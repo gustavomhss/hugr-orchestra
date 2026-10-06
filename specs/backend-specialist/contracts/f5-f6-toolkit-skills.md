@@ -10,6 +10,20 @@ Owner rulings in force (not reopened here): six entry skills plus mode/domain an
 
 ## F5 — Toolkit target contract
 
+### Amendment M3 (2026-10-06): engines fetched on demand
+
+Applies owner decision F5-OD and milestone rulings M3-3 and M3-4 (`../delivery-plan.md` §2). Where this block and a clause below disagree, this block wins. Built in `packages/core/src/pinned-artifact.ts` and `packages/core/src/backend-toolkit/`.
+
+- **First cut (M3-3).** Five engines: `ast-grep` 0.45.3, `sqlc` 1.31.1, `buf` 1.73.0, `gitleaks` 8.30.1 and `kiota` 1.35.0, pinned in `packages/core/src/backend-toolkit/manifest.ts` for the five F5.1 targets. OpenAPI Generator, `protoc-gen-es`, Orval and datamodel-code-generator are the second cut: they need a runtime closure, so the F5.5 private runtimes wait for them. `ogen` and `sqlx-cli` are blocked: upstream ships no binaries and hosting our builds is F5-D3/F5-D8.
+- **Routes (amends F5.5).** `ast-grep` comes from the npm package `@ast-grep/cli-<target>` (pinned to the registry's `dist.integrity`) and exposes `ast-grep` only. `buf` is the raw upstream `buf-<OS>-<arch>` executable, not an archive; its `protoc-gen-buf-*` plugins are not fetched. `gitleaks` 8.30.1 (F3-D9) is added. Every pin is an SRI digest of the download, and the download is checked against it before any byte reaches the disk.
+- **Placement (M3-4, replaces F5.14).** `<TK>` is `Global.Path.cache/backend-toolkit`; `BACKEND_TOOLKIT_ROOT` overrides it. Eviction is allowed: an evicted engine is `absent` and is fetched again on its next need.
+- **Layout (replaces F5.15 and F5.20–F5.22).** Each engine installs into `<TK>/engines/<id>/<version>-<target>/` through one rename of a complete staging directory, with `.complete` written last. Once the engine is ready, the host writes its launcher at `<TK>/bin/<id>` (POSIX `sh`) or `<TK>/bin/<id>.cmd` (Windows) through a temp file and one rename. The launcher sets the engine's manifest `env` (kiota's `KIOTA_OFFLINE_ENABLED` and `KIOTA_CLI_TELEMETRY_OPTOUT`) and execs the engine with the caller's arguments; F5.16 items 2–4 still hold. There are no releases, `inventory.json`, `active.json` or activation: the manifest compiled into the host is the inventory.
+- **States (replaces F5.23, F5.24 and F5.31's `toolkit-not-ready:<substate>`).** Toolkit state is per engine: `absent`, `fetching`, `ready` (install directory and executable), `failed` (the install cause and when it failed) or `unsupported` (the F5.3 reason). Concurrent needs in one host process share one fetch. A failure is remembered for five minutes; inside that window every need fails with it without fetching again, and the first need after it retries. No representative operation runs at fetch time; F5.25 moves to Q-tools. The blocker reasons are `toolkit-not-ready:failed:<engine>:<cause>` and `unsupported-target:<reason>`.
+- **Exposure (amends F5.17).** The shell tool sets `BACKEND_TOOLKIT_BIN=<TK>/bin` only for the native backend seat; it does not use the `shell.env` hook and no other member gets the variable. Before a seat command runs, the host scans it for `$BACKEND_TOOLKIT_BIN/<id>`, `${BACKEND_TOOLKIT_BIN}/<id>` and `$env:BACKEND_TOOLKIT_BIN\<id>` (either separator) and makes each named engine ready, waiting for the fetch. A command that names no engine never fetches. When an engine cannot be made ready, the command does not run and the tool output is the blocker reason, which the seat reports as a `tool` blocker.
+- **Status and prefetch (replaces F5-D).** `toolkit status [--json]` prints one state per engine (`[{ engine, version, target?, status, ... }]`). `toolkit prefetch [ids...] [--target <id>]` fetches ahead of first use, for offline hosts; a target other than the host's installs without a launcher. Both exit non-zero when any listed engine is `failed` or `unsupported` (prefetch also when one is not `ready`).
+- **F5-D7 satisfied.** The manifest compiles into the host, so the engine set is locked to the host version by construction; F5.27's `hostCompat` check is dropped.
+- **Repair, update, channels (amends F5.26, F5.28, F5.29).** Repair is removing an engine directory or the cache; the next need fetches it again. A host update with new pins installs side by side under a new `<version>-<target>`; old directories stay until the cache is evicted. Install channels carry no engines; their postcondition is that the first need, or `toolkit prefetch`, fetches them.
+
 ### Contract
 
 **Targets**
@@ -36,16 +50,17 @@ F5.5 The approved payload is pinned exactly. A change to any pin is a contract a
 
 | Engine ID | Version | Artifact route | Built by | License |
 | --- | --- | --- | --- | --- |
-| `ast-grep` | 0.45.3 | upstream release zip per target; expose `ast-grep` only, never `sg` | upstream | MIT |
+| `ast-grep` | 0.45.3 | npm `@ast-grep/cli-<target>` tarball (Amendment M3); expose `ast-grep` only, never `sg` | upstream | MIT |
 | `sqlc` | 1.31.1 | upstream `sqlc_1.31.1_<os>_<arch>` archive | upstream | MIT |
 | `ogen` | 1.24.0 | module `github.com/ogen-go/ogen/cmd/ogen@v1.24.0`, source rev `0d865e7e568f1b36e5e6788e39aa5cd14e02999f`; `CGO_ENABLED=0`, `GOAMD64=v1` | our CI (T1) | Apache-2.0 |
 | `orval` | 8.39.0 | npm closure, all `@orval/*` pinned, plus `esbuild` 0.28.0 with its `@esbuild/<os>-<cpu>` binary | upstream packages, assembled by T2 | MIT |
 | `datamodel-code-generator` | 0.83.0 | py3-none-any wheel plus a resolver-validated wheel lock including Black and isort | upstream wheels, assembled by T3 | MIT |
-| `buf` | 1.73.0 | upstream `buf-<OS>-<arch>` archive (includes `protoc-gen-buf-lint` and `protoc-gen-buf-breaking`) | upstream | Apache-2.0 |
+| `buf` | 1.73.0 | raw upstream `buf-<OS>-<arch>` executable (Amendment M3; the `protoc-gen-buf-*` plugins are not fetched) | upstream | Apache-2.0 |
 | `protoc-gen-es` | 2.16.0 | npm `@bufbuild/protoc-gen-es`, `@bufbuild/protobuf` and `@bufbuild/protoplugin` 2.16.0 | upstream packages, assembled by T2 | Apache-2.0 |
 | `sqlx-cli` | 0.9.0 | crate source SHA `003b698e99e024f3621b8043a2426fde5b741171`; `cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres,mysql,sqlite,sqlx-toml`; ships `sqlx` and `cargo-sqlx` | our CI (T1) | MIT OR Apache-2.0 |
 | `openapi-generator` | 7.25.0 | release asset `openapi-generator-cli-7.25.0.jar`, invoked as a direct JAR (no npm/bash updater wrapper) | upstream | Apache-2.0 |
 | `kiota` | 1.35.0 | upstream `{osx,linux,win}-{arm64,x64}.zip` self-contained RID archive, complete | upstream | MIT |
+| `gitleaks` | 8.30.1 | upstream `gitleaks_8.30.1_<os>_<arch>` tar.gz (zip on Windows) (F3-D9, Amendment M3) | upstream | MIT |
 
 Private runtimes:
 
@@ -203,6 +218,8 @@ F5.32 Licenses: `licenses/` MUST carry full texts and notices for every componen
 
 ### Schemas
 
+F5-A, F5-B, F5-C and F5-D are superseded for the on-demand toolkit by Amendment M3; they stay as the record of the bundled design.
+
 **F5-A `inventory.json`** (one per release; T5 sole writer)
 ```jsonc
 {
@@ -313,7 +330,7 @@ F5.32 Licenses: `licenses/` MUST carry full texts and notices for every componen
 ### Non-goals
 
 - Supporting musl, Windows arm64 or no-AVX2 x64 (reported as `UNSUPPORTED_TARGET`, per the owner ruling).
-- Any runtime tool catalog, MCP wrapper, package-manager daemon or first-use fetch. The inventory is release metadata only.
+- Any runtime tool catalog, MCP wrapper or package-manager daemon. (First-use fetch is no longer a non-goal: Amendment M3.)
 - Provisioning project prerequisites: databases, container engines, Go/JDK/.NET/Rust SDKs, project generated-code runtime dependencies.
 - Scope or permission enforcement. That belongs to ToolSafety and the native profile, and the backend specialist only consumes denials.
 - Desktop/Electron sidecar packaging. It joins only if a desktop channel is advertised.
@@ -327,7 +344,7 @@ F5.32 Licenses: `licenses/` MUST carry full texts and notices for every componen
 - **F5-D4 unqualified targets:** on musl, win-arm64 or no-AVX2 hosts, refuse the toolkit (`UNSUPPORTED_TARGET`, default in F5.3), or install a best-effort payload labelled unqualified.
 - **F5-D5 sandbox scratch:** where `BACKEND_TOOLKIT_SCRATCH` lives when ToolSafety requires a sandbox. Options are a host-provided per-invocation dir that the profile owner adds to `writeRoots`, or an engine-output subdirectory inside an already-authorized root.
 - **F5-D6 builder pins:** exact Go version for ogen (≥1.25.0) and Rust version for sqlx-cli (≥1.94.0), and whether to add the `mysql-rsa` feature.
-- **F5-D7 host coupling:** exact host-version lock (F5.27 default), or an independent toolkit version with a declared host-compat range.
+- **F5-D7 host coupling:** exact host-version lock (F5.27 default), or an independent toolkit version with a declared host-compat range. Satisfied by Amendment M3: the manifest compiles into the host.
 - **F5-D8 signing:** whether bundled third-party executables are re-signed or notarized (macOS Gatekeeper/quarantine on extracted archives; Windows SmartScreen). The deleted `publish.yml` previously ran Azure Trusted Signing for the Windows CLI only.
 
 ---
