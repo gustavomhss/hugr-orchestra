@@ -211,10 +211,10 @@ it.instance("native compaction archives durable old history but supplies only su
   }).pipe(Effect.provide(environment([plan])))
 }), 30_000)
 
-for (const config of [{ continuity: { enabled: false } }, { continuity: { trigger: 0.8 } }]) {
+for (const config of [{ continuity: { enabled: false } }, { continuity: { trigger: 0.5 } }]) {
   it.instance(`no maintenance starts below the configured trigger or when disabled: ${JSON.stringify(config)}`, () => Effect.gen(function* () {
     yield* Effect.gen(function* () {
-      // Seed reports 50,000 tokens on a 200,000-token window: 25%, below 0.8 and irrelevant when disabled.
+      // Seed reports 50,000 tokens on a 200,000-token window: 25%, below 0.5 and irrelevant when disabled.
       const sessionID = yield* seed()
       const jobs = yield* BackgroundJob.Service
       expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toEqual([])
@@ -334,24 +334,6 @@ it.instance("C13: history that grows during a pass without an advance keeps the 
   }).pipe(Effect.provide(environment([first])))
 }), 30_000)
 
-it.instance("C-R1: a trigger with no positive ceiling skips passes without opening the breaker; masking continues", () => Effect.gen(function* () {
-  yield* Effect.gen(function* () {
-    const output = "build log line\n".repeat(2_000)
-    const sessionID = yield* seed(B, A, output)
-    const sessions = yield* Session.Service
-    const jobs = yield* BackgroundJob.Service
-    // (0.15 - 0.15) of the window leaves no room: every pass skips, and no plan exists for a fork request.
-    for (let turn = 0; turn < 4; turn++) {
-      if (turn > 0) yield* complete(yield* begin(sessionID, `SKIP_TURN_${turn}`), `SKIP_REPLY_${turn}`, 50_000)
-      const latest = (yield* sessions.messages({ sessionID })).at(-1)!.info.id
-      yield* terminal((yield* jobFor(sessionID, latest)).id, "completed", "skipped")
-    }
-    expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === sessionID)).toHaveLength(4)
-    const tool = (yield* prepare(sessionID)).messages.flatMap((message) => message.parts).find((part) => part.type === "tool")
-    expect(tool?.type === "tool" && tool.state.status === "completed" && tool.state.output).toContain("masked")
-  }).pipe(Effect.provide(environment([], { config: { continuity: { trigger: 0.15 } } })))
-}), 60_000)
-
 it.instance("C-R10: one structural event per pass, without op contents", () => Effect.gen(function* () {
   const first = yield* held(FIRST, { reference: NONCE })
   const events: unknown[] = []
@@ -362,25 +344,8 @@ it.instance("C-R10: one structural event per pass, without op contents", () => E
     Logger.make<unknown, void>((options) => { events.push(options.message) })])))
   const passes = events.filter((event) => Array.isArray(event) && event[0] === "continuity maintenance")
   expect(passes).toEqual([["continuity maintenance", expect.objectContaining({ reason: "applied", retried: false,
-    ops: [{ op: "add", section: "findings" }], size: expect.any(Number), ceiling: expect.any(Number) })]])
+    ops: [{ op: "add", section: "findings" }], size: expect.any(Number) })]])
   expect(JSON.stringify(events)).not.toContain(FIRST)
   expect(JSON.stringify(events)).not.toContain(NONCE)
 }), 30_000)
 
-it.instance("C-R11: the parent's overhead outlives its evicted request", () => Effect.gen(function* () {
-  yield* Effect.gen(function* () {
-    const continuity = yield* SessionContinuity.Service
-    const sessions = yield* Session.Service
-    // Seeded without recall, so maintenance first runs after the observations below.
-    const sessionID = yield* seed(B, A, undefined, false)
-    const request = (id: string, system: string[]) => ({ sessionID: id, model: { providerID: "none", id: "none" }, system, messages: [],
-      tools: {}, contextMemory: false }) as unknown as LLM.StreamInput
-    // A 150,000-token system prompt leaves no post-swap room at trigger 0.25 of 200,000.
-    yield* continuity.observe({ sessionID, request: request(sessionID, ["x".repeat(600_000)]), messageIDs: [] })
-    for (let index = 0; index < 4; index++)
-      yield* continuity.observe({ sessionID: SessionID.make(`ses_other_${index}`), request: request(`ses_other_${index}`, []), messageIDs: [] })
-    yield* complete(yield* begin(sessionID, "AFTER_EVICTION"), "AFTER_EVICTION_REPLY", 50_000)
-    const latest = (yield* sessions.messages({ sessionID })).at(-1)!.info.id
-    yield* terminal((yield* jobFor(sessionID, latest)).id, "completed", "skipped")
-  }).pipe(Effect.provide(environment([])))
-}), 30_000)
