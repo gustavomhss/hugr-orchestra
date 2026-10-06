@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { writeFile } from "node:fs/promises"
 import { afterEach, describe, expect } from "bun:test"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Database } from "@opencode-ai/core/database/database"
@@ -70,7 +71,9 @@ const seed = Effect.fn("MaestroNativeApprovalTest.seed")(function* () {
     expect((yield* git.run(["commit", "-m", "fixture config"], { cwd: test.directory })).exitCode).toBe(0)
   }
   expect((yield* git.run(["checkout", "-b", "approval-test"], { cwd: test.directory })).exitCode).toBe(0)
-  yield* Effect.promise(() => Bun.write(`${test.directory}/proof.txt`, "proof\n"))
+  // On Windows, Bun.write resolves before its file handle closes, and Git for Windows (core.fscache) stages a file
+  // that is still open as empty, so the commit would hold an empty proof.txt. writeFile closes before it resolves.
+  yield* Effect.promise(() => writeFile(`${test.directory}/proof.txt`, "proof\n"))
   expect((yield* git.run(["add", "proof.txt"], { cwd: test.directory })).exitCode).toBe(0)
   expect((yield* git.run(["commit", "-m", "proof"], { cwd: test.directory })).exitCode).toBe(0)
   const sessions = yield* Session.Service
