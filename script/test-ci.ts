@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Runs tests on GitHub Actions instead of this machine.
 //
-// It snapshots the working tree (tracked changes plus untracked files that are not gitignored) on top of the newest
+// It snapshots the working tree (tracked changes plus untracked files that are not gitignored) on top of the closest
 // commit GitHub already has, uploads only the changed files through the GitHub API to a temporary ci-run-* branch,
 // waits for the test-ci workflow and prints the test output. Nothing is committed or pushed from the local checkout,
 // so no git hook runs and the current branch is untouched.
@@ -12,14 +12,15 @@ import { $ } from "bun"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
+import { closestBase } from "./test-ci-upload"
 
 const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 const root = (await $`git rev-parse --show-toplevel`.text()).trim()
 const request = parse(process.argv.slice(2))
 const remote = await findRemote()
-const base = await chooseBase()
 const tree = await snapshot()
+const base = await chooseBase()
 const changes = await changed()
 
 console.log(`test-ci: ${request.package} ${request.args.join(" ")} on ${request.os}`)
@@ -96,15 +97,12 @@ async function findRemote() {
   return line[0]!
 }
 
-// The newest commit that GitHub already has: the pushed copy of this branch, else the merge-base with dev.
+// GitHub already has the merge-bases with the pushed copy of this branch and with dev. After dev is merged into a pushed
+// branch, everything dev brought in differs from the pushed copy, so upload on top of whichever differs least.
 async function chooseBase() {
   const current = (await $`git branch --show-current`.cwd(root).text()).trim()
-  const candidates = [current && `${remote}/${current}`, `${remote}/dev`].filter(Boolean)
-  for (const ref of candidates) {
-    const result = await $`git merge-base HEAD ${ref}`.cwd(root).quiet().nothrow()
-    if (result.exitCode === 0) return result.text().trim()
-  }
-  return fail(`Cannot find a commit shared with ${remote}/dev; run git fetch ${remote} dev.`)
+  const base = await closestBase(root, [current && `${remote}/${current}`, `${remote}/dev`].filter(Boolean), tree)
+  return base ?? fail(`Cannot find a commit shared with ${remote}/dev; run git fetch ${remote} dev.`)
 }
 
 async function snapshot() {
@@ -148,7 +146,9 @@ async function changed() {
     return { status, path: file, mode: entries.get(file)?.mode ?? "100644", sha: entries.get(file)?.sha ?? "" }
   })
   if (result.length > 400)
-    fail(`${result.length} files differ from ${base.slice(0, 10)}; push this branch first so less has to upload.`)
+    fail(
+      `${result.length} files differ from ${base.slice(0, 10)}, more than test:ci uploads (400). Push this branch first: the next run then uploads only what changed after the push.`,
+    )
   return result
 }
 
