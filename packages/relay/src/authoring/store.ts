@@ -1,16 +1,17 @@
 export * as AuthoringStore from "./store"
 
-import { Database } from "bun:sqlite"
-import { randomUUID } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { mkdirSync, readdirSync, statSync } from "node:fs"
+import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { Clock, Context, Effect, Layer, Scope } from "effect"
 import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
 import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
 import { RelayJson } from "../json"
 import { AuthoringGraph } from "./graph"
+import { connect } from "#sqlite"
 
-// Documents, versions and scopes in `authoring.sqlite3` (bun:sqlite; relay_authoring/store.py; WP8). The same tables
+// Documents, versions and scopes in `authoring.sqlite3` (`#sqlite`; relay_authoring/store.py; WP8). The same tables
 // and row bodies as the Python store, so a Python-made database opens unchanged. There is no executions table: runs
 // are durable events. A Python-made database keeps its own executions table; nothing here reads or drops it.
 //
@@ -63,53 +64,47 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
     const db = yield* Effect.acquireRelease(
       Effect.sync(() => {
         mkdirSync(dataDir, { recursive: true })
-        return new Database(path.join(dataDir, "authoring.sqlite3"), { create: true, strict: true })
+        return connect(path.join(dataDir, "authoring.sqlite3"))
       }),
       (db) => Effect.sync(() => db.close()),
     )
     yield* Effect.sync(() => {
-      db.run("PRAGMA journal_mode=WAL")
-      db.run("PRAGMA foreign_keys=ON")
+      db.exec("PRAGMA journal_mode=WAL")
+      db.exec("PRAGMA foreign_keys=ON")
       // sqlite3.connect's default 5 s timeout: another process's write is waited for, not failed.
-      db.run("PRAGMA busy_timeout=5000")
-      db.run(
+      db.exec("PRAGMA busy_timeout=5000")
+      db.exec(
         "CREATE TABLE IF NOT EXISTS documents(workspace TEXT, id TEXT, body TEXT NOT NULL, PRIMARY KEY(workspace,id))",
       )
-      db.run(
+      db.exec(
         "CREATE TABLE IF NOT EXISTS versions(workspace TEXT, document_id TEXT, id TEXT, body TEXT NOT NULL, PRIMARY KEY(workspace,id))",
       )
-      db.run(
+      db.exec(
         "CREATE TABLE IF NOT EXISTS scopes(workspace TEXT, id TEXT, body TEXT NOT NULL, PRIMARY KEY(workspace,id))",
       )
     })
 
     const row = <A>(table: "documents" | "versions" | "scopes", id: string): A => {
-      const found = db
-        .query<{ body: string }, [string, string]>(`SELECT body FROM ${table} WHERE workspace=? AND id=?`)
-        .get(workspaceID, id)
+      const found = db.get<{ body: string }>(`SELECT body FROM ${table} WHERE workspace=? AND id=?`, workspaceID, id)
       return found ? JSON.parse(found.body) : AuthoringGraph.refuse("Resource not found", 404, "not-found")
     }
     const rows = <A>(sql: string, ...params: string[]): A[] =>
-      db
-        .query<{ body: string }, string[]>(sql)
-        .all(workspaceID, ...params)
-        .map((found) => JSON.parse(found.body))
+      db.all<{ body: string }>(sql, workspaceID, ...params).map((found) => JSON.parse(found.body))
     const put = (table: "documents" | "scopes", id: string, body: unknown) =>
-      db
-        .query(
-          `INSERT INTO ${table}(workspace,id,body) VALUES(?,?,?) ON CONFLICT(workspace,id) DO UPDATE SET body=excluded.body`,
-        )
-        .run(workspaceID, id, dumps(body, false))
+      db.run(
+        `INSERT INTO ${table}(workspace,id,body) VALUES(?,?,?) ON CONFLICT(workspace,id) DO UPDATE SET body=excluded.body`,
+        workspaceID,
+        id,
+        dumps(body, false),
+      )
     const drop = (table: "documents" | "scopes", id: string) =>
-      db.query(`DELETE FROM ${table} WHERE workspace=? AND id=?`).run(workspaceID, id)
+      db.run(`DELETE FROM ${table} WHERE workspace=? AND id=?`, workspaceID, id)
     const documents = () =>
       rows<RelayAuthoring.Document>("SELECT body FROM documents WHERE workspace=? ORDER BY rowid DESC")
     const scopes = () => rows<RelayAuthoring.Scope>("SELECT body FROM scopes WHERE workspace=? ORDER BY rowid")
     // The clock is read first; the transaction itself never yields.
     const write = <A>(body: (now: string) => A) =>
-      Effect.flatMap(stamp, (now) =>
-        AuthoringGraph.refusing(Effect.sync(() => db.transaction(() => body(now)).immediate())),
-      )
+      Effect.flatMap(stamp, (now) => AuthoringGraph.refusing(Effect.sync(() => db.immediate(() => body(now)))))
 
     const save = (input: SaveInput, now: string) => {
       const previous = input.id ? row<RelayAuthoring.Document>("documents", input.id) : undefined
@@ -134,7 +129,8 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
         versionCounter: (previous?.versionCounter ?? 0) + 1,
       })
       put("documents", id, document)
-      db.query("INSERT INTO versions(workspace,document_id,id,body) VALUES(?,?,?,?)").run(
+      db.run(
+        "INSERT INTO versions(workspace,document_id,id,body) VALUES(?,?,?,?)",
         workspaceID,
         id,
         versionId,
@@ -149,7 +145,7 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
       save: (input) => write((now) => save(input, now)),
       seed: (id, body) =>
         write((now) => {
-          if (db.query("SELECT 1 FROM documents WHERE workspace=? AND id=?").get(workspaceID, id)) return
+          if (db.get("SELECT 1 FROM documents WHERE workspace=? AND id=?", workspaceID, id)) return
           save({ body, createID: id }, now)
         }),
       remove: (id) =>
@@ -225,8 +221,7 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
 export const layer = (dataDir: string, workspaceID: string) => Layer.effect(Service, open(dataDir, workspaceID))
 
 // sha256 of the document as `json.dumps(sort_keys=True, ensure_ascii=False)` encodes it (PARITY-EXCEPTIONS W8-1).
-export const checksum = (document: unknown): string =>
-  new Bun.CryptoHasher("sha256").update(dumps(document, true)).digest("hex")
+export const checksum = (document: unknown): string => createHash("sha256").update(dumps(document, true)).digest("hex")
 
 // Owner decision R8 (2026-10-06): the shipped profiles and whether each may run. The other four check their work with
 // Relay tool programs (`tools/*`) that are not ported yet; they are seeded so they can be read and edited.
@@ -240,7 +235,7 @@ export const PROFILES: ReadonlyMap<string, boolean> = new Map([
 ])
 
 // packages/relay/profiles.
-export const PROFILES_DIRECTORY = path.join(import.meta.dir, "..", "..", "profiles")
+export const PROFILES_DIRECTORY = path.join(import.meta.dirname, "..", "..", "profiles")
 
 /**
  * `seed_profiles`: every `*.sprint.json` in the directory, projected as "Relay · <name>" and seeded as `relay-<name>`,
@@ -255,7 +250,8 @@ export const seedProfiles = (
       Effect.forEach(
         names,
         (name) =>
-          Effect.promise(() => Bun.file(path.join(directory, name + SUFFIX)).text()).pipe(
+          Effect.promise(() => readFile(path.join(directory, name + SUFFIX))).pipe(
+            Effect.map((bytes) => decoder.decode(bytes)),
             Effect.flatMap(AuthoringGraph.loads),
             Effect.flatMap((sprint) => AuthoringGraph.project(`Relay · ${name}`, sprint as RelaySprint.Sprint)),
             Effect.flatMap((document) =>
@@ -291,6 +287,8 @@ export const runnable = (
 }
 
 const CHANGED = "The workflow changed. Reload it before saving."
+// UTF-8 with U+FFFD for invalid bytes; a leading byte order mark is dropped.
+const decoder = new TextDecoder()
 const SUFFIX = ".sprint.json"
 // The fields a save takes from its body, in the order Python assigns them.
 const FIELDS = [

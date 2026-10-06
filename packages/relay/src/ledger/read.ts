@@ -2,7 +2,7 @@ export * as LedgerRead from "./read"
 
 import { constants } from "node:os"
 import path from "node:path"
-import { stat } from "node:fs/promises"
+import { readFile, stat } from "node:fs/promises"
 import { Effect, Result, Schema } from "effect"
 import { RelayJson } from "../json"
 
@@ -77,7 +77,7 @@ const CHUNK = 8192
 // The text as `open(path)` returns it: strict UTF-8 (a BOM stays a character), with Python's error messages.
 function source(ledger: string) {
   return Effect.tryPromise({
-    try: () => Bun.file(ledger).bytes(),
+    try: () => readFile(ledger),
     catch: (error) =>
       code(error) === "ENOENT" ? new Missing({ ledger }) : new ReadError({ ledger, reason: osError(error, ledger) }),
   }).pipe(

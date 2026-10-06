@@ -1,7 +1,7 @@
 export * as GateCheck from "./check"
 
 import { mkdirSync, rmdirSync } from "node:fs"
-import { stat } from "node:fs/promises"
+import { readFile, stat } from "node:fs/promises"
 import path from "node:path"
 import { Effect, Schema } from "effect"
 import type { RelayArm } from "@opencode-ai/schema/relay-arm"
@@ -114,15 +114,16 @@ const current = (input: Input) =>
     return Number(value)
   })
 
+// UTF-8 with U+FFFD for invalid bytes; a leading byte order mark is dropped.
+const decoder = new TextDecoder()
+
 // `$(cat <state>/<name> 2>/dev/null || echo <fallback>)`.
 function stateFile(stateDir: string | undefined, name: string, fallback: string) {
   if (stateDir === undefined) return Effect.succeed(fallback)
   return Effect.promise(() =>
-    Bun.file(path.join(stateDir, name))
-      .text()
-      .then(
-        (value) => value.replace(/\n+$/, ""),
-        () => fallback,
-      ),
+    readFile(path.join(stateDir, name)).then(
+      (bytes) => decoder.decode(bytes).replace(/\n+$/, ""),
+      () => fallback,
+    ),
   )
 }

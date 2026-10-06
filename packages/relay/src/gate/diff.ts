@@ -34,7 +34,7 @@ export const compute = (input: {
       // --no-index exits 1 when the files differ, which is the normal case here.
       (file) => run(["diff", "--no-index", "--", "/dev/null", file]).pipe(Effect.map((result) => result.stdout)),
     )
-    return utf8(Bun.concatArrayBuffers([tracked.stdout, ...untracked]))
+    return utf8(Buffer.concat([tracked.stdout, ...untracked]))
   }).pipe(Effect.catchTag("GateShell.Unavailable", () => Effect.succeed(Option.none<string>())))
 
 // The label the judge sees for the computed diff.

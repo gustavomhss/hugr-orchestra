@@ -57,6 +57,8 @@ interface Workspace {
 
 const goldens: Golden[] = await Promise.all(
   readdirSync(GOLDENS)
+    // GENERATOR.json records the generator's tool versions; it is not a case.
+    .filter((name) => name !== "GENERATOR.json")
     .sort()
     .map(async (name) => ({
       name,

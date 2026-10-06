@@ -9,6 +9,13 @@
     ".": "./src/index.ts",
     "./*": "./src/*.ts"
   },
+  "imports": {
+    "#sqlite": {
+      "bun": "./src/authoring/sqlite.bun.ts",
+      "node": "./src/authoring/sqlite.node.ts",
+      "default": "./src/authoring/sqlite.bun.ts"
+    }
+  },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"
