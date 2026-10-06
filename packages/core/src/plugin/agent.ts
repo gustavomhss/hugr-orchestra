@@ -5,11 +5,11 @@ import { define } from "./internal"
 import { Effect } from "effect"
 import { AgentV2 } from "../agent"
 import { Global } from "../global"
-import { Location } from "../location"
 import { PermissionV2 } from "../permission"
 
 const TRUNCATION_GLOB = path.join(Global.Path.data, "tool-output", "*")
-const BUILD_SYSTEM =
+// Maestro's full prompt lives with the opencode package, which Core must not import.
+const MAESTRO_SYSTEM =
   "You are an AI coding agent. Help the user accomplish software engineering tasks by inspecting the workspace, making targeted changes, and using tools according to the configured permissions."
 
 const PROMPT_EXPLORE = `You are a file search specialist. You excel at thoroughly navigating and exploring codebases.
@@ -96,8 +96,6 @@ Rules:
 export const Plugin = define({
   id: "agent",
   effect: Effect.fn(function* (ctx) {
-    const location = yield* Location.Service
-    const worktree = location.directory
     const whitelistedDirs = [TRUNCATION_GLOB, path.join(Global.Path.tmp, "*")]
     const readonlyExternalDirectory: PermissionV2.Ruleset = [
       { action: "external_directory", resource: "*", effect: "ask" },
@@ -109,8 +107,6 @@ export const Plugin = define({
       { action: "*", resource: "*", effect: "allow" },
       ...readonlyExternalDirectory,
       { action: "question", resource: "*", effect: "deny" },
-      { action: "plan_enter", resource: "*", effect: "deny" },
-      { action: "plan_exit", resource: "*", effect: "deny" },
       { action: "read", resource: "*", effect: "allow" },
       { action: "read", resource: "*.env", effect: "ask" },
       { action: "read", resource: "*.env.*", effect: "ask" },
@@ -119,34 +115,11 @@ export const Plugin = define({
 
     yield* ctx.agent.transform((draft) => {
       draft.update(AgentV2.defaultID, (item) => {
-        item.description = "The default agent. Executes tools based on configured permissions."
-        item.system ??= BUILD_SYSTEM
+        item.description =
+          "High-agency development orchestrator. Uses governed approval only when explicitly requested."
+        item.system ??= MAESTRO_SYSTEM
         item.mode = "primary"
-        item.permissions.push(
-          ...PermissionV2.merge(defaults, [
-            { action: "question", resource: "*", effect: "allow" },
-            { action: "plan_enter", resource: "*", effect: "allow" },
-          ]),
-        )
-      })
-
-      draft.update(AgentV2.ID.make("plan"), (item) => {
-        item.description = "Plan mode. Disallows all edit tools."
-        item.mode = "primary"
-        item.permissions.push(
-          ...PermissionV2.merge(defaults, [
-            { action: "question", resource: "*", effect: "allow" },
-            { action: "plan_exit", resource: "*", effect: "allow" },
-            { action: "external_directory", resource: path.join(Global.Path.data, "plans", "*"), effect: "allow" },
-            { action: "edit", resource: "*", effect: "deny" },
-            { action: "edit", resource: path.join(".opencode", "plans", "*.md"), effect: "allow" },
-            {
-              action: "edit",
-              resource: path.relative(worktree, path.join(Global.Path.data, "plans", "*.md")),
-              effect: "allow",
-            },
-          ]),
-        )
+        item.permissions.push(...PermissionV2.merge(defaults, [{ action: "question", resource: "*", effect: "allow" }]))
       })
 
       draft.update(AgentV2.ID.make("general"), (item) => {

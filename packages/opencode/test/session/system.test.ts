@@ -36,8 +36,8 @@ const skills: Skill.Info[] = [
   },
 ]
 
-const build: Agent.Info = {
-  name: "build",
+const maestro: Agent.Info = {
+  name: "maestro",
   mode: "primary",
   permission: Permission.fromConfig({ "*": "allow" }),
   options: {},
@@ -112,8 +112,8 @@ describe("session.system", () => {
   it.effect("skills output is sorted by name and stable across calls", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const first = yield* prompt.skills(build)
-      const second = yield* prompt.skills(build)
+      const first = yield* prompt.skills(maestro)
+      const second = yield* prompt.skills(maestro)
       const output = first ?? (yield* Effect.fail(new NamedError.Unknown({ message: "missing skills output" })))
 
       expect(first).toBe(second)
@@ -132,7 +132,7 @@ describe("session.system", () => {
   it.effect("MCP output includes connected server instructions", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const output = yield* prompt.mcp(build)
+      const output = yield* prompt.mcp(maestro)
 
       expect(output).toBe(
         [
@@ -152,7 +152,7 @@ describe("session.system", () => {
   it.effect("MCP output omits servers when all advertised tools are denied", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const output = yield* prompt.mcp(build, Permission.fromConfig({ "tool-server_*": "deny" }))
+      const output = yield* prompt.mcp(maestro, Permission.fromConfig({ "tool-server_*": "deny" }))
 
       expect(output).toBe(
         [

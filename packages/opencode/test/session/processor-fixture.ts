@@ -89,7 +89,7 @@ export function providerCfg(url: string) {
 
 export function agent(): Agent.Info {
   return {
-    name: "build",
+    name: "maestro",
     mode: "primary",
     options: {},
     permission: [{ permission: "*", pattern: "*", action: "allow" }],
@@ -121,7 +121,7 @@ export const user = Effect.fn("TestSession.user")(function* (sessionID: SessionI
     id: MessageID.ascending(),
     role: "user",
     sessionID,
-    agent: "build",
+    agent: "maestro",
     model: ref,
     time: { created: Date.now() },
   })
@@ -145,8 +145,8 @@ export const assistant = Effect.fn("TestSession.assistant")(function* (
     id: MessageID.ascending(),
     role: "assistant",
     sessionID,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     path: { cwd: root, root },
     cost: 0,
     tokens: {

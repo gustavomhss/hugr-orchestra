@@ -38,7 +38,7 @@ it.live("a genuinely registered V2 maestro ID cannot substitute for a missing na
           const instance = yield* instances.load({ directory: tmp.path })
           const sessions = yield* Session.Service
           const session = yield* sessions
-            .create({ title: "identity owner", agent: "build" })
+            .create({ title: "identity owner", agent: "general" })
             .pipe(Effect.provideService(InstanceRef, instance))
           const store = yield* SessionStore.Service
           const projected = yield* store.get(session.id)
@@ -46,11 +46,11 @@ it.live("a genuinely registered V2 maestro ID cannot substitute for a missing na
           const locations = yield* LocationServiceMap.Service
           yield* Effect.gen(function* () {
             const agents = yield* AgentV2.Service
-            const build = yield* agents.get(AgentV2.ID.make("build"))
-            if (!build) throw new Error("actual host build permissions missing")
+            const general = yield* agents.get(AgentV2.ID.make("general"))
+            if (!general) throw new Error("actual host general permissions missing")
             yield* agents.transform((editor) =>
               editor.update(AgentV2.ID.make("maestro"), (agent) => {
-                agent.permissions = [...build.permissions]
+                agent.permissions = [...general.permissions]
               }),
             )
             const registry = yield* ToolRegistry.Service
@@ -110,7 +110,7 @@ it.live(
                     assistantMessageID,
                     call: { type: "tool-call", id: `native-${name}`, name, input: arguments_ },
                   })
-                expect((yield* invoke(MaestroArsenal.names.catalog, {}, AgentV2.ID.make("build"))).result).toEqual({
+                expect((yield* invoke(MaestroArsenal.names.catalog, {}, AgentV2.ID.make("general"))).result).toEqual({
                   type: "error",
                   value: "Maestro Arsenal requires native Maestro identity.",
                 })

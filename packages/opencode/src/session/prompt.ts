@@ -62,7 +62,6 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
-import { SessionReminders } from "./reminders"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@opencode-ai/llm"
 
@@ -1094,7 +1093,7 @@ const layer = Layer.effect(
           yield* status.set(sessionID, { type: "busy" })
           yield* Effect.logInfo("loop", { "session.id": sessionID, step })
 
-          let msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
+          const msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
             Effect.provideService(Database.Service, database),
           )
 
@@ -1183,11 +1182,6 @@ const layer = Layer.effect(
           }
           const maxSteps = agent.steps ?? Infinity
           const isLastStep = step >= maxSteps
-          msgs = yield* SessionReminders.apply({ messages: msgs, agent, session }).pipe(
-            Effect.provideService(RuntimeFlags.Service, flags),
-            Effect.provideService(FSUtil.Service, fsys),
-            Effect.provideService(Session.Service, sessions),
-          )
 
           const msg: SessionV1.Assistant = {
             id: MessageID.ascending(),

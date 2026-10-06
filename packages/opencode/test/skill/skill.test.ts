@@ -611,7 +611,7 @@ description: A skill in the .opencode/skills directory.
               "opencode-project",
             ])
             expect(yield* listed("general")).toEqual(yield* listed("maestro"))
-            expect(yield* listed("build")).toEqual([
+            expect(yield* listed("conductor")).toEqual([
               "agents-global",
               "agents-project",
               "claude-global",
@@ -620,9 +620,18 @@ description: A skill in the .opencode/skills directory.
               "customize-opencode",
               "opencode-project",
             ])
-            expect(yield* listed("plan")).toEqual(yield* listed("build"))
+            expect(yield* listed("scout")).toEqual(yield* listed("conductor"))
           }).pipe(Effect.provide(agentLayer(home))),
-        { git: true, config: { skills: { paths: ["team-skills"] } } },
+        {
+          git: true,
+          config: {
+            skills: { paths: ["team-skills"] },
+            agent: {
+              conductor: { description: "Configured primary agent", mode: "primary" },
+              scout: { description: "Configured subagent", mode: "subagent" },
+            },
+          },
+        },
       )
     }),
   )
@@ -653,12 +662,12 @@ description: A skill in the .opencode/skills directory.
           Effect.gen(function* () {
             const skill = yield* Skill.Service
             const agents = yield* Agent.Service
-            const team = (yield* agents.list()).filter((agent) => !["build", "plan"].includes(agent.id ?? agent.name))
+            const team = (yield* agents.list()).filter((agent) => agent.native)
             expect(team.map((agent) => agent.id)).toEqual(
               expect.arrayContaining(["maestro", "general", "explore", "charlie", "lucy"]),
             )
-            // build still lists it, so the skill exists to be hidden.
-            expect(yield* listed("build")).toContain(Skill.CUSTOMIZE_OPENCODE_SKILL_NAME)
+            // A configured agent still lists it, so the skill exists to be hidden.
+            expect(yield* listed("conductor")).toContain(Skill.CUSTOMIZE_OPENCODE_SKILL_NAME)
             for (const agent of team) {
               expect((yield* skill.available(agent)).map((item) => item.name)).not.toContain(
                 Skill.CUSTOMIZE_OPENCODE_SKILL_NAME,
@@ -669,7 +678,7 @@ description: A skill in the .opencode/skills directory.
               )
             }
           }).pipe(Effect.provide(agentLayer(home))),
-        { git: true },
+        { git: true, config: { agent: { conductor: { description: "Configured primary agent", mode: "primary" } } } },
       )
     }),
   )

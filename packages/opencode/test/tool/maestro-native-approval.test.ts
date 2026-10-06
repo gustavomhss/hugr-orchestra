@@ -496,7 +496,7 @@ describe("native Maestro approval admission", () => {
           "session mismatch",
         )
         expectRejected(
-          yield* Effect.exit(def.execute(chain.params, { ...fixture.caller, agentID: "build" })),
+          yield* Effect.exit(def.execute(chain.params, { ...fixture.caller, agentID: "general" })),
           "requires Maestro",
         )
         yield* Effect.promise(() => Bun.write(`${fixture.session.directory}/proof.txt`, "changed\n"))

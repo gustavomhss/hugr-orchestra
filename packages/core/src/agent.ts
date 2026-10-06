@@ -7,7 +7,7 @@ import { State } from "./state"
 
 export const ID = Agent.ID
 export type ID = typeof ID.Type
-export const defaultID = ID.make("build")
+export const defaultID = ID.make("maestro")
 
 export const Color = Agent.Color
 
@@ -66,16 +66,12 @@ const layer = Layer.effect(
     })
     const selectable = (agent: Info | undefined) =>
       agent && agent.mode !== "subagent" && !agent.hidden ? agent : undefined
+    // Maestro is the default unless configuration names another selectable agent. No other agent becomes the
+    // default implicitly, so without Maestro an omitted-agent Session resolves to no agent.
     const selectedDefault = () => {
       const data = state.get()
       const configured = data.default ? selectable(data.agents.get(data.default)) : undefined
-      if (configured) return configured
-      const build = selectable(data.agents.get(ID.make("build")))
-      if (build) return build
-      for (const agent of data.agents.values()) {
-        const fallback = selectable(agent)
-        if (fallback) return fallback
-      }
+      return configured ?? selectable(data.agents.get(defaultID))
     }
 
     return Service.of({

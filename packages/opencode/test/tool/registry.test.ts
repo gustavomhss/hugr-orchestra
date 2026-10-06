@@ -157,12 +157,12 @@ describe("tool.registry", () => {
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       const agent = yield* Agent.Service
-      const build = yield* agent.get("build")
-      if (!build) throw new Error("build agent not found")
+      const maestro = yield* agent.get("maestro")
+      if (!maestro) throw new Error("maestro agent not found")
       const task = (yield* registry.tools({
         providerID: ProviderV2.ID.opencode,
         modelID: ModelV2.ID.make("test"),
-        agent: build,
+        agent: maestro,
       })).find((tool) => tool.id === "task")
 
       expect(task?.jsonSchema).toBeDefined()

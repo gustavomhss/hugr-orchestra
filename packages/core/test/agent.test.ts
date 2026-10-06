@@ -17,7 +17,7 @@ describe("AgentV2", () => {
       const agent = yield* AgentV2.Service
 
       expect(yield* agent.all()).toEqual([])
-      expect(yield* agent.get(AgentV2.ID.make("build"))).toBeUndefined()
+      expect(yield* agent.get(AgentV2.ID.make("maestro"))).toBeUndefined()
     }),
   )
 
@@ -73,7 +73,7 @@ describe("AgentV2", () => {
   it.effect("applies direct agent updates", () =>
     Effect.gen(function* () {
       const agent = yield* AgentV2.Service
-      const id = AgentV2.ID.make("build")
+      const id = AgentV2.ID.make("maestro")
 
       yield* agent.transform((editor) =>
         editor.update(id, (info) => {
@@ -99,6 +99,54 @@ describe("AgentV2", () => {
     }),
   )
 
+  it.effect("defaults to maestro and never to another selectable agent", () =>
+    Effect.gen(function* () {
+      const agent = yield* AgentV2.Service
+      const maestro = AgentV2.ID.make("maestro")
+      const conductor = AgentV2.ID.make("conductor")
+      yield* agent.transform((editor) =>
+        editor.update(conductor, (info) => {
+          info.mode = "primary"
+        }),
+      )
+
+      expect(yield* agent.default()).toBeUndefined()
+      expect(yield* agent.resolve()).toBeUndefined()
+      expect(yield* agent.select()).toEqual({ id: maestro, info: undefined })
+
+      yield* agent.transform((editor) =>
+        editor.update(maestro, (info) => {
+          info.mode = "primary"
+        }),
+      )
+      expect((yield* agent.default())?.id).toBe(maestro)
+      expect((yield* agent.select()).id).toBe(maestro)
+
+      yield* agent.transform((editor) => editor.default(conductor))
+      expect((yield* agent.default())?.id).toBe(conductor)
+      expect((yield* agent.select()).id).toBe(conductor)
+    }),
+  )
+
+  it.effect("falls back to maestro when the configured default cannot be selected", () =>
+    Effect.gen(function* () {
+      const agent = yield* AgentV2.Service
+      const maestro = AgentV2.ID.make("maestro")
+      const scout = AgentV2.ID.make("scout")
+      yield* agent.transform((editor) => {
+        editor.update(maestro, (info) => {
+          info.mode = "primary"
+        })
+        editor.update(scout, (info) => {
+          info.mode = "subagent"
+        })
+        editor.default(scout)
+      })
+
+      expect((yield* agent.default())?.id).toBe(maestro)
+    }),
+  )
+
   it.effect("does not ambiently opt built-in agents into bash", () =>
     Effect.gen(function* () {
       const agent = yield* AgentV2.Service
@@ -115,14 +163,14 @@ describe("AgentV2", () => {
 
       const agents = yield* agent.all()
       expect(agents.map((item) => String(item.id)).sort()).toEqual([
-        "build",
         "compaction",
         "explore",
         "general",
-        "plan",
+        "maestro",
         "summary",
         "title",
       ])
+      expect(yield* agent.default()).toMatchObject({ id: "maestro", mode: "primary" })
       for (const item of agents) {
         expect(item.permissions.some((rule) => rule.action === "bash" && rule.effect !== "deny")).toBe(false)
       }

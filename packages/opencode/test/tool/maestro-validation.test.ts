@@ -121,15 +121,15 @@ describe("Maestro validation tools", () => {
       const registry = yield* ToolRegistry.Service
       const maestro = yield* agents.get("maestro")
       const lucy = yield* agents.get("lucy")
-      const build = yield* agents.get("build")
-      if (!maestro || !lucy || !build) throw new Error("expected native agents")
+      const general = yield* agents.get("general")
+      if (!maestro || !lucy || !general) throw new Error("expected native agents")
       const ref = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test") }
 
       expect((yield* registry.tools({ ...ref, agent: maestro })).map((tool) => tool.id)).toContain(
         "maestro_record_validation",
       )
       expect((yield* registry.tools({ ...ref, agent: lucy })).map((tool) => tool.id)).toContain("maestro_record_review")
-      expect((yield* registry.tools({ ...ref, agent: build })).map((tool) => tool.id)).not.toContain(
+      expect((yield* registry.tools({ ...ref, agent: general })).map((tool) => tool.id)).not.toContain(
         "maestro_record_validation",
       )
     }),
@@ -224,7 +224,7 @@ describe("Maestro validation tools", () => {
     Effect.gen(function* () {
       const tool = yield* MaestroRecordValidationTool
       const def = yield* tool.init()
-      const rejected = yield* Effect.exit(def.execute(validation, context("maestro", "build")))
+      const rejected = yield* Effect.exit(def.execute(validation, context("maestro", "general")))
 
       expect(Exit.isFailure(rejected)).toBe(true)
       if (Exit.isFailure(rejected))

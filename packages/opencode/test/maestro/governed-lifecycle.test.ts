@@ -116,16 +116,16 @@ describe("Maestro governed lifecycle", () => {
       Effect.gen(function* () {
         const agent = yield* Agent.Service
         const registry = yield* ToolRegistry.Service
-        const build = yield* agent.get("build")
+        const general = yield* agent.get("general")
         const maestro = yield* agent.get("maestro")
         const lucy = yield* agent.get("lucy")
-        if (!build || !maestro || !lucy) throw new Error("expected native agents")
-        const buildTools = yield* registry.tools({ ...ref, agent: build })
+        if (!general || !maestro || !lucy) throw new Error("expected native agents")
+        const generalTools = yield* registry.tools({ ...ref, agent: general })
         const maestroTools = yield* registry.tools({ ...ref, agent: maestro })
         const lucyTools = yield* registry.tools({ ...ref, agent: lucy })
-        expect(buildTools.map((tool) => tool.id)).not.toContain("maestro_present_approval")
-        expect(buildTools.map((tool) => tool.id)).not.toContain("maestro_record_approval")
-        expect(buildTools.map((tool) => tool.id)).not.toContain("maestro_record_admission")
+        expect(generalTools.map((tool) => tool.id)).not.toContain("maestro_present_approval")
+        expect(generalTools.map((tool) => tool.id)).not.toContain("maestro_record_approval")
+        expect(generalTools.map((tool) => tool.id)).not.toContain("maestro_record_admission")
         expect(maestroTools.map((tool) => tool.id)).toContain("maestro_present_approval")
         expect(maestroTools.map((tool) => tool.id)).toContain("maestro_record_approval")
         expect(maestroTools.map((tool) => tool.id)).toContain("maestro_record_admission")
@@ -421,7 +421,7 @@ describe("Maestro governed lifecycle", () => {
         id: SessionID.make(reservedChildID),
         parentID: chat.id,
         title: "Fabricated reserved child",
-        agent: "build",
+        agent: "maestro",
       })
       const collisionExit = yield* Effect.exit(
         def.execute(

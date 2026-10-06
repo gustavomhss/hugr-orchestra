@@ -67,7 +67,7 @@ const seed = Effect.fn("TaskGovernanceTest.seed")(function* () {
     id: MessageID.ascending(),
     role: "user",
     sessionID: chat.id,
-    agent: "build",
+    agent: "maestro",
     model,
     time: { created: Date.now() },
   })
@@ -76,8 +76,8 @@ const seed = Effect.fn("TaskGovernanceTest.seed")(function* () {
     role: "assistant",
     parentID: user.id,
     sessionID: chat.id,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     cost: 0,
     path: { cwd: "/tmp", root: "/tmp" },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -473,7 +473,7 @@ it.instance("resumes exact native task session from task_id", () =>
           {
             sessionID: chat.id,
             messageID: assistant.id,
-            agent: "build",
+            agent: "maestro",
             abort: new AbortController().signal,
             extra: { promptOps: stubOps((input) => (seen = input)) },
             messages: [],
@@ -518,7 +518,7 @@ it.instance("denies task_id with different parent or agent", () =>
         {
           sessionID: chat.id,
           messageID: assistant.id,
-          agent: "build",
+          agent: "maestro",
           abort: new AbortController().signal,
           extra: { promptOps: stubOps() },
           messages: [],
