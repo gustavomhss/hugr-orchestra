@@ -82,7 +82,7 @@ describe("Patch namespace", () => {
       expect(hunk.type).toBe("update")
       expect(hunk.path).toBe("old-name.txt")
       if (hunk.type === "update") {
-        expect(hunk.move_path).toBe("new-name.txt")
+        expect(hunk.movePath).toBe("new-name.txt")
       }
     })
 
@@ -103,8 +103,8 @@ describe("Patch namespace", () => {
           type: "update",
           path: "tail.txt",
           chunks: [
-            { old_lines: ["last"], new_lines: ["end"], is_end_of_file: true },
-            { old_lines: [], new_lines: ["appended"] },
+            { oldLines: ["last"], newLines: ["end"], endOfFile: true },
+            { oldLines: [], newLines: ["appended"] },
           ],
         },
       ])
