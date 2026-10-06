@@ -173,6 +173,8 @@ type NativeScan = { found: NativeMatch[]; pages: number; more: boolean; complete
 // One per tool call: an epoch-ms deadline that permission prompts push back.
 type Clock = { deadline: number }
 
+// The helper's root catalogue bound (LIMITS.roots).
+const MAX_ROOTS = 32
 // Bounds one scan at 48 helper pages (~6000 controls); each page is still one bounded native request.
 const MAX_FIND_PAGES = 48
 // Bounds all scans, restarts and retries of one dock_find/dock_action/dock_type call; nothing is dispatched after it.
@@ -183,7 +185,7 @@ const STATES: Record<number, string> = { 1: "active", 4: "checked", 7: "editable
 function nativePage(value: unknown) {
   if (!object(value) || value.backend !== "linux-atspi" || !Array.isArray(value.items) || !object(value.coverage))
     throw new NativeRPCError("unsupported-backend", "Search runs on the native Linux workspace; use dock_read for browser pages", "not-dispatched")
-  return value as { items: unknown[]; hasMore?: boolean; cursor?: unknown; coverage: { complete?: unknown; reasons?: unknown } }
+  return value as { items: unknown[]; hasMore?: boolean; cursor?: unknown; scopeKind?: unknown; coverage: { complete?: unknown; reasons?: unknown } }
 }
 
 function matches(item: unknown, query: NativeQuery): item is NativeItem {
@@ -357,6 +359,19 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       return act(context, query, run, clock, attempt + 1)
     })
   }
+  // The helper catalogues every workspace root (at most MAX_ROOTS) before any descendant, so the first page
+  // holds all window candidates; the key operation itself re-proves the window active before each key event.
+  const activeWindow = async (context: ToolContext, clock: Clock) => {
+    const page = nativePage(await call(context, "read", { budget: MAX_ROOTS, maxText: 0 }, clock))
+    // An application-scope binding walks each root depth-first, so only a whole-tree scan can decide.
+    if (page.scopeKind !== "workspace") return undefined
+    const roots = page.items.filter((item): item is NativeItem => matches(item, {}) && item.parentRef === null)
+    const scan = { found: roots.flatMap((item, index) => fits(item, { window: true }) ? [{ item, page: 1, index, occurrence: 0 }] : []),
+      pages: 1, more: page.hasMore === true, complete: roots.length < page.items.length || page.hasMore !== true, reasons: page.coverage.reasons }
+    if (!scan.complete) return compactScan(scan, "target-search-incomplete")
+    if (scan.found.length === 1) return scan.found[0]!.item
+    return scan.found.length === 0 ? missed(scan, { window: true }) : compactScan(scan, "target-ambiguous")
+  }
   const dock = {
       dock_list: tool({
         description:
@@ -457,10 +472,13 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           }
           const keys = args.keys
           if (args.ref !== undefined) return call(context, "keyboard", { ref: args.ref, keys }).then(toJSON, toolError)
-          // Without a ref the keys go to the one active window, located the same way a target is.
-          const query: NativeQuery = args.target ?? { window: true }
-          return exclusive(() => act(context, query, (item, clock) => call(context, "keyboard", { ref: item.ref, keys }, clock).then(toJSON),
-            { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
+          const send = (item: NativeItem, clock: Clock) => call(context, "keyboard", { ref: item.ref, keys }, clock).then(toJSON)
+          const clock = { deadline: Date.now() + findDeadlineMs }
+          // Without a ref the keys go to the one active window: a single roots page, never a tree walk.
+          return exclusive(() => args.target === undefined ? activeWindow(context, clock).then((item) =>
+            item === undefined ? act(context, { window: true }, send, clock) : typeof item === "string" ? item : send(item, clock))
+            : act(context, args.target, send, clock))
+            .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
       dock_evaluate: tool({
