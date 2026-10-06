@@ -52,7 +52,8 @@ enabled again: true
 after reset: false                              Preferences shows: check box "Wrap long lines" [unchecked]
 ```
 
-**What the model will meet**: the `Document > Word Wrap` menu item exposes no checked state (Mousepad draws its own
+**What the model will meet**: GTK menu items act only while their menu is open (`ui_act` on `Document` first;
+otherwise `menu-closed`). The `Document > Word Wrap` menu item exposes no checked state (Mousepad draws its own
 check icon, and the item's name carries trailing padding: `"Word Wrap      "`). The only readable confirmation is
 `Edit > Preferences... > View > "Wrap long lines"`, which is a real check box with a checked state. The Preferences
 window is not modal and shows no Close button in the tree.
@@ -141,8 +142,9 @@ after Delete + confirm: absent relatorios / absent relatorios/notas.txt / presen
   (`directory pane "Icon view" > panel ""`, zero children on the raw bus, not a helper filter). The `List View`
   toolbar button switches to a table whose cells carry the file names. Thunar remembers the view, hence the
   reset.
-- Opening a modal dialog through an action **freezes Thunar for good** (see "GTK modal dialogs" below). The same
-  dialog opened with the keyboard (`ctrl+shift+n`) works, and its field and buttons are fully operable.
+- `File > Create Folder...` opens a modal dialog. Acting on it now goes out as a click and keeps Thunar answering
+  (see "GTK modal dialogs" below); `ctrl+shift+n` opens the same dialog. The item must be on screen: acting on it
+  with the File menu closed is refused with `menu-closed`, so open `File` first.
 - There is no Trash (no gvfs), so deleting asks to delete permanently; `ctrl+z` after creating a folder raises the
   same confirmation. Two stacked confirmations can appear; only the top one reacts.
 - File rows sit under a table (virtual ancestry): default-mode actions refuse them (`unstable-ref`); the hand
@@ -164,19 +166,27 @@ Menus, check boxes, buttons, combo boxes, spin buttons, page tabs and editable t
 states, except where noted per app above. Toolkit enablement needed no change: the session's
 `org.a11y.Status.IsEnabled=true` is enough for GTK 3 and for Qt 5 (no `QT_LINUX_ACCESSIBILITY_ALWAYS_ON`).
 
-### GTK modal dialogs freeze the app when opened by an action
+### GTK modal dialogs opened by an action (fixed on branch `gtk-dialog-freeze`)
 
-Reproduced twice in Thunar (`File > Create Folder...`) and once in Mousepad (`Search > Go to...`): the action is
-acknowledged, the dialog appears, and from then on the app answers neither AT-SPI nor X input; its main thread waits
-on a futex (`/proc/PID/syscall` 202) and the only recovery is killing the app. at-spi2-atk runs the action inside its
-D-Bus dispatch; the dialog's nested main loop then needs that same non-reentrant dispatch. Opening the same dialogs
-with keys works. Worse, a workspace-scope binding (all apps, as the host binds) fails with `timeout` while any one app
-is frozen, so every `ui_*` call fails until that app is killed. Non-modal windows (Mousepad Preferences) are safe,
-and Qt modals do not freeze (they only delay the action's reply).
+Before the fix, acting on `File > Create Folder...` (Thunar) or `Search > Go to...` (Mousepad) left the app deaf
+to AT-SPI, and every workspace-scope `ui_*` call then failed with `timeout` until the app was killed.
 
-Suggested product fixes, not made here: discovery should skip and report an exporter that does not answer instead of
-failing the whole binding; GTK menu items should be activated by synthesized input (keys/pointer) rather than
-`DoAction`; and an action that ends in `timeout` should tell the model the app may be busy in a dialog.
+Root cause (gdb on the live Thunar, and on a minimal GTK 3 fixture): at-spi2-atk replies to `DoAction` first (the
+helper saw `acknowledged` within 1 ms), then runs the handler inside its own D-Bus dispatch
+(`g_main_context_dispatch > libatspi source > dbus_connection_dispatch > atk-bridge > gtk_menu_shell_activate_item
+> handler > gtk_dialog_run`). The dialog's nested main loop cannot re-enter that source, so the app answers no
+AT-SPI call while the dialog is open. The first key event then makes atk-bridge's key snooper spin its own loop
+that calls `dbus_connection_dispatch` again and waits on the dispatch lock its outer frame holds: a permanent
+futex deadlock. Without a key event the app recovers once the dialog closes (X input still reaches it). Waiting
+or not waiting for the D-Bus reply changes nothing: the reply was never the blocker.
+
+Fix: for GTK apps a `click` action goes out as a left click at the control's centre (the handler then runs from
+GDK's event dispatch, as a person's click does), under the pointer guards plus a hit test that must name the
+control. Items of a closed GTK menu are refused (`menu-closed`). When a click cannot stand in (no active window,
+offscreen, hit elsewhere), `DoAction` runs as before and an app that then stops answering is reported as
+`app-not-responding`. Discovery skips an app that does not answer and every read names it
+(`app-not-responding:<process>`), so the others stay usable; `ui_look` prints it. Covered by
+`test/native/test_modal_actions.py` (4 tests, 6 mutations). Qt modals never froze (Qt only delays the reply).
 
 ### Electron apps other than VS Code
 

@@ -1,6 +1,8 @@
 """Host-confirmed concrete windows; the helper never confirms its own proposals."""
 
 from copy import deepcopy
+from pathlib import Path
+import re
 from secrets import token_hex
 from threading import RLock
 from time import monotonic
@@ -47,7 +49,7 @@ class BindingStore:
         count = context.property(registry, ROOT, A + "Accessible", "ChildCount")
         if type(count) is not int or not 0 <= count <= LIMITS["roots"]:
             raise BusError("ownership-unresolved", "Accessible application discovery exceeds indexed budget")
-        roots = []
+        roots, unresponsive = [], []
         for index in range(count):
             ref = context.call(registry, ROOT, A + "Accessible", "GetChildAtIndex", "(i)", (index,), "((so))")[0]
             if ref[1] == "/org/a11y/atspi/null":
@@ -59,34 +61,26 @@ class BindingStore:
                 continue
             if any(matching[key] != value for key, value in process_identity(pid).items()):
                 raise BusError("wrong-scope", "Owned launch process identity changed")
-            if ref[1] != ROOT or context.call(owner, ROOT, A + "Accessible", "GetRole", reply="(u)")[0] != 75:
+            if ref[1] != ROOT:
                 raise BusError("ownership-unresolved", "Exporter application root is unprovable")
-            windows = context.property(owner, ROOT, A + "Accessible", "ChildCount")
-            if type(windows) is not int or not 0 <= windows <= LIMITS["roots"]:
-                raise BusError("ownership-unresolved", "Accessible window discovery exceeds budget")
-            for child_index in range(windows):
-                child = context.call(owner, ROOT, A + "Accessible", "GetChildAtIndex", "(i)", (child_index,), "((so))")[0]
-                if child[0] not in ("", owner) or child[1] == "/org/a11y/atspi/null":
-                    continue
-                role = context.call(owner, child[1], A + "Accessible", "GetRole", reply="(u)")[0]
-                if role not in WINDOW_ROLES:
-                    continue
-                root = {"owner": owner, "path": child[1]}
-                context.binding["roots"] = [root]
-                context.require_owned(root)
-                parent = context.property(owner, child[1], A + "Accessible", "Parent")
-                if parent[0] not in ("", owner) or parent[1] != ROOT:
-                    raise BusError("ownership-unresolved", "Proposed window left its application root")
-                name = context.property(owner, child[1], A + "Accessible", "Name")
-                if not isinstance(name, str) or len(name) > LIMITS["field"] or not handle(root):
-                    raise BusError("ownership-unresolved", "Window proposal exceeds bounded identity fields")
-                roots.append({**root, "name": name, "role": role})
-                if len(roots) > LIMITS["roots"]:
-                    raise BusError("ownership-unresolved", "Window proposal capacity exhausted")
+            try:
+                roots.extend(_windows(context, owner))
+            except BusError as error:
+                if error.code != "timeout":
+                    raise
+                context.remaining()  # The request's own deadline is not one app's silence.
+                # One app that stops answering (a GTK modal opened inside an accessibility call, a hung app) must
+                # not take the others down with it: leave it out of this proposal and say which one it was.
+                unresponsive.append(_process_name(pid))
+            if len(roots) > LIMITS["roots"]:
+                raise BusError("ownership-unresolved", "Window proposal capacity exhausted")
+        if not roots and unresponsive:
+            raise BusError("app-not-responding", "Not responding: " + ", ".join(unresponsive[:8]))
         if not roots:
             raise BusError("not-ready", "Owned application has no nonempty accessible window proposal")
         proposal_id = token_hex(16)
-        self.proposals[proposal_id] = {"dock": identity, "target": target, "roots": roots, "expires": monotonic() + 10}
+        self.proposals[proposal_id] = {"dock": identity, "target": target, "roots": roots, "unresponsive": unresponsive[:8],
+                                       "expires": monotonic() + 10}
         return {"status": "proposal", "proposalID": proposal_id, "roots": deepcopy(roots)}
 
     def confirm(self, args, timeout_ms, cancelled):
@@ -104,7 +98,7 @@ class BindingStore:
             raise BusError("wrong-scope", "Confirmed roots are outside the native proposal")
         if target.get("roots") and not all(root in target["roots"] for root in roots):
             raise BusError("wrong-scope", "Confirmed roots are outside runtime window evidence")
-        binding = {**target, "dock": proposal["dock"], "roots": deepcopy(roots),
+        binding = {**target, "dock": proposal["dock"], "roots": deepcopy(roots), "unresponsive": list(proposal["unresponsive"]),
                    "bindingID": token_hex(16), "bindingEpoch": token_hex(16)}
         context = RequestContext(self.bus, self.registry, binding, timeout_ms, cancelled)
         for root in roots:
@@ -158,6 +152,42 @@ class BindingStore:
                 if owner not in live:
                     self.cache.disable(owner)
                     self.bus.unsubscribe_lifecycle(self.subscriptions.pop(owner))
+
+
+def _windows(context, owner):
+    if context.call(owner, ROOT, A + "Accessible", "GetRole", reply="(u)")[0] != 75:
+        raise BusError("ownership-unresolved", "Exporter application root is unprovable")
+    windows = context.property(owner, ROOT, A + "Accessible", "ChildCount")
+    if type(windows) is not int or not 0 <= windows <= LIMITS["roots"]:
+        raise BusError("ownership-unresolved", "Accessible window discovery exceeds budget")
+    roots = []
+    for child_index in range(windows):
+        child = context.call(owner, ROOT, A + "Accessible", "GetChildAtIndex", "(i)", (child_index,), "((so))")[0]
+        if child[0] not in ("", owner) or child[1] == "/org/a11y/atspi/null":
+            continue
+        role = context.call(owner, child[1], A + "Accessible", "GetRole", reply="(u)")[0]
+        if role not in WINDOW_ROLES:
+            continue
+        root = {"owner": owner, "path": child[1]}
+        context.binding["roots"] = [root]
+        context.require_owned(root)
+        parent = context.property(owner, child[1], A + "Accessible", "Parent")
+        if parent[0] not in ("", owner) or parent[1] != ROOT:
+            raise BusError("ownership-unresolved", "Proposed window left its application root")
+        name = context.property(owner, child[1], A + "Accessible", "Name")
+        if not isinstance(name, str) or len(name) > LIMITS["field"] or not handle(root):
+            raise BusError("ownership-unresolved", "Window proposal exceeds bounded identity fields")
+        roots.append({**root, "name": name, "role": role})
+    return roots
+
+
+def _process_name(pid):
+    # The kernel's short process name, not UI text: bounded and reduced to a plain token before anyone reads it.
+    try:
+        name = re.sub(r"[^A-Za-z0-9._+-]", "", Path(f"/proc/{pid}/comm").read_text()[:32])
+    except OSError:
+        name = ""
+    return name or f"pid-{pid}"
 
 
 def _target(args, session_id):

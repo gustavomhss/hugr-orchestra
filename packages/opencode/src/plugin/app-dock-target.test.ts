@@ -282,6 +282,26 @@ test("native errors that have a known next step carry it as a hint", async () =>
   expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toContain("Apps > Linux workspace")
 })
 
+test("a timeout, an app that stops answering or a closed menu tells the model what to do instead of a blind retry", async () => {
+  const hint = async (code: string) => JSON.parse(String(await host(() => nativeError(code, "unknown")).hooks.tool.ui_act
+    .execute({ ref: "n:a", actionID: "a:n:a" }, context))).hint as string
+  expect(await hint("timeout")).toContain("may be busy, e.g. showing a dialog an action opened. Look again (ui_look)")
+  expect(await hint("transport-timeout")).toBe(await hint("timeout"))
+  expect(await hint("app-not-responding")).toContain("Do not repeat the action")
+  expect(await hint("menu-closed")).toContain("Open the menu that holds this item first")
+})
+
+test("ui_look names an app the helper left out because it stopped answering", async () => {
+  const frame = { ref: "n:f", parentRef: null, role: 23, roleName: "frame", name: "Untitled - Mousepad", states: [1, 8, 24, 25, 30] }
+  const silent = host(() => page([frame], undefined, { complete: false, reasons: ["app-not-responding:thunar"] }))
+  const text = String(await silent.hooks.tool.ui_look.execute({}, context))
+  expect(text).toContain('windows: frame "Untitled - Mousepad"')
+  expect(text).toContain("Not responding, so missing from this view: thunar (it may be busy in a dialog; ui_look again in a moment)")
+  expect(text).not.toContain("partial view")
+  const both = host(() => page([frame], undefined, { complete: false, reasons: ["app-not-responding:thunar", "read-budget"] }))
+  expect(String(await both.hooks.tool.ui_look.execute({}, context))).toContain('(partial view: ["read-budget"])')
+})
+
 test("parallel native scans run one after another instead of fencing each other's pages", async () => {
   const dock = host((op, args) => op === "action" ? { ok: true, value: { dispatch: "acknowledged" } }
     : args.cursor === undefined ? page([control("n:x", "Explorer")], "c") : page([control("n:y", "Open")]))

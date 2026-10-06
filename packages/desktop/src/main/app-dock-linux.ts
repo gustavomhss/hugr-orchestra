@@ -6,6 +6,7 @@ import type { BrowserWindow, Session, WebContents } from "electron"
 import { randomUUID, X509Certificate } from "node:crypto"
 import type { AppDockAPI } from "./app-dock-api"
 import type { AppDockEvent, AppDockIdentity, AppDockTab, DockBounds, ProfileStorage } from "./app-dock"
+import { AppDockLinuxDisplay } from "./app-dock-linux-display"
 import { AppDockRuntime, RuntimeError } from "./app-dock-runtime"
 import { AppDockURLBridge } from "./app-dock-url-bridge"
 
@@ -569,13 +570,25 @@ export function create(options: {
           printing: "false",
           file_transfer: "false",
         }).toString()
-        await bounded(view.contents!.loadURL(index.href), deadline, "Linux display page")
+        // Install the display floor before the stock client announces its
+        // viewport; a hidden or thumbnail-sized view must not shrink the display.
+        const floor = () =>
+          void view.contents!.executeJavaScript(`(() => {
+            if (location.origin !== ${JSON.stringify(view.origin)} || location.pathname !== "/index.html") return false;
+            ${AppDockLinuxDisplay.script}
+          })()`).catch(() => undefined)
+        view.contents!.once("dom-ready", floor)
+        await bounded(view.contents!.loadURL(index.href), deadline, "Linux display page").finally(() =>
+          view.contents?.removeListener("dom-ready", floor),
+        )
         await wait(
           'return typeof client !== "undefined" && client.connected;',
           "Authenticated Linux display",
           "/index.html",
         )
         requireView()
+        if (!(await execute(AppDockLinuxDisplay.script, "Linux display size", "/index.html")))
+          throw new RuntimeError("failed")
         // Xpra HTML5 21 overwrites its clipboard setting from the server hello.
         // Restore the disabled capability on this connection and future reconnects.
         await execute(
