@@ -6,7 +6,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-muted: #a7a7a7;
   --orchestra-faint: #979797;
   --orchestra-accent: #b388ff;
-  --orchestra-warm: #fcea44;
+  --orchestra-warm: #ffea00;
   --orchestra-success: #00ff88;
   --orchestra-danger: #ff1744;
   --orchestra-shell-background: #121212;
@@ -34,7 +34,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-hover-text: #ffffff;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(76, 37, 119, 0.58), rgba(58, 58, 58, 0.48));
   --orchestra-sidebar-active-text: #ffffff;
-  --orchestra-sidebar-active-accent: #b898fa;
+  --orchestra-sidebar-active-accent: #b996ff;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.035);
   --orchestra-sidebar-icon: #cacaca;
   --orchestra-sidebar-active-icon: #e7e7e7;
@@ -49,7 +49,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-profile-text: var(--orchestra-text);
   --orchestra-sidebar-profile-muted: #a5a5a5;
   --orchestra-sidebar-profile-chevron: #adadad;
-  --orchestra-sidebar-profile-logo: #8623d3;
+  --orchestra-sidebar-profile-logo: #8a00de;
   --orchestra-sidebar-profile-logo-text: #ffffff;
   --orchestra-brand-descriptor: #aaaaaa;
   --orchestra-sidebar-footer: #979797;
@@ -60,7 +60,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --orchestra-tab-hover-text: #d5d5d5;
   --orchestra-tab-active-text: #f4f4f4;
   --orchestra-tab-icon: #cacaca;
-  --orchestra-branch-color: #fee050;
+  --orchestra-branch-color: #ffe048;
   --orchestra-surface: rgba(43, 43, 43, 0.7);
   --orchestra-surface-hover: rgba(59, 59, 59, 0.8);
   --orchestra-surface-active: rgba(92, 59, 138, 0.62);
@@ -350,12 +350,12 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
     --orchestra-evidence-highlight: inset 0 1px 0 rgba(243, 243, 243, 0.05);
     --orchestra-evidence-shadow: var(--orchestra-evidence-highlight), 0 10px 24px rgba(0, 0, 0, 0.2);
     --orchestra-evidence-heading: #bababa;
-    --orchestra-evidence-add: #47f923;
-    --orchestra-evidence-delete: #f4303f;
+    --orchestra-evidence-add: #3bfa00;
+    --orchestra-evidence-delete: #f62d3e;
     --orchestra-evidence-number: #757575;
     --orchestra-file-text: #bebebe;
-    --orchestra-file-add: #11e77a;
-    --orchestra-file-delete: #e64362;
+    --orchestra-file-add: #00e779;
+    --orchestra-file-delete: #ea3d61;
     --orchestra-file-active: linear-gradient(90deg, #2e2e2e, #2a2a2a);
     --orchestra-file-active-border: rgba(162, 162, 162, 0.12);
     --orchestra-file-active-accent: #909090;
@@ -365,7 +365,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
     --orchestra-composer-text: #f0f0f0;
     --orchestra-composer-placeholder: #939393;
     --orchestra-composer-control: #c4c4c4;
-    --orchestra-send-background: linear-gradient(180deg, #982cf6, #7911c0);
+    --orchestra-send-background: linear-gradient(180deg, #9b15ff, #7b00c4);
     --orchestra-rail-tab-text: #a8a8a8;
     --orchestra-rail-tab-hover: #e5e5e5;
     --orchestra-rail-tab-hover-background: rgba(255, 255, 255, 0.05);
@@ -385,17 +385,17 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
     --orchestra-task-title: #ebebeb;
     --orchestra-task-meta: #959595;
     --orchestra-task-rule: rgba(193, 193, 193, 0.08);
-    --orchestra-permission-background: linear-gradient(180deg, rgba(56, 47, 5, 0.72), rgba(28, 28, 28, 0.8));
-    --orchestra-permission-border: rgba(252, 234, 68, 0.3);
-    --orchestra-permission-rule: rgba(252, 234, 68, 0.16);
+    --orchestra-permission-background: linear-gradient(180deg, rgba(57, 47, 0, 0.72), rgba(28, 28, 28, 0.8));
+    --orchestra-permission-border: rgba(255, 234, 0, 0.3);
+    --orchestra-permission-rule: rgba(255, 234, 0, 0.16);
     --orchestra-permission-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 10px 26px rgba(0, 0, 0, 0.26);
     --orchestra-permission-title: #ffffff;
     --orchestra-permission-hint: #d7d7d7;
-    --orchestra-permission-pattern: #fefefe;
-    --orchestra-permission-pattern-border: rgba(252, 234, 68, 0.24);
+    --orchestra-permission-pattern: #fffefa;
+    --orchestra-permission-pattern-border: rgba(255, 234, 0, 0.24);
     --orchestra-permission-pattern-background: rgba(0, 0, 0, 0.22);
     --orchestra-permission-footer: rgba(0, 0, 0, 0.16);
-    --orchestra-permission-icon: #fef2b8;
+    --orchestra-permission-icon: #fff2b2;
     --orchestra-permission-deny: #bebebe;
     --orchestra-permission-always-background: rgba(51, 51, 51, 0.8);
     --orchestra-permission-always-border: rgba(196, 196, 196, 0.24);
@@ -508,10 +508,10 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
   }
   [data-orchestra-palette="amoled"] body[data-new-layout] [data-session-layout="surface"] [data-component="file"],
   [data-orchestra-palette="amoled"] body[data-new-layout] [data-session-layout="surface"] [data-component="file"] diffs-container {
-    --diffs-added-light: #038e05;
-    --diffs-added-dark: #11e77a;
-    --diffs-deleted-light: #70010b;
-    --diffs-deleted-dark: #c11545;
+    --diffs-added-light: #008e03;
+    --diffs-added-dark: #00e779;
+    --diffs-deleted-light: #70000b;
+    --diffs-deleted-dark: #c40043;
   }
   [data-orchestra-palette="amoled"] body[data-new-layout] [data-session-layout="surface"] [data-slot="diff-changes-additions"] {
     color: var(--orchestra-file-add);
@@ -564,7 +564,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
     border: 0;
     background-image: var(--orchestra-send-background) !important;
     color: white;
-    box-shadow: 0 2px 8px rgba(121, 17, 192, 0.4),
+    box-shadow: 0 2px 8px rgba(123, 0, 196, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   [data-orchestra-palette="amoled"] body[data-new-layout] [data-session-layout="surface"] [data-slot="session-child-prompt"] {
@@ -621,9 +621,9 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
       [data-slot="permission-footer-actions"]
       [data-variant="primary"] {
     border: 1px solid rgba(168, 62, 246, 0.5);
-    background: linear-gradient(180deg, #9622f2, #7911c0);
+    background: linear-gradient(180deg, #9900fb, #7b00c4);
     color: white;
-    box-shadow: 0 2px 8px rgba(121, 17, 192, 0.4),
+    box-shadow: 0 2px 8px rgba(123, 0, 196, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
   [data-orchestra-palette="amoled"] body[data-new-layout]
@@ -943,7 +943,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
   background: var(--mx-soft, rgba(207, 207, 207, 0.055));
 }
 [data-orchestra-palette="amoled"] body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="menu-v2-item-content"] {
-  color: var(--mx-bad, #fe1b39);
+  color: var(--mx-bad, #ff1538);
 }
 @media (min-width: 768px) {
   [data-orchestra-palette="amoled"] body[data-new-layout]
@@ -971,7 +971,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
       [data-session-layout="surface"]
       [data-component="session-prompt-dock"]
       :is([data-action="prompt-attach"], [data-slot="orchestra-compose-tools"] > button):hover {
-    border-color: var(--mx-blue, #cdb7fa);
+    border-color: var(--mx-blue, #ceb5ff);
     background: var(--mx-raised, rgba(27, 27, 27, 0.55));
   }
   [data-orchestra-palette="amoled"] body[data-new-layout]
@@ -1009,8 +1009,8 @@ html[data-orchestra-palette="amoled"][data-color-scheme][dir="rtl"] body[data-ne
       [data-session-layout="surface"]
       [data-slot="orchestra-compose-tools"]
       > [data-action="prompt-delivery"][data-delivery="queue"] {
-    border-color: var(--mx-blue, #cdb7fa);
-    color: var(--mx-blue, #cdb7fa);
+    border-color: var(--mx-blue, #ceb5ff);
+    color: var(--mx-blue, #ceb5ff);
   }
 }
 /* orchestra/review.css */
@@ -1156,14 +1156,14 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --mx-modal: #171717;
   --mx-dim: #a9a9a9;
   --mx-strong: #f6f6f6;
-  --mx-blue: #cdb7fa;
-  --mx-good: #39f883;
-  --mx-bad: #fe1b39;
+  --mx-blue: #ceb5ff;
+  --mx-good: #00fa7c;
+  --mx-bad: #ff1538;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.035);
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(0, 0, 0, 0.55);
-  --mx-primary: linear-gradient(180deg, #9223f9, #781bca);
+  --mx-primary: linear-gradient(180deg, #9223f9, #7b00d3);
   --mx-primary-text: #ffffff;
   --mx-enabled: rgba(138, 89, 231, 0.22);
 }
@@ -1397,10 +1397,10 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   color: var(--mx-dim);
 }
 [data-orchestra-palette="amoled"] .home-delta {
-  color: #2ee67b;
+  color: #00e876;
 }
 [data-orchestra-palette="amoled"] .home-delta[data-trend="down"] {
-  color: #ef293b;
+  color: #f1273a;
 }
 [data-orchestra-palette="amoled"] .home-delta[data-trend="flat"] {
   color: inherit;
@@ -1420,7 +1420,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
 [data-orchestra-palette="amoled"] .home-status button {
   border: 0;
   background: transparent;
-  color: #cdb7fa;
+  color: #ceb5ff;
 }
 [data-orchestra-palette="amoled"] .home-block {
   border: 1px solid rgba(196, 196, 196, 0.14);
@@ -1460,7 +1460,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   background: rgba(154, 154, 154, 0.16);
 }
 [data-orchestra-palette="amoled"] .home-track i {
-  background: linear-gradient(90deg, #b388ff, #d2c0fe);
+  background: linear-gradient(90deg, #b388ff, #d2bfff);
 }
 [data-orchestra-palette="amoled"] .home-chip {
   border: 1px solid rgba(193, 193, 193, 0.18);
@@ -1470,8 +1470,8 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   background: #b388ff;
 }
 [data-orchestra-palette="amoled"] .home-live {
-  color: #43c71c;
-  background: rgba(67, 199, 28, 0.13);
+  color: #3bc800;
+  background: rgba(59, 200, 0, 0.13);
 }
 [data-orchestra-palette="amoled"] .home-live::before {
   background: currentColor;
@@ -1732,7 +1732,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   color: #aaaaaa;
 }
 [data-orchestra-palette="amoled"] .orchestra-settings .perm-tool .tnote {
-  color: #fcea44;
+  color: #ffea00;
 }
 [data-orchestra-palette="amoled"] .orchestra-settings .settings-note {
   color: var(--mx-dim);
@@ -1748,11 +1748,11 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   color: #f9f9f9;
 }
 [data-orchestra-palette="amoled"] .orchestra-settings .perm-tool .seg button.on[data-v="deny"] {
-  background: rgba(223, 12, 46, 0.24);
-  color: #feb0ad;
+  background: rgba(224, 0, 44, 0.24);
+  color: #ffb0ad;
 }
 [data-orchestra-palette="amoled"] .orchestra-settings .perm-tool .seg button.on[data-v="allow"] {
-  background: rgba(67, 199, 28, 0.24);
+  background: rgba(59, 200, 0, 0.24);
   color: #ffffff;
 }
 [data-orchestra-palette="amoled"] .orchestra-settings .ic {
@@ -1844,7 +1844,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --zen-ws-hover: rgba(255, 255, 255, 0.05);
   --zen-control-hover: rgba(255, 255, 255, 0.07);
   --zen-control-hover-text: #ebebeb;
-  --zen-active-control: #d1b3fb;
+  --zen-active-control: #d2b1ff;
   --zen-icon: rgba(2, 2, 2, 0.5);
   --zen-input: rgba(2, 2, 2, 0.55);
   --zen-field: rgba(2, 2, 2, 0.6);
@@ -1853,12 +1853,12 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --zen-option: #1a1a1a;
   --zen-empty: #969696;
   --zen-empty-strong: #e3e3e3;
-  --zen-error: rgba(223, 12, 46, 0.14);
-  --zen-error-text: #fd6762;
-  --zen-warn: rgba(252, 234, 68, 0.14);
+  --zen-error: rgba(224, 0, 44, 0.14);
+  --zen-error-text: #ff6560;
+  --zen-warn: rgba(255, 234, 0, 0.14);
   --zen-warn-text: #ffffff;
-  --zen-crash: rgba(223, 12, 46, 0.12);
-  --zen-crash-icon: rgba(223, 12, 46, 0.2);
+  --zen-crash: rgba(224, 0, 44, 0.12);
+  --zen-crash-icon: rgba(224, 0, 44, 0.2);
   --zen-popover: rgba(22, 22, 22, 0.98);
   --zen-popover-border: rgba(196, 196, 196, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -1868,7 +1868,7 @@ html[data-orchestra-palette="amoled"][data-color-scheme] body[data-new-layout] {
   --zen-popover-dim: #909090;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
   --zen-library-empty: #818181;
-  --zen-focus: #d1b3fb;
+  --zen-focus: #d2b1ff;
 }
 [data-orchestra-palette="amoled"] .zen-dock-modes {
   border-block-end: 1px solid var(--border-weak);

@@ -1,4 +1,4 @@
-import { fitOklch, oklchToRgb, rgbToOklch } from "@opencode-ai/ui/theme/color"
+import { oklchToRgb, rgbToOklch } from "@opencode-ai/ui/theme/color"
 
 // Color math for Orchestra palettes: parsing the literals Orchestra's CSS writes, OKLCH conversion, and the
 // WCAG contrast of text over composited glass. Channels are 0..1 in gamma-encoded sRGB, as browsers blend them.
@@ -39,10 +39,29 @@ export function toLch(color: Rgba): Lch {
   return rgbToOklch(color.r, color.g, color.b)
 }
 
+/**
+ * Converts OKLCH back to sRGB. Out-of-gamut colors lose chroma (by bisection, so as little as possible) and never
+ * hue; rounding error at the gamut edge is clamped, so a color read from sRGB comes back unchanged.
+ */
 export function fromLch(lch: Lch, alpha = 1): Rgba {
-  const rgb = oklchToRgb(fitOklch(lch))
-  const clamp = (value: number) => Math.min(1, Math.max(0, value))
-  return { r: clamp(rgb.r), g: clamp(rgb.g), b: clamp(rgb.b), a: alpha }
+  const l = Math.min(1, Math.max(0, lch.l))
+  const rgb = (c: number) => oklchToRgb({ l, c, h: lch.h })
+  const inside = (c: number) => {
+    const value = rgb(c)
+    return [value.r, value.g, value.b].every((channel) => channel >= -1e-4 && channel <= 1 + 1e-4)
+  }
+  const chroma = inside(lch.c)
+    ? lch.c
+    : Array.from({ length: 24 }).reduce<{ low: number; high: number }>(
+        (range) => {
+          const middle = (range.low + range.high) / 2
+          return inside(middle) ? { low: middle, high: range.high } : { low: range.low, high: middle }
+        },
+        { low: 0, high: lch.c },
+      ).low
+  const value = rgb(chroma)
+  const clamp = (channel: number) => Math.min(1, Math.max(0, channel))
+  return { r: clamp(value.r), g: clamp(value.g), b: clamp(value.b), a: alpha }
 }
 
 export function luminance(color: Rgba) {

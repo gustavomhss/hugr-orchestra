@@ -88,7 +88,7 @@
   --swatch-border: rgba(90, 98, 108, 0.16);
   --swatch-text: #24292f;
   --swatch-muted: #424b55;
-  --swatch-accent: #0c4895;
+  --swatch-accent: #00479b;
 }
 [data-palette-swatch="nord"] {
   --swatch-background: #2e3440;

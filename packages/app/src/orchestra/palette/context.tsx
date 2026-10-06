@@ -19,11 +19,15 @@ export const { use: useOrchestraPalette, provider: OrchestraPaletteProvider } = 
     const theme = useTheme()
     const first = initial()
     // Orchestra's own Dark and Light need no stylesheet, so they render at once, exactly as before palettes.
-    const [store, setStore] = createStore({ id: first.id, ready: !recolors(first) })
+    const [store, setStore] = createStore({ id: first.id, ready: !recolors(first), request: 0 })
 
     const apply = (palette: Palette) => {
+      // Arrow keys can select faster than stylesheets load: only the latest selection lands.
+      const request = store.request + 1
+      setStore("request", request)
       const load = recolors(palette) ? sheets[`./generated/palette-${palette.id}.css`]?.() : undefined
       return Promise.resolve(load).then((css) => {
+        if (request !== store.request) return
         // A missing stylesheet means the palette was removed: Orchestra Dark takes over.
         const next = recolors(palette) && !css ? findPalette("dark")! : palette
         style(css)
