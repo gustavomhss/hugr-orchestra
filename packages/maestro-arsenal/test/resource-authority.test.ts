@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { dirname, join, resolve } from "node:path";
+import { existsSync } from "node:fs";
 import { mkdir, symlink, writeFile } from "node:fs/promises";
 import { fixture, git } from "./fixture.ts";
 
@@ -22,7 +23,11 @@ async function conformance(scenario: "allow" | "deny" | "inputs" | "brief") {
         await writeFile(join(assembly, file), await Bun.file(join(source, file)).bytes());
       }
       await writeFile(join(assembly, "package.json"), await Bun.file(join(source, "package.json")).bytes());
-      await symlink(resolve(import.meta.dir, "../node_modules"), join(assembly, "node_modules"), "dir");
+      // Link the node_modules the package actually resolves from: its own under the isolated linker,
+      // the repository root under the hoisted linker that Windows CI installs with.
+      const modules = [resolve(import.meta.dir, "../node_modules"), join(root, "node_modules")].find((path) => existsSync(join(path, "typescript/package.json")));
+      if (!modules) throw new Error("CONFORMANCE_DEPENDENCIES_MISSING: typescript");
+      await symlink(modules, join(assembly, "node_modules"), "dir");
       for (const file of ["src/engine/descriptors.ts", "src/engine/brief-usage.ts"]) {
         await writeFile(join(assembly, file), await Bun.file(resolve(import.meta.dir, "..", file)).bytes());
       }

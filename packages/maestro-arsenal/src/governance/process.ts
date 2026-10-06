@@ -1,3 +1,4 @@
+import { resolve } from "node:path"
 import { type GovernanceContext, requireValue } from "./contracts.ts"
 export const PROCESS_BYTES = 512 * 1024
 export async function processBytes(context: GovernanceContext, directory: string, argv: string[], stdin?: string, beforeSpawn?: () => Promise<void>) {
@@ -38,6 +39,10 @@ export async function git(context: GovernanceContext, root: string, args: string
 export async function gitBytes(context: GovernanceContext, root: string, args: string[]) {
   return processBytes(context, root, [...gitPrefix, ...args])
 }
+// Git for Windows prints the toplevel with forward slashes; resolve() restores the native spelling.
+export async function gitToplevel(context: GovernanceContext, root: string) {
+  return resolve((await git(context, root, ["rev-parse", "--show-toplevel"])).trim())
+}
 export async function requireGitRoot(context: GovernanceContext, root: string) {
-  requireValue((await git(context, root, ["rev-parse", "--show-toplevel"])).trim() === root, "GIT_REPOSITORY_ROOT_OUTSIDE_CONTEXT")
+  requireValue(await gitToplevel(context, root) === root, "GIT_REPOSITORY_ROOT_OUTSIDE_CONTEXT")
 }

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect } from "bun:test"
-import { Effect, Exit, Layer, Option } from "effect"
+import { Clock, Effect, Exit, Layer, Option, Queue } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
@@ -17,7 +17,7 @@ import { Database } from "@opencode-ai/core/database/database"
 import { eq } from "drizzle-orm"
 import { provideTmpdirInstance } from "../fixture/fixture"
 import { resetDatabase } from "../fixture/db"
-import { pollWithTimeout, testEffect } from "../lib/effect"
+import { heldClock, pollWithTimeout, testEffect } from "../lib/effect"
 
 const env = LayerNode.compile(LayerNode.group([CrossSpawnSpawner.node]))
 const it = testEffect(env)
@@ -255,6 +255,10 @@ describe("ShareNext", () => {
             .run()
             .pipe(Effect.orDie)
 
+          // The share flush is delayed on the publisher's clock. Holding that
+          // delay guarantees both diffs land before the flush runs, then firing
+          // it skips the real 1s wait.
+          const held = yield* heldClock
           yield* events.publish(Session.Event.Diff, {
             sessionID: info.id,
             diff: [
@@ -267,7 +271,7 @@ describe("ShareNext", () => {
                 status: "modified",
               },
             ],
-          })
+          }).pipe(Effect.provideService(Clock.Clock, held.clock))
           yield* events.publish(Session.Event.Diff, {
             sessionID: info.id,
             diff: [
@@ -280,7 +284,12 @@ describe("ShareNext", () => {
                 status: "modified",
               },
             ],
-          })
+          }).pipe(Effect.provideService(Clock.Clock, held.clock))
+          const flush = yield* Queue.take(held.sleeps).pipe(Effect.timeout("5 seconds"))
+          expect(flush.millis).toBe(1000)
+          expect(yield* Queue.size(held.sleeps)).toBe(0)
+          expect(seen).toHaveLength(0)
+          yield* flush.wake
           yield* pollWithTimeout(
             Effect.sync(() => (seen.length === 1 ? true : undefined)),
             "timed out waiting for share sync",

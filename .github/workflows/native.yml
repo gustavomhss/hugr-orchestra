@@ -79,6 +79,10 @@ jobs:
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_editor_settings.py --workspace resources/linux-runtime/workspace.py --self-check
 
+      - name: App launch
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
+        run: $RUNNER_TEMP/suite test_app_launch.py --workspace resources/linux-runtime/workspace.py --self-check
+
       - name: Actions with the real registry
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_actions.py
@@ -90,3 +94,9 @@ jobs:
       - name: App dialogs
         if: ${{ !cancelled() && steps.image.outcome == 'success' }}
         run: $RUNNER_TEMP/suite test_dialogs.py
+
+      - name: Modal dialogs opened by actions
+        if: ${{ !cancelled() && steps.image.outcome == 'success' }}
+        run: |
+          $RUNNER_TEMP/suite test_modal_actions.py
+          $RUNNER_TEMP/suite test_modal_actions.py --mutations

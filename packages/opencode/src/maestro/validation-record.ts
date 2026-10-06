@@ -88,6 +88,8 @@ export class ValidationConflictError extends Schema.TaggedErrorClass<ValidationC
 
 export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedError>()("MaestroReviewRejected", {
   reason: Schema.String,
+  // Diagnostic evidence for logs only; the message (and so tool output) stays the bare reason.
+  detail: Schema.optional(Schema.String),
 }) {
   override get message() {
     return `${this._tag}: ${this.reason}`
@@ -608,7 +610,10 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
   const git = yield* Git.Service
   const status = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: directory })
   if (status.exitCode !== 0 || status.truncated || status.text().trim())
-    return yield* new ReviewRejectedError({ reason: "artifact-context-mismatch" })
+    return yield* new ReviewRejectedError({
+      reason: "artifact-context-mismatch",
+      detail: `git status exit ${status.exitCode}${status.truncated ? " truncated" : ""}: ${`${status.text()}${status.stderr.toString("utf8")}`.trim().slice(0, 2000)}`,
+    })
   const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: directory })
   const worktree = root.text().trim()
   if (root.exitCode !== 0 || !worktree) return yield* new ReviewRejectedError({ reason: "git-root-unavailable" })
@@ -635,7 +640,10 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
   if (parentage.exitCode !== 0) return yield* new ReviewRejectedError({ reason: "artifact-parentage-mismatch" })
   const currentHead = yield* git.run(["rev-parse", "HEAD"], { cwd: worktree })
   if (currentHead.exitCode !== 0 || currentHead.text().trim() !== artifact.headSHA)
-    return yield* new ReviewRejectedError({ reason: "artifact-context-mismatch" })
+    return yield* new ReviewRejectedError({
+      reason: "artifact-context-mismatch",
+      detail: `HEAD ${currentHead.text().trim() || `exit ${currentHead.exitCode}`} is not artifact head ${artifact.headSHA}`,
+    })
   const names = yield* git.run(
     ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", artifact.baseSHA, artifact.headSHA, "--", "."],
     {

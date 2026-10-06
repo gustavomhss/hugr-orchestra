@@ -12,7 +12,7 @@ import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
 import { eq } from "drizzle-orm"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -70,7 +70,10 @@ const seed = Effect.fn("MaestroNativeApprovalTest.seed")(function* () {
     expect((yield* git.run(["commit", "-m", "fixture config"], { cwd: test.directory })).exitCode).toBe(0)
   }
   expect((yield* git.run(["checkout", "-b", "approval-test"], { cwd: test.directory })).exitCode).toBe(0)
-  yield* Effect.promise(() => Bun.write(`${test.directory}/proof.txt`, "proof\n"))
+  // Bun.write can resolve on Windows before its handle closes; Git for Windows' FSCache then reads the stale
+  // zero-byte directory entry, stages an empty blob, and every later clean-tree check sees proof.txt modified.
+  const fs = yield* FileSystem.FileSystem
+  yield* fs.writeFileString(`${test.directory}/proof.txt`, "proof\n")
   expect((yield* git.run(["add", "proof.txt"], { cwd: test.directory })).exitCode).toBe(0)
   expect((yield* git.run(["commit", "-m", "proof"], { cwd: test.directory })).exitCode).toBe(0)
   const sessions = yield* Session.Service
@@ -470,7 +473,7 @@ describe("native Maestro approval admission", () => {
           yield* Effect.exit(def.execute(chain.params, { ...fixture.caller, agentID: "build" })),
           "requires Maestro",
         )
-        yield* Effect.promise(() => Bun.write(`${fixture.session.directory}/proof.txt`, "changed\n"))
+        yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${fixture.session.directory}/proof.txt`, "changed\n"))
         expectRejected(yield* Effect.exit(def.execute(chain.params, fixture.caller)), "context is stale")
         expect(yield* presentations(fixture.session.id)).toHaveLength(0)
       }),
@@ -482,7 +485,7 @@ describe("native Maestro approval admission", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* seed()
-        yield* Effect.promise(() => Bun.write(`${fixture.session.directory}/proof.txt`, "dirty\n"))
+        yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${fixture.session.directory}/proof.txt`, "dirty\n"))
         const chain = yield* evidence(fixture, "dirty", false)
         expect(chain.context.changedPaths).toContain("proof.txt")
         const tool = yield* MaestroPresentApprovalTool
