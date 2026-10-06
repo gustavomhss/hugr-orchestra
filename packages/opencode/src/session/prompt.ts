@@ -1225,12 +1225,15 @@ const layer = Layer.effect(
             .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
+            // Tools read this history when they run. Working memory needs their recall capability to choose
+            // what the model is sent, so it is refilled with that choice once continuity prepares it.
+            const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
               agent,
               session,
               model,
               processor: handle,
-              messages: msgs,
+              messages: sent,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
             canRecall = Object.hasOwn(
@@ -1253,6 +1256,7 @@ const layer = Layer.effect(
             yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
 
             const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
+            sent.splice(0, sent.length, ...prepared.messages)
 
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
               sys.skills(agent),
