@@ -1,5 +1,5 @@
-// Preload that stands in for a compiled build: it provides the generated skill file map (script/build.ts) with the
-// authored files in place of Bun's embedded copies. Load it after test/preload.ts, which isolates the cache dir.
+// Preload that stands in for a compiled build: it provides the generated skill module (script/backend-skills.ts),
+// path -> text of the authored files. Load it after test/preload.ts, which isolates the cache dir.
 import { plugin } from "bun"
 import fs from "node:fs/promises"
 import path from "node:path"
@@ -15,7 +15,11 @@ plugin({
     build.module("opencode-backend-skills.gen.ts", () => ({
       loader: "object",
       exports: {
-        default: Object.fromEntries(files.map((file) => [path.relative(source, file).split(path.sep).join("/"), file])),
+        default: Object.fromEntries(
+          await Promise.all(
+            files.map(async (file) => [path.relative(source, file).split(path.sep).join("/"), await fs.readFile(file, "utf8")]),
+          ),
+        ),
       },
     }))
   },
