@@ -215,7 +215,11 @@ it.instance("a worktree without a HEAD revision yields an unavailable receipt, n
   }).pipe(Effect.provide(layer)),
 )
 
-it.instance(
+// The fake scanners are POSIX shell scripts, and Atlas runs its scanner through execFileSync with no shell, which
+// cannot launch a script on Windows. Scanner semantics do not depend on the OS, so these run on Linux and macOS only.
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
+
+posix(
   "with a scanner an entry is admitted once, recalled by ref, and a logbook entry is refused verbatim",
   () =>
     Effect.gen(function* () {
@@ -277,7 +281,7 @@ it.instance(
   { git: true },
 )
 
-it.instance(
+posix(
   "empty write roots hold a file write to the Memory log but never the harness-owned emit",
   () =>
     Effect.gen(function* () {
