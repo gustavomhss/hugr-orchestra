@@ -81,11 +81,10 @@ jobs:
           git config --global user.name "opencode"
 
       - name: Warm unit tests
-        # Linux only: httpapi-codegen is a build-time generator whose tests pin POSIX paths, and
-        # maestro-arsenal has never passed on Windows (tracked separately; its failures may be real bugs).
+        # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
         run: |
           filters=(--filter='!opencode')
-          if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@opencode-ai/httpapi-codegen' --filter='!@opencode-ai/maestro-arsenal'); fi
+          if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@opencode-ai/httpapi-codegen'); fi
           GITHUB_ACTIONS=false bun turbo test "${filters[@]}"
         env:
           OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
