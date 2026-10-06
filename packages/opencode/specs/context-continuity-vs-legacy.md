@@ -67,3 +67,30 @@ error strings, commands, paths and the user's literal rules.
 - On the codex trace, the first continuity reply failed C6 (a quote spanning two sentences) and passed on its one retry.
   C6 still rejects the whole pass; dropping only the offending op, as C8 does, is the next change.
 - The continuity memory is 2–5× larger than the legacy summary.
+
+## 4. What we took from the legacy summary (round 2)
+
+The legacy summary is far shorter and always says where the work stands: done, active, blocked, next move. Three changes
+take that over without losing exact facts:
+
+- **Plan first.** The plan renders right after the objective, open steps first: doing, waiting, verify, todo, then done.
+  A new check, C14, rejects a memory that has an objective but no open step. The next move is always there, and
+  waiting on the user counts.
+- **Compact Activity.** Activity lists edits, failed commands and the 8 most recent commands. Older successful commands
+  become one count per program, e.g. `22 earlier successful commands: sqlite3 ×14, ls ×8 (t4–t25)`. Every call is still
+  one `context_recall` away.
+- **Quotes over consecutive sentences.** C6 accepts a quote that runs over consecutive sentences and stores the whole
+  sentences. Before, "Sem gambiarras. Temos que ir no problema irmao." failed a whole pass.
+
+The same one-shot check, legacy unchanged:
+
+| Trace | Legacy | Continuity round 1 | Continuity round 2 |
+| --- | --- | --- | --- |
+| Maestro dark-mode session | 15/19 (~1.7k) | 16/19 (~3.9k) | 18/19 (~4.3k) |
+| Codex auth debugging | 14/24 (~1.3k) | 20/24 (~6.4k), one retry | 18/24 (~4.4k), no retry |
+| **Total** | **29/43** | **36/43** | **36/43** |
+
+- Round 2 needed no retry. It dropped nothing on the dark-mode trace (round 1 dropped 2 joined errors) and dropped 1 op
+  on the codex trace.
+- The codex memory shrank by 32%. Both memories now open with a plan that says what is in progress, what to verify and
+  what is next. The codex one includes "tell the user honestly that the .bak databases were deleted".
