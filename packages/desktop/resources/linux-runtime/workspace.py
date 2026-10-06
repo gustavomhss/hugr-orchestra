@@ -38,6 +38,10 @@ EDITOR_DEFAULTS = {
     # no ui_* tool can see or type into it; VS Code's own simple dialog opens inside the window instead.
     "files.simpleDialog.enable": True,
 }
+RENDERER_SWITCH = "--force-renderer-accessibility"
+# Files every Chromium build ships next to its binary (Electron apps, Chrome, Chromium); wrapper scripts that live
+# elsewhere are not recognised. VS Code-family editors also turn renderer accessibility on through EDITOR_DEFAULTS.
+CHROMIUM_FILES = ("resources.pak", "v8_context_snapshot.bin", "snapshot_blob.bin")
 
 
 class SessionError(RuntimeError):
@@ -487,6 +491,28 @@ def applications():
     }
 
 
+def renderer_accessibility(app):
+    """Launch Chromium-family apps (Electron, Chrome) with their web contents in the accessibility tree.
+
+    Without RENDERER_SWITCH they export only an empty frame: neither org.a11y.Status IsEnabled/ScreenReaderEnabled
+    nor ACCESSIBILITY_ENABLED=1 turns renderer accessibility on (measured on VS Code 1.140's Electron). Any other app,
+    an entry that already passes the switch, or an unreadable entry launches unchanged."""
+    from gi.repository import Gio, GLib
+
+    executable = GLib.find_program_in_path(app.get_executable() or "")
+    command = app.get_string("Exec") or ""
+    if (not executable or RENDERER_SWITCH in command
+            or not any((Path(os.path.realpath(executable)).parent / name).is_file() for name in CHROMIUM_FILES)):
+        return app
+    entry = GLib.KeyFile()
+    try:
+        entry.load_from_file(app.get_filename(), GLib.KeyFileFlags.KEEP_TRANSLATIONS)
+    except GLib.Error:
+        return app
+    entry.set_string("Desktop Entry", "Exec", f"{command} {RENDERER_SWITCH}")
+    return Gio.DesktopAppInfo.new_from_keyfile(entry) or app
+
+
 def clear_stale_display():
     # A stopped container retains /tmp. Probe both X11 socket namespaces rather
     # than trusting the old lock PID, which can name an unrelated new process.
@@ -597,7 +623,7 @@ def main():
         context = Gio.AppLaunchContext()
         for key, value in environment.items():
             context.setenv(key, value)
-        if not app.launch([], context):
+        if not renderer_accessibility(app).launch([], context):
             raise RuntimeError("failed")
         return
     if command == "prepare":
