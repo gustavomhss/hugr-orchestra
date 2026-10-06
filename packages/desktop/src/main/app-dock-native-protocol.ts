@@ -35,7 +35,8 @@ export type Channel = {
   onExit(listener: (exit: Exit) => void): () => void
   terminate(): Promise<void>
 }
-export type ClientConfig = { startupMs?: number; timeoutMs?: number; cancelGraceMs?: number; sessionID?: string }
+// reapMs bounds how long teardown waits for the channel to prove the helper reaped; it defaults to cancelGraceMs.
+export type ClientConfig = { startupMs?: number; timeoutMs?: number; cancelGraceMs?: number; reapMs?: number; sessionID?: string }
 export type Call = { op: Operation; args: JSONObject; bindingID?: string; bindingEpoch?: string; timeoutMs?: number }
 export type ReadQuery = { budget?: number; maxText?: number; rootRef?: NativeRef; cursor?: string; textOffset?: number }
 export type Client = { readonly hello: Hello; request(call: Call, signal?: AbortSignal): Promise<JSONValue>; close(): Promise<void> }
