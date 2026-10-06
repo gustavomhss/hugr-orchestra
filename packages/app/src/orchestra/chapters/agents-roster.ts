@@ -73,12 +73,20 @@ export function modelKey(agent: Agent) {
   return agent.model ? `${agent.model.providerID}/${agent.model.modelID}` : ""
 }
 
-/** Seeds the editor from the project file first, then from the agent the server resolved. */
+/** Every session runs on Maestro, so the editor keeps it primary and never removes it. */
+export function isMaestro(agent: Agent | undefined) {
+  return (agent?.id ?? agent?.name) === "maestro"
+}
+
+/**
+ * Seeds the editor from the project file first, then from the agent the server resolved. Maestro is always primary,
+ * whatever a hand-edited file says, so saving writes it back as primary.
+ */
 export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undefined): AgentDraft {
   const steps = file?.steps ?? agent?.steps
   return {
     name: agent?.name ?? "",
-    mode: file?.mode ?? agent?.mode ?? "subagent",
+    mode: isMaestro(agent) ? "primary" : (file?.mode ?? agent?.mode ?? "subagent"),
     description: file?.description ?? agent?.description ?? "",
     model: file?.model ?? (agent ? modelKey(agent) : ""),
     steps: steps === undefined ? "" : String(steps),

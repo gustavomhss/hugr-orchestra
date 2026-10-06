@@ -380,6 +380,54 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
   await expect(card(page, "plan")).toHaveCount(0)
 })
 
+test("Maestro cannot be removed or taken out of primary mode; its other fields stay editable", async ({ page }) => {
+  const mock = await setup(page, {
+    models: true,
+    files: {
+      // Edited by hand: the server ignores this mode and `disable` for Maestro, and a save writes it back as primary.
+      maestro: {
+        path: `${directory}/.opencode/agent/maestro.md`,
+        exists: true,
+        revision: "m1",
+        description: "Hand edited",
+        mode: "subagent",
+        disable: true,
+      },
+    },
+  })
+  await openAgents(page)
+  await card(page, "maestro").getByRole("button", { name: "Configure", exact: true }).click()
+  const form = dialog(page)
+  await expect(form.getByLabel("Description")).toHaveValue("Hand edited")
+  const mode = form.getByLabel("Mode", { exact: true })
+  await expect(mode).toBeDisabled()
+  await expect(mode).toHaveValue("primary")
+  await expect(mode).toHaveAccessibleDescription(
+    "Maestro runs every session, so it cannot be removed or taken out of primary mode.",
+  )
+  await expect(form.getByRole("button", { name: "Remove agent", exact: true })).toHaveCount(0)
+
+  await form.getByLabel("Description").fill("Conducts the team")
+  await form.getByLabel("Model", { exact: true }).selectOption("example/builder")
+  await form.getByLabel("Bash", { exact: true }).selectOption("ask")
+  await form.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(form).toHaveCount(0)
+  expect(mock.writes.map((write) => write.body)).toEqual([
+    {
+      mode: "primary",
+      description: "Conducts the team",
+      model: "example/builder",
+      permission: { bash: "ask" },
+      revision: "m1",
+    },
+  ])
+
+  // Every other agent keeps both controls.
+  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  await expect(dialog(page).getByLabel("Mode", { exact: true })).toBeEnabled()
+  await expect(dialog(page).getByRole("button", { name: "Remove agent", exact: true })).toBeVisible()
+})
+
 test("Escape while the file loads closes the dialog and a late answer does not reopen it", async ({ page }) => {
   const gate = { release: () => {} }
   const mock = await setup(page, {

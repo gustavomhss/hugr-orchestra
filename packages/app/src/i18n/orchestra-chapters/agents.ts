@@ -25,6 +25,7 @@ export const AGENTS_COPY = {
   "orchestra.agents.choice.inherit": "Inherit",
   "orchestra.agents.choice.inheritValue": "Inherit ({{action}})",
   "orchestra.agents.choice.custom": "Custom patterns",
+  "orchestra.agents.maestroLocked": "Maestro runs every session, so it cannot be removed or taken out of primary mode.",
   "orchestra.agents.remove": "Remove agent",
   "orchestra.agents.removeTitle": "Remove {{name}}?",
   "orchestra.agents.removeDetail": "Existing sessions keep their recorded model and conversation.",
