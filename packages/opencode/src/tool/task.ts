@@ -584,11 +584,15 @@ export const TaskTool = Tool.define(
           completionEvidence.value = verified
           yield* ctx.metadata({ metadata: { ...metadata, completion: verified } })
         }
-        const text = result.parts.findLast((item) => item.type === "text" && item.text.trim() !== "")
-        if (text?.type === "text") return text.text
+        type Part = (typeof result.parts)[number]
+        const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
+          item.type === "text" && item.text.trim() !== ""
         // An empty final turn still owes the caller a report: summarize this run from the child's session.
-        const run = yield* sessions.messages({ sessionID: nextSession.id }).pipe(Effect.orElseSucceed(() => [result]))
-        return TaskReport.fallback(run.filter((message) => message.info.id > promptID))
+        const history = result.parts.some(reported)
+          ? []
+          : yield* sessions.messages({ sessionID: nextSession.id }).pipe(Effect.orElseSucceed(() => [result]))
+        return result.parts.findLast(reported)?.text ??
+          TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
       const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (
