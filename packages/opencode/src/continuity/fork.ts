@@ -160,12 +160,13 @@ export function request(captured: MemorySnapshot, host: Host, appended: string) 
 }
 
 /**
- * One maintenance pass. A skip is not a producer failure and never counts toward the breaker;
- * a rejection is a check that failed again on the one retry. The summary is structural only.
+ * One maintenance pass. A skip makes no model call and never counts toward the breaker; a
+ * rejection is a check that failed again on the one retry, or failed when no retry could fit.
+ * The summary is structural only.
  */
 export type Pass = {
   artifact?: MemoryArtifact
-  skip?: "precondition" | "workflow" | "no-ceiling" | "no-room" | "input-limit" | "retry-over-limit"
+  skip?: "precondition" | "workflow" | "no-ceiling" | "no-room" | "input-limit"
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
@@ -251,7 +252,8 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     // One cache-hot retry: the same request, the rejected reply and the failed check.
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
       "Reply with one complete, corrected ops object for the same new span, and nothing else."
-    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ skip: "retry-over-limit", check: outcome.check, ceiling })
+    // A paid reply that failed and cannot be retried is a failure, so the breaker can stop it.
+    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check, ceiling })
     outcome = check(yield* ask({ ...first, messages: [...first.messages,
       { role: "assistant", content: reply.text || "(empty reply)" }, { role: "user", content: note }] }))
     if ("check" in outcome) return pass({ check: outcome.check, retried: true, ceiling })

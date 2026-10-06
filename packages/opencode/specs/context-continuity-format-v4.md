@@ -52,8 +52,8 @@ Five ideas carry the design:
    table, string location and every check are the host's work. The producer writes only judgment.
    (Artifacts are every compactor's weakest dimension, 2.2–2.45/5; Cline and pi build their file
    lists in the host.)
-5. **The reader sees only current values.** A retired item leaves the memory. Its reason goes to
-   a per-pass diagnostic event, not to the reader view. The reader is a model with no previous copy
+5. **The reader sees only current values.** A retired item leaves the memory. The per-pass
+   diagnostic event records the retire (2.5); nothing about it reaches the reader view. The reader is a model with no previous copy
    of the memory, and showing superseded values beside current ones hurts retrieval of the current
    one (PI-LLM).
 
@@ -243,7 +243,7 @@ advances coverage and re-renders the host sections.
 | --- | --- | --- | --- |
 | `add` | `op`, `section`, `fields`, `src` | `key` | New item; the host assigns the next `mN`. |
 | `update` | `op`, `id`, `fields`, `src` | — | Patch: only the fields that change; `null` clears an optional field. |
-| `retire` | `op`, `id`, `reason` | `src`, `quote` | Remove the item. The reason goes to the pass's diagnostic event. `quote` (the user's revoking words) is required for protected items (C7). |
+| `retire` | `op`, `id`, `reason` | `src`, `quote` | Remove the item. The reason is required (C11) but never logged (2.5). `quote` (the user's revoking words) is required for protected items (C7). |
 
 - **`src`** is a non-empty array of aliases, each at or before the end of the new span. For exact
   strings these aliases are hints: the host locates the string (C6, C8) and records the alias where
@@ -358,9 +358,13 @@ The store keeps only live items. Rendering is a pure function of the items plus 
 unchanged items render to identical bytes. Like v3's artifact, the memory lives in the service's
 in-memory context map.
 
-Each pass emits one structured diagnostic event through the existing `diagnostic` channel. The
-event records the ops, the outcome (accepted, or the failed check), whether a retry ran, the
-rendered size and the ceiling. The probe harness reads these events. Nothing else stores history.
+Each pass emits one structured diagnostic event through the existing `diagnostic` channel, whatever
+its outcome. Diagnostics stay structural for privacy: the event records each op's kind, section and
+item id, the outcome (applied, skipped with its reason, or the failed check id), whether a retry
+ran, the rendered size and the ceiling. It never carries op contents, check details or retire
+reasons, because those quote the user, tool output and values such as URLs with tokens. The probe
+harness reads these events; content-level probes read the memory itself. Nothing else stores
+history.
 
 ### 2.6 Ceilings
 
@@ -437,7 +441,7 @@ original bytes, and records the alias where the string occurs.
 | C8 | `failures.error` is located in a covered `t` source's raw `output` or `error`. `values.value` is located in a `t` source's identity arguments (the `masking.ts` `KEY_ARGS`: command, filePath, path, url, pattern, query, include, description), its `output` or `error`, or in user text. A value whose match spans a line break is rejected. Matching uses stored part fields, never archive Markdown. | Paraphrased errors the agent will not recognize; mistyped SHAs, paths and commands; values the agent merely wrote into a file; false rejections from JSON escaping or archive splits. |
 | C9 | `confirmed` findings and `done` plan items cite a `t` or `u` alias; `hypothesis` has `check`; `done` has `detail`. | Inferences recorded as facts; "done" with no evidence or outcome. |
 | C10 | After the ops are applied and handles rewritten: at most one `doing`, and every `needs` ID of a plan item that is not `done` is a live item. | An ambiguous execution position; losing a member's output that only Maestro holds while another delegation still needs it. |
-| C11 | `retire` has a non-empty `reason`. | Unexplained loss in the diagnostics. |
+| C11 | `retire` has a non-empty `reason`. | Unexplained loss: the producer must state why, even though the reason is not logged (2.5). |
 | C12 | The rendered memory, with the ledger and Activity, fits the ceiling (2.6). The ledger and Activity are trimmed first, at their own ceilings. | Runaway memory; a swap that fails to bring the context back under the trigger. |
 | C13 | The snapshot's generation, session, boundary and content are unchanged since capture (as in v3). | Applying a stale pass. |
 
@@ -710,8 +714,8 @@ is a finding (gist), so the host does not verify its wording.
 
 What the host does:
 
-- It removes m7 (the hypothesis) and m6 (the fixed symptom). Their reasons go to the diagnostic
-  event. Neither is a protected item, so no quote is needed.
+- It removes m7 (the hypothesis) and m6 (the fixed symptom). Their reasons are checked (C11) but
+  not logged (2.5). Neither is a protected item, so no quote is needed.
 - u5 is one sentence, so both quotes render as all of u5.
 - m2 becomes `done` with tool sources.
 - Rule m3 stays. It is a `must_not`, and only the user's words remove it. Its own text limits it to
@@ -1070,7 +1074,7 @@ without counting as a failure, and the service waits for the next turn (2.7.1).
 | Separate Corrections section | `rules.kind = correction` | Same source and check; one sharp boundary. |
 | Procedures section | Folded into Values (`value` + `use`) | Both are exact strings to reuse. |
 | Notes (max 5) | Findings is the catch-all | A junk drawer, and an arbitrary 5. |
-| Retired section, tombstones for 2 passes, op log | Retired items leave; reasons go to the diagnostic event | PI-LLM; an arbitrary 2; nothing read the log. |
+| Retired section, tombstones for 2 passes, op log | Retired items leave; the diagnostic event records the retire, not its reason | PI-LLM; an arbitrary 2; nothing read the log. |
 | Δ markers | Cut | The model reader has no previous copy. |
 | Now block (doing, last ask, next action) | Plan DOING/VERIFY/WAITING, placed last | The verbatim tail ends the context and holds the latest ask. |
 | `supersede {id, by, …}` | `retire`, plus `key` handles where an ID is needed | `by` cannot name a same-pass item. |
@@ -1179,7 +1183,9 @@ diagnostic events and the memory:
 **Acceptance (pre-registered):** v4 is non-inferior to v3 in every category, and better in
 artifact, continuation and drift.
 
-**Mechanical tests** (deterministic fixtures, before any real model):
+**Mechanical tests** (deterministic fixtures, before any real model). Fixture turns are padded to a
+realistic size: every swap must shrink the context (2.6), so a head smaller than the fixed scaffold
+is skipped, and a fixture with toy-sized turns would never apply memory.
 
 - unchanged items render to identical bytes;
 - aliases are identical when recomputed from stored messages;

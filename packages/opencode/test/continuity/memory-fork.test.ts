@@ -210,6 +210,12 @@ it.effect("a failed check gets one cache-hot retry with the rejected reply and t
   expect(twice.artifact).toBeUndefined()
   expect(twice.pass).toMatchObject({ check: "C1", retried: true })
   expect(twice.pass.skip).toBeUndefined()
+  // A failed reply too large to retry within the input limit is a failure, not a skip: the breaker counts it.
+  const huge = yield* execute(stopped("x".repeat(200_000)), input(), { ...model, limit: { ...model.limit, input: 30_000 } })
+  expect(huge.requests).toHaveLength(1)
+  expect(huge.artifact).toBeUndefined()
+  expect(huge.pass).toMatchObject({ check: "C1", retried: false })
+  expect(huge.pass.skip).toBeUndefined()
   // A transport failure is not a check failure and is never retried.
   expect((yield* execute([Stream.fail(new Error("down")), stopped()]).pipe(Effect.exit))._tag).toBe("Failure")
 }))
