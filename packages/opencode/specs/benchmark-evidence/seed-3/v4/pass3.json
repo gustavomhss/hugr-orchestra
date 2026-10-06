@@ -1,0 +1,83 @@
+{
+  "name": "pass3",
+  "transport": "file",
+  "boundary": 89,
+  "head": [
+    55,
+    80
+  ],
+  "tailStart": 81,
+  "crossed": true,
+  "contextTokens": 45211,
+  "retried": false,
+  "ceiling": 13834,
+  "size": 6150,
+  "dropped": 0,
+  "ops": [
+    {
+      "op": "update",
+      "id": "m33"
+    },
+    {
+      "op": "retire",
+      "id": "m35"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "plan"
+    }
+  ],
+  "applied": true,
+  "items": 48,
+  "memoryTokens": 6150,
+  "calls": [
+    {
+      "label": "v4/pass3",
+      "estimate": 12276,
+      "usage": {
+        "inputTokens": 12276,
+        "outputTokens": 1138
+      }
+    }
+  ]
+}

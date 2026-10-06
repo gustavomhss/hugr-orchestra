@@ -12,6 +12,7 @@ import { useSDK } from "./sdk"
 import { useSync } from "./sync"
 import { useServerSDK } from "./server-sdk"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
+import { agentKey } from "./agent-identity"
 
 export type ModelKey = { providerID: string; modelID: string; variant?: string }
 
@@ -159,8 +160,13 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
 
     // The user talks only to Maestro: every draft, new session and follow-up runs on it.
+    // Maestro is found and sent by its stable id: its display name is configurable.
     const agent = {
-      current: () => sync().data.agent.find((item) => item.name === "maestro"),
+      current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
+      key: () => {
+        const item = agent.current()
+        return item ? agentKey(item) : undefined
+      },
     }
 
     const current = () => {
@@ -188,7 +194,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const snapshot = () => {
       const model = current()
       return {
-        agent: agent.current()?.name,
+        agent: agent.key(),
         model: model ? { providerID: model.provider.id, modelID: model.id } : undefined,
         variant: selected(),
       } satisfies State
@@ -196,7 +202,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
     const write = (next: Partial<State>) => {
       const state = {
-        ...(scope() ?? { agent: agent.current()?.name }),
+        ...(scope() ?? { agent: agent.key() }),
         ...next,
       } satisfies State
 
@@ -236,7 +242,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           batch(() => {
             setStore("last", {
               type: "model",
-              agent: agent.current()?.name,
+              agent: agent.key(),
               model: item ?? null,
               variant: selected(),
             })
@@ -280,7 +286,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
               const model = current()
               setStore("last", {
                 type: "variant",
-                agent: agent.current()?.name,
+                agent: agent.key(),
                 model: model ? { providerID: model.provider.id, modelID: model.id } : null,
                 variant: value ?? null,
               })

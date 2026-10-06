@@ -149,10 +149,11 @@ it.live("unbound pipelines and invalid physical roots HOLD before side effects; 
       expect(yield* f.fs.exists(path.join(f.root, "must-not-run"))).toBe(false)
       return // This passes the absence/HOLD contract, not a live-confinement claim.
     }
-    const invalid = yield* Effect.flip(ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, {
+    // A root not created yet resolves through its nearest existing ancestor, as in ToolSafety.before.
+    const missing = yield* ToolSafetySandbox.wrap(command).pipe(Effect.provideService(ToolSafety.RuntimeProfile, {
       requireSandbox: true, writeRoots: [path.join(f.root, "missing-root")],
-    }), Effect.provideService(ToolSafety.NativeContext, { directory: f.root })))
-    expect(invalid.reason).toBe("sandbox-write-root-acquisition")
+    }), Effect.provideService(ToolSafety.NativeContext, { directory: f.root }))
+    expect(missing._tag).toBe("StandardCommand")
     const pipeline = yield* Effect.flip(ToolSafetySandbox.wrap(ChildProcess.pipeTo(command, command)).pipe(
       Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true }),
     ))
@@ -168,5 +169,24 @@ it.live("unbound pipelines and invalid physical roots HOLD before side effects; 
       expect(glob.reason).toBe("sandbox-seatbelt-glob-policy-unenforceable")
     }
     expect(yield* f.fs.exists(path.join(f.root, "must-not-run"))).toBe(false)
+  }), 30_000,
+)
+
+live("scratch gives each confined command a private TMPDIR; read-only roots still allow /dev/null", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const script = "const fs=require('fs');const p=require('path');const out={};" +
+      "fs.writeFileSync(p.join(process.env.TMPDIR,'probe'),'t');out.tmp=process.env.TMPDIR;" +
+      "fs.writeFileSync('/dev/null','x');" +
+      "try{fs.writeFileSync('denied','x');out.root='written'}catch{out.root='denied'}" +
+      "process.stdout.write(JSON.stringify(out))"
+    const result = yield* Effect.scoped(f.run(script, { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, scratch: true } }))
+    if (result.exitCode !== 0) throw new Error(`BLOCKED: scratch control: ${result.stderr.toString()}`)
+    const out = JSON.parse(result.stdout.toString())
+    expect(out.root).toBe("denied")
+    expect(yield* f.fs.exists(path.join(f.root, "denied"))).toBe(false)
+    expect(out.tmp.startsWith(f.root)).toBe(false)
+    // The scratch directory lives only as long as the command's scope.
+    expect(yield* f.fs.exists(out.tmp)).toBe(false)
   }), 30_000,
 )

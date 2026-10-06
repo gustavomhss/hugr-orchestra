@@ -23,6 +23,13 @@ export function LinuxMenu(props: { controller: ReturnType<typeof createLinuxMenu
     if (menu.store.error === "architecture-mismatch") return language.t("appDock.linux.architectureMismatch")
     return language.t("common.requestFailed")
   }
+  // A launch waits for the app's window (seconds), and the Dock runs one action at a time; every busy control says
+  // which one, and the status sits above the app list so a long list cannot scroll it out of view.
+  const busyText = () => {
+    const opening = menu.store.apps.find((app) => app.id === menu.store.busyApp)?.name
+    if (opening !== undefined) return `${language.t("appDock.linux.openingApp", { app: opening })}…`
+    return `${language.t(menu.store.busy === "install" ? "wsl.onboarding.installing" : "common.loading")}…`
+  }
 
   return (
     <section class="zen-linux" aria-label={language.t("appDock.linux.apps")} aria-busy={!!menu.store.busy}>
@@ -50,21 +57,29 @@ export function LinuxMenu(props: { controller: ReturnType<typeof createLinuxMenu
           </button>
         </Show>
       </div>
+        <Show when={menu.store.loading || menu.store.busy}>
+          <p role="status" aria-live="polite" classList={{ "is-refused": !!menu.store.refused }}>
+            {busyText()}
+          </p>
+        </Show>
         <Show when={menu.capability("appDockLinuxList")}>
           <ul class="zen-linux-apps" aria-label={language.t("appDock.linux.apps")}>
             <For each={menu.store.apps}>
               {(app) => (
                 <li>
+                  {/* While another action runs the button stays clickable (aria-disabled), so a click is answered by the
+                      status line instead of being swallowed by a disabled button. */}
                   <button
                     type="button"
                     aria-label={language.t("session.header.open.action", { app: app.name })}
-                    title={language.t("session.header.open.action", { app: app.name })}
-                    disabled={
-                      menu.blocked() || !menu.capability("appDockLinuxOpen") || !menu.capability("appDockLinuxLaunch")
-                    }
+                    title={menu.store.busy ? busyText() : language.t("session.header.open.action", { app: app.name })}
+                    disabled={menu.unavailable() || !menu.capability("appDockLinuxOpen") || !menu.capability("appDockLinuxLaunch")}
+                    aria-disabled={!!menu.store.busy}
+                    aria-busy={menu.store.busyApp === app.id}
                     onClick={() => void menu.run({ type: "launch", appID: app.id })}
                   >
                     <bdi dir="auto">{props.collapsed ? app.name.slice(0, 1) : app.name}</bdi>
+                    {menu.store.busyApp === app.id && "…"}
                   </button>
                 </li>
               )}
@@ -73,13 +88,6 @@ export function LinuxMenu(props: { controller: ReturnType<typeof createLinuxMenu
           <Show when={!menu.store.loading && !menu.store.busy && !menu.store.error && menu.store.apps.length === 0}>
             <p>{language.t("appDock.linux.empty")}</p>
           </Show>
-        </Show>
-        <Show when={menu.store.loading || menu.store.busy}>
-          <p role="status" aria-live="polite">
-            {menu.store.busyApp
-              ? language.t("appDock.linux.openingApp", { app: menu.store.apps.find(app => app.id === menu.store.busyApp)?.name ?? "" })
-              : language.t(menu.store.busy === "install" ? "wsl.onboarding.installing" : "common.loading")}
-          </p>
         </Show>
         <Show when={menu.store.error}>
           <p role="alert">{errorText()}</p>
@@ -95,13 +103,16 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
     loading: boolean
     busy?: LinuxAction["type"]
     busyApp?: string
+    // An app clicked while another action was running; the status line answers that click.
+    refused?: string
     error?: LinuxError
   }>({ apps: [], loading: false })
   let request = 0
   let listing = 0
   let disposed = false
   const capability = (name: keyof AppDockLinuxAPI) => typeof props.api?.[name] === "function"
-  const blocked = () => props.disabled || !!store.busy
+  const unavailable = () => props.disabled
+  const blocked = () => unavailable() || !!store.busy
   const guard = () => {
     const id = request
     const generation = props.generation()
@@ -126,6 +137,7 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
       })
   }
   const run = async (action: LinuxAction) => {
+    if (!disposed && store.busy && action.type === "launch") setStore("refused", action.appID)
     if (disposed || blocked()) return
     if (action.type === "install" && !capability("appDockLinuxInstall")) return
     if (action.type !== "install" && !capability("appDockLinuxOpen")) return
@@ -171,7 +183,7 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
         if (current()) setStore("error", "failed")
       })
       .finally(() => {
-        if (current()) setStore({ busy: undefined, busyApp: undefined })
+        if (current()) setStore({ busy: undefined, busyApp: undefined, refused: undefined })
       })
   }
   createEffect(
@@ -180,7 +192,8 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
       () => {
         ++request
         ++listing
-        setStore({ busy: store.busy === "install" ? "install" : undefined, busyApp: undefined, loading: false, error: undefined })
+        setStore({ busy: store.busy === "install" ? "install" : undefined, busyApp: undefined, refused: undefined, loading: false,
+          error: undefined })
         void refresh()
       },
     ),
@@ -188,5 +201,5 @@ export function createLinuxMenuController(props: LinuxMenuOptions) {
   onCleanup(() => {
     disposed = true
   })
-  return { store, blocked, capability, refresh, run }
+  return { store, blocked, unavailable, capability, refresh, run }
 }

@@ -69,7 +69,7 @@ source_reqs: # ptr+digest — pre-existing ids only, none authored here
   — the rendered envelope's `next`/`invariant` lines matched `handler.ts`'s `GUIDANCE['atlas-query']` row
   byte-for-byte, confirming the guidance IS delivered on the shipped result envelope independent of the
   now-deleted constant
-  owner: charlie (FORGE) # value
+  owner: backend (FORGE) # value
   outputs: # exec — empty at freeze
   provenance: # exec — empty at freeze
   trace_ref: # exec — empty at freeze

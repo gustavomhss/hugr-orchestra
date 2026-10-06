@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-krn.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE); formal-merge core architecture-reviewed by bobby.
+> **owner:** backend (FORGE); formal-merge core architecture-reviewed by bobby.
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. The KRN block carries the **one** `formal` cluster in
 > the whole Atlas — the `FSPEC-merge` core (KERNEL-9/10/11, + PERSIST-11 as the persistence-side consumer).

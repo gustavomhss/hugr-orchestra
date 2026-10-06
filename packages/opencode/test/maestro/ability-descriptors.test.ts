@@ -21,9 +21,9 @@ describe("Maestro ability descriptors", () => {
       ["atlas-provider"],
     ])
     expect(abilityDescriptors.map((descriptor) => descriptor.allowedSeats)).toEqual([
-      ["maestro", "charlie", "patty", "rosie"],
+      ["maestro", "backend", "patty", "rosie"],
       ["maestro"],
-      ["maestro", "charlie", "lucy"],
+      ["maestro", "backend", "lucy"],
       ["maestro"],
       ["maestro"],
       ["maestro", "jimmy"],

@@ -129,6 +129,6 @@ function reviewPatch(file: string, before: string, after: string) {
 }
 
 function reviewWords(seed: number, length: number) {
-  const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet"]
+  const words = ["alpha", "bravo", "cobalt", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet"]
   return Array.from({ length: Math.ceil(length / 7) }, (_, index) => words[(seed + index * 3) % words.length]).join(" ")
 }

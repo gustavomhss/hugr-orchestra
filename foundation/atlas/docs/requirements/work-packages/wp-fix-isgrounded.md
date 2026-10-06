@@ -97,7 +97,7 @@ context_refs: # closed list
 - source: ../method-tags-knw.md
 - source: ../method-tags-grd.md
 
-owner: KNOW territory · builder_id `charlie` (dispatched by the lead for a frozen-contract security fix)
+owner: KNOW territory · builder_id `backend` (dispatched by the lead for a frozen-contract security fix)
 
 outputs:
 

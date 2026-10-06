@@ -163,7 +163,7 @@ export const MaestroRecordReviewTool = Tool.define(
     const config = yield* Config.Service
     const fs = yield* FileSystem.FileSystem
     return {
-      description: "Record cold review evidence for one validation record. Lucy only.",
+      description: "Record cold review evidence for one validation record. Cold reviewer (`lucy`) only.",
       parameters: ReviewParameters,
       strictParameters: {
         validationRecordID: true,
@@ -183,11 +183,13 @@ export const MaestroRecordReviewTool = Tool.define(
       execute: (params: Schema.Schema.Type<typeof ReviewParameters>, ctx) =>
         Effect.gen(function* () {
           const agent = ctx.agentID ? yield* agents.get(ctx.agentID) : undefined
+          const reviewer = (yield* agents.get("lucy"))?.name ?? "lucy"
           if (agent?.id !== "lucy" || agent.native !== true) {
-            return yield* Effect.fail(new Error("Review recording requires Lucy"))
+            return yield* Effect.fail(new Error(`Review recording requires ${reviewer}`))
           }
           const child = yield* sessions.get(SessionID.make(ctx.sessionID))
-          if (!child.parentID) return yield* Effect.fail(new Error("Review recording requires Lucy child session"))
+          if (!child.parentID)
+            return yield* Effect.fail(new Error(`Review recording requires a ${reviewer} child session`))
           const record = yield* recordReview({ ...params, sessionID: child.parentID, reviewerID: "lucy" })
           return {
             title: `Review ${record.verdict}`,

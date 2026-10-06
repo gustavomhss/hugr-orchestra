@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 39 · dead-value-exports: 142 · type-reachable: 4
+//   declared-modules: 40 · dead-value-exports: 145 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,6 +137,16 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
+  // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and
+  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
+  // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
+  // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
+  // the owner from `ATLAS_ACTOR ?? git user.email`. `shipped: null` is literal: inside this tree nothing runs
+  // it but its suite. Measured with this gate's own analyser: 39 → 40 entries, dead-value-exports 142 → 144.
+  // 2 → 3: `readBoundHeader` joined it (F3 A3/A4). JUSTIFIED: it is the header read the host reaches through the
+  // installed `./native-header` boundary subpath; `native-header.ts` only re-exports it, which this analyser does not
+  // count as a caller, so the row grows here and no new row appears. dead-value-exports 144 → 145.
+  "packages/adapter-io/src/native-memory.ts": { values: 3, shipped: null, banner: true },
   // #95 WP-TV-2 landed: `test-vacuity-source.ts` (the PRODUCER + READ leg + units feed) and `read/test-vacuity.ts`
   // (`testVacuitiesOf`) BOTH moved dead → live and were REMOVED here — exactly the own.ts / relation-derive.ts
   // dead→live transitions documented below. The composition root (`compose.ts` → `ComposedRuntime.

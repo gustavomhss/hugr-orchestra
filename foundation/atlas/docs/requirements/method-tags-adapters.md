@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../method/prompts/S2.md) ·
 > **axiom:** S1 frozen (`requirements-adapters.md`; 55 REQs, every behavioural INV has ≥1 REQ, atom-gate
-> APPROVE) · **owner:** charlie (FORGE); method-decision cold-reviewed by bobby (BLUEPRINT).
+> APPROVE) · **owner:** backend (FORGE); method-decision cold-reviewed by bobby (BLUEPRINT).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. **The ring carries ZERO `formal` tags** — the one
 > `formal` cluster in the whole Atlas is the kernel merge (`FSPEC-merge`, KERNEL-9/10/11) in the core, already

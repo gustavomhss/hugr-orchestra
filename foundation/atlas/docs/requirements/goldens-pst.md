@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-pst.md`; every INV method-tagged; PST authors **no** new model — `FSPEC-merge` is consumed) ·
-> **owner:** charlie (FORGE). PST carries the **persistence-side consumer** of the one `formal` cluster (PERSIST-11).
+> **owner:** backend (FORGE). PST carries the **persistence-side consumer** of the one `formal` cluster (PERSIST-11).
 >
 > **Derivation (not hand-authored where a generator exists):**
 >

@@ -2,7 +2,29 @@ import path from "node:path"
 import { lstat, realpath } from "node:fs/promises"
 import { tool, type ToolContext } from "@opencode-ai/plugin"
 import { Option, Schema } from "effect"
-import type { HugrComposerClient } from "./client"
+import { composerFailure, type HugrComposerClient } from "./client"
+
+// Mirrors mcp_tools/error_codes.py in the Composer backend. Only these codes cross the boundary;
+// free-text backend detail (what_happened, error) stays redacted.
+const ERROR_CODES = new Set([
+  "missing-selection",
+  "unknown-recipe",
+  "unknown-primitive",
+  "recipe-mismatch",
+  "domain-boundary",
+  "empty-query",
+  "not-found",
+  "unknown-skill",
+  "unknown-bundle",
+  "path-rejected",
+  "target-exists",
+  "invalid-output",
+  "scaffold-failed",
+  "backend-unavailable",
+  "catalog-invalid",
+  "audit-failed",
+  "verify-failed",
+])
 
 function output(result: {
   content: ReadonlyArray<{ type: string; text?: string }>
@@ -18,14 +40,19 @@ function output(result: {
     if (typeof value.error === "object") return Object.keys(value.error).length > 0
     return true
   }
-  if (result.isError || failure(result.structuredContent)) throw new Error("HuGR Composer backend operation failed")
+  const code = (value: unknown) =>
+    typeof value === "object" && value !== null && "code" in value && typeof value.code === "string" && ERROR_CODES.has(value.code)
+      ? value.code
+      : "unknown"
+  if (result.isError) throw composerFailure("backend-error")
+  if (failure(result.structuredContent)) throw composerFailure(code(result.structuredContent))
   // Some MCP versions wrap the backend envelope in JSON text rather than structuredContent.
-  const failedText = result.content.some((item) => {
-    if (item.type !== "text" || !item.text) return false
+  const failedText = result.content.flatMap((item) => {
+    if (item.type !== "text" || !item.text) return []
     const decoded = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(item.text)
-    return Option.isSome(decoded) && failure(decoded.value)
+    return Option.isSome(decoded) && failure(decoded.value) ? [decoded.value] : []
   })
-  if (failedText) throw new Error("HuGR Composer backend operation failed")
+  if (failedText.length > 0) throw composerFailure(code(failedText[0]))
   if (result.structuredContent !== undefined) return JSON.stringify(result.structuredContent, null, 2)
   const text = result.content.flatMap((item) => (item.type === "text" && item.text ? [item.text] : [])).join("\n\n")
   return text || JSON.stringify(result, null, 2)

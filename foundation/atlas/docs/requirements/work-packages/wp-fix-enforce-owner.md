@@ -120,7 +120,7 @@ context_refs: # closed list
 - source: ../method-tags-knw.md
 - source: ../goldens-knw.md
 
-owner: KNOW territory · builder_id `charlie` (dispatched by the lead for a frozen-decision defect fix, #178)
+owner: KNOW territory · builder_id `backend` (dispatched by the lead for a frozen-decision defect fix, #178)
 
 outputs:
 

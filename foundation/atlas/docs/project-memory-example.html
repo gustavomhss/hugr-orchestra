@@ -389,17 +389,17 @@
   </div>
 </header>
 
-<!-- charlie -->
+<!-- backend -->
 <section>
   <div class="wrap">
-    <h2>O bloco do <span class="who">charlie · build</span></h2>
+    <h2>O bloco do <span class="who">backend · build</span></h2>
     <p class="lead">
       Cenário: campanha <em>"migrar o billing pra idempotência"</em>. Isto é o que entra sozinho no contexto do
-      <code>charlie</code>, todo turno:
+      <code>backend</code>, todo turno:
     </p>
     <div class="inject">
       <div class="top">
-        <span>atlas ▸ inject @ turn-start</span><span>charlie</span><span class="r">Σ ~870 / ~5K tok</span>
+        <span>atlas ▸ inject @ turn-start</span><span>backend</span><span class="r">Σ ~870 / ~5K tok</span>
       </div>
       <pre><span class="zone"><span class="zh" style="color:var(--accent-2)">▏ AWARENESS — self-model · derivado do root · byte-idêntica</span>
   <span class="k">mission      </span> sistema de billing idempotente ponta-a-ponta
@@ -414,7 +414,7 @@
   <span class="k">current </span> WP-13 · retries idempotentes no worker — em andamento
   <span class="k">state   </span> 3/5 territórios de billing cobertos · falta worker + reconcile</span>
 
-<span class="zone"><span class="zh r">REGRAS — do charlie · sempre / nunca · a única escrita</span>
+<span class="zone"><span class="zh r">REGRAS — do backend · sempre / nunca · a única escrita</span>
   <span class="no">nunca </span> logar o header Authorization              <span class="sc">@ src/http/**</span>    <span class="hit">×12</span>
   <span class="yes">sempre</span> rodar `pnpm typecheck` antes de selar     <span class="sc">@ *</span>             <span class="hit">×40</span>
   <span class="yes">sempre</span> migrations = expand/contract só           <span class="sc">@ db/**</span>          <span class="hit">×7</span>
@@ -441,7 +441,7 @@
       <div class="a r">
         <div class="h">REGRAS (o terceiro slab — a única escrita)</div>
         <p>
-          <b>Do charlie</b>, privadas — o que ELE aprendeu. Note a última: só apareceu porque o
+          <b>Do backend</b>, privadas — o que ELE aprendeu. Note a última: só apareceu porque o
           <b>milestone atual toca <code>src/worker/**</code></b> — regra certa, na hora certa. ~300 tok.
         </p>
       </div>
@@ -461,14 +461,14 @@
       <div class="top">
         <span>atlas ▸ inject @ turn-start</span><span>lucy</span><span class="r">Σ ~810 / ~5K tok</span>
       </div>
-      <pre><span class="zone"><span class="zh" style="color:var(--accent-2)">▏ AWARENESS — self-model · byte-idêntica à do charlie</span>
+      <pre><span class="zone"><span class="zh" style="color:var(--accent-2)">▏ AWARENESS — self-model · byte-idêntica à do backend</span>
   <span class="k">mission      </span> sistema de billing idempotente ponta-a-ponta
   <span class="k">constitution </span> nenhum efeito de pagamento sem Idempotency-Key <span class="no">T0</span>
   <span class="k">terrain      </span> gateway · worker · reconcile · ledger — T0: gateway, ledger
   <span class="k">ontology     </span> seat · território · pack · poke · tier · kit
   <span class="k">taste        </span> expand/contract · sem prosa livre · gate verde ou FAILED</span>
 
-<span class="zone"><span class="zh o">ORIENTAÇÃO — compartilhada · idêntica à do charlie</span>
+<span class="zone"><span class="zh o">ORIENTAÇÃO — compartilhada · idêntica à do backend</span>
   <span class="k">goal    </span> migrar o billing pra idempotência ponta-a-ponta
   <span class="k">last    </span> WP-12 · Idempotency-Key no gateway — <span class="yes">selado</span>
   <span class="k">current </span> WP-13 · retries idempotentes no worker — em andamento

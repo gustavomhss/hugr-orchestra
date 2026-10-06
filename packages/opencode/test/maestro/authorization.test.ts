@@ -16,13 +16,14 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
 import { MessageID, PartID } from "@/session/schema"
 import { MaestroEvent } from "@opencode-ai/schema/maestro-event"
-import { grantAuthorization } from "../../src/maestro/authorization"
+import { grantAuthorization, readAuthorization } from "../../src/maestro/authorization"
 import { reserveDispatch } from "../../src/maestro/dispatch"
 import { recordValidation, validationRecordHash } from "../../src/maestro/validation-record"
 import { presentApprovalFromSession, recordApproval } from "../../src/maestro/approval-record"
 import { renderPresentation } from "../../src/maestro/approval"
 import { Git } from "../../src/git"
 import { recordContext } from "../../src/maestro/context-record"
+import { LEGACY_BACKEND_ID } from "../../src/maestro/roster"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -82,7 +83,7 @@ it.instance(
         projectID: session.projectID,
         workCardID: "card_authorization",
         workCard: "# card\n",
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
         checks: [{ id: "route", status: "PASS", detail: "routed" }],
@@ -144,7 +145,7 @@ it.instance(
         contextHash: context.contextHash,
         policyHash: validation.reviewPolicyHash,
         taskHash: "e".repeat(64),
-        intent: { subagentType: "charlie", prompt: "implement card" },
+        intent: { subagentType: "backend", prompt: "implement card" },
         methodVersion: "request-approval-v1",
         plan: "implement card",
         provenance: "test",
@@ -251,7 +252,7 @@ it.instance(
       expect(reservations[0]).toMatchObject({
         sessionID: session.id,
         authorizationID: granted.id,
-        routedMemberID: "charlie",
+        routedMemberID: "backend",
       })
       yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${test.directory}/stale.txt`, "after reservation\n"))
       expect(yield* reserveDispatch({ sessionID: session.id, authorizationID: granted.id, permission: [] })).toEqual(
@@ -265,6 +266,24 @@ it.instance(
           requireCurrent: true,
         }).pipe(Effect.flip),
       ).toMatchObject({ reason: "context-not-current" })
+
+      // An authorization and reservation written by a build before the backend seat's rename route to its former id.
+      yield* Effect.forEach([granted.id, reservations[0].id], (id) =>
+        Effect.gen(function* () {
+          const row = yield* db.select().from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+          if (!row) throw new Error(`missing row ${id}`)
+          yield* db
+            .update(EventTable)
+            .set({ data: { ...row.data, routedMemberID: LEGACY_BACKEND_ID } })
+            .where(eq(EventTable.id, id))
+            .run()
+            .pipe(Effect.orDie)
+        }),
+      )
+      expect(yield* readAuthorization(granted.id)).toEqual(granted)
+      expect(yield* reserveDispatch({ sessionID: session.id, authorizationID: granted.id, permission: [] })).toEqual(
+        reservations[0],
+      )
     }),
   { git: true },
   15_000,

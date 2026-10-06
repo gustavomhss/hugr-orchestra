@@ -212,7 +212,7 @@ specialist seats, matching V1 `TEAM` exactly.
 | Actor   | memberId  | Role                 | Granted ability class                      | Required return card/evidence                       | Must not do                                           |
 | ------- | --------- | -------------------- | ------------------------------------------ | --------------------------------------------------- | ----------------------------------------------------- |
 | Maestro | `maestro` | conductor/integrator | lifecycle, routing, reconcile, integration | transition/Project/merge receipt                    | product implementation, self-approval, self-review    |
-| Charlie | `charlie` | backend execution    | scoped repository write                    | implementation card, gates, diff receipt            | approve, review own work, merge                       |
+| The backend specialist | `backend` | backend execution    | scoped repository write                    | implementation card, gates, diff receipt            | approve, review own work, merge                       |
 | Patty   | `patty`   | frontend execution   | scoped repository write                    | implementation card, sensory evidence, diff receipt | approve, review own work, merge                       |
 | Lucy    | `lucy`    | cold review          | read-only artifact review                  | cited APPROVE/FIX_FIRST/REJECT card                 | edit implementation, receive author transcript, merge |
 | Bobby   | `bobby`   | architecture         | read-only contract review                  | seam/contract verdict                               | implement product or merge                            |
@@ -459,14 +459,14 @@ file makes WPs sequential unless the lead creates one explicit integration WP.
 | --------- | --------------------------------- | ------- | ----------------------------------------------------------------------- |
 | #184 M0.1 | lead                              | review  | contract source and evidence commit/PR pending                          |
 | #187 M0.2 | Jimmy-style read-only research    | review  | evidence record accepted; commit/PR pending                             |
-| #183 M0.3 | Charlie-style pure parser         | blocked | wait for M0.1/M0.2 commit plus bootstrap packet                         |
-| #181 M1.1 | Charlie-style focused test        | blocked | needs current baseline evidence from #187                               |
-| #182 M1.2 | Charlie-style pure model          | blocked | needs exact Relay contract from #184                                    |
-| #185 M2.1 | Charlie-style schema/fold         | blocked | needs lifecycle transition table from #184                              |
+| #183 M0.3 | Backend-specialist-style pure parser         | blocked | wait for M0.1/M0.2 commit plus bootstrap packet                         |
+| #181 M1.1 | Backend-specialist-style focused test        | blocked | needs current baseline evidence from #187                               |
+| #182 M1.2 | Backend-specialist-style pure model          | blocked | needs exact Relay contract from #184                                    |
+| #185 M2.1 | Backend-specialist-style schema/fold         | blocked | needs lifecycle transition table from #184                              |
 | #195 M4.1 | Frankie-style configuration audit | blocked | needs GitHub Project credential and field census                        |
-| #191 M5.1 | Charlie-style pure planner        | blocked | needs risk/verification contract from #184                              |
-| #198 M6.1 | Charlie-style pure registry       | blocked | needs ability boundary from #184                                        |
-| #200 M7.1 | Charlie-style pure provider       | blocked | needs Atlas mode contract from #184                                     |
+| #191 M5.1 | Backend-specialist-style pure planner        | blocked | needs risk/verification contract from #184                              |
+| #198 M6.1 | Backend-specialist-style pure registry       | blocked | needs ability boundary from #184                                        |
+| #200 M7.1 | Backend-specialist-style pure provider       | blocked | needs Atlas mode contract from #184                                     |
 | #206 M0.4 | lead                              | blocked | normalizes legacy items and freezes conflict map after #184, #187, #183 |
 
 No implementation agent is dispatched until its row changes from `blocked` to

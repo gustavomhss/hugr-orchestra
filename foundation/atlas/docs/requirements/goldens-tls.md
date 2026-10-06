@@ -2,7 +2,7 @@
 
 > **state:** S3 · **protocol:** [`goldens`](../../.claude/skills/goldens/SKILL.md) + [`completeness`](../../.claude/skills/completeness/SKILL.md) Gate-3 teeth ·
 > **axiom:** S2 frozen (`method-tags-tls.md`; every TLS INV method-tagged; **no FSPEC** — TLS consumes KRN's `FSPEC-merge`, authors none) ·
-> **owner:** charlie (FORGE). TLS = the **delivery layer**: read/subscribe projections over the kernel store + one governed write-door (`atlas-emit`).
+> **owner:** backend (FORGE). TLS = the **delivery layer**: read/subscribe projections over the kernel store + one governed write-door (`atlas-emit`).
 >
 > **Derivation (generated from each INV's S2 method-tag — never hand-authored where a generator exists):**
 >

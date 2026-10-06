@@ -49,7 +49,7 @@ const base = {
   contextHash: "c".repeat(64),
   workCardID: "card_validation",
   workCard: "# Card\nImplement exact behavior.\n",
-  routedMemberID: "charlie",
+  routedMemberID: "backend",
   validatorID: "maestro",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],

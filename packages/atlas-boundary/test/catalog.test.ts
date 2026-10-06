@@ -6,7 +6,7 @@ import {
   verifyHostContext,
 } from "../src/generated/boundary.js"
 
-const territories = [{ name: "billing", owner: "charlie", tier: "T1", globs: ["src/**"] }] as const
+const territories = [{ name: "billing", owner: "backend", tier: "T1", globs: ["src/**"] }] as const
 
 test("canonical installed producer binds exact project and immutable content version", () => {
   const catalog = publishTerritoryCatalog("project-a", territories)
@@ -35,7 +35,7 @@ test("empty, duplicate, malformed and unavailable catalogs fail closed", () => {
     territoryCatalog("project-a", {
       projectId: "project-a",
       catalogVersion: "version",
-      territories: [{ name: "billing", owner: "charlie", tier: "BAD", globs: [] }],
+      territories: [{ name: "billing", owner: "backend", tier: "BAD", globs: [] }],
     }),
   ).toThrow("invalid territory")
 })

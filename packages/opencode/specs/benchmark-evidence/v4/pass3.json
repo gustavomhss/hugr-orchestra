@@ -1,0 +1,107 @@
+{
+  "name": "pass3",
+  "transport": "file",
+  "boundary": 89,
+  "head": [
+    55,
+    80
+  ],
+  "tailStart": 81,
+  "crossed": true,
+  "contextTokens": 45211,
+  "retried": false,
+  "ceiling": 13426,
+  "size": 5793,
+  "dropped": 0,
+  "ops": [
+    {
+      "op": "update",
+      "id": "m27"
+    },
+    {
+      "op": "retire",
+      "id": "m32"
+    },
+    {
+      "op": "update",
+      "id": "m33"
+    },
+    {
+      "op": "update",
+      "id": "m35"
+    },
+    {
+      "op": "retire",
+      "id": "m36"
+    },
+    {
+      "op": "retire",
+      "id": "m37"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "rules"
+    },
+    {
+      "op": "add",
+      "section": "decisions"
+    },
+    {
+      "op": "add",
+      "section": "findings"
+    },
+    {
+      "op": "add",
+      "section": "failures"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "values"
+    },
+    {
+      "op": "add",
+      "section": "plan"
+    }
+  ],
+  "applied": true,
+  "items": 46,
+  "memoryTokens": 5793,
+  "calls": [
+    {
+      "label": "v4/pass3",
+      "estimate": 11867,
+      "usage": {
+        "inputTokens": 11867,
+        "outputTokens": 1491
+      }
+    }
+  ]
+}

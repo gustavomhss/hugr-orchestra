@@ -16,6 +16,7 @@ import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
 import { useProviders } from "@/hooks/use-providers"
 import { pathKey } from "@/utils/path-key"
+import { agentKey } from "@/context/agent-identity"
 
 export function createPromptInputController(input: {
   sessionKey: Accessor<string>

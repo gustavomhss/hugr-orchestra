@@ -32,6 +32,7 @@ import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compos
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
 import { showToast } from "@/utils/toast"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@opencode-ai/session-ui/v2/prompt-input"
+import { agentKey, agentMention } from "@/context/agent-identity"
 import {
   createPromptInputV2Controller,
   createPromptInputV2State,
@@ -306,10 +307,10 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     ...props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
       .map((agent) => ({
-        id: `agent:${agent.name}`,
+        id: `agent:${agentKey(agent)}`,
         kind: "agent" as const,
         label: `@${agent.name}`,
-        mention: { type: "agent" as const, name: agent.name, content: `@${agent.name}`, start: 0, end: 0 },
+        mention: agentMention(agent),
       })),
     ...resources(),
     ...recent().map((path) => ({

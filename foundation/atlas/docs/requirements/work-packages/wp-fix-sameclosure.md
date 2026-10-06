@@ -115,7 +115,7 @@ context_refs: # closed list
 - source: ../req-grd.md
 - source: ../method-tags-grd.md
 
-owner: GROUND territory · builder_id `charlie` (dispatched by the lead for a frozen-contract soundness fix)
+owner: GROUND territory · builder_id `backend` (dispatched by the lead for a frozen-contract soundness fix)
 
 outputs:
 

@@ -1,0 +1,76 @@
+import { Database } from "bun:sqlite"
+import { readFileSync } from "node:fs"
+import { snapshot } from "/Users/gustavoschneiter/Documents/HuGR/_worktrees/continuity-protocol-v3/packages/opencode/src/continuity/fork"
+import { decode, scope } from "/Users/gustavoschneiter/Documents/HuGR/_worktrees/continuity-protocol-v3/packages/opencode/src/continuity/memory"
+import { child } from "/Users/gustavoschneiter/Documents/HuGR/_worktrees/continuity-protocol-v3/packages/opencode/src/continuity/alias"
+import { KEY_ARGS } from "/Users/gustavoschneiter/Documents/HuGR/_worktrees/continuity-protocol-v3/packages/opencode/src/continuity/masking"
+const B = "/private/tmp/claude-501/-Users-gustavoschneiter-Documents-HuGR-context-continuity--claude-worktrees-context-continuity-handoff-8993ff/646f85c5-b45a-4f98-aa1d-08ede2c29730/scratchpad/bench"
+const SESSION = "ses_f1511c48bffeDAL863Z2Lw4p1b"
+const db = new Database(B + "/trace.db")
+const rows = db.query("select id, data from message where session_id = ? order by time_created, id").all(SESSION) as any[]
+const messages = rows.map((row) => ({ info: { ...JSON.parse(row.data), id: row.id, sessionID: SESSION },
+  parts: (db.query("select id, message_id, data from part where message_id = ? order by id").all(row.id) as any[]).map((p) => ({ ...JSON.parse(p.data), id: p.id, sessionID: SESSION, messageID: p.message_id })) })) as any[]
+const agents = new Map((db.query("select id, agent from session where parent_id = ?").all(SESSION) as any[]).map((r) => [r.id, r.agent]))
+const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim()
+
+for (const [step, boundary, ceiling] of [["pass1", 36, 14039], ["pass2", 62, 15338]] as const) {
+  const history = messages.slice(0, boundary + 1)
+  const captured = snapshot(SESSION as any, history, undefined, true, 32000)!
+  const delegations = Object.fromEntries([...new Set(history.flatMap((m: any) => m.parts.flatMap((p: any) => child(p) ?? [])))].map((id) => [id, { member: agents.get(id), status: undefined }]))
+  const host = { history, delegations, member: false }
+  const ctx = scope(captured, host as any)
+  const requestRaw = readFileSync(`${B}/exchange/v4-${step}-retry.request.md`, "utf8")
+  // The snapshot the producer saw: system + message 1 (message 2 is its own rejected reply).
+  const seen = requestRaw.slice(0, requestRaw.indexOf("<<<<<<<<<< MESSAGE 2 · role: assistant"))
+  const request = fold(seen)
+  const lines = seen.split("\n")
+  const text = readFileSync(`${B}/exchange/v4-${step}-retry.reply.txt`, "utf8").trim()
+  console.log(`\n######## v4-${step}-retry.reply.txt  (head ${history.indexOf(captured.head[0])}-${history.indexOf(captured.head.at(-1))}, span ${ctx.span[0].alias}..${ctx.end?.alias})`)
+  const full = decode({ text, snapshot: captured, producerID: "ses_diag" as any, host: host as any, ceiling })
+  console.log("FULL DECODE:", "check" in full ? `${full.check}: ${full.detail}` : "accepted")
+  const ops = JSON.parse(text).ops
+  for (const [index, op] of ops.entries()) {
+    const single = { ...op, fields: { ...op.fields } }
+    delete single.key
+    if (single.fields.needs) single.fields.needs = []
+    const one = decode({ text: JSON.stringify({ ops: [single] }), snapshot: captured, producerID: "ses_diag" as any, host: host as any, ceiling })
+    if (!("check" in one)) continue
+    console.log(`\nop ${index + 1} (${op.section}, src ${op.src.join(",")}): ${one.check}: ${one.detail}`)
+    if (one.check !== "C8") continue
+    const name = "error" in op.fields ? "error" : "value"
+    const needle = fold(op.fields[name])
+    // Where the folded needle occurs, by source and field.
+    const where: string[] = []
+    for (const source of ctx.covered) {
+      const part: any = source.part
+      const inSpan = ctx.span.includes(source)
+      const tag = `${source.alias}${inSpan ? "" : "(outside new span)"}`
+      if (source.text && fold(source.text).includes(needle)) where.push(`${tag} text`)
+      if (part?.type === "tool") {
+        const st = part.state
+        for (const [key, value] of Object.entries(st.input ?? {})) {
+          const raw = typeof value === "string" ? value : JSON.stringify(value)
+          if (fold(raw).includes(needle)) where.push(`${tag} input.${key}${KEY_ARGS.includes(key) ? " (KEY_ARG)" : " (not KEY_ARG)"}`)
+          else if (typeof value === "string" && fold(JSON.stringify(value)).includes(needle)) where.push(`${tag} input.${key} only JSON-escaped`)
+          else if (typeof value !== "string" && fold(JSON.stringify(value)).includes(needle)) where.push(`${tag} input.${key} (nested)`)
+        }
+        const out = st.output ?? st.error ?? ""
+        if (fold(out).includes(needle)) where.push(`${tag} ${st.output !== undefined ? "output" : "error"}`)
+        else if (fold(JSON.stringify(out)).includes(needle)) where.push(`${tag} output only JSON-escaped`)
+        if (st.metadata && fold(JSON.stringify(st.metadata)).includes(needle)) where.push(`${tag} metadata`)
+      }
+    }
+    console.log(`   needle: ${JSON.stringify(op.fields[name]).slice(0, 160)}`)
+    console.log(`   in the snapshot the producer saw (system + message 1, folded): ${request.includes(needle)}`)
+    for (const l of lines) if (fold(l).includes(needle)) console.log(`     request line: ${l.slice(0, 200)}`)
+    if (needle.includes(";")) for (const piece of op.fields[name].split(";").map((x: string) => x.trim())) {
+      const hits = ctx.covered.flatMap((source: any) => {
+        const st = source.part?.type === "tool" ? source.part.state : undefined
+        return [...(source.text && fold(source.text).includes(fold(piece)) ? [`${source.alias} text`] : []),
+          ...Object.entries(st?.input ?? {}).filter(([, v]) => typeof v === "string" && fold(v as string).includes(fold(piece))).map(([k]) => `${source.alias} input.${k}${KEY_ARGS.includes(k) ? " (KEY_ARG)" : " (not KEY_ARG)"}`)]
+      })
+      console.log(`   piece "${piece}": ${[...new Set(hits)].slice(0, 8).join("; ") || "nowhere"}`)
+    }
+    console.log(`   occurs in: ${where.join("; ") || "no covered source"}`)
+  }
+}

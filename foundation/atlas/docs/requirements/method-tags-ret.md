@@ -2,7 +2,7 @@
 
 > **state:** S2 · **protocol:** [`formal-decision`](../../.claude/skills/formal-decision/SKILL.md) ·
 > **axiom:** S1 frozen (`req-ret.md`; every behavioural INV has ≥1 REQ, atom-gate passed) ·
-> **owner:** charlie (FORGE).
+> **owner:** backend (FORGE).
 >
 > One tag per **behavioural** INV by the 3-conjunct rule. **No RETR invariant is `formal`** — the whole Atlas's
 > one `formal` cluster is the `FSPEC-merge` core (KRN block); retrieval consumes that core, it does not host one.

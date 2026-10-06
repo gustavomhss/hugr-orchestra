@@ -89,6 +89,37 @@ describe("Linux launcher controller (injected API)", () => {
     state.dispose()
   })
 
+  // A second app clicked during a launch (which waits seconds for the window) used to hit a disabled button and
+  // get no answer; the controller now records it so the status line can answer, and launches only the first.
+  test("an app clicked while another launch runs is answered, not launched, and the answer clears with the launch", async () => {
+    const calls: string[] = []
+    const other = { id: "org.example.Files.desktop", name: "Files" }
+    const launching = Promise.withResolvers<{ status: "launched" }>()
+    const state = setup({
+      appDockLinuxOpen: async () => opened,
+      appDockLinuxList: async () => ({ phase: "ready", apps: [app, other] }),
+      appDockLinuxLaunch: (id) => {
+        calls.push(`launch:${id}`)
+        return launching.promise
+      },
+    })
+    await state.menu.refresh()
+    expect(state.menu.store.refused).toBeUndefined()
+    const pending = state.menu.run({ type: "launch", appID: app.id })
+    await Bun.sleep(0)
+    expect(state.menu.store.busyApp).toBe(app.id)
+    await state.menu.run({ type: "launch", appID: other.id })
+    expect(state.menu.store.refused).toBe(other.id)
+    expect(state.menu.store.busyApp).toBe(app.id)
+    expect(state.menu.unavailable()).toBe(false)
+    launching.resolve({ status: "launched" })
+    await pending
+    expect(calls).toEqual([`launch:${app.id}`])
+    expect(state.menu.store.refused).toBeUndefined()
+    expect(state.menu.store.busy).toBeUndefined()
+    state.dispose()
+  })
+
   test("failed open prevents launch and exposes the sanitized error code", async () => {
     const calls: string[] = []
     const state = setup(
