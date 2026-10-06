@@ -47,9 +47,10 @@ const maintenance: Match = (hit) => {
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
-function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown } = {}) {
+function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number } = {}) {
   const config = testProviderConfig(url)
   config.provider.test.models["test-model"].tool_call = options.toolcall ?? true
+  if (options.context) config.provider.test.models["test-model"].limit.context = options.context
   return Effect.promise(() => Bun.write(path.join(directory, "opencode.json"), JSON.stringify({
     ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
     plugin: [], mcp: {}, compaction: { auto: false },
@@ -337,5 +338,48 @@ it.instance("read shows nested rules again after working memory drops the turn t
   expect(conversation).not.toContain(seed[0])
   expect(conversation).not.toContain("NESTED_RULE_5C1E")
   expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_5C1E`)
+  expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
+}), 120_000)
+
+it.instance("read shows nested rules again after masking hides the read that showed them", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const jobs = yield* BackgroundJob.Service
+  // A 50,000-token window starts maintenance at 25,000 tokens; masking alone settles it under 17,500, so no fork runs.
+  yield* configure(llm.url, instance.directory, { context: 50_000 })
+  const rules = path.join(instance.directory, "rules")
+  yield* Effect.promise(() => Bun.write(path.join(rules, "AGENTS.md"), "NESTED_RULE_8D2A"))
+  // About 10,000 tokens of read output: masking it frees enough on its own.
+  yield* Effect.promise(() => Bun.write(path.join(rules, "first.txt"), "filler line that gives the first read its weight\n".repeat(800)))
+  yield* Effect.promise(() => Bun.write(path.join(rules, "second.txt"), "second"))
+  const chat = yield* sessions.create({ title: "Nested rules after masking" })
+  const capture = ledger()
+  const seed = Array.from({ length: 6 }, (_, index) => `MASKED_RULES_SEED_${index}`)
+  yield* llm.pushMatch(parent(seed[0]), reply().tool("read", { filePath: path.join(rules, "first.txt") }))
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`REPLY_${text}`, text === seed[5] ? 25_000 : 100))
+  yield* llm.pushMatch(capture.record("next", parent("MASKED_RULES_NEXT")), reply().tool("read", { filePath: path.join(rules, "second.txt") }))
+  yield* llm.pushMatch(parent("MASKED_RULES_NEXT"), answer("NEXT_DONE"))
+  yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unexpected masked-rules request" } }))
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    parts: [{ type: "text", text }] }), "Masked-rules HTTP request stalled", "30 seconds")
+  for (const text of seed) yield* send(text)
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  const job = yield* jobFor(chat.id, history.at(-1)!.info.id)
+  const done = yield* jobs.wait({ id: job.id, timeout: 10_000 })
+  expect(done.info?.output).toBe("masked")
+  yield* send("MASKED_RULES_NEXT")
+  const durable = yield* sessions.messages({ sessionID: chat.id })
+  const reads = durable.flatMap((message) => message.parts).flatMap((part) =>
+    part.type === "tool" && part.tool === "read" && part.state.status === "completed" ? [part.state] : [])
+  expect(reads).toHaveLength(2)
+  expect(reads[0].output).toContain("NESTED_RULE_8D2A")
+  // The request that made the second read still carried the first read, masked, without the rules it showed.
+  const conversation = wireMessages(capture.hits[0].hit.body).filter((entry) => entry.role !== "system")
+    .map((entry) => entry.content).join("\n")
+  expect(conversation).toContain(`[masked tool result: read filePath=${path.join(rules, "first.txt")} → completed`)
+  expect(conversation).not.toContain("NESTED_RULE_8D2A")
+  expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_8D2A`)
   expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
 }), 120_000)
