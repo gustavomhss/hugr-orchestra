@@ -236,6 +236,8 @@ const ALTERNATIVES: Record<string, string[]> = { action: ["action", "observedAct
 function missed(scan: NativeScan, query: NativeQuery) {
   if (query.window) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No app window is active in the Linux workspace; pass ref or target for the window, or ask the user to click the app" })
+  if (query.focused && query.capability === undefined && scan.found.length === 0) return toJSON({ code: "target-not-found",
+    outcome: "not-dispatched", found: 0, hint: "No control in the active app window has keyboard focus; open the field with its shortcut or pass target {name, role}" })
   if (query.focused && scan.found.length === 0) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No control has keyboard focus; pass target {name, role} for the field" })
   if (scan.found.length === 0) return compactScan(scan, "target-not-found")
@@ -248,7 +250,7 @@ function missed(scan: NativeScan, query: NativeQuery) {
       ? ['Controls with this name only support observed actions; retry with mode: "observed"'] : []),
     ...(query.capability === "type" && shaped.some((item) => supports(item, "keyboardType"))
       ? ['Fields with this name only accept keyboard input; retry with mode: "keyboard"'] : []),
-    ...(query.focused ? ["The focused control does not take typed text; pass target {name, role} for the field"] : []),
+    ...(query.focused ? ["The focused control is not a text field ui_type can confirm; ui_keys with text types into whatever has focus, or pass target {name, role} for the field"] : []),
     // The helper never acts on list and tree rows themselves, so a row matched by name otherwise looked like a typo.
     ...(query.capability !== undefined && !query.focused && shaped.length > 0
       && !shaped.some((item) => ALTERNATIVES[query.capability!].some((capability) => supports(item, capability)))
@@ -491,28 +493,34 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           call(context, "scroll", { direction: args.direction, amount: args.amount }).then(toJSON, toolError),
       }),
       dock_keyboard: tool({
-        description: "Press keys. Browser tabs: `type` keyDown/keyUp with `key`. Linux workspace: `keys` as one combination such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target` (a focusable control there takes focus first). The effect is defined by the app and never verified, so read again afterwards.",
+        description: "Press keys. Browser tabs: `type` keyDown/keyUp with `key`. Linux workspace: `keys` as one combination such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target` (a focusable control there takes focus first). Or `text`: printable ASCII typed as key events into the control that has keyboard focus in the active app window (or `ref`/`target`, which takes focus first); refused for password fields. The effect is defined by the app and never verified, so read again afterwards.",
         args: {
           type: tool.schema.enum(["keyDown", "keyUp"]).optional().describe("Browser only"),
           key: tool.schema.string().min(1).optional().describe("Browser only: one key name"),
           keys: tool.schema.string().min(1).max(64).optional().describe("Linux workspace: modifiers and one key joined by +, e.g. ctrl+shift+p"),
+          text: tool.schema.string().min(1).max(256).optional().describe("Linux workspace: printable ASCII to type as key events into the focused control, instead of keys"),
           ref: ref.optional().describe("Linux workspace: a control in the window that should receive the keys"),
           target: target.optional().describe("Linux workspace: locate that control by name instead of ref"),
         },
         execute: (args, context) => {
-          if (args.keys === undefined) {
+          if (args.keys === undefined && args.text === undefined) {
             if (args.type === undefined || args.key === undefined)
-              return Promise.resolve("dock_keyboard needs type and key for a browser tab, or keys for the Linux workspace")
+              return Promise.resolve("dock_keyboard needs type and key for a browser tab, or keys or text for the Linux workspace")
             return call(context, "keyboard", { type: args.type, key: args.key }).then(toJSON, toolError)
           }
-          const keys = args.keys
-          if (args.ref !== undefined) return call(context, "keyboard", { ref: args.ref, keys }).then(toJSON, toolError)
-          const send = (item: NativeItem, clock: Clock) => call(context, "keyboard", { ref: item.ref, keys }, clock).then(toJSON)
+          if (args.keys !== undefined && args.text !== undefined)
+            return Promise.resolve("Pass keys or text, not both: press the combination in its own call")
+          const input = args.text === undefined ? { keys: args.keys } : { text: args.text }
+          if (args.ref !== undefined) return call(context, "keyboard", { ref: args.ref, ...input }).then(toJSON, toolError)
+          const send = (item: NativeItem, clock: Clock) => call(context, "keyboard", { ref: item.ref, ...input }, clock).then(toJSON)
           const clock = { deadline: Date.now() + findDeadlineMs }
-          // Without a ref the keys go to the one active window: a single roots page, never a tree walk.
-          return exclusive(() => args.target === undefined ? activeWindow(context, clock).then((item) =>
-            item === undefined ? act(context, { window: true }, send, clock) : typeof item === "string" ? item : send(item, clock))
-            : act(context, args.target, send, clock))
+          const wanted = args.target
+          // Without a ref, keys go to the one active window (a single roots page, never a tree walk) and text goes to
+          // the control focused in it, which the helper re-proves focused and unprotected before typing.
+          return exclusive(() => wanted !== undefined ? act(context, wanted, send, clock)
+            : args.text !== undefined ? act(context, { focused: true }, send, clock)
+            : activeWindow(context, clock).then((item) =>
+              item === undefined ? act(context, { window: true }, send, clock) : typeof item === "string" ? item : send(item, clock)))
             .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
@@ -725,7 +733,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       ui_read: linux(dock.dock_read, "Read the accessibility tree of the apps open in the Linux workspace, one bounded page at a time. Items carry opaque refs (n:...) that expire when the app changes or the next page is read; prefer ui_find, or ui_act/ui_type with `target`, which locate and act in one call. Use rootRef to read one subtree and cursor for the next page (cursors expire within seconds).", ["budget", "maxText", "rootRef", "cursor", "textOffset"]),
       ui_find: linux(dock.dock_find, "Find controls in the Linux workspace apps by accessible name (case-insensitive substring) and/or role. Pages the tree itself and returns compact matches with refs usable right away; searchComplete:false means part of the tree was not searched.", ["name", "role", "includeText"]),
       ui_act: linux(dock.dock_action, "Press, click, toggle or otherwise invoke a control in a Linux workspace app. Prefer `target` {name, role} plus an action name: it locates the control and acts in one call. Use mode observed for controls inside lists and trees. Acknowledgement is not proof; read again to confirm the result.", ["target", "action", "ref", "actionID", "mode"]),
-      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref. Editable mode sets and verifies the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the field that has keyboard focus (e.g. a search box just opened by a shortcut).", ["target", "ref", "text", "mode"]),
+      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref, and verify it. Editable mode sets the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the text field that has keyboard focus (e.g. a search box just opened by a shortcut). When focus is in something that is not a recognized text field (a command palette list, a search box shown as another role), use ui_keys with text instead.", ["target", "ref", "text", "mode"]),
       ui_pointer: tool({
         description: "Move the mouse onto a control in a Linux workspace app (kind hover) or right-click it (kind contextMenu), by `target` {name, role} or ref. Use it for what apps show only under the mouse, such as a row's gear or toolbar, and for right-click menus that ui_act and ui_keys do not open. It is a real mouse event at the control's center, so apps may react to it as they would to a person (a right-click on a VS Code boolean setting's description toggles it); look again afterwards.",
         args: { kind: tool.schema.enum(["hover", "contextMenu"]), target: target.optional().describe("Locate the control by name"),
@@ -739,7 +747,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             .then(toJSON), { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
-      ui_keys: linux(dock.dock_keyboard, "Press a key combination in a Linux workspace app, such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1. It goes to the active app window, or to the window holding `ref`/`target`. Apps are often fastest through their shortcuts; names often show them, e.g. \"Explorer (Ctrl+Shift+E)\". The effect is up to the app, so read again afterwards.", ["keys", "ref", "target"]),
+      ui_keys: linux(dock.dock_keyboard, "Press a key combination in a Linux workspace app, such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target`. Apps are often fastest through their shortcuts; names often show them, e.g. \"Explorer (Ctrl+Shift+E)\". Or pass `text` (printable ASCII, up to 256 characters) to type it in one call as key events into whatever has keyboard focus in the active window: use it when ui_type finds no text field there, such as a command palette or a search box shown as another role; it is refused for password fields. Prefer ui_type for a field you can name, because it verifies the value. Nothing here is verified, so read again afterwards.", ["keys", "text", "ref", "target"]),
       ui_wait: linux(dock.dock_wait, "Wait a bounded time for a Linux workspace app to settle; this is a delay, not proof that the app is ready.", ["milliseconds"]),
     },
   }

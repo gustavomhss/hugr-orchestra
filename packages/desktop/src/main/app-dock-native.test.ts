@@ -436,6 +436,18 @@ test("pointer and focused typing refuse malformed arguments before client work",
   expect(f.client.calls.length).toBe(before)
 })
 
+test("typed text reaches the helper as a key operation, bounded and never mixed with keys", async () => {
+  const f = fixture()
+  const binding = await f.dock.bind(identity(), target(), f.client, confirm)
+  const scope = { bindingID: binding.bindingID, bindingEpoch: binding.bindingEpoch }
+  await f.dock.dispatch("keyboard", identity(), { ref: "n:focus", text: "trim trailing whitespace", world: "linux" })
+  expect(f.client.calls.at(-1)).toEqual({ op: "key", args: { ref: "n:focus", text: "trim trailing whitespace" }, ...scope })
+  const before = f.client.calls.length
+  for (const args of [{ text: "" }, { text: "x".repeat(257) }, { text: 7 }, { text: "x", keys: "Return" }])
+    await expect(f.dock.dispatch("keyboard", identity(), { ref: "n:focus", ...args })).rejects.toMatchObject({ code: "invalid-argument" })
+  expect(f.client.calls.length).toBe(before)
+})
+
 test("numeric native refs, invalid args and browser-only operations fail before client work", async () => {
   const f = fixture()
   await f.dock.bind(identity(), target(), f.client, confirm)

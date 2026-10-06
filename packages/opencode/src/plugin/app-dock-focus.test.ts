@@ -22,7 +22,7 @@ test("ui_type into focus refuses without dispatch when focus is not on a text fi
   const button = host(() => windows(control("n:button", "Search", { states: [8, 12, 24] })))
   const refused = JSON.parse(String(await button.hooks.tool.ui_type.execute({ text: "x" }, context)))
   expect(refused).toMatchObject({ code: "target-not-found", outcome: "not-dispatched", found: 0, nameMatches: 1 })
-  expect(refused.hints).toContain("The focused control does not take typed text; pass target {name, role} for the field")
+  expect(refused.hints).toContain("The focused control is not a text field ui_type can confirm; ui_keys with text types into whatever has focus, or pass target {name, role} for the field")
   const nothing = host(() => windows(control("n:button", "Search")))
   expect(JSON.parse(String(await nothing.hooks.tool.ui_type.execute({ text: "x" }, context))))
     .toMatchObject({ code: "target-not-found", hint: "No control has keyboard focus; pass target {name, role} for the field" })
@@ -44,3 +44,26 @@ test("ui_pointer hovers or right-clicks a located control and passes refs straig
     { op: "pointer", args: { ref: "n:row", kind: "hover", world: "linux" } }])
   await expect(hooks.tool.ui_pointer.execute({ kind: "hover" }, context)).resolves.toBe("ui_pointer requires target or ref")
 })
+
+const keyed = { ok: true as const, value: { method: "keys", characters: 6, dispatch: "acknowledged", postcondition: "unverified" } }
+// VS Code's command palette reports its highlighted list item as focused, not the input box that takes the keys.
+const palette = control("n:item", "Accounts: Manage Accounts", { role: 32, roleName: "list-item", states: [8, 12, 23, 24] })
+
+test("ui_keys text types into whatever has focus in the active window, where ui_type finds no text field", async () => {
+  const { hooks, calls } = host((op) => op === "keyboard" ? keyed : windows(palette))
+  expect(JSON.parse(String(await hooks.tool.ui_keys.execute({ text: "reload" }, context)))).toEqual(keyed.value)
+  // FeatherPad's own focused field sits in an inactive window and is never the destination.
+  expect(calls.filter((call) => call.op === "keyboard")).toEqual([{ op: "keyboard", args: { ref: "n:item", text: "reload", world: "linux" } }])
+  await hooks.tool.ui_keys.execute({ text: "trim", target: { name: "Accounts", role: "list item" } }, context)
+  expect(calls.filter((call) => call.op === "keyboard").at(-1)!.args).toEqual({ ref: "n:item", text: "trim", world: "linux" })
+})
+
+test("ui_keys text refuses without dispatch when nothing in the active window has focus, or with keys too", async () => {
+  const unfocused = host(() => windows(control("n:button", "Search")))
+  expect(JSON.parse(String(await unfocused.hooks.tool.ui_keys.execute({ text: "x" }, context)))).toEqual({ code: "target-not-found",
+    outcome: "not-dispatched", found: 0, hint: "No control in the active app window has keyboard focus; open the field with its shortcut or pass target {name, role}" })
+  const both = host(() => windows(palette))
+  expect(await both.hooks.tool.ui_keys.execute({ text: "x", keys: "Return" }, context)).toBe("Pass keys or text, not both: press the combination in its own call")
+  expect([...unfocused.calls, ...both.calls].every((call) => call.op === "read")).toBe(true)
+})
+

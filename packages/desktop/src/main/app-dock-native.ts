@@ -564,8 +564,14 @@ function operation(op: string, args: Record<string, unknown>): NativeDockProtoco
     throw new NativeDockProtocol.NativeError("unsupported-operation", `Native dock does not support ${op}`)
   if (!NativeDockProtocol.isNativeRef(args.ref))
     throw new NativeDockProtocol.NativeError("wrong-scope", "Native operations require an opaque native ref")
-  // A native key combination goes to the owned window holding ref; the helper parses and refuses unsafe ones.
+  // A native key combination, or printable text typed into the focused ref, goes to the owned window holding ref;
+  // the helper parses and refuses unsafe ones.
   if (op === "keyboard") {
+    if (args.text !== undefined) {
+      if (typeof args.text !== "string" || args.text.length < 1 || args.text.length > 256 || args.keys !== undefined)
+        throw new NativeDockProtocol.NativeError("invalid-argument", "Native typed text must be 1 to 256 characters, without keys")
+      return { op: "key", args: { ref: args.ref, text: args.text } }
+    }
     if (typeof args.keys !== "string" || args.keys.length < 1 || args.keys.length > 64)
       throw new NativeDockProtocol.NativeError("invalid-argument", "Native keyboard requires keys such as ctrl+comma")
     return { op: "key", args: { ref: args.ref, keys: args.keys } }

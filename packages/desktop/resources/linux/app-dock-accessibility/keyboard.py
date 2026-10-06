@@ -22,8 +22,12 @@ DBUS = ("org.freedesktop.DBus", "/org/freedesktop/DBus")
 DEC = "/org/a11y/atspi/registry/deviceeventcontroller"
 _locks, _guard = WeakValueDictionary(), Lock()
 MAX_TEXT, MAX_CALLS = 1500, LIMITS["keyboardCalls"]
+# Unverified typing into whatever holds focus: printable ASCII only, so one KEY_STRING event carries it without
+# Unicode keycode remapping, and no control character (Return, Tab, Escape) can reach the app this way.
+MAX_TYPED = 256
 # X11 modifier masks and the keysyms a shortcut may name; single printable ASCII characters are their own keysym.
 MODIFIERS = {"ctrl": 4, "control": 4, "shift": 1, "alt": 8, "super": 64}
+SHORTCUT_MODIFIERS = 1 | 4 | 8 | 64
 KEYSYMS = {"return": 0xFF0D, "enter": 0xFF0D, "escape": 0xFF1B, "esc": 0xFF1B, "tab": 0xFF09, "backspace": 0xFF08,
            "delete": 0xFFFF, "insert": 0xFF63, "home": 0xFF50, "end": 0xFF57, "left": 0xFF51, "up": 0xFF52,
            "right": 0xFF53, "down": 0xFF54, "pageup": 0xFF55, "pagedown": 0xFF56, "space": 0x20, "plus": 0x2B,
@@ -328,9 +332,20 @@ def parse_keys(keys):
     return mask, keysym
 
 
-def press_keys(bus, node, keys, timeout_ms, allowed_window):
-    """One shortcut into an owned, active window. Its effect is application-defined, so it is never verified."""
-    mask, keysym = parse_keys(keys)
+def parse_text(text):
+    if not isinstance(text, str) or not 1 <= len(text) <= MAX_TYPED or any(not 32 <= ord(c) <= 126 for c in text):
+        raise BusError("unsupported-operation", "Typed text must be 1 to 256 printable ASCII characters")
+    return text
+
+
+def press_keys(bus, node, keys, timeout_ms, allowed_window, text=None):
+    """One shortcut, or text typed as key events, into an owned, active window. Its effect is application-defined,
+    so it is never verified. Text goes to the control holding focus, which must be the unprotected target itself."""
+    if (keys is None) == (text is None):
+        raise BusError("protocol-error", "Send either a key combination or text")
+    mask, keysym = parse_keys(keys) if text is None else (0, None)
+    if text is not None:
+        parse_text(text)
     if type(timeout_ms) is not int or not 1 <= timeout_ms <= 60000:
         raise BusError("protocol-error", "Invalid keyboard deadline")
     if not os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
@@ -341,8 +356,9 @@ def press_keys(bus, node, keys, timeout_ms, allowed_window):
     if not isinstance(allowed_window, dict):
         raise BusError("protocol-error", "Owned window evidence is required")
     deadline = monotonic() + timeout_ms / 1000
-    result = {"method": "keys", "keys": keys, "dispatch": "unknown", "postcondition": "unverified",
-              "focus": {"requested": False, "confirmed": False, "externalRaces": "unfenced"}, "controllerCalls": 0}
+    result = {"method": "keys", **({"keys": keys} if text is None else {"characters": len(text)}), "dispatch": "unknown",
+              "postcondition": "unverified", "focus": {"requested": False, "confirmed": False, "externalRaces": "unfenced"},
+              "controllerCalls": 0}
     counter = [0]
 
     def call(ref, interface, method, signature="()", parameters=(), reply="()"):
@@ -388,25 +404,37 @@ def press_keys(bus, node, keys, timeout_ms, allowed_window):
             if not call(ref, A + "Component", "GrabFocus", reply="(b)") or 12 not in _states(call, ref):
                 raise BusError("focus-unconfirmed", "Provider did not focus the key target")
         result["focus"]["confirmed"] = 12 in _states(call, ref)
+        # The focused target's role and ancestry (checked above) are the proof that typed text is not a password.
+        if text is not None and not result["focus"]["confirmed"]:
+            raise BusError("focus-unconfirmed", "Typed text goes only to the control that holds focus")
         active()
         controller = call(DBUS, DBUS[0], "GetNameOwner", "(s)", ("org.a11y.atspi.Registry",), "(s)"), DEC
 
-        def generate(code, kind):
+        def generate(code, kind, string=""):
             active()
+            if text is not None and 12 not in _states(call, ref):
+                raise BusError("focus-unconfirmed", "Focus left the target before typing")
             result["controllerCalls"] += 1
-            call(controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (code, "", kind))
+            call(controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (code, string, kind))
 
         try:
+            if text is not None:
+                # A modifier left locked would turn typed letters into shortcuts (ctrl+q quits many apps).
+                _release(bus, controller, result, SHORTCUT_MODIFIERS)
+                generate(0, 4, text)  # KEY_STRING: one event for the whole printable ASCII run
             if mask:
                 generate(mask, 5)  # KEY_LOCKMODIFIERS
-            generate(keysym, 3)  # KEY_SYM: press and release
+            if keysym is not None:
+                generate(keysym, 3)  # KEY_SYM: press and release
         finally:
-            if mask and result["controllerCalls"]:
-                _release(bus, controller, result, mask)
+            if (mask or text is not None) and result["controllerCalls"]:
+                _release(bus, controller, result, mask or SHORTCUT_MODIFIERS)
         result["dispatch"] = "acknowledged"
         return result
     except BusError as error:
-        result["dispatch"] = "unknown" if result["controllerCalls"] or result["focus"]["requested"] else "not-dispatched"
+        # Modifier unlocks alone type nothing; any other controller event or a focus grab may have had an effect.
+        sent = result["controllerCalls"] > result.get("cleanupCalls", 0)
+        result["dispatch"] = "unknown" if sent or result["focus"]["requested"] else "not-dispatched"
         error.result = result
         raise
     finally:
@@ -544,6 +572,7 @@ def _send_segment(generate, segment):
 def _release(bus, controller, result, mask=4):
     # Separate finite cleanup budget also runs after the operation deadline.
     result["controllerCalls"] += 1
+    result["cleanupCalls"] = result.get("cleanupCalls", 0) + 1
     try:
         getattr(bus, "cleanup_call", bus.call)(*controller, A + "DeviceEventController", "GenerateKeyboardEvent", "(isu)", (mask, "", 6), "()", 500)
     except BusError as error:

@@ -376,7 +376,7 @@ test("ui_* tools always address the Linux workspace and expose only native argum
   expect(dock.calls.length).toBeGreaterThan(3)
   expect(dock.calls.every((call) => call.args.world === "linux")).toBe(true)
   expect(Object.keys(dock.hooks.tool.ui_read.args).sort()).toEqual(["budget", "cursor", "maxText", "rootRef", "textOffset"])
-  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target"])
+  expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target", "text"])
 })
 
 test("dock_* called by an agent addresses browser tabs; without an agent the legacy envelope is unchanged", async () => {
