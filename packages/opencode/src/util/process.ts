@@ -1,3 +1,39 @@
+// Process: the legacy (cross-spawn) path, and the omni path when OPENCODE_EXPERIMENTAL_OMNI_SPAWNER is on (WP3).
+//
+// Mapping table, legacy option or behavior -> omni (integration plan §4 WP3, D-L1, D-L3, D-L4, D-L6):
+//
+// | Legacy                                  | Omni path                                                               |
+// |-----------------------------------------|-------------------------------------------------------------------------|
+// | cmd[0], cmd.slice(1)                    | spawn(command, args); no shell; omni batch-quotes `.cmd`/`.bat`         |
+// | cwd                                     | cwd                                                                     |
+// | env: undefined / {...}                  | inheritEnv:false, env: Omni.childEnv(env) (D-L3, HUGR_OMNI_* stripped)  |
+// | env: null (empty environment)           | inheritEnv:false, env: {} (Windows still gets SystemRoot)               |
+// | stdin "pipe"                            | stdin "pipe"; a real Writable, end() -> closeStdin()                    |
+// | stdin "ignore" / unset                  | stdin "closed"; the stream is null                                      |
+// | stdout/stderr "pipe"                    | one pump reads omni's single consumer into real Readables, with         |
+// |                                         | backpressure: true (nothing dropped)                                    |
+// | stdout/stderr "ignore" / unset          | pumped and discarded; the stream is null                                |
+// | Stdio "inherit", number, Stream         | unsupported. Flag "1" delegates to legacy (counted, logged); "strict"   |
+// |                                         | rejects `exited` with code EINVAL. Terminal callers use interactive().  |
+// | shell: true / string                    | Shell.invocation() -> [shell, flag, joined]; cmd.exe (undefined)        |
+// |                                         | delegates to legacy in "1" and "strict" alike (D-L4), counted           |
+// | abort (AbortSignal)                     | tree stop({graceMs}); surfaces as an exit code: RunFailedError, or the  |
+// |                                         | nothrow result. Never an OmniError.                                     |
+// | abort already aborted                   | throws synchronously, as legacy (nothing runs)                          |
+// | kill (signal name)                      | ignored: omni sends its own graceful request (SIGTERM / CTRL_BREAK)     |
+// | timeout (ms to SIGKILL after abort)     | graceMs = timeout > 0 ? timeout : 2000 (whole tree, one deadline)       |
+// | deadline (new)                          | timeoutMs; legacy: a timer that aborts the same way                     |
+// | 'error' ENOENT / EACCES                 | NOT_FOUND, INVALID_CWD -> ENOENT; NOT_EXECUTABLE -> EACCES;             |
+// |                                         | INVALID_ARGUMENT -> EINVAL; others -> EIO. Never a synchronous throw:   |
+// |                                         | `exited` rejects with an Error carrying `code` and `cause`.             |
+// | exited = code ?? (signal ? 1 : 0)       | exitCode ?? (signal ? 1 : 0), resolved at root exit plus output end or  |
+// |                                         | a 2 s drain grace (D-L6); after the grace a tree whose pipes are still  |
+// |                                         | held by descendants is stopped, so readers always end                   |
+// | run(): buffers stdout/stderr unbounded  | omni run(), text:false, maxOutputBytes 1 GiB (OUTPUT_LIMIT -> ENOBUFS)  |
+// | stop(proc): kill / taskkill /T /F       | child.stop({graceMs: 2000}) on the whole tree                           |
+// | pid                                     | omni pid once spawned (the binding loads asynchronously: undefined      |
+// |                                         | until then and after a startup failure)                                 |
+// | interactive(): n/a                      | always legacy cross-spawn, stdio may inherit (§3 terminal callers)      |
 import { type ChildProcess } from "child_process"
 import type { Stream } from "node:stream"
 import launch from "cross-spawn"
