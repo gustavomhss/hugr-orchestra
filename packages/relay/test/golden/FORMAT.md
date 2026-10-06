@@ -12,10 +12,14 @@ The generator:
 - runs every fire under `env -i` with only `PATH`, `HOME` and the scenario's explicit `RELAY_*` variables;
 - pins `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_AUTHOR_DATE` and the `GIT_COMMITTER_*` equivalents;
 - sets `RELAY_JUDGE_BACKEND=stub` and `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP=0` unless the scenario sets them;
-- asserts jq 1.7.x, python3, bash and git before writing anything;
+- asserts jq 1.8.1, python3, bash and git before writing anything;
 - always passes the arm token through `RELAY_ARM_TOKEN`, because the TS arm has no transcript marker scan.
 
 Two consecutive generator runs must be byte-identical.
+
+The check and arm goldens were generated with jq 1.8.1 (each area's `GENERATOR.json` records the exact tool
+versions). The plan named jq 1.7.x, which was not available. The TS compact writer must match the bytes in the
+goldens, not a jq version.
 
 ## Byte values
 

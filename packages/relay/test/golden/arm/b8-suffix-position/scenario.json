@@ -1,0 +1,36 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "beta",
+        "instructions": "do beta",
+        "checklist": [
+          {
+            "id": "beta-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "position": "build.beta",
+    "counter": "1\n"
+  },
+  "fires": [
+    {}
+  ]
+}
