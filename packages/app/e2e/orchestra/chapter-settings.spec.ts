@@ -56,7 +56,7 @@ test("the sidebar opens the routed view with the mock's masthead, sections and d
   await expect(nav.filter({ hasText: "Models" })).toHaveAttribute("aria-current", "page")
   await expect(nav.filter({ hasText: "Permissions" })).not.toHaveAttribute("aria-current", "page")
   await page.goto("/orchestra/settings?section=general", { waitUntil: "domcontentloaded" })
-  await expect(view.locator('[data-action="settings-color-scheme"]')).toBeVisible()
+  await expect(view.locator('[data-action="settings-palette"]')).toBeVisible()
   await expect(view.locator('[data-action="settings-language"]')).toBeVisible()
   await nav.filter({ hasText: "Servers" }).click()
   await expect(view.locator(".settings-sec > h3")).toHaveText("Servers")
@@ -89,7 +89,7 @@ test("a malformed shell list stays in General's shell row, which retries, and th
   await expect(page.getByText("Something went wrong")).toHaveCount(0)
   await expect(view.locator('[data-action="settings-shell"]')).toHaveCount(0)
   // Only the shell row depends on that reply: the rest of the section still works.
-  await expect(view.locator('[data-action="settings-color-scheme"]')).toBeVisible()
+  await expect(view.locator('[data-action="settings-palette"]')).toBeVisible()
   await expect(view.locator('[data-action="settings-language"]')).toBeVisible()
 
   await error.getByRole("button", { name: "Try again", exact: true }).click()
@@ -99,6 +99,68 @@ test("a malformed shell list stays in General's shell row, which retries, and th
   await shell.click()
   await expect(page.getByRole("option", { name: "zsh", exact: true })).toBeVisible()
   await expect(page.getByRole("option", { name: "fish (terminal only)", exact: true })).toBeVisible()
+})
+
+test("General's theme picker offers only Orchestra palettes and recolors the glass without reshaping it", async ({
+  page,
+}) => {
+  await setup(page, fixture())
+  await page.goto("/orchestra/settings?section=general", { waitUntil: "domcontentloaded" })
+  const view = page.locator('[data-mx-page="settings"]')
+  const row = view.locator('[data-slot="orchestra-palette-row"]')
+  const picker = row.getByRole("radiogroup", { name: "Theme", exact: true })
+  const radio = (name: string) => picker.getByRole("radio", { name, exact: true })
+  await expect(picker.getByRole("radio")).toHaveText([
+    "System",
+    "Dark",
+    "Light",
+    "Graphite",
+    "Dracula",
+    "Catppuccin",
+    "Gruvbox",
+    "GitHub",
+    "Nord",
+    "AMOLED",
+  ])
+  // The inherited picker, its scheme select and its docs link are gone.
+  await expect(row).not.toContainText(/opencode|OC-2/i)
+  await expect(view.locator('[data-action="settings-theme"], [data-action="settings-color-scheme"]')).toHaveCount(0)
+  await expect(view.locator('a[href*="opencode.ai"]')).toHaveCount(0)
+  await expect(radio("System")).toHaveAttribute("aria-checked", "true")
+
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  const glass = () =>
+    sidebar.evaluate((element) => {
+      const style = getComputedStyle(element)
+      const box = element.getBoundingClientRect()
+      return {
+        shape: [style.backdropFilter, style.borderRadius, style.borderTopWidth, box.width, box.height],
+        tint: [style.backgroundImage, style.borderTopColor],
+      }
+    })
+  const light = await glass()
+  await radio("Graphite").click()
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "graphite")
+  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "dark")
+  await expect(radio("Graphite")).toHaveAttribute("aria-checked", "true")
+  const graphite = await glass()
+  expect(graphite.tint).not.toEqual(light.tint)
+
+  // Arrow keys move the selection; the choice survives a reload, painted before the app mounts.
+  await radio("Graphite").press("ArrowRight")
+  await expect(radio("Dracula")).toBeFocused()
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "dracula")
+  await page.reload({ waitUntil: "domcontentloaded" })
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "dracula")
+  await expect(radio("Dracula")).toHaveAttribute("aria-checked", "true")
+
+  await radio("Dark").click()
+  await expect(page.locator("html")).not.toHaveAttribute("data-orchestra-palette", /.*/)
+  await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "dark")
+  const dark = await glass()
+  // Colors only: every palette keeps the glass blur, radius, border width and size of Orchestra's own skin.
+  expect(graphite.shape).toEqual(dark.shape)
+  expect(dark.tint).not.toEqual(graphite.tint)
 })
 
 test("tool permissions follow the server's rule order, save in place, roll back failures and use arrow keys", async ({

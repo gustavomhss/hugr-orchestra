@@ -4,6 +4,18 @@ export const SETTINGS_COPY = {
   "orchestra.settings.subtitle": "the agents may do.",
   "orchestra.settings.sections": "Settings sections",
   "orchestra.settings.configure": "Configure",
+  "orchestra.settings.palette.title": "Theme",
+  "orchestra.settings.palette.description": "Colors only. The glass, layout and type stay Orchestra's.",
+  "orchestra.settings.palette.system": "System",
+  "orchestra.settings.palette.dark": "Dark",
+  "orchestra.settings.palette.light": "Light",
+  "orchestra.settings.palette.graphite": "Graphite",
+  "orchestra.settings.palette.dracula": "Dracula",
+  "orchestra.settings.palette.catppuccin": "Catppuccin",
+  "orchestra.settings.palette.gruvbox": "Gruvbox",
+  "orchestra.settings.palette.github": "GitHub",
+  "orchestra.settings.palette.nord": "Nord",
+  "orchestra.settings.palette.amoled": "AMOLED",
   "orchestra.settings.permissions.scope":
     "Server-wide defaults for every agent and repository. A project's config or an agent's own rules can override them.",
   "orchestra.settings.permissions.readOnly":

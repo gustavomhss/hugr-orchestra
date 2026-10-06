@@ -252,6 +252,27 @@ for (const scheme of ["dark", "light"] as const) {
   }
 }
 
+test("graphite: a palette recolors the glass and keeps the frozen geometry, radius and blur", async ({ page }) => {
+  await setupIdentity(page, { scheme: "dark", palette: "graphite", viewport })
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "graphite")
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  const toolbar = page.locator('[data-slot="titlebar-v2"]')
+  const tabs = page.locator("#orchestra-session-tabs")
+  const active = tabs.locator('[data-titlebar-tab][data-active="true"]')
+  for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
+  expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
+  expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
+  for (const locator of [sidebar, tabs, active]) {
+    const value = await readGlass(locator)
+    expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
+    expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
+    expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
+  }
+  await expect(sidebar).toHaveCSS("border-radius", "9px")
+  await expect(tabs).toHaveCSS("border-radius", "9px")
+})
+
 test("oracle calibration: real production toolbar rejects geometry and glass mutations", async ({ page }) => {
   await setupIdentity(page, { scheme: "dark", viewport })
   const toolbar = page.locator('[data-slot="titlebar-v2"]')

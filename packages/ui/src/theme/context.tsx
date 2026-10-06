@@ -135,7 +135,8 @@ export function syncThemeBackground() {
   const root = document.documentElement
   root.style.colorScheme = root.dataset.colorScheme ?? "light"
   const style = getComputedStyle(root)
-  const fallback = root.dataset.colorScheme === "dark" ? "#080808" : "#fafafa"
+  // Orchestra's own Dark and Light backgrounds, for the moment before its skin sets --app-background.
+  const fallback = root.dataset.colorScheme === "dark" ? "#080c11" : "#dfe3e8"
   root.style.backgroundColor =
     style.getPropertyValue("--app-background").trim() ||
     style.getPropertyValue("--v2-background-bg-deep").trim() ||
