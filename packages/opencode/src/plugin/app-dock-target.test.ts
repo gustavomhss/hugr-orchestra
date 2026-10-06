@@ -1,7 +1,8 @@
 import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
-import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
+import { AppDockPlugin, createAppDockHooks } from "./app-dock"
+import { scopeLinuxWorkspace } from "./linux-agent"
 import { Permission } from "@/permission"
 import { context, input, fakePort, host, page, control, field, nativeError, type Reply } from "./app-dock.fixture"
 
@@ -75,7 +76,6 @@ test("dock_type target selects only fields with the requested native input capab
   expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
   expect(calls.at(-1)).toEqual({ op: "type", args: { ref: "n:field", text: "café 漢字 🧪", mode: "keyboard" } })
   await expect(hooks.tool.dock_type.execute({ text: "x" }, context)).resolves.toBe("Pass ref")
-  await expect(hooks.tool.ui_type.execute({ text: "x" }, context)).resolves.toBe("Pass ref or target")
 })
 
 test("dock_action target prefers the one control whose whole name equals the query among partial matches", async () => {
@@ -393,13 +393,20 @@ test("host agents' dock_* tools declare and describe only browser use; ui_* tool
   // dock_find and dock_action are hidden from every agent (scopeLinuxWorkspace); the other dock_* are the host agents'.
   const browser = Object.keys(tools).filter((name) => name.startsWith("dock_") && name !== "dock_find" && name !== "dock_action")
   const linux = Object.keys(tools).filter((name) => name.startsWith("ui_"))
-  expect([browser.length, linux.length]).toEqual([16, 10])
+  expect([browser.length, linux.length]).toEqual([16, 11])
   for (const name of browser) expect(text(name)).not.toMatch(/ui_|linux|native|\^n:/i)
   for (const name of linux) expect(text(name)).not.toContain("dock_")
   expect([keys("dock_read"), keys("dock_type"), keys("dock_keyboard"), keys("dock_click")]).toEqual([
     ["actionable", "budget", "format", "maxText", "mode", "visible"], ["ref", "text"], ["key", "type"], ["ref", "x", "y"]])
-  expect([keys("ui_find"), keys("ui_act"), keys("ui_type")]).toEqual([["includeText", "name", "role"],
-    ["action", "actionID", "mode", "ref", "target"], ["mode", "ref", "target", "text"]])
+  expect([keys("ui_find"), keys("ui_act"), keys("ui_type"), keys("ui_pointer")]).toEqual([["includeText", "name", "role"],
+    ["action", "actionID", "mode", "ref", "target"], ["mode", "ref", "target", "text"], ["kind", "ref", "target"]])
+  // Every ui_* ref is a native one; numeric browser refs mean nothing in the Linux workspace.
+  const withRef = linux.filter((name) => "ref" in tools[name]!.args)
+  expect(withRef.sort()).toEqual(["ui_act", "ui_keys", "ui_pointer", "ui_type"])
+  for (const name of withRef) {
+    const ref = tool.schema.object({ ref: tools[name]!.args.ref! })
+    expect([ref.safeParse({ ref: "n:a" }).success, ref.safeParse({ ref: 7 }).success]).toEqual([true, false])
+  }
 })
 
 test("dock_* called by an agent addresses browser tabs; without an agent the legacy envelope is unchanged", async () => {

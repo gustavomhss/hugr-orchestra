@@ -94,7 +94,7 @@ class RequestContext:
         if self.calls >= LIMITS["calls"]:
             raise BusError("read-budget", "Native call budget exhausted")
         self.calls += 1
-        if method in ("DoAction", "SetTextContents", "GenerateKeyboardEvent", "GrabFocus"):
+        if method in ("DoAction", "SetTextContents", "GenerateKeyboardEvent", "GenerateMouseEvent", "GrabFocus"):
             self.dispatch_started = True
         return self.bus.call(owner, path, interface, method, signature, parameters, reply,
                              min(800, remaining, timeout_ms or remaining))

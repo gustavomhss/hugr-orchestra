@@ -60,6 +60,15 @@ export function keys(name: string) {
   return { name: match[1], keys: match[2] }
 }
 
+// Every app keeps its own focused control, but keys reach only the one whose window is active. Roots come first.
+export function focused<T extends { item: Item }>(matches: T[]) {
+  const items = new Map(matches.map((match) => [match.item.ref, match.item]))
+  const top = (item: Item, depth = 0): Item =>
+    item.parentRef && items.has(item.parentRef) && depth < 64 ? top(items.get(item.parentRef)!, depth + 1) : item
+  return matches.filter((match) => match.item.states?.includes(12)
+    && ["frame", "dialog", "window"].includes(role(top(match.item))) && top(match.item).states?.includes(1))
+}
+
 export function tree(items: Item[]) {
   const nodes = new Map(items.map((item) => [item.ref, { item, role: role(item), ...keys(item.name), children: [] } as Node]))
   const roots: Node[] = []
