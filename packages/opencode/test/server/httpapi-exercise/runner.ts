@@ -156,7 +156,7 @@ function withContext<A, E>(
                 role: "user",
                 time: { created: Date.now() },
                 agent: "maestro",
-                model: {
+                model: input?.model ?? {
                   providerID: ProviderV2.ID.opencode,
                   modelID: ModelV2.ID.make("test"),
                 },
@@ -177,6 +177,39 @@ function withContext<A, E>(
                 ),
               )
               return { info, part }
+            }),
+          reply: (user, input) =>
+            Effect.gen(function* () {
+              const info: SessionV1.Assistant = {
+                id: MessageID.ascending(),
+                sessionID: user.info.sessionID,
+                parentID: user.info.id,
+                role: "assistant",
+                agent: user.info.agent,
+                mode: user.info.agent,
+                path: { cwd: context.dir?.path ?? "/", root: context.dir?.path ?? "/" },
+                providerID: user.info.model.providerID,
+                modelID: user.info.model.modelID,
+                cost: 0,
+                tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+                finish: "stop",
+                time: { created: Date.now(), completed: Date.now() },
+              }
+              yield* run(
+                modules.Session.Service.use((svc) =>
+                  Effect.gen(function* () {
+                    yield* svc.updateMessage(info)
+                    yield* svc.updatePart({
+                      id: PartID.ascending(),
+                      sessionID: info.sessionID,
+                      messageID: info.id,
+                      type: "text",
+                      text: input?.text ?? "done",
+                    })
+                  }),
+                ),
+              )
+              return info
             }),
           messages: (sessionID) =>
             run(modules.Session.Service.use((svc) => svc.messages({ sessionID }).pipe(Effect.orDie))),

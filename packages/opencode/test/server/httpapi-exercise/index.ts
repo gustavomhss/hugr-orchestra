@@ -17,6 +17,8 @@
  * - `.json(...)` / `.jsonEffect(...)` assert response shape and optional side effects.
  * - `.mutating()` tells the runner to reset isolated state after destructive routes.
  */
+import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderV2 } from "@opencode-ai/core/provider"
 import { Effect } from "effect"
 import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
@@ -1477,26 +1479,15 @@ const scenarios: Scenario[] = [
     .seeded((ctx) =>
       Effect.gen(function* () {
         const session = yield* ctx.session({ title: "Summarize session" })
-        yield* ctx.message(session.id, { text: "summarize this work" })
-        const summary = [
-          "## Objective",
-          "- Exercise session summarize.",
-          "",
-          "## Important Details",
-          "- Use fake LLM.",
-          "- Keep route local.",
-          "- Test fixture: test/server/httpapi-exercise/index.ts.",
-          "",
-          "## Work State",
-          "- Completed: Summary generated.",
-          "- Active: (none)",
-          "- Blocked: (none)",
-          "",
-          "## Next Move",
-          "1. (none)",
-        ].join("\n")
-        yield* ctx.llmText(summary)
-        yield* ctx.llmText(summary)
+        // A pass covers history up to the last completed step, and the producer resolves the turn's own model.
+        // The head must also outweigh the empty memory scaffold, or the pass is skipped without a model call.
+        const user = yield* ctx.message(session.id, {
+          text: "Summarize this work. " + "Context the turn carried. ".repeat(200),
+          model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
+        })
+        yield* ctx.reply(user, { text: "Work done." })
+        // The producer replies with working-memory ops; an empty list is a valid reply.
+        yield* ctx.llmText(JSON.stringify({ ops: [] }))
         return session
       }),
     )
@@ -1516,6 +1507,8 @@ const scenarios: Scenario[] = [
             !messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
             "summarize should not create a legacy summary message",
           )
+          check(messages.length === 2, "summarize should add no message to the session")
+          // The route awaits the forced pass, so its producer call has already happened.
           yield* ctx.llmWait(1)
         }),
       "status",

@@ -59,7 +59,12 @@ export type ScenarioContext = {
   session: (input?: { title?: string; parentID?: SessionID }) => Effect.Effect<SessionInfo>
   sessionGet: (sessionID: SessionID) => Effect.Effect<SessionInfo | undefined>
   project: () => Effect.Effect<Project.Info>
-  message: (sessionID: SessionID, input?: { text?: string }) => Effect.Effect<MessageSeed>
+  message: (
+    sessionID: SessionID,
+    input?: { text?: string; model?: SessionV1.User["model"] },
+  ) => Effect.Effect<MessageSeed>
+  /** A completed assistant step answering `user`, on the user's model. */
+  reply: (user: MessageSeed, input?: { text?: string }) => Effect.Effect<SessionV1.Assistant>
   messages: (sessionID: SessionID) => Effect.Effect<SessionV1.WithParts[]>
   todos: (sessionID: SessionID, todos: TodoInfo[]) => Effect.Effect<void>
   worktree: (input?: { name?: string }) => Effect.Effect<Worktree.Info>
