@@ -450,7 +450,7 @@ export class AppDockRPC {
     const { senderID, win } = this.dockSender()
 
     const targetOps = ["activate", "read", "click", "type", "navigate", "go", "close", "scroll", "hover", "drag",
-      "clickAt", "scrollTo", "storage", "evaluate", "network", "wait", "screenshot", "keyboard", "action"]
+      "clickAt", "scrollTo", "storage", "evaluate", "network", "wait", "screenshot", "keyboard", "action", "pointer"]
     const world = args.world === undefined ? undefined : dockEnum(args.world, "world", ["browser", "linux"]) as "browser" | "linux"
     if (targetOps.includes(op) && !(op === "close" && args.tabID === undefined && dock.list(senderID).length === 0)) {
       const tabID = op === "activate" ? dockString(args.tabID, "tabID") : this.resolveTabID(dock, senderID, args, world)

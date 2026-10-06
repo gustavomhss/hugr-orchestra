@@ -246,6 +246,20 @@ describe("startup and retirement", () => {
     expect(await failure(client.close())).toMatchObject({ code: "helper-termination-timeout" })
   })
 
+  test("reaping deadline outlasts cancel grace, so a slow but proven reap is not reported as failed", async () => {
+    const { channel, client } = await memory({ cancelGraceMs: 15, reapMs: 2000 })
+    channel.onTerminate = () => Bun.sleep(60)
+    channel.exit()
+    await client.close()
+    expect(channel.reaped).toBe(true)
+    // A reap that never completes still fails, now at the reaping deadline.
+    const stuck = await memory({ cancelGraceMs: 15, reapMs: 40 })
+    stuck.channel.onTerminate = () => new Promise<void>(() => {})
+    stuck.channel.exit()
+    expect(await failure(stuck.client.close())).toMatchObject({ code: "helper-termination-timeout", outcome: "unknown" })
+    expect(stuck.channel.reaped).toBe(false)
+  })
+
   test("startup teardown watchdog exposes failed reaping", async () => {
     const channel = new MemoryChannel()
     channel.initial = { v: 2 }

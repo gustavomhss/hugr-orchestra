@@ -13,11 +13,6 @@ export type PromptInputSubmission = {
 export type PromptInputControls = {
   agents: {
     available: { name: string; hidden?: boolean; mode: string }[]
-    options: string[]
-    current: string
-    loading: boolean
-    visible: boolean
-    select: (name: string | undefined) => void
   }
   model: {
     selection: ReturnType<typeof useLocal>["model"]

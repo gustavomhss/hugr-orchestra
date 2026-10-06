@@ -510,6 +510,25 @@ unixSocketTest("EOF cannot reap a still-running helper; final inspect records OO
   expect(f.state.events.at(-1)).toBe("delete")
 })
 
+unixSocketTest("client teardown waits for the channel's slower but proven reap instead of declaring it failed", async () => {
+  const f = await fixture()
+  f.state.delayReap = true
+  const result = await AppDockNativeRuntime.create(f.options)
+  channels.push(result.channel)
+  const closing = result.client.close().then(() => "reaped", (error: unknown) => error)
+  // close() first offers the helper a shutdown for up to the cancel grace.
+  const deadline = performance.now() + 3000
+  while (!f.state.events.includes("kill")) {
+    if (performance.now() >= deadline) throw new Error("Fixture did not receive helper kill")
+    await Bun.sleep(1)
+  }
+  // Longer than the 1 s cancel grace and within the channel's own cleanup deadline, as on a loaded host.
+  await Bun.sleep(1500)
+  Object.assign(f.state.container!.State, { Running: false, Pid: 0, Status: "exited", ExitCode: 137 })
+  expect(await closing).toBe("reaped")
+  expect(f.state.events.at(-1)).toBe("delete")
+})
+
 unixSocketTest("exit racing kill conflict still requires inspect evidence", async () => {
   const f = await fixture()
   f.state.killConflict = true

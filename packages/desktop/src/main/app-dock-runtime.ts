@@ -375,7 +375,9 @@ export function create(options: { root: string; context: string; image?: string;
       const metadata = await load()
       const container = await owned(metadata)
       if (!container?.running) throw new NativeDockProtocol.NativeError("not-ready", "Linux workspace is not running")
-      const value: unknown = JSON.parse((await guest(metadata, container, ["native-scope"], false, 5000)).stdout)
+      // The guest bounds its census to 4 s itself; this deadline only absorbs docker exec and interpreter start,
+      // which took longer than 5 s for minutes under host load while every ui_* call failed as ownership-unresolved.
+      const value: unknown = JSON.parse((await guest(metadata, container, ["native-scope"], false, 15_000)).stdout)
       if (!NativeDockProtocol.object(value) || !NativeDockProtocol.object(value.session)
         || typeof value.session.sessionID !== "string" || !NativeDockProtocol.object(value.session.processIdentity))
         throw new NativeDockProtocol.NativeError("ownership-unresolved", "Runtime workspace session evidence is incomplete")
