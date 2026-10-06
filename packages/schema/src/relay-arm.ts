@@ -110,6 +110,7 @@ export type HostCheck = (input: HostCheckInput) => Effect.Effect<HostCheckResult
  * - `revisionGuard`: read HEAD before and after the checks; a change yields `revision-drift`.
  * - `blockCap`: the hook block cap for the cap-risk preflight; 0 (Orchestra) skips it.
  * - `compactAfter`: the gate index from which advancing adds a compaction hint (default 6).
+ * - `params`: the run's `${name}` values for context and scope paths and the check environment (WP6, additive).
  */
 export interface EvaluateInput {
   readonly token: Token
@@ -121,6 +122,7 @@ export interface EvaluateInput {
   readonly revisionGuard?: boolean
   readonly blockCap?: number
   readonly compactAfter?: number
+  readonly params?: Readonly<Record<string, string>>
 }
 
 export const Outcome = Schema.Literals([
