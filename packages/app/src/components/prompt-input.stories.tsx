@@ -23,7 +23,6 @@ function createPromptInputStoryRuntime() {
 function PromptInputExample() {
   const input = createPromptInputStoryRuntime()
   const [controls, setControls] = createStore({
-    agent: "build",
     variant: undefined as string | undefined,
     comments: 0,
     tabs: [] as string[],
@@ -49,13 +48,6 @@ function PromptInputExample() {
   const inputControls = {
     agents: {
       available: [{ name: "review", hidden: false, mode: "subagent" }],
-      options: ["build", "review", "plan"],
-      get current() {
-        return controls.agent
-      },
-      loading: false,
-      visible: true,
-      select: (agent?: string) => setControls("agent", agent ?? "build"),
     },
     model: {
       selection: model,
@@ -120,20 +112,12 @@ const todos: Todo[] = [
 function PromptInputWithOpenDock() {
   const input = createPromptInputStoryRuntime()
   const [controls, setControls] = createStore({
-    agent: "build",
     activeTab: undefined as string | undefined,
     todoCollapsed: false,
   })
   const inputControls = {
     agents: {
       available: [],
-      options: ["build"],
-      get current() {
-        return controls.agent
-      },
-      loading: false,
-      visible: true,
-      select: (agent?: string) => setControls("agent", agent ?? "build"),
     },
     model: {
       selection: {
