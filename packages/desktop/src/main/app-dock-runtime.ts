@@ -226,6 +226,12 @@ export function create(options: { root: string; context: string; image?: string;
   const stopOwned = async (metadata: Metadata) => {
     const found = await owned(metadata)
     if (!found?.running) return
+    // Record the open apps for the next start to reopen. Best effort and bounded as a whole (helper refresh
+    // included): it must never keep the container, and its resources, alive past quit.
+    await Promise.race([
+      Promise.resolve().then(() => guest(metadata, found, ["remember"], false, 3_000)).catch(() => undefined),
+      new Promise((resolve) => setTimeout(resolve, 3_000).unref()),
+    ])
     await backend.stop(metadata, found)
     if ((await owned(metadata))?.running) throw new RuntimeError("failed")
   }
