@@ -1,7 +1,7 @@
 import { Effect, Schema } from "effect"
 import * as Tool from "./tool"
 import { Question } from "../question"
-import DESCRIPTION from "./question.txt"
+import { ToolText } from "@opencode-ai/core/tool/text"
 
 export const Parameters = Schema.Struct({
   questions: Schema.mutable(Schema.Array(Question.Prompt)).annotate({ description: "Questions to ask" }),
@@ -17,7 +17,7 @@ export const QuestionTool = Tool.define<typeof Parameters, Metadata, Question.Se
     const question = yield* Question.Service
 
     return {
-      description: DESCRIPTION,
+      description: ToolText.question,
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context<Metadata>) =>
         Effect.gen(function* () {
@@ -27,13 +27,9 @@ export const QuestionTool = Tool.define<typeof Parameters, Metadata, Question.Se
             tool: ctx.callID ? { messageID: ctx.messageID, callID: ctx.callID } : undefined,
           })
 
-          const formatted = params.questions
-            .map((q, i) => `"${q.question}"="${answers[i]?.length ? answers[i].join(", ") : "Unanswered"}"`)
-            .join(", ")
-
           return {
             title: `Asked ${params.questions.length} question${params.questions.length > 1 ? "s" : ""}`,
-            output: `The owner has answered your questions: ${formatted}. You can now continue with the owner's answers in mind.`,
+            output: ToolText.answered(params.questions, answers),
             metadata: {
               answers,
             },

@@ -3,7 +3,7 @@ import { Effect, FileSystem, Schema } from "effect"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { Skill } from "../skill"
 import * as Tool from "./tool"
-import DESCRIPTION from "./skill.txt"
+import { ToolText } from "@opencode-ai/core/tool/text"
 import { loadAtlasSkill, readAtlasSource } from "@/maestro/atlas-source"
 import { Session } from "@/session/session"
 import { Config } from "@/config/config"
@@ -24,7 +24,7 @@ export const SkillTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
 
     return {
-      description: DESCRIPTION,
+      description: ToolText.skill,
       parameters: Parameters,
       execute: (
         params: Schema.Schema.Type<typeof Parameters>,
