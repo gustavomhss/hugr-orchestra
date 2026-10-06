@@ -26,7 +26,7 @@ path. Read it; never copy it wholesale. It is throwaway code, with files above t
 | `crates/hugr-omni/src/spawn` | validation, resolution, env (pure) | `error`, `types` |
 | `crates/hugr-omni/src/error` | `Error`, `ErrorCode`, messages | `types` |
 | `crates/hugr-omni/src/types` | public value types (frozen) | – |
-| `crates/hugr-omni/src/binding` | number rules for bindings (hidden, W03) | `error` |
+| `crates/hugr-omni/src/binding` | number rules and the configured supervisor for bindings (hidden, W03, WP-H) | `error`, `client` (only `configure_supervisor`) |
 | `crates/omni-proto` | messages + codec | – |
 | `crates/omni-supervisor/src/{unix,windows,pty_unix,pty_windows}` | the supervisor | `omni-proto` |
 | `crates/omni-fixture` | test program | – |

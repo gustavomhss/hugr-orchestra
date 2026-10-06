@@ -8,6 +8,15 @@ use std::time::Duration;
 
 use crate::error::Error;
 
+/// The supervisor binary a binding was configured with (`configure({ supervisor })`, WP-H). It wins over
+/// `HUGR_OMNI_SUPERVISOR` and over the lookup next to the module and the executable. `InvalidArgument` for an empty
+/// path, or once a supervisor was started in this process with another one.
+///
+/// Layering: this hidden module sits with `api` for this one call (the bindings' door to `client`).
+pub fn supervisor(path: impl Into<std::path::PathBuf>) -> Result<(), Error> {
+    crate::client::configure_supervisor(path.into())
+}
+
 /// The largest `timeoutMs` / `graceMs` (the protocol carries them as u32 milliseconds).
 const MAX_MS: f64 = 4_294_967_295.0;
 /// 2^64: every integral `f64` below it fits a `u64` exactly.

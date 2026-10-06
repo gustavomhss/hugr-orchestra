@@ -104,6 +104,13 @@ pub(crate) fn spawn(spec: &Spec) -> Result<Spawned, Error> {
     spawn_on(&sup, spec)
 }
 
+/// The supervisor binary to start from now on (a binding's `configure`, WP-H): it wins over
+/// `HUGR_OMNI_SUPERVISOR` and every lookup. Refused with `InvalidArgument` once a supervisor was started in this
+/// process with another one (setting the same path again is fine).
+pub(crate) fn configure_supervisor(path: std::path::PathBuf) -> Result<(), Error> {
+    start::configure(path, CURRENT.started())
+}
+
 /// One tree of one supervisor generation. Dropping it sends `Release` without blocking; the supervisor
 /// keeps its cleanup duty (the tree is still stopped on host death).
 #[derive(Debug)]

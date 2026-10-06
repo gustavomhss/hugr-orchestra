@@ -53,6 +53,11 @@ impl Registry {
         }
     }
 
+    /// Whether a supervisor was ever started (or is starting) in this process.
+    pub(super) fn started(&self) -> bool {
+        lock(&self.st).num > 0
+    }
+
     /// The live generation, or a new one from `open(number)`. `open` runs without the lock held.
     pub(super) fn get(&self, open: impl FnOnce(u64) -> Result<Arc<Gen>, Error>) -> Result<Arc<Gen>, Error> {
         let (num, attempt) = {
@@ -205,12 +210,78 @@ pub(super) fn failed(code: FailCode, errno: i32, msg: &str, program: &str) -> Er
     Error::spawn_refused(code, program, msg, errno)
 }
 
-/// `HUGR_OMNI_SUPERVISOR`, then next to the native module, then next to the current executable.
+/// The supervisor a binding configured (`binding::supervisor`, WP-H): it wins over every other place.
+static CONFIGURED: Mutex<Option<PathBuf>> = Mutex::new(None);
+
+/// Sets the configured supervisor. Refused once a supervisor was started with another one.
+pub(super) fn configure(path: PathBuf, started: bool) -> Result<(), Error> {
+    configure_in(&CONFIGURED, path, started)
+}
+
+/// `configure` on `slot` (a test's own, never the process's).
+pub(super) fn configure_in(slot: &Mutex<Option<PathBuf>>, path: PathBuf, started: bool) -> Result<(), Error> {
+    if path.as_os_str().is_empty() {
+        return Err(Error::supervisor_path_empty());
+    }
+    let mut set = lock(slot);
+    if set.as_ref() == Some(&path) {
+        return Ok(());
+    }
+    if started {
+        return Err(Error::supervisor_configured_late(&path));
+    }
+    *set = Some(path);
+    Ok(())
+}
+
+/// The configured path, then `HUGR_OMNI_SUPERVISOR`, then next to the native module (only when that directory is
+/// trusted, H2), then next to the current executable as started and as its real path (a symlinked install, H3).
 pub(super) fn locate() -> Result<PathBuf, Error> {
-    let exe_dir = std::env::current_exe()
+    if let Some(path) = lock(&CONFIGURED).clone() {
+        return Ok(path);
+    }
+    let module = sys::module_dir().filter(|dir| trusted(dir));
+    let [raw, real] = exe_dirs(std::env::current_exe().ok());
+    pick(std::env::var_os("HUGR_OMNI_SUPERVISOR"), &[module, raw, real])
+}
+
+/// The directory of `exe`, and the directory of its canonical path when that differs (a symlink, H3).
+pub(super) fn exe_dirs(exe: Option<PathBuf>) -> [Option<PathBuf>; 2] {
+    let dir = |p: &Path| p.parent().map(Path::to_path_buf);
+    let Some(exe) = exe else {
+        return [None, None];
+    };
+    let raw = dir(&exe);
+    let real = std::fs::canonicalize(&exe)
         .ok()
-        .and_then(|p| p.parent().map(Path::to_path_buf));
-    pick(std::env::var_os("HUGR_OMNI_SUPERVISOR"), &[sys::module_dir(), exe_dir])
+        .and_then(|p| dir(&p))
+        .filter(|d| Some(d) != raw.as_ref());
+    [raw, real]
+}
+
+/// H2: a module directory anybody else could write to (an addon extracted to a shared `/tmp`) must not supply the
+/// supervisor. Trusted: the directory, and the supervisor in it if present, belong to this user or to root and are
+/// writable by neither group nor others. Root counts as an owner because a system-wide install (`sudo npm i -g`) is
+/// owned by root, and only root could plant a binary there.
+#[cfg(unix)]
+pub(super) fn trusted(dir: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    // SAFETY: geteuid has no preconditions and cannot fail.
+    let me = unsafe { libc::geteuid() };
+    let safe = |p: &Path| match std::fs::metadata(p) {
+        Ok(m) => (m.uid() == me || m.uid() == 0) && m.mode() & 0o022 == 0,
+        Err(e) => e.kind() == std::io::ErrorKind::NotFound && p != dir,
+    };
+    safe(dir) && safe(&dir.join(EXE))
+}
+
+/// H2 on Windows: the module directory stays a candidate. The place a runtime extracts an embedded addon to is
+/// `%TEMP%`, which is per user (`C:\Users\<user>\AppData\Local\Temp`, writable by that user, SYSTEM and the
+/// administrators only), unlike a shared Unix `/tmp`; an ACL check would need new `windows-sys` features
+/// (Security_Authorization), which INV-12 reserves to the lead.
+#[cfg(windows)]
+pub(super) fn trusted(_dir: &Path) -> bool {
+    true
 }
 
 pub(super) fn pick(env: Option<OsString>, dirs: &[Option<PathBuf>]) -> Result<PathBuf, Error> {
