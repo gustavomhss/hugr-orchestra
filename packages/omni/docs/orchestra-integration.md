@@ -654,12 +654,11 @@ adds 3-8 min of cargo.
 - **R2-15 Rollback.** WP9 splits in two:
   - **WP9a** flips the default and ships one release with `=0` still working;
   - **WP9b** deletes legacy after a clean release.
-- **R2-16 Upstream merges.** WP0 adds `script/check-spawn-imports.ts` with `script/spawn-allowlist.json`, and a
-  root `AGENTS.md` rule.
-  - The check fails on imports of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or
-    `StdioClientTransport` outside the allow-list.
-  - WP9b adds `docs/upstream-merge.md`, with a resolution per seam: `ChildProcessSpawner`, `Process`, `Pty` `Proc`,
-    MCP transport.
+- **R2-16 Spawn-import guard.** Orchestra has no upstream: `gustavomhss/hugr-orchestra` is the only remote, and
+  there are no upstream merges (owner, 2026-10-06). WP0 adds `script/check-spawn-imports.ts` with
+  `script/spawn-allowlist.json`, plus a root `AGENTS.md` rule. The check fails on imports of `cross-spawn`,
+  `bun-pty`, `@lydell/node-pty`, `child_process` or `StdioClientTransport` outside the allow-list, so new code cannot
+  bypass omni. There is no upstream-merge guide.
 - **R2-17 Telemetry.**
   - Structured log events for spawn, delegation, gap, adoption, supervisor restart and fallback.
   - The counters appear in `opencode debug omni`.
