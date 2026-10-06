@@ -30,7 +30,7 @@ if (process.env.APP_DOCK_RUNTIME_TEST_LIMIT_MUTATION === "1") {
   plugin({
     name: "runtime-pid-limit-mutation",
     setup(build) {
-      build.onLoad({ filter: /app-dock-runtime\.ts$/ }, async (args) => {
+      build.onLoad({ filter: /app-dock-runtime-docker\.ts$/ }, async (args) => {
         const text = await Bun.file(args.path).text()
         const before = "found.HostConfig.PidsLimit !== 512 ||"
         expect(text.split(before)).toHaveLength(2)

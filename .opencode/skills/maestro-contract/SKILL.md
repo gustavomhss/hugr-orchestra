@@ -51,8 +51,8 @@ Host owns permissions and placement; generated text is not a write receipt.
 git diff -- <shared-path> <consumer-path>
 ```
 
-Resolve actual paths and package suite before execution. In `packages/opencode`:
-`bun typecheck` and `bun test <seam-suite> --timeout 30000`.
+Resolve actual paths and package suite before execution. In `packages/opencode`: `bun typecheck`;
+tests run on Actions from the repository root: `bun run test:ci opencode <seam-suite>`.
 If public Protocol/Server HttpApi changes, run `bun run generate` from `packages/client`;
 never edit generated client source directly. For legacy JS SDK, use `./packages/sdk/js/script/build.ts`
 from repository root when its regeneration is required by the change.

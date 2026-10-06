@@ -4,7 +4,7 @@ import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { promisify } from "node:util"
 
 const exec = promisify(execFile)
@@ -21,8 +21,10 @@ if (enabled && mutation) {
   plugin({
     name: "app-dock-runtime-identity-mutation",
     setup(build) {
-      build.onLoad({ filter: /app-dock-runtime\.ts$/ }, async (args) => {
-        if (resolve(args.path) !== resolve(source)) return
+      // The Docker CLI routing lives in the backend beside the runtime; the metadata cache in the runtime.
+      build.onLoad({ filter: /app-dock-runtime(?:-docker)?\.ts$/ }, async (args) => {
+        const target = mutation === "context" ? join(dirname(resolve(source)), "app-dock-runtime-docker.ts") : resolve(source)
+        if (resolve(args.path) !== target) return
         const text = await Bun.file(args.path).text()
         const before = mutation === "context"
           ? 'command(["--host", metadata.endpoint, ...args], timeout, extraEnv)'
