@@ -40,6 +40,7 @@
 // writing `project` rules for one owner at once can each pass the cap against the same pre-state. Each
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
+import { isAbsolute } from "node:path"
 import { put, taskClosingFold, tok, versioned } from "@atlas/memory"
 import type {
   Awareness,
@@ -396,7 +397,7 @@ function freezeBinding<T extends HeaderBinding>(input: T): T {
   ) {
     throw new Error("native-memory: AtlasBinding.legacyOwners must be non-empty ids other than memoryOwner")
   }
-  if (typeof input.storage?.root !== "string" || !input.storage.root.startsWith("/")) {
+  if (typeof input.storage?.root !== "string" || !isAbsolute(input.storage.root)) {
     throw new Error("native-memory: AtlasBinding.storage.root must be an absolute path")
   }
   return deepFreeze(structuredClone(input))
