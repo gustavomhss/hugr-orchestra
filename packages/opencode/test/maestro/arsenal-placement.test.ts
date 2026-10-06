@@ -15,6 +15,8 @@ import { SessionStore } from "@opencode-ai/core/session/store"
 import { ToolRegistry } from "@opencode-ai/core/tool/registry"
 import { MaestroArsenal } from "@opencode-ai/core/tool/maestro-arsenal"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { PluginV2 } from "@opencode-ai/core/plugin"
+import { Agent } from "@/agent/agent"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
 import { InstanceStore } from "@/project/instance-store"
@@ -28,14 +30,23 @@ import { prepareArsenalSDK } from "./arsenal-fixture"
 const it = testEffect(Layer.empty)
 const assistantMessageID = SessionMessage.ID.make("msg_native_placement_control")
 
-it.live("a genuinely registered V2 maestro ID cannot substitute for a missing native legacy identity owner", () =>
+it.live("configuration cannot strip Maestro's native identity; another agent still cannot use the Arsenal", () =>
   Effect.promise(async () => {
-    await using tmp = await tmpdir({ git: true, config: { agent: { maestro: { disable: true } } } })
+    await using tmp = await tmpdir({
+      git: true,
+      config: { agent: { maestro: { disable: true, mode: "subagent" } } },
+    })
     await AppRuntime.runPromise(
       Effect.scoped(
         Effect.gen(function* () {
           const instances = yield* InstanceStore.Service
           const instance = yield* instances.load({ directory: tmp.path })
+          const native = yield* Agent.Service
+          expect(yield* native.get("maestro").pipe(Effect.provideService(InstanceRef, instance))).toMatchObject({
+            id: "maestro",
+            native: true,
+            mode: "primary",
+          })
           const sessions = yield* Session.Service
           const session = yield* sessions
             .create({ title: "identity owner", agent: "general" })
@@ -45,19 +56,15 @@ it.live("a genuinely registered V2 maestro ID cannot substitute for a missing na
           if (!projected) throw new Error("Session projection missing")
           const locations = yield* LocationServiceMap.Service
           yield* Effect.gen(function* () {
+            const plugins = yield* PluginV2.Service
+            yield* plugins.wait(PluginV2.ID.make("config-agent"))
             const agents = yield* AgentV2.Service
-            const general = yield* agents.get(AgentV2.ID.make("general"))
-            if (!general) throw new Error("actual host general permissions missing")
-            yield* agents.transform((editor) =>
-              editor.update(AgentV2.ID.make("maestro"), (agent) => {
-                agent.permissions = [...general.permissions]
-              }),
-            )
+            expect(yield* agents.get(AgentV2.ID.make("maestro"))).toMatchObject({ id: "maestro", mode: "primary" })
             const registry = yield* ToolRegistry.Service
             const materialized = yield* registry.materialize()
             const result = yield* materialized.settle({
               sessionID: session.id,
-              agent: AgentV2.ID.make("maestro"),
+              agent: AgentV2.ID.make("general"),
               assistantMessageID,
               call: { type: "tool-call", id: "unattested", name: MaestroArsenal.names.catalog, input: {} },
             })

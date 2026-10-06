@@ -64,7 +64,7 @@ export function AgentDialog(props: {
     if (kind === "agent_file_outside") return language.t("orchestra.agents.error.outside")
     if (kind === "agent_file_unparseable")
       return language.t("orchestra.agents.error.invalid", { path: relative(state.file?.path ?? "") })
-    // Reachable when creating `maestro` while configuration has disabled it.
+    // A fallback: configuration cannot hide Maestro, so the editor never sends a disabled or demoted Maestro file.
     if (kind === "agent_file_protected") return language.t("orchestra.agents.maestroLocked")
     return language.t("orchestra.agents.error.save")
   }

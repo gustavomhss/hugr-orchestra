@@ -750,20 +750,30 @@ it.instance(
 )
 
 it.instance(
-  "defaultAgent throws when maestro is disabled and default_agent is not set",
-  () => expectDefaultAgentError('default agent "maestro" not found'),
+  "configuration can neither disable Maestro nor take it out of primary mode; its other fields still apply",
+  () =>
+    Effect.gen(function* () {
+      const maestro = yield* load((svc) => svc.get("maestro"))
+      expect(maestro?.native).toBe(true)
+      expect(maestro?.mode).toBe("primary")
+      expect(maestro?.description).toBe("Conducts the team")
+      expect(yield* load((svc) => svc.defaultAgent())).toBe("maestro")
+    }),
   {
     config: {
       agent: {
-        maestro: { disable: true },
+        maestro: { disable: true, mode: "subagent", description: "Conducts the team" },
       },
     },
   },
 )
 
 it.instance(
-  "defaultAgent does not fall back to a configured primary agent when maestro is disabled",
-  () => expectDefaultAgentError('default agent "maestro" not found'),
+  "defaultAgent stays on Maestro when configuration disables it beside another primary agent",
+  () =>
+    Effect.gen(function* () {
+      expect(yield* load((svc) => svc.defaultAgent())).toBe("maestro")
+    }),
   {
     config: {
       agent: {

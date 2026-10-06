@@ -324,7 +324,8 @@ const layer = Layer.effect(
             item.temperature = value.temperature ?? item.temperature
             continue
           }
-          if (value.disable) {
+          // Every session runs on Maestro, so configuration may neither disable it nor take it out of primary mode.
+          if (value.disable && key !== "maestro") {
             delete agents[key]
             continue
           }
@@ -344,7 +345,7 @@ const layer = Layer.effect(
           item.description = value.description ?? item.description
           item.temperature = value.temperature ?? item.temperature
           item.topP = value.top_p ?? item.topP
-          item.mode = value.mode ?? item.mode
+          item.mode = key === "maestro" ? item.mode : (value.mode ?? item.mode)
           item.color = value.color ?? item.color
           item.hidden = value.hidden ?? item.hidden
           item.name = value.name ?? item.name

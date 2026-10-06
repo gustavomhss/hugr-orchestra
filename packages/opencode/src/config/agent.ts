@@ -28,7 +28,7 @@ export async function load(dir: string) {
       ...md.data,
       ...(prompt ? { prompt } : {}),
     }
-    result[config.name] = protectMaestro(config.name, ConfigParse.schema(ConfigAgentV1.Info, config, item))
+    result[config.name] = ConfigParse.schema(ConfigAgentV1.Info, config, item)
   }
   return result
 }
@@ -53,17 +53,10 @@ export async function loadMode(dir: string) {
     const parsed = Schema.decodeUnknownExit(ConfigAgentV1.Info)(config, { errors: "all", propertyOrder: "original" })
     if (Exit.isSuccess(parsed)) {
       result[config.name] = {
-        ...protectMaestro(config.name, parsed.value),
+        ...parsed.value,
         mode: "primary" as const,
       }
     }
   }
   return result
-}
-
-// Every session runs on Maestro, so an agent file can neither disable it nor take it out of primary mode. The keys
-// are dropped rather than overridden, so the file never changes what other configuration sets for them.
-function protectMaestro(name: string, agent: ConfigAgentV1.Info): ConfigAgentV1.Info {
-  if (name !== "maestro") return agent
-  return Object.fromEntries(Object.entries(agent).filter(([key]) => key !== "disable" && key !== "mode"))
 }

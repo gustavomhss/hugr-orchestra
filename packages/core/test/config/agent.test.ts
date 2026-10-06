@@ -202,15 +202,15 @@ describe("ConfigAgentPlugin.Plugin", () => {
   it.effect("removes a built-in agent disabled by configuration", () =>
     Effect.gen(function* () {
       const agents = yield* AgentV2.Service
-      const maestro = AgentV2.ID.make("maestro")
-      yield* agents.transform((editor) => editor.update(maestro, () => {}))
+      const general = AgentV2.ID.make("general")
+      yield* agents.transform((editor) => editor.update(general, () => {}))
 
       const config = Config.Service.of({
         entries: () =>
           Effect.succeed([
             new Config.Document({
               type: "document",
-              info: decode({ agents: { maestro: { disabled: true } } }),
+              info: decode({ agents: { general: { disabled: true } } }),
             }),
           ]),
       })
@@ -219,7 +219,40 @@ describe("ConfigAgentPlugin.Plugin", () => {
         Effect.provideService(Config.Service, config),
       )
 
-      expect(yield* agents.get(maestro)).toBeUndefined()
+      expect(yield* agents.get(general)).toBeUndefined()
+    }),
+  )
+
+  it.effect("configuration can neither disable Maestro nor take it out of primary mode", () =>
+    Effect.gen(function* () {
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((editor) =>
+        editor.update(AgentV2.defaultID, (agent) => {
+          agent.mode = "primary"
+        }),
+      )
+
+      const config = Config.Service.of({
+        entries: () =>
+          Effect.succeed([
+            new Config.Document({
+              type: "document",
+              info: decode({
+                agents: { maestro: { disabled: true, mode: "subagent", description: "Conducts the team" } },
+              }),
+            }),
+          ]),
+      })
+
+      yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+        Effect.provideService(Config.Service, config),
+      )
+
+      expect(yield* agents.get(AgentV2.defaultID)).toMatchObject({
+        id: "maestro",
+        mode: "primary",
+        description: "Conducts the team",
+      })
     }),
   )
 
