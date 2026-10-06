@@ -60,7 +60,11 @@ const toolkit = Effect.gen(function* () {
   return { root, manifest }
 })
 
-it.instance(
+// The fake scanner is a POSIX shell script, and Atlas runs its scanner through execFileSync with no shell, which cannot
+// launch a script on Windows. These cases write Memory through that scanner, so they run on Linux and macOS only.
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
+
+posix(
   "open binds the toolkit's gitleaks as Atlas's scanner, and leaves Atlas to PATH when the toolkit cannot supply it",
   () =>
     Effect.gen(function* () {

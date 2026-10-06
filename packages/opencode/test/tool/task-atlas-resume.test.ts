@@ -298,8 +298,12 @@ const key = (projectID: string, chat: Session.Info, callID: string) => ({
   id: "T-17",
 })
 
+// The fake scanner is a POSIX shell script, and Atlas runs its scanner through execFileSync with no shell, which cannot
+// launch a script on Windows. These cases write Memory through that scanner, so they run on Linux and macOS only.
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
+
 describe("tool.task Atlas resume admission", () => {
-  it.instance(
+  posix(
     "another seat ignores memoryUnit while the backend seat admits the fold",
     () =>
       Effect.gen(function* () {
@@ -317,7 +321,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  it.instance(
+  posix(
     "the latest admitted receipt picks the newer record, not the last one in the log",
     () =>
       Effect.gen(function* () {
@@ -350,7 +354,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  it.instance(
+  posix(
     "a refused or uncertain later write never wins over an admitted one",
     () =>
       Effect.gen(function* () {
@@ -376,7 +380,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  it.instance(
+  posix(
     "two own records without a receipt yield one ambiguous notice that asks for a packet blocker",
     () =>
       Effect.gen(function* () {
@@ -398,7 +402,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  it.instance(
+  posix(
     "replaying the same dispatch call adds no second part, and a new call admits again",
     () =>
       Effect.gen(function* () {
@@ -421,7 +425,7 @@ describe("tool.task Atlas resume admission", () => {
     { git: true },
   )
 
-  it.instance(
+  posix(
     "a partial store yields a store-partial notice that asks for an atlas blocker",
     () =>
       Effect.gen(function* () {
