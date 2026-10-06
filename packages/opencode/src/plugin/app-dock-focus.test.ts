@@ -5,8 +5,8 @@ const typed = { ok: true as const, value: { method: "keyboard", postcondition: "
 
 // Two app windows, each with its own focused field; only the active one receives keys.
 const windows = (...items: Record<string, unknown>[]) => page([
-  control("n:code", "Settings - Visual Studio Code", { roleName: "frame", states: [1, 8], parentRef: null }),
-  control("n:pad", "notes.txt - FeatherPad", { roleName: "frame", states: [8], parentRef: null }),
+  control("n:code", "Settings - Visual Studio Code", { role: 23, roleName: "frame", states: [1, 8], parentRef: null }),
+  control("n:pad", "notes.txt - FeatherPad", { role: 23, roleName: "frame", states: [8], parentRef: null }),
   { ...field("n:pad-text", "notes.txt"), parentRef: "n:pad" },
   ...items.map((item) => ({ parentRef: "n:code", ...item }))])
 
