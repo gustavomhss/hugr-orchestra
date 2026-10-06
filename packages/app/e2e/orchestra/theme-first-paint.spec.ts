@@ -69,19 +69,26 @@ for (const palette of [
   })
 }
 
-test("an unknown or removed palette falls back to Orchestra Dark", { tag: "@source-fixture" }, async ({ page }) => {
-  await page.setViewportSize({ width: 1200, height: 800 })
-  await page.emulateMedia({ colorScheme: "light" })
-  await page.addInitScript(() => {
-    localStorage.setItem("orchestra-palette", "monokai")
-    localStorage.setItem("opencode-color-scheme", "light")
-  })
-  await paused(page)
-  await page.goto("/")
-  await expect(page.locator("html")).not.toHaveAttribute("data-orchestra-palette", /.*/)
-  await background(page, "dark", DARK)
-  expect(await storage(page)).toEqual({ palette: "dark", scheme: "dark" })
-})
+// Dracula and Catppuccin were pilots the owner did not keep: a saved choice of either paints Orchestra Dark.
+for (const id of ["monokai", "dracula", "catppuccin"]) {
+  test(
+    `an unknown or removed palette (${id}) falls back to Orchestra Dark`,
+    { tag: "@source-fixture" },
+    async ({ page }) => {
+      await page.setViewportSize({ width: 1200, height: 800 })
+      await page.emulateMedia({ colorScheme: "light" })
+      await page.addInitScript((id) => {
+        localStorage.setItem("orchestra-palette", id)
+        localStorage.setItem("opencode-color-scheme", "light")
+      }, id)
+      await paused(page)
+      await page.goto("/")
+      await expect(page.locator("html")).not.toHaveAttribute("data-orchestra-palette", /.*/)
+      await background(page, "dark", DARK)
+      expect(await storage(page)).toEqual({ palette: "dark", scheme: "dark" })
+    },
+  )
+}
 
 test(
   "an inherited theme from before palettes becomes its palette or Orchestra Dark",
@@ -111,11 +118,11 @@ test(
 
     await page.evaluate(() => {
       localStorage.removeItem("orchestra-palette")
-      localStorage.setItem("opencode-theme-id", "dracula")
+      localStorage.setItem("opencode-theme-id", "gruvbox")
     })
     await page.reload()
-    await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "dracula")
-    await background(page, "dark", "rgb(29, 30, 40)")
+    await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "gruvbox")
+    await background(page, "dark", "rgb(40, 40, 40)")
   },
 )
 

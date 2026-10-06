@@ -73,19 +73,23 @@ describe("theme preload", () => {
     expect(localStorage.getItem("opencode-color-scheme")).toBe(scheme)
   })
 
-  test("falls back to Orchestra Dark for an unknown or removed palette", () => {
-    inline()
-    localStorage.setItem("orchestra-palette", "monokai")
-    localStorage.setItem("opencode-color-scheme", "light")
+  // Dracula and Catppuccin were pilots the owner did not keep.
+  test.each(["monokai", "dracula", "catppuccin"])(
+    "falls back to Orchestra Dark for the unknown or removed %s",
+    (id) => {
+      inline()
+      localStorage.setItem("orchestra-palette", id)
+      localStorage.setItem("opencode-color-scheme", "light")
 
-    run()
+      run()
 
-    expect(document.documentElement.dataset.orchestraPalette).toBeUndefined()
-    expect(document.documentElement.dataset.colorScheme).toBe("dark")
-    expect(getComputedStyle(document.documentElement).backgroundColor).toBe("#080c11")
-    expect(localStorage.getItem("orchestra-palette")).toBe("dark")
-    expect(localStorage.getItem("opencode-color-scheme")).toBe("dark")
-  })
+      expect(document.documentElement.dataset.orchestraPalette).toBeUndefined()
+      expect(document.documentElement.dataset.colorScheme).toBe("dark")
+      expect(getComputedStyle(document.documentElement).backgroundColor).toBe("#080c11")
+      expect(localStorage.getItem("orchestra-palette")).toBe("dark")
+      expect(localStorage.getItem("opencode-color-scheme")).toBe("dark")
+    },
+  )
 
   test("migrates legacy oc-1 to oc-2 before mount", () => {
     localStorage.setItem("opencode-theme-id", "oc-1")
@@ -118,11 +122,11 @@ describe("theme preload", () => {
     expect(localStorage.getItem("opencode-theme-css-light")).toBeNull()
 
     localStorage.removeItem("orchestra-palette")
-    localStorage.setItem("opencode-theme-id", "dracula")
+    localStorage.setItem("opencode-theme-id", "gruvbox")
     run()
 
-    expect(document.documentElement.dataset.orchestraPalette).toBe("dracula")
-    expect(localStorage.getItem("orchestra-palette")).toBe("dracula")
+    expect(document.documentElement.dataset.orchestraPalette).toBe("gruvbox")
+    expect(localStorage.getItem("orchestra-palette")).toBe("gruvbox")
     expect(localStorage.getItem("opencode-theme-id")).toBe("oc-2")
   })
 })

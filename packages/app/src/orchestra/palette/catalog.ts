@@ -7,8 +7,6 @@ export const PALETTES = [
   { id: "dark", scheme: "dark" },
   { id: "light", scheme: "light" },
   { id: "graphite", scheme: "dark" },
-  { id: "dracula", scheme: "dark" },
-  { id: "catppuccin", scheme: "dark" },
   { id: "gruvbox", scheme: "dark" },
   { id: "github", scheme: "light" },
   { id: "nord", scheme: "dark" },

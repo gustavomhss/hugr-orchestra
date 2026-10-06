@@ -23,54 +23,6 @@ html[data-orchestra-palette="graphite"][data-new-layout] #root {
     background: transparent;
   }
 }
-html[data-orchestra-palette="dracula"] {
-  --orchestra-palette-scheme: dark;
-}
-html[data-orchestra-palette="dracula"][data-color-scheme] {
-  --orchestra-background: #1d1e28;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #383941 0%, transparent 65%), #1d1e28;
-}
-html[data-orchestra-palette="dracula"][data-new-layout] {
-  background-color: var(--orchestra-background);
-}
-html[data-orchestra-palette="dracula"][data-new-layout] body {
-  background: var(--orchestra-page-background);
-}
-html[data-orchestra-palette="dracula"][data-new-layout] #root {
-  background-color: var(--orchestra-background);
-}
-@media (min-width: 768px) {
-  html[data-orchestra-palette="dracula"][data-new-layout] {
-    background: var(--orchestra-page-background);
-  }
-  html[data-orchestra-palette="dracula"][data-new-layout] #root {
-    background: transparent;
-  }
-}
-html[data-orchestra-palette="catppuccin"] {
-  --orchestra-palette-scheme: dark;
-}
-html[data-orchestra-palette="catppuccin"][data-color-scheme] {
-  --orchestra-background: #1e1e2e;
-  --orchestra-page-background: radial-gradient(900px 700px at 15% 0%, #343547 0%, transparent 65%), #1e1e2e;
-}
-html[data-orchestra-palette="catppuccin"][data-new-layout] {
-  background-color: var(--orchestra-background);
-}
-html[data-orchestra-palette="catppuccin"][data-new-layout] body {
-  background: var(--orchestra-page-background);
-}
-html[data-orchestra-palette="catppuccin"][data-new-layout] #root {
-  background-color: var(--orchestra-background);
-}
-@media (min-width: 768px) {
-  html[data-orchestra-palette="catppuccin"][data-new-layout] {
-    background: var(--orchestra-page-background);
-  }
-  html[data-orchestra-palette="catppuccin"][data-new-layout] #root {
-    background: transparent;
-  }
-}
 html[data-orchestra-palette="gruvbox"] {
   --orchestra-palette-scheme: dark;
 }

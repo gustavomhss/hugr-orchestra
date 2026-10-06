@@ -2365,6 +2365,9 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] {
 [data-orchestra-palette="nord"] .zen-linux button:not(:disabled):hover {
   background: var(--surface-raised-stronger);
 }
+[data-orchestra-palette="nord"] .zen-linux p.is-refused {
+  color: var(--text-strong);
+}
 [data-orchestra-palette="nord"] .zen-linux button:focus-visible {
   outline: 2px solid var(--text-strong);
 }

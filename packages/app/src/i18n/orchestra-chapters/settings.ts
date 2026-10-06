@@ -10,8 +10,6 @@ export const SETTINGS_COPY = {
   "orchestra.settings.palette.dark": "Dark",
   "orchestra.settings.palette.light": "Light",
   "orchestra.settings.palette.graphite": "Graphite",
-  "orchestra.settings.palette.dracula": "Dracula",
-  "orchestra.settings.palette.catppuccin": "Catppuccin",
   "orchestra.settings.palette.gruvbox": "Gruvbox",
   "orchestra.settings.palette.github": "GitHub",
   "orchestra.settings.palette.nord": "Nord",

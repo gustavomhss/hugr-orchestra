@@ -1,11 +1,4 @@
-import {
-  amoledTheme,
-  catppuccinTheme,
-  draculaTheme,
-  githubTheme,
-  gruvboxTheme,
-  nordTheme,
-} from "@opencode-ai/ui/theme/default-themes"
+import { amoledTheme, githubTheme, gruvboxTheme, nordTheme } from "@opencode-ai/ui/theme/default-themes"
 import { PALETTES, type RecolorPalette } from "./catalog"
 import { convertTheme, type PaletteRoles } from "./convert"
 
@@ -26,8 +19,6 @@ const GRAPHITE: PaletteRoles = {
 
 export const PALETTE_DEFINITIONS: PaletteDefinition[] = [
   define("graphite", () => GRAPHITE),
-  define("dracula", (scheme) => convertTheme(draculaTheme, scheme)),
-  define("catppuccin", (scheme) => convertTheme(catppuccinTheme, scheme)),
   define("gruvbox", (scheme) => convertTheme(gruvboxTheme, scheme)),
   // GitHub ships its light variant, so the pilot also shows the converter on Orchestra's light glass.
   define("github", (scheme) => convertTheme(githubTheme, scheme)),

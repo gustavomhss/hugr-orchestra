@@ -115,8 +115,6 @@ test("General's theme picker offers only Orchestra palettes and recolors the gla
     "Dark",
     "Light",
     "Graphite",
-    "Dracula",
-    "Catppuccin",
     "Gruvbox",
     "GitHub",
     "Nord",
@@ -148,11 +146,11 @@ test("General's theme picker offers only Orchestra palettes and recolors the gla
 
   // Arrow keys move the selection; the choice survives a reload, painted before the app mounts.
   await radio("Graphite").press("ArrowRight")
-  await expect(radio("Dracula")).toBeFocused()
-  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "dracula")
+  await expect(radio("Gruvbox")).toBeFocused()
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "gruvbox")
   await page.reload({ waitUntil: "domcontentloaded" })
-  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "dracula")
-  await expect(radio("Dracula")).toHaveAttribute("aria-checked", "true")
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "gruvbox")
+  await expect(radio("Gruvbox")).toHaveAttribute("aria-checked", "true")
 
   await radio("Dark").click()
   await expect(page.locator("html")).not.toHaveAttribute("data-orchestra-palette", /.*/)
