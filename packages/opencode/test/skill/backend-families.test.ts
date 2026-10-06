@@ -12,12 +12,8 @@ const FAMILIES = ["python", "go", "rust", "js-ts", "effect", "next", "jvm", "dot
 const LANGUAGE_FAMILIES = ["python", "go", "rust", "js-ts", "jvm", "dotnet", "ruby", "php", "elixir"]
 // F6.4: `effect` and `next` build on the JavaScript and TypeScript language card instead of owning one.
 const SHARED_LANGUAGE = { effect: "js-ts", next: "js-ts" } as Record<string, string>
-// Lead ruling M3-6 (S-1b), counted in whitespace words like S-1.
+// Lead ruling M3-6 (S-1b), counted in whitespace words like S-1. It has no exceptions.
 const MAX_REFERENCE_WORDS = 700
-// Declared exceptions to S-1b. Each entry must still exceed the cap, so a fixed file has to leave the ledger.
-const OVERSIZED = {
-  "continuity.md": "authored before S-1b (840 words); trimming it belongs to the continuity owner",
-} as Record<string, string>
 // Lead ruling F6-D3 with M3-6: the frozen Go tuple.
 const GO_PINS = { chi: "v5.3.2", pgx: "v5.8.0", sqlc: "1.31.1" }
 
@@ -90,15 +86,7 @@ describe("backend skill families", () => {
         words: (await Bun.file(path.join(REFERENCES, file)).text()).split(/\s+/).filter(Boolean).length,
       })),
     )
-    expect(
-      counts.filter((item) => item.words > MAX_REFERENCE_WORDS && !(item.file in OVERSIZED)),
-    ).toEqual([])
-    // A ledger entry for a file that is gone or back under the cap is stale.
-    expect(
-      Object.keys(OVERSIZED).filter(
-        (file) => !counts.some((item) => item.file === file && item.words > MAX_REFERENCE_WORDS),
-      ),
-    ).toEqual([])
+    expect(counts.filter((item) => item.words > MAX_REFERENCE_WORDS)).toEqual([])
   })
 
   test("states the frozen Go tuple and no other version of its components", async () => {

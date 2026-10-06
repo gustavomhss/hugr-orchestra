@@ -60,7 +60,7 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 | F4-CH | Charter draft amends F4: the `backend-result` card has no tool-call IDs (H5 binds by exact path and command+cwd; else `unbound`) and carries a closed `outcome: done \| blocked` that H5 maps to terminal `blocked`. | See `../charter-draft.md` CH-3, CH-7. |
 
 | S-1 | SKILL.md body cap is 1,000 words (amends F6, which set none); references carry detail. | Enforced by `packages/opencode/test/skill/backend-skills.test.ts`. |
-| S-1b | Each file under `references/` is capped at 700 whitespace words (milestone 3 ruling M3-6). `continuity.md` (840) predates the cap and is a declared, self-expiring exception. | Keeps one read per reference cheap. Enforced by `packages/opencode/test/skill/backend-families.test.ts`. |
+| S-1b | Each file under `references/` is capped at 700 whitespace words (milestone 3 ruling M3-6), with no exceptions; `continuity.md` was trimmed under the cap. | Keeps one read per reference cheap. Enforced by `packages/opencode/test/skill/backend-families.test.ts`. |
 | F6-D3a | Frozen Go tuple: Go 1.25+, `net/http` + `context`, chi `v5.3.2`, pgx `v5.8.0`, sqlc `1.31.1` runtime output with `sql_package: pgx/v5` (M3-6 pins chi). | Closes F6-D3 for Go; the Go references state these pins and `backend-families.test.ts` rejects any other version of them. |
 | S-2 | Armed mode: the packet decides whether the backend specialist pre-runs checks; default is not to (charter wins). Amends F4-O5. | Avoids duplicate runs and keeps one rule in the prompt. |
 | S-3 | Resume fold missing or ambiguous → `packet` blocker; Atlas store partial or unavailable → `atlas` blocker. | Fills the kind F3 cl. 20 leaves unnamed. |
