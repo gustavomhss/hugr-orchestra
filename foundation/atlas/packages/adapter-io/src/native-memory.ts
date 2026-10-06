@@ -60,6 +60,8 @@ import type { DurableMemory, MemoryRead } from "./memory-store.js"
 import { createMemoryEmit } from "./memory-emit.js"
 import type { MemoryRejected } from "./memory-emit.js"
 import { createMemoryRead } from "./memory-read.js"
+import { createAwarenessStore } from "./awareness-store.js"
+import { createDurableOrientation } from "./orientation-store.js"
 import { KNOWN_SCANNERS, detectAvailableScanner, runScanner } from "./scanner.js"
 import type { ScannerBinarySpec } from "./scanner.js"
 
@@ -69,9 +71,10 @@ export interface AtlasBinding {
   readonly source: { readonly worktree: string; readonly revision: string }
   /** The stable roster member id (clause 2). The ONLY owner this surface writes as, and the owner it reads as. */
   readonly memoryOwner: MemberId
-  /** Ids the SAME member's records were written under before its id was renamed. `recall` and `resolveFold` read a
-   *  record owned by one of them as the binding owner's; nothing is ever written or minted under them, and the stored
-   *  record is served unchanged. NOT in clause 1's field set — added for a harness seat rename. */
+  /** Ids the SAME member's records were written under before its id was renamed. `recall`, `resolveFold` and the
+   *  header's rules read a record owned by one of them as the binding owner's; nothing is ever written or minted
+   *  under them, and a stored record is served unchanged. NOT in clause 1's field set — added for a harness seat
+   *  rename. */
   readonly legacyOwners?: readonly MemberId[]
   /** Execution provenance. Carried for the host's receipt; never written into an entry or record (clause 3). */
   readonly execution: {
@@ -216,18 +219,7 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
   return {
     binding,
 
-    header(awareness, orientation): BoundHeader {
-      const read = store.read()
-      const rules = storeStateOf(read)
-      const state = { awareness: facetStates(awareness), rules }
-      if (rules === "unavailable") return { state, bound: { rulesWords: 0, method: "whitespace-words" } }
-      const header = createMemoryRead({ store: frozen(read, store.path), actor: owner }).header(awareness, orientation)
-      return {
-        header,
-        state,
-        bound: { rulesWords: header.rules.reduce((n, r) => n + tok(r), 0), method: "whitespace-words" },
-      }
-    },
+    header: (awareness, orientation) => boundHeader(binding, store, awareness, orientation),
 
     recall(query): BoundRecall {
       const q = narrowRecall(query)
@@ -262,6 +254,50 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
+  }
+}
+
+/** The part of `AtlasBinding` a header read needs (clauses 1, 2, 30). A header read writes nothing and mints no
+ *  receipt, so it takes no execution provenance, and a host never has to fabricate one to read it. */
+export type HeaderBinding = Pick<AtlasBinding, "storage" | "memoryOwner" | "legacyOwners">
+
+/** Clauses 6-9 as one host read: the bound running header for `memoryOwner` (and its `legacyOwners`), with the
+ *  shared Awareness and Orientation slabs assembled from the SAME storage root's own stores — the slabs
+ *  `compose.ts` builds for the CLI/MCP header, without its `ATLAS_ACTOR ?? git user.email` owner (clause 4).
+ *  Reads only; an Awareness or Orientation source that cannot be assembled throws, and the host renders that
+ *  as a degraded header (clause 10). */
+export function readBoundHeader(input: HeaderBinding): BoundHeader {
+  const binding = freezeBinding(input)
+  const root = binding.storage.root
+  return boundHeader(
+    binding,
+    createDurableMemory(root),
+    createAwarenessStore(root).read(),
+    createDurableOrientation(root).orientation(),
+  )
+}
+
+/** Clause 7. A legacy owner's `project` rules rank as the binding owner's own: the read door ranks a snapshot in
+ *  which those records carry `memoryOwner`, so a rule kept under the member's former id stays in its header and
+ *  the same rule text under both ids folds to one. The log itself is never rewritten. */
+function boundHeader(
+  binding: HeaderBinding,
+  store: DurableMemory,
+  awareness: Awareness,
+  orientation: Orientation,
+): BoundHeader {
+  const owner = binding.memoryOwner
+  const legacy = new Set(binding.legacyOwners ?? [])
+  const read = store.read()
+  const rules = storeStateOf(read)
+  const state = { awareness: facetStates(awareness), rules }
+  if (rules === "unavailable") return { state, bound: { rulesWords: 0, method: "whitespace-words" } }
+  const own = { ...read, store: read.store.map((r) => (legacy.has(r.owner) ? { ...r, owner } : r)) }
+  const header = createMemoryRead({ store: frozen(own, store.path), actor: owner }).header(awareness, orientation)
+  return {
+    header,
+    state,
+    bound: { rulesWords: header.rules.reduce((n, r) => n + tok(r), 0), method: "whitespace-words" },
   }
 }
 
@@ -349,7 +385,7 @@ function scannerFor(binding: AtlasBinding): { readonly scanner?: NamedScanner } 
 /** Clause 1: a deep, frozen COPY, so neither the caller's object nor a later mutation of it can move the
  *  owner or the root after composition. Validated, because an empty owner or root is a host bug that would
  *  otherwise surface as an `unowned` refusal or a write into `cwd`. */
-function freezeBinding(input: AtlasBinding): AtlasBinding {
+function freezeBinding<T extends HeaderBinding>(input: T): T {
   if (typeof input.memoryOwner !== "string" || input.memoryOwner === "") {
     throw new Error("native-memory: AtlasBinding.memoryOwner must be a non-empty roster member id")
   }
