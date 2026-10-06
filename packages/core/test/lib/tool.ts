@@ -3,8 +3,9 @@ import { SessionMessage } from "@opencode-ai/core/session/message"
 import { ToolRegistry } from "@opencode-ai/core/tool/registry"
 import { Effect } from "effect"
 
+// A caller that is not Maestro: the Maestro Arsenal tests rely on this identity being refused.
 export const toolIdentity = {
-  agent: AgentV2.ID.make("maestro"),
+  agent: AgentV2.ID.make("general"),
   assistantMessageID: SessionMessage.ID.make("msg_tool_test"),
 }
 
