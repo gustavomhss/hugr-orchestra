@@ -199,6 +199,28 @@ export function args(file: string, command: string, cwd: string) {
   return ["-c", command]
 }
 
+/**
+ * The explicit program and arguments for a `shell: true | string` spawn option, the way Node joins them: the command
+ * and its arguments joined by single spaces, unquoted, handed to the shell's command flag. `true` means /bin/sh on
+ * Unix. PowerShell gets `-NoProfile -Command`, every other shell `-c`. It never adds Shell.args' login and rc-file
+ * wrapping. cmd.exe (and `true` on Windows, which means cmd.exe) gives undefined: its quoting rules differ, and the
+ * caller delegates that spawn.
+ */
+export function invocation(
+  shell: true | string,
+  command: string,
+  args: readonly string[],
+): { file: string; args: string[] } | undefined {
+  const joined = [command, ...args].join(" ")
+  if (shell === true) {
+    if (process.platform === "win32") return
+    return { file: "/bin/sh", args: ["-c", joined] }
+  }
+  if (name(shell) === "cmd") return
+  if (ps(shell)) return { file: shell, args: ["-NoProfile", "-Command", joined] }
+  return { file: shell, args: ["-c", joined] }
+}
+
 let defaultPreferred: string | undefined
 let defaultAcceptable: string | undefined
 

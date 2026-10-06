@@ -532,6 +532,14 @@ Probes were run by reviewer 3 on macOS x64 with Bun 1.3.14 and Node 22.17.1. P6 
 - **P6 Worker terminate.**
   - Bun aborts with rc=134 on a napi-rs finalize panic (H1).
   - Under Node, the terminated Worker's child lives until the host exits.
+- **(d) Worker terminate, recorded by WP0** (2026-10-06, macOS arm64, Bun 1.3.14, Node 22.17.1, omni debug build;
+  `packages/core/test/omni-worker.probe.ts`, a Worker that loads omni through the core loader and starts a 2-process
+  nonce tree):
+  - Bun: red. The host aborts with rc=134 right after `terminate()` (napi `bindgen_runtime/mod.rs:94`: "Delete
+    reference in finalize callback failed PendingException", then "failed to initiate panic"). The tree is gone after
+    the host dies (the supervisor stops it).
+  - Node: red. `terminate()` returns (code 1) and the host exits 0, but both tree processes are still alive 5 s after
+    the terminate; they go only when the host exits.
 
 ## 8. Lean test matrix
 
