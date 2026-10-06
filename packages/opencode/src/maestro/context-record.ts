@@ -17,6 +17,10 @@ import { compileContextToolPlan } from "./context-tool-plan"
 import { ConfigMarkdown } from "@/config/markdown"
 import { Filesystem } from "@/util/filesystem"
 
+// The append-only Atlas Memory logs (the union-merged files in .gitattributes).
+const MEMORY_LOGS = [".atlas/memory.jsonl", ".atlas/orientation.jsonl"]
+const MEMORY = MEMORY_LOGS.map((file) => `:(exclude)${file}`)
+
 type LegacyContextData = Schema.Schema.Type<typeof MaestroEvent.Context.Recorded.data> & { readonly mode: "UNGROUNDED" }
 type ContextData = LegacyContextData | Schema.Schema.Type<typeof MaestroEvent.Context.RecordedV2.data>
 
@@ -212,8 +216,12 @@ const currentEvidence = Effect.fn("MaestroContext.currentEvidence")(function* (d
   if (root.exitCode !== 0 || !worktree) return undefined
   const head = yield* git.run(["rev-parse", "HEAD"], { cwd: worktree })
   if (head.exitCode !== 0) return undefined
-  const diff = yield* git.run(["diff", "--binary", "--no-ext-diff", "HEAD", "--", "."], { cwd: worktree })
-  const untracked = yield* git.run(["ls-files", "--others", "--exclude-standard", "-z"], { cwd: worktree })
+  // Atlas Memory logs are versioned with the code but are not task output (F4-O4): a Memory write must never make the
+  // plan context dirty or stale. They are still committed and pushed like any tracked file.
+  const diff = yield* git.run(["diff", "--binary", "--no-ext-diff", "HEAD", "--", ".", ...MEMORY], { cwd: worktree })
+  const untracked = yield* git.run(["ls-files", "--others", "--exclude-standard", "-z", "--", ".", ...MEMORY], {
+    cwd: worktree,
+  })
   if (diff.exitCode !== 0 || diff.truncated || untracked.exitCode !== 0 || untracked.truncated) return undefined
   const untrackedFiles = yield* Effect.forEach(untracked.text().split("\0").filter(Boolean).sort(), (file) =>
     Effect.promise(() => Bun.file(path.join(worktree, file)).arrayBuffer()).pipe(
@@ -224,7 +232,10 @@ const currentEvidence = Effect.fn("MaestroContext.currentEvidence")(function* (d
     directory,
     branch: (yield* git.branch(worktree)) ?? "DETACHED",
     headSHA: head.text().trim(),
-    changedPaths: (yield* git.status(worktree)).map((item) => item.file).sort(),
+    changedPaths: (yield* git.status(worktree))
+      .map((item) => item.file)
+      .filter((file) => !MEMORY_LOGS.includes(file))
+      .sort(),
     diffSHA256: createHash("sha256").update(diff.stdout).digest("hex"),
     untrackedFiles,
   }
