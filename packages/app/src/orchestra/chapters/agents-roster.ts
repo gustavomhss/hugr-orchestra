@@ -5,6 +5,7 @@ import type {
   AgentFileInput,
   AgentFilePermission,
 } from "@opencode-ai/sdk/v2/client"
+import { agentKey } from "@/context/agent-identity"
 
 // The tool permissions an agent file can override, in the order the profile settings list them.
 export const PERMISSION_TOOLS = [
@@ -48,8 +49,8 @@ export function agentRoster(agents: readonly Agent[]) {
     .map((agent) => ({
       agent,
       subagent: agent.mode === "subagent",
-      // The user talks only to Maestro; every other agent works through it.
-      chat: agent.name === "maestro",
+      // The user talks only to Maestro; every other agent works through it. Its id is stable, its name configurable.
+      chat: agentKey(agent) === "maestro",
     }))
 }
 

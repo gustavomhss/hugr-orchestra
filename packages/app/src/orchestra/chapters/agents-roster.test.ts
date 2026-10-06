@@ -41,6 +41,15 @@ describe("Agents roster", () => {
     expect(agentRoster([])).toEqual([])
   })
 
+  test("a renamed maestro still opens chat, and no other agent can take its name", () => {
+    expect(
+      agentRoster([
+        { ...agent("Conductor", "primary"), id: "maestro" },
+        { ...agent("maestro", "subagent"), id: "impostor" },
+      ]).map((item) => item.chat),
+    ).toEqual([true, false])
+  })
+
   test("only missing or unsupported endpoints are unavailable", () => {
     expect(agentUnavailable(new Error("missing", { cause: { status: 404 } }))).toBe(true)
     expect(agentUnavailable(new Error("unsupported", { cause: { status: 405 } }))).toBe(true)
