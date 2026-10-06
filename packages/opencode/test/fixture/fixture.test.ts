@@ -77,6 +77,19 @@ describe("tmpdir", () => {
     expect(value).toBe("false")
   })
 
+  test("copied git fixtures keep distinct root commits", async () => {
+    // Project IDs derive from the root commit, so sharing the .git template must not share it.
+    await using first = await tmpdir({ git: true })
+    await using second = await tmpdir({ git: true })
+    const roots = await Promise.all(
+      [first.path, second.path].map(async (dir) =>
+        (await $`git rev-list --max-parents=0 HEAD`.cwd(dir).quiet().text()).trim(),
+      ),
+    )
+    expect(roots[0]).toMatch(/^[0-9a-f]{40,64}$/)
+    expect(roots[0]).not.toBe(roots[1])
+  })
+
   test("removes directories on dispose", async () => {
     const tmp = await tmpdir({ git: true })
     const dir = tmp.path

@@ -28,6 +28,20 @@ for (const channel of channels) {
     expect(config.deb?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
     expect(config.rpm?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
   })
+
+  test(`embeds no update feed in ${channel.channel} builds`, async () => {
+    const previous = process.env.OPENCODE_CHANNEL
+    process.env.OPENCODE_CHANNEL = channel.channel
+
+    const module = await import(`./electron-builder.config.ts?publish=${channel.channel}`)
+    const config = module.default as Configuration
+
+    if (previous === undefined) delete process.env.OPENCODE_CHANNEL
+    else process.env.OPENCODE_CHANNEL = previous
+
+    // null, not undefined: an omitted publish lets electron-builder infer a GitHub feed from the git remote.
+    expect(config.publish).toBeNull()
+  })
 }
 
 for (const channel of channels) {

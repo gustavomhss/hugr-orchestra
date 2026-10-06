@@ -32,10 +32,11 @@ test("workspace embedded Python fixture sources parse with the real Python parse
       && declaration.initializer && ts.isNoSubstitutionTemplateLiteral(declaration.initializer)
       ? [{ name: declaration.name.text, source: declaration.initializer.text }] : [])
   expect(bodies.map((body) => body.name).sort()).toEqual(names.toSorted())
-  const python = "import ast,json,sys; bodies=json.load(sys.stdin); [ast.parse(body['source'],filename=body['name']) for body in bodies]; print(len(bodies))"
+  const python = "import ast,json,sys; bodies=json.load(sys.stdin); [ast.parse(body['source'],filename=body['name']) for body in bodies]; print(len(bodies), end='')"
   const process = Bun.spawn(["python3", "-B", "-c", python], { stdin: new Blob([JSON.stringify(bodies)]), stdout: "pipe", stderr: "pipe" })
   const result = await Promise.all([process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()])
-  expect(result).toEqual([0, "3\n", ""])
+  // No trailing newline: Windows text-mode stdout would print it as \r\n.
+  expect(result).toEqual([0, "3", ""])
   const invalid = Bun.spawn(["python3", "-B", "-c", python], { stdin: new Blob([JSON.stringify([{ name: "invalid-control", source: "if :" }])]), stdout: "pipe", stderr: "pipe" })
   expect(await invalid.exited).not.toBe(0)
   expect(await new Response(invalid.stderr).text()).toContain("SyntaxError")

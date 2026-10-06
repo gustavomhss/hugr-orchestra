@@ -10,7 +10,7 @@ import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
-import { Effect } from "effect"
+import { Effect, FileSystem } from "effect"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
@@ -233,7 +233,7 @@ it.instance(
         .run()
         .pipe(Effect.orDie)
       const test = yield* TestInstance
-      yield* Effect.promise(() => Bun.write(`${test.directory}/stale.txt`, "stale\n"))
+      yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${test.directory}/stale.txt`, "stale\n"))
       const stale = yield* grantAuthorization({
         sessionID: session.id,
         validationRecordID: validation.id,
@@ -255,7 +255,7 @@ it.instance(
         approvalMessageID: direct.id,
         reviewerID: "lucy",
       })
-      yield* Effect.promise(() => Bun.write(`${test.directory}/stale.txt`, "stale again\n"))
+      yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${test.directory}/stale.txt`, "stale again\n"))
       const staleDispatch = yield* reserveDispatch({
         sessionID: session.id,
         authorizationID: granted.id,
@@ -279,7 +279,7 @@ it.instance(
         authorizationID: granted.id,
         routedMemberID: "charlie",
       })
-      yield* Effect.promise(() => Bun.write(`${test.directory}/stale.txt`, "after reservation\n"))
+      yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${test.directory}/stale.txt`, "after reservation\n"))
       expect(yield* reserveDispatch({ sessionID: session.id, authorizationID: granted.id, permission: [] })).toEqual(
         reservations[0],
       )
