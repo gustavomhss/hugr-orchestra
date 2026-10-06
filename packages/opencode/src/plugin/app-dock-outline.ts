@@ -124,6 +124,13 @@ function held(roots: Node[], owner?: Node) {
 
 const holder = (node: Node): Node | undefined => node.parent && (region(node.parent) ? node.parent : holder(node.parent))
 
+// The region a person works in: the focused control's own region (itself when it is one). Run 17 (Thunar) entered
+// five nested panes by number, again and again, to reach the focused file list; ui_enter focus=true goes there at once.
+export function focusRegion(roots: Node[]) {
+  const focus = visible(roots).find((node) => has(node, 12))
+  return focus && (region(focus) ? focus : holder(focus))
+}
+
 // Same-shaped nodes count across the whole region, not per parent: Chromium wraps each row's toolbar in its own
 // unnamed section, and per-parent counting gave every one of them the same handle, so none could be entered.
 export function handle(roots: Node[], node: Node): Handle {
@@ -193,7 +200,8 @@ export function look(roots: Node[], scope?: Node, limit = 40): Look {
   if (focused) {
     const trail: string[] = []
     for (let current = focused.parent; current; current = current.parent) if (region(current) && current.name) trail.push(line(current))
-    lines.push(`focus: ${line(focused)}${trail.length ? ` in ${trail.slice(0, 3).join(" < ")}` : ""}`)
+    const home = region(focused) ? focused : holder(focused)
+    lines.push(`focus: ${line(focused)}${trail.length ? ` in ${trail.slice(0, 3).join(" < ")}` : ""}${home && home !== base ? " (ui_enter focus=true goes to its region)" : ""}`)
   }
   lines.push(`scope: ${line(base)}${scope ? " (ui_up to leave)" : ""}`)
   const inside = contents(base)

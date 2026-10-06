@@ -31,6 +31,7 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { InstanceState } from "@/effect/instance-state"
+import { TaskReport } from "./task-report"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -548,9 +549,10 @@ export const TaskTool = Tool.define(
               Effect.asVoid,
             )
           : undefined
+        const promptID = MessageID.ascending()
         const result = yield* ops.prompt(
           {
-            messageID: MessageID.ascending(),
+            messageID: promptID,
             sessionID: nextSession.id,
             model: {
               modelID: model.modelID,
@@ -582,7 +584,15 @@ export const TaskTool = Tool.define(
           completionEvidence.value = verified
           yield* ctx.metadata({ metadata: { ...metadata, completion: verified } })
         }
-        return result.parts.findLast((item) => item.type === "text")?.text ?? ""
+        type Part = (typeof result.parts)[number]
+        const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
+          item.type === "text" && item.text.trim() !== ""
+        // An empty final turn still owes the caller a report: summarize this run from the child's session.
+        const history = result.parts.some(reported)
+          ? []
+          : yield* sessions.messages({ sessionID: nextSession.id }).pipe(Effect.orElseSucceed(() => [result]))
+        return result.parts.findLast(reported)?.text ??
+          TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
       const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (
