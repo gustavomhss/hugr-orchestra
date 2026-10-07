@@ -230,7 +230,7 @@ export function create(options: { root: string; context: string; image?: string;
     // included): it must never keep the container, and its resources, alive past quit.
     if (remember) await Promise.race([
       Promise.resolve().then(() => guest(metadata, found, ["remember"], false, 3_000)).catch(() => undefined),
-      new Promise((resolve) => setTimeout(resolve, 3_000).unref()),
+      new Promise((resolve) => setTimeout(resolve, 3_000)),
     ])
     await backend.stop(metadata, found)
     if ((await owned(metadata))?.running) throw new RuntimeError("failed")
