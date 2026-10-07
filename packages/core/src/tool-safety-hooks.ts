@@ -7,16 +7,19 @@ import type { ToolOutput, ToolResultValue } from "@opencode-ai/llm"
 import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
 import { HookEvaluate } from "@opencode-ai/relay/hook/evaluate"
+import type { Database } from "./database/database"
 import type { EventV2 } from "./event"
 import type { Location } from "./location"
 import { Patch } from "./patch"
 import type { Relay } from "./relay"
+import { RelayHookShipper } from "./relay-hook-shipper"
 import { ToolSafety } from "./tool-safety"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
-// nothing. Every matched action is first a durable `relay.hook.decided` event, but no outcome waits on that event.
+// nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
+// but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
 
 export interface Scope {
   readonly installs: ReadonlyMap<string, RelayHook.Install>
@@ -24,10 +27,21 @@ export interface Scope {
   readonly invocation: Omit<HookEvaluate.Invocation, "timing">
   // The native profile, without hooks: a check's sandbox follows it like the tool's own processes do.
   readonly profile: ToolSafety.Profile | undefined
+  // A Session event's: the sha256 of the prompt text, or nothing.
+  readonly subject?: string
   readonly events?: EventV2.Interface
+  readonly db?: Database.Interface["db"]
   readonly location?: Location.Ref
   readonly relay?: Relay.Interface
 }
+
+/**
+ * Where a host's calls run outside a Location (V1 Sessions): the Location their decisions belong to, and its Relay
+ * service, acquired only once an enabled hook is in play.
+ */
+export const Placement = Context.Reference<
+  { readonly location: Location.Ref; readonly relay: Effect.Effect<Relay.Interface | undefined> } | undefined
+>("@opencode/ToolSafetyHooks/Placement", { defaultValue: () => undefined })
 
 /** What `before` decided, for the same call's `after`. */
 export interface Hooked {
@@ -46,19 +60,36 @@ export const before = Effect.fn("ToolSafetyHooks.before")(function* (input: {
   readonly ambient: Context.Context<never>
 }) {
   if (!input.installs.some((install) => install.enabled)) return undefined
-  const { EventV2 } = yield* Effect.promise(() => import("./event"))
-  const { Location } = yield* Effect.promise(() => import("./location"))
-  const location = yield* lookup(input.ambient, Location.Service)
-  const scope = {
-    installs: new Map(input.installs.map((install) => [install.installID, install])),
-    call: input.call,
-    invocation: yield* invocation(input.call, input.resolve),
-    profile: input.profile,
-    events: yield* lookup(input.ambient, EventV2.Service),
-    location: location && { directory: location.directory, workspaceID: location.workspaceID },
-    relay: yield* relay(input.ambient),
-  } satisfies Scope
+  const scope = yield* scoped(input, input.call, yield* invocation(input.call, input.resolve))
   return { scope, notes: yield* enforce(scope, "before") } satisfies Hooked
+})
+
+/**
+ * The hooks of one Session event. A denial stops only what comes after it: before `prompt` the caller refuses
+ * admission; after `session-start` and `session-idle` there is no result to fail, so the caller only records.
+ */
+export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
+  readonly installs: ReadonlyArray<RelayHook.Install>
+  readonly event: ToolSafety.SessionEvent
+  readonly profile: ToolSafety.Profile | undefined
+  readonly ambient: Context.Context<never>
+}) {
+  if (!input.installs.some((install) => install.enabled)) return
+  const event = input.event
+  // There is no tool call: decisions leave out the empty tool and call ID, and hosts bind the Session instead.
+  const call = {
+    tool: "",
+    args: {},
+    callID: "",
+    sessionID: event.sessionID,
+    ...(event.agent ? { agent: event.agent } : {}),
+    ...(event.directory ? { directory: event.directory } : {}),
+    ...(event.projectID ? { projectID: event.projectID } : {}),
+    ...(event.projectDirectory ? { projectDirectory: event.projectDirectory } : {}),
+  } satisfies ToolSafety.Invocation
+  const subject = event.text === undefined ? undefined : createHash("sha256").update(event.text).digest("hex")
+  const scope = yield* scoped(input, call, { operation: event.operation, paths: [] }, subject)
+  yield* enforce(scope, event.operation === "prompt" ? "before" : "after")
 })
 
 /**
@@ -70,6 +101,37 @@ export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
     const notes = succeeded ? yield* enforce(hooked.scope, "after") : []
     return annotate(value, [...hooked.notes, ...notes])
   })
+
+// The services a decision needs: the call's own context first, then ToolSafety's construction context, then a host's
+// Placement outside any Location.
+const scoped = Effect.fnUntraced(function* (
+  input: {
+    readonly installs: ReadonlyArray<RelayHook.Install>
+    readonly profile: ToolSafety.Profile | undefined
+    readonly ambient: Context.Context<never>
+  },
+  call: ToolSafety.Invocation,
+  invocation: Omit<HookEvaluate.Invocation, "timing">,
+  subject?: string,
+) {
+  const { EventV2 } = yield* Effect.promise(() => import("./event"))
+  const { Location } = yield* Effect.promise(() => import("./location"))
+  const { Database } = yield* Effect.promise(() => import("./database/database"))
+  const placement = yield* Placement
+  const location = yield* lookup(input.ambient, Location.Service)
+  const found = yield* relay(input.ambient)
+  return {
+    installs: new Map(input.installs.map((install) => [install.installID, install])),
+    call,
+    invocation,
+    profile: input.profile,
+    ...(subject === undefined ? {} : { subject }),
+    events: yield* lookup(input.ambient, EventV2.Service),
+    db: (yield* lookup(input.ambient, Database.Service))?.db,
+    location: location ? { directory: location.directory, workspaceID: location.workspaceID } : placement?.location,
+    relay: found ?? (placement ? yield* placement.relay : undefined),
+  } satisfies Scope
+})
 
 const OPERATIONS = new Map<string, "read" | "edit" | "write" | "command">([
   ["read", "read"],
@@ -228,7 +290,13 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
         return yield* deny("relay-hook-approve-native-binding-missing", message)
       }
       const exit = yield* restore(
-        host.ask({ action: "relay_hook", resources: resources(scope), invocation: scope.call, message }),
+        host.ask({
+          action: "relay_hook",
+          resources: resources(scope),
+          invocation: scope.call,
+          message,
+          ...(scope.invocation.tool === undefined ? { trigger: `${scope.invocation.operation}.${timing}` } : {}),
+        }),
       ).pipe(Effect.exit)
       if (Exit.isSuccess(exit)) return yield* decide("approved")
       const interrupted = Cause.hasInterrupts(exit.cause)
@@ -267,13 +335,14 @@ function check(scope: Scope, step: HookEvaluate.Step): Effect.Effect<Pick<Relay.
 function params(scope: Scope) {
   const paths = [scope.invocation.paths, ...(scope.invocation.also ?? []).map((part) => part.paths)].flat()
   return {
-    RELAY_HOOK_TOOL: scope.call.tool,
+    ...(scope.invocation.tool === undefined ? {} : { RELAY_HOOK_TOOL: scope.call.tool }),
     ...(paths.length > 0 ? { RELAY_HOOK_PATH: paths.join("\n") } : {}),
     ...(scope.invocation.command === undefined ? {} : { RELAY_HOOK_COMMAND: scope.invocation.command }),
   }
 }
 
 function resources(scope: Scope) {
+  if (scope.invocation.tool === undefined) return [scope.invocation.operation]
   if (scope.invocation.command !== undefined) return [scope.invocation.command]
   const paths = [scope.invocation.paths, ...(scope.invocation.also ?? []).map((part) => part.paths)].flat()
   return paths.length > 0 ? paths : [scope.call.tool]
@@ -284,9 +353,9 @@ function deny(reason: string, detail: string) {
 }
 
 /**
- * The durable decision. Its subject is the matched paths, or the sha256 of the command, so command text stays in the
- * Session record only. It never decides: a payload that does not decode, a missing event service or a failed write
- * leave the outcome as it is.
+ * The durable decision, then its receipt. Its subject is the matched paths, or the sha256 of the command or prompt, so
+ * their text stays in the Session record only. It never decides: a payload that does not decode, a missing service or a
+ * failed write leave the outcome as it is, and a receipt that cannot be written now ships with the Session's next one.
  */
 const decided = Effect.fnUntraced(function* (
   scope: Scope,
@@ -309,22 +378,36 @@ const decided = Effect.fnUntraced(function* (
     nodeID: step.nodeID,
     action,
     trigger: `${operation}.${timing}`,
-    tool: scope.call.tool,
+    ...(scope.invocation.tool === undefined ? {} : { tool: scope.call.tool }),
     sessionID: scope.call.sessionID,
-    callID: scope.call.callID,
+    ...(scope.invocation.tool === undefined ? {} : { callID: scope.call.callID }),
     ...(scope.call.assistantMessageID ? { assistantMessageID: scope.call.assistantMessageID } : {}),
     ...(scope.call.agent ? { agent: scope.call.agent } : {}),
     subject: subject(scope, operation),
     outcome,
     durationMs: Math.max(0, (yield* Clock.currentTimeMillis) - started),
   })
-  if (Option.isNone(data) || !scope.events) return
-  yield* scope.events
-    .publish(RelayHook.Decided, data.value, scope.location ? { location: scope.location } : undefined)
-    .pipe(Effect.exit)
+  const events = scope.events
+  if (Option.isNone(data) || !events) return
+  yield* RelayHookShipper.track(
+    data.value.decisionID,
+    Effect.gen(function* () {
+      const published = yield* events
+        .publish(RelayHook.Decided, data.value, scope.location ? { location: scope.location } : undefined)
+        .pipe(Effect.exit)
+      if (Exit.isFailure(published) || !scope.relay || !scope.db) return
+      yield* RelayHookShipper.ship({
+        relay: scope.relay,
+        db: scope.db,
+        sessionID: scope.call.sessionID,
+        current: data.value.decisionID,
+      }).pipe(Effect.exit)
+    }),
+  )
 })
 
 function subject(scope: Scope, operation: RelayHook.Operation) {
+  if (scope.invocation.tool === undefined) return scope.subject ?? ""
   const command = scope.invocation.command
   if (command !== undefined && (operation === "command" || operation === "tool"))
     return createHash("sha256").update(command).digest("hex")
@@ -350,17 +433,29 @@ function relay(ambient: Context.Context<never>) {
 }
 
 /**
- * Notes reach the model on the V2 registry's settlement: the model reads its `result` and the Session records its
- * `output`. Any other value is returned as it is; its decisions are still recorded.
+ * Notes reach the model on the V2 registry's settlement, where the model reads its `result` and the Session records its
+ * `output`, and on a V1 tool's text `output`. Any other value is returned as it is; its decisions are still recorded.
  */
 function annotate<A>(value: A, notes: ReadonlyArray<string>): A {
-  if (notes.length === 0 || !settlement(value)) return value
+  if (notes.length === 0) return value
   const text = notes.join("\n")
+  if (legacy(value)) return { ...value, output: `${value.output}\n\n${text}` }
+  if (!settlement(value)) return value
   const output = value.output && {
     ...value.output,
     content: [...value.output.content, { type: "text" as const, text }],
   }
   return { ...value, result: appended(value.result, text), ...(output ? { output } : {}) }
+}
+
+function legacy<A>(value: A): value is A & { readonly output: string } {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !("result" in value) &&
+    "output" in value &&
+    typeof value.output === "string"
+  )
 }
 
 function settlement<A>(value: A): value is A & { readonly result: ToolResultValue; readonly output?: ToolOutput } {
