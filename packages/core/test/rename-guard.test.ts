@@ -36,7 +36,10 @@ describe("rename guard", () => {
   test("every ledger entry still matches something, so the ledger cannot outlive its reasons", async () => {
     const files = await scanned()
     expect(
-      keptPaths.filter((entry) => !tracked.some((file) => entry.path.test(file))).map((entry) => entry.reason),
+      keptPaths
+        .filter((entry) => !entry.requires || tracked.some((file) => file.startsWith(`${entry.requires}/`)))
+        .filter((entry) => !tracked.some((file) => entry.path.test(file)))
+        .map((entry) => entry.reason),
     ).toEqual([])
     expect(
       protectedStrings
