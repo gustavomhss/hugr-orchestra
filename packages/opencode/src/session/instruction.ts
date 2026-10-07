@@ -57,10 +57,9 @@ const layer: Layer.Layer<
     const global = yield* Global.Service
     const flags = yield* RuntimeFlags.Service
     const http = HttpClient.filterStatusOk(withTransientReadRetry(yield* HttpClient.HttpClient))
-    const globalFiles = [
-      path.join(global.config, "AGENTS.md"),
-      ...(!flags.disableClaudeCodePrompt ? [path.join(global.home, ".claude", "CLAUDE.md")] : []),
-    ]
+    // Only Orchestra's own global file loads. Another harness's global file, such as ~/.claude/CLAUDE.md, is written
+    // for that harness; repository instruction files below still include CLAUDE.md.
+    const globalFile = path.join(global.config, "AGENTS.md")
     const instructionFiles = [
       "AGENTS.md",
       ...(!flags.disableClaudeCodePrompt ? ["CLAUDE.md"] : []),
@@ -112,12 +111,7 @@ const layer: Layer.Layer<
       const ctx = yield* InstanceState.context
       const paths = new Set<string>()
 
-      for (const file of globalFiles) {
-        if (yield* fs.existsSafe(file)) {
-          paths.add(path.resolve(file))
-          break
-        }
-      }
+      if (yield* fs.existsSafe(globalFile)) paths.add(path.resolve(globalFile))
 
       // The first project-level match wins so we don't stack AGENTS.md/CLAUDE.md from every ancestor.
       if (!Flag.OPENCODE_DISABLE_PROJECT_CONFIG) {

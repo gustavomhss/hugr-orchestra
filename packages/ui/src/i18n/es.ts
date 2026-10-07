@@ -130,7 +130,6 @@ export const dict = {
   "ui.promptInput.attachments": "Imágenes y archivos",
   "ui.promptInput.context": "Contexto",
   "ui.promptInput.shell": "Comando de shell",
-  "ui.promptInput.chooseAgent": "Elegir agente",
   "ui.promptInput.chooseModel": "Elegir modelo",
   "ui.promptInput.chooseVariant": "Elegir variante del modelo",
   "ui.promptInput.send": "Enviar",

@@ -6,8 +6,9 @@ import path from "path"
 import { Global } from "@opencode-ai/core/global"
 import { InstallationVersion } from "@opencode-ai/core/installation/version"
 
-// The authored skill tree (F6.1). Running from source reads it in place.
-export const source = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
+// The authored skill tree (F6.1). Running from source reads it in place. import.meta.dirname, not Bun's
+// import.meta.dir: the desktop sidecar runs this module under Node, where import.meta.dir is undefined.
+export const source = path.resolve(import.meta.dirname, "../../../backend-specialist/skills")
 
 // Compiled builds embed the tree as a generated file map, tree-relative path -> embedded file (script/build.ts).
 // The embed lives on Bun's virtual filesystem, so it is copied to a real directory (F6.12) that the read tool and

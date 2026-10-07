@@ -1,7 +1,6 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem, httpClient } from "@opencode-ai/core/effect/app-node-platform"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
-import { PlanExitTool } from "./plan"
 import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
@@ -12,6 +11,8 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
+import { ContextCompactTool } from "./context-compact"
+import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
@@ -165,12 +166,12 @@ const layer = Layer.effect(
     const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
+    const compact = yield* ContextCompactTool
     const atlasRecall = yield* AtlasMemoryRecallTool
     const atlasEmit = yield* AtlasMemoryEmitTool
     const question = yield* QuestionTool
     const todo = yield* TodoWriteTool
     const lsptool = yield* LspTool
-    const plan = yield* PlanExitTool
     const webfetch = yield* WebFetchTool
     const websearch = yield* WebSearchTool
     const shell = yield* ShellTool
@@ -308,6 +309,7 @@ const layer = Layer.effect(
           shell: Tool.init(shell),
           read: Tool.init(read),
           recall: Tool.init(recall),
+          compact: Tool.init(compact),
           atlasRecall: Tool.init(atlasRecall),
           atlasEmit: Tool.init(atlasEmit),
           glob: Tool.init(globtool),
@@ -335,7 +337,6 @@ const layer = Layer.effect(
           patch: Tool.init(patchtool),
           question: Tool.init(question),
           lsp: Tool.init(lsptool),
-          plan: Tool.init(plan),
           ...(codeModeTool ? { execute: Tool.init(codeModeTool) } : {}),
         })
 
@@ -347,6 +348,7 @@ const layer = Layer.effect(
             tool.shell,
             tool.read,
             tool.recall,
+            tool.compact,
             tool.atlasRecall,
             tool.atlasEmit,
             tool.glob,
@@ -374,7 +376,6 @@ const layer = Layer.effect(
             tool.patch,
             ...(tool.execute ? [tool.execute] : []),
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
-            ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan] : []),
           ],
           task: tool.task,
           read: tool.read,
@@ -422,10 +423,10 @@ const layer = Layer.effect(
       const description = list
         .map(
           (item) =>
-            `- ${item.id ?? item.name}: ${item.description ?? "This subagent should only be called manually by the user."}`,
+            `- ${item.id ?? item.name}: ${item.description ?? "No description; start it only when the owner names it."}`,
         )
         .join("\n")
-      const sections = ["Available agent types and the tools they have access to:", description]
+      const sections = ["Teammates you can start:", description]
       const allowed = allowedTaskModels(Permission.merge(agent.permission, sessionPermission ?? []))
       if (allowed.length > 0) {
         sections.push(
@@ -660,6 +661,7 @@ export const node = LayerNode.make({
     MCP.node,
     Database.node,
     Archive.node,
+    SessionContinuity.node,
     ArsenalObservations.node,
     AppProcess.node,
     Global.node,

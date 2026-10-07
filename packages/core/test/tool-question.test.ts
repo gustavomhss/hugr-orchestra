@@ -103,14 +103,14 @@ describe("QuestionTool", () => {
         result: {
           type: "text",
           value:
-            'User has answered your questions: "What should happen?"="Build", "Which environment?"="Unanswered". You can now continue with the user\'s answers in mind.',
+            'The owner has answered your questions: "What should happen?"="Build", "Which environment?"="Unanswered". You can now continue with the owner\'s answers in mind.',
         },
         output: {
           structured: { answers: [["Build"], []] },
           content: [
             {
               type: "text",
-              text: 'User has answered your questions: "What should happen?"="Build", "Which environment?"="Unanswered". You can now continue with the user\'s answers in mind.',
+              text: 'The owner has answered your questions: "What should happen?"="Build", "Which environment?"="Unanswered". You can now continue with the owner\'s answers in mind.',
             },
           ],
         },

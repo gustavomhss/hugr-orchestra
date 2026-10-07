@@ -69,7 +69,10 @@ export const before = Effect.fn("ToolSafetyGit.before")(function* (input: {
     return yield* new ToolSafety.Denied({ reason: "git-hygiene-placement-environment" })
   const parsed = yield* Effect.try({
     try: () => commands(input.command),
-    catch: () => new ToolSafety.Denied({ reason: "git-hygiene-command-acquisition" }),
+    // The parser names the construct it refused; keep that code so the HOLD can say what to change.
+    catch: (error) => new ToolSafety.Denied({
+      reason: error instanceof Error && error.message.startsWith("git-hygiene-") ? error.message : "git-hygiene-command-acquisition",
+    }),
   })
   const project = yield* fs.realPath(input.projectDirectory ?? input.directory).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "git-hygiene-project-acquisition" })),

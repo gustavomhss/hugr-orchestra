@@ -67,7 +67,9 @@ it.instance(
       const beforeDescribe = yield* execute.execute({ name: "profile", arguments: {} }, context).pipe(Effect.exit)
       expect(beforeDescribe._tag).toBe("Failure")
       if (beforeDescribe._tag !== "Failure") throw new Error("describe prerequisite was not enforced")
-      expect(Cause.pretty(beforeDescribe.cause)).toContain("Describe this Arsenal capability")
+      expect(Cause.pretty(beforeDescribe.cause)).toContain(
+        'call maestro_arsenal_describe with name "profile" first, then pass arguments that match its inputSchema',
+      )
       const descriptor = yield* describe.execute({ name: "profile" }, context)
       expect(descriptor.metadata.truncated).toBe(false)
       expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(descriptor.output)).toEqual(
@@ -78,6 +80,10 @@ it.instance(
         .execute({ name: "profile", arguments: { action: "set", patch: { scrutiny: "invalid" } } }, context)
         .pipe(Effect.exit)
       expect(invalid._tag).toBe("Failure")
+      if (invalid._tag !== "Failure") throw new Error("invalid arguments were accepted")
+      expect(Cause.pretty(invalid.cause)).toContain(
+        "Arsenal capability failed (invalid_arguments): invalid arguments for profile: args.patch.scrutiny: value outside enum",
+      )
       expect(asks.slice(start)).toEqual(["maestro_arsenal_execute"])
       expect(yield* fs.readDirectory(stateDirectory)).toEqual([])
       const denied = yield* execute

@@ -271,15 +271,19 @@ export default function Agents(props: ChapterPageProps) {
                         <button type="button" class="mx-btn" onClick={() => setState("editing", { agent: item.agent })}>
                           {language.t("orchestra.agents.configure")}
                         </button>
-                        <button
-                          type="button"
-                          class="mx-btn"
-                          disabled={!item.chat || state.opening || !tabs.ready()}
-                          title={item.chat ? undefined : language.t("orchestra.agents.subagentNote")}
-                          onClick={() => openChat()}
+                        <Show
+                          when={item.chat}
+                          fallback={<p class="mx-note agents-note">{language.t("orchestra.agents.maestroOnly")}</p>}
                         >
-                          {language.t("orchestra.agents.openChat")}
-                        </button>
+                          <button
+                            type="button"
+                            class="mx-btn"
+                            disabled={state.opening || !tabs.ready()}
+                            onClick={() => openChat()}
+                          >
+                            {language.t("orchestra.agents.openChat")}
+                          </button>
+                        </Show>
                       </footer>
                     </li>
                   )}

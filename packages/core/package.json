@@ -107,7 +107,7 @@
     "@silvia-odwyer/photon-node": "0.3.4",
     "@openrouter/ai-sdk-provider": "2.9.0",
     "ai-gateway-provider": "3.2.0",
-    "bun-pty": "0.4.8",
+    "bun-pty": "0.4.9",
     "cross-spawn": "catalog:",
     "diff": "catalog:",
     "drizzle-orm": "catalog:",

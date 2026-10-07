@@ -80,7 +80,10 @@ describe("shortcut rows", () => {
   })
 
   test("groups follow the Settings panel", () => {
-    expect(shortcutGroup("model.choose")).toBe("modelAndAgent")
+    expect(shortcutGroup("model.choose")).toBe("modelAndMcp")
+    expect(shortcutGroup("mcp.toggle")).toBe("modelAndMcp")
+    // There are no agent commands: the user talks only to Maestro, so `agent.*` has no group of its own.
+    expect(shortcutGroup("agent.cycle")).toBe("general")
     expect(shortcutGroup("fileTree.toggle")).toBe("navigation")
     expect(shortcutGroup("prompt.submit")).toBe("prompt")
     expect(shortcutGroup("review.next")).toBe("session")

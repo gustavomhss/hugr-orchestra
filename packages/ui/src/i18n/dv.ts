@@ -122,7 +122,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "ތަސްވީރުތަކާއި ފައިލްތައް",
   "ui.promptInput.context": "ކޮންޓެކްސްޓް",
   "ui.promptInput.shell": "ޝެލް ކޮމާންޑެވެ",
-  "ui.promptInput.chooseAgent": "އޭޖެންޓް ހޮވާށެވެ",
   "ui.promptInput.chooseModel": "މޮޑެލް ހޮވާށެވެ",
   "ui.promptInput.chooseVariant": "މޮޑެލް ވެރިއަންޓް ހޮވާށެވެ",
   "ui.promptInput.send": "ފޮނުވުން",

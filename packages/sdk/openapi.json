@@ -27066,14 +27066,6 @@
           },
           "mode": {
             "type": "object",
-            "properties": {
-              "build": {
-                "$ref": "#/components/schemas/AgentConfig"
-              },
-              "plan": {
-                "$ref": "#/components/schemas/AgentConfig"
-              }
-            },
             "additionalProperties": {
               "$ref": "#/components/schemas/AgentConfig"
             }
@@ -27081,10 +27073,7 @@
           "agent": {
             "type": "object",
             "properties": {
-              "plan": {
-                "$ref": "#/components/schemas/AgentConfig"
-              },
-              "build": {
+              "maestro": {
                 "$ref": "#/components/schemas/AgentConfig"
               },
               "general": {

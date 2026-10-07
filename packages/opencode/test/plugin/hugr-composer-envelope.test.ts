@@ -143,15 +143,15 @@ function composerFixture(mode: string) {
     const sessions = yield* Session.Service
     const permission = yield* Permission.Service
     const agents = yield* Agent.Service
-    const agent = yield* agents.get("build")
-    const session = yield* sessions.create({ title: `composer ${mode}`, agent: "build" })
+    const agent = yield* agents.get("maestro")
+    const session = yield* sessions.create({ title: `composer ${mode}`, agent: "maestro" })
     const services = yield* Effect.context<never>()
     const metadata: unknown[] = []
     const context: ToolContext = {
       sessionID: session.id,
       messageID: "message",
-      agent: "build",
-      agentID: "build",
+      agent: "maestro",
+      agentID: "maestro",
       directory: instance.directory,
       worktree: instance.directory,
       abort: new AbortController().signal,

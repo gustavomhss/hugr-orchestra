@@ -1,5 +1,6 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import path from "path"
+import { fileURLToPath } from "url"
 import { Effect, FileSystem, Layer, Context, Schema } from "effect"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { NamedError } from "@opencode-ai/core/util/error"
@@ -7,7 +8,6 @@ import type { Agent } from "@/agent/agent"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstanceState } from "@/effect/instance-state"
 import { Global } from "@opencode-ai/core/global"
-import { SkillPlugin } from "@opencode-ai/core/plugin/skill"
 import { SkillFile } from "@opencode-ai/core/skill/file"
 import { Permission } from "@/permission"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -27,15 +27,10 @@ const EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"
 const OPENCODE_SKILL_PATTERN = "{skill,skills}/**/SKILL.md"
 const SKILL_PATTERN = "**/SKILL.md"
 
-// Built-in skill that ships with opencode. The model's intuition for what an
-// opencode.json should look like is often wrong, and opencode hard-fails on
-// invalid config, so users hit cryptic startup errors. Loading this skill
-// when the model is asked to touch opencode's own config files gives it the
-// actual schemas instead of guesses.
-const CUSTOMIZE_OPENCODE_SKILL_NAME = "customize-opencode"
-const CUSTOMIZE_OPENCODE_SKILL_DESCRIPTION =
-  "Use ONLY when the user is editing or creating opencode's own configuration: opencode.json, opencode.jsonc, files under .opencode/, or files under ~/.config/opencode/. Also use when creating or fixing opencode agents, subagents, skills, plugins, MCP servers, or permission rules. Do not use for the user's own application code, or for any project that is not configuring opencode itself."
-const CUSTOMIZE_OPENCODE_SKILL_BODY = SkillPlugin.CustomizeOpencodeContent
+// Maestro's playbooks ship with Orchestra, so every repository has them. The desktop app points
+// ORCHESTRA_PLAYBOOKS_DIR at its packaged copy; a run from this repository reads the source copy.
+export const PLAYBOOKS_DIR =
+  process.env.ORCHESTRA_PLAYBOOKS_DIR ?? fileURLToPath(new URL("../../playbooks", import.meta.url))
 
 export const Info = Schema.Struct({
   name: Schema.String,
@@ -92,6 +87,7 @@ type State = {
 }
 
 type DiscoveryState = {
+  playbooks: string[]
   matches: string[]
   dirs: string[]
   seat: string[]
@@ -204,6 +200,8 @@ const discoverSkills = Effect.fnUntraced(function* (
   projectID: string,
 ) {
   const state: ScanState = { matches: new Set(), dirs: new Set() }
+  const playbooks: ScanState = { matches: new Set(), dirs: state.dirs }
+  if (yield* fsys.isDir(PLAYBOOKS_DIR)) yield* scan(playbooks, PLAYBOOKS_DIR, SKILL_PATTERN, { scope: "bundled" })
 
   const externalDirs: string[] = []
   if (!disableExternalSkills) {
@@ -291,6 +289,7 @@ const discoverSkills = Effect.fnUntraced(function* (
   if (yield* fsys.isDir(backendSkills.root)) yield* scan(seat, backendSkills.root, SKILL_PATTERN)
 
   return {
+    playbooks: Array.from(playbooks.matches),
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
     seat: Array.from(seat.matches),
@@ -303,10 +302,16 @@ const loadSkills = Effect.fnUntraced(function* (
   events: EventV2Bridge.Service["Service"],
   fsys: FSUtil.Interface,
 ) {
-  yield* Effect.forEach(discovered.matches, (match) => add(state, match, events, fsys), {
-    concurrency: "unbounded",
-    discard: true,
-  })
+  // Playbooks load first, so a skill of the same name from any other source replaces one.
+  yield* Effect.forEach(
+    [discovered.playbooks, discovered.matches],
+    (matches) =>
+      Effect.forEach(matches, (match) => add(state, match, events, fsys), {
+        concurrency: "unbounded",
+        discard: true,
+      }),
+    { discard: true },
+  )
 
   yield* Effect.logInfo("init", { count: Object.keys(state.skills).length })
 })
@@ -341,18 +346,10 @@ const layer = Layer.effect(
     const state = yield* InstanceState.make(
       Effect.fn("Skill.state")(function* () {
         const s: State = { skills: {}, dirs: new Set(), seat: {} }
-        // Register the built-in skill BEFORE disk discovery so a user-disk
-        // skill with the same name can override it.
-        s.skills[CUSTOMIZE_OPENCODE_SKILL_NAME] = {
-          name: CUSTOMIZE_OPENCODE_SKILL_NAME,
-          description: CUSTOMIZE_OPENCODE_SKILL_DESCRIPTION,
-          location: "<built-in>",
-          content: CUSTOMIZE_OPENCODE_SKILL_BODY,
-        }
         const found = yield* InstanceState.get(discovered)
         yield* loadSkills(s, found, events, fsys)
         const seat: State = { skills: {}, dirs: new Set(), seat: {} }
-        yield* loadSkills(seat, { matches: found.seat, dirs: [], seat: [] }, events, fsys)
+        yield* loadSkills(seat, { playbooks: [], matches: found.seat, dirs: [], seat: [] }, events, fsys)
         s.seat = seat.skills
         return s
       }),
@@ -386,7 +383,14 @@ const layer = Layer.effect(
         a.name.localeCompare(b.name),
       )
       if (!agent) return list
-      return list.filter((skill) => Permission.evaluate("skill", skill.name, agent.permission).action !== "deny")
+      // A skill rule whose pattern is an absolute path matches where the skill was found, not its name,
+      // and only hides the skill from this list. Name rules such as "*" never match a location.
+      const located = agent.permission.filter((rule) => path.isAbsolute(rule.pattern))
+      return list.filter(
+        (skill) =>
+          Permission.evaluate("skill", skill.name, agent.permission).action !== "deny" &&
+          Permission.evaluate("skill", skill.location, located).action !== "deny",
+      )
     })
 
     const rescan = Effect.fnUntraced(function* () {

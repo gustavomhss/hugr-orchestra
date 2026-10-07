@@ -5,6 +5,7 @@ import { createHash, randomUUID } from "crypto"
 import matter from "gray-matter"
 import { Effect, Schema } from "effect"
 import type { AgentFile } from "@opencode-ai/schema/agent-file"
+import { AgentV2 } from "../agent"
 import { FSUtil } from "../fs-util"
 import { ConfigMarkdown } from "./markdown"
 
@@ -24,7 +25,7 @@ export class ConflictError extends Schema.TaggedErrorClass<ConflictError>()("Con
 
 export class RejectedError extends Schema.TaggedErrorClass<RejectedError>()("ConfigAgentFile.RejectedError", {
   path: Schema.String,
-  reason: Schema.Literals(["unparseable", "outside", "case"]),
+  reason: Schema.Literals(["unparseable", "outside", "case", "protected"]),
   message: Schema.String,
 }) {}
 
@@ -48,6 +49,13 @@ export const write = Effect.fn("ConfigAgentFile.write")(function* (
 ) {
   const fs = yield* FSUtil.Service
   const filepath = yield* locate(fs, directory, name)
+  // Every session runs on Maestro, so its file may neither disable it nor take it out of primary mode.
+  if (name === AgentV2.defaultID && (input.disable || (input.mode ?? "primary") !== "primary"))
+    return yield* new RejectedError({
+      path: filepath,
+      reason: "protected",
+      message: "Maestro runs every session, so it cannot be disabled or set to a mode other than primary.",
+    })
   const existing = yield* content(fs, filepath)
   if (input.revision !== undefined && input.revision !== revision(existing))
     return yield* new ConflictError({ path: filepath, message: "The agent file changed since it was read." })

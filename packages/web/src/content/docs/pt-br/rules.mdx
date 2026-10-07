@@ -71,14 +71,13 @@ Como isso não é commitado no Git ou compartilhado com sua equipe, recomendamos
 Para usuários migrando do Claude Code, o opencode suporta as convenções de arquivo do Claude Code como alternativas:
 
 - **Regras do projeto**: `CLAUDE.md` no diretório do seu projeto (usado se não existir `AGENTS.md`)
-- **Regras globais**: `~/.claude/CLAUDE.md` (usado se não existir `~/.config/opencode/AGENTS.md`)
 - **Habilidades**: `~/.claude/skills/` — veja [Habilidades do Agente](/docs/skills/) para detalhes
 
 Para desabilitar a compatibilidade com Claude Code, defina uma dessas variáveis de ambiente:
 
 ```bash
 export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only project CLAUDE.md files
 export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
@@ -90,9 +89,8 @@ Quando o opencode inicia, ele procura arquivos de regras nesta ordem:
 
 1. **Arquivos locais** percorrendo a partir do diretório atual (`AGENTS.md`, `CLAUDE.md`)
 2. **Arquivo global** em `~/.config/opencode/AGENTS.md`
-3. **Arquivo Claude Code** em `~/.claude/CLAUDE.md` (a menos que desabilitado)
 
-O primeiro arquivo correspondente vence em cada categoria. Por exemplo, se você tiver tanto `AGENTS.md` quanto `CLAUDE.md`, apenas `AGENTS.md` é usado. Da mesma forma, `~/.config/opencode/AGENTS.md` tem precedência sobre `~/.claude/CLAUDE.md`.
+O primeiro arquivo correspondente vence em cada categoria. Por exemplo, se você tiver tanto `AGENTS.md` quanto `CLAUDE.md`, apenas `AGENTS.md` é usado.
 
 ---
 

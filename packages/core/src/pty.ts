@@ -180,6 +180,9 @@ const layer = Layer.effect(
       }
       yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd })
       const { spawn } = yield* Effect.promise(() => pty())
+      // A short command can exit right after spawn, and the backends only notify listeners attached when an event
+      // fires (bun-pty 0.4.9 starts reading on a microtask; 0.4.8 read inside spawn and dropped such exits). Attach
+      // onData and onExit below without an async step in between, or the session never leaves "running".
       const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env }))
       const info: Info = {
         id,

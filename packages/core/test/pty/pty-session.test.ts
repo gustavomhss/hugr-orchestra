@@ -90,6 +90,44 @@ const waitForOutput = (output: Queue.Queue<string>, text: string) =>
     }),
   )
 
+// Holds bun-pty's first read of a new PTY until its command has exited, the way a GC pause or a loaded CI runner can
+// stall the main thread between spawn and that read. Patching the dependency is the only way to make this race
+// deterministic. `held` lists the PTYs whose first read really waited for the exit, so a test can prove the hold
+// applied instead of passing vacuously after a bun-pty refactor.
+const holdFirstReadUntilExit = Effect.acquireRelease(
+  Effect.promise(async () => {
+    const { Terminal } = await import("bun-pty")
+    const terminal = Terminal.prototype as unknown as { _startReadLoop: (this: { pid: number }) => Promise<void> }
+    const start = terminal._startReadLoop
+    if (typeof start !== "function") throw new Error("bun-pty no longer has Terminal.prototype._startReadLoop")
+    const held: number[] = []
+    terminal._startReadLoop = function () {
+      const deadline = Date.now() + 5_000
+      while (Date.now() < deadline && alive(this.pid)) Bun.sleepSync(5)
+      if (!alive(this.pid)) held.push(this.pid)
+      // bun-pty's wait thread queues the exit just after it reaps the child; let it finish so the first read sees it.
+      Bun.sleepSync(50)
+      return start.call(this)
+    }
+    return {
+      held,
+      restore: () => {
+        terminal._startReadLoop = start
+      },
+    }
+  }),
+  (hold) => Effect.sync(hold.restore),
+)
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
+
 describe("pty", () => {
   it.live("returns typed not found errors for missing sessions", () =>
     Effect.gen(function* () {
@@ -129,6 +167,19 @@ describe("pty", () => {
         expect(Exit.isFailure(missing)).toBe(true)
       }),
     30000,
+  )
+
+  ptyTest("reports the exit of a command that ends before its PTY is first read", () =>
+    Effect.gen(function* () {
+      const hold = yield* holdFirstReadUntilExit
+      const pty = yield* Pty.Service
+      const events = yield* subscribePtyEvents()
+      const info = yield* createPty("/usr/bin/env", ["sh", "-c", "exit 3"])
+
+      expect(yield* waitForEvents(events, info.id, 2)).toEqual(["created", "exited"])
+      expect(hold.held).toEqual([info.pid])
+      expect((yield* pty.get(info.id)).exitCode).toBe(3)
+    }),
   )
 
   ptyTest("replays buffered output and streams live output to attachments", () =>

@@ -107,7 +107,6 @@ export const dict: Record<string, string> = {
   "command.category.terminal": "ཊར་མི་ནཱལ།",
   "command.category.model": "དཔེ་ཚད།",
   "command.category.mcp": "MCP།",
-  "command.category.agent": "ལས་ཚབ།",
   "command.category.permissions": "གནང་བ་ཚུ།",
   "command.category.workspace": "ལཱ་གི་ས་སྒོ།",
   "command.category.settings": "སྒྲིག་སྟངས་ཚུ།",
@@ -157,10 +156,6 @@ export const dict: Record<string, string> = {
   "command.model.choose.description": "དཔེ་ཚད་སོ་སོ་ཅིག་སེལ་འཐུ་འབད།",
   "command.mcp.toggle": "MCPsསོར་སྟོན་འབད།",
   "command.mcp.toggle.description": "MCPsསོར་སྟོན་འབད།",
-  "command.agent.cycle": "ལས་ཚབ་ཤུལ་མམ།",
-  "command.agent.cycle.description": "ཤུལ་མམ་གྱི་ལས་ཚབ་ལུ་སོར་བསྒྱུར་འབད།",
-  "command.agent.cycle.reverse": "རྐང་འཁོར་ལས་ཚབ་རྒྱབ་ལུ་བསྒྱུར།",
-  "command.agent.cycle.reverse.description": "ཧེ་མའི་ལས་ཚབ་ལུ་སོར་བསྒྱུར་འབད།",
   "command.model.variant.cycle": "འཁོར་སྐྱོད་བསམ་བློའི་འབད་བརྩོན།",
   "command.model.variant.cycle.description": "འབད་བརྩོན་གནས་རིམ་ཤུལ་མམ་ལུ་སོར་བསྒྱུར་འབད།",
   "command.prompt.mode.shell": "Shell",
@@ -407,8 +402,8 @@ export const dict: Record<string, string> = {
   "prompt.toast.pasteUnsupported.description":
     "པར་རིས་དང་པི་ཌི་ཨེཕ་ ཡང་ན་ ཚིག་ཡིག་ཡིག་སྣོད་ཚུ་རྐྱངམ་ཅིག་ ནཱ་ལུ་མཉམ་སྦྲགས་འབད་བཏུབ།",
   "prompt.toast.attachmentDuplicate.title": "ཡིག་སྣོད་འདི་ཧེ་མ་ལས་སྐྱེལ་བཙུགས་འབད་ཡི།",
-  "prompt.toast.modelAgentRequired.title": "ལས་ཚབ་དང་དཔེ་ཚད་ཅིག་སེལ་འཐུ་འབད།",
-  "prompt.toast.modelAgentRequired.description": "བརྡ་སྟོན་མ་གཏང་པའི་ཧེ་མ་ ལས་ཚབ་དང་དཔེ་ཚད་གདམ་ཁ་རྐྱབས།",
+  "prompt.toast.modelRequired.title": "དཔེ་ཚད་ཅིག་སེལ་འཐུ་འབད།",
+  "prompt.toast.modelRequired.description": "བརྡ་སྟོན་མ་གཏང་པའི་ཧེ་མ་ དཔེ་ཚད་གདམ་ཁ་རྐྱབས།",
   "prompt.toast.worktreeCreateFailed.title": "Git worktree གསར་བསྐྲུན་འབད་མ་ཚུགས།",
   "prompt.toast.sessionCreateFailed.title": "ལཱ་ཡུན་གསར་བསྐྲུན་འབད་ནི་ལུ་འཐུས་ཤོར་འབྱུང་ཡོདཔ།",
   "prompt.toast.shellSendFailed.title": "Shell བརྡ་བཀོད་གཏང་མ་ཚུགས།",
@@ -1025,9 +1020,6 @@ export const dict: Record<string, string> = {
   "settings.general.row.mobileTitlebarBottom.title": "འོག་གི་འགྲུལ་བསྐྱོད།",
   "settings.general.row.mobileTitlebarBottom.description":
     "མོ་བཱ་ཡེལ་གུ་ གསལ་གཞི་གི་མཇུག་ལུ་ མགོ་མིང་ཕྲ་རིང་དང་ ལཱ་ཡུན་མཆོང་ལྡེ་ཚུ་བཙུགས།",
-  "settings.general.row.showCustomAgents.title": "ལས་ཚབ་སྟོན།",
-  "settings.general.row.showCustomAgents.description":
-    "བརྩམ་མི་ནང་ལུ་ ལས་ཚབ་ཚུ་གི་བར་ན་ སོར་བསྒྱུར་འབད། སྦ་བཞག་པའི་སྐབས་ བཟོ་བསྐྲུན་ལས་ཚབ་ལུ་སྔོན་སྒྲིག་འབདཝ་ཨིན།",
   "settings.general.row.reasoningSummaries.title": "རྒྱུ་མཚན་བཅུད་བསྡུས་ཚུ་སྟོན།",
   "settings.general.row.reasoningSummaries.description":
     "དུས་ཚོད་གྲལ་ཐིག་ནང་དཔེ་ཚད་དོན་དག་བཅུད་བསྡུས་ཚུ་བཀྲམ་སྟོན་འབད།",
@@ -1136,7 +1128,7 @@ export const dict: Record<string, string> = {
   "settings.shortcuts.group.general": "སྤྱིར༌བཏང",
   "settings.shortcuts.group.session": "ལཱ་ཡུན།",
   "settings.shortcuts.group.navigation": "འགྲུལ་བསྐྱོད།",
-  "settings.shortcuts.group.modelAndAgent": "དཔེ་ཚད་དང་ལས་ཚབ།",
+  "settings.shortcuts.group.modelAndMcp": "དཔེ་ཚད་དང་ MCP།",
   "settings.shortcuts.group.terminal": "ཊར་མི་ནཱལ།",
   "settings.shortcuts.group.prompt": "འདི་འཕྲོ་ལས",
   "settings.providers.title": "བྱིན་མི་ཚུ།",

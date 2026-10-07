@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import path from "node:path"
 import { z } from "zod"
 import { ConfigMarkdown } from "@opencode-ai/core/config/markdown"
+import { Skill } from "../../src/skill"
 
 const root = path.resolve(import.meta.dir, "../../../..")
 const names = [
@@ -12,6 +13,7 @@ const names = [
   "maestro-loop",
   "maestro-repo-maintenance",
   "maestro-composer",
+  "maestro-governed",
 ]
 const frontmatter = z.object({
   name: z
@@ -22,7 +24,7 @@ const frontmatter = z.object({
 })
 
 async function readSkill(name: string) {
-  const location = path.join(root, ".opencode/skills", name, "SKILL.md")
+  const location = path.join(Skill.PLAYBOOKS_DIR, name, "SKILL.md")
   const source = await Bun.file(location).text()
   const markdown = ConfigMarkdown.parse(source)
   return { location, source, content: markdown.content, data: frontmatter.parse(markdown.data) }
@@ -52,24 +54,30 @@ describe("Maestro Arsenal playbooks", () => {
     )
   })
 
-  test("orientation keeps playbooks and catalogs on demand", async () => {
-    const prompt = await Bun.file(path.join(root, "packages/opencode/src/agent/prompt/maestro.txt")).text()
-    const orientation = prompt.split(/## On-demand Playbooks\r?\n/)[1]?.split(/\r?\n## Response/)[0]
-    expect(orientation).toBeDefined()
-    expect(orientation).toContain("Load only the playbook relevant to the current action")
-    expect(orientation).toContain("Do not preload all playbooks or full Arsenal/Composer catalogs.")
-    names.forEach((name) => expect(orientation).toContain(`\`${name}\``))
-    expect(orientation).toContain("For FastAPI infrastructure reuse through existing HuGRComposerPlugin")
-    expect(orientation).toContain("load `maestro-composer` when relevant")
-    expect(orientation).toContain("`maestro_arsenal_describe` before `maestro_arsenal_execute`")
-    expect(orientation).toContain("advice never grants execution or approval authority")
-    expect(prompt).toContain("Normal work is default.")
-    expect(prompt).toContain("Governed work is explicit")
-    expect(prompt).toContain("Keep judgment, integration, and final claims in this session.")
-    expect(prompt).toContain("Use these as a compact reasoning map, not mandatory ceremony")
+  // A project copy would shadow the shipped playbook in this repository and drift from what every other one gets.
+  test("each playbook has one copy, in the shipped directory", async () => {
+    const skills = async (cwd: string) =>
+      (await Array.fromAsync(new Bun.Glob("*/SKILL.md").scan({ cwd }))).map((file) => path.dirname(file))
+    const shipped = await skills(Skill.PLAYBOOKS_DIR)
+    expect(shipped).toEqual(expect.arrayContaining(names))
+    expect((await skills(path.join(root, ".opencode/skills"))).filter((name) => shipped.includes(name))).toEqual([])
   })
 
-  test.each(names.filter((name) => name !== "maestro-composer"))(
+  // The prompt replaces the base prompt, so it carries the harness facts; procedures live in playbooks and
+  // tool descriptions. The ceiling is a tripwire against unreviewed growth, not a target.
+  test("Maestro prompt stays within its size budget and names only shipped playbooks", async () => {
+    const file = Bun.file(path.join(root, "packages/core/src/agent/prompt/maestro.txt"))
+    expect(file.size).toBeLessThanOrEqual(24 * 1024)
+    const named = Array.from((await file.text()).matchAll(/`(frame-request|maestro-[a-z-]+)`/g), (match) => match[1]!)
+    expect(named).toContain("maestro-governed")
+    await Promise.all(
+      named.map(async (name) =>
+        expect(await Bun.file(path.join(Skill.PLAYBOOKS_DIR, name, "SKILL.md")).exists()).toBe(true),
+      ),
+    )
+  })
+
+  test.each(names.filter((name) => name !== "maestro-composer" && name !== "maestro-governed"))(
     "%s acquires selected native schemas before execution",
     async (name) => {
       const skill = await readSkill(name)
@@ -106,7 +114,7 @@ describe("Maestro Arsenal playbooks", () => {
 
   test("dispatch uses native context pressure and fresh Own facts", async () => {
     const skill = await readSkill("maestro-pack")
-    expect(skill.content).toContain("Use existing OpenCode truncation, output/resource pointers, Session evidence")
+    expect(skill.content).toContain("Use existing Orchestra truncation, output/resource pointers, Session evidence")
     expect(skill.content).toContain("Current static `own_*` facts dominate reconnaissance")
     expect(skill.content).toContain("Source pointers must match current identities")
     expect(skill.content).toContain("Arming alone is not enforcement.")

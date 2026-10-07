@@ -18,12 +18,12 @@ test("unknown context windows never start maintenance", () => {
   for (const context of [0, -1, NaN, Infinity]) expect(shouldStart({ tokens: 1e9, active: false, context, trigger: 0.7 })).toBe(false)
 })
 
-test("settings default to enabled at 0.7 and reject invalid triggers", () => {
+test("settings default to enabled at 0.4 and reject invalid triggers", () => {
   expect(settings({})).toEqual({ enabled: true, trigger: DEFAULT_TRIGGER })
-  expect(DEFAULT_TRIGGER).toBe(0.7)
-  expect(settings({ continuity: { enabled: false } })).toEqual({ enabled: false, trigger: 0.7 })
-  expect(settings({ continuity: { trigger: 0.5 } })).toEqual({ enabled: true, trigger: 0.5 })
-  for (const trigger of [0, 1, 1.5, -0.2, NaN, Infinity]) expect(settings({ continuity: { trigger } }).trigger).toBe(0.7)
+  expect(DEFAULT_TRIGGER).toBe(0.4)
+  expect(settings({ continuity: { enabled: false } })).toEqual({ enabled: false, trigger: 0.4 })
+  expect(settings({ continuity: { trigger: 0.3 } })).toEqual({ enabled: true, trigger: 0.3 })
+  for (const trigger of [0, 0.7, 1, 1.5, -0.2, NaN, Infinity]) expect(settings({ continuity: { trigger } }).trigger).toBe(0.4)
 })
 
 const tokens: SessionV1.Assistant["tokens"] = {
@@ -63,16 +63,16 @@ test("does not duplicate active maintenance", () => {
   expect(shouldStart({ tokens: 100_000, active: true, context: 100_000, trigger: 0.7 })).toBe(false)
 })
 
-test("the hard limit keeps the last 10% of the window, or the model's output reservation when larger", () => {
+test("the hard limit is 70% of the window, or the input limit when the output reservation leaves less", () => {
   const model = (context: number, output: number, input?: number) => ({ limit: { context, output, input } }) as Provider.Model
-  expect(HARD_LIMIT).toBe(0.9)
-  expect(hardLimit(model(200_000, 8_000))).toBe(180_000)
-  expect(hardLimit(model(200_000, 64_000))).toBe(168_000)
-  expect(hardLimit(model(200_000, 8_000, 150_000))).toBe(150_000)
+  expect(HARD_LIMIT).toBe(0.7)
+  expect(hardLimit(model(200_000, 8_000))).toBe(140_000)
+  expect(hardLimit(model(60_000, 64_000))).toBe(28_000)
+  expect(hardLimit(model(200_000, 8_000, 90_000))).toBe(90_000)
   expect(hardLimit(model(0, 0))).toBe(0)
 })
 
 test("a trigger at or past the hard limit falls back to the default", () => {
-  expect(settings({ continuity: { trigger: 0.9 } }).trigger).toBe(DEFAULT_TRIGGER)
-  expect(settings({ continuity: { trigger: 0.89 } }).trigger).toBe(0.89)
+  expect(settings({ continuity: { trigger: 0.7 } }).trigger).toBe(DEFAULT_TRIGGER)
+  expect(settings({ continuity: { trigger: 0.69 } }).trigger).toBe(0.69)
 })

@@ -12,15 +12,15 @@ it.instance(
   () =>
     Effect.gen(function* () {
       const cfg = yield* Config.use.get()
-      expect(cfg.agent?.["build"]?.color).toBe("#FFA500")
-      expect(cfg.agent?.["plan"]?.color).toBe("primary")
+      expect(cfg.agent?.["maestro"]?.color).toBe("#FFA500")
+      expect(cfg.agent?.["general"]?.color).toBe("primary")
     }),
   {
     git: true,
     config: {
       agent: {
-        build: { color: "#FFA500" },
-        plan: { color: "primary" },
+        maestro: { color: "#FFA500" },
+        general: { color: "primary" },
       },
     },
   },
@@ -30,17 +30,19 @@ it.instance(
   "Agent.get includes color from config",
   () =>
     Effect.gen(function* () {
-      const plan = yield* AgentSvc.use.get("plan")
-      expect(plan?.color).toBe("#A855F7")
-      const build = yield* AgentSvc.use.get("build")
-      expect(build?.color).toBe("accent")
+      const general = yield* AgentSvc.use.get("general")
+      expect(general?.color).toBe("#A855F7")
+      expect(general?.native).toBe(true)
+      const maestro = yield* AgentSvc.use.get("maestro")
+      expect(maestro?.color).toBe("accent")
+      expect(maestro?.native).toBe(true)
     }),
   {
     git: true,
     config: {
       agent: {
-        plan: { color: "#A855F7" },
-        build: { color: "accent" },
+        general: { color: "#A855F7" },
+        maestro: { color: "accent" },
       },
     },
   },

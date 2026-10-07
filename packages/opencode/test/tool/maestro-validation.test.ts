@@ -74,11 +74,27 @@ const validation = {
   contextHash: "a".repeat(64),
   projectID: "prj_validation_tool",
   workCardID: "card_validation_tool",
-  workCard: "# Card\nTool boundary evidence.\n",
+  workCard: [
+    "# Card",
+    "## Definition of Done",
+    "Tool boundary evidence is recorded.",
+    "## Invariants",
+    "A rejected call persists no receipt.",
+    "## Quality Standards",
+    "Focused tool tests pass.",
+    "## Completeness Criteria",
+    "Every rejection path is exercised.",
+    "## Success Criteria",
+    "Maestro records validation only through the tool boundary.",
+    "",
+  ].join("\n"),
   routedMemberID: "backend",
   validatorVersion: "validation-v1",
   checks: [{ id: "typecheck", status: "PASS" as const, detail: "clean" }],
 }
+
+const headings =
+  "## Definition of Done, ## Invariants, ## Quality Standards, ## Completeness Criteria, ## Success Criteria"
 
 describe("Maestro validation tools", () => {
   direct.instance("advertises required non-empty plan and context bindings", () =>
@@ -105,15 +121,15 @@ describe("Maestro validation tools", () => {
       const registry = yield* ToolRegistry.Service
       const maestro = yield* agents.get("maestro")
       const lucy = yield* agents.get("lucy")
-      const build = yield* agents.get("build")
-      if (!maestro || !lucy || !build) throw new Error("expected native agents")
+      const general = yield* agents.get("general")
+      if (!maestro || !lucy || !general) throw new Error("expected native agents")
       const ref = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test") }
 
       expect((yield* registry.tools({ ...ref, agent: maestro })).map((tool) => tool.id)).toContain(
         "maestro_record_validation",
       )
       expect((yield* registry.tools({ ...ref, agent: lucy })).map((tool) => tool.id)).toContain("maestro_record_review")
-      expect((yield* registry.tools({ ...ref, agent: build })).map((tool) => tool.id)).not.toContain(
+      expect((yield* registry.tools({ ...ref, agent: general })).map((tool) => tool.id)).not.toContain(
         "maestro_record_validation",
       )
     }),
@@ -162,6 +178,48 @@ describe("Maestro validation tools", () => {
     }),
   )
 
+  direct.instance("rejects work cards that break the five-section contract before reading evidence", () =>
+    Effect.gen(function* () {
+      const tool = yield* MaestroRecordValidationTool
+      const def = yield* tool.init()
+      const success = "## Success Criteria\nMaestro records validation only through the tool boundary.\n"
+      const quality = "## Quality Standards\nFocused tool tests pass.\n"
+      const cards = [
+        [validation.workCard.replace(success, ""), "missing-section (## Success Criteria)"],
+        [`${validation.workCard}## Invariants\nA second copy.\n`, "duplicate-section (## Invariants)"],
+        [validation.workCard.replace(quality, "## Quality Standards\n"), "empty-section (## Quality Standards)"],
+        [
+          validation.workCard.replace("## Completeness Criteria", "### Completeness Criteria"),
+          "malformed-heading (## Completeness Criteria)",
+        ],
+        [
+          validation.workCard.replace(success, "").replace(quality, "## Quality Standards\n"),
+          "missing-section (## Success Criteria); empty-section (## Quality Standards)",
+        ],
+        ["# Card\nTool boundary evidence.\n", `missing-section (${headings})`],
+      ] as const
+      yield* Effect.forEach(cards, ([workCard, offending]) =>
+        Effect.gen(function* () {
+          const rejected = yield* Effect.exit(def.execute({ ...validation, workCard }, context("maestro")))
+          expect(Exit.isFailure(rejected)).toBe(true)
+          if (Exit.isFailure(rejected))
+            expect(Cause.pretty(rejected.cause)).toContain(
+              `Validation rejected workCard: ${offending}. Write exactly one non-empty section under each of these exact headings, each alone on its line at column zero and outside code fences: ${headings}.`,
+            )
+        }),
+      )
+      const { db } = yield* Database.Service
+      expect(yield* db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
+      // A conforming card passes the contract gate and reaches the evidence checks.
+      const valid = yield* Effect.exit(def.execute(validation, context("maestro")))
+      expect(Exit.isFailure(valid)).toBe(true)
+      if (Exit.isFailure(valid)) {
+        expect(Cause.pretty(valid.cause)).toContain("Validation planRevisionID not found")
+        expect(Cause.pretty(valid.cause)).not.toContain("Validation rejected workCard")
+      }
+    }),
+  )
+
   direct.instance(
     "names the configured cold reviewer label and never authorizes by it",
     () =>
@@ -183,7 +241,7 @@ describe("Maestro validation tools", () => {
           },
           checks: validation.checks,
         } as never
-        for (const caller of [context("Pikachu", "build"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
+        for (const caller of [context("Pikachu", "maestro"), context("Pikachu", "Pikachu"), context("Lucy", "Lucy")]) {
           const rejected = yield* Effect.exit(def.execute(review, caller))
           expect(Exit.isFailure(rejected) && Cause.pretty(rejected.cause)).toContain(
             "Review recording requires Pikachu",
@@ -197,7 +255,7 @@ describe("Maestro validation tools", () => {
     Effect.gen(function* () {
       const tool = yield* MaestroRecordValidationTool
       const def = yield* tool.init()
-      const rejected = yield* Effect.exit(def.execute(validation, context("maestro", "build")))
+      const rejected = yield* Effect.exit(def.execute(validation, context("maestro", "general")))
 
       expect(Exit.isFailure(rejected)).toBe(true)
       if (Exit.isFailure(rejected))

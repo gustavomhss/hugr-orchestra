@@ -14,13 +14,19 @@ export type WorkContractHoldReason =
   | "malformed-heading"
   | "duplicate-section"
 
+/** One offending section and why it holds. Kind and body-type holds name no section. */
+export type WorkContractIssue = {
+  section: WorkContractSection
+  reason: Exclude<WorkContractHoldReason, "unsupported-kind">
+}
+
 export type WorkContractValidation =
   | { status: "VALID"; sections: Record<WorkContractSection, string> }
-  | { status: "HOLD"; reasons: WorkContractHoldReason[] }
+  | { status: "HOLD"; reasons: WorkContractHoldReason[]; issues: WorkContractIssue[] }
 
 const kinds: WorkArtifactKind[] = ["epic", "issue", "sub-issue", "contract", "task", "work-package"]
 
-const sectionNames: WorkContractSection[] = [
+export const workContractSections: WorkContractSection[] = [
   "Definition of Done",
   "Invariants",
   "Quality Standards",
@@ -70,7 +76,7 @@ function headingLevel(line: string): number | undefined {
 }
 
 function canonicalSection(line: string): WorkContractSection | undefined {
-  return sectionNames.find((name) => line === `## ${name}`)
+  return workContractSections.find((name) => line === `## ${name}`)
 }
 
 function isSpace(value: string | undefined): boolean {
@@ -128,7 +134,7 @@ function hasPrefixedDelimiter(line: string, delimiter: string): boolean {
 }
 
 function malformedSection(line: string): WorkContractSection | undefined {
-  for (const name of sectionNames) {
+  for (const name of workContractSections) {
     const delimiter = `## ${name}`
     if (line.startsWith(delimiter)) return name
     if (hasH2SectionSpacingVariant(line, name)) return name
@@ -143,8 +149,8 @@ function malformedSection(line: string): WorkContractSection | undefined {
 }
 
 export function validateWorkContract(input: { kind: unknown; body: unknown }): WorkContractValidation {
-  if (!isKnownKind(input.kind)) return { status: "HOLD", reasons: ["unsupported-kind"] }
-  if (typeof input.body !== "string") return { status: "HOLD", reasons: ["malformed-heading"] }
+  if (!isKnownKind(input.kind)) return { status: "HOLD", reasons: ["unsupported-kind"], issues: [] }
+  if (typeof input.body !== "string") return { status: "HOLD", reasons: ["malformed-heading"], issues: [] }
 
   const lines = input.body.replaceAll("\r\n", "\n").split("\n")
   const ignored = completeFences(lines)
@@ -175,26 +181,26 @@ export function validateWorkContract(input: { kind: unknown; body: unknown }): W
     if (invalid) malformed.add(invalid)
   }
 
-  const reasons: WorkContractHoldReason[] = []
+  const issues: WorkContractIssue[] = []
   const sections = {} as Record<WorkContractSection, string>
 
-  for (const name of sectionNames) {
+  for (const name of workContractSections) {
     const values = occurrences.get(name) ?? []
     if (values.length === 0) {
-      reasons.push(malformed.has(name) ? "malformed-heading" : "missing-section")
+      issues.push({ section: name, reason: malformed.has(name) ? "malformed-heading" : "missing-section" })
       continue
     }
-    if (values.length > 1) reasons.push("duplicate-section")
 
     const extracted = values.map((value) => value.join("\n").trim())
-    if (extracted.some((value) => value.length === 0)) reasons.push("empty-section")
+    if (extracted.some((value) => value.length === 0)) issues.push({ section: name, reason: "empty-section" })
+    if (values.length > 1) issues.push({ section: name, reason: "duplicate-section" })
     sections[name] = extracted[0]
   }
 
   const stableReasons = (
     ["unsupported-kind", "missing-section", "empty-section", "malformed-heading", "duplicate-section"] as const
-  ).filter((reason) => reasons.includes(reason))
+  ).filter((reason) => issues.some((issue) => issue.reason === reason))
 
-  if (stableReasons.length > 0) return { status: "HOLD", reasons: stableReasons }
+  if (stableReasons.length > 0) return { status: "HOLD", reasons: stableReasons, issues }
   return { status: "VALID", sections }
 }

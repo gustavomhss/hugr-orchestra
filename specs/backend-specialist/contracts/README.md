@@ -21,7 +21,7 @@ Drafts were authored by four read-only agents. Lead spot-checked: `registry.ts:2
 
 | ID | Decision | Consequence for the contracts |
 | --- | --- | --- |
-| F1-D3 | ~~The backend specialist is visible in the app/TUI agent picker by default.~~ **Superseded for the desktop app (2026-10-06, dev #31):** the user talks only to Maestro; the composer has no agent choice and every session runs on `maestro`. | The seat stays primary-capable for the TUI/CLI and for Maestro delegation; app direct use goes through Maestro. |
+| F1-D3 | ~~The backend specialist is visible in the app/TUI agent picker by default.~~ **Superseded for the desktop app (2026-10-06, dev #31):** the user talks only to Maestro; the composer has no agent choice and every session runs on `maestro`. **Superseded everywhere by the harness rewrite (epic #22):** Maestro is the only primary agent. | ~~The seat stays primary-capable for the TUI/CLI and for Maestro delegation; app direct use goes through Maestro.~~ The seat is a `subagent` in the app, TUI, CLI and ACP; all use goes through Maestro's delegation, so F1.6's primary mode and the charter's direct use no longer occur. |
 | F3-D5 | Atlas Memory and Knowledge are versioned in Git with the repository. A worktree's Memory has value only once its code merges; the canonical state is the default branch (`dev`/`main`). | Memory is written as tracked files inside the task worktree and merges with the code. Resume reads the branch's own Memory. A1 must make the Memory log merge-safe (append-only records with stable IDs, e.g. a union merge driver or one file per record) so parallel branches do not conflict. F4-O4 working-tree digest excludes the Atlas Memory paths so Memory writes never change the verified code delta. F3-D7 stands: writes come from the harness Atlas binding, not from the backend specialist's file tools. |
 | F6-D2 | Evaluator checkout E is a separate private repository `backend-bench`, modeled on `maestro-bench`. Never installed with the backend specialist and never readable from candidate execution. | Q-family/Q-driver own it; Go fixture prep starts there. |
 | F5-OD | Engines are fetched **on demand**, not bundled in the install payload. Amends owner decision 4: "ready by default" now means no per-tool setup, not pre-downloaded. | The harness (not the backend specialist, whose sandbox blocks network) fetches an exact pinned version, verifies its checksum, and caches it in a shared per-user dir on first use. Offline hosts use an explicit prefetch command. F5 inventory/READY semantics become per-engine `absent → fetching → ready / failed`. T1–T4 produce pinned manifests + checksums instead of bundled payloads; T5/T6 shrink. |
@@ -105,3 +105,12 @@ F5 now describes engines fetched on demand (`f5-f6-toolkit-skills.md`, "Amendmen
 - F5-D7 is satisfied: the manifest compiles into the host.
 - First cut is five engines: ast-grep, sqlc, buf, gitleaks, kiota (M3-3).
 - The shell tool exposes `BACKEND_TOOLKIT_BIN` to the native backend seat only and fetches the engines a command names before running it; a failure blocks the command with `toolkit-not-ready:failed:<engine>:<cause>` or `unsupported-target:<reason>`. `toolkit status` and `toolkit prefetch` are the CLI.
+
+## 7. F5 Amendment M4 (2026-10-06)
+
+Ruling M4-1, written into `f5-f6-toolkit-skills.md` as "Amendment M4":
+
+- Hosted engines run on pinned runtimes: `orval` and `protoc-gen-es` on Node, `openapi-generator` on the Temurin JRE, `datamodel-codegen` on CPython. No ambient interpreter is used (F5.8).
+- npm and pip closures are pinned by lockfile and hash list: `npm ci --ignore-scripts` over a lockfile with an integrity for every package, `pip install --require-hashes --no-deps --only-binary=:all:` over a list with a sha256 for every wheel; a jar is pinned by its own digest.
+- Runtimes are shared per user cache: one install per version and target under `<TK>/runtimes/<id>/<version>-<target>/`, used by every engine on it.
+- A runtime that cannot be made ready blocks its engines with `toolkit-not-ready:failed:<engine>:runtime-<cause>`.

@@ -212,12 +212,12 @@ describe("tool.registry", () => {
     Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       const agent = yield* Agent.Service
-      const build = yield* agent.get("build")
-      if (!build) throw new Error("build agent not found")
+      const maestro = yield* agent.get("maestro")
+      if (!maestro) throw new Error("maestro agent not found")
       const task = (yield* registry.tools({
         providerID: ProviderV2.ID.opencode,
         modelID: ModelV2.ID.make("test"),
-        agent: build,
+        agent: maestro,
       })).find((tool) => tool.id === "task")
 
       expect(task?.jsonSchema).toBeDefined()
@@ -658,16 +658,14 @@ describe("tool.registry agent identity", () => {
         // Past Truncate.MAX_LINES, so the registry truncates and hints with the resolved agent's tools.
         const result = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "maestro" })
         expect(result.metadata.truncated).toBe(true)
-        // Only Maestro's own permissions (Task allowed) produce the delegate hint; an unresolved agent gets the Grep hint.
-        const hint = (output: string) =>
-          output
-            .split("\n")
-            .find((line) => line.startsWith("Use "))
-            ?.split(" ")
-            .slice(0, 3)
-        expect(hint(result.output)).toEqual(["Use", "the", "Task"])
+        // Only Maestro's own permissions (task allowed) add the explore teammate to the hint; an unresolved agent gets
+        // only the grep and read hint.
+        const teammate = "hand it to an `explore` teammate with `task`"
+        const hint = (output: string) => output.split("\n").find((line) => line.startsWith("Use `grep`"))
+        expect(hint(result.output)).toContain(teammate)
         const unresolved = yield* run(Truncate.MAX_LINES, { agent: "Pikachu", agentID: "Pikachu" })
-        expect(hint(unresolved.output)).toEqual(["Use", "Grep", "to"])
+        expect(hint(unresolved.output)).toBeDefined()
+        expect(hint(unresolved.output)).not.toContain(teammate)
       }),
     20_000,
   )

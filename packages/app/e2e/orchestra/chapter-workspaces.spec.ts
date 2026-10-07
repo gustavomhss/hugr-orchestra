@@ -199,7 +199,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(page.locator(".mx-card")).toHaveCount(4)
     await expect(card(page, created).locator("h3")).toHaveText(protocol === "v1" ? "Feature A" : "feature-a")
     await expect(card(page, created).locator(".mx-badge")).toHaveText(
-      protocol === "v1" ? ["sandbox", "opencode/feature-a", "Idle"] : ["sandbox", "Idle"],
+      protocol === "v1" ? ["sandbox", "orchestra/feature-a", "Idle"] : ["sandbox", "Idle"],
     )
     const creates = writes(mock.requests).filter((request) => request.method === "POST")
     expect(creates).toEqual([
@@ -244,7 +244,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(confirm.locator(".mx-dialog-head p")).toHaveText("Removes this git worktree and its files from disk.")
     await expect(confirm.locator(".mx-note")).toHaveText(
       protocol === "v1"
-        ? `Uncommitted changes in ${created} are lost. Its branch opencode/feature-a is deleted too; commits not merged elsewhere are lost.`
+        ? `Uncommitted changes in ${created} are lost. Its branch orchestra/feature-a is deleted too; commits not merged elsewhere are lost.`
         : `If ${created} has uncommitted changes, you are asked again before they are discarded.`,
     )
     await confirm.getByRole("button", { name: "Cancel", exact: true }).click()
@@ -288,6 +288,27 @@ for (const protocol of ["v1", "v2"] as const) {
     )
   })
 }
+
+test("v1: a worktree on a legacy opencode/ branch is listed and deleted with its branch", async ({ page }) => {
+  const mock = await setup(page, { protocol: "v1" })
+  const legacy = "/data/opencode/worktree/project-Server A repository/legacy"
+  mock.state.sandboxes[serverA]!.push(legacy)
+  await openChapter(page)
+  await expect(card(page, legacy).locator(".mx-badge")).toHaveText(["sandbox", "opencode/legacy", "Idle"])
+
+  await card(page, legacy).getByRole("button", { name: "Configure", exact: true }).click()
+  await page.getByRole("dialog").getByRole("button", { name: "Delete workspace", exact: true }).click()
+  const confirm = page.getByRole("dialog", { name: "Delete workspace?", exact: true })
+  await expect(confirm.locator(".mx-note")).toHaveText(
+    `Uncommitted changes in ${legacy} are lost. Its branch opencode/legacy is deleted too; commits not merged elsewhere are lost.`,
+  )
+  await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
+  await expect(confirm).toBeHidden()
+  await expect(card(page, legacy)).toHaveCount(0)
+  expect(writes(mock.requests).filter((request) => request.method === "DELETE")).toEqual([
+    expect.objectContaining({ path: "/experimental/worktree", directory: root, body: { directory: legacy } }),
+  ])
+})
 
 test("v2: the active workspace never offers deletion until another workspace is active", async ({ page }) => {
   const mock = await setup(page)
@@ -462,6 +483,8 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     sandboxes: { [serverA]: [...sandboxes], [serverB]: [sandboxes[1]] } as Record<string, string[]>,
     // Directories the V2 server created with a copy strategy and can therefore remove.
     managed: new Set([sandboxes[0]]),
+    // Branches of worktrees this V1 server created; older worktrees keep their `opencode/<name>` branch.
+    branches: new Map<string, string>(),
   }
   const requests: Request[] = []
   const pending: (() => Promise<void>)[] = []
@@ -545,7 +568,8 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     if (url.pathname === "/vcs") {
       const directory = requestDirectory(url) ?? root
       // `/sandboxes/two` is on a detached HEAD, so V1 reports no branch for it.
-      const branch = directory === root ? "dev" : `opencode/${directory.split("/").at(-1)}`
+      const branch =
+        directory === root ? "dev" : (state.branches.get(directory) ?? `opencode/${directory.split("/").at(-1)}`)
       return json(route, { branch: directory === sandboxes[1] ? null : branch, default_branch: "dev" })
     }
     if (url.pathname === "/project/current") return json(route, current)
@@ -591,7 +615,8 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
       const name = (body?.name ?? "").toLowerCase().replaceAll(" ", "-")
       const directory = `/data/opencode/worktree/${projectID}/${name}`
       list.push(directory)
-      return json(route, { name, branch: `opencode/${name}`, directory })
+      state.branches.set(directory, `orchestra/${name}`)
+      return json(route, { name, branch: `orchestra/${name}`, directory })
     }
     if (state.failRemove)
       return json(route, { name: "WorktreeRemoveFailedError", data: { message: state.failRemove } }, 400)

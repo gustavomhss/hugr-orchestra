@@ -29,8 +29,8 @@ test("ui_type into focus refuses without dispatch when focus is not on a text fi
   const editable = host(() => windows(field("n:focused", "Search settings")))
   expect(await editable.hooks.tool.ui_type.execute({ text: "x", mode: "editable" }, context)).toContain("uses keyboard mode")
   expect([...button.calls, ...nothing.calls, ...editable.calls].every((call) => call.op === "read")).toBe(true)
-  // dock_type still addresses browser tabs and keeps requiring a ref or target there.
-  expect(await editable.hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("dock_type requires ref or target")
+  // dock_type still addresses browser tabs and keeps requiring a ref there.
+  expect(await editable.hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("Pass ref")
 })
 
 test("ui_pointer hovers or right-clicks a located control and passes refs straight through", async () => {
@@ -75,7 +75,10 @@ test("with no active app window, keys and text refuse and say not to close or ki
     const refused = JSON.parse(String(await dialog.hooks.tool.ui_keys.execute(args, context)))
     expect(refused).toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
   }
-  expect(JSON.parse(String(await dialog.hooks.tool.ui_keys.execute({ keys: "Escape" }, context))).hint)
-    .toContain("Do not close or kill windows or processes to get around it")
+  const hint = JSON.parse(String(await dialog.hooks.tool.ui_keys.execute({ keys: "Escape" }, context))).hint
+  expect(hint).toContain("Do not close or kill windows or processes to get around it")
+  // The linux agent cannot ask anyone; it reports, and the owner acts.
+  expect(hint).toContain("stop and report it, since the owner may need to click the app")
+  expect(hint).not.toContain("ask the user")
   expect(dialog.calls.every((call) => call.op === "read")).toBe(true)
 })

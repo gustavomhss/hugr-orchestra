@@ -1,6 +1,7 @@
 import type { Plugin, PluginInput, Hooks, ToolContext } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import { randomUUID } from "node:crypto"
+import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
 import { scopeLinuxWorkspace } from "./app-dock-linux"
 
@@ -86,8 +87,8 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
           port.postMessage({ type: "dock.rpc.cancel", id })
         } catch (error) {
           entry.finish(entry.native
-            ? new NativeRPCError("transport-error", toolErrorMessage(error), "unknown", undefined, entry.target)
-            : new Error(toolErrorMessage(error)))
+            ? new NativeRPCError("transport-error", AppDockHints.toolErrorMessage(error), "unknown", undefined, entry.target)
+            : new Error(AppDockHints.toolErrorMessage(error)))
         }
       },
       finish: (error, value) => {
@@ -116,8 +117,8 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
       if (entry.aborted && router.get(id) === entry) entry.cancel()
     } catch (error) {
       entry.finish(entry.native
-        ? new NativeRPCError("transport-error", toolErrorMessage(error), "unknown", undefined, entry.target)
-        : new Error(toolErrorMessage(error)))
+        ? new NativeRPCError("transport-error", AppDockHints.toolErrorMessage(error), "unknown", undefined, entry.target)
+        : new Error(AppDockHints.toolErrorMessage(error)))
     }
   })
 }
@@ -125,28 +126,11 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
 const parentPort = (): ParentPortLike | undefined =>
   (process as typeof process & { parentPort?: ParentPortLike }).parentPort
 
-const toolErrorMessage = (error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error)
-  return message === "App Dock has no open tabs"
-    ? `${message}; ask the user to open the App Dock (for Linux apps: Apps > Linux workspace)` : message
-}
-const busy = "The app did not answer in time; it may be busy, e.g. showing a dialog an action opened. Look again (ui_look) before retrying an action: it may already have happened"
-// What the model can do next for codes that otherwise led unscripted runs into blind retries.
-const hints: Record<string, string> = {
-  "unstable-ref": 'This control sits below virtual ancestry (lists, trees); retry dock_action with mode: "observed"',
-  "unsupported-interface": 'This field has no editable-text interface; retry dock_type with mode: "keyboard"',
-  "stale-ref": "Native refs expire when the app changes; pass target {name, role} to locate and act in one call",
-  "unsupported-backend": "The active App Dock tab is a browser page; ask the user to open Apps > Linux workspace, or use dock_read for the page",
-  timeout: busy,
-  "transport-timeout": busy,
-  "app-not-responding": "The app stopped answering, likely busy in a dialog it opened. Do not repeat the action; look again (ui_look) in a moment, and if the app stays missing, report it",
-  "menu-closed": "Open the menu that holds this item first (ui_act on the menu, e.g. File), then act on the item",
-}
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
     ...(error.result === undefined ? {} : { result: error.result }), ...(error.target === undefined ? {} : { target: error.target }),
-    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }), ...(hints[error.code] ? { hint: hints[error.code] } : {}) })
-  : toolErrorMessage(error)
+    ...(error.cleanup === undefined ? {} : { cleanup: error.cleanup }), ...(AppDockHints.hintFor(error.code) ? { hint: AppDockHints.hintFor(error.code) } : {}) })
+  : AppDockHints.toolErrorMessage(error)
 
 function cleanupEvidence(value: unknown) {
   if (value === undefined) return
@@ -192,12 +176,14 @@ const MAX_ROOTS = 32
 const MAX_FIND_PAGES = 48
 // Bounds all scans, restarts and retries of one dock_find/dock_action/dock_type call; nothing is dispatched after it.
 const FIND_DEADLINE_MS = 90000
+// How the desktop app resolves a Dock address (appDockURL).
+const ADDRESS = "Only https:// URLs open, including https://localhost; http:// and other schemes are refused. A bare domain such as example.com gets https://, and words with spaces or without a dot become a Google search."
 // AT-SPI state numbers that change what a model can do with a control.
 const STATES: Record<number, string> = { 1: "active", 4: "checked", 7: "editable", 10: "expanded", 12: "focused", 16: "modal", 20: "pressed", 23: "selected" }
 
 function nativePage(value: unknown) {
   if (!object(value) || value.backend !== "linux-atspi" || !Array.isArray(value.items) || !object(value.coverage))
-    throw new NativeRPCError("unsupported-backend", "Search runs on the native Linux workspace; use dock_read for browser pages", "not-dispatched")
+    throw new NativeRPCError("unsupported-backend", "This tab is a browser page; native search, targets and key combinations exist only in the Linux workspace", "not-dispatched")
   return value as { items: unknown[]; hasMore?: boolean; cursor?: unknown; scopeKind?: unknown; coverage: { complete?: unknown; reasons?: unknown } }
 }
 
@@ -242,7 +228,7 @@ function missed(scan: NativeScan, query: NativeQuery) {
   // Keys and text would land in a window ui_* cannot see (often a native file dialog that exposes no controls).
   if (query.window || (query.focused && query.capability === undefined && scan.found.length === 0))
     return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
-      hint: query.window ? "No app window in the Linux workspace is active, so keys would go to a window ui_* cannot see, often a native dialog that exposes no controls. Do not close or kill windows or processes to get around it; report what blocks you or ask the user to click the app"
+      hint: query.window ? "No app window in the Linux workspace is active, so keys would go to a window ui_* cannot see, often a native dialog that exposes no controls. Do not close or kill windows or processes to get around it; stop and report it, since the owner may need to click the app"
         : "No control in the active app window has keyboard focus; open the field with its shortcut or pass target {name, role}" })
   if (query.focused && scan.found.length === 0) return toJSON({ code: "target-not-found", outcome: "not-dispatched", found: 0,
     hint: "No control has keyboard focus; pass target {name, role} for the field" })
@@ -325,11 +311,15 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
     const world = (context as Scoped).world ?? (context.agent ? "browser" : undefined)
     return invoke(context, port, op, world ? { ...args, world } : args, timeoutMs, clock)
   }
-  const ref = tool.schema.union([tool.schema.number().min(1), tool.schema.string().min(3).max(256).startsWith("n:")])
+  const browserRef = tool.schema.number().min(1)
+  const nativeRef = tool.schema.string().min(3).max(256).startsWith("n:")
+  const keyEvent = tool.schema.enum(["keyDown", "keyUp"])
+  const keyName = tool.schema.string().min(1).describe("Key name such as Enter, Tab, Escape or ArrowDown, or a single character")
   const target = tool.schema.object({
     name: tool.schema.string().min(1).max(256).describe("Case-insensitive substring of the control's accessible name; when several controls contain it, the one whose whole name equals it wins"),
-    role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look or dock_find prints it, e.g. push button, entry, check box; any spelling of the same role matches"),
+    role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look or ui_find shows it, e.g. push button, entry, check box; any spelling of the same role matches"),
   })
+  const address = tool.schema.string().describe("https:// URL, bare domain, or search words")
 
   // A model turn takes far longer than a native continuation lives, so the tool,
   // not the model, pages: each page is requested immediately after the previous one.
@@ -418,18 +408,18 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
   const dock = {
       dock_list: tool({
         description:
-          "List App Dock tabs and their current state (url, title, loading, audible, active).",
+          "List the browser tabs in the App Dock with their tabID, url, title and whether each is loading, audible or active.",
         args: {},
         execute: (_args, context) => call(context, "list", {}).then(toJSON, toolError),
       }),
       dock_activate: tool({
-        description: "Activate one App Dock tab by tabID from dock_open or dock_list.",
+        description: "Make one browser tab active by its tabID from dock_list or dock_open; the tools that take no tabID act on the active tab.",
         args: { tabID: tool.schema.string().min(1) },
         execute: (args, context) => call(context, "activate", { tabID: args.tabID }).then(toJSON, toolError),
       }),
       dock_read: tool({
         description:
-          "Read the App Dock browser page or bound native app as a structured accessibility snapshot. Browser refs are numeric; native refs are opaque n: strings. Use refs with dock_click / dock_action / dock_type. Re-read after changes; native observations are non-atomic and refs may expire. Browser pages return a semantic tree where every item carries a stable numeric `ref`, a revalidatable semantic `path`, `parentRef`/`children`, `actionable` and `visible`; a `path` is a selector to revalidate, not a durable identity, so re-read and report ambiguity instead of assuming the first match. Browser-only mode/format/actionable/visible shape the tree (mode=skeleton or a11y omits geometry; format=tree adds `treeText`, format=csv adds `csv`) and are rejected on a native binding. Native-only rootRef, cursor and textOffset select a bounded read page; native cursors expire within seconds, so prefer dock_find to locate native controls.",
+          "Read the active browser tab as a structured accessibility snapshot: page text and a semantic tree in which every item carries a numeric `ref` for dock_click and dock_type, a `path`, `parentRef`/`children`, `actionable` and `visible`. Read again after the page changes. A `path` is a selector to revalidate, not a durable identity: when it matches several elements, read again and report the ambiguity instead of assuming the first.",
         args: {
           budget: tool.schema.number().min(1).max(500).optional().describe(
             "Maximum interactive elements to return (default 100)",
@@ -437,20 +427,20 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           maxText: tool.schema.number().min(0).max(20000).optional().describe(
             "Maximum page text characters to return (default 1500)",
           ),
-          rootRef: tool.schema.string().min(3).max(256).startsWith("n:").optional().describe("Native subtree ref"),
-          cursor: tool.schema.string().min(1).max(256).optional().describe("Native continuation cursor from dock_read"),
-          textOffset: tool.schema.number().int().min(0).optional().describe("Native text character offset"),
+          rootRef: nativeRef.optional().describe("Ref of the subtree to read"),
+          cursor: tool.schema.string().min(1).max(256).optional().describe("Cursor from the previous ui_read page; it expires within seconds"),
+          textOffset: tool.schema.number().int().min(0).optional().describe("Character offset at which a long text continues"),
           mode: tool.schema.enum(["full", "a11y", "skeleton"]).optional().describe(
-            "Browser only: full keeps x/y/width/height (default); a11y and skeleton omit geometry",
+            "full keeps x/y/width/height (default); a11y and skeleton omit geometry",
           ),
           format: tool.schema.enum(["json", "tree", "csv"]).optional().describe(
-            "Browser only: json (default) returns items; tree adds indented treeText; csv adds a flat csv table",
+            "json (default) returns items; tree adds indented treeText; csv adds a flat csv table",
           ),
           actionable: tool.schema.boolean().optional().describe(
-            "Browser only: keep actionable controls plus the context ancestors that keep parentRef/children closed",
+            "Keep actionable controls plus the context ancestors that keep parentRef/children closed",
           ),
           visible: tool.schema.boolean().optional().describe(
-            "Browser only: keep currently visible nodes plus their context ancestors",
+            "Keep currently visible nodes plus their context ancestors",
           ),
         },
         execute: (args, context) =>
@@ -463,55 +453,61 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             ...(args.actionable === undefined ? {} : { actionable: args.actionable }),
             ...(args.visible === undefined ? {} : { visible: args.visible }) }).then((value) => toJSON(readable(value)), toolError),
       }),
+      // Agents never see dock_find or dock_action (see scopeLinuxWorkspace); the linux agent has them as ui_find and ui_act.
       dock_find: tool({
-        description:
-          "Find controls in the native Linux workspace by accessible name (case-insensitive substring) and optional roleName. The tool pages the accessibility tree itself and returns compact matches from the first page that has any, with refs usable immediately by dock_action/dock_type; searchComplete:false means part of the tree was not searched (later pages, or subtrees listed in reasons). Prefer dock_action/dock_type with `target` to locate and act in one call, because native refs expire when the app changes.",
+        description: "Find controls of the apps in the Linux workspace by accessible name and/or role.",
         args: {
           name: tool.schema.string().min(1).max(256).optional().describe("Case-insensitive substring of the accessible name; omit it to list every control of a role"),
           role: tool.schema.string().min(1).max(64).optional().describe("Role as ui_look prints it, e.g. push button, entry, check box (any spelling of the same role matches)"),
           includeText: tool.schema.boolean().optional().describe("Also return each match's current text (default false)"),
         },
         execute: (args, context) => args.name === undefined && args.role === undefined
-          ? Promise.resolve("dock_find needs name, role or both")
+          ? Promise.resolve("Pass name, role or both")
           : exclusive(() => find(context, { name: args.name, role: args.role, ...(args.includeText ? { maxText: 2000 } : {}) },
             (scan) => scan.found.length > 0, { deadline: Date.now() + findDeadlineMs })).then((result) => compactScan(result), toolError),
       }),
       dock_wait: tool({
-        description: "Wait for a bounded duration in the active App Dock tab. Native wait is a cancellable delay, not proof of application readiness.",
+        description: "Wait up to 10 seconds in the active browser tab, e.g. for a page to settle. It only waits; read again to see the result.",
         args: {
-          milliseconds: tool.schema.number().min(0).max(10000).optional().describe("Wait duration in milliseconds"),
+          milliseconds: tool.schema.number().min(0).max(10000).optional().describe("Wait duration in milliseconds (default 100)"),
         },
         execute: (args, context) =>
           call(context, "wait", { milliseconds: args.milliseconds }).then(toJSON, toolError),
       }),
       dock_screenshot: tool({
-        description: "Capture the active App Dock tab as a base64 PNG.",
+        description: "Capture the active browser tab as a PNG image.",
         args: {},
-        execute: (_args, context) => call(context, "screenshot", {}).then(toJSON, toolError),
+        // Base64 in the text output would exceed the tool-output cap and is unreadable as text; an attachment reaches
+        // the model as an image, as `read` returns image files.
+        execute: (_args, context) => call(context, "screenshot", {}).then((value) =>
+          object(value) && value.mime === "image/png" && typeof value.data === "string"
+            ? { output: "Screenshot of the active tab attached as a PNG image.",
+              attachments: [{ type: "file" as const, mime: "image/png", url: `data:image/png;base64,${value.data}` }] }
+            : toJSON(value), toolError),
       }),
       dock_scroll: tool({
-        description: "Scroll the active App Dock tab.",
+        description: "Scroll the active browser tab up or down by a number of pixels, or to its top or bottom.",
         args: {
           direction: tool.schema.enum(["up", "down", "top", "bottom"]),
-          amount: tool.schema.number().min(1).max(10000).optional(),
+          amount: tool.schema.number().min(1).max(10000).optional().describe("Pixels for up or down (default 300); omit it for top and bottom"),
         },
         execute: (args, context) =>
           call(context, "scroll", { direction: args.direction, amount: args.amount }).then(toJSON, toolError),
       }),
       dock_keyboard: tool({
-        description: "Press keys. Browser tabs: `type` keyDown/keyUp with `key`. Linux workspace: `keys` as one combination such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target` (a focusable control there takes focus first). Or `text`: printable ASCII typed as key events into the control that has keyboard focus in the active app window (or `ref`/`target`, which takes focus first); refused for password fields. The effect is defined by the app and never verified, so read again afterwards.",
+        description: "Send one key event to the active browser tab: type keyDown or keyUp with a key such as Enter, Tab, Escape, ArrowDown or a single character. Use dock_type to enter text.",
         args: {
-          type: tool.schema.enum(["keyDown", "keyUp"]).optional().describe("Browser only"),
-          key: tool.schema.string().min(1).optional().describe("Browser only: one key name"),
-          keys: tool.schema.string().min(1).max(64).optional().describe("Linux workspace: modifiers and one key joined by +, e.g. ctrl+shift+p"),
-          text: tool.schema.string().min(1).max(256).optional().describe("Linux workspace: printable ASCII to type as key events into the focused control, instead of keys"),
-          ref: ref.optional().describe("Linux workspace: a control in the window that should receive the keys"),
-          target: target.optional().describe("Linux workspace: locate that control by name instead of ref"),
+          type: keyEvent.optional(),
+          key: keyName.optional(),
+          keys: tool.schema.string().min(1).max(64).optional().describe("Modifiers and one key joined by +, e.g. ctrl+shift+p"),
+          text: tool.schema.string().min(1).max(256).optional().describe("Printable ASCII to type as key events into the focused control, instead of keys"),
+          ref: nativeRef.optional().describe("A control in the window that should receive the keys"),
+          target: target.optional().describe("Locate that control by name instead of ref"),
         },
         execute: (args, context) => {
           if (args.keys === undefined && args.text === undefined) {
             if (args.type === undefined || args.key === undefined)
-              return Promise.resolve("dock_keyboard needs type and key for a browser tab, or keys or text for the Linux workspace")
+              return Promise.resolve((context as Scoped).world === "linux" ? "Pass keys, such as ctrl+comma, or text" : "Pass type and key")
             return call(context, "keyboard", { type: args.type, key: args.key }).then(toJSON, toolError)
           }
           if (args.keys !== undefined && args.text !== undefined)
@@ -531,12 +527,12 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
       }),
       dock_evaluate: tool({
-        description: "Evaluate JavaScript in the active App Dock tab.",
+        description: "Run JavaScript in the page of the active browser tab and return its result.",
         args: { script: tool.schema.string().min(1) },
         execute: (args, context) => call(context, "evaluate", { script: args.script }).then(toJSON, toolError),
       }),
       dock_storage: tool({
-        description: "Read one localStorage or sessionStorage value from the active App Dock tab.",
+        description: "Read one localStorage or sessionStorage value of the active browser tab.",
         args: {
           storage: tool.schema.enum(["local", "session"]),
           key: tool.schema.string().min(1),
@@ -545,7 +541,7 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
           call(context, "storage", { storage: args.storage, key: args.key }).then(toJSON, toolError),
       }),
       dock_network: tool({
-        description: "Install page-level fetch/XHR URL filtering for the active App Dock tab.",
+        description: "Install page-level fetch/XHR URL filtering in the active browser tab.",
         args: {
           blockUrls: tool.schema.array(tool.schema.string()).optional(),
           allowedOrigins: tool.schema.array(tool.schema.string()).optional(),
@@ -556,9 +552,9 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         execute: (args, context) => call(context, "network", args).then(toJSON, toolError),
       }),
       dock_click: tool({
-        description: "Click an interactive App Dock element by `ref`, or click page coordinates when x and y are supplied.",
+        description: "Click an element of the active browser tab by its numeric ref from dock_read, or click the page at coordinates x and y.",
         args: {
-          ref: ref.optional().describe("Browser numeric or native opaque element ref from dock_read"),
+          ref: browserRef.optional().describe("Numeric ref from dock_read"),
           x: tool.schema.number().min(0).optional().describe("Page x coordinate"),
           y: tool.schema.number().min(0).optional().describe("Page y coordinate"),
         },
@@ -572,18 +568,18 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
       }),
       dock_action: tool({
-        description: "Invoke an advertised native action, either by ref+actionID from dock_read/dock_find or by `target` (name/role) plus optional action name, which locates the control and acts in one call. Default mode requires a stable eligible control. Explicit observed mode permits eligible controls below virtual ancestry, revalidates the current control, and never proves durable logical-record identity. Both modes are non-atomic; acknowledgement does not prove task completion.",
-        args: { ref: ref.optional().describe("Element ref from dock_read or dock_find"),
-          actionID: tool.schema.string().min(1).max(256).optional().describe("actionID that belongs to ref"),
+        description: "Invoke an advertised action of a control in a Linux workspace app, by ref and actionID or by target.",
+        args: { ref: nativeRef.optional().describe("Ref from ui_read or ui_find"),
+          actionID: tool.schema.string().min(1).max(256).optional().describe("actionID from that item's actions"),
           target: target.optional().describe("Locate the control by name instead of ref"),
           action: tool.schema.string().min(1).max(256).optional().describe("With target: action name such as press or click; required when the control has several actions"),
-          mode: tool.schema.enum(["stable", "observed"]).optional().describe("Native control identity policy (default stable)") },
+          mode: tool.schema.enum(["stable", "observed"]).optional().describe("stable (default), or observed for controls inside lists and trees") },
         execute: (args, context) => {
           const mode = args.mode === undefined ? {} : { mode: args.mode }
           // Models often pass the actionID they just read in `action`; it is unambiguous, so accept it there.
           const actionID = args.actionID ?? (args.action?.startsWith("a:") ? args.action : undefined)
           if (args.target === undefined) {
-            if (args.ref === undefined || actionID === undefined) return Promise.resolve("dock_action with ref needs the actionID from that item's actions (dock_find/dock_read); or pass target {name, role} with an action name to locate and act in one call")
+            if (args.ref === undefined || actionID === undefined) return Promise.resolve("A ref needs the actionID from that item's actions; or pass target {name, role} with an action name to locate and act in one call")
             return call(context, "action", { ref: args.ref, actionID, ...mode }).then(toJSON, toolError)
           }
           const wanted = args.target
@@ -597,12 +593,12 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
       }),
       dock_type: tool({
-        description: "Replace text in an editable App Dock element, by ref from dock_read/dock_find or by native `target` (name/role), which locates the field and types in one call. Native mode defaults to semantic EditableText replacement; keyboard mode must be explicit and never serves as an automatic fallback. Unicode and empty text are valid.",
+        description: "Replace the value of an editable element of the active browser tab, found by its numeric ref from dock_read, and check that it now holds the text.",
         args: {
-          ref: ref.optional().describe("Element ref from dock_read or dock_find"),
-          target: target.optional().describe("Locate the native field by name instead of ref"),
-          text: tool.schema.string().describe("Text to type into the element"),
-          mode: tool.schema.enum(["editable", "keyboard"]).optional().describe("Native input method (default editable)"),
+          ref: tool.schema.union([browserRef, nativeRef]).optional(),
+          target: target.optional().describe("Locate the field by name instead of ref"),
+          text: tool.schema.string().describe("Text the field should hold; empty clears it"),
+          mode: tool.schema.enum(["editable", "keyboard"]).optional().describe("editable (default) sets the value; keyboard types it for fields that only accept keys"),
         },
         execute: (args, context) => {
           const mode = args.mode === undefined ? {} : { mode: args.mode }
@@ -613,7 +609,8 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
               text: args.text, mode: "keyboard", focused: true }, clock).then(toJSON), { deadline: Date.now() + findDeadlineMs }))
               .then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
           if (args.target === undefined) {
-            if (args.ref === undefined) return Promise.resolve("dock_type requires ref or target")
+            // A Linux-scoped call without ref or target already went to the focused field above.
+            if (args.ref === undefined) return Promise.resolve("Pass ref")
             return call(context, "type", { ref: args.ref, text: args.text, ...mode }).then(toJSON, toolError)
           }
           const wanted = args.target
@@ -624,30 +621,26 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
         },
       }),
       dock_navigate: tool({
-        description: "Navigate the active App Dock tab to a new address (https:// URL or a plain search query).",
-        args: {
-          address: tool.schema.string().describe("URL to navigate to (https://...) or free-text search query"),
-        },
+        description: `Load an address in the active browser tab. ${ADDRESS}`,
+        args: { address },
         execute: (args, context) => call(context, "navigate", { address: args.address }).then(toJSON, toolError),
       }),
       dock_go: tool({
-        description: "Go back, forward, or reload the active App Dock tab.",
+        description: "Go back, forward, or reload the active browser tab.",
         args: {
           command: tool.schema.enum(["back", "forward", "reload"]).describe("Navigation command"),
         },
         execute: (args, context) => call(context, "go", { command: args.command }).then(toJSON, toolError),
       }),
       dock_open: tool({
-        description: "Open a new App Dock tab navigating to an address (https:// URL or a plain search query).",
-        args: {
-          address: tool.schema.string().describe("URL to open (https://...) or a plain search query"),
-        },
+        description: `Open a new browser tab at an address; it becomes the active tab, and the result carries its tabID. ${ADDRESS}`,
+        args: { address },
         execute: (args, context) => call(context, "open", { address: args.address }).then(toJSON, toolError),
       }),
       dock_close: tool({
-        description: "Close one App Dock tab. Without tabID, closes only active tab. Returns remaining tabs.",
+        description: "Close one browser tab by tabID, or the active one without tabID. Returns the remaining tabs.",
         args: {
-          tabID: tool.schema.string().min(1).optional().describe("Specific tab ID from dock_open or dock_list"),
+          tabID: tool.schema.string().min(1).optional().describe("Tab ID from dock_list or dock_open"),
         },
         execute: (args, context) => call(context, "close", { tabID: args.tabID }).then(toJSON, toolError),
       }),
@@ -738,24 +731,32 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
       }, toolError),
     }),
   }
-  // The Linux workspace's own verbs: the same machinery bound to the workspace and narrowed to native arguments.
-  const linux = (definition: Definition, description: string, keep: string[]): Definition => ({
+  // Agent calls of dock_* reach only browser tabs and ui_* calls only the Linux workspace (see `call`). dock_read, dock_type
+  // and dock_keyboard serve both worlds, so each view below declares only its own world's arguments; the shared executes
+  // still take all of them from callers without an agent.
+  const argsOf = (definition: Definition, keys: string[]) => Object.fromEntries(keys.map((key) => [key, definition.args[key]!]))
+  // The Linux workspace's own verbs: the same machinery bound to the workspace.
+  const linux = (definition: Definition, description: string, args: Definition["args"]): Definition => ({
     description,
-    args: Object.fromEntries(keep.map((key) => [key, definition.args[key]!])),
-    execute: (args, context) => definition.execute(args, { ...context, world: "linux" } as Scoped),
+    args,
+    execute: (input, context) => definition.execute(input, { ...context, world: "linux" } as Scoped),
   })
   return {
     tool: {
       ...dock,
+      dock_read: { ...dock.dock_read, args: argsOf(dock.dock_read, ["budget", "maxText", "mode", "format", "actionable", "visible"]) },
+      dock_type: { ...dock.dock_type, args: { ref: browserRef.describe("Numeric ref from dock_read"),
+        text: tool.schema.string().min(1).describe("Text the element should hold") } },
+      dock_keyboard: { ...dock.dock_keyboard, args: { type: keyEvent, key: keyName } },
       ...navigation,
-      ui_read: linux(dock.dock_read, "Read the accessibility tree of the apps open in the Linux workspace, one bounded page at a time. Items carry opaque refs (n:...) that expire when the app changes or the next page is read; prefer ui_find, or ui_act/ui_type with `target`, which locate and act in one call. Use rootRef to read one subtree and cursor for the next page (cursors expire within seconds).", ["budget", "maxText", "rootRef", "cursor", "textOffset"]),
-      ui_find: linux(dock.dock_find, "Find controls in the Linux workspace apps by accessible name (case-insensitive substring) and/or role. Pages the tree itself and returns compact matches with refs usable right away; searchComplete:false means part of the tree was not searched.", ["name", "role", "includeText"]),
-      ui_act: linux(dock.dock_action, "Press, click, toggle or otherwise invoke a control in a Linux workspace app. Prefer `target` {name, role} plus an action name: it locates the control and acts in one call. Use mode observed for controls inside lists and trees. Acknowledgement is not proof; read again to confirm the result.", ["target", "action", "ref", "actionID", "mode"]),
-      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref, and verify it. Editable mode sets the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the text field that has keyboard focus (e.g. a search box just opened by a shortcut). When focus is in something that is not a recognized text field (a command palette list, a search box shown as another role), use ui_keys with text instead.", ["target", "ref", "text", "mode"]),
+      ui_read: linux(dock.dock_read, "Read the accessibility tree of the apps open in the Linux workspace, one bounded page at a time. Items carry opaque refs (n:...) that expire when the app changes or the next page is read; prefer ui_find, or ui_act/ui_type with `target`, which locate and act in one call. Use rootRef to read one subtree and cursor for the next page (cursors expire within seconds).", argsOf(dock.dock_read, ["budget", "maxText", "rootRef", "cursor", "textOffset"])),
+      ui_find: linux(dock.dock_find, "Find controls in the Linux workspace apps by accessible name (case-insensitive substring) and/or role. Pages the tree itself and returns compact matches with refs usable right away; searchComplete:false means part of the tree was not searched.", dock.dock_find.args),
+      ui_act: linux(dock.dock_action, "Press, click, toggle or otherwise invoke a control in a Linux workspace app. Prefer `target` {name, role} plus an action name: it locates the control and acts in one call. Use mode observed for controls inside lists and trees. Acknowledgement is not proof; read again to confirm the result.", dock.dock_action.args),
+      ui_type: linux(dock.dock_type, "Replace the text of a field in a Linux workspace app, by `target` {name, role} or ref, and verify it. Editable mode sets the value; keyboard mode types it for fields that only accept keys. Without target or ref it types, in keyboard mode, into the text field that has keyboard focus (e.g. a search box just opened by a shortcut). When focus is in something that is not a recognized text field (a command palette list, a search box shown as another role), use ui_keys with text instead.", { ...argsOf(dock.dock_type, ["target", "text", "mode"]), ref: nativeRef.optional().describe("Ref from ui_read or ui_find") }),
       ui_pointer: tool({
         description: "Move the mouse onto a control in a Linux workspace app (kind hover) or right-click it (kind contextMenu), by `target` {name, role} or ref. Use it for what apps show only under the mouse, such as a row's gear or toolbar, and for right-click menus that ui_act and ui_keys do not open. It is a real mouse event at the control's center, so apps may react to it as they would to a person (a right-click on a VS Code boolean setting's description toggles it); look again afterwards.",
         args: { kind: tool.schema.enum(["hover", "contextMenu"]), target: target.optional().describe("Locate the control by name"),
-          ref: ref.optional().describe("Element ref from ui_find or ui_read") },
+          ref: nativeRef.optional().describe("Ref from ui_read or ui_find") },
         execute: (args, context) => {
           const scoped = { ...context, world: "linux" } as Scoped
           if (args.ref !== undefined) return call(scoped, "pointer", { ref: args.ref, kind: args.kind }).then(toJSON, toolError)
@@ -765,8 +766,8 @@ export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: n
             .then(toJSON), { deadline: Date.now() + findDeadlineMs })).then((value) => (typeof value === "string" ? value : toJSON(value)), toolError)
         },
       }),
-      ui_keys: linux(dock.dock_keyboard, "Press a key combination in a Linux workspace app, such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target`. Apps are often fastest through their shortcuts; names often show them, e.g. \"Explorer (Ctrl+Shift+E)\". Or pass `text` (printable ASCII, up to 256 characters) to type it in one call as key events into whatever has keyboard focus in the active window: use it when ui_type finds no text field there, such as a command palette or a search box shown as another role; it is refused for password fields. Prefer ui_type for a field you can name, because it verifies the value. Nothing here is verified, so read again afterwards.", ["keys", "text", "ref", "target"]),
-      ui_wait: linux(dock.dock_wait, "Wait a bounded time for a Linux workspace app to settle; this is a delay, not proof that the app is ready.", ["milliseconds"]),
+      ui_keys: linux(dock.dock_keyboard, "Press a key combination in a Linux workspace app, such as ctrl+comma, ctrl+shift+p, alt+f, Escape, Return, F1; it goes to the active app window, or to the window holding `ref`/`target`. Apps are often fastest through their shortcuts; names often show them, e.g. \"Explorer (Ctrl+Shift+E)\". Or pass `text` (printable ASCII, up to 256 characters) to type it in one call as key events into whatever has keyboard focus in the active window: use it when ui_type finds no text field there, such as a command palette or a search box shown as another role; it is refused for password fields. Prefer ui_type for a field you can name, because it verifies the value. Nothing here is verified, so read again afterwards.", argsOf(dock.dock_keyboard, ["keys", "text", "ref", "target"])),
+      ui_wait: linux(dock.dock_wait, "Wait a bounded time for a Linux workspace app to settle; this is a delay, not proof that the app is ready.", dock.dock_wait.args),
     },
   }
 }
