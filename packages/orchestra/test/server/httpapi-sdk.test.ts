@@ -24,7 +24,6 @@ import { TestLLMServer } from "../lib/llm-server"
 import path from "path"
 import { resetDatabase } from "../fixture/db"
 import { disposeAllInstances, TestInstance, tmpdirScoped } from "../fixture/fixture"
-import { markPluginDependenciesReady } from "../fixture/plugin"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { testProviderConfig } from "../lib/test-provider"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -276,8 +275,6 @@ function writeStandardFiles(dir: string) {
   )
 }
 
-// The server builds Config with the real Npm, so marking the plugin dependencies of .orchestra ready keeps it from
-// installing them. A real install outlives its test and, on Windows, starves file I/O for later test files.
 function writeProjectSkill(dir: string) {
   return FSUtil.Service.use((fs) =>
     fs.writeWithDirs(
@@ -290,7 +287,7 @@ description: A project skill visible to REST API prompts.
 # Project REST Skill
 `,
     ),
-  ).pipe(Effect.andThen(Effect.promise(() => markPluginDependenciesReady(path.join(dir, ".orchestra")))))
+  )
 }
 
 function seedMessage(directory: string, sessionID: string) {

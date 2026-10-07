@@ -26,7 +26,6 @@ import { Deferred, Duration, Effect, Layer, Queue, Schedule, Scope, Stream } fro
 import { FetchHttpClient, HttpClient } from "effect/unstable/http"
 import { ChildProcess } from "effect/unstable/process"
 import path from "node:path"
-import { markPluginDependenciesReady } from "../fixture/plugin"
 import { TestLLMServer } from "./llm-server"
 import { testProviderConfig } from "./test-provider"
 import { it } from "./effect"
@@ -216,10 +215,6 @@ export function withCliFixture<A, E>(
 
     const configJson = JSON.stringify(testProviderConfig(llm.url))
     const env = isolatedEnv(home, configJson)
-    // Config starts a background npm install of @orchestra/plugin into each config directory it loads. With this
-    // environment a child loads only its global config directory, so marking that one ready keeps every spawned
-    // orchestra from starting a real install that its test would kill unfinished.
-    yield* Effect.promise(() => markPluginDependenciesReady(path.join(env.XDG_CONFIG_HOME, "orchestra")))
 
     const spawn = Effect.fn("orchestra.spawn")(function* (args: string[], opts?: SpawnOpts) {
       const start = Date.now()

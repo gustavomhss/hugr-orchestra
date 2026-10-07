@@ -6,20 +6,14 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Effect, Layer } from "effect"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
-import { Npm } from "@orchestra/core/npm"
 import { Config } from "@/config/config"
 import { ConfigPlugin } from "@/config/plugin"
 import { CurrentWorkingDirectory } from "@/config/tui-cwd"
 import { TuiConfig } from "../../src/config/tui"
-import { NpmTest } from "../fake/npm"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
-// Config and TuiConfig start an npm install of plugin dependencies into the .orchestra directories they load. A real one
-// outlives its test and, on Windows, starves file I/O for later test files in the same process.
-const npm = [Npm.node, NpmTest.noop] as const
-
-const it = testEffect(LayerNode.compile(LayerNode.group([Config.node, FSUtil.node]), [npm]))
+const it = testEffect(LayerNode.compile(LayerNode.group([Config.node, FSUtil.node])))
 const winIt = process.platform === "win32" ? it.instance : it.instance.skip
 
 const globalConfigFiles = ["orchestra.json", "orchestra.jsonc", "tui.json", "tui.jsonc"].map((file) =>
@@ -76,7 +70,7 @@ const withPlatform = <A, E, R>(platform: typeof process.platform, self: Effect.E
   )
 
 const tuiLayer = (directory: string) =>
-  AppNodeBuilder.build(TuiConfig.node, [npm]).pipe(Layer.provide(Layer.succeed(CurrentWorkingDirectory, directory)))
+  AppNodeBuilder.build(TuiConfig.node).pipe(Layer.provide(Layer.succeed(CurrentWorkingDirectory, directory)))
 
 const getTuiConfig = (directory: string) =>
   TuiConfig.Service.use((svc) => svc.get()).pipe(Effect.provide(tuiLayer(directory)))

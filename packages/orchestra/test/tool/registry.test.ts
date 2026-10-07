@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test"
 import path from "path"
 import fs from "fs/promises"
-import { fileURLToPath, pathToFileURL } from "url"
+import { pathToFileURL } from "url"
 import { Effect, Layer, Result, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
@@ -409,21 +409,16 @@ describe("tool.registry", () => {
   )
 
   it.instance(
-    "preserves Zod arg descriptions from older config-scoped plugin packages",
+    "loads custom tools against the bundled plugin SDK, never a copy in the config directory",
     () =>
       Effect.gen(function* () {
         const test = yield* TestInstance
         const orchestra = path.join(test.directory, ".orchestra")
         const customTools = path.join(orchestra, "tools")
+        // A planted registry copy of the SDK. It links, then throws if anything evaluates it.
         const plugin = path.join(orchestra, "node_modules", "@orchestra", "plugin")
         yield* Effect.promise(() => fs.mkdir(path.join(plugin, "dist"), { recursive: true }))
         yield* Effect.promise(() => fs.mkdir(customTools, { recursive: true }))
-        yield* Effect.promise(() =>
-          fs.cp(path.dirname(fileURLToPath(import.meta.resolve("zod"))), path.join(orchestra, "node_modules", "zod"), {
-            dereference: true,
-            recursive: true,
-          }),
-        )
         yield* Effect.promise(() =>
           Bun.write(
             path.join(plugin, "package.json"),
@@ -433,14 +428,7 @@ describe("tool.registry", () => {
         yield* Effect.promise(() =>
           Bun.write(
             path.join(plugin, "dist", "index.js"),
-            [
-              "import { z } from 'zod'",
-              "export function tool(input) {",
-              "  return input",
-              "}",
-              "tool.schema = z",
-              "",
-            ].join("\n"),
+            ['throw new Error("registry copy ran")', "export function tool() {}", ""].join("\n"),
           ),
         )
         yield* Effect.promise(() =>

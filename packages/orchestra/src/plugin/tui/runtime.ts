@@ -1,4 +1,3 @@
-import { runtimeModules as keymapRuntimeModules } from "@opentui/keymap/runtime-modules"
 import { ensureRuntimePluginSupport } from "@opentui/solid/runtime-plugin-support/configure"
 import {
   type TuiDispose,
@@ -36,6 +35,7 @@ import { Process } from "@/util/process"
 import { Flock } from "@orchestra/core/util/flock"
 import { Flag } from "@orchestra/core/flag/flag"
 import { internalTuiPlugins, type InternalTuiPlugin } from "./internal"
+import { tuiRuntimeModules } from "./runtime-modules"
 import type { HostPluginApi, HostSlots } from "@orchestra/tui/plugin/slots"
 import { ConfigPlugin } from "@/config/plugin"
 import { ConfigPluginV1 } from "@orchestra/core/v1/config/plugin"
@@ -44,7 +44,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Effect } from "effect"
 import { createPluginRuntime, type PluginRuntime, type TuiPluginHost } from "@orchestra/tui/plugin/runtime"
 
-ensureRuntimePluginSupport({ additional: keymapRuntimeModules })
+ensureRuntimePluginSupport({ additional: tuiRuntimeModules })
 
 type PluginLoad = {
   options: ConfigPluginV1.Options | undefined
