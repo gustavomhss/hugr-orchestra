@@ -60,7 +60,8 @@ async function open(): Promise<Binding> {
 
 /**
  * Where the addon and the supervisor are, in this order: the paths given to configure(), then HUGR_OMNI_ADDON and
- * HUGR_OMNI_SUPERVISOR (CI), then the directory of an explicit addon, then next to realpath(process.execPath) (the
+ * HUGR_OMNI_SUPERVISOR (CI). An explicit addon requires its sibling supervisor unless explicitly overridden; it
+ * never borrows a supervisor from another candidate. Otherwise look next to realpath(process.execPath) (the
  * CLI), then process.resourcesPath/omni (the desktop), then this checkout's packages/omni/target/{release,debug}.
  * A non-explicit location counts only when it holds both files, so a release addon never pairs a debug supervisor.
  */
@@ -69,12 +70,18 @@ export function locate(given: Paths = injected): Found {
     addon: given.addon ?? process.env.HUGR_OMNI_ADDON,
     supervisor: given.supervisor ?? process.env.HUGR_OMNI_SUPERVISOR,
   }
-  const missing = [explicit.addon, explicit.supervisor].filter((file) => file !== undefined && !existsSync(file))
-  if (missing.length > 0) throw new Error(`hugr-omni: the configured file ${missing.join(" and ")} does not exist.`)
+  if (explicit.addon !== undefined) {
+    const found = { addon: explicit.addon, supervisor: explicit.supervisor ?? sibling(explicit.addon, SUPERVISOR) }
+    const missing = Object.entries(found).filter(([, file]) => !existsSync(file))
+    if (missing.length > 0)
+      throw new Error(`hugr-omni: the configured ${missing.map(([kind, file]) => `${kind} ${file} does not exist`).join("; ")}.`)
+    return found
+  }
+  if (explicit.supervisor !== undefined && !existsSync(explicit.supervisor))
+    throw new Error(`hugr-omni: the configured supervisor ${explicit.supervisor} does not exist.`)
   const resources = "resourcesPath" in process && typeof process.resourcesPath === "string" ? process.resourcesPath : ""
   const target = path.join(import.meta.dirname, "..", "..", "omni", "target")
   const locations = [
-    ...(explicit.addon ? [{ addon: explicit.addon, supervisor: sibling(explicit.addon, SUPERVISOR) }] : []),
     {
       addon: sibling(realpath(process.execPath), SHIPPED_ADDON),
       supervisor: sibling(realpath(process.execPath), SUPERVISOR),
@@ -87,13 +94,13 @@ export function locate(given: Paths = injected): Found {
       supervisor: path.join(target, profile, SUPERVISOR),
     })),
   ]
-  const pair = locations.find((entry) => existsSync(entry.addon) && existsSync(entry.supervisor))
-  const addon = explicit.addon ?? pair?.addon
+  const pair = locations.find((entry) => existsSync(entry.addon) && (explicit.supervisor !== undefined || existsSync(entry.supervisor)))
+  const addon = pair?.addon
   const supervisor = explicit.supervisor ?? pair?.supervisor
   if (addon && supervisor) return { addon, supervisor }
   throw new Error(
     [
-      `hugr-omni is required (OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) but its ${addon ? "supervisor" : "addon"} was not found. Looked at:`,
+      `hugr-omni is required (OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) but its ${locations.some((entry) => existsSync(entry.addon)) ? "supervisor" : "addon"} was not found. Looked at:`,
       ...locations.map((entry) => `  ${entry.addon} + ${entry.supervisor}`),
       "Build it with `bun run omni:build`, or set HUGR_OMNI_ADDON and HUGR_OMNI_SUPERVISOR.",
     ].join("\n"),
