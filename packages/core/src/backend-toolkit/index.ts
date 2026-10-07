@@ -3,7 +3,7 @@ export * as BackendToolkit from "./index"
 import path from "path"
 import { randomUUID } from "crypto"
 import { access, chmod, mkdir, readFile, rename, rm, writeFile } from "fs/promises"
-import { Context, Effect, Schema } from "effect"
+import { Cause, Context, Effect, Exit, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../effect/layer-node"
 import { Global } from "../global"
@@ -144,38 +144,39 @@ const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, hos
   return { executable: executable(engine, directory, target) }
 })
 
-/** Run `work` for `directory` at most once at a time and remember its failure; resolves to the failure cause. */
+/**
+ * The attempts table owns one background install per directory, not its waiters. Interrupting one waiter must not
+ * cancel another user's shared install. The worker's own lifetime governs populate commands and staging cleanup;
+ * every Exit, including a layer-startup defect or interruption, settles the shared attempt and records its failure.
+ */
 const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect<unknown, PinnedArtifact.Failed>) {
   const attempt = attempts.get(directory)
   if (attempt?.failed && Date.now() - attempt.at < RETRY_MS && !(yield* PinnedArtifact.installed(directory)))
     return attempt.failed
   if (attempt?.running) return yield* Effect.promise(() => attempt.running!)
-  // Registered before the work starts: work that fails synchronously settles before runPromise returns, and its
-  // failure must not be overwritten by a running entry that never resolves.
+  // Publish ownership before starting the worker, including when layer construction fails synchronously.
   const running = Promise.withResolvers<string | undefined>()
   attempts.set(directory, { running: running.promise, at: Date.now() })
-  void Effect.runPromise(
-    work.pipe(
-      Effect.match({
-        onSuccess: () => {
-          attempts.delete(directory)
-          return undefined
-        },
-        onFailure: (error) => {
-          attempts.set(directory, { failed: error.cause, at: Date.now() })
-          return error.cause
-        },
-      }),
-    ),
-  ).then(running.resolve)
+  void Effect.runPromiseExit(work).then((exit) => {
+    if (Exit.isSuccess(exit)) {
+      attempts.delete(directory)
+      running.resolve(undefined)
+      return
+    }
+    const error = Cause.squash(exit.cause)
+    const failed = error instanceof PinnedArtifact.Failed ? error.cause : `defect:${Cause.pretty(exit.cause)}`
+    attempts.set(directory, { failed, at: Date.now() })
+    running.resolve(failed)
+  })
   return yield* Effect.promise(() => running.promise)
 })
 
 /**
  * Install the engine's runtime (shared, `runtime-<cause>` on failure), then the engine with its launcher. npm, pip and
  * source builds run the target's own interpreter or toolchain, so they install only for the host target.
+ * @internal The worker may also run directly with caller-owned cancellation instead of shared admission.
  */
-function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
+export function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
   const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
   const pin = runtime.targets[target]
   const interpreter = path.join(home, pin.executable)
@@ -193,76 +194,85 @@ function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory:
     const cause = yield* once(home, PinnedArtifact.install(home, [pin.artifact]))
     if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
     yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source" ? [install.artifact] : [], (staging) =>
-      Effect.tryPromise({
-        try: async () => {
-          if (install.kind === "npm") {
-            await writeFile(path.join(staging, "package.json"), install.packageJson)
-            await writeFile(path.join(staging, "package-lock.json"), install.lock)
-            // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
-            const npm = windows
-              ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
-              : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
-            await run(interpreter, [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"], staging, {
-              npm_config_cache: path.join(root, "cache", "npm"),
-              npm_config_update_notifier: "false",
-            })
-          }
-          if (install.kind === "pip") {
-            const requirements = path.join(staging, "requirements.txt")
-            await writeFile(requirements, install.requirements)
-            await run(
-              interpreter,
-              ["-m", "pip", "install", "--require-hashes", "--no-deps", "--only-binary=:all:", "--target", staging, "-r", requirements],
-              staging,
-              { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
-            )
-          }
-          // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
-          if (install.kind === "source" && install.build === "go")
-            await run(interpreter, ["build", "-trimpath", "-o", executable(engine, staging, target), install.path], path.join(staging, "src"), {
-              GOFLAGS: "-mod=readonly",
-              GOTOOLCHAIN: "local",
-              GOPATH: path.join(root, "cache", "go"),
-              GOCACHE: path.join(root, "cache", "go-build"),
-              GOPROXY: "https://proxy.golang.org",
-              GOSUMDB: "sum.golang.org",
-              CGO_ENABLED: "0",
-            })
-          // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
-          // RUSTC names one, so it names the toolchain's own.
-          if (install.kind === "source" && install.build === "cargo")
-            await run(
-              interpreter,
-              [
-                "install",
-                "--path",
-                path.join(staging, "src", install.path),
-                "--locked",
-                "--root",
+      Effect.suspend(() => {
+        const pending: { work?: Promise<void> } = {}
+        return Effect.tryPromise({
+          try: (signal) => pending.work = (async () => {
+            if (install.kind === "npm") {
+              await writeFile(path.join(staging, "package.json"), install.packageJson)
+              await writeFile(path.join(staging, "package-lock.json"), install.lock)
+              // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
+              const npm = windows
+                ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
+                : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
+              await run(interpreter, [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"], staging, {
+                npm_config_cache: path.join(root, "cache", "npm"),
+                npm_config_update_notifier: "false",
+              }, signal)
+            }
+            if (install.kind === "pip") {
+              const requirements = path.join(staging, "requirements.txt")
+              await writeFile(requirements, install.requirements)
+              await run(
+                interpreter,
+                ["-m", "pip", "install", "--require-hashes", "--no-deps", "--only-binary=:all:", "--target", staging, "-r", requirements],
                 staging,
-                "--no-default-features",
-                ...(install.features?.length ? ["--features", install.features.join(",")] : []),
-              ],
-              path.join(staging, "src"),
-              {
-                CARGO_HOME: path.join(root, "cache", "cargo"),
-                CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
-                RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
-              },
-            )
-          if (install.kind === "source") return access(executable(engine, staging, target))
-          const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
-          await writeFile(file, text)
-          await chmod(file, 0o755)
-        },
-        catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind === "source" ? install.build : install.kind}` }),
+                { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
+                signal,
+              )
+            }
+            // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
+            if (install.kind === "source" && install.build === "go")
+              await run(interpreter, ["build", "-trimpath", "-o", executable(engine, staging, target), install.path], path.join(staging, "src"), {
+                GOFLAGS: "-mod=readonly",
+                GOTOOLCHAIN: "local",
+                GOPATH: path.join(root, "cache", "go"),
+                GOCACHE: path.join(root, "cache", "go-build"),
+                GOPROXY: "https://proxy.golang.org",
+                GOSUMDB: "sum.golang.org",
+                CGO_ENABLED: "0",
+              }, signal)
+            // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
+            // RUSTC names one, so it names the toolchain's own.
+            if (install.kind === "source" && install.build === "cargo")
+              await run(
+                interpreter,
+                [
+                  "install",
+                  "--path",
+                  path.join(staging, "src", install.path),
+                  "--locked",
+                  "--root",
+                  staging,
+                  "--no-default-features",
+                  ...(install.features?.length ? ["--features", install.features.join(",")] : []),
+                ],
+                path.join(staging, "src"),
+                {
+                  CARGO_HOME: path.join(root, "cache", "cargo"),
+                  CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
+                  RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
+                },
+                signal,
+              )
+            if (install.kind === "source") return access(executable(engine, staging, target))
+            const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
+            await writeFile(file, text)
+            await chmod(file, 0o755)
+          })(),
+          catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind === "source" ? install.build : install.kind}` }),
+        }).pipe(
+          // tryPromise aborts before its Promise settles. Join the nested root's process finalizers before install()
+          // removes staging, including interruption during the async filesystem work preceding the spawn.
+          Effect.onInterrupt(() => Effect.promise(() => pending.work?.then(() => undefined, () => undefined) ?? Promise.resolve())),
+        )
       }),
     )
     if (host) yield* shim(root, engine.id, text)
   })
 }
 
-const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record<string, string>) =>
+const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record<string, string>, signal: AbortSignal) =>
   Effect.runPromise(
     Effect.gen(function* () {
       const processService = yield* AppProcess.Service
@@ -274,6 +284,7 @@ const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record
       if (result.stdoutTruncated || result.stderrTruncated)
         return yield* new AppProcess.AppProcessError({ command: result.command, cause: new Error("Output exceeded 64 MiB") })
     }).pipe(Effect.provide(LayerNode.compile(AppProcess.node))),
+    { signal },
   )
 
 function executable(engine: Engine, directory: string, target: TargetId) {
