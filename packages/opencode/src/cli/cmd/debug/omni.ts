@@ -18,8 +18,13 @@ else {
 export const OmniCommand = cmd({
   command: "omni",
   describe: "show the process spawner in use (omni or legacy) and run a test process tree through omni",
-  builder: (yargs) => yargs,
-  async handler() {
+  builder: (yargs) =>
+    yargs.option("hold", {
+      type: "boolean",
+      default: false,
+      describe: "start the nonce tree, print `holding <nonce> pid=<this process>` and keep it alive until killed",
+    }),
+  async handler(args) {
     const print = (line: string) => process.stdout.write(line + EOL)
     const mode = Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER
     print(`path: ${mode === "off" ? "legacy" : "omni"} (OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=${mode})`)
@@ -37,6 +42,7 @@ export const OmniCommand = cmd({
     }
     print(`addon: ${found.addon}`)
     print(`supervisor: ${found.supervisor}`)
+    if (args.hold) return hold(print)
     const result = await tree().catch((error: unknown) => `failed: ${error instanceof Error ? error.message : error}`)
     print(`nonce tree: ${result}`)
     const counts = Omni.snapshot()
@@ -45,21 +51,40 @@ export const OmniCommand = cmd({
   },
 })
 
-/** Starts the nonce tree through omni, checks both processes are in the tree, stops it, and checks it is gone. */
-async function tree() {
-  const binding = await Omni.load()
+/** Starts the nonce tree and never returns: crash smokes kill this process and expect the tree to go with it. */
+async function hold(print: (line: string) => void) {
   const nonce = `omni-debug-${randomUUID()}`
-  await using child = binding.spawn(process.execPath, ["-e", TREE, TREE, nonce, "1"], {
+  const child = await start(nonce)
+  for await (const line of child.lines()) if (line.text === `ready ${nonce}`) break
+  print(`holding ${nonce} pid=${process.pid}`)
+  setInterval(() => {}, 1 << 30)
+  await new Promise(() => {})
+}
+
+async function start(nonce: string) {
+  const binding = await Omni.load()
+  const child = binding.spawn(process.execPath, ["-e", TREE, TREE, nonce, "1"], {
     inheritEnv: false,
     // A compiled CLI runs scripts only as bun.
     env: Omni.childEnv({ BUN_BE_BUN: "1" }),
-    timeoutMs: 20_000,
   })
   Omni.count("spawns")
-  for await (const line of child.lines()) if (line.text === `ready ${nonce}`) break
-  const before = (await child.processes()).length
-  if (before < 2) return `expected 2 processes, saw ${before}`
-  await child.stop()
-  const after = (await child.processes()).length
-  return after === 0 ? "ok" : `${after} process(es) left after stop`
+  return child
+}
+
+/** Starts the nonce tree through omni, checks both processes are in the tree, stops it, and checks it is gone. */
+async function tree() {
+  const nonce = `omni-debug-${randomUUID()}`
+  await using child = await start(nonce)
+  const timer = setTimeout(() => void child.stop(), 20_000)
+  try {
+    for await (const line of child.lines()) if (line.text === `ready ${nonce}`) break
+    const before = (await child.processes()).length
+    if (before < 2) return `expected 2 processes, saw ${before}`
+    await child.stop()
+    const after = (await child.processes()).length
+    return after === 0 ? "ok" : `${after} process(es) left after stop`
+  } finally {
+    clearTimeout(timer)
+  }
 }
