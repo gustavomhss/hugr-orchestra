@@ -12,7 +12,7 @@
 // Running it again on its own output changes nothing. Running it on a branch that predates the rename renames that
 // branch's work the same way, so merging the renamed dev afterwards leaves mostly mechanical conflicts.
 
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { kept, OLD_NAME, oldNames, protectedStrings } from "./rename-ledger"
 
@@ -61,6 +61,9 @@ const GENERATED =
 // yargs right-aligns the type column, so a longer name must eat the padding to keep the line width.
 const RIGHT_ALIGNED =
   /^packages\/(?:opencode|orchestra)\/test\/cli\/help\/__snapshots__\/help-snapshots\.test\.ts\.snap$/
+// Golden and relay fixtures feed byte comparisons and hashes. The codemod refuses to run rather than change one; only
+// their .md docs may change. A refusal lists the lines, which then need a ledger entry or a deliberate re-record.
+const FROZEN = /(?:^|\/)test\/golden\/|^packages\/relay\/test\/fixtures\//
 
 const args = process.argv.slice(2)
 const dryRun = args.includes("--dry-run")
@@ -74,6 +77,12 @@ const report: string[] = []
 if (!allowDirty && !dryRun && git(root, "status", "--porcelain").trim())
   fail("The working tree is not clean. Commit or set aside your changes first, or pass --allow-dirty.")
 
+progress("checking frozen fixtures")
+const frozen = frozenChanges(tracked())
+if (frozen.length) {
+  for (const line of frozen) console.log(`  ${line}`)
+  fail(`The rename would change ${frozen.length} line(s) or name(s) in frozen fixtures; nothing was changed.`)
+}
 progress("census of protected strings")
 const before = await protectedCensus(await textFiles())
 progress("moving paths")
@@ -101,6 +110,29 @@ if (!dryRun && residue.length) {
 }
 if (changedProtection.length) fail("A protected string changed.")
 if (!dryRun && residue.length) fail("Old names remain outside the ledger.")
+
+// Every change the rename would make under a frozen fixture path (other than .md docs), as "file:line: old => new".
+// Binary files count too: their bytes are never rewritten, but a renamed path would still move them.
+function frozenChanges(files: string[]) {
+  return files
+    .filter((file) => FROZEN.test(file) && !file.endsWith(".md") && !kept(file))
+    .flatMap((file) => {
+      const renamed = rename(file)
+      const moved = renamed === file ? [] : [`${file}: path => ${renamed}`]
+      const bytes = existsSync(path.join(root, file)) ? readFileSync(path.join(root, file)) : undefined
+      if (!bytes || bytes.subarray(0, 8000).includes(0)) return moved
+      const text = bytes.toString("utf8")
+      if (!OLD_NAME.test(text)) return moved
+      const oldLines = text.split("\n")
+      const newLines = apply(text, file, false).split("\n")
+      return [
+        ...moved,
+        ...newLines.flatMap((line, index) =>
+          line === oldLines[index] ? [] : [`${file}:${index + 1}: ${oldLines[index]!.trim()} => ${line.trim()}`],
+        ),
+      ]
+    })
+}
 
 function tracked() {
   return git(root, "ls-files", "-z").split("\0").filter(Boolean)
