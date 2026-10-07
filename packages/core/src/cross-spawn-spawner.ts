@@ -1,4 +1,3 @@
-import type * as Arr from "effect/Array"
 import { NodeFileSystem, NodeSink, NodeStream } from "@effect/platform-node"
 import * as NodePath from "@effect/platform-node/NodePath"
 import * as Deferred from "effect/Deferred"
@@ -24,79 +23,16 @@ import {
 import * as NodeChildProcess from "node:child_process"
 import { PassThrough } from "node:stream"
 import launch from "cross-spawn"
+import { flatten, toError, toPlatformError } from "./child-process-common"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem, path } from "./effect/app-node-platform"
-
-const toError = (err: unknown): Error => (err instanceof globalThis.Error ? err : new globalThis.Error(String(err)))
-
-const toTag = (err: NodeJS.ErrnoException): PlatformError.SystemErrorTag => {
-  switch (err.code) {
-    case "ENOENT":
-      return "NotFound"
-    case "EACCES":
-      return "PermissionDenied"
-    case "EEXIST":
-      return "AlreadyExists"
-    case "EISDIR":
-      return "BadResource"
-    case "ENOTDIR":
-      return "BadResource"
-    case "EBUSY":
-      return "Busy"
-    case "ELOOP":
-      return "BadResource"
-    default:
-      return "Unknown"
-  }
-}
-
-const flatten = (command: ChildProcess.Command) => {
-  const commands: Array<ChildProcess.StandardCommand> = []
-  const opts: Array<ChildProcess.PipeOptions> = []
-
-  const walk = (cmd: ChildProcess.Command): void => {
-    switch (cmd._tag) {
-      case "StandardCommand":
-        commands.push(cmd)
-        return
-      case "PipedCommand":
-        walk(cmd.left)
-        opts.push(cmd.options)
-        walk(cmd.right)
-        return
-    }
-  }
-
-  walk(command)
-  if (commands.length === 0) throw new Error("flatten produced empty commands array")
-  const [head, ...tail] = commands
-  return {
-    commands: [head, ...tail] as Arr.NonEmptyReadonlyArray<ChildProcess.StandardCommand>,
-    opts,
-  }
-}
-
-const toPlatformError = (
-  method: string,
-  err: NodeJS.ErrnoException,
-  command: ChildProcess.Command,
-): PlatformError.PlatformError => {
-  const cmd = flatten(command)
-    .commands.map((x) => `${x.command} ${x.args.join(" ")}`)
-    .join(" | ")
-  return PlatformError.systemError({
-    _tag: toTag(err),
-    module: "ChildProcess",
-    method,
-    pathOrDescriptor: cmd,
-    syscall: err.syscall,
-    cause: err,
-  })
-}
+import { Flag } from "./flag/flag"
+import { OmniSpawner } from "./omni-spawner"
 
 type ExitSignal = Deferred.Deferred<readonly [code: number | null, signal: NodeJS.Signals | null]>
 
-export const make = Effect.gen(function* () {
+/** The legacy spawn function (cross-spawn). Unchanged; omni wraps it to delegate what it does not support. */
+const legacy = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
 
@@ -494,8 +430,21 @@ export const make = Effect.gen(function* () {
     },
   )
 
-  return makeSpawner(spawnCommand)
+  return { spawnCommand, cwd }
 })
+
+/**
+ * The spawner for a mode of OPENCODE_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` is the legacy spawner exactly; `on` and
+ * `strict` spawn through omni, which delegates (on) or refuses (strict) what it does not support.
+ */
+export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) {
+  const base = yield* legacy
+  if (mode === "off") return makeSpawner(base.spawnCommand)
+  return makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
+})
+
+/** The flag is read once, when the layer is built. */
+export const make = Effect.suspend(() => makeWith(Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER))
 
 const layer: Layer.Layer<ChildProcessSpawner, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
   ChildProcessSpawner,
