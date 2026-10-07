@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto"
 import { createServer } from "node:net"
 import { app } from "electron"
 import { checkHealth } from "../server"
+import { DesktopOmni } from "../omni-process"
 import { type WslCommandLine, resolveWslOpencode, shellEscape, wslArgs } from "./runtime"
 import { pollWslHealth } from "./startup"
 import { nativeT } from "../native-translations"
@@ -37,10 +38,13 @@ export async function spawnWslSidecar(
     'export XDG_STATE_HOME="$HOME/.local/state"',
     `exec ${shellEscape(opencode)} --print-logs --log-level ${app.isPackaged ? "WARN" : "INFO"} serve --hostname 0.0.0.0 --port ${port}`,
   ].join("\n")
-  const child = spawn("wsl", wslArgs(["bash", "-se"], distro), {
-    stdio: ["pipe", "pipe", "pipe"],
-    windowsHide: true,
-  })
+  // Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER the WSL server runs through omni, so it ends with this app.
+  const child: DesktopOmni.Spawned = DesktopOmni.enabled()
+    ? DesktopOmni.spawn("wsl", wslArgs(["bash", "-se"], distro))
+    : spawn("wsl", wslArgs(["bash", "-se"], distro), {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      })
   child.stdin.end(script)
 
   const recentOutput: string[] = []

@@ -49,6 +49,8 @@ process.stderr.write("err ok\\n", () => process.exit(3))`
 
 test("rejects a command that never exits, within its timeout", async () => {
   const started = Date.now()
-  await expect(runCommand(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { timeoutMs: 500 })).rejects.toThrow()
+  await expect(
+    runCommand(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { timeoutMs: 500 }),
+  ).rejects.toThrow()
   expect(Date.now() - started).toBeLessThan(20_000)
 })
