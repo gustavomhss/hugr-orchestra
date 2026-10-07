@@ -55,8 +55,6 @@ type V1Input = {
 }
 
 const NOTES = {
-  opencode: "dialog.provider.opencode.note",
-  "opencode-go": "dialog.provider.opencodeGo.tagline",
   anthropic: "dialog.provider.anthropic.note",
   openai: "dialog.provider.openai.note",
   google: "dialog.provider.google.note",

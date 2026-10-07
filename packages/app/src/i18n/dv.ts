@@ -187,11 +187,6 @@ export const dict = {
   "dialog.provider.group.popular": "މަޝްހޫރު",
   "dialog.provider.group.other": "އެހެން",
   "dialog.provider.custom.label": "ކަސްޓަމް OpenAI އާއި އެއްގޮތްވާ ޕްރޮވައިޑަރެއް",
-  "dialog.provider.tag.recommended": "ލަފާދެވިފައިވުން",
-  "dialog.provider.opencode.note":
-    "ކިއުރެޓް ކުރެވިފައިވާ މޮޑެލްތަކުގެ ތެރޭގައި Claude، GPT، Gemini އަދި އެހެނިހެން މޮޑެލްތައް ހިމެނެއެވެ",
-  "dialog.provider.opencode.tagline": "އިތުބާރު ހުރި އޮޕްޓިމައިޒްޑް މޮޑެލްތަކެވެ",
-  "dialog.provider.opencodeGo.tagline": "އެންމެންނަށް ކުޑަ އަގެއްގައި ސަބްސްކްރިޕްޝަން ދިނުމެވެ",
   "dialog.provider.anthropic.note": "ޕްރޯ އަދި މެކްސް ހިމެނޭ ގޮތަށް Claude މޮޑެލްތަކަށް ސީދާ އެކްސެސް ލިބޭނެ އެވެ",
   "dialog.provider.copilot.note": "GitHub Copilot މެދުވެރިކޮށް ކޯޑިންގ އެހީތެރިވުމަށް AI މޮޑެލްތައް",
   "dialog.provider.openai.note": "އަވަސް، ގާބިލް އާންމު AI ޓާސްކްތަކަށް GPT މޮޑެލްތަކެވެ",
@@ -204,7 +199,6 @@ export const dict = {
   "dialog.model.manage": "މޮޑެލްތައް މެނޭޖްކުރުން",
   "dialog.model.manage.description": "މޮޑެލް ސެލެކްޓަރގައި ފެންނަނީ ކޮން މޮޑެލްތަކެއްކަން ކަސްޓަމައިޒް ކުރުން.",
   "dialog.model.manage.provider.toggle": "ހުރިހާ {{provider}} މޮޑެލްތަކެއް ޓޮގްލް ކުރާށެވެ",
-  "dialog.model.unpaid.freeModels.title": "ހިލޭ މޮޑެލްތައް ފޯރުކޮށްދެނީ OpenCode Zen އިންނެވެ",
   "dialog.model.unpaid.addMore.title": "މަޝްހޫރު ޕްރޮވައިޑަރުންގެ އިތުރު މޮޑެލްތައް އިތުރުކުރުން",
   "dialog.model.unpaid.viewMoreProviders": "އިތުރު 70+ ޕްރޮވައިޑަރުން ބައްލަވާށެވެ",
   "dialog.provider.viewAll": "އިތުރު ޕްރޮވައިޑަރުން ދައްކާށެވެ",
@@ -225,13 +219,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API ކީ އެވެ",
   "provider.connect.apiKey.required": "API ކީ ބޭނުންވެއެވެ",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen އިން ކޯޑިންގ އޭޖެންޓުންނަށް އިތުބާރު ހުރި އޮޕްޓިމައިޒްޑް މޮޑެލްތަކުގެ ކިއުރެޓެޑް ސެޓަކަށް އެކްސެސް ލިބިގެންދެއެވެ.",
-  "provider.connect.opencodeZen.line2":
-    "އެއް API ކީ އާއެކު Claude، GPT، Gemini، GLM އަދި އެހެނިހެން މޮޑެލްތަކަށް އެކްސެސް ލިބިގެންދާނެއެވެ.",
-  "provider.connect.opencodeZen.visit.prefix": "ޒިޔާރަތްކުރުން ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen އެވެ",
-  "provider.connect.opencodeZen.visit.suffix": " ތިބާގެ API ކީ އެއްކުރުމަށްޓަކައެވެ.",
   "provider.connect.oauth.code.visit.prefix": "ޒިޔާރަތްކުރުން ",
   "provider.connect.oauth.code.visit.link": "މި ލިންކެވެ",
   "provider.connect.oauth.code.visit.suffix":
@@ -914,10 +901,6 @@ export const dict = {
   "sidebar.settings": "ސެޓިންގސް",
   "sidebar.workspaces.enable": "ވޯކްސްޕޭސްތައް އެނެބަލްކުރުން",
   "sidebar.workspaces.disable": "ވޯކްސްޕޭސްތައް ޑިސެބަލްކުރުން",
-  "sidebar.gettingStarted.title": "ފަށަނީ",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra ގައި ހިލޭ މޮޑެލްތައް ހިމެނޭތީ ވަގުތުން ފަށައިގަނެވޭނެ އެވެ.",
-  "sidebar.gettingStarted.line2":
-    "މޮޑެލްތައް ބޭނުން ކުރުމަށް އެއްވެސް ޕްރޮވައިޑަރެއް ގުޅުވާލުން، inc. Claude، GPT، Gemini ފަދަ ކަންކަމެވެ.",
   "sidebar.project.recentSessions": "ފަހުގެ ސެޝަންތަކެވެ",
   "sidebar.project.viewAllSessions": "ހުރިހާ ސެޝަންތަކެއް ބަލާށެވެ",
   "sidebar.project.clearNotifications": "ނޮޓިފިކޭޝަންތައް ސާފުކުރުން",
@@ -1202,7 +1185,6 @@ export const dict = {
   "workspace.reset.archived.one": "1 ސެޝަން އަރުޝީފް ކުރެވޭނެއެވެ.",
   "workspace.reset.archived.many": "{{count}} ސެޝަންތައް އަރުޝީފް ކުރެވޭނެއެވެ.",
   "workspace.reset.note": "މިއީ ޑިފޯލްޓް ބްރާންޗާ އެއްގޮތްވާ ގޮތަށް ވޯކްސްޕޭސް ރީސެޓް ކުރާނެ ކަމެކެވެ.",
-  "dialog.usageExceeded.dontShowAgain": "އަލުން ނުދައްކާ",
   "janitor.notify.title.one": "Janitor found {{count}} issue",
   "janitor.notify.title.other": "Janitor found {{count}} issues",
   "janitor.report.title": "Janitor report",

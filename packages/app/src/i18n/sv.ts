@@ -186,10 +186,6 @@ export const dict = {
   "dialog.provider.group.popular": "Populära",
   "dialog.provider.group.other": "Andra",
   "dialog.provider.custom.label": "Anpassad OpenAI-kompatibel leverantör",
-  "dialog.provider.tag.recommended": "Rekommenderad",
-  "dialog.provider.opencode.note": "Kurerade modeller inklusive Claude, GPT, Gemini och mer",
-  "dialog.provider.opencode.tagline": "Pålitliga optimerade modeller",
-  "dialog.provider.opencodeGo.tagline": "Lågprisprenumeration för alla",
   "dialog.provider.anthropic.note": "Direkt tillgång till Claude-modeller, inklusive Pro och Max",
   "dialog.provider.copilot.note": "AI-modeller för kodningshjälp via GitHub Copilot",
   "dialog.provider.openai.note": "GPT-modeller för snabba, kapabla allmänna AI-uppgifter",
@@ -202,7 +198,6 @@ export const dict = {
   "dialog.model.manage": "Hantera modeller",
   "dialog.model.manage.description": "Anpassa vilka modeller som visas i modellväljaren.",
   "dialog.model.manage.provider.toggle": "Växla alla {{provider}}-modeller",
-  "dialog.model.unpaid.freeModels.title": "Gratis modeller tillhandahålls av OpenCode Zen",
   "dialog.model.unpaid.addMore.title": "Lägg till fler modeller från populära leverantörer",
   "dialog.model.unpaid.viewMoreProviders": "Se fler än 70 leverantörer",
   "dialog.provider.viewAll": "Visa fler leverantörer",
@@ -223,13 +218,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API-nyckel",
   "provider.connect.apiKey.required": "API-nyckel krävs",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen ger dig tillgång till en utvald uppsättning pålitliga optimerade modeller för kodningsagenter.",
-  "provider.connect.opencodeZen.line2":
-    "Med en enda API-nyckel får du tillgång till modeller som Claude, GPT, Gemini, GLM och mer.",
-  "provider.connect.opencodeZen.visit.prefix": "Besök ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " för att hämta din API-nyckel.",
   "provider.connect.oauth.code.visit.prefix": "Besök ",
   "provider.connect.oauth.code.visit.link": "denna länk",
   "provider.connect.oauth.code.visit.suffix":
@@ -550,7 +538,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "Startskript för arbetsyta",
   "dialog.project.edit.worktree.startup.description": "Körs efter att en ny arbetsyta (worktree) har skapats.",
   "dialog.project.edit.worktree.startup.placeholder": "t.ex. bun install",
-  "dialog.usageExceeded.dontShowAgain": "Visa inte igen",
 
   "context.breakdown.title": "Kontextfördelning",
   "context.breakdown.note":
@@ -907,9 +894,6 @@ export const dict = {
   "sidebar.settings": "Inställningar",
   "sidebar.workspaces.enable": "Aktivera arbetsytor",
   "sidebar.workspaces.disable": "Inaktivera arbetsytor",
-  "sidebar.gettingStarted.title": "Kom igång",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra innehåller gratis modeller så att du kan börja direkt.",
-  "sidebar.gettingStarted.line2": "Anslut valfri leverantör för att använda modeller, inkl. Claude, GPT, Gemini etc.",
   "sidebar.project.recentSessions": "Senaste sessioner",
   "sidebar.project.viewAllSessions": "Se alla sessioner",
   "sidebar.project.clearNotifications": "Rensa aviseringar",

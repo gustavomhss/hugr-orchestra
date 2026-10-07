@@ -9,13 +9,9 @@ type Dictionaries = Record<string, Record<string, Record<string, string>>>
 // the .opencode/ project folder and the opencode command. Only that text is allowed, and only in that key.
 const EXTERNAL_NAMES: Record<string, Record<string, string>> = {
   app: {
-    "dialog.model.unpaid.freeModels.title": "OpenCode Zen",
-    "provider.connect.opencodeZen.line1": "OpenCode Zen",
-    "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
     "dialog.plugins.empty": "opencode.json",
     "error.chain.checkConfig": "opencode.json",
   },
-  ui: { "dialog.usageExceeded.freeTier.description": "OpenCode Go" },
   desktop: { "desktop.cli.installed.message": "opencode" },
   orchestra: { "orchestra.skills.dialog.addDetail": ".opencode/" },
 }

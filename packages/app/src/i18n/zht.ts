@@ -203,10 +203,6 @@ export const dict = {
   "dialog.provider.group.popular": "熱門",
   "dialog.provider.group.other": "其他",
   "dialog.provider.custom.label": "自訂 OpenAI 相容提供者",
-  "dialog.provider.tag.recommended": "推薦",
-  "dialog.provider.opencode.note": "精選模型，包含 Claude、GPT、Gemini 等等",
-  "dialog.provider.opencode.tagline": "經過最佳化的可靠模型",
-  "dialog.provider.opencodeGo.tagline": "適合所有人的低成本訂閱",
   "dialog.provider.anthropic.note": "直接存取 Claude 模型，包括 Pro 和 Max",
   "dialog.provider.openai.note": "適合快速且功能強大的通用 AI 工作之 GPT 模型",
   "dialog.provider.copilot.note": "透過 GitHub Copilot 使用程式設計輔助 AI 模型",
@@ -221,7 +217,6 @@ export const dict = {
   "dialog.model.manage.description": "自訂模型選擇器中顯示的模型。",
   "dialog.model.manage.provider.toggle": "切換所有 {{provider}} 模型",
 
-  "dialog.model.unpaid.freeModels.title": "OpenCode Zen 提供的免費模型",
   "dialog.model.unpaid.addMore.title": "從熱門提供者新增更多模型",
   "dialog.model.unpaid.viewMoreProviders": "查看另外 70 多個提供者",
 
@@ -244,11 +239,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API 金鑰",
   "provider.connect.apiKey.required": "API 金鑰為必填",
-  "provider.connect.opencodeZen.line1": "OpenCode Zen 為你提供一組精選的可靠最佳化模型，用於程式碼代理程式。",
-  "provider.connect.opencodeZen.line2": "只需一個 API 金鑰，你就能使用 Claude、GPT、Gemini、GLM 等模型。",
-  "provider.connect.opencodeZen.visit.prefix": "造訪 ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " 取得你的 API 金鑰。",
   "provider.connect.oauth.code.visit.prefix": "造訪 ",
   "provider.connect.oauth.code.visit.link": "此連結",
   "provider.connect.oauth.code.visit.suffix":
@@ -576,7 +566,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "工作區啟動腳本",
   "dialog.project.edit.worktree.startup.description": "在建立新的工作區 (worktree) 後執行。",
   "dialog.project.edit.worktree.startup.placeholder": "例如 bun install",
-  "dialog.usageExceeded.dontShowAgain": "不再顯示",
 
   "context.breakdown.title": "上下文細分",
   "context.breakdown.note": "輸入 token 的概略細分。「其他」包含工具定義和額外負擔。",
@@ -902,9 +891,6 @@ export const dict = {
   "sidebar.settings": "設定",
   "sidebar.workspaces.enable": "啟用工作區",
   "sidebar.workspaces.disable": "停用工作區",
-  "sidebar.gettingStarted.title": "開始使用",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra 提供免費模型，你可以立即開始使用。",
-  "sidebar.gettingStarted.line2": "連線任意提供者即可使用更多模型，如 Claude、GPT、Gemini 等。",
   "sidebar.project.recentSessions": "最近工作階段",
   "sidebar.project.viewAllSessions": "查看全部工作階段",
   "sidebar.project.clearNotifications": "清除通知",

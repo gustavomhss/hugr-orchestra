@@ -17,6 +17,7 @@ export const CHAT_COPY = {
   "orchestra.chat.menu.delete": "Delete session",
   "orchestra.chat.models.all": "All models",
   "orchestra.chat.models.count": "{{count}} models",
+  "orchestra.chat.model.noProvider": "No provider is connected yet. Connect one to choose a model.",
   "orchestra.chat.delivery.steer": "Steer",
   "orchestra.chat.delivery.queue": "Queue",
   "orchestra.chat.delivery.steerHint":

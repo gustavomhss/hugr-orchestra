@@ -4,6 +4,8 @@ import { expectAppVisible } from "../utils/waits"
 
 const directory = "C:\\OpenCode\\NewProject"
 
+// A fresh install has no provider: nothing is connected for free, so the model control asks for a provider and
+// OpenCode Go is connected like any other provider, from the full list.
 test("creates a session in a new project, connects OpenCode Go, and selects its model", async ({ page }) => {
   let connectedGo = false
   const connections: Array<{ integrationID: string; body: unknown }> = []
@@ -45,8 +47,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
           },
         },
       ],
-      connected: connectedGo ? ["opencode", "opencode-go"] : ["opencode"],
-      default: { providerID: "opencode", modelID: "free-model" },
+      connected: connectedGo ? ["opencode-go"] : [],
+      default: connectedGo ? { "opencode-go": "go-model-1" } : {},
     }),
     integrationMethods: { "opencode-go": [{ type: "api", label: "API key" }] },
     onConnectKey: (input) => {
@@ -113,9 +115,18 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   const modelControl = page.locator('[data-action="prompt-model"]')
   await expect(modelControl).toHaveCount(1)
   await modelControl.click()
-  await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by OpenCode Zen")
-
-  await page.locator('[data-provider-id="opencode-go"]').click()
+  const unpaid = page.locator('[data-component="dialog-v2"]')
+  await expect(unpaid.locator('[data-section="no-provider"]')).toHaveText(
+    "No provider is connected yet. Connect one to choose a model.",
+  )
+  await expect(unpaid.locator('[data-section="free-models"]')).toHaveCount(0)
+  // Zen and Go have no featured place: the dialog offers neither, and Go is found in the full provider list.
+  await expect(unpaid.locator('[data-provider-id="opencode"], [data-provider-id="opencode-go"]')).toHaveCount(0)
+  await unpaid.getByRole("button", { name: "See 70+ more providers", exact: true }).click()
+  const goRow = page.locator('[data-provider-id="opencode-go"]')
+  await expect(goRow).toHaveCount(1)
+  await expect(goRow).not.toContainText("Recommended")
+  await goRow.click()
   await page.locator('[data-input="provider-api-key"]').fill("mock-go-api-key")
   await page.locator('[data-action="provider-connect-submit"]').click()
   await expect(page.locator('[data-component="dialog-v2"]')).toHaveCount(0)

@@ -93,10 +93,6 @@ export const dict = {
   "dialog.provider.group.popular": "Suositut",
   "dialog.provider.group.other": "Muut",
   "dialog.provider.custom.label": "Mukautettu OpenAI-yhteensopiva palveluntarjoaja",
-  "dialog.provider.tag.recommended": "Suositeltu",
-  "dialog.provider.opencode.note": "Kuratoituja malleja, kuten Claude, GPT, Gemini ja muita",
-  "dialog.provider.opencode.tagline": "Luotettavat optimoidut mallit",
-  "dialog.provider.opencodeGo.tagline": "Edullinen tilaus kaikille",
   "dialog.provider.anthropic.note": "Suora pääsy Claude-malleihin, mukaan lukien Pro ja Max",
   "dialog.provider.copilot.note": "AI-malleja koodausapuun GitHub Copilotin kautta",
   "dialog.provider.openai.note": "GPT-mallit nopeisiin, suorituskykyisiin yleisiin tekoälytehtäviin",
@@ -109,7 +105,6 @@ export const dict = {
   "dialog.model.manage": "Hallitse malleja",
   "dialog.model.manage.description": "Mukauta, mitkä mallit näkyvät mallivalitsimessa.",
   "dialog.model.manage.provider.toggle": "Ota kaikki palveluntarjoajan {{provider}} mallit käyttöön tai pois käytöstä",
-  "dialog.model.unpaid.freeModels.title": "OpenCode Zenin tarjoamat ilmaiset mallit",
   "dialog.model.unpaid.addMore.title": "Lisää malleja suosituilta palveluntarjoajilta",
   "dialog.model.unpaid.viewMoreProviders": "Katso yli 70 muuta palveluntarjoajaa",
   "dialog.provider.viewAll": "Näytä lisää palveluntarjoajia",
@@ -130,13 +125,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API-avain",
   "provider.connect.apiKey.required": "API-avain vaaditaan",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen antaa sinulle pääsyn kuratoituun joukkoon luotettavia optimoituja malleja koodausagenteille.",
-  "provider.connect.opencodeZen.line2":
-    "Yhdellä API-avaimella pääset käyttämään malleja, kuten Claude, GPT, Gemini, GLM ja paljon muuta.",
-  "provider.connect.opencodeZen.visit.prefix": "Avaa ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " ja hae API-avaimesi.",
   "provider.connect.oauth.code.visit.prefix": "Avaa ",
   "provider.connect.oauth.code.visit.link": "tämä linkki",
   "provider.connect.oauth.code.visit.suffix":
@@ -442,7 +430,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "Työtilan käynnistysskripti",
   "dialog.project.edit.worktree.startup.description": "Suoritetaan uuden työtilan (työpuun) luomisen jälkeen.",
   "dialog.project.edit.worktree.startup.placeholder": "esim. bun install",
-  "dialog.usageExceeded.dontShowAgain": "Älä näytä uudelleen",
 
   "context.breakdown.title": "Kontekstin erittely",
   "context.breakdown.note":
@@ -802,10 +789,6 @@ export const dict = {
   "sidebar.settings": "Asetukset",
   "sidebar.workspaces.enable": "Ota työtilat käyttöön",
   "sidebar.workspaces.disable": "Poista työtilat käytöstä",
-  "sidebar.gettingStarted.title": "Aloittaminen",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra sisältää ilmaisia malleja, joten voit aloittaa heti.",
-  "sidebar.gettingStarted.line2":
-    "Yhdistä mikä tahansa palveluntarjoaja käyttääksesi malleja, mm. Claude, GPT, Gemini jne.",
   "sidebar.project.recentSessions": "Viimeaikaiset istunnot",
   "sidebar.project.viewAllSessions": "Näytä kaikki istunnot",
   "sidebar.project.clearNotifications": "Tyhjennä ilmoitukset",

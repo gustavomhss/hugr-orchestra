@@ -185,10 +185,6 @@ export const dict = {
   "dialog.provider.group.popular": "Populair",
   "dialog.provider.group.other": "Anders",
   "dialog.provider.custom.label": "Aangepaste OpenAI-compatibele aanbieder",
-  "dialog.provider.tag.recommended": "Aanbevolen",
-  "dialog.provider.opencode.note": "Samengestelde modellen, waaronder Claude, GPT, Gemini en meer",
-  "dialog.provider.opencode.tagline": "Betrouwbare geoptimaliseerde modellen",
-  "dialog.provider.opencodeGo.tagline": "Goedkoop abonnement voor iedereen",
   "dialog.provider.anthropic.note": "Directe toegang tot Claude-modellen, inclusief Pro en Max",
   "dialog.provider.copilot.note": "AI-modellen voor codeerondersteuning via GitHub Copilot",
   "dialog.provider.openai.note": "GPT-modellen voor snelle, capabele algemene AI-taken",
@@ -201,7 +197,6 @@ export const dict = {
   "dialog.model.manage": "Beheer modellen",
   "dialog.model.manage.description": "Pas aan welke modellen in de modelkiezer verschijnen.",
   "dialog.model.manage.provider.toggle": "Alle {{provider}}-modellen in- of uitschakelen",
-  "dialog.model.unpaid.freeModels.title": "Gratis modellen geleverd door OpenCode Zen",
   "dialog.model.unpaid.addMore.title": "Voeg meer modellen toe van populaire aanbieders",
   "dialog.model.unpaid.viewMoreProviders": "Bekijk nog 70+ aanbieders",
   "dialog.provider.viewAll": "Toon meer aanbieders",
@@ -222,13 +217,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API-sleutel",
   "provider.connect.apiKey.required": "API-sleutel is vereist",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen geeft je toegang tot een samengestelde set betrouwbare, geoptimaliseerde modellen voor codeeragenten.",
-  "provider.connect.opencodeZen.line2":
-    "Met één API-sleutel krijg je toegang tot modellen zoals Claude, GPT, Gemini, GLM en meer.",
-  "provider.connect.opencodeZen.visit.prefix": "Ga naar ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " om je API-sleutel op te halen.",
   "provider.connect.oauth.code.visit.prefix": "Ga naar ",
   "provider.connect.oauth.code.visit.link": "deze link",
   "provider.connect.oauth.code.visit.suffix":
@@ -551,7 +539,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description":
     "Wordt uitgevoerd nadat een nieuwe werkruimte (worktree) is aangemaakt.",
   "dialog.project.edit.worktree.startup.placeholder": "bijv. bun install",
-  "dialog.usageExceeded.dontShowAgain": "Niet meer weergeven",
 
   "context.breakdown.title": "Contextanalyse",
   "context.breakdown.note":
@@ -912,10 +899,6 @@ export const dict = {
   "sidebar.settings": "Instellingen",
   "sidebar.workspaces.enable": "Schakel werkruimten in",
   "sidebar.workspaces.disable": "Schakel werkruimten uit",
-  "sidebar.gettingStarted.title": "Aan de slag",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra bevat gratis modellen, zodat je direct aan de slag kunt.",
-  "sidebar.gettingStarted.line2":
-    "Maak verbinding met een aanbieder om modellen te gebruiken, waaronder Claude, GPT en Gemini.",
   "sidebar.project.recentSessions": "Recente sessies",
   "sidebar.project.viewAllSessions": "Bekijk alle sessies",
   "sidebar.project.clearNotifications": "Meldingen wissen",

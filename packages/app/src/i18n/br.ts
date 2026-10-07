@@ -193,10 +193,6 @@ export const dict = {
   "dialog.provider.group.popular": "Popular",
   "dialog.provider.group.other": "Outro",
   "dialog.provider.custom.label": "Provedor personalizado compatível com OpenAI",
-  "dialog.provider.tag.recommended": "Recomendado",
-  "dialog.provider.opencode.note": "Modelos selecionados incluindo Claude, GPT, Gemini e mais",
-  "dialog.provider.opencode.tagline": "Modelos otimizados e confiáveis",
-  "dialog.provider.opencodeGo.tagline": "Assinatura de baixo custo para todos",
   "dialog.provider.anthropic.note": "Acesso direto aos modelos Claude, incluindo Pro e Max",
   "dialog.provider.copilot.note": "Modelos de IA para auxílio à programação pelo GitHub Copilot",
   "dialog.provider.openai.note": "Modelos GPT rápidos e avançados para tarefas gerais de IA",
@@ -209,7 +205,6 @@ export const dict = {
   "dialog.model.manage": "Gerenciar modelos",
   "dialog.model.manage.description": "Personalizar quais modelos aparecem no seletor de modelos.",
   "dialog.model.manage.provider.toggle": "Alternar todos os modelos {{provider}}",
-  "dialog.model.unpaid.freeModels.title": "Modelos gratuitos fornecidos pelo OpenCode Zen",
   "dialog.model.unpaid.addMore.title": "Adicionar mais modelos de provedores populares",
   "dialog.model.unpaid.viewMoreProviders": "Ver mais de 70 provedores",
   "dialog.provider.viewAll": "Ver mais provedores",
@@ -230,13 +225,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "Chave de API",
   "provider.connect.apiKey.required": "A chave de API é obrigatória",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen oferece acesso a um conjunto selecionado de modelos confiáveis otimizados para agentes de código.",
-  "provider.connect.opencodeZen.line2":
-    "Com uma única chave de API você terá acesso a modelos como Claude, GPT, Gemini, GLM e mais.",
-  "provider.connect.opencodeZen.visit.prefix": "Visite ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " para obter sua chave de API.",
   "provider.connect.oauth.code.visit.prefix": "Visite ",
   "provider.connect.oauth.code.visit.link": "este link",
   "provider.connect.oauth.code.visit.suffix":
@@ -550,7 +538,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "Script de inicialização do espaço de trabalho",
   "dialog.project.edit.worktree.startup.description": "Executa após criar um novo espaço de trabalho (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "Ex.: bun install",
-  "dialog.usageExceeded.dontShowAgain": "Não mostrar novamente",
 
   "context.breakdown.title": "Detalhamento do contexto",
   "context.breakdown.note":
@@ -859,9 +846,6 @@ export const dict = {
   "sidebar.settings": "Configurações",
   "sidebar.workspaces.enable": "Habilitar espaços de trabalho",
   "sidebar.workspaces.disable": "Desabilitar espaços de trabalho",
-  "sidebar.gettingStarted.title": "Começando",
-  "sidebar.gettingStarted.line1": "O HuGR Orchestra inclui modelos gratuitos para você começar imediatamente.",
-  "sidebar.gettingStarted.line2": "Conecte qualquer provedor para usar modelos, incluindo Claude, GPT, Gemini etc.",
   "sidebar.project.recentSessions": "Sessões recentes",
   "sidebar.project.viewAllSessions": "Ver todas as sessões",
   "sidebar.project.clearNotifications": "Limpar notificações",

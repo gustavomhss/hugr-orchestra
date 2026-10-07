@@ -165,6 +165,9 @@ test("helpers", () => {
   expect(baseID("openai#cred")).toBe("openai")
   expect(noteKey("github-copilot-enterprise")).toBe("dialog.provider.copilot.note")
   expect(noteKey("constructor")).toBeUndefined()
+  // OpenCode Zen and Go are ordinary providers: no note of their own, as for any provider without one.
+  expect(noteKey("opencode")).toBeUndefined()
+  expect(noteKey("opencode-go")).toBeUndefined()
   expect(matches(["OpenAI", "Connected"], "  conn ")).toBe(true)
   expect(matches(["OpenAI"], "x")).toBe(false)
   const card = fromV2({

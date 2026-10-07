@@ -201,10 +201,6 @@ export const dict = {
   "dialog.provider.group.popular": "Populer",
   "dialog.provider.group.other": "Lainnya",
   "dialog.provider.custom.label": "Penyedia kustom yang kompatibel dengan OpenAI",
-  "dialog.provider.tag.recommended": "Direkomendasikan",
-  "dialog.provider.opencode.note": "Model pilihan, termasuk Claude, GPT, Gemini, dan lainnya",
-  "dialog.provider.opencode.tagline": "Model andal yang dioptimalkan",
-  "dialog.provider.opencodeGo.tagline": "Langganan terjangkau untuk semua orang",
   "dialog.provider.anthropic.note": "Akses langsung ke model Claude, termasuk Pro dan Max",
   "dialog.provider.copilot.note": "Model AI untuk bantuan pengodean melalui GitHub Copilot",
   "dialog.provider.openai.note": "Model GPT untuk tugas AI umum yang cepat dan mumpuni",
@@ -219,7 +215,6 @@ export const dict = {
   "dialog.model.manage.description": "Sesuaikan model mana yang muncul di pemilih model.",
   "dialog.model.manage.provider.toggle": "Alihkan semua model {{provider}}",
 
-  "dialog.model.unpaid.freeModels.title": "Model gratis disediakan oleh OpenCode Zen",
   "dialog.model.unpaid.addMore.title": "Tambahkan lebih banyak model dari penyedia populer",
   "dialog.model.unpaid.viewMoreProviders": "Lihat 70+ penyedia lainnya",
 
@@ -242,13 +237,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "Kunci API",
   "provider.connect.apiKey.required": "Kunci API diperlukan",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen memberi Anda akses ke serangkaian model andal yang dioptimalkan untuk agen pengodean.",
-  "provider.connect.opencodeZen.line2":
-    "Dengan satu kunci API, Anda akan mendapatkan akses ke model seperti Claude, GPT, Gemini, GLM dan lainnya.",
-  "provider.connect.opencodeZen.visit.prefix": "Kunjungi ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " untuk mendapatkan kunci API Anda.",
   "provider.connect.oauth.code.visit.prefix": "Kunjungi ",
   "provider.connect.oauth.code.visit.link": "tautan ini",
   "provider.connect.oauth.code.visit.suffix":
@@ -586,8 +574,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "Skrip awal ruang kerja",
   "dialog.project.edit.worktree.startup.description": "Berjalan setelah membuat ruang kerja (worktree) baru.",
   "dialog.project.edit.worktree.startup.placeholder": "mis. bun install",
-
-  "dialog.usageExceeded.dontShowAgain": "Jangan tampilkan lagi",
 
   "context.breakdown.title": "Rincian Konteks",
   "context.breakdown.note": 'Perkiraan rincian token masukan. "Lainnya" mencakup definisi alat dan beban tambahan.',
@@ -976,10 +962,6 @@ export const dict = {
   "sidebar.settings": "Pengaturan",
   "sidebar.workspaces.enable": "Aktifkan ruang kerja",
   "sidebar.workspaces.disable": "Nonaktifkan ruang kerja",
-  "sidebar.gettingStarted.title": "Memulai",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra menyertakan model gratis sehingga Anda dapat memulai dengan segera.",
-  "sidebar.gettingStarted.line2":
-    "Hubungkan penyedia mana pun untuk menggunakan model, termasuk Claude, GPT, Gemini, dll.",
   "sidebar.project.recentSessions": "Sesi terbaru",
   "sidebar.project.viewAllSessions": "Lihat semua sesi",
   "sidebar.project.clearNotifications": "Hapus notifikasi",

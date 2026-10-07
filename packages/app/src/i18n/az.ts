@@ -187,10 +187,6 @@ export const dict = {
   "dialog.provider.group.popular": "Populyar",
   "dialog.provider.group.other": "Digər",
   "dialog.provider.custom.label": "Xüsusi OpenAI-a uyğun provayder",
-  "dialog.provider.tag.recommended": "Tövsiyə olunan",
-  "dialog.provider.opencode.note": "Claude, GPT, Gemini və daha çoxu daxil olmaqla seçilmiş modellər",
-  "dialog.provider.opencode.tagline": "Etibarlı optimallaşdırılmış modellər",
-  "dialog.provider.opencodeGo.tagline": "Hamı üçün aşağı qiymətli abunəlik",
   "dialog.provider.anthropic.note": "Pro və Max daxil olmaqla Claude modellərinə birbaşa giriş",
   "dialog.provider.copilot.note": "GitHub Copilot vasitəsilə kodlaşdırma yardımı üçün AI modelləri",
   "dialog.provider.openai.note": "Sürətli və bacarıqlı ümumi AI tapşırıqları üçün GPT modelləri",
@@ -203,7 +199,6 @@ export const dict = {
   "dialog.model.manage": "Modelləri idarə et",
   "dialog.model.manage.description": "Model seçicisində hansı modellərin görünəcəyini fərdiləşdir.",
   "dialog.model.manage.provider.toggle": "Bütün {{provider}} modellərini aç/bağla",
-  "dialog.model.unpaid.freeModels.title": "OpenCode Zen tərəfindən təqdim olunan pulsuz modellər",
   "dialog.model.unpaid.addMore.title": "Populyar provayderlərdən daha çox model əlavə edin",
   "dialog.model.unpaid.viewMoreProviders": "Daha 70+ provayderə baxın",
   "dialog.provider.viewAll": "Daha çox provayder göstər",
@@ -224,13 +219,6 @@ export const dict = {
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "API açarı",
   "provider.connect.apiKey.required": "API açarı tələb olunur",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen sizə kodlaşdırma agentləri üçün etibarlı optimallaşdırılmış seçilmiş modellər dəstinə giriş verir.",
-  "provider.connect.opencodeZen.line2":
-    "Tək bir API açarı ilə Claude, GPT, Gemini, GLM və daha çox modellərə giriş əldə edəcəksiniz.",
-  "provider.connect.opencodeZen.visit.prefix": "",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": " səhifəsinə daxil olub API açarınızı əldə edin.",
   "provider.connect.oauth.code.visit.prefix": "",
   "provider.connect.oauth.code.visit.link": "Bu linkə",
   "provider.connect.oauth.code.visit.suffix":
@@ -553,7 +541,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "İş sahəsi başlanğıc skripti",
   "dialog.project.edit.worktree.startup.description": "Yeni iş sahəsi (worktree) yaradıldıqdan sonra işləyir.",
   "dialog.project.edit.worktree.startup.placeholder": "məs. bun install",
-  "dialog.usageExceeded.dontShowAgain": "Bir daha göstərmə",
 
   "context.breakdown.title": "Kontekst bölgüsü",
   "context.breakdown.note": 'Giriş tokenlərinin təxmini bölgüsü. "Digər" alət təriflərini və əlavə yükü əhatə edir.',
@@ -910,10 +897,6 @@ export const dict = {
   "sidebar.settings": "Tənzimləmələr",
   "sidebar.workspaces.enable": "İş sahələrini aktivləşdir",
   "sidebar.workspaces.disable": "İş sahələrini deaktiv et",
-  "sidebar.gettingStarted.title": "Başlanğıc",
-  "sidebar.gettingStarted.line1": "HuGR Orchestra-ya pulsuz modellər daxildir, buna görə dərhal başlaya bilərsiniz.",
-  "sidebar.gettingStarted.line2":
-    "Claude, GPT, Gemini və s. kimi modellərdən istifadə etmək üçün istənilən provayderi qoşun.",
   "sidebar.project.recentSessions": "Son sessiyalar",
   "sidebar.project.viewAllSessions": "Bütün sessiyalara bax",
   "sidebar.project.clearNotifications": "Bildirişləri təmizlə",
