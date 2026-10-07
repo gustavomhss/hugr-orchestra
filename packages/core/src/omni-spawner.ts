@@ -85,7 +85,6 @@ export const make = Effect.fnUntraced(function* (input: {
 export function unsupported(command: ChildProcess.Command) {
   if (command._tag === "PipedCommand") return "a piped command (pipeTo)"
   const opts = command.options
-  if (opts.shell && program(command) === undefined) return `shell ${String(opts.shell)}`
   const inherited = (["stdin", "stdout", "stderr"] as const).find((key) => kind(opts[key]) === "inherit")
   if (inherited) return `${inherited}: "inherit"`
   if (opts.additionalFds && Object.keys(opts.additionalFds).length > 0) return "additionalFds"
@@ -93,11 +92,18 @@ export function unsupported(command: ChildProcess.Command) {
   return undefined
 }
 
-/** The program omni runs: the command itself, or `shell: true | string` made explicit by Shell.invocation (D-L4). */
-export function program(command: ChildProcess.StandardCommand) {
+/**
+ * The program omni runs: the command itself, or `shell: true | string` made explicit by Shell.invocation (D-L4).
+ * cmd.exe (where Shell.invocation gives undefined) parses its own command line, so it gets ComSpec with no arguments
+ * and the tail Node builds, `/d /s /c "<joined>"`, verbatim (WP8b).
+ */
+export function program(command: ChildProcess.StandardCommand): { file: string; args: string[]; verbatim?: string } {
   const shell = command.options.shell
-  if (!shell) return { file: command.command, args: [...command.args], verbatim: undefined }
-  return Shell.invocation(shell, command.command, command.args)
+  if (!shell) return { file: command.command, args: [...command.args] }
+  const explicit = Shell.invocation(shell, command.command, command.args)
+  if (explicit) return explicit
+  const file = shell === true ? (process.env.ComSpec ?? "cmd.exe") : shell
+  return { file, args: [], verbatim: `/d /s /c "${[command.command, ...command.args].join(" ")}"` }
 }
 
 /**
@@ -120,7 +126,6 @@ const start = Effect.fnUntraced(function* (
 ) {
   const opts = command.options
   const run = program(command)
-  if (!run) return yield* Effect.die(new Error("omni-spawner: start() reached a command it does not support"))
   const policy = yield* GapPolicy
   const adoptable = yield* Effect.serviceOption(OmniAdoption.Service)
   const context = yield* Effect.context()
@@ -467,7 +472,6 @@ export const collect = Effect.fnUntraced(function* (
   },
 ) {
   const run = program(command)
-  if (!run) return yield* Effect.die(new Error("omni-spawner: collect() reached a command it does not support"))
   Omni.count("spawns")
   yield* Effect.logDebug("omni spawn", { event: "omni.spawn", collect: true, command: describe(command) })
   const signal = options.signal
