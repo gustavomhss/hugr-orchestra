@@ -5,7 +5,7 @@ import type { OwnPackPlus } from "./own-model.js"
 import type { OwnUnit } from "./types.js"
 
 export const OWN_ARTIFACT_SCHEMA = 1
-export const OWN_ARTIFACT_ROOT = ".opencode/skills/own"
+export const OWN_ARTIFACT_ROOT = ".orchestra/skills/own"
 
 const RECEIPT_BEGIN = "<!-- own-receipt:begin -->"
 const RECEIPT_END = "<!-- own-receipt:end -->"

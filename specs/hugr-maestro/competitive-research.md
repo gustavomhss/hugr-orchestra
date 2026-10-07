@@ -11,7 +11,7 @@ Status: source-backed prompt research, 2026-09-08. This records observed product
 | Hermes Agent product page                                                                           | one agent across surfaces, persistent memory, isolated subagents, sandbox backends                                                                          | retain Session identity; use isolation only for work needing it; do not invent another memory system                   |
 | Grok Code Fast 1 announcement                                                                       | tool-oriented coding model; launch feedback recommends small focused tasks, plan large features, execute phases                                             | frame large work, then use small verifiable slices; avoid one giant prompt                                             |
 | DeepSeek-V3 public repository                                                                       | model/inference publication; no public coding-harness contract identified in source reviewed                                                                | no product behavior lifted from DeepSeek model marketing or inference docs                                             |
-| OpenCode source: `session/llm/request.ts`, `session/system.ts`, `tool/skill.ts`, `session/tools.ts` | agent prompt replaces provider prompt; skills are available then loaded through tool; Session supplies real tools/messages/permissions                      | Maestro prompt must preserve tool reality, list methods compactly, and direct skill loading only when relevant         |
+| Orchestra source: `session/llm/request.ts`, `session/system.ts`, `tool/skill.ts`, `session/tools.ts` | agent prompt replaces provider prompt; skills are available then loaded through tool; Session supplies real tools/messages/permissions                      | Maestro prompt must preserve tool reality, list methods compactly, and direct skill loading only when relevant         |
 
 `OpenAI Atlas` and a distinct `DeepSeek Harness` were not identifiable from a primary public source in this research
 pass. They contribute no claimed behavior until exact sources are supplied.
@@ -33,7 +33,7 @@ pass. They contribute no claimed behavior until exact sources are supplied.
 1. Giant always-loaded methodology corpus: burns context and lowers adherence.
 2. Keyword-only state machine: natural requests become brittle hidden modes.
 3. Universal approval gate: blocks ordinary exploration and implementation without proportional value.
-4. Persistent Maestro memory/store before a measured need: duplicates OpenCode Session evidence.
+4. Persistent Maestro memory/store before a measured need: duplicates Orchestra Session evidence.
 
 ## Prompt Acceptance
 

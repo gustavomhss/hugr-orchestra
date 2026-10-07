@@ -39,7 +39,7 @@ Applies milestone ruling M4-1. Where this block and Amendment M3 or a clause bel
 
 **Targets**
 
-F5.1 The first-qualification target set is closed and has exactly five members. Target IDs use npm `os`/`cpu` spelling to match the existing platform-package selectors (`S/packages/opencode/script/build.ts:53-114`, `S/packages/opencode/script/publish.ts:34-79`):
+F5.1 The first-qualification target set is closed and has exactly five members. Target IDs use npm `os`/`cpu` spelling to match the existing platform-package selectors (`S/packages/orchestra/script/build.ts:53-114`, `S/packages/orchestra/script/publish.ts:34-79`):
 
 | Target ID | os | cpu | libc | CPU floor claimed |
 | --- | --- | --- | --- | --- |
@@ -49,9 +49,9 @@ F5.1 The first-qualification target set is closed and has exactly five members. 
 | `linux-x64` | linux | x64 | glibc | x86-64 with AVX2 (host non-baseline variant) |
 | `win32-x64` | win32 | x64 | n/a | x86-64 with AVX2 (host non-baseline variant) |
 
-F5.2 Toolkit target detection MUST use the same normalization the host installers use. That means Rosetta-translated darwin-x64 maps to `darwin-arm64` (`S/install:95-100`), and musl is detected via `/etc/alpine-release` or `ldd --version` (`S/install:117-127`, `S/packages/opencode/script/postinstall.mjs:80-95`). AVX2 detection follows `S/install:130-155`. The toolkit selector MUST NOT copy the host's cross-variant fallback order (`postinstall.mjs:97-118`, which can pick a musl or baseline package on a glibc/AVX2 host). The toolkit target is either an exact match or `UNSUPPORTED_TARGET`.
+F5.2 Toolkit target detection MUST use the same normalization the host installers use. That means Rosetta-translated darwin-x64 maps to `darwin-arm64` (`S/install:95-100`), and musl is detected via `/etc/alpine-release` or `ldd --version` (`S/install:117-127`, `S/packages/orchestra/script/postinstall.mjs:80-95`). AVX2 detection follows `S/install:130-155`. The toolkit selector MUST NOT copy the host's cross-variant fallback order (`postinstall.mjs:97-118`, which can pick a musl or baseline package on a glibc/AVX2 host). The toolkit target is either an exact match or `UNSUPPORTED_TARGET`.
 
-F5.3 Hosts that are linux-musl (including the Alpine Docker image `S/packages/opencode/Dockerfile:1-16`), win32-arm64, or x64 without AVX2 MUST report toolkit state `UNSUPPORTED_TARGET` with a reason (`libc-musl`, `cpu-arm64-windows`, `cpu-baseline`). The installer MUST NOT report READY on them, and MUST NOT silently install a payload built for another target. Whether the host itself still installs on those targets is outside F5.
+F5.3 Hosts that are linux-musl (including the Alpine Docker image `S/packages/orchestra/Dockerfile:1-16`), win32-arm64, or x64 without AVX2 MUST report toolkit state `UNSUPPORTED_TARGET` with a reason (`libc-musl`, `cpu-arm64-windows`, `cpu-baseline`). The installer MUST NOT report READY on them, and MUST NOT silently install a payload built for another target. Whether the host itself still installs on those targets is outside F5.
 
 F5.4 The OS-version floor and glibc floor per target are **measured, not assumed**. Each floor MUST equal the maximum requirement across the whole closure for that target: native ELF/Mach-O/PE linkage audit, Node 22.23.2 (glibc ≥2.28, macOS ≥11, Windows ≥10), the .NET 10 self-contained Kiota payload, CPython PBS and Temurin. T5 records the floors in the inventory (F5.20). Until the owner accepts the measured floors, F5.1 makes no OS-version claim (see Open owner decisions).
 
@@ -139,9 +139,9 @@ F5.16 Launcher contract. Each engine has exactly one launcher at `releases/<id>/
 
 Launchers MUST NOT mutate `JAVA_HOME`, the user `PATH`, project locks or global caches.
 
-F5.17 Exposure to the shell. The host exposes the active release's `bin/` to invocations as one environment variable, `BACKEND_TOOLKIT_BIN=<TK>/releases/<activeId>/bin`. It uses the existing V1 plugin hook `shell.env` (**[existing]** `S/packages/plugin/src/index.ts:270-273`, merged into every shell call at `S/packages/opencode/src/tool/shell.ts:421-430`, and used for PTY at `S/packages/opencode/src/plugin/pty-environment.ts:18`). The host MUST NOT prepend the toolkit to the user `PATH`, so ambient and project-pinned tools are never shadowed. Recipes invoke `"$BACKEND_TOOLKIT_BIN/<engineId>"` (POSIX) or `& "$env:BACKEND_TOOLKIT_BIN\<engineId>.cmd"` (PowerShell). The hook input carries `sessionID`/`callID` but no agent ID, so the variable is visible to every member's shell. That is acceptable: it is a path, not a grant. **[required-new: H2 registers the hook; T5 supplies the value]** The V2 runner has no equivalent hook at HEAD, so the V2 shell path is unclaimed until H2 adds one.
+F5.17 Exposure to the shell. The host exposes the active release's `bin/` to invocations as one environment variable, `BACKEND_TOOLKIT_BIN=<TK>/releases/<activeId>/bin`. It uses the existing V1 plugin hook `shell.env` (**[existing]** `S/packages/plugin/src/index.ts:270-273`, merged into every shell call at `S/packages/orchestra/src/tool/shell.ts:421-430`, and used for PTY at `S/packages/orchestra/src/plugin/pty-environment.ts:18`). The host MUST NOT prepend the toolkit to the user `PATH`, so ambient and project-pinned tools are never shadowed. Recipes invoke `"$BACKEND_TOOLKIT_BIN/<engineId>"` (POSIX) or `& "$env:BACKEND_TOOLKIT_BIN\<engineId>.cmd"` (PowerShell). The hook input carries `sessionID`/`callID` but no agent ID, so the variable is visible to every member's shell. That is acceptable: it is a path, not a grant. **[required-new: H2 registers the hook; T5 supplies the value]** The V2 runner has no equivalent hook at HEAD, so the V2 shell path is unclaimed until H2 adds one.
 
-F5.18 Invocation is ordinary native shell execution. It is therefore governed by the native `bash` permission (the backend specialist execution profile allows `bash`, `S/packages/opencode/src/maestro/roster.ts:10-18`) and by ToolSafety intercept (`S/packages/opencode/src/session/tools.ts:542` boundary). The toolkit adds no permission, MCP server or daemon. The shell external-directory scan only inspects arguments of file-operating commands (`shell.ts:403-409`), so invoking a launcher by absolute path does not need `external_directory`.
+F5.18 Invocation is ordinary native shell execution. It is therefore governed by the native `bash` permission (the backend specialist execution profile allows `bash`, `S/packages/orchestra/src/maestro/roster.ts:10-18`) and by ToolSafety intercept (`S/packages/orchestra/src/session/tools.ts:542` boundary). The toolkit adds no permission, MCP server or daemon. The shell external-directory scan only inspects arguments of file-operating commands (`shell.ts:403-409`), so invoking a launcher by absolute path does not need `external_directory`.
 
 F5.19 Sandbox compatibility. Every representative operation (F5.25) MUST succeed under both ToolSafety sandbox kinds. Under seatbelt (macOS), writes outside the physical `writeRoots` and all `network*` are denied (`tool-safety-sandbox.ts:84-91`). Under srt, `allowWrite: roots` applies and `allowedDomains` defaults to `[]` (`:96-101`). Therefore:
 - engines MUST NOT need network at invocation;
@@ -196,9 +196,9 @@ F5.25 Representative operations are fixed per engine, as listed in `S/specs/back
 
 Each check asserts non-empty expected artifacts. Exit 0 alone is insufficient. The fixture inputs ship under `releases/<id>/selfcheck/` and are listed in the inventory. Compile/run legs that need project SDKs or databases (Go, JDK 17/Maven, .NET SDK, Rust/Postgres) belong to release qualification (Q-tools), not to end-user setup.
 
-F5.26 Repair (same version) MUST re-run F5.24 steps 2–3 against the active release, even when the host's same-version shortcut would skip it (`S/packages/opencode/src/cli/cmd/upgrade.ts:46-57`).
+F5.26 Repair (same version) MUST re-run F5.24 steps 2–3 against the active release, even when the host's same-version shortcut would skip it (`S/packages/orchestra/src/cli/cmd/upgrade.ts:46-57`).
 
-F5.27 Host coupling: `inventory.hostCompat.opencodeVersion` is the exact host version the release was assembled for. This mirrors the exact same-version `optionalDependencies` rule (`publish.ts:34-79`). If the running host version differs, the state is `NOT_READY/host-incompatible` (F5-D7 may relax this to a range).
+F5.27 Host coupling: `inventory.hostCompat.orchestraVersion` is the exact host version the release was assembled for. This mirrors the exact same-version `optionalDependencies` rule (`publish.ts:34-79`). If the running host version differs, the state is `NOT_READY/host-incompatible` (F5-D7 may relax this to a range).
 
 F5.28 Update and rollback:
 - An update installs a new release side-by-side through F5.24.
@@ -207,8 +207,8 @@ F5.28 Update and rollback:
 - Rollback restores only the engine/runtime/launcher set. It never touches generated application files, project locks or databases.
 - Toolkit update MUST NOT independently auto-update engines or regenerate project output.
 
-F5.29 Every advertised install channel MUST produce the same postcondition: `<TK>` laid out per F5.15 and state `READY` (or `UNSUPPORTED_TARGET`). This covers the curl `install` script, npm `opencode-ai` with platform optional deps plus postinstall, and Homebrew/AUR if advertised. Per-channel deltas from HEAD:
-- `install` moves only `opencode` (`S/install:343`), and `--binary` copies only the binary.
+F5.29 Every advertised install channel MUST produce the same postcondition: `<TK>` laid out per F5.15 and state `READY` (or `UNSUPPORTED_TARGET`). This covers the curl `install` script, npm `orchestra-ai` with platform optional deps plus postinstall, and Homebrew/AUR if advertised. Per-channel deltas from HEAD:
+- `install` moves only `orchestra` (`S/install:343`), and `--binary` copies only the binary.
 - postinstall links one executable and verifies only `--version` (`postinstall.mjs:119-189`).
 - If `--ignore-scripts` or omitted optional deps leave the payload incomplete, the result is `NOT_INSTALLED`. It MUST NOT be reported as success.
 
@@ -246,7 +246,7 @@ F5-A, F5-B, F5-C and F5-D are superseded for the on-demand toolkit by Amendment 
     "osFloor": { "macos": "string|null", "windows": "string|null", "glibc": "string|null" },
     "osFloorEvidence": [ { "componentId": "string", "requirement": "string", "source": "linkage-audit | vendor-doc" } ]
   },
-  "hostCompat": { "opencodeVersion": "string (exact)" },
+  "hostCompat": { "orchestraVersion": "string (exact)" },
   "runtimes": [ {
     "id": "node | cpython | temurin-jre | protoc",
     "version": "string",
@@ -311,15 +311,15 @@ F5-A, F5-B, F5-C and F5-D are superseded for the on-demand toolkit by Amendment 
 
 ### Source anchors
 
-- Host target matrix, naming and archive layout: `S/packages/opencode/script/build.ts:53-114,145-201,218-244` (unchanged since 76015a9).
+- Host target matrix, naming and archive layout: `S/packages/orchestra/script/build.ts:53-114,145-201,218-244` (unchanged since 76015a9).
 - Installer detection and moves: `S/install:84-140` (Rosetta `95-100`, musl `117-127`, AVX2 `130-155`), whole-binary-only move `S/install:343`.
-- npm postinstall: `S/packages/opencode/script/postinstall.mjs:80-118` (cross-variant fallback), `:119-189` (single executable plus `--version`).
-- Exact-version platform deps: `S/packages/opencode/script/publish.ts:34-79`. Docker is musl: `S/packages/opencode/Dockerfile:1-16`.
-- Same-version upgrade shortcut: `S/packages/opencode/src/cli/cmd/upgrade.ts:46-57`. Installation delegation: `S/packages/opencode/src/installation/index.ts:145-165,265-320`.
+- npm postinstall: `S/packages/orchestra/script/postinstall.mjs:80-118` (cross-variant fallback), `:119-189` (single executable plus `--version`).
+- Exact-version platform deps: `S/packages/orchestra/script/publish.ts:34-79`. Docker is musl: `S/packages/orchestra/Dockerfile:1-16`.
+- Same-version upgrade shortcut: `S/packages/orchestra/src/cli/cmd/upgrade.ts:46-57`. Installation delegation: `S/packages/orchestra/src/installation/index.ts:145-165,265-320`.
 - Global paths: `S/packages/core/src/global.ts:11-27`.
 - ToolSafety sandbox: `S/packages/core/src/tool-safety-sandbox.ts:40-58` (required-sandbox denials), `:65-77` (roots and read/write deny list incl. `Global.Path.data`/`state`), `:84-91` (seatbelt `deny network*`, writes outside roots), `:96-101` (srt `allowWrite`/`allowedDomains`).
-- Shell env hook: `S/packages/plugin/src/index.ts:270-273`; consumer `S/packages/opencode/src/tool/shell.ts:421-430`; external-dir scan limited to file commands `shell.ts:403-409`.
-- The backend specialist execution profile: `S/packages/opencode/src/maestro/roster.ts:10-18,54-63`; native recheck `S/packages/opencode/src/session/tools.ts:96-105` (was `87-103` at 76015a9).
+- Shell env hook: `S/packages/plugin/src/index.ts:270-273`; consumer `S/packages/orchestra/src/tool/shell.ts:421-430`; external-dir scan limited to file commands `shell.ts:403-409`.
+- The backend specialist execution profile: `S/packages/orchestra/src/maestro/roster.ts:10-18,54-63`; native recheck `S/packages/orchestra/src/session/tools.ts:96-105` (was `87-103` at 76015a9).
 - Pins and artifact evidence: `S/specs/backend-specialist/execution-plan.md` §4 T; `S/specs/backend-specialist/research/delivery-toolkit.md` §§engine pins, runtime closure, Buf closure, representative operations, primary evidence index [A][S1][O][J][P][B][E][X][G][K][N][PY][T][PR].
 - Product policy: `S/specs/backend-specialist/tool-distribution.md` §§"What by default guarantees", "Approved initial default payload", "Availability and responsibility".
 
@@ -351,7 +351,7 @@ F5-A, F5-B, F5-C and F5-D are superseded for the on-demand toolkit by Amendment 
 
 - **F5-D1 OS floors:** accept the measured per-target floors (F5.4) as the support claim, or set floors first and rebuild/replace components that exceed them. Known pressure: the .NET 10 support table lists macOS 15+ only, against Node's macOS 11. The glibc floor is unknown until the ELF audit, and ast-grep is built on Ubuntu 22.04.
 - **F5-D2 protoc helper:** ship `protoc` 36.2 plus includes and advertise `protoc-rust-tonic` in first qualification, or keep the Buf recipe set TS-only (`buf-ts-es`) and leave tonic/prost purely project-owned.
-- **F5-D3 advertised install channels:** which of curl `install`, npm `opencode-ai`, Homebrew and AUR carry the first-qualified toolkit. HEAD has no release workflow at all (`publish.yml` deleted, see Drift), so every channel's toolkit assembly/publish job is new work.
+- **F5-D3 advertised install channels:** which of curl `install`, npm `orchestra-ai`, Homebrew and AUR carry the first-qualified toolkit. HEAD has no release workflow at all (`publish.yml` deleted, see Drift), so every channel's toolkit assembly/publish job is new work.
 - **F5-D4 unqualified targets:** on musl, win-arm64 or no-AVX2 hosts, refuse the toolkit (`UNSUPPORTED_TARGET`, default in F5.3), or install a best-effort payload labelled unqualified.
 - **F5-D5 sandbox scratch:** where `BACKEND_TOOLKIT_SCRATCH` lives when ToolSafety requires a sandbox. Options are a host-provided per-invocation dir that the profile owner adds to `writeRoots`, or an engine-output subdirectory inside an already-authorized root.
 - **F5-D6 builder pins:** exact Go version for ogen (≥1.25.0) and Rust version for sqlx-cli (≥1.94.0), and whether to add the `mysql-rsa` feature.
@@ -370,9 +370,9 @@ F6.1 The authored skill source root is `C/skills/` (`packages/backend-specialist
 `backend-implement/`, `backend-api/`, `backend-data/`, `backend-concurrency/`, `backend-refactor/`, `backend-check/`.
 
 F6.2 Each entry directory contains exactly one `SKILL.md` whose frontmatter `name` equals the directory name. The constraints below come from loader behavior at HEAD:
-- Frontmatter MUST contain `name` (string) and `description` (string). V1 `isSkillFrontmatter` requires `name` (`S/packages/opencode/src/skill/index.ts:54-60`). Skills without `description` are omitted from the advertised list (`index.ts:367-369`).
+- Frontmatter MUST contain `name` (string) and `description` (string). V1 `isSkillFrontmatter` requires `name` (`S/packages/orchestra/src/skill/index.ts:54-60`). Skills without `description` are omitted from the advertised list (`index.ts:367-369`).
 - No other frontmatter key is relied upon. V2 `slash` (`S/packages/core/src/skill.ts:33-37`) MUST be absent. No `extends`, `requires`, permission or auto-load keys may appear, because neither loader implements them.
-- Names MUST NOT begin with `own_`, which V1 routes to Atlas Own skills (`S/packages/opencode/src/tool/skill.ts:36-53`). They MUST NOT equal `customize-opencode`, the built-in (`index.ts:33,324-329`; `S/packages/core/src/plugin/skill.ts:13-30`).
+- Names MUST NOT begin with `own_`, which V1 routes to Atlas Own skills (`S/packages/orchestra/src/tool/skill.ts:36-53`). They MUST NOT equal `customize-orchestra`, the built-in (`index.ts:33,324-329`; `S/packages/core/src/plugin/skill.ts:13-30`).
 - Names MUST be unique across all discovered sources. V1 loads concurrently and lets the last writer win with only a warning (`index.ts:131-145,284-287`). V2 lets the later source win (`S/packages/core/src/skill.ts:110-118`). Shadowing is a packaging defect, never specialization.
 
 F6.3 No file named `SKILL.md` may exist anywhere under `C/skills/` except the six in F6.2. V1 scans `**/SKILL.md` and V2 scans `{*.md,**/SKILL.md}` (`index.ts:24-26`; `core/src/skill.ts:78-80`), so a nested one would register as a skill. No `*.md` file may exist directly in `C/skills/`, because V2 registers root-level `*.md` under its basename (`core/src/skill.ts:88-93`).
@@ -432,13 +432,13 @@ F6.13 Registration uses existing source mechanisms only:
 - V1: config `skills.paths` (`S/packages/core/src/v1/config/skills.ts:5-12`, scanned with `**/SKILL.md` at `index.ts:255-264`), or a config directory's `skill/`/`skills/` (`index.ts:212-215`).
 - V2: a plugin `ctx.skill.transform(draft => draft.source(DirectorySource{ type: "directory", path }))`, the pattern of `S/packages/core/src/config/plugin/skill.ts:18-46`.
 
-`skills.urls` / `UrlSource` (network pull) MUST NOT be used. The route choice belongs to H1 (F6-D1). Registration MUST NOT place assets under `.opencode/skills/own/`, which is reserved for Atlas Own (`index.ts:125-129,218-254`).
+`skills.urls` / `UrlSource` (network pull) MUST NOT be used. The route choice belongs to H1 (F6-D1). Registration MUST NOT place assets under `.orchestra/skills/own/`, which is reserved for Atlas Own (`index.ts:125-129,218-254`).
 
 F6.14 Admission and read access are host-owned prerequisites. F6 states them but does not implement them.
 
-At HEAD the backend specialist native seat permission is exactly the `execution` profile (`roster.ts:10-18`, applied at `S/packages/opencode/src/agent/agent.ts:291-300`), and the native recheck denies anything that profile denies (`session/tools.ts:96-105`). As a result:
+At HEAD the backend specialist native seat permission is exactly the `execution` profile (`roster.ts:10-18`, applied at `S/packages/orchestra/src/agent/agent.ts:291-300`), and the native recheck denies anything that profile denies (`session/tools.ts:96-105`). As a result:
 - (a) `skill` is denied;
-- (b) `external_directory` is denied. The default skill-dir allow-list at `agent.ts:110-125` applies only to non-native agents. Reading an installed companion outside the worktree goes through `assertExternalDirectoryEffect` (`S/packages/opencode/src/tool/external-directory.ts:15-45`, called from `S/packages/opencode/src/tool/read.ts:266-269`) and is therefore denied.
+- (b) `external_directory` is denied. The default skill-dir allow-list at `agent.ts:110-125` applies only to non-native agents. Reading an installed companion outside the worktree goes through `assertExternalDirectoryEffect` (`S/packages/orchestra/src/tool/external-directory.ts:15-45`, called from `S/packages/orchestra/src/tool/read.ts:266-269`) and is therefore denied.
 
 **[required-new: H1]** must admit `skill` for exactly the six F6.2 names and allow `external_directory` for the registered backend specialist skill root, `<root>/*`, read-only. Until H1 lands, Q-native MUST report companion delivery as blocked. It MUST NOT be treated as passing.
 
@@ -552,13 +552,13 @@ A state that lacks its evidence fields is treated as absent. `advertised` MUST b
 
 ### Source anchors
 
-- V1 discovery patterns and sources: `S/packages/opencode/src/skill/index.ts:22-26,179-277`; add/collision `:106-146`; Own reserve `:125-129,218-254`; advertisement filter `:356-361,367-392`.
-- V1 skill tool: own_ routing `S/packages/opencode/src/tool/skill.ts:36-53`; body + sampled ≤10 paths, `follow:false` `:54-97`.
+- V1 discovery patterns and sources: `S/packages/orchestra/src/skill/index.ts:22-26,179-277`; add/collision `:106-146`; Own reserve `:125-129,218-254`; advertisement filter `:356-361,367-392`.
+- V1 skill tool: own_ routing `S/packages/orchestra/src/tool/skill.ts:36-53`; body + sampled ≤10 paths, `follow:false` `:54-97`.
 - V2 skill service: `S/packages/core/src/skill.ts:33-37` (frontmatter), `:73-105` (`{*.md,**/SKILL.md}`, root-level basename naming), `:107-119` (cache, later-source-wins).
 - V2 skill tool: `S/packages/core/src/tool/skill.ts:35-52,72-97` (sorted first 10 files).
 - V2 source registration: `S/packages/core/src/config/plugin/skill.ts:18-46`; built-in `S/packages/core/src/plugin/skill.ts:13-30`. V1 config schema `S/packages/core/src/v1/config/skills.ts:5-12`.
-- Native seat permission: `S/packages/opencode/src/maestro/roster.ts:10-18`; `S/packages/opencode/src/agent/agent.ts:110-125` (non-native skill-dir allow), `:291-300` (native seat uses profile only); `S/packages/opencode/src/session/tools.ts:96-105`.
-- Read external-directory gate: `S/packages/opencode/src/tool/read.ts:266-269`; `S/packages/opencode/src/tool/external-directory.ts:15-45`.
+- Native seat permission: `S/packages/orchestra/src/maestro/roster.ts:10-18`; `S/packages/orchestra/src/agent/agent.ts:110-125` (non-native skill-dir allow), `:291-300` (native seat uses profile only); `S/packages/orchestra/src/session/tools.ts:96-105`.
+- Read external-directory gate: `S/packages/orchestra/src/tool/read.ts:266-269`; `S/packages/orchestra/src/tool/external-directory.ts:15-45`.
 - Sandbox deny for E: `S/packages/core/src/tool-safety-sandbox.ts:40-58,73-77,84-101`; `S/packages/core/src/tool-safety-profile.ts:64-66`.
 - Layout, WP ownership and acceptance: `S/specs/backend-specialist/execution-plan.md` §4 S/Q; `S/specs/backend-specialist/research/delivery-quality.md` §§"Disjoint work packages", "Framework/version coverage", "Concrete complete-delivery acceptance work", "Paired real-model evaluation" items 1, 4 and 5; `S/specs/backend-specialist/skill-catalog.md` §§"Reference layout and loading", "A useful variant card", "Authorship order and status"; `S/specs/backend-specialist/skill-matrix.md`.
 
@@ -598,15 +598,15 @@ Checked with `git diff --name-status 76015a9 HEAD` against the anchors cited by 
 
 | Anchor | At 76015a9 | At d11d8652aa | Impact on F5/F6 |
 | --- | --- | --- | --- |
-| `.github/workflows/publish.yml` (**new**) | 517-line release workflow: version bump, `packages/opencode/script/build.ts` (line 92), Windows CLI Azure Trusted Signing + repack (lines 124-214), Electron Apple codesign, container login | **Deleted** in `e935bfced4` | No release pipeline exists at HEAD. `publish.ts` and `build.ts` are unchanged but have no CI caller. Toolkit assembly/publication and any signing are entirely new work (F5-D3, F5-D8). Plan §1.1 names only `generate.yml`. |
+| `.github/workflows/publish.yml` (**new**) | 517-line release workflow: version bump, `packages/orchestra/script/build.ts` (line 92), Windows CLI Azure Trusted Signing + repack (lines 124-214), Electron Apple codesign, container login | **Deleted** in `e935bfced4` | No release pipeline exists at HEAD. `publish.ts` and `build.ts` are unchanged but have no CI caller. Toolkit assembly/publication and any signing are entirely new work (F5-D3, F5-D8). Plan §1.1 names only `generate.yml`. |
 | `containers.yml`, `deploy.yml`, `nix-hashes.yml`, `publish-vscode.yml`, `release-github-action.yml` + 13 triage/PR workflows (**new**) | present | **Deleted** | Docker image channel has no build job (it was musl anyway, F5.3). Nix hash maintenance is gone. |
 | `.github/workflows/generate.yml`, `.github/actions/setup-git-committer/` | present | Deleted (already in §1.1) | `delivery-quality.md` §CI row for `generate.yml:8-39` is obsolete. |
 | `.github/workflows/test.yml` | push to dev + PR | `pull_request: [labeled]` + `workflow_dispatch`, every job gated on `epic` label (already in §1.1) | Line anchors shifted: godfile `24-41`→`23-41`; Atlas `43-161`→`44-163`; unit `163-227`→`165-229`; e2e `229-288`→`232-302`. **New:** the unit/e2e matrix is still `ubuntu-latest` + `windows-latest` only, and no workflow at HEAD has a macOS runner, so `darwin-arm64`/`darwin-x64` Q-install needs new runners. |
 | `.github/workflows/typecheck.yml`, `nix-eval.yml`, `storybook.yml` (**new**) | push/PR | epic-label/dispatch only | `delivery-quality.md` `typecheck.yml:10-24` anchor shifted by +1–2 lines. Same epic-only cadence, so all Q gates stay local until epic close. |
 | Node pins | E2E `24.15`, setup-bun `24` | unchanged: `test.yml:258` `24.15` vs `.github/actions/setup-bun/action.yml:16` `24` | Mismatch persists. The effective E2E Node version is still unqualified. Unrelated to toolkit Node 22.23.2, which is private (F5.8). |
 | `packages/core/src/tool-safety*.ts` (new files; §1.1 covers the seam) | absent | sandbox denies read+write on `Global.Path.data`/`state`, denies network under seatbelt, denies writes outside `writeRoots` (`tool-safety-sandbox.ts:65-101`) | **New consequence:** this constrains toolkit placement (F5.14), read-only release and scratch (F5.19, F5-D5), DB-backed recipes (`network-denied-by-profile`), and provides the E read barrier (F6.17). |
-| `packages/opencode/src/session/tools.ts` native recheck | `87-103` | `96-105` | Anchor shift only. The behavior (native profile denies `skill`/`external_directory`) is unchanged and is the F6.14 blocker. |
-| `packages/core/test/tool-skill.test.ts` | — | gains `askExplicit` stub (PermissionV2 interface grew) | Skill tool anchors in `packages/core/src/tool/skill.ts` and `packages/opencode/src/tool/skill.ts` are unchanged. The test still substitutes services, so it is not installed-admission evidence. |
-| Host packaging files cited by delivery-toolkit (`build.ts`, `publish.ts`, `postinstall.mjs`, `bin/opencode`, `install`, `Dockerfile`, `installation/**`, `upgrade.ts`) | — | not in diff | Anchors valid as cited. |
+| `packages/orchestra/src/session/tools.ts` native recheck | `87-103` | `96-105` | Anchor shift only. The behavior (native profile denies `skill`/`external_directory`) is unchanged and is the F6.14 blocker. |
+| `packages/core/test/tool-skill.test.ts` | — | gains `askExplicit` stub (PermissionV2 interface grew) | Skill tool anchors in `packages/core/src/tool/skill.ts` and `packages/orchestra/src/tool/skill.ts` are unchanged. The test still substitutes services, so it is not installed-admission evidence. |
+| Host packaging files cited by delivery-toolkit (`build.ts`, `publish.ts`, `postinstall.mjs`, `bin/orchestra`, `install`, `Dockerfile`, `installation/**`, `upgrade.ts`) | — | not in diff | Anchors valid as cited. |
 | `packages/core/src/session/runner/{publish-llm-event,llm}.ts` | missing usage → 0 | optional `usageKnown` (already in §1.1) | `delivery-quality.md` paired-eval item 7 anchor `publish-llm-event.ts:16-27` is stale. Not an F5/F6 input. |
-| Root `package.json` / `packages/opencode/package.json` | — | tree-sitter patch added; `@opencode-ai/maestro-arsenal` workspace dep added | Shared lock/manifest integrator only. No toolkit pin impact. |
+| Root `package.json` / `packages/orchestra/package.json` | — | tree-sitter patch added; `@orchestra/maestro-arsenal` workspace dep added | Shared lock/manifest integrator only. No toolkit pin impact. |

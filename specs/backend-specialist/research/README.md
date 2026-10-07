@@ -147,7 +147,7 @@ These are scope decisions for this product, not claims those systems are useless
 | --- | --- | --- |
 | R01 | Codex mechanisms | [01-codex.md](01-codex.md) |
 | R02 | Claude Code / Agent SDK | [02-claude.md](02-claude.md) |
-| R03 | OpenCode/Orchestra native plugin seams | [03-native-plugin.md](03-native-plugin.md) |
+| R03 | Orchestra native plugin seams | [03-native-plugin.md](03-native-plugin.md) |
 | R04 | Cursor, Copilot, editor workflows | [04-editors.md](04-editors.md) |
 | R05 | OpenHands and SWE-agent | [05-autonomous.md](05-autonomous.md) |
 | R06 | Aider and Continue | [06-repomaps.md](06-repomaps.md) |
@@ -248,4 +248,4 @@ The OpenClaw/Hermes technical extension received separate tool-contract, backend
 - [Hermes programmatic tool selection](https://github.com/NousResearch/hermes-agent/blob/d795726f78e532ca31655f74656b4be63a907581/tools/code_execution_tool.py): `_sandbox_tools_for` broadens an empty intersection; source fact, not an end-to-end exploit demonstrated here.
 - [Hermes late-steer report](https://github.com/NousResearch/hermes-agent/issues/132359): explicit acceptance after final drain, reported reproduction and open status at inspection.
 - [Hermes self-evolution fitness](https://github.com/NousResearch/hermes-agent-self-evolution/blob/0a929e3aa20e15cf04dc7c28492a7d41a5139125/evolution/core/fitness.py) and [skill orchestration](https://github.com/NousResearch/hermes-agent-self-evolution/blob/0a929e3aa20e15cf04dc7c28492a7d41a5139125/evolution/skills/evolve_skill.py): actual metric/caller and export/holdout sequence; no optimization trial executed.
-- Local `packages/codemode/src/codemode.ts` and `packages/opencode/src/tool/code-mode.ts`: existing interpreter limits, MCP-oriented host exposure and absent explicit adapter limits at the pinned Orchestra baseline.
+- Local `packages/codemode/src/codemode.ts` and `packages/orchestra/src/tool/code-mode.ts`: existing interpreter limits, MCP-oriented host exposure and absent explicit adapter limits at the pinned Orchestra baseline.

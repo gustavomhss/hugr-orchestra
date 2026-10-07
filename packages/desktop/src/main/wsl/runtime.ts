@@ -264,7 +264,7 @@ export async function installWslDistro(name: string, opts?: RunWslOptions) {
   )
 }
 
-export async function installWslOpencode(version: string, distro: string, opts?: RunWslOptions) {
+export async function installWslOrchestra(version: string, distro: string, opts?: RunWslOptions) {
   return runInteractiveCommand(
     resolveSystem32Command("wsl.exe"),
     wslArgs(
@@ -307,11 +307,11 @@ export async function probeWslDistro(name: string, opts?: RunWslOptions): Promis
   }
 }
 
-export async function resolveWslOpencode(distro: string, opts?: RunWslOptions) {
+export async function resolveWslOrchestra(distro: string, opts?: RunWslOptions) {
   return firstLine(
     (
       await runWslSh(
-        'if [ -x "$HOME/.opencode/bin/opencode" ]; then printf "%s\\n" "$HOME/.opencode/bin/opencode"; fi',
+        'if [ -x "$HOME/.orchestra/bin/orchestra" ]; then printf "%s\\n" "$HOME/.orchestra/bin/orchestra"; fi',
         distro,
         opts,
       )

@@ -402,25 +402,25 @@
       "authorizedBy": "owner (gustavomhss), mock-parity integration",
       "authorizedAt": "2026-10-05"
     },
-    "packages/opencode/src/provider/provider.ts": {
+    "packages/orchestra/src/provider/provider.ts": {
       "maximumLines": 1940,
       "reason": "Human waiver: pre-existing file over Godfile cap.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
-    "packages/opencode/src/session/prompt.ts": {
+    "packages/orchestra/src/session/prompt.ts": {
       "maximumLines": 1543,
       "reason": "Governed lifecycle integration extends pre-existing prompt surface.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-09"
     },
-    "packages/opencode/src/session/session.ts": {
+    "packages/orchestra/src/session/session.ts": {
       "maximumLines": 1002,
       "reason": "Human waiver: pre-existing file over Godfile cap.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
-    "packages/opencode/test/tool/task.test.ts": {
+    "packages/orchestra/test/tool/task.test.ts": {
       "maximumLines": 1188,
       "reason": "Governed lifecycle and stable-resume coverage extends pre-existing task suite.",
       "authorizedBy": "stakeholder",

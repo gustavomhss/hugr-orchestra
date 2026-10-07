@@ -8,10 +8,10 @@ import { randomUUID } from "node:crypto"
 
 const ROOT = process.cwd()
 const SNAPSHOT_TARGET = join(ROOT, "OWN-SNAPSHOT.json")
-const SKILLS_TARGET = join(ROOT, ".opencode", "skills", "own")
+const SKILLS_TARGET = join(ROOT, ".orchestra", "skills", "own")
 const IMPLEMENTATION =
   process.env.OWN_SNAPSHOT_MATERIALIZE_IMPL ?? join(ROOT, "packages", "retrieval", "dist", "src", "own-snapshot.js")
-const OWN_ROOT = ".opencode/skills/own/"
+const OWN_ROOT = ".orchestra/skills/own/"
 
 function fail(message) {
   console.error(`materialize-own-snapshot: ${message}`)

@@ -4,7 +4,7 @@ import type {
   AgentFileInfo,
   AgentFileInput,
   AgentFilePermission,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import { agentKey } from "@/context/agent-identity"
 
 // The tool permissions an agent file can override, in the order the profile settings list them.

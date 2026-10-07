@@ -54,7 +54,7 @@ Any failed precondition is `HOLD`; stale/ambiguous conversation cannot approve a
 
 ### 1. Create Pending Presentation
 
-Write exact assistant presentation as durable OpenCode Session message before visible delivery. Its message ID and
+Write exact assistant presentation as durable Orchestra Session message before visible delivery. Its message ID and
 rendered bytes are `ApprovalPresentation` evidence; no separate presentation table exists.
 
 ### 2. Classify Direct Reply
@@ -87,8 +87,8 @@ creates new revision/validation/presentation; old decision remains history and t
 | ---------------------------------- | ------------------------------------------------------------------------- | ----------------------------------- |
 | `plan-revision-read`               | read exact immutable revision                                             | Maestro durable evidence read       |
 | `plan-validation-record-read`      | verify current VALID result                                               | Maestro durable evidence read       |
-| `session-message-read`             | verify direct user reply, order, role, and current presentation           | OpenCode durable conversation read  |
-| `session-message-write`            | persist exact visible approval target                                     | OpenCode durable conversation write |
+| `session-message-read`             | verify direct user reply, order, role, and current presentation           | Orchestra durable conversation read  |
+| `session-message-write`            | persist exact visible approval target                                     | Orchestra durable conversation write |
 | `approval-decision-write`          | later: append immutable conversation decision                             | only with first governed Task slice |
 | `approval-input-guard`             | require exact revision/validation/session/current state                   | before display/reply                |
 | `approval-reply-guard`             | require explicit user reply after current presentation                    | before decision persistence         |
@@ -127,7 +127,7 @@ message against different presentation/revision holds with visible mismatch reas
 
 | System   | Seam                                                                                                                      |
 | -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| OpenCode | exact plan display, durable ordered user/assistant messages, Session identity, decision records, Task/child-Session fence |
+| Orchestra | exact plan display, durable ordered user/assistant messages, Session identity, decision records, Task/child-Session fence |
 | Atlas    | no read/write; context only through revision/validation evidence hashes                                                   |
 | GitHub   | delivery provenance only: commit, PR, review, and merge; never approval gate                                              |
 

@@ -2,7 +2,7 @@
 
 Decisões tomadas pelo lead, com delegação explícita do dono em 2026-10-02, a partir
 de discovery read-only de cada chapter contra `identity-integration@2e148c06ae`.
-Regras aplicadas: reutilizar infraestrutura OpenCode existente; não inventar backend,
+Regras aplicadas: reutilizar infraestrutura Orchestra existente; não inventar backend,
 scheduler ou dados de exemplo; MVP honesto, sem controle simulado.
 
 ## Decisão por chapter

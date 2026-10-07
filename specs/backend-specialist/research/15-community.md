@@ -17,7 +17,7 @@ Twelve pain observations below support six priorities. Ordering reflects severit
 | P5 | Preserve real database/deployment state | O7, O8 |
 | P6 | Keep operating behavior legible across model/version changes | O10, O11 |
 
-**The backend specialist fit:** independent OpenCode/Orchestra backend plugin; optional Maestro delegation; native Atlas Knowledge plus task/PR/project Memory; configurable display names; existing host runtime and store. Community members did not request these named components. Mapping their needs onto this product boundary is design inference, not validated demand for an architecture.
+**The backend specialist fit:** independent Orchestra backend plugin; optional Maestro delegation; native Atlas Knowledge plus task/PR/project Memory; configurable display names; existing host runtime and store. Community members did not request these named components. Mapping their needs onto this product boundary is design inference, not validated demand for an architecture.
 
 ## Method and limits
 
@@ -122,7 +122,7 @@ Each observation separates **independent reproduction** from **similar-symptom c
 
 ### O11 — Model name does not guarantee working tools in chosen harness
 
-- **Source/date/person:** [codyseally, OpenCode #729, 2025-07-06](https://github.com/anomalyco/opencode/issues/729). Ubuntu user running Devstral through Ollama; receives implementation advice instead of file actions.
+- **Source/date/person:** [codyseally, Orchestra #729, 2025-07-06](https://github.com/anomalyco/opencode/issues/729). Ubuntu user running Devstral through Ollama; receives implementation advice instead of file actions.
 - **Voice/impact:** basic agent work blocked. [ajunca, 2025-07-08](https://github.com/anomalyco/opencode/issues/729#issuecomment-3050384735) reports attempted tools without file creation. [ahmed-bekhet, 2025-07-10](https://github.com/anomalyco/opencode/issues/729#issuecomment-3059260082) says larger context alone did not fix tool calls; same LLM worked in LM Studio.
 - **Status checked:** GitHub **closed**, `state_reason: completed`, **2026-03-25**; [closing comment](https://github.com/anomalyco/opencode/issues/729#issuecomment-4122978758) explicitly says inactivity closure. [abate, 2025-07-21](https://github.com/anomalyco/opencode/issues/729#issuecomment-3095465908) confirms Qwen context workaround; [Digital-Yeti, 2026-01-16](https://github.com/anomalyco/opencode/issues/729#issuecomment-3761345263) reports successful Devstral-small-2 `/init`. Model-specific recoveries, not universal fix.
 - **Strength:** comparatively strong field evidence with independent attempts/configuration details. **Independent reproduction:** tool failure reported by distinct users; configurations differ, so common root cause unproven.
@@ -208,7 +208,7 @@ Requirements below are **proposed backend specialist design**, not features requ
 
 ## One concrete end-to-end scenario
 
-**People:** novice founder owns appointment-booking app; experienced backend engineer reviews next morning. **Request:** add rescheduling email using existing Postgres-backed API. Keep current auth/data model. The backend specialist runs as OpenCode/Orchestra plugin; Maestro initially unused.
+**People:** novice founder owns appointment-booking app; experienced backend engineer reviews next morning. **Request:** add rescheduling email using existing Postgres-backed API. Keep current auth/data model. The backend specialist runs as Orchestra plugin; Maestro initially unused.
 
 1. The backend specialist turns request into short editable brief and testable outcome. Atlas Knowledge retrieves existing handler/API contract. Task Memory holds accepted “reuse current API” decision and environment reference.
 2. The backend specialist makes small patch. Existing notification connector fails. After bounded diagnosis, task reports connector blocker, current diff, elapsed time, exposed token usage, and tool calls. It does not create alternate notification service.
@@ -216,20 +216,20 @@ Requirements below are **proposed backend specialist design**, not features requ
 4. Engineer resumes from same Memory, sees failed attempt and explicit DB target, and checks current code/environment before acting. Optional Maestro delegation, if requested, receives references to same native records.
 5. Engineer/agent runs narrow auth/data-path test and staging smoke check. Receipt states exactly what passed and where. PR Memory carries review evidence and remaining production uncertainty.
 
-**Proposed pilot:** use matched fixtures/provider/settings for base OpenCode/Orchestra versus the backend specialist; include no-op edit, dead connector, stale Memory, wrong DB target, and resource-limited deployment. Include novice interpretation and expert review tasks. Budget each end-to-end trial at **30 minutes / 30,000 metered model tokens / 40 tool calls**; at boundary return useful blocker, not false success. Any in-flight budget overshoot remains visible. Report each case, including failures and censored runs.
+**Proposed pilot:** use matched fixtures/provider/settings for base Orchestra versus the backend specialist; include no-op edit, dead connector, stale Memory, wrong DB target, and resource-limited deployment. Include novice interpretation and expert review tasks. Budget each end-to-end trial at **30 minutes / 30,000 metered model tokens / 40 tool calls**; at boundary return useful blocker, not false success. Any in-flight budget overshoot remains visible. Report each case, including failures and censored runs.
 
 **Outcome hypothesis:** resume orientation ≤60 seconds, no false completion in seeded failure cases, and ≥25% reduction in duplicate reads/retries without reducing correctly completed tasks. Record wall time, human correction time, input/output/cache tokens separately, tool calls by purpose, and billing where available. Tokens missing from provider telemetry remain `unknown`; never estimated from dollar spend. These targets need validation; research supplies no baseline proving them achievable.
 
 ## Keep implementation lean
 
-Use three small views over one native task record: **brief**, **live progress/steering strip**, **finish/resume receipt**. Same evidence supports novice explanation and expert detail. Atlas Knowledge supplies source retrieval; task/PR/project Memory supplies scoped decisions and evidence references. Existing OpenCode/Orchestra runtime executes and accounts for work; Maestro is optional routing/delegation. Names are configurable labels over stable identity.
+Use three small views over one native task record: **brief**, **live progress/steering strip**, **finish/resume receipt**. Same evidence supports novice explanation and expert detail. Atlas Knowledge supplies source retrieval; task/PR/project Memory supplies scoped decisions and evidence references. Existing Orchestra runtime executes and accounts for work; Maestro is optional routing/delegation. Names are configurable labels over stable identity.
 
 This proposal does not require a second runner/store, new project-management suite, autonomous agent swarm, bespoke deployment platform, or universal rollback engine. Host capability gaps must remain named design dependencies. First validate whether these views reduce repair/handoff labor; add separate features only for demonstrated unmet need.
 
 ## Interpretation cautions
 
 - Strongest conclusion is existence and shape of user problems, not their prevalence or current incidence.
-- Closed issue ≠ fixed issue: OpenCode #729 and Cursor threads demonstrate this directly. Original-user recovery ≠ universal repair: Replit deployment thread demonstrates that distinction.
+- Closed issue ≠ fixed issue: Orchestra #729 and Cursor threads demonstrate this directly. Original-user recovery ≠ universal repair: Replit deployment thread demonstrates that distinction.
 - A user can love one workflow and reject another in same product. Replit release reports even disagree across people and time; do not turn them into a universal product ranking.
 - Backend experts need semantic correctness and reviewable diffs; novices need understandable outcomes and recovery. Shared evidence model can serve both without separate feature-heavy products.
 - Follow-up interviews should test whether users understand receipt states and DB/code recovery distinction, and whether compact Memory saves explanation time. Public posts cannot establish willingness to pay, adoption likelihood, or the backend specialist's actual efficiency.

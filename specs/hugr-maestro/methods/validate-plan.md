@@ -122,7 +122,7 @@ overwrite prior decision evidence.
 
 | System   | Seam                                                                                               |
 | -------- | -------------------------------------------------------------------------------------------------- |
-| OpenCode | durable proposed-plan and validation records; approval-eligible UI state; Task/child-Session fence |
+| Orchestra | durable proposed-plan and validation records; approval-eligible UI state; Task/child-Session fence |
 | Atlas    | no live call; validates addresses/freshness already bound in ContextRecord                         |
 
 ## Acceptance

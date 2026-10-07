@@ -10,7 +10,7 @@ import { pathToFileURL, fileURLToPath } from "node:url"
 
 const ROOT = process.env.OWN_SNAPSHOT_GUARD_ROOT ?? join(fileURLToPath(new URL("../..", import.meta.url)))
 const SNAPSHOT_REL = "OWN-SNAPSHOT.json"
-const SKILLS_REL = join(".opencode", "skills", "own")
+const SKILLS_REL = join(".orchestra", "skills", "own")
 const SNAPSHOT = join(ROOT, SNAPSHOT_REL)
 const SKILLS = join(ROOT, SKILLS_REL)
 const IMPLEMENTATION =
