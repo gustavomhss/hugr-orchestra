@@ -65,8 +65,9 @@ jobs:
             echo "GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=yes"
           } >> "$GITHUB_ENV"
 
-      # The split of the pushed commit, and what to do with it: `push` (main is behind it), `none` (main already has
-      # it) or, for a tag, `tag`. A main the split does not extend stops here, before the gate.
+      # The split of the pushed commit, and what to do with it: `push` (main is behind it), `none` (main is it, or a
+      # newer run already pushed dev's split) or, for a tag, `tag`. Anything else means the mirror has a commit
+      # Orchestra does not, and the job stops here, before the gate.
       - name: Split and compare with the mirror
         id: split
         run: |
@@ -82,11 +83,16 @@ jobs:
               exit 1
             fi
             echo "action=tag" >> "$GITHUB_OUTPUT"
-          elif git merge-base --is-ancestor "$split" "$main"; then
-            echo "the mirror's main already has $split: nothing to push"
+          elif [ "$split" = "$main" ]; then
+            echo "the mirror's main is already $split: nothing to push"
             echo "action=none" >> "$GITHUB_OUTPUT"
           elif git merge-base --is-ancestor "$main" "$split"; then
             echo "action=push" >> "$GITHUB_OUTPUT"
+          elif git merge-base --is-ancestor "$split" "$main" &&
+            git merge-base --is-ancestor "$main" "$(git subtree split --prefix="$PREFIX" refs/remotes/origin/dev)"; then
+            # A re-run of an older push: a newer run already mirrored dev past this commit.
+            echo "the mirror's main $main is past $split and is dev's split or behind it: nothing to push"
+            echo "action=none" >> "$GITHUB_OUTPUT"
           else
             echo "::error::not a fast-forward: the mirror has commits Orchestra does not; port them to packages/omni (mirror main $main, split $split)"
             exit 1
