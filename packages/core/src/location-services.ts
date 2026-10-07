@@ -1,6 +1,7 @@
 import { Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
 import { AISDK } from "./aisdk"
+import { BehaviorV2 } from "./behavior"
 import { Catalog } from "./catalog"
 import { CommandV2 } from "./command"
 import { Config } from "./config"
@@ -20,6 +21,7 @@ import { PluginV2 } from "./plugin"
 import { PluginInternal } from "./plugin/internal"
 import { Policy } from "./policy"
 import { ProjectCopy } from "./project/copy"
+import { PullRequest } from "./pull-request"
 import { Pty } from "./pty"
 import { QuestionV2 } from "./question"
 import { Reference } from "./reference"
@@ -53,6 +55,7 @@ export const locationServices = LayerNode.group([
   PluginInternal.node,
   ProjectCopy.node,
   ProjectCopy.refreshNode,
+  PullRequest.node,
   FileSystemSearch.node,
   FileSystem.node,
   Watcher.node,
@@ -60,6 +63,7 @@ export const locationServices = LayerNode.group([
   SkillV2.node,
   SystemContextRegistry.node,
   SystemContextBuiltIns.node,
+  BehaviorV2.node,
   LocationMutation.node,
   FileMutation.node,
   PermissionV2.node,

@@ -579,6 +579,35 @@ test.describe("Dock tab menu at the cockpit's geometry", () => {
     })
   }
 
+  // The Dock sits in a frame under its Browser | Linux mode switch: a toggle in the cockpit card, a tab list on
+  // the Dock page. The switch moves the tabs down inside the frame; the menu must still open at its trigger.
+  for (const locale of ["en", "ar"] as const) {
+    test(`the tab menu opens at its trigger under the mode switch, in the cockpit and on the Dock page (${locale === "ar" ? "RTL" : "LTR"})`, async ({
+      page,
+    }) => {
+      const rtl = await openTabs(page, locale, 2)
+      const card = dockCard(page)
+      await expect(card.locator(".zen-browser-frame > .zen-dock-modes").getByRole("button")).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      )
+      await expectMenuAtTrigger(page, card, rtl)
+
+      await page
+        .locator('[data-component="orchestra-sidebar"]')
+        .getByRole("button", { name: "Dock", exact: true })
+        .click()
+      await expect(page).toHaveURL(/\/orchestra\/dock$/)
+      const dock = page.locator(".orchestra-dock")
+      const modes = dock.locator(".zen-browser-frame > .zen-dock-modes")
+      await expect(modes).toHaveAttribute("role", "tablist")
+      await expect(modes.getByRole("tab")).toHaveCount(2)
+      await expect(modes.getByRole("tab").first()).toHaveAttribute("aria-selected", "true")
+      await expect(dock.locator(".zen-tab", { hasText: "Page /a" })).toBeVisible()
+      await expectMenuAtTrigger(page, dock, rtl)
+    })
+  }
+
   test("the tab menu roves with the arrow keys, and Tab returns to its trigger", async ({ page }) => {
     await openTabs(page, "en", 2)
     const trigger = dockCard(page).locator(".zen-tab", { hasText: "Page /a" })
@@ -636,6 +665,29 @@ async function openTabs(page: Page, locale: "en" | "ar", count: number) {
     await expect(dock.locator(".zen-tab").nth(index)).toHaveAttribute("aria-selected", "true")
   }
   return rtl
+}
+
+// Below the frame's mode switch, a pointer opens the "Page /a" menu with its inline-start corner on the
+// pointer and the keyboard opens it under the trigger, from the trigger's inline-start edge.
+async function expectMenuAtTrigger(page: Page, root: Locator, rtl: boolean) {
+  const trigger = root.locator(".zen-tab", { hasText: "Page /a" })
+  const menu = page.getByRole("menu", { name: "Actions for Page /a" })
+  const modes = await rect(root.locator(".zen-browser-frame > .zen-dock-modes"))
+  const tab = await rect(trigger)
+  expect(tab.top).toBeGreaterThanOrEqual(modes.bottom)
+  const start = rtl ? "right" : "left"
+  const point = { x: Math.round(tab.left + tab.width / 2), y: Math.round(tab.top + tab.height / 2) }
+  await page.mouse.click(point.x, point.y, { button: "right" })
+  await expect(menu).toBeVisible()
+  await expectAnchored(page, menu, point, { x: start, y: "top" })
+  await page.keyboard.press("Escape")
+  await expect(menu).toHaveCount(0)
+  await expect(trigger).toBeFocused()
+  await page.keyboard.press("Shift+F10")
+  await expect(menu).toBeVisible()
+  await expectAnchored(page, menu, { x: rtl ? tab.right - 8 : tab.left + 8, y: tab.bottom + 4 }, { x: start, y: "top" })
+  await page.keyboard.press("Escape")
+  await expect(menu).toHaveCount(0)
 }
 
 async function rect(locator: Locator) {

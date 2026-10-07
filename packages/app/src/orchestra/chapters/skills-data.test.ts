@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { filterSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
+import { filterSkills, readSkills, skillAccess, skillErrorMessage, skillSource, sortSkills } from "./skills-data"
 
 const skills = [
   { name: "Review", description: "Check boundaries", location: "/repo/review/SKILL.md", content: "  <b>review</b>\n" },
@@ -87,5 +87,21 @@ describe("skill write errors", () => {
     expect(skillErrorMessage("oops")).toBeUndefined()
     expect(skillErrorMessage({ data: { message: 1 } })).toBeUndefined()
     expect(skillErrorMessage(undefined)).toBeUndefined()
+  })
+})
+
+describe("skills reply", () => {
+  test("reads V1 and V2 catalogs, with or without descriptions and times", () => {
+    const entries = [...skills, { ...skills[0], description: null, mtime: 12 }]
+    expect(readSkills(entries)).toEqual(entries)
+  })
+  test("rejects a malformed catalog so the page shows its error instead of crashing in render", () => {
+    for (const reply of [
+      {},
+      undefined,
+      [{ location: "/repo/a/SKILL.md", content: "" }],
+      [{ ...skills[0], mtime: "now" }],
+    ])
+      expect(() => readSkills(reply)).toThrow("Skills response is malformed")
   })
 })

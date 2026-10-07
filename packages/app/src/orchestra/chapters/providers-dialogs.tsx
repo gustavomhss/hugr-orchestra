@@ -8,7 +8,14 @@ import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
-import { authorizationURL, type CatalogEntry, errorMessage, noteKey, visiblePrompts } from "./providers-data"
+import {
+  authorizationURL,
+  type CatalogEntry,
+  connectableIntegration,
+  errorMessage,
+  noteKey,
+  visiblePrompts,
+} from "./providers-data"
 
 // The mock's provider mark: the real brand when the sprite has it, the neutral model mark otherwise.
 export function ProviderBrand(props: { id: string }) {
@@ -142,7 +149,7 @@ export function ProviderConnectDialog(props: {
   const [integration] = createResource(() =>
     sdk()
       .api.integration.get({ integrationID: props.id, location })
-      .then((result) => result.data),
+      .then((result) => connectableIntegration(result.data)),
   )
   // Unsettled or failed reads must not suspend the chapter route; the API key method is the fallback.
   const loading = () => integration.state === "pending" || integration.state === "unresolved"

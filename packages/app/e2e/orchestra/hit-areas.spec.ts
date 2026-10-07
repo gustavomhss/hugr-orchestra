@@ -87,7 +87,7 @@ for (const scheme of ["dark", "light"] as const) {
     await page.keyboard.press("Tab")
     await dialogClose.focus()
     await expect(dialogClose).toHaveCSS("outline-width", "2px")
-    await expect(dialogClose).toHaveCSS("outline-color", scheme === "dark" ? "rgb(126, 165, 204)" : "rgb(63, 111, 159)")
+    await expect(dialogClose).toHaveCSS("outline-color", scheme === "dark" ? "rgb(126, 165, 204)" : "rgb(22, 71, 117)")
     const box = await dialogClose.boundingBox()
     if (!box) throw new Error("Dialog close button has no layout box")
     await page.mouse.click(box.x - 1, box.y + box.height / 2)

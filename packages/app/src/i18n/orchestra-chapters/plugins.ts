@@ -18,8 +18,12 @@ export const PLUGINS_COPY = {
   "orchestra.plugins.loading": "Loading behaviors…",
   "orchestra.plugins.applied":
     "Active behaviors are added to the system instructions of new chat messages in this profile (not slash commands or shell runs).",
+  "orchestra.plugins.appliedServer":
+    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
   "orchestra.plugins.notApplied":
     "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
+  "orchestra.plugins.syncFailed":
+    "Saved for this profile, but this server did not accept the latest change. Turns keep the behaviors it last accepted.",
   "orchestra.plugins.dialog.configure": "Configure {{name}}",
   "orchestra.plugins.dialog.add": "Add LLM behavior",
   "orchestra.plugins.dialog.subtitle": "Active behaviors are added to new chat messages in this profile.",

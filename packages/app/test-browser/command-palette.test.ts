@@ -67,7 +67,7 @@ describe("command palette sessions", () => {
 
     expect(searches).toEqual(["palette session"])
     expect(result).toHaveLength(1)
-    expect(getProjectAvatarSource(result[0]?.project?.id, result[0]?.project?.icon)).toBe("home-project-avatar")
+    expect(getProjectAvatarSource(result[0]?.project?.icon)).toBe("home-project-avatar")
     expect(result[0]).toMatchObject({
       server,
       sessionID: session.id,

@@ -17,8 +17,7 @@ import { useTabs } from "@/context/tabs"
 import { createTabPromptState } from "@/context/prompt"
 import { createDraftPromptSession } from "@/context/prompt-state"
 import type { HomeProjectSelection } from "@/context/layout"
-import { projectForSession } from "@/pages/layout/helpers"
-import { pathKey } from "@/utils/path-key"
+import { profileProject, projectForSession } from "@/pages/layout/helpers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { useModels } from "@/context/models"
 import { createPromptModelContext, selectPromptModel } from "@/pages/session/composer/prompt-model-selection"
@@ -294,16 +293,14 @@ export function TitlebarTabStrip(props: {
   const matchesProfile = (tab: Tab, session?: Session, fallback?: string) => {
     if (!props.profile) return true
     const conn = global.servers.list().find((item) => ServerConnection.key(item) === tab.server)
-    const projects = conn ? global.ensureServerCtx(conn).projects.list() : []
+    const ctx = conn ? global.ensureServerCtx(conn) : undefined
     const directory = tab.type === "draft" ? tab.directory : (session?.directory ?? fallback)
+    // The titlebar's profile lookup, so a draft in a V2 copy stays on its repository's tab bar.
     const project = session
-      ? projectForSession(session, projects)
-      : projects.find(
-          (item) =>
-            !!directory &&
-            (pathKey(item.worktree) === pathKey(directory) ||
-              item.sandboxes?.some((sandbox) => pathKey(sandbox) === pathKey(directory))),
-        )
+      ? projectForSession(session, ctx?.projects.list() ?? [])
+      : ctx && directory
+        ? profileProject(ctx, directory)
+        : undefined
     return tabMatchesProfile({ server: tab.server, directory, rootDirectory: project?.worktree }, props.profile)
   }
   const visibleTabs = createMemo(() =>

@@ -30,11 +30,14 @@ export const groupNames = {
   "server.fs": "files",
   "server.command": "commands",
   "server.skill": "skills",
+  "server.behavior": "behaviors",
   "server.event": "events",
   "server.pty": "ptys",
   "server.question": "questions",
   "server.reference": "references",
   "server.projectCopy": "projectCopies",
+  "server.pullRequest": "pullRequests",
+  "server.schedule": "schedules",
 } as const
 
 export const endpointNames = {
