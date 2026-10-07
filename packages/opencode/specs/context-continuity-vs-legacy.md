@@ -65,7 +65,7 @@ error strings, commands, paths and the user's literal rules.
 - Continuity lost 2 facts on the dark-mode trace. The producer joined two errors in one field, and the C8 exact check
   dropped that op. The prompt now says "one value or error per item … two errors are two failures".
 - On the codex trace, the first continuity reply failed C6 (a quote spanning two sentences) and passed on its one retry.
-  C6 still rejects the whole pass; dropping only the offending op, as C8 does, is the next change.
+  C6 now drops only the offending op, as C8 does (§7).
 - The continuity memory is 2–5× larger than the legacy summary.
 
 ## 4. What we took from the legacy summary (round 2)
@@ -158,3 +158,11 @@ The same replay of the 10 traces (`versus.ts` dry; head clipping included), with
 - **Still over in one place.** f-f0c3ddc4 opens with a 2.7 MB user message (a pasted file), larger than the window by
   itself. Nothing can cut a message in the native tail; the first pass covers it once the turn has steps. A real
   provider would reject that first request.
+
+## 7. A quote not found drops only its op
+
+C6 used to reject the whole pass when one user quote was not found or matched two places: every other op was lost, the
+pass counted toward the failure breaker, and the context kept growing. Now that op alone is dropped and counted in
+`dropped`, as C8 does for exact values and errors. Nothing unverified is stored: a rule or decision whose quote is not
+the user's words is not added, and a retire whose revoking words are not found leaves the user's item in place. The
+structural checks (C2, C5, C7, C9, C10, C14) still reject the pass.
