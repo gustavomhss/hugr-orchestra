@@ -29,7 +29,7 @@ function input() {
 }
 
 function execute(events: Stream.Stream<LLMEvent, unknown> | Stream.Stream<LLMEvent, unknown>[] = stopped(), captured = input(),
-  selected: Provider.Model = model, trigger = 0.7) {
+  selected: Provider.Model = model) {
   return Effect.gen(function* () {
     const requests: LLM.StreamInput[] = []
     const replies = Array.isArray(events) ? events : [events]
@@ -37,7 +37,7 @@ function execute(events: Stream.Stream<LLMEvent, unknown> | Stream.Stream<LLMEve
       requests.push(value)
       // A retry replays the last scripted reply unless the scenario scripts another.
       return replies[Math.min(requests.length, replies.length) - 1]
-    } } }, host([...captured.head, ...captured.tail]), { trigger })
+    } } }, host([...captured.head, ...captured.tail]))
     return { artifact, pass, requests }
   })
 }
@@ -172,7 +172,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(call.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
   expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v4")
   expect(call.agent.prompt).toContain("do not continue the task, call tools or answer anyone")
-  expect(call.agent.prompt).toContain("There is no size target")
+  expect(call.agent.prompt).toContain("There is no size limit")
   expect(call.user.system).toBeUndefined()
   expect(call.user.tools).toBeUndefined()
   expect(call.user.format).toBeUndefined()
@@ -180,7 +180,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(content).toContain("historical-system-not-producer-authority")
   expect(content).toMatch(/## New span\nu1, a1 \(through a1\)\. The native tail starts at u2 and is not covered\./)
   expect(content).toMatch(/## Index of the new span\nu1 [^\n]+ "turn-0 historical context/)
-  expect(content).toMatch(/## Size\nRendered memory now ~0 tokens; ceiling [\d,]+\./)
+  expect(content).toMatch(/## Size\nRendered memory now ~0 tokens\./)
   expect(call.responseSchema).toBeUndefined()
 }))
 
@@ -242,30 +242,21 @@ it.effect("a failed check gets one cache-hot retry with the rejected reply and t
   expect((yield* execute([Stream.fail(new Error("down")), stopped()]).pipe(Effect.exit))._tag).toBe("Failure")
 }))
 
-it.effect("the ceiling is derived from the trigger and the head, never from the output limit", () => Effect.gen(function* () {
+it.effect("the memory has no size limit; only the producer's own input limit can skip a pass", () => Effect.gen(function* () {
+  // A memory larger than the head it replaces is accepted: the producer judges what stays, not a ceiling.
   const long = JSON.stringify({ ops: [finding(memory.repeat(30))] })
-  const valid = yield* execute(stopped(long), input(), { ...model, limit: { ...model.limit, output: 100 } })
-  expect(valid.artifact).toBeDefined()
-  expect(Token.estimate(valid.artifact!.text)).toBeGreaterThan(1000)
-  // Every swap shrinks the context: memory larger than the head it replaces is rejected.
   const small = input()
   const part = small.head[0].parts[0]
   if (part.type === "text") part.text = `turn-0 ${"historical context ".repeat(150)}`
-  const larger = yield* execute([stopped(long), stopped(long)], small)
-  expect(larger.requests).toHaveLength(2)
-  expect(larger.artifact).toBeUndefined()
-  expect(String(larger.requests[1].messages.at(-1)!.content)).toContain("C12: the rendered memory is")
-  // No positive ceiling: the protected tail alone exceeds the post-swap level, so no pass runs.
-  const none = yield* execute(stopped(), input(), model, 0.16)
-  expect(none.requests).toEqual([])
-  expect(none.pass.skip).toBe("no-ceiling")
-  // A head smaller than the fixed scaffold cannot be replaced by any reply: skip, not a failure (P4).
+  const larger = yield* execute(stopped(long), small, { ...model, limit: { ...model.limit, output: 100 } })
+  expect(larger.requests).toHaveLength(1)
+  expect(larger.artifact).toBeDefined()
+  expect(Token.estimate(larger.artifact!.text)).toBeGreaterThan(1000)
+  // A tiny head still gets a pass: no scaffold-size skip.
   const tiny = input()
   const first = tiny.head[0].parts[0]
   if (first.type === "text") first.text = "turn-0"
-  const room = yield* execute(stopped(), tiny)
-  expect(room.requests).toEqual([])
-  expect(room.pass.skip).toBe("no-room")
+  expect((yield* execute(stopped(), tiny)).pass.skip).toBeUndefined()
   const large = input()
   const text = large.head[0].parts[0]
   if (text.type !== "text") throw new Error("Expected text")
@@ -277,20 +268,12 @@ it.effect("the ceiling is derived from the trigger and the head, never from the 
   const oversized = yield* execute(stopped(), large, { ...model, limit: { ...model.limit, input: 2_000 } })
   expect(oversized.requests).toEqual([])
   expect(oversized.pass.skip).toBe("input-limit")
-  // The head is measured as the model sees it: stored metadata such as an edit diff is not context.
-  const inflated = input()
-  inflated.head[1].parts.push({ id: PartID.make("prt_edit"), messageID: inflated.head[1].info.id, sessionID, type: "tool", tool: "edit",
-    callID: "edit", state: { status: "completed", input: { filePath: "src/app.ts" }, output: "Edit applied.", title: "edit",
-      metadata: { diff: "+ changed line\n".repeat(15_000), filediff: { patch: "+ changed line\n".repeat(15_000) } }, time: { start: 1, end: 2 } } })
-  const measured = yield* execute(stopped(), inflated)
-  expect(measured.artifact).toBeDefined()
-  expect(measured.pass.ceiling).toBeLessThan(10_000)
 }))
 
 it.effect("runs without recall capability: memory no longer depends on it", () => Effect.gen(function* () {
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
-  expect((yield* run({ ...input(), canRecall: false }, services, host(), { trigger: 0.7 })).skip).toBeUndefined()
+  expect((yield* run({ ...input(), canRecall: false }, services, host())).skip).toBeUndefined()
   expect(calls.length).toBeGreaterThan(0)
 }))
 
@@ -318,7 +301,7 @@ for (const phase of ["lookup", "stream"] as const) it.effect(`180-second timeout
   const fiber = yield* run(captured, {
     provider: phase === "lookup" ? { ...provider(), getModel: () => wait } : provider(),
     llm: { stream: () => Stream.fromEffect(wait) },
-  }, host(), { trigger: 0.7 }).pipe(Effect.exit, Effect.forkChild)
+  }, host()).pipe(Effect.exit, Effect.forkChild)
   yield* Deferred.await(ready)
   yield* TestClock.adjust("179 seconds")
   expect(yield* Effect.sync(() => fiber.pollUnsafe())).toBeUndefined()
@@ -337,6 +320,6 @@ it.effect("a span inside one long turn takes the model from that turn's user mes
     head: history.slice(1, 5), tail: history.slice(5), canRecall: true }
   const calls: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (value: LLM.StreamInput) => { calls.push(value); return stopped() } } }
-  expect((yield* run(captured, services, host(history), { trigger: 0.7 })).skip).toBeUndefined()
+  expect((yield* run(captured, services, host(history))).skip).toBeUndefined()
   expect(calls[0]?.model.id).toBe(model.id)
 }))

@@ -6,13 +6,23 @@ import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 // The pins of rulings M3-3 and F5.5; changing one is a contract amendment.
 const PINS = { "ast-grep": "0.45.3", sqlc: "1.31.1", buf: "1.73.0", gitleaks: "8.30.1", kiota: "1.35.0" }
 const LICENSES = { "ast-grep": "MIT", sqlc: "MIT", buf: "Apache-2.0", gitleaks: "MIT", kiota: "MIT" }
-const engines = Object.values(BackendToolkitManifest.ENGINES)
+const engines = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).filter(
+  (engine): engine is BackendToolkitManifest.NativeEngine => !("runtime" in engine),
+)
 const targets = engines.flatMap((engine) =>
   Object.entries(engine.targets).map(([target, pin]) => ({ engine, target, ...pin })),
 )
 
 describe("backend toolkit manifest", () => {
-  test("pins exactly the five first-cut engines at their ruled versions and licenses", () => {
+  test("the second cut adds exactly four hosted engines, each on a declared runtime", () => {
+    const hosted = Object.values(BackendToolkitManifest.ENGINES).filter(
+      (engine): engine is BackendToolkitManifest.HostedEngine => "runtime" in engine,
+    )
+    expect(hosted.map((engine) => engine.id).sort()).toEqual(["datamodel-codegen", "openapi-generator", "orval", "protoc-gen-es"])
+    for (const engine of hosted) expect(BackendToolkitManifest.RUNTIMES[engine.runtime].id).toBe(engine.runtime)
+  })
+
+  test("pins exactly the five first-cut native engines at their ruled versions and licenses", () => {
     expect(Object.fromEntries(engines.map((engine) => [engine.id, engine.version]))).toEqual(PINS)
     expect(Object.fromEntries(engines.map((engine) => [engine.id, engine.license]))).toEqual(LICENSES)
     expect(Object.entries(BackendToolkitManifest.ENGINES).every(([key, engine]) => key === engine.id)).toBe(true)

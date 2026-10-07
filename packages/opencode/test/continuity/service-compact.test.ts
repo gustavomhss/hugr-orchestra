@@ -1,7 +1,9 @@
 import { expect } from "bun:test"
 import { Deferred, Effect, Fiber } from "effect"
 import { Session } from "@/session/session"
-import { PartID } from "@/session/schema"
+import { MessageID, PartID } from "@/session/schema"
+import { ContextCompactTool } from "@/tool/context-compact"
+import * as Tool from "@/tool/tool"
 import { SessionContinuity } from "@/continuity/service"
 import { model } from "./memory-fixture"
 import { it } from "../lib/effect"
@@ -26,7 +28,7 @@ it.instance("compact waits for running maintenance, then finds the context under
 it.instance("a forced compaction runs a pass below the trigger", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
   yield* Effect.gen(function* () {
-    // At trigger 0.8 the seed's 50,000 tokens on a 200,000-token window start nothing on their own.
+    // At trigger 0.5 the seed's 50,000 tokens on a 200,000-token window start nothing on their own.
     const sessionID = yield* seed()
     const continuity = yield* SessionContinuity.Service
     const forced = yield* continuity.compact({ sessionID, canRecall: true, force: true }).pipe(Effect.forkChild)
@@ -35,7 +37,7 @@ it.instance("a forced compaction runs a pass below the trigger", () => Effect.ge
     expect(yield* Fiber.join(forced)).toBe("applied")
     yield* terminal(hit.jobID, "completed", "applied")
     expect((yield* prepare(sessionID)).system[0]).toContain(FIRST)
-  }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.8 } } })))
+  }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.5 } } })))
 }), 30_000)
 
 it.instance("past the hard limit with no usable pass, every old result the archive can restore is masked", () => Effect.gen(function* () {
@@ -59,4 +61,22 @@ it.instance("past the hard limit with no usable pass, every old result the archi
     // Without recall a stub could not be restored, so nothing is masked and the request may overflow.
     expect(yield* continuity.compact({ sessionID, canRecall: false })).toBe("over")
   }).pipe(Effect.provide(environment([], { getModel: () => Effect.succeed(small) })))
+}), 30_000)
+
+it.instance("the agent's context_compact tool runs a forced pass on its own session", () => Effect.gen(function* () {
+  const first = yield* held(FIRST)
+  yield* Effect.gen(function* () {
+    // At trigger 0.5 the seed starts nothing on its own: only the tool runs the pass.
+    const sessionID = yield* seed()
+    const tool = yield* Tool.init(yield* ContextCompactTool)
+    const call = yield* tool.execute({}, { sessionID, messageID: MessageID.ascending(), agent: "build", abort: AbortSignal.any([]),
+      messages: [], metadata: () => Effect.void, ask: () => Effect.void }).pipe(Effect.forkChild)
+    const hit = yield* entered(first)
+    yield* Deferred.succeed(first.release, undefined)
+    const result = yield* Fiber.join(call)
+    expect(result.metadata).toEqual({ outcome: "applied", truncated: false })
+    expect(result.output).toStartWith("Working memory updated")
+    yield* terminal(hit.jobID, "completed", "applied")
+    expect((yield* prepare(sessionID)).system[0]).toContain(FIRST)
+  }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.5 } } })))
 }), 30_000)

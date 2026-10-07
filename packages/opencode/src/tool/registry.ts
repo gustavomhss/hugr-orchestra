@@ -11,6 +11,8 @@ import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
 import { ReadTool } from "./read"
 import { ContextRecallTool } from "./context-recall"
+import { ContextCompactTool } from "./context-compact"
+import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
@@ -159,6 +161,7 @@ const layer = Layer.effect(
     const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
+    const compact = yield* ContextCompactTool
     const atlasRecall = yield* AtlasMemoryRecallTool
     const atlasEmit = yield* AtlasMemoryEmitTool
     const question = yield* QuestionTool
@@ -301,6 +304,7 @@ const layer = Layer.effect(
           shell: Tool.init(shell),
           read: Tool.init(read),
           recall: Tool.init(recall),
+          compact: Tool.init(compact),
           atlasRecall: Tool.init(atlasRecall),
           atlasEmit: Tool.init(atlasEmit),
           glob: Tool.init(globtool),
@@ -339,6 +343,7 @@ const layer = Layer.effect(
             tool.shell,
             tool.read,
             tool.recall,
+            tool.compact,
             tool.atlasRecall,
             tool.atlasEmit,
             tool.glob,
@@ -651,6 +656,7 @@ export const node = LayerNode.make({
     MCP.node,
     Database.node,
     Archive.node,
+    SessionContinuity.node,
     ArsenalObservations.node,
     AppProcess.node,
     Global.node,

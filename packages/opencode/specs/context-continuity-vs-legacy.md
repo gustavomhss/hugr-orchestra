@@ -94,3 +94,25 @@ The same one-shot check, legacy unchanged:
   on the codex trace.
 - The codex memory shrank by 32%. Both memories now open with a plan that says what is in progress, what to verify and
   what is next. The codex one includes "tell the user honestly that the .bak databases were deleted".
+
+## 5. Limits: prune early, no post-compaction ceiling (owner decision)
+
+The owner set the shape: the protocol prunes the conversation continuously and keeps it in a sweet spot. It is not an
+abrupt 700k → 10k cut. Most of a long context is noise (tool calls, logs); replacing a tool call and its output with a
+one-line record of the action and its result already compacts most of it.
+
+- **Trigger: 0.4 of the window** (default, configurable below the hard limit). Maintenance runs in the background.
+- **Hard limit: 0.7 of the window**, or the input limit when the output reservation leaves less. It is not
+  configurable; past it, a pass runs before the next model request. It replaces 0.9.
+- **No post-compaction ceiling.**
+  - The memory no longer has to fit `(trigger − 0.15) × window`, and it may be larger than what it replaces.
+  - C12 and the `no-ceiling` / `no-room` skips are gone; the producer judges what stays.
+  - The window still sizes the host-collected sections (verbatim user messages and Activity), so they do not grow
+    forever. Older entries stay one `context_recall` away.
+- **`context_compact` tool.**
+  - The agent can call it at a milestone, when earlier work has gone stale. It runs a forced pass on the real context and
+    returns the outcome.
+  - The Maestro prompt decides when to call it (owned by the Maestro workstream).
+
+The native tail cut (15% of the window, cut between steps in a long turn) stays: it decides what stays verbatim, not
+how large the memory may be.

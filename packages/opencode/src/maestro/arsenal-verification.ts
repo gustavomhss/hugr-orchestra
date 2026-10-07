@@ -2,6 +2,7 @@ export * as ArsenalVerification from "./arsenal-verification"
 
 import path from "node:path"
 import { createHash } from "node:crypto"
+import { createRequire } from "node:module"
 import { Effect, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -70,7 +71,8 @@ export const run = Effect.fn("ArsenalVerification.run")(function* (
 export const decodeReport = (bytes: string) => Effect.tryPromise({
   try: async () => {
     // Already installed through the Bedrock dependency tree. No provider module is loaded.
-    const { XMLParser, XMLValidator } = await import(Bun.resolveSync("fast-xml-parser", Bun.resolveSync("@ai-sdk/amazon-bedrock", import.meta.dir)))
+    // createRequire resolves under both Bun and the desktop's Node sidecar, where Bun.resolveSync does not exist.
+    const { XMLParser, XMLValidator } = await import(createRequire(createRequire(import.meta.url).resolve("@ai-sdk/amazon-bedrock")).resolve("fast-xml-parser"))
     if (XMLValidator.validate(bytes, { allowBooleanAttributes: false }) !== true) throw new Error("RUNNER_XML_INVALID")
     const parsed: unknown = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@", parseTagValue: false, parseAttributeValue: false, trimValues: false, processEntities: false, isArray: (name: string) => name === "testsuite" || name === "testcase" }).parse(bytes)
     return Schema.decodeUnknownSync(Document)(parsed).testsuites
