@@ -7,6 +7,15 @@ test.setTimeout(180_000)
 const sidebar = (page: Page) => page.locator(".orchestra-sidebar")
 const editor = (page: Page) => page.locator('[data-component="relay-editor"]')
 const canvas = (page: Page) => page.locator('[data-component="relay-canvas"]')
+const RUNS_MISSING = "This server cannot run workflows yet. Runs, receipts and audits appear here once it can."
+const SEEDED = [
+  "Relay · wp-execute",
+  "Relay · spec-decompose",
+  "Relay · tdd_feature",
+  "Relay · planning",
+  "Relay · design",
+  "Relay · research-v2",
+]
 
 async function openWorkflows(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
@@ -16,58 +25,62 @@ async function openWorkflows(page: Page) {
 }
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: library lists workflows, live runs and the waiting count, and every view has a URL`, async ({
+  test(`${scheme}: the library lists the seeded profiles, and runs say the server cannot run them yet`, async ({
     page,
   }) => {
     await setupRelay(page, { scheme })
     await openWorkflows(page)
     const view = page.locator('[data-mx-page="orchestra-workflows"]')
-    await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toContainText("1")
     await expect(view.locator(".mx-eyebrow")).toHaveText("orchestra-canonical / profile automation")
-    await expect(view.getByRole("tab", { name: /Workflows/ })).toHaveAttribute("aria-selected", "true")
-    await expect(view.locator(".wf-attn .mx-row strong")).toHaveText([
-      "Run #1042 · Governed WP execution",
-      "Run #311 · Spec decomposition",
-    ])
     const rows = view.getByRole("listitem")
-    await expect(rows.locator("strong")).toHaveText([
-      "Governed WP execution",
-      "Spec decomposition",
-      "Wave planning",
-      "Product design",
-      "Research brief",
+    await expect(rows.locator("strong")).toHaveText(SEEDED)
+    const row = (name: string) => rows.filter({ has: page.getByText(name, { exact: true }) })
+    await expect(row("Relay · wp-execute").locator(".wf-badges .mx-badge")).toHaveText(["Published v3", "Draft v4"])
+    await expect(row("Relay · tdd_feature").locator(".wf-badges .mx-badge")).toHaveText(["Published v1"])
+    await expect(row("Relay · design").locator(".wf-badges .mx-badge")).toHaveText(["Draft v1 · not published"])
+    // No live runs, no fabricated last runs and no waiting count while the run routes are missing.
+    await expect(view.locator(".wf-attn")).toHaveCount(0)
+    await expect(row("Relay · wp-execute").locator(".wf-last")).toHaveCount(0)
+    await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toHaveCount(0)
+    const run = row("Relay · wp-execute").getByRole("button", { name: "Run Relay · wp-execute" })
+    await expect(run).toBeDisabled()
+    await expect(run).toHaveAttribute("title", "This server cannot run workflows yet")
+    await expect(row("Relay · design").getByRole("button", { name: "Run Relay · design" })).toHaveAttribute(
+      "title",
+      "Needs Relay tools that are not available yet, so it cannot run",
+    )
+
+    const templates = view.locator(".wf-tpl-grid .wf-tpl h3")
+    await expect(templates).toHaveText([
+      "Blank workflow",
+      "Relay · tdd_feature",
+      "Relay · wp-execute",
+      "Relay · design",
+      "Relay · planning",
+      "Relay · research-v2",
+      "Relay · spec-decompose",
     ])
-    await expect(rows.first().locator(".wf-badges .mx-badge")).toHaveText(["Published v3", "Draft v4"])
-    await expect(rows.last().locator(".wf-badges .mx-badge")).toHaveText("Draft v2 · not published")
-    await expect(rows.last().getByRole("button", { name: "Run Research brief" })).toBeDisabled()
+    const blocked = view.locator('.wf-tpl[aria-disabled="true"]')
+    await expect(blocked).toHaveCount(4)
+    await expect(blocked.locator(".mx-badge.warm")).toHaveText(Array(4).fill("Needs tools not available yet"))
     await page.screenshot({ path: test.info().outputPath(`${scheme}-library.png`) })
 
-    await view.getByRole("textbox", { name: "Search workflows" }).fill("WAVE")
-    await expect(rows.locator("strong")).toHaveText(["Wave planning"])
+    await view.getByRole("textbox", { name: "Search workflows" }).fill("TDD")
+    await expect(rows.locator("strong")).toHaveText(["Relay · tdd_feature"])
     await view.getByRole("textbox", { name: "Search workflows" }).fill("")
-    await view.getByRole("group", { name: "Filter by status" }).getByRole("button", { name: "Drafts" }).click()
-    await expect(rows.locator("strong")).toHaveText(["Research brief"])
+    await view.getByRole("group", { name: "Filter by status" }).getByRole("button", { name: "Published" }).click()
+    await expect(rows.locator("strong")).toHaveText(["Relay · wp-execute", "Relay · tdd_feature"])
 
     await view.getByRole("tab", { name: /Executions/ }).click()
     await expect(page).toHaveURL(/\/orchestra\/workflows\/executions$/)
-    await expect(view.getByRole("listitem")).toHaveCount(8)
-    await view
-      .getByRole("group", { name: "Filter runs" })
-      .getByRole("button", { name: /Awaiting human/ })
-      .click()
-    await expect(view.getByRole("listitem").locator("strong")).toHaveText("#1042 · Governed WP execution")
-    await page.screenshot({ path: test.info().outputPath(`${scheme}-executions.png`) })
-    await view.getByRole("listitem").click()
-    await expect(page).toHaveURL(/\/orchestra\/workflows\/wp-execute\/executions\/1042$/)
-    await expect(page.locator('[data-slot="orchestra-titlebar-breadcrumb"]')).toHaveText(
-      /Workflows\s*\/\s*Governed WP execution\s*\/\s*Executions\s*\/\s*Run #1042/,
-    )
+    await expect(view.locator('[data-slot="relay-runs-unsupported"]')).toHaveText(RUNS_MISSING)
+    await expect(page.locator('[data-slot="orchestra-titlebar-breadcrumb"]')).toHaveText(/Workflows\s*\/\s*Executions/)
     await page.goBack()
-    await expect(page).toHaveURL(/\/orchestra\/workflows\/executions$/)
+    await expect(page).toHaveURL(/\/orchestra\/workflows$/)
   })
 }
 
-test("a server without Relay routes says so and shows no count", async ({ page }) => {
+test("a server without the Relay routes says so on both chapters", async ({ page }) => {
   const state = relayState()
   state.supported = false
   await setupRelay(page, { state })
@@ -75,126 +88,105 @@ test("a server without Relay routes says so and shows no count", async ({ page }
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText(
     "This server does not support workflows yet.",
   )
-  await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toHaveCount(0)
   await sidebar(page).getByRole("button", { name: "Hooks", exact: true }).click()
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
 })
 
-test("canvas: open a workflow, inspect a step, walk to its neighbour and close only the top layer", async ({
-  page,
-}) => {
+test("a template that can run is copied with its profile mark; one that cannot is not offered", async ({ page }) => {
+  const state = await setupRelay(page)
+  await page.goto("/orchestra/workflows/new")
+  const dialog = page.getByRole("dialog", { name: "New workflow" })
+  await expect(dialog.getByRole("radio", { name: /Relay · tdd_feature/ })).toHaveAttribute("aria-checked", "true")
+  // A profile whose tools are missing is shown, but cannot be picked.
+  await expect(dialog.getByRole("radio", { name: /Relay · design/ })).toHaveAttribute("aria-disabled", "true")
+  await expect(dialog.getByRole("radio", { name: /Relay · design/ })).toHaveAttribute("aria-checked", "false")
+  await dialog.getByRole("radio", { name: /Relay · wp-execute/ }).click()
+  await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Relay · wp-execute copy")
+  await dialog.getByRole("textbox", { name: "Name" }).fill("WP-07 Session recovery")
+  await dialog.getByRole("button", { name: "Create and open" }).click()
+  await expect(page).toHaveURL(/\/orchestra\/workflows\/doc-\d+$/)
+  const created = state.writes.find((write) => write.method === "POST" && write.path === "/api/relay/document")
+  const body = created?.body as { name: string; nodes: unknown[]; meta: { relay: { profile: string } } }
+  expect([body.name, body.nodes.length, body.meta.relay.profile]).toEqual(["WP-07 Session recovery", 14, "wp-execute"])
+  await expect(editor(page).locator(".wf-name")).toHaveValue("WP-07 Session recovery")
+})
+
+test("canvas: inspect a step, walk to its neighbour and close only the top layer", async ({ page }) => {
   await setupRelay(page)
   await openWorkflows(page)
-  await page.getByRole("listitem").filter({ hasText: "Governed WP execution" }).click()
-  await expect(page).toHaveURL(/\/orchestra\/workflows\/wp-execute$/)
+  await page.getByRole("listitem").filter({ hasText: "Relay · wp-execute" }).click()
+  await expect(page).toHaveURL(/\/orchestra\/workflows\/relay-wp-execute$/)
   await expect(canvas(page).locator(".wf-node")).toHaveCount(14)
   await expect(canvas(page).locator(".wf-group-head b")).toHaveText([
     "Bind",
     "Red",
     "Green",
     "Refactor",
-    "Verification gate",
+    "Verification Gate",
     "Seal",
   ])
-  await expect(canvas(page).locator(".wf-banner")).toContainText("Run #1042 is waiting for you at Verification gate")
-  await expect(canvas(page).locator('.wf-node[data-id="gate.gate"] .wf-state-badge')).toHaveClass(/warm/)
-  await expect(editor(page).getByRole("tab", { name: /Executions/ })).toContainText("4")
+  await expect(canvas(page).locator(".wf-banner")).toHaveCount(0)
+  await expect(canvas(page).locator(".wf-state-badge")).toHaveCount(0)
+  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toBeDisabled()
 
   await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
-  await expect(page).toHaveURL(/\/wp-execute\/node\/green\.implement$/)
+  await expect(page).toHaveURL(/\/relay-wp-execute\/node\/green\.implement$/)
   const details = page.locator('[data-component="relay-node-details"]')
   await expect(details.locator("h2")).toHaveText("Implement minimally")
-  await expect(details.getByRole("region", { name: "Output" })).toContainText("green-changed-the-source")
+  await expect(details.getByRole("region", { name: "Output" })).toContainText("No output for this step yet.")
   await details.getByRole("button", { name: "Next: Green gate" }).click()
   await expect(page).toHaveURL(/\/node\/green\.gate$/)
   await expect(details.locator("h2")).toHaveText("Green gate")
   await page.keyboard.press("Escape")
   await expect(details).toHaveCount(0)
-  await expect(page).toHaveURL(/\/orchestra\/workflows\/wp-execute$/)
+  await expect(page).toHaveURL(/\/orchestra\/workflows\/relay-wp-execute$/)
   await expect(canvas(page)).toBeVisible()
 
+  await editor(page)
+    .getByRole("tab", { name: /Executions/ })
+    .click()
+  await expect(page.locator('[data-slot="relay-runs-unsupported"]')).toHaveText(RUNS_MISSING)
   await editor(page).getByRole("button", { name: "Back to Workflows" }).click()
   await expect(page).toHaveURL(/\/orchestra\/workflows$/)
 })
 
-test("receipt: release asks for a reason, re-checks the gate, and Open step returns with Back to run", async ({
+test("edit: a step added from the panel autosaves the loaded version with whole-number positions, then publishes", async ({
   page,
 }) => {
   const state = await setupRelay(page)
-  await page.goto("/orchestra/workflows/wp-execute/executions/1042")
-  const receipt = page.locator('[data-component="relay-receipt"]')
-  await expect(receipt.locator("h2")).toContainText("Run #1042")
-  await expect(receipt.locator(".wf-wait-head")).toHaveText("Waiting for you at Verification gate")
-  await expect(receipt.locator(".wf-wait-body code")).toHaveText("lints_clean")
-  await expect(receipt.locator(".wf-phase b")).toHaveText([
-    "Bind",
-    "Red",
-    "Green",
-    "Refactor",
-    "Verification gate",
-    "Seal",
-  ])
-  await expect(receipt.locator('[data-step="gate.gate"]')).toContainText("4 / 4")
-  await page.screenshot({ path: test.info().outputPath("dark-receipt.png") })
-
-  await receipt.getByRole("button", { name: "Open step" }).click()
-  await expect(page).toHaveURL(/\/wp-execute\/run\/1042\/node\/gate\.gate$/)
-  const details = page.locator('[data-component="relay-node-details"]')
-  await expect(details.getByRole("region", { name: "Output" })).toContainText(
-    "Attempt 4 failed and the retry budget (3) is spent.",
-  )
-  await expect(details.getByRole("button", { name: /Run to here/ })).toHaveCount(0)
-  await page.keyboard.press("Escape")
-  await expect(page).toHaveURL(/\/wp-execute\/run\/1042$/)
-  await expect(canvas(page).locator(".wf-banner")).toContainText("Viewing run #1042")
-  await canvas(page).getByRole("button", { name: "Back to run" }).click()
-  await expect(page).toHaveURL(/\/wp-execute\/executions\/1042$/)
-
-  const release = receipt.getByRole("button", { name: "Release and re-check" })
-  await expect(release).toBeDisabled()
-  await receipt
-    .getByRole("textbox", { name: "Release reason (required)" })
-    .fill("Fixed the floating promise in recovery.ts")
-  await release.click()
-  await expect(receipt.locator("h2 .mx-badge")).toHaveText("Running")
-  expect(state.writes.filter((write) => write.path.endsWith("/release"))).toEqual([
-    {
-      method: "POST",
-      path: "/api/relay/run/1042/release",
-      body: { reason: "Fixed the floating promise in recovery.ts", mode: "recheck" },
-    },
-  ])
-})
-
-test("edit: add a step from the panel, autosave the draft, publish it and start a run", async ({ page }) => {
-  const state = await setupRelay(page)
-  await page.goto("/orchestra/workflows/wp-execute")
+  await page.goto("/orchestra/workflows/relay-wp-execute")
   await expect(canvas(page).locator(".wf-node")).toHaveCount(14)
   await canvas(page).locator('.wf-node[data-id="green.gate"] .wf-tile').click()
   await canvas(page).focus()
   await page.keyboard.press("n")
-  await expect(page).toHaveURL(/\/wp-execute\/add$/)
+  await expect(page).toHaveURL(/\/relay-wp-execute\/add$/)
   const panel = page.locator('[data-component="relay-add-panel"]')
   await expect(panel.locator("p").first()).toHaveText("Inserted after Green gate")
   await page.keyboard.press("Escape")
   await expect(panel).toHaveCount(0)
-  await expect(page).toHaveURL(/\/wp-execute$/)
 
   await canvas(page).getByRole("button", { name: "Add step (N)" }).click()
   await panel.getByRole("option", { name: /Run task/ }).click()
   const details = page.locator('[data-component="relay-node-details"]')
   await expect(details.locator("h2")).toHaveText("New task")
-  await expect(page).toHaveURL(/\/wp-execute\/node\/execute$/)
   const saved = page.waitForRequest(
-    (request) => request.method() === "PATCH" && request.url().includes("/api/relay/document/wp-execute"),
+    (request) => request.method() === "PATCH" && request.url().includes("/api/relay/document/relay-wp-execute"),
   )
   await details.getByRole("textbox", { name: "Instructions" }).fill("Record the decision.")
   const body = (await saved).postDataJSON() as {
-    nodes: { id: string; parameters: { instructions?: string } }[]
-    versionId: string
-  }
-  expect(body.versionId).toBe("wp-execute-v4")
-  expect(body.nodes.map((node) => node.id)).toContain("execute")
+    nodes: { id: string; position: number[]; parameters: { instructions?: string } }[]
+  } & Record<string, unknown>
+  expect(Object.keys(body).toSorted()).toEqual([
+    "connections",
+    "expectedChecksum",
+    "name",
+    "nodeGroups",
+    "nodes",
+    "versionId",
+  ])
+  expect(body.versionId).toBe("relay-wp-execute-v4")
+  expect(body.nodes.every((node) => node.position.every(Number.isInteger))).toBe(true)
+  expect(body.nodes.find((node) => node.id === "execute")?.parameters.instructions).toBe("Record the decision.")
   await expect(editor(page).locator(".wf-head .wf-save")).toHaveText("Saved")
   await page.keyboard.press("Escape")
   await expect(details).toHaveCount(0)
@@ -203,16 +195,12 @@ test("edit: add a step from the panel, autosave the draft, publish it and start 
   const publish = page.getByRole("dialog", { name: /Publish v/ })
   await publish.getByRole("button", { name: /Publish v/ }).click()
   await expect(publish).toHaveCount(0)
-  expect(state.writes.some((write) => write.path === "/api/relay/document/wp-execute/publish")).toBe(true)
-
-  await editor(page).getByRole("button", { name: "Run", exact: true }).click()
-  const run = page.getByRole("dialog", { name: "Run Governed WP execution" })
-  await expect(run.locator("code")).toContainText(["wp_dir", "base_ref", "test_path"])
-  await run.getByRole("textbox", { name: "test_cmd" }).fill("bun test")
-  await run.getByRole("button", { name: "Start run" }).click()
-  await expect(page).toHaveURL(/\/wp-execute\/executions\/\d+$/)
-  const started = state.writes.find((write) => write.path === "/api/relay/run")
-  expect(started?.body).toMatchObject({ documentID: "wp-execute", params: { test_cmd: "bun test" } })
+  const published = state.writes.find((write) => write.path === "/api/relay/document/relay-wp-execute/publish")
+  expect(published?.body).toMatchObject({ versionId: expect.stringMatching(/^relay-wp-execute-v\d+$/) })
+  await expect(editor(page).locator(".wf-head .mx-badge").first()).toHaveText(/^Published v\d+$/)
+  // Publishing does not make the missing run routes appear.
+  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toBeDisabled()
+  expect(state.writes.some((write) => write.path.startsWith("/api/relay/run"))).toBe(false)
 })
 
 test("the command palette reaches Workflows and Hooks from any page", async ({ page }) => {

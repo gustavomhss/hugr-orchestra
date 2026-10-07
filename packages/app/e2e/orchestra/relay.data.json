@@ -1,57 +1,20 @@
 {
-  "workflows": [
-    {
-      "id": "wp-execute",
-      "name": "Governed WP execution",
-      "description": "Bind, red, green, refactor, verify and seal one work package.",
-      "profile": "wp-execute",
-      "draft": 4,
-      "live": 3,
-      "updated": 9
-    },
-    {
-      "id": "spec-decompose",
-      "name": "Spec decomposition",
-      "description": "Frozen intent to work packages through five gated phases.",
-      "profile": "spec-decompose",
-      "draft": 2,
-      "live": 2,
-      "updated": 1560
-    },
-    {
-      "id": "planning",
-      "name": "Wave planning",
-      "description": "Frame, carve, sequence and dispatch a frozen plan.",
-      "profile": "planning",
-      "draft": 1,
-      "live": 1,
-      "updated": 4320
-    },
-    {
-      "id": "design",
-      "name": "Product design",
-      "description": "Intake to ratify, ending with a human signature.",
-      "profile": "design",
-      "draft": 5,
-      "live": 5,
-      "updated": 8640
-    },
-    {
-      "id": "research-v2",
-      "name": "Research brief",
-      "description": "Question, survey, evidence, contest, conclude, report.",
-      "profile": "research-v2",
-      "draft": 2,
-      "updated": 11520
-    }
-  ],
+  "profiles": {
+    "design": { "published": null, "updated": 8640 },
+    "planning": { "published": null, "updated": 4320 },
+    "research-v2": { "published": null, "updated": 11520 },
+    "spec-decompose": { "published": null, "updated": 1560 },
+    "tdd_feature": { "published": 1, "draft": 1, "updated": 3000 },
+    "wp-execute": { "published": 3, "draft": 4, "updated": 9 }
+  },
+  "runnable": ["tdd_feature", "wp-execute"],
   "hooks": [
     {
       "id": "protect-generated",
       "name": "Protect generated files",
       "description": "Stop edits to generated client code.",
       "draft": 2,
-      "live": 2,
+      "published": 2,
       "updated": 2880,
       "nodes": [
         ["t", "Before edit file", "relay.hookEventTrigger", 120, 200, { "operation": "edit", "timing": "before" }],
@@ -79,7 +42,7 @@
       "name": "Ask before risky commands",
       "description": "Pause pushes and recursive deletes for approval.",
       "draft": 1,
-      "live": 1,
+      "published": 1,
       "updated": 5760,
       "nodes": [
         [
@@ -90,14 +53,8 @@
           200,
           { "operation": "command", "timing": "before" }
         ],
-        [
-          "c",
-          "Command matches",
-          "relay.hookCondition",
-          320,
-          200,
-          { "field": "command", "pattern": "git push* | rm -rf *" }
-        ],
+        ["push", "Push command", "relay.hookCondition", 320, 200, { "field": "command", "pattern": "git push *" }],
+        ["delete", "Recursive delete", "relay.hookCondition", 320, 360, { "field": "command", "pattern": "rm -rf *" }],
         [
           "q",
           "Ask",
@@ -106,12 +63,14 @@
           100,
           { "message": "This command changes shared state. Approve to continue." }
         ],
-        ["a", "Allow", "relay.hookAllow", 540, 300, { "message": "" }]
+        ["a", "Allow", "relay.hookAllow", 540, 360, { "message": "" }]
       ],
       "edges": [
-        ["t", "c", 0],
-        ["c", "q", 0],
-        ["c", "a", 1]
+        ["t", "push", 0],
+        ["push", "q", 0],
+        ["push", "delete", 1],
+        ["delete", "q", 0],
+        ["delete", "a", 1]
       ]
     },
     {
@@ -119,10 +78,17 @@
       "name": "Typecheck when a session stops",
       "description": "Run the type checker before an agent may stop.",
       "draft": 1,
-      "live": 1,
+      "published": 1,
       "updated": 12960,
       "nodes": [
-        ["t", "On session stop", "relay.hookEventTrigger", 120, 200, { "operation": "stop", "timing": "after" }],
+        [
+          "t",
+          "On session stop",
+          "relay.hookEventTrigger",
+          120,
+          200,
+          { "operation": "session-idle", "timing": "after" }
+        ],
         [
           "g",
           "Run gate",
@@ -152,6 +118,7 @@
       "name": "Read instructions first",
       "description": "Remind the agent to read project instructions.",
       "draft": 1,
+      "published": null,
       "updated": 40,
       "nodes": [
         ["t", "Before edit file", "relay.hookEventTrigger", 120, 200, { "operation": "edit", "timing": "before" }],
@@ -167,200 +134,30 @@
       "edges": [["t", "m", 0]]
     }
   ],
-  "runs": [
-    {
-      "runID": "1042",
-      "documentID": "wp-execute",
-      "version": 3,
-      "status": "parked",
-      "position": "gate.gate",
-      "failing": ["lints_clean"],
-      "label": "WP-07 · Session recovery",
-      "agent": "Maestro",
-      "baseRef": "a91c2e0",
-      "started": 26,
-      "steps": [
-        { "wp": "bind.bind_scope", "at": 0, "seconds": 72, "passed": ["bind-artifact-written"] },
-        {
-          "wp": "bind.gate",
-          "at": 1,
-          "seconds": 4,
-          "passed": ["wp_card_restated", "acceptance_scenarios_listed", "surface_declared"]
-        },
-        { "wp": "red.write_failing_tests", "at": 2, "seconds": 185, "passed": ["red-changed-the-tests"] },
-        {
-          "wp": "red.gate",
-          "at": 5,
-          "seconds": 52,
-          "attempts": 2,
-          "note": "Attempt 1 failed failing_output_captured",
-          "passed": ["tests_written_first", "failing_output_captured", "tests_map_to_scenarios"]
-        },
-        { "wp": "green.implement", "at": 6, "seconds": 400, "passed": ["green-changed-the-source"] },
-        {
-          "wp": "green.gate",
-          "at": 13,
-          "seconds": 38,
-          "passed": ["tests_pass", "passing_output_captured", "surface_respected"]
-        },
-        { "wp": "refactor.refactor_or_skip", "at": 14, "seconds": 91, "passed": ["refactor-decision-written"] },
-        {
-          "wp": "refactor.gate",
-          "at": 16,
-          "seconds": 41,
-          "passed": ["refactor_decision_recorded", "tests_still_pass"]
-        },
-        { "wp": "gate.verify_all", "at": 17, "seconds": 250, "passed": ["verify-evidence-written"] },
-        {
-          "wp": "gate.cold_review",
-          "at": 21,
-          "seconds": 122,
-          "attempts": 2,
-          "passed": ["review-is-substantive", "review-engages-with-the-diff"]
-        },
-        {
-          "wp": "gate.gate",
-          "at": 23,
-          "seconds": 166,
-          "attempts": 4,
-          "status": "escalated",
-          "checks": [
-            ["full_suite_green", "pass", "bun test\n412 pass · 0 fail · 38.2s"],
-            [
-              "lints_clean",
-              "fail",
-              "exit 1\nsrc/session/recovery.ts:88:5  error  Promises must be awaited  no-floating-promises\n1 problem (1 error, 0 warnings)"
-            ],
-            ["acceptance_walked_per_scenario", "pass", "SCN-1 pass · SCN-2 pass · SCN-3 pass"]
-          ]
-        }
-      ]
-    },
-    {
-      "runID": "1041",
-      "documentID": "wp-execute",
-      "version": 3,
-      "status": "completed",
-      "label": "WP-06 · Tab persistence",
-      "agent": "Maestro",
-      "baseRef": "7c03d19",
-      "started": 192,
-      "ended": 151
-    },
-    {
-      "runID": "1040",
-      "documentID": "wp-execute",
-      "version": 2,
-      "status": "failed",
-      "position": "green.gate",
-      "reason": "Service restarted during the Green gate. The receipt was marked crashed; nothing was rerun.",
-      "label": "WP-05 · Draft autosave",
-      "agent": "Maestro",
-      "baseRef": "e44b2a8",
-      "started": 1620,
-      "ended": 1602
-    },
-    {
-      "runID": "1039",
-      "documentID": "wp-execute",
-      "version": 2,
-      "status": "completed",
-      "label": "WP-04 · Steer and queue",
-      "agent": "Maestro",
-      "baseRef": "19fa0c4",
-      "started": 2940,
-      "ended": 2903
-    },
-    {
-      "runID": "311",
-      "documentID": "spec-decompose",
-      "version": 2,
-      "status": "running",
-      "position": "requirements.gate",
-      "label": "Billing export",
-      "agent": "Maestro",
-      "baseRef": "b20e7d1",
-      "started": 7
-    },
-    {
-      "runID": "310",
-      "documentID": "spec-decompose",
-      "version": 2,
-      "status": "completed",
-      "label": "Usage limits",
-      "agent": "Maestro",
-      "baseRef": "0d6f2a3",
-      "started": 1800,
-      "ended": 1740
-    },
-    {
-      "runID": "58",
-      "documentID": "planning",
-      "version": 1,
-      "status": "completed",
-      "label": "Linux workspace wave",
-      "agent": "Maestro",
-      "baseRef": "4be19c0",
-      "started": 1320,
-      "ended": 1260
-    },
-    {
-      "runID": "77",
-      "documentID": "design",
-      "version": 5,
-      "status": "failed",
-      "position": "ratify.wet_ink",
-      "reason": "Human approval steps cannot run in this runner yet. The run stopped at Wet Ink.",
-      "label": "Dock tool ergonomics",
-      "agent": "Maestro",
-      "baseRef": "c71d0e2",
-      "started": 4320,
-      "ended": 4200
-    }
-  ],
-  "audits": {
-    "1042": {
-      "status": "fail",
-      "code": "ESCALATED",
-      "rows": [
-        { "label": "Chain", "value": "Intact · 186 entries · SHA-256" },
-        { "label": "Controls", "value": "21 recorded · 20 pass · 1 fail (lints_clean)" },
-        { "label": "Judges", "value": "1 reported · pass · non-independent" },
-        { "label": "Oracle recheck", "value": "Matches the sprint of v3" },
-        { "label": "Exit", "value": "2 · ends in escalation" }
-      ]
-    }
-  },
   "installs": [
-    {
-      "installID": "inst-protect",
-      "document": "protect-generated",
-      "version": 2,
-      "order": 0,
-      "enabled": true,
-      "installedBy": "owner",
-      "installed": 2400
-    },
-    {
-      "installID": "inst-ask",
-      "document": "ask-shell",
-      "version": 1,
-      "order": 1,
-      "enabled": true,
-      "installedBy": "owner",
-      "installed": 5400
-    }
+    { "installID": "inst-protect", "document": "protect-generated", "order": 0, "enabled": true, "installed": 2400 },
+    { "installID": "inst-ask", "document": "ask-shell", "order": 1, "enabled": true, "installed": 5400 }
   ],
   "decisions": {
     "inst-protect": [
-      ["d1", "b", "before.edit", "edit", "src/generated/client.ts", "Blocked", 18, "WP-07 · Session recovery"],
-      ["d2", "a", "before.edit", "edit", "src/session/recovery.ts", "Allowed", 19, "WP-07 · Session recovery"],
-      ["d3", "b", "before.edit", "edit", "src/generated/types.gen.ts", "Blocked", 95, "WP-06 · Tab persistence"],
-      ["d4", "a", "before.edit", "edit", "packages/client/src/api.ts", "Allowed", 300, "Regenerate SDK"],
-      ["d5", "b", "before.edit", "edit", "src/generated/client.ts", "Blocked", 303, "Regenerate SDK"]
+      ["d5", "b", "block", "edit.before", "edit", "src/generated/client.ts", "blocked", 303, "ses_regenerate"],
+      ["d4", "a", "allow", "edit.before", "edit", "packages/client/src/api.ts", "allowed", 300, "ses_regenerate"],
+      ["d3", "b", "block", "edit.before", "edit", "src/generated/types.gen.ts", "blocked", 95, "ses_tabs"],
+      ["d2", "a", "allow", "edit.before", "edit", "src/session/recovery.ts", "allowed", 19, "ses_recovery"],
+      ["d1", "b", "block", "edit.before", "edit", "src/generated/client.ts", "blocked", 18, "ses_recovery"]
     ],
     "inst-ask": [
-      ["d6", "q", "before.command", "bash", "git push origin dev", "Asked · approved", 125, "WP-06 · Tab persistence"]
+      [
+        "d6",
+        "q",
+        "approve",
+        "command.before",
+        "bash",
+        "5b8c0f1f2d0b9d3e8e2b5d7f6c1a4e9b3d2c7f0a8e6b4d1c9f2e5a7b3c0d8e6f",
+        "approved",
+        125,
+        "ses_tabs"
+      ]
     ]
   },
   "nodeTypes": {
@@ -373,59 +170,40 @@
         "maximum": 1,
         "parameters": [
           { "name": "relayBrief", "label": "Workflow objective", "type": "text", "default": "" },
-          { "name": "relayRetryBudget", "label": "Fixes allowed per step", "type": "number", "default": 3 }
+          {
+            "name": "relayRetryBudget",
+            "label": "Fixes allowed per step",
+            "type": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 99
+          }
         ]
       },
+      { "type": "relay.execute", "label": "Run task", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.gate", "label": "Check criteria", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.review", "label": "Review change", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.inject", "label": "Provide context", "inputs": 1, "outputs": ["main"], "parameters": "context" },
+      { "type": "relay.human", "label": "Human approval", "inputs": 1, "outputs": ["main"], "parameters": "step" }
+    ],
+    "step": [
+      { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
+      { "name": "skill", "label": "Skill", "type": "skill", "default": "" },
       {
-        "type": "relay.execute",
-        "label": "Run task",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [
-          { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
-          { "name": "checklist", "label": "Criteria", "type": "json", "default": "[]" }
+        "name": "skillMode",
+        "label": "How to use the skill",
+        "type": "options",
+        "default": "combine",
+        "options": [
+          { "value": "combine", "label": "Skill plus instructions" },
+          { "value": "replace", "label": "Skill replaces instructions" }
         ]
       },
-      {
-        "type": "relay.gate",
-        "label": "Check criteria",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [
-          { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
-          { "name": "checklist", "label": "Criteria", "type": "json", "default": "[]" }
-        ]
-      },
-      {
-        "type": "relay.review",
-        "label": "Review change",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [
-          { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
-          { "name": "checklist", "label": "Criteria", "type": "json", "default": "[]" }
-        ]
-      },
-      {
-        "type": "relay.inject",
-        "label": "Provide context",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [
-          { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
-          { "name": "checklist", "label": "Criteria", "type": "json", "default": "[]" }
-        ]
-      },
-      {
-        "type": "relay.human",
-        "label": "Human approval",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [
-          { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
-          { "name": "checklist", "label": "Criteria", "type": "json", "default": "[]" }
-        ]
-      }
+      { "name": "checklist", "label": "Criteria to advance", "type": "json", "default": "[]" }
+    ],
+    "context": [
+      { "name": "text", "label": "Context", "type": "text", "default": "" },
+      { "name": "file", "label": "Context file", "type": "string", "default": "" }
     ],
     "hook": [
       {
@@ -445,7 +223,10 @@
               { "value": "edit", "label": "Edit file" },
               { "value": "write", "label": "Create file" },
               { "value": "command", "label": "Run command" },
-              { "value": "stop", "label": "Session stop" }
+              { "value": "tool", "label": "Any tool" },
+              { "value": "session-start", "label": "Session start" },
+              { "value": "prompt", "label": "Prompt" },
+              { "value": "session-idle", "label": "Session stop" }
             ]
           },
           {
@@ -466,62 +247,58 @@
         "inputs": 1,
         "outputs": ["Yes", "No"],
         "parameters": [
-          { "name": "field", "label": "Field", "type": "options", "default": "path" },
-          { "name": "pattern", "label": "Matches pattern", "type": "string", "default": "" }
+          {
+            "name": "field",
+            "label": "Field",
+            "type": "options",
+            "default": "path",
+            "options": [
+              { "value": "path", "label": "File path" },
+              { "value": "tool", "label": "Tool" },
+              { "value": "command", "label": "Command" },
+              { "value": "event", "label": "Event" }
+            ]
+          },
+          {
+            "name": "pattern",
+            "label": "Matches pattern",
+            "type": "string",
+            "default": "",
+            "placeholder": "src/generated/**"
+          }
         ]
-      },
-      {
-        "type": "relay.hookBlock",
-        "label": "Block",
-        "inputs": 1,
-        "outputs": [],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
-      },
-      {
-        "type": "relay.hookApprove",
-        "label": "Ask for approval",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
-      },
-      {
-        "type": "relay.hookAllow",
-        "label": "Allow",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
       },
       {
         "type": "relay.hookRemind",
         "label": "Send reminder",
         "inputs": 1,
         "outputs": ["main"],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
+        "parameters": "message"
+      },
+      { "type": "relay.hookBlock", "label": "Block", "inputs": 1, "outputs": [], "parameters": "message" },
+      {
+        "type": "relay.hookApprove",
+        "label": "Ask for approval",
+        "inputs": 1,
+        "outputs": ["main"],
+        "parameters": "message"
       },
       {
         "type": "relay.hookVerify",
         "label": "Run check",
         "inputs": 1,
         "outputs": ["Pass", "Fail"],
-        "parameters": [
-          { "name": "message", "label": "Message", "type": "text", "default": "" },
-          { "name": "check", "label": "Check command", "type": "string", "default": "" }
-        ]
+        "parameters": "verify"
       },
       {
         "type": "relay.hookRepair",
         "label": "Require repair",
         "inputs": 1,
         "outputs": ["main"],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
+        "parameters": "message"
       },
-      {
-        "type": "relay.hookRecord",
-        "label": "Record only",
-        "inputs": 1,
-        "outputs": ["main"],
-        "parameters": [{ "name": "message", "label": "Message", "type": "text", "default": "" }]
-      }
+      { "type": "relay.hookRecord", "label": "Record only", "inputs": 1, "outputs": ["main"], "parameters": "message" },
+      { "type": "relay.hookAllow", "label": "Allow", "inputs": 1, "outputs": ["main"], "parameters": "note" }
     ]
   }
 }
