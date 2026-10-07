@@ -1,10 +1,11 @@
 // Local WP10 helpers. lib.ts and the product remain frozen. Node builtins only.
-import { spawn, spawnSync } from "node:child_process"
+import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { createHash, randomUUID } from "node:crypto"
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { cli, isolated, LOGS, table, until, win } from "./lib.ts"
+import { cleanup, cli, isolated, LOGS, table, until } from "./lib.ts"
 
 export function requireLocal() {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1") throw new Error("campaign requires ORCHESTRA_LOCAL_TESTS=1")
@@ -26,7 +27,7 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   if (resolved.status !== 0) throw new Error(`node unavailable: ${resolved.stderr}`)
   mkdirSync(LOGS, { recursive: true })
   const tag = `${name}-${Date.now()}-${randomUUID().slice(0, 8)}`
-  return { ...scratch, env, node: resolved.stdout.trim(), tag, log: path.join(LOGS, `${tag}.host.log`) }
+  return { ...scratch, env, node: resolved.stdout.trim(), tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
 }
 
 export type Fixture = ReturnType<typeof fixture>
@@ -37,6 +38,7 @@ export function evidence(scratch: Fixture) {
     baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
     cli: bin, cliSha256: createHash("sha256").update(readFileSync(bin)).digest("hex"),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
+    fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),
     osCoverage: Object.fromEntries(["darwin", "linux", "win32"].map((os) => [os, os === process.platform ? "executed-local" : "not-run"])),
   }
 }
@@ -52,6 +54,7 @@ export async function start(scratch: Fixture) {
   const proc = spawn(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], {
     env: scratch.env, cwd: scratch.project, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   })
+  scratch.hosts.push(proc)
   let out = ""
   let failure: Error | undefined
   proc.on("error", (error) => { failure = error })
@@ -67,8 +70,25 @@ export async function start(scratch: Fixture) {
   return { proc, url, pid: proc.pid!, out: () => out }
 }
 
+export async function finish(scratch: Fixture, nonces: string[] = []) {
+  // A serve command line does not contain HOME. Kill only handles created by this fixture.
+  for (const proc of scratch.hosts) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
+  await until(10_000, "owned CLI host exit", () =>
+    scratch.hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
+  await cleanup(scratch.home, nonces)
+  const destination = path.join(LOGS, `${scratch.tag}.evidence`)
+  mkdirSync(destination, { recursive: true })
+  for (const file of readdirSync(scratch.home).filter((file) => /\.(jsonl|json|log|txt|edited|vim-size)$/.test(file)))
+    copyFileSync(path.join(scratch.home, file), path.join(destination, file))
+  for (const nonce of nonces) {
+    const dir = path.join(os.tmpdir(), nonce)
+    for (const file of readdirSync(dir).filter((file) => file.endsWith(".json")))
+      copyFileSync(path.join(dir, file), path.join(destination, `${nonce}-${file}`))
+  }
+}
+
 export function api(url: string, directory: string) {
-  return async <T = unknown>(method: string, route: string, body?: unknown, timeoutMs = 60_000): Promise<T> => {
+  return async <T = unknown>(method: string, route: string, body?: unknown, timeoutMs = 120_000): Promise<T> => {
     const response = await fetch(new URL(route, url), {
       method, headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(directory) },
       body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs),
@@ -118,5 +138,3 @@ readline.createInterface({input: process.stdin}).on('line', line => {
 process.stdin.on('end', () => process.exit(0));
 `)
 }
-
-export const terminalShell = win ? "cmd.exe" : "/bin/sh"

@@ -3,8 +3,8 @@
 import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { cleanup, supervised, sweep, until, verdict } from "./lib.ts"
-import { api, evidence, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
+import { supervised, sweep, until, verdict } from "./lib.ts"
+import { api, evidence, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
   const scratch = fixture("v5-mcp")
@@ -44,7 +44,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     const failed = await call<Record<string, { status: string; error?: string }>>("POST", "/mcp", {
       name: "failure", config: { type: "local", command: [scratch.node, mcpFixture(scratch, failureNonce, true), failureNonce], timeout: 10_000 },
     }, 25_000)
-    metrics.failureDiagnostics = failed.failure
+    metrics.failureDiagnostics = { status: failed.failure?.status, tail: failed.failure?.error?.slice(-350) }
     if (failed.failure?.status !== "failed" || !failed.failure.error?.includes(`LAST-STDERR-${failureNonce}`))
       throw new Error(`last stderr line absent from failed-connect diagnostics: ${JSON.stringify(failed.failure)}`)
     await call("POST", "/mcp/campaign/disconnect", {})
@@ -56,7 +56,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
   } finally {
     // Record leftovers before emergency cleanup; cleanup never changes a verdict to green.
     metrics.beforeCleanup = await sweep(nonce)
-    await cleanup(scratch.home, [])
+    await finish(scratch).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` })
   }
   const result = verdict("v5-mcp", { ...evidence(scratch), mutation: options.mutation ?? null, pass,
     status: pass ? "passed-local" : "failed-local", error, metrics,
