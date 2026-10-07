@@ -45,6 +45,7 @@ export async function run() {
     })
     const status = { lsp: await api.get("/lsp"), mcp: await api.get("/mcp") }
     const supervisors = [...new Map(Object.values(live).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
+    const retained = Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])
     if (supervisors.length === 0) throw new Error("positive control failed before quit")
     step(`live ${JSON.stringify(live)}; status ${JSON.stringify(status)}`)
     if (!table().some((row) => matches(row, pinnedHost) && !row.state.startsWith("Z"))) throw new Error("serve identity changed before SIGTERM")
@@ -55,7 +56,7 @@ export async function run() {
     const after = await until(20_000 - exitMs, "quit cleaning all owned trees and supervisor", () => {
       const rows = table(Math.min(2000, 20_000 - (Date.now() - quit)))
       const found = { lsp: members(lspNonce, rows), mcp: members(mcpNonce, rows), tree: members(tree.nonce, rows) }
-      const counts = { ...Object.fromEntries(Object.entries(found).map(([name, tree]) => [name, tree.members.length + tree.wrappers.length])), supervisors: rows.filter((row) => !row.state.startsWith("Z") && supervisors.some((pinned) => matches(row, pinned))).length }
+      const counts = { ...Object.fromEntries(Object.entries(found).map(([name, tree]) => [name, tree.members.length + tree.wrappers.length])), retainedMembers: rows.filter((row) => !row.state.startsWith("Z") && retained.some((pinned) => matches(row, pinned))).length, supervisors: rows.filter((row) => !row.state.startsWith("Z") && supervisors.some((pinned) => matches(row, pinned))).length }
       return Object.values(counts).every((count) => count === 0) ? counts : undefined
     })
     const totalMs = Date.now() - quit

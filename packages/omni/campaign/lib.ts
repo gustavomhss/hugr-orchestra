@@ -1,8 +1,9 @@
 // Shared harness for the WP10 validation campaign (packages/omni/docs/orchestra-integration.md §4 WP10).
 //
 // Every scenario runs the real product (the compiled CLI by default) against an isolated HOME / XDG tree and a
-// throwaway git project, and identifies processes only through the shared nonce oracle
-// (packages/core/test/fixture/process-tree.ts). Each scenario prints one `CAMPAIGN_VERDICT {...}` JSON line.
+// throwaway git project. Trees use the shared nonce fixture (packages/core/test/fixture/process-tree.ts), while
+// hosts, supervisors and observed members retain PID/start-time identities. OS queries fail closed and are bounded.
+// Each scenario prints one `CAMPAIGN_VERDICT {...}` JSON line.
 //
 // Plain node: builtins only, so the scripts run under bun on every OS and can be imported by bun:test wrappers.
 
@@ -350,7 +351,7 @@ export function members(nonce: string, rows = table()) {
     return record
   })
   const found = live.filter((row) => records.some((record) => matches(row, record)))
-  if (found.some((row) => !hasNonce(row.args, nonce))) throw new Error(`fixture ${nonce} retained identity but lost its argv nonce`)
+  // macOS may drop argv during kernel teardown before the PID disappears. A retained identity still counts live.
   return { members: found, wrappers: live.filter((row) => hasNonce(row.args, nonce) && !found.some((member) => matches(member, row))) }
 }
 
@@ -367,9 +368,10 @@ export function control(nonce: string, size: number, hosts: Identity[], rows = t
   }
   const protectedMembers = [...found.members, ...found.wrappers].map((row) => ({
     identity: identity(row.pid, rows),
+    argvPresent: hasNonce(row.args, nonce),
     supervisors: above(row.pid).filter((ancestor) => SUPERVISOR.test(ancestor.args) && hosts.some((host) => above(ancestor.pid).some((parent) => matches(parent, host)))).map((row) => identity(row.pid, rows)),
   }))
-  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.supervisors.length > 0) }
+  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }
 }
 
 /** Compatibility control, strengthened from any-member to all-member supervision. */

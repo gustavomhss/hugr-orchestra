@@ -63,7 +63,7 @@ async function hold() {
     if (!kill9(hostIdentity)) throw new Error("could not kill pinned hold host")
     const killed = Date.now()
     steps.push({ phase: "host-killed", at: killed })
-    const observed = await deadlineSnapshots(killed, KPI_MS, [nonce], [hostIdentity, ...supervisors])
+    const observed = await deadlineSnapshots(killed, KPI_MS, [nonce], [hostIdentity, ...supervisors, ...before.fixtureIds, ...before.wrappers])
     return verdict("v2-hold", { target: "hold", nonce, hostIdentity, before, supervisors, observed, pass: observed.zeroAtMs !== undefined && observed.last.counts[0] === 0 && observed.last.retained.length === 0 })
   } catch (error) {
     return verdict("v2-hold", { pass: false, nonce, hostIdentity, steps, error: String(error), output: out })
@@ -149,7 +149,7 @@ async function host(target: "serve" | "tui") {
     const killed = Date.now()
     step(`kill -9 ${started.pid}`)
     const all = [...nonces, lspNonce, mcpNonce]
-    const observed = await deadlineSnapshots(killed, KPI_MS, all, [hostIdentity, ...supervisors])
+    const observed = await deadlineSnapshots(killed, KPI_MS, all, [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])])
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args.slice(0, 160)}`)
     step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
     return verdict(`v2-${target}`, {

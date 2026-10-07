@@ -50,7 +50,7 @@ export async function run() {
     const recoveryMs = Date.now() - created
     if (!fresh.some((pinned) => !supervisors.some((old) => matches(old, pinned)))) throw new Error("recovery did not create a new supervisor identity")
     if (!kill9(pinnedHost)) throw new Error("could not kill pinned server")
-    const afterHost = await deadlineSnapshots(Date.now(), 8000, [trees.after.nonce], [pinnedHost, ...fresh])
+    const afterHost = await deadlineSnapshots(Date.now(), 8000, [trees.after.nonce], [pinnedHost, ...fresh, ...recovered.fixtureIds, ...recovered.wrappers])
     step(`recovery ${recoveryMs} ms; new host-owned tree zero at ${afterHost.zeroAtMs} ms`)
     return verdict("v3-supervisor", {
       home: scratch.home, nonces, pinnedHost, before, supervisors, observed, serverAlive, tier,
