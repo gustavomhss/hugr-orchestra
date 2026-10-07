@@ -45,7 +45,7 @@ async function openSession(page: Page) {
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode Zen",
           models: {
             "free-model": {
               id: "free-model",
@@ -96,7 +96,7 @@ test("composer model popover renders a bounded window and keeps keyboard selecti
   const search = page.getByPlaceholder("Search models", { exact: true })
   await expect(search).toBeFocused()
   const options = page.locator('[data-option-key^="router:"]')
-  await expect(page.locator('[data-option-key="orchestra:free-model"]')).toHaveAttribute("data-selected-model", "true")
+  await expect(page.locator('[data-option-key="opencode:free-model"]')).toHaveAttribute("data-selected-model", "true")
   await expect(page.locator('[data-option-key="router:model-000"]')).toBeVisible()
   await expect.poll(() => options.count()).toBeLessThan(60)
   await expectContiguous(options)
@@ -131,7 +131,7 @@ test("model dialog renders a bounded window and keeps keyboard selection", async
   // The command menu may restore focus to its trigger while the dialog opens; focus the search like a user.
   await search.click()
   await expect(search).toBeFocused()
-  const current = dialog.locator('[data-slot="list-item"][data-key="orchestra:free-model"]')
+  const current = dialog.locator('[data-slot="list-item"][data-key="opencode:free-model"]')
   await expect(current).toHaveAttribute("data-selected", "true")
   await expect(dialog.locator('[data-slot="list-item"][data-key="router:model-000"]')).toBeVisible()
   await expect.poll(() => items.count()).toBeLessThan(60)

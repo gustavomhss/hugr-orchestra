@@ -121,7 +121,7 @@ test("General's theme picker offers only Orchestra palettes and recolors the gla
     "AMOLED",
   ])
   // The inherited picker, its scheme select and its docs link are gone.
-  await expect(row).not.toContainText(/orchestra|OC-2/i)
+  await expect(row).not.toContainText(/opencode|OC-2/i)
   await expect(view.locator('[data-action="settings-theme"], [data-action="settings-color-scheme"]')).toHaveCount(0)
   await expect(view.locator('a[href*="opencode.ai"]')).toHaveCount(0)
   await expect(radio("System")).toHaveAttribute("aria-checked", "true")

@@ -16,6 +16,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /(?:^|\/)(?:LICENSE|NOTICE)(?:\.[a-z]+)?$/, reason: "license and notice texts keep their copyright lines" },
   { path: /^specs\/orchestra-visual\/(?:handoff|evidence)\//, reason: "hash-pinned evidence archives" },
+  {
+    path: /^packages\/app\/src\/i18n\/branding\.test\.ts$/,
+    reason: "branding detector and its planted old-product counterexamples must keep the name they reject",
+  },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
     path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,
@@ -118,6 +122,16 @@ export const protectedStrings: Protected[] = [
     pattern: /opencode(?:#credential|-test)\b/g,
     paths: /^packages\/core\/test\/session-runner-model\.test\.ts$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
     reason: "Zen provider-family fixtures for credential and free-model header eligibility",
+  },
+  {
+    pattern: /opencode:free-model/g,
+    paths: /^packages\/app\/e2e\/regression\/model-picker-virtual-list\.spec\.ts$/,
+    reason: "Zen provider id in the model picker's selected-row locator",
+  },
+  {
+    pattern: /opencode\|OC-2/g,
+    paths: /^packages\/app\/e2e\/orchestra\/chapter-settings\.spec\.ts$/,
+    reason: "negative assertion against the inherited theme names, not against Orchestra",
   },
   {
     pattern: /opencode\/<InstallationVersion>|`opencode`/g,
