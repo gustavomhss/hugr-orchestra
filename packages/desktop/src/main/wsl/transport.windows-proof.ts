@@ -19,7 +19,7 @@ test("real Windows/WSL transport copies verified host bytes to isolated guest HO
   expect(home.startsWith("/tmp/")).toBe(true)
   const host = await mkdtemp(join(tmpdir(), "w4-transport-"))
   const source = join(host, "owned ' $() executable")
-  const bytes = "#!/bin/bash\nprintf '1.16.2\\n'\n"
+  const bytes = "#!/bin/bash\nprintf 'orchestra v1.16.2\\n'\n"
   try {
     await Bun.write(source, bytes)
     await installWslArtifact(distro!, "1.16.2", {
@@ -33,7 +33,7 @@ test("real Windows/WSL transport copies verified host bytes to isolated guest HO
     })
     const installed = await runWslInDistro(["bash", "-c", `${shellEscape(`${home}/.orchestra/bin/orchestra`)} --version`], distro)
     expect(installed.code).toBe(0)
-    expect(installed.stdout.trim()).toBe("1.16.2")
+    expect(installed.stdout.trim()).toBe("orchestra v1.16.2")
   } finally {
     await runWslInDistro(["rm", "-rf", "--", home], distro)
     await rm(host, { recursive: true, force: true })

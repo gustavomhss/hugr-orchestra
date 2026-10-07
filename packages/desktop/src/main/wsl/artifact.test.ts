@@ -19,7 +19,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
   const root = await mkdtemp(join(tmpdir(), "w4-transfer-"))
   const source = join(root, "owned ' $(touch planted); artifact")
   const destination = join(root, ".orchestra/bin/orchestra")
-  const bytes = "#!/bin/bash\nprintf '1.16.2\\n'\n"
+  const bytes = "#!/bin/bash\nprintf 'orchestra v1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
   const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s") => shell(
     ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version], root,
@@ -37,6 +37,12 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await execute(source)).code).toBe(0)
     expect(await readFile(destination, "utf8")).toBe(bytes)
     await Bun.write(destination, "foreign-old")
+    for (const output of ["1.16.2", "orchestra v", "orchestra v1.16.2 extra", "orchestra v1.16.3"]) {
+      const malformed = `#!/bin/bash\nprintf '%s\\n' '${output}'\n`
+      await Bun.write(source, malformed)
+      expect((await execute(source, createHash("sha256").update(malformed).digest("hex"))).code).toBe(82)
+      expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    }
     await Bun.write(source, "not an executable\n")
     expect((await execute(source, createHash("sha256").update("not an executable\n").digest("hex"))).code).toBe(83)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
