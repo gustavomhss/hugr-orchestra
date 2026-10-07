@@ -24,7 +24,6 @@ export const navigation = [
   { id: "providers", label: "settings.providers.title", chapter: "C05" },
   { id: "shortcuts", label: "settings.tab.shortcuts", chapter: "C06" },
   { id: "settings", label: "sidebar.settings", chapter: undefined },
-  { id: "help", label: "sidebar.help", chapter: undefined },
 ] as const
 
 // Capability pages without an entry here use their navigation label, as the reference does.

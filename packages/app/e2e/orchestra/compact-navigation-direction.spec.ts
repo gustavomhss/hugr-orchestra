@@ -5,9 +5,9 @@ test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
 const projectName = "مشروع Compact navigation 42 — واجهة"
 const cases = [
-  { name: "English LTR", locale: "en", direction: "ltr", home: "Home", help: "Help", override: false },
-  { name: "English forced RTL", locale: "en", direction: "rtl", home: "Home", help: "Help", override: true },
-  { name: "Arabic RTL", locale: "ar", direction: "rtl", home: "الرئيسية", help: "مساعدة", override: false },
+  { name: "English LTR", locale: "en", direction: "ltr", home: "Home", last: "Settings", override: false },
+  { name: "English forced RTL", locale: "en", direction: "rtl", home: "Home", last: "Settings", override: true },
+  { name: "Arabic RTL", locale: "ar", direction: "rtl", home: "الرئيسية", last: "الإعدادات", override: false },
 ] as const
 
 for (const scenario of cases) {
@@ -149,14 +149,14 @@ for (const scenario of cases) {
         // Short windows must scroll the last navigation target into view before the profile.
         await page.setViewportSize({ width: 1152, height: 600 })
         await expect(sidebar).toHaveCSS("width", "56px")
-        const help = sidebar.getByRole("button", { name: scenario.help, exact: true })
-        await help.focus()
-        await expect(help).toBeInViewport({ ratio: 1 })
+        const last = sidebar.getByRole("button", { name: scenario.last, exact: true })
+        await last.focus()
+        await expect(last).toBeInViewport({ ratio: 1 })
         await page.keyboard.press("Tab")
         await expect(profile).toBeFocused()
         await page.keyboard.press("Shift+Tab")
-        await expect(help).toBeFocused()
-        await expect(help).toBeInViewport({ ratio: 1 })
+        await expect(last).toBeFocused()
+        await expect(last).toBeInViewport({ ratio: 1 })
       },
     )
   }

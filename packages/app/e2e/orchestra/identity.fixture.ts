@@ -14,6 +14,7 @@ export async function setupIdentity(
   page: Page,
   input: {
     scheme: "dark" | "light"
+    palette?: "graphite"
     viewport: { width: number; height: number }
     locale?: "en" | "ar"
     running?: boolean
@@ -21,8 +22,9 @@ export async function setupIdentity(
 ) {
   const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   await page.addInitScript(
-    ({ scheme, server, directory, sessionID }) => {
-      localStorage.setItem("opencode-theme-id", "oc-2")
+    ({ scheme, palette, server, directory, sessionID }) => {
+      // Orchestra's own Dark or Light, or a palette that recolors it in the same scheme.
+      localStorage.setItem("orchestra-palette", palette ?? scheme)
       localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
@@ -37,7 +39,7 @@ export async function setupIdentity(
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
     },
-    { scheme: input.scheme, server, directory, sessionID },
+    { scheme: input.scheme, palette: input.palette, server, directory, sessionID },
   )
   const assistant = assistantMessage(
     input.running ? [] : [textPart("prt_orchestra_identity_response", "Orchestra identity fixture response")],

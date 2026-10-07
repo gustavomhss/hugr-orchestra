@@ -36,7 +36,10 @@ import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
+import { credentialScenarios } from "./credential"
+import { scheduleScenarios } from "./schedule"
 import { skillScenarios } from "./skill"
+import { catalogScenarios } from "./catalog"
 import { disposeApps } from "./backend"
 import { runtime } from "./runtime"
 import { type Scenario } from "./types"
@@ -115,6 +118,8 @@ const scenarios: Scenario[] = [
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
   ...relayScenarios,
+  ...catalogScenarios,
+  ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),
@@ -593,7 +598,7 @@ const scenarios: Scenario[] = [
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
   ...integrationScenarios,
-  http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
+  ...credentialScenarios,
   http.protected
     .get("/api/event", "v2.event.subscribe")
     .stream()
@@ -664,7 +669,6 @@ const scenarios: Scenario[] = [
       headers: ctx.headers(),
     }))
     .status(404, undefined, "none"),
-  http.protected.get("/api/reference", "v2.reference.list").json(200, object),
   http.protected
     .get("/api/provider/{providerID}", "v2.provider.get")
     .at((ctx) => ({ path: route("/api/provider/{providerID}", { providerID: "missing" }), headers: ctx.headers() }))

@@ -434,6 +434,13 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
         return [{ r: data[offset], g: data[offset + 1], b: data[offset + 2], a: 1 }]
       }
     }
+    // A glass plate (data-glass-plate, orchestra theme.css) draws the blur of the glass painted right after it,
+    // which keeps only a no-op filter of its own.
+    const backdropFilter = (element: Element) => {
+      const plate = element.previousElementSibling
+      if (plate?.hasAttribute("data-glass-plate")) return getComputedStyle(plate).backdropFilter
+      return getComputedStyle(element).backdropFilter
+    }
     const filters = (value: string) =>
       value === "none"
         ? []
@@ -488,16 +495,14 @@ export function measureContrast(page: Page, targets: ContrastTarget[]) {
       return {
         layers: [...(await own(style)), ...pseudo.flat()],
         opacity: Number(style.opacity),
-        backdrop: filters(style.backdropFilter),
+        backdrop: filters(backdropFilter(element)),
       }
     }
     const ancestry = (element: Element): Element[] =>
       element.parentElement ? [...ancestry(element.parentElement), element] : [element]
     const paint = async (element: Element, points: Point[], ink: Color) => {
       const chain = ancestry(element)
-      const blurs = chain.map(
-        (node) => filters(getComputedStyle(node).backdropFilter).find((item) => item.name === "blur")?.amount ?? 0,
-      )
+      const blurs = chain.map((node) => filters(backdropFilter(node)).find((item) => item.name === "blur")?.amount ?? 0)
       // A photograph is seen through the first glass above it.
       const steps = await Promise.all(
         chain.map((node, index) => layers(node, blurs.slice(index + 1).find((value) => value > 0) ?? 0)),

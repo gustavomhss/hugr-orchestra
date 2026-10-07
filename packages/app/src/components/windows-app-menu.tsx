@@ -41,11 +41,7 @@ export function WindowsAppMenu(props: {
       runCommand(entry.command)
       return
     }
-    if (entry.action) {
-      runAction(entry.action)
-      return
-    }
-    if (entry.href) props.platform.openExternal(entry.href)
+    if (entry.action) runAction(entry.action)
   }
 
   return (
@@ -79,7 +75,9 @@ export function WindowsAppMenu(props: {
       <DropdownMenu.Portal>
         <DropdownMenu.Content class="desktop-app-menu">
           <DropdownMenu.Group>
-            <DropdownMenu.GroupLabel class="desktop-app-menu-heading">OpenCode</DropdownMenu.GroupLabel>
+            <DropdownMenu.GroupLabel class="desktop-app-menu-heading">
+              {language.t("desktop.menu.app")}
+            </DropdownMenu.GroupLabel>
             {DESKTOP_MENU.filter((menu) => desktopMenuVisible(menu, "windows")).map((menu) => (
               <DesktopMenuSubmenu label={language.t(menu.labelKey)}>
                 {menu.items

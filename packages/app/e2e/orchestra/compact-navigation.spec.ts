@@ -192,11 +192,16 @@ test("WIP chapters mark their page above its content; other pages do not", async
 })
 
 // Every main view is one panel of the shared sidebar glass, one 6px gutter from the sidebar.
+// The sidebar's blur is drawn by its glass plate (theme.css).
 async function expectMainGlass(main: Locator) {
   const sidebar = main.page().locator('[data-component="orchestra-sidebar"]')
+  const plate = main.page().locator('[data-glass-plate="sidebar"]')
   for (const property of ["background-image", "backdrop-filter", "border-top-color", "box-shadow", "border-radius"])
     expect(await main.evaluate((element, name) => getComputedStyle(element).getPropertyValue(name), property)).toBe(
-      await sidebar.evaluate((element, name) => getComputedStyle(element).getPropertyValue(name), property),
+      await (property === "backdrop-filter" ? plate : sidebar).evaluate(
+        (element, name) => getComputedStyle(element).getPropertyValue(name),
+        property,
+      ),
     )
   const panel = (await main.boundingBox())!
   const nav = (await sidebar.boundingBox())!

@@ -7,6 +7,7 @@ import { File } from "@opencode-ai/session-ui/file"
 import { Font } from "@opencode-ai/ui/font"
 import { HugrSplash } from "@/orchestra/brand"
 import { ThemeProvider, syncThemeBackground } from "@opencode-ai/ui/theme/context"
+import { OrchestraPaletteProvider } from "@/orchestra/palette/context"
 import { MetaProvider } from "@solidjs/meta"
 import {
   type BaseRouterProps,
@@ -44,7 +45,6 @@ import { FileProvider } from "@/context/file"
 import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider, useServerSync } from "@/context/server-sync"
 import { GlobalProvider, useGlobal } from "@/context/global"
-import { HighlightsProvider } from "@/context/highlights"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
 import { LayoutProvider } from "@/context/layout"
 import { ModelsProvider } from "@/context/models"
@@ -397,7 +397,7 @@ function SharedProviders(props: ParentProps) {
       <BodyDesignClass />
       <CommandProvider>
         <DesktopCommands />
-        <HighlightsProvider>{props.children}</HighlightsProvider>
+        {props.children}
       </CommandProvider>
     </>
   )
@@ -485,24 +485,26 @@ export function AppBaseProviders(
           void window.api?.setTitlebar?.({ mode, scheme })
         }}
       >
-        <LanguageProvider locale={props.locale} onNativeTranslations={props.onNativeTranslations}>
-          <UiI18nBridge>
-            <ErrorBoundary
-              fallback={(error) => {
-                Sentry.captureException(error)
-                return <ErrorPage error={error} />
-              }}
-            >
-              <QueryProvider>
-                <WslServersProvider>
-                  <DialogProvider>
-                    <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
-                  </DialogProvider>
-                </WslServersProvider>
-              </QueryProvider>
-            </ErrorBoundary>
-          </UiI18nBridge>
-        </LanguageProvider>
+        <OrchestraPaletteProvider>
+          <LanguageProvider locale={props.locale} onNativeTranslations={props.onNativeTranslations}>
+            <UiI18nBridge>
+              <ErrorBoundary
+                fallback={(error) => {
+                  Sentry.captureException(error)
+                  return <ErrorPage error={error} />
+                }}
+              >
+                <QueryProvider>
+                  <WslServersProvider>
+                    <DialogProvider>
+                      <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
+                    </DialogProvider>
+                  </WslServersProvider>
+                </QueryProvider>
+              </ErrorBoundary>
+            </UiI18nBridge>
+          </LanguageProvider>
+        </OrchestraPaletteProvider>
       </ThemeProvider>
     </MetaProvider>
   )

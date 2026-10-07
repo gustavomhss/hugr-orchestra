@@ -18,6 +18,7 @@ test("exposes every standard HTTP API group", () => {
     "files",
     "commands",
     "skills",
+    "behaviors",
     "events",
     "ptys",
     "questions",
@@ -26,6 +27,8 @@ test("exposes every standard HTTP API group", () => {
     "relayDocuments",
     "relayPublish",
     "relayHooks",
+    "pullRequests",
+    "schedules",
   ])
   expect(Object.keys(client.messages)).toEqual(["list"])
   expect(Object.keys(client.integrations)).toEqual([

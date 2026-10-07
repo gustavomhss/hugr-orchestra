@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   behaviorCardText,
+  behaviorInstructions,
   behaviorProfileDirectory,
   behaviorSystem,
   CAVEMAN_ID,
@@ -56,6 +57,22 @@ describe("LLM behaviors", () => {
 
   test("an enabled custom behavior without instructions adds nothing", () => {
     expect(behaviorSystem([{ ...custom, instructions: "   " }])).toBeUndefined()
+  })
+
+  test("a V2 server receives each enabled behavior on its own, with the same text a V1 prompt carries", () => {
+    const caveman = { ...defaultBehaviorState().behaviors[0]!, enabled: true, intensity: "ultra" as const }
+    const active = behaviorInstructions([caveman, custom, { ...custom, id: "off", enabled: false }])
+    expect(active.map((item) => [item.id, item.name])).toEqual([
+      [CAVEMAN_ID, "Caveman (intensity: ultra)"],
+      ["reviewer", "Reviewer"],
+    ])
+    expect(active[0]?.instructions).toStartWith("Respond terse like smart caveman. Preserve technical accuracy.\n")
+    expect(active[0]?.instructions).toContain("one word when one word is enough")
+    expect(active[1]?.instructions).toBe("Cite the file and line for every claim.")
+    const system = behaviorSystem([caveman, custom])
+    active.forEach((item) => expect(system).toContain(`## ${item.name}\n${item.instructions}`))
+    expect(behaviorInstructions(defaultBehaviorState().behaviors)).toEqual([])
+    expect(behaviorInstructions([{ ...custom, instructions: "  " }])).toEqual([])
   })
 
   test("sanitizes stored state from browser storage", () => {

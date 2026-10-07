@@ -75,7 +75,7 @@ import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, SummaryDiff, TimelineRow, TimelineRowMap } from "./rows"
 import { filterVirtualIndexes } from "./virtual-items"
-import { errorMessage, SessionSharePopover } from "./session-share-popover"
+import { errorMessage } from "@/pages/layout/helpers"
 import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
@@ -299,8 +299,6 @@ export function MessageTimeline(props: {
   })
   const titleValue = createMemo(() => info()?.title)
   const titleLabel = createMemo(() => sessionTitle(titleValue()))
-  const shareUrl = createMemo(() => info()?.share?.url)
-  const shareEnabled = createMemo(() => sync().data.config.share !== "disabled")
   const parentID = createMemo(() => info()?.parentID)
   const parent = createMemo(() => {
     const id = parentID()
@@ -574,16 +572,8 @@ export function MessageTimeline(props: {
     editing: false,
     menuOpen: false,
     pendingRename: false,
-    pendingShare: false,
   })
   let titleRef: HTMLInputElement | undefined
-
-  const [share, setShare] = createStore({
-    open: false,
-    dismiss: null as "escape" | "outside" | null,
-  })
-  let more: HTMLButtonElement | undefined
-  let shareAnchor: HTMLButtonElement | undefined
 
   const bindListRoot = (root: HTMLDivElement) => {
     if (root === listRoot()) return
@@ -700,7 +690,6 @@ export function MessageTimeline(props: {
           editing: false,
           menuOpen: false,
           pendingRename: false,
-          pendingShare: false,
         }),
       { defer: true },
     ),
@@ -1479,12 +1468,7 @@ export function MessageTimeline(props: {
                       when={settings.general.newLayoutDesigns()}
                       fallback={<SessionContextUsage placement="bottom" buttonAppearance="default" />}
                     >
-                      <SessionHeadActions
-                        shareEnabled={shareEnabled() && !parentID()}
-                        shareOpen={share.open}
-                        shareRef={(el) => (shareAnchor = el)}
-                        onShare={() => setShare({ open: true, dismiss: null })}
-                      />
+                      <SessionHeadActions />
                     </Show>
                     <Show when={!parentID()}>
                       <Show
@@ -1504,32 +1488,17 @@ export function MessageTimeline(props: {
                               icon="dot-grid"
                               variant="ghost"
                               class="size-6 rounded-md data-[expanded]:bg-surface-base-active"
-                              classList={{
-                                "bg-surface-base-active": share.open || title.pendingShare,
-                              }}
                               aria-label={language.t("common.moreOptions")}
-                              aria-expanded={title.menuOpen || share.open || title.pendingShare}
-                              ref={(el: HTMLButtonElement) => {
-                                more = el
-                              }}
+                              aria-expanded={title.menuOpen}
                             />
                             <DropdownMenu.Portal>
                               <DropdownMenu.Content
                                 style={{ "min-width": "104px" }}
                                 onCloseAutoFocus={(event) => {
-                                  if (title.pendingRename) {
-                                    event.preventDefault()
-                                    setTitle("pendingRename", false)
-                                    openTitleEditor()
-                                    return
-                                  }
-                                  if (title.pendingShare) {
-                                    event.preventDefault()
-                                    requestAnimationFrame(() => {
-                                      setShare({ open: true, dismiss: null })
-                                      setTitle("pendingShare", false)
-                                    })
-                                  }
+                                  if (!title.pendingRename) return
+                                  event.preventDefault()
+                                  setTitle("pendingRename", false)
+                                  openTitleEditor()
                                 }}
                               >
                                 <DropdownMenu.Item
@@ -1540,17 +1509,6 @@ export function MessageTimeline(props: {
                                 >
                                   <DropdownMenu.ItemLabel>{language.t("common.rename")}</DropdownMenu.ItemLabel>
                                 </DropdownMenu.Item>
-                                <Show when={shareEnabled()}>
-                                  <DropdownMenu.Item
-                                    onSelect={() => {
-                                      setTitle({ pendingShare: true, menuOpen: false })
-                                    }}
-                                  >
-                                    <DropdownMenu.ItemLabel>
-                                      {language.t("session.share.action.share")}
-                                    </DropdownMenu.ItemLabel>
-                                  </DropdownMenu.Item>
-                                </Show>
                                 <DropdownMenu.Item onSelect={() => exportSession(id)}>
                                   <DropdownMenu.ItemLabel>{language.t("common.export")}</DropdownMenu.ItemLabel>
                                 </DropdownMenu.Item>
@@ -1582,31 +1540,18 @@ export function MessageTimeline(props: {
                             icon={<IconV2 name="outline-dots" />}
                             variant="ghost-muted"
                             size="large"
-                            state={share.open || title.pendingShare ? "pressed" : undefined}
                             aria-label={language.t("common.moreOptions")}
-                            aria-expanded={title.menuOpen || share.open || title.pendingShare}
-                            ref={(el: HTMLButtonElement) => {
-                              more = el
-                            }}
+                            aria-expanded={title.menuOpen}
                           />
                           <MenuV2.Portal>
                             <MenuV2.Content
                               data-orchestra-menu="session"
                               style={{ "min-width": "180px" }}
                               onCloseAutoFocus={(event) => {
-                                if (title.pendingRename) {
-                                  event.preventDefault()
-                                  setTitle("pendingRename", false)
-                                  openTitleEditor()
-                                  return
-                                }
-                                if (title.pendingShare) {
-                                  event.preventDefault()
-                                  requestAnimationFrame(() => {
-                                    setShare({ open: true, dismiss: null })
-                                    setTitle("pendingShare", false)
-                                  })
-                                }
+                                if (!title.pendingRename) return
+                                event.preventDefault()
+                                setTitle("pendingRename", false)
+                                openTitleEditor()
                               }}
                             >
                               <MenuV2.Item
@@ -1617,15 +1562,6 @@ export function MessageTimeline(props: {
                               >
                                 {language.t("orchestra.chat.menu.rename")}
                               </MenuV2.Item>
-                              <Show when={shareEnabled()}>
-                                <MenuV2.Item
-                                  onSelect={() => {
-                                    setTitle({ pendingShare: true, menuOpen: false })
-                                  }}
-                                >
-                                  {language.t("orchestra.chat.share")}
-                                </MenuV2.Item>
-                              </Show>
                               <MenuV2.Item onSelect={() => exportSession(id)}>
                                 {language.t("orchestra.chat.menu.export")}
                               </MenuV2.Item>
@@ -1642,14 +1578,6 @@ export function MessageTimeline(props: {
                           </MenuV2.Portal>
                         </MenuV2>
                       </Show>
-                      <SessionSharePopover
-                        sessionID={sessionID}
-                        url={shareUrl}
-                        enabled={shareEnabled}
-                        share={share}
-                        setShare={setShare}
-                        anchor={() => shareAnchor ?? more}
-                      />
                     </Show>
                   </div>
                 )}

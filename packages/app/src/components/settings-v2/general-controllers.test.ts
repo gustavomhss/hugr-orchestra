@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "bun:test"
 import { createRoot } from "solid-js"
-import { createShellOptions, createSoundPreviewController } from "./general-controller-behavior"
+import { createShellOptions, createSoundPreviewController, readShells } from "./general-controller-behavior"
 
 describe("settings v2 controllers", () => {
   test("normalizes shell names and preserves an unavailable configured shell", () => {
@@ -20,6 +20,18 @@ describe("settings v2 controllers", () => {
       { id: "/bin/zsh", value: "zsh", name: "zsh", terminalOnly: false },
       { id: "fish", value: "fish", name: "fish", terminalOnly: false },
     ])
+  })
+
+  test("reads a well-formed shell list and rejects a malformed reply before anything maps it", () => {
+    const shells = [
+      { path: "/bin/zsh", name: "zsh", acceptable: true },
+      { path: "/usr/bin/fish", name: "fish", acceptable: false },
+    ]
+    expect(readShells(shells)).toEqual(shells)
+    expect(readShells([])).toEqual([])
+    // The reply that took the whole app down was `{}`; a failed request leaves no data at all.
+    for (const reply of [{}, undefined, null, "zsh", [{ path: "/bin/zsh", name: "zsh" }], [{ ...shells[0], name: 1 }]])
+      expect(() => readShells(reply)).toThrow("The server returned a malformed shell list.")
   })
 
   test("debounces previews and stops owned audio on disposal", async () => {

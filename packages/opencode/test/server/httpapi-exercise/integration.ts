@@ -2,7 +2,7 @@ import { array, locationData, object } from "./assertions"
 import { http, route } from "./dsl"
 import { type Scenario } from "./types"
 
-// V2 integration and credential routes (/api/integration, /api/credential), moved out of index.ts unchanged.
+// V2 integration routes (/api/integration), moved out of index.ts unchanged. Credentials live in credential.ts.
 export const integrationScenarios: Scenario[] = [
   http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),
   http.protected
@@ -48,21 +48,6 @@ export const integrationScenarios: Scenario[] = [
     .at((ctx) => ({
       path: route("/api/integration/attempt/{attemptID}", { attemptID: "con_missing" }),
       headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .delete("/api/credential/{credentialID}", "v2.credential.remove")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .patch("/api/credential/{credentialID}", "v2.credential.update")
-    .at((ctx) => ({
-      path: route("/api/credential/{credentialID}", { credentialID: "cred_missing" }),
-      headers: ctx.headers(),
-      body: { label: "Work" },
     }))
     .status(204, undefined, "status"),
 ]

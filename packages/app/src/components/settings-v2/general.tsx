@@ -9,10 +9,10 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
-import { ExternalLink } from "../external-link"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
 import { LayoutRetirementNotice, LayoutTransitionToggle } from "./interface-transition"
+import { PalettePicker } from "@/orchestra/palette/picker"
 import {
   createAppearanceSettingsController,
   createPermissionScopeController,
@@ -27,7 +27,6 @@ import {
 } from "./general-controllers"
 import "./settings-v2.css"
 
-const schemeOptions: ("system" | "light" | "dark")[] = ["system", "light", "dark"]
 const fontSettings = {
   ui: {
     action: "settings-ui-font",
@@ -100,21 +99,33 @@ const ShellSetting: Component<{ controller: ShellSettingsController }> = (props)
       title={language.t("settings.general.row.shell.title")}
       description={language.t("settings.general.row.shell.description")}
     >
-      <SelectV2
-        appearance="inline"
-        data-action="settings-shell"
-        options={options()}
-        current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
-        placement="bottom-end"
-        gutter={6}
-        value={(option) => option.id}
-        label={(option) => {
-          if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
-          if (!option.terminalOnly) return option.name
-          return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
-        }}
-        onSelect={(option) => option && props.controller.select(option.value)}
-      />
+      <Show
+        when={!props.controller.failed()}
+        fallback={
+          <div class="flex items-center gap-3" role="alert" data-action="settings-shell-error">
+            <span class="text-text-weak">{language.t("orchestra.settings.general.shellError")}</span>
+            <ButtonV2 size="small" variant="neutral" onClick={props.controller.retry}>
+              {language.t("orchestra.settings.general.shellRetry")}
+            </ButtonV2>
+          </div>
+        }
+      >
+        <SelectV2
+          appearance="inline"
+          data-action="settings-shell"
+          options={options()}
+          current={options().find((option) => option.value === props.controller.current()) ?? options()[0]}
+          placement="bottom-end"
+          gutter={6}
+          value={(option) => option.id}
+          label={(option) => {
+            if (option.id === "auto") return language.t("settings.general.row.shell.autoDefault")
+            if (!option.terminalOnly) return option.name
+            return `${option.name} (${language.t("settings.general.row.shell.terminalOnly")})`
+          }}
+          onSelect={(option) => option && props.controller.select(option.value)}
+        />
+      </Show>
     </SettingsRowV2>
   )
 }
@@ -125,49 +136,13 @@ const AppearanceSection: Component<{ controller: AppearanceSettingsController }>
     <div class="settings-v2-section">
       <h3 class="settings-v2-section-title">{language.t("settings.general.section.appearance")}</h3>
       <SettingsListV2>
-        <SettingsRowV2
-          title={language.t("settings.general.row.colorScheme.title")}
-          description={language.t("settings.general.row.colorScheme.description")}
-        >
-          <SelectV2
-            appearance="inline"
-            data-action="settings-color-scheme"
-            options={schemeOptions}
-            current={schemeOptions.find((option) => option === props.controller.scheme.current())}
-            placement="bottom-end"
-            gutter={6}
-            label={(option) => {
-              if (option === "system") return language.t("theme.scheme.system")
-              if (option === "light") return language.t("theme.scheme.light")
-              return language.t("theme.scheme.dark")
-            }}
-            onSelect={(option) => option && props.controller.scheme.select(option)}
-          />
-        </SettingsRowV2>
-
-        <SettingsRowV2
-          title={language.t("settings.general.row.theme.title")}
-          description={
-            <>
-              {language.t("settings.general.row.theme.description")}{" "}
-              <ExternalLink class="settings-v2-link" href="https://opencode.ai/docs/themes/">
-                {language.t("common.learnMore")}
-              </ExternalLink>
-            </>
-          }
-        >
-          <SelectV2
-            appearance="inline"
-            data-action="settings-theme"
-            options={props.controller.theme.options()}
-            current={props.controller.theme.current()}
-            placement="bottom-end"
-            gutter={6}
-            value={(option) => option.id}
-            label={(option) => option.name}
-            onSelect={props.controller.theme.select}
-          />
-        </SettingsRowV2>
+        <div data-component="settings-v2-row" data-slot="orchestra-palette-row">
+          <div data-slot="settings-v2-row-copy">
+            <div data-slot="settings-v2-row-title">{language.t("orchestra.settings.palette.title")}</div>
+            <div data-slot="settings-v2-row-description">{language.t("orchestra.settings.palette.description")}</div>
+          </div>
+          <PalettePicker label={language.t("orchestra.settings.palette.title")} />
+        </div>
 
         <FontSetting kind="ui" fonts={props.controller.fonts} />
         <FontSetting kind="code" fonts={props.controller.fonts} />
@@ -479,18 +454,6 @@ export const SettingsGeneralV2: Component<{
       <h3 class="settings-v2-section-title">{language.t("settings.general.section.updates")}</h3>
 
       <SettingsListV2>
-        <SettingsRowV2
-          title={language.t("settings.general.row.releaseNotes.title")}
-          description={language.t("settings.general.row.releaseNotes.description")}
-        >
-          <div data-action="settings-release-notes">
-            <Switch
-              checked={settings.general.releaseNotes()}
-              onChange={(checked) => settings.general.setReleaseNotes(checked)}
-            />
-          </div>
-        </SettingsRowV2>
-
         <SettingsRowV2
           title={language.t("settings.updates.row.check.title")}
           description={language.t("settings.updates.row.check.description")}

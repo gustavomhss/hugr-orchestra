@@ -21,6 +21,7 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { ClaudeCode } from "@/claude-code/engine"
 import { commandSource } from "@/continuity/alias"
 import { hardLimit, tokenCount } from "@/continuity/trigger"
 import { SystemPrompt } from "./system"
@@ -124,6 +125,7 @@ const layer = Layer.effect(
     const processor = yield* SessionProcessor.Service
     const compaction = yield* SessionCompaction.Service
     const continuity = yield* SessionContinuity.Service
+    const claudeCode = yield* ClaudeCode.Service
     const plugin = yield* Plugin.Service
     const commands = yield* Command.Service
     const config = yield* Config.Service
@@ -1140,6 +1142,7 @@ const layer = Layer.effect(
             break
           }
 
+          if (yield* claudeCode.turn({ sessionID, user: lastUser })) continue
           step++
           if (step === 1)
             yield* title({
@@ -1414,11 +1417,7 @@ const layer = Layer.effect(
       const templateCommand = yield* Effect.promise(async () => cmd.template)
 
       const placeholders = templateCommand.match(placeholderRegex) ?? []
-      let last = 0
-      for (const item of placeholders) {
-        const value = Number(item.slice(1))
-        if (value > last) last = value
-      }
+      const last = placeholders.reduce((last, item) => Math.max(last, Number(item.slice(1))), 0)
 
       const withArgs = templateCommand.replaceAll(placeholderRegex, (_, index) => {
         const position = Number(index)
@@ -1622,6 +1621,7 @@ export const node = LayerNode.make({
     SessionProcessor.node,
     SessionCompaction.node,
     SessionContinuity.node,
+    ClaudeCode.node,
     Plugin.node,
     Command.node,
     Config.node,

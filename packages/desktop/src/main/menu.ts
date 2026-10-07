@@ -9,7 +9,6 @@ import {
 
 import { UPDATER_ENABLED } from "./constants"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
-import { openExternalURL } from "./windows"
 import { nativeT } from "./native-translations"
 
 type Deps = {
@@ -55,10 +54,6 @@ function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOpt
         checkForUpdates: deps.checkForUpdates,
         relaunch: deps.relaunch,
       })
-  }
-  if (entry.href) {
-    const href = entry.href
-    item.click = () => openExternalURL(href)
   }
 
   return item

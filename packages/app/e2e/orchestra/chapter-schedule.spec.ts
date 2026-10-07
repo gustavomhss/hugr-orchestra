@@ -1,13 +1,17 @@
-import { expect, test, type Page } from "@playwright/test"
-import { currentSession, mockOpenCodeServer } from "../utils/mock-server"
+import { expect, test } from "@playwright/test"
+import {
+  createTask,
+  DAY,
+  directory,
+  HOUR,
+  NOTE,
+  NOTE_DEVICE,
+  openSchedule,
+  otherDirectory,
+  setup,
+  SLOT,
+} from "./chapter-schedule.fixture"
 
-const server = "http://127.0.0.1:4096"
-const directory = "/repo/schedule"
-const otherDirectory = "/repo/other"
-const SESSION_ID = /^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$/
-const MESSAGE_ID = /^msg_[0-9a-f]{12}[0-9A-Za-z]{14}$/
-const NOTE =
-  "Saved on this device for this profile · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed."
 // Dates render in the browser's timezone and locale: New York proves the page does not use the host zone.
 test.use({
   viewport: { width: 1440, height: 900 },
@@ -18,7 +22,9 @@ test.use({
 test.setTimeout(180_000)
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: a task is saved per profile with local dates and sends nothing until it runs`, async ({ page }) => {
+  test(`${scheme}: a task is saved on the server per profile with local dates and the page runs nothing`, async ({
+    page,
+  }) => {
     const api = await setup(page, { scheme })
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).click()
@@ -47,10 +53,26 @@ for (const scheme of ["dark", "light"] as const) {
     await dialog.getByLabel("Next run").fill("2020-01-01T09:00")
     await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
     await expect(dialog.getByRole("alert")).toHaveText("Choose a future time.")
+    expect(api.schedule.calls.filter((call) => call.method !== "GET")).toEqual([])
     await dialog.getByLabel("Next run").fill("2031-01-15T09:30")
     await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
     await expect(dialog).toHaveCount(0)
 
+    // The task's time of day is anchored to the zone it was entered in.
+    expect(api.schedule.calls.filter((call) => call.method === "POST")).toEqual([
+      {
+        method: "POST",
+        path: "/api/schedule",
+        directory,
+        body: {
+          name: "Daily review",
+          prompt: "Review the changes and summarize risks.",
+          cadence: "daily",
+          next: SLOT,
+          timezone: "America/New_York",
+        },
+      },
+    ])
     const card = view.getByRole("article", { name: "Daily review" })
     await expect(card.locator(".mx-badge")).toHaveText(["Daily", "Scheduled"])
     await expect(card.locator(".mx-badge.good")).toHaveText("Scheduled")
@@ -74,27 +96,30 @@ for (const scheme of ["dark", "light"] as const) {
     await page.evaluate(() => sessionStorage.removeItem("schedule-e2e-directory"))
     await page.reload()
     await expect(view.getByRole("article", { name: "Daily review" })).toBeVisible()
-    expect(api.created).toEqual([])
+    expect(api.attempts).toBe(0)
     expect(api.prompts).toEqual([])
   })
 }
 
-test("Run now creates a Maestro session on this profile with the task's prompt, then records it", async ({ page }) => {
+test("Run now asks the server to run the task, opens its session and shows the recorded run", async ({ page }) => {
   const api = await setup(page)
   await openSchedule(page)
   await createTask(page, { name: "Release notes", prompt: "Draft the release notes." })
   const card = page.getByRole("article", { name: "Release notes" })
   await card.getByRole("button", { name: "Run now", exact: true }).click()
 
-  await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
-  expect(api.created).toEqual([{ agent: "maestro", location: { directory } }])
-  expect(api.prompts).toEqual([
-    { sessionID: "ses_schedule_1", body: { id: expect.stringMatching(/^msg_/), text: "Draft the release notes." } },
+  await expect(page).toHaveURL(/\/session\/ses_schedule_run_1$/)
+  const id = api.schedule.tasks[0]!.id
+  expect(api.schedule.calls.filter((call) => call.path.endsWith("/run"))).toEqual([
+    { method: "POST", path: `/api/schedule/${id}/run`, directory },
   ])
+  // The server admits the prompt; the page creates no session and sends no prompt itself.
+  expect(api.attempts).toBe(0)
+  expect(api.prompts).toEqual([])
 
   await openSchedule(page)
   const recorded = page.getByRole("article", { name: "Release notes" })
-  // A one-off task pauses after dispatch and keeps its time.
+  // A one-off task pauses after it runs and keeps its time.
   await expect(recorded.locator(".mx-badge")).toHaveText(["Once", "Paused"])
   await expect(recorded.getByRole("switch")).toHaveAttribute("aria-checked", "false")
   await expect(recorded.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 9:30\sAM\s*America\/New_York · 1 run$/)
@@ -103,9 +128,7 @@ test("Run now creates a Maestro session on this profile with the task's prompt, 
   )
   await page.screenshot({ path: test.info().outputPath("dark-after-run.png") })
   await recorded.getByRole("button", { name: "Open session", exact: true }).click()
-  await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
-  expect(api.created).toHaveLength(1)
-  expect(api.prompts).toHaveLength(1)
+  await expect(page).toHaveURL(/\/session\/ses_schedule_run_1$/)
 })
 
 test("a rejected Run now shows the server's reason, records nothing and can be retried", async ({ page }) => {
@@ -113,64 +136,88 @@ test("a rejected Run now shows the server's reason, records nothing and can be r
   await openSchedule(page)
   await createTask(page, { name: "Release notes", prompt: "Draft the release notes." })
   const card = page.getByRole("article", { name: "Release notes" })
-  api.fail = true
+  api.schedule.runError = "Session store is unavailable"
   await card.getByRole("button", { name: "Run now", exact: true }).click()
   await expect(page.locator('[data-mx-page="orchestra-schedule"] > .mx-inner > .mx-error')).toHaveText(
     "Could not run Release notes: Session store is unavailable",
   )
-  expect(api.attempts).toBe(1)
-  expect(api.created).toEqual([])
-  expect(api.prompts).toEqual([])
   await expect(page).toHaveURL(/\/orchestra\/schedule$/)
   await expect(card.locator("p").nth(1)).toContainText("0 runs")
   await expect(card.locator(".mx-badge")).toHaveText(["Once", "Scheduled"])
   await expect(card.locator(".mx-note")).toHaveCount(0)
 
-  api.fail = false
+  api.schedule.runError = undefined
   await card.getByRole("button", { name: "Run now", exact: true }).click()
-  await expect(page).toHaveURL(/\/session\/ses_schedule_2$/)
-  expect(api.attempts).toBe(2)
-  expect(api.prompts.map((prompt) => prompt.sessionID)).toEqual(["ses_schedule_2"])
+  await expect(page).toHaveURL(/\/session\/ses_schedule_run_1$/)
+  expect(api.schedule.calls.filter((call) => call.path.endsWith("/run"))).toHaveLength(2)
+  expect(api.attempts).toBe(0)
 })
 
-test("due tasks dispatch while the page is open, recurring dates roll forward and paused tasks wait", async ({
+test("the server runs due tasks while the page is open; the page shows what it recorded and runs nothing", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, {
-    name: "Hourly check",
-    prompt: "Check the build.",
-    cadence: "hourly",
-    date: "2031-01-15T09:30",
-  })
-  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
+  await createTask(page, { name: "Hourly check", prompt: "Check the build.", cadence: "hourly" })
+  await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", cadence: "weekly" })
   const hourly = page.getByRole("article", { name: "Hourly check" })
+  const weekly = page.getByRole("article", { name: "Weekly sweep" })
+
+  // Past the slot with the page open: the page starts nothing itself and still shows the last server record.
+  await page.clock.fastForward("31:00")
+  await page.clock.runFor(15_000)
+  expect(api.attempts).toBe(0)
+  expect(api.prompts).toEqual([])
+  await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 9:30\sAM\s*America\/New_York · 0 runs$/)
+
+  // What the server's scheduler records: one run admitted, one run that failed, and an overtaken slot.
+  api.sessions.push({
+    id: "ses_scheduled_run",
+    directory,
+    agent: "maestro",
+    title: "Hourly check",
+    time: { created: 1, updated: 1 },
+  })
+  Object.assign(api.schedule.tasks[0]!, {
+    runs: 1,
+    next: SLOT + HOUR,
+    last: { outcome: "started", time: SLOT + 1_000, slot: SLOT, sessionID: "ses_scheduled_run" },
+  })
+  Object.assign(api.schedule.tasks[1]!, {
+    next: SLOT + 7 * DAY,
+    missed: SLOT - 7 * DAY,
+    last: { outcome: "failed", time: SLOT + 1_000, slot: SLOT, error: "Session store is unavailable" },
+  })
+  await page.clock.runFor(15_000)
+  await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
+  await expect(hourly.locator(".mx-note")).toHaveText(/^Last: 1\/15\/2031, 9:30:01\sAM · Open session$/)
+  await expect(weekly.locator("p").nth(1)).toHaveText(/^Next: Jan 22, 2031, 9:30\sAM\s*America\/New_York · 0 runs$/)
+  await expect(weekly.locator(".schedule-missed")).toHaveText([
+    /^Missed: Jan 8, 2031, 9:30\sAM$/,
+    /^Failed: 1\/15\/2031, 9:30:01\sAM · Session store is unavailable$/,
+  ])
+  await expect(weekly.getByRole("button", { name: "Open session", exact: true })).toHaveCount(0)
+  await expect(page.locator(".mx-note").last()).toHaveText(NOTE)
+  await page.screenshot({ path: test.info().outputPath("dark-server-runs.png") })
+
+  await hourly.getByRole("button", { name: "Open session", exact: true }).click()
+  await expect(page).toHaveURL(/\/session\/ses_scheduled_run$/)
+  expect(api.attempts).toBe(0)
+})
+
+test("pausing, resuming a one-off with a new time, and removing are saved on the server", async ({ page }) => {
+  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
+  const api = await setup(page)
+  await openSchedule(page)
+  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
+  const id = `/api/schedule/${api.schedule.tasks[0]!.id}`
   const once = page.getByRole("article", { name: "Later once" })
   await once.getByRole("switch", { name: "Enable Later once" }).click()
   await expect(once.locator(".mx-badge")).toHaveText(["Once", "Paused"])
 
-  await page.clock.fastForward("31:00")
-  // Scheduled runs carry IDs derived from their slot, so a retry or a second tab reconciles.
-  await expect
-    .poll(() => api.created)
-    .toEqual([{ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } }])
-  await expect
-    .poll(() => api.prompts)
-    .toEqual([
-      {
-        sessionID: (api.created[0] as { id: string }).id,
-        body: { id: expect.stringMatching(MESSAGE_ID), text: "Check the build." },
-      },
-    ])
-  await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
-  await expect(hourly.locator(".mx-badge")).toHaveText(["Every hour", "Scheduled"])
-  // Background dispatch stays on this page.
-  await expect(page).toHaveURL(/\/orchestra\/schedule$/)
-
   // Past its time while paused: resuming a one-off asks for a new time instead of running it.
-  await page.clock.fastForward("20:00")
+  await page.clock.fastForward("50:00")
   await once.getByRole("switch", { name: "Enable Later once" }).click()
   const dialog = page.getByRole("dialog", { name: "Edit Later once" })
   await expect(dialog).toBeVisible()
@@ -178,157 +225,90 @@ test("due tasks dispatch while the page is open, recurring dates roll forward an
   await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(once.locator(".mx-badge")).toHaveText(["Once", "Scheduled"])
+  await expect(once.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:00\sAM\s*America\/New_York · 0 runs$/)
 
-  await page.clock.fastForward("10:00")
-  await expect.poll(() => api.created).toHaveLength(2)
-  expect(api.created[1]).toEqual({ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } })
-  await expect(once.locator(".mx-badge")).toHaveText(["Once", "Paused"])
-  await expect(once.locator("p").nth(1)).toContainText("1 run")
-  // Paused tasks were skipped and the hourly task is not due again until 10:30.
-  expect(api.created).toHaveLength(2)
-  expect(api.prompts.map((prompt) => prompt.body.text)).toEqual(["Check the build.", "Tag the release."])
+  await once.getByRole("button", { name: "Edit", exact: true }).click()
+  await page.getByRole("dialog", { name: "Edit Later once" }).getByRole("button", { name: "Remove task" }).click()
+  await page.getByRole("dialog", { name: "Remove this item?" }).getByRole("button", { name: "Confirm" }).click()
+  await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
+
+  expect(api.schedule.calls.filter((call) => call.method === "PATCH" || call.method === "DELETE")).toEqual([
+    { method: "PATCH", path: id, directory, body: { enabled: false } },
+    {
+      method: "PATCH",
+      path: id,
+      directory,
+      body: {
+        name: "Later once",
+        prompt: "Tag the release.",
+        cadence: "once",
+        next: Date.parse("2031-01-15T10:00:00-05:00"),
+        timezone: "America/New_York",
+        enabled: true,
+      },
+    },
+    { method: "DELETE", path: id, directory },
+  ])
+  expect(api.attempts).toBe(0)
 })
 
-test("a task overdue when the page opens runs at once; a one-off more than a day late is marked Missed", async ({
-  page,
-}) => {
+test("tasks saved on this device move to the server once, with their history", async ({ page }) => {
   await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
-  const api = await setup(page)
-  await openSchedule(page)
-  await createTask(page, { name: "Morning digest", prompt: "Digest.", cadence: "daily" })
-  await createTask(page, { name: "Stale once", prompt: "Too late.", date: "2031-01-15T09:45" })
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Home", exact: true }).click()
-  await expect(page).not.toHaveURL(/\/orchestra\/schedule$/)
-  // A day later with time paused: only the check on open can dispatch, never the 15 s interval.
-  await page.clock.pauseAt(new Date("2031-01-16T10:00:00-05:00"))
-  // Paused time also pauses animation frames, so skip the frame-based actionability wait of click().
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).dispatchEvent("click")
-  await expect
-    .poll(async () => {
-      await page.clock.runFor(500)
-      return api.created.length
-    })
-    .toBe(1)
-  expect(api.created).toEqual([{ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } }])
-  const digest = page.getByRole("article", { name: "Morning digest" })
-  await expect(digest.locator("p").nth(1)).toHaveText(/^Next: Jan 17, 2031, 9:30\sAM\s*America\/New_York · 1 run$/)
-  await expect(digest.locator(".schedule-missed")).toHaveText(/^Missed: Jan 15, 2031, 9:30\sAM$/)
-  const stale = page.getByRole("article", { name: "Stale once" })
-  await expect(stale.locator(".mx-badge")).toHaveText(["Once", "Paused"])
-  await expect(stale.locator(".schedule-missed")).toHaveText(/^Missed: Jan 15, 2031, 9:45\sAM$/)
-  await expect(stale.locator("p").nth(1)).toContainText("0 runs")
-  await expect(page.locator(".mx-note").last()).toHaveText(NOTE)
-  await page.clock.runFor(60_000)
-  expect(api.attempts).toBe(1)
-})
-
-test("two pages of one profile serve a due slot once and both show the run", async ({ page }) => {
-  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
-  const api = await setup(page)
+  const api = await setup(page, { legacy: true })
   await openSchedule(page)
   await createTask(page, { name: "Hourly check", prompt: "Check the build.", cadence: "hourly" })
+  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
+  await expect(page.locator(".mx-note").last()).toHaveText(NOTE_DEVICE)
+  // A run from the device gives the task history to carry over.
+  await page
+    .getByRole("article", { name: "Hourly check" })
+    .getByRole("button", { name: "Run now", exact: true })
+    .click()
+  await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
+
+  // The server now supports scheduled tasks; two windows of the profile open at once.
+  api.schedule.supported = true
   const other = await page.context().newPage()
   await setup(other, {}, api)
-  await openSchedule(other)
-  await expect(other.getByRole("article", { name: "Hourly check" })).toBeVisible()
+  await Promise.all([openSchedule(page), openSchedule(other)])
+  for (const view of [page, other]) {
+    await expect(view.locator("article")).toHaveText([/^Hourly check/, /^Later once/])
+    await expect(view.locator(".mx-note").last()).toHaveText(NOTE)
+  }
+  // Both windows may send a task; reusing its device ID adopts the one the server already has.
+  expect(api.schedule.tasks.map((task) => task.name)).toEqual(["Hourly check", "Later once"])
+  const creates = api.schedule.calls.filter((call) => call.method === "POST" && call.path === "/api/schedule")
+  expect(new Set(creates.map((call) => call.body?.id))).toEqual(new Set(api.schedule.tasks.map((task) => task.id)))
+  expect(creates.find((call) => call.body?.name === "Hourly check")?.body).toEqual({
+    id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    name: "Hourly check",
+    prompt: "Check the build.",
+    cadence: "hourly",
+    next: SLOT,
+    timezone: "America/New_York",
+    minute: 570,
+    enabled: true,
+    history: { runs: 1, last: { time: expect.any(Number), sessionID: "ses_schedule_1" } },
+  })
+  expect(creates.find((call) => call.body?.name === "Later once")?.body).toMatchObject({
+    minute: 585,
+    history: { runs: 0 },
+  })
+  const hourly = page.getByRole("article", { name: "Hourly check" })
+  await expect(hourly.locator("p").nth(1)).toContainText("1 run")
+  await expect(hourly.locator(".mx-note")).toHaveText(/^Last: .* · Open session$/)
 
-  await page.clock.fastForward("31:00")
-  await expect.poll(() => api.attempts).toBe(1)
-  await page.clock.runFor(60_000)
-  expect(api.attempts).toBe(1)
-  expect(api.prompts).toHaveLength(1)
-  for (const view of [page, other])
-    await expect(view.getByRole("article", { name: "Hourly check" }).locator("p").nth(1)).toHaveText(
-      /^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/,
-    )
+  // The device list is empty now: reopening sends nothing more to move, and the page runs nothing itself.
+  const sent = creates.length
   await other.close()
-})
-
-test("a failed scheduled run is not retried; Run now retries the same slot with the same IDs", async ({ page }) => {
-  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
-  const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Hourly check", prompt: "Check the build.", cadence: "hourly" })
-  api.fail = true
-  await page.clock.fastForward("31:00")
-  await expect(page.locator('[data-mx-page="orchestra-schedule"] > .mx-inner > .mx-error')).toHaveText(
-    "Could not run Hourly check: Session store is unavailable",
+  await expect(page.locator("article")).toHaveText([/^Hourly check/, /^Later once/])
+  await page.clock.fastForward("50:00")
+  await page.clock.runFor(15_000)
+  expect(api.schedule.calls.filter((call) => call.method === "POST" && call.path === "/api/schedule")).toHaveLength(
+    sent,
   )
-  expect(api.requests).toEqual([{ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } }])
-  await page.clock.runFor(60_000)
   expect(api.attempts).toBe(1)
-  // The failure is remembered across a remount, not only in the page that saw it.
-  await openSchedule(page)
-  await page.clock.runFor(30_000)
-  expect(api.attempts).toBe(1)
-
-  api.fail = false
-  const card = page.getByRole("article", { name: "Hourly check" })
-  await card.getByRole("button", { name: "Run now", exact: true }).click()
-  const slot = (api.requests[0] as { id: string }).id
-  await expect(page).toHaveURL(new RegExp(`/session/${slot}$`))
-  expect(api.requests.map((body) => (body as { id: string }).id)).toEqual([slot, slot])
-  expect(api.prompts).toEqual([
-    { sessionID: slot, body: { id: expect.stringMatching(MESSAGE_ID), text: "Check the build." } },
-  ])
-  await openSchedule(page)
-  await expect(card.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
-  await page.clock.runFor(30_000)
-  expect(api.attempts).toBe(2)
-})
-
-test("pausing or removing a task during its dispatch keeps the saved list consistent", async ({ page }) => {
-  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
-  const api = await setup(page)
-  await openSchedule(page)
-  await createTask(page, { name: "Pause me", prompt: "First.", cadence: "hourly" })
-  await createTask(page, { name: "Remove me", prompt: "Second." })
-  const releaseFirst = api.hold()
-  await page.clock.fastForward("31:00")
-  await expect.poll(() => api.attempts).toBe(1)
-  const paused = page.getByRole("article", { name: "Pause me" })
-  await paused.getByRole("switch", { name: "Enable Pause me" }).click()
-  const releaseSecond = api.hold()
-  releaseFirst()
-  await expect.poll(() => api.attempts).toBe(2)
-  await page.getByRole("article", { name: "Remove me" }).getByRole("button", { name: "Edit", exact: true }).click()
-  await page.getByRole("dialog", { name: "Edit Remove me" }).getByRole("button", { name: "Remove task" }).click()
-  await page.getByRole("dialog", { name: "Remove this item?" }).getByRole("button", { name: "Confirm" }).click()
-  releaseSecond()
-  await expect.poll(() => api.prompts).toHaveLength(2)
-  await expect(paused.locator(".mx-badge")).toHaveText(["Every hour", "Paused"])
-  await expect(paused.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
-  await expect(page.locator("article")).toHaveText([/^Pause me/])
-  await openSchedule(page)
-  await expect(page.locator("article")).toHaveText([/^Pause me/])
-  await page.clock.runFor(60_000)
-  expect(api.attempts).toBe(2)
-})
-
-test("leaving the page mid-run neither navigates nor keeps scheduling", async ({ page }) => {
-  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
-  const api = await setup(page)
-  await openSchedule(page)
-  await createTask(page, { name: "Leave me", prompt: "Run once." })
-  await createTask(page, { name: "Later hourly", prompt: "Later.", cadence: "hourly", date: "2031-01-15T10:00" })
-  const release = api.hold()
-  await page.getByRole("article", { name: "Leave me" }).getByRole("button", { name: "Run now", exact: true }).click()
-  await expect.poll(() => api.attempts).toBe(1)
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Home", exact: true }).click()
-  await expect(page).not.toHaveURL(/\/orchestra\/schedule$/)
-  const home = page.url()
-  release()
-  await expect.poll(() => api.prompts).toHaveLength(1)
-  await page.clock.fastForward("01:10:00")
-  await page.clock.runFor(30_000)
-  expect(api.attempts).toBe(1)
-  expect(page.url()).toBe(home)
-
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).click()
-  await expect(page.getByRole("article", { name: "Leave me" }).locator(".mx-badge")).toHaveText(["Once", "Paused"])
-  await expect(page.getByRole("article", { name: "Leave me" }).locator("p").nth(1)).toContainText("1 run")
-  await expect.poll(() => api.attempts).toBe(2)
-  expect(api.requests[1]).toEqual({ id: expect.stringMatching(SESSION_ID), agent: "maestro", location: { directory } })
 })
 
 test("edit keeps the task, dialogs dismiss without saving, and remove asks first", async ({ page }) => {
@@ -359,6 +339,7 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await expect(edit.getByLabel("Name")).toHaveValue("Weekly sweep")
   await expect(edit.getByLabel("What to run")).toHaveValue("Sweep stale branches.")
   await expect(edit.getByLabel("Cadence")).toHaveValue("weekly")
+  await expect(edit.getByLabel("Agent", { exact: true })).toHaveCount(0)
   await expect(edit.getByLabel("Next run")).toHaveValue("2031-01-15T09:30")
   await edit.getByLabel("Name").fill("Discarded name")
   await page.keyboard.press("Escape")
@@ -370,12 +351,22 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await edit.getByRole("button", { name: "Close dialog", exact: true }).click()
   await expect(edit).toHaveCount(0)
   await expect(page.getByRole("article", { name: "Discarded name" })).toHaveCount(0)
+  expect(api.schedule.calls.filter((call) => call.method === "PATCH")).toEqual([])
 
   await card.getByRole("button", { name: "Edit", exact: true }).click()
   await edit.getByLabel("Cadence").selectOption("hourly")
   await edit.getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(edit).toHaveCount(0)
   await expect(card.locator(".mx-badge")).toHaveText(["Every hour", "Scheduled"])
+  expect(api.schedule.calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
+    {
+      name: "Weekly sweep",
+      prompt: "Sweep stale branches.",
+      cadence: "hourly",
+      next: SLOT,
+      timezone: "America/New_York",
+    },
+  ])
 
   await card.getByRole("button", { name: "Edit", exact: true }).click()
   await edit.getByRole("button", { name: "Remove task", exact: true }).click()
@@ -400,157 +391,18 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
   await page.reload()
   await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
-  expect(api.created).toEqual([])
+  expect(api.schedule.calls.filter((call) => call.method === "DELETE")).toHaveLength(2)
+  expect(api.attempts).toBe(0)
 })
 
-test("V1 servers dispatch through the legacy session API on Maestro", async ({ page }) => {
-  const api = await setup(page, { protocol: "v1" })
+test("an unreachable schedule API says so and runs nothing from the page", async ({ page }) => {
+  const api = await setup(page)
+  api.schedule.unavailable = true
   await openSchedule(page)
-  await createTask(page, { name: "Legacy run", prompt: "Summarize open issues." })
-  await page.getByRole("article", { name: "Legacy run" }).getByRole("button", { name: "Run now", exact: true }).click()
-  await expect(page).toHaveURL(/\/session\/ses_schedule_1$/)
-  expect(api.attempts).toBe(1)
-  expect(api.prompts).toEqual([
-    {
-      sessionID: "ses_schedule_1",
-      body: expect.objectContaining({ agent: "maestro", parts: [{ type: "text", text: "Summarize open issues." }] }),
-    },
-  ])
+  await expect(page.locator(".mx-empty")).toHaveText("Could not load scheduled tasks from the server.")
+  await expect(page.locator(".mx-note")).toHaveCount(0)
+  api.schedule.unavailable = false
+  await openSchedule(page)
+  await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
+  expect(api.attempts).toBe(0)
 })
-
-async function openSchedule(page: Page) {
-  await page.goto("/orchestra/schedule", { waitUntil: "domcontentloaded" })
-  await expect(page.locator('[data-mx-page="orchestra-schedule"]')).toBeVisible({ timeout: 60_000 })
-  const notice = page.getByRole("button", { name: "Dismiss Tabs information", exact: true })
-  if (await notice.isVisible()) await notice.click()
-}
-
-async function createTask(page: Page, input: { name: string; prompt: string; cadence?: string; date?: string }) {
-  await page.getByRole("button", { name: "Schedule task", exact: true }).click()
-  const dialog = page.getByRole("dialog", { name: "Schedule task" })
-  await dialog.getByLabel("Name").fill(input.name)
-  await dialog.getByLabel("What to run").fill(input.prompt)
-  await dialog.getByLabel("Cadence").selectOption(input.cadence ?? "once")
-  await dialog.getByLabel("Next run").fill(input.date ?? "2031-01-15T09:30")
-  await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
-  await expect(dialog).toHaveCount(0)
-  await expect(page.getByRole("article", { name: input.name })).toBeVisible()
-}
-
-// Records every session-create request and prompt; `hold` keeps the next creates waiting until released.
-function recorder() {
-  const api = {
-    attempts: 0,
-    fail: false,
-    gate: undefined as Promise<void> | undefined,
-    requests: [] as unknown[],
-    created: [] as unknown[],
-    prompts: [] as { sessionID: string; body: Record<string, unknown> }[],
-    sessions: [] as ({ id: string } & Record<string, unknown>)[],
-    hold() {
-      const gate = Promise.withResolvers<void>()
-      api.gate = gate.promise
-      return () => gate.resolve()
-    },
-  }
-  return api
-}
-
-// `shared` lets a second page of the same context reuse the first page's recorder and sessions.
-async function setup(
-  page: Page,
-  input: { scheme?: "dark" | "light"; protocol?: "v1" | "v2" } = {},
-  shared?: ReturnType<typeof recorder>,
-) {
-  const protocol = input.protocol ?? "v2"
-  const api = shared ?? recorder()
-  await page.addInitScript(
-    ({ server, directory, scheme }) => {
-      const selected = sessionStorage.getItem("schedule-e2e-directory") ?? directory
-      localStorage.setItem("opencode.settings.dat:defaultServerUrl", server)
-      localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({
-          general: { newLayoutDesigns: true, shouldDisplayTabsToast: false, newInterfaceNoticeDismissed: true },
-        }),
-      )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
-      localStorage.setItem(
-        "opencode.global.dat:server",
-        JSON.stringify({
-          list: [server],
-          projects: {
-            local: [{ worktree: directory, expanded: true }],
-            [server]: [{ worktree: directory, expanded: true }],
-          },
-        }),
-      )
-      const layout = JSON.stringify({ home: { selection: { server, directory: selected } } })
-      localStorage.setItem("opencode.global.dat:layout", layout)
-      localStorage.setItem(`opencode.global.dat:${server}\0layout`, layout)
-    },
-    { server, directory, scheme: input.scheme ?? "dark" },
-  )
-  await mockOpenCodeServer(page, {
-    protocol,
-    eventRetry: 60_000,
-    provider: { all: [], connected: [], default: {} },
-    directory,
-    project: {
-      id: "schedule",
-      name: "Schedule repository",
-      worktree: directory,
-      vcs: "git",
-      sandboxes: [],
-      time: { created: 1, updated: 1 },
-    },
-    sessions: api.sessions,
-    pageMessages: () => ({ items: [] }),
-    onPrompt: (prompt) =>
-      api.prompts.push({ sessionID: prompt.sessionID, body: prompt.body as Record<string, unknown> }),
-  })
-  // The shared mock server lists sessions but cannot create them: answer creation here and keep each
-  // request. A known session ID is adopted, as the V2 server does.
-  await page.route("**/*", async (route) => {
-    const url = new URL(route.request().url())
-    if (url.origin !== server) return route.fallback()
-    const json = (body: unknown, status = 200) =>
-      route.fulfill({
-        status,
-        contentType: "application/json",
-        headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify(body),
-      })
-    const create = url.pathname === (protocol === "v2" ? "/api/session" : "/session")
-    if (!create || route.request().method() !== "POST") return route.fallback()
-    api.attempts++
-    const attempt = api.attempts
-    const body = route.request().postDataJSON()
-    api.requests.push(body)
-    await api.gate
-    if (api.fail) return json({ message: "Session store is unavailable" }, 400)
-    if (protocol === "v2") api.created.push(body)
-    const id = typeof body?.id === "string" ? body.id : `ses_schedule_${attempt}`
-    const session = api.sessions.find((item) => item.id === id) ?? {
-      id,
-      directory,
-      agent: body?.agent ?? "maestro",
-      title: "New session",
-      time: { created: 1, updated: 1 },
-    }
-    if (!api.sessions.includes(session)) api.sessions.push(session)
-    if (protocol === "v2") return json({ data: currentSession(session, directory) })
-    return json({
-      id,
-      slug: id,
-      projectID: "schedule",
-      directory,
-      title: "New session",
-      version: "1",
-      time: session.time,
-    })
-  })
-  return api
-}

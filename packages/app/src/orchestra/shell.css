@@ -24,7 +24,6 @@
    side. Keep this list flat, with class or slot ancestors: a generic element nested in
    :is() or :where() lands in Chromium's universal rule bucket and slows every recalc. */
 @layer components {
-  [data-slot="orchestra-titlebar-caption"],
   [data-slot="orchestra-titlebar-breadcrumb"] > span,
   [data-slot="orchestra-brand-descriptor"],
   .orchestra-nav-label,
@@ -181,10 +180,6 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
     box-shadow: var(--glass-shadow);
     -webkit-backdrop-filter: var(--glass-filter);
     backdrop-filter: var(--glass-filter);
-  }
-
-  .orchestra-session-tabs[hidden] {
-    display: none;
   }
 
   /* Every main view is one glass panel, as the reference's .main.glass: chapter pages carry
@@ -628,9 +623,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   --orchestra-navigation-display: none;
 }
 
-.orchestra-shell
-  > [data-slot="titlebar-v2"]
-  :is([data-slot="orchestra-titlebar-breadcrumb"], [data-slot="orchestra-titlebar-caption"]) {
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] {
   font-size: 12px;
   font-weight: 400;
   line-height: normal;
@@ -641,11 +634,6 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
   font-family: "Mx Inter Medium", var(--orchestra-font-family-sans);
   font-weight: 600;
-}
-
-/* The reference spaces the caption 16px from the scheme toggle. */
-.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-caption"] {
-  margin-inline-end: 10px;
 }
 
 .orchestra-shell > [data-slot="titlebar-v2"] .orchestra-navigation-toggle {

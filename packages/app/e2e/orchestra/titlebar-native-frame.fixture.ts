@@ -90,7 +90,7 @@ export const closeProfileTab = () => {}
 export const newTabTooltipKeybind = () => []
 export const normalizeSessionInfo = (value) => value
 export const projectForSession = () => undefined
-export const pathKey = (value) => value
+export const profileProject = () => undefined
 export const useNavigate = () => () => {}
 export const useLocation = () => ({ pathname: "/", search: "", hash: "" })
 export const useParams = () => ({})
@@ -310,8 +310,7 @@ export function nativeFrameViteConfig(cache: string) {
             source === "./titlebar-tab-order" ||
             source === "./command-tooltip-keybind" ||
             source === "@/utils/session" ||
-            source === "@/pages/layout/helpers" ||
-            source === "@/utils/path-key"
+            source === "@/pages/layout/helpers"
           )
             return "\0frame:providers"
           if (source === "./titlebar.css") return "\0frame:empty"
