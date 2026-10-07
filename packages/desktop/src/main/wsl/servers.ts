@@ -16,6 +16,7 @@ import { getStore } from "../store"
 import { pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
 import { clearWslDistroState } from "./policy"
 import { nativeT } from "../native-translations"
+import { installWslArtifact } from "./artifact"
 import {
   installWslDistro,
   installWslRuntimeElevated,
@@ -50,6 +51,7 @@ type WslServersControllerOptions = {
   probeDistro?: typeof probeWslDistro
   resolveOrchestra?: typeof resolveWslOrchestra
   readCommandVersion?: typeof readWslCommandVersion
+  installArtifact?: (distro: string, opts: { signal?: AbortSignal }) => Promise<void>
 }
 
 export type WslServersController = ReturnType<typeof createWslServersController>
@@ -59,7 +61,7 @@ export function wslServerIdForDistro(distro: string) {
 }
 
 export function createWslServersController(
-  appVersion: string,
+  expectedVersion: string, // The caller supplies CliArtifactManifest.version.
   spawnSidecar: SpawnSidecar,
   options?: WslServersControllerOptions,
 ) {
@@ -135,7 +137,7 @@ export function createWslServersController(
     const version = resolved
       ? await (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts)
       : null
-    return orchestraCheck(distro, resolved, version, appVersion)
+    return orchestraCheck(distro, resolved, version, expectedVersion)
   }
 
   const probeAddableDistros = async (distros: string[], opts?: { signal?: AbortSignal }) => {
@@ -355,9 +357,13 @@ export function createWslServersController(
       })
     },
 
-    // Orchestra has no Linux server binary yet, and installing the upstream one is refused, so nothing runs.
-    async installServer(_name: string) {
-      throw new Error(nativeT("desktop.wsl.error.installUnavailable"))
+    async installServer(name: string) {
+      await runJob({ kind: "install-server", distro: name, startedAt: Date.now() }, async (abort) => {
+        const opts = { signal: abort.signal }
+        await (options?.installArtifact ?? ((distro, opts) => installWslArtifact(distro, expectedVersion, opts)))(name, opts)
+        abort.signal.throwIfAborted()
+        setOrchestraCheck(name, await checkOrchestra(name, opts))
+      })
     },
 
     async openTerminal(name: string) {
