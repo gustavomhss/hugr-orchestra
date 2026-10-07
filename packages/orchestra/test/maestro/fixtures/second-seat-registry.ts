@@ -1,20 +1,20 @@
 // Fresh-process source snapshot: scaffold a real second seat, then resolve the registry from that snapshot.
 // Runtime services remain real. Optional mutation changes only the copied Task source, never the working tree.
-import { plugin } from "bun"
-import { afterAll } from "bun:test"
+import { plugin, type BunPlugin } from "bun"
 import fs from "node:fs/promises"
-import os from "node:os"
 import path from "node:path"
 import { add } from "../../../script/seat"
 
-const snapshot = await fs.mkdtemp(path.join(os.tmpdir(), "second-seat-source-"))
-afterAll(() => fs.rm(snapshot, { recursive: true, force: true }))
+// Parent owns this directory, including cleanup after timeout/kill.
+const snapshot = process.env.ORCHESTRA_SEAT_SNAPSHOT
+if (!snapshot) throw new Error("Second-seat parent-owned snapshot missing")
 const source = path.resolve(import.meta.dirname, "../../..")
 const packageRoot = path.join(snapshot, "packages/orchestra")
 await fs.cp(path.join(source, "src/maestro/seats"), path.join(packageRoot, "src/maestro/seats"), { recursive: true })
 await fs.cp(path.join(source, "src/agent/prompt"), path.join(packageRoot, "src/agent/prompt"), { recursive: true })
 await fs.cp(path.resolve(source, "../backend-specialist"), path.join(snapshot, "packages/backend-specialist"), { recursive: true })
 await add("sample-seat", "synthetic packet execution", packageRoot)
+process.env.ORCHESTRA_SEAT_SKILL_BYTES = await Bun.file(path.join(snapshot, "packages/sample-seat-specialist/skills/sample-seat-work/SKILL.md")).text()
 const registrySource = (await Bun.file(path.join(packageRoot, "src/maestro/seats/index.ts")).text())
   .replaceAll('from "./', `from "${path.join(packageRoot, "src/maestro/seats").replaceAll("\\", "/")}/`)
 
@@ -26,7 +26,7 @@ if (process.env.ORCHESTRA_SEAT_MUTATION === "backend-only-task") {
   await Bun.write(path.join(packageRoot, "src/tool/task.ts"), taskSource.replace(binding, mutation))
 }
 
-plugin({
+export const snapshotPlugin: BunPlugin = {
   name: "second-seat-source-snapshot",
   setup(build) {
     build.onLoad({ filter: /[\\/]maestro[\\/]seats[\\/]index\.ts$/ }, () => ({ loader: "ts", contents: registrySource }))
@@ -36,15 +36,5 @@ plugin({
       }))
     }
   },
-})
-
-if (process.env.ORCHESTRA_SEAT_EMBEDDED === "1") {
-  const { seatSkillsModule } = await import("../../../script/seat-skills")
-  const contents = await seatSkillsModule()
-  plugin({
-    name: "second-seat-compiled-skills",
-    setup(build) {
-      build.module("orchestra-seat-skills.gen.ts", () => ({ loader: "js", contents }))
-    },
-  })
 }
+plugin(snapshotPlugin)

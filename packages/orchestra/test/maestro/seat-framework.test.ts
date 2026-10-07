@@ -61,42 +61,88 @@ describe("native seat framework", () => {
     expect(await Bun.file(created.prompt).text()).toContain("synthetic packet execution")
   })
 
-  test("second seat runs from source and embedded skills; isolated backend-only mutation fails", async () => {
+  test("second seat runs from source and a genuine Bun bundle; both isolated mutations fail", async () => {
     await using tmp = await tmpdir()
     const packageRoot = path.resolve(import.meta.dirname, "../..")
-    const originalTask = await Bun.file(path.join(packageRoot, "src/tool/task.ts")).text()
-    const config = path.join(tmp.path, "bunfig.toml")
+    const originals = await Promise.all(["src/tool/task.ts", "src/maestro/seats/index.ts", "src/maestro/seat-skill-root.ts"].map(async (file) => ({ file, bytes: await Bun.file(path.join(packageRoot, file)).text() })))
+    // Keep artifacts under the package so Bun resolves both isolated (Linux) and hoisted (Windows) dependencies.
+    // Source snapshots remain separate and parent-owned; no authored source or installed module is overwritten.
+    await using artifacts = {
+      path: await fs.mkdtemp(path.join(packageRoot, ".second-seat-proof-")),
+      async [Symbol.asyncDispose]() { await fs.rm(this.path, { recursive: true, force: true }) },
+    }
+    const sourceConfig = path.join(tmp.path, "source.toml")
+    const buildConfig = path.join(tmp.path, "build.toml")
+    const compiledConfig = path.join(tmp.path, "compiled.toml")
     // Explicit preload order matters: package bunfig's default test/preload.ts can import RuntimeFlags and cache the
     // registry before the synthetic source snapshot exists. Retain the normal guard, solid loader and projectors.
-    await Bun.write(config, "[test]\npreload = " + JSON.stringify([
+    const bootstrap = [
       path.resolve(packageRoot, "../../script/test-guard.ts"),
       Bun.resolveSync("@opentui/solid/preload", packageRoot),
-      path.join(packageRoot, "test/maestro/fixtures/second-seat-registry.ts"),
-      path.join(packageRoot, "test/preload.ts"),
-    ]) + "\n")
-    for (const mode of ["source", "embedded", "mutation", "restored"] as const) {
-      const child = Bun.spawn([
-        process.execPath, "test", `--config=${config}`, "./test/maestro/fixtures/second-seat-runtime.ts", "--timeout", "90000",
-      ], {
-        cwd: packageRoot, stdout: "pipe", stderr: "pipe",
-        env: { ...process.env, HUGR_SAMPLE_SEAT_NAME: "Environment Seat", ORCHESTRA_SEAT_EMBEDDED: mode === "embedded" ? "1" : "0", ORCHESTRA_SEAT_MUTATION: mode === "mutation" ? "backend-only-task" : "" },
-      })
-      const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-      if (mode === "mutation") {
-        expect(exit, stderr).not.toBe(0)
-        expect(stderr).toContain("second-seat result binding")
-        expect(stderr).toMatch(/\b1 fail\b/)
-        expect(await Bun.file(path.join(packageRoot, "src/tool/task.ts")).text()).toBe(originalTask)
-        console.log(JSON.stringify({ seatMutation: { binding: "native definition lookup -> backend-only lookup", exit, oracle: "second-seat result binding", failed: true, originalTaskBytesMatch: true } }))
-        continue
+    ]
+    await Bun.write(sourceConfig, "[test]\npreload = " + JSON.stringify([...bootstrap, path.join(packageRoot, "test/maestro/fixtures/second-seat-registry.ts"), path.join(packageRoot, "test/preload.ts")]) + "\n")
+    await Bun.write(buildConfig, "[test]\npreload = " + JSON.stringify([...bootstrap, path.join(packageRoot, "test/maestro/fixtures/second-seat-registry.ts")]) + "\n")
+    await Bun.write(compiledConfig, "[test]\npreload = " + JSON.stringify(bootstrap) + "\n")
+    for (const mode of ["source", "compiled", "omit-embedded-map", "backend-only-task", "restored-source", "restored-compiled"] as const) {
+      const snapshot = path.join(tmp.path, mode, "snapshot")
+      const outdir = path.join(artifacts.path, mode, "bundle")
+      const compiled = ["compiled", "omit-embedded-map", "restored-compiled"].includes(mode)
+      const env: NodeJS.ProcessEnv = { ...process.env, HUGR_SAMPLE_SEAT_NAME: "Environment Seat", ORCHESTRA_SEAT_SNAPSHOT: snapshot, ORCHESTRA_SEAT_BUNDLE_DIR: outdir, ORCHESTRA_SEAT_COMPILED: compiled ? "1" : "0", ORCHESTRA_SEAT_MUTATION: mode }
+      try {
+        if (compiled) {
+          const build = await runProofChild(packageRoot, buildConfig, "./test/maestro/fixtures/second-seat-bundle.ts", env)
+          if (build.exit !== 0) throw new Error(`second seat ${mode} build failed (${build.exit}):\n${build.stdout}\n${build.stderr}`)
+          expect(build.stderr).toMatch(/\b1 pass\b/)
+          expect(build.stderr).not.toMatch(/\b[1-9]\d* skip\b/)
+          expect(build.stdout).toContain('"sourceTreeRemoved":true')
+          const proof = await Bun.file(path.join(outdir, "proof.json")).json()
+          env.ORCHESTRA_SEAT_SKILL_BYTES = proof.skillBytes
+        }
+        const result = await runProofChild(packageRoot, compiled ? compiledConfig : sourceConfig,
+          compiled ? path.join(outdir, "second-seat.test.js") : "./test/maestro/fixtures/second-seat-runtime.ts", env)
+        const diagnostics = `${result.stdout}\n${result.stderr}`
+        expect(result.stderr, diagnostics).not.toMatch(/\b[1-9]\d* skip\b/)
+        if (mode === "backend-only-task" || mode === "omit-embedded-map") {
+          const oracle = mode === "backend-only-task" ? "second-seat result binding" : "second-seat compiled skill binding"
+          expect(result.exit, diagnostics).not.toBe(0)
+          expect(diagnostics).toContain(oracle)
+          expect(result.stderr, diagnostics).toMatch(/\b1 fail\b/)
+          console.log(JSON.stringify({ seatMutation: { mutation: mode, exit: result.exit, oracle, failed: true } }))
+        }
+        if (mode !== "backend-only-task" && mode !== "omit-embedded-map") {
+          if (result.exit !== 0) throw new Error(`second seat ${mode} failed (${result.exit}):\n${diagnostics}`)
+          expect(result.stdout).toContain(`"mode":"${compiled ? "compiled" : "source"}"`)
+          expect(result.stdout).toContain('"parsed":true,"resumedReadOnly":true,"realPermission":true,"delegateDenied":true,"foreignSkillDenied":true,"inRootEditDenied":true,"exactSkillBytes":true')
+          expect(result.stderr).toMatch(/\b1 pass\b/)
+          console.log(JSON.stringify({ secondSeatCheck: { mode, exit: result.exit, oracle: "second-seat result binding" } }))
+        }
+        for (const original of originals) expect(await Bun.file(path.join(packageRoot, original.file)).text(), original.file).toBe(original.bytes)
+      } finally {
+        await fs.rm(path.join(tmp.path, mode), { recursive: true, force: true })
+        await fs.rm(path.join(artifacts.path, mode), { recursive: true, force: true })
       }
-      if (exit !== 0) throw new Error(`second seat ${mode} failed (${exit}):\n${stdout}\n${stderr}`)
-      expect(stdout, stderr).toContain(`"mode":"${mode === "restored" ? "source" : mode}"`)
-      expect(stdout).toContain('"parsed":true,"resumedReadOnly":true')
-      expect(stderr).toMatch(/\b1 pass\b/)
-      expect(stderr).not.toMatch(/\b[1-9]\d* skip\b/)
-      expect(await Bun.file(path.join(packageRoot, "src/tool/task.ts")).text()).toBe(originalTask)
-      console.log(JSON.stringify({ secondSeatCheck: { mode, exit, oracle: "second-seat result binding" } }))
     }
-  }, 360000)
+  }, 1200000)
 })
+
+async function runProofChild(cwd: string, config: string, fixture: string, env: NodeJS.ProcessEnv) {
+  const child = Bun.spawn([process.execPath, "test", `--config=${config}`, fixture, "--timeout", "90000"], { cwd, stdout: "pipe", stderr: "pipe", env })
+  const stdout = new Response(child.stdout).text()
+  const stderr = new Response(child.stderr).text()
+  const state = { timedOut: false }
+  const deadline = setTimeout(() => {
+    state.timedOut = true
+    child.kill("SIGKILL")
+  }, 120000)
+  try {
+    const exit = await child.exited
+    const output = { exit, stdout: await stdout, stderr: await stderr }
+    if (state.timedOut) throw new Error(`Second-seat child deadline exceeded (${fixture}):\n${output.stdout}\n${output.stderr}`)
+    return output
+  } finally {
+    clearTimeout(deadline)
+    if (child.exitCode === null) child.kill("SIGKILL")
+    await child.exited
+    await Promise.all([stdout, stderr])
+  }
+}
