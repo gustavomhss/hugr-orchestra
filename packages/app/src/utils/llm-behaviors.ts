@@ -49,22 +49,29 @@ export function sanitizeBehaviorState(value: unknown): LlmBehaviorState {
   return { behaviors: value.behaviors.flatMap((item) => (isBehavior(item) ? [normalize(item)] : [])) }
 }
 
-export function behaviorSystem(behaviors: LlmBehavior[]) {
-  const active = behaviors.filter(
-    (behavior) => behavior.enabled && (behavior.id === CAVEMAN_ID || behavior.instructions.trim()),
-  )
-  if (!active.length) return
-  return [
-    "LLM behaviors active for this profile. Apply them to every answer.",
-    ...active.map((behavior) =>
-      [
-        behavior.id === CAVEMAN_ID ? `## ${behavior.name} (intensity: ${intensity(behavior)})` : `## ${behavior.name}`,
+// The active behaviors as model instructions: a V1 prompt carries them joined (behaviorSystem), a V2 server keeps
+// them per project and applies each one to every turn.
+export function behaviorInstructions(behaviors: LlmBehavior[]) {
+  return behaviors
+    .filter((behavior) => behavior.enabled && (behavior.id === CAVEMAN_ID || behavior.instructions.trim()))
+    .map((behavior) => ({
+      id: behavior.id,
+      name: behavior.id === CAVEMAN_ID ? `${behavior.name} (intensity: ${intensity(behavior)})` : behavior.name,
+      instructions: [
         behavior.instructions.trim(),
         behavior.id === CAVEMAN_ID ? `${INTENSITY_RULES[intensity(behavior)]} ${CAVEMAN_GUARDS}` : "",
       ]
         .filter(Boolean)
         .join("\n"),
-    ),
+    }))
+}
+
+export function behaviorSystem(behaviors: LlmBehavior[]) {
+  const active = behaviorInstructions(behaviors)
+  if (!active.length) return
+  return [
+    "LLM behaviors active for this profile. Apply them to every answer.",
+    ...active.map((behavior) => `## ${behavior.name}\n${behavior.instructions}`),
   ].join("\n\n")
 }
 

@@ -117,9 +117,6 @@ export const SettingsProvidersV2: Component<{
                     <div class="settings-v2-provider-copy">
                       <div class="settings-v2-provider-main">
                         <span class="settings-v2-provider-name">{item.name}</span>
-                        <Show when={item.id === "opencode" || item.id === "opencode-go"}>
-                          <Tag>{language.t("dialog.provider.tag.recommended")}</Tag>
-                        </Show>
                       </div>
                       <Show when={controller.note(item.id)}>
                         {(key) => <p class="settings-v2-provider-description">{language.t(key())}</p>}

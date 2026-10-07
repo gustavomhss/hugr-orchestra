@@ -231,6 +231,15 @@ html[data-color-scheme="light"] .orchestra-pr-dialog {
   margin: 0 0 12px;
 }
 
+/* The fieldset only disables the fields while the request runs; the fields keep the mock's layout. */
+.orchestra-pr-fields {
+  display: contents;
+}
+
+.orchestra-pr-dialog [data-action="pr-open"] {
+  overflow-wrap: anywhere;
+}
+
 @media (min-width: 768px) {
   /* All files carries the same switch above the session's file browser. */
   body[data-new-layout] [data-session-tab="files"] > [data-slot="orchestra-files-head"] {

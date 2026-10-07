@@ -1,6 +1,6 @@
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, type Locator, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOpenCodeServer, type MockServerConfig } from "../utils/mock-server"
 import { installDockBridge } from "./session-cockpit-bridge"
 import { expectSessionTitle } from "../utils/waits"
 
@@ -56,6 +56,7 @@ export async function setupCockpit(
     // A fresh profile has not had the rail opened for it yet.
     rail?: "fresh"
     vcsDiff?: unknown[]
+    pullRequests?: MockServerConfig["pullRequests"]
     onPrompt?: (input: { sessionID: string; body: unknown }) => void
   },
 ) {
@@ -67,6 +68,7 @@ export async function setupCockpit(
   await mockOpenCodeServer(page, {
     freshRail: options.rail === "fresh",
     vcsDiff: options.vcsDiff,
+    pullRequests: options.pullRequests,
     onPrompt: options.onPrompt,
     directory,
     project: {

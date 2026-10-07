@@ -1,8 +1,8 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "a989dbf0-525d-4a8a-bb4b-cdeebcdc5ff1",
-  "prevIds": ["f14a9b18-8207-487e-a3d3-227e629ba9ad"],
+  "id": "01c44789-486e-45cd-80d2-d40cd25d9c03",
+  "prevIds": ["a989dbf0-525d-4a8a-bb4b-cdeebcdc5ff1"],
   "ddl": [
     {
       "name": "workspace",
@@ -46,6 +46,14 @@
     },
     {
       "name": "project",
+      "entityType": "tables"
+    },
+    {
+      "name": "scheduled_task_run",
+      "entityType": "tables"
+    },
+    {
+      "name": "scheduled_task",
       "entityType": "tables"
     },
     {
@@ -799,6 +807,246 @@
       "name": "commands",
       "entityType": "columns",
       "table": "project"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "task_id",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "slot",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "state",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "message_id",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "prompt",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "error",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_claimed",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_settled",
+      "entityType": "columns",
+      "table": "scheduled_task_run"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "directory",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "name",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "prompt",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "cadence",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "timezone",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "minute",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "next",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "enabled",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "runs",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "missed",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "scheduled_task"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_updated",
+      "entityType": "columns",
+      "table": "scheduled_task"
     },
     {
       "type": "text",
@@ -1566,6 +1814,17 @@
       "table": "project_directory"
     },
     {
+      "columns": ["task_id"],
+      "tableTo": "scheduled_task",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_scheduled_task_run_task_id_scheduled_task_id_fk",
+      "entityType": "fks",
+      "table": "scheduled_task_run"
+    },
+    {
       "columns": ["session_id"],
       "tableTo": "session",
       "columnsTo": ["id"],
@@ -1740,6 +1999,20 @@
     {
       "columns": ["id"],
       "nameExplicit": false,
+      "name": "scheduled_task_run_pk",
+      "table": "scheduled_task_run",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
+      "name": "scheduled_task_pk",
+      "table": "scheduled_task",
+      "entityType": "pks"
+    },
+    {
+      "columns": ["id"],
+      "nameExplicit": false,
       "name": "message_pk",
       "table": "message",
       "entityType": "pks"
@@ -1847,6 +2120,74 @@
       "name": "permission_project_action_resource_idx",
       "entityType": "indexes",
       "table": "permission"
+    },
+    {
+      "columns": [
+        {
+          "value": "task_id",
+          "isExpression": false
+        },
+        {
+          "value": "slot",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "scheduled_task_run_slot_idx",
+      "entityType": "indexes",
+      "table": "scheduled_task_run"
+    },
+    {
+      "columns": [
+        {
+          "value": "state",
+          "isExpression": false
+        },
+        {
+          "value": "time_claimed",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "scheduled_task_run_state_idx",
+      "entityType": "indexes",
+      "table": "scheduled_task_run"
+    },
+    {
+      "columns": [
+        {
+          "value": "directory",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "scheduled_task_directory_idx",
+      "entityType": "indexes",
+      "table": "scheduled_task"
+    },
+    {
+      "columns": [
+        {
+          "value": "enabled",
+          "isExpression": false
+        },
+        {
+          "value": "next",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "scheduled_task_due_idx",
+      "entityType": "indexes",
+      "table": "scheduled_task"
     },
     {
       "columns": [

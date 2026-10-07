@@ -2,7 +2,7 @@ import { For, Show, createEffect, createMemo, createUniqueId, on, onCleanup, onM
 import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Mark } from "@opencode-ai/ui/logo"
+import { HugrMark } from "@/orchestra/brand"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
@@ -480,7 +480,7 @@ export function TasksPanel(
               when={props.summary}
               fallback={
                 <div class="flex h-full flex-col items-center justify-center gap-6 px-6 pb-42 text-center">
-                  <Mark class="w-14 opacity-10" />
+                  <HugrMark class="w-14 opacity-10" />
                   <div class="text-14-regular text-text-weak max-w-56">{language.t("session.tasks.empty")}</div>
                 </div>
               }
