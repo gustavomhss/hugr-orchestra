@@ -78,21 +78,29 @@ if (!allowDirty && !dryRun && git(root, "status", "--porcelain").trim())
   fail("The working tree is not clean. Commit or set aside your changes first, or pass --allow-dirty.")
 
 progress("checking frozen fixtures")
+const originals = await textFiles()
 const frozen = frozenChanges(tracked())
 if (frozen.length) {
   for (const line of frozen) console.log(`  ${line}`)
   fail(`The rename would change ${frozen.length} line(s) or name(s) in frozen fixtures; nothing was changed.`)
 }
 progress("census of protected strings")
-const before = await protectedCensus(await textFiles())
+const before = await protectedCensus(originals)
 progress("moving paths")
 const moves = movePaths()
 progress("rewriting files")
-const rewritten = await rewriteFiles()
+const projected = originals.map((entry) => ({ file: rename(entry.file), text: entry.text }))
+const rewritten = await rewriteFiles(projected)
+if (dryRun) progress("generators not run; generated-output residue omitted from preview")
 if (!dryRun && !skipRegen) regenerate()
 progress("checking the result")
-const after = await protectedCensus(await textFiles())
-const residue = await residualOldNames()
+const result = dryRun ? projected : await textFiles()
+const after = await protectedCensus(result)
+const contents = new Map(result.map((entry) => [entry.file, entry.text]))
+const residue = tracked()
+  .map((file) => dryRun ? rename(file) : file)
+  .filter((file) => !kept(file) && (!dryRun || !GENERATED.test(file)))
+  .flatMap((file) => oldNames(file, contents.get(file) ?? ""))
 
 console.log(`rename-codemod${dryRun ? " (dry run)" : ""}: ${moves.length} paths moved, ${rewritten} files rewritten`)
 for (const [name, count] of counts) console.log(`  ${name.padEnd(26)} ${count}`)
@@ -103,13 +111,14 @@ console.log(
   `protected strings: ${[...before.values()].reduce((sum, n) => sum + n, 0)} before, ${[...after.values()].reduce((sum, n) => sum + n, 0)} after, ${changedProtection.length} changed`,
 )
 for (const key of changedProtection) console.log(`  CHANGED ${key}: ${before.get(key) ?? 0} -> ${after.get(key) ?? 0}`)
+if (dryRun) report.push("## preview scope", "Generators not run; generated-output residue omitted.")
 if (reportFile) await Bun.write(reportFile, report.join("\n") + "\n")
-if (!dryRun && residue.length) {
+if (residue.length) {
   console.log(`unprotected old names left: ${residue.length}`)
   for (const line of residue.slice(0, 200)) console.log(`  ${line}`)
 }
 if (changedProtection.length) fail("A protected string changed.")
-if (!dryRun && residue.length) fail("Old names remain outside the ledger.")
+if (residue.length) fail("Old names remain outside the ledger.")
 
 // Every change the rename would make under a frozen fixture path (other than .md docs), as "file:line: old => new".
 // Binary files count too: their bytes are never rewritten, but a renamed path would still move them.
@@ -124,7 +133,7 @@ function frozenChanges(files: string[]) {
       const text = bytes.toString("utf8")
       if (!OLD_NAME.test(text)) return moved
       const oldLines = text.split("\n")
-      const newLines = apply(text, file, false).split("\n")
+      const newLines = apply(text, renamed, false).split("\n")
       return [
         ...moved,
         ...newLines.flatMap((line, index) =>
@@ -142,11 +151,10 @@ async function textFiles() {
   const files = tracked()
   const result: { file: string; text: string }[] = []
   for (const file of files) {
-    if (kept(file)) continue
     const bytes = await Bun.file(path.join(root, file))
       .bytes()
-      .catch(() => undefined)
-    if (!bytes || bytes.subarray(0, 8000).includes(0)) continue
+      .catch((error: unknown) => fail(`Unreadable tracked file ${file}: ${String(error)}`))
+    if (kept(file) || bytes.subarray(0, 8000).includes(0)) continue
     result.push({ file, text: new TextDecoder().decode(bytes) })
   }
   return result
@@ -197,39 +205,64 @@ function rename(file: string) {
 
 function movePaths() {
   const files = tracked()
-  const planned = files.map((file) => ({ from: file, to: rename(file) })).filter((move) => move.from !== move.to)
-  // Move whole directories when the directory itself is renamed, then the remaining files.
+  const planned = files.map((file) => ({ from: file, to: rename(file) }))
+  const destinations = new Map<string, string>()
+  for (const move of planned) {
+    const previous = destinations.get(move.to)
+    if (previous) fail(`Cannot move ${move.from}: ${move.to} collides with ${previous}.`)
+    destinations.set(move.to, move.from)
+  }
+  // Plan all directory levels, then basenames, using the same virtual paths in preview and execution.
   const directories = new Map<string, string>()
   for (const move of planned) {
     const from = move.from.split("/")
     const to = move.to.split("/")
-    const index = from.findIndex((segment, i) => segment !== to[i])
-    if (index < from.length - 1) directories.set(from.slice(0, index + 1).join("/"), to.slice(0, index + 1).join("/"))
+    from.slice(0, -1).forEach((segment, index) => {
+      if (segment !== to[index])
+        directories.set(from.slice(0, index + 1).join("/"), to.slice(0, index + 1).join("/"))
+    })
   }
-  const done: string[] = []
-  for (const [from, to] of [...directories].sort(([a], [b]) => a.length - b.length)) {
-    if ([...directories.keys()].some((other) => other !== from && from.startsWith(`${other}/`))) continue
-    if (existsSync(path.join(root, to))) fail(`Cannot move ${from}: ${to} already exists.`)
-    if (!dryRun) git(root, "mv", from, to)
-    done.push(`${from} -> ${to}`)
+  const operations: { from: string; to: string }[] = []
+  const within = (file: string, directory: string) => file === directory || file.startsWith(`${directory}/`)
+  const currentPath = (file: string) =>
+    operations.reduce(
+      (current, move) => within(current, move.from) ? move.to + current.slice(move.from.length) : current,
+      file,
+    )
+  for (const [from, to] of [...directories].sort(([a], [b]) => a.split("/").length - b.split("/").length)) {
+    operations.push({ from: currentPath(from), to })
   }
-  const remaining = (dryRun ? files : tracked())
-    .map((file) => ({ from: file, to: rename(file) }))
-    .filter((move) => move.from !== move.to)
-    .filter((move) => !dryRun || !done.some((entry) => move.from.startsWith(`${entry.split(" -> ")[0]}/`)))
-  for (const move of remaining) {
-    if (existsSync(path.join(root, move.to))) fail(`Cannot move ${move.from}: ${move.to} already exists.`)
-    if (!dryRun) git(root, "mv", move.from, move.to)
-    done.push(`${move.from} -> ${move.to}`)
+  for (const move of planned) {
+    const from = currentPath(move.from)
+    if (from !== move.to) operations.push({ from, to: move.to })
   }
+  // Resolve destinations back through earlier virtual moves, including untracked filesystem occupants.
+  // Complete this preflight before the first git mv or text write.
+  operations.forEach((move, index) => {
+    let original: string | undefined = move.to
+    for (const earlier of operations.slice(0, index).reverse()) {
+      if (within(original, earlier.to)) {
+        original = earlier.from + original.slice(earlier.to.length)
+        continue
+      }
+      if (within(original, earlier.from)) {
+        original = undefined
+        break
+      }
+    }
+    if (original !== undefined && existsSync(path.join(root, original)))
+      fail(`Cannot move ${move.from}: ${move.to} already exists.`)
+  })
+  if (!dryRun) for (const move of operations) git(root, "mv", move.from, move.to)
+  const done = operations.map((move) => `${move.from} -> ${move.to}`)
   report.push("## moves", ...done)
   return done
 }
 
-async function rewriteFiles() {
+async function rewriteFiles(files: { file: string; text: string }[]) {
   let rewritten = 0
   report.push("## rewritten lines")
-  for (const entry of await textFiles()) {
+  for (const entry of files) {
     if (GENERATED.test(entry.file) || !OLD_NAME.test(entry.text)) continue
     const next = RIGHT_ALIGNED.test(entry.file)
       ? keepWidth(entry.text, apply(entry.text, entry.file, true))
@@ -243,6 +276,7 @@ async function rewriteFiles() {
         report.push(`${entry.file}:${index + 1}: ${oldLines[index]!.trim()}\n    => ${line.trim()}`)
     })
     if (!dryRun) await Bun.write(path.join(root, entry.file), next)
+    entry.text = next
   }
   return rewritten
 }
@@ -286,11 +320,6 @@ function regenerate() {
   step("packages/sdk/openapi.json", "packages/orchestra", ["bun", "dev", "generate"], "../sdk/openapi.json")
   step("the client", "packages/client", ["bun", "run", "generate"])
   step("the Atlas bundles", "packages/atlas-boundary", ["bun", "run", "generate"])
-}
-
-// Same rule as the guard: what is left after kept paths and protected strings must not name the old product.
-async function residualOldNames() {
-  return (await textFiles()).flatMap((entry) => oldNames(entry.file, entry.text))
 }
 
 function git(cwd: string, ...command: string[]) {
