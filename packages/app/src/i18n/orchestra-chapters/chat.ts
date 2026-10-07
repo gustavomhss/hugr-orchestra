@@ -2,7 +2,6 @@
 export const CHAT_COPY = {
   "orchestra.chat.you": "You",
   "orchestra.chat.review": "Review",
-  "orchestra.chat.share": "Share",
   "orchestra.chat.apps": "Apps",
   "orchestra.chat.filesChanged": "Files Changed {{count}}",
   "orchestra.chat.allFiles": "All files",

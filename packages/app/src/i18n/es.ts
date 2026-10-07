@@ -179,10 +179,6 @@ export const dict = {
   "command.session.compact.description": "Resumir la sesión para reducir el tamaño del contexto",
   "command.session.fork": "Bifurcar desde mensaje",
   "command.session.fork.description": "Crear una nueva sesión desde un mensaje anterior",
-  "command.session.share": "Compartir sesión",
-  "command.session.share.description": "Compartir esta sesión y copiar la URL al portapapeles",
-  "command.session.unshare": "Dejar de compartir sesión",
-  "command.session.unshare.description": "Dejar de compartir esta sesión",
 
   "command.session.export": "Exportar sesión",
   "command.session.export.description": "Exportar la transcripción completa de la sesión como JSON",
@@ -650,17 +646,6 @@ export const dict = {
   "toast.context.noLineSelection.title": "Sin selección de líneas",
   "toast.context.noLineSelection.description": "Primero selecciona un rango de líneas en una pestaña de archivo.",
 
-  "toast.session.share.copyFailed.title": "Fallo al copiar URL al portapapeles",
-  "toast.session.share.success.title": "Sesión compartida",
-  "toast.session.share.success.description": "Enlace para compartir copiado al portapapeles.",
-  "toast.session.share.failed.title": "Fallo al compartir sesión",
-  "toast.session.share.failed.description": "Ocurrió un error al compartir la sesión",
-
-  "toast.session.unshare.success.title": "La sesión dejó de compartirse",
-  "toast.session.unshare.success.description": "La sesión dejó de compartirse correctamente.",
-  "toast.session.unshare.failed.title": "Fallo al dejar de compartir sesión",
-  "toast.session.unshare.failed.description": "Ocurrió un error al dejar de compartir la sesión",
-
   "toast.session.export.success.title": "Sesión exportada",
   "toast.session.export.success.description": "Sesión guardada en {{filename}}",
   "toast.session.export.failed.title": "No se pudo exportar la sesión",
@@ -856,20 +841,6 @@ export const dict = {
   "status.popover.tab.lsp": "LSP",
   "status.popover.tab.plugins": "Plugins",
   "status.popover.action.manageServers": "Gestionar servidores",
-
-  "session.share.popover.title": "Publicar en la web",
-  "session.share.popover.description.shared":
-    "Esta sesión es pública en la web. Es accesible para cualquiera con el enlace.",
-  "session.share.popover.description.unshared":
-    "Compartir sesión públicamente en la web. Será accesible para cualquiera con el enlace.",
-  "session.share.action.share": "Compartir",
-  "session.share.action.publish": "Publicar",
-  "session.share.action.publishing": "Publicando...",
-  "session.share.action.unpublish": "Despublicar",
-  "session.share.action.unpublishing": "Despublicando...",
-  "session.share.action.view": "Ver",
-  "session.share.copy.copied": "Copiado",
-  "session.share.copy.copyLink": "Copiar enlace",
 
   "lsp.tooltip.none": "Sin servidores LSP",
   "lsp.label.connected": "{{count}} LSP",

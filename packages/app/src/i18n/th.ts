@@ -177,10 +177,6 @@ export const dict = {
   "command.session.compact.description": "สรุปเซสชันเพื่อลดขนาดบริบท",
   "command.session.fork": "แตกแขนงจากข้อความ",
   "command.session.fork.description": "สร้างเซสชันใหม่จากข้อความก่อนหน้า",
-  "command.session.share": "แชร์เซสชัน",
-  "command.session.share.description": "แชร์เซสชันนี้และคัดลอก URL ไปยังคลิปบอร์ด",
-  "command.session.unshare": "ยกเลิกการแชร์เซสชัน",
-  "command.session.unshare.description": "หยุดการแชร์เซสชันนี้",
 
   "command.session.export": "ส่งออกเซสชัน",
   "command.session.export.description": "ส่งออกบันทึกทั้งหมดของเซสชันเป็น JSON",
@@ -642,17 +638,6 @@ export const dict = {
   "toast.context.noLineSelection.title": "ไม่มีการเลือกบรรทัด",
   "toast.context.noLineSelection.description": "เลือกช่วงบรรทัดในแท็บไฟล์ก่อน",
 
-  "toast.session.share.copyFailed.title": "ไม่สามารถคัดลอก URL ไปยังคลิปบอร์ด",
-  "toast.session.share.success.title": "แชร์เซสชันแล้ว",
-  "toast.session.share.success.description": "คัดลอก URL แชร์ไปยังคลิปบอร์ดแล้ว!",
-  "toast.session.share.failed.title": "ไม่สามารถแชร์เซสชัน",
-  "toast.session.share.failed.description": "เกิดข้อผิดพลาดระหว่างการแชร์เซสชัน",
-
-  "toast.session.unshare.success.title": "ยกเลิกการแชร์เซสชันแล้ว",
-  "toast.session.unshare.success.description": "ยกเลิกการแชร์เซสชันสำเร็จ!",
-  "toast.session.unshare.failed.title": "ไม่สามารถยกเลิกการแชร์เซสชัน",
-  "toast.session.unshare.failed.description": "เกิดข้อผิดพลาดระหว่างการยกเลิกการแชร์เซสชัน",
-
   "toast.session.export.success.title": "ส่งออกเซสชันแล้ว",
   "toast.session.export.success.description": "บันทึกเซสชันไปยัง {{filename}} แล้ว",
   "toast.session.export.failed.title": "ไม่สามารถส่งออกเซสชัน",
@@ -841,18 +826,6 @@ export const dict = {
   "status.popover.tab.lsp": "LSP",
   "status.popover.tab.plugins": "ปลั๊กอิน",
   "status.popover.action.manageServers": "จัดการเซิร์ฟเวอร์",
-
-  "session.share.popover.title": "เผยแพร่บนเว็บ",
-  "session.share.popover.description.shared": "เซสชันนี้เป็นสาธารณะบนเว็บ สามารถเข้าถึงได้โดยผู้ที่มีลิงก์",
-  "session.share.popover.description.unshared": "แชร์เซสชันสาธารณะบนเว็บ จะเข้าถึงได้โดยผู้ที่มีลิงก์",
-  "session.share.action.share": "แชร์",
-  "session.share.action.publish": "เผยแพร่",
-  "session.share.action.publishing": "กำลังเผยแพร่...",
-  "session.share.action.unpublish": "ยกเลิกการเผยแพร่",
-  "session.share.action.unpublishing": "กำลังยกเลิกการเผยแพร่...",
-  "session.share.action.view": "ดู",
-  "session.share.copy.copied": "คัดลอกแล้ว",
-  "session.share.copy.copyLink": "คัดลอกลิงก์",
 
   "lsp.tooltip.none": "ไม่มีเซิร์ฟเวอร์ LSP",
   "lsp.label.connected": "{{count}} LSP",

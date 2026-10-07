@@ -464,7 +464,7 @@ describe("ownSource", () => {
     const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
     expect(ownSource(config, "v2", "ready").state).toBe("unknown")
     expect(ownSource({}, "v1", "ready").state).toBe("unknown")
-    expect(ownSource({ share: "manual" }, "v1", "ready").state).toBe("missing")
+    expect(ownSource({ model: "anthropic/claude" }, "v1", "ready").state).toBe("missing")
     expect(ownSource(config, "v1", "ready")).toEqual({
       state: "configured",
       projectID: "atlas-project",

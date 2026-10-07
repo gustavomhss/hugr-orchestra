@@ -179,10 +179,6 @@ export const dict = {
   "command.session.compact.description": "Підсумувати сесію, щоб зменшити розмір контексту",
   "command.session.fork": "Відгалузити від повідомлення",
   "command.session.fork.description": "Створити нову сесію з попереднього повідомлення",
-  "command.session.share": "Поділитися сесією",
-  "command.session.share.description": "Поділитися цією сесією та скопіювати URL у буфер обміну",
-  "command.session.unshare": "Припинити поширення сесії",
-  "command.session.unshare.description": "Припинити поширення цієї сесії",
 
   "command.session.export": "Експортувати сесію",
   "command.session.export.description": "Експортувати повну історію сесії у форматі JSON",
@@ -655,17 +651,6 @@ export const dict = {
   "toast.context.noLineSelection.title": "Не вибрано рядків",
   "toast.context.noLineSelection.description": "Спочатку виберіть діапазон рядків у вкладці файлу.",
 
-  "toast.session.share.copyFailed.title": "Не вдалося скопіювати URL у буфер обміну",
-  "toast.session.share.success.title": "Сесію опубліковано",
-  "toast.session.share.success.description": "Посилання скопійовано в буфер обміну!",
-  "toast.session.share.failed.title": "Не вдалося опублікувати сесію",
-  "toast.session.share.failed.description": "Під час публікації сесії сталася помилка",
-
-  "toast.session.unshare.success.title": "Поширення сесії припинено",
-  "toast.session.unshare.success.description": "Поширення сесії успішно припинено!",
-  "toast.session.unshare.failed.title": "Не вдалося припинити поширення сесії",
-  "toast.session.unshare.failed.description": "Під час припинення поширення сесії сталася помилка",
-
   "toast.session.export.success.title": "Сесію експортовано",
   "toast.session.export.success.description": "Сесію збережено у файл {{filename}}",
   "toast.session.export.failed.title": "Не вдалося експортувати сесію",
@@ -897,20 +882,6 @@ export const dict = {
   "status.popover.tab.lsp": "LSP",
   "status.popover.tab.plugins": "Плагіни",
   "status.popover.action.manageServers": "Керувати серверами",
-
-  "session.share.popover.title": "Опублікувати в інтернеті",
-  "session.share.popover.description.shared":
-    "Ця сесія є публічною в інтернеті. Вона доступна будь-кому за посиланням.",
-  "session.share.popover.description.unshared":
-    "Опублікуйте сесію публічно в інтернеті. Вона буде доступна будь-кому за посиланням.",
-  "session.share.action.share": "Поділитися",
-  "session.share.action.publish": "Опублікувати",
-  "session.share.action.publishing": "Публікація...",
-  "session.share.action.unpublish": "Скасувати публікацію",
-  "session.share.action.unpublishing": "Скасування публікації...",
-  "session.share.action.view": "Переглянути",
-  "session.share.copy.copied": "Скопійовано",
-  "session.share.copy.copyLink": "Копіювати посилання",
 
   "lsp.tooltip.none": "Немає серверів LSP",
   "lsp.label.connected": "{{count}} LSP",
