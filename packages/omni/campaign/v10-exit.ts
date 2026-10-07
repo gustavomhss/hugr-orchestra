@@ -64,7 +64,7 @@ export async function run() {
     step(`exit ${host.proc.exitCode ?? host.proc.signalCode} in ${exitMs} ms; cleanup ${totalMs} ms; after ${JSON.stringify(after)}`)
     return verdict("v10-exit", { target: "serve", kpi: "runtime.dispose completes, exits exactly 143, cleans LSP/MCP within 20 s", eventLoopRetention: "unproven: this serve command explicitly process.exit()s", home: scratch.home, nonce: tree.nonce, pinnedHost, live, supervisors, status, shutdown, exitCode: host.proc.exitCode, signalCode: host.proc.signalCode, exitMs, totalMs, after, leftovers, llm: llm.seen, pass: shutdown.pass && totalMs < 20_000 && leftovers.length === 0, steps })
   } catch (error) {
-    return verdict("v10-exit", { target: "serve", pass: false, error: String(error), home: scratch.home, nonce: tree.nonce, llm: llm.seen, offered: llm.offered, steps })
+    return verdict("v10-exit", { target: "serve", pass: false, eventLoopRetention: "unproven: serve explicitly process.exit()s", error: String(error), home: scratch.home, nonce: tree.nonce, llm: llm.seen, offered: llm.offered, steps })
   } finally {
     llm.stop()
     await cleanup(scratch.home, [tree.nonce])

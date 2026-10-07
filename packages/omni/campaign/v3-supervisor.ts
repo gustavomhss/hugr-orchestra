@@ -27,8 +27,10 @@ export async function run() {
     })
     const supervisors = [...new Map(Object.values(before).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
     if (supervisors.length === 0) throw new Error("no pinned supervisors in positive control")
+    step(`full controls ${JSON.stringify(before)}; supervisor identities ${JSON.stringify(supervisors)}`)
     for (const supervisor of supervisors) if (!kill9(supervisor)) throw new Error(`could not kill pinned supervisor ${JSON.stringify(supervisor)}`)
     const killed = Date.now()
+    step(`supervisor kill succeeded at ${killed}`)
     const observed = await deadlineSnapshots(killed, 8000, [trees.bash.nonce, trees.pty.nonce], supervisors)
     const serverAlive = table().some((row) => matches(row, pinnedHost) && !row.state.startsWith("Z"))
     const tier = win

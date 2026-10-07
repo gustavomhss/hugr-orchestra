@@ -47,6 +47,7 @@ async function hold() {
   const proc = spawn(bin, ["debug", "omni", "--hold"], { env, cwd: project, stdio: ["ignore", "pipe", "pipe"] })
   const hostIdentity = own(home, proc)
   let out = ""
+  const steps: Record<string, unknown>[] = []
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
   let nonce: string | undefined
@@ -58,12 +59,14 @@ async function hold() {
       return found.pass ? found : undefined
     })
     const supervisors = [...new Map(before.protectedMembers.flatMap((member) => member.supervisors).map((pinned) => [pinned.pid, pinned])).values()]
+    steps.push({ phase: "control", before, supervisors, at: Date.now() })
     if (!kill9(hostIdentity)) throw new Error("could not kill pinned hold host")
     const killed = Date.now()
+    steps.push({ phase: "host-killed", at: killed })
     const observed = await deadlineSnapshots(killed, KPI_MS, [nonce], [hostIdentity, ...supervisors])
     return verdict("v2-hold", { target: "hold", nonce, hostIdentity, before, supervisors, observed, pass: observed.zeroAtMs !== undefined && observed.last.counts[0] === 0 && observed.last.retained.length === 0 })
   } catch (error) {
-    return verdict("v2-hold", { pass: false, error: String(error), output: out })
+    return verdict("v2-hold", { pass: false, nonce, hostIdentity, steps, error: String(error), output: out })
   } finally {
     await cleanup(home, nonce ? [nonce] : [])
   }

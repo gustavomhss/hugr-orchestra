@@ -11,7 +11,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync, appendFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { alive, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
+import { tree } from "../../core/test/fixture/process-tree.ts"
 
 export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
 
@@ -263,21 +263,20 @@ export function table(timeoutMs = QUERY_MS): Row[] {
       options,
     )
     if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
-    const rows = JSON.parse(out.stdout) as { ProcessId: number; ParentProcessId: number; CommandLine: string | null; StartTime: string | null }[]
-    if (!Array.isArray(rows) || rows.length === 0) throw new Error("Get-CimInstance returned no process table")
-    const parsed = rows.filter((row) => row.ProcessId !== out.pid && row.ProcessId !== 0 && row.ProcessId !== 4).map((row) => {
-      // PID 0 is System Idle Process; PID 4 is System. Neither can be an owned campaign child.
-      if (!Number.isSafeInteger(row.ProcessId) || row.ProcessId <= 0 || !Number.isSafeInteger(row.ParentProcessId) || typeof row.CommandLine !== "string" || !row.CommandLine.trim() || typeof row.StartTime !== "string" || !/^\d+$/.test(row.StartTime))
-        throw new Error(`Get-CimInstance cannot establish process identity/argv for PID ${row.ProcessId}: ${JSON.stringify(row)}`)
-      return { pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine, startTime: row.StartTime, state: "live" }
-    })
-    if (!parsed.some((row) => row.pid === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
+    const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid)
     parsed.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
     return parsed
   }
   const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
-  const rows = out.stdout.split("\n")
+  const rows = decodeUnixTable(out.stdout, out.pid)
+  rows.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
+  return rows
+}
+
+/** Exact ps decoding boundary; Linux cross-checks start time and argv through the same /proc identity. */
+export function decodeUnixTable(stdout: string, queryPID: number): Row[] {
+  const rows = stdout.split("\n")
     .filter((line) => line.trim().length > 0)
     .flatMap((line) => {
       const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\S+)\s+(\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.*)$/)
@@ -304,9 +303,24 @@ export function table(timeoutMs = QUERY_MS): Row[] {
       if (!/^\d+$/.test(observed.fields[19]!)) throw new Error(`malformed /proc/${pid}/stat start time`)
       return [{ pid, parent: Number(observed.fields[1]), state: observed.fields[0]!, startTime: observed.fields[19]!, args: observed.args }]
     })
-    .filter((row) => row.pid !== out.pid)
+    .filter((row) => row.pid !== queryPID)
   if (!rows.some((row) => row.pid === process.pid)) throw new Error("ps returned an incomplete or malformed process table (querying host missing)")
-  rows.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
+  return rows
+}
+
+/** Pure CIM decoding boundary, separately falsifiable without claiming a Windows runtime run. */
+export function decodeWindowsTable(input: unknown, queryPID: number): Row[] {
+  if (!Array.isArray(input) || input.length === 0) throw new Error("Get-CimInstance returned no process table")
+  const rows = input.flatMap((value: unknown) => {
+    if (typeof value !== "object" || value === null) throw new Error("malformed Get-CimInstance row")
+    const row = value as Record<string, unknown>
+    // PID 0 is System Idle Process; PID 4 is System. Neither can be an owned campaign child.
+    if (row.ProcessId === queryPID || row.ProcessId === 0 || row.ProcessId === 4) return []
+    if (typeof row.ProcessId !== "number" || !Number.isSafeInteger(row.ProcessId) || row.ProcessId <= 0 || typeof row.ParentProcessId !== "number" || !Number.isSafeInteger(row.ParentProcessId) || row.ParentProcessId < 0 || typeof row.CommandLine !== "string" || !row.CommandLine.trim() || typeof row.StartTime !== "string" || !/^\d+$/.test(row.StartTime))
+      throw new Error(`Get-CimInstance cannot establish process identity/argv for PID ${row.ProcessId}: ${JSON.stringify(row)}`)
+    return [{ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine, startTime: row.StartTime, state: "live" }]
+  })
+  if (!rows.some((row) => row.pid === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
   return rows
 }
 

@@ -61,7 +61,8 @@ export async function run() {
     const markerSent = Date.now()
     if (markerSent < completed.time!.end!) throw new Error("marker generated before tool completion")
     if (adopted.output.includes(marker)) throw new Error("unique post-tool marker already present before injection")
-    writeFileSync(channel, marker)
+    // Named fault injection lets the real post-adoption output oracle be tested in both directions.
+    if (process.env.OMNI_CAMPAIGN_MUTATION !== "omit-post-tool-marker") writeFileSync(channel, marker)
     const listed = await until(20_000, "new post-tool output traversing adoption pump into registry", async () => {
       const jobs = await api.get(`/session/${session.id}/processes`) as Listed[]
       return jobs.find((job) => job.id === adopted.id && job.written > adopted.written && job.output.includes(marker))
