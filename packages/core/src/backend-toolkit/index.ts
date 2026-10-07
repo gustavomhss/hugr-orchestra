@@ -2,12 +2,13 @@ export * as BackendToolkit from "./index"
 
 import path from "path"
 import { randomUUID } from "crypto"
-import { execFile } from "child_process"
 import { access, chmod, mkdir, readFile, rename, rm, writeFile } from "fs/promises"
-import { promisify } from "util"
 import { Context, Effect, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { LayerNode } from "../effect/layer-node"
 import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
+import { AppProcess } from "../process"
 import { ENGINES, RUNTIMES, type Engine, type EngineId, type HostedEngine, type Runtime, type RuntimeId } from "./manifest"
 import { detect, type TargetId } from "./target"
 
@@ -262,7 +263,18 @@ function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory:
 }
 
 const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record<string, string>) =>
-  promisify(execFile)(file, [...args], { cwd, env: { ...process.env, ...env }, timeout: INSTALL_MS, maxBuffer: 64 * 1024 * 1024 })
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const processService = yield* AppProcess.Service
+      const result = yield* processService.run(
+        ChildProcess.make(file, args, { cwd, env: { ...process.env, ...env }, forceKillAfter: "5 seconds" }),
+        { timeout: INSTALL_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
+      ).pipe(Effect.flatMap(AppProcess.requireSuccess))
+      // AppProcess caps capture without failing the run; an incomplete install log must still fail the install.
+      if (result.stdoutTruncated || result.stderrTruncated)
+        return yield* new AppProcess.AppProcessError({ command: result.command, cause: new Error("Output exceeded 64 MiB") })
+    }).pipe(Effect.provide(LayerNode.compile(AppProcess.node))),
+  )
 
 function executable(engine: Engine, directory: string, target: TargetId) {
   const install = "runtime" in engine ? engine.install : undefined

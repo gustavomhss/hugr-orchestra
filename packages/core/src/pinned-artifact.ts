@@ -2,11 +2,12 @@ export * as PinnedArtifact from "./pinned-artifact"
 
 import path from "path"
 import { createHash } from "crypto"
-import { execFile } from "child_process"
 import { access, chmod, mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises"
-import { promisify } from "util"
 import which from "which"
 import { Effect, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { LayerNode } from "./effect/layer-node"
+import { AppProcess } from "./process"
 
 // The host (never the model) installs pinned upstream artifacts. A download is checked against its pinned digest before
 // any byte of it is written to disk, and the install directory only appears through one rename of a complete staging
@@ -36,6 +37,7 @@ export class Failed extends Schema.TaggedErrorClass<Failed>()("PinnedArtifactFai
 }
 
 const DOWNLOAD_MS = 10 * 60_000
+const EXTRACT_MS = 10 * 60_000
 
 /**
  * Download, verify and lay out every artifact in a staging dir, run `populate` over it, then move it into `directory`
@@ -99,7 +101,17 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
     writeFile(extractor ? path.join(directory, `archive.${artifact.format}`) : path.join(out, path.posix.basename(new URL(artifact.url).pathname)), bytes),
   )
   if (extractor)
-    yield* step("extract", () => promisify(execFile)(extractor[0], extractor.slice(1), { cwd: directory }))
+    yield* Effect.gen(function* () {
+      const processService = yield* AppProcess.Service
+      const result = yield* processService.run(
+        ChildProcess.make(extractor[0], extractor.slice(1), { cwd: directory, env: process.env, forceKillAfter: "5 seconds" }),
+        { timeout: EXTRACT_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
+      ).pipe(Effect.flatMap(AppProcess.requireSuccess))
+      if (result.stdoutTruncated || result.stderrTruncated) return yield* new Failed({ cause: "extract" })
+    }).pipe(
+      Effect.provide(LayerNode.compile(AppProcess.node)),
+      Effect.mapError(() => new Failed({ cause: "extract" })),
+    )
   yield* Effect.forEach(
     artifact.entries,
     (entry) =>
