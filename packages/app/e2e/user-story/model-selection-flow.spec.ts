@@ -111,6 +111,15 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(editor).toHaveCount(1)
   const draft = "Keep the selected model with this new-session draft."
   await editor.fill(draft)
+  // With no provider, sending is refused with a hint instead of reaching the server, and the draft offers to
+  // connect one.
+  await editor.press("Enter")
+  await expect(page.getByText("Select a model", { exact: true })).toBeVisible()
+  await expect(page).toHaveURL(draftURL.href)
+  await expect(editor).toHaveText(draft)
+  const providerTip = page.locator('[data-component="provider-tip"]')
+  await expect(providerTip).toHaveAttribute("data-visible", "true")
+  await expect(providerTip).toContainText("Connect to 75+ providers")
 
   const modelControl = page.locator('[data-action="prompt-model"]')
   await expect(modelControl).toHaveCount(1)
@@ -131,6 +140,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await page.locator('[data-action="provider-connect-submit"]').click()
   await expect(page.locator('[data-component="dialog-v2"]')).toHaveCount(0)
   expect(connections).toEqual([{ integrationID: "opencode-go", body: { key: "mock-go-api-key" } }])
+  await expect(providerTip).toHaveCount(0)
 
   await expect(modelControl).toHaveAttribute("data-control-type", "popover")
   await modelControl.click()
