@@ -534,7 +534,6 @@ export function Titlebar(props: {
                 </Show>
                 <div class="flex-1" />
                 <Show when={!mobile()}>
-                  <span data-slot="orchestra-titlebar-caption">{language.t("orchestra.brand.caption")}</span>
                   <button
                     type="button"
                     data-slot="orchestra-theme-toggle"

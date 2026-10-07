@@ -99,7 +99,6 @@ export const ORCHESTRA_COPY = {
   "orchestra.workspaces.unavailable": "Workspace information is unavailable on this server.",
   "orchestra.brand.name": "Orchestra",
   "orchestra.brand.descriptor": "Human Guardrail",
-  "orchestra.brand.caption": "OpenCode, evolved.",
   "orchestra.nav.chat": "Chat",
   "orchestra.nav.agents": "Agents",
   "orchestra.nav.maestro": "Maestro",

@@ -76,8 +76,10 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     id: "app",
     labelKey: "desktop.menu.app",
     platforms: ["macos"],
+    // Electron's default About, Hide and Quit labels use the process name, which keeps its inherited value (see APP_NAMES
+    // in the desktop main process), so these items carry the product name themselves.
     items: [
-      { type: "item", role: "about" },
+      { type: "item", role: "about", labelKey: "desktop.menu.about" },
       {
         type: "item",
         labelKey: "desktop.menu.checkForUpdates",
@@ -89,11 +91,11 @@ export const DESKTOP_MENU: DesktopMenu[] = [
       { type: "item", labelKey: "desktop.menu.restart", action: "app.relaunch" },
       { type: "item", labelKey: "desktop.menu.exportLogs", command: "logs.export" },
       { type: "separator" },
-      { type: "item", role: "hide" },
+      { type: "item", role: "hide", labelKey: "desktop.menu.hide" },
       { type: "item", role: "hideOthers" },
       { type: "item", role: "unhide" },
       { type: "separator" },
-      { type: "item", role: "quit" },
+      { type: "item", role: "quit", labelKey: "desktop.menu.quit" },
     ],
   },
   {

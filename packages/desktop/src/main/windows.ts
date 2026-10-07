@@ -198,7 +198,7 @@ export function createMainWindow(id: string = randomUUID()) {
     height: state.height,
     show: false,
     autoHideMenuBar: true,
-    title: "OpenCode",
+    title: nativeT("desktop.menu.app"),
     icon: iconPath(),
     backgroundColor: backgroundColor ?? defaultBackgroundColor(),
     ...(process.platform === "darwin"
@@ -401,8 +401,10 @@ function wireWindowRecovery(win: BrowserWindow, name: string) {
               { id: "export-logs", label: nativeT("desktop.recovery.action.exportLogs") },
               { id: "quit", label: nativeT("desktop.recovery.action.quit") },
             ]
+        // Without a title, Windows and Linux title the box with the process name.
         const result = await dialog.showMessageBox(win, {
           type: "warning",
+          title: nativeT("desktop.menu.app"),
           buttons: actions.map((action) => action.label),
           defaultId: 0,
           cancelId: 2,

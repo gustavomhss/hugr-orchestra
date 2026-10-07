@@ -113,7 +113,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   const modelControl = page.locator('[data-action="prompt-model"]')
   await expect(modelControl).toHaveCount(1)
   await modelControl.click()
-  await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by OpenCode")
+  await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by OpenCode Zen")
 
   await page.locator('[data-provider-id="opencode-go"]').click()
   await page.locator('[data-input="provider-api-key"]').fill("mock-go-api-key")

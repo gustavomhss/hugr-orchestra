@@ -52,6 +52,9 @@ import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
 
+// These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
+// data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
+// dialogs name "HuGR Orchestra" through the desktop.menu.* translations instead.
 const APP_NAMES: Record<string, string> = {
   dev: "OpenCode Dev",
   beta: "OpenCode Beta",

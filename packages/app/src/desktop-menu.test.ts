@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { DESKTOP_MENU } from "./desktop-menu"
+import { DESKTOP_NATIVE_ENGLISH } from "./i18n/desktop-native"
 
 describe("desktop menu", () => {
   test("exports logs through the desktop command registry", () => {
@@ -19,5 +20,15 @@ describe("desktop menu", () => {
 
     expect(windowMenu?.labelKey).toBe("desktop.menu.window")
     expect(roleItems.length).toBeGreaterThan(0)
+  })
+
+  test("names HuGR Orchestra on the macOS items Electron would label with the process name", () => {
+    const items = DESKTOP_MENU.find((menu) => menu.id === "app")?.items ?? []
+    const labels = (["about", "hide", "quit"] as const).map((role) => {
+      const item = items.find((entry) => entry.type === "item" && entry.role === role)
+      return item?.type === "item" && item.labelKey ? DESKTOP_NATIVE_ENGLISH[item.labelKey] : undefined
+    })
+
+    expect(labels).toEqual(["About HuGR Orchestra", "Hide HuGR Orchestra", "Quit HuGR Orchestra"])
   })
 })

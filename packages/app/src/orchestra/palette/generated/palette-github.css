@@ -19,10 +19,10 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-shell-shadow: 0 32px 90px rgba(42, 48, 54, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --orchestra-toolbar-background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.82));
   --orchestra-toolbar-border: rgba(101, 110, 119, 0.12);
-  --orchestra-toolbar-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 16px rgba(60, 67, 75, 0.09);
+  --orchestra-toolbar-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --orchestra-toolbar-drop: 0 6px 16px rgba(60, 67, 75, 0.09);
   --orchestra-toolbar-label: #454b52;
   --orchestra-toolbar-brand: #3f464f;
-  --orchestra-toolbar-caption: #474b50;
   --orchestra-toolbar-button: #454b53;
   --orchestra-workspace-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.34) 42%, rgba(255, 255, 255, 0.56)),
     radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.5), transparent 68%);
@@ -102,7 +102,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] .orchestra-shell > [data-slot="titlebar-v2"] {
     border-block-end: 1px solid var(--orchestra-toolbar-border);
     background: var(--orchestra-toolbar-background);
-    box-shadow: var(--orchestra-toolbar-shadow);
+    box-shadow: var(--orchestra-toolbar-highlight);
   }
   html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] .orchestra-workspace {
     background: url("/orchestra/mtn-src.jpg") center / cover no-repeat;
@@ -114,6 +114,9 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
     border: 1px solid var(--orchestra-glass-border);
     background: var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
+  }
+  html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow > div {
+    box-shadow: var(--orchestra-toolbar-drop);
   }
 }
 /* orchestra/shell.css */
@@ -309,9 +312,6 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   [data-orchestra-palette="github"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
     color: var(--orchestra-toolbar-brand);
   }
-  [data-orchestra-palette="github"] [data-slot="orchestra-titlebar-caption"] {
-    color: var(--orchestra-toolbar-caption);
-  }
   [data-orchestra-palette="github"] [data-slot="orchestra-theme-toggle"] {
     border: 0;
     background: transparent;
@@ -435,7 +435,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
     background: var(--orchestra-session-background);
     box-shadow: var(--orchestra-session-shadow);
   }
-  [data-orchestra-palette="github"] body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div {
+  [data-orchestra-palette="github"] body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div > div {
     background: var(--orchestra-workspace-overlay),
         url("/orchestra/mtn-src.jpg") center / cover no-repeat;
   }

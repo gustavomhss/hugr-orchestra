@@ -195,7 +195,7 @@ describe("WSL server settings presentation", () => {
             version: null,
             expectedVersion: "1.2.3",
             matchesDesktop: null,
-            error: "opencode is installed but could not run",
+            error: "The server is installed but could not run",
           },
         },
       },
