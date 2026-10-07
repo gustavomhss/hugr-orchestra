@@ -14,7 +14,7 @@ export function trustedAsset(kind: "typescript" | "parser-worker") {
     : join(local, "package.json");
   const root = dirname(realpathSync(metadata));
   const info: unknown = JSON.parse(readFileSync(metadata, "utf8"));
-  const expected = kind === "typescript" ? "typescript" : "@opencode-ai/maestro-arsenal";
+  const expected = kind === "typescript" ? "typescript" : "@orchestra/maestro-arsenal";
   if (!info || typeof info !== "object" || !("name" in info) || info.name !== expected)
     throw new AcquisitionError("TRUSTED_ASSET_PACKAGE_INVALID", expected);
   const entry = realpathSync(kind === "typescript"

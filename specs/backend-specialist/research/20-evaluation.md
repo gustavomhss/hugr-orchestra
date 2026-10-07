@@ -6,7 +6,7 @@ Research date: 2026-10-03. Research only; benchmark execution and the backend sp
 
 **Optimize accepted backend tasks per total cost, with low user repair burden.** “Agent finished,” “tests green,” and “user liked explanation” each answer different questions. Best-in-class requires all three: correct outcome, dependable collaboration, efficient delivery. Quality cannot be traded away silently for fewer tokens. [S2, S9–S14]
 
-Use existing OpenCode/Orchestra execution path, native Atlas shared memory, optional Maestro. Add thin experiment driver, task manifests, trusted graders, native trace export, paired report. Borrow benchmark evidence methods; current needs do not justify adopting entire platform. Reconsider Harbor only if measured environment/regrading maintenance costs exceed adapter costs while production-runtime fidelity survives. [S5, S8, S9]
+Use existing Orchestra execution path, native Atlas shared memory, optional Maestro. Add thin experiment driver, task manifests, trusted graders, native trace export, paired report. Borrow benchmark evidence methods; current needs do not justify adopting entire platform. Reconsider Harbor only if measured environment/regrading maintenance costs exceed adapter costs while production-runtime fidelity survives. [S5, S8, S9]
 
 “Good enough não serve” means explicit acceptance contracts, truthful verification, reliable recovery, measured improvements. It does not mean maximal architecture, compulsory planning ceremonies, or benchmark percentage chosen without user evidence.
 
@@ -42,7 +42,7 @@ Harbor verifier doc’s displayed example enables `set -euo pipefail`, runs pyte
 
 ### Comparison arms
 
-- **B — native baseline:** pinned OpenCode/Orchestra, model, repository instructions, native tools and Atlas service/snapshot; the backend specialist disabled, Maestro off.
+- **B — native baseline:** pinned Orchestra, model, repository instructions, native tools and Atlas service/snapshot; the backend specialist disabled, Maestro off.
 - **C — the backend specialist candidate:** same conditions plus frozen backend specialist version/defaults; Maestro off. Main question: incremental plugin value over runtime already available to user.
 - **M — optional Maestro:** C with Maestro on, evaluated separately on tasks needing planning/handoff. Compare same total task budget; include planning and handoff costs. Core backend specialist acceptance cannot depend on Maestro installation.
 

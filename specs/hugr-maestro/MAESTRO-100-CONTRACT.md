@@ -7,7 +7,7 @@ remains the delivery record for existing #106 through #114 scope.
 
 ## Objective
 
-Deliver Maestro as an OpenCode-native governed team operating system. Maestro
+Deliver Maestro as an Orchestra-native governed team operating system. Maestro
 orchestrates a fixed team, turns approved work into bounded Relay runs, keeps
 GitHub Project current, selects sufficient verification efficiently, integrates
 only proven work, and recovers honestly from failure.
@@ -94,8 +94,8 @@ Project #2. No other Maestro implementation WP may use this exception.
 M0.3 owns exactly these files:
 
 ```text
-packages/opencode/src/maestro/work-contract.ts
-packages/opencode/test/maestro/work-contract.test.ts
+packages/orchestra/src/maestro/work-contract.ts
+packages/orchestra/test/maestro/work-contract.test.ts
 ```
 
 It exports a pure `validateWorkContract({ kind, body })` seam for `epic`,
@@ -121,10 +121,10 @@ mutate GitHub, write Project state, or integrate a readiness writer.
 M0.3 tests valid extraction and every rejection class for each of six artifact
 kinds. Mutation probes separately remove each rejection guard and corrupt one
 kind branch; each must make its targeted
-`bun --cwd packages/opencode test --timeout 30000 --only-failures
+`bun --cwd packages/orchestra test --timeout 30000 --only-failures
 test/maestro/work-contract.test.ts` case fail, then restore. PR records all
 before/after outputs.
-`bun --cwd packages/opencode typecheck` is required before review.
+`bun --cwd packages/orchestra typecheck` is required before review.
 
 Until M4.1 wires Project mutation, lead enforces the validator receipt before
 manually moving a non-bootstrap item to `READY`, `QUEUED`, or `DISPATCHED`.
@@ -190,13 +190,13 @@ recovery behavior. A model may propose content; it cannot create authority.
 | lifecycle methods     | `specs/hugr-maestro/methods/*.md`                                              | `FRAME/GROUND/CONTRACT` -> validated method event -> next phase or `HOLD`     | durable Session/message/records -> versioned lifecycle event        | core only                       | method acceptance plus EventV2 test                                   | #172 / #185                |
 | actor identity        | `actor-identity-contract.md`                                                   | unresolved actor -> canonicalization guard -> identified or `HOLD`            | project, session, member -> canonical actor bytes                   | core only                       | actor collision/cross-project tests                                   | #172                       |
 | team roster           | `maestro/packages/core/src/team.ts` V1 reference; `actor-identity-contract.md` | typed WP -> route/grant guard -> seat-bound or `HOLD`                         | WP type and actor -> fixed seat/grants/card                         | conductor routes; core enforces | route/grant/review mutations                                          | #176 / #188-#190           |
-| RelayRun              | `relay/SPEC.md` V1 reference; `packages/opencode/src/tool/task.ts`             | `ARMED/RUNNING` -> gate receipt -> `STEP_HELD/STEP_ACCEPTED/COMPLETED`        | immutable run plus bound child Session -> gate receipt and cursor   | host state machine only         | real Task resume seam and Relay integration tests                     | #178 / #181-#182-#179      |
+| RelayRun              | `relay/SPEC.md` V1 reference; `packages/orchestra/src/tool/task.ts`             | `ARMED/RUNNING` -> gate receipt -> `STEP_HELD/STEP_ACCEPTED/COMPLETED`        | immutable run plus bound child Session -> gate receipt and cursor   | host state machine only         | real Task resume seam and Relay integration tests                     | #178 / #181-#182-#179      |
 | Project ledger        | GitHub Project #2; #169-#206                                                   | receipt pending -> idempotent adapter mutation -> mapped Stage or `HOLD`      | validated work receipt -> Project field update                      | GitHub adapter only             | GitHub API receipt and exact issue/PR URL                             | #174 / #195-#194           |
-| repository delivery   | `packages/opencode/src/tool/task.ts`; git worktree fixture contracts           | planned -> lease guard -> worktree/PR receipt or `HOLD`                       | run/worktree/base SHA -> PR/head SHA receipt                        | repository adapter only         | real git/worktree/PR fixtures                                         | #174 / #193                |
+| repository delivery   | `packages/orchestra/src/tool/task.ts`; git worktree fixture contracts           | planned -> lease guard -> worktree/PR receipt or `HOLD`                       | run/worktree/base SHA -> PR/head SHA receipt                        | repository adapter only         | real git/worktree/PR fixtures                                         | #174 / #193                |
 | verification and CI   | `.github/workflows/test.yml`; `script/godfile.ts`                              | head known -> VerificationPlan -> exact-SHA CI verdict or `HOLD`              | base/head/diff/risk -> required/skipped checks and CI receipt       | verifier/CI adapter only        | planner/gate/CI receipt tests                                         | #170 / #191-#192           |
 | source size           | `script/godfile.ts`                                                            | changed source -> LOC guard -> target/decision/block                          | source file plus Project size decision -> size receipt or `HOLD`    | Godfile gate only               | band fixtures and real mutation probe                                 | #170 / #196                |
 | Atlas context         | `atlas-context-envelope-contract.md`; `own-protocol.md`                        | `ABSENT/BOOTSTRAP/STALE/READY` -> receipt validation -> context or `HOLD`     | capability/snapshot/unit -> verified context or HOLD                | Atlas provider only             | OCE acceptance and freshness tests                                    | #173 / #200-#202           |
-| abilities             | `packages/opencode/src/maestro/*`; V1 `tool-registry.ts` reference             | config/grant unknown -> registry check -> available/unavailable               | config/grants -> filtered ability inventory                         | core registry only              | registry/transport parity tests                                       | #175 / #198-#197-#199      |
+| abilities             | `packages/orchestra/src/maestro/*`; V1 `tool-registry.ts` reference             | config/grant unknown -> registry check -> available/unavailable               | config/grants -> filtered ability inventory                         | core registry only              | registry/transport parity tests                                       | #175 / #198-#197-#199      |
 | recovery              | `SESSION-STATE.md`; Relay state contract                                       | failed receipt -> recovery classifier -> retry/hold/escalate/cancel/supersede | failed receipt -> terminal or recoverable state                     | core only                       | fault injection and replay tests                                      | #171 / #203-#205           |
 | existing #113 scope   | `ROADMAP.md`; #113 body                                                        | legacy active -> M0.4 contract audit -> normalized or explicitly superseded   | legacy issue/receipt -> canonical contract state                    | lead then validator             | body parse and dependency audit                                       | #177 / #206                |
 | M0 program governance | [#177](https://github.com/gmhelmold/HuGR-Orchestra/issues/177); this contract  | bootstrap `PLANNED` -> M0.1/M0.2/M0.3 receipts -> M0.4 conflict map or `HOLD` | five-axiom issue body plus records -> governed dispatch eligibility | lead until M4.1 adapter         | contract parse, baseline record, validator tests, conflict-map review | #177 / #183-#184-#187-#206 |
@@ -248,7 +248,7 @@ retry must call Task resume with exact `task_id = runnerSessionId` and exact
 bound agent/parent/worktree/model policy. A missing, unknown, or mismatched
 task ID is `HOLD`; it must not create a replacement child Session.
 
-OpenCode Task resume is a required seam proof, not an assumption. If it cannot
+Orchestra Task resume is a required seam proof, not an assumption. If it cannot
 continue the same child Session with controlled next-step input, the host must
 provide an explicit native continuation boundary before Relay implementation.
 
@@ -348,7 +348,7 @@ ABSENT -> BOOTSTRAP -> READY
                     -> STALE -> BOOTSTRAP | HOLD
 ```
 
-`ABSENT` supports normal OpenCode work and explicit bootstrap, but not
+`ABSENT` supports normal Orchestra work and explicit bootstrap, but not
 grounded dispatch. `READY` requires current verified catalog/Own receipts.
 `STALE`, missing, malformed, under-approximate, ambiguous, or cross-project
 context is `HOLD`. Maestro consumes static verified Own context through an
@@ -378,13 +378,13 @@ may guide behavior or test cases; it is never a V2 runtime dependency.
 | V1 term                     | V2 term                                                | V2 decision                                                                            |
 | --------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | `TEAM` / named fleet        | conductor plus eight specialist roster entries         | preserve fixed roles and stable IDs in M3; do not port Claude agent files as authority |
-| Runner                      | `RelayRun` bound to one OpenCode child Session         | preserve continuous context only through proven Task resume; otherwise `HOLD`          |
+| Runner                      | `RelayRun` bound to one Orchestra child Session         | preserve continuous context only through proven Task resume; otherwise `HOLD`          |
 | Relay hook / `SubagentStop` | native Relay execution adapter                         | host evaluates gate and resumes exact child Session; no Claude hook runtime dependency |
 | Gate / DoD chain            | versioned gate receipt                                 | preserve external mechanical oracle and retry bound; Runner prose never advances state |
 | `ToolRegistry`              | internal Ability registry plus scoped tool projection  | preserve one discoverable registry; do not expose flat V1 tool catalog to every seat   |
 | `.maestro` files and JSONL  | EventV2 records plus typed receipts                    | retain portable evidence semantics; no V1 file store as authority                      |
 | V1 internal Atlas           | optional Atlas capability provider/static Own boundary | no direct vendor import; `ABSENT` remains supported                                    |
-| Claude plugin hooks         | OpenCode lifecycle/Task/Tool adapters                  | hooks are compatibility adapter behavior, not V2 core architecture                     |
+| Claude plugin hooks         | Orchestra lifecycle/Task/Tool adapters                  | hooks are compatibility adapter behavior, not V2 core architecture                     |
 
 ## Internal Abilities
 

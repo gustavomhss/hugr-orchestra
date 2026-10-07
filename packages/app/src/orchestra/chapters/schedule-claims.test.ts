@@ -56,7 +56,7 @@ describe("schedule claims", () => {
 
   test("malformed stored claims are ignored", async () => {
     const shared = storage()
-    shared.setItem("opencode.orchestra.schedule.claim.task", "{not json")
+    shared.setItem("orchestra.schedule.claim.task", "{not json")
     const claims = createClaims(shared, undefined)
     expect(claims.read("task")).toBeUndefined()
     expect(await claims.take("task", 100, 1_000, false)).toBe(true)
@@ -74,8 +74,8 @@ describe("schedule claims", () => {
     expect(await claims.take("task", 100, 1_000, false)).toBe(false)
     expect(await claims.take("task", 100, 1_000, true)).toBe(true)
     expect(requests).toEqual([
-      { name: "opencode.orchestra.schedule.claim.task", ifAvailable: true },
-      { name: "opencode.orchestra.schedule.claim.task", ifAvailable: undefined },
+      { name: "orchestra.schedule.claim.task", ifAvailable: true },
+      { name: "orchestra.schedule.claim.task", ifAvailable: undefined },
     ])
   })
 })

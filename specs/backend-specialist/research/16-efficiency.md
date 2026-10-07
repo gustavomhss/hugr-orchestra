@@ -1,6 +1,6 @@
 # R16 — Coding-agent efficiency without quality loss
 
-Research date: 2026-10-03. Target: the backend specialist on OpenCode/Orchestra native models/runtime; Atlas owns shared Knowledge/Memory. Evidence: primary provider docs, implementation sources, research papers. Local findings from static source reads; evaluation below remains proposed, not executed.
+Research date: 2026-10-03. Target: the backend specialist on Orchestra native models/runtime; Atlas owns shared Knowledge/Memory. Evidence: primary provider docs, implementation sources, research papers. Local findings from static source reads; evaluation below remains proposed, not executed.
 
 ## Decision
 
@@ -120,7 +120,7 @@ Source root inspected: `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonic
 | `packages/core/src/tool/registry.ts:50–81,106–120`; `packages/core/src/tool-output-store.ts:138–173` | Canonical materialization/settlement and generic bounding with managed output paths. | Reuse registry/output store; native registration gives permission-filtered definitions, not demonstrated provider-deferred discovery. Full producer output and bounded model view remain distinct. |
 | `packages/core/src/session/runner/llm.ts:173–221,239–303,390–412` | Location-scoped model/context, one provider stream, persisted calls then eager fibers, join before continuation, durable inbox promotion. | The backend specialist supplies task policy, not another model/tool loop. Parallel acquisition must respect dependencies. Process-global SessionExecution/coordinator retain Session-ID ownership. |
 | `packages/core/src/session/runner/model.ts:173–233`; `packages/llm/src/route/executor.ts:345–379` | Catalog-backed model/variant selection; native retry owner. | Route and retry through host. Do not silently replay provider work after crash or add second attempt loop. |
-| `packages/sdk-next/src/opencode.ts:10–42` | Existing host composition returns client plus `tools.register`. | Thin Atlas adapter only where existing Atlas exposure needs binding. Reuse Atlas search/read/memory semantics, IDs, provenance, freshness; API details not inspected here. No backend specialist retriever or memory database. |
+| `packages/sdk-next/src/orchestra.ts:10–42` | Existing host composition returns client plus `tools.register`. | Thin Atlas adapter only where existing Atlas exposure needs binding. Reuse Atlas search/read/memory semantics, IDs, provenance, freshness; API details not inspected here. No backend specialist retriever or memory database. |
 | `packages/llm/src/schema/events.ts:7–68`; `packages/core/src/session/runner/publish-llm-event.ts:16–27`; `packages/core/src/observability.ts:11–24` | Canonical inclusive usage, cache breakdown, raw-provider metadata escape hatch; Session projection; existing logging/tracing. | Export evaluation rows from native events/usage/observability. Missing fields belong in host telemetry, not the backend specialist cost ledger. |
 
 **Accounting blockers to resolve before measured adoption:**

@@ -154,7 +154,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await openChapter(page)
     const created =
       protocol === "v1"
-        ? "/data/opencode/worktree/project-Server A repository/feature-a"
+        ? "/data/orchestra/worktree/project-Server A repository/feature-a"
         : "/repos/orchestra-workspaces/feature-a"
 
     await page.getByRole("button", { name: "New workspace", exact: true }).click()
@@ -291,7 +291,7 @@ for (const protocol of ["v1", "v2"] as const) {
 
 test("v1: a worktree on a legacy opencode/ branch is listed and deleted with its branch", async ({ page }) => {
   const mock = await setup(page, { protocol: "v1" })
-  const legacy = "/data/opencode/worktree/project-Server A repository/legacy"
+  const legacy = "/data/orchestra/worktree/project-Server A repository/legacy"
   mock.state.sandboxes[serverA]!.push(legacy)
   await openChapter(page)
   await expect(card(page, legacy).locator(".mx-badge")).toHaveText(["sandbox", "opencode/legacy", "Idle"])
@@ -466,7 +466,7 @@ async function openChapter(page: Page, load = true) {
 }
 
 async function drafts(page: Page) {
-  return page.evaluate(() => JSON.parse(localStorage.getItem("opencode.window.browser.dat:tabs") ?? "[]"))
+  return page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]"))
 }
 
 async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?: "v1" | "v2" } = {}) {
@@ -494,14 +494,14 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
         "settings.v3",
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       if (sessionStorage.getItem("workspaces-seeded")) return
       sessionStorage.setItem("workspaces-seeded", "1")
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: { local: [{ worktree: root, expanded: true }], [serverB]: [{ worktree: root, expanded: true }] },
@@ -509,7 +509,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
         }),
       )
       localStorage.setItem(
-        "opencode.global.dat:layout",
+        "orchestra.global.dat:layout",
         JSON.stringify({ home: { selection: { server: serverA, directory: root } } }),
       )
     },
@@ -613,7 +613,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     if (method === "GET") return json(route, list)
     if (method === "POST") {
       const name = (body?.name ?? "").toLowerCase().replaceAll(" ", "-")
-      const directory = `/data/opencode/worktree/${projectID}/${name}`
+      const directory = `/data/orchestra/worktree/${projectID}/${name}`
       list.push(directory)
       state.branches.set(directory, `orchestra/${name}`)
       return json(route, { name, branch: `orchestra/${name}`, directory })

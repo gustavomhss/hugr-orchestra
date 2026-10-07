@@ -257,7 +257,7 @@ test("add validates the name and endpoint and writes the profile config", async 
   state.configError = true
   await dialog.getByLabel("Command or server URL").fill("https://mcp.example.test/docs")
   await dialog.getByRole("button", { name: "Save" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Request failed: Permission denied writing /work/opencode.json")
+  await expect(dialog.getByRole("alert")).toHaveText("Request failed: Permission denied writing /work/orchestra.json")
   state.configError = false
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(page.getByRole("dialog")).toHaveCount(0)
@@ -488,7 +488,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverA, serverB],
           projects: {
@@ -499,8 +499,8 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
           lastProject: { local: directory, [serverA]: directory, [serverB]: directory },
         }),
       )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", "dark")
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", "dark")
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     },
     { serverA, serverB, directory },
@@ -513,7 +513,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
     state.requests.push({
       method: route.request().method(),
       url: url.toString(),
-      directory: await route.request().headerValue("x-opencode-directory"),
+      directory: await route.request().headerValue("x-orchestra-directory"),
       ...(body ? { body: JSON.parse(body) } : {}),
     })
     const project = {
@@ -551,7 +551,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
     const config = /^\/mcp\/([^/]+)\/config$/.exec(path)
     if (config) {
       const name = decodeURIComponent(config[1])
-      if (state.configError) return json(route, { message: "Permission denied writing /work/opencode.json" }, 400)
+      if (state.configError) return json(route, { message: "Permission denied writing /work/orchestra.json" }, 400)
       if (route.request().method() === "DELETE" && !(name in state.entries[url.origin]))
         return json(
           route,

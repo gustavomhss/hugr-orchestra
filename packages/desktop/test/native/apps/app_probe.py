@@ -32,7 +32,7 @@ from context import RequestContext, process_identity
 from refs import RefRegistry
 from snapshot import read
 
-# AT-SPI role numbers to readable names; the same table as packages/opencode/src/plugin/app-dock-outline.ts.
+# AT-SPI role numbers to readable names; the same table as packages/orchestra/src/plugin/app-dock-outline.ts.
 ROLES = ("invalid", "accelerator label", "alert", "animation", "arrow", "calendar", "canvas", "check box",
          "check menu item", "color chooser", "column header", "combo box", "date editor", "desktop icon",
          "desktop frame", "dial", "dialog", "directory pane", "drawing area", "file chooser", "filler",

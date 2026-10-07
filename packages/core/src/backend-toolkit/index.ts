@@ -39,20 +39,20 @@ export class NotReady extends Schema.TaggedErrorClass<NotReady>()("BackendToolki
 }
 
 /** Cache root holding one install directory per engine version and target. */
-export const Root = Context.Reference<string>("@opencode/BackendToolkit/Root", {
+export const Root = Context.Reference<string>("@orchestra/BackendToolkit/Root", {
   defaultValue: () => process.env.BACKEND_TOOLKIT_ROOT ?? path.join(Global.Path.cache, "backend-toolkit"),
 })
 
-export const Manifest = Context.Reference<Readonly<Record<EngineId, Engine>>>("@opencode/BackendToolkit/Manifest", {
+export const Manifest = Context.Reference<Readonly<Record<EngineId, Engine>>>("@orchestra/BackendToolkit/Manifest", {
   defaultValue: () => ENGINES,
 })
 
-export const Runtimes = Context.Reference<Readonly<Record<RuntimeId, Runtime>>>("@opencode/BackendToolkit/Runtimes", {
+export const Runtimes = Context.Reference<Readonly<Record<RuntimeId, Runtime>>>("@orchestra/BackendToolkit/Runtimes", {
   defaultValue: () => RUNTIMES,
 })
 
 /** The host's toolkit target, or why it has none. */
-export const Target = Context.Reference<ReturnType<typeof detect>>("@opencode/BackendToolkit/Target", {
+export const Target = Context.Reference<ReturnType<typeof detect>>("@orchestra/BackendToolkit/Target", {
   defaultValue: () => detect(),
 })
 

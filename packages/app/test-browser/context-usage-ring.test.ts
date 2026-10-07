@@ -24,11 +24,11 @@ Bun.plugin({
     })
   },
 })
-const { ProgressCircle }: typeof import("@opencode-ai/ui/progress-circle") = await import(
-  `${Bun.resolveSync("@opencode-ai/ui/progress-circle", import.meta.dir)}?solid`
+const { ProgressCircle }: typeof import("@orchestra/ui/progress-circle") = await import(
+  `${Bun.resolveSync("@orchestra/ui/progress-circle", import.meta.dir)}?solid`
 )
-const { ProgressCircleV2 }: typeof import("@opencode-ai/ui/v2/progress-circle-v2") = await import(
-  `${Bun.resolveSync("@opencode-ai/ui/v2/progress-circle-v2", import.meta.dir)}?solid`
+const { ProgressCircleV2 }: typeof import("@orchestra/ui/v2/progress-circle-v2") = await import(
+  `${Bun.resolveSync("@orchestra/ui/v2/progress-circle-v2", import.meta.dir)}?solid`
 )
 
 for (const ring of [

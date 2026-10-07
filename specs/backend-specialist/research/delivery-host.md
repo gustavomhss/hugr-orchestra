@@ -5,11 +5,11 @@ Date: 2026-10-04. Source audit only; commands below are future verification, not
 ## Baseline and evidence scope
 
 - Source root: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`.
-- Metadata worktree/output: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-host-plan`.
+- Metadata worktree/output: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-host-plan`.
 - `git rev-parse HEAD` in **both** directories returned `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Metadata worktree contains `.git` without checked-out product files; its deletion status is not source-root state. Source status showed intentional untracked `specs/backend-specialist/`.
 - Read first: `specs/backend-specialist/research/delivery-planning.md`; then `README.md`, `integration-flow.md`, `skill-catalog.md`, `atlas.md`; relevant root/package/session-LLM/test/HttpApi/app/session-ui `AGENTS.md`.
-- Path shorthand below: **O** = `packages/opencode`; **A** = `packages/app`; **T** = `packages/tui`; **S** = `packages/session-ui`. Paths otherwise relative to source root.
-- Evidence: complete public hook types plus actual callers; targeted source/test reads. Hook searches returned known system-transform/start/end/stop call sites; stock searches returned `chat.message`/ordinary triggers as positive controls. Package glob returned known opencode/atlas-boundary manifests but no `packages/backend-specialist/package.json`.
+- Path shorthand below: **O** = `packages/orchestra`; **A** = `packages/app`; **T** = `packages/tui`; **S** = `packages/session-ui`. Paths otherwise relative to source root.
+- Evidence: complete public hook types plus actual callers; targeted source/test reads. Hook searches returned known system-transform/start/end/stop call sites; stock searches returned `chat.message`/ordinary triggers as positive controls. Package glob returned known orchestra/atlas-boundary manifests but no `packages/backend-specialist/package.json`.
 - No product tests, typechecks, installs, configuration execution, source edits, agents, commits or pushes performed. Only this report authored. Existing tests inspected, not certified green.
 
 ## Delivery blockers — lead disposition required
@@ -19,7 +19,7 @@ Date: 2026-10-04. Source audit only; commands below are future verification, not
 3. Lifecycle hooks have callers, but implementation does not satisfy declared lifecycle semantics. They cannot currently guarantee closing-memory checkpoints.
 4. Native IDs partly separated already; UI/prompt payloads still route by `.name`, and authority hashes include presentation. Environment-name interpolation alone breaks required invariants.
 5. Installed Atlas boundary supplies verified static Own, not native member Memory/header/resume capabilities. This is provider/host work, not backend-specialist-owned storage.
-6. Actual stock OpenCode `v1.18.27` lacks fork lifecycle hooks and separate agent ID. Existing APIs support useful pieces, but full rename-safe, selected-turn Atlas integration is **not established**. Lead must choose host capability changes or explicitly narrower stock support.
+6. Actual stock Orchestra `v1.18.27` lacks fork lifecycle hooks and separate agent ID. Existing APIs support useful pieces, but full rename-safe, selected-turn Atlas integration is **not established**. Lead must choose host capability changes or explicitly narrower stock support.
 
 ## Native seams: existing implementation versus required work
 
@@ -66,9 +66,9 @@ Date: 2026-10-04. Source audit only; commands below are future verification, not
 - Full independent behavior can mean same specialist, defined caller packet, native host execution/permissions/history, installed shared Atlas with member header + task/PR/project Memory, direct authority Session = execution Session, no Maestro session/grants. Atlas outage remains explicitly degraded; evidence-dependent work blocks. CLI/MCP pure generators need not fabricate conversation identity.
 - This is a delivery target, not baseline readiness. Current fork statically imports Maestro roster, Task governance and Atlas source helpers; absence of an active Maestro conversation is not proof of installation independent from Maestro modules. Shared provider/host registration dependency must be resolved by owners; the backend specialist package itself must not import Maestro services.
 
-## Stock OpenCode 1.18.27 — direct primary-source comparison
+## Stock Orchestra 1.18.27 — direct primary-source comparison
 
-GitHub tag resolved to **`4b7e19e315cca414121ba1d61523fef74bb3ae8b`**. Registry also publishes `opencode-ai@1.18.27`. Source inspection only; package binaries not installed/exercised. Fork manifest version does not identify upstream capabilities.
+GitHub tag resolved to **`4b7e19e315cca414121ba1d61523fef74bb3ae8b`**. Registry also publishes `orchestra-ai@1.18.27`. Source inspection only; package binaries not installed/exercised. Fork manifest version does not identify upstream capabilities.
 
 | Stock surface | Source-supported capability | Limit for full backend specialist |
 | --- | --- | --- |
@@ -77,7 +77,7 @@ GitHub tag resolved to **`4b7e19e315cca414121ba1d61523fef74bb3ae8b`**. Registry 
 | System transform [U1,U5] | Receives optional Session + model and can change system strings. | No selected-agent input. `chat.params`/headers have agent but run after system/messages assembled and expose other outputs. No invented selected-agent hook. |
 | `chat.message` [U1,U6] | Can alter actual user message/parts; resolved `output.message.agent` exists even if optional input.agent omitted. | Admission-time context is not refresh on every provider turn, member-switch retirement or exact one-time durable resume semantics. |
 | Session APIs [U7,U8] | `/session/{sessionID}` get exposes project/directory/parent/agent/metadata; update accepts metadata. Tool invocation can consult Session/message identity using supplied IDs. | Latest Session selection is not executing request identity: title uses same Session with `agent: title` (`prompt.ts:216-235`); compaction similarly uses compaction agent. Pending new user admission can also change Session selection before execution completes. |
-| SDK distinction [U8] | Exported `@opencode-ai/sdk/v2` describes above V1 server Session metadata APIs. | `PluginInput.client` is root legacy SDK; its Session type omits agent/metadata and update type accepts title only. SDK `/v2` is not proof of Core SessionV2 execution support. |
+| SDK distinction [U8] | Exported `@orchestra/sdk/v2` describes above V1 server Session metadata APIs. | `PluginInput.client` is root legacy SDK; its Session type omits agent/metadata and update type accepts title only. SDK `/v2` is not proof of Core SessionV2 execution support. |
 | Lifecycle [U1,U6,U7] | Generic events and instance `dispose`; Created/Updated/Deleted events are emitted. | Public `stop`, `session.start`, `session.end` absent; inspected stock prompt/session callers do not invoke them. Events are not exact final-fold/cleanup acknowledgments. |
 | Skills [U9] | Native skill directories and `skills.paths`/URLs, permission filtering. | Installing assets does not supply Atlas backend or always-injected member Rules. |
 
@@ -113,7 +113,7 @@ Dependency order: freeze above → provider/host/registration/hash/UI/package wo
 
 Use source root, not metadata worktree. `AGENTS.md` requires package-local tests and `bun typecheck`; O manifest uses Bun tests/30000 ms, `O/bunfig.toml` supplies test preloads.
 
-**CWD `packages/opencode`:**
+**CWD `packages/orchestra`:**
 
 ```sh
 bun typecheck
@@ -145,13 +145,13 @@ Required integration cases beyond current fixtures: direct selection without Mae
 ## Primary upstream sources
 
 - Tag identity: https://api.github.com/repos/anomalyco/opencode/git/ref/tags/v1.18.27
-- Published package metadata: https://registry.npmjs.org/opencode-ai/1.18.27
+- Published package metadata: https://registry.npmjs.org/orchestra-ai/1.18.27
 - [U1 — stock public plugin Hooks](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/index.ts)
 - [U2 — stock ToolContext](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/plugin/src/tool.ts)
-- [U3 — stock Agent/config/name lookup](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/agent/agent.ts)
-- [U4 — stock V1 plugin loader](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/plugin/index.ts)
-- [U5 — stock request preparation and hook ordering](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/session/llm/request.ts)
-- [U6 — stock prompt execution/title/message admission](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/session/prompt.ts); [compaction](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/session/compaction.ts)
-- [U7 — stock Session lifecycle](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/session/session.ts); [HTTP get/update contract](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/server/routes/instance/httpapi/groups/session.ts)
+- [U3 — stock Agent/config/name lookup](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/agent/agent.ts)
+- [U4 — stock V1 plugin loader](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/plugin/index.ts)
+- [U5 — stock request preparation and hook ordering](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/llm/request.ts)
+- [U6 — stock prompt execution/title/message admission](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/prompt.ts); [compaction](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/compaction.ts)
+- [U7 — stock Session lifecycle](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/session/session.ts); [HTTP get/update contract](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/server/routes/instance/httpapi/groups/session.ts)
 - [U8 — SDK exports](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/package.json); [root legacy types](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/gen/types.gen.ts); [SDK/v2 types](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/sdk/js/src/v2/gen/types.gen.ts)
-- [U9 — stock skill discovery/permissions](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/opencode/src/skill/index.ts)
+- [U9 — stock skill discovery/permissions](https://github.com/anomalyco/opencode/blob/4b7e19e315cca414121ba1d61523fef74bb3ae8b/packages/orchestra/src/skill/index.ts)

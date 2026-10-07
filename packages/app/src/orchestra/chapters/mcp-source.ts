@@ -79,7 +79,7 @@ export function mcpRequest(
   const url = new URL(`${input.server.http.url.replace(/\/+$/, "")}${path}`)
   const headers = new Headers()
   if (method === "GET") url.searchParams.set("directory", input.directory)
-  if (method !== "GET") headers.set("x-opencode-directory", encodeURIComponent(input.directory))
+  if (method !== "GET") headers.set("x-orchestra-directory", encodeURIComponent(input.directory))
   if (body !== undefined) headers.set("content-type", "application/json")
   if (input.server.http.password)
     headers.set(

@@ -1,4 +1,4 @@
-import { Icon } from "@opencode-ai/ui/v2/icon"
+import { Icon } from "@orchestra/ui/v2/icon"
 import { useLanguage } from "@/context/language"
 import { OrchestraNavigationTooltip } from "./navigation-tooltip"
 

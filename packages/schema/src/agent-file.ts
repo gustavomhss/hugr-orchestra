@@ -12,7 +12,7 @@ export const Permission = Schema.Union([Action, Schema.Record(Schema.String, Act
 })
 export type Permission = typeof Permission.Type
 
-// The fields an agent markdown file (`.opencode/agent/<name>.md`) defines; `system` is the body.
+// The fields an agent markdown file (`.orchestra/agent/<name>.md`) defines; `system` is the body.
 // `permission` keeps the file's key order because later entries win.
 const fields = {
   description: Schema.String.pipe(optional),

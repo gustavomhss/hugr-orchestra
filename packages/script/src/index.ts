@@ -1,7 +1,7 @@
 import { $ } from "bun"
 import semver from "semver"
 import path from "path"
-import pkg from "../../opencode/package.json" with { type: "json" }
+import pkg from "../../orchestra/package.json" with { type: "json" }
 
 const rootPkgPath = path.resolve(import.meta.dir, "../../../package.json")
 const rootPkg = await Bun.file(rootPkgPath).json()
@@ -19,37 +19,37 @@ if (!semver.satisfies(process.versions.bun, expectedBunVersionRange)) {
 }
 
 const env = {
-  OPENCODE_CHANNEL: process.env["OPENCODE_CHANNEL"],
-  OPENCODE_BUMP: process.env["OPENCODE_BUMP"],
-  OPENCODE_VERSION: process.env["OPENCODE_VERSION"],
-  OPENCODE_RELEASE: process.env["OPENCODE_RELEASE"],
+  ORCHESTRA_CHANNEL: process.env["ORCHESTRA_CHANNEL"],
+  ORCHESTRA_BUMP: process.env["ORCHESTRA_BUMP"],
+  ORCHESTRA_VERSION: process.env["ORCHESTRA_VERSION"],
+  ORCHESTRA_RELEASE: process.env["ORCHESTRA_RELEASE"],
 }
 const CHANNEL = await (async () => {
-  if (env.OPENCODE_CHANNEL) return env.OPENCODE_CHANNEL
-  if (env.OPENCODE_BUMP) return "latest"
-  if (env.OPENCODE_VERSION && !env.OPENCODE_VERSION.startsWith("0.0.0-")) return "latest"
+  if (env.ORCHESTRA_CHANNEL) return env.ORCHESTRA_CHANNEL
+  if (env.ORCHESTRA_BUMP) return "latest"
+  if (env.ORCHESTRA_VERSION && !env.ORCHESTRA_VERSION.startsWith("0.0.0-")) return "latest"
   return await $`git branch --show-current`.text().then((x) => x.trim())
 })()
 const IS_PREVIEW = CHANNEL !== "latest"
 
 const VERSION = await (async () => {
-  if (env.OPENCODE_VERSION) return env.OPENCODE_VERSION
+  if (env.ORCHESTRA_VERSION) return env.ORCHESTRA_VERSION
   // Provider compatibility checks need the source version even for preview builds.
   if (IS_PREVIEW) return `${pkg.version}-${CHANNEL}-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
-  const version = await fetch("https://registry.npmjs.org/opencode-ai/latest")
+  const version = await fetch("https://registry.npmjs.org/orchestra-ai/latest")
     .then((res) => {
       if (!res.ok) throw new Error(res.statusText)
       return res.json()
     })
     .then((data: any) => data.version)
   const [major, minor, patch] = version.split(".").map((x: string) => Number(x) || 0)
-  const t = env.OPENCODE_BUMP?.toLowerCase()
+  const t = env.ORCHESTRA_BUMP?.toLowerCase()
   if (t === "major") return `${major + 1}.0.0`
   if (t === "minor") return `${major}.${minor + 1}.0`
   return `${major}.${minor}.${patch + 1}`
 })()
 
-const bot = ["actions-user", "opencode", "opencode-agent[bot]"]
+const bot = ["actions-user", "orchestra", "orchestra-agent[bot]"]
 const teamPath = path.resolve(import.meta.dir, "../../../.github/TEAM_MEMBERS")
 const team = [
   ...(await Bun.file(teamPath)
@@ -70,10 +70,10 @@ export const Script = {
     return IS_PREVIEW
   },
   get release(): boolean {
-    return !!env.OPENCODE_RELEASE
+    return !!env.ORCHESTRA_RELEASE
   },
   get team() {
     return team
   },
 }
-console.log(`opencode script`, JSON.stringify(Script, null, 2))
+console.log(`orchestra script`, JSON.stringify(Script, null, 2))

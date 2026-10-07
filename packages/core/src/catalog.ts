@@ -2,7 +2,7 @@ export * as Catalog from "./catalog"
 
 import { makeLocationNode } from "./effect/app-node"
 import { Array, Context, Effect, Layer, Option, Order, pipe, Schema } from "effect"
-import { Catalog } from "@opencode-ai/schema/catalog"
+import { Catalog } from "@orchestra/schema/catalog"
 import { Credential } from "./credential"
 import { ModelV2 } from "./model"
 import { ProviderV2 } from "./provider"
@@ -71,7 +71,7 @@ export interface Interface extends State.Transformable<Draft> {
   }
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Catalog") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Catalog") {}
 
 const layer = Layer.effect(
   Service,

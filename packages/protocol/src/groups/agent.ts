@@ -1,6 +1,6 @@
-import { Agent } from "@opencode-ai/schema/agent"
-import { AgentFile } from "@opencode-ai/schema/agent-file"
-import { Location } from "@opencode-ai/schema/location"
+import { Agent } from "@orchestra/schema/agent"
+import { AgentFile } from "@orchestra/schema/agent-file"
+import { Location } from "@orchestra/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError, InvalidRequestError, UnknownError } from "../errors"
@@ -33,7 +33,7 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
         OpenApi.annotations({
           identifier: "v2.agent.file.get",
           summary: "Get agent file",
-          description: "Read the agent definition stored in this location's .opencode/agent directory.",
+          description: "Read the agent definition stored in this location's .orchestra/agent directory.",
         }),
       ),
   )
@@ -51,7 +51,7 @@ export const AgentGroup = HttpApiGroup.make("server.agent")
           identifier: "v2.agent.file.update",
           summary: "Update agent file",
           description:
-            "Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.",
+            "Write the agent definition to this location's .orchestra/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.",
         }),
       ),
   )

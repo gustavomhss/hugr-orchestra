@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { Option, Schema } from "effect"
-import { ConfigAgentFile } from "@opencode-ai/core/config/agent-file"
-import { ConfigMarkdown } from "@opencode-ai/core/config/markdown"
-import { ConfigAgentV1 } from "@opencode-ai/core/v1/config/agent"
+import { ConfigAgentFile } from "@orchestra/core/config/agent-file"
+import { ConfigMarkdown } from "@orchestra/core/config/markdown"
+import { ConfigAgentV1 } from "@orchestra/core/v1/config/agent"
 
 const render = (existing: string | undefined, input: Parameters<typeof ConfigAgentFile.render>[1]) => {
   const text = ConfigAgentFile.render(existing, input)

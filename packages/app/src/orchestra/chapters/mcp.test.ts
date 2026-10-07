@@ -332,7 +332,7 @@ describe("MCP profile config requests", () => {
     expect(request.init.method).toBe("GET")
     expect(request.init.body).toBeUndefined()
     expect(request.init.headers.get("authorization")).toBe(`Basic ${btoa("owner:pw")}`)
-    expect(request.init.headers.get("x-opencode-directory")).toBeNull()
+    expect(request.init.headers.get("x-orchestra-directory")).toBeNull()
   })
 
   test("writes route the directory in a header, send JSON, and omit auth without a password", () => {
@@ -340,7 +340,7 @@ describe("MCP profile config requests", () => {
       config: { type: "remote", url: "https://x.test" },
     })
     expect(request.url.toString()).toBe("http://127.0.0.1:4096/mcp/docs%2F/config")
-    expect(request.init.headers.get("x-opencode-directory")).toBe(encodeURIComponent("/work/a b"))
+    expect(request.init.headers.get("x-orchestra-directory")).toBe(encodeURIComponent("/work/a b"))
     expect(request.init.headers.get("content-type")).toBe("application/json")
     expect(request.init.headers.get("authorization")).toBeNull()
     expect(JSON.parse(request.init.body!)).toEqual({ config: { type: "remote", url: "https://x.test" } })
