@@ -9,7 +9,7 @@ an authentication credential or a guarantee that a hosted model will accept a re
 - The rule applies to provider IDs starting with `opencode`, matching the existing
   V1 OpenCode telemetry convention, including credential-backed virtual IDs.
 - A model qualifies when its cost list is nonempty and every tier has zero input
-  and output cost. Empty/unknown cost lists and models with any paid tier do not qualify.
+  and output cost. Empty cost lists and models with any paid tier do not qualify.
   Cache pricing is not part of this input/output classification.
 - V2 applies the rule while constructing native route defaults, after catalog and
   selected-variant headers have been merged. V1 applies it after model headers and

@@ -32,6 +32,13 @@ const cases = [
     cost: { input: 0, output: 0 },
     free: false,
   },
+  {
+    name: "catalog paid tier only",
+    providerID: "opencode",
+    modelID: "claude-sonnet-4",
+    cost: { input: 0, output: 0, context_over_200k: { input: 0, output: 0 } },
+    free: false,
+  },
 ]
 
 cases.forEach((item) =>
@@ -84,8 +91,9 @@ export default async () => ({
                 ProviderV2.ID.make(item.providerID),
                 ModelV2.ID.make(item.modelID),
               )
-              if (item.name === "catalog paid tier")
+              if (item.name.startsWith("catalog paid tier"))
                 expect(resolved.cost.tiers?.some((tier) => tier.input > 0)).toBe(true)
+              if (item.name === "catalog paid tier only") expect(resolved.cost.experimentalOver200K?.input).toBe(0)
               if (item.name === "configured paid tier") expect(resolved.cost.experimentalOver200K?.input).toBe(1)
               const sessionID = SessionID.make("session-free-headers")
               const agent = {
