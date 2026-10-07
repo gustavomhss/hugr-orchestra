@@ -119,10 +119,13 @@ process.exit(0);
       if (!compiled.success) throw new Error(`Mutation compile failed: ${compiled.logs.join("\n")}`)
       const observed = await execute(mutant, [], env, scratch.project, 30_000, [scratch.home])
       const rejected = rejectsArtifact(observed, target.addon, "addon")
-      const success = observed.code === 0 && observed.stdout.includes("MUTATION_IMPLICIT_FALLBACK_OK") &&
-        observed.stdout.includes(path.join(resources, "omni", names.addon)) && !observed.timedOut
+      const marker = "MUTATION_IMPLICIT_FALLBACK_OK "
+      const line = observed.stdout.split("\n").find((line) => line.startsWith(marker))
+      const selected = line ? JSON.parse(line.slice(marker.length)) as { addon: string; supervisor: string } : undefined
+      const success = observed.code === 0 && !observed.timedOut &&
+        selected?.addon === path.join(resources, "omni", names.addon) && selected.supervisor === path.join(resources, "omni", names.supervisor)
       const restored = await execute(target.bin, ["debug", "omni"], env, scratch.project, 2000, [scratch.home])
-      return { kind: "compiled-preflight-configure-bypass", ...observed, gatePass: rejected,
+      return { kind: "compiled-preflight-configure-bypass", ...observed, selected, gatePass: rejected,
         detected: success && !rejected, restored, missingArtifactPreserved: !existsSync(target.addon) }
     })() : undefined
     const log = evidence("v9-cells", { source, home: scratch.home, checkoutFallbackBait: bait, cells, controls, mutation })
