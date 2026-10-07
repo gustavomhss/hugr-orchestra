@@ -179,7 +179,8 @@ test("every golden departure names its PARITY-EXCEPTIONS row", async () => {
 })
 const cmd = (id: string, program: string) => ({ id, cmd: program })
 
-describe("check goldens", () => {
+// POSIX goldens (R11): the plan keeps check replay off Windows, like the arm replay.
+describe.skipIf(process.platform === "win32")("check goldens", () => {
   const dir = path.join(root, "test/golden/check")
   const names = existsSync(dir)
     ? readdirSync(dir).filter((name) => existsSync(path.join(dir, name, "scenario.json")))

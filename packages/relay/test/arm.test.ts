@@ -205,7 +205,9 @@ test("every arm golden departure names its PARITY-EXCEPTIONS row", async () => {
   )
 })
 
-describe("arm goldens", () => {
+// The goldens are POSIX (R11): workdirs and `<root>` paths are written into JSON unescaped, and the checks are bash
+// programs, so the plan keeps arm replay off Windows; Windows runs the ledger, authoring and hook-evaluation suites.
+describe.skipIf(process.platform === "win32")("arm goldens", () => {
   const names = existsSync(goldens)
     ? readdirSync(goldens).filter((name) => existsSync(path.join(goldens, name, "scenario.json")))
     : []
