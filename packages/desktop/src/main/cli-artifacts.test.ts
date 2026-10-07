@@ -15,7 +15,7 @@ async function fixture() {
   roots.push(root)
   const bytes = Buffer.from("owned executable bytes")
   const manifest = {
-    schema: 1,
+    schema: 1 as const,
     version: "1.18.27",
     artifacts: [
       {
