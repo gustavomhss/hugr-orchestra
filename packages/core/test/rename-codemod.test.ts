@@ -266,7 +266,9 @@ describe("rename codemod CLI", () => {
       const result = run(cwd, dry)
       expect(result.code, result.output).toBe(0)
       expect((await lstat(path.join(cwd, source))).isSymbolicLink()).toBe(true)
-      expect(await readlink(path.join(cwd, source))).toBe("../../ui/src/custom-elements.d.ts")
+      expect(path.resolve(path.dirname(path.join(cwd, source)), await readlink(path.join(cwd, source)))).toBe(
+        path.join(cwd, "packages/ui/src/custom-elements.d.ts"),
+      )
       expect(await Bun.file(path.join(cwd, source)).text()).toBe("export {}\n")
     }
   })

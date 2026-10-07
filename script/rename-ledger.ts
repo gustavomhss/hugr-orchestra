@@ -64,7 +64,6 @@ export const protectedStrings: Protected[] = [
   { pattern: /\bupstream (?:opencode|OpenCode)\b/g, reason: "sentence about the upstream project" },
   { pattern: /\bOpenCode's historical\b/g, reason: "sentence about upstream history" },
   { pattern: /\bopencode 2\.0\b/g, reason: "sentence about an upstream release" },
-  { pattern: /OpenCode, evolved\./g, reason: "brand caption that names the upstream product" },
   {
     pattern:
       /Older releases named these branches `opencode\/<name>`|older worktrees keep their `opencode\/<name>` branch|legacy opencode\/ branch/g,
@@ -156,11 +155,6 @@ export const protectedStrings: Protected[] = [
     pattern: /\["opencode", "/g,
     paths: /\/test\/provider\/transform\.test\.ts$/,
     reason: "the Zen provider id in a transform table",
-  },
-  {
-    pattern: /repo: "opencode"/g,
-    paths: /\/test\/cli\/github-remote\.test\.ts$/,
-    reason: "repository name parsed from the upstream URL",
   },
   {
     pattern: /\bopencode-v2-openapi\.json\b/g,

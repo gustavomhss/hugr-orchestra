@@ -34,8 +34,7 @@ export const install = lazy(async () => {
     return
   }
   const { registerHooks } = await import("node:module")
-  // Node before 22.15 has no in-thread hooks. Plugins that import the SDK then fail to resolve, which is safe.
-  if (typeof registerHooks !== "function") return
+  if (typeof registerHooks !== "function") throw new Error("Bundled plugin SDK requires Node.js 22.15 or later")
   // A module that a load hook generates can reach objects from this one only through a global.
   Object.assign(globalThis, { [GLOBAL_KEY]: loaded })
   registerHooks({
