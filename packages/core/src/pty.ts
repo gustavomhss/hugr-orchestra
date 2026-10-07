@@ -9,6 +9,7 @@ import { EventV2 } from "./event"
 import { Flag } from "./flag/flag"
 import { Location } from "./location"
 import { OmniAdoption } from "./omni-adoption"
+import { OmniBackground } from "./omni-background"
 import { PtyProtocol } from "./pty/protocol"
 import { clampSize } from "./pty/pty"
 import type { OmniProc } from "./pty/omni"
@@ -152,6 +153,9 @@ const layer = Layer.effect(
     async function close(omni: NonNullable<Active["omni"]>, title: string, adopt: boolean) {
       const adoption = adopt ? omni.adoption : undefined
       if (!adoption || !(await descendants(omni.proc))) return omni.proc.stop(STOP_GRACE_MS)
+      // The adopted tree's output goes to the registry's ring from now on (R2-4), not to the closed session.
+      const sink = OmniBackground.sink(omni.proc.child)
+      omni.proc.redirect((data) => sink.write(data))
       const release = OmniAdoption.release(omni.proc.child, Exit.void, { title, graceMs: STOP_GRACE_MS }).pipe(
         Effect.provideService(OmniAdoption.Service, adoption.service),
       )

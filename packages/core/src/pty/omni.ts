@@ -21,6 +21,8 @@ export type OmniProc = Proc & {
   readonly child: Terminal
   /** Ends the whole tree within graceMs; never rejects. */
   stop(graceMs?: number): Promise<void>
+  /** From now on every chunk goes to `sink` instead of the listeners (an adopted tree's output, R2-4). */
+  redirect(sink: (data: string) => void): void
 }
 
 /** Loads hugr-omni through the core loader (failing loudly when it is missing) and returns a synchronous spawn. */
@@ -53,9 +55,10 @@ export function adapt(child: Terminal): OmniProc {
   const onExit = new Set<(event: Exit) => void>()
   // Data waits here only until the first listener; after the last one left, output is read and discarded.
   const queued: string[] = []
-  const state = { listened: false, exit: undefined as Exit | undefined }
+  const state = { listened: false, exit: undefined as Exit | undefined, sink: undefined as ((data: string) => void) | undefined }
 
   const emit = (data: string) => {
+    if (state.sink) return call(state.sink, data)
     if (!state.listened) {
       queued.push(data)
       return
@@ -121,6 +124,9 @@ export function adapt(child: Terminal): OmniProc {
       void stop()
     },
     stop,
+    redirect(sink) {
+      state.sink = sink
+    },
   }
 }
 
