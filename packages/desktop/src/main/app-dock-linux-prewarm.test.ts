@@ -3,8 +3,12 @@ import { rejection } from "./rejection.fixture"
 
 // The Electron module only resolves inside the Electron runtime; open() needs a partition session.
 // Bun keeps a module mock for the rest of the test process, so it also needs the default export that later
-// files reach through `import electron from "electron"` (store.ts, imported by wsl/servers.test.ts).
+// files reach through `import electron from "electron"` (store.ts, imported by wsl/servers.test.ts). A later
+// mock.module("electron") can only replace the values of names this first mock declares, so it also declares the
+// names app-dock-popups.test.ts imports through app-dock.ts.
 const electron = {
+  app: {},
+  shell: {},
   session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) },
   WebContentsView: class {},
 }
