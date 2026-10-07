@@ -103,7 +103,7 @@ describe("native seat framework", () => {
         const diagnostics = `${result.stdout}\n${result.stderr}`
         expect(result.stderr, diagnostics).not.toMatch(/\b[1-9]\d* skip\b/)
         if (mode === "backend-only-task" || mode === "omit-embedded-map") {
-          const oracle = mode === "backend-only-task" ? "second-seat result binding" : "second-seat compiled skill binding"
+          const oracle = mode === "backend-only-task" ? "second-seat result binding" : "Cannot import compiled seat skill module"
           expect(result.exit, diagnostics).not.toBe(0)
           expect(diagnostics).toContain(oracle)
           expect(result.stderr, diagnostics).toMatch(/\b1 fail\b/)

@@ -3,7 +3,6 @@
 import { plugin, type BunPlugin } from "bun"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { add } from "../../../script/seat"
 
 // Parent owns this directory, including cleanup after timeout/kill.
 const snapshot = process.env.ORCHESTRA_SEAT_SNAPSHOT
@@ -13,7 +12,15 @@ const packageRoot = path.join(snapshot, "packages/orchestra")
 await fs.cp(path.join(source, "src/maestro/seats"), path.join(packageRoot, "src/maestro/seats"), { recursive: true })
 await fs.cp(path.join(source, "src/agent/prompt"), path.join(packageRoot, "src/agent/prompt"), { recursive: true })
 await fs.cp(path.resolve(source, "../backend-specialist"), path.join(snapshot, "packages/backend-specialist"), { recursive: true })
-await add("sample-seat", "synthetic packet execution", packageRoot)
+// The scaffold validates canonical identity through the live roster. Run it in a separate process so that
+// validation cannot cache this process's registry before the synthetic registry loader is registered.
+const scaffold = Bun.spawn([process.execPath, "-e", `const { add } = await import(${JSON.stringify(path.join(source, "script/seat.ts"))}); await add("sample-seat", "synthetic packet execution", process.argv[1])`, packageRoot], {
+  cwd: source, stdout: "pipe", stderr: "pipe", env: process.env,
+})
+const [scaffoldOut, scaffoldErr, scaffoldExit] = await Promise.all([
+  new Response(scaffold.stdout).text(), new Response(scaffold.stderr).text(), scaffold.exited,
+])
+if (scaffoldExit !== 0) throw new Error(`Second-seat scaffold failed (${scaffoldExit}):\n${scaffoldOut}\n${scaffoldErr}`)
 process.env.ORCHESTRA_SEAT_SKILL_BYTES = await Bun.file(path.join(snapshot, "packages/sample-seat-specialist/skills/sample-seat-work/SKILL.md")).text()
 const registrySource = (await Bun.file(path.join(packageRoot, "src/maestro/seats/index.ts")).text())
   .replaceAll('from "./', `from "${path.join(packageRoot, "src/maestro/seats").replaceAll("\\", "/")}/`)

@@ -9,9 +9,8 @@ test("build genuine second-seat Bun bundle", async () => {
   const outdir = process.env.ORCHESTRA_SEAT_BUNDLE_DIR
   const snapshot = process.env.ORCHESTRA_SEAT_SNAPSHOT
   if (!outdir || !snapshot) throw new Error("Second-seat bundle paths missing")
-  const { seatSkillsModule } = await import("../../../script/seat-skills")
-  // Integration seam: replace the next line with `const files = await seatSkillsFiles()` and update import above.
-  const files = { "orchestra-seat-skills.gen.ts": await seatSkillsModule() }
+  const { seatSkillsFiles } = await import("../../../script/seat-skills")
+  const files = await seatSkillsFiles()
   const omitted = process.env.ORCHESTRA_SEAT_MUTATION === "omit-embedded-map"
   const built = await Bun.build({
     entrypoints: [path.join(import.meta.dirname, "second-seat-compiled.ts")],
