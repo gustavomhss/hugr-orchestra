@@ -23,7 +23,6 @@ import { useGlobal } from "@/context/global"
 import { directoryKey } from "@/context/global-sync/utils"
 import { getProjectAvatarVariant, type LocalProject, useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
 import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
@@ -68,7 +67,6 @@ const icons = {
   shortcuts: '<rect x="1" y="3" width="14" height="10" rx="2"/><path d="M4 6h.1M7 6h.1M10 6h.1M12 6h.1M4 9h.1M7 9h5"/>',
   settings:
     '<circle cx="8" cy="8" r="2.3"/><path d="M8 1.9v1.6M8 12.5v1.6M14.1 8h-1.6M3.5 8H1.9M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1M12.3 12.3l-1.1-1.1M4.8 4.8 3.7 3.7"/>',
-  help: '<circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.2a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1.1M8 11.6v.1"/>',
 }
 
 export function OrchestraSidebar(props: { compact: boolean; constrained: boolean; onToggle: () => void }) {
@@ -77,7 +75,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
   const server = useServer()
   const tabs = useTabs()
   const language = useLanguage()
-  const platform = usePlatform()
   const command = useCommand()
   const navigate = useNavigate()
   const dialog = useDialog()
@@ -471,7 +468,6 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                         if (item.id === "chat") return openChat()
                         if (item.id === "maestro") return openMaestro()
                         if (item.id === "search") return command.show()
-                        if (item.id === "help") return platform.openExternal("https://opencode.ai/desktop-feedback")
                         if (chapterPages[item.id]) return openChapter(item.id)
                         if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
                         if (item.chapter) openPending(language.t(item.label), item.chapter)
@@ -528,13 +524,10 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                 <ProjectAvatar
                   class="orchestra-profile-avatar"
                   data-unset={
-                    !getProjectAvatarSource(profile().project?.id, profile().project?.icon) &&
-                    !profile().project?.icon?.color
-                      ? ""
-                      : undefined
+                    !getProjectAvatarSource(profile().project?.icon) && !profile().project?.icon?.color ? "" : undefined
                   }
                   fallback={profile().project ? displayName(profile().project!) : ""}
-                  src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
+                  src={getProjectAvatarSource(profile().project?.icon)}
                   variant={getProjectAvatarVariant(profile().project?.icon?.color)}
                   aria-hidden="true"
                 />

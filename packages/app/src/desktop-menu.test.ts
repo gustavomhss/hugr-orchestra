@@ -22,6 +22,13 @@ describe("desktop menu", () => {
     expect(roleItems.length).toBeGreaterThan(0)
   })
 
+  test("the Help menu only exports logs and links nowhere outside the app", () => {
+    const help = DESKTOP_MENU.find((menu) => menu.id === "help")
+
+    expect(help?.items).toEqual([{ type: "item", labelKey: "desktop.menu.exportLogs", command: "logs.export" }])
+    expect(DESKTOP_MENU.flatMap((menu) => menu.items ?? []).filter((item) => "href" in item)).toEqual([])
+  })
+
   test("names HuGR Orchestra on the macOS items Electron would label with the process name", () => {
     const items = DESKTOP_MENU.find((menu) => menu.id === "app")?.items ?? []
     const labels = (["about", "hide", "quit"] as const).map((role) => {

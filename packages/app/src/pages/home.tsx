@@ -80,7 +80,6 @@ function NarrowHome(props: {
       <HomeUtilityNav
         class="flex shrink-0 pb-3"
         onOpenSettings={props.projects.utility.settings}
-        onOpenHelp={props.projects.utility.help}
         language={props.projects.copy.language}
       />
     </div>

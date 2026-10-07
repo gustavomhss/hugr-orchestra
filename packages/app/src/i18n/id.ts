@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Proyek berikutnya",
   "desktop.menu.minimize": "Minimalkan",
   "desktop.menu.maximize": "Maksimalkan",
-  "desktop.menu.documentation": "Dokumentasi",
-  "desktop.menu.supportForum": "Forum dukungan",
-  "desktop.menu.shareFeedback": "Bagikan umpan balik",
-  "desktop.menu.reportBug": "Laporkan bug",
   "desktop.menu.ariaLabel": "Menu HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "Pemeriksaan pembaruan gagal.",
@@ -271,9 +267,7 @@ export const dict = {
 
   "provider.custom.title": "Penyedia kustom",
   "provider.custom.unavailable": "Penyedia kustom tidak tersedia di server ini",
-  "provider.custom.description.prefix": "Konfigurasikan penyedia yang kompatibel dengan OpenAI. Lihat ",
-  "provider.custom.description.link": "dokumen konfigurasi penyedia",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Konfigurasikan penyedia yang kompatibel dengan OpenAI.",
   "provider.custom.field.providerID.label": "ID Penyedia",
   "provider.custom.field.providerID.placeholder": "penyediaku",
   "provider.custom.field.providerID.description": "Huruf kecil, angka, tanda hubung, atau garis bawah",
@@ -593,11 +587,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description": "Berjalan setelah membuat ruang kerja (worktree) baru.",
   "dialog.project.edit.worktree.startup.placeholder": "mis. bun install",
 
-  "dialog.releaseNotes.action.getStarted": "Mulai",
-  "dialog.releaseNotes.action.next": "Berikutnya",
-  "dialog.releaseNotes.action.hideFuture": "Jangan tampilkan ini di masa depan",
-  "dialog.releaseNotes.media.alt": "Pratinjau rilis",
-
   "dialog.usageExceeded.dontShowAgain": "Jangan tampilkan lagi",
 
   "context.breakdown.title": "Rincian Konteks",
@@ -715,8 +704,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Periksa pembaruan",
   "error.page.action.updateTo": "Perbarui ke {{version}}",
   "error.page.circular": "[Sirkular]",
-  "error.page.report.prefix": "Harap laporkan kesalahan ini",
-  "error.page.report.discord": "di Discord",
   "error.page.version": "Versi: {{version}}",
 
   "error.dev.rootNotFound":
@@ -987,7 +974,6 @@ export const dict = {
   "sidebar.menu.toggle": "Alihkan menu",
   "sidebar.nav.projectsAndSessions": "Proyek dan sesi",
   "sidebar.settings": "Pengaturan",
-  "sidebar.help": "Bantuan",
   "sidebar.workspaces.enable": "Aktifkan ruang kerja",
   "sidebar.workspaces.disable": "Nonaktifkan ruang kerja",
   "sidebar.gettingStarted.title": "Memulai",
@@ -1109,9 +1095,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Nonaktifkan sistem cadangan X11 di Wayland. Memerlukan mulai ulang.",
   "settings.general.row.wayland.tooltip":
     "Di Linux dengan monitor berlaju penyegaran berbeda, Wayland asli bisa lebih stabil.",
-
-  "settings.general.row.releaseNotes.title": "Catatan rilis",
-  "settings.general.row.releaseNotes.description": "Tampilkan pop-up Apa yang Baru setelah pembaruan",
 
   "settings.updates.row.startup.title": "Periksa pembaruan saat dimulai",
   "settings.updates.row.startup.description": "Secara otomatis memeriksa pembaruan saat HuGR Orchestra diluncurkan",

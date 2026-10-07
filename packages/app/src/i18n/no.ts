@@ -45,10 +45,6 @@ export const dict = {
   "desktop.menu.nextProject": "Neste prosjekt",
   "desktop.menu.minimize": "Minimer",
   "desktop.menu.maximize": "Maksimer",
-  "desktop.menu.documentation": "Dokumentasjon",
-  "desktop.menu.supportForum": "Brukerstøtteforum",
-  "desktop.menu.shareFeedback": "Del tilbakemelding",
-  "desktop.menu.reportBug": "Rapporter en feil",
   "desktop.menu.ariaLabel": "HuGR Orchestra-meny",
 
   "desktop.updater.dialog.checkFailed.message": "Søket etter oppdateringer mislyktes.",
@@ -269,9 +265,7 @@ export const dict = {
 
   "provider.custom.title": "Egendefinert leverandør",
   "provider.custom.unavailable": "Egendefinerte leverandører er ikke tilgjengelige på denne serveren",
-  "provider.custom.description.prefix": "Konfigurer en OpenAI-kompatibel leverandør. Se ",
-  "provider.custom.description.link": "dokumentasjon for leverandørkonfigurasjon",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Konfigurer en OpenAI-kompatibel leverandør.",
   "provider.custom.field.providerID.label": "Leverandør-ID",
   "provider.custom.field.providerID.placeholder": "minleverandør",
   "provider.custom.field.providerID.description": "Små bokstaver, tall, bindestreker eller understreker",
@@ -606,8 +600,6 @@ export const dict = {
   "error.page.action.checking": "Sjekker...",
   "error.page.action.checkUpdates": "Se etter oppdateringer",
   "error.page.action.updateTo": "Oppdater til {{version}}",
-  "error.page.report.prefix": "Vennligst rapporter denne feilen",
-  "error.page.report.discord": "på Discord",
   "error.page.version": "Versjon: {{version}}",
 
   "error.dev.rootNotFound":
@@ -792,7 +784,6 @@ export const dict = {
   "sidebar.menu.toggle": "Veksle meny",
   "sidebar.nav.projectsAndSessions": "Prosjekter og sesjoner",
   "sidebar.settings": "Innstillinger",
-  "sidebar.help": "Hjelp",
   "sidebar.workspaces.enable": "Aktiver arbeidsområder",
   "sidebar.workspaces.disable": "Deaktiver arbeidsområder",
   "sidebar.gettingStarted.title": "Kom i gang",
@@ -849,9 +840,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Deaktiver X11-reserveløsningen på Wayland. Krever omstart.",
   "settings.general.row.wayland.tooltip":
     "På Linux med skjermer med blandet oppdateringsfrekvens kan direkte Wayland-støtte være mer stabilt.",
-
-  "settings.general.row.releaseNotes.title": "Utgivelsesnotater",
-  "settings.general.row.releaseNotes.description": 'Vis "Hva er nytt"-vinduer etter oppdateringer',
 
   "settings.updates.row.startup.title": "Se etter oppdateringer ved oppstart",
   "settings.updates.row.startup.description": "Se automatisk etter oppdateringer når HuGR Orchestra starter",
@@ -1029,10 +1017,6 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sesjoner vil bli arkivert.",
   "workspace.reset.note": "Dette vil tilbakestille arbeidsområdet til å samsvare med standardgrenen.",
   "common.open": "Åpne",
-  "dialog.releaseNotes.action.getStarted": "Kom i gang",
-  "dialog.releaseNotes.action.next": "Neste",
-  "dialog.releaseNotes.action.hideFuture": "Ikke vis disse igjen",
-  "dialog.releaseNotes.media.alt": "Forhåndsvisning av utgivelse",
   "toast.project.reloadFailed.title": "Kunne ikke laste inn {{project}} på nytt",
   "error.server.invalidConfiguration": "Ugyldig konfigurasjon",
   "common.moreCountSuffix": " (+{{count}} mer)",

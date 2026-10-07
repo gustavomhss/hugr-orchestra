@@ -169,9 +169,7 @@ export const dict = {
 
   "provider.custom.title": "Custom provider",
   "provider.custom.unavailable": "Custom providers are unavailable on this server",
-  "provider.custom.description.prefix": "Configure an OpenAI-compatible provider. See the ",
-  "provider.custom.description.link": "provider config docs",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Configure an OpenAI-compatible provider.",
   "provider.custom.field.providerID.label": "Provider ID",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Lowercase letters, numbers, hyphens, or underscores",
@@ -492,10 +490,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description": "Runs after creating a new workspace (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "e.g. bun install",
 
-  "dialog.releaseNotes.action.getStarted": "Get started",
-  "dialog.releaseNotes.action.next": "Next",
-  "dialog.releaseNotes.action.hideFuture": "Don't show these in the future",
-  "dialog.releaseNotes.media.alt": "Release preview",
   "dialog.usageExceeded.dontShowAgain": "Don't show again",
 
   "context.breakdown.title": "Context Breakdown",
@@ -613,8 +607,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Check for updates",
   "error.page.action.updateTo": "Update to {{version}}",
   "error.page.circular": "[Circular]",
-  "error.page.report.prefix": "Please report this error",
-  "error.page.report.discord": "on Discord",
   "error.page.version": "Version: {{version}}",
 
   "error.dev.rootNotFound":
@@ -887,7 +879,6 @@ export const dict = {
   "sidebar.menu.toggle": "Toggle menu",
   "sidebar.nav.projectsAndSessions": "Projects and sessions",
   "sidebar.settings": "Settings",
-  "sidebar.help": "Help",
   "sidebar.workspaces.enable": "Enable workspaces",
   "sidebar.workspaces.disable": "Disable workspaces",
   "sidebar.gettingStarted.title": "Getting started",
@@ -1007,9 +998,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Disable X11 fallback on Wayland. Requires restart.",
   "settings.general.row.wayland.tooltip":
     "On Linux with mixed refresh-rate monitors, native Wayland can be more stable.",
-
-  "settings.general.row.releaseNotes.title": "Release notes",
-  "settings.general.row.releaseNotes.description": "Show What's New popups after updates",
 
   "settings.updates.row.startup.title": "Check for updates on startup",
   "settings.updates.row.startup.description": "Automatically check for updates when HuGR Orchestra launches",

@@ -41,11 +41,7 @@ export function WindowsAppMenu(props: {
       runCommand(entry.command)
       return
     }
-    if (entry.action) {
-      runAction(entry.action)
-      return
-    }
-    if (entry.href) props.platform.openExternal(entry.href)
+    if (entry.action) runAction(entry.action)
   }
 
   return (

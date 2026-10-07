@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Следующий проект",
   "desktop.menu.minimize": "Свернуть",
   "desktop.menu.maximize": "Развернуть",
-  "desktop.menu.documentation": "Документация",
-  "desktop.menu.supportForum": "Форум поддержки",
-  "desktop.menu.shareFeedback": "Отправить отзыв",
-  "desktop.menu.reportBug": "Сообщить об ошибке",
   "desktop.menu.ariaLabel": "Меню HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "Не удалось проверить наличие обновлений.",
@@ -270,9 +266,7 @@ export const dict = {
 
   "provider.custom.title": "Пользовательский провайдер",
   "provider.custom.unavailable": "Пользовательские провайдеры недоступны на этом сервере",
-  "provider.custom.description.prefix": "Настройте провайдера, совместимого с OpenAI. См. ",
-  "provider.custom.description.link": "документацию по настройке провайдера",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Настройте провайдера, совместимого с OpenAI.",
   "provider.custom.field.providerID.label": "ID провайдера",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Строчные буквы, цифры, дефисы или подчёркивания",
@@ -702,8 +696,6 @@ export const dict = {
   "error.page.action.checking": "Проверка...",
   "error.page.action.checkUpdates": "Проверить обновления",
   "error.page.action.updateTo": "Обновить до {{version}}",
-  "error.page.report.prefix": "Пожалуйста, сообщите об этой ошибке",
-  "error.page.report.discord": "в Discord",
   "error.page.version": "Версия: {{version}}",
 
   "error.dev.rootNotFound":
@@ -928,7 +920,6 @@ export const dict = {
   "sidebar.menu.toggle": "Переключить меню",
   "sidebar.nav.projectsAndSessions": "Проекты и сессии",
   "sidebar.settings": "Настройки",
-  "sidebar.help": "Помощь",
   "sidebar.workspaces.enable": "Включить рабочие пространства",
   "sidebar.workspaces.disable": "Отключить рабочие пространства",
   "sidebar.gettingStarted.title": "Начало работы",
@@ -1020,9 +1011,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Отключить резервный режим X11 в Wayland. Требуется перезапуск.",
   "settings.general.row.wayland.tooltip":
     "На Linux с мониторами разной частоты обновления нативный Wayland может быть стабильнее.",
-
-  "settings.general.row.releaseNotes.title": "Примечания к выпуску",
-  "settings.general.row.releaseNotes.description": 'Показывать всплывающие окна "Что нового" после обновлений',
 
   "settings.updates.row.startup.title": "Проверять обновления при запуске",
   "settings.updates.row.startup.description": "Автоматически проверять обновления при запуске HuGR Orchestra",
@@ -1204,10 +1192,6 @@ export const dict = {
   "workspace.reset.archived.many": "Будут архивированы сессии: {{count}}.",
   "workspace.reset.note": "Это сбросит рабочее пространство до соответствия ветке по умолчанию.",
   "common.open": "Открыть",
-  "dialog.releaseNotes.action.getStarted": "Начать",
-  "dialog.releaseNotes.action.next": "Далее",
-  "dialog.releaseNotes.action.hideFuture": "Больше не показывать",
-  "dialog.releaseNotes.media.alt": "Предварительный просмотр выпуска",
   "toast.project.reloadFailed.title": "Не удалось перезагрузить {{project}}",
   "error.server.invalidConfiguration": "Недопустимая конфигурация",
   "common.moreCountSuffix": " (ещё {{count}})",

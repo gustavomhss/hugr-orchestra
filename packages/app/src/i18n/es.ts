@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Siguiente proyecto",
   "desktop.menu.minimize": "Minimizar",
   "desktop.menu.maximize": "Maximizar",
-  "desktop.menu.documentation": "Documentación",
-  "desktop.menu.supportForum": "Foro de asistencia",
-  "desktop.menu.shareFeedback": "Enviar comentarios",
-  "desktop.menu.reportBug": "Informar de un error",
   "desktop.menu.ariaLabel": "Menú de HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "No se pudo buscar actualizaciones.",
@@ -271,9 +267,7 @@ export const dict = {
 
   "provider.custom.title": "Proveedor personalizado",
   "provider.custom.unavailable": "Los proveedores personalizados no están disponibles en este servidor",
-  "provider.custom.description.prefix": "Configurar un proveedor compatible con OpenAI. Ver la ",
-  "provider.custom.description.link": "documentación de configuración del proveedor",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Configurar un proveedor compatible con OpenAI.",
   "provider.custom.field.providerID.label": "ID del proveedor",
   "provider.custom.field.providerID.placeholder": "miproveedor",
   "provider.custom.field.providerID.description": "Letras minúsculas, números, guiones o guiones bajos",
@@ -707,8 +701,6 @@ export const dict = {
   "error.page.action.checking": "Comprobando...",
   "error.page.action.checkUpdates": "Buscar actualizaciones",
   "error.page.action.updateTo": "Actualizar a {{version}}",
-  "error.page.report.prefix": "Informa de este error",
-  "error.page.report.discord": "en Discord",
   "error.page.version": "Versión: {{version}}",
 
   "error.dev.rootNotFound":
@@ -932,7 +924,6 @@ export const dict = {
   "sidebar.menu.toggle": "Mostrar u ocultar menú",
   "sidebar.nav.projectsAndSessions": "Proyectos y sesiones",
   "sidebar.settings": "Ajustes",
-  "sidebar.help": "Ayuda",
   "sidebar.workspaces.enable": "Habilitar espacios de trabajo",
   "sidebar.workspaces.disable": "Deshabilitar espacios de trabajo",
   "sidebar.gettingStarted.title": "Primeros pasos",
@@ -1023,10 +1014,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Deshabilitar el uso alternativo de X11 en Wayland. Requiere reiniciar.",
   "settings.general.row.wayland.tooltip":
     "En Linux con monitores de frecuencia de actualización mixta, Wayland nativo puede ser más estable.",
-
-  "settings.general.row.releaseNotes.title": "Notas de la versión",
-  "settings.general.row.releaseNotes.description":
-    'Mostrar ventanas emergentes de "Novedades" después de las actualizaciones',
 
   "settings.updates.row.startup.title": "Buscar actualizaciones al iniciar",
   "settings.updates.row.startup.description": "Buscar actualizaciones automáticamente cuando se inicia HuGR Orchestra",
@@ -1207,10 +1194,6 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sesiones serán archivadas.",
   "workspace.reset.note": "Esto restablecerá el espacio de trabajo para coincidir con la rama predeterminada.",
   "common.open": "Abrir",
-  "dialog.releaseNotes.action.getStarted": "Comenzar",
-  "dialog.releaseNotes.action.next": "Siguiente",
-  "dialog.releaseNotes.action.hideFuture": "No mostrar esto en el futuro",
-  "dialog.releaseNotes.media.alt": "Vista previa de la versión",
   "toast.project.reloadFailed.title": "Error al recargar {{project}}",
   "error.server.invalidConfiguration": "Configuración inválida",
   "common.moreCountSuffix": " (+{{count}} más)",

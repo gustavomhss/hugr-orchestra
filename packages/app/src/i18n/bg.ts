@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Следващ проект",
   "desktop.menu.minimize": "Минимизиране",
   "desktop.menu.maximize": "Увеличете максимално",
-  "desktop.menu.documentation": "Документация",
-  "desktop.menu.supportForum": "Форум за поддръжка",
-  "desktop.menu.shareFeedback": "Споделете обратна връзка",
-  "desktop.menu.reportBug": "Докладване за грешка",
   "desktop.menu.ariaLabel": "Меню на HuGR Orchestra",
   "desktop.updater.dialog.checkFailed.message": "Проверката на актуализацията е неуспешна.",
   "desktop.updater.dialog.checkFailed.title": "Грешка при актуализиране",
@@ -252,9 +248,7 @@ export const dict = {
   "provider.connect.toast.connected.description": "{{provider}} модела вече са налични за използване.",
   "provider.custom.title": "Персонализиран доставчик",
   "provider.custom.unavailable": "Персонализираните доставчици не са достъпни на този сървър",
-  "provider.custom.description.prefix": "Конфигурирайте OpenAI-съвместим доставчик. Вижте",
-  "provider.custom.description.link": "документи за конфигурация на доставчика",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Конфигурирайте OpenAI-съвместим доставчик.",
   "provider.custom.field.providerID.label": "ID на доставчика",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Малки букви, цифри, тирета или долни черти",
@@ -559,10 +553,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description":
     "Изпълнява се след създаване на ново работно пространство (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "напр. bun install",
-  "dialog.releaseNotes.action.getStarted": "Започнете",
-  "dialog.releaseNotes.action.next": "Следваща",
-  "dialog.releaseNotes.action.hideFuture": "Не ги показвайте в бъдеще",
-  "dialog.releaseNotes.media.alt": "Визуализация на изданието",
   "context.breakdown.title": "Разбивка на контекста",
   "context.breakdown.note":
     "Приблизителна разбивка на входните токени. „Други“ включва дефиниции на инструменти и режийни разходи.",
@@ -662,8 +652,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Проверете за актуализации",
   "error.page.action.updateTo": "Актуализиране до {{version}}",
   "error.page.circular": "[Кръгло]",
-  "error.page.report.prefix": "Моля, докладвайте тази грешка",
-  "error.page.report.discord": "на Discord",
   "error.page.version": "Версия: {{version}}",
   "error.dev.rootNotFound":
     "Основният елемент не е намерен. Забравихте ли да го добавите към вашия index.html? Или може би атрибутът id е изписан неправилно?",
@@ -917,7 +905,6 @@ export const dict = {
   "sidebar.menu.toggle": "Превключване на менюто",
   "sidebar.nav.projectsAndSessions": "Проекти и сесии",
   "sidebar.settings": "Настройки",
-  "sidebar.help": "Помощ",
   "sidebar.workspaces.enable": "Активиране на работни пространства",
   "sidebar.workspaces.disable": "Деактивирайте работните пространства",
   "sidebar.gettingStarted.title": "Първи стъпки",
@@ -1037,8 +1024,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Деактивирайте X11 резервен вариант на Wayland. Изисква рестартиране.",
   "settings.general.row.wayland.tooltip":
     "На Linux с монитори със смесена честота на опресняване естественият Wayland може да бъде по-стабилен.",
-  "settings.general.row.releaseNotes.title": "Бележки по изданието",
-  "settings.general.row.releaseNotes.description": "Показване на изскачащи прозорци с новости след актуализации",
   "settings.updates.row.startup.title": "Проверете за актуализации при стартиране",
   "settings.updates.row.startup.description":
     "Автоматично проверявайте за актуализации при стартиране на HuGR Orchestra",

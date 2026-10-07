@@ -46,10 +46,6 @@ export const dict = {
   "desktop.menu.nextProject": "Sonraki proje",
   "desktop.menu.minimize": "Simge durumuna küçült",
   "desktop.menu.maximize": "Ekranı kapla",
-  "desktop.menu.documentation": "Belgeler",
-  "desktop.menu.supportForum": "Destek forumu",
-  "desktop.menu.shareFeedback": "Geri bildirim paylaş",
-  "desktop.menu.reportBug": "Hata bildir",
   "desktop.menu.ariaLabel": "HuGR Orchestra menüsü",
 
   "desktop.updater.dialog.checkFailed.message": "Güncellemeler kontrol edilemedi.",
@@ -275,9 +271,7 @@ export const dict = {
 
   "provider.custom.title": "Özel sağlayıcı",
   "provider.custom.unavailable": "Özel sağlayıcılar bu sunucuda kullanılamıyor",
-  "provider.custom.description.prefix": "OpenAI uyumlu bir sağlayıcı yapılandırın. ",
-  "provider.custom.description.link": "sağlayıcı yapılandırma dokümanları",
-  "provider.custom.description.suffix": " sayfasına bakın.",
+  "provider.custom.description": "OpenAI uyumlu bir sağlayıcı yapılandırın.",
   "provider.custom.field.providerID.label": "Sağlayıcı kimliği",
   "provider.custom.field.providerID.placeholder": "saglayicim",
   "provider.custom.field.providerID.description": "Küçük harfler, rakamlar, tire veya alt çizgi",
@@ -707,8 +701,6 @@ export const dict = {
   "error.page.action.checking": "Kontrol ediliyor...",
   "error.page.action.checkUpdates": "Güncellemeleri kontrol et",
   "error.page.action.updateTo": "{{version}} sürümüne güncelle",
-  "error.page.report.prefix": "Lütfen bu hatayı",
-  "error.page.report.discord": "Discord üzerinden bildirin",
   "error.page.version": "Sürüm: {{version}}",
 
   "error.dev.rootNotFound":
@@ -931,7 +923,6 @@ export const dict = {
   "sidebar.menu.toggle": "Menüyü aç/kapat",
   "sidebar.nav.projectsAndSessions": "Projeler ve oturumlar",
   "sidebar.settings": "Ayarlar",
-  "sidebar.help": "Yardım",
   "sidebar.workspaces.enable": "Çalışma alanlarını etkinleştir",
   "sidebar.workspaces.disable": "Çalışma alanlarını devre dışı bırak",
   "sidebar.gettingStarted.title": "Başlarken",
@@ -1023,9 +1014,6 @@ export const dict = {
     "Wayland'da X11 geri dönüşünü devre dışı bırak. Yeniden başlatma gerektirir.",
   "settings.general.row.wayland.tooltip":
     "Farklı yenileme hızlarına sahip monitörlerin kullanıldığı Linux sistemlerinde yerel Wayland daha kararlı olabilir.",
-
-  "settings.general.row.releaseNotes.title": "Sürüm notları",
-  "settings.general.row.releaseNotes.description": "Güncellemelerden sonra Yenilikler bildirimlerini göster",
 
   "settings.updates.row.startup.title": "Başlangıçta güncellemeleri kontrol et",
   "settings.updates.row.startup.description": "HuGR Orchestra başladığında otomatik güncelleme kontrolü yap",
@@ -1205,10 +1193,6 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} oturum arşivlenecek.",
   "workspace.reset.note": "Bu işlem çalışma alanını varsayılan dalla eşleşecek şekilde sıfırlayacak.",
   "common.open": "Aç",
-  "dialog.releaseNotes.action.getStarted": "Başla",
-  "dialog.releaseNotes.action.next": "İleri",
-  "dialog.releaseNotes.action.hideFuture": "Bunu gelecekte bir daha gösterme",
-  "dialog.releaseNotes.media.alt": "Sürüm önizlemesi",
   "toast.project.reloadFailed.title": "{{project}} yeniden yüklenemedi",
   "error.server.invalidConfiguration": "Geçersiz yapılandırma",
   "common.moreCountSuffix": " (+{{count}} daha)",

@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Projet suivant",
   "desktop.menu.minimize": "Réduire",
   "desktop.menu.maximize": "Agrandir",
-  "desktop.menu.documentation": "Documentation",
-  "desktop.menu.supportForum": "Forum d'assistance",
-  "desktop.menu.shareFeedback": "Envoyer des commentaires",
-  "desktop.menu.reportBug": "Signaler un bogue",
   "desktop.menu.ariaLabel": "Menu HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "La recherche de mises à jour a échoué.",
@@ -258,9 +254,7 @@ export const dict = {
   "provider.connect.toast.connected.description": "Les modèles {{provider}} sont maintenant disponibles.",
   "provider.custom.title": "Fournisseur personnalisé",
   "provider.custom.unavailable": "Les fournisseurs personnalisés ne sont pas disponibles sur ce serveur",
-  "provider.custom.description.prefix": "Configurez un fournisseur compatible avec OpenAI. Consultez la ",
-  "provider.custom.description.link": "documentation sur la configuration des fournisseurs",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Configurez un fournisseur compatible avec OpenAI.",
   "provider.custom.field.providerID.label": "ID du fournisseur",
   "provider.custom.field.providerID.placeholder": "monfournisseur",
   "provider.custom.field.providerID.description":
@@ -666,8 +660,6 @@ export const dict = {
   "error.page.action.checking": "Vérification...",
   "error.page.action.checkUpdates": "Vérifier les mises à jour",
   "error.page.action.updateTo": "Mettre à jour vers {{version}}",
-  "error.page.report.prefix": "Veuillez signaler cette erreur",
-  "error.page.report.discord": "sur Discord",
   "error.page.version": "Version : {{version}}",
   "error.dev.rootNotFound":
     "Élément racine introuvable. Avez-vous oublié de l'ajouter à votre index.html ? Ou peut-être que l'attribut id est mal orthographié ?",
@@ -869,7 +861,6 @@ export const dict = {
   "sidebar.menu.toggle": "Basculer le menu",
   "sidebar.nav.projectsAndSessions": "Projets et sessions",
   "sidebar.settings": "Paramètres",
-  "sidebar.help": "Aide",
   "sidebar.workspaces.enable": "Activer les espaces de travail",
   "sidebar.workspaces.disable": "Désactiver les espaces de travail",
   "sidebar.gettingStarted.title": "Commencer",
@@ -960,9 +951,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Désactiver le repli X11 sur Wayland. Nécessite un redémarrage.",
   "settings.general.row.wayland.tooltip":
     "Sur Linux avec des moniteurs à taux de rafraîchissement mixte, Wayland natif peut être plus stable.",
-  "settings.general.row.releaseNotes.title": "Notes de version",
-  "settings.general.row.releaseNotes.description":
-    "Afficher les fenêtres contextuelles « Quoi de neuf » après les mises à jour",
   "settings.updates.row.startup.title": "Vérifier les mises à jour au démarrage",
   "settings.updates.row.startup.description":
     "Vérifier automatiquement les mises à jour au lancement de HuGR Orchestra",
@@ -1135,10 +1123,6 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sessions seront archivées.",
   "workspace.reset.note": "Cela réinitialisera l'espace de travail pour correspondre à la branche par défaut.",
   "common.open": "Ouvrir",
-  "dialog.releaseNotes.action.getStarted": "Commencer",
-  "dialog.releaseNotes.action.next": "Suivant",
-  "dialog.releaseNotes.action.hideFuture": "Ne plus afficher à l'avenir",
-  "dialog.releaseNotes.media.alt": "Aperçu de la version",
   "toast.project.reloadFailed.title": "Échec du rechargement de {{project}}",
   "error.server.invalidConfiguration": "Configuration invalide",
   "common.moreCountSuffix": " (+{{count}} de plus)",

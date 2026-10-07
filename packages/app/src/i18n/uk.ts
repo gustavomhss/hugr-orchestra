@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Наступний проєкт",
   "desktop.menu.minimize": "Згорнути",
   "desktop.menu.maximize": "Розгорнути",
-  "desktop.menu.documentation": "Документація",
-  "desktop.menu.supportForum": "Форум підтримки",
-  "desktop.menu.shareFeedback": "Надіслати відгук",
-  "desktop.menu.reportBug": "Повідомити про помилку",
   "desktop.menu.ariaLabel": "Меню HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "Не вдалося перевірити наявність оновлень.",
@@ -271,9 +267,7 @@ export const dict = {
 
   "provider.custom.title": "Користувацький провайдер",
   "provider.custom.unavailable": "Користувацькі провайдери недоступні на цьому сервері",
-  "provider.custom.description.prefix": "Налаштуйте провайдера, сумісного з OpenAI. Перегляньте ",
-  "provider.custom.description.link": "документацію з налаштування провайдера",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Налаштуйте провайдера, сумісного з OpenAI.",
   "provider.custom.field.providerID.label": "ID провайдера",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Малі літери, цифри, дефіси або підкреслення",
@@ -595,11 +589,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description": "Виконується після створення нової робочої області (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "напр. bun install",
 
-  "dialog.releaseNotes.action.getStarted": "Розпочати",
-  "dialog.releaseNotes.action.next": "Далі",
-  "dialog.releaseNotes.action.hideFuture": "Не показувати це в майбутньому",
-  "dialog.releaseNotes.media.alt": "Попередній перегляд релізу",
-
   "dialog.usageExceeded.dontShowAgain": "Більше не показувати",
 
   "context.breakdown.title": "Розподіл контексту",
@@ -719,8 +708,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Перевірити оновлення",
   "error.page.action.updateTo": "Оновити до {{version}}",
   "error.page.circular": "[Циклічне]",
-  "error.page.report.prefix": "Будь ласка, повідомте про цю помилку",
-  "error.page.report.discord": "у Discord",
   "error.page.version": "Версія: {{version}}",
 
   "error.dev.rootNotFound":
@@ -1000,7 +987,6 @@ export const dict = {
   "sidebar.menu.toggle": "Перемкнути меню",
   "sidebar.nav.projectsAndSessions": "Проєкти та сесії",
   "sidebar.settings": "Налаштування",
-  "sidebar.help": "Довідка",
   "sidebar.workspaces.enable": "Увімкнути робочі області",
   "sidebar.workspaces.disable": "Вимкнути робочі області",
   "sidebar.gettingStarted.title": "Початок роботи",
@@ -1125,9 +1111,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Вимкнути резервний X11 на Wayland. Потребує перезапуску.",
   "settings.general.row.wayland.tooltip":
     "На Linux з моніторами з різною частотою оновлення нативний Wayland може бути більш стабільним.",
-
-  "settings.general.row.releaseNotes.title": "Нотатки до релізу",
-  "settings.general.row.releaseNotes.description": 'Показувати спливаючі вікна "Що нового" після оновлень',
 
   "settings.updates.row.startup.title": "Перевіряти оновлення під час запуску",
   "settings.updates.row.startup.description":

@@ -167,9 +167,7 @@ export const dict = {
 
   "provider.custom.title": "Brugerdefineret udbyder",
   "provider.custom.unavailable": "Brugerdefinerede udbydere er ikke tilgængelige på denne server",
-  "provider.custom.description.prefix": "Konfigurer en OpenAI-kompatibel udbyder. Se ",
-  "provider.custom.description.link": "dokumentation for udbyderkonfiguration",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Konfigurer en OpenAI-kompatibel udbyder.",
   "provider.custom.field.providerID.label": "Udbyder-ID",
   "provider.custom.field.providerID.placeholder": "minudbyder",
   "provider.custom.field.providerID.description": "Små bogstaver, tal, bindestreger eller understregninger",
@@ -581,8 +579,6 @@ export const dict = {
   "error.page.action.checking": "Tjekker...",
   "error.page.action.checkUpdates": "Tjek for opdateringer",
   "error.page.action.updateTo": "Opdater til {{version}}",
-  "error.page.report.prefix": "Rapporter venligst denne fejl",
-  "error.page.report.discord": "på Discord",
   "error.page.version": "Version: {{version}}",
 
   "error.dev.rootNotFound":
@@ -801,7 +797,6 @@ export const dict = {
   "sidebar.menu.toggle": "Skift menu",
   "sidebar.nav.projectsAndSessions": "Projekter og sessioner",
   "sidebar.settings": "Indstillinger",
-  "sidebar.help": "Hjælp",
   "sidebar.workspaces.enable": "Aktiver arbejdsområder",
   "sidebar.workspaces.disable": "Deaktiver arbejdsområder",
   "sidebar.gettingStarted.title": "Kom i gang",
@@ -888,9 +883,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Deaktiver X11-fallback på Wayland. Kræver genstart.",
   "settings.general.row.wayland.tooltip":
     "På Linux med skærme med forskellige opdateringshastigheder kan indbygget Wayland være mere stabilt.",
-
-  "settings.general.row.releaseNotes.title": "Udgivelsesnoter",
-  "settings.general.row.releaseNotes.description": 'Vis pop op-vinduer med "Hvad er nyt" efter opdateringer',
 
   "settings.updates.row.startup.title": "Tjek for opdateringer ved opstart",
   "settings.updates.row.startup.description": "Tjek automatisk for opdateringer, når HuGR Orchestra starter",
@@ -1070,10 +1062,6 @@ export const dict = {
   "workspace.reset.archived.many": "{{count}} sessioner vil blive arkiveret.",
   "workspace.reset.note": "Dette vil nulstille arbejdsområdet til at matche hovedgrenen.",
   "common.open": "Åbn",
-  "dialog.releaseNotes.action.getStarted": "Kom i gang",
-  "dialog.releaseNotes.action.next": "Næste",
-  "dialog.releaseNotes.action.hideFuture": "Vis ikke disse i fremtiden",
-  "dialog.releaseNotes.media.alt": "Forhåndsvisning af udgivelse",
   "toast.project.reloadFailed.title": "Kunne ikke genindlæse {{project}}",
   "error.server.invalidConfiguration": "Ugyldig konfiguration",
   "common.moreCountSuffix": " (+{{count}} mere)",
@@ -1213,10 +1201,6 @@ export const dict = {
   "desktop.menu.nextProject": "Næste projekt",
   "desktop.menu.minimize": "Minimer",
   "desktop.menu.maximize": "Maksimer",
-  "desktop.menu.documentation": "Dokumentation",
-  "desktop.menu.supportForum": "Supportforum",
-  "desktop.menu.shareFeedback": "Giv feedback",
-  "desktop.menu.reportBug": "Rapportér en fejl",
   "desktop.menu.ariaLabel": "HuGR Orchestra-menu",
 
   "desktop.updater.dialog.checkFailed.message": "Søgningen efter opdateringer mislykkedes.",

@@ -487,7 +487,7 @@ function ProjectTrigger(props: ComponentProps<"button"> & { controller: PromptPr
         {(item) => (
           <ProjectAvatar
             fallback={displayName(item())}
-            src={getProjectAvatarSource(item().id, item().icon)}
+            src={getProjectAvatarSource(item().icon)}
             variant={getProjectAvatarVariant(item().icon?.color)}
           />
         )}
@@ -531,7 +531,7 @@ function ProjectItem(props: {
     >
       <ProjectAvatar
         fallback={displayName(props.project)}
-        src={getProjectAvatarSource(props.project.id, props.project.icon)}
+        src={getProjectAvatarSource(props.project.icon)}
         variant={getProjectAvatarVariant(props.project.icon?.color)}
       />
       <DropdownMenu.ItemLabel class="min-w-0 truncate leading-5">{displayName(props.project)}</DropdownMenu.ItemLabel>

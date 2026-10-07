@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Հաջորդ նախագիծ",
   "desktop.menu.minimize": "Նվազագույնի հասցնել",
   "desktop.menu.maximize": "Առավելագույնի հասցնել",
-  "desktop.menu.documentation": "Փաստաթղթեր",
-  "desktop.menu.supportForum": "Աջակցման ֆորում",
-  "desktop.menu.shareFeedback": "Կիսվել կարծիք",
-  "desktop.menu.reportBug": "Հաղորդել սխալի մասին",
   "desktop.menu.ariaLabel": "HuGR Orchestra-ի մենյու",
   "desktop.updater.dialog.checkFailed.message": "Թարմացման ստուգումը ձախողվեց։",
   "desktop.updater.dialog.checkFailed.title": "Թարմացման սխալ",
@@ -251,9 +247,7 @@ export const dict = {
   "provider.connect.toast.connected.description": "{{provider}} մոդելներ այժմ հասանելի են օգտագործման համար։",
   "provider.custom.title": "Պատվերով մատակարար",
   "provider.custom.unavailable": "Պատվերով մատակարարներն անհասանելի են այս սերվերում",
-  "provider.custom.description.prefix": "Կարգավորել OpenAI-ի հետ համատեղելի մատակարար: Տեսեք ",
-  "provider.custom.description.link": "մատակարարի կազմաձևման փաստաթղթեր",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Կարգավորել OpenAI-ի հետ համատեղելի մատակարար։",
   "provider.custom.field.providerID.label": "Մատակարարի ID",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Փոքրատառ, թվեր, գծիկներ կամ ընդգծում",
@@ -558,10 +552,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup.description":
     "Աշխատում է նոր աշխատանքային տարածք (աշխատանքային ծառ) ստեղծելուց հետո",
   "dialog.project.edit.worktree.startup.placeholder": "օր. bun տեղադրում",
-  "dialog.releaseNotes.action.getStarted": "Սկսել",
-  "dialog.releaseNotes.action.next": "Հաջորդ",
-  "dialog.releaseNotes.action.hideFuture": "Չցուցադրել դրանք ապագայում",
-  "dialog.releaseNotes.media.alt": "Թողարկման նախադիտում",
   "context.breakdown.title": "Համատեքստային բաշխում",
   "context.breakdown.note":
     "Մուտքային նշանների մոտավոր բաժանում։ «Այլ»-ը ներառում է գործիքի սահմանումները և վերադիր ծախսերը:",
@@ -661,8 +651,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Ստուգեք թարմացումների համար",
   "error.page.action.updateTo": "Թարմացնել {{version}}",
   "error.page.circular": "[Circular]",
-  "error.page.report.prefix": "Խնդրում ենք հայտնել այս սխալի մասին",
-  "error.page.report.discord": "Discord-ում",
   "error.page.version": "Տարբերակ՝ {{version}}",
   "error.dev.rootNotFound":
     "Արմատային տարրը չի գտնվել։ Մոռացե՞լ եք այն ավելացնել ձեր index.html-ում: Կամ գուցե id հատկանիշը սխալ է գրվել:",
@@ -917,7 +905,6 @@ export const dict = {
   "sidebar.menu.toggle": "Փոխարկել ընտրացանկ",
   "sidebar.nav.projectsAndSessions": "Նախագծեր և նիստեր",
   "sidebar.settings": "Կարգավորումներ",
-  "sidebar.help": "Օգնություն",
   "sidebar.workspaces.enable": "Միացնել աշխատանքային տարածքները",
   "sidebar.workspaces.disable": "Անջատել աշխատանքային տարածքները",
   "sidebar.gettingStarted.title": "Սկսում",
@@ -1032,8 +1019,6 @@ export const dict = {
   "settings.general.row.wayland.description": "Անջատել X11-ի հետադարձ կապը Wayland-ում: Պահանջվում է վերագործարկում:",
   "settings.general.row.wayland.tooltip":
     "Linux-ի վրա՝ թարմացման արագության խառը մոնիտորներով, բնիկ Wayland-ը կարող է ավելի կայուն լինել:",
-  "settings.general.row.releaseNotes.title": "Թողարկման նշումներ",
-  "settings.general.row.releaseNotes.description": "Ցույց տալ, թե ինչ է նոր պատուհանները թարմացումներից հետո",
   "settings.updates.row.startup.title": "Ստուգեք գործարկման ժամանակ թարմացումների համար",
   "settings.updates.row.startup.description":
     "Ավտոմատ կերպով ստուգել թարմացումները, երբ HuGR Orchestra-ն գործարկվում է",

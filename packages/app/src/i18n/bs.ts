@@ -42,10 +42,6 @@ export const dict = {
   "desktop.menu.nextProject": "Sljedeći projekat",
   "desktop.menu.minimize": "Minimiziraj",
   "desktop.menu.maximize": "Maksimiziraj",
-  "desktop.menu.documentation": "Dokumentacija",
-  "desktop.menu.supportForum": "Forum za podršku",
-  "desktop.menu.shareFeedback": "Pošalji povratne informacije",
-  "desktop.menu.reportBug": "Prijavi grešku",
   "desktop.menu.ariaLabel": "Meni aplikacije HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "Provjera ažuriranja nije uspjela.",
@@ -271,9 +267,7 @@ export const dict = {
 
   "provider.custom.title": "Prilagođeni provajder",
   "provider.custom.unavailable": "Prilagođeni provajderi nisu dostupni na ovom serveru",
-  "provider.custom.description.prefix": "Konfiguriši OpenAI-kompatibilnog provajdera. Pogledaj ",
-  "provider.custom.description.link": "dokumentaciju za konfiguraciju provajdera",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Konfiguriši OpenAI-kompatibilnog provajdera.",
   "provider.custom.field.providerID.label": "ID provajdera",
   "provider.custom.field.providerID.placeholder": "mojprovajder",
   "provider.custom.field.providerID.description": "Mala slova, brojevi, crtice ili donje crte",
@@ -704,8 +698,6 @@ export const dict = {
   "error.page.action.checking": "Provjera...",
   "error.page.action.checkUpdates": "Provjeri ažuriranja",
   "error.page.action.updateTo": "Ažuriraj na {{version}}",
-  "error.page.report.prefix": "Molimo prijavi ovu grešku",
-  "error.page.report.discord": "na Discordu",
   "error.page.version": "Verzija: {{version}}",
 
   "error.dev.rootNotFound":
@@ -927,7 +919,6 @@ export const dict = {
   "sidebar.menu.toggle": "Prikaži/sakrij meni",
   "sidebar.nav.projectsAndSessions": "Projekti i sesije",
   "sidebar.settings": "Postavke",
-  "sidebar.help": "Pomoć",
   "sidebar.workspaces.enable": "Omogući radne prostore",
   "sidebar.workspaces.disable": "Onemogući radne prostore",
   "sidebar.gettingStarted.title": "Početak",
@@ -1019,9 +1010,6 @@ export const dict = {
     "Onemogući rezervni X11 način rada na Waylandu. Zahtijeva ponovno pokretanje.",
   "settings.general.row.wayland.tooltip":
     "Na Linuxu sa monitorima miješanih stopa osvježavanja, nativni Wayland može biti stabilniji.",
-
-  "settings.general.row.releaseNotes.title": "Bilješke o izdanju",
-  "settings.general.row.releaseNotes.description": 'Prikaži iskačuće prozore "Šta je novo" nakon ažuriranja',
 
   "settings.updates.row.startup.title": "Provjeri ažuriranja pri pokretanju",
   "settings.updates.row.startup.description": "Automatski provjerava ažuriranja kada se HuGR Orchestra pokrene",
@@ -1201,10 +1189,6 @@ export const dict = {
   "workspace.reset.archived.many": "Biće arhivirano {{count}} sesija.",
   "workspace.reset.note": "Ovo će vratiti radni prostor na stanje podrazumijevane grane.",
   "common.open": "Otvori",
-  "dialog.releaseNotes.action.getStarted": "Započni",
-  "dialog.releaseNotes.action.next": "Sljedeće",
-  "dialog.releaseNotes.action.hideFuture": "Ne prikazuj ovo u budućnosti",
-  "dialog.releaseNotes.media.alt": "Pregled izdanja",
   "toast.project.reloadFailed.title": "Nije uspjelo ponovno učitavanje {{project}}",
   "error.server.invalidConfiguration": "Nevažeća konfiguracija",
   "common.moreCountSuffix": " (+{{count}} više)",
