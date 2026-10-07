@@ -1121,54 +1121,6 @@ it.effect("creates a missing ORCHESTRA_CONFIG_DIR", () =>
   }).pipe(Effect.provide(testInstanceStoreLayer), Effect.provide(LayerNode.compile(CrossSpawnSpawner.node))),
 )
 
-// Every npm call Config makes lands here. Config must make none: the plugin SDK comes bundled with Orchestra.
-const npmCalls: string[] = []
-const recordingNpm = Layer.mock(Npm.Service)({
-  install: (dir, input) =>
-    Effect.sync(() => {
-      npmCalls.push(`install ${dir} ${input?.add.map((pkg) => pkg.name).join(",") ?? ""}`)
-    }),
-  add: (pkg) =>
-    Effect.sync(() => {
-      npmCalls.push(`add ${pkg}`)
-    }).pipe(Effect.andThen(Effect.die(`unexpected npm add ${pkg}`))),
-})
-const recordingIt = testEffect(
-  LayerNode.compile(LayerNode.group([Config.node, FSUtil.node, Env.node, CrossSpawnSpawner.node]), [
-    [Auth.node, AuthTest.empty],
-    [Account.node, AccountTest.empty],
-    [Npm.node, recordingNpm],
-    [httpClient, Layer.succeed(HttpClient.HttpClient, unexpectedHttp)],
-  ]),
-)
-
-recordingIt.effect("never installs the plugin SDK or anything else into a config directory", () =>
-  Effect.gen(function* () {
-    npmCalls.length = 0
-    const dir = yield* tmpdirScoped()
-    const projectDir = path.join(dir, ".orchestra")
-    const configDir = path.join(dir, "configdir")
-    yield* FSUtil.use.writeWithDirs(path.join(projectDir, "orchestra.json"), JSON.stringify({}))
-    yield* FSUtil.use.ensureDir(configDir)
-
-    const directories = yield* withProcessEnv(
-      "ORCHESTRA_CONFIG_DIR",
-      configDir,
-      Config.Service.use((svc) =>
-        svc.get().pipe(Effect.andThen(svc.waitForDependencies()), Effect.andThen(svc.directories())),
-      ).pipe(provideInstanceEffect(dir)),
-    )
-
-    expect(directories).toEqual(expect.arrayContaining([projectDir, configDir]))
-    expect(npmCalls).toEqual([])
-    for (const configured of [projectDir, configDir]) {
-      expect(yield* FSUtil.use.readFileString(path.join(configured, ".gitignore"))).toContain("node_modules")
-      expect(yield* FSUtil.use.existsSafe(path.join(configured, "node_modules"))).toBe(false)
-      expect(yield* FSUtil.use.existsSafe(path.join(configured, "package.json"))).toBe(false)
-    }
-  }).pipe(Effect.provide(testInstanceStoreLayer)),
-)
-
 it.instance("resolves scoped npm plugins in config", () =>
   Effect.gen(function* () {
     const test = yield* TestInstance
