@@ -59,8 +59,13 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
+  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*", "!resources/icons/**/*"],
   extraResources: [
+    // Native windows and the macOS Dock read process.resourcesPath/icons outside app.asar.
+    {
+      from: "resources/icons",
+      to: "icons",
+    },
     {
       from: "resources/linux/app-dock-accessibility",
       to: "app-dock-accessibility",

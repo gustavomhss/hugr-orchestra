@@ -120,7 +120,7 @@ const scoped = Effect.fnUntraced(function* (
   const placement = yield* Placement
   const location = yield* lookup(input.ambient, Location.Service)
   const found = yield* relay(input.ambient)
-  return {
+  const scope = {
     installs: new Map(input.installs.map((install) => [install.installID, install])),
     call,
     invocation,
@@ -131,6 +131,14 @@ const scoped = Effect.fnUntraced(function* (
     location: location ? { directory: location.directory, workspaceID: location.workspaceID } : placement?.location,
     relay: found ?? (placement ? yield* placement.relay : undefined),
   } satisfies Scope
+  // An enabled-hook boundary retries missing receipts only in this Session, even if no hook step matches.
+  if (scope.relay && scope.db)
+    yield* RelayHookShipper.ship({
+      relay: scope.relay,
+      db: scope.db,
+      sessionID: scope.call.sessionID,
+    }).pipe(Effect.exit)
+  return scope
 })
 
 const OPERATIONS = new Map<string, "read" | "edit" | "write" | "command">([
@@ -355,7 +363,8 @@ function deny(reason: string, detail: string) {
 /**
  * The durable decision, then its receipt. Its subject is the matched paths, or the sha256 of the command or prompt, so
  * their text stays in the Session record only. It never decides: a payload that does not decode, a missing service or a
- * failed write leave the outcome as it is, and a receipt that cannot be written now ships with the Session's next one.
+ * failed write leave the outcome as it is. A receipt that cannot be written now is retried at the next enabled-hook
+ * boundary in the same Session, or with its next decision; this is not startup or global recovery.
  */
 const decided = Effect.fnUntraced(function* (
   scope: Scope,

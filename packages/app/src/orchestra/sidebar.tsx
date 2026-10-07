@@ -608,13 +608,10 @@ export function OrchestraSidebar(props: { compact: boolean; constrained: boolean
                 <ProjectAvatar
                   class="orchestra-profile-avatar"
                   data-unset={
-                    !getProjectAvatarSource(profile().project?.id, profile().project?.icon) &&
-                    !profile().project?.icon?.color
-                      ? ""
-                      : undefined
+                    !getProjectAvatarSource(profile().project?.icon) && !profile().project?.icon?.color ? "" : undefined
                   }
                   fallback={profile().project ? displayName(profile().project!) : ""}
-                  src={getProjectAvatarSource(profile().project?.id, profile().project?.icon)}
+                  src={getProjectAvatarSource(profile().project?.icon)}
                   variant={getProjectAvatarVariant(profile().project?.icon?.color)}
                   aria-hidden="true"
                 />

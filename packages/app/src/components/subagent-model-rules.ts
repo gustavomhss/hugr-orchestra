@@ -1,19 +1,14 @@
+import { matchWildcard } from "@/utils/wildcard"
+
 export interface ModelRule {
   permission: string
   pattern: string
   action: "allow" | "deny" | "ask"
 }
 
-/** Client mirror of the server Wildcard.match (packages/opencode/src/util/wildcard.ts):
-    `*` spans `/`, match is full-string. Kept to the shapes this feature
-    reads and writes; exotic patterns fall back to generic `*` handling. */
+/** Model-scope globs are case-sensitive, full-string, and normalize slashes on both sides. `*` spans `/`. */
 export function wildcardMatch(str: string, pattern: string): boolean {
-  const normalized = pattern.replaceAll("\\", "/")
-  const escaped = normalized
-    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".")
-  return new RegExp(`^${escaped}$`, "s").test(str.replaceAll("\\", "/"))
+  return matchWildcard(str.replaceAll("\\", "/"), pattern.replaceAll("\\", "/"))
 }
 
 const TASK = "task"
