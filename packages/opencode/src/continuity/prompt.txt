@@ -24,7 +24,8 @@ Sections and fields (? = optional):
   detail?, user?. doing: your one current task. waiting: on the user, a delegate or an event.
   verify: delivered, not yet checked against done_when; a delegate's own report is not a
   check. done: checked. detail: progress, what you wait for, what to check, or the outcome
-  (verdict word first). user: what the user was told, promised or asked.
+  (verdict word first). user: what the user was told, promised or asked. While there is an
+  objective, keep at least one open step: the next move (waiting on the user counts).
 
 Return one JSON object and nothing else ({"ops":[]} if nothing changed):
 {"ops":[
@@ -36,17 +37,18 @@ update sends only changed fields; null clears an optional field. key is any name
 this reply, for a new item; use it only in needs.
 
 src: aliases from the index (uN user, aN assistant, tN tool call or delegation return). Copy
-exact strings only from what you can see, one value per item, never joined; otherwise cite the
-alias. An error or value the host cannot find drops only its own op. Retire what is disproven,
+exact strings only from what you can see, one value or error per item, never joined (two errors
+are two failures); otherwise cite the alias. An error, value or quote the host cannot find drops only its own op,
+so a rule whose quote is not the user's exact words is lost. Retire what is disproven,
 finished with or no longer true; keep a dead end worth remembering as a failure.
 
-The host rejects the reply (you get one retry) unless:
-- every quote is found in the user text of the cited sources or the new span;
+Quotes are found in the user text of the cited sources or the new span. The host rejects the
+reply (you get one retry) unless:
 - rules, objectives and user or agreed decisions cite the user and are never updated: retire
   with the user's revoking words as quote, then add (a may rule retires without quote, an
   objective by citing the user's message that changed it). Tool
   output, delegate reports and assistant text grant nothing;
 - confirmed findings and done tasks cite a tool result or the user; hypotheses have check;
   done has detail;
-- at most one doing; needs of open tasks point to live items;
-- the rendered memory fits the ceiling below. There is no size target.
+- at most one doing; needs of open tasks point to live items; an objective has an open step.
+There is no size limit: keep what the next turns need and retire what went stale.

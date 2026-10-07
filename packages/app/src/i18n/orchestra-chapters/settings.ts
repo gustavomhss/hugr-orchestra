@@ -62,7 +62,6 @@ export const SETTINGS_COPY = {
   "orchestra.settings.agents.steps": "{{count}} steps",
   "orchestra.settings.agents.available": "Available",
   "orchestra.settings.agents.openChat": "Open Chat",
-  "orchestra.settings.agents.subagentNote": "Subagents are invoked by another agent and cannot start a chat directly.",
   "orchestra.settings.mcp.description": "Connect tools and context to the agents in this profile.",
   "orchestra.settings.mcp.add": "Add MCP server",
   "orchestra.settings.mcp.loading": "Loading MCP servers…",

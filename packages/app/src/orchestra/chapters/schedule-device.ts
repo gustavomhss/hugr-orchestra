@@ -29,7 +29,6 @@ export type ScheduleItem = {
   id: string
   name: string
   prompt: string
-  agent: string
   cadence: Cadence
   // Zone that anchors daily and weekly slots and in which the next run is shown.
   timezone: string
@@ -39,7 +38,7 @@ export type ScheduleItem = {
   missed?: number
   last?: ScheduleRun
 }
-export type ScheduleFields = Pick<ScheduleItem, "name" | "prompt" | "agent" | "cadence" | "next">
+export type ScheduleFields = Pick<ScheduleItem, "name" | "prompt" | "cadence" | "next">
 export type ScheduleSource = {
   status: () => "loading" | "ready" | "error"
   tasks: () => ScheduleItem[]
@@ -64,6 +63,8 @@ export type DeviceStore = {
 export const TICK = 15_000
 // One hung request must not stall the scheduler; the slot claim outlives this (CLAIM_TTL).
 const TIMEOUT = 60_000
+// The user talks only to Maestro, so every scheduled run is a Maestro session, like every chat.
+const AGENT = "maestro"
 const decode = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
 // Servers without scheduled tasks: tasks are saved on this device and run from this page while it is open.
@@ -113,7 +114,7 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
       const v2 = (await sdk().protocol) !== "v1"
       const result = await abortable(
         sdk().api.session.create(
-          { id: ids?.session, agent: live.agent, location: { directory: props.directory } },
+          { id: ids?.session, agent: AGENT, location: { directory: props.directory } },
           { signal },
         ),
         signal,
@@ -126,7 +127,7 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
               sessionID: session.id,
               id: ids?.message ?? Identifier.ascending("message"),
               text: live.prompt,
-              agent: live.agent,
+              agent: AGENT,
             }),
             signal,
           ).then(

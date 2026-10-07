@@ -104,7 +104,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Model",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Machtigingen",
   "command.category.workspace": "Werkruimte",
   "command.category.settings": "Instellingen",
@@ -154,10 +153,6 @@ export const dict = {
   "command.model.choose.description": "Selecteer een ander model",
   "command.mcp.toggle": "MCP's in- of uitschakelen",
   "command.mcp.toggle.description": "MCP's in- of uitschakelen",
-  "command.agent.cycle": "Volgende agent",
-  "command.agent.cycle.description": "Schakel over naar de volgende agent",
-  "command.agent.cycle.reverse": "Vorige agent",
-  "command.agent.cycle.reverse.description": "Schakel over naar de vorige agent",
   "command.model.variant.cycle": "Volgend denkniveau",
   "command.model.variant.cycle.description": "Ga naar het volgende inspanningsniveau",
   "command.prompt.mode.shell": "Shell",
@@ -403,8 +398,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "Hier kunnen alleen afbeeldingen, pdf's of tekstbestanden worden bijgevoegd.",
   "prompt.toast.attachmentDuplicate.title": "Dit bestand is al geüpload",
-  "prompt.toast.modelAgentRequired.title": "Selecteer een agent en model",
-  "prompt.toast.modelAgentRequired.description": "Kies een agent en model voordat je een prompt verzendt.",
+  "prompt.toast.modelRequired.title": "Selecteer een model",
+  "prompt.toast.modelRequired.description": "Kies een model voordat je een prompt verzendt.",
   "prompt.toast.worktreeCreateFailed.title": "Kan worktree niet maken",
   "prompt.toast.sessionCreateFailed.title": "Kan sessie niet maken",
   "prompt.toast.shellSendFailed.title": "Kan shell-opdracht niet verzenden",
@@ -1018,9 +1013,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigatie onderaan",
   "settings.general.row.mobileTitlebarBottom.description":
     "Plaats de titelbalk en sessietabbladen onderaan het scherm op mobiel",
-  "settings.general.row.showCustomAgents.title": "Toon agent",
-  "settings.general.row.showCustomAgents.description":
-    "Schakel tussen agenten in het invoerveld. Indien verborgen wordt standaard de Build-agent gebruikt.",
   "settings.general.row.reasoningSummaries.title": "Toon redeneeroverzichten",
   "settings.general.row.reasoningSummaries.description":
     "Geef samenvattingen van modelredeneringen weer in de tijdlijn",
@@ -1128,7 +1120,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Algemeen",
   "settings.shortcuts.group.session": "Sessie",
   "settings.shortcuts.group.navigation": "Navigatie",
-  "settings.shortcuts.group.modelAndAgent": "Model en agent",
+  "settings.shortcuts.group.modelAndMcp": "Model en MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Prompt",
   "settings.providers.title": "Aanbieders",

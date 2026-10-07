@@ -234,7 +234,7 @@ test("add validates the name and endpoint and writes the profile config", async 
   await page.getByRole("button", { name: "Add MCP server" }).click()
   const dialog = page.getByRole("dialog", { name: "Add MCP server" })
   await expect(dialog).toContainText(
-    "Connect tools to this profile. Saving updates its OpenCode config and restarts its MCP servers.",
+    "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",
   )
   await dialog.getByLabel("Name").fill("shared")
   await dialog.getByLabel("Command or server URL").fill("bunx server")
@@ -320,7 +320,7 @@ test("configure prefills the raw profile entry, skips unedited saves, and remove
   await row(page, "online").getByRole("button", { name: "Configure" }).click()
   await page.getByRole("dialog", { name: "Configure online" }).getByRole("button", { name: "Remove server" }).click()
   const confirm = page.getByRole("dialog", { name: "Remove this item?" })
-  await expect(confirm).toContainText("This removes online from Profile A's OpenCode config.")
+  await expect(confirm).toContainText("This removes online from Profile A's project config.")
   await confirm.getByRole("button", { name: "Confirm" }).click()
   await expect(confirm.getByRole("alert")).toHaveText(
     "Request failed: MCP server online is not defined in this project's config",

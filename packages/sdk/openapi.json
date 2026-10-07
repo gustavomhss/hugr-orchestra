@@ -13496,6 +13496,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
           }
         },
         "description": "Update a stored credential label.",
@@ -13577,6 +13587,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }
@@ -17251,6 +17271,9 @@
           },
           {
             "$ref": "#/components/schemas/EventMaestroDispatchReserved"
+          },
+          {
+            "$ref": "#/components/schemas/EventMaestroTaskBound"
           },
           {
             "$ref": "#/components/schemas/EventMessagePartDelta"
@@ -22280,6 +22303,59 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["maestro.task.bound"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "taskId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "projectID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "memberID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "executionSessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "authoritySessionID": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": ["host", "user", "dispatch", "governed"]
+                      }
+                    },
+                    "required": [
+                      "taskId",
+                      "projectID",
+                      "memberID",
+                      "executionSessionID",
+                      "authoritySessionID",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["message.part.delta"]
                   },
                   "properties": {
@@ -23818,6 +23894,9 @@
               },
               {
                 "$ref": "#/components/schemas/SyncEventMaestroDispatchReserved"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventMaestroTaskBound"
               }
             ]
           }
@@ -24593,14 +24672,6 @@
           },
           "mode": {
             "type": "object",
-            "properties": {
-              "build": {
-                "$ref": "#/components/schemas/AgentConfig"
-              },
-              "plan": {
-                "$ref": "#/components/schemas/AgentConfig"
-              }
-            },
             "additionalProperties": {
               "$ref": "#/components/schemas/AgentConfig"
             }
@@ -24608,10 +24679,7 @@
           "agent": {
             "type": "object",
             "properties": {
-              "plan": {
-                "$ref": "#/components/schemas/AgentConfig"
-              },
-              "build": {
+              "maestro": {
                 "$ref": "#/components/schemas/AgentConfig"
               },
               "general": {
@@ -27853,6 +27921,9 @@
           },
           {
             "$ref": "#/components/schemas/MaestroDispatchReserved"
+          },
+          {
+            "$ref": "#/components/schemas/MaestroTaskBound"
           },
           {
             "$ref": "#/components/schemas/MessagePartDelta"
@@ -32668,6 +32739,73 @@
                   "taskIntentHash",
                   "permission"
                 ],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventMaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["maestro.task.bound.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "taskId": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "projectID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "memberID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "executionSessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "authoritySessionID": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["host", "user", "dispatch", "governed"]
+                  }
+                },
+                "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
                 "additionalProperties": false
               }
             },
@@ -38959,6 +39097,74 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "MaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.bound"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "enum": ["host", "user", "dispatch", "governed"]
+              }
+            },
+            "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
       "MessagePartDelta": {
         "type": "object",
         "properties": {
@@ -41472,9 +41678,6 @@
           "prompt": {
             "type": "string"
           },
-          "agent": {
-            "type": "string"
-          },
           "cadence": {
             "$ref": "#/components/schemas/ScheduledTaskCadence"
           },
@@ -41503,7 +41706,7 @@
             "$ref": "#/components/schemas/ScheduledTaskRun"
           }
         },
-        "required": ["id", "name", "prompt", "agent", "cadence", "timezone", "minute", "next", "enabled", "runs"],
+        "required": ["id", "name", "prompt", "cadence", "timezone", "minute", "next", "enabled", "runs"],
         "additionalProperties": false
       },
       "ScheduledTaskHistory": {
@@ -41548,9 +41751,6 @@
           "prompt": {
             "type": "string"
           },
-          "agent": {
-            "type": "string"
-          },
           "cadence": {
             "$ref": "#/components/schemas/ScheduledTaskCadence"
           },
@@ -41572,7 +41772,7 @@
             "$ref": "#/components/schemas/ScheduledTaskHistory"
           }
         },
-        "required": ["name", "prompt", "agent", "cadence", "next", "timezone"],
+        "required": ["name", "prompt", "cadence", "next", "timezone"],
         "additionalProperties": false
       },
       "ScheduledTaskUpdateInput": {
@@ -41582,9 +41782,6 @@
             "type": "string"
           },
           "prompt": {
-            "type": "string"
-          },
-          "agent": {
             "type": "string"
           },
           "cadence": {
@@ -44536,6 +44733,52 @@
               "taskIntentHash",
               "permission"
             ],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMaestroTaskBound": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["maestro.task.bound"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "projectID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "memberID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "executionSessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "authoritySessionID": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "enum": ["host", "user", "dispatch", "governed"]
+              }
+            },
+            "required": ["taskId", "projectID", "memberID", "executionSessionID", "authoritySessionID", "source"],
             "additionalProperties": false
           }
         },

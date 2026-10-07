@@ -22,7 +22,6 @@ export const scheduleScenarios: Scenario[] = [
       body: {
         name: "httpapi-schedule",
         prompt: "Exercise the scheduled task routes.",
-        agent: "build",
         cadence: "once",
         next: Date.UTC(2099, 0, 1, 9, 30),
         timezone: "UTC",

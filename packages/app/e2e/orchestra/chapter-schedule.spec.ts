@@ -39,12 +39,13 @@ for (const scheme of ["dark", "light"] as const) {
     await view.getByRole("button", { name: "Schedule task", exact: true }).click()
     const dialog = page.getByRole("dialog", { name: "Schedule task" })
     await expect(dialog).toBeVisible()
-    await expect(dialog.locator('select[name="agent"] option')).toHaveText(["build", "plan", "review"])
+    // Every scheduled run is a Maestro session, so the dialog offers no agent choice.
+    await expect(dialog.locator("select")).toHaveCount(1)
+    await expect(dialog.getByLabel("Agent", { exact: true })).toHaveCount(0)
     await expect(dialog.locator('select[name="cadence"] option')).toHaveText(["Once", "Every hour", "Daily", "Weekly"])
     await page.screenshot({ path: test.info().outputPath(`${scheme}-dialog.png`) })
     await dialog.getByLabel("Name").fill("Daily review")
     await dialog.getByLabel("Cadence").selectOption("daily")
-    await dialog.getByLabel("Agent").selectOption("plan")
     await dialog.getByLabel("Next run").fill("2031-01-15T09:30")
     await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
     await expect(dialog.getByRole("alert")).toHaveText("Describe the task.")
@@ -66,7 +67,6 @@ for (const scheme of ["dark", "light"] as const) {
         body: {
           name: "Daily review",
           prompt: "Review the changes and summarize risks.",
-          agent: "plan",
           cadence: "daily",
           next: SLOT,
           timezone: "America/New_York",
@@ -74,7 +74,7 @@ for (const scheme of ["dark", "light"] as const) {
       },
     ])
     const card = view.getByRole("article", { name: "Daily review" })
-    await expect(card.locator(".mx-badge")).toHaveText(["Daily", "plan", "Scheduled"])
+    await expect(card.locator(".mx-badge")).toHaveText(["Daily", "Scheduled"])
     await expect(card.locator(".mx-badge.good")).toHaveText("Scheduled")
     await expect(card).toContainText("Review the changes and summarize risks.")
     await expect(card.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 9:30\sAM\s*America\/New_York · 0 runs$/)
@@ -83,7 +83,8 @@ for (const scheme of ["dark", "light"] as const) {
 
     await view.getByRole("textbox", { name: "Search scheduled tasks" }).fill("nothing like it")
     await expect(view.locator(".mx-empty")).toHaveText("No scheduled tasks match your search.")
-    await view.getByRole("textbox", { name: "Search scheduled tasks" }).fill("PLAN")
+    // Search reads the prompt as well as the name, ignoring case.
+    await view.getByRole("textbox", { name: "Search scheduled tasks" }).fill("SUMMARIZE")
     await expect(card).toBeVisible()
 
     await page.reload()
@@ -103,7 +104,7 @@ for (const scheme of ["dark", "light"] as const) {
 test("Run now asks the server to run the task, opens its session and shows the recorded run", async ({ page }) => {
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Release notes", prompt: "Draft the release notes.", agent: "plan" })
+  await createTask(page, { name: "Release notes", prompt: "Draft the release notes." })
   const card = page.getByRole("article", { name: "Release notes" })
   await card.getByRole("button", { name: "Run now", exact: true }).click()
 
@@ -119,7 +120,7 @@ test("Run now asks the server to run the task, opens its session and shows the r
   await openSchedule(page)
   const recorded = page.getByRole("article", { name: "Release notes" })
   // A one-off task pauses after it runs and keeps its time.
-  await expect(recorded.locator(".mx-badge")).toHaveText(["Once", "plan", "Paused"])
+  await expect(recorded.locator(".mx-badge")).toHaveText(["Once", "Paused"])
   await expect(recorded.getByRole("switch")).toHaveAttribute("aria-checked", "false")
   await expect(recorded.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 9:30\sAM\s*America\/New_York · 1 run$/)
   await expect(recorded.locator(".mx-note")).toHaveText(
@@ -133,7 +134,7 @@ test("Run now asks the server to run the task, opens its session and shows the r
 test("a rejected Run now shows the server's reason, records nothing and can be retried", async ({ page }) => {
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Release notes", prompt: "Draft the release notes.", agent: "build" })
+  await createTask(page, { name: "Release notes", prompt: "Draft the release notes." })
   const card = page.getByRole("article", { name: "Release notes" })
   api.schedule.runError = "Session store is unavailable"
   await card.getByRole("button", { name: "Run now", exact: true }).click()
@@ -142,7 +143,7 @@ test("a rejected Run now shows the server's reason, records nothing and can be r
   )
   await expect(page).toHaveURL(/\/orchestra\/schedule$/)
   await expect(card.locator("p").nth(1)).toContainText("0 runs")
-  await expect(card.locator(".mx-badge")).toHaveText(["Once", "build", "Scheduled"])
+  await expect(card.locator(".mx-badge")).toHaveText(["Once", "Scheduled"])
   await expect(card.locator(".mx-note")).toHaveCount(0)
 
   api.schedule.runError = undefined
@@ -158,8 +159,8 @@ test("the server runs due tasks while the page is open; the page shows what it r
   await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Hourly check", prompt: "Check the build.", agent: "build", cadence: "hourly" })
-  await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", agent: "plan", cadence: "weekly" })
+  await createTask(page, { name: "Hourly check", prompt: "Check the build.", cadence: "hourly" })
+  await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", cadence: "weekly" })
   const hourly = page.getByRole("article", { name: "Hourly check" })
   const weekly = page.getByRole("article", { name: "Weekly sweep" })
 
@@ -174,7 +175,7 @@ test("the server runs due tasks while the page is open; the page shows what it r
   api.sessions.push({
     id: "ses_scheduled_run",
     directory,
-    agent: "build",
+    agent: "maestro",
     title: "Hourly check",
     time: { created: 1, updated: 1 },
   })
@@ -186,7 +187,7 @@ test("the server runs due tasks while the page is open; the page shows what it r
   Object.assign(api.schedule.tasks[1]!, {
     next: SLOT + 7 * DAY,
     missed: SLOT - 7 * DAY,
-    last: { outcome: "failed", time: SLOT + 1_000, slot: SLOT, error: "Agent plan is not available" },
+    last: { outcome: "failed", time: SLOT + 1_000, slot: SLOT, error: "Session store is unavailable" },
   })
   await page.clock.runFor(15_000)
   await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
@@ -194,7 +195,7 @@ test("the server runs due tasks while the page is open; the page shows what it r
   await expect(weekly.locator("p").nth(1)).toHaveText(/^Next: Jan 22, 2031, 9:30\sAM\s*America\/New_York · 0 runs$/)
   await expect(weekly.locator(".schedule-missed")).toHaveText([
     /^Missed: Jan 8, 2031, 9:30\sAM$/,
-    /^Failed: 1\/15\/2031, 9:30:01\sAM · Agent plan is not available$/,
+    /^Failed: 1\/15\/2031, 9:30:01\sAM · Session store is unavailable$/,
   ])
   await expect(weekly.getByRole("button", { name: "Open session", exact: true })).toHaveCount(0)
   await expect(page.locator(".mx-note").last()).toHaveText(NOTE)
@@ -209,11 +210,11 @@ test("pausing, resuming a one-off with a new time, and removing are saved on the
   await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Later once", prompt: "Tag the release.", agent: "review", date: "2031-01-15T09:45" })
+  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
   const id = `/api/schedule/${api.schedule.tasks[0]!.id}`
   const once = page.getByRole("article", { name: "Later once" })
   await once.getByRole("switch", { name: "Enable Later once" }).click()
-  await expect(once.locator(".mx-badge")).toHaveText(["Once", "review", "Paused"])
+  await expect(once.locator(".mx-badge")).toHaveText(["Once", "Paused"])
 
   // Past its time while paused: resuming a one-off asks for a new time instead of running it.
   await page.clock.fastForward("50:00")
@@ -223,7 +224,7 @@ test("pausing, resuming a one-off with a new time, and removing are saved on the
   await dialog.getByLabel("Next run").fill("2031-01-15T10:00")
   await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(dialog).toHaveCount(0)
-  await expect(once.locator(".mx-badge")).toHaveText(["Once", "review", "Scheduled"])
+  await expect(once.locator(".mx-badge")).toHaveText(["Once", "Scheduled"])
   await expect(once.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:00\sAM\s*America\/New_York · 0 runs$/)
 
   await once.getByRole("button", { name: "Edit", exact: true }).click()
@@ -240,7 +241,6 @@ test("pausing, resuming a one-off with a new time, and removing are saved on the
       body: {
         name: "Later once",
         prompt: "Tag the release.",
-        agent: "review",
         cadence: "once",
         next: Date.parse("2031-01-15T10:00:00-05:00"),
         timezone: "America/New_York",
@@ -256,8 +256,8 @@ test("tasks saved on this device move to the server once, with their history", a
   await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
   const api = await setup(page, { legacy: true })
   await openSchedule(page)
-  await createTask(page, { name: "Hourly check", prompt: "Check the build.", agent: "build", cadence: "hourly" })
-  await createTask(page, { name: "Later once", prompt: "Tag the release.", agent: "review", date: "2031-01-15T09:45" })
+  await createTask(page, { name: "Hourly check", prompt: "Check the build.", cadence: "hourly" })
+  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
   await expect(page.locator(".mx-note").last()).toHaveText(NOTE_DEVICE)
   // A run from the device gives the task history to carry over.
   await page
@@ -283,7 +283,6 @@ test("tasks saved on this device move to the server once, with their history", a
     id: expect.stringMatching(/^[0-9a-f-]{36}$/),
     name: "Hourly check",
     prompt: "Check the build.",
-    agent: "build",
     cadence: "hourly",
     next: SLOT,
     timezone: "America/New_York",
@@ -315,7 +314,7 @@ test("tasks saved on this device move to the server once, with their history", a
 test("edit keeps the task, dialogs dismiss without saving, and remove asks first", async ({ page }) => {
   const api = await setup(page)
   await openSchedule(page)
-  await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", agent: "plan", cadence: "weekly" })
+  await createTask(page, { name: "Weekly sweep", prompt: "Sweep stale branches.", cadence: "weekly" })
   const card = page.getByRole("article", { name: "Weekly sweep" })
   const edit = page.getByRole("dialog", { name: "Edit Weekly sweep" })
 
@@ -340,7 +339,7 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   await expect(edit.getByLabel("Name")).toHaveValue("Weekly sweep")
   await expect(edit.getByLabel("What to run")).toHaveValue("Sweep stale branches.")
   await expect(edit.getByLabel("Cadence")).toHaveValue("weekly")
-  await expect(edit.getByLabel("Agent")).toHaveValue("plan")
+  await expect(edit.getByLabel("Agent", { exact: true })).toHaveCount(0)
   await expect(edit.getByLabel("Next run")).toHaveValue("2031-01-15T09:30")
   await edit.getByLabel("Name").fill("Discarded name")
   await page.keyboard.press("Escape")
@@ -355,16 +354,14 @@ test("edit keeps the task, dialogs dismiss without saving, and remove asks first
   expect(api.schedule.calls.filter((call) => call.method === "PATCH")).toEqual([])
 
   await card.getByRole("button", { name: "Edit", exact: true }).click()
-  await edit.getByLabel("Agent").selectOption("review")
   await edit.getByLabel("Cadence").selectOption("hourly")
   await edit.getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(edit).toHaveCount(0)
-  await expect(card.locator(".mx-badge")).toHaveText(["Every hour", "review", "Scheduled"])
+  await expect(card.locator(".mx-badge")).toHaveText(["Every hour", "Scheduled"])
   expect(api.schedule.calls.filter((call) => call.method === "PATCH").map((call) => call.body)).toEqual([
     {
       name: "Weekly sweep",
       prompt: "Sweep stale branches.",
-      agent: "review",
       cadence: "hourly",
       next: SLOT,
       timezone: "America/New_York",

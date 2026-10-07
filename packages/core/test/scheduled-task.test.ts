@@ -69,7 +69,6 @@ const slot = Date.parse("2031-01-15T09:30:00-05:00")
 const hourly = {
   name: "Hourly check",
   prompt: "Check the build.",
-  agent: "build",
   cadence: "hourly" as const,
   next: slot,
   timezone: "America/New_York",
@@ -89,7 +88,7 @@ const stopped = (input: { task: ScheduledTask.Info; slot: number; claimed: numbe
     const sessions = yield* SessionV2.Service
     const ids = slotIDs(input.task.id, input.slot)
     if (input.admitted) {
-      yield* sessions.create({ id: ids.session, agent: AgentV2.ID.make(input.task.agent), location: { directory } })
+      yield* sessions.create({ id: ids.session, agent: AgentV2.defaultID, location: { directory } })
       yield* sessions.prompt({ id: ids.message, sessionID: ids.session, prompt: { text: input.task.prompt } })
     }
     yield* db
@@ -102,7 +101,6 @@ const stopped = (input: { task: ScheduledTask.Info; slot: number; claimed: numbe
         session_id: ids.session,
         message_id: ids.message,
         prompt: input.task.prompt,
-        agent: input.task.agent,
         owner: "stopped-process",
         time_claimed: input.claimed,
       })
@@ -120,6 +118,7 @@ describe("ScheduledTask scheduler", () => {
       const sessions = yield* SessionV2.Service
       const created = yield* tasks.create(directory, hourly)
       expect(created).toMatchObject({ minute: 570, next: slot, enabled: true, runs: 0 })
+      expect(created).not.toHaveProperty("agent")
       yield* tasks.tick
       expect(yield* inputs).toHaveLength(0)
 
@@ -129,7 +128,8 @@ describe("ScheduledTask scheduler", () => {
       const ids = slotIDs(created.id, slot)
       expect((yield* inputs).map((row) => [row.id, row.session_id])).toEqual([[ids.message, ids.session]])
       expect(wakes).toEqual([ids.session])
-      expect(yield* sessions.get(ids.session)).toMatchObject({ agent: "build", location: { directory } })
+      // Every scheduled run is a Maestro Session; a task names no agent of its own.
+      expect(yield* sessions.get(ids.session)).toMatchObject({ agent: "maestro", location: { directory } })
       expect(yield* first(tasks)).toMatchObject({
         runs: 1,
         next: slot + HOUR,

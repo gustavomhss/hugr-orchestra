@@ -36,7 +36,7 @@ export const MaestroCatalogContextTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     return {
       description:
-        "Read verified project-bound Atlas territory names and static Own availability. Maestro only. No scope inference or runtime retrieval.",
+        "Read verified project-bound Atlas territory names and static Own availability. Maestro only. No scope inference or runtime retrieval. Tier is criticality: T0 (must be right) and T1 (load-bearing) are ratified and binding; T2 is the unratified default and only advisory.",
       parameters: Schema.Struct({}),
       execute: (_params, ctx) =>
         Effect.gen(function* () {

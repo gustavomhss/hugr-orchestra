@@ -5,12 +5,14 @@ import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { Cause, Effect, Exit, Schema } from "effect"
+import path from "node:path"
 import { Agent } from "@/agent/agent"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { readAdmission } from "@/maestro/admission-record"
 import { IntentAssessment } from "@/maestro/admit-request"
 import { MessageID, SessionID } from "@/session/schema"
+import { Skill } from "@/skill"
 import { MaestroRecordAdmissionTool } from "@/tool/maestro-admission"
 import { ToolJsonSchema } from "@/tool/json-schema"
 import { Tool } from "@/tool/tool"
@@ -108,7 +110,7 @@ describe("Maestro admission contract", () => {
         },
       })
       const skill = yield* Effect.promise(() =>
-        Bun.file(new URL("../../../../.opencode/skills/frame-request/SKILL.md", import.meta.url)).text(),
+        Bun.file(path.join(Skill.PLAYBOOKS_DIR, "frame-request", "SKILL.md")).text(),
       )
       const raw = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(skillExample(skill))
       expect(raw).toHaveProperty("assessment")
@@ -163,7 +165,7 @@ describe("Maestro admission contract", () => {
         const tool = yield* MaestroRecordAdmissionTool
         const def = yield* Tool.init(tool)
         const rejected = yield* Effect.exit(
-          def.execute({ methodVersion: "admit-request-v1", assessment }, context("maestro", "build")),
+          def.execute({ methodVersion: "admit-request-v1", assessment }, context("maestro", "general")),
         )
         expect(Exit.isFailure(rejected)).toBe(true)
         expect(Exit.isFailure(rejected) && String(Cause.squash(rejected.cause))).toContain(

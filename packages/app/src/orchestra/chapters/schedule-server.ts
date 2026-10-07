@@ -69,7 +69,6 @@ export function createServerSchedule(props: {
                 id: task.id,
                 name: task.name,
                 prompt: task.prompt,
-                agent: task.agent,
                 cadence: task.cadence,
                 next: task.next,
                 timezone,

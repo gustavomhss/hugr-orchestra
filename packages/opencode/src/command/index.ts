@@ -133,17 +133,15 @@ const layer = Layer.effect(
 
       for (const item of yield* skill.all()) {
         if (commands[item.name]) continue
-        const dir = item.location === "<built-in>" ? undefined : path.dirname(item.location)
         commands[item.name] = {
           name: item.name,
           description: item.description,
           source: "skill",
           get template() {
-            if (!dir) return item.content
             return [
               item.content,
               "",
-              `Base directory for this skill: ${dir}`,
+              `Base directory for this skill: ${path.dirname(item.location)}`,
               "Relative paths in this skill (e.g., scripts/, references/) are relative to this base directory.",
             ].join("\n")
           },

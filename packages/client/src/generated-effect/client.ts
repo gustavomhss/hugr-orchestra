@@ -803,7 +803,6 @@ type Endpoint20_1Input = {
   readonly id?: Endpoint20_1Request["payload"]["id"]
   readonly name: Endpoint20_1Request["payload"]["name"]
   readonly prompt: Endpoint20_1Request["payload"]["prompt"]
-  readonly agent: Endpoint20_1Request["payload"]["agent"]
   readonly cadence: Endpoint20_1Request["payload"]["cadence"]
   readonly next: Endpoint20_1Request["payload"]["next"]
   readonly timezone: Endpoint20_1Request["payload"]["timezone"]
@@ -818,7 +817,6 @@ const Endpoint20_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint20_1
       id: input["id"],
       name: input["name"],
       prompt: input["prompt"],
-      agent: input["agent"],
       cadence: input["cadence"],
       next: input["next"],
       timezone: input["timezone"],
@@ -834,7 +832,6 @@ type Endpoint20_2Input = {
   readonly location?: Endpoint20_2Request["query"]["location"]
   readonly name?: Endpoint20_2Request["payload"]["name"]
   readonly prompt?: Endpoint20_2Request["payload"]["prompt"]
-  readonly agent?: Endpoint20_2Request["payload"]["agent"]
   readonly cadence?: Endpoint20_2Request["payload"]["cadence"]
   readonly next?: Endpoint20_2Request["payload"]["next"]
   readonly timezone?: Endpoint20_2Request["payload"]["timezone"]
@@ -847,7 +844,6 @@ const Endpoint20_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint20_2
     payload: {
       name: input["name"],
       prompt: input["prompt"],
-      agent: input["agent"],
       cadence: input["cadence"],
       next: input["next"],
       timezone: input["timezone"],

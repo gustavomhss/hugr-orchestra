@@ -34,7 +34,7 @@ const ctx = {
   sessionID: SessionID.make("ses_test"),
   messageID: MessageID.make("msg_test"),
   callID: "",
-  agent: "build",
+  agent: "maestro",
   abort: AbortSignal.any([]),
   messages: [],
   metadata: () => Effect.void,
@@ -167,6 +167,22 @@ describe("tool.grep", () => {
       expect(result.metadata.matches).toBe(1)
       expect(result.output).toContain(file)
       expect(result.output).toContain("Line 2: line2")
+    }),
+  )
+
+  it.instance("searches only the given file, not the files beside it", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const file = path.join(test.directory, "target.txt")
+      yield* Effect.promise(() => Bun.write(file, "needle here\n"))
+      yield* Effect.promise(() => Bun.write(path.join(test.directory, "sibling.txt"), "needle there\nneedle again\n"))
+      const info = yield* GrepTool
+      const grep = yield* info.init()
+      const result = yield* grep.execute({ pattern: "needle", path: file }, ctx)
+      expect(result.metadata.matches).toBe(1)
+      expect(result.output).toStartWith(`Found 1 matches\n${file}:\n  Line 1: needle here`)
+      expect(result.output).not.toContain("sibling.txt")
+      expect(result.output).not.toContain("needle there")
     }),
   )
 

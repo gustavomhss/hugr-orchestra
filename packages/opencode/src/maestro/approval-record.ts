@@ -35,7 +35,11 @@ export class ApprovalConflictError extends Schema.TaggedErrorClass<ApprovalConfl
   sessionID: Schema.String,
   assistantMessageID: Schema.String,
   callID: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `${this._tag}: this plan revision, validation and methodVersion were already presented with different content. Present again with a new methodVersion.`
+  }
+}
 
 export class ApprovalRejectedError extends Schema.TaggedErrorClass<ApprovalRejectedError>()("MaestroApprovalRejected", {
   reason: Schema.String,

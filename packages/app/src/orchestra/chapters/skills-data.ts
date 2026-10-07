@@ -41,7 +41,8 @@ export function filterSkills(skills: SkillEntry[], query: string) {
   )
 }
 
-// V1 reports the bundled skill as `<built-in>`; V2 gives it a virtual absolute path under /builtin/.
+// A server's built-in skills: V1 reports them as `<built-in>`, V2 under the virtual absolute path /builtin/.
+// Orchestra's own server ships none (playbooks are files), but other servers may.
 export function skillSource(location: string, directory: string): SkillSource {
   if (location === "<built-in>" || location.startsWith("/builtin/")) return "builtin"
   return slash(location).startsWith(root(directory)) ? "project" : "global"

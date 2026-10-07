@@ -17,10 +17,10 @@ function workspace(error: string) {
   return createLinuxWorkspaceHooks(port) as Required<Hooks>
 }
 
-test("a stopped workspace tells the agent what to ask the user instead of an opaque failure", async () => {
+test("a stopped workspace tells the agent what to report instead of an opaque failure", async () => {
   expect(JSON.parse(String(await workspace("workspace-not-running").tool.linux_exec.execute({ argv: ["true"] }, context)))).toEqual({
     error: "workspace-not-running",
-    hint: "The Linux workspace is stopped; ask the user to open Apps > Linux workspace in the App Dock, then retry",
+    hint: "The Linux workspace is stopped; stop and report that the owner must open Apps > Linux workspace in the App Dock",
   })
   expect(JSON.parse(String(await workspace("workspace-busy").tool.linux_exec.execute({ argv: ["true"] }, context))))
     .toEqual({ error: "workspace-busy" })

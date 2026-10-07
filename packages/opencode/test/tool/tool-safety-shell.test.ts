@@ -40,7 +40,7 @@ it.instance("actual V1 split credential prefix stays out of retained artifact an
     const sessionID = SessionID.descending()
     const progress: string[] = []
     const context: Tool.Context = {
-      sessionID, messageID: MessageID.ascending(), callID: "fixture-stream", agent: "build",
+      sessionID, messageID: MessageID.ascending(), callID: "fixture-stream", agent: "maestro",
       abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
       ask: (request) => permission.ask({ ...request, sessionID, ruleset: [{ permission: "*", pattern: "*", action: "allow" }] }).pipe(Effect.orDie),
     }
@@ -104,7 +104,7 @@ it.instance("actual V1 timeout settles failure; nonzero fails and cancellation s
     const shell = yield* Tool.init(definition)
     const observations: string[] = []
     const context: Tool.Context = {
-      sessionID: SessionID.descending(), messageID: MessageID.ascending(), callID: "outcome", agent: "build",
+      sessionID: SessionID.descending(), messageID: MessageID.ascending(), callID: "outcome", agent: "maestro",
       abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: () => Effect.void,
     }
     const run = (command: string, timeout: number, abort = context.abort) => safety.run({

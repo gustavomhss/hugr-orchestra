@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/solid-query"
 import { getFilename } from "@opencode-ai/core/util/path"
 import {
   createMemo,
@@ -17,7 +16,6 @@ import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
-import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
@@ -68,10 +66,8 @@ export default function SchedulePage(props: ChapterPageProps) {
 
 function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource; device: boolean }) {
   const language = useLanguage()
-  const serverSync = useServerSync()
   const global = useGlobal()
   const tabs = useTabs()
-  const agents = useQuery(() => serverSync().queryOptions.agents(pathKey(props.directory)))
   // Created once per screen: a source owns its timers and requests for as long as the screen is mounted.
   const source = props.source()
   const [state, setState] = createStore({ search: "" })
@@ -88,7 +84,6 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
       .find((item) => pathKey(item.worktree) === pathKey(props.directory))
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
-  const choices = createMemo(() => (agents.data ?? []).filter((agent) => agent.mode !== "subagent" && !agent.hidden))
   const cadence = (task: ScheduleItem) => language.t(`orchestra.schedule.cadence.${task.cadence}`)
   const status = (task: ScheduleItem) =>
     language.t(task.enabled ? "orchestra.schedule.status.enabled" : "orchestra.schedule.status.paused")
@@ -98,9 +93,7 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
     return source
       .tasks()
       .filter((task) =>
-        [task.name, task.prompt, task.agent, cadence(task), status(task)].some((text) =>
-          text.toLowerCase().includes(query),
-        ),
+        [task.name, task.prompt, cadence(task), status(task)].some((text) => text.toLowerCase().includes(query)),
       )
   })
   // Slots are shown in the task's own zone, the one that anchors its daily and weekly runs.
@@ -137,13 +130,11 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
     const fields: ScheduleFields = {
       name: String(form.get("name") ?? "").trim(),
       prompt: String(form.get("prompt") ?? "").trim(),
-      agent: String(form.get("agent") ?? ""),
       next: new Date(String(form.get("date") ?? "")).getTime(),
       cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
     }
     if (!fields.name) return Promise.resolve(language.t("orchestra.schedule.error.name"))
     if (!fields.prompt) return Promise.resolve(language.t("orchestra.schedule.error.prompt"))
-    if (!fields.agent) return Promise.resolve(language.t("orchestra.schedule.error.agent"))
     if (!Number.isFinite(fields.next)) return Promise.resolve(language.t("orchestra.schedule.error.date"))
     if (fields.next <= Date.now()) return Promise.resolve(language.t("orchestra.schedule.error.past"))
     return source.save(edit.id, fields, !!edit.resume)
@@ -218,9 +209,6 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
                   <p>{task.prompt}</p>
                   <div class="mx-meta">
                     <MxBadge>{cadence(task)}</MxBadge>
-                    <MxBadge>
-                      <bdi>{task.agent}</bdi>
-                    </MxBadge>
                     <MxBadge tone={task.enabled ? "good" : undefined}>{status(task)}</MxBadge>
                   </div>
                   <p>
@@ -302,20 +290,6 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
             <Match when={current.type === "edit" && current}>
               {(edit) => {
                 const task = source.tasks().find((item) => item.id === edit().id)
-                // Keep a saved agent selectable even when the profile no longer lists it.
-                const options = () => {
-                  const names = choices().map((agent) => agent.name)
-                  if (!task || names.includes(task.agent)) return names.map((name) => ({ value: name, label: name }))
-                  return [
-                    ...names.map((name) => ({ value: name, label: name })),
-                    {
-                      value: task.agent,
-                      label: agents.isSuccess
-                        ? language.t("orchestra.schedule.agentMissing", { name: task.agent })
-                        : task.agent,
-                    },
-                  ]
-                }
                 return (
                   <ScheduleDialog
                     title={
@@ -352,33 +326,15 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
                         </select>
                       </label>
                       <label class="mx-field">
-                        <span>{language.t("orchestra.schedule.field.agent")}</span>
-                        <select name="agent">
-                          <Show when={agents.isPending}>
-                            <option value="">{language.t("orchestra.schedule.agentsLoading")}</option>
-                          </Show>
-                          <Show when={agents.isError}>
-                            <option value="">{language.t("orchestra.schedule.agentsError")}</option>
-                          </Show>
-                          <For each={options()}>
-                            {(option) => (
-                              <option value={option.value} selected={option.value === task?.agent}>
-                                {option.label}
-                              </option>
-                            )}
-                          </For>
-                        </select>
+                        <span>{language.t("orchestra.schedule.field.date")}</span>
+                        <input
+                          name="date"
+                          type="datetime-local"
+                          value={localInput(task?.next ?? Date.now() + 3_600_000)}
+                          required
+                        />
                       </label>
                     </div>
-                    <label class="mx-field">
-                      <span>{language.t("orchestra.schedule.field.date")}</span>
-                      <input
-                        name="date"
-                        type="datetime-local"
-                        value={localInput(task?.next ?? Date.now() + 3_600_000)}
-                        required
-                      />
-                    </label>
                     <Show when={task}>
                       {(existing) => (
                         <button

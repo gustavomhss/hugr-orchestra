@@ -5,13 +5,6 @@ import { currentSession, mockOpenCodeServer } from "../utils/mock-server"
 export const server = "http://127.0.0.1:4096"
 export const directory = "/repo/schedule"
 export const otherDirectory = "/repo/other"
-const agents = [
-  { name: "build", mode: "primary" },
-  { name: "plan", mode: "primary" },
-  { name: "explore", mode: "subagent" },
-  { name: "secret", mode: "primary", hidden: true },
-  { name: "review", mode: "all" },
-]
 export const SESSION_ID = /^ses_[0-9a-f]{12}[0-9A-Za-z]{14}$/
 export const MESSAGE_ID = /^msg_[0-9a-f]{12}[0-9A-Za-z]{14}$/
 export const NOTE =
@@ -29,26 +22,19 @@ export async function openSchedule(page: Page) {
   if (await notice.isVisible()) await notice.click()
 }
 
-export async function createTask(
-  page: Page,
-  input: { name: string; prompt: string; agent: string; cadence?: string; date?: string },
-) {
+export async function createTask(page: Page, input: { name: string; prompt: string; cadence?: string; date?: string }) {
   await page.getByRole("button", { name: "Schedule task", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "Schedule task" })
   await dialog.getByLabel("Name").fill(input.name)
   await dialog.getByLabel("What to run").fill(input.prompt)
   await dialog.getByLabel("Cadence").selectOption(input.cadence ?? "once")
-  await dialog.getByLabel("Agent").selectOption(input.agent)
   await dialog.getByLabel("Next run").fill(input.date ?? "2031-01-15T09:30")
   await dialog.getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(page.getByRole("article", { name: input.name })).toBeVisible()
 }
 
-type ScheduleTask = { id: string; directory: string; name: string; cadence: string; agent: string } & Record<
-  string,
-  unknown
->
+type ScheduleTask = { id: string; directory: string; name: string; cadence: string } & Record<string, unknown>
 
 // Records every session-create request and prompt; `hold` keeps the next creates waiting until released.
 // `schedule` is the server's scheduled task API in memory: what the page sent and what the server holds.
@@ -149,19 +135,6 @@ export async function setup(
       })
     if (url.pathname === "/api/schedule" || url.pathname.startsWith("/api/schedule/"))
       return schedule(api, route, url, json)
-    if (url.pathname === "/agent") return json(agents.map((agent) => ({ permission: [], options: {}, ...agent })))
-    if (url.pathname === "/api/agent")
-      return json({
-        location: { directory },
-        data: agents.map((agent) => ({
-          id: agent.name,
-          name: agent.name,
-          mode: agent.mode,
-          hidden: agent.hidden ?? false,
-          request: { settings: {}, headers: {}, body: {} },
-          permissions: [],
-        })),
-      })
     const create = url.pathname === (protocol === "v2" ? "/api/session" : "/session")
     if (!create || route.request().method() !== "POST") return route.fallback()
     api.attempts++
@@ -175,7 +148,7 @@ export async function setup(
     const session = api.sessions.find((item) => item.id === id) ?? {
       id,
       directory,
-      agent: body?.agent ?? "build",
+      agent: body?.agent ?? "maestro",
       title: "New session",
       time: { created: 1, updated: 1 },
     }
@@ -221,7 +194,6 @@ function schedule(
       directory: where ?? directory,
       name: String(body.name),
       prompt: body.prompt,
-      agent: String(body.agent),
       cadence: String(body.cadence),
       timezone: body.timezone,
       minute: body.minute ?? 0,
@@ -254,7 +226,8 @@ function schedule(
     api.sessions.push({
       id: sessionID,
       directory,
-      agent: task.agent,
+      // The server runs every scheduled task as a Maestro session.
+      agent: "maestro",
       title: task.name,
       time: { created: 1, updated: 1 },
     })

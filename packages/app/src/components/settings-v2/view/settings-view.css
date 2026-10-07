@@ -225,6 +225,11 @@
   color: #7f8fa0;
   font: 10.5px var(--mx-mono);
 }
+/* Takes the Open Chat slot on every agent card but Maestro's, so it sits in the footer row. */
+.orchestra-settings .mx-card-foot .agent-note {
+  margin: 0;
+  text-align: end;
+}
 .orchestra-settings .settings-route {
   max-inline-size: 300px;
 }

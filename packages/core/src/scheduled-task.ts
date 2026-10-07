@@ -70,7 +70,6 @@ type Claim = {
   readonly sessionID: SessionV2.ID
   readonly messageID: SessionMessage.ID
   readonly prompt: string
-  readonly agent: string
 }
 type Outcome = { type: "started"; sessionID: SessionV2.ID } | { type: "failed"; error: string } | { type: "void" }
 
@@ -143,7 +142,6 @@ const layer = Layer.effect(
         sessionID: ids ? SessionV2.ID.make(ids.session) : SessionV2.ID.create(),
         messageID: ids ? SessionMessage.ID.make(ids.message) : SessionMessage.ID.create(),
         prompt: task.prompt,
-        agent: task.agent,
       }
       yield* db
         .insert(ScheduledTaskRunTable)
@@ -155,7 +153,6 @@ const layer = Layer.effect(
           session_id: claimed.sessionID,
           message_id: claimed.messageID,
           prompt: claimed.prompt,
-          agent: claimed.agent,
           owner,
           time_claimed: now,
         })
@@ -194,11 +191,12 @@ const layer = Layer.effect(
       )
 
     // The path a user prompt takes: the Session (adopted when its ID exists), durable admission, then a wake.
+    // The user talks only to Maestro, so every scheduled run is a Maestro Session, like every chat.
     const dispatch = (claimed: Claim) =>
       Effect.gen(function* () {
         const session = yield* sessions.create({
           id: claimed.sessionID,
-          agent: AgentV2.ID.make(claimed.agent),
+          agent: AgentV2.defaultID,
           location: { directory: claimed.task.directory },
         })
         yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
@@ -294,7 +292,7 @@ const layer = Layer.effect(
           const run = yield* db.select().from(ScheduledTaskRunTable).where(eq(ScheduledTaskRunTable.id, stale.id)).get()
           if (run?.state !== "running" || run.owner !== stale.owner || run.time_claimed !== stale.time_claimed) return
           const task = yield* find(run.task_id)
-          if (!task || !run.message_id || run.prompt === null || run.agent === null) return
+          if (!task || !run.message_id || run.prompt === null) return
           yield* db
             .update(ScheduledTaskRunTable)
             .set({ owner, time_claimed: now })
@@ -306,7 +304,6 @@ const layer = Layer.effect(
             sessionID: run.session_id,
             messageID: run.message_id,
             prompt: run.prompt,
-            agent: run.agent,
           }
         }),
       )
@@ -364,7 +361,6 @@ const layer = Layer.effect(
                 directory,
                 name: input.name,
                 prompt: input.prompt,
-                agent: input.agent,
                 cadence: input.cadence,
                 timezone: input.timezone,
                 minute: input.minute ?? ScheduledTaskModel.localMinute(input.next, input.timezone),
@@ -420,7 +416,6 @@ const layer = Layer.effect(
               .set({
                 name: input.name ?? task.name,
                 prompt: input.prompt ?? task.prompt,
-                agent: input.agent ?? task.agent,
                 cadence: enabled.cadence,
                 timezone: enabled.timezone,
                 minute: enabled.minute,
@@ -504,7 +499,6 @@ function toInfo(task: Task, run: RunRow | undefined): Info {
     id: task.id,
     name: task.name,
     prompt: task.prompt,
-    agent: task.agent,
     cadence: task.cadence,
     timezone: task.timezone,
     minute: task.minute,

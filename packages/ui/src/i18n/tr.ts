@@ -132,7 +132,6 @@ export const dict = {
   "ui.promptInput.attachments": "Görseller ve dosyalar",
   "ui.promptInput.context": "Bağlam",
   "ui.promptInput.shell": "Kabuk komutu",
-  "ui.promptInput.chooseAgent": "Ajan seç",
   "ui.promptInput.chooseModel": "Model seç",
   "ui.promptInput.chooseVariant": "Model varyantı seç",
   "ui.promptInput.send": "Gönder",

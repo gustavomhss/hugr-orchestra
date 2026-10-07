@@ -106,7 +106,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "မော်ဒယ်",
   "command.category.mcp": "MCP",
-  "command.category.agent": "အေးဂျင့်",
   "command.category.permissions": "ခွင့်ပြုချက်များ",
   "command.category.workspace": "အလုပ်နေရာ",
   "command.category.settings": "ဆက်တင်များ",
@@ -156,10 +155,6 @@ export const dict = {
   "command.model.choose.description": "မတူညီသော မော်ဒယ်ကို ရွေးပါ။",
   "command.mcp.toggle": "MCP များကို ပြောင်းရန်",
   "command.mcp.toggle.description": "MCP များကို ပြောင်းရန်",
-  "command.agent.cycle": "သံသရာအေးဂျင့်",
-  "command.agent.cycle.description": "နောက်အေးဂျင့်သို့ ပြောင်းပါ။",
-  "command.agent.cycle.reverse": "နောက်ပြန်လှည့်သည့် အေးဂျင့်စက်ဝန်း",
-  "command.agent.cycle.reverse.description": "ယခင်အေးဂျင့်သို့ ပြောင်းပါ။",
   "command.model.variant.cycle": "သံသရာတွေးတောအားထုတ်မှု",
   "command.model.variant.cycle.description": "နောက်ထပ်ကြိုးစားမှုအဆင့်သို့ ပြောင်းပါ။",
   "command.prompt.mode.shell": "Shell",
@@ -406,8 +401,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.description":
     "ရုပ်ပုံများ၊ PDF များ သို့မဟုတ် စာသားဖိုင်များကိုသာ ဤနေရာတွင် ပူးတွဲနိုင်ပါသည်။",
   "prompt.toast.attachmentDuplicate.title": "ဤဖိုင်ကို အပ်လုဒ်လုပ်ပြီးပါပြီ။",
-  "prompt.toast.modelAgentRequired.title": "အေးဂျင့်နှင့် မော်ဒယ်ကို ရွေးပါ။",
-  "prompt.toast.modelAgentRequired.description": "Prompt မပို့မီ အေးဂျင့်နှင့် မော်ဒယ်ကို ရွေးပါ။",
+  "prompt.toast.modelRequired.title": "မော်ဒယ်ကို ရွေးပါ။",
+  "prompt.toast.modelRequired.description": "Prompt မပို့မီ မော်ဒယ်ကို ရွေးပါ။",
   "prompt.toast.worktreeCreateFailed.title": "Git worktree ဖန်တီး၍မရပါ။",
   "prompt.toast.sessionCreateFailed.title": "စက်ရှင်ကို ဖန်တီး၍မရပါ။",
   "prompt.toast.shellSendFailed.title": "shell command ကို ပို့၍မရပါ။",
@@ -1021,9 +1016,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "အောက်ခြေလမ်းညွှန်",
   "settings.general.row.mobileTitlebarBottom.description":
     "မိုဘိုင်းတွင် စခရင်၏အောက်ခြေတွင် ခေါင်းစဉ်ဘားနှင့် ဆက်ရှင်တက်ဘ်များကို ထားရှိပါ။",
-  "settings.general.row.showCustomAgents.title": "အေးဂျင့်ကို ပြပါ။",
-  "settings.general.row.showCustomAgents.description":
-    "တေးရေးဆရာရှိ အေးဂျင့်များအကြား ပြောင်းပါ။ ဝှက်ထားသည့်အခါ၊ Build အေးဂျင့်အဖြစ် သတ်မှတ်သည်။",
   "settings.general.row.reasoningSummaries.title": "ကျိုးကြောင်းဆင်ခြင်ခြင်း အနှစ်ချုပ်များကို ပြပါ။",
   "settings.general.row.reasoningSummaries.description":
     "အချိန်ဇယားတွင် မော်ဒယ် ကျိုးကြောင်းဆင်ခြင်ခြင်း အနှစ်ချုပ်များကို ပြသပါ။",
@@ -1132,7 +1124,7 @@ export const dict = {
   "settings.shortcuts.group.general": "အထွေထွေ",
   "settings.shortcuts.group.session": "အပိုင်း",
   "settings.shortcuts.group.navigation": "အညွှန်း",
-  "settings.shortcuts.group.modelAndAgent": "မော်ဒယ်နှင့် အေးဂျင့်",
+  "settings.shortcuts.group.modelAndMcp": "မော်ဒယ်နှင့် MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "အချက်ပြပါ။",
   "settings.providers.title": "ဝန်ဆောင်မှုပေးသူများ",

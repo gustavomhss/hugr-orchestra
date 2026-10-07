@@ -7,15 +7,12 @@ const native = (name: string, id?: string) => ({ name, mode: "primary", native: 
 const roster = [native("build"), native("plan"), native("maestro")]
 
 let params: { id?: string } = {}
-let search: { draftId?: string } = {}
-let customAgents = false
 let agents = roster
 let sessions: Record<string, { agent?: string } | undefined> = {}
 
 beforeAll(async () => {
   mock.module("@solidjs/router", () => ({
     useParams: () => params,
-    useSearchParams: () => [search, () => undefined],
   }))
 
   // Each use() runs the real Local init against the route, roster and saved state of the current test.
@@ -33,10 +30,6 @@ beforeAll(async () => {
 
   mock.module("./sync", () => ({
     useSync: () => () => ({ data: { agent: agents, config: {} } }),
-  }))
-
-  mock.module("@/context/settings", () => ({
-    useSettings: () => ({ visibility: { customAgents: () => customAgents } }),
   }))
 
   mock.module("@/context/models", () => ({
@@ -62,8 +55,6 @@ beforeAll(async () => {
 
 beforeEach(() => {
   params = {}
-  search = {}
-  customAgents = false
   agents = roster
   sessions = {}
 })
@@ -84,15 +75,12 @@ describe("Local agent", () => {
   })
 
   test("new sessions and drafts start on maestro", () => {
-    search = { draftId: "draft_1" }
-
     expect(currentAgent()).toBe("maestro")
   })
 
-  test("a session saved on another agent continues on maestro, even with custom agents shown", () => {
+  test("a session saved on another agent continues on maestro", () => {
     params = { id: "ses_plan" }
     sessions = { ses_plan: { agent: "plan" } }
-    customAgents = true
 
     expect(currentAgent()).toBe("maestro")
   })

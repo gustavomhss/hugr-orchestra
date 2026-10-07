@@ -1141,7 +1141,6 @@ export function make(options: ClientOptions) {
               id: input["id"],
               name: input["name"],
               prompt: input["prompt"],
-              agent: input["agent"],
               cadence: input["cadence"],
               next: input["next"],
               timezone: input["timezone"],
@@ -1164,7 +1163,6 @@ export function make(options: ClientOptions) {
             body: {
               name: input["name"],
               prompt: input["prompt"],
-              agent: input["agent"],
               cadence: input["cadence"],
               next: input["next"],
               timezone: input["timezone"],

@@ -86,7 +86,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.agents.action.allow": "Allow",
   "orchestra.agents.action.ask": "Ask",
   "orchestra.agents.action.deny": "Deny",
-  "orchestra.agents.subagentNote": "Subagents are invoked by another agent and cannot start a chat directly.",
+  "orchestra.agents.maestroOnly": "Only Maestro chats with you; other agents work through it.",
   "orchestra.agents.openChat": "Open Chat",
   "orchestra.agents.draftError": "The draft could not be opened. Try again.",
   "orchestra.workspaces.title": "Workspaces",
@@ -245,7 +245,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.evidence.rerun.block.blocked": "This session is waiting for your answer. Respond to it first.",
   "orchestra.evidence.rerun.block.busy": "This session is working. Run the command again when it is idle.",
   "orchestra.evidence.rerun.block.pending": "A command request is still being sent. Wait for its response.",
-  "orchestra.evidence.rerun.block.model": "Select an agent and model to run commands.",
+  "orchestra.evidence.rerun.block.model": "Select a model to run commands.",
   "orchestra.evidence.sessionChanged": "The session changed; no text was inserted.",
   "orchestra.pr.append.title": "Add to your draft?",
   "orchestra.pr.append.body":

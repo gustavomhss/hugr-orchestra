@@ -1,0 +1,3 @@
+Search the web and return content from the most relevant pages, for current information or anything newer than your training data. The current year is {{year}}; use it in queries about recent events.
+
+- `numResults` (8 by default), `type` (`auto`, `fast` or `deep`), `livecrawl` and `contextMaxCharacters` take effect only with search providers that support them.

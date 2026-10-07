@@ -2725,7 +2725,6 @@ export type SchedulesListOutput = {
     readonly id: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly timezone: string
     readonly minute: number
@@ -2747,7 +2746,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2763,7 +2761,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2779,7 +2776,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2791,27 +2787,10 @@ export type SchedulesCreateInput = {
       readonly last?: { readonly time: number; readonly sessionID: string }
     }
   }["prompt"]
-  readonly agent: {
-    readonly id?: string
-    readonly name: string
-    readonly prompt: string
-    readonly agent: string
-    readonly cadence: "once" | "hourly" | "daily" | "weekly"
-    readonly next: number
-    readonly timezone: string
-    readonly minute?: number
-    readonly enabled?: boolean
-    readonly history?: {
-      readonly runs: number
-      readonly missed?: number
-      readonly last?: { readonly time: number; readonly sessionID: string }
-    }
-  }["agent"]
   readonly cadence: {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2827,7 +2806,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2843,7 +2821,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2859,7 +2836,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2875,7 +2851,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2891,7 +2866,6 @@ export type SchedulesCreateInput = {
     readonly id?: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly next: number
     readonly timezone: string
@@ -2915,7 +2889,6 @@ export type SchedulesCreateOutput = {
     readonly id: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly timezone: string
     readonly minute: number
@@ -2937,7 +2910,6 @@ export type SchedulesUpdateInput = {
   readonly name?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
@@ -2946,25 +2918,14 @@ export type SchedulesUpdateInput = {
   readonly prompt?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
     readonly enabled?: boolean
   }["prompt"]
-  readonly agent?: {
-    readonly name?: string
-    readonly prompt?: string
-    readonly agent?: string
-    readonly cadence?: "once" | "hourly" | "daily" | "weekly"
-    readonly next?: number
-    readonly timezone?: string
-    readonly enabled?: boolean
-  }["agent"]
   readonly cadence?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
@@ -2973,7 +2934,6 @@ export type SchedulesUpdateInput = {
   readonly next?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
@@ -2982,7 +2942,6 @@ export type SchedulesUpdateInput = {
   readonly timezone?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
@@ -2991,7 +2950,6 @@ export type SchedulesUpdateInput = {
   readonly enabled?: {
     readonly name?: string
     readonly prompt?: string
-    readonly agent?: string
     readonly cadence?: "once" | "hourly" | "daily" | "weekly"
     readonly next?: number
     readonly timezone?: string
@@ -3009,7 +2967,6 @@ export type SchedulesUpdateOutput = {
     readonly id: string
     readonly name: string
     readonly prompt: string
-    readonly agent: string
     readonly cadence: "once" | "hourly" | "daily" | "weekly"
     readonly timezone: string
     readonly minute: number

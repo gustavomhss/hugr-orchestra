@@ -31,11 +31,15 @@ function hasTaskTool(agent?: Agent.Info) {
 }
 
 // A scoped agent (the Linux workspace agent holds only linux_* and ui_*) cannot open the saved file, and its own
-// file tools reach a different machine: run 16 grepped the host path inside the workspace. Such an agent gets no
-// path, only how to ask its own tools for less.
+// file tools reach a different machine: run 16 grepped the host path inside the workspace. Neither can a seat whose
+// external-directory rules deny the saved-output directory. Such an agent gets no path, only how to ask its own tools
+// for less.
 function canReadSaved(agent?: Agent.Info) {
   if (!agent?.permission) return true
-  return [...disabled(["read", "grep", "task"], agent.permission)].length < 3
+  const off = disabled(["read", "grep", "task"], agent.permission)
+  if (!off.has("task")) return true
+  if (off.has("read") && off.has("grep")) return false
+  return evaluate("external_directory", GLOB, agent.permission).action !== "deny"
 }
 
 export interface Interface {
@@ -141,9 +145,8 @@ const layer = Layer.effect(
         const note = `...${removed} ${unit} truncated...\n\nThe tool call succeeded but its output was cut to fit your context. The rest is not saved anywhere your tools can reach, so do not look for a file. Ask for less instead: call the tool again with a narrower scope (one region, subtree or kind of control), a smaller budget, a more specific search, or its paging arguments (cursor, offset).`
         return { content: direction === "head" ? `${preview}\n\n${note}` : `${note}\n\n${preview}`, truncated: true, outputPath: file } as const
       }
-      const hint = hasTaskTool(agent)
-        ? `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.`
-        : `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse Grep to search the full content or Read with offset/limit to view specific sections.`
+      // Searching or paging the saved file is cheap; only a long analysis of it is worth a subagent.
+      const hint = `The tool call succeeded but the output was truncated. Full output saved to: ${file}\nUse \`grep\` to search the full content or \`read\` with offset/limit to view specific sections.${hasTaskTool(agent) ? " For a long analysis of the whole file, hand it to an `explore` teammate with `task`." : ""}`
       const pressure = `Context pressure: this result exceeds the configured ${maxBytes}-byte/${maxLines}-line tool budget. Use bounded saved-output slices or the existing compaction flow; do not paste the full transcript.`
 
       return {

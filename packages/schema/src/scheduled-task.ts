@@ -46,7 +46,6 @@ export const Info = Schema.Struct({
   id: ID,
   name: Schema.String,
   prompt: Schema.String,
-  agent: Schema.String,
   cadence: Cadence,
   /** IANA time zone that anchors daily and weekly slots. */
   timezone: Schema.String,
@@ -73,7 +72,6 @@ export const CreateInput = Schema.Struct({
   id: ID.pipe(optional),
   name: Text,
   prompt: Text,
-  agent: Text,
   cadence: Cadence,
   next: Schema.Finite,
   timezone: Schema.String,
@@ -88,7 +86,6 @@ export interface UpdateInput extends Schema.Schema.Type<typeof UpdateInput> {}
 export const UpdateInput = Schema.Struct({
   name: Text.pipe(optional),
   prompt: Text.pipe(optional),
-  agent: Text.pipe(optional),
   cadence: Cadence.pipe(optional),
   /** A new time re-anchors the task's time of day and clears its missed slot. */
   next: Schema.Finite.pipe(optional),

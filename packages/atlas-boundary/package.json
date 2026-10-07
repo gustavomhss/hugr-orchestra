@@ -15,6 +15,10 @@
     "./native-header": {
       "types": "./src/generated/native-header.d.ts",
       "default": "./src/generated/native-header.js"
+    },
+    "./native-memory": {
+      "types": "./src/generated/native-memory.d.ts",
+      "default": "./src/generated/native-memory.js"
     }
   },
   "scripts": {

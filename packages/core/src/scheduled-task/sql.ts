@@ -12,7 +12,6 @@ export const ScheduledTaskTable = sqliteTable(
     directory: absoluteColumn().notNull(),
     name: text().notNull(),
     prompt: text().notNull(),
-    agent: text().notNull(),
     cadence: text().$type<ScheduledTask.Cadence>().notNull(),
     timezone: text().notNull(),
     minute: integer().notNull(),
@@ -45,7 +44,6 @@ export const ScheduledTaskRunTable = sqliteTable(
     // Runs imported from device storage do not know them.
     message_id: text().$type<SessionMessage.ID>(),
     prompt: text(),
-    agent: text(),
     error: text(),
     // Process that holds a running claim; a claim older than its lease may be taken over.
     owner: text(),

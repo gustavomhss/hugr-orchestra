@@ -5,12 +5,6 @@ import { createPromptInputV2Controller } from "./interaction"
 import { createPromptInputV2Store } from "./store"
 import { createEffect } from "solid-js"
 
-const agents = [
-  { id: "build", label: "Build" },
-  { id: "plan", label: "Plan" },
-  { id: "review", label: "Review" },
-]
-
 const variants = [
   { id: "default", label: "Default" },
   { id: "fast", label: "Fast" },
@@ -105,9 +99,6 @@ const commandSuggestions: PromptInputV2Suggestion[] = [
 ]
 
 function ControlledPromptInput() {
-  // Agent choice is a persisted user/workspace preference in v1, not part of PromptStore.
-  const [preferences, setPreferences] = createStore({ agent: "build" })
-
   const [runtime, setRuntime] = createStore({
     stopping: false,
   })
@@ -153,11 +144,6 @@ function ControlledPromptInput() {
     view: {
       add: {
         onAttach: () => addAttachment("architecture.txt", "text/plain"),
-      },
-      agent: {
-        options: () => agents,
-        current: () => preferences.agent,
-        onSelect: (agent) => setPreferences("agent", agent),
       },
       model: {
         options: () => models.map((model) => ({ id: model.id, label: model.name, providerID: model.providerID })),

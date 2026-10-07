@@ -121,7 +121,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Hình ảnh và tệp",
   "ui.promptInput.context": "Ngữ cảnh",
   "ui.promptInput.shell": "Lệnh shell",
-  "ui.promptInput.chooseAgent": "Chọn tác nhân",
   "ui.promptInput.chooseModel": "Chọn mô hình",
   "ui.promptInput.chooseVariant": "Chọn biến thể mô hình",
   "ui.promptInput.send": "Gửi",

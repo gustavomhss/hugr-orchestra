@@ -81,8 +81,7 @@ const pass = (services: { provider: Provider.Interface; llm: LLM.Interface }, bo
     const head = [history.indexOf(captured.head[0]), history.indexOf(captured.head.at(-1)!)]
     model.begin(name)
     const before = model.calls.length
-    const result = yield* run(captured, services, { history, delegations: delegations(history), member: false },
-      { trigger: TRIGGER, overhead: OVERHEAD })
+    const result = yield* run(captured, services, { history, delegations: delegations(history), member: false },)
     const { artifact, ...summary } = result
     const calls = model.calls.slice(before)
     const info = { name, transport: TRANSPORT, boundary, head, tailStart: history.indexOf(captured.tail[0]), crossed,
@@ -113,7 +112,7 @@ const probe = (services: { provider: Provider.Interface; llm: LLM.Interface }, a
     const store = contexts()
     store.set({ sessionID: SessionID.make(SESSION), boundary: artifact.boundary, tailStart: artifact.tailStart, text: artifact.text, artifact })
     // Exactly what context.ts injects: the memory as system text and the native tail as messages.
-    const prepared = store.prepare(SessionID.make(SESSION), messages, true)
+    const prepared = store.prepare(SessionID.make(SESSION), messages)
     if (!prepared.system.length) throw new Error("memory not applied")
     const user = messages.findLast((message) => message.info.role === "user")!.info as SessionV1.User
     const reader = yield* services.provider.getModel(user.model.providerID, user.model.modelID)

@@ -242,6 +242,14 @@ const cli = yargs(args)
       resolve: (m) => m.DbCommand,
     }),
   )
+  .command(
+    lazy({
+      command: "toolkit",
+      describe: "manage the backend specialist's toolkit engines",
+      load: () => import("./cli/cmd/toolkit"),
+      resolve: (m) => m.ToolkitCommand,
+    }),
+  )
   .fail((msg, err) => {
     if (
       msg?.startsWith("Unknown argument") ||

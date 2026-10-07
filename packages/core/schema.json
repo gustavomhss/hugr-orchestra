@@ -1,7 +1,7 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "425f901f-a31c-41df-9c31-5995e0f97362",
+  "id": "01c44789-486e-45cd-80d2-d40cd25d9c03",
   "prevIds": ["a989dbf0-525d-4a8a-bb4b-cdeebcdc5ff1"],
   "ddl": [
     {
@@ -884,16 +884,6 @@
       "autoincrement": false,
       "default": null,
       "generated": null,
-      "name": "agent",
-      "entityType": "columns",
-      "table": "scheduled_task_run"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
       "name": "error",
       "entityType": "columns",
       "table": "scheduled_task_run"
@@ -965,16 +955,6 @@
       "default": null,
       "generated": null,
       "name": "prompt",
-      "entityType": "columns",
-      "table": "scheduled_task"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "agent",
       "entityType": "columns",
       "table": "scheduled_task"
     },

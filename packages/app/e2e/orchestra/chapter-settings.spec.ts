@@ -272,7 +272,7 @@ test("providers choose the route for new turns and models toggle their composer 
 
   // The composer reads the same app-wide visibility: the hidden model is gone from its picker.
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "Agents" }).click()
-  await view.locator('article[data-agent="build"]').getByRole("button", { name: "Open Chat" }).click()
+  await view.locator('article[data-agent="maestro"]').getByRole("button", { name: "Open Chat" }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
   await page.locator('[data-action="prompt-model"]').click()
   await expect(page.locator('[data-option-key="openrouter:claude-sonnet-4"]')).toBeVisible()
@@ -287,11 +287,17 @@ test("agents, MCP servers and shortcuts use the profile's real data and actions"
   const view = page.locator('[data-mx-page="settings"]')
   const agents = view.locator("article[data-agent]")
   await expect(agents).toHaveCount(2)
-  const build = agents.filter({ hasText: "build" })
-  await expect(build.locator(".agent-role")).toHaveText("primary")
-  await expect(build.locator(".mx-badge")).toHaveText(["gpt-5", "25 steps", "Available"])
-  await expect(build.getByRole("button", { name: "Open Chat" })).toBeEnabled()
-  await expect(agents.filter({ hasText: "explore" }).getByRole("button", { name: "Open Chat" })).toBeDisabled()
+  const maestro = view.locator('article[data-agent="maestro"]')
+  await expect(maestro.locator(".agent-role")).toHaveText("primary")
+  await expect(maestro.locator(".mx-badge")).toHaveText(["gpt-5", "25 steps", "Available"])
+  await expect(maestro.getByRole("button", { name: "Open Chat" })).toBeEnabled()
+  // Only Maestro chats with the user; every other agent shows why it has no Open Chat.
+  const explore = view.locator('article[data-agent="explore"]')
+  await expect(explore.getByRole("button", { name: "Open Chat" })).toHaveCount(0)
+  await expect(explore.locator(".mx-card-foot")).toHaveText(
+    /Only Maestro chats with you; other agents work through it\.$/,
+  )
+  await expect(maestro.locator(".mx-card-foot")).not.toContainText("Only Maestro")
 
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "MCP" }).click()
   const docs = view.locator('[data-mcp-name="docs"]')
@@ -529,9 +535,9 @@ async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v
     if (url.pathname === "/agent")
       return json(route, [
         {
-          name: "build",
+          name: "maestro",
           mode: "primary",
-          description: "The default agent.",
+          description: "Orchestrates the work.",
           model: { providerID: "openai", modelID: "gpt-5" },
           steps: 25,
           permission: [],
