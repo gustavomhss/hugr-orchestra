@@ -19,6 +19,7 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
   const errors: string[] = []
   const ids: string[] = []
   const hash = (text: string) => createHash("sha256").update(text).digest("hex")
+  const gap = /\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g
   try {
     processTable()
     const host = await start(scratch)
@@ -103,12 +104,14 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
 const fs = require('node:fs');
 const readline = require('node:readline');
 const nonce = process.argv[2];
+const partial = {writes: 0, beforeLF: 0};
 function write(text) {
   const block = Buffer.isBuffer(text) ? text : Buffer.from(text);
   let offset = 0;
   while (offset < block.length) {
     const written = fs.writeSync(1, block, offset, block.length - offset);
     if (written <= 0) throw Error('producer write made no progress');
+    if (written < block.length - offset) { partial.writes++; if (block[offset + written] === 10) partial.beforeLF++; }
     offset += written;
   }
   return offset;
@@ -119,6 +122,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
   if (line === 'unicode') write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
   if (line === 'more') write(${JSON.stringify(missed)} + '\\n');
   if (line === 'calibrate') write('CAL-' + nonce + '\\n');
+  if (line === 'gap-control') write('\\x1b[0m\\n[orchestra: 7 bytes of output skipped]\\n');
   if (line === 'done') write('PRODUCER-DONE-' + nonce + '\\n');
   if (line === 'flood') {
     const block = Buffer.from(('x'.repeat(1023) + '\\n').repeat(1024));
@@ -127,7 +131,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
     write('PAYLOAD-BEGIN-' + nonce + '\\n');
     for (let i = 0; i < 50; i++) bytes += write(block);
     const lines = block.reduce((count, byte) => count + (byte === 10 ? 1 : 0), 0) * 50;
-    fs.writeFileSync(${JSON.stringify(done)}, JSON.stringify({bytes, lines, completed: true, ms: Date.now() - start}));
+    fs.writeFileSync(${JSON.stringify(done)}, JSON.stringify({bytes, lines, partial, completed: true, ms: Date.now() - start}));
   }
 });
 `)
@@ -185,6 +189,11 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await quiet(output.state)
       const calibration = `calibrate\r\nCAL-${nonce}\r\n`
       if (output.state.text !== calibration) throw new Error(`PTY byte-accounting capability: non-canonical echo/rendering ${JSON.stringify(output.state.text)}`)
+      output.ws.send("gap-control\r")
+      await until(20_000, "gap annotation parser positive control", () =>
+        [...output.state.text.matchAll(gap)].some((match) => Number(match[1]) === 7) ? true : undefined)
+      await quiet(output.state)
+      metrics.syntheticGapParserPositiveControl = 7
       const from = output.state.text.length
       const started = Date.now()
       const healthMs: number[] = []
@@ -203,8 +212,15 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       const produced = JSON.parse(readFileSync(done, "utf8")) as { bytes: number; lines: number; completed: boolean; ms: number }
       if (!produced.completed || produced.bytes !== 50 * 1024 * 1024) throw new Error("producer did not finish exactly 50 MiB")
       const flood = output.state.text.slice(from)
-      const gaps = [...flood.matchAll(/\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g)].map((match) => Number(match[1]))
-      const received = flood.replace(/\x1b\[0m\r\n\[orchestra: \d+ bytes of output skipped\]\r\n/g, "")
+      writeFileSync(path.join(scratch.home, "flood.ws.txt"), flood)
+      metrics.gapDiagnostics = [...flood.matchAll(/\[orchestra: (\d+) bytes of output skipped\]/g)].map((match) => ({
+        bytes: Number(match[1]), context: flood.slice(Math.max(0, match.index - 12), match.index + match[0].length + 12),
+      }))
+      metrics.asciiDiagnostics = { carriageReturns: [...flood.matchAll(/\r/g)].length,
+        doubledCarriageReturns: [...flood.matchAll(/\r\r\n/g)].length, linefeeds: [...flood.matchAll(/\n/g)].length,
+        prefix: flood.slice(0, 100), suffix: flood.slice(-100) }
+      const gaps = [...flood.matchAll(gap)].map((match) => Number(match[1]))
+      const received = flood.replace(gap, "")
       const prefix = `flood\r\nPAYLOAD-BEGIN-${nonce}\r\n`
       const suffix = `done\r\nPRODUCER-DONE-${nonce}\r\n`
       const expectedNativeBytes = produced.bytes + produced.lines + Buffer.byteLength(prefix + suffix)
@@ -212,16 +228,16 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       const receivedNativeBytes = Buffer.byteLength(received)
       metrics.byteAccounting = { expectedNativeBytes, receivedNativeBytes, lostNativeBytes, producerBytes: produced.bytes,
         newlineExpansionBytes: produced.lines, echoAndMarkerBytes: Buffer.byteLength(prefix + suffix), mutatedGaps: output.state.mutatedGaps }
-      if (!received.startsWith(prefix) || !received.endsWith(suffix) || !/^[x\r\n]*$/.test(received.slice(prefix.length, -suffix.length)) ||
-        receivedNativeBytes + lostNativeBytes !== expectedNativeBytes)
-        throw new Error("ASCII PTY payload + echo/newlines does not reconcile with received bytes + lostBefore markers")
-      if (options.mutation === "gap-count" && output.state.mutatedGaps === 0) throw new Error("gap-count mutation not applied: no native gap observed")
       const tail = output.state.text.length
       output.ws.send("size\r")
       await until(20_000, "terminal responds after flood", () => plain(output.state.text.slice(tail)).includes("SIZE 40 120") ? true : undefined)
       metrics.output = { ...produced, elapsedMs: Date.now() - started, receivedUTF16: output.state.text.length,
         wireBytes: output.state.wireBytes, frames: output.state.frames, gaps,
         healthProbes: healthMs.length, maxHealthMs: Math.max(...healthMs), postFloodResponsive: true }
+      if (!received.startsWith(prefix) || !received.endsWith(suffix) || !/^[x\r\n]*$/.test(received.slice(prefix.length, -suffix.length)) ||
+        receivedNativeBytes + lostNativeBytes !== expectedNativeBytes)
+        throw new Error("ASCII PTY payload + echo/newlines does not reconcile with received bytes + lostBefore markers")
+      if (options.mutation === "gap-count" && output.state.mutatedGaps === 0) throw new Error("gap-count mutation not applied: no native gap observed")
       await output.close()
       checks.output = "passed"
     } catch (cause) {

@@ -38,11 +38,12 @@ export function evidence(scratch: Fixture) {
     sourceSHA: string; cliSha256: string; sourceHashes: Record<string, string>; addonSha256: string; supervisorSha256: string
   }
   const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
-  if (digest(bin) !== built.cliSha256 || Object.entries(built.sourceHashes).some(([file, hash]) => digest(path.join(ROOT, file)) !== hash))
+  if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||
+    ["packages/opencode/src/lsp/client.ts", "packages/opencode/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
     baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
-    cli: bin, ...built,
+    cli: bin, ...Object.fromEntries(Object.entries(built).map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
     harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
     fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),

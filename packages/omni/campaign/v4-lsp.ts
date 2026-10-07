@@ -21,6 +21,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
   let llm: ReturnType<typeof createServer> | undefined
   const rpcLog = path.join(scratch.home, `${tree.nonce}.rpc.jsonl`)
   const wrapperLog = path.join(scratch.home, `${tree.nonce}.wrapper.jsonl`)
+  const cleanupObservation = { before: null as number[] | null }
   try {
     processTable()
     const tools = process.env.OMNI_CAMPAIGN_LSP_TOOLS ?? path.join(LOGS, "tools/node_modules")
@@ -163,14 +164,17 @@ setInterval(() => {}, 1e9);
   finally {
     llm?.closeAllConnections()
     llm?.close()
-    try { await finalSweep(tree.nonce) }
+    try {
+      cleanupObservation.before = await finalSweep(tree.nonce)
+      if (cleanupObservation.before.length > 0) { pass = false; error = `${error ?? ""} final nonce leftovers: ${cleanupObservation.before}` }
+    }
     catch (cause) { pass = false; error = `${error ?? ""} oracle: ${String(cause)}` }
     finally { await finish(scratch, [tree.nonce]).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` }) }
   }
   const result = verdict("v4-lsp", { ...evidence(scratch), pass, status: pass ? "passed-local-automatic-restart" : "failed-local",
-    mutation: options.mutation ?? null, cyclesCompleted: cycles.length, cycles,
+    mutation: options.mutation ?? null, cyclesCompleted: cycles.length, cycles, beforeCleanup: cleanupObservation.before,
     automaticRecovery: { pass: automaticRestart ?? null, statusBeforeDemand: autoRecoveryStatus }, findings, error,
-    wp10Complete: pass && automaticRestart === true,
+    localScenarioComplete: pass && automaticRestart === true, wp10Complete: false,
     protocolLog: rpcLog, wrapperLog, capability: { wrapper: "node (npx-equivalent)", lsp: "typescript-language-server 4.3.4 + TypeScript 5.8.2", oracle: "shared records + independent nonce process-table sweep", skipped: [] },
   })
   return { ...result, pass }
