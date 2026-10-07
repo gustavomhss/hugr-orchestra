@@ -1,10 +1,10 @@
 import { registerCustomTheme } from "@pierre/diffs"
-import { OrchestraTheme } from "./marked-theme"
+import { OpenCodeTheme } from "./marked-theme"
 
 let registered = false
 
-export function registerOrchestraTheme() {
+export function registerOpenCodeTheme() {
   if (registered) return
   registered = true
-  registerCustomTheme("Orchestra", () => Promise.resolve(OrchestraTheme))
+  registerCustomTheme("OpenCode", () => Promise.resolve(OpenCodeTheme))
 }

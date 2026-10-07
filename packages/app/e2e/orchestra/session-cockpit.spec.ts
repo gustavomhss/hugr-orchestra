@@ -1,4 +1,4 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import type { DockCall } from "./session-cockpit-bridge"

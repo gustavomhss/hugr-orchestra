@@ -78,7 +78,7 @@ async function cleanup(root: string) {
 
 async function parent() {
   assert(process.env.APP_DOCK_RUNTIME_TEST_IMAGE, "Set APP_DOCK_RUNTIME_TEST_IMAGE to an existing runtime image")
-  const temporary = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "orchestra")
+  const temporary = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "opencode")
   await mkdir(temporary, { recursive: true })
   const root = await mkdtemp(join(temporary, "orchestra-dock-linux-flow-"))
   console.log(`Linux App Dock evidence and ownership metadata: ${root}`)

@@ -6,7 +6,7 @@ Research date: 2026-10-03. Research only; source inspection, no test/benchmark e
 
 Transfer **bounded, scoped persistence; progressive disclosure; revision-aware correction; stable prompt epochs; recoverable history** into Atlas/host. Hermes implements useful persistence and reuse machinery. “Agent grows with you” / “self-improving” does not establish improving task success, factual correctness, or lower total cost.
 
-The backend specialist remains backend plugin inside Orchestra, usable without Maestro. Atlas remains native Knowledge foundation, including per-member persistent project rules and task/PR recall. Optional Maestro supplies native identity/plan context. Host owns Session execution, prompt assembly, provider adapters and compaction. No second `MEMORY.md` store, learning daemon, compactor, or all-stack ingestion framework.
+The backend specialist remains backend plugin inside OpenCode/Orchestra, usable without Maestro. Atlas remains native Knowledge foundation, including per-member persistent project rules and task/PR recall. Optional Maestro supplies native identity/plan context. Host owns Session execution, prompt assembly, provider adapters and compaction. No second `MEMORY.md` store, learning daemon, compactor, or all-stack ingestion framework.
 
 ## Evidence boundary and primary docs
 

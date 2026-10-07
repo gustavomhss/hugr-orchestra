@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { readFile } from "node:fs/promises"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -15,7 +15,7 @@ async function setup(page: Page, scheme = "dark") {
   page.on("request", (request) =>
     requests.push(JSON.stringify({ url: request.url(), headers: request.headers(), body: request.postData() })),
   )
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: { id: "env-project", name: "Env A", worktree: directory, sandboxes: [], time: { created: 1, updated: 1 } },
     provider: { all: [], connected: [], default: {} },
@@ -52,11 +52,11 @@ async function setup(page: Page, scheme = "dark") {
     ({ serverA, serverB, scheme }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: {
@@ -68,7 +68,7 @@ async function setup(page: Page, scheme = "dark") {
           },
         }),
       )
-      localStorage.setItem("orchestra.window.browser.dat:tabs", "[]")
+      localStorage.setItem("opencode.window.browser.dat:tabs", "[]")
     },
     { serverA, serverB, scheme },
   )

@@ -14,7 +14,7 @@ export type * from "./types.js"
 export * from "./relate.js" // WP-2.8-b.RETR — partitioned, deterministic relate() over the index axes
 export * from "./pack.js" // WP-6.19.RETR — the bounded pack (relevance-from-index, ~2K cap, T0-then-T1-by-rank)
 export * from "./own.js" // WP-6.20.RETR — OwnPack (mechanical own_<unit>, capped, D1 content-free availability-manifest)
-export * from "./own-artifact.js" // Static Orchestra Own skills + self-report-resistant receipt verification
+export * from "./own-artifact.js" // Static OpenCode Own skills + self-report-resistant receipt verification
 export * from "./own-coverage.js" // Genesis coverage receipt: expected Own units for CI
 export * from "./own-snapshot.js" // Persisted Genesis Own oracle + deterministic static projection
 export * from "./poke.js" // WP-6.21.RETR — debounced once-per-scope poke (N=2 settle) + covering-set tool projection (pack-grain announce, X1)

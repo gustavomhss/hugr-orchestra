@@ -20,7 +20,7 @@ describe("resolveServerList", () => {
           authToken: true,
           http: {
             url: "https://server.example.test",
-            username: "orchestra",
+            username: "opencode",
             password: "secret",
           },
         },
@@ -31,7 +31,7 @@ describe("resolveServerList", () => {
     expect(list[0]?.type).toBe("http")
     expect(list[0]?.http).toEqual({
       url: "https://server.example.test",
-      username: "orchestra",
+      username: "opencode",
       password: "secret",
     })
     expect(list[0]?.type === "http" ? list[0].authToken : false).toBe(true)
@@ -43,7 +43,7 @@ describe("resolveServerList", () => {
       stored: [
         {
           url: "https://server.example.test",
-          username: "orchestra",
+          username: "opencode",
           password: "saved",
         },
       ],
@@ -54,7 +54,7 @@ describe("resolveServerList", () => {
     expect(list[0]?.type).toBe("http")
     expect(list[0]?.http).toEqual({
       url: "https://server.example.test",
-      username: "orchestra",
+      username: "opencode",
       password: "saved",
     })
     expect(list[0]?.type === "http" ? list[0].authToken : true).toBeUndefined()
@@ -205,10 +205,10 @@ describe("migrateCanonicalLocalServerState", () => {
       migrateCanonicalLocalServerState(
         {
           list: [],
-          projects: { "https://orchestra.example.com": [{ worktree: "/remote", expanded: true }] },
-          lastProject: { "https://orchestra.example.com": "/remote" },
+          projects: { "https://opencode.example.com": [{ worktree: "/remote", expanded: true }] },
+          lastProject: { "https://opencode.example.com": "/remote" },
         },
-        ServerConnection.Key.make("https://orchestra.example.com"),
+        ServerConnection.Key.make("https://opencode.example.com"),
       ),
     ).toEqual({
       list: [],
@@ -223,14 +223,14 @@ describe("migrateCanonicalLocalServerState", () => {
         {
           projects: {
             local: [{ worktree: "/local", expanded: false }],
-            "https://orchestra.example.com": [
+            "https://opencode.example.com": [
               { worktree: "/local", expanded: true },
               { worktree: "/remote", expanded: true },
             ],
           },
-          lastProject: { local: "/local", "https://orchestra.example.com": "/remote" },
+          lastProject: { local: "/local", "https://opencode.example.com": "/remote" },
         },
-        ServerConnection.Key.make("https://orchestra.example.com"),
+        ServerConnection.Key.make("https://opencode.example.com"),
       ),
     ).toEqual({
       projects: {

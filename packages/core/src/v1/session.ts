@@ -43,7 +43,7 @@ export {
   ToolStateRunning,
   User,
   WithParts,
-} from "@orchestra/schema/session-v1"
+} from "@opencode-ai/schema/session-v1"
 
 export const OutputLengthError = NamedError.create("MessageOutputLengthError", {})
 export const AuthError = NamedError.create("ProviderAuthError", { providerID: Schema.String, message: Schema.String })

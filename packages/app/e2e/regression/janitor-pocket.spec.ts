@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import {
   directory,
   sessionID as routeSessionID,
@@ -37,7 +37,7 @@ test("keeps Janitor chat session, sends prompt, and opens it in session view", a
   }, report)
   await page.addInitScript(
     ({ directory, sessionID }) => {
-      localStorage.setItem(`orchestra.janitor.session.local.${directory}`, sessionID)
+      localStorage.setItem(`opencode.janitor.session.local.${directory}`, sessionID)
     },
     { directory: base64Encode(directory), sessionID: janitorSessionID },
   )
@@ -57,7 +57,7 @@ test("keeps Janitor chat session, sends prompt, and opens it in session view", a
   })
   await expect
     .poll(() =>
-      page.evaluate((key) => localStorage.getItem(key), `orchestra.janitor.session.local.${base64Encode(directory)}`),
+      page.evaluate((key) => localStorage.getItem(key), `opencode.janitor.session.local.${base64Encode(directory)}`),
     )
     .toBe(janitorSessionID)
 
@@ -108,7 +108,7 @@ for (const viewport of [
             onReport: () => () => {},
           },
         }
-        localStorage.setItem(`orchestra.janitor.session.local.${directory}`, sessionID)
+        localStorage.setItem(`opencode.janitor.session.local.${directory}`, sessionID)
       },
       { report, directory: base64Encode(directory), sessionID: janitorSessionID },
     )

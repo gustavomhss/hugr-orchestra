@@ -258,7 +258,7 @@ window.nativeFrameFixture = {
 `
 
 export function nativeFrameViteConfig(cache: string) {
-  const mutation = process.env.ORCHESTRA_NATIVE_FRAME_MUTATION
+  const mutation = process.env.OPENCODE_NATIVE_FRAME_MUTATION
   const mutations = {
     "wrong-coordinate": {
       kind: SyntaxKind.CallExpression,
@@ -303,7 +303,7 @@ export function nativeFrameViteConfig(cache: string) {
             )
           if (
             source.startsWith("@/context/") ||
-            source.startsWith("@orchestra/ui/") ||
+            source.startsWith("@opencode-ai/ui/") ||
             source === "@solidjs/router" ||
             source === "@/components/titlebar-tab-strip" ||
             source === "./windows-app-menu" ||

@@ -1,11 +1,11 @@
-import { AISDK } from "@orchestra/core/aisdk"
+import { AISDK } from "@opencode-ai/core/aisdk"
 import { describe, expect, mock } from "bun:test"
 import { Effect } from "effect"
-import { ModelV2 } from "@orchestra/core/model"
-import { PluginV2 } from "@orchestra/core/plugin"
-import { PluginHost } from "@orchestra/core/plugin/host"
-import { CloudflareAIGatewayPlugin } from "@orchestra/core/plugin/provider/cloudflare-ai-gateway"
-import { ProviderV2 } from "@orchestra/core/provider"
+import { ModelV2 } from "@opencode-ai/core/model"
+import { PluginV2 } from "@opencode-ai/core/plugin"
+import { PluginHost } from "@opencode-ai/core/plugin/host"
+import { CloudflareAIGatewayPlugin } from "@opencode-ai/core/plugin/provider/cloudflare-ai-gateway"
+import { ProviderV2 } from "@opencode-ai/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -144,7 +144,7 @@ describe("CloudflareAIGatewayPlugin", () => {
           package: "ai-gateway-provider",
           options: {
             name: "cloudflare-ai-gateway",
-            metadata: { invoked_by: "test", project: "orchestra" },
+            metadata: { invoked_by: "test", project: "opencode" },
             cacheTtl: 300,
             cacheKey: "cache-key",
             skipCache: true,
@@ -158,7 +158,7 @@ describe("CloudflareAIGatewayPlugin", () => {
           gateway: "env-gateway",
           apiKey: "env-token",
           options: {
-            metadata: { invoked_by: "test", project: "orchestra" },
+            metadata: { invoked_by: "test", project: "opencode" },
             cacheTtl: 300,
             cacheKey: "cache-key",
             skipCache: true,
@@ -189,13 +189,13 @@ describe("CloudflareAIGatewayPlugin", () => {
           options: {
             name: "cloudflare-ai-gateway",
             headers: {
-              "cf-aig-metadata": JSON.stringify({ invoked_by: "header", project: "orchestra" }),
+              "cf-aig-metadata": JSON.stringify({ invoked_by: "header", project: "opencode" }),
             },
           },
         })
 
         expect(aiGatewayCalls[0]?.options).toMatchObject({
-          metadata: { invoked_by: "header", project: "orchestra" },
+          metadata: { invoked_by: "header", project: "opencode" },
         })
       }),
     ),

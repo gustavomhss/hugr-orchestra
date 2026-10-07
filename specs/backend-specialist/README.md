@@ -37,7 +37,7 @@ Integrating with these owners is not a project to rebuild them. Missing integrat
 
 - The backend specialist is a plugin that works independently of Maestro and integrates natively with Maestro.
 - The backend specialist executes a clear, preassigned backend scope. Investigation, diagnosis, discovery, scope definition and other members' responsibilities stay with their respective owners.
-- It runs on Orchestra. CLI and MCP expose its capabilities; a second conversational/model runtime is outside this design.
+- It runs on OpenCode/Orchestra. CLI and MCP expose its capabilities; a second conversational/model runtime is outside this design.
 - Atlas is the shared foundation of Maestro and the team. Native Knowledge and Memory integration is a requirement.
 - The backend specialist owns `task`, `pr` and `project` Memory in Atlas. Its bounded Project Rules are injected through native context; task/PR history is explicitly consultable, with the own resumed-fold contract. Orchestrator `logbook` and shared derived Awareness/Orientation remain distinct.
 - Atlas unavailability permits explicitly degraded ordinary work. An operation that requires unavailable Atlas evidence remains blocked.
@@ -103,7 +103,7 @@ The key differentiation is less user rescue: fewer repeated explanations, surpri
 ```text
 User with defined scope               Maestro with assigned packet
        \                              /
-        Orchestra host adapters
+        OpenCode / Orchestra host adapters
         - actual Session and selected member
         - Location, tools, permissions, model execution
         - bounded system-context admission and evidence
@@ -131,7 +131,7 @@ CLI adapter ------- shared capability handlers ------- MCP adapter
 | Atlas foundation | Shared Knowledge; per-member task/PR/project Memory; derived slabs; storage, write doors and read semantics |
 | Maestro adapter | Receive Maestro-defined scope, permissions and work packet; return implementation results; orchestration and grant decisions remain with Maestro |
 | CLI/MCP adapters | Parse and validate inputs, bind their real caller/project context, invoke shared handlers and encode results |
-| Provider runtime | Model selection, credentials, provider turns and usage; supplied by Orchestra |
+| Provider runtime | Model selection, credentials, provider turns and usage; supplied by OpenCode/Orchestra |
 
 The proposed specialist package is `packages/backend-specialist`. It does not import Maestro services, Core databases, Server internals or the vendored Atlas implementation. Orchestra-specific composition remains host-owned. The installed Atlas boundary is a shared foundation package, not a module hidden inside the backend specialist.
 
@@ -149,7 +149,7 @@ Start with one dependable implementation path. Host/caller owners select model/r
 
 The first end-to-end integration targets Orchestra's existing **V1 server-plugin/Agent/Task path**, where the current native specialist roster and Maestro delegation actually execute. This choice avoids making a Core runtime migration a hidden prerequisite for proving the backend specialist's value. “Maestro V2” as a product program is not the same term as Core's `SessionV2` execution runtime.
 
-The package also targets standalone Orchestra through its actual supported V1 plugin loader; installation, selected-agent binding and context/tool behavior must be verified against each claimed version. Maestro's absence is part of that test, not an inferred property of packaging.
+The package also targets standalone OpenCode through its actual supported V1 plugin loader; installation, selected-agent binding and context/tool behavior must be verified against each claimed version. Maestro's absence is part of that test, not an inferred property of packaging.
 
 V2 context and tool adapters are a separate compatibility work package using the same specialist/foundation contracts. V2's durable inbox, steer/queue and Context Epoch semantics are requirements for that adapter, not guarantees attributed to V1. Never run the V2 model loop through legacy `SessionPrompt.loop(...)` to manufacture parity. V2 governed delegation remains unavailable until its native Task/authority seam is actually supported.
 
@@ -169,7 +169,7 @@ Local coding choices remain inside the supplied interfaces, behavior, scope and 
 
 ## Identity and configurable names
 
-The proposed public-name variable is `HUGR_BACKEND_NAME`, defaulting to the default label (`BACKEND_DEFAULT_LABEL` in `packages/orchestra/src/maestro/roster.ts`) when absent. For example, `HUGR_BACKEND_NAME=Ada` renders Ada while preserving the same backend specialist.
+The proposed public-name variable is `HUGR_BACKEND_NAME`, defaulting to the default label (`BACKEND_DEFAULT_LABEL` in `packages/opencode/src/maestro/roster.ts`) when absent. For example, `HUGR_BACKEND_NAME=Ada` renders Ada while preserving the same backend specialist.
 
 | Identity | Meaning | Survives display rename? |
 | --- | --- | --- |
@@ -296,10 +296,10 @@ Reuse native cache-stable context, batch independent reads, load exact procedure
 
 ## Current source anchors
 
-- `packages/orchestra/src/agent/agent.ts`: native roster registration, default selection and protected specialist configuration.
-- `packages/orchestra/src/maestro/roster.ts`: stable members, initial profiles and short role prompts.
-- `packages/orchestra/src/maestro/validation-record.ts`: current roster/grant/review-policy hash inputs.
-- `packages/orchestra/src/tool/task.ts`: child creation, resumption and governed execution paths.
+- `packages/opencode/src/agent/agent.ts`: native roster registration, default selection and protected specialist configuration.
+- `packages/opencode/src/maestro/roster.ts`: stable members, initial profiles and short role prompts.
+- `packages/opencode/src/maestro/validation-record.ts`: current roster/grant/review-policy hash inputs.
+- `packages/opencode/src/tool/task.ts`: child creation, resumption and governed execution paths.
 - `packages/plugin/src/index.ts`, `packages/plugin/src/v2/effect/context.ts`: actual V1 and V2 plugin extension surfaces.
 - `packages/core/src/system-context/registry.ts`: scoped context composition.
 - `specs/hugr-maestro/actor-identity-contract.md`: ratified Session-composed execution provenance.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@orchestra/sdk-next",
+  "name": "@opencode-ai/sdk-next",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -12,9 +12,9 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@orchestra/client": "workspace:*",
-    "@orchestra/core": "workspace:*",
-    "@orchestra/server": "workspace:*",
+    "@opencode-ai/client": "workspace:*",
+    "@opencode-ai/core": "workspace:*",
+    "@opencode-ai/server": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

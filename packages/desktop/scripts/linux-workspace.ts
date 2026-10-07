@@ -6,8 +6,8 @@ import { tmpdir } from "node:os"
 
 // Bun's Node stdin adapter lost pipe bytes under load. Keep the command runner
 // on Node and inherit its descriptors directly; Bun only builds/launches it.
-await mkdir(join(tmpdir(), "orchestra"), { recursive: true })
-const directory = await mkdtemp(join(tmpdir(), "orchestra/linux-cli-"))
+await mkdir(join(tmpdir(), "opencode"), { recursive: true })
+const directory = await mkdtemp(join(tmpdir(), "opencode/linux-cli-"))
 try {
   const built = await Bun.build({
     entrypoints: [resolve(import.meta.dir, "linux-workspace-cli.ts")],

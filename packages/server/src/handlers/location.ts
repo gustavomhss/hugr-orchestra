@@ -1,4 +1,4 @@
-import { Location } from "@orchestra/core/location"
+import { Location } from "@opencode-ai/core/location"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"

@@ -1,7 +1,7 @@
 export * as PermissionFixture from "./permission-fixture"
 
 import { Effect, Layer } from "effect"
-import { PermissionV2 } from "@orchestra/core/permission"
+import { PermissionV2 } from "@opencode-ai/core/permission"
 
 /** Existing normal runner fixture: every permission path fails closed if reached. */
 export const normalLayer = Layer.succeed(

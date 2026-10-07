@@ -499,7 +499,7 @@ Two standing threads remain owner-level, unchanged from the prior handoff:
 - **The fork-PR contribution flow** — #301 means forks never reach the gate until synced in-repo.
 - **The self-hosted runner's load flakes** (§2.7/§2.8) still bite: `s-mcp-4-draft-parity`,
   `s26-surface-lies`, `scanner.wp-11.w5`, and `memory-store.test.ts:A4` (REAL subprocess spawn) all
-  time out or flake when a foreign build (`orchestra-tasks` rust/tsgo) starves the machine. Wave B PR gates
+  time out or flake when a foreign build (`opencode-tasks` rust/tsgo) starves the machine. Wave B PR gates
   reproduced scanner spawn failures only under concurrent full-suite runs; serial reruns passed. Keep full
   gates serial when runner pressure is visible; rerun is standard recovery, not a code fix.
 

@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 export async function setupCompactNavigation(
   page: Page,
@@ -22,7 +22,7 @@ export async function setupCompactNavigation(
     time: { created: 1, updated: 1 },
     sandboxes: [],
   }
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: input.protocol,
     directory,
     project,
@@ -37,7 +37,7 @@ export async function setupCompactNavigation(
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [server],
           projects: {
@@ -47,13 +47,13 @@ export async function setupCompactNavigation(
           lastProject: { local: directory, [server]: directory },
         }),
       )
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
-      localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale }))
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
       // Seed once per tab: a reload must keep what the app itself persisted since.
       if (!selected || sessionStorage.getItem("compact-navigation-selected")) return
       sessionStorage.setItem("compact-navigation-selected", "1")
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     { directory, server, locale: input.locale ?? "en", scheme: input.scheme ?? "dark", selected: !!input.selected },
   )

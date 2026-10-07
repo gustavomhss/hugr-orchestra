@@ -23,8 +23,8 @@ Bun.plugin({
     })
   },
 })
-const { DialogProvider, useDialog }: typeof import("@orchestra/ui/context/dialog") = await import(
-  `${Bun.resolveSync("@orchestra/ui/context/dialog", import.meta.dir)}?solid`
+const { DialogProvider, useDialog }: typeof import("@opencode-ai/ui/context/dialog") = await import(
+  `${Bun.resolveSync("@opencode-ai/ui/context/dialog", import.meta.dir)}?solid`
 )
 
 describe("owned dialogs", () => {

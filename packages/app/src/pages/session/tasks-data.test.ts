@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import {
-  createOrchestraClient,
+  createOpencodeClient,
   type AssistantMessage,
   type Message,
   type Part,
   type Session,
   type UserMessage,
-} from "@orchestra/sdk/v2/client"
+} from "@opencode-ai/sdk/v2/client"
 import { ServerConnection } from "@/context/server"
 import { createServerSession } from "@/context/server-session"
 import { ServerScope } from "@/utils/server-scope"
@@ -292,7 +292,7 @@ describe("deriveTasks stats", () => {
     const pages = [Promise.withResolvers<Response>(), Promise.withResolvers<Response>()]
     const requests: string[] = []
     const store = createServerSession(
-      createOrchestraClient({
+      createOpencodeClient({
         baseUrl: "http://tasks.test",
         throwOnError: true,
         fetch: (async (request) => {

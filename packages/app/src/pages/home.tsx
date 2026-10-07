@@ -1,4 +1,4 @@
-import { useDialog } from "@orchestra/ui/context/dialog"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Show, startTransition } from "solid-js"
 import { useCommand } from "@/context/command"

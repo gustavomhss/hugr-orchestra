@@ -1,7 +1,7 @@
 # Method: Admit Request
 
 Status: proposed V2 method. ID: `admit-request`. Deterministic policy kernel exists at
-`packages/orchestra/src/maestro/admit-request.ts`; durable trigger/record/replay remains unimplemented. Composition:
+`packages/opencode/src/maestro/admit-request.ts`; durable trigger/record/replay remains unimplemented. Composition:
 M1 Frame + M2 Ground.
 
 V1 evidence: `v1-portability-register.md` preserves pure explicit goal/acceptance capture; V2 deliberately
@@ -30,9 +30,9 @@ record.
 ## Inputs
 
 ```text
-sessionId            durable Orchestra Session identity
+sessionId            durable OpenCode Session identity
 messageId            durable incoming user message identity
-message              user text and attachments already admitted by Orchestra
+message              user text and attachments already admitted by OpenCode
 sessionState         active plan/work summary, if any
 orientation          read-only Atlas Awareness + Orientation reference, or explicit UN-SEEDED
 methodVersion        version of this method contract
@@ -44,7 +44,7 @@ the recorded result; it never asks the model to reinterpret the request.
 ## Preconditions
 
 1. Session is a Maestro user-facing development session.
-2. Message is durably admitted by Orchestra.
+2. Message is durably admitted by OpenCode.
 3. Session state and project orientation are readable, or their absence is explicit.
 
 If any prerequisite is unobservable, result is `CLARIFY` with a system reason. No task is created.
@@ -117,9 +117,9 @@ the smallest question.
 
 | Capability                         | Purpose                                                             | Boundary                        |
 | ---------------------------------- | ------------------------------------------------------------------- | ------------------------------- |
-| `session-read`                     | read durable user message and session state                         | Orchestra read only              |
+| `session-read`                     | read durable user message and session state                         | OpenCode read only              |
 | `atlas-orientation-read`           | read compact project orientation                                    | Atlas read only                 |
-| `maestro-admission-record`         | persist method result keyed to message                              | Orchestra durable event/metadata |
+| `maestro-admission-record`         | persist method result keyed to message                              | OpenCode durable event/metadata |
 | `admission-schema-guard`           | reject malformed assessment/result                                  | before record                   |
 | `no-governed-task-before-approval` | deny Task/child Session creation without approved revision identity | Session/Task boundary           |
 
@@ -151,7 +151,7 @@ is unobservable, active work could be changed, or assessment fails validation. I
 
 | System   | Seam                                                                                                                  |
 | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| Orchestra | durable `SessionID`/`MessageID`, message reads, session metadata/event persistence, Task/child-Session creation fence |
+| OpenCode | durable `SessionID`/`MessageID`, message reads, session metadata/event persistence, Task/child-Session creation fence |
 | Atlas    | read-only project/session orientation reference; no scoped pack or write                                              |
 
 ## Failure and Recovery

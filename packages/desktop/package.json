@@ -1,12 +1,12 @@
 {
-  "name": "@orchestra/desktop",
+  "name": "@opencode-ai/desktop",
   "private": true,
   "version": "1.18.27",
   "type": "module",
   "license": "MIT",
   "homepage": "https://opencode.ai",
   "author": {
-    "name": "Orchestra",
+    "name": "OpenCode",
     "email": "hello@opencode.ai"
   },
   "scripts": {
@@ -40,8 +40,8 @@
   "devDependencies": {
     "@actions/artifact": "4.0.0",
     "@lydell/node-pty": "catalog:",
-    "@orchestra/app": "workspace:*",
-    "@orchestra/ui": "workspace:*",
+    "@opencode-ai/app": "workspace:*",
+    "@opencode-ai/ui": "workspace:*",
     "@sentry/solid": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@solid-primitives/i18n": "2.2.1",

@@ -1,6 +1,6 @@
 # R19 — Backend correctness: small controls, hard evidence
 
-Research date: 2026-10-03. Product premise supplied by user: the backend specialist operates independently inside Orchestra, with native shared Atlas Knowledge/Memory.
+Research date: 2026-10-03. Product premise supplied by user: the backend specialist operates independently inside OpenCode/Orchestra, with native shared Atlas Knowledge/Memory.
 
 ## Decision
 
@@ -160,7 +160,7 @@ Use existing migration runner. Flyway supplies ordered execution and transaction
 
 ## The backend specialist workflow and evidence handoff
 
-The backend specialist can invoke these workflows directly through Orchestra using native Atlas retrieval. Maestro participation is unnecessary. Treat Knowledge/Memory distinction below as record organization, following existing Atlas interfaces.
+The backend specialist can invoke these workflows directly through OpenCode/Orchestra using native Atlas retrieval. Maestro participation is unnecessary. Treat Knowledge/Memory distinction below as record organization, following existing Atlas interfaces.
 
 1. **Ground current change.** Inspect touched route, query, migration, caller, and effect boundary. Retrieve only matching invariant/workflow and prior failure cards. Compare their revision/version assumptions with current code and environment.
 2. **Select triggered findings.** SQL writer → 1; migration → 2; harmful retried command → 3; durable async boundary → 4; API/list change → 5; permission-bearing access → 6. Finding 7 calibrates whichever test evidence is claimed. Shared constraints or probes can satisfy related findings together.

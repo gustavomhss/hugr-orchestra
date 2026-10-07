@@ -9,7 +9,7 @@ const catalog: SkillFixture[] = [
   {
     name: "Boundary review",
     description: "Inspect public interfaces",
-    location: "/repo/shared/.orchestra/skills/review/SKILL.md",
+    location: "/repo/shared/.opencode/skills/review/SKILL.md",
     content:
       "  # Review\n<script>window.__skillInjected = true</script>\n<img src=x onerror=alert(1)>\n<b>Keep literal markup</b>\n",
     mtime: 1_791_000_000_123,
@@ -17,7 +17,7 @@ const catalog: SkillFixture[] = [
   {
     name: "Release notes",
     description: "Describe shipped changes",
-    location: "/home/user/.config/orchestra/skills/notes/SKILL.md",
+    location: "/home/user/.config/opencode/skills/notes/SKILL.md",
     content: "# Notes\n\nKeep the exact trailing newline.\n",
   },
 ]
@@ -125,10 +125,10 @@ for (const protocol of ["v1", "v2"] as const) {
     const governed = {
       name: "own_policy",
       description: "Atlas policy",
-      location: `${directory}/.orchestra/skills/own/own_policy/SKILL.md`,
+      location: `${directory}/.opencode/skills/own/own_policy/SKILL.md`,
       content: "# Policy\n",
     }
-    const created = `${directory}/.orchestra/skills/release-checklist/SKILL.md`
+    const created = `${directory}/.opencode/skills/release-checklist/SKILL.md`
     const response = { status: 200, skills: [...catalog, governed, builtin], hidden: [created] }
     await setup(page, { protocol, response, writes })
     await openSkills(page)
@@ -389,18 +389,18 @@ async function setup(
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: { local: [{ worktree: directory }], [serverB]: [{ worktree: directory }] },
         }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:layout",
+        "opencode.global.dat:layout",
         JSON.stringify({ home: { selection: { server: serverA, directory } } }),
       )
     },
@@ -471,7 +471,7 @@ function json(route: Route, body: unknown, status = 200) {
   })
 }
 
-// Mirrors the server contract: PUT creates `<directory>/.orchestra/skills/<name>/SKILL.md` or rewrites the
+// Mirrors the server contract: PUT creates `<directory>/.opencode/skills/<name>/SKILL.md` or rewrites the
 // registered file at `path` (bumping its mtime); DELETE removes the registered file at `path`.
 function writeSkill(
   route: Route,
@@ -502,7 +502,7 @@ function writeSkill(
   const saved = {
     name: body.name,
     description: body.description,
-    location: body.path ?? `${directory}/.orchestra/skills/${body.name}/SKILL.md`,
+    location: body.path ?? `${directory}/.opencode/skills/${body.name}/SKILL.md`,
     content: body.content,
     mtime: Date.now(),
   }

@@ -1,7 +1,7 @@
 # R58 — Elixir server-side skill variants
 
 Research date: 2026-10-04. Status: source-researched card proposals; not installed or exercised.
-Metadata worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r58-elixir-variants`. `git rev-parse HEAD` plus exact shell equality check verified `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; Git resolves root through macOS `/private/var` alias.
+Metadata worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r58-elixir-variants`. `git rev-parse HEAD` plus exact shell equality check verified `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; Git resolves root through macOS `/private/var` alias.
 Read frozen [skill-variants-plan.md][plan] and [R42 — web backends][r42]. Evidence below comes from versioned primary docs and tagged source; examples and every selection/behavior check remain **unexecuted**. Dependency resolution, compilation and runtime behavior were not tested.
 
 ## Role, composition and version boundary

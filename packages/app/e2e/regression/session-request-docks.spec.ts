@@ -1,10 +1,10 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/Orchestra/RequestDocks"
+const directory = "C:/OpenCode/RequestDocks"
 const projectID = "proj_request_docks"
 const sessionID = "ses_request_docks"
 const title = "Request dock regression"
@@ -177,7 +177,7 @@ async function mockServer(
     questions?: unknown[] | (() => unknown[])
   },
 ) {
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: "v2",
     directory,
     project: {
@@ -192,7 +192,7 @@ async function mockServer(
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: {
             "claude-opus-4-6": {
               id: "claude-opus-4-6",

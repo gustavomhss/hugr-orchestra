@@ -27,6 +27,6 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 600_000,
-    env: { VITE_ORCHESTRA_SERVER_HOST: "127.0.0.1", VITE_ORCHESTRA_SERVER_PORT: "4096" },
+    env: { VITE_OPENCODE_SERVER_HOST: "127.0.0.1", VITE_OPENCODE_SERVER_PORT: "4096" },
   },
 })

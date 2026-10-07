@@ -1,9 +1,9 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/Orchestra/OpenFileExpand"
+const directory = "C:/OpenCode/OpenFileExpand"
 const projectID = "proj_open_file_expand"
 const sessionID = "ses_open_file_expand"
 const title = "Open file expand"
@@ -12,7 +12,7 @@ const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${pr
 test.use({ viewport: { width: 1440, height: 900 } })
 
 test("expands a folder whose path has a trailing Windows separator", async ({ page }) => {
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: {
       id: projectID,
@@ -26,7 +26,7 @@ test("expands a folder whose path has a trailing Windows separator", async ({ pa
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -86,22 +86,22 @@ test("expands a folder whose path has a trailing Windows separator", async ({ pa
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:layout",
+        "opencode.global.dat:layout",
         JSON.stringify({ review: { diffStyle: "split", panelOpened: true } }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:review-panel-v2",
+        "opencode.global.dat:review-panel-v2",
         JSON.stringify({ sidebarOpened: true, sidebarWidth: 240, expandMode: "collapse" }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
     },

@@ -3,7 +3,7 @@ import type {
   WslInstalledDistro,
   WslJob,
   WslOnlineDistro,
-  WslOrchestraCheck,
+  WslOpencodeCheck,
   WslRuntimeCheck,
   WslServerConfig,
   WslServerItem,
@@ -13,12 +13,12 @@ import type {
 } from "../../preload/types"
 import { WSL_SERVERS_KEY } from "../store-keys"
 import { getStore } from "../store"
-import { expectOrchestraVersion, pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
+import { expectOpencodeVersion, pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
 import { clearWslDistroState, wslServerIdToRestart } from "./policy"
 import { nativeT } from "../native-translations"
 import {
   installWslDistro,
-  installWslOrchestra,
+  installWslOpencode,
   installWslRuntimeElevated,
   listInstalledWslDistros,
   listOnlineWslDistros,
@@ -26,7 +26,7 @@ import {
   probeWslDistro,
   probeWslRuntime,
   readWslCommandVersion,
-  resolveWslOrchestra,
+  resolveWslOpencode,
   summarize,
 } from "./runtime"
 
@@ -49,7 +49,7 @@ type WslServersControllerOptions = {
   readServers?: () => WslServerConfig[]
   writeServers?: (servers: WslServerConfig[]) => void
   probeDistro?: typeof probeWslDistro
-  resolveOrchestra?: typeof resolveWslOrchestra
+  resolveOpencode?: typeof resolveWslOpencode
   readCommandVersion?: typeof readWslCommandVersion
 }
 
@@ -122,25 +122,25 @@ export function createWslServersController(
     updateServer(id, (item) => ({ ...item, runtime }))
   }
 
-  const setOrchestraCheck = (distro: string, check: WslOrchestraCheck) => {
+  const setOpencodeCheck = (distro: string, check: WslOpencodeCheck) => {
     setState({
-      orchestraChecks: {
-        ...state.orchestraChecks,
+      opencodeChecks: {
+        ...state.opencodeChecks,
         [distro]: check,
       },
     })
   }
 
-  const checkOrchestra = async (distro: string, opts?: { signal?: AbortSignal }) => {
-    const resolved = await (options?.resolveOrchestra ?? resolveWslOrchestra)(distro, opts)
+  const checkOpencode = async (distro: string, opts?: { signal?: AbortSignal }) => {
+    const resolved = await (options?.resolveOpencode ?? resolveWslOpencode)(distro, opts)
     const version = resolved
       ? await (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts)
       : null
-    return orchestraCheck(distro, resolved, version, appVersion)
+    return opencodeCheck(distro, resolved, version, appVersion)
   }
 
-  const refreshOrchestraCheck = async (distro: string, opts?: { signal?: AbortSignal }) => {
-    setOrchestraCheck(distro, await checkOrchestra(distro, opts))
+  const refreshOpencodeCheck = async (distro: string, opts?: { signal?: AbortSignal }) => {
+    setOpencodeCheck(distro, await checkOpencode(distro, opts))
   }
 
   const probeAddableDistros = async (distros: string[], opts?: { signal?: AbortSignal }) => {
@@ -154,14 +154,14 @@ export function createWslServersController(
       setState({ distroProbes: { ...state.distroProbes, ...Object.fromEntries(distroProbes) } })
     }
 
-    const orchestraChecks = await Promise.all(
+    const opencodeChecks = await Promise.all(
       unique
         .filter((distro) => distroProbeReady(state.distroProbes[distro]))
-        .filter((distro) => !state.orchestraChecks[distro])
-        .map(async (distro) => [distro, await checkOrchestra(distro, opts)] as const),
+        .filter((distro) => !state.opencodeChecks[distro])
+        .map(async (distro) => [distro, await checkOpencode(distro, opts)] as const),
     )
-    if (orchestraChecks.length) {
-      setState({ orchestraChecks: { ...state.orchestraChecks, ...Object.fromEntries(orchestraChecks) } })
+    if (opencodeChecks.length) {
+      setState({ opencodeChecks: { ...state.opencodeChecks, ...Object.fromEntries(opencodeChecks) } })
     }
   }
 
@@ -169,29 +169,29 @@ export function createWslServersController(
     return state.servers.some((item) => item.config.id === id && item.config.distro === distro)
   }
 
-  const refreshOrchestraCheckBackground = (id: string, distro: string) => {
-    void checkOrchestra(distro)
+  const refreshOpencodeCheckBackground = (id: string, distro: string) => {
+    void checkOpencode(distro)
       .then((check) => {
         if (!hasServer(id, distro)) return
-        setOrchestraCheck(distro, check)
+        setOpencodeCheck(distro, check)
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error)
-        logger?.error("wsl orchestra check failed", { id, distro, message })
+        logger?.error("wsl opencode check failed", { id, distro, message })
       })
   }
 
-  const refreshOrchestraChecks = async () => {
+  const refreshOpencodeChecks = async () => {
     await Promise.all(
       state.servers.map((item) =>
-        checkOrchestra(item.config.distro)
+        checkOpencode(item.config.distro)
           .then((check) => {
             if (!hasServer(item.config.id, item.config.distro)) return
-            setOrchestraCheck(item.config.distro, check)
+            setOpencodeCheck(item.config.distro, check)
           })
           .catch((error) => {
             const message = error instanceof Error ? error.message : String(error)
-            logger?.error("wsl orchestra check failed", {
+            logger?.error("wsl opencode check failed", {
               id: item.config.id,
               distro: item.config.distro,
               message,
@@ -252,7 +252,7 @@ export function createWslServersController(
         setRuntime(id, { kind: "failed", message })
         logger?.error("wsl sidecar exited", { id, distro: item.config.distro, code, signal })
       })
-      refreshOrchestraCheckBackground(id, item.config.distro)
+      refreshOpencodeCheckBackground(id, item.config.distro)
       logger?.log("wsl sidecar ready", { id, distro: item.config.distro, url: sidecar.url })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -304,7 +304,7 @@ export function createWslServersController(
 
     async initialize() {
       refreshFromStore()
-      void refreshOrchestraChecks()
+      void refreshOpencodeChecks()
       for (const id of wslServerIdsToStartOnInitialize(state.servers.map((item) => item.config))) void startServer(id)
     },
 
@@ -360,14 +360,14 @@ export function createWslServersController(
       })
     },
 
-    async installOrchestra(name: string) {
-      await runJob({ kind: "install-orchestra", distro: name, startedAt: Date.now() }, async (abort) => {
-        const result = await installWslOrchestra(appVersion, name, { signal: abort.signal })
+    async installOpencode(name: string) {
+      await runJob({ kind: "install-opencode", distro: name, startedAt: Date.now() }, async (abort) => {
+        const result = await installWslOpencode(appVersion, name, { signal: abort.signal })
         if (result.code !== 0) {
-          throw new Error(summarize(result.stderr || result.stdout) || nativeT("desktop.wsl.error.installOrchestra"))
+          throw new Error(summarize(result.stderr || result.stdout) || nativeT("desktop.wsl.error.installOpencode"))
         }
-        await refreshOrchestraCheck(name, { signal: abort.signal })
-        expectOrchestraVersion(state.orchestraChecks[name]?.version ?? null, appVersion, name)
+        await refreshOpencodeCheck(name, { signal: abort.signal })
+        expectOpencodeVersion(state.opencodeChecks[name]?.version ?? null, appVersion, name)
         const id = wslServerIdToRestart(state.servers, name)
         if (id) await startServer(id)
       })
@@ -402,7 +402,7 @@ export function createWslServersController(
       persistServers(remaining)
       setState({
         servers: state.servers.filter((item) => item.config.id !== id),
-        ...(distro ? clearWslDistroState(state.distroProbes, state.orchestraChecks, distro) : {}),
+        ...(distro ? clearWslDistroState(state.distroProbes, state.opencodeChecks, distro) : {}),
       })
     },
 
@@ -428,7 +428,7 @@ function initialState(): WslServersState {
     installed: [],
     online: [],
     distroProbes: {},
-    orchestraChecks: {},
+    opencodeChecks: {},
     pendingRestart: false,
     servers: [],
     job: null,
@@ -464,12 +464,12 @@ function normalizePersistedServer(value: unknown): WslServerConfig[] {
   ]
 }
 
-function orchestraCheck(
+function opencodeCheck(
   distro: string,
   resolvedPath: string | null,
   version: string | null,
   expectedVersion: string,
-): WslOrchestraCheck {
+): WslOpencodeCheck {
   if (!resolvedPath) {
     return {
       distro,
@@ -477,7 +477,7 @@ function orchestraCheck(
       version: null,
       expectedVersion,
       matchesDesktop: null,
-      error: nativeT("desktop.wsl.error.orchestraMissing"),
+      error: nativeT("desktop.wsl.error.opencodeMissing"),
     }
   }
   if (!version) {
@@ -487,7 +487,7 @@ function orchestraCheck(
       version: null,
       expectedVersion,
       matchesDesktop: null,
-      error: nativeT("desktop.wsl.error.orchestraCannotRun"),
+      error: nativeT("desktop.wsl.error.opencodeCannotRun"),
     }
   }
   return {
@@ -514,7 +514,7 @@ export type {
   WslOnlineDistro,
   WslRuntimeCheck,
   WslDistroProbe,
-  WslOrchestraCheck,
+  WslOpencodeCheck,
   WslServerConfig,
   WslServerItem,
   WslServerRuntime,

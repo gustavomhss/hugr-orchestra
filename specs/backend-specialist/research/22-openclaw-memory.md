@@ -2,7 +2,7 @@
 
 Research date: 2026-10-03. Research only; source/test inspection, no downloaded code executed. Runtime ownership and tool/plugin policy remain separate research scopes.
 
-**Decision:** borrow provenance, bounded selection, explicit succession, evidence checks, and cache identity semantics. The backend specialist stays in Orchestra; Maestro optional. Atlas remains native shared Knowledge plus per-member task/PR/project Memory. Reject copied embedding store, independent DB/index/context engine, and dreaming daemon absent demonstrated unmet need and measured benefit.
+**Decision:** borrow provenance, bounded selection, explicit succession, evidence checks, and cache identity semantics. The backend specialist stays in OpenCode/Orchestra; Maestro optional. Atlas remains native shared Knowledge plus per-member task/PR/project Memory. Reject copied embedding store, independent DB/index/context engine, and dreaming daemon absent demonstrated unmet need and measured benefit.
 
 ## Evidence and version boundary
 

@@ -64,7 +64,7 @@ Gaps: no peer-reviewed 2025–2026 study isolates persona effects on **multi-tur
 | Claude Code output styles | Style can change "role, tone, and response format" [P5] | Custom styles drop the built-in engineering instructions unless `keep-coding-instructions: true` | "It doesn't guarantee that something always happens or never happens" [P5]. Voice is a separable layer, and swapping it can silently remove the charter |
 | Codex CLI | "You are Codex, based on GPT-5…" [P6] | Long behavioral rules. Since 2026-01-20, `model_personality` (pragmatic default / friendly / none) is injected through a template slot, per model family [P7] | The pragmatic voice explicitly avoids "cheerleading, motivational language, or artificial reassurance" [P8] |
 | Cline | Was "a highly skilled software engineer with extensive knowledge…" plus a ban on "Great"/"Certainly" openers [P9]. Now "You are Cline, an AI coding agent." [P10] | Rules and tool protocol | Moved away from expertise flattery |
-| Orchestra (upstream) | "You are Orchestra, the best coding agent on the planet." [P11] | Rules | Superlative framing. E1/E2/E13 suggest it adds nothing to accuracy and may inflate confidence |
+| OpenCode (upstream) | "You are OpenCode, the best coding agent on the planet." [P11] | Rules | Superlative framing. E1/E2/E13 suggest it adds nothing to accuracy and may inflate confidence |
 | Amp | Optional `name` adds "You are <name>, a custom agent running in Amp." "Omit it to avoid adding a named identity to the prompt." [P12] | `instructions`, `tools`, `model` | Treats the name as an optional prompt input, separate from logs/UI metadata |
 | Amp subagents | "Subagents are tools, too" [P13] | Task-scoped, condensed return | Early specialized subagents went unused; generic subagents with clear tasks worked better |
 | GitHub Copilot custom agents | "You are a testing specialist focused on…" [P14] | Description (required), tools, ≤30k-char body | Role plus responsibility scope |
@@ -91,7 +91,7 @@ Pattern: the field converges on **one functional identity sentence + rules + too
 
 ## 5. Observations on the current backend specialist surface
 
-Read-only, from `packages/orchestra/src/agent/prompt/backend.txt`, `packages/orchestra/src/maestro/roster.ts`, and `packages/orchestra/src/agent/agent.ts:294–300`:
+Read-only, from `packages/opencode/src/agent/prompt/backend.txt`, `packages/opencode/src/maestro/roster.ts`, and `packages/opencode/src/agent/agent.ts:294–300`:
 
 1. **The prompt hardcodes "You are <default label>"** while `displayName` is meant to be configurable. If the label changes, the user sees one name and the model calls itself another. This also makes the canonical behavioral template depend on the label, which `README.md:205` already says to avoid.
 2. **The routing description has almost no content.** `${displayName} native team specialist.` gives Maestro, or any model choosing an agent, no signal about *when* to pick the backend specialist. Shipped practice (P4, P14) makes the description the "when to use" contract.
@@ -229,7 +229,7 @@ Product and vendor (retrieved 2026-10-05)
 - [P8] OpenAI Codex, `codex-rs/core/templates/personalities/gpt-5.2-codex_pragmatic.md`. https://github.com/openai/codex/blob/main/codex-rs/core/templates/personalities/gpt-5.2-codex_pragmatic.md — "avoiding cheerleading, motivational language, or artificial reassurance".
 - [P9] Cline v3.0.0, `src/core/prompts/system.ts` lines 10, 842. https://github.com/cline/cline/blob/v3.0.0/src/core/prompts/system.ts
 - [P10] Cline main, `sdk/packages/shared/src/prompt/system/act.ts` (last commit 2026-09-15). https://github.com/cline/cline/blob/main/sdk/packages/shared/src/prompt/system/act.ts
-- [P11] Orchestra upstream, `packages/orchestra/src/session/prompt/anthropic.txt` (dev). https://github.com/sst/opencode/blob/dev/packages/orchestra/src/session/prompt/anthropic.txt
+- [P11] OpenCode upstream, `packages/opencode/src/session/prompt/anthropic.txt` (dev). https://github.com/sst/opencode/blob/dev/packages/opencode/src/session/prompt/anthropic.txt
 - [P12] Amp, Plugin API (`CreateAgentConfig.name`). https://ampcode.com/manual/plugin-api — "Omit it to avoid adding a named identity to the prompt."
 - [P13] Amp, "Agents for the Agent," 2025-06-10. https://ampcode.com/notes/agents-for-the-agent
 - [P14] GitHub, Custom agents configuration. https://docs.github.com/en/copilot/reference/custom-agents-configuration
@@ -237,4 +237,4 @@ Product and vendor (retrieved 2026-10-05)
 - [P16] OpenAI, GPT-5.1 prompting guide. https://developers.openai.com/cookbook/examples/gpt-5/gpt-5-1_prompting_guide
 - [P17] OpenAI, GPT-5 prompting guide. https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide — contradictory prompts "can be more damaging to GPT-5 than to other models".
 
-Local files read (read-only): `packages/orchestra/src/agent/prompt/{backend,maestro,lucy}.txt`, `packages/orchestra/src/maestro/roster.ts`, `packages/orchestra/src/agent/agent.ts:280–310`, `specs/backend-specialist/README.md`, `specs/backend-specialist/research/{02-claude,11-devin,14-other-competitors,27-agent-failures}.md`.
+Local files read (read-only): `packages/opencode/src/agent/prompt/{backend,maestro,lucy}.txt`, `packages/opencode/src/maestro/roster.ts`, `packages/opencode/src/agent/agent.ts:280–310`, `specs/backend-specialist/README.md`, `specs/backend-specialist/research/{02-claude,11-devin,14-other-competitors,27-agent-failures}.md`.

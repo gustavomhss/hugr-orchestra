@@ -23,7 +23,7 @@ export {
   type WslInstalledDistro,
   type WslJob,
   type WslOnlineDistro,
-  type WslOrchestraCheck,
+  type WslOpencodeCheck,
   type WslRuntimeCheck,
   type WslServerConfig,
   type WslServerItem,

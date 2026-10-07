@@ -1,6 +1,6 @@
 import { Match, Show, Switch, createMemo } from "solid-js"
-import { Tabs } from "@orchestra/ui/tabs"
-import { ResizeHandle } from "@orchestra/ui/resize-handle"
+import { Tabs } from "@opencode-ai/ui/tabs"
+import { ResizeHandle } from "@opencode-ai/ui/resize-handle"
 import FileTree, { type Kind } from "@/components/file-tree"
 import { useFile } from "@/context/file"
 import { useLanguage } from "@/context/language"

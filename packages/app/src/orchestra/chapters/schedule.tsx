@@ -1,5 +1,5 @@
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { getFilename } from "@orchestra/core/util/path"
+import { getFilename } from "@opencode-ai/core/util/path"
 import { Option, Schema } from "effect"
 import {
   createEffect,

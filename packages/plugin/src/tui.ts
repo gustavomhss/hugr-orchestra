@@ -1,6 +1,6 @@
 import type {
   AgentPart,
-  OrchestraClient,
+  OpencodeClient,
   Event,
   FilePart,
   LspStatus,
@@ -15,7 +15,7 @@ import type {
   SessionStatus,
   TextPart,
   Config as SdkConfig,
-} from "@orchestra/sdk/v2"
+} from "@opencode-ai/sdk/v2"
 import type { CliRenderer, KeyEvent, RGBA, Renderable, SlotMode } from "@opentui/core"
 import type { Binding, Keymap } from "@opentui/keymap"
 import {
@@ -611,7 +611,7 @@ export type TuiPluginApi = {
   kv: TuiKV
   state: TuiState
   theme: TuiTheme
-  client: OrchestraClient
+  client: OpencodeClient
   event: TuiEventBus
   renderer: CliRenderer
   slots: TuiSlots

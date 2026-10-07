@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { Page, Route } from "@playwright/test"
-import { mockOrchestraServer } from "../../utils/mock-server"
+import { mockOpenCodeServer } from "../../utils/mock-server"
 
 test("applies message latency after a list response gate is released", async () => {
   const events: string[] = []
@@ -12,9 +12,9 @@ test("applies message latency after a list response gate is released", async () 
       return Promise.resolve()
     },
   } as unknown as Page
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     provider: {},
-    directory: "C:/Orchestra",
+    directory: "C:/OpenCode",
     project: {},
     sessions: [{ id: "session" }],
     messageDelay: 25,

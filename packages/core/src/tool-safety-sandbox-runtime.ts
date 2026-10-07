@@ -53,7 +53,7 @@ const RIPGREP_LINUX = {
 // A failed acquisition is retried on a later need, not on every command.
 const RETRY_MS = 5 * 60_000
 
-export const Source = Context.Reference<Source | undefined>("@orchestra/ToolSafetySandbox/Source", {
+export const Source = Context.Reference<Source | undefined>("@opencode/ToolSafetySandbox/Source", {
   defaultValue: () => {
     const ripgrep = process.platform === "linux" ? RIPGREP_LINUX[process.arch as keyof typeof RIPGREP_LINUX] : undefined
     if (!ripgrep) return undefined

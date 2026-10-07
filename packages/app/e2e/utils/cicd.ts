@@ -1,6 +1,6 @@
 import { expect, type Page, type Route, type WebSocketRoute } from "@playwright/test"
 import type { ModelInfo } from "@opencode-ai/client/promise"
-import { mockOrchestraServer } from "./mock-server"
+import { mockOpenCodeServer } from "./mock-server"
 
 // Shared fixture for the CI/CD chapter spec: two servers with one repository profile each, a
 // workflow file inventory, and a server PTY double for pipeline runs.
@@ -88,7 +88,7 @@ export async function mockPty(page: Page, protocol: "v1" | "v2") {
       const url = new URL(route.request().url())
       const method = route.request().method()
       // The V1 SDK sends the directory as a query only for GET/HEAD; other methods carry a header.
-      const header = route.request().headers()["x-orchestra-directory"]
+      const header = route.request().headers()["x-opencode-directory"]
       expect(
         url.searchParams.get(protocol === "v1" ? "directory" : "location[directory]") ??
           (header === undefined ? undefined : decodeURIComponent(header)),
@@ -175,7 +175,7 @@ export async function setup(
     time: { created: 1, updated: 1 },
     sandboxes: [],
   })
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: options.protocol ?? "v2",
     directory,
     project: project(serverA),
@@ -188,7 +188,7 @@ export async function setup(
     if (url.origin !== serverA && url.origin !== serverB) return route.fallback()
     const path = url.pathname
     if (path === "/api/provider")
-      return json(route, { location: { directory }, data: [{ id: "opencode", name: "Orchestra", settings: {} }] })
+      return json(route, { location: { directory }, data: [{ id: "opencode", name: "OpenCode", settings: {} }] })
     if (path === "/api/model") return json(route, { location: { directory }, data: [model] })
     if (path === "/api/model/default") return json(route, { location: { directory }, data: model })
     if (path === "/api/mcp") return json(route, { location: { directory }, data: [] })
@@ -284,7 +284,7 @@ export async function setup(
     ({ serverB, scheme, directory }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: {
@@ -294,8 +294,8 @@ export async function setup(
           lastProject: { local: directory, [serverB]: directory },
         }),
       )
-      localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale: "en" }))
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale: "en" }))
+      localStorage.setItem("opencode-color-scheme", scheme)
     },
     { serverB, scheme: options.scheme ?? "dark", directory },
   )
@@ -316,7 +316,7 @@ export function provider() {
     all: [
       {
         id: "opencode",
-        name: "Orchestra",
+        name: "OpenCode",
         models: { "test-model": { id: "test-model", name: "Test model", limit: { context: 200_000 } } },
       },
     ],

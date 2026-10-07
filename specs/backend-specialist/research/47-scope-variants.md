@@ -1,7 +1,7 @@
 # R47 — task modes × technical domains: implementation variant cards
 
 Status: source-only research, 2026-10-03. Cards, bundles and selection/check cases below are proposals; application commands, generators, benchmarks and tests unexecuted. Public skill IDs remain lead decision.
-Baseline: `git rev-parse --show-toplevel --verify HEAD` in metadata worktree resolved `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r47-scope-variants`, HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Supplied `backend-plugin` source worktree HEAD independently matched.
+Baseline: `git rev-parse --show-toplevel --verify HEAD` in metadata worktree resolved `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r47-scope-variants`, HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Supplied `backend-plugin` source worktree HEAD independently matched.
 Contract read: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md`, plus parent `capabilities.md` and `backend-toolbox.md`. R29/R31/R32 used as source leads; technical claims below cite primary material reopened during R47, never earlier reports as runtime evidence.
 
 ## Shared contract and selection axes

@@ -1,9 +1,9 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/Orchestra/ReviewTabSwitch"
+const directory = "C:/OpenCode/ReviewTabSwitch"
 const projectID = "proj_review_tab_switch"
 const sessionA = "ses_review_tab_a"
 const sessionB = "ses_review_tab_b"
@@ -75,7 +75,7 @@ async function readProbe(page: Page) {
 }
 
 async function setup(page: Page) {
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: {
       id: projectID,
@@ -89,7 +89,7 @@ async function setup(page: Page) {
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -105,14 +105,14 @@ async function setup(page: Page) {
     ({ directory, server, sessions }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify(sessions.map((sessionId: string) => ({ type: "session", server, sessionId }))),
       )
     },

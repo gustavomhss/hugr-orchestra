@@ -74,7 +74,7 @@ test.skipIf(!enabled)("coalesces actual reads, bounds catalogue caching, and pre
     env: environment, timeout: 30_000, killSignal: "SIGKILL", maxBuffer: 2 * 1024 * 1024,
   })
   expect((await docker(["image", "inspect", "--format", "{{.Os}}", image])).stdout.trim()).toBe("linux")
-  const root = await mkdtemp(join(tmpdir(), "orchestra/orchestra-runtime-performance-"))
+  const root = await mkdtemp(join(tmpdir(), "opencode/orchestra-runtime-performance-"))
   const runtime = module.AppDockRuntime.create({ root, context: resolve("resources/linux-runtime"), image })
   const cleanup = { id: "", owner: "" }
   try {

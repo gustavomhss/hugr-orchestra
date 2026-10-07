@@ -16,7 +16,7 @@ export type DiffProps<T = {}> = FileDiffOptions<T> & {
 
 const unsafeCSS = `
 :host {
-  --diffs-bg: var(--orchestra-diffs-bg, var(--color-background-stronger));
+  --diffs-bg: var(--opencode-diffs-bg, var(--color-background-stronger));
 }
 
 [data-diff],
@@ -74,11 +74,11 @@ const unsafeCSS = `
   background-color: var(--diffs-bg-context-gutter);
 }
 
-::highlight(orchestra-find) {
+::highlight(opencode-find) {
   background-color: rgb(from var(--surface-warning-base) r g b / 0.35);
 }
 
-::highlight(orchestra-find-current) {
+::highlight(opencode-find-current) {
   background-color: rgb(from var(--surface-warning-strong) r g b / 0.55);
 }
 
@@ -187,7 +187,7 @@ ${lineCommentStyles}
 
 export function createDefaultOptions<T>(style: FileDiffOptions<T>["diffStyle"]) {
   return {
-    theme: "Orchestra",
+    theme: "OpenCode",
     themeType: "system",
     disableLineNumbers: false,
     overflow: "wrap",

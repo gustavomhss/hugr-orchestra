@@ -19,7 +19,7 @@ export type TuiOptions = {
   config?: Config
 }
 
-export async function createOrchestraServer(options?: ServerOptions) {
+export async function createOpencodeServer(options?: ServerOptions) {
   options = Object.assign(
     {
       hostname: "127.0.0.1",
@@ -32,10 +32,10 @@ export async function createOrchestraServer(options?: ServerOptions) {
   const args = [`serve`, `--hostname=${options.hostname}`, `--port=${options.port}`]
   if (options.config?.logLevel) args.push(`--log-level=${options.config.logLevel}`)
 
-  const proc = launch(`orchestra`, args, {
+  const proc = launch(`opencode`, args, {
     env: {
       ...process.env,
-      ORCHESTRA_CONFIG_CONTENT: JSON.stringify(options.config ?? {}),
+      OPENCODE_CONFIG_CONTENT: JSON.stringify(options.config ?? {}),
     },
   })
   let clear = () => {}
@@ -53,7 +53,7 @@ export async function createOrchestraServer(options?: ServerOptions) {
       output += chunk.toString()
       const lines = output.split("\n")
       for (const line of lines) {
-        if (line.startsWith("orchestra server listening")) {
+        if (line.startsWith("opencode server listening")) {
           const match = line.match(/on\s+(https?:\/\/[^\s]+)/)
           if (!match) {
             clear()
@@ -99,7 +99,7 @@ export async function createOrchestraServer(options?: ServerOptions) {
   }
 }
 
-export function createOrchestraTui(options?: TuiOptions) {
+export function createOpencodeTui(options?: TuiOptions) {
   const args = []
 
   if (options?.project) {
@@ -115,11 +115,11 @@ export function createOrchestraTui(options?: TuiOptions) {
     args.push(`--agent=${options.agent}`)
   }
 
-  const proc = launch(`orchestra`, args, {
+  const proc = launch(`opencode`, args, {
     stdio: "inherit",
     env: {
       ...process.env,
-      ORCHESTRA_CONFIG_CONTENT: JSON.stringify(options?.config ?? {}),
+      OPENCODE_CONFIG_CONTENT: JSON.stringify(options?.config ?? {}),
     },
   })
 

@@ -1,6 +1,6 @@
 export * as AppDockLinux from "./app-dock-linux"
 
-import type { LinuxTab } from "@orchestra/app/app-dock-linux"
+import type { LinuxTab } from "@opencode-ai/app/app-dock-linux"
 import { session, WebContentsView } from "electron"
 import type { BrowserWindow, Session, WebContents } from "electron"
 import { randomUUID, X509Certificate } from "node:crypto"

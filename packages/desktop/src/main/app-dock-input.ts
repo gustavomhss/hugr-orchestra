@@ -279,7 +279,7 @@ export function createAppDockInput(ctx: AppDockContext): Pick<AppDockAPI, "click
         record.view.webContents.sendInputEvent({ type: "mouseUp", x: inputX, y: inputY, button: "left", clickCount: 1 })
         await navigationDone
         await new Promise((resolve) => setTimeout(resolve, 50))
-        const nativeClick = await this.execute(senderID, tabID, "(() => { const probe = window.__orchestraDockClickProbe; if (!probe) return false; const fired = probe.fired(); probe.cleanup(); delete window.__orchestraDockClickProbe; return fired })()")
+        const nativeClick = await this.execute(senderID, tabID, "(() => { const probe = window.__opencodeDockClickProbe; if (!probe) return false; const fired = probe.fired(); probe.cleanup(); delete window.__opencodeDockClickProbe; return fired })()")
         let url = record.view.webContents.getURL() || beforeURL
         let trusted = true
         let navigationBlocked = observedBlocked || (ctx.blockedNavigationVersions.get(`${senderID}:${tabID}`) ?? 0) > blockedNavigationVersion

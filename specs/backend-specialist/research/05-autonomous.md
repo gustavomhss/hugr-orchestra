@@ -1,6 +1,6 @@
 # R05 — OpenHands / SWE-agent mechanisms for the backend specialist
 
-**Research date:** 2026-10-03. **Disposition:** adapt mechanisms; retain Orchestra execution ownership and Atlas Knowledge+Memory ownership.
+**Research date:** 2026-10-03. **Disposition:** adapt mechanisms; retain OpenCode/Orchestra execution ownership and Atlas Knowledge+Memory ownership.
 
 **Scope:** primary repositories/docs plus selected source, read-only investigation. This report proposes architecture and evaluation scenarios. It does not report implementation, executed upstream code, measured improvements, benchmark results, or security certification.
 
@@ -28,7 +28,7 @@ Names such as the backend specialist, Maestro and Atlas denote roles here. Publi
 
 | Owner | Proposed responsibility |
 | --- | --- |
-| **Orchestra host** | Session admission, provider-turn execution, tool registry, permissions, Location placement, interruption, durable transcript, Session History/Context Epoch selection. |
+| **OpenCode/Orchestra host** | Session admission, provider-turn execution, tool registry, permissions, Location placement, interruption, durable transcript, Session History/Context Epoch selection. |
 | **the backend specialist plugin** | Backend-engineering task policy/profile; typed task/result contract; tool-feedback presentation; verification expectations; task budget policy; references to artifacts and reusable knowledge. Invoke through host facilities. |
 | **Maestro native integration** | Optional native capability binding using the backend specialist's same task/result contract. Supply objective, scope, baseline, limits and evidence references; receive progress, completion/blockage, cancellation acknowledgement. Direct backend specialist invocation works without Maestro. |
 | **Atlas** | Shared Knowledge+Memory: repository facts, validated failure lessons, provenance, retrieval and evidence references. Session execution/transcript remains host-owned; the backend specialist does not create another knowledge database or memory service. |
@@ -142,7 +142,7 @@ SWE-agent [history processors][S10] support last-N observation elision, keep/rem
 
 ## 4. Proposed evaluation, not executed results
 
-Start with native Orchestra + the backend specialist profile baseline. Compare one mechanism at a time, then selected combined configuration, holding task revisions, model/provider settings, tools, permissions, budget and environment fixed. Allow normal LLM variation through predeclared repeated runs; report distributions and failure categories instead of single best run. Include both direct invocation and Maestro-native invocation under same contract.
+Start with native OpenCode/Orchestra + the backend specialist profile baseline. Compare one mechanism at a time, then selected combined configuration, holding task revisions, model/provider settings, tools, permissions, budget and environment fixed. Allow normal LLM variation through predeclared repeated runs; report distributions and failure categories instead of single best run. Include both direct invocation and Maestro-native invocation under same contract.
 
 Suggested backend cases:
 
@@ -229,7 +229,7 @@ All source links below pin inspected commits. Documentation links identify live 
 
 ## 8. Research artifact boundary
 
-Output: this `RESEARCH.md` in existing metadata-only detached worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r05-autonomous`, base `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Research used GitHub metadata/content APIs and primary document retrieval. No upstream installs, code execution, benchmark runs, production implementation, subagents, commits, pushes or configuration edits were part of this work.
+Output: this `RESEARCH.md` in existing metadata-only detached worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r05-autonomous`, base `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Research used GitHub metadata/content APIs and primary document retrieval. No upstream installs, code execution, benchmark runs, production implementation, subagents, commits, pushes or configuration edits were part of this work.
 
 [OH]: https://github.com/OpenHands/OpenHands
 [SDK]: https://github.com/OpenHands/software-agent-sdk

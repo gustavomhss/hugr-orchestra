@@ -3,7 +3,7 @@ import fs from "fs/promises"
 import path from "path"
 import { promisify } from "util"
 import { pathToFileURL } from "url"
-import { Repository } from "@orchestra/core/repository"
+import { Repository } from "@opencode-ai/core/repository"
 
 const exec = promisify(execFile)
 

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/Orchestra/ReviewTerminalStacked"
+const directory = "C:/OpenCode/ReviewTerminalStacked"
 const projectID = "proj_review_terminal_stacked"
 const sessionID = "ses_review_terminal_stacked"
 const title = "Review terminal stacked"
@@ -24,7 +24,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
   let detailVersion = 1
   let detailFailures = 1
   await page.setViewportSize({ width: 1400, height: 900 })
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: "v1",
     directory,
     project: {
@@ -39,7 +39,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -141,7 +141,7 @@ test("keeps the review tree and terminal sized when both panels are open", async
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
     localStorage.setItem(
-      "orchestra.global.dat:layout",
+      "opencode.global.dat:layout",
       JSON.stringify({ review: { diffStyle: "split", panelOpened: true } }),
     )
   })

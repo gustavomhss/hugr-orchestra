@@ -7,7 +7,7 @@ import {
   wslTerminalArgs,
 } from "./policy"
 import {
-  expectOrchestraVersion,
+  expectOpencodeVersion,
   pendingRestartAfterWslInstall,
   pollWslHealth,
   wslServerIdsToStartOnInitialize,
@@ -15,7 +15,7 @@ import {
 import { createWslServersController, type WslServerConfig } from "./servers"
 
 let persistedServers: WslServerConfig[] = []
-let releaseOrchestraResolve: (() => void) | undefined
+let releaseOpencodeResolve: (() => void) | undefined
 
 test("starts every configured WSL server on initialization", () => {
   expect(
@@ -27,13 +27,13 @@ test("starts every configured WSL server on initialization", () => {
 })
 
 test("rejects an update that did not install the desktop version", () => {
-  expect(() => expectOrchestraVersion("1.16.2", "1.16.2")).not.toThrow()
-  expect(() => expectOrchestraVersion("1.14.35", "1.16.2")).toThrow(
-    "Orchestra update finished but Debian still reports 1.14.35; expected 1.16.2",
+  expect(() => expectOpencodeVersion("1.16.2", "1.16.2")).not.toThrow()
+  expect(() => expectOpencodeVersion("1.14.35", "1.16.2")).toThrow(
+    "OpenCode update finished but Debian still reports 1.14.35; expected 1.16.2",
   )
 })
 
-test("restarts an existing distro server after updating Orchestra", () => {
+test("restarts an existing distro server after updating OpenCode", () => {
   expect(
     wslServerIdToRestart(
       [
@@ -55,7 +55,7 @@ test("clears cached distro probes when removing a WSL server", () => {
       {
         Debian: {
           distro: "Debian",
-          resolvedPath: "/home/luke/.orchestra/bin/orchestra",
+          resolvedPath: "/home/luke/.opencode/bin/opencode",
           version: "1.16.2",
           expectedVersion: "1.16.2",
           matchesDesktop: true,
@@ -64,7 +64,7 @@ test("clears cached distro probes when removing a WSL server", () => {
       },
       "Debian",
     ),
-  ).toEqual({ distroProbes: {}, orchestraChecks: {} })
+  ).toEqual({ distroProbes: {}, opencodeChecks: {} })
 })
 
 test("opens terminals for distro names containing spaces", () => {
@@ -104,9 +104,9 @@ test("derives a required Windows restart from the post-install runtime probe", (
   expect(pendingRestartAfterWslInstall({ available: true, version: "WSL version: 2.6.1", error: null })).toBe(false)
 })
 
-test("ignores stale background Orchestra checks after removing a WSL server", async () => {
+test("ignores stale background OpenCode checks after removing a WSL server", async () => {
   persistedServers = []
-  releaseOrchestraResolve = undefined
+  releaseOpencodeResolve = undefined
   const controller = createWslServersController(
     "1.16.2",
     async () => ({
@@ -115,25 +115,25 @@ test("ignores stale background Orchestra checks after removing a WSL server", as
         onExit: () => undefined,
       },
       url: "http://127.0.0.1:4096",
-      username: "orchestra",
+      username: "opencode",
       password: "secret",
     }),
     testControllerOptions(),
   )
 
   await controller.addServer("Debian")
-  await waitFor(() => !!releaseOrchestraResolve)
+  await waitFor(() => !!releaseOpencodeResolve)
   await controller.removeServer("wsl:Debian")
-  releaseOrchestraResolve?.()
+  releaseOpencodeResolve?.()
   await new Promise((resolve) => setTimeout(resolve, 0))
 
   expect(controller.getState().servers).toEqual([])
-  expect(controller.getState().orchestraChecks).toEqual({})
+  expect(controller.getState().opencodeChecks).toEqual({})
 })
 
-test("ignores stale startup Orchestra checks after removing a WSL server", async () => {
+test("ignores stale startup OpenCode checks after removing a WSL server", async () => {
   persistedServers = [{ id: "wsl:Debian", distro: "Debian" }]
-  releaseOrchestraResolve = undefined
+  releaseOpencodeResolve = undefined
   const controller = createWslServersController(
     "1.16.2",
     async () => new Promise<never>(() => undefined),
@@ -141,20 +141,20 @@ test("ignores stale startup Orchestra checks after removing a WSL server", async
   )
 
   await controller.initialize()
-  await waitFor(() => !!releaseOrchestraResolve)
+  await waitFor(() => !!releaseOpencodeResolve)
   await controller.removeServer("wsl:Debian")
-  releaseOrchestraResolve?.()
+  releaseOpencodeResolve?.()
   await new Promise((resolve) => setTimeout(resolve, 0))
 
   expect(controller.getState().servers).toEqual([])
-  expect(controller.getState().orchestraChecks).toEqual({})
+  expect(controller.getState().opencodeChecks).toEqual({})
 })
 
-test("probes addable distros in parallel before checking Orchestra", async () => {
+test("probes addable distros in parallel before checking OpenCode", async () => {
   persistedServers = []
   const started: string[] = []
   const release = new Map<string, () => void>()
-  const orchestra: string[] = []
+  const opencode: string[] = []
   const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
     ...testControllerOptions(),
     probeDistro: async (distro) => {
@@ -162,28 +162,28 @@ test("probes addable distros in parallel before checking Orchestra", async () =>
       await new Promise<void>((resolve) => release.set(distro, resolve))
       return { name: distro, canExecute: true, hasBash: true, hasCurl: true, error: null }
     },
-    resolveOrchestra: async (distro) => {
-      orchestra.push(distro)
-      return "/home/me/.orchestra/bin/orchestra"
+    resolveOpencode: async (distro) => {
+      opencode.push(distro)
+      return "/home/me/.opencode/bin/opencode"
     },
   })
 
   const task = controller.probeAddable(["Debian", "Ubuntu"])
   await waitFor(() => started.length === 2)
   expect(started).toEqual(["Debian", "Ubuntu"])
-  expect(orchestra).toEqual([])
+  expect(opencode).toEqual([])
   release.get("Debian")?.()
   release.get("Ubuntu")?.()
   await task
 
   expect(Object.keys(controller.getState().distroProbes)).toEqual(["Debian", "Ubuntu"])
-  expect(orchestra).toEqual(["Debian", "Ubuntu"])
-  expect(Object.keys(controller.getState().orchestraChecks)).toEqual(["Debian", "Ubuntu"])
+  expect(opencode).toEqual(["Debian", "Ubuntu"])
+  expect(Object.keys(controller.getState().opencodeChecks)).toEqual(["Debian", "Ubuntu"])
 })
 
-test("does not check Orchestra in addable distros that cannot execute commands", async () => {
+test("does not check OpenCode in addable distros that cannot execute commands", async () => {
   persistedServers = []
-  const orchestra: string[] = []
+  const opencode: string[] = []
   const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
     ...testControllerOptions(),
     probeDistro: async (distro) => ({
@@ -193,17 +193,17 @@ test("does not check Orchestra in addable distros that cannot execute commands",
       hasCurl: distro === "Debian",
       error: distro === "Debian" ? null : "Open Ubuntu once to finish setup",
     }),
-    resolveOrchestra: async (distro) => {
-      orchestra.push(distro)
-      return "/home/me/.orchestra/bin/orchestra"
+    resolveOpencode: async (distro) => {
+      opencode.push(distro)
+      return "/home/me/.opencode/bin/opencode"
     },
   })
 
   await controller.probeAddable(["Debian", "Ubuntu"])
 
   expect(Object.keys(controller.getState().distroProbes)).toEqual(["Debian", "Ubuntu"])
-  expect(orchestra).toEqual(["Debian"])
-  expect(Object.keys(controller.getState().orchestraChecks)).toEqual(["Debian"])
+  expect(opencode).toEqual(["Debian"])
+  expect(Object.keys(controller.getState().opencodeChecks)).toEqual(["Debian"])
 })
 
 async function waitFor(check: () => boolean) {
@@ -221,11 +221,11 @@ function testControllerOptions() {
       persistedServers = servers
     },
     readCommandVersion: async () => "1.16.2",
-    resolveOrchestra: async () => {
+    resolveOpencode: async () => {
       await new Promise<void>((resolve) => {
-        releaseOrchestraResolve = resolve
+        releaseOpencodeResolve = resolve
       })
-      return "/home/me/.orchestra/bin/orchestra"
+      return "/home/me/.opencode/bin/opencode"
     },
   }
 }

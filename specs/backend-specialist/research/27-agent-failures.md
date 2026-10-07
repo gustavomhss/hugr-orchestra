@@ -108,7 +108,7 @@ All proposed; use deterministic barriers, actual persistence/dispatch boundaries
 
 ## The backend specialist synthesis — small, independent, user-centered
 
-1. **One backend truth path.** The backend specialist stays independent Orchestra backend plugin. Use native durable prompt admission, task/result evidence, permissions, and Session ownership. Atlas stays native shared foundation; Maestro optional consumer/orchestrator of same contracts.
+1. **One backend truth path.** The backend specialist stays independent OpenCode/Orchestra backend plugin. Use native durable prompt admission, task/result evidence, permissions, and Session ownership. Atlas stays native shared foundation; Maestro optional consumer/orchestrator of same contracts.
 2. **Stable IDs, dynamic labels.** Delayed callbacks retain original identity, location, and authority scope. Label changes update presentation; do not remap memory, task ownership, or acknowledgements. Deferred writes recheck relevant current settings under original identity.
 3. **Truthful progress.** Admission receipt is not model consumption; child completion is not parent delivery; successful summary generation is not useful context reduction; partial restore is not full success. Surface existing evidence states with specific next action.
 4. **Spend once where possible.** Retain completed results across delivery retry. Bound no-progress model/tool/compression work at existing runner boundary. Crash recovery may promote eligible durable inbox inputs; must not silently replay uncertain provider/tool side effects.

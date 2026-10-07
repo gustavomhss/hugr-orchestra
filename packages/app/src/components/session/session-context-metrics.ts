@@ -1,4 +1,4 @@
-import type { AssistantMessage, Message, Part } from "@orchestra/sdk/v2/client"
+import type { AssistantMessage, Message, Part } from "@opencode-ai/sdk/v2/client"
 
 type Parts = Record<string, Part[] | undefined>
 

@@ -20,7 +20,7 @@ describe("App Dock input", () => {
     expect(appDockURL("https://example.com/path")).toBe("https://example.com/path")
     expect(appDockURL("  youtube.com  ")).toBe("https://youtube.com/")
     expect(appDockURL("open source browser")).toBe("https://www.google.com/search?q=open%20source%20browser")
-    expect(appDockURL("orchestra")).toBe("https://www.google.com/search?q=orchestra")
+    expect(appDockURL("opencode")).toBe("https://www.google.com/search?q=opencode")
     expect(() => appDockURL(" ")).toThrow("App Dock address is required")
     expect(() => appDockURL("file:///etc/passwd")).toThrow("App Dock only supports HTTPS URLs")
     expect(() => appDockURL("javascript:alert(1)")).toThrow("App Dock only supports HTTPS URLs")

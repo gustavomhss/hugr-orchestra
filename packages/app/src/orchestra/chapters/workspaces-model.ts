@@ -39,7 +39,7 @@ export function repositoryWorkspaces(
     }))
 }
 
-// V1 creates worktrees only at `<data>/worktree/<projectID>/<name>` (orchestra `Worktree.makeWorktreeInfo`). Its remove
+// V1 creates worktrees only at `<data>/worktree/<projectID>/<name>` (opencode `Worktree.makeWorktreeInfo`). Its remove
 // deletes any other directory outright when git does not list it, so nothing outside that folder is offered.
 function serverWorktree(projectID: string, directory: string) {
   const parts = pathKey(directory).split("/")

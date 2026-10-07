@@ -69,7 +69,7 @@ for (const protocol of ["v1", "v2"] as const) {
       ".github/workflows/release.yaml",
     )
     await expect
-      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
+      .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("opencode.window.browser.dat:tabs") ?? "[]")))
       .toMatchObject([{ type: "draft", server: serverA, directory }])
     expect(mutations).toEqual([])
   })
@@ -129,7 +129,7 @@ test("profiles on different servers keep separate inventories and discard a late
     ".github/workflows/server-b.yml",
   )
   await expect
-    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("opencode.window.browser.dat:tabs") ?? "[]")))
     .toMatchObject([{ type: "draft", server: serverB, directory }])
   expect(mutations).toEqual([])
 })

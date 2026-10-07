@@ -131,7 +131,7 @@ function createPipelines(input: Input) {
         cursor: entry.cursor,
         ticket,
         sameOrigin: new URL(input.sdk.url, location.href).origin === location.origin,
-        username: server.http.username ?? "orchestra",
+        username: server.http.username ?? "opencode",
         password: server.http.password ?? "",
         authToken: server.type === "http" ? server.authToken : false,
       }),
@@ -294,7 +294,7 @@ function createPipelines(input: Input) {
     return input.sdk.client.pty
       .connectToken(
         { ptyID, directory: input.directory },
-        { throwOnError: false, headers: { "x-orchestra-ticket": "1" } },
+        { throwOnError: false, headers: { "x-opencode-ticket": "1" } },
       )
       .then((result) => (result.response.status === 200 ? result.data?.ticket : undefined))
   }

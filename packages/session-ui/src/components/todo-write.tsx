@@ -1,6 +1,6 @@
 import { createMemo, For, Show } from "solid-js"
-import { Checkbox } from "@orchestra/ui/checkbox"
-import { useI18n } from "@orchestra/ui/context/i18n"
+import { Checkbox } from "@opencode-ai/ui/checkbox"
+import { useI18n } from "@opencode-ai/ui/context/i18n"
 import { BasicTool } from "./basic-tool"
 import { confirmedTodos } from "./confirmed-todos"
 import type { ToolProps } from "./message-part"

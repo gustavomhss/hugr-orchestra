@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 test("restored local profile loads agents and opens a draft through the mocked API", async ({ page }) => {
   // Match the chapter fixtures without adopting an accidental preview-port override from the config.
@@ -28,14 +28,14 @@ test("restored local profile loads agents and opens a draft through the mocked A
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({ projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     { server, directory },
   )
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     provider: { all: [], connected: [], default: {} },
     directory,
     project: {
@@ -66,7 +66,7 @@ test("restored local profile loads agents and opens a draft through the mocked A
   await expect(page.locator('[data-component="prompt-input"][contenteditable="true"]')).toHaveText("")
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   await expect
-    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("opencode.window.browser.dat:tabs") ?? "[]")))
     .toMatchObject([{ type: "draft", server, directory }])
   expect(mutations).toEqual([])
   expect(errors.filter((error) => /bootstrap|reading 'every'/.test(error))).toEqual([])

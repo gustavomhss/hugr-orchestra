@@ -4,4 +4,4 @@ packages/client/src/generated-effect/
 # Exact-byte Atlas boundary bundles belong to their canonical generator.
 packages/atlas-boundary/src/generated/
 # Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
-foundation/atlas/.orchestra/skills/own/
+foundation/atlas/.opencode/skills/own/

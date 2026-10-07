@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test"
 import semver from "semver"
-import pkg from "../../orchestra/package.json" with { type: "json" }
+import pkg from "../../opencode/package.json" with { type: "json" }
 
 async function load(version = "") {
   const child = Bun.spawn([process.execPath, "--eval", `const { Script } = await import('./src/index.ts'); console.log('VERSION_RESULT:'+JSON.stringify({version:Script.version,channel:Script.channel,preview:Script.preview}))`], {
     cwd: `${import.meta.dir}/..`,
-    env: { ...process.env, ORCHESTRA_CHANNEL: "dev", ORCHESTRA_VERSION: version, ORCHESTRA_BUMP: "", ORCHESTRA_RELEASE: "" },
+    env: { ...process.env, OPENCODE_CHANNEL: "dev", OPENCODE_VERSION: version, OPENCODE_BUMP: "", OPENCODE_RELEASE: "" },
     stdout: "pipe",
     stderr: "pipe",
   })

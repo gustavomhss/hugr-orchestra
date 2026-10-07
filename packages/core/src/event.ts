@@ -1,8 +1,8 @@
 export * as EventV2 from "./event"
 
 import { Cause, Context, Effect, Layer, Option, PubSub, Queue, Schema, Stream } from "effect"
-import { Event } from "@orchestra/schema/event"
-import type { Data, Definition, Payload } from "@orchestra/schema/event"
+import { Event } from "@opencode-ai/schema/event"
+import type { Data, Definition, Payload } from "@opencode-ai/schema/event"
 import { and, asc, eq, gt, inArray, sql } from "drizzle-orm"
 import { Database } from "./database/database"
 import { EventSequenceTable, EventTable } from "./event/sql"
@@ -13,11 +13,11 @@ export { SealWindowInput, SealWindowResult, SealWindowError } from "./event/seal
 import { Location } from "./location"
 import { makeGlobalNode } from "./effect/app-node"
 import { isDeepStrictEqual } from "node:util"
-import { Durable } from "@orchestra/schema/durable-event-manifest"
+import { Durable } from "@opencode-ai/schema/durable-event-manifest"
 
 export const ID = Event.ID
-export type ID = import("@orchestra/schema/event").ID
-export type { Data, Definition, Payload } from "@orchestra/schema/event"
+export type ID = import("@opencode-ai/schema/event").ID
+export type { Data, Definition, Payload } from "@opencode-ai/schema/event"
 
 export type Subscriber<D extends Definition = Definition> = (event: Payload<D>) => Effect.Effect<void>
 export type Unsubscribe = Effect.Effect<void>
@@ -162,7 +162,7 @@ export interface Interface {
   ) => Effect.Effect<EventSeal.SealWindowResult, EventSeal.SealWindowError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@orchestra/Event") {}
+export class Service extends Context.Service<Service, Interface>()("@opencode/Event") {}
 
 export const allBounded = (events: Interface, capacity: number) =>
   Effect.gen(function* () {

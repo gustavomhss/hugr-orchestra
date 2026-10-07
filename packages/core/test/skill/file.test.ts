@@ -2,12 +2,12 @@ import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { AbsolutePath } from "@orchestra/core/schema"
-import { SkillV2 } from "@orchestra/core/skill"
-import { SkillDiscovery } from "@orchestra/core/skill/discovery"
-import { SkillFile } from "@orchestra/core/skill/file"
+import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { AbsolutePath } from "@opencode-ai/core/schema"
+import { SkillV2 } from "@opencode-ai/core/skill"
+import { SkillDiscovery } from "@opencode-ai/core/skill/discovery"
+import { SkillFile } from "@opencode-ai/core/skill/file"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
 
@@ -27,7 +27,7 @@ function withProject<A, E>(body: (project: Project) => Effect.Effect<A, E, Skill
       Effect.gen(function* () {
         const project = {
           path: path.join(tmp.path, "repo"),
-          root: path.join(tmp.path, "repo", ".orchestra", "skills"),
+          root: path.join(tmp.path, "repo", ".opencode", "skills"),
           global: path.join(tmp.path, "global"),
           outside: path.join(tmp.path, "outside"),
         }
@@ -247,12 +247,12 @@ describe("SkillV2 writes", () => {
 
         const other = path.join(project.outside, "other")
         yield* Effect.promise(async () => {
-          await fs.mkdir(path.join(other, ".orchestra"), { recursive: true })
-          await fs.symlink(project.outside, path.join(other, ".orchestra", "skills"))
+          await fs.mkdir(path.join(other, ".opencode"), { recursive: true })
+          await fs.symlink(project.outside, path.join(other, ".opencode", "skills"))
         })
         expect(yield* failure(skill.save(other, { name: "escape", description: "Mine", content: "" }))).toEqual([
           "readonly",
-          `${path.join(other, ".orchestra", "skills", "escape", "SKILL.md")} resolves through a symbolic link and cannot be changed.`,
+          `${path.join(other, ".opencode", "skills", "escape", "SKILL.md")} resolves through a symbolic link and cannot be changed.`,
         ])
         expect(yield* exists(path.join(project.outside, "escape"))).toBe(false)
       }),

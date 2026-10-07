@@ -249,9 +249,9 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
     "This server routes new turns to OpenCode Zen from its own configuration.",
   )
 
-  const orchestra = chapter.locator('.mx-card[data-provider-id="opencode"]')
-  await expect(orchestra.locator(".mx-badge")).toHaveText(["Connected", "Config"])
-  await expect(orchestra.getByRole("button", { name: "Disconnect" })).toBeDisabled()
+  const opencode = chapter.locator('.mx-card[data-provider-id="opencode"]')
+  await expect(opencode.locator(".mx-badge")).toHaveText(["Connected", "Config"])
+  await expect(opencode.getByRole("button", { name: "Disconnect" })).toBeDisabled()
   const signedIn = chapter.locator('.mx-card[data-provider-id="openai"]')
   await expect(signedIn.locator(".mx-badge")).toHaveText(["Connected", "Credential"])
   const keyed = chapter.locator('.mx-card[data-provider-id="openai#work"]')
@@ -399,14 +399,14 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({ list: [], projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     { server, directory, scheme },
   )
@@ -461,7 +461,7 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
           v1Provider("openrouter", "OpenRouter", "custom", ["auto"]),
         ],
         connected: ["opencode", "anthropic", "mistral", "lmstudio"],
-        default: { anthropic: "claude", orchestra: "big-pickle" },
+        default: { anthropic: "claude", opencode: "big-pickle" },
       })
     if (path === "/provider/auth") return json(route, { openrouter: [{ type: "api", label: "API key" }] })
     if (path.startsWith("/auth/") || path === "/global/dispose" || path === "/instance/dispose")

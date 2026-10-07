@@ -13,7 +13,7 @@ All sources were accessed 2026-10-05. Quotes are at most 15 words.
 
 ## 0. Local finding that changes the problem
 
-`packages/orchestra/src/session/llm/request.ts:60` builds the system prompt as `input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)`. The backend specialist has a `prompt` (`maestro/roster.ts:62`), so **the backend specialist's 33-word charter replaces the per-family provider prompt entirely** (`anthropic.txt`, `gpt.txt`, `codex.txt`, `gemini.txt`, `kimi.txt`, `beast.txt`). After it the host appends environment, instruction files (AGENTS.md / project rules), MCP instructions and the skills list (`session/prompt.ts:1251-1262`).
+`packages/opencode/src/session/llm/request.ts:60` builds the system prompt as `input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)`. The backend specialist has a `prompt` (`maestro/roster.ts:62`), so **the backend specialist's 33-word charter replaces the per-family provider prompt entirely** (`anthropic.txt`, `gpt.txt`, `codex.txt`, `gemini.txt`, `kimi.txt`, `beast.txt`). After it the host appends environment, instruction files (AGENTS.md / project rules), MCP instructions and the skills list (`session/prompt.ts:1251-1262`).
 
 Consequences:
 
@@ -27,10 +27,10 @@ So the charter must be a self-sufficient execution prompt. A role paragraph on t
 
 | Prompt (pinned) | Kind | Approx. words | Ordering of sections |
 |---|---|---|---|
-| Orchestra `anthropic.txt` | top-level, interactive | 1,335 | identity → safety → tone → objectivity → task mgmt (+examples) → doing tasks → tool policy (+examples) → code refs |
-| Orchestra `codex.txt` / `gpt.txt` | top-level | 1,171 / 1,492 | editing constraints → tool usage → git hygiene → frontend → presenting work → final-answer style |
-| Orchestra `gemini.txt` | top-level | 2,235 | core mandates → workflows → operational guidelines → ~10 examples |
-| Orchestra `beast.txt` (GPT-4.x/o-series) | top-level | 1,904 | persistence ×3 → 8-step workflow incl. internet research → comms → git |
+| OpenCode `anthropic.txt` | top-level, interactive | 1,335 | identity → safety → tone → objectivity → task mgmt (+examples) → doing tasks → tool policy (+examples) → code refs |
+| OpenCode `codex.txt` / `gpt.txt` | top-level | 1,171 / 1,492 | editing constraints → tool usage → git hygiene → frontend → presenting work → final-answer style |
+| OpenCode `gemini.txt` | top-level | 2,235 | core mandates → workflows → operational guidelines → ~10 examples |
+| OpenCode `beast.txt` (GPT-4.x/o-series) | top-level | 1,904 | persistence ×3 → 8-step workflow incl. internet research → comms → git |
 | Codex CLI `base_instructions/default.md` @823ea83 | top-level, general | 3,389 | personality → AGENTS.md spec → preambles → planning (+examples) → task execution → validating → ambition vs precision → progress → final message → tool guidelines |
 | Codex CLI `gpt-5.2-codex_prompt.md` @823ea83 | top-level, model-specialised | 1,221 | general → editing constraints → plan tool → special requests (review) → frontend → final message |
 | Gemini CLI `snippets.ts` @fb972b2 | composed at runtime | variable | preamble → core mandates (security, context efficiency, engineering standards) → sub-agents → skills → workflow → ops guidelines → sandbox → git; user memory appended last |
@@ -46,7 +46,7 @@ Patterns visible in shipped prompts [S]:
 - **Subagent prompts are narrower, not necessarily tiny.** The one high-quality open-source specialist (Gemini's investigator) spends most of its words on termination and the return schema, not on general engineering advice.
 - **Composition beats monoliths.** Gemini CLI and OpenHands render sections conditionally (interactive vs headless, tools present, model family). Gemini's generalist subagent reuses the core prompt with `interactiveOverride=false`. OpenHands appends a short per-family `<IMPORTANT>` block (Claude: 3 bullets; Gemini: 1 bullet; GPT-5 variants: a few bullets) on top of a shared core.
 - **Hard boundaries are written as explicit prohibitions** everywhere: Codex "NEVER revert existing changes you did not make", Gemini "Do not stage or commit changes", OpenHands "Do NOT make potentially dangerous changes", Aider's overeager paragraph "Do what they ask, but no more". Softer guidance (style, tone) is framed positively.
-- **The final-report shape is always specified, near the end.** Codex devotes about 25% of its default prompt to "Presenting your work and final message". Gemini's subagent enforces a zod schema via a `complete_task` tool and gives a filled example. Orchestra's `gpt.txt` and `codex.txt` end with final-answer rules.
+- **The final-report shape is always specified, near the end.** Codex devotes about 25% of its default prompt to "Presenting your work and final message". Gemini's subagent enforces a zod schema via a `complete_task` tool and gives a filled example. OpenCode's `gpt.txt` and `codex.txt` end with final-answer rules.
 - **Prompt edits are eval-gated in mature projects.** Gemini CLI's source comment says to run "the major benchmarks, such as SWEBench" before editing the context-efficiency section.
 
 ## 2. Cross-source patterns, with evidence strength
@@ -76,7 +76,7 @@ The backend specialist implication [O]: each boundary gets one sentence of reaso
 
 - [V] Anthropic: "Tell Claude what to do instead of what not to do". Opus 5 and Sonnet 5 pages: positive examples work better than instructions about what not to do. Both statements are about output style.
 - [M] Jang et al., 2022: on negated prompts, larger models did worse (inverse scaling, 2022-era models). Vrabcová et al., 2025: increasing model size "may improve" negation handling. The negation problem is real but shrinking, and it is language-dependent.
-- [S] Every shipped coding prompt still uses explicit NEVER / Do not for destructive or out-of-role actions (Codex, Gemini CLI, OpenHands, Aider, Orchestra).
+- [S] Every shipped coding prompt still uses explicit NEVER / Do not for destructive or out-of-role actions (Codex, Gemini CLI, OpenHands, Aider, OpenCode).
 
 The backend specialist implication [O]: define the role positively ("you implement the packet as specified"). Pair every prohibition with the action to take instead ("if the fix needs a file outside `allowed_paths`, stop and report it as a blocker"). Keep the bare not-yours list short, around 5 items. A "do not" with no alternative behaviour is the weak form.
 
@@ -84,13 +84,13 @@ The backend specialist implication [O]: define the role positively ("you impleme
 
 - [V] Anthropic (Opus 4.5 and later): models are "more responsive to the system prompt"; "CRITICAL: You MUST" causes overtriggering, so "dial back any aggressive language". Claude Code: add "IMPORTANT" to one line only, because "If you emphasize many lines, none of them stands out."
 - [V] OpenAI GPT-4.1: "generally not necessary to use all-caps". GPT-5 Cursor case: "Be THOROUGH" was "counterproductive" and caused repeated tool calls.
-- [S] Older and some current prompts (Orchestra `kimi.txt`, `beast.txt`, Gemini CLI) still use heavy MUST/NEVER. No public measurement isolates the effect for Kimi.
+- [S] Older and some current prompts (OpenCode `kimi.txt`, `beast.txt`, Gemini CLI) still use heavy MUST/NEVER. No public measurement isolates the effect for Kimi.
 
 ### P5. Ordering: identity and hard rules first, return contract last, payload separate — **moderate-strong**
 
 - [M] Lost in the Middle (Liu et al., TACL 2023): U-shaped use of context, with the middle worst. IFScale: primacy bias toward earlier instructions.
 - [V] GPT-4.1: with long context, put instructions "at both the beginning and end". When instructions conflict, the model follows "the one closer to the end". Gemini 3: put role, constraints and output format in the system instruction or at the very beginning; put the question after the bulk context. Anthropic: put longform data at the top and the query at the end ("up to 30 percent" better on complex multi-document inputs). Opus 5: in long prompts, pair a key instruction with "a short reminder near the end".
-- [S] Codex, Orchestra `gpt.txt`/`codex.txt` and Gemini's investigator all end with the final-report contract. OpenHands puts per-family overrides last and the volatile date at the very end for prompt caching.
+- [S] Codex, OpenCode `gpt.txt`/`codex.txt` and Gemini's investigator all end with the final-report contract. OpenHands puts per-family overrides last and the volatile date at the very end for prompt caching.
 
 The backend specialist implication [O]: the charter is position 0 of the system prompt, which is good for boundaries. Project rules and the skills list come after it and the packet arrives in the user turn, so the return contract sits mid-context by the time the backend specialist finishes. Two mitigations: (a) end the charter with the return contract, and (b) have the packet template (Maestro side) restate a one-line return reminder at its end. Precedence must be stated, not inferred from position. Control Illusion (Geng et al., 2025) shows system/user separation "fails to establish a reliable instruction hierarchy".
 
@@ -99,7 +99,7 @@ The backend specialist implication [O]: the charter is position 0 of the system 
 - [S] Gemini investigator: a typed schema (`SummaryOfFindings`, `ExplorationTrace`, `RelevantLocations[]`), returned through a `complete_task` tool, with a filled example. Claude Code subagents: only the final report reaches the parent. Anthropic: subagents return a "condensed, distilled summary" of about 1–2k tokens.
 - [V] Claude Code best practices: have the agent "show evidence rather than asserting success" (command, output, result).
 - [M] Tam et al., 2024 ("Let Me Speak Freely?"): strict format constraints degrade reasoning. Here this argues for constraining only the final report, not the working turns.
-- [Local] Orchestra already supports `format.type === "json_schema"` with a structured-output system prompt (`session/prompt.ts:1264`). A schema-validated return card is therefore available without prompt-only enforcement.
+- [Local] OpenCode already supports `format.type === "json_schema"` with a structured-output system prompt (`session/prompt.ts:1264`). A schema-validated return card is therefore available without prompt-only enforcement.
 
 ### P7. Verification: bind to assigned checks; do not say "verify thoroughly" — **strong, family-divergent**
 
@@ -121,7 +121,7 @@ The backend specialist implication [O]: scope containment belongs in the shared 
 
 - [V] Anthropic: examples are "one of the most reliable ways" to steer format; use "diverse, canonical examples" and avoid "a laundry list of edge cases". Gemini 3: "always include few-shot examples", but too many cause overfitting, and examples must share one format. GPT-4.1: behaviour shown in examples must also be stated in the rules.
 - [M] Aider's comments in `model-settings.yml` record small measured differences from where examples sit (GPT-4.1: 98.2% vs 95.6% well-formed with examples in user vs system messages). The placement of examples matters at the margin.
-- [S] Gemini's investigator includes exactly one filled final report. Orchestra `gemini.txt` uses about 10 interaction examples, which is costly in a subagent.
+- [S] Gemini's investigator includes exactly one filled final report. OpenCode `gemini.txt` uses about 10 interaction examples, which is costly in a subagent.
 
 ### P10. Treat the prompt as code: eval-gated, one change at a time, per family — **strong (vendor plus measured fragility)**
 
@@ -163,7 +163,7 @@ Order (one XML-tagged or Markdown-headed block each; pick one syntax and use it 
 - *Claude (Opus/Sonnet 4.5+):* scope-dampening sentence (Anthropic's "deliver what was asked, at the scope intended" pattern); no extra verification instructions; brief-output reminder. Calm wording only.
 - *GPT-5.x / Codex:* end-to-end persistence sentence ("do not stop at analysis or partial fixes" pattern); explicit exact-scope sentence (GPT-5.2 feature-creep note); preamble cadence off or minimal for a subagent.
 - *Gemini 3.x:* "avoid being too proactive" sentence (OpenHands); keep sampling defaults (Gemini 3 guidance); constraints and output format must sit in the system instruction (already true).
-- *Kimi and others:* shared core only until evals show a need. No primary vendor prompting guidance was found for Kimi in this pass, and Orchestra's `kimi.txt` is the only local signal.
+- *Kimi and others:* shared core only until evals show a need. No primary vendor prompting guidance was found for Kimi in this pass, and OpenCode's `kimi.txt` is the only local signal.
 
 **Shared vs per-family:**
 
@@ -208,7 +208,7 @@ Vendor guidance
 
 Shipped prompts (pinned)
 
-- Orchestra (local): `packages/orchestra/src/session/prompt/{anthropic,codex,gpt,beast,gemini,kimi}.txt`; composition in `src/session/llm/request.ts:60`, `src/session/prompt.ts:1251-1264`, `src/session/system.ts`; roster in `src/maestro/roster.ts`; charter `src/agent/prompt/backend.txt`
+- OpenCode (local): `packages/opencode/src/session/prompt/{anthropic,codex,gpt,beast,gemini,kimi}.txt`; composition in `src/session/llm/request.ts:60`, `src/session/prompt.ts:1251-1264`, `src/session/system.ts`; roster in `src/maestro/roster.ts`; charter `src/agent/prompt/backend.txt`
 - OpenAI Codex @823ea830c0fd418b09ff02d36cad9a1fff66465b — `codex-rs/protocol/src/prompts/base_instructions/default.md`, `codex-rs/core/gpt-5.2-codex_prompt.md`, `codex-rs/core/gpt_5_codex_prompt.md`, `codex-rs/core/templates/collab/experimental_prompt.md` — https://github.com/openai/codex
 - Gemini CLI @fb972b2f87fe7d5b06d37eac711490162d98de2c — `packages/core/src/prompts/snippets.ts`, `packages/core/src/agents/codebase-investigator.ts`, `packages/core/src/agents/generalist-agent.ts` — https://github.com/google-gemini/gemini-cli
 - OpenHands software-agent-sdk @54daf056bd863bb46f922a2fe9324dd736b37ff6 — `openhands-sdk/openhands/sdk/context/prompts/sections/static.py`, `.../prompts/presets.py` — https://github.com/OpenHands/software-agent-sdk

@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, Show } from "solid-js"
-import { base64Encode } from "@orchestra/core/util/encode"
-import { Message } from "@orchestra/session-ui/message-part"
+import { base64Encode } from "@opencode-ai/core/util/encode"
+import { Message } from "@opencode-ai/session-ui/message-part"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { CommentsProvider, useComments } from "@/context/comments"
 import { FileProvider } from "@/context/file"
@@ -86,7 +86,7 @@ function PocketComposer(props: {
   const [retryNonce, setRetryNonce] = createSignal(0)
   let generation = 0
   const storageKey = createMemo(
-    () => `orchestra.janitor.session.${serverSDK().scope}.${base64Encode(props.directory())}`,
+    () => `opencode.janitor.session.${serverSDK().scope}.${base64Encode(props.directory())}`,
   )
   const sessionKey = createMemo(() =>
     SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(props.directory()), sessionID())),

@@ -5,14 +5,14 @@
 ## Evidence boundary
 
 - Date: 2026-10-03. Both source worktree `backend-plugin` and metadata worktree `backend-r46-skill-composition` returned HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Source HEAD checked first; metadata HEAD checked before report write.
-- Exact requested source paths exist. V1 means `packages/orchestra`; V2 means `packages/core` at this commit, not similarly named current upstream APIs. Source inspection only; existing tests read, not run. Candidate packaging below remains proposed, not installed/exercised.
+- Exact requested source paths exist. V1 means `packages/opencode`; V2 means `packages/core` at this commit, not similarly named current upstream APIs. Source inspection only; existing tests read, not run. Candidate packaging below remains proposed, not installed/exercised.
 - [Frozen contract][Brief] controls roles. [R03][Prior] and [R39][R39] supply prior findings; current source controls host claims. Official [AgentSkills specification][Spec] supplies portable packaging rules, not host behavior.
 
 ## Actual semantics: V1 versus V2
 
 | Concern | V1 | V2 | Composition consequence |
 | --- | --- | --- | --- |
-| Discovery | Config directories scan `{skill,skills}/**/SKILL.md`; external `.claude`/`.agents` home and ancestor paths subject to flags; extra `skills.paths` and `skills.urls`. [V1-scan] | Registered directory/URL/embedded sources. Config plugin adds `skill/`, then `skills/`, plus `skills: string[]` paths/URLs; relative paths use Location directory. Native config discovers global config and ancestor `.orchestra`, not V1 external-directory scanning. [V2-config] [Config] [Sources] | Prefer `.orchestra/skills/<name>/SKILL.md` or already registered package asset root. Installing package alone does not register arbitrary asset directories. |
+| Discovery | Config directories scan `{skill,skills}/**/SKILL.md`; external `.claude`/`.agents` home and ancestor paths subject to flags; extra `skills.paths` and `skills.urls`. [V1-scan] | Registered directory/URL/embedded sources. Config plugin adds `skill/`, then `skills/`, plus `skills: string[]` paths/URLs; relative paths use Location directory. Native config discovers global config and ancestor `.opencode`, not V1 external-directory scanning. [V2-config] [Config] [Sources] | Prefer `.opencode/skills/<name>/SKILL.md` or already registered package asset root. Installing package alone does not register arbitrary asset directories. |
 | Name | Frontmatter string required; used verbatim as registry key/tool argument. Generic loader does not enforce directory-name equality or standard name grammar. Special Own check exists. [V1] | Optional frontmatter name; direct-source `.md` can infer filename stem. Nested `SKILL.md` needs explicit name; unnamed root `SKILL.md` can become `SKILL`. [V2] | Always declare unique portable name matching directory. Directory hierarchy does not namespace names. |
 | Description | Optional string; advertised only when defined. Verbose catalog includes name, description, location. [V1-list] | Optional string; guidance advertises name/description, without location. [Guidance] | Description supplies model selection cue, not executable predicate. Missing description hides catalog entry, not exact-name lookup or authority. |
 | Body | Parsed Markdown content stored, then trimmed into `<skill_content>` on explicit `skill({name})`. [V1-tool] | Same model-facing delivery through canonical tool. [V2-tool] | Entire selected body loads, not only applicable section. Load extra documents explicitly. |
@@ -33,7 +33,7 @@ Portable standard requires `name` and nonempty `description`, constrains name/le
 - Native plugin seam already registers V2 sources via `ctx.skill.transform(draft => draft.source(...))`; built-in plugin demonstrates embedded content. V1 already accepts extra skill paths. Prefer existing directory registration for packs with real companion files; synthetic embedded location does not materialize resources. [PluginHost] [Builtin] [V1-scan]
 - URL sources consume `index.json` entries containing name/files/optional version and fetch listed assets into native cache. V1 requires `SKILL.md`; V2 also accepts `<name>.md`. Index version controls cached asset refresh, **not target framework compatibility or semver resolution**; include referenced files in distribution. [URLs1] [URLs2]
 - V1 state caches discovered/loaded skills per Instance. V2 caches source contents by source key; `reload` replays source registration without clearing that map. Guidance updates track available summaries, not proof that changed body reached context. Do not promise hot-refresh or add backend-specialist-owned cache/persistence. [V1-list] [V2] [State] [Guidance]
-- `own_` is special V1 Atlas route: verified availability and load, with snapshot/content hash; `.orchestra/skills/own/` also has naming checks. V2 generic skill tool has no equivalent branch. Do not use Own names for ordinary guidance or assume generic packaging inherits Atlas verification. [V1] [V1-tool] [V2-tool]
+- `own_` is special V1 Atlas route: verified availability and load, with snapshot/content hash; `.opencode/skills/own/` also has naming checks. V2 generic skill tool has no equivalent branch. Do not use Own names for ordinary guidance or assume generic packaging inherits Atlas verification. [V1] [V1-tool] [V2-tool]
 - **Current native backend specialist admission limit:** execution profile allows read/glob/grep/bash/edit, default denies others, including `skill`. Agent config skips permission overrides for native seats; invocation rechecks profile. Existing authorized Task can inject verified Own bodies, not arbitrary variant packs. On-demand candidate requires host-owned admission; frontmatter cannot provide it. [Profile] [AgentLock] [Enforce] [OwnHandoff]
 
 ## Minimal candidate packaging — proposal only
@@ -41,7 +41,7 @@ Portable standard requires `name` and nonempty `description`, constrains name/le
 Future native asset path; no resolver, service, manifest DSL or activation change:
 
 ```text
-.orchestra/skills/backend-backend/
+.opencode/skills/backend-backend/
   SKILL.md
   references/task-modes.md
   references/http-boundary.md
@@ -111,7 +111,7 @@ Existing test source corroborates V1 undescribed discovery, V2 later-source prec
 7. “Versioned skill” can conflate pack release, URL cache version and target framework version. Document target evidence in prose; consume host cache/lifecycle and Atlas persistence rather than building replacements.
 8. “Native-compatible” can be mistaken for “enabled for native backend specialist.” Profile denial is real host-admission issue, not reason to invent permission system or bypass it with skill labels.
 
-**Extraction order:** shared role/modes and component-fact expectations → runtime rules → cited framework deltas → compact selection/examples → later host-owned packaging/exercise. Recommended asset root remains `.orchestra/skills/backend-backend/`; distributed packs can use existing source registration. Lead report destination: `specs/backend-specialist/research/46-skill-composition.md`.
+**Extraction order:** shared role/modes and component-fact expectations → runtime rules → cited framework deltas → compact selection/examples → later host-owned packaging/exercise. Recommended asset root remains `.opencode/skills/backend-backend/`; distributed packs can use existing source registration. Lead report destination: `specs/backend-specialist/research/46-skill-composition.md`.
 
 ## Source links
 
@@ -120,12 +120,12 @@ Local links target inspected source worktree; line anchors plus baseline identif
 [Brief]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md#L7-L14
 [Prior]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/03-native-plugin.md#L15-L29
 [R39]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/39-typescript-code.md#L15-L16
-[V1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L54-L145
-[V1-scan]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L179-L277
-[V1-list]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/index.ts#L279-L391
-[V1-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/skill.ts#L12-L104
-[V1-prompt]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/session/system.ts#L105-L117
-[V1-commands]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/command/index.ts#L134-L152
+[V1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/skill/index.ts#L54-L145
+[V1-scan]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/skill/index.ts#L179-L277
+[V1-list]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/skill/index.ts#L279-L391
+[V1-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/tool/skill.ts#L12-L104
+[V1-prompt]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/session/system.ts#L105-L117
+[V1-commands]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/command/index.ts#L134-L152
 [V2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L30-L128
 [Guidance]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill/guidance.ts#L16-L68
 [V2-tool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/tool/skill.ts#L15-L99
@@ -136,13 +136,13 @@ Local links target inspected source worktree; line anchors plus baseline identif
 [Builtin]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/plugin/skill.ts#L13-L30
 [PluginHost]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/plugin/host.ts#L208-L217
 [State]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/state.ts#L78-L85
-[URLs1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/skill/discovery.ts#L47-L130
+[URLs1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/skill/discovery.ts#L47-L130
 [URLs2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill/discovery.ts#L98-L207
-[Profile]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/maestro/roster.ts#L10-L63
-[AgentLock]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/agent/agent.ts#L291-L317
-[Enforce]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/session/tools.ts#L87-L104
-[OwnHandoff]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/task.ts#L497-L541
-[Tests1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/test/skill/skill.test.ts#L214-L239
+[Profile]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/maestro/roster.ts#L10-L63
+[AgentLock]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/agent/agent.ts#L291-L317
+[Enforce]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/session/tools.ts#L87-L104
+[OwnHandoff]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/tool/task.ts#L497-L541
+[Tests1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/test/skill/skill.test.ts#L214-L239
 [Tests2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/test/skill.test.ts#L41-L124
 [TestsTool]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/test/tool-skill.test.ts#L20-L145
 [Docs]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/web/src/content/docs/skills.mdx#L34-L115

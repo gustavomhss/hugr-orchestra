@@ -1,4 +1,4 @@
-import { getFilename } from "@orchestra/core/util/path"
+import { getFilename } from "@opencode-ai/core/util/path"
 import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"

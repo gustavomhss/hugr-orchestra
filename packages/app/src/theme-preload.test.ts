@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test"
-import { syncThemeBackground } from "@orchestra/ui/theme/context"
+import { syncThemeBackground } from "@opencode-ai/ui/theme/context"
 
 const src = await Bun.file(new URL("../public/oc-theme-preload.js", import.meta.url)).text()
 const skin = await Bun.file(new URL("./orchestra/background.css", import.meta.url)).text()
@@ -30,7 +30,7 @@ describe("theme preload", () => {
     const meta = document.createElement("meta")
     meta.name = "theme-color"
     document.head.appendChild(meta)
-    localStorage.setItem("orchestra-color-scheme", mode)
+    localStorage.setItem("opencode-color-scheme", mode)
 
     run()
 
@@ -46,23 +46,23 @@ describe("theme preload", () => {
   })
 
   test("migrates legacy oc-1 to oc-2 before mount", () => {
-    localStorage.setItem("orchestra-theme-id", "oc-1")
-    localStorage.setItem("orchestra-theme-css-light", "--background-base:#fff;")
-    localStorage.setItem("orchestra-theme-css-dark", "--background-base:#000;")
+    localStorage.setItem("opencode-theme-id", "oc-1")
+    localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
+    localStorage.setItem("opencode-theme-css-dark", "--background-base:#000;")
 
     run()
 
     expect(document.documentElement.dataset.theme).toBe("oc-2")
     expect(document.documentElement.dataset.colorScheme).toBe("light")
-    expect(localStorage.getItem("orchestra-theme-id")).toBe("oc-2")
-    expect(localStorage.getItem("orchestra-theme-css-light")).toBeNull()
-    expect(localStorage.getItem("orchestra-theme-css-dark")).toBeNull()
+    expect(localStorage.getItem("opencode-theme-id")).toBe("oc-2")
+    expect(localStorage.getItem("opencode-theme-css-light")).toBeNull()
+    expect(localStorage.getItem("opencode-theme-css-dark")).toBeNull()
     expect(document.getElementById("oc-theme-preload")).toBeNull()
   })
 
   test("keeps cached css for non-default themes", () => {
-    localStorage.setItem("orchestra-theme-id", "nightowl")
-    localStorage.setItem("orchestra-theme-css-light", "--background-base:#fff;")
+    localStorage.setItem("opencode-theme-id", "nightowl")
+    localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
 
     run()
 

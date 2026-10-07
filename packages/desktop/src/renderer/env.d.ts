@@ -3,7 +3,7 @@ import type { ElectronAPI } from "../preload/types"
 declare global {
   interface Window {
     api: ElectronAPI
-    __ORCHESTRA__?: {
+    __OPENCODE__?: {
       deepLinks?: string[]
     }
   }

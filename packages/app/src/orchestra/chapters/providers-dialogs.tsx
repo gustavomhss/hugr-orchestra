@@ -1,7 +1,7 @@
 import { Dialog } from "@kobalte/core/dialog"
-import { useDialog } from "@orchestra/ui/context/dialog"
-import { iconNames } from "@orchestra/ui/icons/provider"
-import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { iconNames } from "@opencode-ai/ui/icons/provider"
+import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
 import { children, createMemo, createResource, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
@@ -238,7 +238,7 @@ export function ProviderConnectDialog(props: {
         if (!alive.value) return
         const url = authorizationURL(result.data.url)
         if (!url) return fail(language.t("orchestra.providers.connectDialog.badLink"))
-        // The Orchestra console recognizes the desktop shell by its own OAuth client.
+        // The OpenCode console recognizes the desktop shell by its own OAuth client.
         if (props.id === "opencode" && platform.platform === "desktop")
           url.searchParams.set("client_id", "opencode-desktop")
         setState({ busy: false, attempt: { ...result.data, url: url.href } })

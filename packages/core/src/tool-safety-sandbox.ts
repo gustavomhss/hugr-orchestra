@@ -82,7 +82,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-write-root-acquisition" })),
   ))
   const scratch = profile.sandbox?.scratch
-    ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
+    ? yield* fs.makeTempDirectoryScoped({ prefix: "opencode-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
         Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-acquisition" })),
       )
@@ -121,7 +121,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       ...command.options, cwd, shell: false, env: confined, extendEnv: false,
     })
   }
-  const temp = yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-sandbox-" }).pipe(
+  const temp = yield* fs.makeTempDirectoryScoped({ prefix: "opencode-tool-sandbox-" }).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-directory-acquisition" })),
   )
   const policy = path.join(temp, "settings.json")

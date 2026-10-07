@@ -4,7 +4,7 @@
 
 Adapt **call-scoped composition over Orchestra's existing tools**: derive discovery from host-visible definitions; bind stable identity, effective arguments, authorization, cancellation and settlement to every nested call; return compact aggregates with honest outcome/cost metadata. Existing CodeMode supplies interpreter and discovery. Hermes contributes boundary lessons, not another runtime.
 
-The backend specialist remains Orchestra-native. Maestro optional; Atlas shared through native host services. Display names configurable; actor/tool/session IDs remain stable. No second Python runtime, model gateway, permissions store, executable registry, or memory backend.
+The backend specialist remains OpenCode/Orchestra-native. Maestro optional; Atlas shared through native host services. Display names configurable; actor/tool/session IDs remain stable. No second Python runtime, model gateway, permissions store, executable registry, or memory backend.
 
 ## Evidence and version boundary
 
@@ -135,7 +135,7 @@ Measure eager versus composition on same task/output-quality target: parent inpu
 
 Local anchors below refer to O; they are inspected existing code, not newly shipped integration.
 
-1. **Reuse current composition host.** `packages/orchestra/src/tool/code-mode.ts`: `CodeModeTool` builds permission-visible MCP tree; `invokeChildTool` fires before hook, asks permission, calls existing MCP client with abort signal, then after hook; child IDs derive from parent call. This is concrete reuse seam, currently MCP-oriented.
+1. **Reuse current composition host.** `packages/opencode/src/tool/code-mode.ts`: `CodeModeTool` builds permission-visible MCP tree; `invokeChildTool` fires before hook, asks permission, calls existing MCP client with abort signal, then after hook; child IDs derive from parent call. This is concrete reuse seam, currently MCP-oriented.
 2. **For V2 native leaves, use canonical settlement.** `packages/core/src/tool/registry.ts`: `materialize()` filters definitions and captures registration identities; `settleWith()` rejects stale identity, supplies session/agent/message/call context, runs leaf, bounds output through `ToolOutputStore`. Any future CodeMode view must delegate to that settlement, not reach private executors or add registry authorization callbacks. MCP/plugin registration remains explicitly unfinished in `packages/core/src/tool/AGENTS.md`; do not claim legacy adapter already satisfies V2 integration.
 3. **Small host-owned addition:** invocation envelope binding stable actor/session/Location, parent/child call IDs, final argument provenance, deadline and shared subcall/spend budget; derive tool view from current host scope. Each canonical leaf retains resource resolution → permission → effect. Empty exposed set stays empty. Catalog/display rename must not change policy key or execution target.
 4. **Close outcomes outside model context.** Host emits one child settlement record even when script catches failure, output is aggregated, or cancellation wins. Preserve unknown-effect status; bounded model aggregate references host-retained evidence. `packages/codemode/src/tool-runtime.ts` currently observes success/failure, explicitly not interruption; host must close cancelled spans rather than invent success.

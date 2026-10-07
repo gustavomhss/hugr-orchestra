@@ -1,12 +1,12 @@
 import { expect } from "bun:test"
 import { Effect, Schema } from "effect"
 import { eq, sql } from "drizzle-orm"
-import { EventV2 } from "@orchestra/core/event"
-import { EventSeal } from "@orchestra/core/event/seal"
-import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
-import { Database } from "@orchestra/core/database/database"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@opencode-ai/core/event"
+import { EventSeal } from "@opencode-ai/core/event/seal"
+import { EventSequenceTable, EventTable } from "@opencode-ai/core/event/sql"
+import { Database } from "@opencode-ai/core/database/database"
+import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node])))

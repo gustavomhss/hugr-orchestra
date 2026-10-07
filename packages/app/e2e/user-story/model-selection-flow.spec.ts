@@ -1,14 +1,14 @@
 import { expect, test } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:\\Orchestra\\NewProject"
+const directory = "C:\\OpenCode\\NewProject"
 
 test("creates a session in a new project, connects OpenCode Go, and selects its model", async ({ page }) => {
   let connectedGo = false
   const connections: Array<{ integrationID: string; body: unknown }> = []
 
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: {
       id: "proj_model_selection_flow",
@@ -22,7 +22,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: {
             "free-model": {
               id: "free-model",
@@ -64,8 +64,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
       "settings.v3",
       JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
     )
-    if (localStorage.getItem("orchestra.global.dat:server") === null)
-      localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ projects: { local: [] } }))
+    if (localStorage.getItem("opencode.global.dat:server") === null)
+      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ projects: { local: [] } }))
   })
 
   await page.goto("/")
@@ -113,7 +113,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   const modelControl = page.locator('[data-action="prompt-model"]')
   await expect(modelControl).toHaveCount(1)
   await modelControl.click()
-  await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by Orchestra")
+  await expect(page.locator('[data-section="free-models"]')).toContainText("Free models provided by OpenCode")
 
   await page.locator('[data-provider-id="opencode-go"]').click()
   await page.locator('[data-input="provider-api-key"]').fill("mock-go-api-key")

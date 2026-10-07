@@ -40,7 +40,7 @@ export function resource(): { serviceName: string; serviceVersion: string; attri
     attributes: {
       ...resourceAttributes(),
       "deployment.environment.name": InstallationChannel,
-      "orchestra.client": Flag.ORCHESTRA_CLIENT,
+      "orchestra.client": Flag.OPENCODE_CLIENT,
       "orchestra.run": runID,
       "service.instance.id": runID,
     },

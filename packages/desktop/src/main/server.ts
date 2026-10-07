@@ -17,7 +17,7 @@ type SidecarMessage =
 
 export type SidecarListener = { stop: () => Promise<void> }
 
-const SIDECAR_SERVICE_NAME = "orchestra server"
+const SIDECAR_SERVICE_NAME = "opencode server"
 // 20s is sufficient for sidecar boot + health on all supported platforms.
 // 60s masked slow-start regressions; 20s fails fast on CI while leaving
 // headroom for cold starts (observed p99 ~8s on macOS, ~12s on Linux).
@@ -63,9 +63,9 @@ export function preferAppEnv(userDataPath: string) {
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
     ...shellEnv,
-    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
-    ORCHESTRA_CLIENT: "desktop",
+    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
+    OPENCODE_CLIENT: "desktop",
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
   })
   return shellEnv
@@ -90,7 +90,7 @@ export async function spawnLocalServer(
       // repository copy, since the bundled server cannot locate it from its own path.
       ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
         ? join(process.resourcesPath, "playbooks")
-        : resolve(outDir, "../../../orchestra/playbooks"),
+        : resolve(outDir, "../../../opencode/playbooks"),
     },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
@@ -233,7 +233,7 @@ export async function checkHealth(url: string, password?: string | null): Promis
 
   const headers = new Headers()
   if (password) {
-    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
+    const auth = Buffer.from(`opencode:${password}`).toString("base64")
     headers.set("authorization", `Basic ${auth}`)
   }
 

@@ -1,7 +1,7 @@
 # R59 — Cross-language protocol-specific backend skill variants
 
 Research date: 2026-10-04. **Recommendation: six scope cards, shared contract/lifetime guidance, conditional framework references.** Protocol selects procedure; language selects implementation API.
-Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r59-protocol-variants`: `git rev-parse --show-toplevel HEAD` returned corresponding `/private/var/...` path and **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`**. Source worktree HEAD matched.
+Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r59-protocol-variants`: `git rev-parse --show-toplevel HEAD` returned corresponding `/private/var/...` path and **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`**. Source worktree HEAD matched.
 Read frozen [variant plan][PLAN] and source leads [R29][L29], [R30][L30], [R45][L45]. Carry forward: generated types are not runtime validation; generated service boundaries are not business behavior; codecs do not own transport framing or domain policy.
 Evidence: primary specifications, official documentation and tagged/pinned source inspected. **All selection/behavior checks below are proposed and unexecuted.** Package combinations and generated outputs were not exercised. This report is research, not an installed/exercised skill.
 

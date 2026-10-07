@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@orchestra/protocol",
+  "name": "@opencode-ai/protocol",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@orchestra/schema": "workspace:*",
+    "@opencode-ai/schema": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

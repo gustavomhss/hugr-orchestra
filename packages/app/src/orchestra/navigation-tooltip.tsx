@@ -1,7 +1,7 @@
 import { Tooltip, useTooltipContext } from "@kobalte/core/tooltip"
 import { createEffect, createSignal, onCleanup, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
-import "@orchestra/ui/v2/tooltip-v2.css"
+import "@opencode-ai/ui/v2/tooltip-v2.css"
 
 // Compose the primitive with the actual button so it owns focus, hover and Escape
 // together, and its accessible description reaches the keyboard target. Expanded
