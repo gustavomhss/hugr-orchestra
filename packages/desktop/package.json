@@ -28,6 +28,7 @@
   },
   "main": "./out/main/index.js",
   "dependencies": {
+    "@opencode-ai/core": "workspace:*",
     "hugr-omni": "workspace:*",
     "@zip.js/zip.js": "2.7.62",
     "effect": "catalog:",

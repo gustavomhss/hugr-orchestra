@@ -10,7 +10,7 @@ import { EventEmitter, once } from "node:events"
 import { constants } from "node:os"
 import { PassThrough, type Readable, Writable } from "node:stream"
 import { omniSpawner } from "../../../core/src/flag/flag"
-import { Omni } from "../../../core/src/omni"
+import { Omni } from "@opencode-ai/core/omni"
 
 // The binding's pipe child, through core's loader (no import of hugr-omni here, D-L2).
 type PipeChild = Extract<ReturnType<Awaited<ReturnType<typeof Omni.load>>["spawn"]>, { closeStdin: unknown }>

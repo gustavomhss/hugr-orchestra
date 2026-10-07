@@ -6,7 +6,7 @@ export * as OmniHost from "./omni-host"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { app } from "electron"
-import { Omni } from "../../../core/src/omni"
+import { Omni } from "@opencode-ai/core/omni"
 import { DesktopOmni } from "./omni-process"
 
 export const ADDON = "hugr_omni.node"
