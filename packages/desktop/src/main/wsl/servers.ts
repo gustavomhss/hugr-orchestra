@@ -362,7 +362,9 @@ export function createWslServersController(
         const opts = { signal: abort.signal }
         await (options?.installArtifact ?? ((distro, opts) => installWslArtifact(distro, expectedVersion, opts)))(name, opts)
         abort.signal.throwIfAborted()
-        setOrchestraCheck(name, await checkOrchestra(name, opts))
+        const check = await checkOrchestra(name, opts)
+        abort.signal.throwIfAborted()
+        setOrchestraCheck(name, check)
       })
     },
 

@@ -81,6 +81,15 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
   expect(commands.length).toBe(3)
+  const duringVerification = new AbortController()
+  await expect(installWslArtifact("Ubuntu Preview", "1.16.2", {
+    ...options, signal: duringVerification.signal,
+    verifyArtifact: async () => {
+      duringVerification.abort()
+      return { path: "unused", version: "1.16.2" }
+    },
+  })).rejects.toThrow()
+  expect(commands.length).toBe(4)
 })
 
 test.each([false, true])("protected health rejects open/unhealthy servers (protected=%s)", async (protectedServer) => {
