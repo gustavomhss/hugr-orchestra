@@ -95,22 +95,22 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
   await build(["--single", "--target", native])
   const identity = await run([binary, "--version"])
   expect(identity.code).toBe(0)
-  expect(identity.stdout).toBe(version)
+  expect(identity.stdout).toBe(`orchestra v${version}`)
   const help = await run([binary, "--help"])
   expect(help.code).toBe(0)
   expect(help.stdout).toContain("orchestra")
   expect(help.stdout).not.toContain("lildax")
   const launched = await run(["node", "bin/orchestra.cjs", "--version"], 30_000, { ORCHESTRA_BIN_PATH: binary })
   expect(launched.code).toBe(0)
-  expect(launched.stdout).toBe(version)
+  expect(launched.stdout).toBe(`orchestra v${version}`)
   const launcher = path.join(home, "launcher/bin/orchestra.cjs")
   await Bun.write(launcher, Bun.file(path.join(root, "bin/orchestra.cjs")))
   await copyFile(binary, path.join(home, "launcher/bin/.orchestra"))
-  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(`orchestra v${version}`)
   const installed = path.join(home, `launcher/node_modules/@orchestra/cli-${native}/bin`)
   await mkdir(installed, { recursive: true })
   await rename(path.join(home, "launcher/bin/.orchestra"), path.join(installed, path.basename(binary)))
-  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(`orchestra v${version}`)
   const manifest = await Bun.file(path.join(root, `dist/cli-${native}/package.json`)).json()
   expect(manifest.version).toBe(version)
   expect(manifest.repository.url).toBe("git+https://github.com/gustavomhss/hugr-orchestra.git")
@@ -213,7 +213,11 @@ test("all explicit targets produce correct executable format/architecture and pr
 test("single and baseline retain native-only selection semantics", async () => {
   await build(["--single", "--baseline"])
   expect((await readdir(path.join(root, "dist"))).sort()).toEqual(
-    (process.arch === "x64" ? [`cli-${native}`, `cli-${native}-baseline`] : [`cli-${native}`]).sort(),
+    [
+      `cli-${native}`,
+      ...(process.arch === "x64" ? [`cli-${native}-baseline`] : []),
+      ...(process.platform === "linux" && process.arch === "x64" ? [`cli-${native}-baseline-musl`] : []),
+    ].sort(),
   )
   await build(["--single"])
   expect(await readdir(path.join(root, "dist"))).toEqual([`cli-${native}`])

@@ -3,7 +3,6 @@
 import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
-import pkg from "../package.json"
 
 const dir = path.resolve(import.meta.dirname, "..")
 const binary = "orchestra"
@@ -65,7 +64,7 @@ const { modelsData } = await import("./generate")
 const plugin = createSolidTransformPlugin()
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
-if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
+if (!skipInstall) await $`bun install --frozen-lockfile --os="*" --cpu="*"`
 
 for (const item of targets) {
   const name = `cli-${item.target}`
