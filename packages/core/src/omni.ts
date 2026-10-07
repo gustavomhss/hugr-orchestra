@@ -42,9 +42,6 @@ export function load() {
 
 async function open(): Promise<Binding> {
   const found = locate()
-  // Until the binding has configure(), its index.js picks the addon from HUGR_OMNI_ADDON, read on the JS side, so
-  // this write reaches it on Bun too. childEnv() strips it from every child.
-  process.env.HUGR_OMNI_ADDON = found.addon
   const binding: Configurable = await import("hugr-omni").catch((cause: unknown) => {
     throw new Error(`hugr-omni could not load its native addon ${found.addon}: ${String(cause)}`, { cause })
   })
