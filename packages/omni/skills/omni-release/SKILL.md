@@ -39,8 +39,8 @@ current state of the release (what is open, what the owner decided) is in [HANDO
 One version for all artifacts. Change it in:
 
 - `Cargo.toml` (`[workspace.package] version`). The crates inherit it, and `Cargo.lock` follows on the next build.
-- `bindings/node/package.json`: `version` **and** the five `optionalDependencies`. `pack.mjs` asserts that the
-  package lists the five platform packages at its own version.
+- `bindings/node/package.json`: `version` **and** the eight `optionalDependencies`. `pack.mjs` asserts that the
+  package lists the eight platform packages at its own version.
 - `.claude-plugin/plugin.json`: `version` pins the skills plugin to it.
 
 Then search for the old version string, to catch anything new that carries it.
@@ -65,7 +65,8 @@ for one release is not a yes for the next.
 After the yes:
 
 1. Publish the **platform packages first**: `hugr-omni-linux-x64-gnu`, `hugr-omni-linux-arm64-gnu`,
-   `hugr-omni-darwin-arm64`, `hugr-omni-darwin-x64` and `hugr-omni-win32-x64-msvc` (plus any target added since).
+   `hugr-omni-linux-x64-musl`, `hugr-omni-linux-arm64-musl`, `hugr-omni-darwin-arm64`, `hugr-omni-darwin-x64`,
+   `hugr-omni-win32-x64-msvc` and `hugr-omni-win32-arm64-msvc` (plus any target added since).
 2. Publish **`hugr-omni` last.** Deno reads the packument of every optional dependency, and fails on one that does
    not exist yet.
 3. The first publish ends the pre-release state. Remove the `PRE_RELEASE_INSTALL` exception from
