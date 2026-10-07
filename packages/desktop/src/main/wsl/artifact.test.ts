@@ -1,12 +1,54 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { chmod, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { guestEnvironment, installGuestScript, installWslArtifact, linuxGuestTarget, WslArtifactError } from "./artifact"
 import { checkWslAuthentication } from "./startup"
-import { wslServeScript } from "./sidecar"
-import { shellEscape } from "./runtime"
+import { spawnWslSidecar, wslServeScript } from "./sidecar"
+import { normalizeWslCommandVersion, readWslCommandVersion, shellEscape } from "./runtime"
+
+test("startup admits only descriptor-bound guest bytes before credentials/serve", async () => {
+  const root = await mkdtemp(join(tmpdir(), "w4-admission-"))
+  const binary = join(root, ".orchestra/bin/orchestra")
+  const marker = join(root, "executed")
+  const trusted = "#!/bin/bash\nprintf '%s\\n' \"$1\" >> \"$HOME/executed\"\nprintf 'orchestra v1.16.2\\n'\n"
+  const options = (bytes: string) => ({
+    directory: root, timeoutMs: 20_000,
+    readManifest: async () => ({ schema: 1 as const, version: "1.16.2", artifacts: [{ target: "linux-x64-baseline", file: "owned", sha256: createHash("sha256").update(bytes).digest("hex") }] }),
+    verifyArtifact: async () => ({ path: join(root, "owned"), version: "1.16.2" }),
+    run: async (args: string[]) => ({ ...(await shell(args, root)), signal: null }),
+  })
+  try {
+    await mkdir(join(root, ".orchestra/bin"), { recursive: true })
+    await Bun.write(binary, trusted)
+    await chmod(binary, 0o755)
+    expect(await readWslCommandVersion(binary, "Debian", options(trusted))).toBe("1.16.2")
+    expect(await readFile(marker, "utf8")).toBe("--version\n")
+    for (const scenario of ["tampered", "stale", "symlink", "outside"]) {
+      await rm(marker, { force: true })
+      await rm(binary, { force: true })
+      const bytes = scenario === "stale" ? trusted.replace("v1.16.2", "v1.16.3") : trusted + "# changed\n"
+      await Bun.write(binary, bytes)
+      await chmod(binary, 0o755)
+      const outside = join(root, "outside")
+      await Bun.write(outside, trusted)
+      await chmod(outside, 0o755)
+      if (scenario === "symlink") { await rm(binary); await symlink(outside, binary) }
+      await expect(spawnWslSidecar("Debian", {
+        resolveOrchestra: async () => scenario === "outside" ? outside : binary,
+        artifact: options(scenario === "stale" ? bytes : trusted),
+      })).rejects.toThrow(WslArtifactError)
+      expect(await Bun.file(marker).exists()).toBe(scenario === "stale")
+      if (scenario === "stale") expect(await readFile(marker, "utf8")).toBe("--version\n")
+    }
+    for (const output of ["1.16.2", "orchestra v", " orchestra v1.16.2", "orchestra v1.16.2 extra", "orchestra v1.16.2\nextra"]) {
+      expect(normalizeWslCommandVersion(output)).toBeNull()
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
 
 test("guest architecture/ABI selects Linux baseline only", () => {
   expect(linuxGuestTarget("x86_64", "glibc 2.39")).toBe("linux-x64-baseline")

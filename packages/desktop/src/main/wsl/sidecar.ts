@@ -2,7 +2,7 @@ import { spawn } from "node:child_process"
 import { createServer } from "node:net"
 import { type WslCommandLine, resolveWslOrchestra, runWslInDistro, shellEscape, wslArgs } from "./runtime"
 import { checkWslAuthentication, pollWslHealth } from "./startup"
-import { guestEnvironment } from "./artifact"
+import { guestEnvironment, verifyWslGuestArtifact } from "./artifact"
 import { nativeT } from "../native-translations"
 
 export type WslSidecar = {
@@ -14,11 +14,17 @@ export type WslSidecar = {
 
 export async function spawnWslSidecar(
   distro: string,
-  opts: { onLine?: (line: WslCommandLine) => void; healthTimeoutMs?: number; signal?: AbortSignal } = {},
+  opts: {
+    onLine?: (line: WslCommandLine) => void; healthTimeoutMs?: number; signal?: AbortSignal
+    resolveOrchestra?: typeof resolveWslOrchestra
+    artifact?: Parameters<typeof verifyWslGuestArtifact>[2]
+  } = {},
 ): Promise<WslSidecar> {
   opts.signal?.throwIfAborted()
-  const orchestra = await resolveWslOrchestra(distro, { signal: opts.signal })
+  const orchestra = await (opts.resolveOrchestra ?? resolveWslOrchestra)(distro, { signal: opts.signal })
   if (!orchestra) throw new Error(nativeT("desktop.wsl.error.serverNotInstalled", { distro }))
+  await verifyWslGuestArtifact(distro, orchestra, { ...opts.artifact, signal: opts.signal })
+  opts.signal?.throwIfAborted()
 
   const port = await allocatePort()
   const credential = await runWslInDistro(

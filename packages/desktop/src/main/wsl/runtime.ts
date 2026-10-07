@@ -303,8 +303,12 @@ export async function resolveWslOrchestra(distro: string, opts?: RunWslOptions) 
 }
 
 export async function readWslCommandVersion(command: string, distro: string, opts?: RunWslOptions) {
-  const result = await runWslSh(`${shellEscape(command)} --version 2>/dev/null || true`, distro, opts)
-  return firstLine(result.stdout)
+  const { verifyWslGuestArtifact } = await import("./artifact")
+  return normalizeWslCommandVersion((await verifyWslGuestArtifact(distro, command, opts)) ?? "")
+}
+
+export function normalizeWslCommandVersion(output: string) {
+  return /^orchestra v([^\s]+)\r?\n?$/.exec(output)?.[1] ?? null
 }
 
 export function openWslTerminal(distro?: string | null) {
