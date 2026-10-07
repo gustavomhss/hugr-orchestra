@@ -2014,7 +2014,7 @@ export type GlobalEvent = {
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR"
 
 /**
- * Server configuration for opencode serve and web commands
+ * Server configuration for orchestra serve and web commands
  */
 export type ServerConfig = {
   port?: number
@@ -2076,6 +2076,7 @@ export type AgentConfig = {
   steps?: number
   maxSteps?: number
   permission?: PermissionConfig
+  engine?: "orchestra" | "claude-code"
   [key: string]:
     | unknown
     | string
@@ -2100,6 +2101,8 @@ export type AgentConfig = {
     | "info"
     | number
     | PermissionConfig
+    | "orchestra"
+    | "claude-code"
     | undefined
 }
 
@@ -2788,6 +2791,7 @@ export type Agent = {
     [key: string]: unknown
   }
   steps?: number
+  engine?: "orchestra" | "claude-code"
 }
 
 export type SkillSaveInput = {

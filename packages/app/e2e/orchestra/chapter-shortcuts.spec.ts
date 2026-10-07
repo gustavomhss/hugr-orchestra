@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/shortcuts"
@@ -220,16 +220,16 @@ async function setup(page: Page, scheme: "dark" | "light") {
         "settings.v3",
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({ projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     { server, directory, scheme },
   )
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     provider: { all: [], connected: [], default: {} },
     directory,
     project: {

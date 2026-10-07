@@ -2,7 +2,7 @@
 
 Research date: **2026-10-03**. Research only. Public pages read directly; newest dated Cloud release inspected: **2026-09-30**. Undated docs below mean “documented when retrieved,” not verified rollout to every account.
 
-Target: **the backend specialist, independent OpenCode/Orchestra plugin; Maestro-native integration optional; Atlas shared native Knowledge/Memory foundation; configurable display names backed by stable IDs; no second runtime.** These are user constraints, not conclusions about existing backend specialist implementation.
+Target: **the backend specialist, independent Orchestra plugin; Maestro-native integration optional; Atlas shared native Knowledge/Memory foundation; configurable display names backed by stable IDs; no second runtime.** These are user constraints, not conclusions about existing backend specialist implementation.
 
 ## Decision
 

@@ -1,8 +1,8 @@
 // The opencode -> Orchestra rename ledger. One list feeds both sides:
 // - script/rename-codemod.ts never rewrites a kept path or a protected string;
 // - packages/core/test/rename-guard.test.ts fails on any "opencode" (any case) that neither covers.
-// Every entry must still match something in the tree; the guard fails on dead entries, so the ledger cannot
-// silently grow into a blanket exemption. An entry with `requires` is checked only once that directory is tracked,
+// Every entry must still match something in the tree; the guard fails on dead entries. Exemption changes require
+// diff review. An entry with `requires` is checked only once that directory is tracked,
 // so a branch that has not landed yet (packages/relay) can rely on it when it runs the codemod before merging.
 
 export type Kept = { path: RegExp; reason: string; requires?: string }
@@ -21,8 +21,6 @@ export const keptPaths: Kept[] = [
       "upstream README and its translations, pending the owner's rewrite; a mechanical rename would advertise install commands for packages that do not exist",
   },
   { path: /^specs\/orchestra-visual\/(?:handoff|evidence)\//, reason: "hash-pinned evidence archives" },
-  { path: /(?:^|\/)evidence\//, reason: "evidence archives" },
-  { path: /\.log$/, reason: "committed command logs are evidence of past runs" },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
     path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,

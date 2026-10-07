@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import {
   assistantMessage,
   directory,
@@ -25,17 +25,17 @@ export async function setupIdentity(
     ({ scheme, palette, server, directory, sessionID }) => {
       // Orchestra's own Dark or Light, or a palette that recolors it in the same scheme.
       localStorage.setItem("orchestra-palette", palette ?? scheme)
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "orchestra.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
     },

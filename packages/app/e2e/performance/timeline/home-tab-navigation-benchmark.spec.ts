@@ -116,7 +116,7 @@ async function installHomeActivity(page: Parameters<typeof mockStressTimeline>[0
   await page.addInitScript(
     ({ server, directory }) =>
       localStorage.setItem(
-        "opencode.global.dat:layout",
+        "orchestra.global.dat:layout",
         JSON.stringify({ home: { selection: { server, directory } } }),
       ),
     { server, directory: fixture.directory },

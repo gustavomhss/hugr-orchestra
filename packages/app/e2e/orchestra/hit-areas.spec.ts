@@ -9,15 +9,15 @@ for (const scheme of ["dark", "light"] as const) {
     const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
     await page.addInitScript(
       (input) => {
-        localStorage.setItem("opencode-theme-id", "oc-2")
-        localStorage.setItem("opencode-color-scheme", input.scheme)
+        localStorage.setItem("orchestra-theme-id", "oc-2")
+        localStorage.setItem("orchestra-color-scheme", input.scheme)
         localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify([{ type: "session", server: input.server, sessionId: input.sessionID }]),
         )
         localStorage.setItem(
-          "opencode.global.dat:server",
+          "orchestra.global.dat:server",
           JSON.stringify({
             projects: { local: [{ worktree: input.directory, expanded: true }] },
             lastProject: { local: input.directory },
@@ -29,7 +29,7 @@ for (const scheme of ["dark", "light"] as const) {
     await setupTimeline(page, { settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false }, locale: "en" })
     await expect(page.locator("body")).toHaveAttribute("data-new-layout", "")
     await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
-    if (process.env.OPENCODE_HIT_AREA_MUTATION === "1") {
+    if (process.env.ORCHESTRA_HIT_AREA_MUTATION === "1") {
       await page.addStyleTag({ content: "body[data-new-layout] button::after { content: none !important; }" })
     }
     const sidebar = page.locator('[data-component="orchestra-sidebar"]')

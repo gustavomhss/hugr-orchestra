@@ -346,7 +346,7 @@
 
   body[data-new-layout]
     [data-session-layout="surface"]
-    [data-component="icon"]:has(use[href="#opencode-icon-branch"])
+    [data-component="icon"]:has(use[href="#orchestra-icon-branch"])
     + span {
     color: var(--orchestra-branch-color);
     font-family: var(--orchestra-branch-font-family);
@@ -449,7 +449,7 @@
 
   body[data-new-layout] [data-session-layout="surface"] [data-component="file"],
   body[data-new-layout] [data-session-layout="surface"] [data-component="file"] diffs-container {
-    --opencode-diffs-bg: var(--orchestra-evidence-solid);
+    --orchestra-diffs-bg: var(--orchestra-evidence-solid);
     --diffs-fg-number-override: var(--orchestra-evidence-number);
     --diffs-added-light: #2f7a4c;
     --diffs-added-dark: #72b797;

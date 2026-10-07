@@ -2,31 +2,31 @@ import { afterAll, expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { Flag } from "@opencode-ai/core/flag/flag"
+import { Flag } from "@orchestra/core/flag/flag"
 import { Deferred, Effect, Latch, Option, Schema, Stream } from "effect"
-import type { OpenCodeEvent } from "../src"
+import type { OrchestraEvent } from "../src"
 
 // Core resolves the database path once, when the first test imports ../src, so every host in this file shares one
 // database. A per-test path would be ignored after the first import, and removing it would break the later tests.
-const database = await mkdtemp(join(tmpdir(), "opencode-embedded-db-"))
-const previousDatabase = Flag.OPENCODE_DB
-Flag.OPENCODE_DB = join(database, "opencode.sqlite")
+const database = await mkdtemp(join(tmpdir(), "orchestra-embedded-db-"))
+const previousDatabase = Flag.ORCHESTRA_DB
+Flag.ORCHESTRA_DB = join(database, "orchestra.sqlite")
 afterAll(async () => {
-  Flag.OPENCODE_DB = previousDatabase
+  Flag.ORCHESTRA_DB = previousDatabase
   await rm(database, { recursive: true, force: true })
 })
 
 // The first host boots the whole Core graph, and the test itself waits up to 10 seconds for the prompted event.
 test("embedded client uses the real router and handlers", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "opencode-embedded-"))
-  const { AbsolutePath, Agent, Location, Model, OpenCode, Prompt, Provider, Session, Tool } = await import("../src")
+  const directory = await mkdtemp(join(tmpdir(), "orchestra-embedded-"))
+  const { AbsolutePath, Agent, Location, Model, Orchestra, Prompt, Provider, Session, Tool } = await import("../src")
   const sessionID = Session.ID.make(`ses_embedded_${crypto.randomUUID()}`)
   const model = Model.Ref.make({ id: Model.ID.make("embedded"), providerID: Provider.ID.make("test") })
 
   try {
     const program = Effect.gen(function* () {
-      const opencode = yield* OpenCode.create()
-      yield* opencode.tools.register({
+      const orchestra = yield* Orchestra.create()
+      yield* orchestra.tools.register({
         embedded_tool: Tool.make({
           description: "Embedded test tool",
           input: Schema.Struct({}),
@@ -35,54 +35,54 @@ test("embedded client uses the real router and handlers", async () => {
         }),
       })
 
-      const created = yield* opencode.sessions.create({
+      const created = yield* orchestra.sessions.create({
         id: sessionID,
         agent: Agent.ID.make("maestro"),
         location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
       })
-      yield* opencode.sessions.switchModel({ sessionID, model })
-      const selected = yield* opencode.sessions.get({ sessionID })
-      const page = yield* opencode.sessions.list({ directory: AbsolutePath.make(directory) })
-      const active = yield* opencode.sessions.active()
-      const admitted = yield* opencode.sessions.prompt({
+      yield* orchestra.sessions.switchModel({ sessionID, model })
+      const selected = yield* orchestra.sessions.get({ sessionID })
+      const page = yield* orchestra.sessions.list({ directory: AbsolutePath.make(directory) })
+      const active = yield* orchestra.sessions.active()
+      const admitted = yield* orchestra.sessions.prompt({
         sessionID,
         prompt: Prompt.make({ text: "Do not run" }),
         resume: false,
       })
-      const context = yield* opencode.sessions.context({ sessionID })
-      const wake = yield* opencode.sessions.prompt({
+      const context = yield* orchestra.sessions.context({ sessionID })
+      const wake = yield* orchestra.sessions.prompt({
         sessionID,
         prompt: Prompt.make({ text: "Promote this input" }),
       })
-      const prompted = yield* opencode.sessions.events({ sessionID }).pipe(
+      const prompted = yield* orchestra.sessions.events({ sessionID }).pipe(
         Stream.filter((event) => event.type === "session.next.prompted" && event.data.messageID === wake.id),
         Stream.runHead,
         Effect.timeout("10 seconds"),
         Effect.map(Option.getOrThrow),
       )
-      const wakeContext = yield* opencode.sessions.context({ sessionID })
-      const event = yield* opencode.sessions
+      const wakeContext = yield* orchestra.sessions.context({ sessionID })
+      const event = yield* orchestra.sessions
         .events({ sessionID })
         .pipe(Stream.take(1), Stream.runHead, Effect.map(Option.getOrUndefined))
       const modelMessage = Option.fromNullishOr(context.find((message) => message.type === "model-switched")).pipe(
         Option.getOrThrow,
       )
-      const message = yield* opencode.sessions.message({ sessionID, messageID: modelMessage.id })
-      yield* opencode.sessions.interrupt({ sessionID })
-      const other = yield* opencode.sessions.create({
+      const message = yield* orchestra.sessions.message({ sessionID, messageID: modelMessage.id })
+      yield* orchestra.sessions.interrupt({ sessionID })
+      const other = yield* orchestra.sessions.create({
         location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
       })
       const missingSessionID = Session.ID.make(`ses_missing_${crypto.randomUUID()}`)
       const missing = yield* Effect.all(
         [
-          opencode.sessions.events({ sessionID: missingSessionID }).pipe(Stream.runHead, Effect.flip),
-          opencode.sessions.interrupt({ sessionID: missingSessionID }).pipe(Effect.flip),
-          opencode.sessions.message({ sessionID: missingSessionID, messageID: modelMessage.id }).pipe(Effect.flip),
+          orchestra.sessions.events({ sessionID: missingSessionID }).pipe(Stream.runHead, Effect.flip),
+          orchestra.sessions.interrupt({ sessionID: missingSessionID }).pipe(Effect.flip),
+          orchestra.sessions.message({ sessionID: missingSessionID, messageID: modelMessage.id }).pipe(Effect.flip),
         ],
         { concurrency: "unbounded" },
       )
       const missingMessage = yield* Effect.flip(
-        opencode.sessions.message({
+        orchestra.sessions.message({
           sessionID: other.id,
           messageID: modelMessage.id,
         }),
@@ -113,16 +113,16 @@ test("embedded client uses the real router and handlers", async () => {
 }, 10_000)
 
 test("Location-owned runner events reach the ready global client", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "opencode-embedded-events-"))
-  const { AbsolutePath, Location, OpenCode, Prompt, Session } = await import("../src")
+  const directory = await mkdtemp(join(tmpdir(), "orchestra-embedded-events-"))
+  const { AbsolutePath, Location, Orchestra, Prompt, Session } = await import("../src")
   const sessionID = Session.ID.make(`ses_embedded_${crypto.randomUUID()}`)
 
   try {
     const program = Effect.gen(function* () {
-      const opencode = yield* OpenCode.create()
+      const orchestra = yield* Orchestra.create()
       const connected = yield* Latch.make(false)
-      const prompted = yield* Deferred.make<OpenCodeEvent>()
-      yield* opencode.events.subscribe().pipe(
+      const prompted = yield* Deferred.make<OrchestraEvent>()
+      yield* orchestra.events.subscribe().pipe(
         Stream.runForEach((event) =>
           event.type === "server.connected"
             ? connected.open
@@ -133,11 +133,11 @@ test("Location-owned runner events reach the ready global client", async () => {
         Effect.forkScoped,
       )
       yield* connected.await
-      yield* opencode.sessions.create({
+      yield* orchestra.sessions.create({
         id: sessionID,
         location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
       })
-      yield* opencode.sessions.prompt({ sessionID, prompt: Prompt.make({ text: "Observe this input" }) })
+      yield* orchestra.sessions.prompt({ sessionID, prompt: Prompt.make({ text: "Observe this input" }) })
 
       const event = yield* Deferred.await(prompted).pipe(Effect.timeout("4 seconds"))
       expect(event.durable).toEqual(expect.objectContaining({ aggregateID: sessionID, seq: expect.any(Number) }))
@@ -149,20 +149,20 @@ test("Location-owned runner events reach the ready global client", async () => {
 }, 10_000)
 
 test("independent embedded hosts do not share live notifications", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "opencode-embedded-hosts-"))
-  const { AbsolutePath, Agent, Location, OpenCode, Session } = await import("../src")
+  const directory = await mkdtemp(join(tmpdir(), "orchestra-embedded-hosts-"))
+  const { AbsolutePath, Agent, Location, Orchestra, Session } = await import("../src")
   const sessionID = Session.ID.make(`ses_embedded_${crypto.randomUUID()}`)
 
   try {
     const program = Effect.gen(function* () {
-      const first = yield* OpenCode.create()
-      const second = yield* OpenCode.create()
+      const first = yield* Orchestra.create()
+      const second = yield* Orchestra.create()
       const firstReady = yield* Latch.make(false)
       const secondReady = yield* Latch.make(false)
       const firstEvent = yield* Latch.make(false)
       const secondEvent = yield* Latch.make(false)
       const observe = (ready: Latch.Latch, event: Latch.Latch) =>
-        Stream.runForEach((notification: OpenCodeEvent) =>
+        Stream.runForEach((notification: OrchestraEvent) =>
           notification.type === "server.connected"
             ? ready.open
             : notification.type === "session.next.agent.switched" && notification.data.sessionID === sessionID
@@ -189,19 +189,19 @@ test("independent embedded hosts do not share live notifications", async () => {
 }, 10_000)
 
 test("embedded client is available as a Layer service", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "opencode-embedded-layer-"))
-  const { AbsolutePath, Location, OpenCode, Session } = await import("../src")
+  const directory = await mkdtemp(join(tmpdir(), "orchestra-embedded-layer-"))
+  const { AbsolutePath, Location, Orchestra, Session } = await import("../src")
   const sessionID = Session.ID.make(`ses_embedded_${crypto.randomUUID()}`)
 
   try {
     const created = await Effect.runPromise(
       Effect.gen(function* () {
-        const opencode = yield* OpenCode.Service
-        return yield* opencode.sessions.create({
+        const orchestra = yield* Orchestra.Service
+        return yield* orchestra.sessions.create({
           id: sessionID,
           location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
         })
-      }).pipe(Effect.provide(OpenCode.layer), Effect.scoped),
+      }).pipe(Effect.provide(Orchestra.layer), Effect.scoped),
     )
 
     expect(created.id).toBe(sessionID)

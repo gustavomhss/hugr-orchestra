@@ -166,8 +166,8 @@ describe("own-snapshot-guard", () => {
     expect(runGate().out).toMatch(/snapshot revision blob drift: packages\/genesis -> packages\/genesis\/src\/index.ts/)
   })
   it("fails unexpected static Own file", () => {
-    write(".opencode/skills/own/EXTRA.md", "unexpected\n")
-    expect(runGate().out).toMatch(/unexpected static Own file: \.opencode\/skills\/own\/EXTRA.md/)
+    write(".orchestra/skills/own/EXTRA.md", "unexpected\n")
+    expect(runGate().out).toMatch(/unexpected static Own file: \.orchestra\/skills\/own\/EXTRA.md/)
   })
   it("fails symlinked static Own skill instead of ignoring or following it", () => {
     const skill = contract.materializeStaticOwnSnapshot(snapshot()).skills[0].path

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { ScheduledTaskModel } from "@opencode-ai/core/scheduled-task/model"
+import { ScheduledTaskModel } from "@orchestra/core/scheduled-task/model"
 
 const HOUR = 3_600_000
 const DAY = 24 * HOUR

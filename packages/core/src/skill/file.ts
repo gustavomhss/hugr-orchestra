@@ -10,10 +10,10 @@ import { FSUtil } from "../fs-util"
 // New names become directory names and skill tool arguments, so they follow the Agent Skills naming rule.
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const NAME_LIMIT = 64
-// The project's own skill folders that opencode reads. Global, configured-path and URL skills stay read-only.
-const PROJECT_ROOTS = [".opencode/skills", ".opencode/skill", ".claude/skills", ".agents/skills"]
+// The project's own skill folders that orchestra reads. Global, configured-path and URL skills stay read-only.
+const PROJECT_ROOTS = [".orchestra/skills", ".orchestra/skill", ".claude/skills", ".agents/skills"]
 // Atlas owns these skills and verifies them by name; editing them here would bypass that governance.
-const GOVERNED_ROOT = ".opencode/skills/own"
+const GOVERNED_ROOT = ".orchestra/skills/own"
 
 export class WriteError extends Schema.TaggedErrorClass<WriteError>()("SkillWriteError", {
   reason: Schema.Literals(["invalid", "missing", "readonly", "conflict"]),
@@ -48,7 +48,7 @@ export const modified = Effect.fn("SkillFile.modified")(function* (file: string)
 })
 
 /**
- * Creates `<directory>/.opencode/skills/<name>/SKILL.md`, or rewrites a registered project skill file in place.
+ * Creates `<directory>/.orchestra/skills/<name>/SKILL.md`, or rewrites a registered project skill file in place.
  * Edits keep the other front-matter keys, but the front matter is re-serialized as YAML, so comments and
  * formatting inside it are not preserved. Files are written to a temporary sibling and then linked (create)
  * or renamed (edit) into place, so readers never see a partial file and a symlink at the target is not followed.
@@ -79,7 +79,7 @@ export const save = Effect.fn("SkillFile.save")(function* (input: {
       message: `${current.name} changed on disk after it was read. Reopen it and try again.`,
     })
 
-  const location = current?.location ?? path.join(input.directory, ".opencode", "skills", name, "SKILL.md")
+  const location = current?.location ?? path.join(input.directory, ".orchestra", "skills", name, "SKILL.md")
   if (!current) yield* requireLexical(input.directory, location)
   const existing = current ? yield* fs.readFileStringSafe(location).pipe(Effect.orDie) : undefined
   const data = existing === undefined ? {} : ConfigMarkdown.parseOption(existing)?.data

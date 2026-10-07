@@ -11,7 +11,7 @@ about this foundation.
 | Ownership read     | `@atlas/adapter-io/src/compose-runtime.ts`: `own(scope) -> OwnDispatch { tool, pack: OwnPackPlus }`; current store + axes compose bounded ownership state | `packages/retrieval/test/wp-6.20-retr.own.test.ts` | primary candidate for `assemble-context` after Own-first adapter freeze |
 | Shared Awareness   | `@atlas/memory/src/awareness.ts`: derived grounded facets; explicit facet `UN-SEEDED`; cap/injection behavior                                             | `packages/memory/test/wp-6.24-a-mem.test.ts`       | candidate for `orient-session`                                          |
 | Shared Orientation | `@atlas/memory/src/orient.ts`: derived from DEFINE artifact + event-log fold; no written-memory persistence                                               | `packages/memory/test/wp-6.24-b-mem.test.ts`       | candidate for `orient-session`                                          |
-| Runtime exposure   | `packages/adapter-io/src/compose-runtime.ts`, `compose.ts`: `memoryAwareness()` and `memoryOrientation()` reads                                           | package-level runtime tests not yet selected       | candidate only; no OpenCode adapter exists                              |
+| Runtime exposure   | `packages/adapter-io/src/compose-runtime.ts`, `compose.ts`: `memoryAwareness()` and `memoryOrientation()` reads                                           | package-level runtime tests not yet selected       | candidate only; no Orchestra adapter exists                              |
 
 ## Measured State
 
@@ -33,7 +33,7 @@ npm test -- --run packages/retrieval/test/wp-6.19-retr.pack.test.ts \
 Result: `3` files, `30` tests passed.
 
 Vite emitted two non-fatal warnings resolving parent Orquestra `@tsconfig/bun/tsconfig.json`; all selected Atlas
-tests collected and passed. This proves selected Atlas seams, not an OpenCode adapter or full Atlas runtime.
+tests collected and passed. This proves selected Atlas seams, not an Orchestra adapter or full Atlas runtime.
 
 ## Design Consequence
 
@@ -49,15 +49,15 @@ pull-reachable tail name the only valid depth path: another exact `own(unit)` re
 
 ## Missing Seams
 
-1. Implement OpenCode Session/Task mapping to ratified `ComposedActor` in `actor-identity-contract.md`.
+1. Implement Orchestra Session/Task mapping to ratified `ComposedActor` in `actor-identity-contract.md`.
 2. Frozen Own-first ContextToolPlan adapter containing only current-proven fields V2 needs.
 3. Atlas Own bridge with explicit structural/runtime snapshot identity for PR invalidation.
 4. Explicit project-level unseeded declaration distinct from facet-level Awareness `UN-SEEDED`.
 
-## OpenCode Discovery
+## Orchestra Discovery
 
-Current OpenCode source proves `Session.Info.projectID` and selected `agent` exist in
-`packages/opencode/src/session/session.ts`. They source `projectId` and future stable Maestro/member mapping.
+Current Orchestra source proves `Session.Info.projectID` and selected `agent` exist in
+`packages/orchestra/src/session/session.ts`. They source `projectId` and future stable Maestro/member mapping.
 V2 uses durable direct Session user reply for plan authority, so no external authenticated-principal seam is needed.
 Provider `cfg.username` remains model metadata and is never provenance authority.
 

@@ -1,4 +1,4 @@
-import { oklchToRgb, rgbToOklch } from "@opencode-ai/ui/theme/color"
+import { oklchToRgb, rgbToOklch } from "@orchestra/ui/theme/color"
 
 // Color math for Orchestra palettes: parsing the literals Orchestra's CSS writes, OKLCH conversion, and the
 // WCAG contrast of text over composited glass. Channels are 0..1 in gamma-encoded sRGB, as browsers blend them.

@@ -3,8 +3,8 @@ import type { Database } from "bun:sqlite"
 import path from "path"
 import { Effect } from "effect"
 import { SqlClient } from "effect/unstable/sql"
-import { layer } from "@opencode-ai/core/database/sqlite.bun"
-import { Sqlite } from "@opencode-ai/core/database/sqlite"
+import { layer } from "@orchestra/core/database/sqlite.bun"
+import { Sqlite } from "@orchestra/core/database/sqlite"
 import { tmpdir } from "./fixture/tmpdir"
 
 // Bun's own statement cache holds 20 statements. A statement left open keeps the database file open after close,

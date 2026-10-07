@@ -57,6 +57,9 @@ describe("rename guard", () => {
   })
 
   test("flags an unprotected old name in text and in a path, and lets protected strings through", () => {
+    expect(kept("packages/x/evidence/opencode.ts")).toBe(false)
+    expect(kept("packages/x/opencode.log")).toBe(false)
+    expect(kept("specs/orchestra-visual/evidence/S06/result.json")).toBe(true)
     expect(oldNames("packages/x/src/a.ts", 'const name = "OpenCode"\nconst seal = "opencode:event-seal:v1"')).toEqual([
       'packages/x/src/a.ts:1: const name = "OpenCode"',
     ])

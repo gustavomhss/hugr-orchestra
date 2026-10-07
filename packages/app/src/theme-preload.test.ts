@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "bun:test"
-import { syncThemeBackground } from "@opencode-ai/ui/theme/context"
+import { syncThemeBackground } from "@orchestra/ui/theme/context"
 
 const src = await Bun.file(new URL("../public/oc-theme-preload.js", import.meta.url)).text()
 const skin = await Bun.file(new URL("./orchestra/background.css", import.meta.url)).text()
@@ -40,7 +40,7 @@ beforeEach(() => {
 describe("theme preload", () => {
   test.each(["light", "dark"])("uses the approved Orchestra %s background before mount", (mode) => {
     const meta = inline()
-    localStorage.setItem("opencode-color-scheme", mode)
+    localStorage.setItem("orchestra-color-scheme", mode)
 
     run()
 
@@ -62,7 +62,7 @@ describe("theme preload", () => {
   ])("paints the saved %s palette in its own scheme before mount", (id, scheme, background) => {
     const meta = inline()
     localStorage.setItem("orchestra-palette", id)
-    localStorage.setItem("opencode-color-scheme", scheme === "dark" ? "light" : "dark")
+    localStorage.setItem("orchestra-color-scheme", scheme === "dark" ? "light" : "dark")
 
     run()
 
@@ -70,7 +70,7 @@ describe("theme preload", () => {
     expect(document.documentElement.dataset.colorScheme).toBe(scheme)
     expect(getComputedStyle(document.documentElement).backgroundColor).toBe(background)
     expect(meta.content).toBe(background)
-    expect(localStorage.getItem("opencode-color-scheme")).toBe(scheme)
+    expect(localStorage.getItem("orchestra-color-scheme")).toBe(scheme)
   })
 
   // Dracula and Catppuccin were pilots the owner did not keep.
@@ -79,7 +79,7 @@ describe("theme preload", () => {
     (id) => {
       inline()
       localStorage.setItem("orchestra-palette", id)
-      localStorage.setItem("opencode-color-scheme", "light")
+      localStorage.setItem("orchestra-color-scheme", "light")
 
       run()
 
@@ -87,30 +87,30 @@ describe("theme preload", () => {
       expect(document.documentElement.dataset.colorScheme).toBe("dark")
       expect(getComputedStyle(document.documentElement).backgroundColor).toBe("#080c11")
       expect(localStorage.getItem("orchestra-palette")).toBe("dark")
-      expect(localStorage.getItem("opencode-color-scheme")).toBe("dark")
+      expect(localStorage.getItem("orchestra-color-scheme")).toBe("dark")
     },
   )
 
   test("migrates legacy oc-1 to oc-2 before mount", () => {
-    localStorage.setItem("opencode-theme-id", "oc-1")
-    localStorage.setItem("opencode-theme-css-light", "--background-base:#fff;")
-    localStorage.setItem("opencode-theme-css-dark", "--background-base:#000;")
+    localStorage.setItem("orchestra-theme-id", "oc-1")
+    localStorage.setItem("orchestra-theme-css-light", "--background-base:#fff;")
+    localStorage.setItem("orchestra-theme-css-dark", "--background-base:#000;")
 
     run()
 
     expect(document.documentElement.dataset.theme).toBe("oc-2")
     expect(document.documentElement.dataset.colorScheme).toBe("light")
-    expect(localStorage.getItem("opencode-theme-id")).toBe("oc-2")
-    expect(localStorage.getItem("opencode-theme-css-light")).toBeNull()
-    expect(localStorage.getItem("opencode-theme-css-dark")).toBeNull()
+    expect(localStorage.getItem("orchestra-theme-id")).toBe("oc-2")
+    expect(localStorage.getItem("orchestra-theme-css-light")).toBeNull()
+    expect(localStorage.getItem("orchestra-theme-css-dark")).toBeNull()
     expect(document.getElementById("oc-theme-preload")).toBeNull()
   })
 
   test("turns an inherited theme into its Orchestra palette, or Orchestra Dark when none ships", () => {
     inline()
-    localStorage.setItem("opencode-theme-id", "nightowl")
-    localStorage.setItem("opencode-color-scheme", "light")
-    localStorage.setItem("opencode-theme-css-light", "--background-base:#123456;")
+    localStorage.setItem("orchestra-theme-id", "nightowl")
+    localStorage.setItem("orchestra-color-scheme", "light")
+    localStorage.setItem("orchestra-theme-css-light", "--background-base:#123456;")
 
     run()
 
@@ -119,14 +119,14 @@ describe("theme preload", () => {
     expect(document.documentElement.dataset.colorScheme).toBe("dark")
     expect(getComputedStyle(document.documentElement).backgroundColor).toBe("#080c11")
     expect(document.getElementById("oc-theme-preload")).toBeNull()
-    expect(localStorage.getItem("opencode-theme-css-light")).toBeNull()
+    expect(localStorage.getItem("orchestra-theme-css-light")).toBeNull()
 
     localStorage.removeItem("orchestra-palette")
-    localStorage.setItem("opencode-theme-id", "gruvbox")
+    localStorage.setItem("orchestra-theme-id", "gruvbox")
     run()
 
     expect(document.documentElement.dataset.orchestraPalette).toBe("gruvbox")
     expect(localStorage.getItem("orchestra-palette")).toBe("gruvbox")
-    expect(localStorage.getItem("opencode-theme-id")).toBe("oc-2")
+    expect(localStorage.getItem("orchestra-theme-id")).toBe("oc-2")
   })
 })

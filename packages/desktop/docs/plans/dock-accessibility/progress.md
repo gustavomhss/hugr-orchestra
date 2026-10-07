@@ -42,7 +42,7 @@ Lead repeated lifetime/resource proofs after fixing boot/namespace validation an
 | A / a11y-read | refs.py, snapshot.py, test_snapshot.py | W1 source | Bounded scoped reads, continuation, stale/foreign/unstable refs |
 | B / a11y-actions | actions.py, test_actions.py | W1 registry signature | Advertised actions, explicit keyboard/setter mode, false/disabled/read-only/unknown outcomes |
 | C / a11y-channel | native-client TypeScript module/test | W1 protocol | Raw UTF8 JSONL, bounded FIFO/control lane, no replay, deadline/EOF/reaping races |
-| D / a11y-tools | native adapter module/test, opencode plugin pair | W1 Client interface | Typed registration, backend selection, tool schema/cancellation/error/web regressions |
+| D / a11y-tools | native adapter module/test, orchestra plugin pair | W1 Client interface | Typed registration, backend selection, tool schema/cancellation/error/web regressions |
 
 GO: four disjoint implementations. Merge/readiness order A -> B; C -> D; then lead-owned bootstrap/RPC/packaging/actual registered-tool proof. No shared manifest/registry edits by workers. Runtime production wiring remains handoff-owned.
 

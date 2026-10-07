@@ -1,5 +1,5 @@
-import { PullRequest } from "@opencode-ai/core/pull-request"
-import { PullRequestError } from "@opencode-ai/protocol/groups/pull-request"
+import { PullRequest } from "@orchestra/core/pull-request"
+import { PullRequestError } from "@orchestra/protocol/groups/pull-request"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"

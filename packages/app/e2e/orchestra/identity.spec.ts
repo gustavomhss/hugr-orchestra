@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
-import type { GlobalEvent } from "@opencode-ai/sdk/v2/client"
+import type { GlobalEvent } from "@orchestra/sdk/v2/client"
 import {
   completedAssistantInfo,
   directory,
@@ -31,7 +31,7 @@ const glass = {
   },
 }
 
-const mutation = process.env.OPENCODE_IDENTITY_MUTATION
+const mutation = process.env.ORCHESTRA_IDENTITY_MUTATION
 if (
   mutation &&
   ![

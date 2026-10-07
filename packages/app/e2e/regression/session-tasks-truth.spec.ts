@@ -1,9 +1,9 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/OpenCode/TasksTruth"
+const directory = "C:/Orchestra/TasksTruth"
 const projectID = "proj_tasks_truth"
 const parentID = "ses_tasks_parent"
 const parentTitle = "Tasks truth parent"
@@ -139,7 +139,7 @@ async function openPanel(page: Page, owner = server) {
 }
 
 async function setup(page: Page, owner = server) {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     directory,
     project: {
       id: projectID,
@@ -153,7 +153,7 @@ async function setup(page: Page, owner = server) {
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: {
             "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } },
           },
@@ -180,14 +180,14 @@ async function setup(page: Page, owner = server) {
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [server],
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
-      localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
+      localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
     },
     { directory, server: owner, sessionId: parentID },
   )

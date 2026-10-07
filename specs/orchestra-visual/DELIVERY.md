@@ -65,7 +65,7 @@ Current-dev candidate captures: [`screenshots/README.md`](screenshots/README.md)
 Original published identity evidence (not a new performance run on this port):
 
 Root:
-`/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/visual-evidence-delivery`
+`/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/visual-evidence-delivery`
 
 For every `{dark,light}` × `{ltr,rtl}` combination:
 

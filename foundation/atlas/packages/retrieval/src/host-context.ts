@@ -1,7 +1,7 @@
 // ── REFERENCE MODEL — EXTERNAL STATIC HOST BOUNDARY
 // Declared in harness/gates/reference-model-guard.mjs.
 // Installed consumers are outside Atlas's packages/*/src scan. The host builds this exact entry into
-// @opencode-ai/atlas-boundary; no Atlas-local runtime composes it. Ledger classification states scan reach.
+// @orchestra/atlas-boundary; no Atlas-local runtime composes it. Ledger classification states scan reach.
 import type { Territory } from "@atlas/contracts"
 import { createTerritoryCatalog, parseTerritoryCatalog } from "@atlas/index"
 import type { TerritoryCatalog } from "@atlas/index"

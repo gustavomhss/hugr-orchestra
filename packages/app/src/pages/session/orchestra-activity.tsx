@@ -1,6 +1,6 @@
 import { For, Show, createMemo, createUniqueId, type Accessor } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Icon } from "@orchestra/ui/icon"
 import { useJanitor } from "@/context/janitor"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
