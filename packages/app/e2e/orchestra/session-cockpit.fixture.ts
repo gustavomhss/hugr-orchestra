@@ -1,6 +1,6 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, type Locator, type Page } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { installDockBridge } from "./session-cockpit-bridge"
 import { expectSessionTitle } from "../utils/waits"
 
@@ -64,7 +64,7 @@ export async function setupCockpit(
         session(`ses_cockpit_extra_${index}`, `Background ${index}`, 1700000010000 + index, { parentID }),
       )
     : []
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     freshRail: options.rail === "fresh",
     vcsDiff: options.vcsDiff,
     onPrompt: options.onPrompt,
@@ -81,7 +81,7 @@ export async function setupCockpit(
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: {
             "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } },
           },
@@ -145,15 +145,15 @@ export async function setupCockpit(
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
-      localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify([{ type: "session", server, sessionId }]))
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("language.v1", JSON.stringify({ locale }))
       // Web links leave through window.open; record them instead of opening a page.
       const opened: string[] = []

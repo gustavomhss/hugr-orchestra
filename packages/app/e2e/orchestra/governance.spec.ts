@@ -1,4 +1,4 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { Agent, AssistantMessage, Config, Message, Part, ToolPart, UserMessage } from "@opencode-ai/sdk/v2/client"
+import type { Agent, AssistantMessage, Config, Message, Part, ToolPart, UserMessage } from "@orchestra/sdk/v2/client"
 import { normalizeSessionMessages } from "@/utils/session-message"
 import type { SessionMessageAssistantTool } from "@opencode-ai/client/promise"
 import { maestroCapability, ownSource, readGovernance, sessionWorking } from "./orchestra-governance-data"

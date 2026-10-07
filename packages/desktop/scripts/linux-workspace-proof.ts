@@ -7,8 +7,8 @@ import { MessageChannel } from "node:worker_threads"
 import { AppDockRuntime } from "../src/main/app-dock-runtime"
 import { LinuxWorkspaceFiles } from "../src/main/linux-workspace-files"
 import { LinuxWorkspaceRPC } from "../src/main/linux-workspace-rpc"
-import { createLinuxWorkspaceHooks } from "../../opencode/src/plugin/linux-workspace"
-import type { ToolContext } from "@opencode-ai/plugin"
+import { createLinuxWorkspaceHooks } from "../../orchestra/src/plugin/linux-workspace"
+import type { ToolContext } from "@orchestra/plugin"
 
 const root = process.env.APP_DOCK_ACCESS_ROOT
 assert(root, "APP_DOCK_ACCESS_ROOT must select an existing owned workspace")
@@ -256,7 +256,7 @@ try {
       channel.port1.close()
       channel.port2.close()
     }
-    const foreignRoot = await mkdtemp(join(tmpdir(), "opencode/access-foreign-"))
+    const foreignRoot = await mkdtemp(join(tmpdir(), "orchestra/access-foreign-"))
     await writeFile(join(foreignRoot, "metadata.json"), JSON.stringify({ ...metadata, containerID: "0".repeat(64) }), {
       mode: 0o600,
     })

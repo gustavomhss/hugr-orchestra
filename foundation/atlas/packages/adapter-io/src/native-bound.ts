@@ -1,6 +1,6 @@
 // @atlas/adapter-io — src/native-bound.ts  (the installed bound-Memory entry — F3 work packages A1/A3)
 //
-// The host builds this exact file into @opencode-ai/atlas-boundary's `./native-memory` subpath; no Atlas-local
+// The host builds this exact file into @orchestra/atlas-boundary's `./native-memory` subpath; no Atlas-local
 // runtime imports it. It only re-exports, so the reference-model ledger counts `createNativeMemory`'s missing in-tree
 // caller on the `native-memory.ts` row (see harness/gates/reference-model-guard.mjs), not here.
 //

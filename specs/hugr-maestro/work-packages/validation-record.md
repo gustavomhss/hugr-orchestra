@@ -7,7 +7,7 @@ Target: `maestro-dev` at `e87a1223b4`. Consumer: Wave 2 authorization and Wave 3
 ## Definition of Done
 
 - `packages/schema/src/maestro-event.ts` defines versioned durable `Validation.Recorded` and `Review.Received` events, both aggregated by `sessionID`.
-- `packages/opencode/src/maestro/validation-record.ts` writes and reads immutable records through `Database` and `EventV2Bridge`; it imports `roster` and `lookupRouteGrant` from current Maestro authority and defines no parallel seat, route, grant, or policy lists.
+- `packages/orchestra/src/maestro/validation-record.ts` writes and reads immutable records through `Database` and `EventV2Bridge`; it imports `roster` and `lookupRouteGrant` from current Maestro authority and defines no parallel seat, route, grant, or policy lists.
 - Validation hashes exact UTF-8 work-card bytes internally. Caller cannot supply or override the work-card hash, roster hash, grant hash, or review-policy hash.
 - Validation accepts exactly one non-Maestro routed roster seat, validates nonempty deterministically ordered named checks, and persists `VALID`, `INVALID`, or `HOLD`.
 - Lucy review loads exact validation record, verifies exact work-card hash, accepts only Lucy native identity, rejects self-review, accepts artifact card/diff/check evidence only, and persists `APPROVE`, `FIX_FIRST`, or `REJECT` with cited findings for non-approval verdicts.
@@ -27,10 +27,10 @@ Target: `maestro-dev` at `e87a1223b4`. Consumer: Wave 2 authorization and Wave 3
 
 ## Quality Standards
 
-- Owner files: `packages/schema/src/maestro-event.ts`, `packages/opencode/src/maestro/validation-record.ts`, `packages/opencode/src/tool/maestro-validation.ts`, `packages/opencode/src/tool/registry.ts`, and focused tests only.
+- Owner files: `packages/schema/src/maestro-event.ts`, `packages/orchestra/src/maestro/validation-record.ts`, `packages/orchestra/src/tool/maestro-validation.ts`, `packages/orchestra/src/tool/registry.ts`, and focused tests only.
 - Do not edit generated SDK/client sources. Run `bun run generate` from `packages/client` only if public Protocol or Server HttpApi changes; this packet changes neither.
 - Use Effect `Schema`, `Database`, and `EventV2Bridge`; no in-memory authority cache, metadata map, `any`, or broad catch.
-- Tests run from `packages/opencode`: focused validation/tool tests, `test:maestro-restart`, native runtime proof, then `bun typecheck`. Schema manifest tests run from `packages/schema`.
+- Tests run from `packages/orchestra`: focused validation/tool tests, `test:maestro-restart`, native runtime proof, then `bun typecheck`. Schema manifest tests run from `packages/schema`.
 - Before landing, mutate work-card hash binding and reviewer identity/route check separately; each focused test must fail, then restore.
 - Cold reviewer reads full diff, verifies target parentage and file list, and rejects any wrong-worktree artifact.
 

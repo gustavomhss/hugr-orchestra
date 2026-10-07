@@ -2,7 +2,7 @@
 
 ## Decision
 
-Borrow identity fences, receipt distinctions, scoped cancellation, recovery classification. The backend specialist stays OpenCode/Orchestra plugin; optional Maestro adapter uses native work lifecycle. Atlas stays shared Knowledge/Memory. Resolve specialist public labels through environment-backed host configuration; Maestro retains its fixed public name. Persist native IDs, never display names. Reuse host runtime, store, scheduler.
+Borrow identity fences, receipt distinctions, scoped cancellation, recovery classification. The backend specialist stays Orchestra plugin; optional Maestro adapter uses native work lifecycle. Atlas stays shared Knowledge/Memory. Resolve specialist public labels through environment-backed host configuration; Maestro retains its fixed public name. Persist native IDs, never display names. Reuse host runtime, store, scheduler.
 
 Hermes provides useful small mechanisms, but its conversation runner, gateway, SQLite ownership, child threads, and recovery automation form substantial runtime infrastructure. Public child lifecycle is process-local supervision, not restart-resumable work execution.
 
@@ -82,7 +82,7 @@ Hermes provides useful small mechanisms, but its conversation runner, gateway, S
 - **Receipt:** outbox states `pending → attempting → delivered/failed`, later `abandoned`; redelivery visibly warns possible duplicate. Startup claim checks process ownership and deliverable platform/profile; attempt budget not spent on missing adapter. Defaults: 3 recovery attempts, 24-hour stale cutoff, bounded retention/pruning. [ledger]
 - **Adverse:** platform accepted/send-ACK-lost window remains at-least-once. Ledger recording/finalization best-effort; disabled ledger or write failure weakens guarantee. Slash/ephemeral replies excluded. General send record uses `INSERT OR REPLACE`, resetting state/attempts on same key; do not treat hash alone as monotonic exactly-once receipt. Fresh marker without persisted input can only resume stored history, not reconstruct vanished prompt. [delivery], [ledger]
 - **Controls / test reach:** active-turn tests use real temp SQLite/SessionStore: unmarked answered chat stays idle; marked unanswered chat resumes; persisted unledgered answer becomes outbox row; human silence-marker gets notice while internal silence suppressed. They call recovery methods directly, not SIGKILL/restart a gateway. Ledger tests use real DB plus forged orphan owner: live-owner exclusion, second-claim exclusion, missing-platform budget retention and later healthy claim. No real platform send guarantee. [T-recovery], [T-ledger]
-- **The backend specialist extraction:** project existing native obligation/result states; separate “execution unfinished” from “result exists, delivery owed.” OpenCode advisory wakes must not become Hermes-style implicit post-crash provider retry. Recovery needs explicit native design.
+- **The backend specialist extraction:** project existing native obligation/result states; separate “execution unfinished” from “result exists, delivery owed.” Orchestra advisory wakes must not become Hermes-style implicit post-crash provider retry. Recovery needs explicit native design.
 
 ### T6 — Persistence failure → damage-class guard → recoverable evidence
 
@@ -117,7 +117,7 @@ Hermes provides useful small mechanisms, but its conversation runner, gateway, S
 
 | Priority | Small mechanism | Existing owner / boundary |
 |---|---|---|
-| P0 | Native ID tuple: session, admitted input, child, optional work + attempt, generation; environment names resolved once to bindings | OpenCode/Orchestra owns session/input IDs; Maestro adapter supplies native work/attempt IDs when present. |
+| P0 | Native ID tuple: session, admitted input, child, optional work + attempt, generation; environment names resolved once to bindings | Orchestra owns session/input IDs; Maestro adapter supplies native work/attempt IDs when present. |
 | P0 | Receipt ladder: admitted, running, cancel-requested, terminal, persisted, delivered, verified; partial and unknown explicit | Plugin projects native events/results. Completion prose never closes Maestro work by itself. |
 | P0 | Generation-qualified cancellation/cleanup; observe terminal result before claiming stopped | Existing host execution ownership. No second coordinator or PID registry. |
 | P1 | Recovery classification: absent result versus persisted result awaiting delivery; exact retry reconciliation | Existing host journal/store APIs and explicit recovery policy. No plugin outbox DB, timer or auto-resume scheduler. |

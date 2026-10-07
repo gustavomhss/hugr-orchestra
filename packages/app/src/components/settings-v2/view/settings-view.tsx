@@ -1,4 +1,4 @@
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { useSearchParams } from "@solidjs/router"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { reconcile, unwrap } from "solid-js/store"

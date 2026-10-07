@@ -38,10 +38,10 @@ Model: available general/explore agent; bounded return cards, not whole transcri
 
 | ID | Research domain | Starting sources | Required result |
 | --- | --- | --- | --- |
-| R1 | Existing Dock MCP/RPC and package boundaries | desktop `app-dock-api.ts`, `app-dock-rpc.ts`, browser helpers, opencode plugin, App Dock corpus | Exact integration seams, compatibility obligations, proposed file ownership map |
+| R1 | Existing Dock MCP/RPC and package boundaries | desktop `app-dock-api.ts`, `app-dock-rpc.ts`, browser helpers, orchestra plugin, App Dock corpus | Exact integration seams, compatibility obligations, proposed file ownership map |
 | R2 | Native reads and actions | AT-SPI Accessible/Action/Text/EditableText/Selection/Component and GTK/Qt/Chromium primary docs | Available operations, identity/lifetime facts, semantic limitations, prerequisites for a real proof |
 | R3 | Guest deployment/session and runtime handoff | AT-SPI/D-Bus setup, distro packages, toolkit enablement, current desktop packaging | Minimal dependencies and session requirements, transport/lifecycle obligations, unresolved runtime inputs |
-| R4 | Functional proof and regression strategy | Existing desktop/opencode harnesses; primary docs for GTK/Qt/Chromium apps | Real-app test matrix, observable side effects, negative controls, package-local commands and CI reach |
+| R4 | Functional proof and regression strategy | Existing desktop/orchestra harnesses; primary docs for GTK/Qt/Chromium apps | Real-app test matrix, observable side effects, negative controls, package-local commands and CI reach |
 | R5 | Bounded reads/events/performance | AT-SPI cache/collection/events, GTK/Qt/Chromium accessibility behavior | Bounded-work design evidence, profiling protocol, failure controls, costs that require measurement |
 
 Acceptance of every research card: file:line or primary URL plus relevant exact clause; distinguish documented support from measured behavior; name blockers; answer what the framing missed.

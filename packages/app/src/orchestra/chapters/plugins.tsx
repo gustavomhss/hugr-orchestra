@@ -1,5 +1,5 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { getFilename } from "@opencode-ai/core/util/path"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { getFilename } from "@orchestra/core/util/path"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"

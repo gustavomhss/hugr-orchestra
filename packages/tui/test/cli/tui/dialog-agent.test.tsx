@@ -32,7 +32,7 @@ test("agent dialog lists a renamed agent by its label and selects its id", async
     { ThemeProvider },
     { TuiConfigProvider },
     { ToastProvider },
-    { OpencodeKeymapProvider, registerOpencodeKeymap },
+    { OrchestraKeymapProvider, registerOrchestraKeymap },
   ] = await Promise.all([
     import("../../../src/ui/dialog"),
     import("../../../src/ui/dialog-select"),
@@ -48,11 +48,11 @@ test("agent dialog lists a renamed agent by its label and selects its id", async
     const renderer = useRenderer()
     const keymap = createDefaultOpenTuiKeymap(renderer)
     const resolvedConfig = createTuiResolvedConfig({ keybinds: {}, leader_timeout: 1000 })
-    const off = registerOpencodeKeymap(keymap, renderer, resolvedConfig)
+    const off = registerOrchestraKeymap(keymap, renderer, resolvedConfig)
     onCleanup(off)
     return (
       <TestTuiContexts directory={tmp.path} paths={{ home: tmp.path, state, worktree: tmp.path }}>
-        <OpencodeKeymapProvider keymap={keymap}>
+        <OrchestraKeymapProvider keymap={keymap}>
           <TuiConfigProvider config={resolvedConfig}>
             <KVProvider>
               <ThemeProvider mode="dark">
@@ -72,7 +72,7 @@ test("agent dialog lists a renamed agent by its label and selects its id", async
               </ThemeProvider>
             </KVProvider>
           </TuiConfigProvider>
-        </OpencodeKeymapProvider>
+        </OrchestraKeymapProvider>
       </TestTuiContexts>
     )
   }

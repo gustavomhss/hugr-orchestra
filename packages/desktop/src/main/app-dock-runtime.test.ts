@@ -10,7 +10,7 @@ import { rejection } from "./rejection.fixture"
 
 const exec = promisify(execFile)
 const enabled = process.env.APP_DOCK_RUNTIME_INTEGRATION === "1"
-const temporary = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "opencode")
+const temporary = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "orchestra")
 const context = process.env.APP_DOCK_RUNTIME_TEST_X11_MUTATION === "1"
   ? await fixtureRoot("x11-mutation")
   : resolve("resources/linux-runtime")

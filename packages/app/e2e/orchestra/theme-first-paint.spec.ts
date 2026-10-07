@@ -12,12 +12,12 @@ for (const mode of ["light", "dark"] as const) {
         await page.emulateMedia({ colorScheme: mode })
         await page.addInitScript(
           ({ selection, css, mode }) => {
-            localStorage.setItem("opencode-color-scheme", selection === "default" ? "system" : mode)
+            localStorage.setItem("orchestra-color-scheme", selection === "default" ? "system" : mode)
             if (selection === "default") return
-            localStorage.setItem("opencode-theme-id", "nightowl")
+            localStorage.setItem("orchestra-theme-id", "nightowl")
             if (selection === "cached") {
-              localStorage.setItem("opencode-theme-css-light", css)
-              localStorage.setItem("opencode-theme-css-dark", css)
+              localStorage.setItem("orchestra-theme-css-light", css)
+              localStorage.setItem("orchestra-theme-css-dark", css)
             }
           },
           {
@@ -67,7 +67,7 @@ for (const mode of ["light", "dark"] as const) {
         await expect(page.getByLabel("Selected theme", { exact: true })).toHaveText("nightowl")
         await expect(page.locator("html")).toHaveAttribute("data-theme", "nightowl")
         await background(page, next)
-        await expect.poll(() => page.evaluate(() => localStorage.getItem("opencode-theme-id"))).toBe("nightowl")
+        await expect.poll(() => page.evaluate(() => localStorage.getItem("orchestra-theme-id"))).toBe("nightowl")
       },
     )
   }

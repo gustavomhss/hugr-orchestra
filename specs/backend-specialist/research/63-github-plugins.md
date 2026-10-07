@@ -29,14 +29,14 @@ OMO's vendored `packages/shared-skills/skills/ast-grep` has separate [MIT licens
 
 | Candidate | Actual inspected integration shape | The backend specialist extraction / platform cost |
 | --- | --- | --- |
-| Superpowers | [TDD][S1] and [verification][S2] are Markdown procedures. [SessionStart manifest][S4] invokes [shell bootstrap][S5]. [OpenCode adapter][S3] registers skills, maps V1/V2 tools, caches bootstrap and injects controller instructions into context. Child-session detection skips controller bootstrap when parent identity is known; lookup failure falls back to injection. | Keep small implementation/evidence procedures. Bootstrap/controller workflow brings planning and approval behavior. Existing adapter source is evidence of an adapter, not proof of compatibility with this pinned host. |
-| ECC | [API][E1]/[migration][E2] skills are portable text. [build-fix][E3] groups compiler errors and repairs incrementally, but also detects build systems and diagnoses. [OpenCode hook module][E4] declares strict-profile formatting/typechecks, changed-file tracking, compaction injection and permission auto-approval responses. | Keep backend recipes and correction of the backend specialist's own local compiler mistakes. Use supplied stack/build commands. Permission handling conflicts with Maestro; context/persistence conflicts with harness/Atlas. |
+| Superpowers | [TDD][S1] and [verification][S2] are Markdown procedures. [SessionStart manifest][S4] invokes [shell bootstrap][S5]. [Orchestra adapter][S3] registers skills, maps V1/V2 tools, caches bootstrap and injects controller instructions into context. Child-session detection skips controller bootstrap when parent identity is known; lookup failure falls back to injection. | Keep small implementation/evidence procedures. Bootstrap/controller workflow brings planning and approval behavior. Existing adapter source is evidence of an adapter, not proof of compatibility with this pinned host. |
+| ECC | [API][E1]/[migration][E2] skills are portable text. [build-fix][E3] groups compiler errors and repairs incrementally, but also detects build systems and diagnoses. [Orchestra hook module][E4] declares strict-profile formatting/typechecks, changed-file tracking, compaction injection and permission auto-approval responses. | Keep backend recipes and correction of the backend specialist's own local compiler mistakes. Use supplied stack/build commands. Permission handling conflicts with Maestro; context/persistence conflicts with harness/Atlas. |
 | Anthropic selected plugins | [feature-dev command][A1] is phased controller text: discovery/explorer agents, architecture agents, user approval, implementation, reviewer agents. [code-simplifier agent][A2] has `model: opus`, recently-touched scope and behavior preservation, plus concrete JS/React style opinions. | Phase 5 contributes “read supplied relevant files, follow chosen architecture and project conventions.” Simplification becomes inline local work, not independent reviewer/model dispatch. Replace upstream style opinions with component conventions. |
-| OMO | [refactor command sections][O1] combine plan-agent invocation, LSP/AST edits, checks and commits. [runtime construction][O4] wires managers, tools, hooks, config migration, model cache and compaction/autocontinue. [adapter package][O8] pins `@opencode-ai/plugin`/SDK `1.18.31`. | Keep independently phrased scoped-edit procedure only. Full platform duplicates execution/orchestration/config ownership and adds host-version/tool dependencies; SUL boundary also matters. |
-| Ponytail | [skill][P1] contains reuse/stdlib/native-feature ladder and explicit protection for validation/data-loss handling. [instruction builder][P3] reads skill body and filters intensity examples. [OpenCode adapter][P2] registers skills/commands, injects system text each turn and persists mode under XDG config or `~/.config/opencode/.ponytail-active`. | Keep local reuse/minimality guidance. Persistent persona/state, requirement-challenging modes, whole-flow diagnosis and audit/review commands exceed the backend specialist's implementation role. |
+| OMO | [refactor command sections][O1] combine plan-agent invocation, LSP/AST edits, checks and commits. [runtime construction][O4] wires managers, tools, hooks, config migration, model cache and compaction/autocontinue. [adapter package][O8] pins `@orchestra/plugin`/SDK `1.18.31`. | Keep independently phrased scoped-edit procedure only. Full platform duplicates execution/orchestration/config ownership and adds host-version/tool dependencies; SUL boundary also matters. |
+| Ponytail | [skill][P1] contains reuse/stdlib/native-feature ladder and explicit protection for validation/data-loss handling. [instruction builder][P3] reads skill body and filters intensity examples. [Orchestra adapter][P2] registers skills/commands, injects system text each turn and persists mode under XDG config or `~/.config/orchestra/.ponytail-active`. | Keep local reuse/minimality guidance. Persistent persona/state, requirement-challenging modes, whole-flow diagnosis and audit/review commands exceed the backend specialist's implementation role. |
 
 Helper-code findings sharpen portability limits:
-- ECC's standalone [post-edit-typecheck helper][E5] invokes `npx tsc --noEmit`, filters diagnostics to edited-file path candidates, truncates displayed lines and exits zero after handling failures. This is best-effort feedback, not project-green evidence. OpenCode strict hook likewise logs failures; use package-owned `bun typecheck` here.
+- ECC's standalone [post-edit-typecheck helper][E5] invokes `npx tsc --noEmit`, filters diagnostics to edited-file path candidates, truncates displayed lines and exits zero after handling failures. This is best-effort feedback, not project-green evidence. Orchestra strict hook likewise logs failures; use package-owned `bun typecheck` here.
 - OMO's [edit-error recovery hook][O3] only matches three English `edit` error strings and appends a reread reminder. Portable behavior: reread current file after failed/stale edit; hook-string coverage does not transfer to `apply_patch` automatically.
 - OMO's [AST helper][O5] previews through JSON, applies through a separate `--update-all` call, and reports preview match totals. Its JSON parser salvages malformed output, and replacement returns success on empty parsed matches. Adapt procedure to require trustworthy preview and inspect resulting diff; helper output alone cannot prove expected edits happened.
 
@@ -125,7 +125,7 @@ Same word “rename,” different scope: internal backend symbol rename can use 
 [SL]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/LICENSE
 [S1]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/test-driven-development/SKILL.md
 [S2]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/verification-before-completion/SKILL.md
-[S3]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/.opencode/plugins/superpowers.js
+[S3]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/.orchestra/plugins/superpowers.js
 [S4]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/hooks/hooks.json
 [S5]: https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/hooks/session-start
 [E]: https://github.com/affaan-m/ECC/tree/ef648e01899ba3e8dc6371642deaaf64b4477775
@@ -133,7 +133,7 @@ Same word “rename,” different scope: internal backend symbol rename can use 
 [E1]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/skills/api-design/SKILL.md
 [E2]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/skills/database-migrations/SKILL.md
 [E3]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/commands/build-fix.md
-[E4]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/.opencode/plugins/ecc-hooks.ts
+[E4]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/.orchestra/plugins/ecc-hooks.ts
 [E5]: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/scripts/hooks/post-edit-typecheck.js
 [A]: https://github.com/anthropics/claude-plugins-official/tree/d182ca456ca09d31d139f7d3818d1d333b103cce
 [AL]: https://github.com/anthropics/claude-plugins-official/blob/d182ca456ca09d31d139f7d3818d1d333b103cce/plugins/code-simplifier/LICENSE
@@ -141,17 +141,17 @@ Same word “rename,” different scope: internal backend symbol rename can use 
 [A2]: https://github.com/anthropics/claude-plugins-official/blob/d182ca456ca09d31d139f7d3818d1d333b103cce/plugins/code-simplifier/agents/code-simplifier.md
 [O]: https://github.com/code-yeongyu/oh-my-openagent/tree/f985c7831830b3a4b1919aeb470fd522f8460e76
 [OL]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/LICENSE.md
-[O1]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-opencode/src/features/builtin-commands/templates/refactor-sections/plan-and-execution.ts
-[O3]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-opencode/src/hooks/edit-error-recovery/hook.ts
-[O4]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-opencode/src/testing/create-plugin-module.ts
+[O1]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-orchestra/src/features/builtin-commands/templates/refactor-sections/plan-and-execution.ts
+[O3]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-orchestra/src/hooks/edit-error-recovery/hook.ts
+[O4]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-orchestra/src/testing/create-plugin-module.ts
 [O5]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/shared-skills/skills/ast-grep/scripts/ast_grep_helper.py
 [O6]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/shared-skills/skills/ast-grep/SOURCE
 [O7]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/shared-skills/skills/ast-grep/LICENSE
-[O8]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-opencode/package.json
+[O8]: https://github.com/code-yeongyu/oh-my-openagent/blob/f985c7831830b3a4b1919aeb470fd522f8460e76/packages/omo-orchestra/package.json
 [P]: https://github.com/DietrichGebert/ponytail/tree/c982cd411abb53323c4baa1baa3c2f020b8d0b08
 [PL]: https://github.com/DietrichGebert/ponytail/blob/c982cd411abb53323c4baa1baa3c2f020b8d0b08/LICENSE
 [P1]: https://github.com/DietrichGebert/ponytail/blob/c982cd411abb53323c4baa1baa3c2f020b8d0b08/skills/ponytail/SKILL.md
-[P2]: https://github.com/DietrichGebert/ponytail/blob/c982cd411abb53323c4baa1baa3c2f020b8d0b08/.opencode/plugins/ponytail.mjs
+[P2]: https://github.com/DietrichGebert/ponytail/blob/c982cd411abb53323c4baa1baa3c2f020b8d0b08/.orchestra/plugins/ponytail.mjs
 [P3]: https://github.com/DietrichGebert/ponytail/blob/c982cd411abb53323c4baa1baa3c2f020b8d0b08/hooks/ponytail-instructions.js
 [D1]: https://www.postgresql.org/docs/17/sql-altertable.html
 [D2]: https://www.django-rest-framework.org/api-guide/exceptions/#validationerror

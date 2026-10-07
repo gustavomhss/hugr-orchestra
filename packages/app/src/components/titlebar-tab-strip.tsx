@@ -24,11 +24,11 @@ import { useModels } from "@/context/models"
 import { createPromptModelContext, selectPromptModel } from "@/pages/session/composer/prompt-model-selection"
 import { ModelLogo } from "@/orchestra/model-logo"
 import { modelActivity } from "@/orchestra/model-logo-resolver"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { showToast } from "@/utils/toast"
 import { canStartTabDrag, isTabCloseTarget } from "./titlebar-tab-gesture"
 import { adjacentTabKey, mergeVisibleTabOrder, tabMatchesProfile } from "./titlebar-tab-order"
-import type { Session } from "@opencode-ai/sdk/v2"
+import type { Session } from "@orchestra/sdk/v2"
 import { agentKey } from "@/context/agent-identity"
 
 function SessionTabSlot(props: {

@@ -1,12 +1,12 @@
 import "@/index.css"
 import * as Sentry from "@sentry/solid"
-import { I18nProvider } from "@opencode-ai/ui/context"
-import { DialogProvider } from "@opencode-ai/ui/context/dialog"
-import { FileComponentProvider } from "@opencode-ai/ui/context/file"
-import { File } from "@opencode-ai/session-ui/file"
-import { Font } from "@opencode-ai/ui/font"
+import { I18nProvider } from "@orchestra/ui/context"
+import { DialogProvider } from "@orchestra/ui/context/dialog"
+import { FileComponentProvider } from "@orchestra/ui/context/file"
+import { File } from "@orchestra/session-ui/file"
+import { Font } from "@orchestra/ui/font"
 import { HugrSplash } from "@/orchestra/brand"
-import { ThemeProvider, syncThemeBackground } from "@opencode-ai/ui/theme/context"
+import { ThemeProvider, syncThemeBackground } from "@orchestra/ui/theme/context"
 import { MetaProvider } from "@solidjs/meta"
 import {
   type BaseRouterProps,
@@ -20,7 +20,7 @@ import {
 } from "@solidjs/router"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { Effect } from "effect"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import {
   type Component,
   createEffect,
@@ -271,7 +271,7 @@ function LayoutCompatibility(props: ParentProps) {
 
 declare global {
   interface Window {
-    __OPENCODE__?: {
+    __ORCHESTRA__?: {
       deepLinks?: string[]
     }
     api?: Partial<import("./app-dock-linux").AppDockLinuxAPI> & {

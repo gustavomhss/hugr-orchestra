@@ -4,7 +4,7 @@ export interface ModelRule {
   action: "allow" | "deny" | "ask"
 }
 
-/** Client mirror of the server Wildcard.match (packages/opencode/src/util/wildcard.ts):
+/** Client mirror of the server Wildcard.match (packages/orchestra/src/util/wildcard.ts):
     `*` spans `/`, match is full-string. Kept to the shapes this feature
     reads and writes; exotic patterns fall back to generic `*` handling. */
 export function wildcardMatch(str: string, pattern: string): boolean {
@@ -19,7 +19,7 @@ export function wildcardMatch(str: string, pattern: string): boolean {
 const TASK = "task"
 
 /** True when the session carries model-scoped task rules. Mirrors the
-    detection in TaskTool (packages/opencode/src/tool/task.ts) exactly:
+    detection in TaskTool (packages/orchestra/src/tool/task.ts) exactly:
     permission === "task" with a "/" in the pattern. */
 export function hasModelScope(rules: readonly ModelRule[]): boolean {
   return rules.some((rule) => rule.permission === TASK && rule.pattern.includes("/"))

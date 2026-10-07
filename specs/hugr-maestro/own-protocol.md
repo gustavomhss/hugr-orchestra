@@ -1,6 +1,6 @@
 # HuGR Maestro V2: Static Own Protocol
 
-Status: proposed. This protocol materializes Atlas-derived ownership state as versioned OpenCode skills. It supersedes the runtime-`own()` adapter as Maestro's primary context path.
+Status: proposed. This protocol materializes Atlas-derived ownership state as versioned Orchestra skills. It supersedes the runtime-`own()` adapter as Maestro's primary context path.
 
 ## Purpose
 
@@ -18,7 +18,7 @@ Maestro -> selects canonical unit -> loads current own_* skill -> follows only i
 Each available canonical ownership unit has exactly one artifact:
 
 ```text
-.opencode/skills/own/<base64url(utf8(unit))>/SKILL.md
+.orchestra/skills/own/<base64url(utf8(unit))>/SKILL.md
 ```
 
 The skill frontmatter `name` is `own_<base64url(utf8(unit))>`. Base64url is injective, so two units with an equal leaf such as `src/billing` and `crates/billing` cannot collide. Human-facing `description` names the canonical unit. Path, leaf, display label, glob, and guessed handle never identify an artifact.
@@ -34,7 +34,7 @@ The receipt may be machine-readable YAML frontmatter or a delimited JSON block, 
 
 Post-Genesis Own materializer reads Atlas availability after Genesis has completed. It emits an `OwnCoverageReceipt` for every canonical unit exposed by that availability. It contains ordered unit IDs, snapshot identity, graph coverage verdict, schema version, and source-file blob anchors for each rendered Own skill. Genesis never writes Own Markdown or an Own coverage receipt.
 
-Coverage is committed at `.opencode/skills/own/OWN-COVERAGE.json`. CI reads this receipt as its only expected-unit oracle; it never treats a successfully scanned empty skill directory as complete coverage.
+Coverage is committed at `.orchestra/skills/own/OWN-COVERAGE.json`. CI reads this receipt as its only expected-unit oracle; it never treats a successfully scanned empty skill directory as complete coverage.
 
 Materializer input is one unit plus its current Knowledge/graph projection and coverage receipt. It may use an agent to draft Markdown, but the agent never decides unit membership, impact, freshness, fact membership, or receipt fields. Materializer rejects output when any cited fact is stale, or when its cited facts, snapshot, or artifact name differ from input. Stale Genesis is therefore `HOLD`, never a static Own baseline.
 
@@ -91,7 +91,7 @@ coverage rather than silently weakening source freshness.
 
 ## Maestro Boundary
 
-OpenCode already discovers `.opencode/skills/**/SKILL.md`; static Own artifacts therefore use existing skill loading. Maestro selects only canonical unit IDs supplied by a valid Own availability/impact surface, then loads matching `own_*` skill. Deeper context comes only from explicit skill drill pointers.
+Orchestra already discovers `.orchestra/skills/**/SKILL.md`; static Own artifacts therefore use existing skill loading. Maestro selects only canonical unit IDs supplied by a valid Own availability/impact surface, then loads matching `own_*` skill. Deeper context comes only from explicit skill drill pointers.
 
 Maestro cannot call Atlas query/pack/write APIs, source-path search, glob selection, or generic retrieval to replace a missing/stale Own artifact. Missing, stale, ambiguous, or held Own state returns `HOLD`.
 

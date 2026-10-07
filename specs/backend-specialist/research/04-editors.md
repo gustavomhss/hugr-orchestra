@@ -1,6 +1,6 @@
 # R04 — Backend-agent workflows from editor documentation
 
-Research date: **2026-10-03**. Target: independent **OpenCode/Orchestra plugin**, **Atlas mandatory architectural foundation**, **Maestro-native delegation optional**. Product names below identify sources, not proposed branding.
+Research date: **2026-10-03**. Target: independent **Orchestra plugin**, **Atlas mandatory architectural foundation**, **Maestro-native delegation optional**. Product names below identify sources, not proposed branding.
 
 ## Decision
 
@@ -25,7 +25,7 @@ Ranking expresses operational value and bounded implementation risk. Atlas adapt
 
 ## 1. Method and evidence limits
 
-Primary vendor pages fetched directly; public Microsoft source inspected through read-only GitHub API. Documentation assertions separated from source-visible behavior. No application installed or exercised, no downloaded code executed, no subagents launched, no configuration changed, no commits/pushes, no local source checkout. Authenticated product UIs, server internals, performance, retrieval quality, and Atlas/Maestro/OpenCode contracts remain untested.
+Primary vendor pages fetched directly; public Microsoft source inspected through read-only GitHub API. Documentation assertions separated from source-visible behavior. No application installed or exercised, no downloaded code executed, no subagents launched, no configuration changed, no commits/pushes, no local source checkout. Authenticated product UIs, server internals, performance, retrieval quality, and Atlas/Maestro/Orchestra contracts remain untested.
 
 Evidence labels:
 
@@ -113,7 +113,7 @@ URL: https://docs.github.com/en/copilot/concepts/agents/coding-agent/about-codin
 
 - Research/plan/branch work can precede PR creation on supported entry points; chat context can carry into cloud session. Ephemeral GitHub Actions environment supports code edits, tests, linters, and logs. Other entry points have different workflows.
 - Published limits include one target repository and one branch per run. This constrains conclusions about cross-project orchestration.
-- Reuse: task brief, visible artifacts/status, feedback iteration, separate plan from execution. Boundary: existing OpenCode session or optional Maestro owns execution; no GitHub Actions clone or background service added to plugin.
+- Reuse: task brief, visible artifacts/status, feedback iteration, separate plan from execution. Boundary: existing Orchestra session or optional Maestro owns execution; no GitHub Actions clone or background service added to plugin.
 
 **G4 — Copilot code review [D]**  
 URL: https://docs.github.com/en/copilot/concepts/code-review/code-review
@@ -262,7 +262,7 @@ https://agentskills.io/specification
 ### Ownership
 
 ```text
-OpenCode/Orchestra host
+Orchestra host
   Existing sessions, tool execution, permissions, terminal lifecycle, transcript
     |
     +-- Plugin: scoped customization, context manifest, receipts, handoff UI

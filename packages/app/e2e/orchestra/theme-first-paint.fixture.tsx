@@ -1,5 +1,5 @@
 import { render } from "solid-js/web"
-import { ThemeProvider, useTheme } from "@opencode-ai/ui/theme/context"
+import { ThemeProvider, useTheme } from "@orchestra/ui/theme/context"
 import "../../src/index.css"
 
 function Controls() {

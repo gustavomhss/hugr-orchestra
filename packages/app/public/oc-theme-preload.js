@@ -7,19 +7,19 @@
     }
   }
 
-  const key = "opencode-theme-id"
+  const key = "orchestra-theme-id"
   const savedTheme = read(key) || "oc-2"
   const themeId = savedTheme === "oc-1" ? "oc-2" : savedTheme
 
   if (savedTheme === "oc-1") {
     try {
       localStorage.setItem(key, themeId)
-      localStorage.removeItem("opencode-theme-css-light")
-      localStorage.removeItem("opencode-theme-css-dark")
+      localStorage.removeItem("orchestra-theme-css-light")
+      localStorage.removeItem("orchestra-theme-css-dark")
     } catch {}
   }
 
-  const savedScheme = read("opencode-color-scheme")
+  const savedScheme = read("orchestra-color-scheme")
   const scheme = savedScheme === "dark" || savedScheme === "light" ? savedScheme : "system"
   const isDark = scheme === "dark" || (scheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
   const mode = isDark ? "dark" : "light"
@@ -31,7 +31,7 @@
   root.toggleAttribute("data-new-layout", true)
   root.style.colorScheme = mode
 
-  const css = themeId === "oc-2" ? null : read("opencode-theme-css-" + mode)
+  const css = themeId === "oc-2" ? null : read("orchestra-theme-css-" + mode)
   if (css) {
     const style = document.createElement("style")
     style.id = "oc-theme-preload"

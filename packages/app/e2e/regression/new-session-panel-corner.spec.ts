@@ -1,9 +1,9 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
 const draftID = "draft_new_session_panel_corner"
-const directory = "C:/OpenCode/NewSessionPanelCorner"
+const directory = "C:/Orchestra/NewSessionPanelCorner"
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 
 test.use({ deviceScaleFactor: 1 })
@@ -42,7 +42,7 @@ test.describe("legacy layout", () => {
 })
 
 async function readPanelCorners(page: Page, testInfo: TestInfo, scheme: "dark" | "light") {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     directory,
     project: {
       id: "proj_new_session_panel_corner",
@@ -63,17 +63,17 @@ async function readPanelCorners(page: Page, testInfo: TestInfo, scheme: "dark" |
         "settings.v3",
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "orchestra.window.browser.dat:tabs",
         JSON.stringify([{ type: "draft", draftID, server, directory }]),
       )
     },

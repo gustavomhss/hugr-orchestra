@@ -11,19 +11,19 @@ Status: current adapter implemented in the `maestro-grounding` worktree; landing
 | Shared-scope pack            | `foundation/atlas/packages/retrieval/src/pack.ts:234-245`                      | `Packer.mergedPack(Territory[])` enforces one shared `PACK_CAP` budget                              |
 | Cap source                   | `foundation/atlas/packages/retrieval/src/pack.ts:50-65,130-134`                | `capFor('pack')` is current budget authority                                                        |
 | Empty scope behavior         | `foundation/atlas/packages/retrieval/src/pack.ts:204-206,234-241`              | uncovered/malformed scope returns empty total pack; it is not `UN-SEEDED`                           |
-| Package boundary             | root `package.json`; `foundation/atlas/package.json`; retrieval `package.json` | Atlas is nested independent workspace; no `@atlas/*` dependency/export exists in OpenCode workspace |
+| Package boundary             | root `package.json`; `foundation/atlas/package.json`; retrieval `package.json` | Atlas is nested independent workspace; no `@atlas/*` dependency/export exists in Orchestra workspace |
 
 ## Blocker
 
 ACE requires a catalog address/version resolving `Territory.name` exactly once. Current measured retrieval starts only at
-`Packer.pack(Territory)`: it has no project-scoped catalog interface. OpenCode cannot obtain canonical `Territory`
+`Packer.pack(Territory)`: it has no project-scoped catalog interface. Orchestra cannot obtain canonical `Territory`
 objects or version without either:
 
 1. A frozen Atlas catalog read API exported through installed package/runtime boundary.
 2. A versioned read-only Atlas service client with exact catalog response contract.
 
-Direct relative import from `foundation/atlas`, copying `Territory` into OpenCode, path/glob lookup, or creating an
-OpenCode catalog store would violate ACE and `atlas-foundation-seam-register.md`.
+Direct relative import from `foundation/atlas`, copying `Territory` into Orchestra, path/glob lookup, or creating an
+Orchestra catalog store would violate ACE and `atlas-foundation-seam-register.md`.
 
 ## Required Next Contract
 
@@ -40,4 +40,4 @@ Required properties:
 3. Returned `Territory` objects are valid inputs to `Packer.pack` and `Packer.mergedPack`.
 4. No write, shell, network, model, or ambient current-project inference.
 
-After this contract exists as an installable/current Atlas seam, implement ACE-1 through ACE-9 in OpenCode adapter.
+After this contract exists as an installable/current Atlas seam, implement ACE-1 through ACE-9 in Orchestra adapter.
