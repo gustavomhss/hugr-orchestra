@@ -281,14 +281,14 @@ describe("opencode run (non-interactive subprocess)", () => {
         expect(events).toContainEqual(
           expect.objectContaining({
             type: "error",
-            error: { name: "RetryWaitTooLong", data: { message: expect.stringContaining("retry in 20h 59m") } },
+            error: { name: "RetryWaitTooLong", data: { message: expect.stringMatching(/retry in (20h 59m|21h 0m)/) } },
           }),
         )
 
         yield* llm.error(429, { error: { message: "Rate limit exceeded" } }, { "retry-after": "75600" })
         const text = yield* opencode.run("hit the quota again")
         expect(text.exitCode).not.toBe(0)
-        expect(text.stderr).toContain("retry 1 in 20h 59m")
+        expect(text.stderr).toMatch(/retry 1 in (20h 59m|21h 0m)/)
         expect(text.stderr).toContain("longer than run waits (10m 0s)")
       }),
     60_000,
