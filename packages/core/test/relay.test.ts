@@ -273,7 +273,8 @@ describe("Relay.Service", () => {
       const dirs = yield* fixture
       const startup = path.join(dirs.home, "startup.sh")
       writeFileSync(startup, `touch "${path.join(dirs.work, "startup-ran")}"\n`)
-      const check = 'env > "$PWD/env.txt"'
+      const check =
+        'env > "$PWD/env.txt"' + (process.platform === "win32" ? '; cygpath -w "$HOME" > "$PWD/home.txt"' : "")
       const verified = yield* withEnv(
         {
           ANTHROPIC_API_KEY: "sk-ant-provider-key",
@@ -330,7 +331,10 @@ describe("Relay.Service", () => {
       excluded.forEach((name) => expect(dump).not.toMatch(new RegExp(`^${name}=`, "m")))
       const secrets = ["sk-ant-provider-key", "sk-provider-key", "ghp_provider_token", "c".repeat(64), "judge-from-env"]
       secrets.forEach((secret) => expect(dump).not.toContain(secret))
-      expect(dump).toContain(`HOME=${dirs.home}\n`)
+      // MSYS converts HOME to its POSIX spelling; compare the native directory, not its shell spelling.
+      if (process.platform === "win32")
+        expect(readFileSync(path.join(dirs.work, "home.txt"), "utf8").trim()).toBe(dirs.home)
+      if (process.platform !== "win32") expect(dump).toContain(`HOME=${dirs.home}\n`)
       expect(dump).toContain("test_cmd=bun test\n")
       // BASH_ENV never reached the fresh bash, from the process or from the params.
       expect(existsSync(path.join(dirs.work, "startup-ran"))).toBe(false)
@@ -409,10 +413,13 @@ describe("Relay.Service", () => {
           yield* TestClock.adjust("59 seconds")
           expect(fiber.pollUnsafe()).toBeUndefined()
           expect(alive(child)).toBe(true)
+          const boundary = performance.now()
           yield* TestClock.adjust("1 second")
           expect(yield* Fiber.join(fiber)).toMatchObject({ verdict: "unavailable", reason: "timeout", ledgerSeq: 0 })
           yield* gone(shell)
           yield* gone(child)
+          // The fixture watchdog must never satisfy the timeout's cleanup oracle.
+          expect(performance.now() - boundary).toBeLessThan(10_000)
         }),
       )
     }),
@@ -449,10 +456,12 @@ describe("Relay.Service", () => {
           yield* TestClock.adjust("59 seconds")
           expect(fiber.pollUnsafe()).toBeUndefined()
           expect(alive(child)).toBe(true)
+          const boundary = performance.now()
           yield* TestClock.adjust("1 second")
           expect(yield* Fiber.join(fiber)).toEqual({ outcome: "check", i: 0, wp: "build", failing: ["slow"] })
           yield* gone(shell)
           yield* gone(child)
+          expect(performance.now() - boundary).toBeLessThan(10_000)
         }),
       )
     }),
