@@ -16,6 +16,8 @@ import * as Statement from "effect/unstable/sql/Statement"
 import { Sqlite } from "./sqlite"
 
 const ATTR_DB_SYSTEM_NAME = "db.system.name"
+// Distinct SQL texts kept compiled per connection. Generated `IN (...)` lists make one text per list length.
+const STATEMENT_LIMIT = 500
 
 const TypeId = "~@opencode-ai/core/database/SqliteBun" as const
 type TypeId = typeof TypeId
@@ -53,15 +55,45 @@ const make = (options: Config) =>
       ? Statement.defaultTransforms(options.transformResultNames).array
       : undefined
 
-    // Every statement is finalized as soon as it ran. Bun's `query` caches only the first 20 statements it compiles
-    // and leaves the rest to the garbage collector, and `close` defers to the last open statement, so on Windows the
-    // database file stayed locked after the layer closed until a collection happened to finalize them.
+    // Bun's `query` caches only the first 20 statements it compiles and leaves the rest to the garbage collector, and
+    // a statement still open keeps the database file open after `close` (Windows then refuses to remove it). The
+    // adapter therefore owns every statement it runs: it reuses them by SQL text, finalizes the least recently used one
+    // past STATEMENT_LIMIT, and finalizes all of them before the connection closes.
+    const statements = new Map<string, ReturnType<Database["prepare"]>>()
+    const prepare = (query: string) => {
+      const cached = statements.get(query)
+      // Map order is recency order: a reused statement moves to the end, so the first entry is the one to evict.
+      statements.delete(query)
+      const statement = cached ?? native.prepare(query)
+      statements.set(query, statement)
+      if (statements.size <= STATEMENT_LIMIT) return statement
+      const oldest = statements.entries().next().value
+      if (!oldest) return statement
+      statements.delete(oldest[0])
+      oldest[1].finalize()
+      return statement
+    }
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        statements.forEach((statement) => statement.finalize())
+        statements.clear()
+      }).pipe(
+        // With every statement finalized the strict close succeeds and releases the file at once. A refusal means
+        // something outside the adapter left a statement open; the native layer's own close runs after this one.
+        Effect.andThen(
+          Effect.try({ try: () => native.close(true), catch: (cause) => cause }).pipe(
+            Effect.catch((cause) => Effect.logWarning("database closed with a statement still open", { cause })),
+          ),
+        ),
+      ),
+    )
+
     const run = (query: string, params: ReadonlyArray<unknown> = []) =>
       Effect.withFiber<Array<Record<string, unknown>>, SqlError>((fiber) => {
-        const statement = native.prepare(query)
+        const statement = prepare(query)
+        // @ts-ignore bun-types missing safeIntegers method, fixed in https://github.com/oven-sh/bun/pull/26627
+        statement.safeIntegers(Context.get(fiber.context, Client.SafeIntegers))
         try {
-          // @ts-ignore bun-types missing safeIntegers method, fixed in https://github.com/oven-sh/bun/pull/26627
-          statement.safeIntegers(Context.get(fiber.context, Client.SafeIntegers))
           return Effect.succeed((statement.all(...(params as any)) ?? []) as Array<Record<string, unknown>>)
         } catch (cause) {
           return Effect.fail(
@@ -69,17 +101,15 @@ const make = (options: Config) =>
               reason: classifySqliteError(cause, { message: "Failed to execute statement", operation: "execute" }),
             }),
           )
-        } finally {
-          statement.finalize()
         }
       })
 
     const runValues = (query: string, params: ReadonlyArray<unknown> = []) =>
       Effect.withFiber<Array<unknown[]>, SqlError>((fiber) => {
-        const statement = native.prepare(query)
+        const statement = prepare(query)
+        // @ts-ignore bun-types missing safeIntegers method, fixed in https://github.com/oven-sh/bun/pull/26627
+        statement.safeIntegers(Context.get(fiber.context, Client.SafeIntegers))
         try {
-          // @ts-ignore bun-types missing safeIntegers method, fixed in https://github.com/oven-sh/bun/pull/26627
-          statement.safeIntegers(Context.get(fiber.context, Client.SafeIntegers))
           return Effect.succeed((statement.values(...(params as any)) ?? []) as Array<unknown[]>)
         } catch (cause) {
           return Effect.fail(
@@ -87,8 +117,6 @@ const make = (options: Config) =>
               reason: classifySqliteError(cause, { message: "Failed to execute statement", operation: "execute" }),
             }),
           )
-        } finally {
-          statement.finalize()
         }
       })
 
