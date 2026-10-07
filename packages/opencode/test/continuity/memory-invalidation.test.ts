@@ -14,7 +14,6 @@ import { SessionSummary } from "@/session/summary"
 import { SessionPrompt } from "@/session/prompt"
 import { SessionCompaction } from "@/session/compaction"
 import { SessionStatus } from "@/session/status"
-import { SessionShare } from "@/share/session"
 import { Todo } from "@/session/todo"
 import { sessionHandlers } from "@/server/routes/instance/httpapi/handlers/session"
 import { SessionApi } from "@/server/routes/instance/httpapi/groups/session"
@@ -28,7 +27,7 @@ import { requestInDirectory } from "../server/httpapi-layer"
 import { FIRST, SECOND, applyFirst, begin, complete, entered, environment, held, prepare, seed, terminal } from "./service-fixture"
 
 // Real session schemas and handlers, with local test transport/context. Untested
-// prompt/share/permission endpoints throw if accidentally invoked; no model API.
+// prompt/permission endpoints throw if accidentally invoked; no model API.
 const api = HttpApi.make("opencode-instance").addHttpApi(SessionApi)
 const serve = Effect.gen(function* () {
   const instance = yield* InstanceRef
@@ -41,7 +40,7 @@ const serve = Effect.gen(function* () {
       Layer.succeed(InstanceContextMiddleware, InstanceContextMiddleware.of((effect) => effect.pipe(Effect.provideService(InstanceRef, instance)))),
       Layer.succeed(WorkspaceRoutingMiddleware, WorkspaceRoutingMiddleware.of((effect) => effect.pipe(
         Effect.provideService(WorkspaceRouteContext, { directory: instance.directory })))),
-      Layer.mock(SessionShare.Service, {}), Layer.mock(SessionPrompt.Service, {}),
+      Layer.mock(SessionPrompt.Service, {}),
       Layer.mock(SessionCompaction.Service, {}), Layer.mock(Permission.Service, {}),
       Layer.mock(SessionStatus.Service, {}), Layer.mock(Todo.Service, {}),
     ]),

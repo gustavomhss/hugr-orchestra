@@ -61,7 +61,6 @@ describe("Session.Info", () => {
         files: 2,
         diffs: [{ additions: 1, deletions: 0, file: "a.ts", patch: "--- a/a.ts" }],
       },
-      share: { url: "https://share.example.com/s/1" },
       title: "Full session",
       version: "1.0.0",
       metadata: { source: "test" },
@@ -94,6 +93,19 @@ describe("Session.Info", () => {
       time: { created: 1, updated: 2 },
     }
     expect(decode(input)).toEqual(input)
+  })
+
+  test("drops the share url that sessions recorded before sharing was removed", () => {
+    const input = {
+      id: sessionID,
+      slug: "shared",
+      projectID,
+      directory: "/tmp/proj",
+      title: "Shared session",
+      version: "0.1.0",
+      time: { created: 1, updated: 2 },
+    }
+    expect(decode({ ...input, share: { url: "https://share.example.com/s/1" } })).toEqual(input)
   })
 
   test("rejects unbranded session id", () => {

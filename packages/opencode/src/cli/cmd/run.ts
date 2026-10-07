@@ -158,10 +158,6 @@ export const RunCommand = effectCmd({
         describe: "fork the session before continuing (requires --continue or --session)",
         type: "boolean",
       })
-      .option("share", {
-        type: "boolean",
-        describe: "share the session",
-      })
       .option("model", {
         type: "string",
         alias: ["m"],
@@ -522,21 +518,6 @@ export const RunCommand = effectCmd({
         }
       }
 
-      async function share(sdk: OpencodeClient, sessionID: string) {
-        const cfg = await sdk.config.get()
-        if (!cfg.data) return
-        if (cfg.data.share !== "auto" && !flags.autoShare && !args.share) return
-        const res = await sdk.session.share({ sessionID }).catch((error) => {
-          if (error instanceof Error && error.message.includes("disabled")) {
-            UI.println(UI.Style.TEXT_DANGER_BOLD + "!  " + error.message)
-          }
-          return { error }
-        })
-        if (!res.error && "data" in res && res.data?.share?.url) {
-          UI.println(UI.Style.TEXT_INFO_BOLD + "~  " + res.data.share.url)
-        }
-      }
-
       async function createFreshSession(
         sdk: OpencodeClient,
         input: { agent: string | undefined; model: ModelInput | undefined; variant: string | undefined },
@@ -558,7 +539,6 @@ export const RunCommand = effectCmd({
           throw new Error("Failed to create session")
         }
 
-        void share(sdk, id).catch(() => {})
         return {
           id,
           title: result.data?.title,
@@ -818,8 +798,6 @@ export const RunCommand = effectCmd({
         // Validate agent if specified
         const agent = await pickAgent(client)
 
-        await share(client, sessionID)
-
         if (!interactive) {
           const events = await client.event.subscribe()
           const completed = loop(client, events).catch((e) => {
@@ -912,7 +890,6 @@ export const RunCommand = effectCmd({
             fetch: fetchFn,
             resolveAgent: localAgent,
             session,
-            share,
             createSession: createFreshSession,
             agent: args.agent,
             model,
@@ -979,7 +956,6 @@ export async function runMini(input: MiniCommandInput) {
     continue: input.continue,
     session: input.session,
     fork: input.fork,
-    share: undefined,
     model: input.model,
     agent: input.agent,
     format: "default",

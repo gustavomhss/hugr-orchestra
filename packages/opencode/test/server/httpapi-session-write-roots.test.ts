@@ -103,6 +103,6 @@ describe("session HttpApi reserved write-root rules", () => {
         expect(WriteRoots.read(current.permission)).toEqual([path.join(test.directory, "src")])
         expect(current.permission).toContainEqual({ permission: "bash", pattern: "*", action: "deny" })
       }),
-    { git: true, config: { formatter: false, lsp: false, share: "disabled" } },
+    { git: true, config: { formatter: false, lsp: false } },
   )
 })

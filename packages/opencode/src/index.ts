@@ -196,7 +196,7 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "import <file>",
-      describe: "import session data from JSON file or URL",
+      describe: "import session data from a JSON file",
       load: () => import("./cli/cmd/import"),
       resolve: (m) => m.ImportCommand,
     }),
