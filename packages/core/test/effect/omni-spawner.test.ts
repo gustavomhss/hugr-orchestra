@@ -33,13 +33,17 @@ const BOUND = 20_000
 
 const Spawner = ChildProcessSpawner.ChildProcessSpawner
 
-/** A root that starts the nonce tree with `stdio`, waits until every tree process wrote its record, then exits 0. */
+/**
+ * A root that starts the nonce tree with `stdio`, waits until every tree process wrote its record, then exits 0. On
+ * Windows the tree is started detached: libuv puts a non-detached child in a kill-on-close job of its parent, so it
+ * would die with the root, unlike a grandchild that `start` or a shell leaves behind. omni's Job still holds it.
+ */
 function exiting(fixture: ReturnType<typeof tree>, stdio: "inherit" | "ignore") {
   const code = `
 const cp = process.getBuiltinModule("node:child_process")
 const fs = process.getBuiltinModule("node:fs")
 const [file, args, dir, size] = JSON.parse(process.argv.at(-1))
-cp.spawn(file, args, { stdio: ["ignore", "${stdio}", "${stdio}"], windowsHide: true })
+cp.spawn(file, args, { stdio: ["ignore", "${stdio}", "${stdio}"], windowsHide: true, detached: process.platform === "win32" })
 const tick = () => fs.readdirSync(dir).filter((name) => name.endsWith(".json")).length >= size ? process.exit(0) : setTimeout(tick, 20)
 tick()`
   return ChildProcess.make(process.execPath, [
@@ -116,7 +120,11 @@ const catFile = (repo: { dir: string; ids: string[] }) =>
 
 const sha = (data: Buffer) => createHash("sha256").update(data).digest("hex")
 
-describe("omni spawner", () => {
+const mode = omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER)
+
+// The omni binaries exist only in runs that turn omni on (test-ci provides them with the flag), so a flag-off run
+// skips this file; the positive control (D-L1) makes sure flag-on runs do spawn through omni.
+describe.skipIf(mode === "off")("omni spawner", () => {
   fx.live(
     "1. a grandchild holding stdout: exit returns bounded, then the tree is stopped, or adopted under policy tool",
     () =>
@@ -334,7 +342,7 @@ describe("omni spawner", () => {
   )
 
   // A delegation would fail a strict run's positive control (D-L1), so this one runs only outside strict runs.
-  ;(omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) === "strict" ? on.live.skip : on.live)(
+  ;(mode === "strict" ? on.live.skip : on.live)(
     "7b. mode 1 delegates a piped command to legacy and counts the delegation",
     () =>
       Effect.gen(function* () {
@@ -457,7 +465,7 @@ describe("omni spawner", () => {
         const ticker = `setInterval(() => process.getBuiltinModule("node:fs").writeSync(1, "tick " + process.argv.at(-1) + "\\n"), 100)`
         const root = `
 const cp = process.getBuiltinModule("node:child_process")
-cp.spawn(process.execPath, ["-e", ${JSON.stringify(ticker)}, process.argv.at(-1)], { stdio: ["ignore", "inherit", "inherit"], windowsHide: true })
+cp.spawn(process.execPath, ["-e", ${JSON.stringify(ticker)}, process.argv.at(-1)], { stdio: ["ignore", "inherit", "inherit"], windowsHide: true, detached: process.platform === "win32" })
 setTimeout(() => process.exit(0), 300)`
         yield* Effect.scoped(
           Effect.gen(function* () {
