@@ -4,6 +4,7 @@ import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 import { ToolSafetyGit } from "@opencode-ai/core/tool-safety-git"
 import { OutputInspector } from "@opencode-ai/core/output-inspector"
 import { AppProcess } from "@opencode-ai/core/process"
+import { OmniSpawner } from "@opencode-ai/core/omni-spawner"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import os from "os"
 import { createWriteStream } from "node:fs"
@@ -500,7 +501,8 @@ export const ShellTool = Tool.define(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
           )
-          const handle = yield* spawner.spawn(wrapped)
+          // The tool keeps only the tail, so a gap is a visible marker rather than a failed run (R2-2).
+          const handle = yield* spawner.spawn(wrapped).pipe(Effect.provideService(OmniSpawner.GapPolicy, "marker"))
           const inspection = OutputInspector.quarantine()
 
           const retain = (chunk: string) =>

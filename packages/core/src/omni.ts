@@ -112,9 +112,12 @@ function realpath(file: string) {
 const counters = { spawns: 0, delegations: 0 }
 export type Counter = keyof typeof counters
 
-/** Counts one spawn that omni ran, or one that was delegated to the legacy spawner (D-L1 positive control). */
-export function count(kind: Counter) {
-  counters[kind]++
+/**
+ * Counts one spawn that omni ran, or one that was delegated to the legacy spawner (D-L1 positive control). `by` lets
+ * a test take back what it counted itself, so its own counting never satisfies (or fails) a run's control.
+ */
+export function count(kind: Counter, by = 1) {
+  counters[kind] += by
 }
 
 export function snapshot() {

@@ -5,7 +5,11 @@ import { afterAll } from "bun:test"
 import { omniSpawner } from "../packages/core/src/flag/flag"
 
 const mode = omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER)
-if (mode !== "off") {
+// A test that starts its own `bun test` (arsenal-lazy) hands it this run's environment, flag included; the control
+// belongs to the outermost run only, which marks itself here before any test spawns.
+const nested = process.env.OPENCODE_OMNI_CONTROL_RUN !== undefined
+process.env.OPENCODE_OMNI_CONTROL_RUN = String(process.pid)
+if (mode !== "off" && !nested) {
   const { Omni } = await import("../packages/core/src/omni")
   afterAll(() => {
     const problem = Omni.verdict(mode, Omni.snapshot())

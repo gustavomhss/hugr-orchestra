@@ -113,9 +113,12 @@ export async function alive(nonce: string) {
 export async function gone(nonce: string, timeoutMs = 20_000) {
   const deadline = Date.now() + timeoutMs
   for (;;) {
-    const count = await alive(nonce)
+    // alive() reading 0 is confirmed by the command-line sweep: under Bun on Windows signal 0 was seen to miss live
+    // processes, and a missed process must never pass as gone.
+    const recorded = await alive(nonce)
+    const count = recorded === 0 ? (await sweep(nonce)).length : recorded
     if (count === 0 || Date.now() > deadline) return count
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, recorded === 0 ? 500 : 100))
   }
 }
 

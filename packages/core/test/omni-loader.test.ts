@@ -46,6 +46,9 @@ describe("Omni counters and the positive control", () => {
     expect(after).toEqual({ spawns: before.spawns + 2, delegations: before.delegations + 1 })
     after.spawns = -1
     expect(Omni.snapshot().spawns).toBe(before.spawns + 2)
+    Omni.count("spawns", -2)
+    Omni.count("delegations", -1)
+    expect(Omni.snapshot()).toEqual(before)
   })
 
   test("verdict: off never fails; on needs a spawn; strict needs a spawn and no delegation", () => {
