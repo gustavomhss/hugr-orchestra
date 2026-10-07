@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  hugr-omni's supervisor and addon (Resources/omni). They need no entitlement under the hardened runtime: the
+  supervisor is plain Rust that posix_spawns programs (no JIT, no unsigned memory, no dyld variables), and the addon
+  is loaded by Electron, whose own entitlements apply to it. Keep this empty; electron-builder.config.ts signs both
+  with it instead of the inherited Electron helper entitlements.
+-->
+<plist version="1.0">
+<dict/>
+</plist>
