@@ -121,9 +121,12 @@ export const hold = (evaluation: Pick<RelayArm.Evaluation, "outcome">): RelayArm
   return "completion-checks-not-passing"
 }
 
-// The parked HOLD text (Maestro condition 1): the spent budget, the failing checks and the instruction not to dispatch.
+/**
+ * The parked HOLD text after the `completion-parked-awaiting-owner` code (Maestro condition 1): the spent budget, the
+ * failing checks and the instruction not to dispatch. The host prints it as `Tool safety HOLD: <code>. <text>`.
+ */
 export const parkedHold = (wp: string, failing: ReadonlyArray<string>): string =>
-  `completion-parked-awaiting-owner: gate '${wp}' is parked awaiting the owner because its retry budget is spent. ` +
+  `Gate '${wp}' is parked awaiting the owner because its retry budget is spent. ` +
   `Failing: ${failing.length ? failing.join(", ") : "(none recorded)"}. ` +
   "Do not dispatch again; tell the owner what failed and why. " +
   `Only the owner can release or cancel it, and a release resets the retry budget of gate '${wp}' only.`
@@ -317,13 +320,17 @@ const settle = (context: Context, gate: Gate) =>
       context.revision = yield* ArmRound.revision(plan.meta.workdir)
     const round = { ...context.round, revision: context.revision }
     const graded = yield* ArmRound.grade(round, owner, base, checklist ?? [])
-    context.results.push(...graded.results)
-    context.hosted ||= graded.results.length + graded.unbound.length > 0
-    context.complete &&= graded.unbound.length === 0
+    // A host check this evaluation already ran at its revision is not re-run as a regression of a later gate.
+    const ran = new Set([...context.results, ...graded.results].map((result) => result.name))
     const regressed =
       i > 0 && isFile(context.ledger)
-        ? yield* ArmRound.regressions(round, owner, context.ledger, plan.wps.slice(0, i))
-        : { lines: [], failing: [] }
+        ? yield* ArmRound.regressions(round, owner, context.ledger, plan.wps.slice(0, i), ran)
+        : { lines: [], failing: [], results: [], unbound: [] }
+    const results = [...graded.results, ...regressed.results]
+    const unbound = graded.unbound.length + regressed.unbound.length
+    context.results.push(...results)
+    context.hosted ||= results.length + unbound > 0
+    context.complete &&= unbound === 0
     const failing = [...graded.failing, ...regressed.failing]
     if (context.revision !== undefined && (yield* ArmRound.revision(plan.meta.workdir)) !== context.revision)
       return { outcome: "revision-drift" as const, wp: id, failing }
@@ -334,9 +341,7 @@ const settle = (context: Context, gate: Gate) =>
     const repeated = claim === undefined ? false : yield* blocked(context, outcome, base, claim)
 
     if (input.observe) {
-      const observed = yield* Effect.exit(
-        input.observe({ complete: graded.unbound.length === 0, results: graded.results }),
-      )
+      const observed = yield* Effect.exit(input.observe({ complete: unbound === 0, results }))
       if (Exit.isFailure(observed)) return yield* new Invalid({ reason: "observe failed" })
     }
     const buffered = [...graded.lines, ...regressed.lines]

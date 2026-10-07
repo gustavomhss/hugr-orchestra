@@ -142,7 +142,8 @@ export const ChecklistItem = Schema.Struct({
 }).annotate({ identifier: "RelayLedger.ChecklistItem" })
 export interface ChecklistItem extends Schema.Schema.Type<typeof ChecklistItem> {}
 
-// A keep-best re-run of an earlier accepted control. Always deterministic, always origin `regression`.
+// A keep-best re-run of an earlier accepted control. Always deterministic, always origin `regression`. `host_check`,
+// `revision` and `event_id` are TS-only and additive: the re-run of an Arsenal host-check control (WP18).
 export const RegressionItem = Schema.Struct({
   ts: Timestamp,
   arm: Schema.optionalKey(Schema.String),
@@ -156,6 +157,9 @@ export const RegressionItem = Schema.Struct({
   origin: Schema.Literal("regression"),
   macro: Schema.optionalKey(Schema.String),
   kind: Schema.optionalKey(RecordedKind),
+  host_check: Schema.optionalKey(Schema.String),
+  revision: Schema.optionalKey(Schema.String),
+  event_id: Schema.optionalKey(Schema.String),
 }).annotate({ identifier: "RelayLedger.RegressionItem" })
 export interface RegressionItem extends Schema.Schema.Type<typeof RegressionItem> {}
 

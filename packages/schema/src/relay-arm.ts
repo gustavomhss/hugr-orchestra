@@ -94,6 +94,8 @@ export interface HostCheckInput {
   readonly sessionID?: string
   readonly gateID: string
   readonly check: { readonly id: string; readonly hostCheck: Id }
+  // HEAD as the revision guard read it before the checks, for the result's provenance (WP18, additive).
+  readonly revision?: string
 }
 
 // A failed or defective callback is an `acquisition-error` result, never a pass. Checks run one at a time, 60 s each.

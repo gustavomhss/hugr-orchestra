@@ -48,6 +48,8 @@ Missing/stale/held canonical ownership evidence stays HOLD; Composer does not re
    Label predicted spend separately from observed usage; do not claim estimates are charges.
 6. If completion checks need lifecycle binding, inspect `relay-arm` and actual native dispatch support.
    Generated checks are proposals until the host binds and executes them. Arming alone is not enforcement.
+   An armed contract binds the next native Task in this session and runs on the host's Relay arm; size
+   `retryBudget` per gate, since a spent budget parks the arm until the owner releases it.
    Require actual dispatch/completion receipts before claiming interception; plugin presence proves nothing
    about custom/MCP tools or V2 coverage. No Relay token line or external Claude hook installation.
 7. Dispatch only through available native Task under its permissions. In explicit governed mode, use the

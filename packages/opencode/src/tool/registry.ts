@@ -75,6 +75,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { MCP } from "@/mcp"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
+import { LocationServiceMap } from "@opencode-ai/core/location-services"
 import { McpCatalog } from "@/mcp/catalog"
 
 export function webSearchEnabled(providerID: ProviderV2.ID, flags = { exa: false, parallel: false }) {
@@ -668,6 +669,8 @@ export const node = LayerNode.make({
     InstanceStore.node,
     Permission.node,
     Ripgrep.node,
+    // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
+    LocationServiceMap.node,
   ],
 })
 

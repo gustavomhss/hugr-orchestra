@@ -2,25 +2,22 @@ export * as ArsenalCompletion from "./arsenal-completion"
 
 import path from "path"
 import { createHash, randomUUID } from "node:crypto"
-import { Context, Effect, Option, Schema } from "effect"
+import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
+import { RelayArm } from "@opencode-ai/schema/relay-arm"
+import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
 import { FSUtil } from "@opencode-ai/core/fs-util"
 import { AppProcess } from "@opencode-ai/core/process"
 import { ChildProcess } from "effect/unstable/process"
+import { Location } from "@opencode-ai/core/location"
+import { Relay } from "@opencode-ai/core/relay"
+import { AbsolutePath } from "@opencode-ai/core/schema"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
+import { ToolFailure } from "@opencode-ai/llm"
 import { ToolSafetyGit } from "@opencode-ai/core/tool-safety-git"
 import { ToolSafetySandbox } from "@opencode-ai/core/tool-safety-sandbox"
 
-// Exact D relay-arm state shape. Host callbacks below bind D's evaluator, not a second evaluator.
-const ID = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/))
-const Contract = Schema.Struct({
-  sessionID: ID, label: Schema.NonEmptyString.check(Schema.isMaxLength(4096)),
-  retryBudget: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThanOrEqualTo(32))),
-  chain: Schema.Array(Schema.Struct({
-    id: ID, instructions: Schema.optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
-    checks: Schema.Array(Schema.Struct({ id: ID, hostCheck: ID })).check(Schema.isMinLength(1), Schema.isMaxLength(64)),
-  })).check(Schema.isMinLength(1), Schema.isMaxLength(32)),
-})
-const Stored = Schema.Struct({ schema: Schema.Literal(1), projectID: ID, contract: Contract })
+// The Arsenal completion host on the Relay arm (port plan §6). The model only arms a contract; the native dispatch binds
+// it, the Relay arm under the same token is the one evaluator, and Relay is the only writer of the arm and its ledger.
 export type CheckOutcome = { readonly status: "pass" | "fail" | "skip" | "missing" | "acquisition-error"; readonly exitCode?: number }
 export type Dispatch = {
   readonly sessionID: string
@@ -36,28 +33,23 @@ export type Binding = Dispatch & {
   readonly stateDirectory: string
   readonly ownedPaths: ReadonlyArray<string>
 }
-type ContractValue = {
-  sessionID: string; label: string; retryBudget?: number
-  chain: { id: string; instructions?: string; checks: { id: string; hostCheck: string }[] }[]
-}
-export type Capture = {
-  complete: boolean
-  results: { name: string; status: CheckOutcome["status"]; exitCode?: number; provenance: {
-    source: "host-check"; projectID: string; sessionID: string; eventID: string; revision: string; revisionKind: "git"
-  } }[]
-}
+export type Capture = RelayArm.HostCapture
 export type HostCheck = (binding: Binding) => Effect.Effect<CheckOutcome, unknown>
 export interface Host {
   /** Native authority resolves a stored token by actual dispatch identity. Never read model metadata. */
   readonly resolve: (input: Dispatch) => Effect.Effect<Binding | undefined, ToolSafety.Denied>
   readonly checks: ReadonlyMap<string, HostCheck>
-  readonly evaluateCompletion: (projectID: string, contract: ContractValue, observations: Capture,
-    bindings: readonly string[]) => { status: string; failures: readonly string[] }
+  /** The Relay service of the binding's Location, which holds the arm and its ledger. */
+  readonly relay: (placement: { readonly directory: string; readonly projectID: string }) => Effect.Effect<Relay.Interface, ToolSafety.Denied>
+  /** Records the checks run so far in one evaluation, before the disposition of the gate that ran them. */
   readonly observe: (binding: Binding, capture: Capture) => Effect.Effect<void>
 }
 export const NativeHost = Context.Reference<Host | undefined>("@opencode/ArsenalCompletion/NativeHost", { defaultValue: () => undefined })
 export type Receipt = { readonly taskID: string; readonly planID: string; readonly directory: string }
-const receipts = new WeakMap<Receipt, { host: Host; binding: Binding; contract: ContractValue; revision: string; fingerprint: string; checks: ReadonlyMap<string, HostCheck> }>()
+const receipts = new WeakMap<Receipt, {
+  host: Host; binding: Binding; contract: RelayArm.Contract; fingerprint: string; checks: ReadonlyMap<string, HostCheck>
+  relay: Relay.Interface
+}>()
 
 export const make = Effect.gen(function* () {
   const host = yield* NativeHost
@@ -70,6 +62,12 @@ export const make = Effect.gen(function* () {
   }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-git-acquisition" })),
     Effect.flatMap((result) => result.exitCode || result.stdoutTruncated || result.stderrTruncated
       ? Effect.fail(new ToolSafety.Denied({ reason: "completion-git-failed-or-overflow" })) : Effect.succeed(result.stdout.toString("utf8"))))
+  // HEAD with the exact git codes; the arm's revision guard then binds the checks to the HEAD it reads itself.
+  const head = (directory: string) => git(directory, ["rev-parse", "HEAD"]).pipe(
+    Effect.map((text) => text.trim()),
+    Effect.filterOrFail((text) => /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(text),
+      () => new ToolSafety.Denied({ reason: "completion-revision-acquisition" })),
+  )
 
   const load = (binding: Binding) => Effect.scoped(Effect.gen(function* () {
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(binding.token) || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(binding.projectID))
@@ -86,26 +84,55 @@ export const make = Effect.gen(function* () {
     if (bytes.length !== Number(info.size) || after.size !== info.size ||
       Option.getOrUndefined(after.mtime)?.getTime() !== Option.getOrUndefined(info.mtime)?.getTime())
       return yield* new ToolSafety.Denied({ reason: "completion-state-changed" })
-    const stateValue = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(Stored))(
+    const stateValue = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(RelayArm.Stored))(
       new TextDecoder().decode(bytes), { onExcessProperty: "error" },
     )
     if (stateValue.projectID !== binding.projectID || stateValue.contract.sessionID !== binding.sessionID)
       return yield* new ToolSafety.Denied({ reason: "completion-project-or-session-mismatch" })
-    const contract: ContractValue = { ...stateValue.contract,
-      chain: stateValue.contract.chain.map((gate) => ({ ...gate, checks: gate.checks.map((check) => ({ ...check })) })),
-    }
-    const checks = contract.chain.flatMap((gate) => gate.checks)
+    const checks = stateValue.contract.chain.flatMap((gate) => gate.checks)
     if (checks.length > 1000 || new Set(checks.map((check) => check.id)).size !== checks.length ||
-      new Set(contract.chain.map((gate) => gate.id)).size !== contract.chain.length)
+      new Set(stateValue.contract.chain.map((gate) => gate.id)).size !== stateValue.contract.chain.length)
       return yield* new ToolSafety.Denied({ reason: "completion-callback-cap-or-duplicate" })
-    return { contract, fingerprint: createHash("sha256").update(JSON.stringify(stateValue)).digest("hex") }
+    return { contract: stateValue.contract, fingerprint: createHash("sha256").update(JSON.stringify(stateValue)).digest("hex") }
   })).pipe(Effect.mapError((error) => error instanceof ToolSafety.Denied ? error : new ToolSafety.Denied({ reason: "completion-state-acquisition" })))
+
+  // PUT the Relay arm under the Arsenal token (same body 200, different body 409), then refuse a parked one before any
+  // worker runs (Maestro condition 3).
+  const arm = Effect.fn("ArsenalCompletion.arm")(function* (relay: Relay.Interface, binding: Binding,
+    loaded: { readonly contract: RelayArm.Contract; readonly fingerprint: string }) {
+    if (FSUtil.contains(binding.directory, relay.paths.root))
+      return yield* new ToolSafety.Denied({ reason: "completion-state-inside-project" })
+    if (path.basename(relay.paths.root) !== binding.projectID)
+      return yield* new ToolSafety.Denied({ reason: "completion-dispatch-binding-mismatch" })
+    const meta: RelayArm.Meta = {
+      workdir: yield* fs.realPath(binding.directory).pipe(
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-state-acquisition" })),
+      ),
+      token: binding.token,
+      label: loaded.contract.label,
+      project_id: binding.projectID,
+      session_id: binding.sessionID,
+      contract_sha256: loaded.fingerprint,
+    }
+    // The arm belongs to the dispatching session, which owns the contract, so every retry evaluates the same arm.
+    yield* relay.create({ token: binding.token, sprint: sprint(loaded.contract), meta, agentID: binding.sessionID }).pipe(
+      Effect.mapError((error) => new ToolSafety.Denied({
+        reason: error._tag === "ArmCreate.Conflict" ? "completion-contract-drift" : "completion-state-acquisition",
+      })),
+    )
+    const parked = yield* relay.parked(binding.token).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" })),
+    )
+    if (Option.isSome(parked)) return yield* new ToolSafety.Denied({
+      reason: "completion-parked-awaiting-owner", detail: Relay.parkedHold(parked.value.wp, parked.value.failing),
+    })
+  })
 
   const beforeDispatch = Effect.fn("ArsenalCompletion.beforeDispatch")(function* (input: Dispatch) {
     if (!host) return
     const binding = yield* host.resolve(input)
     if (!binding) return
-    if (typeof host.evaluateCompletion !== "function" || typeof host.observe !== "function")
+    if (typeof host.relay !== "function" || typeof host.observe !== "function")
       return yield* new ToolSafety.Denied({ reason: "completion-evaluator-or-observer-unbound" })
     if (!binding.planID || binding.sessionID !== input.sessionID || binding.taskID !== input.taskID ||
       binding.callID !== input.callID || binding.projectID !== input.projectID ||
@@ -116,10 +143,11 @@ export const make = Effect.gen(function* () {
     const checks = new Map(host.checks)
     if (loaded.contract.chain.some((gate) => gate.checks.some((check) => !checks.has(check.hostCheck))))
       return yield* new ToolSafety.Denied({ reason: "completion-host-check-unbound" })
-    const revision = (yield* git(binding.directory, ["rev-parse", "HEAD"])).trim()
-    if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision)) return yield* new ToolSafety.Denied({ reason: "completion-revision-acquisition" })
+    yield* head(binding.directory)
+    const relay = yield* host.relay(binding)
+    yield* arm(relay, binding, loaded)
     const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
-    receipts.set(receipt, { host, binding, ...loaded, revision, checks })
+    receipts.set(receipt, { host, binding, ...loaded, checks, relay })
     return receipt
   })
 
@@ -130,35 +158,107 @@ export const make = Effect.gen(function* () {
     receipts.delete(receipt)
     if ((yield* load(current.binding)).fingerprint !== current.fingerprint)
       return yield* new ToolSafety.Denied({ reason: "completion-contract-drift" })
-    const revision = (yield* git(current.binding.directory, ["rev-parse", "HEAD"])).trim()
-    if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(revision)) return yield* new ToolSafety.Denied({ reason: "completion-revision-acquisition" })
-    const results = yield* Effect.forEach(current.contract.chain.flatMap((gate) => gate.checks), (check) => {
-      const callback = current.checks.get(check.hostCheck)
-      if (!callback) return Effect.fail(new ToolSafety.Denied({ reason: "completion-host-check-unbound" }))
-      return callback(current.binding).pipe(
-        Effect.timeoutOrElse({ duration: "60 seconds", orElse: () => Effect.fail(new Error("check timeout")) }),
-        Effect.catch(() => Effect.succeed({ status: "acquisition-error" as const })),
-        Effect.map((outcome) => ({ name: check.id, status: outcome.status, exitCode: "exitCode" in outcome ? outcome.exitCode : undefined, provenance: {
-          source: "host-check" as const, projectID: current.binding.projectID, sessionID: current.binding.sessionID,
-          eventID: randomUUID(), revision, revisionKind: "git" as const,
-        } })),
-      )
-    }, { concurrency: 1 })
-    const capture = { complete: true, results }
-    if ((yield* git(current.binding.directory, ["rev-parse", "HEAD"])).trim() !== revision)
-      return yield* new ToolSafety.Denied({ reason: "completion-revision-drift" })
-    yield* current.host.observe(current.binding, capture)
-    const evaluation = yield* Effect.try({
-      try: () => current.host.evaluateCompletion(current.binding.projectID, current.contract, capture, [...current.checks.keys()]),
-      catch: () => new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" }),
-    })
-    if (evaluation.status !== "PASS" || evaluation.failures.length > 0)
-      return yield* new ToolSafety.Denied({ reason: "completion-checks-not-passing" })
-    return { verified: true as const, planID: current.binding.planID, taskID, checks: results.length }
+    const binding = current.binding
+    const revision = yield* head(binding.directory)
+    // Every result this evaluation produced; each gate's observation carries all of them, so the last one is whole.
+    const seen: RelayArm.HostCheckResult[] = []
+    // Why an observation stopped the evaluation, which the arm itself reports only as a defect.
+    const refused: { reason?: string } = {}
+    const evaluation = yield* current.relay.evaluate({
+      token: binding.token,
+      agentID: binding.sessionID,
+      mode: "all-gates",
+      revisionGuard: true,
+      blockCap: 0,
+      hostChecks: new Map([...current.checks].map(([name, check]) => [name, adapt(check, binding, revision)])),
+      observe: (capture) => {
+        if (!capture.complete) {
+          refused.reason = "completion-host-check-unbound"
+          return Effect.die(new ToolSafety.Denied({ reason: refused.reason }))
+        }
+        seen.push(...capture.results)
+        return current.host.observe(binding, { complete: true, results: [...seen] }).pipe(
+          Effect.catchCause((cause) => {
+            const error = Cause.squash(cause)
+            refused.reason = error instanceof ToolSafety.Denied ? error.reason : "completion-evaluation-acquisition"
+            return Effect.die(error)
+          }),
+        )
+      },
+    }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" })))
+    if (refused.reason) return yield* new ToolSafety.Denied({ reason: refused.reason })
+    const hold = Relay.hold(evaluation)
+    if (hold === "completion-parked-awaiting-owner")
+      return yield* new ToolSafety.Denied({ reason: hold, detail: Relay.parkedHold(evaluation.wp ?? "", evaluation.failing) })
+    if (evaluation.outcome === "noop") return yield* new ToolSafety.Denied({ reason: "completion-evaluation-acquisition",
+      detail: "This arm already passed every gate and cannot verify new work; arm a new contract for the next task." })
+    if (hold) return yield* new ToolSafety.Denied({ reason: hold })
+    // A pass is one Relay can audit: an intact chain and every control passing.
+    const audit = yield* current.relay.audit(binding.token).pipe(Effect.option)
+    if (Option.isNone(audit) || audit.value.result !== "PASS")
+      return yield* new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" })
+    return { verified: true as const, planID: binding.planID, taskID, checks: seen.length }
   })
 
   return { beforeDispatch, verifiedCompletion }
 })
+
+/** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */
+export const locationRelay = (get: (ref: Location.Ref) => Layer.Layer<Relay.Service, unknown>) =>
+  (placement: { readonly directory: string }) => Relay.Service.use(Effect.succeed).pipe(
+    Effect.provide(get(Location.Ref.make({ directory: AbsolutePath.make(placement.directory) }))),
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" })),
+  )
+
+/**
+ * Maestro condition 2: Maestro may request the release of a parked arm, but only the owner's answer to the native-host
+ * approval releases it. Approving resets the parked gate's retry budget only; rejecting leaves the arm parked, which is
+ * the owner cancelling it. Nothing else in Orchestra calls `Relay.release` for an Arsenal arm.
+ */
+export const release = Effect.fn("ArsenalCompletion.release")(function* (input: {
+  readonly relay: Relay.Interface
+  readonly token: string
+  readonly reason: string
+  readonly approve: (message: string) => Effect.Effect<void, unknown>
+}) {
+  const unavailable = () => new ToolFailure({ message: "COMPLETION_RELEASE_UNAVAILABLE" })
+  const parked = yield* input.relay.parked(input.token).pipe(Effect.mapError(unavailable))
+  if (Option.isNone(parked)) return yield* new ToolFailure({ message: "COMPLETION_RELEASE_NOT_PARKED" })
+  yield* input.approve(`${Relay.parkedHold(parked.value.wp, parked.value.failing)} Release requested: ${input.reason}`).pipe(
+    Effect.mapError(() => new ToolFailure({ message: "COMPLETION_RELEASE_REJECTED" })),
+  )
+  yield* input.relay.release(input.token, `owner: ${input.reason}`).pipe(Effect.mapError(unavailable))
+})
+
+/** The contract as a Relay sprint: label → brief, retryBudget → retry_budget, gate → WP, check → host_check control. */
+export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
+  return {
+    brief: contract.label,
+    retry_budget: contract.retryBudget ?? 3,
+    work_packages: contract.chain.map((gate) => ({
+      id: gate.id,
+      ...(gate.instructions === undefined ? {} : { instructions: gate.instructions }),
+      checklist: gate.checks.map((check) => ({ id: check.id, host_check: check.hostCheck })),
+    })),
+  }
+}
+
+// A host check as the arm calls it. A failed callback is an acquisition error with the same provenance, never a pass.
+function adapt(check: HostCheck, binding: Binding, revision: string): RelayArm.HostCheck {
+  return (input) => {
+    const provenance = {
+      source: "host-check" as const, projectID: binding.projectID, sessionID: binding.sessionID,
+      eventID: randomUUID(), revision: input.revision ?? revision, revisionKind: "git" as const,
+    }
+    return check(binding).pipe(
+      Effect.map((outcome) => ({
+        name: input.check.id, status: outcome.status, provenance,
+        ...(outcome.exitCode === undefined ? {} : { exitCode: outcome.exitCode }),
+      })),
+      Effect.catch(() => Effect.succeed({ name: input.check.id, status: "acquisition-error" as const, provenance })),
+    )
+  }
+}
 
 /** Host-registered built-ins. Package/compiler commands are fixed argv declared by the host, never Plan/model commands. */
 export function builtins(fs: FSUtil.Interface, processes: AppProcess.Interface, input: {

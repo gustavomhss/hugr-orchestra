@@ -244,8 +244,8 @@ export const make = Effect.gen(function* () {
   const config = yield* Config.Service
   const git = yield* Git.Service
   const observations = yield* ArsenalObservations.Service
+  const locations = yield* LocationServiceMap.Service
   const safety = yield* ToolSafety.make
-  const evaluateCompletion: { value?: ArsenalCompletion.Host["evaluateCompletion"] } = {}
   const runnerReports = new WeakMap<ArsenalCompletion.Binding, Effect.Success<ReturnType<typeof ArsenalVerification.run>>>()
   const approvalHost = yield* makeApprovalHost
   const state = yield* InstanceState.make((instance) =>
@@ -379,41 +379,27 @@ export const make = Effect.gen(function* () {
     },
     Effect.provideService(Database.Service, database),
   )
+  // The session's own completion-arm facts, newest first: the native record of what Maestro armed.
+  const arms = (sessionID: string) => Effect.gen(function* () {
+    const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, sessionID),
+      eq(EventTable.type, EventV2.versionedType(SessionEvent.Tool.Progress.type, 1)),
+      sql`json_extract(${EventTable.data}, '$.structured.nativeArsenal.kind') = 'completion-arm'`,
+    )).orderBy(desc(EventTable.seq)).limit(257).all().pipe(Effect.orDie)
+    if (rows.length > 256) return yield* new ToolSafety.Denied({ reason: "completion-arm-history-overflow" })
+    return rows.flatMap((row) => {
+      const data = Schema.decodeUnknownOption(SessionEvent.Tool.Progress.data)(row.data)
+      if (Option.isNone(data)) return []
+      const fact = Schema.decodeUnknownOption(ArsenalObservations.NativeFact)(data.value.structured.nativeArsenal)
+      return Option.isSome(fact) && fact.value.kind === "completion-arm" ? [{ row, data: data.value, fact: fact.value }] : []
+    })
+  })
   const resolve: ArsenalCompletion.Host["resolve"] = (input) =>
     under(
       input.directory,
       Effect.gen(function* () {
-        const rows = yield* database.db
-          .select()
-          .from(EventTable)
-          .where(
-            and(
-              eq(EventTable.aggregate_id, input.sessionID),
-              eq(EventTable.type, EventV2.versionedType(SessionEvent.Tool.Progress.type, 1)),
-              sql`json_extract(${EventTable.data}, '$.structured.nativeArsenal.kind') = 'completion-arm'`,
-            ),
-          )
-          .orderBy(desc(EventTable.seq))
-          .limit(257)
-          .all()
-          .pipe(Effect.orDie)
-        if (rows.length > 256) return yield* new ToolSafety.Denied({ reason: "completion-arm-history-overflow" })
-        const arm = rows
-          .flatMap((row) => {
-            const data = Schema.decodeUnknownOption(SessionEvent.Tool.Progress.data)(row.data)
-            if (Option.isNone(data)) return []
-            const fact = Schema.decodeUnknownOption(ArsenalObservations.NativeFact)(data.value.structured.nativeArsenal)
-            return Option.isSome(fact) && fact.value.kind === "completion-arm"
-              ? [{ row, data: data.value, fact: fact.value }]
-              : []
-          })
-          .find((entry) => entry.fact.token)
+        const arm = (yield* arms(input.sessionID)).find((entry) => entry.fact.token)
         if (!arm) return
         const authority = yield* approved(input)
-        if (!evaluateCompletion.value) {
-          const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
-          evaluateCompletion.value = Arsenal.evaluateCompletion
-        }
         const native = yield* agents.get("maestro")
         if (native?.id !== "maestro" || native.native !== true)
           return yield* new ToolSafety.Denied({ reason: "completion-native-owner-missing" })
@@ -565,10 +551,7 @@ export const make = Effect.gen(function* () {
   const host: ArsenalCompletion.Host = {
     resolve,
     checks,
-    evaluateCompletion: (projectID, contract, observations, bindings) => {
-      if (!evaluateCompletion.value) throw new Error("COMPLETION_EVALUATOR_NOT_ACQUIRED")
-      return evaluateCompletion.value(projectID, contract, observations, bindings)
-    },
+    relay: ArsenalCompletion.locationRelay((ref) => locations.get(ref)),
     observe: (binding, capture) =>
       Effect.gen(function* () {
         const part = yield* database.db
@@ -601,6 +584,22 @@ export const make = Effect.gen(function* () {
         })
       }).pipe(Effect.orDie),
   }
+  // A release request (Maestro condition 2) names an arm this session armed natively; the owner's answer decides.
+  const release = Effect.fn("ArsenalBindings.release")(function* (context: { sessionID: string; assistantMessageID: string; callID: string }, args: unknown) {
+    const request = Schema.decodeUnknownOption(Schema.Struct({ token: Schema.NonEmptyString, reason: Schema.NonEmptyString }))(args)
+    if (Option.isNone(request)) return yield* new ToolFailure({ message: "COMPLETION_RELEASE_INVALID" })
+    const session = yield* sessions.get(SessionID.make(context.sessionID)).pipe(Effect.mapError(() => new ToolFailure({ message: "ARSENAL_SESSION_MISSING" })))
+    const armed = yield* arms(session.id).pipe(Effect.mapError((error) => new ToolFailure({ message: error.reason })))
+    if (!armed.some((entry) => entry.fact.token === request.value.token)) return yield* new ToolFailure({ message: "COMPLETION_RELEASE_TOKEN_UNBOUND" })
+    return yield* ArsenalCompletion.release({
+      relay: yield* host.relay(session).pipe(Effect.mapError(() => new ToolFailure({ message: "COMPLETION_RELEASE_UNAVAILABLE" }))),
+      token: request.value.token,
+      reason: request.value.reason,
+      approve: (message) => approvalHost.ask({ action: "completion_release", resources: [`relay-arm:${request.value.token}`], message,
+        invocation: { tool: MaestroArsenal.names.execute, args, sessionID: session.id, callID: context.callID,
+          assistantMessageID: context.assistantMessageID, directory: session.directory, projectID: session.projectID } }),
+    })
+  })
   const withSession = <A, E, R>(sessionID: string, effect: Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
       const session = yield* sessions.get(SessionID.make(sessionID)).pipe(Effect.orDie)
@@ -721,8 +720,9 @@ export const make = Effect.gen(function* () {
           Effect.mapError(() => new ToolFailure({ message: "ARSENAL_RAW_RESULT_DENIED" })),
         )
         if (name !== "relay-arm") return
-        const action = Schema.decodeUnknownOption(Schema.Struct({ action: Schema.Literal("arm") }))(args)
+        const action = Schema.decodeUnknownOption(Schema.Struct({ action: Schema.Literals(["arm", "release"]) }))(args)
         if (Option.isNone(action)) return
+        if (action.value.action === "release") return yield* release(context, args)
         const envelope = Schema.decodeUnknownSync(
           Schema.Struct({ content: Schema.Array(Schema.Struct({ text: Schema.String })) }),
         )(result)
