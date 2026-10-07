@@ -1,14 +1,23 @@
 import { afterAll, beforeAll, expect, test } from "bun:test"
-import { mkdir, mkdtemp, open, rm } from "node:fs/promises"
+import { copyFile, mkdir, mkdtemp, open, readdir, rename, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
 const root = path.resolve(import.meta.dirname, "..")
 const version = "1.18.27-closure-test"
 const targets = [
-  "linux-arm64", "linux-x64", "linux-x64-baseline", "linux-arm64-musl", "linux-x64-musl",
-  "linux-x64-baseline-musl", "darwin-arm64", "darwin-x64", "darwin-x64-baseline",
-  "windows-arm64", "windows-x64", "windows-x64-baseline",
+  "linux-arm64",
+  "linux-x64",
+  "linux-x64-baseline",
+  "linux-arm64-musl",
+  "linux-x64-musl",
+  "linux-x64-baseline-musl",
+  "darwin-arm64",
+  "darwin-x64",
+  "darwin-x64-baseline",
+  "windows-arm64",
+  "windows-x64",
+  "windows-x64-baseline",
 ]
 const native = `${process.platform === "win32" ? "windows" : process.platform}-${process.arch}`
 const binary = path.join(root, `dist/cli-${native}/bin/orchestra${process.platform === "win32" ? ".exe" : ""}`)
@@ -22,13 +31,25 @@ beforeAll(async () => {
   await Promise.all(["data", "config", "cache", "state", "tmp"].map((dir) => mkdir(path.join(home, dir))))
   await Bun.write(path.join(home, "models.json"), "{}")
   env = {
-    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^(ORCHESTRA_|XDG_|HOME$|USERPROFILE$|APPDATA$|LOCALAPPDATA$)/.test(key))),
-    HOME: home, USERPROFILE: home, APPDATA: home, LOCALAPPDATA: home,
-    TMPDIR: path.join(home, "tmp"), TMP: path.join(home, "tmp"), TEMP: path.join(home, "tmp"),
-    XDG_DATA_HOME: path.join(home, "data"), XDG_CONFIG_HOME: path.join(home, "config"),
-    XDG_CACHE_HOME: path.join(home, "cache"), XDG_STATE_HOME: path.join(home, "state"),
-    ORCHESTRA_TEST_HOME: home, ORCHESTRA_VERSION: version, ORCHESTRA_CHANNEL: "dev",
-    ORCHESTRA_PURE: "1", ORCHESTRA_DISABLE_MODELS_FETCH: "1",
+    ...Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !/^(ORCHESTRA_|XDG_|HOME$|USERPROFILE$|APPDATA$|LOCALAPPDATA$)/.test(key)),
+    ),
+    HOME: home,
+    USERPROFILE: home,
+    APPDATA: home,
+    LOCALAPPDATA: home,
+    TMPDIR: path.join(home, "tmp"),
+    TMP: path.join(home, "tmp"),
+    TEMP: path.join(home, "tmp"),
+    XDG_DATA_HOME: path.join(home, "data"),
+    XDG_CONFIG_HOME: path.join(home, "config"),
+    XDG_CACHE_HOME: path.join(home, "cache"),
+    XDG_STATE_HOME: path.join(home, "state"),
+    ORCHESTRA_TEST_HOME: home,
+    ORCHESTRA_VERSION: version,
+    ORCHESTRA_CHANNEL: "dev",
+    ORCHESTRA_PURE: "1",
+    ORCHESTRA_DISABLE_MODELS_FETCH: "1",
     MODELS_DEV_API_JSON: path.join(home, "models.json"),
   }
 })
@@ -39,7 +60,11 @@ afterAll(async () => {
 
 async function run(argv: string[], timeout = 120_000, overrides = {}) {
   const child = Bun.spawn(argv, { cwd: root, env: { ...env, ...overrides }, stdout: "pipe", stderr: "pipe", timeout })
-  const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+  const [stdout, stderr, code] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ])
   return { stdout: stdout.trim(), stderr: stderr.trim(), code }
 }
 
@@ -51,7 +76,12 @@ async function build(args: string[]) {
 test("rejects bad targets before loading fixtures or touching any artifact", async () => {
   const sentinel = path.join(root, "dist/cli-preserved/sentinel")
   await Bun.write(sentinel, "preserve these bytes")
-  for (const args of [["--target", "../foreign"], ["--target"], ["--target", "linux-arm"], ["--target", native, "--target", native]]) {
+  for (const args of [
+    ["--target", "../foreign"],
+    ["--target"],
+    ["--target", "linux-arm"],
+    ["--target", native, "--target", native],
+  ]) {
     const result = await run([process.execPath, "script/build.ts", "--skip-install", "--single", ...args], 30_000, {
       MODELS_DEV_API_JSON: path.join(home, "deliberately-missing.json"),
     })
@@ -73,6 +103,14 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
   const launched = await run(["node", "bin/orchestra.cjs", "--version"], 30_000, { ORCHESTRA_BIN_PATH: binary })
   expect(launched.code).toBe(0)
   expect(launched.stdout).toBe(version)
+  const launcher = path.join(home, "launcher/bin/orchestra.cjs")
+  await Bun.write(launcher, Bun.file(path.join(root, "bin/orchestra.cjs")))
+  await copyFile(binary, path.join(home, "launcher/bin/.orchestra"))
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
+  const installed = path.join(home, `launcher/node_modules/@orchestra/cli-${native}/bin`)
+  await mkdir(installed, { recursive: true })
+  await rename(path.join(home, "launcher/bin/.orchestra"), path.join(installed, path.basename(binary)))
+  expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
   const manifest = await Bun.file(path.join(root, `dist/cli-${native}/package.json`)).json()
   expect(manifest.version).toBe(version)
   expect(manifest.repository.url).toBe("git+https://github.com/gustavomhss/hugr-orchestra.git")
@@ -171,3 +209,12 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(manifest.cpu).toEqual([arm ? "arm64" : "x64"])
   }
 }, 1_800_000)
+
+test("single and baseline retain native-only selection semantics", async () => {
+  await build(["--single", "--baseline"])
+  expect((await readdir(path.join(root, "dist"))).sort()).toEqual(
+    (process.arch === "x64" ? [`cli-${native}`, `cli-${native}-baseline`] : [`cli-${native}`]).sort(),
+  )
+  await build(["--single"])
+  expect(await readdir(path.join(root, "dist"))).toEqual([`cli-${native}`])
+}, 900_000)

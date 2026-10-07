@@ -3,22 +3,15 @@
 import { $ } from "bun"
 import { rm } from "fs/promises"
 import path from "path"
-import { Script } from "@orchestra/script"
-import { createSolidTransformPlugin } from "@opentui/solid/bun-plugin"
 import pkg from "../package.json"
-import { modelsData } from "./generate"
 
 const dir = path.resolve(import.meta.dirname, "..")
-const binary = "lildax"
-process.chdir(dir)
-
-await rm("dist", { recursive: true, force: true })
+const binary = "orchestra"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
 const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
-const plugin = createSolidTransformPlugin()
 
 const allTargets: {
   os: string
@@ -40,28 +33,44 @@ const allTargets: {
   { os: "win32", arch: "x64", avx2: false },
 ]
 
-const targets = singleFlag
-  ? allTargets.filter((item) => {
-      if (item.os !== process.platform || item.arch !== process.arch) return false
-      if (item.avx2 === false) return baselineFlag
-      return item.abi === undefined
-    })
-  : allTargets
+const namedTargets = allTargets.map((item) => ({
+  ...item,
+  target: [item.os === "win32" ? "windows" : item.os, item.arch, item.avx2 === false ? "baseline" : undefined, item.abi]
+    .filter(Boolean)
+    .join("-"),
+}))
+const targetArgs = process.argv.slice(2).flatMap((arg, index, args) =>
+  arg === "--target" ? [args[index + 1] ?? ""] : arg.startsWith("--target=") ? [arg.slice(9)] : [],
+)
+if (targetArgs.length > 1 || (targetArgs.length === 1 && !namedTargets.some((item) => item.target === targetArgs[0])))
+  throw new Error(
+    `Invalid --target: ${targetArgs.join(", ") || "missing value"}. Expected one of: ${namedTargets.map((item) => item.target).join(", ")}`,
+  )
+
+const targets = targetArgs.length
+  ? namedTargets.filter((item) => item.target === targetArgs[0])
+  : singleFlag
+    ? namedTargets.filter((item) => {
+        if (item.os !== process.platform || item.arch !== process.arch) return false
+        if (item.avx2 === false) return baselineFlag
+        return item.abi === undefined
+      })
+    : namedTargets
+
+// Validate before loading build-time snapshots/dependencies or replacing any artifact.
+process.chdir(dir)
+const { Script } = await import("@orchestra/script")
+const { createSolidTransformPlugin } = await import("@opentui/solid/bun-plugin")
+const { modelsData } = await import("./generate")
+const plugin = createSolidTransformPlugin()
+if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
 if (!skipInstall) await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`
 
 for (const item of targets) {
-  const target = [
-    binary,
-    item.os === "win32" ? "windows" : item.os,
-    item.arch,
-    item.avx2 === false ? "baseline" : undefined,
-    item.abi,
-  ]
-    .filter(Boolean)
-    .join("-")
-  const name = target.replace(binary, "cli")
+  const name = `cli-${item.target}`
   console.log(`building ${name}`)
+  if (targetArgs.length) await rm(`dist/${name}`, { recursive: true, force: true })
   const result = await Bun.build({
     entrypoints: ["./src/index.ts"],
     tsconfig: "./tsconfig.json",
@@ -76,14 +85,14 @@ for (const item of targets) {
       autoloadDotenv: false,
       autoloadTsconfig: true,
       autoloadPackageJson: true,
-      target: target.replace(binary, "bun") as Bun.Build.CompileTarget,
-      outfile: `./dist/${name}/bin/${binary}`,
+      target: `bun-${item.target}` as Bun.Build.CompileTarget,
+      outfile: `./dist/${name}/bin/${binary}${item.os === "win32" ? ".exe" : ""}`,
       execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
       windows: {},
     },
     define: {
-      ORCHESTRA_VERSION: `'${Script.version}'`,
-      ORCHESTRA_CLI_NAME: `'${binary}'`,
+      ORCHESTRA_VERSION: JSON.stringify(Script.version),
+      ORCHESTRA_CLI_NAME: JSON.stringify(binary),
       ORCHESTRA_MODELS_DEV: modelsData,
       ORCHESTRA_CHANNEL: `'${Script.channel}'`,
       ORCHESTRA_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "undefined",
@@ -105,7 +114,7 @@ for (const item of targets) {
         name: `@orchestra/${name}`,
         version: Script.version,
         license: "MIT",
-        repository: { type: "git", url: "git+https://github.com/anomalyco/opencode.git" },
+        repository: { type: "git", url: "git+https://github.com/gustavomhss/hugr-orchestra.git" },
         os: [item.os],
         cpu: [item.arch],
       },
