@@ -116,15 +116,23 @@ const HOOK_ACTIONS: HookEntry[] = [
   { key: "record", type: "relay.hookRecord", group: "actions", glyph: "record", tone: "record" },
 ]
 
-// Before the server's catalog arrives, these are the §2 hook operations.
-const DEFAULT_OPERATIONS = ["read", "edit", "write", "command"]
+// Before the server's catalog arrives, these are the contract's operations (schema relay-hook `TriggerParameters`):
+// the tool operations, then the session events of the former Hooks page.
+const DEFAULT_OPERATIONS = ["read", "edit", "write", "command", "tool", "session-start", "prompt", "session-idle"]
+
+/** The timings an operation accepts: session start and stop fire after, a prompt before, tools either way. */
+export function operationTimings(operation: string) {
+  if (operation === "session-start" || operation === "session-idle") return ["after"]
+  if (operation === "prompt") return ["before"]
+  return ["before", "after"]
+}
 
 // Hook entries offered by this server: one trigger per operation it lists, then the actions it implements.
 export function hookEntries(types: RelayNodeType[] | undefined): (HookEntry | TriggerEntry)[] {
   const trigger = types?.find((item) => item.type === TRIGGER)
   const operations = trigger?.parameters
     .find((parameter) => parameter.name === "operation")
-    ?.options.map((option) => option.value)
+    ?.options?.map((option) => option.value)
   const triggers = (operations ?? DEFAULT_OPERATIONS).map(
     (operation): TriggerEntry => ({
       key: `trigger:${operation}`,
@@ -135,22 +143,23 @@ export function hookEntries(types: RelayNodeType[] | undefined): (HookEntry | Tr
       operation,
     }),
   )
-  if (!types) return [...triggers, ...HOOK_ACTIONS.filter((entry) => entry.key !== "allow")]
+  if (!types) return [...triggers, ...HOOK_ACTIONS]
   const listed = new Set(types.map((item) => item.type))
   return [...triggers, ...HOOK_ACTIONS.filter((entry) => listed.has(entry.type))]
 }
 
 export function operationGlyph(operation: string): Glyph {
   if (operation === "read" || operation === "write" || operation === "command" || operation === "edit") return operation
-  if (operation.includes("stop")) return "stop"
-  if (operation.includes("prompt")) return "prompt"
-  if (operation.includes("start")) return "start"
+  if (operation === "tool") return "execute"
+  if (operation === "session-idle") return "stop"
+  if (operation === "prompt") return "prompt"
+  if (operation === "session-start") return "start"
   return "edit"
 }
 
-// Output labels for hook nodes: the server's catalog when it has one, else the §2 contract.
+// Output labels for hook nodes: the server's catalog when it has one, else the contract (schema `RelayHook.Outputs`).
 export function hookOutputs(types: RelayNodeType[] | undefined): Outputs {
-  if (!types) return { [CONDITION]: ["Yes", "No"], "relay.hookBlock": [] }
+  if (!types) return { [CONDITION]: ["Yes", "No"], "relay.hookBlock": [], "relay.hookVerify": ["Pass", "Fail"] }
   return Object.fromEntries(
     types.map((item) => [item.type, item.outputs.map((output) => (output === "main" ? "" : output))]),
   )
@@ -172,5 +181,5 @@ export function nodeTone(node: FlowNode): Tone {
 // The i18n key suffix for a node type ("execute", "gate", "condition", …).
 export const workflowKey = (type: string) => WORKFLOW_ENTRIES.find((item) => item.type === type)?.key
 export const hookKey = (type: string) => HOOK_ACTIONS.find((item) => item.type === type)?.key
-export const isOperation = (value: string): value is "read" | "edit" | "write" | "command" =>
+export const isFileOperation = (value: string): value is "read" | "edit" | "write" | "command" =>
   value === "read" || value === "edit" || value === "write" || value === "command"

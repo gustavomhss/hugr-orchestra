@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, Index, type JSX, on, Show } from "solid-js"
-import type { RelayRun } from "./client"
+import type { RelayRun } from "./runs"
 import { workflowKey } from "./catalog"
 import { CheckList } from "./checks"
 import { Empty, NodeDetails, Rows, Switchable } from "./details"

@@ -7,7 +7,8 @@ import { createStore } from "solid-js/store"
 import { MxPage } from "../chapters/kit"
 import type { CanvasApi } from "./canvas"
 import { hookOutputs } from "./catalog"
-import { documentDiagnostics, type RelayDocument, RelayError, type RelayRun } from "./client"
+import { documentDiagnostics, type RelayDocument, RelayError } from "./client"
+import type { RelayRun } from "./runs"
 import { DeleteDialog, failure, PublishDialog, RunDialog, ShortcutsDialog } from "./dialogs"
 import { EditorHead, type SaveState } from "./editor-head"
 import { CanvasTab } from "./editor-canvas"
@@ -15,7 +16,8 @@ import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { HookActivity, TestDialog } from "./hook-activity"
-import { issueText } from "./parts"
+import { issueText, runBlocker } from "./parts"
+import { RunsUnavailable } from "./library"
 import { copyDocument } from "./presets"
 import { layerBase, type RelayRoute, relayPath } from "./route"
 import type { RelaySource } from "./source"
@@ -79,7 +81,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const [test, setTest] = createSignal<{ path: string[]; result: string; label: string }>()
   const [install, setInstall] = createSignal(false)
   const outputs = () => (kind === "hook" ? hookOutputs(props.source.nodeTypes.data?.hook) : {})
-  const found = createMemo(() => issues(flow(), documentDiagnostics(base())))
+  const found = createMemo(() => issues(flow(), [...documentDiagnostics(base())]))
   const issueList = () => found().map((issue) => ({ text: issueText(copy, flow(), issue), node: issueNode(issue) }))
   const runs = () => (props.source.runs.data ?? []).filter((run) => run.documentID === props.id)
   const installed = () => (props.source.installs.data ?? []).find((item) => item.document === props.id)
@@ -96,7 +98,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       queryKey: props.source.key("run", props.route.view ?? ""),
       queryFn:
         props.route.view && !runs().some((run) => run.runID === props.route.view)
-          ? () => props.source.client.run(props.route.view!)
+          ? () => props.source.runClient.run(props.route.view!)
           : skipToken,
       retry: false,
     }),
@@ -208,12 +210,21 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     setInstall(true)
     const current = installed()
     const result = await (
-      current ? props.source.client.enable(current.installID, next) : props.source.client.install(base())
+      current ? props.source.client.enable(current.installID, next) : props.source.client.install(props.id)
     ).then(
       () => undefined,
       (error: unknown) => failure(error),
     )
     setInstall(false)
+    props.source.invalidate("installs")
+    if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
+  }
+
+  const repin = async (installID: string) => {
+    const result = await props.source.client.update(installID).then(
+      () => undefined,
+      (error: unknown) => failure(error),
+    )
     props.source.invalidate("installs")
     if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
   }
@@ -293,7 +304,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               id: "relay.editor.run",
               title: copy.t("orchestra.workflows.run.title", { name: name() }),
               category,
-              disabled: !base().activeVersionId,
+              disabled: !!runBlocker(base(), props.source.runsState()),
               onSelect: () => setDialog("run"),
             },
           ]
@@ -335,7 +346,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       return
     }
     if (typing || props.route.node) return
-    if (mod && event.key === "Enter" && kind === "workflow" && base().activeVersionId)
+    if (mod && event.key === "Enter" && kind === "workflow" && !runBlocker(base(), props.source.runsState()))
       return (event.preventDefault(), setDialog("run"))
     if (event.key === "?") return (event.preventDefault(), setDialog("keys"))
     if (props.route.tab !== "editor" || target?.closest(".wf-drawer") || mod) {
@@ -363,7 +374,15 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         document={base()}
         name={name()}
         tab={props.route.tab}
-        runCount={kind === "workflow" ? runs().length : (decisions.data?.length ?? 0)}
+        runCount={
+          kind === "workflow"
+            ? props.source.runsState() === "ready"
+              ? runs().length
+              : undefined
+            : (decisions.data?.length ?? 0)
+        }
+        runBlock={kind === "workflow" ? runBlocker(base(), props.source.runsState()) : undefined}
+        installExists={!!installed()}
         save={save}
         issues={issueList()}
         canPublish={canPublish()}
@@ -397,7 +416,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               selected={selected()}
               run={overlayRun()}
               runs={runs()}
-              decision={(decisions.data ?? []).toSorted((a, b) => (b.at ?? 0) - (a.at ?? 0))[0]}
+              decision={(decisions.data ?? []).toSorted((a, b) => b.seq - a.seq)[0]}
               installed={installed()?.enabled ? installed() : undefined}
               test={test()}
               save={save}
@@ -408,7 +427,15 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               onKeys={() => setDialog("keys")}
               onTest={() => setDialog("test")}
               onClearTest={() => setTest(undefined)}
+              onUpdateInstall={(installID) => void repin(installID)}
             />
+          </Match>
+          <Match when={kind === "workflow" && props.source.runsState() !== "ready"}>
+            <div class="mx-page">
+              <div class="mx-inner" style={{ "padding-top": "28px" }}>
+                <RunsUnavailable source={props.source} />
+              </div>
+            </div>
           </Match>
           <Match when={kind === "workflow"}>
             <Executions
@@ -467,7 +494,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         <Match when={dialog() === "test"}>
           <TestDialog
             flow={flow()}
-            outputs={outputs()}
             types={props.source.nodeTypes.data?.hook}
             onClose={() => setDialog(undefined)}
             onResult={(result) => {

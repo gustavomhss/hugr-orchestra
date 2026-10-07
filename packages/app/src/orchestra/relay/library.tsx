@@ -1,12 +1,15 @@
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
-import type { RelayDocument, RelayRun, RelayRunStatus } from "./client"
-import { CreateWorkflowDialog, templateID } from "./create"
-import { DeleteDialog, RunDialog } from "./dialogs"
+import type { RelayDocument } from "./client"
+import { CreateWorkflowDialog, templateID, templates } from "./create"
+import { DeleteDialog, failure, RunDialog } from "./dialogs"
 import { badgeTone, liveRuns, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
-import { phaseNames, RunBadge, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
+import { phaseNames, RunBadge, runBlocker, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
+import { copyDocument } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
+import type { RelayRun, RelayRunStatus } from "./runs"
 import type { RelaySource } from "./source"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
@@ -42,6 +45,17 @@ export function WorkflowLibrary(props: Props) {
   const live = createMemo(() => liveRuns(runs()).filter((run) => flows().has(run.documentID)))
   const waiting = () => live().filter((run) => run.status === "parked").length
   const running = () => live().filter((run) => run.status === "running").length
+  const duplicate = async (document: RelayDocument) => {
+    const created = await props.source.client
+      .create(copyDocument(document, copy.t("orchestra.workflows.create.copyName", { name: document.name })))
+      .catch(
+        (error: unknown) =>
+          void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
+      )
+    if (!created) return
+    props.source.invalidate("documents")
+    props.go(relayPath.editor("workflow", created.id))
+  }
   const openTemplate = (id: string) => {
     setTemplate(id)
     props.go(relayPath.create("workflow"))
@@ -57,7 +71,7 @@ export function WorkflowLibrary(props: Props) {
       icon: "history",
       run: () => props.go(relayPath.history("workflow", document.id)),
     },
-    { label: copy.t("orchestra.workflows.menu.duplicate"), icon: "workflows", run: () => openTemplate(document.id) },
+    { label: copy.t("orchestra.workflows.menu.duplicate"), icon: "workflows", run: () => void duplicate(document) },
     "-",
     {
       label: copy.t("orchestra.workflows.menu.delete"),
@@ -104,7 +118,9 @@ export function WorkflowLibrary(props: Props) {
           onClick={() => props.go(relayPath.runs("workflow"))}
         >
           {copy.t("orchestra.workflows.tab.runs")}
-          <span class="wf-count">{runs().filter((run) => flows().has(run.documentID)).length}</span>
+          <Show when={props.source.runsState() === "ready"}>
+            <span class="wf-count">{runs().filter((run) => flows().has(run.documentID)).length}</span>
+          </Show>
         </button>
       </div>
       <Switch>
@@ -120,6 +136,9 @@ export function WorkflowLibrary(props: Props) {
           <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
             {copy.t("orchestra.workflows.retry")}
           </button>
+        </Match>
+        <Match when={props.route.tab === "runs" && props.source.runsState() !== "ready"}>
+          <RunsUnavailable source={props.source} />
         </Match>
         <Match when={props.route.tab === "runs"}>
           <AllRuns
@@ -233,11 +252,9 @@ export function WorkflowLibrary(props: Props) {
                             class="mx-btn icon"
                             aria-label={copy.t("orchestra.workflows.row.run", { name: document.name })}
                             title={copy.t(
-                              document.activeVersionId
-                                ? "orchestra.workflows.row.runTitle"
-                                : "orchestra.workflows.row.publishFirst",
+                              runBlocker(document, props.source.runsState()) ?? "orchestra.workflows.row.runTitle",
                             )}
-                            disabled={!document.activeVersionId}
+                            disabled={!!runBlocker(document, props.source.runsState())}
                             onClick={() => setDialog({ type: "run", document })}
                           >
                             <Ic name="play" />
@@ -265,7 +282,7 @@ export function WorkflowLibrary(props: Props) {
           </div>
           <div class="wf-tpl-grid">
             <TemplateCard id="blank" flows={flows()} documents={props.source.list()} onPick={openTemplate} />
-            <For each={props.source.list().slice(0, 5)}>
+            <For each={templates(props.source.list())}>
               {(document) => (
                 <TemplateCard id={document.id} flows={flows()} documents={props.source.list()} onPick={openTemplate} />
               )}
@@ -370,6 +387,32 @@ function LiveRow(props: { run: RelayRun; flows: Map<string, Flow>; source: Relay
 }
 
 const FILTERS = ["all", "running", "parked", "failed", "completed"] as const
+
+// Runs are not available: the server has no run routes yet (WP17), or reading them failed.
+export function RunsUnavailable(props: { source: RelaySource }) {
+  const copy = useRelayCopy()
+  return (
+    <Show
+      when={props.source.runsState() === "error"}
+      fallback={
+        <p class="mx-empty" role="status" data-slot="relay-runs-unsupported">
+          {copy.t(
+            props.source.runsState() === "loading"
+              ? "orchestra.workflows.runs.loading"
+              : "orchestra.workflows.runs.unsupportedBody",
+          )}
+        </p>
+      }
+    >
+      <p class="mx-error" role="alert">
+        {copy.t("orchestra.workflows.runs.error", { reason: String(props.source.runs.error?.message ?? "") })}
+      </p>
+      <button type="button" class="mx-btn" onClick={() => void props.source.runs.refetch()}>
+        {copy.t("orchestra.workflows.retry")}
+      </button>
+    </Show>
+  )
+}
 
 export function AllRuns(props: {
   runs: RelayRun[]

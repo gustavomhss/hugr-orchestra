@@ -1,17 +1,18 @@
-import type { RelayDocument, RelayNodeType } from "./client"
+import type { RelayDocument, RelayDocumentFields, RelayNodeType } from "./client"
 import { CONDITION, documentFields, type Flow, START, TRIGGER } from "./graph"
 
-// Starting points for new documents. Workflow templates are copies of workflows already in the profile (the
-// server seeds the shipped Relay profiles); "blank" is a start node only. Hook presets are small graphs built
-// from the node types this server lists, so a preset never offers an action the server cannot run.
+// Starting points for new documents. Workflow templates are the shipped Relay profiles the server seeded into the
+// profile; "blank" is a start node only. Hook presets are small graphs built from the node types this server lists,
+// so a preset never offers an action the server cannot run.
 
 export type HookPresetID = "protect-generated" | "ask-shell" | "gate-stop" | "remind-first"
 export type PresetKey =
   | "trigger.before.edit"
   | "trigger.before.command"
-  | "trigger.stop"
+  | "trigger.sessionIdle"
   | "preset.pathMatches"
-  | "preset.commandMatches"
+  | "preset.pushMatches"
+  | "preset.deleteMatches"
   | "preset.blockChange"
   | "preset.blockMessage"
   | "preset.askMessage"
@@ -27,7 +28,7 @@ export type PresetKey =
   | "type.remind"
 export type PresetText = (key: PresetKey) => string
 
-export function blankWorkflow(name: string, startName: string) {
+export function blankWorkflow(name: string, startName: string): RelayDocumentFields {
   return {
     name,
     nodes: [
@@ -46,8 +47,9 @@ export function blankWorkflow(name: string, startName: string) {
   }
 }
 
-export function copyWorkflow(source: RelayDocument, name: string) {
-  const relay = source.meta.relay
+// A copy keeps the source's Relay metadata: the retained sprint fields, and the profile mark that run admission
+// reads, so a copy of a profile that cannot run yet cannot run either.
+export function copyDocument(source: RelayDocument, name: string): RelayDocumentFields {
   return {
     name,
     description: source.description,
@@ -55,15 +57,8 @@ export function copyWorkflow(source: RelayDocument, name: string) {
     connections: source.connections,
     nodeGroups: source.nodeGroups,
     tags: [],
-    meta: {
-      relay:
-        typeof relay === "object" && relay !== null ? { ...relay, kind: "workflow" } : { schema: 1, kind: "workflow" },
-    },
+    meta: source.meta,
   }
-}
-
-export function copyDocument(source: RelayDocument, name: string) {
-  return { ...copyWorkflow(source, name), meta: { ...source.meta } }
 }
 
 type PresetNode = {
@@ -122,6 +117,8 @@ const PRESETS: Preset[] = [
     ],
   },
   {
+    // Two conditions, not "git push * | rm -rf *": a `|` in a pattern is literal. The second is tried when the first
+    // does not match and leads to the same Ask.
     id: "ask-shell",
     operations: ["command"],
     nodes: [
@@ -134,12 +131,20 @@ const PRESETS: Preset[] = [
         parameters: { operation: "command", timing: "before" },
       },
       {
-        id: "match",
-        text: "preset.commandMatches",
+        id: "push",
+        text: "preset.pushMatches",
         type: CONDITION,
         x: 320,
         y: 200,
-        parameters: { field: "command", pattern: "git push* | rm -rf *" },
+        parameters: { field: "command", pattern: "git push *" },
+      },
+      {
+        id: "delete",
+        text: "preset.deleteMatches",
+        type: CONDITION,
+        x: 320,
+        y: 360,
+        parameters: { field: "command", pattern: "rm -rf *" },
       },
       {
         id: "ask",
@@ -150,26 +155,28 @@ const PRESETS: Preset[] = [
         parameters: {},
         message: "preset.askMessage",
       },
-      { id: "allow", text: "type.allow", type: "relay.hookAllow", x: 540, y: 300, parameters: { message: "" } },
+      { id: "allow", text: "type.allow", type: "relay.hookAllow", x: 540, y: 360, parameters: { message: "" } },
     ],
     edges: [
-      ["event", "match", 0],
-      ["match", "ask", 0],
-      ["match", "allow", 1],
+      ["event", "push", 0],
+      ["push", "ask", 0],
+      ["push", "delete", 1],
+      ["delete", "ask", 0],
+      ["delete", "allow", 1],
     ],
   },
   {
     id: "gate-stop",
-    operations: ["stop"],
+    operations: ["session-idle"],
     twoOutputs: "relay.hookVerify",
     nodes: [
       {
         id: "event",
-        text: "trigger.stop",
+        text: "trigger.sessionIdle",
         type: TRIGGER,
         x: 120,
         y: 200,
-        parameters: { operation: "stop", timing: "after" },
+        parameters: { operation: "session-idle", timing: "after" },
       },
       {
         id: "gate",
@@ -238,7 +245,7 @@ export function hookPresets(types: RelayNodeType[] | undefined) {
     types
       ?.find((item) => item.type === TRIGGER)
       ?.parameters.find((parameter) => parameter.name === "operation")
-      ?.options.map((option) => option.value) ?? ["read", "edit", "write", "command"],
+      ?.options?.map((option) => option.value) ?? ["read", "edit", "write", "command", "session-idle"],
   )
   const outputs = (type: string) => types?.find((item) => item.type === type)?.outputs.length ?? 1
   return PRESETS.flatMap((preset) => {
@@ -264,7 +271,11 @@ export function presetChain(preset: Pick<Preset, "nodes" | "edges">, text: Prese
   return walk(first.id, [first.id]).map((id) => names.get(id) ?? id)
 }
 
-export function hookDocument(name: string, preset: Pick<Preset, "nodes" | "edges"> | undefined, text: PresetText) {
+export function hookDocument(
+  name: string,
+  preset: Pick<Preset, "nodes" | "edges"> | undefined,
+  text: PresetText,
+): RelayDocumentFields {
   const nodes: PresetNode[] = preset?.nodes ?? [
     {
       id: "event",

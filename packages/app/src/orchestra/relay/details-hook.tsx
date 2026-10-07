@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, type JSX, on, Show } from "solid-js"
-import type { RelayDecision, RelayNodeType } from "./client"
+import { decisionTime, type RelayDecision, type RelayNodeType } from "./client"
 import { Empty, NodeDetails, Rows, Switchable } from "./details"
 import {
   CONDITION,
@@ -12,37 +12,47 @@ import {
   TRIGGER,
   updateNode,
 } from "./graph"
-import { hookKey, isOperation } from "./catalog"
+import { hookKey, isFileOperation, operationTimings } from "./catalog"
 import { Ic, useRelayCopy } from "./ui"
 
 type Copy = ReturnType<typeof useRelayCopy>
 
-export const TIMINGS = ["before", "after"]
-
-// "Before edit file", "After shell command", "On session stop"; unknown operations use the server's label.
+// "Before edit file", "After any tool", "On session stop"; an operation this app does not know uses the server's label.
 export function triggerName(copy: Copy, operation: string, timing: string, types?: RelayNodeType[]) {
-  if (isOperation(operation))
-    return copy.t(`orchestra.hooks.trigger.${timing === "after" ? "after" : "before"}.${operation}`)
-  if (operation === "stop") return copy.t("orchestra.hooks.trigger.stop")
+  const when = timing === "after" ? "after" : "before"
+  if (isFileOperation(operation) || operation === "tool") return copy.t(`orchestra.hooks.trigger.${when}.${operation}`)
+  if (operation === "session-start") return copy.t("orchestra.hooks.trigger.sessionStart")
+  if (operation === "prompt") return copy.t("orchestra.hooks.trigger.prompt")
+  if (operation === "session-idle") return copy.t("orchestra.hooks.trigger.sessionIdle")
   const label = types
     ?.find((item) => item.type === TRIGGER)
     ?.parameters.find((parameter) => parameter.name === "operation")
-    ?.options.find((option) => option.value === operation)?.label
-  return copy.t(timing === "after" ? "orchestra.hooks.trigger.afterOther" : "orchestra.hooks.trigger.beforeOther", {
+    ?.options?.find((option) => option.value === operation)?.label
+  return copy.t(when === "after" ? "orchestra.hooks.trigger.afterOther" : "orchestra.hooks.trigger.beforeOther", {
     event: (label ?? operation).toLowerCase(),
   })
 }
 
+// Every operation and timing the server lists that the contract allows together.
 export function hookOperations(types: RelayNodeType[] | undefined) {
   const trigger = types?.find((item) => item.type === TRIGGER)
-  const operations = trigger?.parameters
-    .find((parameter) => parameter.name === "operation")
-    ?.options.map((option) => option.value) ?? ["read", "edit", "write", "command"]
-  const timings =
-    trigger?.parameters.find((parameter) => parameter.name === "timing")?.options.map((option) => option.value) ??
-    TIMINGS
+  const option = (name: string) =>
+    trigger?.parameters.find((parameter) => parameter.name === name)?.options?.map((item) => item.value)
+  const operations = option("operation") ?? [
+    "read",
+    "edit",
+    "write",
+    "command",
+    "tool",
+    "session-start",
+    "prompt",
+    "session-idle",
+  ]
+  const timings = option("timing") ?? ["before", "after"]
   return operations.flatMap((operation) =>
-    operation === "stop" ? [{ operation, timing: "after" }] : timings.map((timing) => ({ operation, timing })),
+    operationTimings(operation)
+      .filter((timing) => timings.includes(timing))
+      .map((timing) => ({ operation, timing })),
   )
 }
 
@@ -58,6 +68,7 @@ type Props = {
   onNav: (id: string) => void
   onClose: () => void
   onTest: () => void
+  onAddCondition: (id: string) => void
 }
 
 export function HookDetails(props: Props) {
@@ -116,12 +127,19 @@ function Input(props: Props) {
           <Rows
             rows={[
               [copy.t("orchestra.hooks.details.event"), decision().trigger],
-              [copy.t("orchestra.hooks.details.tool"), decision().tool],
-              [copy.t("orchestra.hooks.details.target"), decision().subject],
-              [copy.t("orchestra.hooks.details.session"), decision().sessionID],
+              [copy.t("orchestra.hooks.details.tool"), decision().tool ?? undefined],
+              [
+                copy.t(
+                  decision().trigger.startsWith("command.")
+                    ? "orchestra.hooks.details.commandHash"
+                    : "orchestra.hooks.details.target",
+                ),
+                decision().subject,
+              ],
+              [copy.t("orchestra.hooks.details.session"), decision().session],
               [
                 copy.t("orchestra.hooks.details.when"),
-                decision().at !== undefined ? `${copy.clock(decision().at)} · ${copy.when(decision().at)}` : undefined,
+                `${copy.clock(decisionTime(decision()))} · ${copy.when(decisionTime(decision()))}`,
               ],
             ]}
           />
@@ -133,7 +151,7 @@ function Input(props: Props) {
 
 function Output(props: Props) {
   const copy = useRelayCopy()
-  const decider = () => (props.decision ? nodeOf(props.flow, props.decision.nodeID) : undefined)
+  const decider = () => (props.decision ? nodeOf(props.flow, props.decision.node) : undefined)
   const reached = () => {
     const target = decider()
     if (!target) return false
@@ -164,10 +182,12 @@ function Output(props: Props) {
       {(decision) => (
         <Switchable
           title={copy.t("orchestra.hooks.details.lastFire")}
-          json={{ node: decision().nodeID, action: decision().action, outcome: decision().outcome }}
+          json={{ node: decision().node, action: decision().action, outcome: decision().outcome }}
         >
           <div class="wf-out-head">
-            <span class="mx-badge blue">{decision().outcome}</span>
+            <span class={`mx-badge ${outcomeTone(decision().outcome)}`}>
+              {copy.t(`orchestra.hooks.outcome.${decision().outcome}`)}
+            </span>
           </div>
           <Show
             when={decider()?.id === props.node.id}
@@ -271,18 +291,29 @@ function Params(props: Props) {
               </For>
             </select>
           </label>
-          <label class="mx-field" classList={{ invalid: !String(props.node.parameters.pattern ?? "").trim() }}>
+          <label class="mx-field" classList={{ invalid: !String(props.node.parameters.pattern ?? "") }}>
             <span>{copy.t("orchestra.hooks.details.matches")}</span>
             <input
               value={String(props.node.parameters.pattern ?? "")}
-              placeholder="src/generated/**"
+              placeholder={props.node.parameters.field === "path" ? "src/generated/**" : "git push *"}
               onInput={(event) => update({ pattern: event.currentTarget.value })}
             />
+            <span class="mx-hint">
+              {copy.t(
+                props.node.parameters.field === "path"
+                  ? "orchestra.hooks.details.patternPath"
+                  : "orchestra.hooks.details.patternWildcard",
+              )}
+            </span>
           </label>
         </div>
         <p class="mx-note" style={{ "margin-top": "0" }}>
           {copy.t("orchestra.hooks.details.ports")}
         </p>
+        <button type="button" class="mx-btn" onClick={() => props.onAddCondition(props.node.id)}>
+          <Ic name="plus" />
+          {copy.t("orchestra.hooks.details.addCondition")}
+        </button>
       </Show>
       <Show when={props.node.type !== TRIGGER && props.node.type !== CONDITION}>
         <Show when={props.node.type === "relay.hookVerify"}>
@@ -313,4 +344,12 @@ function Params(props: Props) {
       </Show>
     </>
   )
+}
+
+// Restrictive outcomes in red, waits for a human in warm ink, passes and records in green.
+export function outcomeTone(outcome: RelayDecision["outcome"]) {
+  if (outcome === "blocked" || outcome === "rejected" || outcome === "failed" || outcome === "repair-required")
+    return "bad"
+  if (outcome === "approved" || outcome === "cancelled" || outcome === "unavailable") return "warm"
+  return "good"
 }

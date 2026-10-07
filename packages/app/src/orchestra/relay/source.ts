@@ -4,10 +4,11 @@ import { useGlobal } from "@/context/global"
 import { usePlatform } from "@/context/platform"
 import type { ServerConnection } from "@/context/server"
 import { pathKey } from "@/utils/path-key"
-import { createRelayClient, documentKind, relayUnsupported, type RelayKind, type RelayRun } from "./client"
+import { createRelayClient, documentKind, relayUnsupported, type RelayKind } from "./client"
+import { createRunClient, type RelayRun } from "./runs"
 
 // One profile's Relay data, shared by the chapter pages and the sidebar through the server's query client.
-// Queries never retry: a 404 means the server has no Relay routes and the screens say so.
+// Queries never retry: a server without a Relay route answers 404 and the screens say so.
 
 export const relayKey = (scope: string, directory: string, ...parts: string[]) => [
   scope,
@@ -16,13 +17,9 @@ export const relayKey = (scope: string, directory: string, ...parts: string[]) =
   ...parts,
 ]
 
-export function relayClient(
-  server: ServerConnection.Any,
-  directory: string,
-  fetch: typeof globalThis.fetch | undefined,
-) {
+export function runClient(server: ServerConnection.Any, directory: string, fetch: typeof globalThis.fetch | undefined) {
   // Called through a wrapper: window.fetch throws when invoked as a method of another object.
-  return createRelayClient({
+  return createRunClient({
     server: server.http,
     directory,
     fetch: (url, init) => (fetch ?? globalThis.fetch)(url, init),
@@ -35,7 +32,11 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const global = useGlobal()
   const platform = usePlatform()
   const ctx = global.ensureServerCtx(input.server)
-  const client = relayClient(input.server, input.directory, platform.fetch)
+  const client = createRelayClient({
+    sdk: ctx.sdk.createClient({ directory: input.directory }),
+    directory: input.directory,
+  })
+  const runner = runClient(input.server, input.directory, platform.fetch)
   const queryClient = () => ctx.queryClient
   const key = (...parts: string[]) => relayKey(ctx.sdk.scope, input.directory, ...parts)
 
@@ -56,7 +57,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const runs = useQuery(
     () => ({
       queryKey: key("runs"),
-      queryFn: input.kind === "workflow" && documents.isSuccess ? () => client.runs() : skipToken,
+      queryFn: input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
       retry: false,
       refetchInterval: (query: { state: { data?: RelayRun[] } }) =>
         query.state.data?.some((run) => run.status === "running") ? 10_000 : false,
@@ -71,10 +72,16 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     }),
     queryClient,
   )
+  // Run routes (WP17) may be missing while the authoring routes exist; the run views then say so.
+  const runsState = () => {
+    if (runs.isSuccess) return "ready" as const
+    if (runs.isError) return relayUnsupported(runs.error) ? ("unsupported" as const) : ("error" as const)
+    return "loading" as const
+  }
   const list = createMemo(() =>
     (documents.data ?? [])
       .filter((document) => documentKind(document) === input.kind && !document.isArchived)
-      .toSorted((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)),
+      .toSorted((a, b) => (b.updated ?? 0) - (a.updated ?? 0)),
   )
   const invalidate = (...parts: string[]) => void ctx.queryClient.invalidateQueries({ queryKey: key(...parts) })
 
@@ -89,7 +96,20 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
     }),
   )
 
-  return { client, documents, nodeTypes, runs, installs, list, supported, invalidate, key, queryClient }
+  return {
+    client,
+    runClient: runner,
+    documents,
+    nodeTypes,
+    runs,
+    runsState,
+    installs,
+    list,
+    supported,
+    invalidate,
+    key,
+    queryClient,
+  }
 }
 
 // The runs that wait for a human in this profile, for the sidebar count. Shares the chapter's cache entry.
@@ -102,7 +122,7 @@ export function useAwaitingRuns(target: () => { server: ServerConnection.Any; di
       const current = target()
       if (!current) return { queryKey: ["orchestra-relay-awaiting"], queryFn: skipToken }
       const ctx = global.ensureServerCtx(current.server)
-      const client = relayClient(current.server, current.directory, platform.fetch)
+      const client = runClient(current.server, current.directory, platform.fetch)
       return {
         queryKey: relayKey(ctx.sdk.scope, current.directory, "runs"),
         queryFn: () => client.runs(),

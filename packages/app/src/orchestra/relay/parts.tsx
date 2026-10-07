@@ -1,7 +1,8 @@
 import { For, Show } from "solid-js"
-import type { RelayDocument, RelayRun } from "./client"
+import type { RelayDocument } from "./client"
+import type { RelayRun } from "./runs"
 import { badgeTone, RUN_TONE, runHandle } from "./format"
-import { checkCount, type Flow, type Issue, nodeOf, steps } from "./graph"
+import { checkCount, type Flow, type Issue, nodeOf, START, steps } from "./graph"
 import { Ic, useRelayCopy } from "./ui"
 
 export function VersionBadges(props: { document: RelayDocument }) {
@@ -140,6 +141,13 @@ export function phaseNames(flow: Flow) {
     .map((phase) => phase.name)
 }
 
+// A seeded profile's objective without its "name vX — " prefix, which the card title already says.
+export function templateSummary(document: RelayDocument) {
+  const brief = document.nodes.find((node) => node.type === START)?.parameters.relayBrief
+  const text = typeof brief === "string" ? brief.replace(/^[\w-]+ v[\d.]+ — /, "") : ""
+  return text || document.description
+}
+
 export function TemplateCard(props: {
   id: string
   flows: Map<string, Flow>
@@ -151,14 +159,18 @@ export function TemplateCard(props: {
   const copy = useRelayCopy()
   const document = () => props.documents.find((item) => item.id === props.id)
   const flow = () => props.flows.get(props.id)
+  // Profiles whose Relay tools are not ported yet can be read in the library, but not started from here.
+  const blocked = () => document()?.runnable === false
   return (
     <button
       type="button"
       class="mx-card wf-tpl"
       role={props.radio ? "radio" : undefined}
       aria-checked={props.radio ? !!props.selected : undefined}
+      aria-disabled={blocked() ? "true" : undefined}
+      title={blocked() ? copy.t("orchestra.workflows.template.toolsMissingTitle") : undefined}
       data-template={props.id}
-      onClick={() => props.onPick(props.id)}
+      onClick={() => !blocked() && props.onPick(props.id)}
     >
       <div class="mx-card-top">
         <span class="mx-mark">
@@ -168,7 +180,7 @@ export function TemplateCard(props: {
       </div>
       <p>
         {document()
-          ? document()!.description || copy.t("orchestra.workflows.template.copy")
+          ? templateSummary(document()!) || copy.t("orchestra.workflows.template.copy")
           : copy.t("orchestra.workflows.template.blankBody")}
       </p>
       <Chain names={flow() ? phaseNames(flow()!) : [copy.t("orchestra.workflows.type.start")]} />
@@ -200,9 +212,19 @@ export function TemplateCard(props: {
             </>
           )}
         </Show>
+        <Show when={blocked()}>
+          <span class="mx-badge warm">{copy.t("orchestra.workflows.template.toolsMissing")}</span>
+        </Show>
       </div>
     </button>
   )
+}
+
+/** Why a workflow cannot start a run, as a copy key, or undefined when it can. */
+export function runBlocker(document: RelayDocument, runs: "loading" | "ready" | "unsupported" | "error") {
+  if (!document.runnable) return "orchestra.workflows.row.toolsMissing" as const
+  if (runs === "unsupported") return "orchestra.workflows.runs.unsupported" as const
+  if (!document.activeVersionId) return "orchestra.workflows.row.publishFirst" as const
 }
 
 export function issueText(copy: ReturnType<typeof useRelayCopy>, flow: Flow, issue: Issue) {

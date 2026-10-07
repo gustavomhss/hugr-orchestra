@@ -1,6 +1,7 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createSignal, For, Show } from "solid-js"
-import type { RelayDocument, RelayRun, RelayRunStep } from "./client"
+import type { RelayDocument } from "./client"
+import type { RelayRun, RelayRunStep } from "./runs"
 import { createAction } from "./dialogs"
 import { badgeTone, runHandle, span, STEP_TONE, type Tone } from "./format"
 import { type Flow, nodeOf, phaseOf, readChecklist, retryBudget, steps } from "./graph"
@@ -27,7 +28,7 @@ export function Receipt(props: {
   const audit = useQuery(
     () => ({
       queryKey: props.source.key("audit", props.run.runID, props.run.status),
-      queryFn: props.run.status === "running" ? skipToken : () => props.source.client.audit(props.run.runID),
+      queryFn: props.run.status === "running" ? skipToken : () => props.source.runClient.audit(props.run.runID),
       retry: false,
     }),
     props.source.queryClient,
@@ -66,7 +67,7 @@ export function Receipt(props: {
     release.run(async () => {
       const value = reason().trim()
       if (!value) return
-      const run = await props.source.client.release(props.run.runID, value)
+      const run = await props.source.runClient.release(props.run.runID, value)
       setReason("")
       props.source
         .queryClient()
@@ -77,7 +78,7 @@ export function Receipt(props: {
     })
   const download = () =>
     ledger.run(async () => {
-      const value = await props.source.client.ledger(props.run.runID)
+      const value = await props.source.runClient.ledger(props.run.runID)
       const blob = new Blob([typeof value === "string" ? value : JSON.stringify(value, null, 2)], {
         type: "application/json",
       })

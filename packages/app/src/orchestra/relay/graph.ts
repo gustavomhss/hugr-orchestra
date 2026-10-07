@@ -1,4 +1,5 @@
-import type { RelayDocument, RelayKind, RelayNode } from "./client"
+import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
+import type { RelayKind } from "./client"
 
 // The editable graph behind the canvas. Documents connect nodes by name; the canvas works by ID so a rename
 // never breaks a wire. Every function here is pure and returns a new flow.
@@ -14,6 +15,7 @@ export type FlowNode = {
   x: number
   y: number
   parameters: Record<string, unknown>
+  typeVersion?: number
 }
 export type FlowEdge = { from: string; to: string; port: number }
 export type FlowPhase = { id: string; name: string; description: string; nodeIds: string[] }
@@ -45,7 +47,7 @@ export const HOOK_OUTPUTS: Outputs = {
 }
 
 export function flowFromDocument(
-  document: Pick<RelayDocument, "nodes" | "connections" | "nodeGroups">,
+  document: Pick<RelayAuthoring.Document, "nodes" | "connections" | "nodeGroups">,
   kind: RelayKind,
 ): Flow {
   const ids = new Map(document.nodes.map((node) => [node.name, node.id]))
@@ -66,17 +68,30 @@ export function flowFromDocument(
       type: node.type,
       x: node.position[0],
       y: node.position[1],
-      parameters: node.parameters,
+      parameters: { ...node.parameters },
+      ...(node.typeVersion === undefined ? {} : { typeVersion: node.typeVersion }),
     })),
     edges,
-    phases: kind === "workflow" ? document.nodeGroups.map((group) => ({ ...group, nodeIds: [...group.nodeIds] })) : [],
+    phases:
+      kind === "workflow"
+        ? (document.nodeGroups ?? []).map((group) => ({
+            id: group.id,
+            name: group.name,
+            description: group.description ?? "",
+            nodeIds: [...group.nodeIds],
+          }))
+        : [],
   }
 }
 
-// The document fields a save replaces.
-export function documentFields(flow: Flow) {
+// The document fields a save replaces. Positions are whole numbers: ledgers and hook exports carry integers only.
+export function documentFields(flow: Flow): {
+  nodes: RelayAuthoring.Node[]
+  connections: RelayAuthoring.Connections
+  nodeGroups?: RelayAuthoring.NodeGroup[]
+} {
   const names = new Map(flow.nodes.map((node) => [node.id, node.name]))
-  const connections: Record<string, { main: { node: string; type: string; index: number }[][] }> = {}
+  const connections: Record<string, { main: RelayAuthoring.Edge[][] }> = {}
   flow.edges.forEach((edge) => {
     const source = names.get(edge.from)
     const target = names.get(edge.to)
@@ -86,12 +101,13 @@ export function documentFields(flow: Flow) {
     main[edge.port].push({ node: target, type: "main", index: 0 })
     connections[source] = { main }
   })
-  const nodes: RelayNode[] = flow.nodes.map((node) => ({
+  const nodes = flow.nodes.map((node) => ({
     id: node.id,
     name: node.name,
     type: node.type,
-    position: [node.x, node.y],
+    position: [Math.round(node.x), Math.round(node.y)] as const,
     parameters: node.parameters,
+    ...(node.typeVersion === undefined ? {} : { typeVersion: node.typeVersion }),
   }))
   if (flow.kind === "hook") return { nodes, connections }
   return { nodes, connections, nodeGroups: flow.phases.filter((phase) => phase.nodeIds.length) }
@@ -194,16 +210,21 @@ function hookIssues(flow: Flow): Issue[] {
       (node.type === "relay.hookBlock" || node.type === "relay.hookApprove") && timing === "after"
         ? [{ code: "needs-before" as const, node: node.id }]
         : []
+    // The export needs a pattern, a command and a message (Allow's note may be empty), as the server compiles them.
     const pattern =
-      node.type === CONDITION && !String(node.parameters.pattern ?? "").trim()
+      node.type === CONDITION && !String(node.parameters.pattern ?? "")
         ? [{ code: "pattern-empty" as const, node: node.id }]
         : []
     const check =
-      node.type === "relay.hookVerify" && !String(node.parameters.check ?? "").trim()
+      node.type === "relay.hookVerify" && !String(node.parameters.check ?? "")
         ? [{ code: "check-command" as const, node: node.id }]
         : []
+    const message =
+      node.type !== CONDITION && node.type !== "relay.hookAllow" && !String(node.parameters.message ?? "")
+        ? [{ code: "message-empty" as const, node: node.id }]
+        : []
     const loose = reachable.has(node.id) ? [] : [{ code: "hook-loose" as const, node: node.id }]
-    return [...before, ...pattern, ...check, ...loose]
+    return [...before, ...pattern, ...check, ...message, ...loose]
   })
   const actions = flow.nodes.some((node) => node.type !== TRIGGER && node.type !== CONDITION)
   const action: Issue[] = actions ? [] : [{ code: "no-action", node: triggers[0]?.id }]
@@ -343,40 +364,82 @@ export function uniqueName(flow: Flow, base: string) {
 
 /* ---------- hook test ---------- */
 
-// Walks the hook with a sample value: conditions take Yes when the pattern matches, everything else follows
-// its first output. Graph only; nothing is evaluated on the server.
-export function walkHook(flow: Flow, value: string, outputs: Outputs) {
+/** A sample agent event: the trigger's operation and timing and the value the conditions read. */
+export type HookProbe = { operation: string; timing: string; path?: string; command?: string; tool?: string }
+
+// Walks the hook the way the engine plans it (relay/src/hook/evaluate.ts): a condition takes Yes or No, actions
+// run in order along their output, Block ends the branch, and a Run gate continues on Pass because its check is
+// not run here. Graph only; nothing is evaluated on the server.
+export function walkHook(flow: Flow, probe: HookProbe) {
   const trigger = flow.nodes.find((node) => node.type === TRIGGER)
-  if (!trigger) return { path: [], result: undefined }
-  const step = (node: FlowNode, path: string[]): { path: string[]; result: FlowNode | undefined } => {
-    const port = node.type === CONDITION ? (globMatch(String(node.parameters.pattern ?? ""), value) ? 0 : 1) : 0
-    const next = nodeOf(flow, flow.edges.find((edge) => edge.from === node.id && edge.port === port)?.to)
-    if (!next || path.includes(next.id))
-      return { path, result: node.type === CONDITION || node.type === TRIGGER ? undefined : node }
-    if (next.type === CONDITION) return step(next, [...path, next.id])
-    if (!outputsOf(flow, next, outputs).length || !outEdges(flow, next.id).length)
-      return { path: [...path, next.id], result: next }
-    return step(next, [...path, next.id])
+  if (!trigger) return { path: [], actions: [] }
+  const visit = (id: string, path: string[]): string[] => {
+    const node = nodeOf(flow, id)
+    if (!node || path.includes(id)) return path
+    const port = node.type === CONDITION ? (conditionHolds(node.parameters, probe) ? 0 : 1) : 0
+    const next = flow.edges.find((edge) => edge.from === id && edge.port === port)
+    if (!next || node.type === "relay.hookBlock") return [...path, id]
+    return visit(next.to, [...path, id])
   }
-  return step(trigger, [trigger.id])
+  const path = visit(trigger.id, [])
+  const actions = path.flatMap((id) => {
+    const node = nodeOf(flow, id)
+    return node && node.type !== TRIGGER && node.type !== CONDITION ? [node] : []
+  })
+  return { path, actions }
 }
 
-// `*` stays inside one path segment, `**` crosses segments, `?` is one character; `|` separates alternatives.
-export function globMatch(pattern: string, value: string) {
-  return pattern
-    .split("|")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .some((part) => {
-      const body = part
-        .replace(/[.+^$(){}[\]\\]/g, "\\$&")
-        .replace(/\*\*/g, "\u0000")
-        .replace(/\*/g, "[^/]*")
-        .replace(/\u0000/g, ".*")
-        .replace(/\?/g, ".")
-      return new RegExp(`^${body}$`).test(value)
-    })
+// A condition on a field the event lacks (a path on a command, a tool on a session trigger) takes No.
+export function conditionHolds(parameters: Record<string, unknown>, probe: HookProbe) {
+  const pattern = String(parameters.pattern ?? "")
+  if (parameters.field === "path") return probe.path !== undefined && pathMatch(pattern, probe.path)
+  if (parameters.field === "event") return wildcard(pattern, `${probe.operation}.${probe.timing}`)
+  const value = parameters.field === "tool" ? probe.tool : probe.command
+  return value !== undefined && wildcard(pattern, value)
 }
+
+// Commands, tools and events use Orchestra's permission wildcard: `*` is any run (across `/` too), `?` one
+// character, everything else literal, including `|`. A pattern ending in " *" also matches without the argument.
+export function wildcard(pattern: string, value: string) {
+  const test = (body: string) =>
+    new RegExp(
+      `^${body
+        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*/g, "[\\s\\S]*")
+        .replace(/\?/g, "[\\s\\S]")}$`,
+    ).test(value)
+  return test(pattern) || (pattern.endsWith(" *") && test(pattern.slice(0, -2)))
+}
+
+// Paths use the engine's glob: `*` and `?` stay inside one segment, `**` crosses segments, `[a-z]` and `[!a]` are
+// classes, `{a,b}` are alternatives, `\` escapes, and each leading `!` negates. `|` is literal.
+export function pathMatch(pattern: string, path: string) {
+  const bangs = /^!*/.exec(pattern)![0].length
+  const tokens = pattern.slice(bangs).match(/\\[\s\S]|\*\*\/?|\*|\?|\[(?:\\.|[^\]])+\]|[{},]|[\s\S]/g) ?? []
+  const body = tokens.reduce(
+    (acc, token) => {
+      if (token === "{") return { out: `${acc.out}(?:`, depth: acc.depth + 1 }
+      if (token === "}" && acc.depth > 0) return { out: `${acc.out})`, depth: acc.depth - 1 }
+      if (token === "," && acc.depth > 0) return { out: `${acc.out}|`, depth: acc.depth }
+      return { out: acc.out + globToken(token), depth: acc.depth }
+    },
+    { out: "", depth: 0 },
+  )
+  if (body.depth > 0) return bangs % 2 === 1
+  return new RegExp(`^${body.out}$`).test(path) !== (bangs % 2 === 1)
+}
+
+function globToken(token: string) {
+  if (token.startsWith("\\")) return escape(token.slice(1))
+  if (token === "**/") return "(?:[\\s\\S]*/)?"
+  if (token === "**") return "[\\s\\S]*"
+  if (token === "*") return "[^/]*"
+  if (token === "?") return "[^/]"
+  if (token.startsWith("[") && token.length > 2) return `[${token.slice(1, -1).replace(/^[!^]/, "^")}]`
+  return escape(token)
+}
+
+const escape = (text: string) => text.replace(/[.+^${}()|[\]\\*?]/g, "\\$&")
 
 /* ---------- layout ---------- */
 

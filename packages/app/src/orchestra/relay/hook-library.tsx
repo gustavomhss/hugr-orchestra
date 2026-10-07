@@ -2,7 +2,7 @@ import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
-import type { RelayDocument } from "./client"
+import { decisionTime, type RelayDocument } from "./client"
 import { createAction, DeleteDialog, failure } from "./dialogs"
 import { type Flow, flowFromDocument, nodeOf, TRIGGER } from "./graph"
 import { ActivityRows } from "./hook-activity"
@@ -51,8 +51,8 @@ export function HookLibrary(props: Props) {
       ),
       queryFn: installs().length
         ? () =>
-            Promise.all(installs().map((item) => props.source.client.decisions(item.installID).catch(() => []))).then(
-              (lists) => lists.flat(),
+            Promise.all(installs().map((item) => props.source.client.decisions(item.installID))).then((lists) =>
+              lists.flat(),
             )
         : skipToken,
       retry: false,
@@ -63,8 +63,8 @@ export function HookLibrary(props: Props) {
     const install = installOf(id)
     if (!install) return
     return (decisions.data ?? [])
-      .filter((item) => item.installID === install.installID)
-      .toSorted((a, b) => (b.at ?? 0) - (a.at ?? 0))[0]
+      .filter((item) => item.install === install.installID)
+      .toSorted((a, b) => b.ts - a.ts || b.seq - a.seq)[0]
   }
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "hook")])),
@@ -74,7 +74,7 @@ export function HookLibrary(props: Props) {
     setBusy(document.id)
     const current = installOf(document.id)
     const result = await (
-      current ? props.source.client.enable(current.installID, next) : props.source.client.install(document)
+      current ? props.source.client.enable(current.installID, next) : props.source.client.install(document.id)
     ).then(
       () => undefined,
       (error: unknown) => failure(error),
@@ -249,16 +249,20 @@ export function HookLibrary(props: Props) {
                             name: document.name,
                             profile: props.profile,
                           })}
-                          title={document.activeVersionId ? undefined : copy.t("orchestra.hooks.publishFirst")}
-                          disabled={!document.activeVersionId || busy() === document.id}
+                          title={
+                            document.activeVersionId || install() ? undefined : copy.t("orchestra.hooks.publishFirst")
+                          }
+                          disabled={(!document.activeVersionId && !install()) || busy() === document.id}
                           onClick={() => void toggle(document, !on())}
                         />
                         <span>
                           {copy.t(on() ? "orchestra.hooks.installed" : "orchestra.hooks.off")}
                           <small style={{ display: "block", "margin-top": "2px" }}>
                             {fired()
-                              ? `${fired()!.outcome} · ${copy.when(fired()!.at)}`
-                              : copy.t("orchestra.hooks.row.notFired")}
+                              ? `${copy.t(`orchestra.hooks.outcome.${fired()!.outcome}`)} · ${copy.when(decisionTime(fired()!))}`
+                              : decisions.isSuccess || !install()
+                                ? copy.t("orchestra.hooks.row.notFired")
+                                : ""}
                           </small>
                         </span>
                       </div>

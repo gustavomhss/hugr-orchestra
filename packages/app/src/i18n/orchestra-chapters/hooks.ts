@@ -41,6 +41,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.activity.loading": "Reading activity…",
   "orchestra.hooks.activity.note": "Each row is one event this hook handled in {{profile}}.",
   "orchestra.hooks.activity.open": "Open hook",
+  "orchestra.hooks.activity.commandHash": "command sha256 {{hash}}…",
 
   "orchestra.hooks.create.title": "New hook",
   "orchestra.hooks.create.description": "Pick the event it listens for. You add conditions and actions on the canvas.",
@@ -56,7 +57,8 @@ export const HOOKS_COPY = {
   "orchestra.hooks.preset.remind-first": "Remind before first edit",
   "orchestra.hooks.preset.remind-first.body": "Add a short instruction before the agent changes a file.",
   "orchestra.hooks.preset.pathMatches": "Path matches",
-  "orchestra.hooks.preset.commandMatches": "Command matches",
+  "orchestra.hooks.preset.pushMatches": "Push command",
+  "orchestra.hooks.preset.deleteMatches": "Recursive delete",
   "orchestra.hooks.preset.blockChange": "Block change",
   "orchestra.hooks.preset.blockMessage":
     "Generated files are rebuilt by the generator. Change the source schema and regenerate.",
@@ -74,7 +76,11 @@ export const HOOKS_COPY = {
   "orchestra.hooks.trigger.after.edit": "After edit file",
   "orchestra.hooks.trigger.after.write": "After create file",
   "orchestra.hooks.trigger.after.command": "After shell command",
-  "orchestra.hooks.trigger.stop": "On session stop",
+  "orchestra.hooks.trigger.before.tool": "Before any tool",
+  "orchestra.hooks.trigger.after.tool": "After any tool",
+  "orchestra.hooks.trigger.sessionStart": "On session start",
+  "orchestra.hooks.trigger.prompt": "Before prompt",
+  "orchestra.hooks.trigger.sessionIdle": "On session stop",
   "orchestra.hooks.trigger.beforeOther": "Before {{event}}",
   "orchestra.hooks.trigger.afterOther": "After {{event}}",
 
@@ -119,6 +125,8 @@ export const HOOKS_COPY = {
   "orchestra.hooks.canvas.emptyBody": "The trigger fires on its event. Add what should happen next.",
   "orchestra.hooks.canvas.installed": "Installed in {{profile}} · v{{version}}",
   "orchestra.hooks.canvas.notFired": "not fired yet",
+  "orchestra.hooks.canvas.installedEarlier": "Installed in {{profile}} · an earlier version",
+  "orchestra.hooks.canvas.update": "Install the published version",
   "orchestra.hooks.canvas.test": "Test · {{label}} → {{result}}",
   "orchestra.hooks.canvas.graphOnly": "Graph only; nothing ran",
   "orchestra.hooks.canvas.clear": "Clear",
@@ -138,8 +146,13 @@ export const HOOKS_COPY = {
     "Block and Ask need a Before event. After events can remind, record or run a gate.",
   "orchestra.hooks.details.field": "Field",
   "orchestra.hooks.details.matches": "Matches",
-  "orchestra.hooks.details.ports":
-    "Yes continues from the upper port, No from the lower one. Separate alternatives with |.",
+  "orchestra.hooks.details.ports": "Yes continues from the upper port, No from the lower one.",
+  "orchestra.hooks.details.patternPath":
+    "* and ? stay inside a folder, ** crosses folders, {a,b} is either. A | is matched literally: for another pattern, add a condition.",
+  "orchestra.hooks.details.patternWildcard":
+    "* matches any text and ? one character. A | is matched literally: for another pattern, add a condition.",
+  "orchestra.hooks.details.addCondition": "Add condition",
+  "orchestra.hooks.details.commandHash": "Command hash",
   "orchestra.hooks.details.command": "Command",
   "orchestra.hooks.details.passFail": "Exit 0 continues on Pass; anything else on Fail.",
   "orchestra.hooks.details.message": "Message to the agent",
@@ -152,4 +165,18 @@ export const HOOKS_COPY = {
   "orchestra.hooks.testDialog.run": "Run test",
   "orchestra.hooks.testDialog.noTrigger": "Add a trigger first.",
   "orchestra.hooks.testDialog.noAction": "No action reached",
+  "orchestra.hooks.testDialog.noSubject":
+    "This event carries no path, command or tool, so conditions on those take No. Conditions on the event still apply.",
+
+  "orchestra.hooks.outcome.blocked": "Blocked",
+  "orchestra.hooks.outcome.approved": "Approved",
+  "orchestra.hooks.outcome.rejected": "Rejected",
+  "orchestra.hooks.outcome.cancelled": "Cancelled",
+  "orchestra.hooks.outcome.passed": "Passed",
+  "orchestra.hooks.outcome.failed": "Failed",
+  "orchestra.hooks.outcome.unavailable": "Check unavailable",
+  "orchestra.hooks.outcome.repair-required": "Repair required",
+  "orchestra.hooks.outcome.reminded": "Reminded",
+  "orchestra.hooks.outcome.recorded": "Recorded",
+  "orchestra.hooks.outcome.allowed": "Allowed",
 }

@@ -6,7 +6,6 @@ import {
   documentFields,
   type Flow,
   flowFromDocument,
-  globMatch,
   insertNode,
   issues,
   layoutWorkflow,
@@ -16,7 +15,9 @@ import {
   TRIGGER,
   uniqueID,
   uniqueName,
+  pathMatch,
   walkHook,
+  wildcard,
 } from "./graph"
 
 const node = (id: string, type: string, parameters: Record<string, unknown> = {}) => ({
@@ -26,7 +27,8 @@ const node = (id: string, type: string, parameters: Record<string, unknown> = {}
   position: [0, 0] as [number, number],
   parameters,
 })
-const link = (target: string) => ({ main: [[{ node: target, type: "main", index: 0 }]] })
+const edge = (target: string) => ({ node: target, type: "main", index: 0 }) as const
+const link = (target: string) => ({ main: [[edge(target)]] })
 
 const workflow = (): Flow =>
   flowFromDocument(
@@ -58,6 +60,9 @@ describe("documents and flows", () => {
     const fields = documentFields(renamed)
     expect(fields.connections).toEqual({ START: link("Renamed"), Renamed: link("G"), G: link("B") })
     expect(fields.nodes.find((item) => item.id === "a")?.position).toEqual([0, 0])
+    // Positions leave the canvas as whole numbers.
+    const dragged = { ...flow, nodes: flow.nodes.map((item) => ({ ...item, x: item.x + 10.6, y: item.y - 0.4 })) }
+    expect(documentFields(dragged).nodes.map((item) => item.position)).toEqual(flow.nodes.map(() => [11, 0]))
     expect("nodeGroups" in fields && fields.nodeGroups).toEqual([
       { id: "p", name: "Phase", description: "", nodeIds: ["a", "g"] },
     ])
@@ -69,7 +74,7 @@ describe("documents and flows", () => {
         nodes: [node("t", TRIGGER), node("c", CONDITION), node("y", "relay.hookBlock"), node("n", "relay.hookAllow")],
         connections: {
           T: link("C"),
-          C: { main: [[{ node: "Y", type: "main", index: 0 }], [{ node: "N", type: "main", index: 0 }]] },
+          C: { main: [[edge("Y")], [edge("N")]] },
         },
         nodeGroups: [{ id: "x", name: "x", description: "", nodeIds: ["c"] }],
       },
@@ -108,24 +113,28 @@ describe("issues", () => {
     expect(issues(flow, ["Server says no"])).toContainEqual({ code: "server", text: "Server says no" })
   })
 
-  test("a hook needs one trigger, a Before event for Block, patterns and a connected action", () => {
+  test("a hook needs one trigger, a Before event for Block, patterns, messages and a connected action", () => {
     const hook: Flow = {
       kind: "hook",
       nodes: [
         { id: "t", name: "T", type: TRIGGER, x: 0, y: 0, parameters: { operation: "edit", timing: "after" } },
-        { id: "c", name: "C", type: CONDITION, x: 0, y: 0, parameters: { pattern: " " } },
-        { id: "b", name: "B", type: "relay.hookBlock", x: 0, y: 0, parameters: {} },
-        { id: "r", name: "R", type: "relay.hookRemind", x: 0, y: 0, parameters: {} },
+        { id: "c", name: "C", type: CONDITION, x: 0, y: 0, parameters: { pattern: "" } },
+        { id: "b", name: "B", type: "relay.hookBlock", x: 0, y: 0, parameters: { message: "Stop." } },
+        { id: "r", name: "R", type: "relay.hookRemind", x: 0, y: 0, parameters: { message: "" } },
+        { id: "a", name: "A", type: "relay.hookAllow", x: 0, y: 0, parameters: { message: "" } },
       ],
       edges: [
         { from: "t", to: "c", port: 0 },
         { from: "c", to: "b", port: 0 },
+        { from: "c", to: "a", port: 1 },
       ],
       phases: [],
     }
+    // Allow's note may be empty; every other action needs its message, as the server compiles the export.
     expect(issues(hook)).toEqual([
       { code: "pattern-empty", node: "c" },
       { code: "needs-before", node: "b" },
+      { code: "message-empty", node: "r" },
       { code: "hook-loose", node: "r" },
     ])
     expect(issues({ ...hook, nodes: hook.nodes.filter((item) => item.type !== TRIGGER) })).toContainEqual({
@@ -196,33 +205,66 @@ describe("edits", () => {
 })
 
 describe("hook test walk", () => {
+  const node = (id: string, name: string, type: string, parameters: Record<string, unknown> = {}) => ({
+    id,
+    name,
+    type,
+    x: 0,
+    y: 0,
+    parameters,
+  })
   const hook: Flow = {
     kind: "hook",
     nodes: [
-      { id: "t", name: "Before edit", type: TRIGGER, x: 0, y: 0, parameters: {} },
-      { id: "c", name: "Path matches", type: CONDITION, x: 0, y: 0, parameters: { pattern: "src/generated/**" } },
-      { id: "b", name: "Block", type: "relay.hookBlock", x: 0, y: 0, parameters: {} },
-      { id: "a", name: "Allow", type: "relay.hookAllow", x: 0, y: 0, parameters: {} },
+      node("t", "Before edit", TRIGGER, { operation: "edit", timing: "before" }),
+      node("c", "Path matches", CONDITION, { field: "path", pattern: "src/generated/**" }),
+      node("b", "Block", "relay.hookBlock", { message: "No." }),
+      node("r", "Remind", "relay.hookRemind", { message: "Careful." }),
+      node("a", "Allow", "relay.hookAllow", { message: "" }),
     ],
     edges: [
       { from: "t", to: "c", port: 0 },
       { from: "c", to: "b", port: 0 },
-      { from: "c", to: "a", port: 1 },
+      { from: "c", to: "r", port: 1 },
+      { from: "r", to: "a", port: 0 },
     ],
     phases: [],
   }
-  const outputs = { [CONDITION]: ["Yes", "No"], "relay.hookBlock": [] }
+  const edit = (path: string) => ({ operation: "edit", timing: "before", path })
 
-  test("a match takes Yes and stops at the action that answers", () => {
-    expect(walkHook(hook, "src/generated/client.ts", outputs)).toEqual({ path: ["t", "c", "b"], result: hook.nodes[2] })
-    expect(walkHook(hook, "src/session/recovery.ts", outputs)).toEqual({ path: ["t", "c", "a"], result: hook.nodes[3] })
+  test("a condition takes Yes or No; actions run in order and Block ends the branch", () => {
+    expect(walkHook(hook, edit("src/generated/client.ts"))).toEqual({ path: ["t", "c", "b"], actions: [hook.nodes[2]] })
+    expect(walkHook(hook, edit("src/session/recovery.ts")).actions.map((item) => item.name)).toEqual([
+      "Remind",
+      "Allow",
+    ])
   })
 
-  test("globs: * stays in a segment, ** crosses them, | separates alternatives", () => {
-    expect(globMatch("src/*.ts", "src/a.ts")).toBe(true)
-    expect(globMatch("src/*.ts", "src/a/b.ts")).toBe(false)
-    expect(globMatch("src/**", "src/a/b.ts")).toBe(true)
-    expect(globMatch("git push* | rm -rf *", "rm -rf build")).toBe(true)
-    expect(globMatch("a.b", "axb")).toBe(false)
+  test("a condition on a field the event lacks takes No", () => {
+    expect(walkHook(hook, { operation: "edit", timing: "before" }).path).toEqual(["t", "c", "r", "a"])
+  })
+
+  test("paths: * and ? stay in a segment, ** crosses them, classes, alternatives and negation", () => {
+    expect(pathMatch("src/*.ts", "src/a.ts")).toBe(true)
+    expect(pathMatch("src/*.ts", "src/a/b.ts")).toBe(false)
+    expect(pathMatch("src/**", "src/a/b.ts")).toBe(true)
+    expect(pathMatch("src/**/b.ts", "src/b.ts")).toBe(true)
+    expect(pathMatch("src/?.ts", "src/ab.ts")).toBe(false)
+    expect(pathMatch("src/[ab].ts", "src/b.ts")).toBe(true)
+    expect(pathMatch("src/[!ab].ts", "src/b.ts")).toBe(false)
+    expect(pathMatch("src/*.{ts,tsx}", "src/a.tsx")).toBe(true)
+    expect(pathMatch("!src/**", "lib/a.ts")).toBe(true)
+    expect(pathMatch("src/{a,b", "src/a")).toBe(false)
+    expect(pathMatch("a.b", "axb")).toBe(false)
+  })
+
+  test("commands: * crosses everything, | is literal, and a trailing ' *' also matches the bare command", () => {
+    expect(wildcard("git push *", "git push origin dev")).toBe(true)
+    expect(wildcard("git push *", "git push")).toBe(true)
+    expect(wildcard("rm -rf *", "rm -rf /tmp/x")).toBe(true)
+    expect(wildcard("git push* | rm -rf *", "rm -rf build")).toBe(false)
+    expect(wildcard("git push* | rm -rf *", "git push* | rm -rf now")).toBe(true)
+    expect(wildcard("edit.before", "edit.before")).toBe(true)
+    expect(wildcard("edit.before", "editxbefore")).toBe(false)
   })
 })

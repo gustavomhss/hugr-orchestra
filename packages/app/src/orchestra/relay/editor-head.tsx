@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js"
 import type { RelayDocument, RelayKind } from "./client"
-import { HeadBadge } from "./parts"
+import { HeadBadge, type runBlocker } from "./parts"
 import { relayPath } from "./route"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
@@ -13,7 +13,12 @@ export function EditorHead(props: {
   document: RelayDocument
   name: string
   tab: "editor" | "runs"
-  runCount: number
+  // Hidden while the server has no run routes.
+  runCount: number | undefined
+  // Why Run is off (a copy key), when it is.
+  runBlock: ReturnType<typeof runBlocker>
+  // An install exists, so the toggle works even after an unpublish.
+  installExists?: boolean
   save: SaveState
   issues: { text: string; node?: string }[]
   canPublish: boolean
@@ -110,7 +115,9 @@ export function EditorHead(props: {
           onClick={() => props.go(relayPath.history(props.kind, props.document.id))}
         >
           {copy.t(workflow() ? "orchestra.workflows.tab.runs" : "orchestra.hooks.tab.activity")}
-          <span class="wf-count">{props.runCount}</span>
+          <Show when={props.runCount !== undefined}>
+            <span class="wf-count">{props.runCount}</span>
+          </Show>
         </button>
       </div>
       <div class="wf-head-right">
@@ -178,8 +185,8 @@ export function EditorHead(props: {
                 role="switch"
                 aria-checked={!!props.installed}
                 aria-label={copy.t("orchestra.hooks.editor.installLabel")}
-                title={published() ? undefined : copy.t("orchestra.hooks.publishFirst")}
-                disabled={!published() || props.installBusy}
+                title={published() || props.installExists ? undefined : copy.t("orchestra.hooks.publishFirst")}
+                disabled={(!published() && !props.installExists) || props.installBusy}
                 onClick={() => props.onInstall(!props.installed)}
               />
               {copy.t(props.installed ? "orchestra.hooks.installed" : "orchestra.hooks.notInstalled")}
@@ -189,12 +196,8 @@ export function EditorHead(props: {
           <button
             type="button"
             class="mx-btn primary"
-            title={
-              published()
-                ? copy.t("orchestra.workflows.editor.runTitle")
-                : copy.t("orchestra.workflows.row.publishFirst")
-            }
-            disabled={!published()}
+            title={copy.t(props.runBlock ?? "orchestra.workflows.editor.runTitle")}
+            disabled={!!props.runBlock}
             onClick={props.onRun}
           >
             <Ic name="play" />

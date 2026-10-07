@@ -1,14 +1,21 @@
 import { createSignal, For, Show } from "solid-js"
-import type { RelayDocument } from "./client"
+import { documentProfile, type RelayDocument } from "./client"
 import { createAction } from "./dialogs"
 import type { Flow } from "./graph"
 import { TemplateCard } from "./parts"
-import { blankWorkflow, copyWorkflow } from "./presets"
+import { blankWorkflow, copyDocument } from "./presets"
 import type { RelaySource } from "./source"
 import { RelayDialog, useRelayCopy } from "./ui"
 
-// The first workflow in the profile is the default template; an empty profile starts blank.
-export const templateID = (documents: RelayDocument[]) => documents[0]?.id ?? "blank"
+// Templates are the shipped Relay profiles the server seeded: the ones that can run first, then by name.
+export const templates = (documents: RelayDocument[]) =>
+  documents
+    .filter((document) => documentProfile(document) !== undefined)
+    .toSorted((a, b) => Number(b.runnable) - Number(a.runnable) || a.name.localeCompare(b.name))
+
+// The first runnable profile is the default; a profile without one starts blank.
+export const templateID = (documents: RelayDocument[]) =>
+  templates(documents).find((document) => document.runnable)?.id ?? "blank"
 
 export function CreateWorkflowDialog(props: {
   source: RelaySource
@@ -19,7 +26,7 @@ export function CreateWorkflowDialog(props: {
 }) {
   const copy = useRelayCopy()
   const action = createAction()
-  const documents = () => props.source.list().slice(0, 5)
+  const documents = () => templates(props.source.list())
   const nameOf = (id: string) => {
     const source = props.source.list().find((item) => item.id === id)
     return source
@@ -40,7 +47,7 @@ export function CreateWorkflowDialog(props: {
     const source = props.source.list().find((item) => item.id === pick())
     return action.run(async () => {
       const created = await props.source.client.create(
-        source ? copyWorkflow(source, value) : blankWorkflow(value, copy.t("orchestra.workflows.type.start")),
+        source ? copyDocument(source, value) : blankWorkflow(value, copy.t("orchestra.workflows.type.start")),
       )
       props.source
         .queryClient()

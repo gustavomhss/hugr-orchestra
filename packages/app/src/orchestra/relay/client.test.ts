@@ -1,111 +1,169 @@
 import { describe, expect, test } from "bun:test"
-import { createRelayClient, decodeDocument, decodeRun, documentKind, RelayError, relayUnsupported } from "./client"
+import { createSdkForServer } from "@/utils/server"
+import {
+  createRelayClient,
+  decisionTime,
+  decodeDocument,
+  documentKind,
+  RelayError,
+  relayUnsupported,
+  type RelayDocumentView,
+} from "./client"
+import { createRunClient, decodeRun } from "./runs"
 
-type Call = { url: URL; init: RequestInit }
+const directory = "/repo/a b"
 
-function server(respond: (call: Call) => Response) {
-  const calls: Call[] = []
-  const client = createRelayClient({
-    server: { url: "http://127.0.0.1:4096", username: "opencode", password: "secret" },
-    directory: "/repo/a b",
-    fetch: async (url, init) => {
-      const call = { url, init }
-      calls.push(call)
-      return respond(call)
+function server(respond: (request: Request) => Response) {
+  const requests: Request[] = []
+  const fetcher = Object.assign(
+    async (input: string | URL | Request, init?: RequestInit) => {
+      const request = new Request(input, init)
+      requests.push(request.clone())
+      return respond(request)
     },
-  })
-  return { client, calls }
+    { preconnect: globalThis.fetch.preconnect },
+  )
+  const http = { url: "http://127.0.0.1:4096", username: "opencode", password: "secret" }
+  const client = createRelayClient({ sdk: createSdkForServer({ server: http, fetch: fetcher, directory }), directory })
+  const runs = createRunClient({ server: http, directory, fetch: (url, init) => fetcher(url, init) })
+  return { client, runs, requests }
 }
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } })
+const located = (data: unknown, status = 200) =>
+  Response.json({ location: { directory }, data }, { status, headers: { "content-type": "application/json" } })
+const refusal = (status: number, body: unknown) => Response.json(body, { status })
 
-describe("requests", () => {
-  test("scope every call to the profile's location and send the server's credentials", async () => {
-    const api = server(() => json([]))
-    expect(await api.client.runs("wp-execute")).toEqual([])
-    const call = api.calls[0]
-    expect(call.url.pathname).toBe("/api/relay/run")
-    expect(call.url.searchParams.get("location[directory]")).toBe("/repo/a b")
-    expect(call.url.searchParams.get("document")).toBe("wp-execute")
-    expect(new Headers(call.init.headers).get("authorization")).toBe(`Basic ${btoa("opencode:secret")}`)
+const view = (fields: Partial<RelayDocumentView> = {}): RelayDocumentView => ({
+  id: "relay-wp-execute",
+  name: "Relay · wp-execute",
+  nodes: [],
+  connections: {},
+  tags: [],
+  isArchived: false,
+  active: false,
+  activeVersionId: null,
+  meta: { relay: { schema: 1, kind: "workflow", profile: "wp-execute" } },
+  createdAt: "2026-10-06T12:00:00Z",
+  updatedAt: "2026-10-06T12:30:00Z",
+  versionId: "v4",
+  versionCounter: 4,
+  checksum: "c".repeat(64),
+  activeVersion: null,
+  runnable: true,
+  ...fields,
+})
+
+describe("authoring routes through the generated client", () => {
+  test("every call is scoped to the profile's location and carries the server's credentials", async () => {
+    const api = server(() => located([view()]))
+    const [document] = await api.client.documents()
+    const request = api.requests[0]
+    const url = new URL(request.url)
+    expect([request.method, url.pathname]).toEqual(["GET", "/api/relay/document"])
+    expect(url.searchParams.get("location[directory]")).toBe(directory)
+    expect(request.headers.get("authorization")).toBe(`Basic ${btoa("opencode:secret")}`)
+    expect([document.description, document.nodeGroups, document.publishedCounter]).toEqual(["", [], undefined])
+    expect(document.updated).toBe(Date.parse("2026-10-06T12:30:00Z"))
   })
 
-  test("a save sends the document back with its version guard", async () => {
-    const stored = {
-      id: "d",
-      name: "Doc",
+  test("a save sends the edited fields and the version guard, nothing else", async () => {
+    const api = server((request) => located(view({ versionId: "v5", versionCounter: 5, name: "Renamed" })))
+    const loaded = decodeDocument(view())
+    const saved = await api.client.save(loaded, { name: "Renamed", nodes: [], connections: {} })
+    const request = api.requests[0]
+    expect([request.method, new URL(request.url).pathname]).toEqual(["PATCH", "/api/relay/document/relay-wp-execute"])
+    expect(await request.json()).toEqual({
+      name: "Renamed",
       nodes: [],
       connections: {},
-      versionId: "v1",
-      versionCounter: 1,
-      checksum: "c1",
-      meta: { relay: { kind: "workflow", sprint: { keep: true } } },
-      extra: 1,
-    }
-    const api = server((call) => json({ ...JSON.parse(String(call.init.body)), versionId: "v2", versionCounter: 2 }))
-    const saved = await api.client.save(decodeDocument(stored)[0], { name: "Renamed" })
-    const body = JSON.parse(String(api.calls[0].init.body))
-    expect(api.calls[0].init.method).toBe("PATCH")
-    expect(body).toMatchObject({
-      name: "Renamed",
-      versionId: "v1",
-      expectedChecksum: "c1",
-      extra: 1,
-      meta: { relay: { sprint: { keep: true } } },
+      versionId: "v4",
+      expectedChecksum: "c".repeat(64),
     })
-    expect([saved.versionId, saved.versionCounter, saved.name]).toEqual(["v2", 2, "Renamed"])
+    expect([saved.versionId, saved.versionCounter, saved.name]).toEqual(["v5", 5, "Renamed"])
   })
 
-  test("a server without Relay routes reads as unsupported; other failures keep their message", async () => {
-    const missing = server(() => json({ message: "Not found" }, 404))
-    const failure = await missing.client.documents().catch((error: unknown) => error)
-    expect(relayUnsupported(failure)).toBe(true)
-    const shell = server(
-      () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } }),
+  test("publish names the loaded version; install leaves the version to the server", async () => {
+    const published = view({ activeVersionId: "v4", activeVersion: { ...view(), workflowId: "relay-wp-execute" } })
+    const api = server((request) =>
+      new URL(request.url).pathname.endsWith("/publish")
+        ? located(published)
+        : located({ installID: "inst-1", document: "hook-1", version: "v2", enabled: true }),
     )
-    expect(relayUnsupported(await shell.client.documents().catch((error: unknown) => error))).toBe(true)
-    const conflict = server(() => json({ message: "Stale version", code: "conflict" }, 409))
-    const error = await conflict.client.release("1042", "fixed").catch((cause: unknown) => cause)
+    expect((await api.client.publish(decodeDocument(view()))).publishedCounter).toBe(4)
+    expect(await api.requests[0].json()).toEqual({ versionId: "v4", expectedChecksum: "c".repeat(64) })
+    const install = await api.client.install("hook-1")
+    expect(install.version).toBe("v2")
+    expect([api.requests[1].method, new URL(api.requests[1].url).pathname]).toEqual(["POST", "/api/relay/hook"])
+    expect(await api.requests[1].json()).toEqual({ document: "hook-1" })
+  })
+
+  test("refusals keep their tag, code and message; only a route the server lacks reads as unsupported", async () => {
+    const missing = server(() => new Response("Not Found", { status: 404, headers: { "content-type": "text/plain" } }))
+    expect(relayUnsupported(await missing.client.documents().catch((error: unknown) => error))).toBe(true)
+    const page = server(() => new Response("<!doctype html>", { headers: { "content-type": "text/html" } }))
+    expect(relayUnsupported(await page.client.documents().catch((error: unknown) => error))).toBe(true)
+    const unknown = server(() =>
+      refusal(404, { _tag: "RelayNotFoundError", code: "document-missing", message: "No document gone." }),
+    )
+    const error = await unknown.client.document("gone").catch((cause: unknown) => cause)
     expect(error).toBeInstanceOf(RelayError)
     expect(relayUnsupported(error)).toBe(false)
-    expect(error instanceof RelayError && [error.status, error.message, error.code]).toEqual([
-      409,
-      "Stale version",
-      "conflict",
+    expect(error instanceof RelayError && [error.status, error.tag, error.code, error.message]).toEqual([
+      404,
+      "RelayNotFoundError",
+      "document-missing",
+      "No document gone.",
     ])
+    const stale = server(() =>
+      refusal(409, { _tag: "RelayConflictError", code: "version-conflict", message: "The workflow changed." }),
+    )
+    const conflict = await stale.client.save(decodeDocument(view()), {}).catch((cause: unknown) => cause)
+    expect(conflict instanceof RelayError && [conflict.status, conflict.code]).toEqual([409, "version-conflict"])
   })
 
-  test("location-scoped answers are unwrapped", async () => {
-    const api = server(() =>
-      json({ location: { directory: "/repo" }, data: [{ id: "d", name: "Doc", nodes: [], connections: {} }] }),
-    )
-    expect((await api.client.documents()).map((item) => item.id)).toEqual(["d"])
+  test("decisions are ledger lines, timed in epoch seconds", async () => {
+    const line = {
+      ts: 1_791_300_000,
+      event: "hook-decision",
+      decision: "d1",
+      install: "inst-1",
+      version: "v2",
+      node: "block",
+      action: "block",
+      trigger: "edit.before",
+      tool: "edit",
+      session: "ses_1",
+      call: "call_1",
+      subject: "src/generated/client.ts",
+      outcome: "blocked",
+      seq: 7,
+    }
+    const api = server(() => located([line]))
+    const [decision] = await api.client.decisions("inst-1")
+    expect(new URL(api.requests[0].url).pathname).toBe("/api/relay/hook/inst-1/decisions")
+    expect([decision.decision, decision.node, decision.session, decision.seq]).toEqual(["d1", "block", "ses_1", 7])
+    expect(decisionTime(decision)).toBe(1_791_300_000_000)
   })
 })
 
-describe("decoding", () => {
-  test("the published counter comes from the active version, or from the draft when they are the same", () => {
-    const base = { id: "d", name: "Doc", nodes: [], connections: {}, versionCounter: 4 }
-    expect(
-      decodeDocument({ ...base, versionId: "v4", activeVersionId: "v3", activeVersion: { versionCounter: 3 } })[0]
-        .publishedCounter,
-    ).toBe(3)
-    expect(decodeDocument({ ...base, versionId: "v4", activeVersionId: "v4" })[0].publishedCounter).toBe(4)
-    expect(decodeDocument({ ...base, versionId: "v4", activeVersionId: "v3" })[0].publishedCounter).toBeUndefined()
-    expect(decodeDocument({ ...base, versionId: "v4", activeVersionId: null })[0].activeVersionId).toBeNull()
-    expect(decodeDocument({ name: "no id" })).toEqual([])
-  })
-
+describe("documents", () => {
   test("the kind comes from the metadata, then from the node types", () => {
-    const hook = decodeDocument({
-      id: "h",
-      name: "H",
-      nodes: [{ id: "t", name: "T", type: "relay.hookEventTrigger", position: [0, 0] }],
-      connections: {},
-    })[0]
+    const hook = decodeDocument(
+      view({
+        meta: {},
+        nodes: [{ id: "t", name: "T", type: "relay.hookEventTrigger", position: [0, 0], parameters: {} }],
+      }),
+    )
     expect(documentKind(hook)).toBe("hook")
     expect(documentKind({ ...hook, meta: { relay: { kind: "workflow" } } })).toBe("workflow")
+  })
+})
+
+describe("runs (no routes yet)", () => {
+  test("a server without the run routes reads as unsupported", async () => {
+    const api = server(() => new Response("Not Found", { status: 404 }))
+    expect(relayUnsupported(await api.runs.runs().catch((error: unknown) => error))).toBe(true)
+    expect(new URL(api.requests[0].url).pathname).toBe("/api/relay/run")
   })
 
   test("runs keep only what the server reported", () => {
@@ -126,12 +184,7 @@ describe("decoding", () => {
       ],
     })
     expect(run.status).toBe("parked")
-    expect(run.steps[0]).toMatchObject({
-      wp: "a",
-      status: "escalated",
-      attempts: 4,
-      checks: [{ id: "x", verdict: "fail", output: undefined }],
-    })
+    expect(run.steps[0]).toMatchObject({ status: "escalated", attempts: 4, checks: [{ id: "x", verdict: "fail" }] })
     expect([run.label, run.baseRef, run.startedAt]).toEqual([undefined, undefined, undefined])
     expect(decodeRun({ runID: "1", documentID: "d", status: "unknown" })).toEqual([])
   })

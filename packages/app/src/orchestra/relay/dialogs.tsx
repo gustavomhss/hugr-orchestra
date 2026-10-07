@@ -1,5 +1,6 @@
-import { createResource, createSignal, For, type JSX, Show } from "solid-js"
-import { RelayError, type RelayDocument, type RelayRun } from "./client"
+import { createSignal, For, type JSX, Show } from "solid-js"
+import { RelayError, type RelayDocument } from "./client"
+import type { RelayRun } from "./runs"
 import { checkParams } from "./format"
 import { checkCount, type Flow, flowFromDocument, readChecklist, retryBudget, steps } from "./graph"
 import { phaseNames } from "./parts"
@@ -137,15 +138,8 @@ export function RunDialog(props: {
   const copy = useRelayCopy()
   const action = createAction()
   const [values, setValues] = createSignal<Record<string, string>>({})
-  // Parameters come from the checks of the version that runs, not from the draft.
-  const [published] = createResource(
-    () => props.document.activeVersionId ?? undefined,
-    (version) =>
-      version === props.document.versionId
-        ? props.document
-        : props.source.client.version(props.document.id, version).catch(() => props.document),
-  )
-  const flow = () => flowFromDocument(published() ?? props.document, "workflow")
+  // Parameters come from the checks of the version that runs (the published one the view carries), not the draft.
+  const flow = () => flowFromDocument(props.document.activeVersion ?? props.document, "workflow")
   const params = () =>
     checkParams(
       steps(flow()).flatMap((node) =>
@@ -159,7 +153,7 @@ export function RunDialog(props: {
       if (!version) throw new RelayError(409, copy.t("orchestra.workflows.run.publishFirst"))
       const entries = Object.entries(values()).filter(([, value]) => value.trim())
       props.onStarted(
-        await props.source.client.start({
+        await props.source.runClient.start({
           documentID: props.document.id,
           version,
           params: Object.fromEntries(entries),

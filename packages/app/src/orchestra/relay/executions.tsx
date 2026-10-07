@@ -1,5 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
-import type { RelayDocument, RelayRun, RelayRunStatus } from "./client"
+import type { RelayDocument } from "./client"
+import type { RelayRun, RelayRunStatus } from "./runs"
 import { newestFirst, RUN_TONE, runHandle, span } from "./format"
 import type { Flow } from "./graph"
 import { stateLabel } from "./parts"

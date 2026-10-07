@@ -5,7 +5,8 @@ import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
 import { Canvas, type CanvasApi, type NodeOverlay } from "./canvas"
 import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
-import type { RelayDecision, RelayDocument, RelayInstall, RelayKind, RelayRun } from "./client"
+import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
+import type { RelayRun } from "./runs"
 import { HookDetails, hookOperations, triggerName } from "./details-hook"
 import { WorkflowDetails } from "./details-workflow"
 import type { SaveState } from "./editor-head"
@@ -27,7 +28,7 @@ import {
   START,
   TRIGGER,
 } from "./graph"
-import { addNode, defaultAnchor, groupSelection } from "./insert"
+import { addAlternative, addNode, defaultAnchor, groupSelection } from "./insert"
 import { issueText, stateLabel } from "./parts"
 import { layerBase, relayPath } from "./route"
 import { Ic, useRelayCopy } from "./ui"
@@ -52,6 +53,7 @@ type Props = EditorProps & {
   onKeys: () => void
   onTest: () => void
   onClearTest: () => void
+  onUpdateInstall: (installID: string) => void
 }
 
 // The Editor tab: the canvas with its banner, the add panel and node details, each layer on its own URL.
@@ -313,26 +315,37 @@ export function CanvasTab(props: Props) {
         </div>
       )
     }
-    if (!workflow() && props.installed)
+    if (!workflow() && props.installed) {
+      const installed = props.installed
+      // The install pins a versionId; a later publish leaves it on the earlier one until it is updated.
+      const current = installed.version === props.document.activeVersionId
       return (
-        <div class="wf-banner">
-          <span class="wf-dot good" />
+        <div class="wf-banner" classList={{ warm: !current }}>
+          <span class={`wf-dot ${current ? "good" : "warm"}`} />
           <span>
             {[
-              copy.t("orchestra.hooks.canvas.installed", {
-                profile: props.profile,
-                version: props.installed.version ?? props.document.publishedCounter ?? "",
-              }),
+              current
+                ? copy.t("orchestra.hooks.canvas.installed", {
+                    profile: props.profile,
+                    version: props.document.publishedCounter ?? "",
+                  })
+                : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
               props.decision
-                ? `${props.decision.outcome} ${copy.when(props.decision.at)}`
+                ? `${copy.t(`orchestra.hooks.outcome.${props.decision.outcome}`)} ${copy.when(decisionTime(props.decision))}`
                 : copy.t("orchestra.hooks.canvas.notFired"),
             ].join(" · ")}
           </span>
+          <Show when={!current && props.document.activeVersionId}>
+            <button type="button" class="mx-btn primary" onClick={() => props.onUpdateInstall(installed.installID)}>
+              {copy.t("orchestra.hooks.canvas.update")}
+            </button>
+          </Show>
           <button type="button" class="mx-btn" onClick={() => props.go(relayPath.history("hook", props.document.id))}>
             {copy.t("orchestra.hooks.tab.activity")}
           </button>
         </div>
       )
+    }
   }
   const save = () => (
     <span class="wf-save">
@@ -462,6 +475,13 @@ export function CanvasTab(props: Props) {
                 onNav={(id) => props.go(relayPath.node("hook", props.document.id, id), true)}
                 onClose={() => props.close(base())}
                 onTest={props.onTest}
+                onAddCondition={(id) => {
+                  const added = addAlternative(props.flow, id)
+                  if (!added) return
+                  props.edit(added.flow)
+                  props.select([added.id])
+                  props.go(relayPath.node("hook", props.document.id, added.id), true)
+                }}
               />
             }
           >

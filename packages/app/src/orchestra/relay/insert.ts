@@ -127,3 +127,27 @@ export function groupSelection(flow: Flow, selected: string[], name: string) {
   const id = uniqueID(flow, "phase")
   return { flow: addPhase(flow, { id, name, description: "", nodeIds: members }), id }
 }
+
+// Another condition tried when `id` does not match: it takes over the No port and leads to the same Yes step, so two
+// patterns mean either one (a `|` inside a pattern is literal).
+export function addAlternative(flow: Flow, id: string) {
+  const node = nodeOf(flow, id)
+  if (!node || node.type !== CONDITION) return
+  const alternative: FlowNode = {
+    id: uniqueID(flow, "condition"),
+    name: uniqueName(flow, node.name),
+    type: CONDITION,
+    x: node.x,
+    y: node.y + 160,
+    parameters: { field: node.parameters.field ?? "path", pattern: "" },
+  }
+  const yes = flow.edges.find((edge) => edge.from === id && edge.port === 0)
+  const no = flow.edges.find((edge) => edge.from === id && edge.port === 1)
+  const edges = [
+    ...flow.edges.filter((edge) => edge !== no),
+    { from: id, to: alternative.id, port: 1 },
+    ...(yes ? [{ from: alternative.id, to: yes.to, port: 0 }] : []),
+    ...(no ? [{ from: alternative.id, to: no.to, port: 1 }] : []),
+  ]
+  return { flow: { ...flow, nodes: [...flow.nodes, alternative], edges }, id: alternative.id }
+}

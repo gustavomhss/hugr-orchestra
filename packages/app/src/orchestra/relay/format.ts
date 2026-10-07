@@ -1,4 +1,4 @@
-import type { RelayRun, RelayRunStatus, RelayStepStatus } from "./client"
+import type { RelayRun, RelayRunStatus, RelayStepStatus } from "./runs"
 
 // Pure display helpers; the components turn their keys into copy.
 
