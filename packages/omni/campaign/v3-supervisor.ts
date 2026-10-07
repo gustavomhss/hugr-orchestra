@@ -39,6 +39,7 @@ export async function run() {
     permission: { "*": "allow", bash: "allow", external_directory: "allow" },
     model: "test/test-model",
     provider: provider(llm.url),
+    agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
   }
   const env = { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) }
   const nonces = Object.values(trees).map((t) => t.nonce)
@@ -49,9 +50,11 @@ export async function run() {
   }
   try {
     const host = await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, scratch.project)
+    step(`host ${host.pid}; home ${scratch.home}; nonces ${JSON.stringify(nonces)}`)
     const api = client(host.url, scratch.project)
     const session = await api.post("/session", {})
     await api.post(`/session/${session.id}/prompt_async`, {
+      agent: "maestro",
       model: { providerID: "test", modelID: "test-model" },
       parts: [{ type: "text", text: "Run the campaign tree." }],
     })
@@ -64,8 +67,8 @@ export async function run() {
     const control = { bash: supervised(trees.bash.nonce), pty: supervised(trees.pty.nonce) }
     const supervisors = supervisorsOf([host.pid]).map((row) => row.pid)
     step(`trees live; supervised ${JSON.stringify(control)}; supervisors of ${host.pid}: ${supervisors.join(",")}`)
-    if (supervisors.length === 0) throw new Error("no supervisor found under the server")
-    for (const pid of supervisors) kill9(pid)
+    if (!control.bash || !control.pty || supervisors.length === 0) throw new Error("positive control failed before supervisor kill")
+    for (const pid of supervisors) if (!kill9(pid)) throw new Error(`could not kill supervisor ${pid}`)
     const killed = Date.now()
     step(`kill -9 supervisor(s) ${supervisors.join(",")}`)
     await sleep(8_000)
@@ -120,6 +123,7 @@ export async function run() {
         serverAlive &&
         recovered.ok &&
         newSupervised &&
+        fresh.some((pid) => !supervisors.includes(pid)) &&
         afterHost.after === 0,
       steps,
     })

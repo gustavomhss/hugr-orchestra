@@ -8,7 +8,7 @@
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, writeFileSync, appendFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync, appendFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { alive, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
@@ -54,11 +54,12 @@ export function isolated(name: string, config: Record<string, unknown>) {
   const home = realpathSync(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
   const project = path.join(home, "project")
   mkdirSync(project, { recursive: true })
-  spawnSync("git", ["init", "-q"], { cwd: project })
+  const git = spawnSync("git", ["init", "-q"], { cwd: project })
+  if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)
   writeFileSync(path.join(project, "a.ts"), "export const a = 1\n")
   const env: Record<string, string> = {}
   for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined && !key.toUpperCase().startsWith("HUGR_OMNI_") && !key.startsWith("OPENCODE_")) env[key] = value
+    if (value !== undefined && !/^(HUGR_|OPENCODE_|ORCHESTRA_|ANTHROPIC_|OPENAI_|AWS_|AZURE_|GOOGLE_|GEMINI_|GITHUB_|GH_|BUN_OPTIONS|NODE_OPTIONS|SSH_AUTH_SOCK)/i.test(key) && !/(TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)/i.test(key)) env[key] = value
   Object.assign(env, {
     OPENCODE_TEST_HOME: home,
     HOME: home,
@@ -67,13 +68,15 @@ export function isolated(name: string, config: Record<string, unknown>) {
     XDG_DATA_HOME: path.join(home, ".local/share"),
     XDG_STATE_HOME: path.join(home, ".local/state"),
     XDG_CACHE_HOME: path.join(home, ".cache"),
-    OPENCODE_CONFIG_CONTENT: JSON.stringify(config),
+    OPENCODE_CONFIG_CONTENT: JSON.stringify(config.provider ? { ...config, agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } }, ...(config.agent as Record<string, unknown>) } } : config),
     OPENCODE_DISABLE_PROJECT_CONFIG: "1",
     OPENCODE_PURE: "1",
     OPENCODE_DISABLE_AUTOUPDATE: "1",
     OPENCODE_DISABLE_AUTOCOMPACT: "1",
     OPENCODE_DISABLE_MODELS_FETCH: "1",
     OPENCODE_AUTH_CONTENT: "{}",
+    OPENCODE_DISABLE_CLAUDE_CODE: "1",
+    OPENCODE_DISABLE_EXTERNAL_SKILLS: "1",
     OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
   })
   return { home, project, env }
@@ -130,7 +133,7 @@ export async function fakeLLM(calls: ToolCall[]) {
       const names = (parsed.tools ?? []).map((tool) => tool.function.name)
       if (names.length > 0) offered.push(names)
       const available = calls.filter((call) => names.includes(call.name))
-      const withTools = !issued && available.length > 0
+      const withTools = !issued && calls.length > 0 && available.length === calls.length
       seen.push(withTools ? "tools" : "text")
       if (withTools) issued = true
       response.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache" })
@@ -168,14 +171,25 @@ export async function fakeLLM(calls: ToolCall[]) {
 
 export type Started = { proc: ChildProcess; url: string; pid: number; extra: number[]; out: () => string }
 
+const hosts = new Map<string, Set<ChildProcess>>()
+
+/** Retain handles of only campaign-owned hosts: serve's argv contains no isolated HOME marker. */
+export function own(home: string, proc: ChildProcess) {
+  const entries = hosts.get(home) ?? new Set<ChildProcess>()
+  entries.add(proc)
+  hosts.set(home, entries)
+}
+
 /** Starts `opencode serve` (or another subcommand that prints `listening on http://...`) and waits for its URL. */
 export async function serve(bin: string, args: string[], env: Record<string, string>, cwd: string): Promise<Started> {
+  if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
+  own(env.OPENCODE_TEST_HOME!, proc)
   let out = ""
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
   const url = await until(120_000, `${path.basename(bin)} ${args[0]} to listen`, () => {
-    if (proc.exitCode !== null) throw new Error(`exited ${proc.exitCode} before listening: ${out.slice(-2000)}`)
+    if (proc.exitCode !== null || proc.signalCode !== null) throw new Error(`exited ${proc.exitCode ?? proc.signalCode} before listening: ${out.slice(-2000)}`)
     return out.match(/listening on (http:\/\/\S+)/)?.[1]
   })
   return { proc, url, pid: proc.pid!, extra: [] as number[], out: () => out }
@@ -186,6 +200,7 @@ export function client(url: string, directory: string) {
   const call = async (method: string, route: string, body?: unknown) => {
     const response = await fetch(new URL(route, url), {
       method,
+      signal: AbortSignal.timeout(120_000),
       headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(directory) },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
@@ -224,14 +239,18 @@ export function table() {
       ],
       { encoding: "utf8", windowsHide: true, maxBuffer: 64 * 1024 * 1024 },
     )
-    const rows = JSON.parse(out.stdout || "[]") as { ProcessId: number; ParentProcessId: number; CommandLine: string | null }[]
-    return rows.map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine ?? "" }))
+    if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
+    const rows = JSON.parse(out.stdout) as { ProcessId: number; ParentProcessId: number; CommandLine: string | null }[]
+    if (!Array.isArray(rows) || rows.length === 0) throw new Error("Get-CimInstance returned no process table")
+    return rows.filter((row) => row.ProcessId !== out.pid).map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine ?? "" }))
   }
-  return spawnSync("ps", ["-A", "-ww", "-o", "pid=,ppid=,args="], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
-    .stdout.split("\n")
+  const out = spawnSync("ps", process.platform === "darwin" ? ["-axww", "-o", "pid=,ppid=,args="] : ["-eww", "-o", "pid=,ppid=,args="], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+  if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
+  return out.stdout.split("\n")
     .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/))
     .filter((match) => match !== null)
     .map((match) => ({ pid: Number(match[1]), parent: Number(match[2]), args: match[3]! }))
+    .filter((row) => row.pid !== out.pid)
 }
 
 const SUPERVISOR = /(^|[\\/"])hugr-omni-supervisor(\.exe)?("|\s|$)/
@@ -271,18 +290,23 @@ export function kill9(pid: number) {
 
 /** Last resort cleanup: kill every process that mentions the marker, then reap recorded trees. */
 export async function cleanup(marker: string, nonces: string[]) {
+  const owned = [...(hosts.get(marker) ?? [])]
+  for (const proc of owned) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
   for (const row of mentioning(marker)) kill9(row.pid)
   await Promise.all(nonces.map((nonce) => reap(nonce).catch(() => undefined)))
+  await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
+  hosts.delete(marker)
 }
 
 /** Counts the nonce trees still alive: records and process-table sweep, the max of both. */
 export async function remaining(nonce: string) {
-  return Math.max(await alive(nonce), (await sweep(nonce)).length)
+  return Math.max(await alive(nonce), (await sweep(nonce)).length, mentioning(nonce).length)
 }
 
 /** Prints the verdict line and appends it to logs/<scenario>.jsonl. */
-export function verdict(scenario: string, result: Record<string, unknown>) {
-  const line = { scenario, os: `${process.platform}-${process.arch}`, at: new Date().toISOString(), load: load(), ...result }
+export function verdict<T extends Record<string, unknown>>(scenario: string, result: T) {
+  const provenance = path.join(LOGS, "build-provenance.json")
+  const line = { scenario, os: `${process.platform}-${process.arch}`, at: new Date().toISOString(), load: load(), command: process.argv, cliBuildSHA: process.env.OMNI_CAMPAIGN_BUILD_SHA ?? (!process.env.OMNI_CAMPAIGN_CLI && existsSync(provenance) ? JSON.parse(readFileSync(provenance, "utf8")).sha : undefined), ...result }
   mkdirSync(LOGS, { recursive: true })
   appendFileSync(path.join(LOGS, `${scenario}.jsonl`), JSON.stringify(line) + "\n")
   console.log(`CAMPAIGN_VERDICT ${JSON.stringify(line)}`)

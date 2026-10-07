@@ -21,6 +21,7 @@ import {
   isolated,
   kill9,
   mentioning,
+  own,
   provider,
   remaining,
   serve,
@@ -37,6 +38,7 @@ import {
 const KPI_MS = 8_000
 
 export async function run(target: "serve" | "tui" | "hold" = "serve") {
+  if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   if (target === "hold") return hold()
   return host(target)
 }
@@ -45,6 +47,7 @@ async function hold() {
   const bin = cli()
   const { env, home, project } = isolated("v2-hold", {})
   const proc = spawn(bin, ["debug", "omni", "--hold"], { env, cwd: project, stdio: ["ignore", "pipe", "pipe"] })
+  own(home, proc)
   let out = ""
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
@@ -70,7 +73,8 @@ async function hold() {
 }
 
 async function host(target: "serve" | "tui") {
-  if (target === "tui" && win) return verdict("v2-tui", { target, pass: null, note: "not run: the harness hosts the TUI in a python pty (Unix only)" })
+  if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
+  if (target === "tui" && win) return verdict("v2-tui", { target, pass: false, error: "Windows TUI requires a real console harness; python pty is Unix-only" })
   const bin = cli()
   const scratch = isolated(`v2-${target}`, {})
   const trees = {
@@ -91,6 +95,7 @@ async function host(target: "serve" | "tui") {
     permission: { "*": "allow", bash: "allow", edit: "allow", external_directory: "allow" },
     model: "test/test-model",
     provider: provider(llm.url),
+    agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
     lsp: {
       typescript: { disabled: true },
       deno: { disabled: true },
@@ -122,6 +127,7 @@ async function host(target: "serve" | "tui") {
     const session = await api.post("/session", {})
     step(`session ${session.id}`)
     await api.post(`/session/${session.id}/prompt_async`, {
+      agent: "maestro",
       model: { providerID: "test", modelID: "test-model" },
       parts: [{ type: "text", text: "Run the campaign tree and write b.ts." }],
     })
@@ -156,6 +162,7 @@ async function host(target: "serve" | "tui") {
         lsp: (await sweep(lspNonce)).length,
         mcpServer: (await sweep(mcpNonce)).length,
         llm: llm.seen,
+        offered: llm.offered,
       }
       throw new Error(`${error}; state ${JSON.stringify(state)}; host output: ${started.out().slice(-3000)}`)
     })
@@ -168,7 +175,8 @@ async function host(target: "serve" | "tui") {
     const supervisors = supervisorsOf([started.pid, ...started.extra]).map((row) => row.pid)
     step(`positive control (supervisor above each): ${JSON.stringify(control)}; supervisors ${supervisors.join(",")}`)
 
-    kill9(started.pid)
+    if (!Object.values(control).every(Boolean) || supervisors.length === 0) throw new Error("positive control failed before host kill")
+    if (!kill9(started.pid)) throw new Error(`could not kill host ${started.pid}`)
     const killed = Date.now()
     step(`kill -9 ${started.pid}`)
     let zeroAt: number | undefined
@@ -200,6 +208,7 @@ async function host(target: "serve" | "tui") {
       zeroAtMs: zeroAt ?? null,
       leftovers,
       llm: llm.seen,
+      offered: llm.offered,
       pass: Object.values(control).every(Boolean) && total === 0 && leftovers.length === 0,
       steps,
     })
@@ -221,19 +230,20 @@ async function tui(bin: string, env: Record<string, string>, project: string) {
     cwd: project,
     stdio: ["pipe", "pipe", "pipe"],
   })
+  own(env.OPENCODE_TEST_HOME!, host)
   let out = ""
   host.stdout!.on("data", (chunk) => (out += chunk))
   host.stderr!.on("data", (chunk) => (out += chunk))
   const url = `http://127.0.0.1:${port}`
   await until(120_000, "the TUI's server", async () =>
-    fetch(new URL("/global/health", url))
-      .then((response) => (response.status < 500 ? true : undefined))
+    fetch(new URL("/global/health", url), { signal: AbortSignal.timeout(2000) })
+      .then(async (response) => (response.ok && (await response.json()).healthy === true ? true : undefined))
       .catch(() => undefined),
   ).catch((error) => {
     throw new Error(`${error}; TUI output: ${out.slice(-2000)}`)
   })
   const pid = await until(10_000, "the TUI pid", () =>
-    table().find((row) => row.args.includes(`--port ${port}`) && row.args.startsWith(bin) && row.pid !== host.pid)?.pid,
+    table().find((row) => row.parent === host.pid && row.args.includes(`--port ${port}`) && row.args.startsWith(bin))?.pid,
   )
   return { proc: host, url, pid, extra: [] as number[], out: () => out }
 }
