@@ -20,7 +20,7 @@ export const debugRead = (args: { params?: string; metaOnly?: boolean }): Effect
         sessionID: session.id,
         messageID,
         callID: "read-bench",
-        agent: "build",
+        agent: "maestro",
         abort: new AbortController().signal,
         messages: [],
         metadata: (val) => Effect.void,

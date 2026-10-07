@@ -3,6 +3,7 @@ import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import path from "path"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { WriteRoots } from "@/maestro/write-roots"
 import { AppProcess } from "@opencode-ai/core/process"
 import { Global } from "@opencode-ai/core/global"
 import { InstanceStore } from "@/project/instance-store"
@@ -21,6 +22,7 @@ export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
 import { commandSource } from "@/continuity/alias"
+import { hardLimit, tokenCount } from "@/continuity/trigger"
 import { SystemPrompt } from "./system"
 import { Instruction } from "./instruction"
 import { Plugin } from "../plugin"
@@ -63,7 +65,6 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
-import { SessionReminders } from "./reminders"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@opencode-ai/llm"
 
@@ -699,6 +700,8 @@ const layer = Layer.effect(
         ...part,
         id: part.id ? PartID.make(part.id) : PartID.ascending(),
       })
+      // Briefs attach files the same way, so only a top-level session's attachments come from the owner.
+      const sender = current.parentID ? "Your caller" : "The owner"
 
       const resolvePart: (part: PromptInput["parts"][number]) => Effect.Effect<Draft<SessionV1.Part>[]> = Effect.fn(
         "SessionPrompt.resolveUserPart",
@@ -796,7 +799,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify({ filePath: part.filename })}`,
+                    text: `${sender} attached ${part.filename ?? "a text file"}. Its content as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -862,7 +865,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                   },
                 ]
                 const exit = yield* provider.getModel(info.model.providerID, info.model.modelID).pipe(
@@ -904,7 +907,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                    text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                   })
                 }
                 return pieces
@@ -927,7 +930,7 @@ const layer = Layer.effect(
                       sessionID: input.sessionID,
                       type: "text",
                       synthetic: true,
-                      text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                      text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                     },
                   ]
                 }
@@ -937,7 +940,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached the directory ${filepath}. Its listing as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -956,7 +959,7 @@ const layer = Layer.effect(
                   sessionID: input.sessionID,
                   type: "text",
                   synthetic: true,
-                  text: `Called the Read tool with the following input: {"filePath":"${filepath}"}`,
+                  text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                 },
                 {
                   id: part.id,
@@ -1063,13 +1066,12 @@ const layer = Layer.effect(
       const message = yield* createUserMessage(input)
       yield* sessions.touch(input.sessionID)
 
-      const permissions: PermissionV1.Rule[] = []
-      for (const [t, enabled] of Object.entries(input.tools ?? {})) {
-        permissions.push({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" })
-      }
+      const permissions = Object.entries(input.tools ?? {}).map(
+        ([t, enabled]): PermissionV1.Rule => ({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" }),
+      )
       if (permissions.length > 0) {
-        session.permission = permissions
-        yield* sessions.setPermission({ sessionID: session.id, permission: permissions })
+        session.permission = WriteRoots.keep(session.permission, permissions)
+        yield* sessions.setPermission({ sessionID: session.id, permission: session.permission })
       }
 
       if (input.noReply === true) return message
@@ -1096,7 +1098,7 @@ const layer = Layer.effect(
           yield* status.set(sessionID, { type: "busy" })
           yield* Effect.logInfo("loop", { "session.id": sessionID, step })
 
-          let msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
+          const msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
             Effect.provideService(Database.Service, database),
           )
 
@@ -1154,6 +1156,7 @@ const layer = Layer.effect(
             continue
           }
 
+          // Only tasks stored before continuity replaced the legacy compaction reach this; nothing creates them now.
           if (task?.type === "compaction") {
             const result = yield* compaction.process({
               messages: msgs,
@@ -1166,14 +1169,9 @@ const layer = Layer.effect(
             continue
           }
 
-          if (
-            lastFinished &&
-            lastFinished.summary !== true &&
-            (yield* compaction.isOverflow({ tokens: lastFinished.tokens, model }))
-          ) {
-            yield* compaction.create({ sessionID, agent: lastUser.agent, model: lastUser.model, auto: true })
-            continue
-          }
+          // The last 10% of the window is reserved: past it, maintenance finishes before the next request.
+          if (lastFinished && lastFinished.summary !== true && tokenCount(lastFinished.tokens) >= hardLimit(model))
+            yield* continuity.compact({ sessionID, canRecall })
 
           const agent = yield* agents.get(lastUser.agent)
           if (!agent) {
@@ -1185,11 +1183,6 @@ const layer = Layer.effect(
           }
           const maxSteps = agent.steps ?? Infinity
           const isLastStep = step >= maxSteps
-          msgs = yield* SessionReminders.apply({ messages: msgs, agent, session }).pipe(
-            Effect.provideService(RuntimeFlags.Service, flags),
-            Effect.provideService(FSUtil.Service, fsys),
-            Effect.provideService(Session.Service, sessions),
-          )
 
           const msg: SessionV1.Assistant = {
             id: MessageID.ascending(),
@@ -1360,15 +1353,19 @@ const layer = Layer.effect(
               yield* continuity.start({ sessionID, message: handle.message, canRecall })
               return "break" as const
             }
+            // A provider overflow (no finish) forces a pass; a step past the window's input limit only checks it.
             if (result === "compact") {
-              yield* compaction.create({
-                sessionID,
-                agent: lastUser.agent,
-                model: lastUser.model,
-                auto: true,
-                overflow: !handle.message.finish,
-              })
-            }
+              const shrunk = yield* continuity.compact({ sessionID, canRecall, force: !handle.message.finish })
+              // Retrying an overflow that maintenance could not shrink would repeat it forever.
+              if (!handle.message.finish && shrunk !== "applied" && shrunk !== "masked") {
+                const message = "Session too large: context maintenance could not bring it under the model limit"
+                handle.message.error = new SessionV1.ContextOverflowError({ message }).toObject()
+                handle.message.finish = "error"
+                yield* sessions.updateMessage(handle.message)
+                yield* events.publish(Session.Event.Error, { sessionID, error: handle.message.error })
+                return "break" as const
+              }
+            } else if (!handle.message.error) yield* continuity.start({ sessionID, message: handle.message, canRecall })
             return "continue" as const
           }).pipe(
             Effect.ensuring(instruction.clear(handle.message.id)),
@@ -1377,8 +1374,6 @@ const layer = Layer.effect(
           if (outcome === "break") break
           continue
         }
-
-        yield* compaction.prune({ sessionID }).pipe(Effect.ignore, Effect.forkIn(scope))
 
         return yield* lastAssistant(sessionID)
       },

@@ -88,6 +88,11 @@ export async function spawnLocalServer(
       ...createSidecarEnv(),
       ...OmniHost.sidecarEnv(),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
+      // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
+      // repository copy, since the bundled server cannot locate it from its own path.
+      ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
+        ? join(process.resourcesPath, "playbooks")
+        : resolve(outDir, "../../../opencode/playbooks"),
     },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",

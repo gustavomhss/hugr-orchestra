@@ -7,10 +7,11 @@ import { Global } from "@opencode-ai/core/global"
 import { InstallationVersion } from "@opencode-ai/core/installation/version"
 
 // The authored skill tree (F6.1). Running from source reads it in place.
-export const source = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
+// `import.meta.dirname` works under Bun and the desktop Node sidecar (`import.meta.dir` is Bun-only).
+export const source = path.resolve(import.meta.dirname, "../../../backend-specialist/skills")
 
-// Compiled builds embed the tree as a generated file map, tree-relative path -> embedded file (script/build.ts).
-// The embed lives on Bun's virtual filesystem, so it is copied to a real directory (F6.12) that the read tool and
+// Compiled builds (Bun binary and desktop Node sidecar) embed the tree as a generated module mapping each tree-relative
+// path to its text (script/backend-skills.ts). It is copied to a real directory (F6.12) that the read tool and
 // sandboxed shells can reach. That directory is under the cache: ToolSafety's sandbox denies reads under data/state.
 const embedded = await import(
   // @ts-expect-error - generated file at build time
@@ -21,22 +22,28 @@ const embedded = await import(
 
 export const root = embedded ? await extract(embedded, Global.Path.cache, InstallationVersion) : source
 
-// Copies `files` into a directory keyed by the installation version, unless it already holds exactly those bytes.
-// Versions never share a copy, so installs of different versions can run side by side. A partial, stale or
-// tampered copy is replaced whole: the tree is written to a sibling temp directory and renamed into place.
+// Copies `files` into a directory keyed `<version>-<digest12>` by the installation version and the embedded content
+// digest (the F6.12 manifest), unless it already holds exactly those bytes. Two builds never share a copy, even with the
+// same version string (unversioned builds are all "local"), so no install replaces or removes a copy another process
+// is reading. Old copies are kept: a rollback re-selects its own. Only a partial or tampered copy of this very content
+// is replaced whole: the tree is written to a sibling temp directory and renamed into place.
 export async function extract(files: Record<string, string>, cache: string, version: string) {
-  const dir = path.join(cache, "backend-skills", version)
+  const entries = Object.entries(files).map(([file, text]) => [file, new TextEncoder().encode(text)] as const)
+  const expected = digest(entries)
+  const dir = path.join(cache, "backend-skills", `${version}-${expected.slice(0, 12)}`)
   // Windows temp and cache paths can carry 8.3 short names (RUNNER~1); permission checks compare canonical paths, so the
   // root handed to grants and the read tool must be the canonical one.
   const canonical = () => fs.realpath(dir)
-  const entries = await Promise.all(
-    Object.entries(files).map(async ([file, from]) => [file, await Bun.file(from).bytes()] as const),
-  )
-  const expected = digest(entries)
   if (digest(await readTree(dir)) === expected) return canonical()
 
   const temp = `${dir}.${randomUUID()}.tmp`
-  await Promise.all(entries.map(([file, bytes]) => Bun.write(path.join(temp, ...file.split("/")), bytes)))
+  await Promise.all(
+    entries.map(async ([file, bytes]) => {
+      const target = path.join(temp, ...file.split("/"))
+      await fs.mkdir(path.dirname(target), { recursive: true })
+      await fs.writeFile(target, bytes)
+    }),
+  )
   await fs.rm(dir, { recursive: true, force: true })
   // A concurrent start may place the same tree first. Its copy is as good as this one.
   await place(temp, dir).catch(async (error) => {
@@ -55,7 +62,7 @@ async function place(from: string, to: string, delays = [50, 100, 200, 400]): Pr
   )
   if (!error) return
   if (!["EPERM", "EACCES", "EBUSY"].includes(error.code ?? "") || delays.length === 0) throw error
-  await Bun.sleep(delays[0]!)
+  await new Promise((resolve) => setTimeout(resolve, delays[0]))
   return place(from, to, delays.slice(1))
 }
 
@@ -68,7 +75,7 @@ async function readTree(dir: string) {
       .map(async (entry) => {
         const file = path.relative(dir, path.join(entry.parentPath, entry.name)).split(path.sep).join("/")
         if (!entry.isFile()) return [`${file}\0not-a-file`, new Uint8Array()] as const
-        return [file, await Bun.file(path.join(dir, file)).bytes()] as const
+        return [file, new Uint8Array(await fs.readFile(path.join(dir, file)))] as const
       }),
   )
 }

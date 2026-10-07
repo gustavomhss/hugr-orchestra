@@ -1,13 +1,17 @@
-import { describe, expect, test } from "bun:test"
+import { describe, expect } from "bun:test"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Effect, Layer } from "effect"
 import type { Agent } from "../../src/agent/agent"
 import { NamedError } from "@opencode-ai/core/util/error"
 import { Skill } from "../../src/skill"
 import { Permission } from "../../src/permission"
-import type { Provider } from "../../src/provider/provider"
+import { RuntimeFlags } from "../../src/effect/runtime-flags"
+import { LLMRequestPrep } from "../../src/session/llm/request"
+import { MessageID, SessionID } from "../../src/session/schema"
 import { SystemPrompt } from "../../src/session/system"
 import { MCP } from "../../src/mcp"
+import { ModelV2 } from "@opencode-ai/core/model"
+import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
 
 const skills: Skill.Info[] = [
@@ -36,8 +40,8 @@ const skills: Skill.Info[] = [
   },
 ]
 
-const build: Agent.Info = {
-  name: "build",
+const maestro: Agent.Info = {
+  name: "maestro",
   mode: "primary",
   permission: Permission.fromConfig({ "*": "allow" }),
   options: {},
@@ -85,37 +89,48 @@ const it = testEffect(
   ]),
 )
 
+const prep = testEffect(RuntimeFlags.layer())
+
 describe("session.system", () => {
-  test("selects the Meta prompt for Muse Spark model IDs", () => {
-    for (const id of ["meta/muse-spark-preview", "muse-spark-1.1", "muse-spark-1.2"]) {
-      const prompt = SystemPrompt.provider({ api: { id } } as Provider.Model)[0]
-      expect(prompt).toContain("powered by Muse Spark,")
-      expect(prompt).toContain("using Meta Muse Spark.")
-      expect(prompt).not.toContain("{{MODEL_NAME}}")
-    }
-  })
-
-  test("selects the Meta prompt for Muse Glimmer model IDs", () => {
-    for (const id of ["meta/muse-glimmer", "meta/muse-glimmer-30b", "muse-glimmer-30b"]) {
-      const prompt = SystemPrompt.provider({ api: { id } } as Provider.Model)[0]
-      expect(prompt).toContain("powered by Muse Glimmer,")
-      expect(prompt).toContain("using Meta Muse Glimmer.")
-      expect(prompt).not.toContain("{{MODEL_NAME}}")
-    }
-  })
-
-  test("selects the Kimi prompt for official provider model IDs", () => {
-    for (const providerID of ["kimi-for-coding", "moonshotai", "moonshotai-cn"]) {
-      const prompt = SystemPrompt.provider({ providerID, api: { id: "k3" } } as Provider.Model)[0]
-      expect(prompt).toContain("# Prompt and Tool Use")
-    }
-  })
+  // Models once got one of several upstream provider prompts; now every model gets the same Orchestra prompt.
+  prep.effect("gives an agent without a prompt the Orchestra base prompt, whatever the model", () =>
+    Effect.gen(function* () {
+      const flags = yield* RuntimeFlags.Service
+      for (const id of ["claude-sonnet-4-5", "gpt-5", "gpt-5-codex", "gemini-2.5-pro", "kimi-k2", "muse-spark-1.1"]) {
+        const model = ProviderTest.model({ id: ModelV2.ID.make(id) })
+        const prepared = yield* LLMRequestPrep.prepare({
+          sessionID: "ses_base_prompt",
+          model,
+          agent: { name: "conductor", mode: "primary", permission: [], options: {} },
+          user: {
+            id: MessageID.make("msg_base_prompt"),
+            sessionID: SessionID.make("ses_base_prompt"),
+            role: "user",
+            agent: "conductor",
+            model: { providerID: model.providerID, modelID: model.id },
+            time: { created: 0 },
+          },
+          system: ["Environment"],
+          messages: [],
+          tools: {},
+          provider: ProviderTest.info({}, model),
+          auth: undefined,
+          plugin: { trigger: (_name, _input, output) => Effect.succeed(output), list: () => Effect.succeed([]), init: () => Effect.void },
+          flags,
+          isWorkflow: false,
+        })
+        expect(prepared.system).toEqual([`${SystemPrompt.base}\nEnvironment`])
+      }
+      expect(SystemPrompt.base).toStartWith("You are an agent in HuGR Orchestra")
+      expect(SystemPrompt.base.toLowerCase()).not.toContain("opencode")
+    }),
+  )
 
   it.effect("skills output is sorted by name and stable across calls", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const first = yield* prompt.skills(build)
-      const second = yield* prompt.skills(build)
+      const first = yield* prompt.skills(maestro)
+      const second = yield* prompt.skills(maestro)
       const output = first ?? (yield* Effect.fail(new NamedError.Unknown({ message: "missing skills output" })))
 
       expect(first).toBe(second)
@@ -134,7 +149,7 @@ describe("session.system", () => {
   it.effect("MCP output includes connected server instructions", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const output = yield* prompt.mcp(build)
+      const output = yield* prompt.mcp(maestro)
 
       expect(output).toBe(
         [
@@ -154,7 +169,7 @@ describe("session.system", () => {
   it.effect("MCP output omits servers when all advertised tools are denied", () =>
     Effect.gen(function* () {
       const prompt = yield* SystemPrompt.Service
-      const output = yield* prompt.mcp(build, Permission.fromConfig({ "tool-server_*": "deny" }))
+      const output = yield* prompt.mcp(maestro, Permission.fromConfig({ "tool-server_*": "deny" }))
 
       expect(output).toBe(
         [

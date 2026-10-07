@@ -111,7 +111,6 @@ export const dict = {
   "command.category.terminal": "Терминал",
   "command.category.model": "Модель",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Агент",
   "command.category.permissions": "Разрешения",
   "command.category.workspace": "Рабочее пространство",
   "command.category.settings": "Настройки",
@@ -167,10 +166,6 @@ export const dict = {
   "command.model.choose.description": "Выбрать другую модель",
   "command.mcp.toggle": "Переключить MCP",
   "command.mcp.toggle.description": "Переключить MCP",
-  "command.agent.cycle": "Следующий агент",
-  "command.agent.cycle.description": "Переключиться к следующему агенту",
-  "command.agent.cycle.reverse": "Предыдущий агент",
-  "command.agent.cycle.reverse.description": "Переключиться к предыдущему агенту",
   "command.model.variant.cycle": "Переключить уровень усилий",
   "command.model.variant.cycle.description": "Переключиться к следующему уровню усилий",
   "command.prompt.mode.shell": "Оболочка",
@@ -428,8 +423,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.title": "Неподдерживаемое вложение",
   "prompt.toast.attachmentDuplicate.title": "Этот файл уже загружен",
   "prompt.toast.pasteUnsupported.description": "Здесь можно прикрепить только изображения, PDF или текстовые файлы.",
-  "prompt.toast.modelAgentRequired.title": "Выберите агента и модель",
-  "prompt.toast.modelAgentRequired.description": "Выберите агента и модель перед отправкой запроса.",
+  "prompt.toast.modelRequired.title": "Выберите модель",
+  "prompt.toast.modelRequired.description": "Выберите модель перед отправкой запроса.",
   "prompt.toast.worktreeCreateFailed.title": "Не удалось создать worktree",
   "prompt.toast.sessionCreateFailed.title": "Не удалось создать сессию",
   "prompt.toast.shellSendFailed.title": "Не удалось отправить команду оболочки",
@@ -998,9 +993,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Нижняя навигация",
   "settings.general.row.mobileTitlebarBottom.description":
     "На мобильных устройствах размещать строку заголовка и вкладки сессии внизу экрана",
-  "settings.general.row.showCustomAgents.title": "Выбор агента",
-  "settings.general.row.showCustomAgents.description":
-    "Показывать переключатель агентов в редакторе запросов. Если он скрыт, по умолчанию используется агент Build.",
   "settings.general.row.reasoningSummaries.title": "Показывать сводки рассуждений",
   "settings.general.row.reasoningSummaries.description": "Отображать сводки рассуждений модели в ленте",
 
@@ -1115,7 +1107,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Основные",
   "settings.shortcuts.group.session": "Сессия",
   "settings.shortcuts.group.navigation": "Навигация",
-  "settings.shortcuts.group.modelAndAgent": "Модель и агент",
+  "settings.shortcuts.group.modelAndMcp": "Модель и MCP",
   "settings.shortcuts.group.terminal": "Терминал",
   "settings.shortcuts.group.prompt": "Запрос",
 

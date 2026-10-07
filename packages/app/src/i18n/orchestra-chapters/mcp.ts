@@ -15,7 +15,7 @@ export const MCP_COPY = {
   "orchestra.mcp.enable": "Enable {{name}}",
   "orchestra.mcp.configureTitle": "Configure {{name}}",
   "orchestra.mcp.editSubtitle":
-    "Connect tools to this profile. Saving updates its OpenCode config and restarts its MCP servers.",
+    "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",
   "orchestra.mcp.configUnavailable":
     "Current configuration unavailable from this server. You can remove this server here.",
   "orchestra.mcp.configOutside":
@@ -42,5 +42,5 @@ export const MCP_COPY = {
   "orchestra.mcp.toolsUnsupported": "This server does not report MCP tools.",
   "orchestra.mcp.removeTitle": "Remove this item?",
   "orchestra.mcp.removeSubtitle": "Its configuration is removed from this profile.",
-  "orchestra.mcp.removeNote": "This removes {{name}} from {{profile}}'s OpenCode config.",
+  "orchestra.mcp.removeNote": "This removes {{name}} from {{profile}}'s project config.",
 }

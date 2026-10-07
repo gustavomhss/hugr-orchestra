@@ -39,8 +39,12 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description:
-            "Read a text file or supported image, page through a large UTF-8 text file by line offset, or list a directory page. Relative paths resolve from the current location; absolute paths inside it are accepted, while external absolute paths require external_directory approval.",
+          description: `Read a file, or list a directory.
+
+- A relative \`path\` resolves from the working directory; a path outside it asks the owner first.
+- A text file up to 50 KB comes back whole as \`content\`, without line numbers. A larger file, or a read with \`offset\` or \`limit\`, comes back as a page of at most 2000 lines and 50 KB starting at line \`offset\`, counted from 1, with lines longer than 2000 characters cut. When more remains, \`truncated\` is true and \`next\` is the offset to continue from.
+- A directory lists one level as \`entries\`, directories first and ending in a path separator; \`offset\` and \`limit\` page the entries.
+- JPEG, PNG, GIF and WebP images up to 20 MB come back as attachments. PDFs, archives, Office files, other binary files and text that is not UTF-8 are refused.`,
           input: Input,
           output: Output,
           toModelOutput: ({ input, output }) => {

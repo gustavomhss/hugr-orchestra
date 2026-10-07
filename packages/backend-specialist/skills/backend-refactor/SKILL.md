@@ -32,6 +32,8 @@ Missing context is a `packet` blocker, never permission to look for more files.
 
 Exact invocations of a selected engine live in its recipe; a recipe is used only when the packet selects that tool.
 
+Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+
 ## Common procedure
 
 1. Read the named targets and the supplied context.

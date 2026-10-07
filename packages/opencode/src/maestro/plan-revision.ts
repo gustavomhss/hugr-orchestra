@@ -21,10 +21,15 @@ export type RecordPlanRevisionInput = Omit<
   "id" | "revisionHash" | "createdAt" | "status" | "revision"
 > & { units?: readonly string[] }
 
+// Revision identity hashes the whole input, so in practice this conflict means the admission precondition failed.
 export class PlanRevisionConflictError extends Schema.TaggedErrorClass<PlanRevisionConflictError>()(
   "MaestroPlanRevisionConflict",
   { sessionID: Schema.String, admissionMessageID: Schema.String, methodVersion: Schema.String },
-) {}
+) {
+  override get message() {
+    return `${this._tag}: admission message ${this.admissionMessageID} has no READY_TO_DRAFT admission recorded under admit-request-v1 in this Session. Plan only from the admission message ID of a READY_TO_DRAFT maestro_record_admission result with methodVersion "admit-request-v1".`
+  }
+}
 
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`

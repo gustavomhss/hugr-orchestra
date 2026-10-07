@@ -34,7 +34,7 @@ const read = Effect.fn("ReadFollowupTest.read")(function* (args: Tool.InferParam
   return yield* tool.execute(args, {
     sessionID: SessionID.make("ses_test"),
     messageID: MessageID.make("msg_test"),
-    agent: "build",
+    agent: "maestro",
     abort: AbortSignal.any([]),
     messages: [],
     metadata: () => Effect.void,

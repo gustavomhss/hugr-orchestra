@@ -35,6 +35,7 @@ describe("maestro.work-contract", () => {
       expect(validateWorkContract({ kind, body: contractBody({ omit: "Success Criteria" }) })).toEqual({
         status: "HOLD",
         reasons: ["missing-section"],
+        issues: [{ section: "Success Criteria", reason: "missing-section" }],
       })
     })
 
@@ -42,6 +43,7 @@ describe("maestro.work-contract", () => {
       expect(validateWorkContract({ kind, body: contractBody({ empty: "Definition of Done" }) })).toEqual({
         status: "HOLD",
         reasons: ["empty-section"],
+        issues: [{ section: "Definition of Done", reason: "empty-section" }],
       })
     })
 
@@ -49,6 +51,7 @@ describe("maestro.work-contract", () => {
       expect(validateWorkContract({ kind, body: contractBody({ malformed: "Definition of Done" }) })).toEqual({
         status: "HOLD",
         reasons: ["malformed-heading"],
+        issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
       })
     })
 
@@ -57,6 +60,7 @@ describe("maestro.work-contract", () => {
       expect(validateWorkContract({ kind, body })).toEqual({
         status: "HOLD",
         reasons: ["duplicate-section"],
+        issues: [{ section: "Definition of Done", reason: "duplicate-section" }],
       })
     })
   }
@@ -65,10 +69,12 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "feature", body: contractBody() })).toEqual({
       status: "HOLD",
       reasons: ["unsupported-kind"],
+      issues: [],
     })
     expect(validateWorkContract({ kind: "issue", body: null })).toEqual({
       status: "HOLD",
       reasons: ["malformed-heading"],
+      issues: [],
     })
   })
 
@@ -100,6 +106,7 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "issue", body })).toEqual({
       status: "HOLD",
       reasons: ["malformed-heading"],
+      issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
     })
   })
 
@@ -108,6 +115,7 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "issue", body })).toEqual({
       status: "HOLD",
       reasons: ["malformed-heading"],
+      issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
     })
   })
 
@@ -116,6 +124,7 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "issue", body })).toEqual({
       status: "HOLD",
       reasons: ["malformed-heading"],
+      issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
     })
   })
 
@@ -141,6 +150,7 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "issue", body })).toEqual({
       status: "HOLD",
       reasons: ["malformed-heading"],
+      issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
     })
   })
 
@@ -179,6 +189,12 @@ describe("maestro.work-contract", () => {
     expect(validateWorkContract({ kind: "issue", body })).toEqual({
       status: "HOLD",
       reasons: ["missing-section", "empty-section", "malformed-heading", "duplicate-section"],
+      issues: [
+        { section: "Definition of Done", reason: "duplicate-section" },
+        { section: "Invariants", reason: "empty-section" },
+        { section: "Quality Standards", reason: "malformed-heading" },
+        { section: "Success Criteria", reason: "missing-section" },
+      ],
     })
   })
 
@@ -231,6 +247,7 @@ describe("maestro.work-contract", () => {
       expect(validateWorkContract({ kind: "issue", body })).toEqual({
         status: "HOLD",
         reasons: ["malformed-heading"],
+        issues: [{ section: "Definition of Done", reason: "malformed-heading" }],
       })
     }
   })

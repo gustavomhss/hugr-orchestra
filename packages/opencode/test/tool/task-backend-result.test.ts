@@ -101,7 +101,7 @@ const seed = Effect.fn("TaskBackendResultTest.seed")(function* () {
     id: MessageID.ascending(),
     role: "user",
     sessionID: chat.id,
-    agent: "build",
+    agent: "maestro",
     model: ref,
     time: { created: Date.now() },
   })
@@ -110,8 +110,8 @@ const seed = Effect.fn("TaskBackendResultTest.seed")(function* () {
     role: "assistant",
     parentID: user.id,
     sessionID: chat.id,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     cost: 0,
     path: { cwd: "/tmp", root: "/tmp" },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -180,8 +180,8 @@ const dispatch = Effect.fn("TaskBackendResultTest.dispatch")(function* (
       {
         sessionID: chat.id,
         messageID: assistant.id,
-        agent: options?.caller?.agent ?? "build",
-        agentID: options?.caller?.agentID ?? "build",
+        agent: options?.caller?.agent ?? "maestro",
+        agentID: options?.caller?.agentID ?? "maestro",
         abort: new AbortController().signal,
         extra: { promptOps: options?.prompt ? { ...promptOps, prompt: options.prompt } : promptOps },
         messages: [],
@@ -254,7 +254,9 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
 // No writePaths in these dispatches: the host binds a read-only backend child and reports it, with the shell fact this
 // host gives a child that ran no command.
 const shell = await Effect.runPromise(ToolSafetySandbox.status())
-const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...shell }
+// Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
+const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
+const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...host, ...shell }
 
 describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
@@ -272,6 +274,7 @@ describe("tool.task backend-result", () => {
         nextActions: [],
         terminal: { reason: "ended" },
         writeRoots: [],
+        ...host,
         ...shell,
       })
     }),
@@ -466,6 +469,7 @@ describe("tool.task backend-result", () => {
         ...card,
         terminal: { reason: "ended" },
         writeRoots: [],
+        ...host,
         ...shell,
       })
     }),

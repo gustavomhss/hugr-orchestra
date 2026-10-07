@@ -11,7 +11,7 @@ import { Effect, Stream } from "effect"
 import type { LLM } from "@/session/llm"
 import { Token } from "@/util/token"
 
-export const CAP = 1_800_000
+export const CAP = Number(process.env.BENCH_CAP ?? 1_800_000)
 export type Transport = "dry" | "file" | "api"
 export type Call = { label: string; text: string; usage: unknown; estimate: number }
 
@@ -22,8 +22,8 @@ export function create(input: { dir: string; exchange: string; ledger: string; v
   const read = (file: string) => existsSync(file)
     ? readFileSync(file, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line) as { label: string; total: number }) : []
   const entries = () => read(ledger)
-  // The cap covers every seed: seed 1's ledger.jsonl plus each ledger-seed-N.jsonl.
-  const spent = () => readdirSync(input.dir).filter((name) => /^ledger(-seed-[0-9]+)?\.jsonl$/.test(name))
+  // The cap covers every ledger in the directory: every seed, trace and arm.
+  const spent = () => readdirSync(input.dir).filter((name) => /^ledger.*\.jsonl$/.test(name))
     .flatMap((name) => read(path.join(input.dir, name))).reduce((sum, entry) => sum + entry.total, 0)
   // A file reply is re-read on every re-run; it is charged once. An API call is charged every time it runs.
   const charge = (entry: Record<string, unknown> & { label: string; total: number }, once: boolean) => {

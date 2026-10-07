@@ -6,6 +6,7 @@ import { makeLocationNode } from "../effect/app-node"
 import { PermissionV2 } from "../permission"
 import { SessionTodo } from "../session/todo"
 import { ToolRegistry } from "./registry"
+import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
 
@@ -31,8 +32,7 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description:
-            "Create and maintain a structured task list for the current coding session. Use it to track progress during multi-step work and keep todo statuses current.",
+          description: ToolText.todowrite,
           input: Input,
           output: Output,
           toModelOutput: ({ output }) => [{ type: "text", text: toModelOutput(output) }],

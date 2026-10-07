@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test"
 import { card, dialog, directory, openAgents, otherDirectory, serverA, serverB, setup } from "./chapter-agents.fixture"
 
+const maestroOnly = "Only Maestro chats with you; other agents work through it."
+
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
 
@@ -9,7 +11,7 @@ for (const scheme of ["dark", "light"] as const) {
     await setup(page, { scheme, models: true })
     await openAgents(page)
     const roster = page.getByRole("list", { name: "Configured agents" })
-    await expect(roster.getByRole("listitem")).toHaveCount(4)
+    await expect(roster.getByRole("listitem")).toHaveCount(5)
     await expect(roster).not.toContainText("secret")
     await expect(page.locator(".orchestra-agents").getByRole("heading", { level: 1 })).toHaveText(
       "Who is doingthe work.",
@@ -17,7 +19,8 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(page.getByRole("button", { name: "Create agent", exact: true })).toBeEnabled()
     const plan = card(page, "plan")
     expect.soft(await plan.locator(".agent-role").textContent()).toBe("primary")
-    expect.soft(await plan.locator("p").textContent()).toBe("Plans repository work")
+    // The card's first paragraph is the description; the Maestro-only note sits in its footer.
+    expect.soft(await plan.locator("p").first().textContent()).toBe("Plans repository work")
     await expect(plan.locator(".mx-badge")).toHaveText(["reasoner", "7 steps", "Available"])
     await expect(plan.locator(".mx-badge bdi")).toHaveAttribute("title", "example/reasoner")
     await expect(card(page, "build").locator(".mx-badge")).toHaveText(["Default model", "Unlimited steps", "Available"])
@@ -26,21 +29,22 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(offline.last()).toHaveClass(/\bbad\b/)
     await expect(offline.last()).toHaveAttribute("title", "offline is not connected in this profile.")
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`), fullPage: true })
-    const research = card(page, "research").getByRole("button", { name: "Open Chat", exact: true })
-    await expect(research).toBeDisabled()
-    await expect(research).toHaveAttribute(
-      "title",
-      "Subagents are invoked by another agent and cannot start a chat directly.",
-    )
-    await expect(card(page, "review").getByRole("button", { name: "Open Chat", exact: true })).toBeEnabled()
-    await expect(card(page, "build").getByRole("button", { name: "Configure", exact: true })).toBeEnabled()
+    // Primary, subagent and all-mode agents alike work through Maestro.
+    for (const name of ["plan", "research", "review", "build"]) {
+      await expect(card(page, name).locator(".mx-card-foot")).toContainText(maestroOnly)
+      await expect(card(page, name).getByRole("button", { name: "Open Chat", exact: true })).toHaveCount(0)
+      await expect(card(page, name).getByRole("button", { name: "Configure", exact: true })).toBeEnabled()
+    }
+    const maestro = card(page, "maestro")
+    await expect(maestro.getByRole("button", { name: "Open Chat", exact: true })).toBeEnabled()
+    await expect(maestro).not.toContainText(maestroOnly)
   })
 }
 
 test("Open Chat opens a blank draft with no agent choice for the same profile and sends nothing", async ({ page }) => {
   const mock = await setup(page)
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Open Chat", exact: true }).click()
+  await card(page, "maestro").getByRole("button", { name: "Open Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/, { timeout: 30_000 })
   const draftID = new URL(page.url()).searchParams.get("draftId")
   await expect
@@ -102,12 +106,13 @@ test("ordinary drafts offer no agent choice", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
 })
 
-test("Open Chat does not carry the chosen agent's model into the draft", async ({ page }) => {
+test("Open Chat opens a draft on Maestro's configured model", async ({ page }) => {
   const mock = await setup(page, { models: true })
   await openAgents(page)
-  await card(page, "plan").getByRole("button", { name: "Open Chat", exact: true }).click()
+  await card(page, "maestro").getByRole("button", { name: "Open Chat", exact: true }).click()
   await expect(page).toHaveURL(/\/new-session\?draftId=/)
-  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Builder")
+  // Maestro's model, not the provider default Builder, shows the draft runs on Maestro.
+  await expect(page.locator('[data-action="prompt-model"]')).toContainText("Reasoner")
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
   expect(mock.requests.filter((request) => !["GET", "HEAD", "OPTIONS"].includes(request.method))).toEqual([])
 })
@@ -371,8 +376,56 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
       directory,
     ],
   ])
-  await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("listitem")).toHaveCount(3)
+  await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("listitem")).toHaveCount(4)
   await expect(card(page, "plan")).toHaveCount(0)
+})
+
+test("Maestro cannot be removed or taken out of primary mode; its other fields stay editable", async ({ page }) => {
+  const mock = await setup(page, {
+    models: true,
+    files: {
+      // Edited by hand: the server ignores this mode and `disable` for Maestro, and a save writes it back as primary.
+      maestro: {
+        path: `${directory}/.opencode/agent/maestro.md`,
+        exists: true,
+        revision: "m1",
+        description: "Hand edited",
+        mode: "subagent",
+        disable: true,
+      },
+    },
+  })
+  await openAgents(page)
+  await card(page, "maestro").getByRole("button", { name: "Configure", exact: true }).click()
+  const form = dialog(page)
+  await expect(form.getByLabel("Description")).toHaveValue("Hand edited")
+  const mode = form.getByLabel("Mode", { exact: true })
+  await expect(mode).toBeDisabled()
+  await expect(mode).toHaveValue("primary")
+  await expect(mode).toHaveAccessibleDescription(
+    "Maestro runs every session, so it cannot be removed or taken out of primary mode.",
+  )
+  await expect(form.getByRole("button", { name: "Remove agent", exact: true })).toHaveCount(0)
+
+  await form.getByLabel("Description").fill("Conducts the team")
+  await form.getByLabel("Model", { exact: true }).selectOption("example/builder")
+  await form.getByLabel("Bash", { exact: true }).selectOption("ask")
+  await form.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(form).toHaveCount(0)
+  expect(mock.writes.map((write) => write.body)).toEqual([
+    {
+      mode: "primary",
+      description: "Conducts the team",
+      model: "example/builder",
+      permission: { bash: "ask" },
+      revision: "m1",
+    },
+  ])
+
+  // Every other agent keeps both controls.
+  await card(page, "plan").getByRole("button", { name: "Configure", exact: true }).click()
+  await expect(dialog(page).getByLabel("Mode", { exact: true })).toBeEnabled()
+  await expect(dialog(page).getByRole("button", { name: "Remove agent", exact: true })).toBeVisible()
 })
 
 test("Escape while the file loads closes the dialog and a late answer does not reopen it", async ({ page }) => {

@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/solid-query"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { getFilename } from "@opencode-ai/core/util/path"
 import { Option, Schema } from "effect"
@@ -21,7 +20,6 @@ import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
-import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
 import { displayName, errorMessage } from "@/pages/layout/helpers"
@@ -51,6 +49,8 @@ import "./schedule.css"
 const TICK = 15_000
 // One hung request must not stall the scheduler; the slot claim outlives this (CLAIM_TTL).
 const TIMEOUT = 60_000
+// The user talks only to Maestro, so every scheduled run is a Maestro session, like every chat.
+const AGENT = "maestro"
 const decode = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
 type DialogInput = { type: "edit"; id?: string; resume?: boolean } | { type: "remove"; id: string }
@@ -60,10 +60,8 @@ export default function SchedulePage(props: ChapterPageProps) {
   const language = useLanguage()
   const sdk = useSDK()
   const sync = useSync()
-  const serverSync = useServerSync()
   const global = useGlobal()
   const tabs = useTabs()
-  const agents = useQuery(() => serverSync().queryOptions.agents(pathKey(props.directory)))
   const target = Persist.serverWorkspace(sdk().scope, props.directory, "orchestra.schedule")
   const [saved, setSaved, , ready] = persisted(
     { ...target, migrate: readTasks },
@@ -85,7 +83,6 @@ export default function SchedulePage(props: ChapterPageProps) {
       .find((item) => pathKey(item.worktree) === pathKey(props.directory))
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
-  const choices = createMemo(() => (agents.data ?? []).filter((agent) => agent.mode !== "subagent" && !agent.hidden))
   const cadence = (task: ScheduleTask) => language.t(`orchestra.schedule.cadence.${task.cadence}`)
   const status = (task: ScheduleTask) =>
     language.t(task.enabled ? "orchestra.schedule.status.enabled" : "orchestra.schedule.status.paused")
@@ -93,9 +90,7 @@ export default function SchedulePage(props: ChapterPageProps) {
     const query = state.search.trim().toLowerCase()
     if (!query) return saved.tasks
     return saved.tasks.filter((task) =>
-      [task.name, task.prompt, task.agent, cadence(task), status(task)].some((text) =>
-        text.toLowerCase().includes(query),
-      ),
+      [task.name, task.prompt, cadence(task), status(task)].some((text) => text.toLowerCase().includes(query)),
     )
   })
   const nextFormat = createMemo(
@@ -151,7 +146,7 @@ export default function SchedulePage(props: ChapterPageProps) {
       const v2 = (await sdk().protocol) !== "v1"
       const result = await abortable(
         sdk().api.session.create(
-          { id: ids?.session, agent: live.agent, location: { directory: props.directory } },
+          { id: ids?.session, agent: AGENT, location: { directory: props.directory } },
           { signal },
         ),
         signal,
@@ -164,7 +159,7 @@ export default function SchedulePage(props: ChapterPageProps) {
               sessionID: session.id,
               id: ids?.message ?? Identifier.ascending("message"),
               text: live.prompt,
-              agent: live.agent,
+              agent: AGENT,
             }),
             signal,
           ).then(
@@ -250,17 +245,14 @@ export default function SchedulePage(props: ChapterPageProps) {
   const save = (edit: Extract<Dialog, { type: "edit" }>, form: FormData) => {
     const name = String(form.get("name") ?? "").trim()
     const prompt = String(form.get("prompt") ?? "").trim()
-    const agent = String(form.get("agent") ?? "")
     const next = new Date(String(form.get("date") ?? "")).getTime()
     if (!name) return language.t("orchestra.schedule.error.name")
     if (!prompt) return language.t("orchestra.schedule.error.prompt")
-    if (!agent) return language.t("orchestra.schedule.error.agent")
     if (!Number.isFinite(next)) return language.t("orchestra.schedule.error.date")
     if (next <= Date.now()) return language.t("orchestra.schedule.error.past")
     const fields = {
       name,
       prompt,
-      agent,
       next,
       minute: localMinute(next),
       cadence: CADENCES.find((item) => item === form.get("cadence")) ?? "once",
@@ -331,9 +323,6 @@ export default function SchedulePage(props: ChapterPageProps) {
                   <p>{task.prompt}</p>
                   <div class="mx-meta">
                     <MxBadge>{cadence(task)}</MxBadge>
-                    <MxBadge>
-                      <bdi>{task.agent}</bdi>
-                    </MxBadge>
                     <MxBadge tone={task.enabled ? "good" : undefined}>{status(task)}</MxBadge>
                   </div>
                   <p>
@@ -405,20 +394,6 @@ export default function SchedulePage(props: ChapterPageProps) {
             <Match when={current.type === "edit" && current}>
               {(edit) => {
                 const task = saved.tasks.find((item) => item.id === edit().id)
-                // Keep a saved agent selectable even when the profile no longer lists it.
-                const options = () => {
-                  const names = choices().map((agent) => agent.name)
-                  if (!task || names.includes(task.agent)) return names.map((name) => ({ value: name, label: name }))
-                  return [
-                    ...names.map((name) => ({ value: name, label: name })),
-                    {
-                      value: task.agent,
-                      label: agents.isSuccess
-                        ? language.t("orchestra.schedule.agentMissing", { name: task.agent })
-                        : task.agent,
-                    },
-                  ]
-                }
                 return (
                   <ScheduleDialog
                     title={
@@ -455,33 +430,15 @@ export default function SchedulePage(props: ChapterPageProps) {
                         </select>
                       </label>
                       <label class="mx-field">
-                        <span>{language.t("orchestra.schedule.field.agent")}</span>
-                        <select name="agent">
-                          <Show when={agents.isPending}>
-                            <option value="">{language.t("orchestra.schedule.agentsLoading")}</option>
-                          </Show>
-                          <Show when={agents.isError}>
-                            <option value="">{language.t("orchestra.schedule.agentsError")}</option>
-                          </Show>
-                          <For each={options()}>
-                            {(option) => (
-                              <option value={option.value} selected={option.value === task?.agent}>
-                                {option.label}
-                              </option>
-                            )}
-                          </For>
-                        </select>
+                        <span>{language.t("orchestra.schedule.field.date")}</span>
+                        <input
+                          name="date"
+                          type="datetime-local"
+                          value={localInput(task?.next ?? Date.now() + 3_600_000)}
+                          required
+                        />
                       </label>
                     </div>
-                    <label class="mx-field">
-                      <span>{language.t("orchestra.schedule.field.date")}</span>
-                      <input
-                        name="date"
-                        type="datetime-local"
-                        value={localInput(task?.next ?? Date.now() + 3_600_000)}
-                        required
-                      />
-                    </label>
                     <Show when={task}>
                       {(existing) => (
                         <button

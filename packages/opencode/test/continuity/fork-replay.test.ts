@@ -48,7 +48,7 @@ function execute(request?: ParentRequest) {
     const { artifact } = yield* run(captured(), { provider: provider(), llm: { stream: (input) => {
       requests.push(input)
       return stopped()
-    } } }, host(history), { trigger: 0.7, parent: request })
+    } } }, host(history), { parent: request })
     return { artifact, requests }
   })
 }
@@ -78,12 +78,6 @@ it.live("maintenance replays the parent request prefix and appends one instructi
   expect(sent.tools.read.inputSchema).toBe(source.input.tools.read.inputSchema)
   // The parent request is not mutated by the replay.
   expect(source.input.messages).toHaveLength(1)
-}))
-
-it.live("the parent's system and tool definitions count against the ceiling", () => Effect.gen(function* () {
-  // 0.55 of the 200,000-token window cannot hold a 125,000-token parent overhead: no pass runs.
-  const { requests } = yield* execute(parent({ system: ["x".repeat(500_000)] }))
-  expect(requests).toEqual([])
 }))
 
 test("replayed tools keep their definitions but never execute", async () => {

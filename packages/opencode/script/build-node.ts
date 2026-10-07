@@ -3,6 +3,7 @@
 import { Script } from "@opencode-ai/script"
 import path from "path"
 import { fileURLToPath } from "url"
+import { backendSkillsModule } from "./backend-skills"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -45,10 +46,22 @@ const result = await Bun.build({
   ],
   files: {
     "opencode-web-ui.gen.ts": "",
-    // No embedded backend skill tree under Node: BackendSkillRoot falls back to its source path.
-    "opencode-backend-skills.gen.ts": "export default undefined",
+    "opencode-backend-skills.gen.ts": await backendSkillsModule(path.join(dir, "../backend-specialist/skills")),
   },
 })
+
+// Every generated module must be provided above: an unresolved one survives as a bare import that breaks the desktop
+// bundle (electron-vite) or fails at runtime, and only the Bun build is otherwise exercised.
+const unresolved = (
+  await Promise.all(
+    (await Array.fromAsync(new Bun.Glob("**/*.js").scan({ cwd: "./dist/node" }))).map(async (file) =>
+      [...(await Bun.file(path.join("./dist/node", file)).text()).matchAll(/["']([\w./-]+\.gen\.ts)["']/g)].map(
+        (match) => `${file}: ${match[1]}`,
+      ),
+    ),
+  )
+).flat()
+if (unresolved.length > 0) throw new Error(`Unresolved generated modules in the Node build:\n${unresolved.join("\n")}`)
 
 const external = await Promise.all(
   result.outputs

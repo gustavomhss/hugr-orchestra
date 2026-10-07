@@ -32,6 +32,8 @@ Missing business meaning blocks that part of the work. Missing prewritten SQL do
 
 Exact driver, ORM and runner APIs live in the references your stack selects. Load none because the library merely appears in the repository.
 
+Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
+
 ## Common procedure
 
 1. Establish the assigned boundary: which database, which handle, which transaction, and who commits or rolls back.

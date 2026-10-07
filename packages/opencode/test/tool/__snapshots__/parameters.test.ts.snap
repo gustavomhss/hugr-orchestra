@@ -78,7 +78,7 @@ exports[`tool parameters JSON Schema (wire shape) glob 1`] = `
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
     "path": {
-      "description": "The directory to search in. If not specified, the current working directory will be used. IMPORTANT: Omit this field to use the default directory. DO NOT enter "undefined" or "null" - simply omit it for the default behavior. Must be a valid directory path if provided.",
+      "description": "The directory to search in, absolute or relative to the working directory. Omit it to search the working directory.",
       "type": "string",
     },
     "pattern": {
@@ -102,7 +102,7 @@ exports[`tool parameters JSON Schema (wire shape) grep 1`] = `
       "type": "string",
     },
     "path": {
-      "description": "The directory to search in. Defaults to the current working directory.",
+      "description": "The file or directory to search in. Defaults to the current working directory.",
       "type": "string",
     },
     "pattern": {
@@ -182,14 +182,6 @@ exports[`tool parameters JSON Schema (wire shape) lsp 1`] = `
     "line",
     "character",
   ],
-  "type": "object",
-}
-`;
-
-exports[`tool parameters JSON Schema (wire shape) plan 1`] = `
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "properties": {},
   "type": "object",
 }
 `;
@@ -332,7 +324,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "background": {
-      "description": "Run the agent in the background. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress",
+      "description": "Return at once while the teammate works; its result arrives as a new message when it finishes, so do not wait for it or poll it.",
       "type": "boolean",
     },
     "command": {
@@ -340,7 +332,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "description": {
-      "description": "A short (3-5 words) description of the task",
+      "description": "A 3-5 word label the owner sees for this task",
       "type": "string",
     },
     "governed": {
@@ -395,20 +387,63 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       ],
       "type": "object",
     },
+    "memoryUnit": {
+      "anyOf": [
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "task",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+        {
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "pr",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "kind",
+            "id",
+          ],
+          "type": "object",
+        },
+      ],
+      "description": "Backend specialist resume only: the task or PR unit whose latest admitted Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for other agents.",
+    },
     "model": {
-      "description": "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
+      "description": "The model to run the teammate on, as 'providerID/modelID'. Without it, the teammate runs on its configured model, or else on yours.",
       "type": "string",
     },
     "prompt": {
-      "description": "The task for the agent to perform",
+      "description": "The teammate's whole brief",
       "type": "string",
     },
     "subagent_type": {
-      "description": "The type of specialized agent to use for this task",
+      "description": "The teammate to start, from the list in this tool's description",
       "type": "string",
     },
     "task_id": {
-      "description": "This should only be set if you mean to resume a previous task (you can pass a prior task_id and the task will continue the same subagent session as before instead of creating a fresh one)",
+      "description": "Set only to continue an earlier task: the exact task_id that call returned. The teammate resumes with its earlier context. An unknown id fails.",
       "type": "string",
     },
     "writePaths": {
@@ -546,7 +581,7 @@ exports[`tool parameters JSON Schema (wire shape) write 1`] = `
       "type": "string",
     },
     "filePath": {
-      "description": "The absolute path to the file to write (must be absolute, not relative)",
+      "description": "The path to the file to write, absolute or relative to the working directory",
       "type": "string",
     },
   },

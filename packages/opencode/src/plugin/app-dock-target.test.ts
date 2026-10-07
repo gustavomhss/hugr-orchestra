@@ -74,7 +74,7 @@ test("dock_type target selects only fields with the requested native input capab
   const result = await hooks.tool.dock_type.execute({ target: { name: "search" }, text: "café 漢字 🧪", mode: "keyboard" }, context)
   expect(JSON.parse(String(result))).toEqual({ postcondition: "verified" })
   expect(calls.at(-1)).toEqual({ op: "type", args: { ref: "n:field", text: "café 漢字 🧪", mode: "keyboard" } })
-  expect(await hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("dock_type requires ref or target")
+  expect(await hooks.tool.dock_type.execute({ text: "x" }, context)).toBe("Pass ref")
 })
 
 test("dock_action target prefers the one control whose whole name equals the query among partial matches", async () => {
@@ -274,12 +274,16 @@ test("action-ambiguous names the actions the model can pass", async () => {
 test("native errors that have a known next step carry it as a hint", async () => {
   const unstable = host(() => nativeError("unstable-ref"))
   expect(JSON.parse(String(await unstable.hooks.tool.dock_action.execute({ ref: "n:a", actionID: "a:n:a" }, context))))
-    .toMatchObject({ code: "unstable-ref", hint: 'This control sits below virtual ancestry (lists, trees); retry dock_action with mode: "observed"' })
+    .toMatchObject({ code: "unstable-ref", hint: 'This control sits below virtual ancestry (lists, trees); retry ui_act with mode: "observed"' })
   const plain = host(() => nativeError("capacity"))
   expect(JSON.parse(String(await plain.hooks.tool.dock_action.execute({ ref: "n:a", actionID: "a:n:a" }, context))))
     .not.toHaveProperty("hint")
+  // A browser-scoped caller with no tab can open one itself; it is never sent to the Linux workspace.
   const empty = host((): Reply => ({ ok: false, error: { message: "App Dock has no open tabs" } }))
-  expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toContain("Apps > Linux workspace")
+  expect(String(await empty.hooks.tool.dock_list.execute({}, context))).toBe("App Dock has no open tabs; open one with dock_open")
+  const browser = host(() => ({ ok: true, value: { url: "https://example.com", items: [] } }))
+  expect(JSON.parse(String(await browser.hooks.tool.dock_keyboard.execute({ keys: "ctrl+c" }, context)))).toMatchObject({
+    code: "unsupported-backend", hint: expect.stringContaining("operated by the linux agent; hand that work to it") })
 })
 
 test("a timeout, an app that stops answering or a closed menu tells the model what to do instead of a blind retry", async () => {
@@ -336,7 +340,7 @@ test("dock_find lists a role without a name and dock_action takes an actionID pa
     : page([control("n:a", "Open"), field("n:search", "Search settings"), field("n:filter", "Filter")]))
   expect(JSON.parse(String(await dock.hooks.tool.dock_find.execute({ role: "Entry" }, context))))
     .toMatchObject({ found: 2, items: [{ ref: "n:search" }, { ref: "n:filter" }] })
-  expect(await dock.hooks.tool.dock_find.execute({}, context)).toBe("dock_find needs name, role or both")
+  expect(await dock.hooks.tool.dock_find.execute({}, context)).toBe("Pass name, role or both")
   expect(JSON.parse(String(await dock.hooks.tool.dock_action.execute({ ref: "n:a", action: "a:n:a" }, context))))
     .toEqual({ dispatch: "acknowledged" })
   expect(dock.calls.at(-1)).toEqual({ op: "action", args: { ref: "n:a", actionID: "a:n:a" } })
@@ -357,7 +361,8 @@ test("dock_keyboard sends native key combinations to a ref, a target or the one 
   expect(sent()).toEqual([{ ref: "n:code", keys: "ctrl+comma" }, { ref: "n:a", keys: "Escape" }, { ref: "n:term", keys: "F1" }])
   await dock.hooks.tool.dock_keyboard.execute({ type: "keyDown", key: "Enter" }, context)
   expect(sent().at(-1)).toEqual({ type: "keyDown", key: "Enter" })
-  expect(await dock.hooks.tool.dock_keyboard.execute({ key: "Enter" }, context)).toContain("needs type and key")
+  expect(await dock.hooks.tool.dock_keyboard.execute({ key: "Enter" }, context)).toBe("Pass type and key")
+  expect(await dock.hooks.tool.ui_keys.execute({ ref: "n:a" }, context)).toBe("Pass keys, such as ctrl+comma, or text")
   const idle = host(() => page([frame("n:term", "xterm", false)]))
   expect(JSON.parse(String(await idle.hooks.tool.dock_keyboard.execute({ keys: "ctrl+comma" }, context))))
     .toMatchObject({ code: "target-not-found", outcome: "not-dispatched" })
@@ -399,6 +404,30 @@ test("ui_* tools always address the Linux workspace and expose only native argum
   expect(Object.keys(dock.hooks.tool.ui_keys.args).sort()).toEqual(["keys", "ref", "target", "text"])
 })
 
+test("host agents' dock_* tools declare and describe only browser use; ui_* tools never name dock_* tools", () => {
+  const tools = createAppDockHooks(fakePort().port).tool!
+  const text = (name: string) =>
+    `${tools[name]!.description} ${JSON.stringify(tool.schema.toJSONSchema(tool.schema.object(tools[name]!.args)))}`
+  const keys = (name: string) => Object.keys(tools[name]!.args).sort()
+  // dock_find and dock_action are hidden from every agent (scopeLinuxWorkspace); the other dock_* are the host agents'.
+  const browser = Object.keys(tools).filter((name) => name.startsWith("dock_") && name !== "dock_find" && name !== "dock_action")
+  const linux = Object.keys(tools).filter((name) => name.startsWith("ui_"))
+  expect([browser.length, linux.length]).toEqual([16, 11])
+  for (const name of browser) expect(text(name)).not.toMatch(/ui_|linux|native|\^n:/i)
+  for (const name of linux) expect(text(name)).not.toContain("dock_")
+  expect([keys("dock_read"), keys("dock_type"), keys("dock_keyboard"), keys("dock_click")]).toEqual([
+    ["actionable", "budget", "format", "maxText", "mode", "visible"], ["ref", "text"], ["key", "type"], ["ref", "x", "y"]])
+  expect([keys("ui_find"), keys("ui_act"), keys("ui_type"), keys("ui_pointer")]).toEqual([["includeText", "name", "role"],
+    ["action", "actionID", "mode", "ref", "target"], ["mode", "ref", "target", "text"], ["kind", "ref", "target"]])
+  // Every ui_* ref is a native one; numeric browser refs mean nothing in the Linux workspace.
+  const withRef = linux.filter((name) => "ref" in tools[name]!.args)
+  expect(withRef.sort()).toEqual(["ui_act", "ui_keys", "ui_pointer", "ui_type"])
+  for (const name of withRef) {
+    const ref = tool.schema.object({ ref: tools[name]!.args.ref! })
+    expect([ref.safeParse({ ref: "n:a" }).success, ref.safeParse({ ref: 7 }).success]).toEqual([true, false])
+  }
+})
+
 test("dock_* called by an agent addresses browser tabs; without an agent the legacy envelope is unchanged", async () => {
   const dock = host(() => ({ ok: true, value: [] }))
   await dock.hooks.tool.dock_list.execute({}, { ...context, agent: "build" } as ToolContext)
@@ -410,16 +439,21 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   const config: { permission?: unknown; agent?: Record<string, Record<string, unknown>> } = {
     permission: { "*": "allow", dock: "ask" }, agent: { linux: { model: "opencode/mimo" } } }
   scopeLinuxWorkspace(config)
-  const tools = ["bash", "read", "edit", "webfetch", "task", "todowrite", "linux_exec", "linux_read", "ui_find", "ui_act", "dock_read", "dock_find"]
+  const tools = ["bash", "read", "edit", "webfetch", "task", "todowrite", "linux_exec", "linux_read", "ui_find", "ui_act", "dock_read",
+    "dock_find", "dock_action"]
   const global = Permission.fromConfig(config.permission as PermissionConfig)
   const linux = Permission.merge(global, Permission.fromConfig(config.agent!.linux!.permission as PermissionConfig))
-  expect([...Permission.disabled(tools, global)].sort()).toEqual(["linux_exec", "linux_read", "ui_act", "ui_find"])
+  // dock_find and dock_action only reach native controls, which host agents' browser-scoped calls never do.
+  expect([...Permission.disabled(tools, global)].sort()).toEqual(["dock_action", "dock_find", "linux_exec", "linux_read", "ui_act", "ui_find"])
   expect(tools.filter((tool) => !Permission.disabled(tools, linux).has(tool)).sort())
     .toEqual(["linux_exec", "linux_read", "todowrite", "ui_act", "ui_find"])
   // Execution asks under the plugin permission names; the user's own dock rule still applies inside the scope.
   expect(Permission.evaluate("linux", "exec", linux).action).toBe("allow")
   expect(Permission.evaluate("dock", "action", linux).action).toBe("ask")
   expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
+  // The linux agent speaks as Orchestra's, never as the upstream product.
+  expect(config.agent!.linux!.prompt).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
+  expect(`${config.agent!.linux!.prompt} ${config.agent!.linux!.description}`.toLowerCase()).not.toContain("opencode")
   // Run 13: after the task the model ran its own "behavior proof", drove a native dialog with xdotool and killed VS Code.
   const prompt = String(config.agent!.linux!.prompt)
   for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",
@@ -430,9 +464,12 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
     "with focus true straight into the region holding the focused control",
     "Saved tool output lives outside the workspace, out of your reach."])
     expect(prompt).toContain(rule)
+  // It cannot ask anyone: a blocker ends in a report.
+  expect(prompt).toContain("stop and report exactly what blocked you; you cannot ask the owner")
+  expect(prompt).not.toContain("ask the user")
   const plain: { permission?: unknown } = { permission: "ask" }
   scopeLinuxWorkspace(plain)
-  expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny" })
+  expect(plain.permission).toEqual({ "*": "ask", "linux_*": "deny", "ui_*": "deny", dock_find: "deny", dock_action: "deny" })
 })
 
 test("ui_look maps the workspace, ui_enter zooms into a numbered region and ui_up leaves it, per session", async () => {

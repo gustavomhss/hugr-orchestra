@@ -9,8 +9,8 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(80)
-    expect(EventManifest.Definitions.length).toBe(110)
+    expect(EventManifest.ServerDefinitions.length).toBe(81)
+    expect(EventManifest.Definitions.length).toBe(111)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -23,8 +23,8 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(102)
-    expect(EventManifest.Durable.size).toBe(57)
+    expect(EventManifest.Latest.size).toBe(103)
+    expect(EventManifest.Durable.size).toBe(58)
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -48,6 +48,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.get("maestro.review.received")).toBe(MaestroEvent.Review.ReceivedV2)
     expect(EventManifest.Latest.get("maestro.authorization.granted")).toBe(MaestroEvent.Authorization.Granted)
     expect(EventManifest.Latest.get("maestro.dispatch.reserved")).toBe(MaestroEvent.Dispatch.ReservedV2)
+    expect(EventManifest.Latest.get("maestro.task.bound")).toBe(MaestroEvent.Task.Bound)
     expect(EventManifest.Latest.get("project.updated")).toBe(Project.Event.Updated)
     expect(Project.Event.Definitions).toEqual([Project.Event.Updated])
     expect(FileSystem.Event.Definitions).toEqual([FileSystem.Event.Edited])
@@ -56,7 +57,7 @@ describe("public event manifest", () => {
     expect(Reference.Event.Definitions).toEqual([Reference.Event.Updated])
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(IdeEvent.Definitions).toEqual([IdeEvent.Installed])
-    expect(EventManifest.Definitions.slice(65, 68)).toEqual([
+    expect(EventManifest.Definitions.slice(66, 69)).toEqual([
       SessionV1.Event.PartDelta,
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
@@ -75,5 +76,6 @@ describe("public event manifest", () => {
     expect(EventManifest.Durable.get("maestro.authorization.granted.1")).toBe(MaestroEvent.Authorization.Granted)
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.1")).toBe(MaestroEvent.Dispatch.Reserved)
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.2")).toBe(MaestroEvent.Dispatch.ReservedV2)
+    expect(EventManifest.Durable.get("maestro.task.bound.1")).toBe(MaestroEvent.Task.Bound)
   })
 })

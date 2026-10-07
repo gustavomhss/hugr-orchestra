@@ -70,7 +70,7 @@ export function finding(text = memory, src = ["u1"]) {
 }
 
 export function artifact(): MemoryArtifact {
-  const result = decode({ text: JSON.stringify({ ops: [finding()] }), snapshot: captured(), producerID, host: host(), ceiling: 20_000 })
+  const result = decode({ text: JSON.stringify({ ops: [finding()] }), snapshot: captured(), producerID, host: host(), budget: 20_000 })
   if (!("artifact" in result)) throw new Error(`Expected a validated memory fixture: ${JSON.stringify(result)}`)
   return result.artifact
 }

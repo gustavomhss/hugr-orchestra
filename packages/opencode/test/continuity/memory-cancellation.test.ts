@@ -51,7 +51,7 @@ it.instance("maintenance completion then cancellation await captured AbortContro
     const capture = yield* transport()
     const snapshot = captured()
     const accepted: MemoryArtifact[] = []
-    const job = yield* jobs.start({ type: "context-maintenance", run: run(snapshot, { provider: provider(), llm: capture.llm }, host([...snapshot.head, ...snapshot.tail]), { trigger: 0.7 }).pipe(
+    const job = yield* jobs.start({ type: "context-maintenance", run: run(snapshot, { provider: provider(), llm: capture.llm }, host([...snapshot.head, ...snapshot.tail])).pipe(
       Effect.map(({ artifact }) => {
         if (artifact) accepted.push(artifact)
         return artifact ? "applied" : "discarded"

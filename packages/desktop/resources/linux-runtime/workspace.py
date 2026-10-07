@@ -42,6 +42,10 @@ RENDERER_SWITCH = "--force-renderer-accessibility"
 # Files every Chromium build ships next to its binary (Electron apps, Chrome, Chromium); wrapper scripts that live
 # elsewhere are not recognised. VS Code-family editors also turn renderer accessibility on through EDITOR_DEFAULTS.
 CHROMIUM_FILES = ("resources.pak", "v8_context_snapshot.bin", "snapshot_blob.bin")
+# Every launched app and the children it starts carry this variable; `remember` finds open apps by it.
+APP_MARKER = "ORCHESTRA_APP_ID"
+OPEN_APPS_LIMIT = 16
+OPEN_APPS_BYTES = 8192
 
 
 class SessionError(RuntimeError):
@@ -491,6 +495,61 @@ def applications():
     }
 
 
+def launch_app(app_id, environment, installed):
+    from gi.repository import Gio
+
+    app = installed.get(app_id)
+    if app is None:
+        raise RuntimeError("failed")
+    seed_editor_accessibility([app_id])
+    context = Gio.AppLaunchContext()
+    for key, value in {**environment, APP_MARKER: app_id}.items():
+        context.setenv(key, value)
+    if not renderer_accessibility(app).launch([], context):
+        raise RuntimeError("failed")
+
+
+def remember(installed, *, _runtime=RUNTIME):
+    """Record the installed apps that still run, for the next session start to reopen. Nothing records an app's
+    windows, so an app that keeps a process alive after its last window closed (a tray icon) is reopened."""
+    runtime_directories(_runtime=_runtime)
+    found = []
+    for process in Path("/proc").iterdir():
+        try:
+            environ = (process / "environ").read_bytes() if process.name.isdecimal() else b""
+        except OSError:
+            continue  # Exited during the scan, or not readable by this user (another user, non-dumpable).
+        found.extend(entry.partition(b"=")[2].decode(errors="replace") for entry in environ.split(b"\0")
+                     if entry.startswith(APP_MARKER.encode() + b"="))
+    app_ids = sorted(set(found).intersection(installed))[:OPEN_APPS_LIMIT]
+    path = _runtime / "open-apps.json"
+    if not app_ids:
+        path.unlink(missing_ok=True)
+        return
+    atomic_private_file(path, json.dumps(app_ids).encode(), OPEN_APPS_BYTES)
+
+
+def restore(installed, environment, *, _runtime=RUNTIME):
+    """Reopen the apps `remember` recorded. The record lives in the home the agent can write, so it is untrusted:
+    only installed desktop IDs launch, which `launch` already allows. It is removed before anything launches, so an
+    app that breaks the session is not reopened on every start, and a failing app never keeps the others closed."""
+    path = _runtime / "open-apps.json"
+    try:
+        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), "rb") as stream:
+            data = stream.read(OPEN_APPS_BYTES + 1)
+        path.unlink()
+        app_ids = json.loads(data)
+    except (OSError, ValueError, RecursionError):
+        return
+    if len(data) > OPEN_APPS_BYTES or not isinstance(app_ids, list) or len(app_ids) > OPEN_APPS_LIMIT:
+        return
+    for app_id in app_ids:
+        try:
+            launch_app(app_id, environment, installed)
+        except Exception:
+            continue
+
+
 def renderer_accessibility(app):
     """Launch Chromium-family apps (Electron, Chrome) with their web contents in the accessibility tree.
 
@@ -580,10 +639,12 @@ def main():
         parse_session(data)
         atomic_private_file(RUNTIME / "session.json", data, SESSION_BYTES)
         try:
-            seed_editor_accessibility(applications())
+            installed = applications()
+            seed_editor_accessibility(installed)
         except (ImportError, ValueError):
-            pass  # Gio is optional for the session itself; launch seeds again.
+            installed = {}  # Gio is optional for the session itself; launch seeds again.
         subprocess.Popen(["xterm"])
+        restore(installed, {key: session[key] for key in SESSION_FIELDS if key in session})
         # Xpra strips an inherited DBus address. Its child owns this session bus;
         # keep it alive when the initial terminal window is closed.
         while True:
@@ -612,19 +673,12 @@ def main():
         )))
         return
     if command == "launch":
-        from gi.repository import Gio
-
         environment = session_environment()
         os.environ.update(environment)
-        app = applications().get(sys.argv[2])
-        if app is None:
-            raise RuntimeError("failed")
-        seed_editor_accessibility([sys.argv[2]])
-        context = Gio.AppLaunchContext()
-        for key, value in environment.items():
-            context.setenv(key, value)
-        if not renderer_accessibility(app).launch([], context):
-            raise RuntimeError("failed")
+        launch_app(sys.argv[2], environment, applications())
+        return
+    if command == "remember":
+        remember(applications())
         return
     if command == "prepare":
         STAGING.parent.mkdir(mode=0o700, parents=True, exist_ok=True)

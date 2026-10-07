@@ -215,7 +215,20 @@ it.instance(
         contextHash: context.contextHash,
         projectID: data.session.projectID,
         workCardID: "grounded-card",
-        workCard: "# Card\nBounded backend work.\n",
+        workCard: [
+          "# Card",
+          "## Definition of Done",
+          "Bounded backend work matches owned:contract.",
+          "## Invariants",
+          "Owned stays deterministic.",
+          "## Quality Standards",
+          "The current Own source is verified.",
+          "## Completeness Criteria",
+          "The single grounded backend unit is covered.",
+          "## Success Criteria",
+          "The backend specialist returns the grounded result.",
+          "",
+        ].join("\n"),
         routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
@@ -436,6 +449,26 @@ it.instance(
       yield* fs.writeFileString(path.join(data.test.directory, "src/owned.ts"), "export const owned = 2\n")
       expect(yield* contextIsCurrent(context)).toBe(false)
       expect(yield* recordContext(plan.id, data.session.id, true).pipe(Effect.flip)).toBeInstanceOf(AtlasContextHeld)
+    }),
+  { git: true },
+  30000,
+)
+
+// F4-O4: Atlas Memory logs travel with the code but are not task output, so a Memory write keeps the context current.
+it.instance(
+  "an Atlas Memory write keeps the context current while a code change still makes it stale",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const plan = yield* recordPlanRevision(data.input)
+      const context = yield* recordContext(plan.id, data.session.id, true)
+      const fs = yield* FileSystem.FileSystem
+      yield* fs.writeFileString(path.join(data.test.directory, ".atlas/memory.jsonl"), '{"memory":"lesson"}\n')
+      yield* fs.writeFileString(path.join(data.test.directory, ".atlas/orientation.jsonl"), '{"orientation":"hit"}\n')
+      expect(yield* contextIsCurrent(context)).toBe(true)
+      expect(yield* recordContext(plan.id, data.session.id, true)).toEqual(context)
+      yield* fs.writeFileString(path.join(data.test.directory, "src/owned.ts"), "export const owned = 2\n")
+      expect(yield* contextIsCurrent(context)).toBe(false)
     }),
   { git: true },
   30000,

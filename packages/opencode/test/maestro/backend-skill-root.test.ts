@@ -21,8 +21,10 @@ describe("backend skill root", () => {
     const cache = path.join(tmp.path, "cache")
 
     const dir = await BackendSkillRoot.extract(files, cache, "1.0.0")
-    // The root is canonical (no 8.3 short names or symlinked temp prefixes), so permission checks match it.
-    expect(dir).toBe(await fs.realpath(path.join(cache, "backend-skills", "1.0.0")))
+    // The copy is keyed by version and content digest, and the root is canonical (no 8.3 short names or symlinked temp
+    // prefixes), so permission checks match it.
+    expect(path.basename(dir)).toMatch(/^1\.0\.0-[0-9a-f]{12}$/)
+    expect(dir).toBe(await fs.realpath(path.join(cache, "backend-skills", path.basename(dir))))
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
 
     // A verified copy is left alone: the directory is not replaced.
@@ -39,7 +41,7 @@ describe("backend skill root", () => {
     await Bun.write(path.join(dir, "a", "planted.md"), "x")
     await BackendSkillRoot.extract(files, cache, "1.0.0")
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
-    expect((await fs.readdir(path.dirname(dir))).toSorted()).toEqual(["1.0.0"])
+    expect((await fs.readdir(path.dirname(dir))).toSorted()).toEqual([path.basename(dir)])
   })
 
   test("each installation version keeps its own copy", async () => {
@@ -54,6 +56,47 @@ describe("backend skill root", () => {
     expect(await tree(newer)).toEqual({ "a/SKILL.md": "v2" })
     // An older install still running keeps its copy: it was never replaced.
     expect((await fs.stat(older)).ino).toBe(before.ino)
+  })
+
+  test("a rollback re-selects the older copy unchanged", async () => {
+    await using tmp = await tmpdir()
+    const cache = path.join(tmp.path, "cache")
+    const v1 = await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" })
+    const first = await BackendSkillRoot.extract(v1, cache, "1.0.0")
+    const before = await fs.stat(first)
+    const second = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "2.0.0")
+
+    expect(await BackendSkillRoot.extract(v1, cache, "1.0.0")).toBe(first)
+    expect((await fs.stat(first)).ino).toBe(before.ino)
+    expect(await tree(first)).toEqual({ "a/SKILL.md": "v1" })
+    expect(await tree(second)).toEqual({ "a/SKILL.md": "v2" })
+  })
+
+  test("an install touches nothing outside its own copy", async () => {
+    await using tmp = await tmpdir()
+    const cache = path.join(tmp.path, "cache")
+    const other = path.join(cache, "other", "sentinel")
+    const sibling = path.join(cache, "backend-skills", "0.9.0-0123456789ab", "a", "SKILL.md")
+    await Bun.write(other, "other")
+    await Bun.write(sibling, "older install")
+
+    await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
+    expect(await Bun.file(other).text()).toBe("other")
+    expect(await Bun.file(sibling).text()).toBe("older install")
+  })
+
+  test("two builds with the same version string keep separate copies", async () => {
+    await using tmp = await tmpdir()
+    const cache = path.join(tmp.path, "cache")
+    const first = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "a"), { "a/SKILL.md": "first" }), cache, "local")
+    const before = await fs.stat(first)
+    const second = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "b"), { "a/SKILL.md": "second" }), cache, "local")
+
+    expect(second).not.toBe(first)
+    expect(path.basename(second)).toMatch(/^local-[0-9a-f]{12}$/)
+    expect((await fs.stat(first)).ino).toBe(before.ino)
+    expect(await tree(first)).toEqual({ "a/SKILL.md": "first" })
+    expect(await tree(second)).toEqual({ "a/SKILL.md": "second" })
   })
 
   test("a compiled build's extracted backend-implement loads through the real skill service for backend", async () => {
@@ -94,7 +137,8 @@ describe("backend skill root", () => {
     )(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(line)).backendEmbedded
     expect(evidence.source).toBe(SOURCE)
     expect(evidence.root).not.toBe(SOURCE)
-    expect(evidence.root.endsWith(path.join("opencode", "backend-skills", "local"))).toBe(true)
+    expect(path.dirname(evidence.root).endsWith(path.join("opencode", "backend-skills"))).toBe(true)
+    expect(path.basename(evidence.root)).toMatch(/^local-[0-9a-f]{12}$/)
     expect(evidence.extracted).toEqual(await relativeFiles(SOURCE))
     // Every seat-runtime case ran against the extracted root and none was skipped.
     expect(stderr).toMatch(/\b3 pass\b/)
@@ -104,9 +148,9 @@ describe("backend skill root", () => {
 })
 
 // Writes `contents` as real files under `dir` and returns the map the generated module would export.
-async function embed(dir: string, contents: Record<string, string>) {
-  await Promise.all(Object.entries(contents).map(([file, text]) => Bun.write(path.join(dir, "src", file), text)))
-  return Object.fromEntries(Object.keys(contents).map((file) => [file, path.join(dir, "src", file)]))
+// The generated module maps tree-relative paths to file text (script/backend-skills.ts).
+async function embed(_dir: string, contents: Record<string, string>) {
+  return contents
 }
 
 async function tree(dir: string) {

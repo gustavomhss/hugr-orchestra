@@ -7,10 +7,11 @@ type Port = {
   on(event: "message", listener: (event: { data: unknown }) => void): void
 }
 // What the agent can do about each workspace state; without it models retry blindly or reach for other tools.
+// Only the linux agent holds these tools, and it cannot ask the owner, so each hint ends in a report.
 const hints = {
-  "workspace-not-configured": "The Linux workspace was never set up; ask the user to open Apps > Linux workspace in the App Dock",
-  "workspace-not-running": "The Linux workspace is stopped; ask the user to open Apps > Linux workspace in the App Dock, then retry",
-  "workspace-unavailable": "The Linux workspace is not available in this app window; ask the user to open it in the App Dock",
+  "workspace-not-configured": "The Linux workspace was never set up; stop and report that the owner must open Apps > Linux workspace in the App Dock",
+  "workspace-not-running": "The Linux workspace is stopped; stop and report that the owner must open Apps > Linux workspace in the App Dock",
+  "workspace-unavailable": "The Linux workspace is not available in this app window; stop and report that the owner must open it in the App Dock",
 }
 
 const routers = new WeakMap<Port, Map<string, { settle: (value: unknown, error?: string) => void }>>()

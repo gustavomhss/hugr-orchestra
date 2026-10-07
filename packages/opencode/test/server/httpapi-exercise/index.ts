@@ -909,7 +909,7 @@ const scenarios: Scenario[] = [
     .at((ctx) => ({
       path: route("/api/session/{sessionID}/agent", { sessionID: ctx.state.id }),
       headers: { ...ctx.headers(), "content-type": "application/json" },
-      body: { agent: "plan" },
+      body: { agent: "reviewer" },
     }))
     .status(204, undefined, "none"),
   http.protected
@@ -1376,7 +1376,7 @@ const scenarios: Scenario[] = [
       path: route("/session/{sessionID}/message", { sessionID: ctx.state.id }),
       headers: ctx.headers(),
       body: {
-        agent: "build",
+        agent: "maestro",
         model: { providerID: "test", modelID: "test-model" },
         parts: [{ type: "text", text: "hello llm" }],
       },
@@ -1411,7 +1411,7 @@ const scenarios: Scenario[] = [
       path: route("/session/{sessionID}/prompt_async", { sessionID: ctx.state.id }),
       headers: ctx.headers(),
       body: {
-        agent: "build",
+        agent: "maestro",
         model: { providerID: "test", modelID: "test-model" },
         parts: [{ type: "text", text: "hello async" }],
       },
@@ -1456,7 +1456,7 @@ const scenarios: Scenario[] = [
     .at((ctx) => ({
       path: route("/session/{sessionID}/shell", { sessionID: ctx.state.id }),
       headers: ctx.headers(),
-      body: { agent: "build", model: { providerID: "test", modelID: "test-model" }, command: "printf shell-ok" },
+      body: { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, command: "printf shell-ok" },
     }))
     .json(
       200,
@@ -1478,25 +1478,6 @@ const scenarios: Scenario[] = [
       Effect.gen(function* () {
         const session = yield* ctx.session({ title: "Summarize session" })
         yield* ctx.message(session.id, { text: "summarize this work" })
-        const summary = [
-          "## Objective",
-          "- Exercise session summarize.",
-          "",
-          "## Important Details",
-          "- Use fake LLM.",
-          "- Keep route local.",
-          "- Test fixture: test/server/httpapi-exercise/index.ts.",
-          "",
-          "## Work State",
-          "- Completed: Summary generated.",
-          "- Active: (none)",
-          "- Blocked: (none)",
-          "",
-          "## Next Move",
-          "1. (none)",
-        ].join("\n")
-        yield* ctx.llmText(summary)
-        yield* ctx.llmText(summary)
         return session
       }),
     )
@@ -1510,12 +1491,10 @@ const scenarios: Scenario[] = [
       (body, ctx) =>
         Effect.gen(function* () {
           check(body === true, "summarize should return true")
+          // Summarize runs a working-memory pass. With no finished assistant turn there is nothing to cover, so it
+          // returns without a model call and adds no message; the legacy summary message is gone.
           const messages = yield* ctx.messages(ctx.state.id)
-          check(
-            messages.some((message) => message.info.role === "assistant" && message.info.summary === true),
-            "summarize should create a summary assistant message",
-          )
-          yield* ctx.llmWait(1)
+          check(messages.length === 1, "summarize should not add messages")
         }),
       "status",
     ),

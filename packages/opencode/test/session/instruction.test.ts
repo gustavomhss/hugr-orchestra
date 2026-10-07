@@ -83,7 +83,7 @@ function loaded(filepath: string): SessionV1.WithParts[] {
         sessionID,
         role: "user",
         time: { created: 0 },
-        agent: "build",
+        agent: "maestro",
         model: {
           providerID: ProviderV2.ID.make("anthropic"),
           modelID: ModelV2.ID.make("claude-sonnet-4-20250514"),
@@ -225,6 +225,23 @@ describe("Instruction.system", () => {
         expect(rules).toHaveLength(2)
         expect(rules[0]).toBe(`Instructions from: ${path.join(globalTmp, "AGENTS.md")}\n# Global Instructions`)
         expect(rules[1]).toBe(`Instructions from: ${path.join(projectTmp, "AGENTS.md")}\n# Project Instructions`)
+      }).pipe(provideInstance(projectTmp), provideInstruction({ home: globalTmp, config: globalTmp }))
+    }),
+  )
+
+  it.live("never loads Claude Code's global CLAUDE.md but keeps the project CLAUDE.md", () =>
+    Effect.gen(function* () {
+      const globalTmp = yield* tmpWithFiles({ ".claude/CLAUDE.md": "# Global Claude" })
+      const projectTmp = yield* tmpWithFiles({ "CLAUDE.md": "# Project Claude" })
+
+      yield* Effect.gen(function* () {
+        const svc = yield* Instruction.Service
+        const paths = yield* svc.systemPaths()
+        expect(paths.has(path.join(globalTmp, ".claude", "CLAUDE.md"))).toBe(false)
+        expect(paths.has(path.join(projectTmp, "CLAUDE.md"))).toBe(true)
+        expect(yield* svc.system()).toEqual([
+          `Instructions from: ${path.join(projectTmp, "CLAUDE.md")}\n# Project Claude`,
+        ])
       }).pipe(provideInstance(projectTmp), provideInstruction({ home: globalTmp, config: globalTmp }))
     }),
   )

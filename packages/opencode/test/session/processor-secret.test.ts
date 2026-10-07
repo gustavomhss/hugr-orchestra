@@ -26,6 +26,7 @@ import { ProviderV2 } from "@opencode-ai/core/provider"
 import { ModelV2 } from "@opencode-ai/core/model"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { LLMEvent } from "@opencode-ai/llm"
+import { ToolSafety } from "@opencode-ai/core/tool-safety"
 
 
 import { ref, env, providerCfg, agent, user, assistant, boot } from "./processor-fixture"
@@ -50,7 +51,7 @@ it.live("processor stores sanitized denial for secret-bearing acquired Error bef
     const call = parts.find((part) => part.type === "tool")
     expect(call?.state.status).toBe("error")
     if (call?.state.status !== "error") throw new Error("TOOL_ERROR_NOT_PERSISTED")
-    expect(call.state.error).toBe("Tool safety HOLD: recognized-secret-output")
+    expect(call.state.error).toBe(new ToolSafety.Denied({ reason: "recognized-secret-output" }).message)
     expect(JSON.stringify(parts)).not.toContain(secret)
     expect(yield* llm.calls).toBe(1)
   }), { config: (url) => providerCfg(url) }),

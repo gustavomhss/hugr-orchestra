@@ -53,7 +53,7 @@ it.live(
       await using tmp = await tmpdir({
         git: true,
         config: {
-          agent: { build: { permission: { "*": "allow" } } },
+          agent: { maestro: { permission: { "*": "allow" } } },
           provider: {
             native: {
               npm: "@ai-sdk/openai-compatible",
@@ -120,9 +120,9 @@ it.live(
             const instance = yield* instances.load({ directory: tmp.path })
             yield* Effect.gen(function* () {
               const sessions = yield* Session.Service
-              const session = yield* sessions.create({ agent: "build" })
+              const session = yield* sessions.create({ agent: "maestro" })
               const agents = yield* Agent.Service
-              const agent = yield* agents.get("build")
+              const agent = yield* agents.get("maestro")
               const providers = yield* Provider.Service
               const model = yield* providers.getModel(ProviderV2.ID.make("native"), ModelV2.ID.make("probe"))
               const mcp = yield* MCP.Service
@@ -137,8 +137,8 @@ it.live(
                 sessionID: session.id,
                 role: "assistant",
                 parentID: MessageID.ascending(),
-                agent: "build",
-                mode: "build",
+                agent: "maestro",
+                mode: "maestro",
                 path: { cwd: tmp.path, root: tmp.path },
                 cost: 0,
                 tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -308,7 +308,7 @@ it.live(
             ).toBe("text")
             expect((yield* invoke("denied", "read", { path: "locked.txt" })).result).toEqual({
               type: "error",
-              value: "Tool safety HOLD: project-never-touch",
+              value: expect.stringMatching(/^Tool safety HOLD: project-never-touch\n\S/),
             })
             expect((yield* invoke("allowed", "read", { path: "free.txt" })).result).toMatchObject({
               type: "json",
@@ -364,7 +364,7 @@ it.live(
           const instance = yield* instances.load({ directory: tmp.path })
           yield* Effect.gen(function* () {
             const sessions = yield* Session.Service
-            const session = yield* sessions.create({ agent: "build" })
+            const session = yield* sessions.create({ agent: "maestro" })
             const registry = yield* Service
             const definitions = yield* registry.all()
             const probe = definitions.find((definition) => definition.id === "probe")
@@ -372,12 +372,12 @@ it.live(
             const fs = yield* FSUtil.Service
             const permission = yield* Permission.Service
             const agents = yield* Agent.Service
-            const agent = yield* agents.get("build")
+            const agent = yield* agents.get("maestro")
             const context: Tool.Context = {
               sessionID: session.id,
               messageID: MessageID.ascending(),
               callID: "custom-denied",
-              agent: "build",
+              agent: "maestro",
               abort: new AbortController().signal,
               messages: [],
               ask: (request) =>
@@ -443,7 +443,7 @@ it.live(
               const parent = yield* sessions.create({ agent: "maestro" })
               const child = yield* sessions.create({
                 parentID: parent.id,
-                agent: "build",
+                agent: "general",
                 permission: [{ permission: "edit", pattern: "**", action: "allow" }],
               })
               const messageID = MessageID.ascending()
@@ -468,7 +468,7 @@ it.live(
                 type: "tool",
                 tool: "task",
                 callID: "native-task",
-                state: { status: "running", input: { subagent_type: "build" }, time: { start: Date.now() } },
+                state: { status: "running", input: { subagent_type: "general" }, time: { start: Date.now() } },
               })
               const registry = yield* Service
               const definitions = yield* registry.all()

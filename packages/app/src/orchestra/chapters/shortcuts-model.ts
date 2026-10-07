@@ -3,7 +3,7 @@ import { DEFAULT_PALETTE_KEYBIND, parseKeybind } from "@/context/command"
 // Same list, defaults and conflict rules as Settings > Shortcuts; both surfaces write the one
 // keybind store in `settings.v3`, which the command context reads to fire bindings.
 export const PALETTE_ID = "command.palette"
-export const SHORTCUT_GROUPS = ["general", "session", "navigation", "modelAndAgent", "terminal", "prompt"] as const
+export const SHORTCUT_GROUPS = ["general", "session", "navigation", "modelAndMcp", "terminal", "prompt"] as const
 export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number]
 
 export type ShortcutRow = {
@@ -59,7 +59,7 @@ export function shortcutRows(input: {
 export function shortcutGroup(id: string): ShortcutGroup {
   if (id === PALETTE_ID) return "general"
   if (id.startsWith("terminal.")) return "terminal"
-  if (id.startsWith("model.") || id.startsWith("agent.") || id.startsWith("mcp.")) return "modelAndAgent"
+  if (id.startsWith("model.") || id.startsWith("mcp.")) return "modelAndMcp"
   if (id.startsWith("file.") || id.startsWith("fileTree.")) return "navigation"
   if (id.startsWith("prompt.")) return "prompt"
   if (["session.", "message.", "permissions.", "steps.", "review."].some((prefix) => id.startsWith(prefix)))

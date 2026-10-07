@@ -14,7 +14,7 @@ const it = testEffect(LayerNode.compile(LayerNode.group([Truncate.node, FSUtil.n
   [Config.node, TestConfig.layer({ get: () => Effect.succeed({}), directories: () => Effect.succeed([]) })],
 ]))
 const context = (): Tool.Context => ({
-  sessionID: SessionID.descending(), messageID: MessageID.ascending(), agent: "build",
+  sessionID: SessionID.descending(), messageID: MessageID.ascending(), agent: "maestro",
   abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: () => Effect.void,
 })
 

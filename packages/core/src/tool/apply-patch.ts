@@ -68,8 +68,25 @@ const layer = Layer.effectDiscard(
       .register({
         [name]: Tool.withPermission(
           Tool.make({
-            description:
-              "Apply one patch containing add, update, and delete file operations. All targets are resolved and approved before target contents are read. Operations apply sequentially; if a later operation fails, earlier operations remain applied and the failure reports them explicitly. Moves and atomic rollback are not supported yet.",
+            description: `Edit files with a patch in \`patchText\`:
+
+*** Begin Patch
+*** Add File: docs/notes.md
++# Notes
+*** Update File: src/app.py
+@@ def greet():
+-    print("Hi")
++    print("Hello")
+*** Delete File: obsolete.txt
+*** End Patch
+
+- Paths are relative to the working directory, or absolute; a path outside it asks the owner first.
+- \`*** Add File\` creates a new file from its \`+\` lines, where an empty line between two of them is an empty line of the file. \`*** Delete File\` removes a file. Moving a file with \`*** Move to\` is not supported here.
+- In \`*** Update File\`, start each hunk with an \`@@\` line. Text after \`@@\`, such as a function or class line, is found first, and the hunk is matched below it. Hunk lines start with a space (context), \`-\` (remove) or \`+\` (add), so a blank context line is a single space; an empty line between hunk lines is read as one, and empty lines before or after a hunk only separate it. Give about three lines of context around each change.
+- Context and \`-\` lines must match the current file. Matching tolerates differences in trailing whitespace, then indentation, then typographic quotes and dashes, and the matched lines are replaced by the hunk's lines as written, context included.
+- Each hunk takes the first match below the previous one, so give hunks in file order, and add context or an \`@@\` line naming the function or class when lines repeat. A hunk ending in a \`*** End of File\` line must match the last lines of the file. A hunk with only \`+\` lines is appended to the end of the file, and its blank lines must be written as \`+\`.
+- Every file is checked before any is written: a line that is not part of this format, a hunk that does not match, or a missing file to update or delete, fails the call and changes nothing. Files are then written in order; if one write fails, for example because an added file already exists, the error lists the files already changed.
+- The result lists changed files as \`A\`, \`M\` or \`D\`, without their content.`,
             input: Input,
             output: Output,
             toModelOutput: ({ output }) => [{ type: "text", text: toModelOutput(output) }],

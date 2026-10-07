@@ -62,6 +62,7 @@ export type Event =
   | EventMaestroReviewReceived
   | EventMaestroAuthorizationGranted
   | EventMaestroDispatchReserved
+  | EventMaestroTaskBound
   | EventMessagePartDelta
   | EventSessionDiff
   | EventSessionError
@@ -1538,6 +1539,18 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "maestro.task.bound"
+        properties: {
+          taskId: string
+          projectID: string
+          memberID: string
+          executionSessionID: string
+          authoritySessionID: string
+          source: "host" | "user" | "dispatch" | "governed"
+        }
+      }
+    | {
+        id: string
         type: "message.part.delta"
         properties: {
           sessionID: string
@@ -1996,6 +2009,7 @@ export type GlobalEvent = {
     | SyncEventMaestroReviewReceived
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
+    | SyncEventMaestroTaskBound
 }
 
 /**
@@ -2299,13 +2313,10 @@ export type Config = {
   subagent_depth?: number
   username?: string
   mode?: {
-    build?: AgentConfig
-    plan?: AgentConfig
-    [key: string]: AgentConfig | undefined
+    [key: string]: AgentConfig
   }
   agent?: {
-    plan?: AgentConfig
-    build?: AgentConfig
+    maestro?: AgentConfig
     general?: AgentConfig
     explore?: AgentConfig
     title?: AgentConfig
@@ -3423,6 +3434,7 @@ export type V2Event =
   | MaestroReviewReceived
   | MaestroAuthorizationGranted
   | MaestroDispatchReserved
+  | MaestroTaskBound
   | MessagePartDelta
   | SessionDiff
   | SessionError
@@ -4821,6 +4833,25 @@ export type SyncEventMaestroDispatchReserved = {
         pattern: string
         action: "allow" | "deny" | "ask"
       }>
+    }
+  }
+}
+
+export type SyncEventMaestroTaskBound = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.task.bound.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      taskId: string
+      projectID: string
+      memberID: string
+      executionSessionID: string
+      authoritySessionID: string
+      source: "host" | "user" | "dispatch" | "governed"
     }
   }
 }
@@ -6818,6 +6849,28 @@ export type MaestroDispatchReserved = {
   }
 }
 
+export type MaestroTaskBound = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.task.bound"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    taskId: string
+    projectID: string
+    memberID: string
+    executionSessionID: string
+    authoritySessionID: string
+    source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
 export type MessagePartDelta = {
   id: string
   metadata?: {
@@ -8503,6 +8556,19 @@ export type EventMaestroDispatchReserved = {
       pattern: string
       action: "allow" | "deny" | "ask"
     }>
+  }
+}
+
+export type EventMaestroTaskBound = {
+  id: string
+  type: "maestro.task.bound"
+  properties: {
+    taskId: string
+    projectID: string
+    memberID: string
+    executionSessionID: string
+    authoritySessionID: string
+    source: "host" | "user" | "dispatch" | "governed"
   }
 }
 

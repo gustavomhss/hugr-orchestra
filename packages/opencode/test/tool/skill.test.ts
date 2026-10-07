@@ -1,6 +1,7 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { Npm } from "@opencode-ai/core/npm"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
 import { Cause, Effect, Exit, Layer } from "effect"
@@ -12,6 +13,7 @@ import { SkillTool } from "../../src/tool/skill"
 import { Session } from "@/session/session"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { ToolRegistry } from "@/tool/registry"
+import { NpmTest } from "../fake/npm"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { SessionID, MessageID } from "../../src/session/schema"
 import { testEffect } from "../lib/effect"
@@ -20,7 +22,7 @@ const baseCtx: Omit<Tool.Context, "ask"> = {
   sessionID: SessionID.make("ses_test"),
   messageID: MessageID.make("msg_test"),
   callID: "",
-  agent: "build",
+  agent: "maestro",
   abort: AbortSignal.any([]),
   messages: [],
   metadata: () => Effect.void,
@@ -30,7 +32,14 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([ToolRegistry.node, Session.node, SessionProjector.node, CrossSpawnSpawner.node, Ripgrep.node])))
+// The first test writes .opencode/skill, and Config starts a detached npm install into every .opencode directory it
+// loads. A real one outlives its test and, on Windows, starves file I/O for later test files in the same process.
+const it = testEffect(
+  TestAppNodeBuilder.build(
+    LayerNode.group([ToolRegistry.node, Session.node, SessionProjector.node, CrossSpawnSpawner.node, Ripgrep.node]),
+    [[Npm.node, NpmTest.noop]],
+  ),
+)
 
 describe("tool.skill", () => {
   it.instance("execute returns skill content block with files", () =>
@@ -47,7 +56,7 @@ describe("tool.skill", () => {
       )
 
       const registry = yield* ToolRegistry.Service
-      const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
+      const agent = { name: "maestro", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
         providerID: "opencode" as any,
         modelID: "gpt-5" as any,
@@ -60,7 +69,7 @@ describe("tool.skill", () => {
 
       const requests: Array<Omit<PermissionV1.Request, "id" | "sessionID" | "tool">> = []
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" })
+      const session = yield* sessions.create({ agent: "maestro" })
       const ctx: Tool.Context = {
         ...baseCtx,
         sessionID: session.id,
@@ -111,7 +120,7 @@ Use this skill.
       )
 
       const registry = yield* ToolRegistry.Service
-      const agent = { name: "build", mode: "primary" as const, permission: [], options: {} }
+      const agent = { name: "maestro", mode: "primary" as const, permission: [], options: {} }
       const tool = (yield* registry.tools({
         providerID: "opencode" as any,
         modelID: "gpt-5" as any,
@@ -120,7 +129,7 @@ Use this skill.
       if (!tool) throw new Error("Skill tool not found")
 
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" })
+      const session = yield* sessions.create({ agent: "maestro" })
       const exit = yield* tool
         .execute(
           { name: "missing-skill" },

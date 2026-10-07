@@ -38,7 +38,7 @@ it.live("askBefore push enters real native permission graph; model approval labe
       const sessionID = SessionV2.ID.make(`ses_approval_${Date.now()}`)
       yield* database.db.insert(ProjectTable).values({ id: Project.ID.global, worktree: AbsolutePath.make(tmp.path), sandboxes: [] }).onConflictDoNothing().run().pipe(Effect.orDie)
       yield* database.db.insert(SessionTable).values({ id: sessionID, project_id: Project.ID.global, slug: "approval", directory: tmp.path,
-        title: "approval", version: "test", agent: "build" }).run().pipe(Effect.orDie)
+        title: "approval", version: "test", agent: toolIdentity.agent }).run().pipe(Effect.orDie)
       yield* agents.transform((editor) => editor.update(toolIdentity.agent, (agent) => { agent.permissions = [] }))
       expect((yield* permissions.ask({ sessionID, agent: toolIdentity.agent, action: "push", resources: ["git push"] })).effect).toBe("ask")
       const invocation = { tool: "bash", sessionID, callID: "approval", directory: tmp.path, projectID: Project.ID.global,

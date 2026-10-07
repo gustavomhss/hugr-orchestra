@@ -4,6 +4,8 @@ Status: draft for owner review, 2026-10-05. Not installed. `packages/opencode/sr
 
 v3a (2026-10-06): one bullet added under Checks and honesty after the backend-bench run (amendment A5: Claude opus 8/9 → 8/9, sonnet 7/9 → 8/9, no new role violations or false claims; n = 1 per cell). The open-weight tail (v3b) is not adopted: its write-path rule did not hold on free models, so missing write paths and repairs without diagnosis must be enforced by the host (packet write roots in the ToolSafety profile), not by prose.
 
+v3c (2026-10-06, evaluated, not adopted): v3a without direct use, after the owner ruled that the backend seat is a `subagent` and Maestro the only primary agent. Under the pre-registered rule (backend-bench A8: per model, at most one run below v3a) it failed on opus, 21/24 vs 23/24, all three losses on `03-outside-failure` where the card reported `cd <repo> && bun test` instead of the command it ran; sonnet rose from 19/24 to 21/24, with zero role violations and false claims on both. v3a stays installed. Its direct-use clauses are now dead conditionals: the seat only ever receives packets from the orchestrator.
+
 Inputs: research R65 (system-prompt practice), R66 (persona evidence), R67 (runtime composition and the 53 requirements), contracts F1–F4.
 
 ## Owner decisions applied (2026-10-05)
