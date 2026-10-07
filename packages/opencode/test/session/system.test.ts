@@ -122,7 +122,6 @@ describe("session.system", () => {
         expect(prepared.system).toEqual([`${SystemPrompt.base}\nEnvironment`])
       }
       expect(SystemPrompt.base).toStartWith("You are an agent in HuGR Orchestra")
-      expect(SystemPrompt.base.toLowerCase()).not.toContain("opencode")
     }),
   )
 

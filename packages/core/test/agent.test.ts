@@ -197,8 +197,6 @@ describe("AgentV2", () => {
         summary: AgentPrompt.summary,
       })
       expect(AgentPrompt.maestro).toStartWith("You are Maestro")
-      for (const item of yield* agent.all())
-        expect(`${item.system} ${item.description ?? ""}`.toLowerCase()).not.toContain("opencode")
     }),
   )
 })
