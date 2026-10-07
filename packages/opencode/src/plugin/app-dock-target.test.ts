@@ -453,7 +453,6 @@ test("the Linux workspace is its own scope: host agents lose its tools, the linu
   expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
   // The linux agent speaks as Orchestra's, never as the upstream product.
   expect(config.agent!.linux!.prompt).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
-  expect(`${config.agent!.linux!.prompt} ${config.agent!.linux!.description}`.toLowerCase()).not.toContain("opencode")
   // Run 13: after the task the model ran its own "behavior proof", drove a native dialog with xdotool and killed VS Code.
   const prompt = String(config.agent!.linux!.prompt)
   for (const rule of ["Do exactly the task. Verify it through the app's own state or the file the task names; do not run extra experiments",

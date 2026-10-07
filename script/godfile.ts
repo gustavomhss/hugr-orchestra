@@ -48,6 +48,15 @@ function baseFileLoc(cwd: string, base: string, file: string) {
   }
 }
 
+// A file moved since the base keeps the base's line count and waiver standing under its old path.
+// -l0 lifts the rename limit, so a whole-package move still pairs every file.
+function renamedFrom(cwd: string, base: string) {
+  const fields = git(cwd, ["diff", "--name-status", "-z", "-M", "-l0", "--diff-filter=R", base]).split("\0")
+  const map = new Map<string, string>()
+  for (let index = 0; index + 2 < fields.length; index += 3) map.set(fields[index + 2]!, fields[index + 1]!)
+  return map
+}
+
 function mergeBase(cwd: string, baseRef: string) {
   try {
     return git(cwd, ["merge-base", baseRef, "HEAD"]).trim()
@@ -127,6 +136,7 @@ export function runGodfileGate(input: { cwd: string; baseRef: string }): Report 
 
   const warnings: Finding[] = []
   const errors: string[] = []
+  const moved = renamedFrom(input.cwd, base)
   const waiverLedger = waivers(input.cwd)
   errors.push(...waiverLedger.errors)
   const seenWaivers = new Set<string>()
@@ -140,7 +150,7 @@ export function runGodfileGate(input: { cwd: string; baseRef: string }): Report 
       continue
     }
 
-    const baseLines = baseFileLoc(input.cwd, base, file)
+    const baseLines = baseFileLoc(input.cwd, base, moved.get(file) ?? file)
     const waiver = waiverLedger.entries[file]
     if (waiver && baseLines !== undefined) seenWaivers.add(file)
     if (baseLines !== undefined && lines <= baseLines) {

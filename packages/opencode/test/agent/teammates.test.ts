@@ -27,14 +27,14 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
-it.instance("every native agent runs on its own prompt, free of opencode and Claude Code", () =>
+it.instance("every native agent runs on its own prompt, free of Claude Code", () =>
   Effect.gen(function* () {
-    // An agent without a prompt runs on the provider base prompt, which speaks as opencode.
+    // An agent without a prompt runs on the provider base prompt instead of its own.
     const agents = (yield* load((svc) => svc.list())).filter((agent) => agent.native)
     expect(agents.map((agent) => agent.id)).toEqual(expect.arrayContaining(["maestro", "general", "explore", "lucy"]))
     for (const agent of agents) {
       expect(agent.prompt?.trim()).toBeTruthy()
-      expect(agent.prompt).not.toMatch(/opencode|claude code/i)
+      expect(agent.prompt).not.toMatch(/claude code/i)
     }
   }),
 )

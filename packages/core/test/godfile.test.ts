@@ -59,6 +59,24 @@ describe("godfile", () => {
     )
   })
 
+  test("a moved legacy file keeps its base line count, and still fails when it grows", () => {
+    const cwd = repo()
+    mkdirSync(join(cwd, "moved"))
+    git(cwd, "mv", "legacy.ts", "moved/legacy.ts")
+    expect(runGodfileGate({ cwd, baseRef: "HEAD" }).warnings).toContainEqual({
+      file: "moved/legacy.ts",
+      lines: HARD_LIMIT_LOC + 1,
+      baseLines: HARD_LIMIT_LOC + 1,
+      kind: "legacy",
+    })
+    writeFileSync(join(cwd, "moved/legacy.ts"), lines(HARD_LIMIT_LOC + 2))
+    expect(runGodfileGate({ cwd, baseRef: "HEAD" }).errors).toEqual([
+      expect.stringContaining(
+        `moved/legacy.ts: ${HARD_LIMIT_LOC + 2} LOC exceeds ${HARD_LIMIT_LOC} (base ${HARD_LIMIT_LOC + 1} LOC)`,
+      ),
+    ])
+  })
+
   test("fails a new hard-limit file", () => {
     const cwd = repo()
     writeFileSync(join(cwd, "new.ts"), lines(HARD_LIMIT_LOC + 1))
