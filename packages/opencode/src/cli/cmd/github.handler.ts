@@ -1,5 +1,4 @@
 import path from "path"
-import { exec } from "child_process"
 import { Filesystem } from "@/util/filesystem"
 import * as prompts from "@clack/prompts"
 import { map, pipe, sortBy, values } from "remeda"
@@ -288,18 +287,12 @@ export const githubInstall = Effect.fn("Cli.github.install")(function* () {
 
         // Open browser
         const url = "https://github.com/apps/opencode-agent"
-        const command =
-          process.platform === "darwin"
-            ? `open "${url}"`
-            : process.platform === "win32"
-              ? `start "" "${url}"`
-              : `xdg-open "${url}"`
-
-        exec(command, (error) => {
-          if (error) {
-            prompts.log.warn(`Could not open browser. Please visit: ${url}`)
-          }
-        })
+        // No shell, and off omni: the browser must outlive this process (integration plan §3).
+        const opener = { darwin: ["open"], win32: ["rundll32", "url.dll,FileProtocolHandler"] }[
+          process.platform as string
+        ]
+        const warn = () => prompts.log.warn(`Could not open browser. Please visit: ${url}`)
+        void Process.interactive([...(opener ?? ["xdg-open"]), url]).exited.then((code) => code === 0 || warn(), warn)
 
         // Wait for installation
         s.message("Waiting for GitHub app to be installed")

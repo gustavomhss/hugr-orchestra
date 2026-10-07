@@ -19,6 +19,7 @@ import {
 } from "./app-dock-runtime-backend"
 import { AppDockRuntimeDocker } from "./app-dock-runtime-docker"
 import { LinuxWorkspaceAccess } from "./linux-workspace-access"
+import { DesktopOmni } from "./omni-process"
 
 export { RuntimeError }
 
@@ -149,7 +150,9 @@ export function create(options: { root: string; context: string; image?: string;
   }
   const bridgeCommand = (metadata: Metadata, container: Workspace, command: "configure" | "callback", input: unknown) => new Promise<void>((resolve, reject) => {
     const host = backend.command(metadata.endpoint, container.id, { user: "dock", argv: ["python3", "/opt/orchestra/browser-bridge.py", command] })
-    const child = spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "pipe", "pipe"] })
+    const child: DesktopOmni.Spawned = DesktopOmni.enabled()
+      ? DesktopOmni.spawn(host.file, host.args, { env: host.env })
+      : spawn(host.file, host.args, { env: host.env, stdio: ["pipe", "pipe", "pipe"] })
     const timer = setTimeout(() => child.kill("SIGKILL"), 20_000)
     // URI callbacks carry credentials. Keep them out of argv, output and errors.
     child.stdout.resume()

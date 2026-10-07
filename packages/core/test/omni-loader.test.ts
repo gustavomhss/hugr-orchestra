@@ -102,10 +102,15 @@ describe("Omni.locate", () => {
     const files = { addon: path.join(dir, "hugr_omni.node"), supervisor: path.join(dir, "hugr-omni-supervisor") }
     await writeFile(files.addon, "")
     await writeFile(files.supervisor, "")
-    Omni.configure({ addon: path.join(dir, "missing.node"), supervisor: files.supervisor })
-    expect(() => Omni.locate()).toThrow("missing.node does not exist")
-    Omni.configure(files)
-    expect(Omni.locate()).toEqual(files)
+    try {
+      Omni.configure({ addon: path.join(dir, "missing.node"), supervisor: files.supervisor })
+      expect(() => Omni.locate()).toThrow("missing.node does not exist")
+      Omni.configure(files)
+      expect(Omni.locate()).toEqual(files)
+    } finally {
+      // These fake paths must not outlive the test: other test files in this process load the real addon.
+      Omni.configure({ addon: undefined, supervisor: undefined })
+    }
   })
 })
 

@@ -2,8 +2,12 @@ import { execFile } from "node:child_process"
 import { access, readFile, readdir } from "node:fs/promises"
 import { dirname, extname, join } from "node:path"
 import util from "node:util"
+import { DesktopOmni } from "./omni-process"
 
-const execFilePromise = util.promisify(execFile)
+const legacyExecFile = util.promisify(execFile)
+// Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER the lookups run through omni; legacy stays the default.
+const execFilePromise = (file: string, args: string[]) =>
+  DesktopOmni.enabled() ? DesktopOmni.execFile(file, args) : legacyExecFile(file, args)
 
 const exists = (path: string) =>
   access(path)

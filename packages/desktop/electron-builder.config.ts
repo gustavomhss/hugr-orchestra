@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process"
+import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
@@ -14,6 +15,29 @@ const signScript = path.join(rootDir, "script", "sign-windows.ps1")
 // pins still resolve after the canonical app id changes back to ai.opencode.desktop.
 const legacyDesktopEntry = path.join(packageDir, "resources", "linux", "opencode-desktop.desktop")
 const legacyDesktopEntryFpm = `${legacyDesktopEntry}=/usr/share/applications/opencode-desktop.desktop`
+
+// hugr-omni (D-L8): the addon and the supervisor ship as real files in Resources/omni, staged by scripts/stage-omni.ts.
+const omniEntitlements = path.join(packageDir, "resources", "entitlements.omni.plist")
+const omniBinaries = ["hugr-omni-supervisor", "hugr_omni.node"].map((name) => `Contents/Resources/omni/${name}`)
+
+type MacSign = Extract<NonNullable<NonNullable<Configuration["mac"]>["sign"]>, (...args: never[]) => unknown>
+
+// electron-builder signs every nested binary with entitlementsInherit, the Electron helpers' JIT entitlements. omni's
+// two files get the empty entitlements.omni.plist instead; everything else goes through electron-builder's own signer.
+async function signMac(...[options]: Parameters<MacSign>) {
+  const builder = createRequire(import.meta.url).resolve("electron-builder")
+  const signer = createRequire(builder)("app-builder-lib/out/codeSign/macCodeSign") as {
+    sign: (options: Parameters<MacSign>[0]) => Promise<void>
+  }
+  const forFile = options.optionsForFile
+  await signer.sign({
+    ...options,
+    optionsForFile: (file) => {
+      const base = forFile?.(file) ?? {}
+      return omniBinaries.some((binary) => file.endsWith(binary)) ? { ...base, entitlements: omniEntitlements } : base
+    },
+  })
+}
 
 const metainfoFpm = (appId: string) =>
   `${path.join(packageDir, "resources", `${appId}.metainfo.xml`)}=/usr/share/metainfo/${appId}.metainfo.xml`
@@ -59,7 +83,7 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
+  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*", "!resources/omni/**"],
   extraResources: [
     {
       from: "resources/linux/app-dock-accessibility",
@@ -80,9 +104,8 @@ const getBase = (appId: string): Configuration => ({
         ]
       : []),
     {
-      from: "native/",
-      to: "native/",
-      filter: ["index.js", "index.d.ts", "build/Release/mac_window.node", "swift-build/**"],
+      from: "resources/omni",
+      to: "omni",
     },
   ],
   mac: {
@@ -92,6 +115,8 @@ const getBase = (appId: string): Configuration => ({
     gatekeeperAssess: false,
     entitlements: "resources/entitlements.plist",
     entitlementsInherit: "resources/entitlements.plist",
+    binaries: omniBinaries,
+    sign: signMac,
     notarize: true,
     target: ["dmg", "zip"],
   },
@@ -108,6 +133,8 @@ const getBase = (appId: string): Configuration => ({
       sign: signWindows,
     },
     target: ["nsis"],
+    // The supervisor (.exe) is signed by default; the omni addon is a .node.
+    signExts: [".node"],
     verifyUpdateCodeSignature: false,
   },
   nsis: {

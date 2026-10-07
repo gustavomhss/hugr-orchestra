@@ -51,6 +51,8 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { setNativeTranslations } from "./native-translations"
+import { OmniHost } from "./omni-host"
+import { OmniSmoke } from "./omni-smoke"
 
 const APP_NAMES: Record<string, string> = {
   dev: "OpenCode Dev",
@@ -151,6 +153,7 @@ const main = Effect.gen(function* () {
   initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
+  OmniHost.setup()
 
   const wslServers = createWslServersController(
     app.getVersion(),
@@ -423,6 +426,11 @@ const main = Effect.gen(function* () {
         Effect.sync(() => {
           logger.error("sidecar health check failed", e.toString())
         }),
+      ),
+    )
+    yield* Effect.promise(() =>
+      OmniSmoke.report({ url, username: "opencode", password }).catch((error: unknown) =>
+        logger.error("omni smoke report failed", error),
       ),
     )
 
