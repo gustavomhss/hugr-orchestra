@@ -175,6 +175,7 @@ async function authenticatedHealth(url: string, password: string) {
 
 test("all explicit targets produce correct executable format/architecture and preserve siblings", async () => {
   const sentinel = path.join(root, "dist/cli-preserved/sentinel")
+  const artifacts = new Map<string, string>()
   await Bun.write(sentinel, "preserve these bytes")
   for (const target of targets) {
     const stale = path.join(root, `dist/cli-${target}/stale-output`)
@@ -183,6 +184,7 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(await Bun.file(stale).exists()).toBe(false)
     expect(await Bun.file(sentinel).text()).toBe("preserve these bytes")
     const file = path.join(root, `dist/cli-${target}/bin/orchestra${target.startsWith("windows-") ? ".exe" : ""}`)
+    artifacts.set(file, await digest(file))
     const handle = await open(file)
     const bytes = Buffer.alloc(4096)
     await handle.read(bytes, 0, bytes.length, 0).finally(() => handle.close())
@@ -208,7 +210,20 @@ test("all explicit targets produce correct executable format/architecture and pr
     expect(manifest.os).toEqual([target.startsWith("windows-") ? "win32" : target.split("-")[0]])
     expect(manifest.cpu).toEqual([arm ? "arm64" : "x64"])
   }
+  for (const [file, hash] of artifacts) expect(await digest(file)).toBe(hash)
 }, 1_800_000)
+
+async function digest(file: string) {
+  const hash = new Bun.CryptoHasher("sha256")
+  await Bun.file(file).stream().pipeTo(
+    new WritableStream({
+      write: (chunk) => {
+        hash.update(chunk)
+      },
+    }),
+  )
+  return hash.digest("hex")
+}
 
 test("single and baseline retain native-only selection semantics", async () => {
   await build(["--single", "--baseline"])
