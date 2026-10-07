@@ -11,8 +11,10 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 ### backend-api
 
 - [buf](buf.md): check; input: a Buf module of .proto files.
+- [controller-gen](controller-gen.md): generator; input: Go API types with kubebuilder markers the packet assigns.
 - [datamodel-codegen](datamodel-codegen.md): generator; input: an OpenAPI document or JSON Schema.
 - [kiota](kiota.md): generator; input: an OpenAPI description.
+- [kopium](kopium.md): generator; input: a CustomResourceDefinition file the packet supplies.
 - [ogen](ogen.md): generator; input: an OpenAPI description.
 - [openapi-generator](openapi-generator.md): generator; input: an OpenAPI description.
 - [orval](orval.md): generator; input: an OpenAPI description.
@@ -26,3 +28,7 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 ### backend-refactor
 
 - [ast-grep](ast-grep.md): generator; input: a syntax pattern, its rewrite and the files to apply it to.
+
+### backend-check
+
+- [kubeconform](kubeconform.md): check; input: Kubernetes manifests the change wrote, with the schemas the packet supplies.

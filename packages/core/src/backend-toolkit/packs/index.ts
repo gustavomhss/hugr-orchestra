@@ -1,8 +1,11 @@
 import astGrep from "./ast-grep"
 import buf from "./buf"
+import controllerGen from "./controller-gen"
 import datamodelCodegen from "./datamodel-codegen"
 import gitleaks from "./gitleaks"
 import kiota from "./kiota"
+import kopium from "./kopium"
+import kubeconform from "./kubeconform"
 import ogen from "./ogen"
 import openapiGenerator from "./openapi-generator"
 import orval from "./orval"
@@ -24,4 +27,7 @@ export const ENGINES = {
   [datamodelCodegen.id]: datamodelCodegen,
   [ogen.id]: ogen,
   [sqlx.id]: sqlx,
+  [controllerGen.id]: controllerGen,
+  [kubeconform.id]: kubeconform,
+  [kopium.id]: kopium,
 }
