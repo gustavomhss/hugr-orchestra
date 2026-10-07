@@ -5,6 +5,7 @@ import { useSettingsDialog } from "@/components/settings-dialog"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import { Persist, persisted } from "@/utils/persist"
+import { openPullRequests, pullRequestCall, pullRequestCli, type PullRequestFailure } from "@/utils/pull-request"
 import {
   change,
   compact,
@@ -41,6 +42,8 @@ type Outcome<T> =
   | { status: "unavailable" }
   | { status: "error" }
   | { status: "complete"; data: T }
+  | { status: "failed"; failure: PullRequestFailure }
+type OpenPullRequests = NonNullable<ReturnType<typeof openPullRequests>>
 
 // Reads stay fresh this long per profile and period, so switching periods back and forth is instant.
 const STALE_MS = 30_000
@@ -65,6 +68,7 @@ export function KpiDashboard(props: {
   )
   const [activity, setActivity] = createSignal<Outcome<Activity>>({ status: "loading" })
   const [repository, setRepository] = createSignal<Outcome<GitActivity>>({ status: "loading" })
+  const [pulls, setPulls] = createSignal<Outcome<OpenPullRequests>>({ status: "loading" })
   const [state, setState] = createStore({ branch: undefined as string | undefined, expanded: false })
   const lifecycle = { abort: new AbortController() }
   onCleanup(() => lifecycle.abort.abort())
@@ -93,9 +97,9 @@ export function KpiDashboard(props: {
     return { text: number(scaled.value, scaled.digits), unit: scaled.unit }
   }
 
-  // One cached read per profile, period and day. Only complete reads stay cached.
-  async function cached<T>(name: string, period: Period, read: (signal: AbortSignal) => Promise<Outcome<T>>) {
-    const queryKey = ["orchestra-home", props.directory, name, period, localEnd(Date.now())]
+  // One cached read per profile, scope (the period, for period-bound reads) and day. Only complete reads stay cached.
+  async function cached<T>(name: string, scope: string, read: (signal: AbortSignal) => Promise<Outcome<T>>) {
+    const queryKey = ["orchestra-home", props.directory, name, scope, localEnd(Date.now())]
     const result = await props.queryClient
       .fetchQuery({ queryKey, queryFn: ({ signal }) => read(signal), staleTime: STALE_MS, retry: false })
       .catch(() => ({ status: "error" }) as const)
@@ -109,6 +113,7 @@ export function KpiDashboard(props: {
     const signal = lifecycle.abort.signal
     setActivity({ status: "loading" })
     setRepository({ status: "loading" })
+    setPulls({ status: "loading" })
     setState("expanded", false)
     void cached("activity", period, (abort) =>
       outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
@@ -128,6 +133,18 @@ export function KpiDashboard(props: {
       ),
     ).then((result) => {
       if (!signal.aborted) setRepository(result)
+    })
+    // Open pull requests are a count of now, the same for every period.
+    void cached("pullRequests", "open", (abort) =>
+      pullRequestCall(
+        client.v2.pullRequest.list({ location: { directory: props.directory } }, { signal: abort }),
+        openPullRequests,
+      ).then(
+        (result): Outcome<OpenPullRequests> =>
+          "data" in result ? { status: "complete", data: result.data } : { status: "failed", failure: result.failure },
+      ),
+    ).then((result) => {
+      if (!signal.aborted) setPulls(result)
     })
     void client.vcs
       .get({ directory: props.directory }, { signal })
@@ -264,7 +281,7 @@ export function KpiDashboard(props: {
           ? language.t("orchestra.home.note.commits", { branch: state.branch })
           : language.t("orchestra.home.note.commitsCurrent"),
       ),
-      blank("pullRequests", "notConnected", language.t("orchestra.home.note.notConnected")),
+      pullRequestTile(),
       commits("merges", (totals) => totals.merges, language.t("orchestra.home.note.merges")),
       activity(
         "models",
@@ -299,6 +316,33 @@ export function KpiDashboard(props: {
           : "",
       bars: heights(current.bars.map((bar) => bar.failed)),
     }
+  }
+
+  // The real open count from the host CLI; when it cannot be known the tile says why instead of a number.
+  function pullRequestTile(): TileView {
+    const current = pulls()
+    if (current.status === "loading") return blank("pullRequests", "loading", "")
+    if (current.status === "complete")
+      return {
+        id: "pullRequests",
+        value: { ...count(current.data.count), raw: current.data.count },
+        note: language.t(`orchestra.home.note.pullRequests.${current.data.host}`),
+        bars: [],
+      }
+    const failure: PullRequestFailure =
+      current.status === "failed"
+        ? current.failure
+        : { reason: current.status === "unavailable" ? "unavailable" : "error" }
+    const cli = pullRequestCli(failure.host)
+    if (failure.reason === "not_installed")
+      return blank("pullRequests", "notConnected", language.t("orchestra.home.note.cliMissing", { cli }))
+    if (failure.reason === "not_authenticated")
+      return blank("pullRequests", "notConnected", language.t("orchestra.home.note.cliSignedOut", { cli }))
+    if (failure.reason === "no_remote")
+      return blank("pullRequests", "notConnected", language.t("orchestra.home.note.notConnected"))
+    if (failure.reason === "unavailable")
+      return blank("pullRequests", "unavailable", language.t("orchestra.home.note.pullRequestsUnavailable"))
+    return blank("pullRequests", "unavailable", language.t("orchestra.home.note.pullRequestsError"))
   }
 
   function blank(id: Tile, tileState: string, note: string): TileView {
@@ -408,7 +452,7 @@ export function KpiDashboard(props: {
       class="orchestra-home-dashboard"
       data-component="orchestra-kpis"
       aria-labelledby="orchestra-home-title"
-      aria-busy={activity().status === "loading" || repository().status === "loading"}
+      aria-busy={activity().status === "loading" || repository().status === "loading" || pulls().status === "loading"}
     >
       <div class="home-inner">
         <header class="home-mast">

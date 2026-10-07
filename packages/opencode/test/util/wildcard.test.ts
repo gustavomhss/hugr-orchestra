@@ -88,3 +88,70 @@ test("match handles case-insensitivity on Windows", () => {
     expect(Wildcard.match("/users/test/file", "/Users/test/*")).toBe(false)
   }
 })
+
+test("match stays fast on patterns that made the old regex backtrack", () => {
+  // The old regex took about 15 s on the first input and over a minute on the second, so a regression fails the timing
+  // check on the first input instead of hanging on the larger ones.
+  const cases = [
+    { input: "ab".repeat(150), expected: false },
+    { input: "ab".repeat(500), expected: false },
+    { input: "ab".repeat(50_000), expected: false },
+    { input: `${"ab".repeat(50_000)}c`, expected: true },
+  ]
+  for (const item of cases) {
+    const start = performance.now()
+    expect(Wildcard.match(item.input, "*a*b*a*b*c")).toBe(item.expected)
+    expect(performance.now() - start).toBeLessThan(250)
+  }
+})
+
+test("match agrees with the regex it replaced on seeded random cases", () => {
+  // Includes case relatives a non-unicode `i` regex folds or keeps apart (ß, dotless ı, long ſ, micro µ, Kelvin K).
+  // Both sides fold only on Windows, so the Windows runner of `test:ci --os both` checks the folding.
+  const chars = "aAbB c/\\.\n+()[]{}^$|ıIiſsSßµμΣσςKk\u212A"
+  let seed = 20261006
+  const next = () => (seed = (Math.imul(seed, 1103515245) + 12345) >>> 0) / 2 ** 32
+  const text = (length: number, from = chars) =>
+    Array.from({ length }, () => from[Math.floor(next() * from.length)]).join("")
+  // Patterns derived from their input (with `?`, `*`, case flips and drops) so a fair share of cases match.
+  const mutate = (input: string) =>
+    input
+      .split("")
+      .map((char) => {
+        const roll = next()
+        if (roll < 0.1) return "?"
+        if (roll < 0.2) return "*"
+        if (roll < 0.3) return char === char.toLowerCase() ? char.toUpperCase() : char.toLowerCase()
+        if (roll < 0.35) return ""
+        return char
+      })
+      .join("")
+  const cases = Array.from({ length: 5000 }, () => {
+    const input = text(Math.floor(next() * 14))
+    const pattern = next() < 0.5 ? mutate(input) : text(Math.floor(next() * 10), chars + "***??")
+    if (next() < 0.75) return { input, pattern }
+    return { input: next() < 0.5 ? input : `${input} ${text(3)}`, pattern: `${pattern} *` }
+  })
+
+  expect(
+    cases.filter((item) => Wildcard.match(item.input, item.pattern) !== regexMatch(item.input, item.pattern)),
+  ).toEqual([])
+  expect(cases.filter((item) => regexMatch(item.input, item.pattern)).length).toBeGreaterThan(1000)
+  expect(
+    cases.filter((item) => item.pattern.endsWith(" *") && regexMatch(item.input, item.pattern)).length,
+  ).toBeGreaterThan(200)
+})
+
+// The regex matcher that match replaced, kept verbatim as the oracle for the equivalence test.
+function regexMatch(input: string, pattern: string) {
+  const normalized = input.replaceAll("\\", "/")
+  let escaped = pattern
+    .replaceAll("\\", "/")
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*")
+    .replace(/\?/g, ".")
+
+  if (escaped.endsWith(" .*")) escaped = escaped.slice(0, -3) + "( .*)?"
+
+  return new RegExp("^" + escaped + "$", process.platform === "win32" ? "si" : "s").test(normalized)
+}

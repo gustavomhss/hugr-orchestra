@@ -29,12 +29,12 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --mx-soft: rgba(60, 87, 118, 0.045);
   --mx-raised: rgba(255, 255, 255, 0.63);
   --mx-modal: #f8fafc;
-  /* WCAG AA on the light glass panel (owner decision); the mock uses #697586. */
-  --mx-dim: #48515c;
+  /* WCAG AA on the light glass over the photograph's darkest band, hue kept (owner decision). */
+  --mx-dim: #3d4651;
   --mx-strong: #263341;
-  --mx-blue: #376ea5;
-  --mx-good: #3d7e5e;
-  --mx-bad: #a75249;
+  --mx-blue: #0b477b;
+  --mx-good: #045033;
+  --mx-bad: #7b2a24;
   --mx-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --mx-shadow: 0 30px 100px rgba(28, 46, 65, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(28, 46, 65, 0.16);

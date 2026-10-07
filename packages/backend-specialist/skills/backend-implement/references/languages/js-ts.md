@@ -51,7 +51,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - Scoped to the package: its typecheck (for example `bun typecheck`, `tsc --noEmit` through the package script) and its test runner on the assigned files.
 - Outputs: handwritten routes, schemas, services and tests. Generated clients and schemas are regenerated, never edited.
-- Toolkit engines, only for the artifacts the packet assigns: [ast-grep](../recipes/external/ast-grep.md) for bounded syntax rewrites, [buf](../recipes/external/buf.md) for Protobuf schema checks, [kiota](../recipes/external/kiota.md) for API clients from an OpenAPI description, [orval](../recipes/external/orval.md) for TypeScript clients and Zod schemas from an OpenAPI description, [protoc-gen-es](../recipes/external/protoc-gen-es.md) for TypeScript code from Protobuf schemas.
+- Toolkit engines ([recipes](../recipes/external/index.md)), only for the artifacts the packet assigns: ast-grep for bounded syntax rewrites, buf for Protobuf schema checks, kiota for API clients from an OpenAPI description, orval for TypeScript clients and Zod schemas from an OpenAPI description, protoc-gen-es for TypeScript code from Protobuf schemas, kysely-codegen for Kysely table types from a supplied database.
 
 ## Limits and checks
 

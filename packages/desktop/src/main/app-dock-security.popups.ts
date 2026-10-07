@@ -31,8 +31,9 @@ export const waitFor = async (predicate: () => boolean | Promise<boolean>, label
   }
 }
 
-// U32. Only the tab on screen may attach a view. A popup from a background tab, or from any tab while the
-// Dock is hidden, opens behind it and is attached only when it is selected.
+// U32. Only the tab on screen may raise a popup. A popup from a background tab, or from any tab while the
+// Dock is hidden, is refused as blocked: no WebContents is created and no tab is announced or attached.
+// The tab on screen keeps its popups, which open as the selected tab.
 export async function backgroundPopups(harness: PopupHarness) {
   const ipcWin = harness.ipcWin
   const invoke = (channel: string, args: unknown[]) => harness.invoke(ipcWin.webContents.mainFrame, channel, args)
@@ -44,69 +45,76 @@ export async function backgroundPopups(harness: PopupHarness) {
   const u32FrontContents = attachedContents(ipcWin)
   check(u32OpenerContents && u32FrontContents && u32OpenerContents !== u32FrontContents, "U32 App Dock views missing")
   check(!attached(ipcWin, u32OpenerContents), "U32 opener is not a background tab")
-  const u32Popup = async (from: Electron.WebContents, url: string) => {
+  const u32Live = () =>
+    JSON.stringify(
+      harness.webContents
+        .getAllWebContents()
+        .filter((item) => !item.isDestroyed())
+        .map((item) => item.id)
+        .sort((left, right) => left - right),
+    )
+  const u32Open = async (from: Electron.WebContents, url: string) => {
     await waitFor(
       async () => (await harness.execute("view:u32-opener-ready", from, "document.readyState === 'complete'")) === true,
       "U32 opener load",
     )
     await harness.execute("view:u32-window-open", from, `window.open(${JSON.stringify(url)}); undefined`)
-    let contents: Electron.WebContents | undefined
-    await waitFor(() => {
-      contents = harness.webContents.getAllWebContents().find((item) => !item.isDestroyed() && item.getURL() === url)
-      return contents !== undefined
-    }, `U32 popup WebContents ${url}`)
-    return contents!
   }
-  const u32BackgroundURL = `${harness.base}/popup-target?u32=background`
-  const u32BackgroundContents = await u32Popup(u32OpenerContents!, u32BackgroundURL)
+  const u32Refused = async (from: Electron.WebContents, opener: Tab, url: string) => {
+    const before = u32Live()
+    await u32Open(from, url)
+    const refused = await waitEvent(
+      harness,
+      u32Start,
+      (event) => event.type === "navigation-error" && event.payload.url === url,
+      `U32 refusal ${url}`,
+    )
+    check(
+      refused.payload.code === "blocked" &&
+        JSON.stringify(refused.payload.identity) === JSON.stringify(identity(opener)),
+      `U32 popup ${url} was not refused as blocked for its opener`,
+    )
+    check(u32Live() === before, `U32 refused popup ${url} created a view`)
+  }
+  await u32Refused(u32OpenerContents!, u32Opener, `${harness.base}/popup-target?u32=background`)
   check(
     ipcWin.contentView.children.length === 1 && attached(ipcWin, u32FrontContents),
     "U32 popup from a background tab displaced the tab on screen",
   )
-  check(!attached(ipcWin, u32BackgroundContents), "U32 popup from a background tab attached a view")
-  check(!attached(ipcWin, u32OpenerContents), "U32 background opener attached a view")
-  const u32Background = await waitEvent(
-    harness,
-    u32Start,
-    (event) => event.type === "tab-opened-background" && event.payload.url === u32BackgroundURL,
-    "U32 background popup tab-opened-background",
-  )
   await invoke("app-dock-hide", [identity(u32Front)])
   check(attachedContents(ipcWin) === undefined, "U32 hide left a view attached")
-  const u32HiddenURL = `${harness.base}/popup-target?u32=hidden`
-  const u32HiddenContents = await u32Popup(u32FrontContents!, u32HiddenURL)
+  await u32Refused(u32FrontContents!, u32Front, `${harness.base}/popup-target?u32=hidden`)
   check(attachedContents(ipcWin) === undefined, "U32 popup attached a view while the Dock was hidden")
-  const u32Hidden = await waitEvent(
+  check(
+    !(await events(harness))
+      .slice(u32Start)
+      .some((event) => event.type === "tab-opened" || event.type === "tab-opened-background"),
+    "U32 a refused popup announced a tab",
+  )
+
+  await invoke("app-dock-select", [identity(u32Front), harness.bounds])
+  check(attached(ipcWin, u32FrontContents), "U32 selecting the front tab did not attach it")
+  const u32FrontURL = `${harness.base}/popup-target?u32=front`
+  await u32Open(u32FrontContents!, u32FrontURL)
+  const u32Opened = await waitEvent(
     harness,
     u32Start,
-    (event) => event.type === "tab-opened-background" && event.payload.url === u32HiddenURL,
-    "U32 hidden popup tab-opened-background",
+    (event) => event.type === "tab-opened" && event.payload.url === u32FrontURL,
+    "U32 front popup tab-opened",
   )
+  let u32PopupContents: Electron.WebContents | undefined
+  await waitFor(() => {
+    u32PopupContents = harness.webContents
+      .getAllWebContents()
+      .find((item) => !item.isDestroyed() && item.getURL() === u32FrontURL)
+    return u32PopupContents !== undefined
+  }, "U32 front popup WebContents")
   check(
-    [u32Background, u32Hidden].every(
-      (event) =>
-        Object.keys(event.payload).length === 3 &&
-        typeof event.payload.tabID === "string" &&
-        event.payload.tabID.length > 0 &&
-        Number.isSafeInteger(event.payload.generation) &&
-        event.payload.generation >= 1 &&
-        JSON.stringify(structuredClone(event.payload)) === JSON.stringify(event.payload),
-    ) && !(await events(harness)).slice(u32Start).some((event) => event.type === "tab-opened"),
-    "U32 background popup event is not a cloneable public tab identity, or announced a selected tab",
+    ipcWin.contentView.children.length === 1 && attached(ipcWin, u32PopupContents),
+    "U32 the front tab's popup is not the one attached, selected tab",
   )
-  await invoke("app-dock-select", [identity(u32Background.payload), harness.bounds])
-  check(
-    ipcWin.contentView.children.length === 1 && attached(ipcWin, u32BackgroundContents),
-    "U32 selecting the background popup did not attach only its view",
-  )
-  await invoke("app-dock-select", [identity(u32Hidden.payload), harness.bounds])
-  check(
-    ipcWin.contentView.children.length === 1 && attached(ipcWin, u32HiddenContents),
-    "U32 selecting the hidden popup did not attach only its view",
-  )
-  for (const opened of [u32Hidden.payload, u32Background.payload, u32Front, u32Opener])
-    await invoke("app-dock-close-tab", [opened.tabID])
-  return "popups from a background tab or a hidden Dock open unattached as tab-opened-background; selecting attaches only them"
+  for (const opened of [u32Opened.payload, u32Front, u32Opener]) await invoke("app-dock-close-tab", [opened.tabID])
+  return "popups from a background tab or a hidden Dock are refused as blocked with no view; the tab on screen still opens its popup as the selected tab"
 }
 
 // U33. U28 left both windows at the 20 inactive view cap, with its tab a1 in the background of the first.

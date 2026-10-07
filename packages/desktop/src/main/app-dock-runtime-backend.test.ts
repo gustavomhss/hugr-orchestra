@@ -29,7 +29,9 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
   const state = {
     workspace: "workspace" in input ? input.workspace : running(pinned),
     terminate: async () => {},
+    start: async () => {},
     copy: async () => {},
+    exec: async (_command: { argv: string[]; timeout?: number }) => {},
   }
   const backend: Backend = {
     locate: async (saved) => {
@@ -51,12 +53,15 @@ async function fixture(input: { pin?: string; workspace?: Workspace } = {}) {
     },
     start: async (_metadata, workspace) => {
       calls.push(`start ${workspace.id}`)
+      await state.start()
     },
     stop: async (_metadata, workspace) => {
       calls.push(`stop ${workspace.id}`)
+      if (state.workspace) state.workspace = { ...state.workspace, running: false }
     },
     exec: async (_metadata, workspace, command) => {
       calls.push(`exec ${command.user} ${workspace.id} ${command.argv.join(" ")}`)
+      await state.exec(command)
       if (command.argv.at(-1) === "list") return { stdout: JSON.stringify([{ id: "x.desktop", name: "X" }]), stderr: "" }
       if (command.argv.at(-1) === "native-session")
         return { stdout: JSON.stringify({ sessionID: "session", processIdentity: {}, environment: {} }), stderr: "" }
@@ -162,4 +167,69 @@ test("a failed workspace.py refresh blocks the helper exec and is retried on the
     `exec root ${pinned} chmod 0644 /opt/orchestra/workspace.py`,
     `exec dock ${pinned} python3 /opt/orchestra/workspace.py list`,
   ])
+})
+
+test("stop records the open apps, with the current helper, before it stops the workspace", async () => {
+  const f = await fixture({ pin: pinned })
+  const timeouts: Array<number | undefined> = []
+  f.state.exec = async (command) => {
+    if (command.argv.at(-1) === "remember") timeouts.push(command.timeout)
+  }
+
+  await f.runtime.stop()
+  expect(f.calls).toEqual([
+    `copy workspace.py ${pinned}:/opt/orchestra/workspace.py`,
+    `exec root ${pinned} chown 0:0 /opt/orchestra/workspace.py`,
+    `exec root ${pinned} chmod 0644 /opt/orchestra/workspace.py`,
+    `exec dock ${pinned} python3 /opt/orchestra/workspace.py remember`,
+    `stop ${pinned}`,
+  ])
+  expect(timeouts).toEqual([3_000])
+  expect((await f.runtime.state()).phase).toBe("stopped")
+})
+
+test("a failing or hanging remember still stops the workspace within its bound", async () => {
+  for (const remember of [
+    () => Promise.reject(new Error("remember failed")),
+    () => new Promise<void>(() => {}),
+  ]) {
+    const f = await fixture({ pin: pinned })
+    f.state.exec = async (command) => {
+      if (command.argv.at(-1) === "remember") await remember()
+    }
+    const started = performance.now()
+
+    await f.runtime.stop()
+    expect(performance.now() - started).toBeLessThan(4_500)
+    expect(f.calls.at(-1)).toBe(`stop ${pinned}`)
+    expect((await f.runtime.state()).phase).toBe("stopped")
+  }
+}, 15_000)
+
+test("a remember that cannot refresh the helper still stops the workspace", async () => {
+  const f = await fixture({ pin: pinned })
+  f.state.copy = () => new Promise<void>(() => {})
+
+  await f.runtime.stop()
+  expect(f.calls).toEqual([`stop ${pinned}`])
+  expect((await f.runtime.state()).phase).toBe("stopped")
+}, 10_000)
+
+test("an unpinned running workspace is stopped without running remember into it", async () => {
+  const f = await fixture({ workspace: running(pinned) })
+
+  await f.runtime.stop()
+  expect(f.calls).toEqual([`stop ${pinned}`])
+})
+
+test("a start that fails after starting the workspace stops it without overwriting the saved open apps", async () => {
+  const f = await fixture({ pin: pinned, workspace: { ...running(pinned), running: false } })
+  f.state.start = async () => {
+    if (f.state.workspace) f.state.workspace = { ...f.state.workspace, running: true }
+  }
+
+  expect(await rejection(f.runtime.start())).toBeDefined()
+  expect(f.calls).toContain(`start ${pinned}`)
+  expect(f.calls.at(-1)).toBe(`stop ${pinned}`)
+  expect(f.calls.filter((call) => call.endsWith(" remember"))).toEqual([])
 })

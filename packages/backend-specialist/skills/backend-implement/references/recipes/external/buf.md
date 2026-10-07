@@ -4,6 +4,8 @@
 
 The packet assigns a change to `.proto` files in a Buf module (`buf.yaml` present) and names lint, build or breaking-change checks. The engine is buf `1.73.0`, provided by the host and run only as `"$BACKEND_TOOLKIT_BIN/buf"`. This toolkit release covers `lint`, `build` and `breaking` only.
 
+Source: adapted from Buf's official protobuf skill (Apache-2.0), <https://github.com/bufbuild/claude-plugins/tree/main/plugins/protobuf/skills/protobuf>.
+
 ## Non-trigger
 
 - Code generation for TypeScript: follow [protoc-gen-es](protoc-gen-es.md), the one generation plugin the toolkit ships. Any other plugin must be a project-pinned route that is already installed; otherwise return a `packet` blocker. Never fetch a plugin.
@@ -20,12 +22,12 @@ The packet assigns a change to `.proto` files in a Buf module (`buf.yaml` presen
 
 1. Edit the `.proto` files the change needs. Run the commands below from the repository root, with `proto` standing for the module directory.
 2. Compile: `"$BACKEND_TOOLKIT_BIN/buf" build proto`. Without `-o` it writes no image; a compile error stops here.
-3. Lint: `"$BACKEND_TOOLKIT_BIN/buf" lint proto`. Fix findings inside the changed files; findings elsewhere are baseline, reported, not fixed.
+3. Lint: `"$BACKEND_TOOLKIT_BIN/buf" lint proto`. Fix findings inside the changed files; findings elsewhere are baseline, reported, not fixed. Most fixes are renames the rule names: enum values prefixed with the enum name and a `_UNSPECIFIED` zero value, `lower_snake_case` fields, a versioned package (`acme.user.v1`), one `<Method>Request` and `<Method>Response` per RPC. A `// buf:lint:ignore <RULE>` comment is allowed only when the packet accepts that rule there.
 4. Breaking check against the committed baseline:
    ```sh
    "$BACKEND_TOOLKIT_BIN/buf" breaking proto --against '.git#ref=HEAD,subdir=proto'
    ```
-   A reported breaking change that the packet does not allow is reverted or returned as a `packet` blocker; never weaken the rules to pass. Never keep a baseline image in `$TMPDIR` between commands: under the sandbox it is a fresh directory for each command.
+   A reported breaking change that the packet does not allow is reverted or returned as a `packet` blocker; never weaken the rules to pass. The compatible forms: reserve a deleted field's number and name (`reserved 3; reserved "name";`), never renumber or retype a field (add a new one and mark the old `deprecated = true`), keep a renamed field's JSON name with `json_name`, never move an existing field into a `oneof`, and deprecate RPCs, messages and enum values instead of deleting them. Never keep a baseline image in `$TMPDIR` between commands: under the sandbox it is a fresh directory for each command.
 5. Run the packet's checks for code that consumes the schema.
 
 ## Tools and outputs

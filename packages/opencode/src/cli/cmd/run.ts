@@ -25,27 +25,19 @@ import { Filesystem } from "@/util/filesystem"
 import { createOpencodeClient, type OpencodeClient, type ToolPart } from "@opencode-ai/sdk/v2"
 import { FormatError, FormatUnknownError } from "../error"
 import { INTERACTIVE_INPUT_ERROR, resolveInteractiveStdin } from "./run/runtime.stdin"
+import { reportRetry } from "./run/retry-wait"
 
 type ModelInput = Parameters<OpencodeClient["session"]["prompt"]>[0]["model"]
 
 function pick(value: string | undefined): ModelInput | undefined {
   if (!value) return undefined
   const [providerID, ...rest] = value.split("/")
-  return {
-    providerID,
-    modelID: rest.join("/"),
-  } as ModelInput
+  return { providerID, modelID: rest.join("/") } as ModelInput
 }
 
 function resolveRunInput(value?: string, piped?: string): string | undefined {
-  if (!value) {
-    return piped
-  }
-
-  if (!piped) {
-    return value
-  }
-
+  if (!value) return piped
+  if (!piped) return value
   return value + "\n" + piped
 }
 
@@ -98,10 +90,7 @@ async function tool(part: ToolPart) {
 
     inline(next)
   } catch {
-    inline({
-      icon: "\u2699",
-      title: part.tool,
-    })
+    inline({ icon: "\u2699", title: part.tool })
   }
 }
 
@@ -116,10 +105,7 @@ async function toolError(part: ToolPart) {
     })
     return
   } catch {
-    inline({
-      icon: "✗",
-      title: `${part.tool} failed`,
-    })
+    inline({ icon: "✗", title: `${part.tool} failed` })
   }
 }
 
@@ -780,13 +766,18 @@ export const RunCommand = effectCmd({
               UI.error(err)
             }
 
-            if (
-              event.type === "session.status" &&
-              event.properties.sessionID === sessionID &&
-              event.properties.status.type === "idle"
-            ) {
-              break
+            const status = event.type === "session.status" ? event.properties : undefined
+            if (status?.status.type === "retry" && sessions.has(status.sessionID)) {
+              const err = await reportRetry({
+                client,
+                sessionID,
+                retrySessionID: status.sessionID,
+                status: status.status,
+                emit,
+              })
+              if (err) error = error ? error + EOL + err : err
             }
+            if (status?.sessionID === sessionID && status.status.type === "idle") break
 
             if (event.type === "permission.asked") {
               const permission = event.properties

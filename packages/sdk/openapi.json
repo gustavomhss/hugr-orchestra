@@ -13496,6 +13496,16 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
           }
         },
         "description": "Update a stored credential label.",
@@ -13577,6 +13587,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
                 }
               }
             }
@@ -14818,6 +14838,104 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.skill.remove({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/behavior": {
+      "put": {
+        "tags": ["behaviors"],
+        "operationId": "v2.behavior.set",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BehaviorInfo"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Replace the behaviors of the requested location's project and return the stored set. Every session of the project receives them as system context from its next provider turn; removed behaviors leave the next turn's request.",
+        "summary": "Set behaviors",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BehaviorSetInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.behavior.set({\n  ...\n})"
           }
         ]
       }
@@ -16224,6 +16342,670 @@
           {
             "lang": "js",
             "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.projectCopy.refresh({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/pull-request": {
+      "get": {
+        "tags": ["pullRequest"],
+        "operationId": "v2.pullRequest.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestList"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "PullRequestError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PullRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "List open pull requests on the location's github.com or gitlab.com remote through the gh or glab CLI signed in on the server.",
+        "summary": "List open pull requests",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.pullRequest.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["pullRequest"],
+        "operationId": "v2.pullRequest.create",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/PullRequestCreated"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "PullRequestError | InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PullRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Open a pull request from a pushed branch of the location's repository through the gh or glab CLI signed in on the server.",
+        "summary": "Create pull request",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PullRequestCreateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.pullRequest.create({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/schedule": {
+      "get": {
+        "tags": ["schedule"],
+        "operationId": "v2.schedule.list",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ScheduledTaskInfo"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "List the location's scheduled tasks with the outcome of each task's latest run.",
+        "summary": "List scheduled tasks",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.schedule.list({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["schedule"],
+        "operationId": "v2.schedule.create",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ScheduledTaskInfo"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Schedule a prompt for the location. The server runs due slots itself; creating with an ID the location already has returns that task unchanged.",
+        "summary": "Create scheduled task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduledTaskCreateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.schedule.create({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/schedule/{scheduleID}": {
+      "patch": {
+        "tags": ["schedule"],
+        "operationId": "v2.schedule.update",
+        "parameters": [
+          {
+            "name": "scheduleID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ScheduledTaskInfo"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ScheduleNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleNotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Edit, pause or resume a scheduled task.",
+        "summary": "Update scheduled task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduledTaskUpdateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.schedule.update({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["schedule"],
+        "operationId": "v2.schedule.remove",
+        "parameters": [
+          {
+            "name": "scheduleID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ScheduleNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleNotFoundError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Remove a scheduled task and its run history.",
+        "summary": "Remove scheduled task",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.schedule.remove({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/schedule/{scheduleID}/run": {
+      "post": {
+        "tags": ["schedule"],
+        "operationId": "v2.schedule.run",
+        "parameters": [
+          {
+            "name": "scheduleID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ScheduledTaskRunResult"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ScheduleNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleNotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "ScheduleRunError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleRunError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Admit the task's prompt into a Session now. Serves the due slot when no run holds it, otherwise starts an extra run. A failed run is not recorded.",
+        "summary": "Run scheduled task now",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOpencodeClient } from \"@opencode-ai/sdk\n\nconst client = createOpencodeClient()\nawait client.v2.schedule.run({\n  ...\n})"
           }
         ]
       }
@@ -27325,6 +28107,70 @@
         "required": ["name", "data"],
         "additionalProperties": false
       },
+      "PullRequestError": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["PullRequestError"]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "$ref": "#/components/schemas/PullRequestErrorKind"
+              },
+              "message": {
+                "type": "string"
+              },
+              "host": {
+                "$ref": "#/components/schemas/PullRequestHost"
+              },
+              "branch": {
+                "type": "string"
+              },
+              "remote": {
+                "type": "string"
+              }
+            },
+            "required": ["kind", "message"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["name", "data"],
+        "additionalProperties": false
+      },
+      "ScheduleNotFoundError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ScheduleNotFoundError"]
+          },
+          "scheduleID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "scheduleID", "message"],
+        "additionalProperties": false
+      },
+      "ScheduleRunError": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": ["ScheduleRunError"]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["_tag", "message"],
+        "additionalProperties": false
+      },
       "effect_HttpApiError_Forbidden": {
         "type": "object",
         "properties": {
@@ -35777,6 +36623,39 @@
         "required": ["name", "description", "content"],
         "additionalProperties": false
       },
+      "BehaviorInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$",
+            "description": "Stable behavior identifier: lowercase letters, digits, dots, underscores and hyphens."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "instructions": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": ["id", "name", "instructions"],
+        "additionalProperties": false
+      },
+      "BehaviorSetInput": {
+        "type": "object",
+        "properties": {
+          "behaviors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BehaviorInfo"
+            }
+          }
+        },
+        "required": ["behaviors"],
+        "additionalProperties": false
+      },
       "Models-devRefreshed": {
         "type": "object",
         "properties": {
@@ -40637,6 +41516,300 @@
         "required": ["directory"],
         "additionalProperties": false
       },
+      "PullRequestHost": {
+        "type": "string",
+        "enum": ["github", "gitlab"]
+      },
+      "PullRequestInfo": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          }
+        },
+        "required": ["number", "title", "url", "state", "author"],
+        "additionalProperties": false
+      },
+      "PullRequestList": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "$ref": "#/components/schemas/PullRequestHost"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PullRequestInfo"
+            }
+          }
+        },
+        "required": ["host", "repository", "count", "truncated", "items"],
+        "additionalProperties": false
+      },
+      "PullRequestErrorKind": {
+        "type": "string",
+        "enum": ["not_installed", "not_authenticated", "no_remote", "branch_not_pushed", "cli_failed"]
+      },
+      "PullRequestCreateInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "head": {
+            "type": "string"
+          }
+        },
+        "required": ["title", "body", "base"],
+        "additionalProperties": false
+      },
+      "PullRequestCreated": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "$ref": "#/components/schemas/PullRequestHost"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": ["host", "repository", "number", "url"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskCadence": {
+        "type": "string",
+        "enum": ["once", "hourly", "daily", "weekly"]
+      },
+      "ScheduledTaskStartedRun": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["started"]
+          },
+          "time": {
+            "type": "number"
+          },
+          "slot": {
+            "type": "number"
+          },
+          "sessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          }
+        },
+        "required": ["outcome", "time", "sessionID"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskFailedRun": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["failed"]
+          },
+          "time": {
+            "type": "number"
+          },
+          "slot": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["outcome", "time", "error"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskRun": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ScheduledTaskStartedRun"
+          },
+          {
+            "$ref": "#/components/schemas/ScheduledTaskFailedRun"
+          }
+        ]
+      },
+      "ScheduledTaskInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/ScheduledTaskCadence"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "minute": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1439
+          },
+          "next": {
+            "type": "number"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "missed": {
+            "type": "number"
+          },
+          "last": {
+            "$ref": "#/components/schemas/ScheduledTaskRun"
+          }
+        },
+        "required": ["id", "name", "prompt", "cadence", "timezone", "minute", "next", "enabled", "runs"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskHistory": {
+        "type": "object",
+        "properties": {
+          "runs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "missed": {
+            "type": "number"
+          },
+          "last": {
+            "type": "object",
+            "properties": {
+              "time": {
+                "type": "number"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              }
+            },
+            "required": ["time", "sessionID"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["runs"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskCreateInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/ScheduledTaskCadence"
+          },
+          "next": {
+            "type": "number"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "minute": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1439
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "history": {
+            "$ref": "#/components/schemas/ScheduledTaskHistory"
+          }
+        },
+        "required": ["name", "prompt", "cadence", "next", "timezone"],
+        "additionalProperties": false
+      },
+      "ScheduledTaskUpdateInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/ScheduledTaskCadence"
+          },
+          "next": {
+            "type": "number"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScheduledTaskRunResult": {
+        "type": "object",
+        "properties": {
+          "sessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          }
+        },
+        "required": ["sessionID"],
+        "additionalProperties": false
+      },
       "EventModels-devRefreshed": {
         "type": "object",
         "properties": {
@@ -45114,6 +46287,10 @@
       "description": "Experimental skill routes."
     },
     {
+      "name": "behaviors",
+      "description": "Project-scoped model behaviors applied as system context."
+    },
+    {
       "name": "events",
       "description": "Experimental event stream route."
     },
@@ -45132,6 +46309,14 @@
     {
       "name": "projectCopy",
       "description": "Project copy management routes."
+    },
+    {
+      "name": "pullRequest",
+      "description": "Host pull requests through the server's gh or glab CLI."
+    },
+    {
+      "name": "schedule",
+      "description": "Scheduled task routes."
     },
     {
       "name": "pty",

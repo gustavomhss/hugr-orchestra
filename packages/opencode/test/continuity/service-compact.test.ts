@@ -82,7 +82,7 @@ it.instance("the agent's context_compact tool runs a forced pass on its own sess
   }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.5 } } })))
 }), 30_000)
 
-it.instance("below the trigger, a long turn is pruned by steps every PRUNE_STEP of growth, with no model call", () => Effect.gen(function* () {
+it.instance("below the trigger nothing is compacted: a long turn keeps every tool result", () => Effect.gen(function* () {
   yield* Effect.gen(function* () {
     // At trigger 0.5 the seed's 50,000 tokens on a 200,000-token window start no pass.
     const sessionID = yield* seed()
@@ -106,8 +106,8 @@ it.instance("below the trigger, a long turn is pruned by steps every PRUNE_STEP 
       yield* continuity.start({ sessionID, message: step, canRecall: true })
       const output = (yield* prepare(sessionID)).messages.find((message) => message.info.id === steps[0].id)!.parts[0]
       if (output.type !== "tool" || output.state.status !== "completed") throw new Error("Expected the completed read")
-      // Step 6 is the first past 60,000 tokens (the seed's 50,000 plus PRUNE_STEP), and the read has left the last five steps.
-      expect(output.state.output.startsWith("[masked tool result: read filePath=step-0.log")).toBe(index >= 6)
+      // 62,500 tokens at most on a 200,000-token window: under the 0.5 trigger, so the old read stays whole.
+      expect(output.state.output).toStartWith("step 0 log line")
     }
     expect((yield* prepare(sessionID)).system).toEqual([])
   }).pipe(Effect.provide(environment([], { config: { continuity: { trigger: 0.5 } } })))

@@ -7,49 +7,63 @@
     }
   }
 
-  const key = "opencode-theme-id"
-  const savedTheme = read(key) || "oc-2"
-  const themeId = savedTheme === "oc-1" ? "oc-2" : savedTheme
-
-  if (savedTheme === "oc-1") {
+  function write(key, value) {
     try {
-      localStorage.setItem(key, themeId)
-      localStorage.removeItem("opencode-theme-css-light")
-      localStorage.removeItem("opencode-theme-css-dark")
+      localStorage.setItem(key, value)
     } catch {}
+  }
+
+  function drop(key) {
+    try {
+      localStorage.removeItem(key)
+    } catch {}
+  }
+
+  const root = document.documentElement
+  const own = ["system", "dark", "light"]
+
+  // Orchestra shows only its own palettes. An inherited theme chosen before palettes existed becomes the palette
+  // of the same name when one ships, and Orchestra Dark otherwise.
+  const legacy = read("opencode-theme-id")
+  const stored = read("orchestra-palette")
+  const requested = stored || (legacy && legacy !== "oc-1" && legacy !== "oc-2" ? legacy : null)
+  if (legacy && legacy !== "oc-2") {
+    write("opencode-theme-id", "oc-2")
+    drop("opencode-theme-css-light")
+    drop("opencode-theme-css-dark")
+  }
+
+  // A recolored palette's first-paint rules are inlined before this script; they name the palette's scheme.
+  if (requested && !own.includes(requested)) {
+    root.dataset.orchestraPalette = requested
+    const scheme = getComputedStyle(root).getPropertyValue("--orchestra-palette-scheme").trim()
+    if (scheme === "dark" || scheme === "light") {
+      write("orchestra-palette", requested)
+      write("opencode-color-scheme", scheme)
+    }
+    if (scheme !== "dark" && scheme !== "light") {
+      // Unknown or removed palette: Orchestra Dark.
+      delete root.dataset.orchestraPalette
+      write("orchestra-palette", "dark")
+      write("opencode-color-scheme", "dark")
+    }
   }
 
   const savedScheme = read("opencode-color-scheme")
   const scheme = savedScheme === "dark" || savedScheme === "light" ? savedScheme : "system"
   const isDark = scheme === "dark" || (scheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
   const mode = isDark ? "dark" : "light"
-  const root = document.documentElement
 
-  root.dataset.theme = themeId
+  root.dataset.theme = "oc-2"
   root.dataset.colorScheme = mode
   // Orchestra is the default shell. Settings reconcile this marker with the body after mount.
   root.toggleAttribute("data-new-layout", true)
   root.style.colorScheme = mode
 
-  const css = themeId === "oc-2" ? null : read("opencode-theme-css-" + mode)
-  if (css) {
-    const style = document.createElement("style")
-    style.id = "oc-theme-preload"
-    style.textContent =
-      ":root{color-scheme:" +
-      mode +
-      ";--text-mix-blend-mode:" +
-      (isDark ? "plus-lighter" : "multiply") +
-      ";" +
-      css +
-      "}"
-    document.head.appendChild(style)
-  }
-
   const style = getComputedStyle(root)
   root.style.backgroundColor =
     style.getPropertyValue("--app-background").trim() ||
     style.getPropertyValue("--v2-background-bg-deep").trim() ||
-    (isDark ? "#080808" : "#fafafa")
+    (isDark ? "#080c11" : "#dfe3e8")
   document.querySelector("meta[name='theme-color']")?.setAttribute("content", getComputedStyle(root).backgroundColor)
 })()

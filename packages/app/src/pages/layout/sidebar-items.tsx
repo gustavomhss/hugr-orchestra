@@ -48,7 +48,7 @@ export const ProjectIcon = (props: {
       <div class="size-full rounded overflow-clip">
         <Avatar
           fallback={name()}
-          src={getProjectAvatarSource(props.project.id, props.project.icon)}
+          src={getProjectAvatarSource(props.project.icon)}
           {...getAvatarColors(props.project.icon?.color)}
           class="size-full rounded"
           classList={{ "badge-mask": notify() }}

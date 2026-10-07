@@ -11,7 +11,15 @@ import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
-import { filterSkills, skillAccess, skillErrorMessage, skillSource, sortSkills, type SkillEntry } from "./skills-data"
+import {
+  filterSkills,
+  readSkills,
+  skillAccess,
+  skillErrorMessage,
+  skillSource,
+  sortSkills,
+  type SkillEntry,
+} from "./skills-data"
 import "./skills.css"
 
 export default function Skills(props: ChapterPageProps) {
@@ -76,7 +84,7 @@ export default function Skills(props: ChapterPageProps) {
       ).data
     })
     if (abort.signal.aborted) return
-    setState({ skills: sortSkills(entries, props.directory), status: "ready" })
+    setState({ skills: sortSkills(readSkills(entries), props.directory), status: "ready" })
   }
 
   function refresh() {

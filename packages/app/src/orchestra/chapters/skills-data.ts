@@ -1,9 +1,28 @@
+import { Option, Schema } from "effect"
+
 export type SkillEntry = {
   name: string
   description?: string | null
   location: string
   content: string
   mtime?: number | null
+}
+
+const decodeSkills = Schema.decodeUnknownOption(
+  Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      description: Schema.optional(Schema.NullOr(Schema.String)),
+      location: Schema.String,
+      content: Schema.String,
+      mtime: Schema.optional(Schema.NullOr(Schema.Number)),
+    }),
+  ),
+)
+
+// The catalog reply is untrusted: a malformed one fails the load, which the page shows as its error with Retry.
+export function readSkills(value: unknown): readonly SkillEntry[] {
+  return Option.getOrThrowWith(decodeSkills(value), () => new Error("Skills response is malformed"))
 }
 
 export type SkillSource = "project" | "global" | "builtin"
@@ -39,7 +58,7 @@ export function skillAccess(location: string, directory: string): SkillAccess {
 }
 
 /** Project skills first, then the user's global skills, then built-ins; names break ties. */
-export function sortSkills(skills: SkillEntry[], directory: string) {
+export function sortSkills(skills: readonly SkillEntry[], directory: string) {
   return skills.toSorted(
     (a, b) =>
       SOURCE_ORDER.indexOf(skillSource(a.location, directory)) -

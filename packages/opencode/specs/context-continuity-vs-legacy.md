@@ -119,6 +119,11 @@ how large the memory may be.
 
 ## 6. Continuous pruning by steps
 
+> **Superseded in part (owner, 2026-10-07).** Pruning and summarizing are one compaction, and it starts at the trigger
+> (40% of the window: 400k on a 1M model). Nothing runs below it, so the "prune below the trigger" (`PRUNE_STEP`) is
+> removed. The step-based tail, the attachment cost and the delegation fold stay. The replay table below measured the
+> removed below-trigger pruning.
+
 The owner approved pruning that keeps the conversation small between memory passes.
 
 - **Tail by steps.** Tool output in the last 5 assistant steps stays verbatim. Before, it was the last 5 user turns, so one

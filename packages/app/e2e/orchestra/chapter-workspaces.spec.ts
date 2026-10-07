@@ -336,6 +336,37 @@ test("v2: the active workspace never offers deletion until another workspace is 
   expect(writes(mock.requests)).toEqual([])
 })
 
+test("v2: the tab bar's New session from a draft in a copy starts in the selected workspace", async ({ page }) => {
+  const mock = await setup(page)
+  await openChapter(page)
+  // A draft in the first copy; the second copy then becomes the selected workspace.
+  await card(page, sandboxes[0]).getByRole("button", { name: "Use workspace", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  const copy = new URL(page.url()).searchParams.get("draftId") ?? ""
+  await expect(workspaceTrigger(page, "one")).toBeVisible()
+  await openChapter(page, false)
+  await card(page, sandboxes[1]).getByRole("button", { name: "Use workspace", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=[^&]+$/)
+  await expect(workspaceTrigger(page, "two")).toBeVisible()
+
+  // V2 copies are not project sandboxes, yet their drafts stay on the repository's tab bar.
+  const controls = page.locator('[data-slot="orchestra-tab-controls"]')
+  await controls.locator(`a[data-titlebar-tab-link][href="/new-session?draftId=${encodeURIComponent(copy)}"]`).click()
+  await expect.poll(() => new URL(page.url()).searchParams.get("draftId")).toBe(copy)
+  await expect(workspaceTrigger(page, "one")).toBeVisible()
+  await expect(page.locator("#orchestra-profile-name")).toHaveText("Server A repository")
+
+  // The new draft belongs to the repository, not the copy it was opened from, so it starts in the selected workspace.
+  await controls.getByRole("button", { name: "New session", exact: true }).click()
+  await expect.poll(() => new URL(page.url()).searchParams.get("draftId")).not.toBe(copy)
+  const created = new URL(page.url()).searchParams.get("draftId")
+  await expect
+    .poll(async () => (await drafts(page)).find((tab: { draftID: string }) => tab.draftID === created))
+    .toEqual(expect.objectContaining({ type: "draft", server: serverA, directory: root }))
+  await expect(workspaceTrigger(page, "two")).toBeVisible()
+  expect(writes(mock.requests)).toEqual([])
+})
+
 // Workspaces is a WIP screen that still needs a spec; the owner parked its open failures (2026-10-05).
 test.fixme("Escape closes the dialog while a navigation tooltip still shows behind it", async ({ page }) => {
   const mock = await setup(page)

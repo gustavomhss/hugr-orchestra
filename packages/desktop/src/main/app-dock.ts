@@ -327,23 +327,26 @@ export function createAppDock(options: {
     view.webContents.setWindowOpenHandler(({ url }) => {
       if (externalURL(url)) return { action: "deny" }
       try {
-        if (!isCurrent(senderID, id, tabGeneration) || options.allowPopup?.(senderID, identity(id, tabGeneration), url) === false) {
+        // Only the tab on screen may raise a popup. A page in a background tab, or in any tab while the Dock
+        // is hidden, is refused as blocked: no new tab appears and nothing takes the screen from the user.
+        if (
+          active.get(senderID) !== id ||
+          !isCurrent(senderID, id, tabGeneration) ||
+          options.allowPopup?.(senderID, identity(id, tabGeneration), url) === false
+        ) {
           throw new Error("App Dock popup blocked")
         }
         const popupURL = appDockURL(url)
-        // Only the tab on screen may attach a view. A popup from a background tab, or from any tab while
-        // the Dock is hidden, opens behind it and waits for the user to select it.
-        const selected = active.get(senderID) === id && isCurrent(senderID, id, tabGeneration)
         // A page can chain popups without a click, so a popup never evicts the user's tabs to make room:
         // at the view cap it is blocked instead.
-        if (!viewCapacity(senderID, selected)) throw new Error("App Dock tab limit reached")
+        if (!viewCapacity(senderID, true)) throw new Error("App Dock tab limit reached")
         void open(senderID, win, popupURL, layoutBounds.get(senderID) ?? bounds, notify, profileStorage, {
           tabID: randomUUID(),
-          selected,
+          selected: true,
         })
           .then((tab) => {
             options.onPopupOpened?.(senderID, identity(id, tabGeneration), tab)
-            notify(Object.freeze({ type: selected ? "tab-opened" : "tab-opened-background", payload: tab }))
+            notify(Object.freeze({ type: "tab-opened", payload: tab }))
           })
           .catch(() => {
             if (isCurrent(senderID, id, tabGeneration)) notify(Object.freeze({

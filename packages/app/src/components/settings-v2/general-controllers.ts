@@ -1,6 +1,4 @@
-import { createMemo, createResource, onMount, type Accessor } from "solid-js"
-import type { ColorScheme } from "@opencode-ai/ui/theme/context"
-import { useTheme } from "@opencode-ai/ui/theme/context"
+import { createMemo, createResource, type Accessor } from "solid-js"
 import { usePermission } from "@/context/permission"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -17,7 +15,7 @@ import {
   useSettings,
 } from "@/context/settings"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
-import { createSoundPreviewController, type ShellOption } from "./general-controller-behavior"
+import { createSoundPreviewController, readShells, type ShellOption } from "./general-controller-behavior"
 
 export { createShellOptions, createSoundPreviewController } from "./general-controller-behavior"
 export type { ShellOption, ShellSelectOption } from "./general-controller-behavior"
@@ -52,18 +50,22 @@ export function createPermissionScopeController(sessionID: Accessor<string | und
 export function createShellSettingsController() {
   const serverSdk = useServerSDK()
   const serverSync = useServerSync()
-  const [shells] = createResource(
+  const [shells, { refetch }] = createResource(
     async () => {
       const sdk = serverSdk()
-      if ((await sdk.protocol) === "v1") return (await sdk.client.pty.shells()).data ?? []
-      return [] as ShellOption[]
+      if ((await sdk.protocol) === "v1") return readShells((await sdk.client.pty.shells()).data)
+      return []
     },
-    { initialValue: [] as ShellOption[] },
+    { initialValue: [] as readonly ShellOption[] },
   )
   const current = createMemo(() => serverSync().data.config.shell ?? "")
+  // Reading an errored resource throws into the app-wide boundary, so a failed read stays this row's state.
+  const failed = () => shells.state === "errored"
 
   return {
-    shells: () => shells.latest,
+    shells: () => (failed() ? [] : shells.latest),
+    failed,
+    retry: () => void refetch(),
     current,
     select: (value: string) => {
       if (value === current()) return
@@ -74,21 +76,8 @@ export function createShellSettingsController() {
 
 export function createAppearanceSettingsController() {
   const settings = useSettings()
-  const theme = useTheme()
-  const themes = createMemo(() => theme.ids().map((id) => ({ id, name: theme.name(id) })))
-
-  onMount(() => void theme.loadThemes())
 
   return {
-    scheme: {
-      current: theme.colorScheme,
-      select: (value: ColorScheme) => theme.setColorScheme(value),
-    },
-    theme: {
-      options: themes,
-      current: createMemo(() => themes().find((option) => option.id === theme.themeId())),
-      select: (option: { id: string } | null) => option && theme.setTheme(option.id),
-    },
     fonts: {
       ui: createMemo(() => ({
         value: sansInput(settings.appearance.uiFont()),

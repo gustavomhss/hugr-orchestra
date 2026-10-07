@@ -15,6 +15,7 @@ const generated = await import("./generate.ts")
 
 import { Script } from "@opencode-ai/script"
 import pkg from "../package.json"
+import { backendSkillsModule } from "./backend-skills"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -52,8 +53,7 @@ const createEmbeddedFileMap = async (root: string, include: (file: string) => bo
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
-// The backend specialist's packaged skills (F6.12), extracted to a real directory at runtime by src/maestro/backend-skill-root.ts.
-const backendSkillsFileMap = await createEmbeddedFileMap(path.join(dir, "../backend-specialist/skills"), () => true)
+const backendSkillsFileMap = await backendSkillsModule(path.join(dir, "../backend-specialist/skills"))
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {

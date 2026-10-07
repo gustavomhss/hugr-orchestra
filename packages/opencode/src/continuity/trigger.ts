@@ -13,10 +13,6 @@ export const HARD_LIMIT = 0.7
 // Background memory starts this far below the trigger; masking alone that reaches it skips the fork.
 export const PREPARE_MARGIN = 0.15
 
-// Below the trigger, old tool output is stubbed each time the context grows by this fraction of the window.
-// Batches keep the cached prefix stable between them; each batch rewrites only output that just left the tail.
-export const PRUNE_STEP = 0.05
-
 export type Settings = { enabled: boolean; trigger: number }
 
 /** Resolve user settings; an invalid trigger falls back to the default. */
