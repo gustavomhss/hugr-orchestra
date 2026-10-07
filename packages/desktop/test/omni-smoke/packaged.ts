@@ -65,10 +65,17 @@ try {
       body: JSON.stringify(body),
     })
   const session = (await (await call("/session", {})).json()) as { id: string }
+  // The shell route needs an existing agent. GET /agent lists the default agent first; agent names change upstream
+  // (dev dropped "build" for "maestro"), so the smoke asks instead of naming one.
+  const agents = (await (await fetch(new URL("/agent", server.url), { headers: { authorization } })).json()) as {
+    name: string
+  }[]
+  const agent = agents[0]?.name
+  if (!agent) throw new Error(`GET /agent listed no agent: ${JSON.stringify(agents)}`)
   // The shell call returns only when the tree ends, so it is not awaited; an early answer is kept as evidence.
   let shellAnswer = "no answer yet"
   void call(`/session/${session.id}/shell`, {
-    agent: "build",
+    agent,
     model: { providerID: "opencode", modelID: "smoke" },
     command: [trees.shell.command, ...trees.shell.args].map(quote).join(" "),
   })
