@@ -58,7 +58,7 @@ export function DialogEditProjectV2(props: { project: LocalProject; server: Serv
               >
                 <ProjectAvatar
                   fallback={model.store.name || model.defaultName()}
-                  src={getProjectAvatarSource(props.project.id, {
+                  src={getProjectAvatarSource({
                     color: model.store.color,
                     url: props.project.icon?.url,
                     override: model.store.iconOverride,

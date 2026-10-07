@@ -1544,14 +1544,11 @@ const layer = Layer.effect(
                     ? { field: "reasoning_content" }
                     : false),
               },
-              cost: {
-                input: model?.cost?.input ?? existingModel?.cost?.input ?? 0,
-                output: model?.cost?.output ?? existingModel?.cost?.output ?? 0,
-                cache: {
-                  read: model?.cost?.cache_read ?? existingModel?.cost?.cache.read ?? 0,
-                  write: model?.cost?.cache_write ?? existingModel?.cost?.cache.write ?? 0,
-                },
-              },
+              cost: model.cost ? mergeDeep(existingModel?.cost ?? {}, cost({
+                ...model.cost,
+                cache_read: model.cost.cache_read ?? existingModel?.cost.cache.read,
+                cache_write: model.cost.cache_write ?? existingModel?.cost.cache.write,
+              })) : existingModel?.cost ?? cost(undefined),
               options: mergeDeep(existingModel?.options ?? {}, model.options ?? {}),
               limit: {
                 context: model.limit?.context ?? existingModel?.limit?.context ?? 0,

@@ -8,6 +8,8 @@ const projectID = "proj_provider_api_key_mask"
 const sessionID = "ses_provider_api_key_mask"
 const secret = "sk-mask-test-0123456789"
 
+// Nothing is connected, so the model control opens the connect dialog. A connected OpenCode Zen counts as a
+// connected provider like any other and would open the model popover instead.
 async function openSession(page: Page) {
   const connections: Array<{ integrationID: string; body: unknown }> = []
   await mockOpenCodeServer(page, {
@@ -42,8 +44,8 @@ async function openSession(page: Page) {
           },
         },
       ],
-      connected: ["opencode"],
-      default: { providerID: "opencode", modelID: "free-model" },
+      connected: [],
+      default: {},
     },
     onConnectKey: (input) => connections.push(input),
     sessions: [
@@ -75,6 +77,8 @@ async function openSession(page: Page) {
 test("masks the provider API key while it is typed and keeps the reveal toggle keyboard operable", async ({ page }) => {
   const { control, connections } = await openSession(page)
   await control.click()
+  // OpenCode Go has no featured place in the dialog; it is connected from the full provider list.
+  await page.getByRole("button", { name: "See 70+ more providers", exact: true }).click()
   await page.locator('[data-provider-id="opencode-go"]').click()
 
   const dialog = page.locator('[data-component="dialog-v2"]')

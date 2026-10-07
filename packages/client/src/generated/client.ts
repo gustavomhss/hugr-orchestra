@@ -93,6 +93,8 @@ import type {
   SkillsSaveOutput,
   SkillsRemoveInput,
   SkillsRemoveOutput,
+  BehaviorsSetInput,
+  BehaviorsSetOutput,
   EventsSubscribeOutput,
   PtysListInput,
   PtysListOutput,
@@ -120,6 +122,20 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  PullRequestsListInput,
+  PullRequestsListOutput,
+  PullRequestsCreateInput,
+  PullRequestsCreateOutput,
+  SchedulesListInput,
+  SchedulesListOutput,
+  SchedulesCreateInput,
+  SchedulesCreateOutput,
+  SchedulesUpdateInput,
+  SchedulesUpdateOutput,
+  SchedulesRemoveInput,
+  SchedulesRemoveOutput,
+  SchedulesRunInput,
+  SchedulesRunOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -881,6 +897,21 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
+    behaviors: {
+      set: (input: BehaviorsSetInput, requestOptions?: RequestOptions) =>
+        request<BehaviorsSetOutput>(
+          {
+            method: "PUT",
+            path: `/api/behavior`,
+            query: { location: input["location"] },
+            body: { behaviors: input["behaviors"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
     events: {
       subscribe: (requestOptions?: RequestOptions): AsyncIterable<EventsSubscribeOutput> =>
         sse<EventsSubscribeOutput>(
@@ -1058,6 +1089,114 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    pullRequests: {
+      list: (input?: PullRequestsListInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsListOutput>(
+          {
+            method: "GET",
+            path: `/api/pull-request`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: PullRequestsCreateInput, requestOptions?: RequestOptions) =>
+        request<PullRequestsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/pull-request`,
+            query: { location: input["location"] },
+            body: { title: input["title"], body: input["body"], base: input["base"], head: input["head"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    schedules: {
+      list: (input?: SchedulesListInput, requestOptions?: RequestOptions) =>
+        request<SchedulesListOutput>(
+          {
+            method: "GET",
+            path: `/api/schedule`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: SchedulesCreateInput, requestOptions?: RequestOptions) =>
+        request<SchedulesCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/schedule`,
+            query: { location: input["location"] },
+            body: {
+              id: input["id"],
+              name: input["name"],
+              prompt: input["prompt"],
+              cadence: input["cadence"],
+              next: input["next"],
+              timezone: input["timezone"],
+              minute: input["minute"],
+              enabled: input["enabled"],
+              history: input["history"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 409, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: SchedulesUpdateInput, requestOptions?: RequestOptions) =>
+        request<SchedulesUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              prompt: input["prompt"],
+              cadence: input["cadence"],
+              next: input["next"],
+              timezone: input["timezone"],
+              enabled: input["enabled"],
+            },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: SchedulesRemoveInput, requestOptions?: RequestOptions) =>
+        request<SchedulesRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 401, 400],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      run: (input: SchedulesRunInput, requestOptions?: RequestOptions) =>
+        request<SchedulesRunOutput>(
+          {
+            method: "POST",
+            path: `/api/schedule/${encodeURIComponent(input.scheduleID)}/run`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 500, 401, 400],
+            empty: false,
           },
           requestOptions,
         ),

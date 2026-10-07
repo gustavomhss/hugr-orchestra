@@ -1,5 +1,41 @@
 # Provider and Model Catalog
 
+## OpenCode Free-Model User Agent
+
+Session requests for the OpenCode provider family preserve its transport identity:
+`User-Agent: opencode/<InstallationVersion>`. This is a compatibility header, not
+an authentication credential or a guarantee that a hosted model will accept a request.
+
+- The rule applies to provider IDs starting with `opencode`, matching the existing
+  V1 OpenCode telemetry convention, including credential-backed virtual IDs.
+- A model qualifies when its cost list is nonempty and every tier has zero input
+  and output cost. Empty cost lists and models with any paid tier do not qualify.
+  Cache pricing is not part of this input/output classification.
+- V2 applies the rule while constructing native route defaults, after catalog and
+  selected-variant headers have been merged. V1 applies it after model headers and
+  the `chat.headers` plugin hook, including regular and context-maintenance requests.
+  V1 checks the base cost, `tiers`, and legacy `experimentalOver200K` cost.
+  Its config reconstruction preserves catalog tiers and adapts configured
+  `context_over_200k`; the native adapter reapplies the rule after its final
+  provider/model/prepared header merge.
+- Existing `User-Agent` keys are removed case-insensitively before one canonical
+  header is set. Other headers and credentials are preserved; input maps are not mutated.
+- AI SDK may append its own version/runtime tokens after the OpenCode prefix.
+
+The shared implementation is `packages/core/src/installation/headers.ts`.
+HTTP regression coverage lives in `packages/core/test/session-runner-model.test.ts`
+and `packages/opencode/test/session/llm-free-headers.test.ts`.
+
+To run the scoped regressions on Linux and Windows:
+
+```sh
+bun run test:ci core test/session-runner-model.test.ts --os both
+bun run test:ci opencode test/session/llm-free-headers.test.ts --os both
+```
+
+These tests check local HTTP requests on CI runners, not the hosted OpenCode gateway.
+Gateway eligibility, quotas, credentials, and service policy remain server-owned.
+
 ## Provider Schema
 
 ```ts

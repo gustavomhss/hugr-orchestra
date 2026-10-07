@@ -9,7 +9,7 @@ export const title = "Governed approval refactor"
 export const created = 1_760_000_000_000
 export const maestro = { name: "maestro", mode: "primary", native: true, permission: [], options: {} }
 export const build = { name: "build", mode: "primary", native: true, permission: [], options: {} }
-export const config = { share: "manual", maestro: { atlas: { projectID: "atlas-hugr", directory: "/repo/atlas" } } }
+export const config = { maestro: { atlas: { projectID: "atlas-hugr", directory: "/repo/atlas" } } }
 
 export function governedMessages() {
   const tool = (id: string, name: string, state: Record<string, unknown>) => ({

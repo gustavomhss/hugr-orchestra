@@ -4,6 +4,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import { directory, setupTimeline } from "../performance/timeline-stability/fixture"
 import { parentID, parentTitle, railTab, server, setupCockpit } from "./session-cockpit.fixture"
+import type { PullRequestReply } from "../utils/mock-server"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
@@ -43,17 +44,41 @@ test("a fresh profile opens the rail on Review once; the header's Review button 
   await expect(railTab(page, "review")).toHaveAttribute("aria-selected", "true")
 })
 
-test("Create PR previews an editable proposal of the listed changes and downloads it; nothing is sent", async ({
+const patch = (file: string) => `diff --git a/${file} b/${file}\n@@ -1 +1 @@\n-before\n+after\n`
+const changes = [
+  { file: "src/approval.ts", patch: patch("src/approval.ts"), additions: 48, deletions: 32, status: "modified" },
+  { file: "docs/flow.md", patch: patch("docs/flow.md"), additions: 18, deletions: 4, status: "modified" },
+]
+// The cockpit session lives in /work/cockpit; the routes run in the session's repository.
+const cockpit = "/work/cockpit"
+const locationBody = { directory: cockpit, project: { id: "proj_cockpit", directory: cockpit } }
+const hostError = (data: Record<string, unknown>): PullRequestReply => ({
+  status: 400,
+  body: { name: "PullRequestError", data },
+})
+
+async function openDraft(page: Page) {
+  await page.getByRole("button", { name: "Create PR", exact: true }).click()
+  const draft = page.getByRole("dialog", { name: "Create pull request" })
+  await expect(draft.getByRole("textbox", { name: "Title" })).toHaveValue(parentTitle)
+  return draft
+}
+
+test("Create PR opens the pull request through the server and shows only the address the host returned", async ({
   page,
 }) => {
-  const patch = (file: string) => `diff --git a/${file} b/${file}\n@@ -1 +1 @@\n-before\n+after\n`
+  const created = Promise.withResolvers<PullRequestReply>()
+  const requests: { url: URL; body: unknown }[] = []
   await setupCockpit(page, {
     bridge: false,
     empty: true,
-    vcsDiff: [
-      { file: "src/approval.ts", patch: patch("src/approval.ts"), additions: 48, deletions: 32, status: "modified" },
-      { file: "docs/flow.md", patch: patch("docs/flow.md"), additions: 18, deletions: 4, status: "modified" },
-    ],
+    vcsDiff: changes,
+    pullRequests: {
+      create: (input) => {
+        requests.push(input)
+        return created.promise
+      },
+    },
   })
   await openParent(page)
   await reviewButton(page).click()
@@ -71,45 +96,140 @@ test("Create PR previews an editable proposal of the listed changes and download
     patch("docs/flow.md") + patch("src/approval.ts"),
   ]).toContain(text)
 
-  const sent: string[] = []
-  page.on("request", (request) => {
-    const url = new URL(request.url())
-    if (request.method() !== "GET" && url.port === new URL(server).port)
-      sent.push(`${request.method()} ${url.pathname}`)
-  })
-  // Positive control: the filter sees a non-GET request to the server before it is trusted to see none.
-  await page.evaluate((url) => fetch(`${url}/orchestra-control`, { method: "POST" }).catch(() => undefined), server)
-  await expect.poll(() => sent).toEqual(["POST /orchestra-control"])
-  sent.length = 0
-  await page.getByRole("button", { name: "Create PR", exact: true }).click()
-  const draft = page.getByRole("dialog", { name: "Create pull request" })
-  await expect(draft).toContainText("Preview the proposal. No remote pull request is created.")
-  await expect(draft.getByRole("textbox", { name: "Title" })).toHaveValue(parentTitle)
+  const draft = await openDraft(page)
+  await expect(draft).toContainText("Opens the pull request with the gh or glab CLI signed in on this server.")
   await expect(draft.getByRole("textbox", { name: "From branch" })).toHaveValue("main")
   await expect(draft.getByRole("textbox", { name: "Base branch" })).toHaveValue("main")
   const description = draft.getByRole("textbox", { name: "Description" })
   await expect(description).toHaveValue(/^Summary\n- Cockpit parent\n\nFiles\n/)
   await expect(description).toHaveValue(/^- `src\/approval\.ts` \(\+48 −32\)$/m)
   await expect(description).toHaveValue(/^- `docs\/flow\.md` \(\+18 −4\)$/m)
-
   await draft.getByRole("textbox", { name: "Title" }).fill("Approval proposal")
+  await draft.getByRole("textbox", { name: "From branch" }).fill("feature/approval")
   await draft.getByRole("textbox", { name: "Base branch" }).fill("dev")
-  await draft.getByRole("button", { name: "Create preview", exact: true }).click()
-  const preview = page.getByRole("dialog", { name: "Pull request preview" })
-  await expect(preview).toContainText("main → dev")
-  await expect(preview.getByRole("heading", { name: "Approval proposal", level: 3 })).toBeVisible()
-  await expect(preview).toContainText("Nothing was sent: Orchestra has no GitHub or GitLab connection yet.")
-  await expect(preview.getByRole("link")).toHaveCount(0)
+  const body = await description.inputValue()
+  await draft.getByRole("button", { name: "Create pull request", exact: true }).click()
 
-  const saved = page.waitForEvent("download")
-  await preview.getByRole("button", { name: "Download proposal", exact: true }).click()
-  const proposal = await saved
-  expect(proposal.suggestedFilename()).toBe("Approval proposal-pr.md")
-  const markdown = await readFile((await proposal.path())!, "utf8")
-  expect(markdown).toMatch(/^# Approval proposal\n\n`main` → `dev`\n\nSummary\n- Cockpit parent\n\nFiles\n/)
-  expect(markdown).toContain("- `src/approval.ts` (+48 −32)\n")
-  expect(markdown).toContain("- `docs/flow.md` (+18 −4)\n")
-  expect(sent).toEqual([])
+  // While the host answers, the form is locked and the dialog cannot be dismissed.
+  await expect(draft.getByRole("button", { name: "Creating pull request…", exact: true })).toBeDisabled()
+  await expect(draft.getByRole("textbox", { name: "Title" })).toBeDisabled()
+  await expect(draft.getByRole("button", { name: "Cancel", exact: true })).toBeDisabled()
+  await page.keyboard.press("Escape")
+  await expect(draft).toBeVisible()
+  await expect.poll(() => requests.length).toBe(1)
+  expect(requests[0]!.url.searchParams.get("location[directory]")).toBe(cockpit)
+  expect(requests[0]!.body).toEqual({ title: "Approval proposal", body, base: "dev", head: "feature/approval" })
+
+  const url = "https://github.com/acme/widgets/pull/31"
+  created.resolve({
+    status: 200,
+    body: { location: locationBody, data: { host: "github", repository: "acme/widgets", number: 31, url } },
+  })
+  const result = page.getByRole("dialog", { name: "Pull request created" })
+  await expect(result).toContainText("feature/approval → dev")
+  await expect(result.getByRole("heading", { name: "Approval proposal", level: 3 })).toBeVisible()
+  await expect(result.getByRole("status")).toHaveText(`Opened at ${url}`)
+  await expect(result.getByRole("link", { name: url, exact: true })).toHaveAttribute("href", url)
+  await expect(result.getByRole("button", { name: "Download proposal" })).toHaveCount(0)
+  await expect(result).not.toContainText("Nothing was sent")
+  await result.getByRole("button", { name: "Close", exact: true }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Create PR", exact: true })).toBeFocused()
+  expect(requests).toHaveLength(1)
+})
+
+test("When the host CLI cannot open it, Create PR keeps the Markdown proposal with one line saying why", async ({
+  page,
+}) => {
+  test.slow()
+  const replies: { reply: PullRequestReply; reason: string; line: string }[] = [
+    {
+      reply: hostError({ kind: "not_installed", message: "gh is not installed on this server", host: "github" }),
+      reason: "not_installed",
+      line: "Nothing was sent: gh is not installed on this server. Download the proposal and open the pull request from your host.",
+    },
+    {
+      reply: hostError({ kind: "not_authenticated", message: "glab is not signed in", host: "gitlab" }),
+      reason: "not_authenticated",
+      line: "Nothing was sent: glab is not signed in on this server. Run glab auth login there, or download the proposal.",
+    },
+    {
+      reply: hostError({ kind: "no_remote", message: "This repository has no github.com or gitlab.com remote" }),
+      reason: "no_remote",
+      line: "Nothing was sent: this repository has no github.com or gitlab.com remote. Download the proposal and open the pull request from your host.",
+    },
+    {
+      reply: hostError({
+        kind: "branch_not_pushed",
+        message: "main is not pushed to origin",
+        host: "github",
+        branch: "main",
+        remote: "origin",
+      }),
+      reason: "branch_not_pushed",
+      line: "Nothing was sent: push main to origin first, or download the proposal.",
+    },
+    {
+      reply: hostError({
+        kind: "cli_failed",
+        message: "gh failed: Validation Failed: A pull request already exists for acme:main.",
+        host: "github",
+      }),
+      reason: "cli_failed",
+      line: "No pull request address came back: gh failed: Validation Failed: A pull request already exists for acme:main. Check your host before you try again, or download the proposal.",
+    },
+    {
+      reply: { status: 404, body: {} },
+      reason: "unavailable",
+      line: "Nothing was sent: this server cannot open pull requests. Download the proposal and open the pull request from your host.",
+    },
+    // A success without an https address is not a pull request.
+    {
+      reply: {
+        status: 200,
+        body: {
+          location: locationBody,
+          data: { host: "github", repository: "acme/widgets", number: 31, url: "javascript:alert(1)" },
+        },
+      },
+      reason: "error",
+      line: "Orchestra could not confirm a pull request. Check your host before you try again, or download the proposal.",
+    },
+  ]
+  const queue = [...replies]
+  await setupCockpit(page, {
+    bridge: false,
+    empty: true,
+    vcsDiff: changes,
+    pullRequests: { create: () => queue.shift()!.reply },
+  })
+  await openParent(page)
+  await reviewButton(page).click()
+  for (const [index, item] of replies.entries()) {
+    const draft = await openDraft(page)
+    await draft.getByRole("textbox", { name: "Title" }).fill("Approval proposal")
+    await draft.getByRole("textbox", { name: "Base branch" }).fill("dev")
+    await draft.getByRole("button", { name: "Create pull request", exact: true }).click()
+    const preview = page.getByRole("dialog", { name: "Pull request preview" })
+    await expect(preview.getByRole("status")).toHaveAttribute("data-reason", item.reason)
+    await expect(preview.getByRole("status")).toHaveText(item.line)
+    await expect(preview).toContainText("main → dev")
+    await expect(preview.getByRole("heading", { name: "Approval proposal", level: 3 })).toBeVisible()
+    await expect(preview.getByRole("link")).toHaveCount(0)
+    if (index === 0) {
+      const saved = page.waitForEvent("download")
+      await preview.getByRole("button", { name: "Download proposal", exact: true }).click()
+      const proposal = await saved
+      expect(proposal.suggestedFilename()).toBe("Approval proposal-pr.md")
+      const markdown = await readFile((await proposal.path())!, "utf8")
+      expect(markdown).toMatch(/^# Approval proposal\n\n`main` → `dev`\n\nSummary\n- Cockpit parent\n\nFiles\n/)
+      expect(markdown).toContain("- `src/approval.ts` (+48 −32)\n")
+      expect(markdown).toContain("- `docs/flow.md` (+18 −4)\n")
+    }
+    await preview.getByRole("button", { name: "Close", exact: true }).click()
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+  }
+  expect(queue).toEqual([])
 })
 
 test("Files Changed and All files lead to each other", async ({ page }) => {

@@ -148,6 +148,9 @@ verified: `415038b`).
 | `tui/src/clipboard.ts:11` (`xclip` / `wl-copy`) | They daemonize to own the selection; omni would kill them. |
 | `cli/cmd/github.handler.ts:298` | Opens the browser (the launched app must outlive the host). Moves from `exec` with a shell string to `execFile`, or to the `open` package. |
 | `shell-env.ts:37` (`spawnSync`) | omni has no synchronous API; this is a bounded probe. |
+| `core/src/backend-toolkit/target.ts` (`spawnSync`) | Synchronous host detection (`sysctl`, `ldd`); omni has no synchronous API. |
+| `atlas-boundary/src/generated/native-memory.js` (`execFileSync`) | Canonically generated Atlas secret scanner with a synchronous, fail-closed write contract and a 5 s timeout. Changing the scanner's execution contract belongs to Atlas. |
+| `opencode/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `Bun.$` and `Bun.spawn` in plugins | Plugin API surface. |
 | `@opencode-ai/sdk` server spawn | D-L10. |
 

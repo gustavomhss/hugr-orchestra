@@ -50,10 +50,13 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
-import { setNativeTranslations } from "./native-translations"
+import { nativeT, setNativeTranslations } from "./native-translations"
 import { OmniHost } from "./omni-host"
 import { OmniSmoke } from "./omni-smoke"
 
+// These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
+// data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
+// dialogs name "HuGR Orchestra" through the desktop.menu.* translations instead.
 const APP_NAMES: Record<string, string> = {
   dev: "OpenCode Dev",
   beta: "OpenCode Beta",
@@ -293,6 +296,9 @@ const main = Effect.gen(function* () {
   app.setAsDefaultProtocolClient("opencode")
   registerRendererProtocol()
   setDockIcon()
+  // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
+  // still the bundle's, until HuGR desktop icons exist.
+  app.setAboutPanelOptions({ applicationName: nativeT("desktop.menu.app"), applicationVersion: app.getVersion() })
   const updater = setupAutoUpdater(stopSidecars)
   const menuDeps = {
     trigger: (id: string) => {
@@ -406,7 +412,9 @@ const main = Effect.gen(function* () {
           writeLog("utility", "sidecar exited", { code }, "warn")
           void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn"))
         },
-        onMessage: (message, reply) => { if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply) },
+        onMessage: (message, reply) => {
+          if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
+        },
       }),
     )
     server = listener

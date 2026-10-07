@@ -104,7 +104,8 @@ export type Download = TabIdentity & {
   state: "progressing" | "paused" | "completed" | "cancelled" | "interrupted"
 }
 
-const home = "https://opencode.ai"
+// A new tab opens on the search page the address bar already falls back to (app-dock-utils in the desktop main).
+const home = "https://www.google.com"
 // Older desktop builds lack the manifest calls; without all of these the Dock is unavailable.
 const required = [
   "appDockOpen",

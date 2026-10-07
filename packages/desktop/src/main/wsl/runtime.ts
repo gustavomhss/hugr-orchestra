@@ -270,18 +270,6 @@ export async function installWslDistro(name: string, opts?: RunWslOptions) {
   )
 }
 
-export async function installWslOpencode(version: string, distro: string, opts?: RunWslOptions) {
-  return runInteractiveCommand(
-    resolveSystem32Command("wsl.exe"),
-    wslArgs(
-      ["bash", "-lc", `curl -fsSL https://opencode.ai/install | bash -s -- --version ${shellEscape(version)}`],
-      distro,
-    ),
-    withTimeout(opts, DEFAULT_WSL_INSTALL_TIMEOUT_MS),
-    DEFAULT_WSL_INSTALL_TIMEOUT_MS,
-  )
-}
-
 export async function probeWslDistro(name: string, opts?: RunWslOptions): Promise<WslDistroProbe> {
   const executable = await runWslInDistro(["/bin/true"], name, opts).catch((error) => ({
     code: 1,
@@ -294,21 +282,16 @@ export async function probeWslDistro(name: string, opts?: RunWslOptions): Promis
       name,
       canExecute: false,
       hasBash: false,
-      hasCurl: false,
       error: summarize(executable.stderr || executable.stdout) || nativeT("desktop.wsl.error.executeDistro"),
     }
   }
 
-  const [bash, curl] = await Promise.all([
-    runWslSh("command -v bash >/dev/null && printf yes || printf no", name, opts),
-    runWslSh("command -v curl >/dev/null && printf yes || printf no", name, opts),
-  ])
+  const bash = await runWslSh("command -v bash >/dev/null && printf yes || printf no", name, opts)
 
   return {
     name,
     canExecute: true,
     hasBash: bash.code === 0 && summarize(bash.stdout) === "yes",
-    hasCurl: curl.code === 0 && summarize(curl.stdout) === "yes",
     error: null,
   }
 }

@@ -197,7 +197,8 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
 
   await chapter.getByRole("button", { name: "Connect provider" }).click()
   await expect(dialog.getByRole("heading", { name: "Connect provider" })).toBeVisible()
-  await expect(dialog.locator(".mx-row strong").first()).toHaveText("OpenCode Zen")
+  // Popular providers lead; OpenCode Zen is an ordinary provider and sorts with the rest by name.
+  await expect(dialog.locator(".mx-row strong").first()).toHaveText("Anthropic")
   await dialog.getByRole("button", { name: "Custom OpenAI-compatible provider" }).click()
   await expect(dialog.getByRole("heading", { name: "Custom provider" })).toBeVisible()
   await expect(

@@ -8,3 +8,5 @@ packages/atlas-boundary/src/generated/
 foundation/atlas/.opencode/skills/own/
 # hugr-omni keeps its own gate (packages/omni/scripts/ci.mjs).
 packages/omni/**
+# Exact-byte palette stylesheets belong to packages/app/script/orchestra-palettes.ts.
+packages/app/src/orchestra/palette/generated/

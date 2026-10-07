@@ -117,7 +117,8 @@ for (const scheme of ["dark", "light"] as const) {
         6,
         "session strip spans remaining workspace",
       )
-      for (const locator of [sidebar, tabs, active]) expectGlass(await readGlass(locator), glass[scheme])
+      for (const locator of [sidebar, tabs]) expectGlass(await readPlatedGlass(locator), glass[scheme])
+      expectGlass(await readGlass(active), glass[scheme])
       await expect(sidebar).toHaveCSS("border-radius", "9px")
       await expect(tabs).toHaveCSS("border-radius", "9px")
 
@@ -252,6 +253,26 @@ for (const scheme of ["dark", "light"] as const) {
   }
 }
 
+test("graphite: a palette recolors the glass and keeps the frozen geometry, radius and blur", async ({ page }) => {
+  await setupIdentity(page, { scheme: "dark", palette: "graphite", viewport })
+  await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "graphite")
+  const sidebar = page.locator('[data-component="orchestra-sidebar"]')
+  const toolbar = page.locator('[data-slot="titlebar-v2"]')
+  const tabs = page.locator("#orchestra-session-tabs")
+  const active = tabs.locator('[data-titlebar-tab][data-active="true"]')
+  for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
+  expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
+  expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
+  for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
+    expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
+    expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
+    expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
+    expect(value.borderTopColor, "palette tints the glass border").not.toBe(glass.dark.borderTopColor)
+  }
+  await expect(sidebar).toHaveCSS("border-radius", "9px")
+  await expect(tabs).toHaveCSS("border-radius", "9px")
+})
+
 test("oracle calibration: real production toolbar rejects geometry and glass mutations", async ({ page }) => {
   await setupIdentity(page, { scheme: "dark", viewport })
   const toolbar = page.locator('[data-slot="titlebar-v2"]')
@@ -350,6 +371,25 @@ function readGlass(locator: Locator) {
       boxShadow: style.boxShadow,
     }
   })
+}
+
+// The sidebar and the session tab strip draw their blur on a plate painted right under them (theme.css).
+// The plate must cover exactly the glass's rounded box, and the glass keeps a no-op backdrop filter so
+// it stays the backdrop root of the glass nested in it; the fingerprint then reads the plate's blur.
+async function readPlatedGlass(locator: Locator) {
+  const plate = locator.locator("xpath=preceding-sibling::*[1][@data-glass-plate]")
+  await expect(plate, "glass plate right under the glass").toHaveCount(1)
+  const box = await readBox(locator)
+  const under = await readBox(plate)
+  for (const edge of ["top", "right", "bottom", "left"] as const)
+    expectPixels(under[edge], box[edge], `glass plate ${edge}`)
+  await expect(plate).toHaveCSS(
+    "border-radius",
+    await locator.evaluate((element) => getComputedStyle(element).borderRadius),
+  )
+  const glass = await readGlass(locator)
+  expect(glass.backdropFilter, "plated glass keeps a no-op backdrop root").toBe("brightness(1)")
+  return { ...glass, backdropFilter: (await readGlass(plate)).backdropFilter }
 }
 
 function expectGlass(actual: Awaited<ReturnType<typeof readGlass>>, expected: Awaited<ReturnType<typeof readGlass>>) {

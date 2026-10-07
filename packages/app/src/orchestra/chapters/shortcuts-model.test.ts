@@ -27,7 +27,7 @@ const key = (
 describe("shortcut rows", () => {
   const catalog = [
     { id: "tab.new", title: "New session", keybind: "ctrl+t,ctrl+n" },
-    { id: "session.share", title: "Share session" },
+    { id: "session.export", title: "Export session" },
     { id: "terminal.toggle", title: "Toggle terminal", keybind: "ctrl+`" },
     { id: "suggested.tab.new", title: "New session", keybind: "ctrl+t" },
   ]
@@ -44,7 +44,7 @@ describe("shortcut rows", () => {
       ["home.toggle", "general"],
       ["legacy.action", "general"],
       ["tab.new", "general"],
-      ["session.share", "session"],
+      ["session.export", "session"],
       ["terminal.toggle", "terminal"],
     ])
     expect(rows.find((row) => row.id === "legacy.action")?.title).toBe("legacy.action")
@@ -63,7 +63,7 @@ describe("shortcut rows", () => {
       config: "none",
       preset: DEFAULT_PALETTE_KEYBIND,
     })
-    expect(rows.find((row) => row.id === "session.share")?.config).toBeUndefined()
+    expect(rows.find((row) => row.id === "session.export")?.config).toBeUndefined()
   })
 
   test("hidden live options and suggested copies are not rows of their own", () => {
@@ -122,7 +122,7 @@ describe("conflicts", () => {
     catalog: [
       { id: "tab.new", title: "New session", keybind: "ctrl+t,ctrl+n" },
       { id: "home.toggle", title: "Home", keybind: "ctrl+b" },
-      { id: "session.share", title: "Share session" },
+      { id: "session.export", title: "Export session" },
     ],
     options: [],
     overrides: { "command.palette": "ctrl+k" },
@@ -138,7 +138,7 @@ describe("conflicts", () => {
     expect(findConflict(rows, "tab.new", "ctrl+n")).toBeUndefined()
     expect(findConflict(rows, "home.toggle", "ctrl+shift+y")).toBeUndefined()
     expect(findConflict(rows, "home.toggle", "none")).toBeUndefined()
-    expect(findConflict(rows, "session.share", "ctrl+b")?.title).toBe("Home")
+    expect(findConflict(rows, "session.export", "ctrl+b")?.title).toBe("Home")
   })
 
   test("signatures normalize alias spellings and skip modifier-only entries", () => {

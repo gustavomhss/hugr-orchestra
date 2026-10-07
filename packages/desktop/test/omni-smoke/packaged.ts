@@ -57,22 +57,30 @@ try {
   )
   if (server.main?.line !== trees.main.ready || !server.main.bytes)
     failures.push(`main: expected "${trees.main.ready}" as bytes, got ${JSON.stringify(server.main)}`)
+  const authorization = `Basic ${Buffer.from(`${server.username}:${server.password}`).toString("base64")}`
   const call = (route: string, body: unknown) =>
     fetch(new URL(route, server.url), {
       method: "POST",
-      headers: {
-        authorization: `Basic ${Buffer.from(`${server.username}:${server.password}`).toString("base64")}`,
-        "content-type": "application/json",
-      },
+      headers: { authorization, "content-type": "application/json" },
       body: JSON.stringify(body),
     })
   const session = (await (await call("/session", {})).json()) as { id: string }
-  // The shell call returns only when the tree ends; it is never awaited.
+  // The shell route needs an existing agent. GET /agent lists the default agent first; agent names change upstream
+  // (dev dropped "build" for "maestro"), so the smoke asks instead of naming one.
+  const agents = (await (await fetch(new URL("/agent", server.url), { headers: { authorization } })).json()) as {
+    name: string
+  }[]
+  const agent = agents[0]?.name
+  if (!agent) throw new Error(`GET /agent listed no agent: ${JSON.stringify(agents)}`)
+  // The shell call returns only when the tree ends, so it is not awaited; an early answer is kept as evidence.
+  let shellAnswer = "no answer yet"
   void call(`/session/${session.id}/shell`, {
-    agent: "build",
+    agent,
     model: { providerID: "opencode", modelID: "smoke" },
     command: [trees.shell.command, ...trees.shell.args].map(quote).join(" "),
-  }).catch(() => undefined)
+  })
+    .then(async (response) => (shellAnswer = `${response.status} ${(await response.text()).slice(0, 2000)}`))
+    .catch((error) => (shellAnswer = `request failed: ${String(error)}`))
   const pty = await call("/pty", { command: trees.terminal.command, args: trees.terminal.args })
   if (!pty.ok) failures.push(`terminal: POST /pty answered ${pty.status} ${await pty.text()}`)
 
@@ -81,7 +89,16 @@ try {
     const count = await until(60_000, `${name} tree`, async () =>
       (await alive(created.nonce)) === created.size ? created.size : undefined,
     ).catch(() => 0)
-    if (count !== created.size) failures.push(`${name}: the tree never started (${count}/${created.size})`)
+    if (count !== created.size) {
+      failures.push(`${name}: the tree never started (${count}/${created.size})`)
+      if (name === "shell") {
+        failures.push(`shell: POST /session/:id/shell: ${shellAnswer}`)
+        const messages = await fetch(new URL(`/session/${session.id}/message`, server.url), {
+          headers: { authorization },
+        }).then((response) => response.text(), String)
+        failures.push(`shell: the session's messages: ${messages.slice(0, 4000)}`)
+      }
+    }
     else if (!supervised(created.nonce)) failures.push(`${name}: no hugr-omni-supervisor above the tree (legacy spawn)`)
   }
 
