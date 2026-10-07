@@ -2,11 +2,16 @@ export * as Pty from "./pty"
 
 import { makeLocationNode } from "./effect/app-node"
 import type { Disp, Proc } from "#pty"
-import { Context, Effect, Layer, Schema, Types } from "effect"
+import { Context, Effect, Exit, Layer, Option, Schema, Types } from "effect"
 import { Pty } from "@opencode-ai/schema/pty"
 import { Config } from "./config"
 import { EventV2 } from "./event"
+import { Flag } from "./flag/flag"
 import { Location } from "./location"
+import { OmniAdoption } from "./omni-adoption"
+import { PtyProtocol } from "./pty/protocol"
+import { clampSize } from "./pty/pty"
+import type { OmniProc } from "./pty/omni"
 import { PtyID } from "./pty/schema"
 import { Shell } from "./shell"
 import { lazy } from "./util/lazy"
@@ -16,6 +21,11 @@ const BUFFER_LIMIT = 1024 * 1024 * 2
 // Cap retention so abandoned terminals do not accumulate unbounded buffers.
 const EXITED_LIMIT = 25
 const pty = lazy(() => import("#pty"))
+const omniPty = lazy(() => import("./pty/omni").then((mod) => mod.load()))
+// How long an omni tree gets to wind down when its session goes, and how long the layer finalizer waits for every
+// pending stop: above ConPTY's declared 6 s close (integration plan, WP2).
+const STOP_GRACE_MS = 2000
+const FINALIZE_CAP = "7 seconds"
 
 type Subscriber = {
   readonly onData: (chunk: string) => void
@@ -34,6 +44,11 @@ type Active = {
   cursor: number
   subscribers: Map<object, Subscriber>
   listeners: Disp[]
+  // Set when omni runs this session: its tree, and the adoption services the creating caller had (R2-3).
+  omni?: {
+    proc: OmniProc
+    adoption?: { service: OmniAdoption.Service["Service"]; registry?: OmniAdoption.Interface }
+  }
 }
 
 export const Info = Pty.Info
@@ -97,8 +112,11 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const context = yield* Effect.context()
     const runFork = Effect.runForkWith(context)
+    const runPromise = Effect.runPromiseWith(context)
     const sessions = new Map<PtyID, Active>()
     const exitOrder: PtyID[] = []
+    // Stops of omni trees still in flight: remove never awaits them, the layer finalizer does (capped).
+    const stopping = new Set<Promise<void>>()
 
     function notifyEnd(session: Active, event: { exitCode?: number }) {
       for (const subscriber of session.subscribers.values()) {
@@ -113,10 +131,17 @@ const layer = Layer.effect(
       session.subscribers.clear()
     }
 
-    function teardown(session: Active) {
+    // `adopt`: the user closed the session, so a tree with live descendants may go to the adoption registry. Eviction
+    // and the layer's end always stop what is left of the tree (for omni, also after the root exited).
+    function teardown(session: Active, adopt: boolean) {
       for (const listener of session.listeners) listener.dispose()
       session.listeners.length = 0
-      if (session.info.status === "running") {
+      if (session.omni) {
+        const pending = close(session.omni, session.info.title, adopt)
+        stopping.add(pending)
+        void pending.finally(() => stopping.delete(pending))
+      }
+      if (!session.omni && session.info.status === "running") {
         try {
           session.process.kill()
         } catch {}
@@ -124,11 +149,27 @@ const layer = Layer.effect(
       notifyEnd(session, {})
     }
 
+    async function close(omni: NonNullable<Active["omni"]>, title: string, adopt: boolean) {
+      const adoption = adopt ? omni.adoption : undefined
+      if (!adoption || !(await descendants(omni.proc))) return omni.proc.stop(STOP_GRACE_MS)
+      const release = OmniAdoption.release(omni.proc.child, Exit.void, { title, graceMs: STOP_GRACE_MS }).pipe(
+        Effect.provideService(OmniAdoption.Service, adoption.service),
+      )
+      return runPromise(
+        adoption.registry ? release.pipe(Effect.provideService(OmniAdoption.Registry, adoption.registry)) : release,
+      ).catch(() => omni.proc.stop(STOP_GRACE_MS))
+    }
+
     yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        for (const session of sessions.values()) teardown(session)
+      Effect.gen(function* () {
+        for (const session of sessions.values()) teardown(session, false)
         sessions.clear()
         exitOrder.length = 0
+        if (stopping.size === 0) return
+        yield* Effect.promise(() => Promise.allSettled([...stopping])).pipe(
+          Effect.timeoutOption(FINALIZE_CAP),
+          Effect.asVoid,
+        )
       }),
     )
 
@@ -138,20 +179,20 @@ const layer = Layer.effect(
       return session
     })
 
-    const removeSession = Effect.fnUntraced(function* (id: PtyID) {
+    const removeSession = Effect.fnUntraced(function* (id: PtyID, adopt = false) {
       const session = sessions.get(id)
       if (!session) return
       sessions.delete(id)
       const index = exitOrder.indexOf(id)
       if (index !== -1) exitOrder.splice(index, 1)
       yield* Effect.logInfo("removing session", { id })
-      teardown(session)
+      teardown(session, adopt)
       yield* events.publish(Event.Deleted, { id: session.info.id })
     })
 
     const remove = Effect.fn("Pty.remove")(function* (id: PtyID) {
       yield* requireSession(id)
-      yield* removeSession(id)
+      yield* removeSession(id, true)
     })
 
     const list = Effect.fn("Pty.list")(function* () {
@@ -178,9 +219,29 @@ const layer = Layer.effect(
         env.LC_CTYPE = "C.UTF-8"
         env.LANG = "C.UTF-8"
       }
-      yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd })
-      const { spawn } = yield* Effect.promise(() => pty())
-      const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env }))
+      // Only given sizes reach the backend, so a create without them stays what it was.
+      const size = {
+        ...(input.cols === undefined ? {} : { cols: clampSize(input.cols) }),
+        ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),
+      }
+      const backend = Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
+      yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd, backend })
+      const omni =
+        backend === "omni"
+          ? yield* Effect.gen(function* () {
+              const { spawn } = yield* Effect.promise(() => omniPty())
+              const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env, ...size }))
+              const service = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Service))
+              const registry = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Registry))
+              return { proc, ...(service ? { adoption: { service, registry } } : {}) }
+            })
+          : undefined
+      const proc =
+        omni?.proc ??
+        (yield* Effect.gen(function* () {
+          const { spawn } = yield* Effect.promise(() => pty())
+          return yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env, ...size }))
+        }))
       const info: Info = {
         id,
         title: input.title || `Terminal ${id.slice(-4)}`,
@@ -198,6 +259,7 @@ const layer = Layer.effect(
         cursor: 0,
         subscribers: new Map(),
         listeners: [],
+        ...(omni ? { omni } : {}),
       }
       sessions.set(id, session)
       session.listeners.push(
@@ -216,7 +278,8 @@ const layer = Layer.effect(
           }
           session.buffer += chunk
           if (session.buffer.length <= BUFFER_LIMIT) return
-          const excess = session.buffer.length - BUFFER_LIMIT
+          // Never keep half of a surrogate pair at the start of the ring.
+          const excess = PtyProtocol.cut(session.buffer, session.buffer.length - BUFFER_LIMIT)
           session.buffer = session.buffer.slice(excess)
           session.bufferCursor += excess
         }),
@@ -246,7 +309,8 @@ const layer = Layer.effect(
     const update = Effect.fn("Pty.update")(function* (id: PtyID, input: UpdateInput) {
       const session = yield* requireSession(id)
       if (input.title) session.info.title = input.title
-      if (input.size && session.info.status === "running") session.process.resize(input.size.cols, input.size.rows)
+      if (input.size && session.info.status === "running")
+        session.process.resize(clampSize(input.size.cols), clampSize(input.size.rows))
       yield* events.publish(Event.Updated, { info: session.info })
       return session.info
     })
@@ -312,6 +376,12 @@ const layer = Layer.effect(
     return Service.of({ list, get, create, update, remove, write, attach })
   }),
 )
+
+// Whether anything besides the root is alive in the tree, such as a background job the shell left behind.
+async function descendants(proc: OmniProc) {
+  const alive = await proc.child.processes().catch(() => [])
+  return alive.some((entry) => entry.pid !== proc.pid)
+}
 
 export const locationLayer = layer.pipe(Layer.provide(Config.locationLayer))
 
