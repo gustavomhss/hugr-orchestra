@@ -193,7 +193,8 @@ describe("pty on omni", () => {
         const shows = (rows: number, cols: number) => (text: string) =>
           windows
             ? new RegExp(`Lines:\\s*${rows}\\b[\\s\\S]*Columns:\\s*${cols}\\b`).test(text)
-            : new RegExp(`(^|\\n)${rows} ${cols}\\r?\\n`).test(text)
+            : // The shell's prompt may land before the answer on the same line.
+              new RegExp(`\\b${rows} ${cols}\\r?\\n`).test(text)
         const check = Effect.fn("PtyOmniTest.check")(function* (
           session: Effect.Success<ReturnType<typeof attach>>,
           rows: number,
