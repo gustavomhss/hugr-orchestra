@@ -1,5 +1,6 @@
 // V8 must execute on Windows; importing/run() on macOS reports unrun, never Windows green.
-// CI wrapper: import { run } from '../../../omni/campaign/v8-windows.ts'; expect((await run()).pass).toBe(true)
+// CI wrapper in opencode/test: import { run } from '../../omni/campaign/v8-windows.ts'; expect((await run()).pass).toBe(true)
+// Run alongside util/process.test.ts: the preload's process-local control cannot see this harness's child counters.
 // The wrapper belongs in opencode/test and is deliberately outside this work package's write-set.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
