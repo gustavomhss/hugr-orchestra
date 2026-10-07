@@ -13,6 +13,7 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 - [buf](buf.md): check; input: a Buf module of .proto files.
 - [datamodel-codegen](datamodel-codegen.md): generator; input: an OpenAPI document or JSON Schema.
 - [kiota](kiota.md): generator; input: an OpenAPI description.
+- [modelina](modelina.md): generator; input: an AsyncAPI document.
 - [ogen](ogen.md): generator; input: an OpenAPI description.
 - [openapi-generator](openapi-generator.md): generator; input: an OpenAPI description.
 - [orval](orval.md): generator; input: an OpenAPI description.
@@ -20,9 +21,15 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 
 ### backend-data
 
+- [datafusion-cli](datafusion-cli.md): check; input: the schema DDL and the SQL the change wrote.
+- [gocqlx-schemagen](gocqlx-schemagen.md): generator; input: a disposable Cassandra or Scylla cluster holding the packet's keyspace schema.
 - [sqlc](sqlc.md): generator; input: SQL query files and the schema DDL sqlc reads.
 - [sqlx](sqlx.md): generator; input: a SQLx project's migrations and a disposable database.
 
 ### backend-refactor
 
 - [ast-grep](ast-grep.md): generator; input: a syntax pattern, its rewrite and the files to apply it to.
+
+### backend-check
+
+- [datafusion-cli](datafusion-cli.md): check; input: the schema DDL and the SQL the change wrote.

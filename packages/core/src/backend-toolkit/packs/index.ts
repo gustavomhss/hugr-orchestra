@@ -1,8 +1,11 @@
 import astGrep from "./ast-grep"
 import buf from "./buf"
+import datafusionCli from "./datafusion-cli"
 import datamodelCodegen from "./datamodel-codegen"
 import gitleaks from "./gitleaks"
+import gocqlxSchemagen from "./gocqlx-schemagen"
 import kiota from "./kiota"
+import modelina from "./modelina"
 import ogen from "./ogen"
 import openapiGenerator from "./openapi-generator"
 import orval from "./orval"
@@ -24,4 +27,7 @@ export const ENGINES = {
   [datamodelCodegen.id]: datamodelCodegen,
   [ogen.id]: ogen,
   [sqlx.id]: sqlx,
+  [datafusionCli.id]: datafusionCli,
+  [gocqlxSchemagen.id]: gocqlxSchemagen,
+  [modelina.id]: modelina,
 }

@@ -39,12 +39,15 @@ const artifacts = [
     return []
   }),
 ]
-// npm lock entries carry their own SRI integrity and registry URL.
+// npm lock entries carry their own SRI integrity and registry URL. A bundled entry has neither: its bytes ship inside
+// the tarball of the package that bundles it, whose own entry is pinned.
 const locked = packs.flatMap((pack) => {
   if ("targets" in pack || pack.install.kind !== "npm") return []
-  const lock: { packages: Record<string, { resolved?: string; integrity?: string }> } = JSON.parse(pack.install.lock)
+  const lock: { packages: Record<string, { resolved?: string; integrity?: string; inBundle?: boolean }> } = JSON.parse(
+    pack.install.lock,
+  )
   return Object.entries(lock.packages)
-    .filter(([key]) => key !== "")
+    .filter(([key, entry]) => key !== "" && !entry.inBundle)
     .map(([key, entry]) => ({
       owner: `${pack.id}:${key}`,
       url: entry.resolved ?? "",
