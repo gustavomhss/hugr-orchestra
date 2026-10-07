@@ -1,7 +1,7 @@
 # R51 — JS/TS backend variants: Node/Bun × Express/Fastify/Hono
 
 Research date: 2026-10-04. **Source-only evidence; every selection case, implementation example and behavior check below is proposed/unexecuted.** Pins identify inspected releases, not upgrade recommendations or demonstrated runtime compatibility.
-Own metadata-only detached worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r51-js-variants`. `git rev-parse HEAD` returned **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`**. Inherited Git status contains metadata-checkout deletions; no checkout performed.
+Own metadata-only detached worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r51-js-variants`. `git rev-parse HEAD` returned **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`**. Inherited Git status contains metadata-checkout deletions; no checkout performed.
 Read source leads under `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/`: `skill-variants-plan.md`, `39-typescript-code.md` (R39), `44-compiled-validation.md` (R44). R39 supplies profile fixture; R44 supplies compiler-boundary leads. Primary sources newly inspected below.
 
 ## Composition contract

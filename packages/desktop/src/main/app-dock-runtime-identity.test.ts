@@ -76,7 +76,7 @@ test.skipIf(!enabled)("pins the local endpoint and reloads identity before stopp
   expect((await docker(["info", "--format", "{{.OSType}}"])).stdout.trim()).toBe("linux")
   expect((await docker(["image", "inspect", "--format", "{{.Os}}", image])).stdout.trim()).toBe("linux")
 
-  const root = await mkdtemp(join(process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "orchestra"), "orchestra-runtime-identity-"))
+  const root = await mkdtemp(join(process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "opencode"), "orchestra-runtime-identity-"))
   const privateContext = `orchestra-runtime-identity-${randomUUID()}`
   const previous = { context: process.env.DOCKER_CONTEXT, host: process.env.DOCKER_HOST }
   const cleanup = { context: false, owner: "" }

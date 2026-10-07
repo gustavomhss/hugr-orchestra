@@ -1,7 +1,7 @@
 # R52 — Effect backend implementation skill variants
 
 Research date: 2026-10-04. Status: source-only research; snippets, selection cases and behavior checks below **unexecuted**.
-Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r52-effect-variants`: `git rev-parse HEAD` returned **76015a9dcd5b0c77164a3f1bee49b0060a4d37f0**, matching requested baseline. Frozen `backend-plugin` worktree returned same HEAD.
+Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r52-effect-variants`: `git rev-parse HEAD` returned **76015a9dcd5b0c77164a3f1bee49b0060a4d37f0**, matching requested baseline. Frozen `backend-plugin` worktree returned same HEAD.
 Read frozen [plan](/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md) and [R39](/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/39-typescript-code.md); R39 comparison fixture retained below.
 Host root **H** = `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`; local citations describe inspected worktree bytes, whose checkout HEAD was `5e4bea3b519c04cebfb787e98dfa171f5771d25c`.
 
@@ -10,7 +10,7 @@ Host root **H** = `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`; 
 - Target: **effect 4.0.0-beta.83 + `patches/effect@4.0.0-beta.83.patch`**, per H/`package.json:34-36,66,160`. Platform-node, SQLite-Bun and OpenTelemetry packages share beta.83 pin; package manager Bun 1.3.14. Manifest facts, not measured installed versions.
 - Upstream tag `effect@4.0.0-beta.83` resolves through tag object `fd729130449b07247a4df21bbcb7c8b6671356a6` to commit **cd7ab658994104bd6fe8f841f1440bea32c387f5**. Primary Effect links below pin that commit; package manifest confirms beta.83 and MIT license. [V]
 - Host patch changes `StreamSse({ data })` JSON-string wrapper identifier to `${identifier}Stream` when data schema has identifier; applies source and distributed JS. Preserve decoded data identity and separate OpenAPI transport identity. Anonymous data keeps upstream wrapper behavior. [L1][SSE]
-- Available beta.98 checkout at `/Users/gustavoschneiter/.local/share/orchestra/repos/github.com/Effect-TS/effect-smol` supplies no target API evidence here. Newer checkout or v3 recipe cannot establish beta.83 compatibility; re-pin source if supplied component version changes.
+- Available beta.98 checkout at `/Users/gustavoschneiter/.local/share/opencode/repos/github.com/Effect-TS/effect-smol` supplies no target API evidence here. Newer checkout or v3 recipe cannot establish beta.83 compatibility; re-pin source if supplied component version changes.
 
 ## Shared contract for every card
 
@@ -111,10 +111,10 @@ const output = Stream.unwrap(
 
 **Trigger:** packet assigns tests for Effect services, typed failures, scopes, streams or runtime integration. **Non-trigger:** independent review/project diagnosis; pure synchronous schema check needs no service harness by default.
 **Inputs:** behavior oracle, named implementation/tests, package-local commands, real DB/OS/HTTP fixture, production-equivalent layer topology and clock/ownership assumptions.
-**Steps:** reuse package's `testEffect(...)`: Core has `packages/core/test/lib/effect.ts`; orchestra has `packages/orchestra/test/lib/effect.ts`. Compose explicit supplied layers; invoke actual service with named bindings. Avoid reimplementing behavior in tests or blanket mocks. [TEST]
-**Steps, continued:** `it.effect` provides TestClock/TestConsole for deterministic Effect time; `it.live` keeps live clock for filesystem, git, sockets, processes, locks and DB integration. orchestra `it.instance` supplies live scoped instance fixture; Core helper does not expose that method. Preserve existing fixture ownership instead of copying richer helper elsewhere.
+**Steps:** reuse package's `testEffect(...)`: Core has `packages/core/test/lib/effect.ts`; opencode has `packages/opencode/test/lib/effect.ts`. Compose explicit supplied layers; invoke actual service with named bindings. Avoid reimplementing behavior in tests or blanket mocks. [TEST]
+**Steps, continued:** `it.effect` provides TestClock/TestConsole for deterministic Effect time; `it.live` keeps live clock for filesystem, git, sockets, processes, locks and DB integration. opencode `it.instance` supplies live scoped instance fixture; Core helper does not expose that method. Preserve existing fixture ownership instead of copying richer helper elsewhere.
 **Steps, continued:** synchronize with Deferred/readiness rather than guessed sleeps. TestClock only controls Effect time, not native timers/OS. Await `Fiber.interrupt` or close inner test scope before asserting finalizers. Scoped outer harness cleanup occurs after body; assertion inside still-open scope cannot prove release. [CLOCK][FIBERS]
-**Steps, continued:** mounted HttpApi tests exercise middleware order, decoded inputs and serialized response; use supplied Effect HTTP test layers. Shared pub/sub identity, when required by existing orchestra fixture, uses supplied `testEffectShared`/memo map; do not create replacement runtime. [TEST]
+**Steps, continued:** mounted HttpApi tests exercise middleware order, decoded inputs and serialized response; use supplied Effect HTTP test layers. Shared pub/sub identity, when required by existing opencode fixture, uses supplied `testEffectShared`/memo map; do not create replacement runtime. [TEST]
 **Tools → output:** read assigned tests/helpers; later package-local `bun typecheck` and focused tests → meaningful positive/negative assertions plus recorded executed/skipped/unexecuted results.
 **Version caveat:** helper names/topology are host-specific, not universal Effect testing API; beta.83 `TestClock.adjust` and fiber cleanup semantics require pinned source. Promise `await` assertion alone exercises neither scoped finalizers nor typed failure/defect distinction.
 **Local freedom:** fixture composition, synchronization and assertion detail within assigned behavior. **Upstream blocker:** missing observable success/failure contract, required fixture or test command; request named input rather than invent harness.
@@ -144,4 +144,4 @@ Execution evidence pending by assignment: compile snippets against selected lock
 - [L4] H/`packages/core/src/credential.ts:49-129`, `src/database/database.ts:13-40`, `src/session/store.ts:28-58`, `src/event.ts:160-171,643-661`.
 - [L5] H/`packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts:118-203`; H/`packages/core/src/event.ts:592-600`.
 - [L6] H/`packages/protocol/src/groups/event.ts:29-45`; H/`packages/server/src/handlers/event.ts:11-49`.
-- [TEST] H/`packages/core/test/lib/effect.ts:11-53`; H/`packages/orchestra/test/lib/effect.ts:38-65,131-147`; `packages/orchestra/test/AGENTS.md`; `packages/orchestra/test/server/AGENTS.md`; inspected test examples: Core `test/event.test.ts:81-103`, orchestra `test/server/httpapi-schema-error-body.test.ts:110-121` and `test/server/httpapi-event.test.ts:26-58` (latter legacy transport fixture, not current event-schema oracle).
+- [TEST] H/`packages/core/test/lib/effect.ts:11-53`; H/`packages/opencode/test/lib/effect.ts:38-65,131-147`; `packages/opencode/test/AGENTS.md`; `packages/opencode/test/server/AGENTS.md`; inspected test examples: Core `test/event.test.ts:81-103`, opencode `test/server/httpapi-schema-error-body.test.ts:110-121` and `test/server/httpapi-event.test.ts:26-58` (latter legacy transport fixture, not current event-schema oracle).

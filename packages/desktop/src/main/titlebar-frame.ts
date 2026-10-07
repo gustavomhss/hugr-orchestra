@@ -1,4 +1,4 @@
-import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
+import type { NativeTitlebarFrame } from "@opencode-ai/app/native-titlebar"
 
 export function requireTitlebarFrame(value: unknown, bounds: { width: number; height: number }, zoom: number) {
   if (value === undefined) return undefined

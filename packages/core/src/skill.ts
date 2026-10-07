@@ -3,7 +3,7 @@ export * as SkillV2 from "./skill"
 import { makeLocationNode } from "./effect/app-node"
 import path from "path"
 import { Context, Effect, Layer, Schema, Types } from "effect"
-import { Skill } from "@orchestra/schema/skill"
+import { Skill } from "@opencode-ai/schema/skill"
 import { AgentV2 } from "./agent"
 import { ConfigMarkdown } from "./config/markdown"
 import { FSUtil } from "./fs-util"
@@ -55,7 +55,7 @@ export interface Interface extends State.Transformable<Draft> {
   readonly remove: (directory: string, location: string) => Effect.Effect<void, SkillFile.WriteError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Skill") {}
+export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Skill") {}
 
 const layer = Layer.effect(
   Service,

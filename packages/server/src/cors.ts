@@ -2,7 +2,7 @@ import { Context } from "effect"
 
 export type CorsOptions = { readonly cors?: ReadonlyArray<string> }
 
-export const CorsConfig = Context.Reference<CorsOptions | undefined>("@orchestra/ServerCorsConfig", {
+export const CorsConfig = Context.Reference<CorsOptions | undefined>("@opencode/ServerCorsConfig", {
   defaultValue: () => undefined,
 })
 

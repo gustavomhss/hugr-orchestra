@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { Agent } from "@orchestra/sdk/v2/client"
+import type { Agent } from "@opencode-ai/sdk/v2/client"
 import {
   agentDraft,
   agentFileInput,
@@ -75,7 +75,7 @@ describe("Agent editor", () => {
     ],
   }
   const file = {
-    path: "/repo/.orchestra/agent/plan.md",
+    path: "/repo/.opencode/agent/plan.md",
     exists: true,
     revision: "r1",
     system: "File prompt",
@@ -164,7 +164,7 @@ describe("Agent editor", () => {
   test("Maestro stays primary whatever its file or the server says, so a save writes it back as primary", () => {
     const maestro = { ...agent("maestro", "subagent"), id: "maestro" }
     const handEdited = {
-      path: "/repo/.orchestra/agent/maestro.md",
+      path: "/repo/.opencode/agent/maestro.md",
       exists: true,
       revision: "m1",
       mode: "subagent" as const,

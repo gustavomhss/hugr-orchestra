@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 export const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 export const directory = "/repo/governance"
@@ -144,21 +144,21 @@ export async function setupGovernance(
   const requests: { url: string; method: string }[] = []
   await page.addInitScript(
     ({ server, scheme, locale, otherServer }) => {
-      localStorage.setItem("orchestra.settings.dat:defaultServerUrl", server)
+      localStorage.setItem("opencode.settings.dat:defaultServerUrl", server)
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({
           general: { newLayoutDesigns: true, shouldDisplayTabsToast: false, newInterfaceNoticeDismissed: true },
         }),
       )
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
-      localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale }))
-      if (otherServer) localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [otherServer] }))
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
+      if (otherServer) localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [otherServer] }))
     },
     { server, scheme: input.scheme ?? "dark", locale: input.locale ?? "en", otherServer: input.otherServer },
   )
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     protocol: input.protocol,
     eventRetry: 60_000,
@@ -174,7 +174,7 @@ export async function setupGovernance(
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: {
             "claude-opus-4-6": { id: "claude-opus-4-6", name: "Claude Opus 4.6", limit: { context: 200_000 } },
           },

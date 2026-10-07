@@ -1,6 +1,6 @@
 # R67 — the backend specialist charter: runtime composition and requirements
 
-Status: source research, 2026-10-05. Read-only; no test, typecheck or install was run. Baseline: worktree `_worktrees/backend-plugin`, HEAD `99de9a5692` (= `fork/dev` `d11d8652aa` + specs commit). Anchors are `file:line`. **O** = `packages/orchestra/src`, **S** = `specs/backend-specialist`.
+Status: source research, 2026-10-05. Read-only; no test, typecheck or install was run. Baseline: worktree `_worktrees/backend-plugin`, HEAD `99de9a5692` (= `fork/dev` `d11d8652aa` + specs commit). Anchors are `file:line`. **O** = `packages/opencode/src`, **S** = `specs/backend-specialist`.
 
 Scope: what the backend specialist's system prompt (the charter, today `O/agent/prompt/backend.txt`) must satisfy, and what surrounds it at runtime. Token figures are estimates (≈4 bytes/token for English prose, ≈3.5 for code-heavy text), not tokenizer measurements.
 
@@ -30,7 +30,7 @@ Scope: what the backend specialist's system prompt (the charter, today `O/agent/
 | 1 | **Agent prompt, which REPLACES the provider prompt** | `request.ts:60`: `...(input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model))` | `backend.txt`, 273 B. None of `anthropic.txt`/`gpt.txt`/`codex.txt` etc. (`O/session/system.ts:27-49`) is sent |
 | 2 | Environment block | `system.ts:72-83`: model name/ID, `<env>` working dir, worktree root, git yes/no, platform, date | ≈350 B |
 | 2b | `<available_references>` | `system.ts:84-101`, only when config references have descriptions | usually absent |
-| 3 | Instruction files, each prefixed `Instructions from: <path>` | `O/session/instruction.ts:155-169`. Order: (a) the first existing global file, `~/.config/orchestra/AGENTS.md` or else `~/.claude/CLAUDE.md` (`instruction.ts:60-63, 114-119`); (b) the project files `AGENTS.md`, then `CLAUDE.md`, then `CONTEXT.md` (64-68). For the first filename found, `findUp` collects **every** ancestor match from cwd up to the worktree (`packages/core/src/fs-util.ts:154-166`), so nested AGENTS.md files stack despite the comment at `instruction.ts:122`. (c) `config.instructions` files, then (d) URLs | Root `AGENTS.md` (9.1 KB). Add `packages/orchestra/AGENTS.md` (6.5 KB) if cwd is inside that package. No global file on this host |
+| 3 | Instruction files, each prefixed `Instructions from: <path>` | `O/session/instruction.ts:155-169`. Order: (a) the first existing global file, `~/.config/opencode/AGENTS.md` or else `~/.claude/CLAUDE.md` (`instruction.ts:60-63, 114-119`); (b) the project files `AGENTS.md`, then `CLAUDE.md`, then `CONTEXT.md` (64-68). For the first filename found, `findUp` collects **every** ancestor match from cwd up to the worktree (`packages/core/src/fs-util.ts:154-166`), so nested AGENTS.md files stack despite the comment at `instruction.ts:122`. (c) `config.instructions` files, then (d) URLs | Root `AGENTS.md` (9.1 KB). Add `packages/opencode/AGENTS.md` (6.5 KB) if cwd is inside that package. No global file on this host |
 | 4 | `<mcp_instructions>` | `system.ts:119-135`. A server is included only if it has zero tools or some tool is not permission-disabled | Effectively none: `"*": deny` disables every MCP tool |
 | 5 | Skills list (`<available_skills>`) | `system.ts:105-117`. Omitted when `skill` is disabled (106). When present, it is filtered per skill name by permission (`O/skill/index.ts:356-361`) | **Omitted**, because skill is denied |
 | 6 | Structured-output instruction | `prompt.ts:89, 1265`, only for `format: json_schema` | Absent in Task |
@@ -41,7 +41,7 @@ The prepared `system` array becomes leading `role: "system"` messages (`request.
 
 ### 1.4 Messages after the system
 
-- **Child user message.** It is built from `ops.resolvePromptParts(params.prompt)` (`task.ts:515`; `O/session/prompt.ts:164-171`): Maestro's free-text prompt plus resolved `@file` parts. The "Maestro packet" is just this text. Its intended shape is the `maestro-pack` dispatch output schema (`.orchestra/skills/maestro-pack/SKILL.md:82-88`: targets, writes/reads, acceptance, latitude, hardRules, `checks[{command,cwd,expectedOutcome}]`, `returnShape{status, baseline, changedPaths, evidencePointers, blockers, newDecisions}`), together with the worker Step 0 baseline commands (`SKILL.md:58-66`).
+- **Child user message.** It is built from `ops.resolvePromptParts(params.prompt)` (`task.ts:515`; `O/session/prompt.ts:164-171`): Maestro's free-text prompt plus resolved `@file` parts. The "Maestro packet" is just this text. Its intended shape is the `maestro-pack` dispatch output schema (`.opencode/skills/maestro-pack/SKILL.md:82-88`: targets, writes/reads, acceptance, latitude, hardRules, `checks[{command,cwd,expectedOutcome}]`, `returnShape{status, baseline, changedPaths, evidencePointers, blockers, newDecisions}`), together with the worker Step 0 baseline commands (`SKILL.md:58-66`).
 - **Governed only.** When `authorizationID` resolves to a GROUNDED context record, each verified `own_*` skill is appended as a **synthetic** user part `<skill_content name="…">…</skill_content>` (`task.ts:516-529`). The backend specialist receives these without holding the `skill` permission.
 - **Reminders.** `SessionReminders.apply` (`prompt.ts:1187`) only injects plan/build reminders (`O/session/reminders.ts:24-48`). Nothing applies to the backend specialist.
 - **Max-steps.** `MAX_STEPS_PROMPT` is appended only at `agent.steps` (`prompt.ts:1185-1186, 1275`). The backend specialist has no `steps`, so this never happens.
@@ -63,7 +63,7 @@ Task returns **only the last text part** of the child's final message (`task.ts:
 | Charter `backend.txt` | 273 | ~65 | 33 words |
 | Provider prompt | 0 | 0 | Replaced. For reference: `anthropic.txt` 8,212 B ≈ 2.0k; `gpt.txt` 9,284 B; `codex.txt` 7,390 B |
 | Environment | ~350 | ~90 | Date changes daily, which invalidates the prompt-cache suffix from that point |
-| Root `AGENTS.md` | 9,103 | ~2.3k | +6,453 B ≈ 1.6k when cwd is under `packages/orchestra` |
+| Root `AGENTS.md` | 9,103 | ~2.3k | +6,453 B ≈ 1.6k when cwd is under `packages/opencode` |
 | Global instructions | 0 | 0 | Not present on this host |
 | MCP / skills / structured output | 0 | 0 | Skills would cost ≈400–600 after H1 (six entries with descriptions and locations) |
 | Tool definitions | ~9,000 | ~2.3k | read 551, glob 517, grep 657, edit 1,369, write 623 (`O/tool/*.txt`); bash rendered from `tool/shell/shell.txt` (1,269) + `shell/prompt.ts` sections (≈2–3 KB); plus JSON schemas |
@@ -244,7 +244,7 @@ The implied charter shape keeps the four-anchor seat template and adds about fiv
 | K14 | No three-axis honesty rule and no "unavailable stays unavailable" | #30, #31 | High (F4 trust split; a false verification is an unconditional fail, execution-plan §2.7) |
 | K15 | No Atlas wording. In V1 no header exists today (§1.4) | #44, #45: the charter must handle header present, absent and degraded without assuming any of them | Low now, required at A4 |
 | K16 | Orchestrator-side: `task.txt:20` "outputs should generally be trusted", and the Task catalog description "<label> native team specialist." (`agent.ts:299`) | Outside the charter; flag to H5/Maestro. The catalog description is what Maestro uses to choose the seat (`registry.ts:396-409`) | Low |
-| K17 | Nested `AGENTS.md` files stack (`fs-util.ts:154-166`), contrary to the comment at `instruction.ts:122` | Budget only (+1.6k tokens in `packages/orchestra`) | Low |
+| K17 | Nested `AGENTS.md` files stack (`fs-util.ts:154-166`), contrary to the comment at `instruction.ts:122` | Budget only (+1.6k tokens in `packages/opencode`) | Low |
 
 ### Sequencing implication
 

@@ -92,4 +92,4 @@ Given OCE-1 through OCE-8.
 
 When adapter runs.
 
-Then zero Atlas runtime read/write or memory-write calls and zero Orchestra Task/child Session creations occur.
+Then zero Atlas runtime read/write or memory-write calls and zero OpenCode Task/child Session creations occur.

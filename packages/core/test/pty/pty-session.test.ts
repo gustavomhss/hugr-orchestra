@@ -1,13 +1,13 @@
 import { describe, expect } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Layer, Queue } from "effect"
-import { Config } from "@orchestra/core/config"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { EventV2 } from "@orchestra/core/event"
-import { Location } from "@orchestra/core/location"
-import { Pty } from "@orchestra/core/pty"
-import type { PtyID } from "@orchestra/core/pty/schema"
-import { AbsolutePath } from "@orchestra/core/schema"
+import { Config } from "@opencode-ai/core/config"
+import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { EventV2 } from "@opencode-ai/core/event"
+import { Location } from "@opencode-ai/core/location"
+import { Pty } from "@opencode-ai/core/pty"
+import type { PtyID } from "@opencode-ai/core/pty/schema"
+import { AbsolutePath } from "@opencode-ai/core/schema"
 import { location } from "../fixture/location"
 import { testEffect } from "../lib/effect"
 
@@ -45,7 +45,7 @@ const subscribePtyEvents = Effect.fn("PtySessionTest.subscribePtyEvents")(functi
 const createPty = Effect.fn("PtySessionTest.createPty")(function* (command: string, args: string[] = []) {
   const pty = yield* Pty.Service
   return yield* Effect.acquireRelease(
-    pty.create({ command, args, cwd: "/tmp", env: { TERM: "xterm-256color", ORCHESTRA_TERMINAL: "1" } }),
+    pty.create({ command, args, cwd: "/tmp", env: { TERM: "xterm-256color", OPENCODE_TERMINAL: "1" } }),
     (info) => pty.remove(info.id).pipe(Effect.ignore),
   )
 })

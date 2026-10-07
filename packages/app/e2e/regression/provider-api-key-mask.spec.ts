@@ -1,16 +1,16 @@
 import { expect, test, type Page } from "@playwright/test"
-import { base64Encode } from "@orchestra/core/util/encode"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { base64Encode } from "@opencode-ai/core/util/encode"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:/Orchestra/ProviderApiKeyMask"
+const directory = "C:/OpenCode/ProviderApiKeyMask"
 const projectID = "proj_provider_api_key_mask"
 const sessionID = "ses_provider_api_key_mask"
 const secret = "sk-mask-test-0123456789"
 
 async function openSession(page: Page) {
   const connections: Array<{ integrationID: string; body: unknown }> = []
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: {
       id: projectID,
@@ -24,7 +24,7 @@ async function openSession(page: Page) {
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: {
             "free-model": {
               id: "free-model",

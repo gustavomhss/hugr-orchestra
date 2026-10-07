@@ -10,8 +10,8 @@ export type SkillSource = "project" | "global" | "builtin"
 /** Mirrors the server's write rule: only the project's own skill folders change, never Atlas-governed skills. */
 export type SkillAccess = "edit" | "builtin" | "global" | "governed" | "fixed"
 
-const PROJECT_ROOTS = [".orchestra/skills/", ".orchestra/skill/", ".claude/skills/", ".agents/skills/"]
-const GOVERNED_ROOT = ".orchestra/skills/own/"
+const PROJECT_ROOTS = [".opencode/skills/", ".opencode/skill/", ".claude/skills/", ".agents/skills/"]
+const GOVERNED_ROOT = ".opencode/skills/own/"
 
 const SOURCE_ORDER: SkillSource[] = ["project", "global", "builtin"]
 

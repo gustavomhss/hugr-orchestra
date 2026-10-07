@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { currentSession, mockOrchestraServer } from "../utils/mock-server"
+import { currentSession, mockOpenCodeServer } from "../utils/mock-server"
 
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/schedule"
@@ -467,7 +467,7 @@ async function setup(
   await page.addInitScript(
     ({ server, directory, scheme }) => {
       const selected = sessionStorage.getItem("schedule-e2e-directory") ?? directory
-      localStorage.setItem("orchestra.settings.dat:defaultServerUrl", server)
+      localStorage.setItem("opencode.settings.dat:defaultServerUrl", server)
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem(
         "settings.v3",
@@ -475,10 +475,10 @@ async function setup(
           general: { newLayoutDesigns: true, shouldDisplayTabsToast: false, newInterfaceNoticeDismissed: true },
         }),
       )
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [server],
           projects: {
@@ -488,12 +488,12 @@ async function setup(
         }),
       )
       const layout = JSON.stringify({ home: { selection: { server, directory: selected } } })
-      localStorage.setItem("orchestra.global.dat:layout", layout)
-      localStorage.setItem(`orchestra.global.dat:${server}\0layout`, layout)
+      localStorage.setItem("opencode.global.dat:layout", layout)
+      localStorage.setItem(`opencode.global.dat:${server}\0layout`, layout)
     },
     { server, directory, scheme: input.scheme ?? "dark" },
   )
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol,
     eventRetry: 60_000,
     provider: { all: [], connected: [], default: {} },

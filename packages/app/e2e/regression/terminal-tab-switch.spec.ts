@@ -1,9 +1,9 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
-const directory = "C:/Orchestra/TerminalTabSwitch"
+const directory = "C:/OpenCode/TerminalTabSwitch"
 const projectID = "proj_terminal_tab_switch"
 const sessionA = "ses_terminal_tab_a"
 const sessionB = "ses_terminal_tab_b"
@@ -65,7 +65,7 @@ async function readProbe(page: Page) {
 }
 
 async function setup(page: Page) {
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: "v2",
     directory,
     project: {
@@ -80,7 +80,7 @@ async function setup(page: Page) {
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: { test: { id: "test", name: "Test", limit: { context: 200_000 } } },
         },
       ],
@@ -105,7 +105,7 @@ async function setup(page: Page) {
     }),
   )
   await page.route(`**/api/pty/${ptyID}/connect-token*`, (route) => {
-    expect(route.request().headers()["x-orchestra-ticket"]).toBe("1")
+    expect(route.request().headers()["x-opencode-ticket"]).toBe("1")
     const url = new URL(route.request().url())
     expect(url.searchParams.get("location[directory]")).toBe(directory)
     return route.fulfill({
@@ -124,14 +124,14 @@ async function setup(page: Page) {
     ({ directory, server, sessions }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify(sessions.map((sessionId: string) => ({ type: "session", server, sessionId }))),
       )
     },

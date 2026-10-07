@@ -1,5 +1,5 @@
-import { Skill } from "@orchestra/schema/skill"
-import { Location } from "@orchestra/schema/location"
+import { Skill } from "@opencode-ai/schema/skill"
+import { Location } from "@opencode-ai/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError, InvalidRequestError } from "../errors"
@@ -38,7 +38,7 @@ export const SkillGroup = HttpApiGroup.make("server.skill")
           identifier: "v2.skill.save",
           summary: "Save skill",
           description:
-            "Create a project skill under .orchestra/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
+            "Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.",
         }),
       ),
   )

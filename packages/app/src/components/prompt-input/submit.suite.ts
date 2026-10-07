@@ -150,20 +150,20 @@ beforeAll(async () => {
     useSearchParams: () => [search, () => undefined],
   }))
 
-  mock.module("@orchestra/sdk/v2/client", () => ({
-    createOrchestraClient: (input: { directory: string }) => {
+  mock.module("@opencode-ai/sdk/v2/client", () => ({
+    createOpencodeClient: (input: { directory: string }) => {
       createdClients.push(input.directory)
       return clientFor(input.directory)
     },
   }))
 
-  mock.module("@orchestra/ui/toast", () => ({
+  mock.module("@opencode-ai/ui/toast", () => ({
     Toast: { Region: () => null },
     showToast: () => 0,
     toaster: { dismiss: () => undefined },
   }))
 
-  mock.module("@orchestra/core/util/encode", () => ({
+  mock.module("@opencode-ai/core/util/encode", () => ({
     base64Encode: (value: string) => value,
   }))
 

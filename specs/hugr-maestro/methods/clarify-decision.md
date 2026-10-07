@@ -19,7 +19,7 @@ Committed `AdmissionRecord` outcome is `CLARIFY` with a valid `ClarificationNeed
 
 ```text
 admissionRecordId    durable record produced by admit-request
-sessionId            durable Orchestra Session identity
+sessionId            durable OpenCode Session identity
 messageId            user message that caused admission
 clarificationNeed    decision needed, why it blocks, known facts, forbidden assumptions
 methodVersion        version of this method contract
@@ -31,7 +31,7 @@ non-exhaustive examples; it never supplies a recommended answer as fact.
 ## Preconditions
 
 1. Linked `AdmissionRecord` is committed, valid, and has outcome `CLARIFY`.
-2. Caller may still speak in its Orchestra Session.
+2. Caller may still speak in its OpenCode Session.
 3. No later admission record supersedes this clarification need.
 
 Precondition failure produces a visible held state. No question is silently sent and no Task is created.
@@ -111,7 +111,7 @@ it does not rerun `frame-question`. A newer admission record supersedes an undel
 
 | System   | Seam                                                                                     |
 | -------- | ---------------------------------------------------------------------------------------- |
-| Orchestra | durable `SessionID`/`MessageID`, visible assistant response, Session/Task creation fence |
+| OpenCode | durable `SessionID`/`MessageID`, visible assistant response, Session/Task creation fence |
 | Atlas    | none; request has not earned project-context access beyond admission orientation         |
 
 ## Acceptance

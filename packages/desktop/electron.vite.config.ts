@@ -1,14 +1,14 @@
 import { sentryVitePlugin } from "@sentry/vite-plugin"
 import { defineConfig } from "electron-vite"
-import appPlugin from "@orchestra/app/vite"
+import appPlugin from "@opencode-ai/app/vite"
 import * as fs from "node:fs/promises"
 
-const ORCHESTRA_SERVER_DIST = "../orchestra/dist/node"
+const OPENCODE_SERVER_DIST = "../opencode/dist/node"
 
 const channel = (() => {
-  const raw = process.env.ORCHESTRA_CHANNEL
+  const raw = process.env.OPENCODE_CHANNEL
   if (raw === "dev" || raw === "beta" || raw === "prod") return raw
-  if (process.env.ORCHESTRA_CHANNEL === "latest") return "prod"
+  if (process.env.OPENCODE_CHANNEL === "latest") return "prod"
   return "dev"
 })()
 
@@ -34,7 +34,7 @@ const sentry =
 export default defineConfig({
   main: {
     define: {
-      "import.meta.env.ORCHESTRA_CHANNEL": JSON.stringify(channel),
+      "import.meta.env.OPENCODE_CHANNEL": JSON.stringify(channel),
     },
     build: {
       rollupOptions: {
@@ -55,25 +55,25 @@ const require = __cjs_mod__.createRequire(import.meta.url);
     },
     plugins: [
       {
-        name: "orchestra:node-pty-narrower",
+        name: "opencode:node-pty-narrower",
         enforce: "pre",
         resolveId(s) {
           if (s === "@lydell/node-pty") return nodePtyPkg
         },
       },
       {
-        name: "orchestra:virtual-server-module",
+        name: "opencode:virtual-server-module",
         enforce: "pre",
         resolveId(id) {
-          if (id === "virtual:orchestra-server") return this.resolve(`${ORCHESTRA_SERVER_DIST}/node.js`)
+          if (id === "virtual:opencode-server") return this.resolve(`${OPENCODE_SERVER_DIST}/node.js`)
         },
       },
       {
-        name: "orchestra:copy-server-assets",
+        name: "opencode:copy-server-assets",
         async writeBundle() {
-          for (const l of await fs.readdir(ORCHESTRA_SERVER_DIST)) {
+          for (const l of await fs.readdir(OPENCODE_SERVER_DIST)) {
             if (!l.endsWith(".wasm")) continue
-            await fs.writeFile(`./out/main/chunks/${l}`, await fs.readFile(`${ORCHESTRA_SERVER_DIST}/${l}`))
+            await fs.writeFile(`./out/main/chunks/${l}`, await fs.readFile(`${OPENCODE_SERVER_DIST}/${l}`))
           }
         },
       },
@@ -95,7 +95,7 @@ const require = __cjs_mod__.createRequire(import.meta.url);
     publicDir: "../../../app/public",
     root: "src/renderer",
     build: {
-      sourcemap: process.env.ORCHESTRA_FAST_BUILD === "1" ? false : true,
+      sourcemap: process.env.OPENCODE_FAST_BUILD === "1" ? false : true,
       rollupOptions: {
         input: {
           main: "src/renderer/index.html",

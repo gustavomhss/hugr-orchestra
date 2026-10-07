@@ -93,7 +93,7 @@ For this checkout, package-level `bun typecheck` and package-local tests follow 
 
 **Practical overhead:** Provider-specific capabilities/pricing metadata, usage accounting, and evaluation maintenance. Extra cheap requests can cost more than one successful strong-model request. Keep stable Atlas/project instructions separate from volatile task evidence; preserve native Session context/caching behavior rather than inventing another history/memory store.
 
-## Proposed Orchestra integration
+## Proposed OpenCode/Orchestra integration
 
 This is design guidance, not claim of implemented Atlas/Maestro APIs.
 

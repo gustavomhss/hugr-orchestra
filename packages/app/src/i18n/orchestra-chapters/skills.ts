@@ -15,7 +15,7 @@ export const SKILLS_COPY = {
     "Saved to {{location}}. The server lists it after it reloads this project's configuration.",
   "orchestra.skills.reload": "Reload list",
   "orchestra.skills.dialog.add": "Add skill",
-  "orchestra.skills.dialog.addDetail": "Saved as .orchestra/skills/<name>/SKILL.md in this profile's repository.",
+  "orchestra.skills.dialog.addDetail": "Saved as .opencode/skills/<name>/SKILL.md in this profile's repository.",
   "orchestra.skills.dialog.edit": "Edit {{name}}",
   "orchestra.skills.dialog.read": "Read {{name}}",
   "orchestra.skills.dialog.builtin": "Built into the server. Read-only.",

@@ -115,8 +115,8 @@ describe("native tool safety", () => {
       yield* check("read", { filePath: "corpus", limit: 40 }, { corpusFiles: ["corpus"] })
       expect((yield* Effect.flip(check("read", { filePath: "missing", limit: 40 }, { corpusFiles: ["missing"] }))).reason).toBe("corpus-stat-acquisition")
       expect((yield* Effect.flip(check("read", { filePath: "missing" }, { transcriptFiles: ["missing"] }))).reason).toBe("transcript-stat-acquisition")
-      expect((yield* Effect.flip(check("write", { filePath: "orchestra.json" }, { protectedWrites: ["orchestra.json"] }))).reason).toBe("protected-instruction-or-config-write")
-      yield* check("write", { filePath: "orchestra.json" }, { protectedWrites: ["orchestra.json"], allowedConfigEdits: ["orchestra.json"] })
+      expect((yield* Effect.flip(check("write", { filePath: "opencode.json" }, { protectedWrites: ["opencode.json"] }))).reason).toBe("protected-instruction-or-config-write")
+      yield* check("write", { filePath: "opencode.json" }, { protectedWrites: ["opencode.json"], allowedConfigEdits: ["opencode.json"] })
       // A root may be a file or a path not created yet; it resolves through its nearest existing ancestor.
       expect((yield* Effect.flip(check("write", { filePath: "owned/file" }, { writeRoots: ["missing-root"] }))).reason).toBe("write-outside-physical-roots")
       yield* check("write", { filePath: "missing-root/deep/new" }, { writeRoots: ["missing-root"] })

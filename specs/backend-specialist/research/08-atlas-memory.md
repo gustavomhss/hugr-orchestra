@@ -6,7 +6,7 @@ Research date: 2026-10-03. Atlas baseline: `76015a9dcd5b0c77164a3f1bee49b0060a4d
 
 **Keep Atlas as shared foundation. Borrow memory lifecycle mechanisms, not another memory database.** Best transfers: bounded hot/cold context, stable identity independent of Session/display name, evidence-linked corrections, explicit checkpoint succession, scope-first selection, and task-level evaluation.
 
-The backend specialist runs on Orchestra independently of Maestro. Native Maestro integration supplies orchestration context through adapters; Atlas continues owning shared code-grounded Knowledge and per-member Memory. Task/PR recall stays explicit, except own resumed unit's closing fold once at spawn. Project rules persist across Sessions and display rename. These are target requirements from brief, not claims that every host integration already ships.
+The backend specialist runs on OpenCode/Orchestra independently of Maestro. Native Maestro integration supplies orchestration context through adapters; Atlas continues owning shared code-grounded Knowledge and per-member Memory. Task/PR recall stays explicit, except own resumed unit's closing fold once at spawn. Project rules persist across Sessions and display rename. These are target requirements from brief, not claims that every host integration already ships.
 
 **Important distinction:** Atlas already implements durable memory doors. Biggest gaps concern projection semantics and host consumption, not missing storage. Memory and Knowledge share Atlas, but current physical storage differs: `.atlas/memory.jsonl` versus Knowledge CAS/projection. “One Atlas” does not mean one physical file. [A-contract], [A-compose], [A-store]
 
@@ -50,7 +50,7 @@ The backend specialist runs on Orchestra independently of Maestro. Native Maestr
 
 **Current-source correction.** Active Letta is no longer adequately described as only the V1 database/block architecture. `memory-filesystem.ts` derives per-agent directories and initializes/clones git memory. `memory-format.ts` explicitly distinguishes legacy `system/` core memory from MemFS v2 root Markdown, selected by `MEMORY.md`. Current constraints code counts complete files and aggregate core characters. Live SDK memory docs still describe `system/`; current MemFS docs and source explain newer root layout. Treat this as version skew. [L-handoff], [L-filesystem], [L-format], [L-constraints], [D-letta-memory], [D-memfs]
 
-**Atlas fit.** Keep bounded project rules resident; expose compact discovery/recall affordances for task/PR history. A paged result should carry stable record identity, continuation cursor, returned-budget receipt, and truncation/completeness state. Reuse existing Atlas records and host context assembly. MemGPT heartbeat loop is not the backend specialist's execution model; Orchestra remains runtime owner.
+**Atlas fit.** Keep bounded project rules resident; expose compact discovery/recall affordances for task/PR history. A paged result should carry stable record identity, continuation cursor, returned-budget receipt, and truncation/completeness state. Reuse existing Atlas records and host context assembly. MemGPT heartbeat loop is not the backend specialist's execution model; OpenCode/Orchestra remains runtime owner.
 
 **Cost / falsification.** Per-turn context remains recurring cost even when bytes are stable. Paging trades smaller prompts for tool/model round trips. Test large recall, long no-whitespace rules, huge grounding fields, and evidence on a later page. Success requires bounded rendered context *and* successful retrieval, not merely fewer returned bytes.
 
@@ -58,7 +58,7 @@ The backend specialist runs on Orchestra independently of Maestro. Native Maestr
 
 **Primary evidence.** Letta V1 block `id` is separate from `label`; blocks attach to agents. Current Letta memory directories key on `agentId`; SDK docs distinguish persistent agent, conversation, and connection Session. Graphiti records `group_id`, threads it through search, and `_resolve_request_scope` returns request-local driver/client bundles rather than mutating shared database target during awaited ingestion. Official namespacing docs explicitly say namespace filtering is not application authorization. [L-block], [L-block-manager], [L-filesystem], [D-letta-sessions], [G-engine], [G-search], [D-groups]
 
-Vocabulary differs: Letta's connection Session is not Orchestra's durable Session. Borrow identity separation, not lifecycle types.
+Vocabulary differs: Letta's connection Session is not OpenCode's durable Session. Borrow identity separation, not lifecycle types.
 
 **Atlas fit / gap.** Repo path currently selects memory file; opaque owner string selects member. `composeRuntime(repoPath)` resolves actor once from `ATLAS_ACTOR ?? gitUserEmail(repoPath) ?? ""`. The backend specialist needs stable host project/member binding independent of Session ID, display name, current title, or process-global environment switching. Default git email can conflate several agents launched by one developer. Preserve foundation's opaque owner: host/Maestro adapters supply identity; Atlas need not import seat orchestration. [A-contract], [A-compose], [A-types]
 
@@ -121,7 +121,7 @@ Use positive controls, deliberately wrong predecessor/owner/validity mutations, 
 
 **Foundation responsibility:** schemas, append-only Memory history, correction/head projections, rule applicability/selection, query budgets and integrity receipts. Shared Knowledge keeps its existing grounding/admission/reconciliation authority.
 
-**The backend specialist/Orchestra adapter responsibility:** stable project/member/store binding; supply path/tool/phase applicability; expose explicit recall; inject bounded project slab at host context boundary; deliver own resumed fold once; record source/citation/context receipts. Session-owned history remains host history. Task recall never becomes automatic similarity injection on every turn.
+**The backend specialist/OpenCode adapter responsibility:** stable project/member/store binding; supply path/tool/phase applicability; expose explicit recall; inject bounded project slab at host context boundary; deliver own resumed fold once; record source/citation/context receipts. Session-owned history remains host history. Task recall never becomes automatic similarity injection on every turn.
 
 **Native Maestro adapter responsibility:** map seat/unit/PR identity and lifecycle events into same foundation operations. Standalone execution must not require Maestro's scheduler, seat registry, or memory service. A display rename changes neither persisted owner nor project identity. Current env/git-only composition seam needs deliberate host binding; process-global actor changes during concurrent calls are unsuitable. [A-compose], [A-contract]
 

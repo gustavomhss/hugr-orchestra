@@ -32,7 +32,7 @@ R28 adds precise recovery classifications, physical file/producer ownership, lay
 - **Healthy oracle →** dead comparable owner can be recovered; fresh incomparable owner and qualified live-but-expired owner remain protected. After legitimate takeover, force A's late mutation/release: successor state survives and B's valid write succeeds.
 - **Negative oracle →** replace destination epoch check with acquire-time check, or reclaim solely by TTL. Controlled paused-owner schedule must expose stale write or premature takeover, not merely timeout error.
 - **Do not generalize →** OpenClaw's 90-second foreign-heartbeat policy is failure-detector policy, not proof process died, distributed consensus, or remote-effect fencing. Random owner identity is not automatically ordered fencing token. PostgreSQL locks protect participating DB operations, not unrelated remote APIs.
-- **Small task →** process-local serialization or existing transaction usually enough. The backend specialist uses existing Orchestra ownership; this recipe does not authorize adding coordinator or clustered Session execution.
+- **Small task →** process-local serialization or existing transaction usually enough. The backend specialist uses existing OpenCode/Orchestra ownership; this recipe does not authorize adding coordinator or clustered Session execution.
 
 ## R2 — Preserve WAL family and lock custody before inspecting or recovering
 
@@ -118,7 +118,7 @@ R28 adds precise recovery classifications, physical file/producer ownership, lay
 2. State one invariant and shortest failing schedule. Choose installed driver/runtime facility; use language notes only when that boundary crosses it. No mandatory Rust/Go/Python/TS migration, framework, database, or test toolchain.
 3. For future implementation verification, pair useful healthy transition with targeted bad interleaving and known-bad control. Establish barrier was reached; inspect actual destination/resource. Missing environment, skipped path, or unjoined worker means inconclusive—not green. No such execution performed for R28.
 4. Native Atlas may retain compact lesson: trigger, invariant, source revision, boundary, minimized schedule, evidence pointer, invalidation condition. Research remains labeled source-observed/proposed; Atlas memory never substitutes for live lease, commit receipt, authorization, or current schema.
-5. Existing Orchestra owns Session admission/execution, tools, resource scopes, and process-local coordination. Preserve durable admission before advisory wake; keep post-crash provider continuation separate from storage inspection/recovery. Native Atlas remains Knowledge/Memory authority. **No second agent platform, memory store, coordinator, or generic infrastructure layer.**
+5. Existing OpenCode/Orchestra owns Session admission/execution, tools, resource scopes, and process-local coordination. Preserve durable admission before advisory wake; keep post-crash provider continuation separate from storage inspection/recovery. Native Atlas remains Knowledge/Memory authority. **No second agent platform, memory store, coordinator, or generic infrastructure layer.**
 
 ## Primary source register
 

@@ -50,7 +50,7 @@ This is the short operational snapshot. Read [ROADMAP.md](ROADMAP.md) for depend
 
 1. Triage #107 and the Windows Core failure #102 with current-run evidence.
 2. Classify and close applicable #113 P2 safety children before #111.
-3. Deliver #112 as an installed, read-only, versioned boundary. Do not recreate Atlas catalog logic in Orchestra.
+3. Deliver #112 as an installed, read-only, versioned boundary. Do not recreate Atlas catalog logic in OpenCode.
 4. Deliver #114 durable record boundaries; missing context must HOLD.
 5. Deliver #109, then #108 to persist verified ContextRecord evidence.
 6. Deliver #106 and #110 from current `dev`.

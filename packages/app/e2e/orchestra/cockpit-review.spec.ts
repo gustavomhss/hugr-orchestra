@@ -1,6 +1,6 @@
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Locator, type Page } from "@playwright/test"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 import { installDockBridge } from "./session-cockpit-bridge"
 import { railTab } from "./session-cockpit.fixture"
@@ -88,7 +88,7 @@ test("compact Dock ignores the full Dock collapsed preference across reentry", a
   await expect(full).toHaveClass(/is-sidebar-collapsed/)
   await expect(full.getByRole("button", { name: "Expand sidebar", exact: true })).toBeVisible()
   await expect(full.locator(".zen-tab-title")).toBeHidden()
-  expect(await page.evaluate(() => localStorage.getItem("orchestra.app-dock.sidebar-collapsed"))).toBe("true")
+  expect(await page.evaluate(() => localStorage.getItem("opencode.app-dock.sidebar-collapsed"))).toBe("true")
   await full.getByRole("button", { name: "Expand sidebar", exact: true }).click()
   await expect(full.locator(".zen-tab-title")).toBeVisible()
 })
@@ -184,7 +184,7 @@ async function setup(page: Page, scheme: "dark" | "light" = "dark") {
   ]
   const events: unknown[] = []
   const sequence = { value: 0 }
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory,
     project: {
       id: projectID,
@@ -277,18 +277,18 @@ async function setup(page: Page, scheme: "dark" | "light" = "dark") {
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: parent }]),
       )
-      localStorage.setItem("orchestra-color-scheme", scheme)
-      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     },
     { directory, server, parent, scheme },

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { directory, setupTimeline } from "../performance/timeline-stability/fixture"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", actionTimeout: 10_000 })
 test.setTimeout(120_000)
@@ -43,7 +43,7 @@ async function serveV2Catalog(page: Page) {
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname
     if (path === "/api/provider")
-      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "Orchestra", settings: {} }] } })
+      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "OpenCode", settings: {} }] } })
     if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
     if (path === "/api/model/default") return route.fulfill({ json: { location, data: model } })
     return route.fallback()
@@ -56,11 +56,11 @@ async function serveV2Catalog(page: Page) {
 async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" | "v2") {
   await page.addInitScript(
     (input) => {
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", input.scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", input.scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: input.directory, expanded: true }] },
           lastProject: { local: input.directory },
@@ -204,7 +204,7 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     { id: "plugins-a", name: "Plugins A", worktree: "/plugins-a", sandboxes: [], time: { created: 1, updated: 1 } },
     { id: "plugins-b", name: "Plugins B", worktree: "/plugins-b", sandboxes: [], time: { created: 1, updated: 1 } },
   ]
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     directory: "/plugins-a",
     project: projects[0],
     provider: { all: [], connected: [], default: {} },
@@ -219,7 +219,7 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
     localStorage.setItem(
-      "orchestra.global.dat:server",
+      "opencode.global.dat:server",
       JSON.stringify({
         projects: {
           local: [
@@ -229,7 +229,7 @@ test("each repository profile owns its behaviors", async ({ page }) => {
         },
       }),
     )
-    localStorage.setItem("orchestra.window.browser.dat:tabs", "[]")
+    localStorage.setItem("opencode.window.browser.dat:tabs", "[]")
   })
   await page.goto("/")
   const pick = async (name: string) => {

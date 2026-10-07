@@ -1,6 +1,6 @@
-# Orchestra Desktop
+# OpenCode Desktop
 
-The Orchestra Desktop app, built with Electron.
+The OpenCode Desktop app, built with Electron.
 
 ## Development
 

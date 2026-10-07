@@ -28,17 +28,17 @@ painel Apps e plugin `app-dock.ts`.
 | 15 arquivos divergentes, merge por 4 grupos disjuntos (agentes, verificados pelo lead) | feito |
 | Conflito sem marcador: `mode` com dois sentidos (leitura do navegador × ação nativa), corrigido no host e no plugin, com testes | feito |
 | `target` nativo: nome exato vence parciais; alvo decidido na árvore inteira com segunda passada antes de agir | feito |
-| Gate: typecheck desktop/app/orchestra/script = 0 erros; desktop 379, plugin 46, app 116, script 2, runtime Docker 2, todos sem falha; fixtures Python idênticas às aprovadas | feito |
+| Gate: typecheck desktop/app/opencode/script = 0 erros; desktop 379, plugin 46, app 116, script 2, runtime Docker 2, todos sem falha; fixtures Python idênticas às aprovadas | feito |
 | Prova no Orchestra real, build único, na mesma sessão | feito |
 | Controle negativo no app real | feito |
-| Receipt durável | feito: `~/.local/share/orchestra/recovery/linux-workspace-campaign-20261004/real-app-joint-proof.json` (0600) |
+| Receipt durável | feito: `~/.local/share/opencode/recovery/linux-workspace-campaign-20261004/real-app-joint-proof.json` (0600) |
 
 ### Prova no app real (Orchestra dev deste branch, VS Code 1.140.0, agente MiMo-V2.6-Flash Free)
 
 - **Terminal → interface:** `linux_exec`/`linux_write` criam `/home/dock/campaign/nota.txt`; `code --reuse-window` pede a abertura; o VS Code mostra o diálogo de confiança de arquivos; o agente aperta "Open" pela interface; `dock_find` acha a janela "nota.txt - Visual Studio Code". Conferido por fora (`docker exec`).
 - **Interface → terminal:** Manage → Settings, busca `@id:files.trimTrailingWhitespace` (keyboard, `verified`), marcar a caixa (`observed`); `linux_read` vê `{"files.trimTrailingWhitespace": true}`; desmarcar e `linux_read` vê `{}`. Repetido no código final: 7/7.
 - **Recusa segura:** `target {name: "Settings"}` foi recusado (`target-ambiguous`, nada executado), porque a árvore inteira tem dois itens; com `"Settings Ctrl"` passou.
-- **Controle negativo:** com `ORCHESTRA_PERMISSION={"dock":{"*":"allow","action":"deny"}}`, o primeiro `dock_action` é negado pela regra de permissão, o agente para, e `settings.json` fica com bytes e mtime idênticos. Isso também prova que o serviço de permissão real está ligado ao App Dock.
+- **Controle negativo:** com `OPENCODE_PERMISSION={"dock":{"*":"allow","action":"deny"}}`, o primeiro `dock_action` é negado pela regra de permissão, o agente para, e `settings.json` fica com bytes e mtime idênticos. Isso também prova que o serviço de permissão real está ligado ao App Dock.
 - **Recolhimento do helper:** helper `accessibility` rodando antes de fechar o app e 0 depois.
 - A frente A provou sua correção de versão: o build se carimba `1.18.27-<branch>-<data>` e o free tier aceita.
 
@@ -158,7 +158,7 @@ eventos AT-SPI), #36 (papéis legíveis únicos, `ui_enter` estável, dicas de a
 
 | Rodada | Resultado | Causa / correção |
 |---|---|---|
-| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como orchestra; revertido para identidade do Orchestra ("Linux workspace specialist on the Orchestra team"), pois o Orchestra não guarda identidade do orchestra — se o free tier recusar de novo, usar outro provedor |
+| 7 | subagente recusado pelo free tier | prompt do `linux` passou a se identificar como opencode; revertido para identidade do Orchestra ("Linux workspace specialist on the Orchestra team"), pois o Orchestra não guarda identidade do opencode — se o free tier recusar de novo, usar outro provedor |
 | 8–10 | ponte nunca liga | carga (memória/swap); preparação do helper morta a cada timeout → preparação em fundo |
 | 11 | lê, mas configurações do VS Code estouram | varreduras repetidas e custo quadrático → #34 |
 | 12 | liga a opção pela UI; não desfaz; 9× `xdotool` | faltavam verbos (foco, ponteiro), papéis inconsistentes → #36, #40 |
@@ -203,5 +203,5 @@ Fora do escopo, para épicos próprios:
 - Sem `git add -A`; stage por nome; typecheck e testes a partir do diretório do pacote.
 - Uma GUI/job pesado por vez; agentes só com testes direcionados.
 - App dev: ver a seção 12 de `docs/plans/dock-accessibility/handoff-claude.md` (versão real no
-  build do servidor, `ORCHESTRA_DB` isolado, `ELECTRON_EXEC_PATH`, imagem
+  build do servidor, `OPENCODE_DB` isolado, `ELECTRON_EXEC_PATH`, imagem
   `orchestra-native-code:20261004`).

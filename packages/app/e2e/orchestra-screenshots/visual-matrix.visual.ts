@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
 import { evidenceFixture, evidencePage, runCard } from "../orchestra/evidence.fixture"

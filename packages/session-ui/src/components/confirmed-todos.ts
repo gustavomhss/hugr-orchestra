@@ -1,4 +1,4 @@
-import type { Todo } from "@orchestra/sdk/v2"
+import type { Todo } from "@opencode-ai/sdk/v2"
 
 export function confirmedTodos(state: { status?: string; metadata?: Record<string, unknown>; output?: string }) {
   if (state.status !== "completed") return

@@ -1,5 +1,5 @@
 import { NodeFileSystem } from "@effect/platform-node"
-import { compile, emitEffectImported, emitPromise, write } from "@orchestra/httpapi-codegen"
+import { compile, emitEffectImported, emitPromise, write } from "@opencode-ai/httpapi-codegen"
 import { ClientApi, endpointNames, groupNames, omitEndpoints } from "../src/contract"
 import { Effect } from "effect"
 import { fileURLToPath } from "url"
@@ -17,8 +17,8 @@ await Effect.runPromise(
               import: 'import type { SessionEventEncoded } from "../wire"',
             },
             "events.subscribe": {
-              name: "OrchestraEventEncoded",
-              import: 'import type { OrchestraEventEncoded } from "@orchestra/protocol/groups/event"',
+              name: "OpenCodeEventEncoded",
+              import: 'import type { OpenCodeEventEncoded } from "@opencode-ai/protocol/groups/event"',
             },
           },
         }),

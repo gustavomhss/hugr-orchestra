@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto"
 import { join } from "node:path"
-import { tool, type ToolContext } from "@orchestra/plugin"
+import { tool, type ToolContext } from "@opencode-ai/plugin"
 import { AppDockNative } from "../src/main/app-dock-native"
 import { NativeDockClient } from "../src/main/app-dock-native-client"
 import { NativeDockProtocol } from "../src/main/app-dock-native-protocol"
 import { AppDockRPC } from "../src/main/app-dock-rpc"
-import { createAppDockHooks } from "../../orchestra/src/plugin/app-dock"
+import { createAppDockHooks } from "../../opencode/src/plugin/app-dock"
 import {
   appIDs, check, checkout, configValue, digest, failure, inventory, message, outputPath, recorder, requirements, restoring,
   senderID, snapshot, success, successArray, validateProcess, wireRequests,
@@ -16,7 +16,7 @@ import { channel, command, deadline, files, manifests, validateLaunches } from "
 const sourceFiles = [
   "packages/desktop/src/main/app-dock-native-protocol.ts", "packages/desktop/src/main/app-dock-native-client.ts",
   "packages/desktop/src/main/app-dock-native.ts", "packages/desktop/src/main/app-dock-rpc.ts",
-  "packages/desktop/src/main/app-dock-api.ts", "packages/orchestra/src/plugin/app-dock.ts",
+  "packages/desktop/src/main/app-dock-api.ts", "packages/opencode/src/plugin/app-dock.ts",
   "packages/desktop/scripts/app-dock-native-proof.ts", "packages/desktop/test/native/scenarios.json",
   "packages/desktop/scripts/native-proof-docker.ts",
   "packages/desktop/scripts/app-dock-native-proof-support.ts", "packages/desktop/scripts/app-dock-native-proof-guest.ts",

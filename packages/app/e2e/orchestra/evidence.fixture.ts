@@ -11,7 +11,7 @@ import {
   toolPart,
   userMessage,
 } from "../performance/timeline-stability/fixture"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
 
@@ -55,7 +55,7 @@ export async function evidencePage(
     ...(input.workdir === undefined ? {} : { workdir: input.workdir }),
   }
   const metadata = { exit: 0, truncated: false, ...input.metadata }
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: input.protocol ?? "v2",
     directory: root,
     project: { ...project(), worktree: root },
@@ -63,12 +63,12 @@ export async function evidencePage(
       all: [
         {
           id: "opencode",
-          name: "Orchestra",
+          name: "OpenCode",
           models: { "test-model": { id: "test-model", name: "Test model", limit: { context: 200_000 } } },
         },
       ],
       connected: ["opencode"],
-      default: { orchestra: "test-model" },
+      default: { opencode: "test-model" },
     },
     sessions: records,
     vcsDiff: [{ file: "src/approval.ts", additions: 10, deletions: 3, before: "old\n", after: "new\n" }],
@@ -118,7 +118,7 @@ export async function evidencePage(
     const path = new URL(route.request().url()).pathname
     const location = { directory: root }
     if (path === "/api/provider")
-      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "Orchestra", settings: {} }] } })
+      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "OpenCode", settings: {} }] } })
     if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
     if (path === "/api/model/default") return route.fulfill({ json: { location, data: model } })
     if (/^\/api\/session\/[^/]+\/message$/.test(path))
@@ -137,15 +137,15 @@ export async function evidencePage(
           general: { newLayoutDesigns: true, shellToolPartsExpanded: true, shouldDisplayTabsToast: false },
         }),
       )
-      localStorage.setItem("orchestra-color-scheme", scheme)
-      localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale }))
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: secondServer ? [secondServer] : [],
           projects: { local: [{ worktree: directory, expanded: true }] },

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
-import { base64Encode } from "@orchestra/core/util/encode"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { base64Encode } from "@opencode-ai/core/util/encode"
+import { mockOpenCodeServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 import {
   assistantMessage,
@@ -38,7 +38,7 @@ for (const newLayoutDesigns of [false, true]) {
   ]) {
     test(`${newLayoutDesigns ? "v2" : "legacy"} Context displays ${scenario.name}`, async ({ page }) => {
       const assistant = assistantMessage()
-      await mockOrchestraServer(page, {
+      await mockOpenCodeServer(page, {
         directory,
         project: { id: "proj_context_availability", worktree: directory, time: { created: 1 } },
         provider: {
@@ -82,7 +82,7 @@ for (const newLayoutDesigns of [false, true]) {
       })
       await page.addInitScript((newLayoutDesigns) => {
         localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns } }))
-        localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale: "en" }))
+        localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale: "en" }))
         localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.17.20" }))
       }, newLayoutDesigns)
       // The legacy layout retires on the oldInterfaceSunset date and the app then renders the new layout

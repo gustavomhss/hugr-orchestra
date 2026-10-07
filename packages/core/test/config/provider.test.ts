@@ -1,13 +1,13 @@
 import { describe, expect } from "bun:test"
 import { Effect, Schema } from "effect"
-import { Catalog } from "@orchestra/core/catalog"
-import { Config } from "@orchestra/core/config"
-import { ConfigProviderPlugin } from "@orchestra/core/config/plugin/provider"
-import { Integration } from "@orchestra/core/integration"
-import { ModelV2 } from "@orchestra/core/model"
-import { PluginV2 } from "@orchestra/core/plugin"
-import { PluginHost } from "@orchestra/core/plugin/host"
-import { ProviderV2 } from "@orchestra/core/provider"
+import { Catalog } from "@opencode-ai/core/catalog"
+import { Config } from "@opencode-ai/core/config"
+import { ConfigProviderPlugin } from "@opencode-ai/core/config/plugin/provider"
+import { Integration } from "@opencode-ai/core/integration"
+import { ModelV2 } from "@opencode-ai/core/model"
+import { PluginV2 } from "@opencode-ai/core/plugin"
+import { PluginHost } from "@opencode-ai/core/plugin/host"
+import { ProviderV2 } from "@opencode-ai/core/provider"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "../plugin/fixture"
 
@@ -67,8 +67,8 @@ describe("ConfigProviderPlugin.Plugin", () => {
               type: "document",
               info: decode({
                 providers: {
-                  orchestra: {
-                    api: { type: "aisdk", package: "@ai-sdk/openai", url: "https://orchestra.test/v1" },
+                  opencode: {
+                    api: { type: "aisdk", package: "@ai-sdk/openai", url: "https://opencode.test/v1" },
                     models: {
                       "alpha-gpt-next": {
                         variants: [
@@ -118,8 +118,8 @@ describe("ConfigProviderPlugin.Plugin", () => {
               type: "document",
               info: decode({
                 providers: {
-                  orchestra: {
-                    api: { type: "aisdk", package: "@ai-sdk/openai", url: "https://orchestra.test/v1" },
+                  opencode: {
+                    api: { type: "aisdk", package: "@ai-sdk/openai", url: "https://opencode.test/v1" },
                   },
                 },
               }),
@@ -128,7 +128,7 @@ describe("ConfigProviderPlugin.Plugin", () => {
               type: "document",
               info: decode({
                 providers: {
-                  orchestra: {
+                  opencode: {
                     models: {
                       "alpha-gpt-next": {
                         variants: [{ id: "high", body: { reasoningEffort: "high" } }],

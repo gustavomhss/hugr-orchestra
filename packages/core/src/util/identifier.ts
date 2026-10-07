@@ -1,1 +1,1 @@
-export * as Identifier from "@orchestra/schema/identifier"
+export * as Identifier from "@opencode-ai/schema/identifier"

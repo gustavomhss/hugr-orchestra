@@ -1,5 +1,5 @@
 {
-  description = "Orchestra development flake";
+  description = "OpenCode development flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -39,11 +39,11 @@
             };
           in
           rec {
-            orchestra = final.callPackage ./nix/orchestra.nix {
+            opencode = final.callPackage ./nix/opencode.nix {
               inherit node_modules;
             };
-            orchestra-desktop = final.callPackage ./nix/desktop.nix {
-              inherit orchestra;
+            opencode-desktop = final.callPackage ./nix/desktop.nix {
+              inherit opencode;
             };
           };
       };
@@ -56,12 +56,12 @@
           };
         in
         rec {
-          default = orchestra;
-          orchestra = pkgs.callPackage ./nix/orchestra.nix {
+          default = opencode;
+          opencode = pkgs.callPackage ./nix/opencode.nix {
             inherit node_modules;
           };
-          orchestra-desktop = pkgs.callPackage ./nix/desktop.nix {
-            inherit orchestra;
+          opencode-desktop = pkgs.callPackage ./nix/desktop.nix {
+            inherit opencode;
           };
           # Updater derivation with fakeHash - build fails and reveals correct hash
           node_modules_updater = node_modules.override {

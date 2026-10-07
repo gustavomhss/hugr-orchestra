@@ -1,12 +1,12 @@
-import { TextField } from "@orchestra/ui/text-field"
+import { TextField } from "@opencode-ai/ui/text-field"
 import * as Sentry from "@sentry/solid"
 import { HugrSplash } from "@/orchestra/brand"
-import { Button } from "@orchestra/ui/button"
+import { Button } from "@opencode-ai/ui/button"
 import { Component, createSignal, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
-import { Icon } from "@orchestra/ui/icon"
+import { Icon } from "@opencode-ai/ui/icon"
 import { errorDescriptionKey } from "./error-description"
 
 export type InitError = {

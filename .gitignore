@@ -19,14 +19,14 @@ ts-dist
 /result
 refs
 Session.vim
-/orchestra.json
+/opencode.json
 a.out
 target
 .scripts
 .direnv/
 
 # Local dev files
-orchestra-dev
+opencode-dev
 UPCOMING_CHANGELOG.md
 logs/
 *.bun-build

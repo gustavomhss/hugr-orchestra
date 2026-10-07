@@ -6,7 +6,7 @@ import type {
   SessionMessageToolStateCompleted,
   SessionMessageUser,
 } from "@opencode-ai/client/promise"
-import { confirmedTodos } from "@orchestra/session-ui/confirmed-todos"
+import { confirmedTodos } from "@opencode-ai/session-ui/confirmed-todos"
 import { createV2SessionReducer } from "../context/server-session-v2-reducer"
 import { normalizeSessionMessages } from "./session-message"
 

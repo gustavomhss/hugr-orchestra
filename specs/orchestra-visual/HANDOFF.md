@@ -173,7 +173,7 @@ Caption macOS: DTO `{left, top, height}` em CSS viewport; main usa zoom nativo
 da janela e valida sender/mainFrame/limites. IPC `set-titlebar-frame`, state em
 WeakMap, cleanup em hidden/legacy/mobile/fullscreen/unmount. Controles físicos
 em RTL. Posições medidas: `{26,28}` em zoom 1, `{32,36}` em 1.25/RTL, legacy
-`{14,14}`. Tipo-only subpath `@orchestra/app/native-titlebar` evita poluir
+`{14,14}`. Tipo-only subpath `@opencode-ai/app/native-titlebar` evita poluir
 `Window.api` via barrel do app.
 
 As extrações finais são `createNativeTitlebarFrame`,

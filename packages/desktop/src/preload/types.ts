@@ -1,21 +1,21 @@
-import type { DesktopMenuAction } from "@orchestra/app/desktop-menu"
-import type { WslServersPlatform } from "@orchestra/app/wsl/types"
-import type { UpdaterState } from "@orchestra/app/updater"
-import type { DesktopNativeBundle } from "@orchestra/app/i18n/desktop-native"
-import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
+import type { DesktopMenuAction } from "@opencode-ai/app/desktop-menu"
+import type { WslServersPlatform } from "@opencode-ai/app/wsl/types"
+import type { UpdaterState } from "@opencode-ai/app/updater"
+import type { DesktopNativeBundle } from "@opencode-ai/app/i18n/desktop-native"
+import type { NativeTitlebarFrame } from "@opencode-ai/app/native-titlebar"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
   WslJob,
   WslOnlineDistro,
-  WslOrchestraCheck,
+  WslOpencodeCheck,
   WslRuntimeCheck,
   WslServerConfig,
   WslServerItem,
   WslServerRuntime,
   WslServersEvent,
   WslServersState,
-} from "@orchestra/app/wsl/types"
+} from "@opencode-ai/app/wsl/types"
 
 export type ServerReadyData = {
   url: string
@@ -107,7 +107,7 @@ export type AppDockManifest = {
 
 export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
 
-export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAPI & {
+export type ElectronAPI = import("@opencode-ai/app/app-dock-linux").AppDockLinuxAPI & {
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },

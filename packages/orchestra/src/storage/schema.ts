@@ -1,5 +1,0 @@
-export { AccountTable, AccountStateTable, ControlAccountTable } from "@orchestra/core/account/sql"
-export { ProjectTable } from "@orchestra/core/project/sql"
-export { SessionTable, MessageTable, PartTable, TodoTable } from "@orchestra/core/session/sql"
-export { SessionShareTable } from "@orchestra/core/share/sql"
-export { WorkspaceTable } from "@orchestra/core/control-plane/workspace.sql"

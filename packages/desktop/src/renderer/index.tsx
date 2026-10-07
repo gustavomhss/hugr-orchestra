@@ -14,9 +14,9 @@ import {
   useCommand,
   useWslServers,
   useLanguage,
-} from "@orchestra/app"
-import type { UpdaterState } from "@orchestra/app/updater"
-import { HugrSplash } from "@orchestra/app/orchestra/brand"
+} from "@opencode-ai/app"
+import type { UpdaterState } from "@opencode-ai/app/updater"
+import { HugrSplash } from "@opencode-ai/app/orchestra/brand"
 import * as Sentry from "@sentry/solid"
 import type { AsyncStorage } from "@solid-primitives/storage"
 import { createMemoryHistory, MemoryRouter, type BaseRouterProps } from "@solidjs/router"
@@ -30,7 +30,7 @@ import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./
 import { windowFullscreen } from "./window-fullscreen"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
-import { useTheme } from "@orchestra/ui/theme/context"
+import { useTheme } from "@opencode-ai/ui/theme/context"
 
 const root = document.getElementById("root")
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
@@ -52,7 +52,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
         (i) =>
           i.name !== "Breadcrumbs" &&
           !(
-            import.meta.env.ORCHESTRA_CHANNEL === "prod" &&
+            import.meta.env.OPENCODE_CHANNEL === "prod" &&
             (i.name === "GlobalHandlers" || i.name === "BrowserApiErrors")
           ),
       )
@@ -63,7 +63,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 const [updaterState, setUpdaterState] = createSignal<UpdaterState>({ status: "disabled" })
 void window.api.updater.subscribe(setUpdaterState)
 
-const deepLinkEvent = "orchestra:deep-link"
+const deepLinkEvent = "opencode:deep-link"
 
 type DesktopWindowState = {
   id?: string
@@ -71,9 +71,9 @@ type DesktopWindowState = {
 
 const emitDeepLinks = (urls: string[]) => {
   if (urls.length === 0) return
-  window.__ORCHESTRA__ ??= {}
-  const pending = window.__ORCHESTRA__.deepLinks ?? []
-  window.__ORCHESTRA__.deepLinks = [...pending, ...urls]
+  window.__OPENCODE__ ??= {}
+  const pending = window.__OPENCODE__.deepLinks ?? []
+  window.__OPENCODE__.deepLinks = [...pending, ...urls]
   window.dispatchEvent(new CustomEvent(deepLinkEvent, { detail: { urls } }))
 }
 
@@ -83,7 +83,7 @@ const listenForDeepLinks = () => {
 }
 
 function windowLastActiveUrlKey(windowID: string) {
-  return `orchestra.desktop.window.${windowID}.last-active-url`
+  return `opencode.desktop.window.${windowID}.last-active-url`
 }
 
 function getLastActiveUrl(windowID: string) {
@@ -335,7 +335,7 @@ function LoadingSplash() {
 function DesktopRoot(props: { windowState: DesktopWindowState }) {
   const platform = createPlatform(props.windowState)
   const loadLocale = async () => {
-    const current = await platform.storage?.("orchestra.global.dat").getItem("language")
+    const current = await platform.storage?.("opencode.global.dat").getItem("language")
     const legacy = current ? undefined : await platform.storage?.().getItem("language.v1")
     const raw = current ?? legacy
     if (!raw) return

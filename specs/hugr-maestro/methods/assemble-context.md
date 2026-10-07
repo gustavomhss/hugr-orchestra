@@ -1,10 +1,10 @@
 # Method: Assemble Context
 
-Status: proposed V2 method, blocked on Orchestra-to-Atlas adapter freeze. ID: `assemble-context`. Composition: M2 Ground.
+Status: proposed V2 method, blocked on OpenCode-to-Atlas adapter freeze. ID: `assemble-context`. Composition: M2 Ground.
 
 V1 internal `atlas/` is reference only. Current Atlas foundation source has a distinct candidate seam:
 `@atlas/retrieval` `BoundedPack` and `@atlas/memory` Awareness/Orientation. Selected named tests are measured
-green; no V2 Orchestra adapter, field mapping, or behavior is frozen until its own contract/proof exists. See
+green; no V2 OpenCode adapter, field mapping, or behavior is frozen until its own contract/proof exists. See
 `atlas-foundation-seam-register.md`.
 
 ## Purpose

@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test"
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import {
   assistantMessage,
   directory,
@@ -22,18 +22,18 @@ export async function setupIdentity(
   const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
   await page.addInitScript(
     ({ scheme, server, directory, sessionID }) => {
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
       localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
     },

@@ -53,11 +53,11 @@ function input(over: Partial<Parameters<typeof materializeStaticOwn>[0]> = {}) {
 }
 
 describe("static Own artifact", () => {
-  it("uses injective canonical-unit names and Orchestra skill paths", () => {
+  it("uses injective canonical-unit names and OpenCode skill paths", () => {
     expect(staticOwnSkillName(billing.id)).not.toBe(staticOwnSkillName(source.id))
     expect(staticOwnSkillName(billing.id)).toMatch(/^own_[A-Za-z0-9_-]+$/)
     expect(staticOwnArtifactPath(billing.id)).toBe(
-      `.orchestra/skills/own/${staticOwnSkillName(billing.id).slice(4)}/SKILL.md`,
+      `.opencode/skills/own/${staticOwnSkillName(billing.id).slice(4)}/SKILL.md`,
     )
   })
 
@@ -178,7 +178,7 @@ describe("static Own artifact", () => {
       sourceRevision: "abc123",
       units: ["crates/billing"],
     })
-    expect(OWN_COVERAGE_PATH).toBe(".orchestra/skills/own/OWN-COVERAGE.json")
+    expect(OWN_COVERAGE_PATH).toBe(".opencode/skills/own/OWN-COVERAGE.json")
     expect(parseStaticOwnCoverage(coverage)?.units).toEqual(["crates/billing"])
     expect(
       verifyStaticOwnCoverageSet({

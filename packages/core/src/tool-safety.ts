@@ -42,7 +42,7 @@ export type ShellFact = {
 }
 
 /** Per-invocation cell that ToolSafetySandbox.wrap fills and ToolSafety.run attaches to its observation. */
-export const ShellReport = Context.Reference<{ fact?: ShellFact } | undefined>("@orchestra/ToolSafety/ShellReport", {
+export const ShellReport = Context.Reference<{ fact?: ShellFact } | undefined>("@opencode/ToolSafety/ShellReport", {
   defaultValue: () => undefined,
 })
 
@@ -58,7 +58,7 @@ export const shellFact = (sessionID: string) => shells.get(sessionID)
 
 const worse = (current: ShellFact | undefined, next: ShellFact) => current?.shellWrites === "unenforced" ? current : next
 
-export const RuntimeProfile = Context.Reference<Profile | undefined>("@orchestra/ToolSafety/Profile", {
+export const RuntimeProfile = Context.Reference<Profile | undefined>("@opencode/ToolSafety/Profile", {
   defaultValue: () => undefined,
 })
 
@@ -66,7 +66,7 @@ export const RuntimeProfile = Context.Reference<Profile | undefined>("@orchestra
 export const NativeContext = Context.Reference<{
   readonly directory: string
   readonly projectID?: string
-} | undefined>("@orchestra/ToolSafety/NativeContext", { defaultValue: () => undefined })
+} | undefined>("@opencode/ToolSafety/NativeContext", { defaultValue: () => undefined })
 
 export type Approval = {
   readonly action: string
@@ -76,10 +76,10 @@ export type Approval = {
 export const NativeHost = Context.Reference<{
   /** Must await actual native permission decision; preferences never grant authority. */
   readonly ask: (request: Approval) => Effect.Effect<void, Denied>
-} | undefined>("@orchestra/ToolSafety/NativeHost", { defaultValue: () => undefined })
+} | undefined>("@opencode/ToolSafety/NativeHost", { defaultValue: () => undefined })
 
 export const RuntimeProfileLoader = Context.Reference<(() => Effect.Effect<Profile | undefined, Denied>) | undefined>(
-  "@orchestra/ToolSafety/ProfileLoader", { defaultValue: () => undefined },
+  "@opencode/ToolSafety/ProfileLoader", { defaultValue: () => undefined },
 )
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied", {
@@ -231,7 +231,7 @@ export interface Interface {
   ) => Effect.Effect<A, E | Denied, R>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@orchestra/ToolSafety") {}
+export class Service extends Context.Service<Service, Interface>()("@opencode/ToolSafety") {}
 
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}

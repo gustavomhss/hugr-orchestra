@@ -10,7 +10,7 @@ const sha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).tri
 // The build reads the working tree, so a dirty tree is not exactly the named commit.
 const dirty = execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim() !== ""
 // Released bundles build on the prod channel; the integration runner keeps Vite's dev-channel default.
-const channel = process.env.ORCHESTRA_CHANNEL ?? "prod"
+const channel = process.env.OPENCODE_CHANNEL ?? "prod"
 
 // A screenshot pack for visual acceptance, not a gate: the `.visual.ts` suffix keeps it out of
 // the default and integration runners, which only collect `.spec.ts` and `.test.ts` files.
@@ -36,6 +36,6 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 600_000,
-    env: { VITE_ORCHESTRA_SERVER_HOST: "127.0.0.1", VITE_ORCHESTRA_SERVER_PORT: "4096", ORCHESTRA_CHANNEL: channel },
+    env: { VITE_OPENCODE_SERVER_HOST: "127.0.0.1", VITE_OPENCODE_SERVER_PORT: "4096", OPENCODE_CHANNEL: channel },
   },
 })

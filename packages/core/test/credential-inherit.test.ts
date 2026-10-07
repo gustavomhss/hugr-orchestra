@@ -6,15 +6,15 @@ import { rm } from "fs/promises"
 import os from "os"
 import path from "path"
 import { Effect, Exit, Layer } from "effect"
-import { Credential } from "@orchestra/core/credential"
-import { Database } from "@orchestra/core/database/database"
-import { makeGlobalNode } from "@orchestra/core/effect/app-node"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { EventV2 } from "@orchestra/core/event"
-import { Integration } from "@orchestra/core/integration"
+import { Credential } from "@opencode-ai/core/credential"
+import { Database } from "@opencode-ai/core/database/database"
+import { makeGlobalNode } from "@opencode-ai/core/effect/app-node"
+import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
+import { LayerNode } from "@opencode-ai/core/effect/layer-node"
+import { EventV2 } from "@opencode-ai/core/event"
+import { Integration } from "@opencode-ai/core/integration"
 
-const root = mkdtempSync(path.join(os.tmpdir(), "orchestra-inherit-"))
+const root = mkdtempSync(path.join(os.tmpdir(), "opencode-inherit-"))
 // Windows keeps a closed SQLite file locked while a lazily closed handle lives, so temp cleanup is best effort there.
 afterAll(() => rm(root, { recursive: true, force: true, maxRetries: 5 }).catch(() => undefined))
 
@@ -25,7 +25,7 @@ const key = (value: string) => Credential.Key.make({ type: "key", key: value })
 let count = 0
 const fixture = () => {
   const dir = path.join(root, `case-${count++}`)
-  return { release: path.join(dir, "release", "orchestra.db"), dev: path.join(dir, "dev", "orchestra-dev.db") }
+  return { release: path.join(dir, "release", "opencode.db"), dev: path.join(dir, "dev", "opencode-dev.db") }
 }
 
 const run = <A, E>(
@@ -94,15 +94,15 @@ const migrations = (filename: string) => {
 const sleep = Effect.promise(() => Bun.sleep(5))
 
 describe("Credential inheritance from the release database", () => {
-  const env = process.env.ORCHESTRA_INHERIT_CREDENTIALS
+  const env = process.env.OPENCODE_INHERIT_CREDENTIALS
   afterEach(() => {
-    if (env === undefined) delete process.env.ORCHESTRA_INHERIT_CREDENTIALS
-    else process.env.ORCHESTRA_INHERIT_CREDENTIALS = env
+    if (env === undefined) delete process.env.OPENCODE_INHERIT_CREDENTIALS
+    else process.env.OPENCODE_INHERIT_CREDENTIALS = env
   })
 
   test("tests run isolated from the user's data directory", () => {
     expect(root.startsWith(os.tmpdir())).toBe(true)
-    expect(process.env.ORCHESTRA_DB).toBe(":memory:")
+    expect(process.env.OPENCODE_DB).toBe(":memory:")
     expect(env).toBe("0")
   })
 
@@ -201,22 +201,22 @@ describe("Credential inheritance from the release database", () => {
     expect(results).toEqual([[], [], [], []])
   })
 
-  test("in-memory databases and ORCHESTRA_INHERIT_CREDENTIALS=0 stay isolated; =1 forces inheritance", async () => {
+  test("in-memory databases and OPENCODE_INHERIT_CREDENTIALS=0 stay isolated; =1 forces inheritance", async () => {
     const paths = fixture()
     await seedRelease(paths.release, (credentials) =>
       credentials.create({ integrationID: openai, label: "installed", value: key("sk-installed") }),
     )
     createIn(paths.dev)
 
-    delete process.env.ORCHESTRA_INHERIT_CREDENTIALS
+    delete process.env.OPENCODE_INHERIT_CREDENTIALS
     expect(Credential.inheritedPath(":memory:", paths.release)).toBeUndefined()
     expect(Credential.inheritedPath(paths.release, paths.release)).toBeUndefined()
     expect(Credential.inheritedPath(paths.dev, paths.release)).toBe(paths.release)
 
-    process.env.ORCHESTRA_INHERIT_CREDENTIALS = "1"
+    process.env.OPENCODE_INHERIT_CREDENTIALS = "1"
     expect(Credential.inheritedPath(":memory:", paths.release)).toBe(paths.release)
 
-    process.env.ORCHESTRA_INHERIT_CREDENTIALS = "0"
+    process.env.OPENCODE_INHERIT_CREDENTIALS = "0"
     expect(Credential.inheritedPath(paths.dev, paths.release)).toBeUndefined()
     const disabled = await run(paths.dev, Credential.inheritedPath(paths.dev, paths.release), (credentials) =>
       credentials.list(openai),
@@ -337,7 +337,7 @@ describe("Credential inheritance from the release database", () => {
     expect(result.refreshedBeforeDev).toEqual([])
     expect(result.inherited).toBeInstanceOf(Credential.InheritedError)
     expect(result.inherited.message).toContain("inherited from the installed app")
-    expect(result.inherited.message).toContain("ORCHESTRA_INHERIT_CREDENTIALS")
+    expect(result.inherited.message).toContain("OPENCODE_INHERIT_CREDENTIALS")
     // Dev-owned: refreshes normally and stores the new value in the dev database.
     expect(result.ownConnection).toEqual({ type: "credential", id: result.own.id, label: "dev" })
     expect(refreshed).toEqual(["dev"])
@@ -345,17 +345,17 @@ describe("Credential inheritance from the release database", () => {
     expect(result.stored?.value).toEqual(expect.objectContaining({ access: "dev-new" }))
   })
 
-  test("the real wiring inherits through XDG data and ORCHESTRA_DB", async () => {
+  test("the real wiring inherits through XDG data and OPENCODE_DB", async () => {
     const dir = path.join(root, "wiring")
     const data = path.join(dir, "share")
-    const release = path.join(data, "orchestra", "orchestra.db")
+    const release = path.join(data, "opencode", "opencode.db")
     await seedRelease(release, (credentials) =>
       credentials.create({ integrationID: openai, label: "installed", value: key("sk-installed") }),
     )
     const script = `
       import { Effect } from "effect"
-      import { Credential } from "@orchestra/core/credential"
-      import { LayerNode } from "@orchestra/core/effect/layer-node"
+      import { Credential } from "@opencode-ai/core/credential"
+      import { LayerNode } from "@opencode-ai/core/effect/layer-node"
       const labels = await Effect.runPromise(
         Effect.gen(function* () {
           return (yield* (yield* Credential.Service).all()).map((item) => item.label)
@@ -370,7 +370,7 @@ describe("Credential inheritance from the release database", () => {
         XDG_CACHE_HOME: path.join(dir, "cache"),
         XDG_CONFIG_HOME: path.join(dir, "config"),
         XDG_STATE_HOME: path.join(dir, "state"),
-        ORCHESTRA_DB: path.join(dir, "dev.db"),
+        OPENCODE_DB: path.join(dir, "dev.db"),
         ...extra,
       }
       const result = Bun.spawnSync(["bun", "-e", script], {
@@ -381,8 +381,8 @@ describe("Credential inheritance from the release database", () => {
       return JSON.parse(result.stdout.toString().trim().split("\n").at(-1)!)
     }
     expect(data.startsWith(os.tmpdir())).toBe(true)
-    expect(spawn({ ORCHESTRA_INHERIT_CREDENTIALS: undefined })).toEqual(["installed"])
-    expect(spawn({ ORCHESTRA_INHERIT_CREDENTIALS: "0" })).toEqual([])
-    expect(spawn({ ORCHESTRA_INHERIT_CREDENTIALS: undefined, ORCHESTRA_DB: ":memory:" })).toEqual([])
+    expect(spawn({ OPENCODE_INHERIT_CREDENTIALS: undefined })).toEqual(["installed"])
+    expect(spawn({ OPENCODE_INHERIT_CREDENTIALS: "0" })).toEqual([])
+    expect(spawn({ OPENCODE_INHERIT_CREDENTIALS: undefined, OPENCODE_DB: ":memory:" })).toEqual([])
   }, 240_000)
 })

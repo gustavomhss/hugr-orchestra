@@ -50,7 +50,7 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
   await expect
     .poll(() =>
       page.evaluate((draftID) => {
-        const tabs = JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]") as Array<{
+        const tabs = JSON.parse(localStorage.getItem("opencode.window.browser.dat:tabs") ?? "[]") as Array<{
           draftID?: string
           directory?: string
           server?: string
@@ -287,7 +287,7 @@ test("configure seeds from the project file and keeps pattern rules it does not 
     protocol: "v2",
     files: {
       plan: {
-        path: `${directory}/.orchestra/agent/plan.md`,
+        path: `${directory}/.opencode/agent/plan.md`,
         exists: true,
         revision: "r1",
         description: "From the file",
@@ -330,7 +330,7 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
   const mock = await setup(page, {
     files: {
       plan: {
-        path: `${directory}/.orchestra/agent/plan.md`,
+        path: `${directory}/.opencode/agent/plan.md`,
         exists: true,
         revision: "r1",
         description: "Plan file",
@@ -359,7 +359,7 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
   await expect(dialog(page).getByRole("heading", { name: "Remove plan?" })).toBeVisible()
   await expect(dialog(page)).toContainText("Existing sessions keep their recorded model and conversation.")
   await expect(dialog(page)).toContainText(
-    "Adds disable: true to .orchestra/agent/plan.md and keeps the rest of the definition. Delete that line to restore plan.",
+    "Adds disable: true to .opencode/agent/plan.md and keeps the rest of the definition. Delete that line to restore plan.",
   )
   expect(mock.writes).toEqual([])
   await dialog(page).getByRole("button", { name: "Confirm", exact: true }).click()
@@ -386,7 +386,7 @@ test("Maestro cannot be removed or taken out of primary mode; its other fields s
     files: {
       // Edited by hand: the server ignores this mode and `disable` for Maestro, and a save writes it back as primary.
       maestro: {
-        path: `${directory}/.orchestra/agent/maestro.md`,
+        path: `${directory}/.opencode/agent/maestro.md`,
         exists: true,
         revision: "m1",
         description: "Hand edited",
@@ -515,7 +515,7 @@ test("saving while sessions run defers the legacy reload instead of disposing th
   await expect(dialog(page)).toHaveCount(0)
   expect(mock.writes).toHaveLength(1)
   await expect(page.getByRole("status").filter({ hasText: "Saved to" })).toHaveText(
-    "Saved to .orchestra/agent/reviewer.md. Sessions are running in this profile, so the agent list reloads once they finish.",
+    "Saved to .opencode/agent/reviewer.md. Sessions are running in this profile, so the agent list reloads once they finish.",
   )
   expect(mock.disposed).toEqual([])
 })

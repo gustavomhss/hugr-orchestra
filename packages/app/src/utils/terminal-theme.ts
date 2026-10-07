@@ -1,7 +1,7 @@
-import { withAlpha } from "@orchestra/ui/theme/color"
-import { resolveThemeVariant } from "@orchestra/ui/theme/resolve"
-import { resolveThemeVariantV2 } from "@orchestra/ui/theme/v2/resolve"
-import type { DesktopTheme, HexColor, ResolvedV2Theme } from "@orchestra/ui/theme/types"
+import { withAlpha } from "@opencode-ai/ui/theme/color"
+import { resolveThemeVariant } from "@opencode-ai/ui/theme/resolve"
+import { resolveThemeVariantV2 } from "@opencode-ai/ui/theme/v2/resolve"
+import type { DesktopTheme, HexColor, ResolvedV2Theme } from "@opencode-ai/ui/theme/types"
 import { createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 

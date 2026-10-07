@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { Patch } from "@orchestra/core/patch"
+import { Patch } from "@opencode-ai/core/patch"
 
 const patch = (...lines: string[]) => ["*** Begin Patch", ...lines, "*** End Patch"].join("\n")
 

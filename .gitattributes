@@ -13,7 +13,7 @@ packages/app/src/pages/session/orchestra-evidence-fixtures/** -text
 .atlas/orientation.jsonl linguist-generated=true
 # Shipped specialist skills and seat prompts are LF on every platform (F6.6); Windows checkouts must not convert them.
 packages/backend-specialist/skills/** text eol=lf
-packages/orchestra/src/agent/prompt/*.txt text eol=lf
+packages/opencode/src/agent/prompt/*.txt text eol=lf
 # Generated Atlas boundary: the contract is its bytes. A CRLF checkout would also add a carriage return to the line
 # break inside a joined template literal, changing what the code produces, so Windows checkouts must not convert it.
 packages/atlas-boundary/src/generated/** -text

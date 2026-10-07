@@ -1,6 +1,6 @@
-@import "@orchestra/ui/styles/tailwind";
-@import "@orchestra/session-ui/styles";
-@import "@orchestra/ui/v2/styles/tailwind.css";
+@import "@opencode-ai/ui/styles/tailwind";
+@import "@opencode-ai/session-ui/styles";
+@import "@opencode-ai/ui/v2/styles/tailwind.css";
 @import "tw-animate-css";
 @import "./orchestra/background.css";
 @import "./orchestra/theme.css";

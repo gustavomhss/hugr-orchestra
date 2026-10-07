@@ -1,7 +1,7 @@
 import type { ThemeRegistrationResolved } from "@pierre/diffs"
 
-export const OrchestraTheme = {
-  name: "Orchestra",
+export const OpenCodeTheme = {
+  name: "OpenCode",
   bg: "var(--color-background-stronger)",
   fg: "var(--text-base)",
   colors: {

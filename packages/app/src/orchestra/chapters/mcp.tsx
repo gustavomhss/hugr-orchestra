@@ -1,4 +1,4 @@
-import { getFilename } from "@orchestra/core/util/path"
+import { getFilename } from "@opencode-ai/core/util/path"
 import { useQuery } from "@tanstack/solid-query"
 import { createMemo, createResource, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { toggleMcp } from "@/context/global-sync/mcp"

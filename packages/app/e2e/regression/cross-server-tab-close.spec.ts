@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { base64Encode } from "@orchestra/core/util/encode"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { currentSession } from "../utils/mock-server"
 
 const serverA = "http://127.0.0.1:4096"
@@ -16,9 +16,9 @@ test.describe("legacy tab strip", () => {
     await page.addInitScript(
       ({ serverB, sessionA, sessionB }) => {
         localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-        localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
+        localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
         localStorage.setItem(
-          "orchestra.window.browser.dat:tabs",
+          "opencode.window.browser.dat:tabs",
           JSON.stringify([
             { type: "session", server: "http://127.0.0.1:4096", sessionId: sessionA },
             { type: "session", server: serverB, sessionId: sessionB },
@@ -57,7 +57,7 @@ test("desktop closing the last profile tab goes Home and preserves the other ser
     ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: {
@@ -67,7 +67,7 @@ test("desktop closing the last profile tab goes Home and preserves the other ser
         }),
       )
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([
           { type: "session", server: "http://127.0.0.1:4096", sessionId: sessionA },
           { type: "session", server: serverB, sessionId: sessionB },
@@ -130,9 +130,9 @@ test("legacy session routes preserve an existing tab's server", async ({ page })
   await page.addInitScript(
     ({ serverB, sessionB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-      localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
+      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
       localStorage.setItem(
-        "orchestra.window.browser.dat:tabs",
+        "opencode.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server: serverB, sessionId: sessionB }]),
       )
     },

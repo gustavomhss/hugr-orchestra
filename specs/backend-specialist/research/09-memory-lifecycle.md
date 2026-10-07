@@ -6,11 +6,11 @@ Research date: 2026-10-03. Research-only; source inspection, not runtime validat
 
 **Adopt identity separation, bounded context selection, explicit correction lineage. Adapt promotion and compaction behind Atlas. Reject name-derived identity, automatic learned-rule authority, and another memory store/runtime.**
 
-The backend specialist remains independent backend-specialist plugin on Orchestra; Maestro-native composition uses same Atlas contracts. Atlas owns durable Knowledge/Memory. Project continuity and execution identity have different keys and lifetimes.
+The backend specialist remains independent backend-specialist plugin on OpenCode/Orchestra; Maestro-native composition uses same Atlas contracts. Atlas owns durable Knowledge/Memory. Project continuity and execution identity have different keys and lifetimes.
 
 ### Evidence boundary
 
-- **Mem0 pin:** [`abb81c88e1f738a8117d8293530fbc31a5ef8fd9`](https://github.com/mem0ai/mem0/commit/abb81c88e1f738a8117d8293530fbc31a5ef8fd9), commit dated 2026-10-01. Inspected Python OSS engine, prompts/history, native Orchestra integration, pinned Platform docs.
+- **Mem0 pin:** [`abb81c88e1f738a8117d8293530fbc31a5ef8fd9`](https://github.com/mem0ai/mem0/commit/abb81c88e1f738a8117d8293530fbc31a5ef8fd9), commit dated 2026-10-01. Inspected Python OSS engine, prompts/history, native OpenCode integration, pinned Platform docs.
 - **Mastra pin:** [`daf5de73b5662bb8d4293bb7f7e649aff9bc48cd`](https://github.com/mastra-ai/mastra/commit/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd), commit dated 2026-10-03. Inspected memory/core source and pinned docs. Memory package declares `1.36.0-alpha.2`; Subconscious explicitly experimental. Findings concern this source snapshot, not every released version. [A12] [A13]
 - **Native baseline:** private worktree HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Read Git objects `specs/hugr-maestro/actor-identity-contract.md` and `atlas-foundation-seam-register.md`; these establish intended seams, not proof of current adapter implementation. Historical test claims inside those documents were not rerun or adopted.
 - Below, **source** means inspected implementation; **docs** means upstream assertion; **proposal** means Atlas/the backend specialist adaptation. Source tests were read selectively, not executed. Hosted Mem0 behavior remains documentation-backed. No benchmark, latency, accuracy, compression-ratio, or savings claims adopted.
@@ -20,7 +20,7 @@ The backend specialist remains independent backend-specialist plugin on Orchestr
 | Surface | Concrete upstream pattern | Portable consequence / trap |
 | --- | --- | --- |
 | Mem0 OSS scope | `_build_filters_and_metadata` requires user, agent, or run identifier; supplied identifiers compose query filters. Identity keys in freeform metadata are stripped; update preserves existing identity. [M1] | Adopt typed scope supplied by host. User/agent/run filters describe partitions, not caller authorization. `agent_id` alone must not become globally shared specialist authority. |
-| Mem0 Orchestra scope | Shared helpers distinguish project `(user, app)`, session `(user, app, run)`, global `(user)`. Project default omits run ID. [M4] [M8] | Useful lifetime separation. These are Platform integration semantics; Python OSS engine's first-class identity tuple differs. Don't conflate `app_id`, hosted project container, and the backend specialist's project identity. |
+| Mem0 OpenCode scope | Shared helpers distinguish project `(user, app)`, session `(user, app, run)`, global `(user)`. Project default omits run ID. [M4] [M8] | Useful lifetime separation. These are Platform integration semantics; Python OSS engine's first-class identity tuple differs. Don't conflate `app_id`, hosted project container, and the backend specialist's project identity. |
 | Mem0 project identity | Plugin honors explicit `MEM0_APP_ID`; otherwise parses remote owner/repo into `owner-repo`, then falls back to directory basename. Parser omits host. [M4] [M9] | Clones can share key, but repository rename/transfer changes it. Same owner/repo on different hosts collides; basename fallback also collides. Treat names/remotes/paths as aliases only. |
 | Mastra resource/thread | Persistent resource-scoped working memory crosses threads; thread scope isolates conversations. Switching scope selects separate storage, not migration. [A1] [A2] | Strong conceptual split: project knowledge survives Session; task working set remains locally selected. Mastra “working memory” itself is durable text/JSON, not merely ephemeral prompt selection. |
 | Mastra delegation | Docs derive resource as `{parentResourceId}-{agentName}`, create fresh thread per delegation. Shared resource lets directly-called agents share working memory. [A1] | Agent rename and supervisor change can fragment memory. Sharing IDs also shares mutable state. Stable member ID needed; display name never key. |
@@ -54,7 +54,7 @@ The backend specialist standalone must resolve native project/member/Session con
 
 - Prompt extracts from both user and assistant, including recommendations and proposed plans; says **“When in doubt, extract.”** Repeated assistant advice can become apparent project fact unless source role and acceptance stay explicit.
 - Hash dedup covers bounded retrieval results/current batch in inspected path, not global semantic uniqueness or retry idempotency.
-- Native Orchestra plugin periodically auto-captures user text at project scope with literal `confidence: 0.7`; this is configured metadata, not calibrated probability. Compaction hook writes a status string as a user-role memory and asks model to save more learnings. Compaction pressure thereby encourages promotion. [M4]
+- Native OpenCode plugin periodically auto-captures user text at project scope with literal `confidence: 0.7`; this is configured metadata, not calibrated probability. Compaction hook writes a status string as a user-role memory and asks model to save more learnings. Compaction pressure thereby encourages promotion. [M4]
 - Procedural-memory branch generates an LLM summary of execution history, and source marks support for future removal. Its prompt asks to preserve every output verbatim; that instruction is neither archival integrity nor bounded context. [M1] [M2]
 
 ### Mem0 Platform Dream: useful lineage; different authority model
@@ -173,7 +173,7 @@ Measure claim-level support/applicability, correction propagation, false promoti
 | Material considered | Verified primary license evidence | Reuse boundary |
 | --- | --- | --- |
 | Mem0 `mem0/memory`, prompts, shared integration helpers and repository docs | Pinned root [LICENSE][L1]: Apache-2.0 | Semantic adaptation preferred. Literal source/prompt reuse must retain applicable notices, supply license, mark modified files, and carry relevant NOTICE attribution if included in reused distribution. |
-| Mem0 native Orchestra plugin | Own pinned [LICENSE][L2]: Apache-2.0 | Same obligations. Examined as pattern/counterexample; plugin backend not adoption proposal. |
+| Mem0 native OpenCode plugin | Own pinned [LICENSE][L2]: Apache-2.0 | Same obligations. Examined as pattern/counterexample; plugin backend not adoption proposal. |
 | Mastra `packages/memory`, selected core memory/processors, repository docs | Root [LICENSE.md][L3] covers material outside exceptions under Apache-2.0; memory [package.json][A12] independently declares Apache-2.0 | Verify exact ported files/dependencies at reuse time; source prompts count as source material. Not blanket claim about entire monorepo. |
 | Mastra exceptions | [`ee/LICENSE`][L4]: Enterprise Edition License, production/redistribution restricted; [`packages/connect/LICENSE-ELv2.txt`][L5]: Elastic License 2.0 | Neither needed for proposed semantic adaptations. Do not sweep either into presumed Apache reuse. Third-party components retain own terms. |
 | Mem0 hosted Dream/decay implementation | Public product docs inspected; hosted implementation license not established | Behavior can inform independent semantics. OSS license does not establish access/reuse rights to hosted implementation. |
@@ -198,7 +198,7 @@ All GitHub links below pinned to inspected commits. Live docs useful for navigat
 [M1]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/main.py
 [M2]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/configs/prompts.py
 [M3]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/storage.py
-[M4]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/orchestra-plugin/orchestra-mem0.ts
+[M4]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/opencode-plugin/opencode-mem0.ts
 [M5]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/docs/platform/features/dream.mdx
 [M6]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/docs/platform/features/memory-decay.mdx
 [M7]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/docs/platform/features/memory-expiration.mdx
@@ -223,7 +223,7 @@ All GitHub links below pinned to inspected commits. Live docs useful for navigat
 [A17]: https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/processors/observational-memory/__tests__/subconscious-project-scope.test.ts
 [A18]: https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/tools/working-memory.ts
 [L1]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/LICENSE
-[L2]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/orchestra-plugin/LICENSE
+[L2]: https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/opencode-plugin/LICENSE
 [L3]: https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/LICENSE.md
 [L4]: https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/ee/LICENSE
 [L5]: https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/connect/LICENSE-ELv2.txt
@@ -233,7 +233,7 @@ All GitHub links below pinned to inspected commits. Live docs useful for navigat
 - Mem0 scope protection: [`main.py` identity filtering](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/main.py#L137-L164); [scope assembly](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/main.py#L310-L412).
 - Mem0 ADD pipeline and payload: [`main.py` L918-L1099](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/main.py#L918-L1099); [correction/history/delete](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/memory/main.py#L1829-L2142).
 - Mem0 temporal/truncation helper: [`prompts.py` L965-L1042](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/mem0/configs/prompts.py#L965-L1042).
-- Mem0 project parser: [`identity.ts`](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/agent-plugin-core/typescript/src/identity.ts); [scope helpers](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/agent-plugin-core/typescript/src/scoping.ts); [auto-capture](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/orchestra-plugin/orchestra-mem0.ts#L752-L776); [compaction](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/orchestra-plugin/orchestra-mem0.ts#L884-L927).
+- Mem0 project parser: [`identity.ts`](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/agent-plugin-core/typescript/src/identity.ts); [scope helpers](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/agent-plugin-core/typescript/src/scoping.ts); [auto-capture](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/opencode-plugin/opencode-mem0.ts#L752-L776); [compaction](https://github.com/mem0ai/mem0/blob/abb81c88e1f738a8117d8293530fbc31a5ef8fd9/integrations/opencode-plugin/opencode-mem0.ts#L884-L927).
 - Mastra project-scope source test: [`subconscious-project-scope.test.ts`](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/processors/observational-memory/__tests__/subconscious-project-scope.test.ts).
 - Mastra curation/pin/origin semantics: [`curate.ts`](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/processors/observational-memory/subconscious/curate.ts), [`pinned.ts`](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/processors/observational-memory/subconscious/pinned.ts), [`origin.ts`](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/processors/observational-memory/subconscious/origin.ts).
 - Mastra exact merge semantics: [`working-memory.ts` L14-L69](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/tools/working-memory.ts#L14-L69); [instance-local writer mutex](https://github.com/mastra-ai/mastra/blob/daf5de73b5662bb8d4293bb7f7e649aff9bc48cd/packages/memory/src/index.ts#L1174-L1253).

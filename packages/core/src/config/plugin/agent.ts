@@ -55,9 +55,9 @@ export const Plugin = define({
     yield* ctx.agent.transform(
       Effect.fn(function* (draft) {
         const entries = yield* config.entries()
-        // Config lists `.orchestra` folders once, when the location opens. One created later (by the agent
+        // Config lists `.opencode` folders once, when the location opens. One created later (by the agent
         // file API) is scanned here too, so reloading agents picks it up without reopening the location.
-        const local = location && path.join(location.directory, ".orchestra")
+        const local = location && path.join(location.directory, ".opencode")
         const late =
           local &&
           !entries.some((entry) => entry.type === "directory" && path.resolve(entry.path) === path.resolve(local))

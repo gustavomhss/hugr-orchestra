@@ -56,7 +56,7 @@ export type Interface = ChildProcessSpawner["Service"] & {
   ) => Stream.Stream<string, AppProcessError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@orchestra/AppProcess") {}
+export class Service extends Context.Service<Service, Interface>()("@opencode/AppProcess") {}
 
 export const requireSuccess = (result: RunResult): Effect.Effect<RunResult, AppProcessError> =>
   result.exitCode === 0

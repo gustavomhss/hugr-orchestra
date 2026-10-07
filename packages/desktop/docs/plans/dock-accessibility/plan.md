@@ -50,7 +50,7 @@ user  -> App Dock viewer -> runtime / Xpra -> the same Linux app instance
 
 Shipped repository anchors, all relative to the baseline:
 
-- `packages/orchestra/src/plugin/app-dock.ts:38–59,75–88,145–167`: plugin request envelope, permission path, 15-second timeout, numeric refs and existing read/type/click semantics.
+- `packages/opencode/src/plugin/app-dock.ts:38–59,75–88,145–167`: plugin request envelope, permission path, 15-second timeout, numeric refs and existing read/type/click semantics.
 - `packages/desktop/src/main/app-dock-rpc.ts:117–132,252–258`: RPC dispatch and implicit tab selection. Native dispatch must preserve the selected tab captured at admission; it cannot drift when activation changes.
 - `packages/desktop/src/main/app-dock-browser.ts:1–34,154–174`: web ref registry and snapshot shape. Do not reuse its numeric namespace stride as a native identity scheme.
 - `packages/desktop/src/main/server.ts:84–113`: the existing JS utility process uses message IPC and diagnostic stdout handling. It is not a guest Python stdin/stdout transport.
@@ -106,7 +106,7 @@ Each worker gets a separate branch/worktree pinned to the W1 source snapshot: re
 | A / `a11y-read` | `resources/linux/app-dock-accessibility/{refs,snapshot}.py`; `test/native/test_snapshot.py` | Scoped, bounded tree/text reads; epoch-qualified refs; N01/N04/N05/N07 | W1 |
 | B / `a11y-actions` | `resources/linux/app-dock-accessibility/actions.py`; `test/native/test_actions.py` | Interface/advertised-action checks, click and full-value replacement; N02/N03/N06 | W1 RefRegistry contract |
 | C / `a11y-channel` | `src/main/app-dock-native-client.ts`; sibling `.test.ts` | Bounded raw JSONL client, correlation, watchdog/EOF/backpressure; N08/N09 | W1 protocol |
-| D / `a11y-tools` | `src/main/app-dock-native.ts`; sibling `.test.ts`; `packages/orchestra/src/plugin/app-dock{,.test}.ts` | Native dispatcher and additive tool schemas/descriptions; N10 plus browser routing regressions | W1 client contract |
+| D / `a11y-tools` | `src/main/app-dock-native.ts`; sibling `.test.ts`; `packages/opencode/src/plugin/app-dock{,.test}.ts` | Native dispatcher and additive tool schemas/descriptions; N10 plus browser routing regressions | W1 client contract |
 | E / `a11y-testbed` | `test/native/{Dockerfile,session.sh,gtk_fixture.py,qt_fixture.cpp,scenarios.json}`; `scripts/app-dock-native-proof.ts` | Real-app session and independent postcondition/control harness; N01–N10 | W1 wire contract |
 | F / `a11y-metrics` | `scripts/app-dock-native-bench.ts`; `test/native/benchmark-cases.json` | Paired, calibrated measurements/invalid-report handling; P01–P05 | W1 metrics/driver contract |
 

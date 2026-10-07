@@ -73,10 +73,10 @@ async function child() {
   const password = randomUUID()
   const userDataPath = await mkdtemp(join(tmpdir(), "app-dock-live-userdata-"))
   Object.assign(process.env, {
-    ORCHESTRA_CLIENT: "desktop",
+    OPENCODE_CLIENT: "desktop",
     XDG_STATE_HOME: userDataPath,
-    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
   })
   const doc = createAppDock({ developmentMode: () => false })
   registerAppDockBridge(doc)
@@ -97,7 +97,7 @@ async function child() {
     pass("L01", "real sidecar utility process booted and passed health")
 
     const url = `http://127.0.0.1:${port}`
-    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
+    const auth = Buffer.from(`opencode:${password}`).toString("base64")
     const idsResponse = await fetch(`${url}/experimental/tool/ids?directory=${encodeURIComponent(userDataPath)}`, {
       headers: { authorization: `Basic ${auth}` },
       signal: AbortSignal.timeout(10_000),

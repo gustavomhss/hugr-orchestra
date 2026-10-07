@@ -1,16 +1,16 @@
 export * from "./client.js"
 export * from "./server.js"
 
-import { createOrchestraClient } from "./client.js"
-import { createOrchestraServer } from "./server.js"
+import { createOpencodeClient } from "./client.js"
+import { createOpencodeServer } from "./server.js"
 import type { ServerOptions } from "./server.js"
 
-export async function createOrchestra(options?: ServerOptions) {
-  const server = await createOrchestraServer({
+export async function createOpencode(options?: ServerOptions) {
+  const server = await createOpencodeServer({
     ...options,
   })
 
-  const client = createOrchestraClient({
+  const client = createOpencodeClient({
     baseUrl: server.url,
   })
 

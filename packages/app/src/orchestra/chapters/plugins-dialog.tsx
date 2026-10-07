@@ -1,5 +1,5 @@
 import { Dialog } from "@kobalte/core/dialog"
-import { DialogHeader, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
+import { DialogHeader, DialogV2 } from "@opencode-ai/ui/v2/dialog-v2"
 import { For, Show, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { CAVEMAN_ID, INTENSITIES, intensity, type LlmBehavior } from "@/utils/llm-behaviors"

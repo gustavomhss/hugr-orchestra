@@ -1,4 +1,4 @@
-import { createSimpleContext } from "@orchestra/ui/context"
+import { createSimpleContext } from "@opencode-ai/ui/context"
 import { createStore } from "solid-js/store"
 import { createEffect, onCleanup, onMount } from "solid-js"
 import { useLanguage } from "@/context/language"

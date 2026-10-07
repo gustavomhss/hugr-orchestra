@@ -580,7 +580,7 @@ const invariants = [
       "dock session completes without invoking any dock_* tool",
       "session tool list omits dock_* tools for the live model"
     ],
-    tests: ["app-dock-youtube.test.ts (opt-in: APP_DOCK_YOUTUBE=1, ORCHESTRA_AUTH_CONTENT, APP_DOCK_YOUTUBE_MODEL=provider/model; skipped otherwise; Y03/Y04 need a tool-capable funded model)"]
+    tests: ["app-dock-youtube.test.ts (opt-in: APP_DOCK_YOUTUBE=1, OPENCODE_AUTH_CONTENT, APP_DOCK_YOUTUBE_MODEL=provider/model; skipped otherwise; Y03/Y04 need a tool-capable funded model)"]
   }
 ];
 

@@ -1,5 +1,5 @@
 {
-  "name": "@orchestra/session-ui",
+  "name": "@opencode-ai/session-ui",
   "version": "1.18.27",
   "private": true,
   "type": "module",
@@ -40,9 +40,9 @@
   "dependencies": {
     "@kobalte/core": "catalog:",
     "@opencode-ai/client": "file:../app/vendor/opencode-ai-client-1.17.13-v2.tgz",
-    "@orchestra/core": "workspace:*",
-    "@orchestra/sdk": "workspace:*",
-    "@orchestra/ui": "workspace:*",
+    "@opencode-ai/core": "workspace:*",
+    "@opencode-ai/sdk": "workspace:*",
+    "@opencode-ai/ui": "workspace:*",
     "@pierre/diffs": "catalog:",
     "@shikijs/stream": "catalog:",
     "@shikijs/transformers": "3.9.2",

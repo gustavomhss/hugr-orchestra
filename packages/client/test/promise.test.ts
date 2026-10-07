@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { isSessionNotFoundError, isUnauthorizedError, Orchestra } from "../src"
+import { isSessionNotFoundError, isUnauthorizedError, OpenCode } from "../src"
 
 test("exposes every standard HTTP API group", () => {
-  const client = Orchestra.make({ baseUrl: "http://localhost:3000" })
+  const client = OpenCode.make({ baseUrl: "http://localhost:3000" })
 
   expect(Object.keys(client)).toEqual([
     "health",
@@ -39,7 +39,7 @@ test("exposes every standard HTTP API group", () => {
 })
 
 test("sessions.get returns the wire projection", async () => {
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async (input) => {
       expect(typeof input === "string" ? input : input instanceof URL ? input.href : input.url).toBe(
@@ -55,7 +55,7 @@ test("sessions.get returns the wire projection", async () => {
 })
 
 test("events.subscribe exposes the Promise event stream wire projection", async () => {
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async () =>
       new Response(
@@ -72,7 +72,7 @@ test("events.subscribe exposes the Promise event stream wire projection", async 
 })
 
 test("events.subscribe terminates on malformed Promise SSE data", async () => {
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async () => new Response("data: {not-json}\n\n", { headers: { "content-type": "text/event-stream" } }),
   })
@@ -94,7 +94,7 @@ test("events.subscribe terminates on malformed Promise SSE data", async () => {
 test("session methods use the public HTTP contract", async () => {
   const requests: Array<{ url: string; init?: RequestInit }> = []
   let historyPage = 0
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async (input, init) => {
       const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
@@ -180,7 +180,7 @@ test("session methods use the public HTTP contract", async () => {
 })
 
 test("middleware errors remain declared client errors", async () => {
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async () =>
       Response.json({ _tag: "UnauthorizedError", message: "Authentication required" }, { status: 401 }),
@@ -195,7 +195,7 @@ test("middleware errors remain declared client errors", async () => {
 })
 
 test("sessions.history decodes SessionNotFoundError", async () => {
-  const client = Orchestra.make({
+  const client = OpenCode.make({
     baseUrl: "http://localhost:3000",
     fetch: async () =>
       Response.json(

@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { readFile } from "node:fs/promises"
-import { mockOrchestraServer } from "../utils/mock-server"
+import { mockOpenCodeServer } from "../utils/mock-server"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -529,7 +529,7 @@ async function setup(
   } = {},
 ) {
   await page.clock.setFixedTime(now)
-  await mockOrchestraServer(page, {
+  await mockOpenCodeServer(page, {
     protocol: "v2",
     directory,
     project,
@@ -544,11 +544,11 @@ async function setup(
         "settings.v3",
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
-      localStorage.setItem("orchestra-theme-id", "oc-2")
-      localStorage.setItem("orchestra-color-scheme", scheme)
-      localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale }))
+      localStorage.setItem("opencode-theme-id", "oc-2")
+      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("opencode.global.dat:language", JSON.stringify({ locale }))
       localStorage.setItem(
-        "orchestra.global.dat:server",
+        "opencode.global.dat:server",
         JSON.stringify({
           list: secondServer ? [serverB] : [],
           projects: {
@@ -561,7 +561,7 @@ async function setup(
       if (sessionStorage.getItem("kpis-seeded")) return
       sessionStorage.setItem("kpis-seeded", "1")
       localStorage.setItem(
-        "orchestra.global.dat:layout",
+        "opencode.global.dat:layout",
         JSON.stringify({ home: { selection: { server: serverA, ...(noSelection ? {} : { directory }) } } }),
       )
     },

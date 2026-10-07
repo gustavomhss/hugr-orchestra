@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
-import type { ToolContext } from "@orchestra/plugin"
-import { createAppDockHooks } from "../../../orchestra/src/plugin/app-dock"
+import type { ToolContext } from "@opencode-ai/plugin"
+import { createAppDockHooks } from "../../../opencode/src/plugin/app-dock"
 import type { AppDockAPI } from "./app-dock-api"
 import { AppDockRPC } from "./app-dock-rpc"
 import { NativeDock } from "./app-dock-native"

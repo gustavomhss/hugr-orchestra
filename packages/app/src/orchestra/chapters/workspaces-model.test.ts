@@ -44,11 +44,11 @@ describe("repositoryWorkspaces", () => {
       id: "abc",
       worktree: "/repos/orchestra",
       sandboxes: [
-        "/data/orchestra/worktree/abc/feature",
-        "/data/orchestra/worktree/other/feature",
+        "/data/opencode/worktree/abc/feature",
+        "/data/opencode/worktree/other/feature",
         "/repos/orchestra-clone",
-        "/data/orchestra/worktree/abc/feature/nested",
-        "C:\\data\\orchestra\\worktree\\abc\\fix",
+        "/data/opencode/worktree/abc/feature/nested",
+        "C:\\data\\opencode\\worktree\\abc\\fix",
       ],
     }
     expect(repositoryWorkspaces(project).map((item) => [item.folder, item.removable])).toEqual([

@@ -1,8 +1,8 @@
 export * as ToolRegistry from "./registry"
 
-import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@opencode-ai/llm"
 import { Context, DateTime, Effect, Layer, Option, Scope } from "effect"
-import { SessionEvent } from "@orchestra/schema/session-event"
+import { SessionEvent } from "@opencode-ai/schema/session-event"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
 import { SessionMessage } from "../session/message"
@@ -42,12 +42,12 @@ export interface Settlement {
   readonly outputPaths?: ReadonlyArray<string>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/ToolRegistry") {}
+export class Service extends Context.Service<Service, Interface>()("@opencode/v2/ToolRegistry") {}
 
 const NativeBinding = Context.Reference<{
   location: Location.Interface
   events: EventV2.Interface
-} | undefined>("@orchestra/ToolRegistry/NativeSafetyBinding", { defaultValue: () => undefined })
+} | undefined>("@opencode/ToolRegistry/NativeSafetyBinding", { defaultValue: () => undefined })
 
 const registryLayer = Layer.effect(
   Service,

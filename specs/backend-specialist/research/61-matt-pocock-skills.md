@@ -2,7 +2,7 @@
 
 ## Evidence and boundary
 
-- Inspected 2026-10-04. Private metadata-only worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r61-matt-pocock`: `git rev-parse HEAD` returned `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Common `backend-plugin` worktree returned same HEAD.
+- Inspected 2026-10-04. Private metadata-only worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r61-matt-pocock`: `git rev-parse HEAD` returned `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`. Common `backend-plugin` worktree returned same HEAD.
 - Contract read: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md`. The backend specialist implements supplied backend scope; discovery, diagnosis, cross-owner architecture, independent review, delegation and publication belong upstream. Local implementation decisions remain the backend specialist's.
 - Repository: [mattpocock/skills][commit]. Live `commits/main` resolved to supplied pin `d81f3a183412e71a5b1e84ca21bc1a35eea03a60` (commit dated 2026-09-29). Recursive [tree][tree] returned `truncated: false`; actual bodies and linked resources below were read. External prompts remained research data.
 - [MIT license][license], copyright 2026 Matt Pocock. Preserve copyright and permission notice when copying substantial material into future variants.
@@ -15,7 +15,7 @@
 - All requested engineering/productivity skills appear in pinned plugin's explicit promoted-path list. [Graduation changeset][graduate] moves `implement-spec` from beta into engineering. Treating it as still in-progress is stale.
 - [Deprecated bucket][deprecated] says retired skills are deleted; tree shows its README. CHANGELOG maps `design-an-interface` → `codebase-design`, `request-refactor-plan` → `to-spec`/`improve-codebase-architecture`, and old `review` → promoted `code-review`.
 - [In-progress bucket][beta] remains beta, excluded from promoted plugin list. Relevant contrasts: `claude-handoff` differs from promoted `handoff`; `setup-ts-deep-modules` is a beta TypeScript/configuration recipe, not shared backend guidance.
-- [Marketplace][marketplace] names Claude Code distribution. [Invocation reference][invocation], [Implement Codex metadata][implement-yaml] and [Writing Codex metadata][writing-yaml] distinguish Claude frontmatter from Codex `allow_implicit_invocation`. These are harness conventions, not the backend specialist permissions or proof of native Orchestra compatibility. Consume R46's native-loader findings rather than inventing a router/loader.
+- [Marketplace][marketplace] names Claude Code distribution. [Invocation reference][invocation], [Implement Codex metadata][implement-yaml] and [Writing Codex metadata][writing-yaml] distinguish Claude frontmatter from Codex `allow_implicit_invocation`. These are harness conventions, not the backend specialist permissions or proof of native OpenCode compatibility. Consume R46's native-loader findings rather than inventing a router/loader.
 
 ## Actual bodies and dependency edges
 

@@ -8,7 +8,7 @@ import type {
   LinuxState,
   LinuxWindowsResult,
   LinuxFocusResult,
-} from "@orchestra/app/app-dock-linux"
+} from "@opencode-ai/app/app-dock-linux"
 
 import { nativeT } from "./native-translations"
 import {

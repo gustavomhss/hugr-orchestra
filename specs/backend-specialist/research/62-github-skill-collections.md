@@ -6,7 +6,7 @@ Inspection: **2026-10-04**. Source-only research; proposed selection/behavior ch
 
 **Adopt authoring methods plus narrow, corrected references.** Best combination: Anthropic’s conditional references and evidence-bearing evaluations; Addy’s scoped implementation slices; framework-specific request/testing deltas from Hobson and Awesome Copilot. Popularity supplies sample, not correctness evidence.
 
-- `git rev-parse HEAD` returned **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`** in both `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin` and assigned metadata-only worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r62-github-skills`.
+- `git rev-parse HEAD` returned **`76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`** in both `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin` and assigned metadata-only worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r62-github-skills`.
 - Read `specs/backend-specialist/research/skill-variants-plan.md`, `03-native-plugin.md`, `20-evaluation.md` from supplied backend specialist worktree; inspected native skill loading/tool source cited below. Plan’s current backend-only contract controls transfer.
 - Used preselected public-topic/skills.sh sample. Search API blocker, `User flagged as spammy.`, supplied by brief; used direct `gh api` repository/commit/tree/content endpoints with pinned refs. No fresh popularity ranking or install-count verification claimed.
 - Selected assets below are actual `SKILL.md` bodies plus named resources, examples and evaluation implementations. Optional `sickn33/agentic-awesome-skills` catalog comparison omitted: primary bodies already answer transfer question. Matt Pocock, Superpowers/ECC and vendor-specific lanes remain outside sample.
@@ -32,7 +32,7 @@ If later copying substantial text/code, retain applicable license/copyright noti
 - **Inspected:** [body][A], [grader instructions][AG], [trigger runner][AE], [description optimization loop][AO]. Body separates metadata, triggered procedure and on-demand references; framework example selects one of `aws.md`, `gcp.md`, `azure.md`. Grader examines actual outputs, cites evidence per assertion, and critiques assertions that also accept wrong results.
 - **Adopt:** description states task context and exclusion; body provides named reference plus explicit read condition. Evaluate realistic positives and near-miss negatives separately from backend outcomes. Compare candidate with native baseline/previous skill under same task/model; critique weak assertions. These are skill-maintainer methods, not the backend specialist’s runtime responsibilities.
 - **Adaptation:** put applicability/non-trigger facts in description, not solely unloaded body. Replace “pushy” keyword expansion with component + task + version boundaries. Require fresh final holdout: `run_loop.py` selects best iteration by repeatedly observed test score, making that split validation data rather than untouched confirmation.
-- **Counterexample:** `run_eval.py` creates temporary `.claude/commands`, invokes `claude -p`, and can return false on first unrelated tool call. Query exceptions become `False`, which can credit a should-not-trigger case. This measures a particular Claude first-action proxy; it is not native Orchestra compatibility or reliable negative evidence. Keep infrastructure failure separate from non-trigger. Static reading, not reproduced execution.
+- **Counterexample:** `run_eval.py` creates temporary `.claude/commands`, invokes `claude -p`, and can return false on first unrelated tool call. Query exceptions become `False`, which can credit a should-not-trigger case. This measures a particular Claude first-action proxy; it is not native OpenCode compatibility or reliable negative evidence. Keep infrastructure failure separate from non-trigger. Static reading, not reproduced execution.
 
 ### B — Anthropic `mcp-builder`: shared protocol procedure, language leaves
 
@@ -178,5 +178,5 @@ Status: **researched proposals**. Skill performance, source examples and native 
 [X4]: https://expressjs.com/en/4x/guide/error-handling
 [X5]: https://expressjs.com/en/guide/error-handling.html
 [FV]: https://fastify.dev/docs/v5.6.x/Reference/Validation-and-Serialization/
-[N1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/orchestra/src/tool/skill.ts#L54-L97
+[N1]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/opencode/src/tool/skill.ts#L54-L97
 [N2]: /Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/packages/core/src/skill.ts#L73-L105

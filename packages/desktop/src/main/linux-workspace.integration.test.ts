@@ -8,7 +8,7 @@ test.skipIf(process.env.APP_DOCK_ACCESS_INTEGRATION !== "1")(
   `[real Docker + PTY] Linux access proof (${process.env.APP_DOCK_ACCESS_PROOF_SCOPE ?? "full"})`,
   async () => {
     expect(process.env.APP_DOCK_ACCESS_ROOT).toBeTruthy()
-    const parent = join(tmpdir(), "orchestra")
+    const parent = join(tmpdir(), "opencode")
     await mkdir(parent, { recursive: true })
     const directory = await mkdtemp(join(parent, "workspace-access-proof-"))
     await symlink(resolve("node_modules"), join(directory, "node_modules"), "dir")
