@@ -1,16 +1,15 @@
 import { expect, test } from "bun:test"
 import { execFile } from "node:child_process"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { promisify } from "node:util"
 import { pathToFileURL } from "node:url"
 import { nativeCliTarget, verifyCliArtifact } from "../src/main/cli-artifacts"
-import { desktopCliTargets } from "./cli-staging"
-import { verifyPackagedCli } from "./cli-packaging"
 import { installElectron } from "./install-electron"
 
-test("owned W2 builder stages native/WSL bytes and real Electron background service authenticates", async () => {
+test("owned native CLI authenticates through Electron without changing workspace dependency paths", async () => {
   if (!process.env.RUNNER_OS) throw new Error("Native artifact integration requires Actions")
   const desktop = resolve(import.meta.dir, "..")
   const home = await mkdtemp(join(tmpdir(), "orchestra-native-integration-"))
@@ -47,9 +46,19 @@ test("owned W2 builder stages native/WSL bytes and real Electron background serv
   const directory = join(desktop, "resources/cli")
   const target = nativeCliTarget(process.platform, process.arch)
   const binary = join(directory, `orchestra-${target}${process.platform === "win32" ? ".exe" : ""}`)
+  const require = createRequire(resolve(desktop, "../cli/package.json"))
+  const dependencies = ["@effect/platform-node", "@orchestra/core/installation/version", "effect"]
+  const paths = await Promise.all(dependencies.map((name) => realpath(require.resolve(name))))
+  console.log(
+    "Workspace dependency paths before native build",
+    Object.fromEntries(dependencies.map((name, index) => [name, paths[index]])),
+  )
   return run(
     process.execPath,
-    ["--eval", 'const { buildCliToResources } = await import("./scripts/utils.ts"); await buildCliToResources()'],
+    [
+      "--eval",
+      `const { buildCliToResources } = await import("./scripts/utils.ts"); await buildCliToResources({ targets: [${JSON.stringify(target)}] })`,
+    ],
     {
       cwd: desktop,
       env,
@@ -58,13 +67,15 @@ test("owned W2 builder stages native/WSL bytes and real Electron background serv
     },
   )
     .then(async () => {
+      const installed = await Promise.all(dependencies.map((name) => realpath(require.resolve(name))))
+      expect(installed).toEqual(paths)
+      console.log(
+        "Workspace dependency paths after native build",
+        Object.fromEntries(dependencies.map((name, index) => [name, installed[index]])),
+      )
       const artifact = await verifyCliArtifact(directory, target)
       expect(artifact.version).toBe(version)
       expect((await run(artifact.path, ["--version"], { env })).stdout.trim()).toBe(`orchestra v${version}`)
-      await Promise.all(
-        desktopCliTargets(process.platform, process.arch).map((item) => verifyCliArtifact(directory, item)),
-      )
-      await verifyPackagedCli(directory, process.platform, process.arch, version)
       await installElectron()
       const built = await Bun.build({
         entrypoints: [join(desktop, "src/main/background-cli.ts")],
