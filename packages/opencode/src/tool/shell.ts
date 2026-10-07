@@ -27,6 +27,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
+import { BackgroundProcess } from "@/background/process"
 
 export { Parameters } from "./shell/prompt"
 
@@ -346,6 +347,7 @@ export const ShellTool = Tool.define(
   Effect.gen(function* () {
     const config = yield* Config.Service
     const spawner = yield* ChildProcessSpawner
+    const adoptable = yield* BackgroundProcess.adoptable
     const fs = yield* FSUtil.Service
     const trunc = yield* Truncate.Service
     const plugin = yield* Plugin.Service
@@ -593,7 +595,7 @@ export const ShellTool = Tool.define(
           if (exit.kind === "exit") yield* Fiber.join(reader)
           return exit.kind === "exit" ? exit.code : null
         }),
-      ).pipe(Effect.orDie)
+      ).pipe(adoptable(ctx.sessionID), Effect.orDie)
 
       const meta: string[] = []
       if (expired) {
