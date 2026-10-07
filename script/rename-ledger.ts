@@ -132,7 +132,7 @@ export const protectedStrings: Protected[] = [
     reason: "the Zen provider id in a provider object or fixture",
   },
   {
-    pattern: /(?<![\w./-])opencode(?=:\s*\{)/g,
+    pattern: /(?<![\w./-])opencode(?=:\s*\{)|\?\.\[(["'])opencode\1\]|(?<=providerOptions\??\.)opencode\b/g,
     reason: "the Zen provider id as a provider config, auth or options key",
   },
   { pattern: /\bdialog\.provider\.opencode\b/g, reason: "i18n key derived from the Zen provider id" },
