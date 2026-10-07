@@ -1,0 +1,8 @@
+{
+  "id": "C-SPAWN-02.verbatim-unix",
+  "os": ["linux", "macos"],
+  "steps": [
+    {"run": ["${FIXTURE}"], "options": {"windowsVerbatimArgs": "argv a"}, "expect": {"error": "INVALID_ARGUMENT", "message": ["windowsVerbatimArgs", "not Windows"]}},
+    {"spawn": ["${FIXTURE}", "argv"], "options": {"windowsVerbatimArgs": ""}, "expect": {"error": "INVALID_ARGUMENT", "message": ["windowsVerbatimArgs", "not Windows"]}}
+  ]
+}

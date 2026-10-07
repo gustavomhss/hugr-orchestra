@@ -142,7 +142,7 @@ fn entry(e: &Value) -> Check {
 fn options(v: &Value) -> Check {
     for (k, o) in object(v)? {
         match k.as_str() {
-            "cwd" => text(o),
+            "cwd" | "windowsVerbatimArgs" => text(o),
             "env" => match object(o)?.values().all(|x| x.is_string() || x.is_null()) {
                 true => Ok(()),
                 false => Err("env values are text or null".into()),

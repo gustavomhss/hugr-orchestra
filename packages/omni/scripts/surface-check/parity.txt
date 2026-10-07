@@ -28,8 +28,10 @@ label | PLAN Apêndice E, `processes()` decision: no agent or session label
 # WP-H (proposed, lead approves at merge): `configure` sits under spawn. It says where the native addon and the supervisor
 # that every spawn starts are. The addon has no Rust meaning (Rust links the core); a Rust host names its supervisor with
 # HUGR_OMNI_SUPERVISOR or by placing it next to its executable, which is not an item of the API.
+# WP8b (proposed, lead approves at merge): `windowsVerbatimArgs` sits under spawn. It says how the program is started (its
+# Windows command line), like `configure` says where the supervisor that starts it is.
 run | run, CommonOptions, RunOptions | Command, Command::new, Command::arg, Command::args, Command::run
-spawn | spawn, SpawnOptions, PipeChild, configure, ConfigureOptions, ConfigureOptions.addon, ConfigureOptions.supervisor | Command::spawn, Command::spawn_pty, PipeChild
+spawn | spawn, SpawnOptions, PipeChild, configure, ConfigureOptions, ConfigureOptions.addon, ConfigureOptions.supervisor, CommonOptions.windowsVerbatimArgs | Command::spawn, Command::spawn_pty, PipeChild, Command::windows_verbatim_args
 cwd | CommonOptions.cwd | Command::cwd
 environment | CommonOptions.env, CommonOptions.inheritEnv | Command::env, Command::env_remove, Command::inherit_env
 terminal | RunOptions.pty, SpawnOptions.pty, spawn.pty, PtyOption, PtyOption.cols, PtyOption.rows, PtyChild, PtyChild.resize | Command::pty, PtySize, PtySize.cols, PtySize.rows, PtyChild, PtyChild::resize
