@@ -1,15 +1,11 @@
-# CI: the same gate on Linux, macOS (arm64) and Windows, scripts/ci.mjs. A push to main or bundle/**, or a pull
-# request to main, runs the fast gate; a v* tag, or a run started by hand with `release`, adds the release checks.
-# wp/** never runs. A newer push cancels the older run of the same branch.
+# CI: the same gate on Linux, macOS (arm64) and Windows, scripts/ci.mjs. This repository is a read-only mirror of
+# HuGR Orchestra's packages/omni (skills/omni-release/references/mirror.md): day-to-day CI runs there (omni.yml), and the
+# mirror job runs this gate on Linux before every push. Here it runs only on a v* tag, with the release checks, and by
+# hand (`release` adds them). A newer run of the same ref cancels the older one.
 name: ci
 on:
   push:
-    branches: [main, "bundle/**"]
     tags: ["v*"]
-    paths-ignore: ["**.md", "docs/**", "LICENSE*"]
-  pull_request:
-    branches: [main]
-    paths-ignore: ["**.md", "docs/**", "LICENSE*"]
   workflow_dispatch:
     inputs:
       release: { type: boolean, default: false, description: "Run the release checks too" }
@@ -44,7 +40,7 @@ jobs:
         run: |
           rustup show active-toolchain || rustup toolchain install
           if [ "$RUNNER_OS" = Linux ] && [ -n "$RELEASE" ]; then rustup target add x86_64-unknown-linux-musl; fi
-      # One cache per OS and lockfile. Only main saves it, so branches read a warm cache without filling the 10 GB quota.
+      # One cache per OS and lockfile. Only main saves it (a run by hand on main), so tags read it without filling the quota.
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}

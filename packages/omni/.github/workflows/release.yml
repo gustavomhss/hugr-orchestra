@@ -1,7 +1,7 @@
-# Release: builds the eight platform packages, each on its own OS and CPU, packs it with the main package and proves a
-# clean install with npm, Bun and Deno (K9; on musl, npm and Bun under Alpine: Deno has no musl build). The tarballs are
-# the artifacts; publishing is the lead's, by hand, with the owner's yes (platform packages first, hugr-omni last).
-# Started by hand.
+# Release: builds the eight platform packages, each on its own OS and CPU (scripts/build-artifacts.mjs, which Orchestra's
+# omni-artifacts workflow also calls), packs each with the main package and proves a clean install with npm, Bun and
+# Deno (K9; on musl, npm and Bun under Alpine: Deno has no musl build). The tarballs are the artifacts; publishing is
+# the lead's, by hand, with the owner's yes (platform packages first, hugr-omni last). Started by hand.
 name: release
 on:
   workflow_dispatch:
@@ -14,16 +14,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # build: zig (glibc 2.17 floor), alpine (musl, inside rust:alpine) or native. runtimes: what verify.mjs proves.
+        # build: zig (glibc 2.17 floor), alpine (musl, inside rust:alpine) or native; the triples are in
+        # scripts/build-artifacts.mjs. runtimes: what verify.mjs proves.
         include:
-          - { id: linux-x64-gnu, os: ubuntu-24.04, build: zig, runtimes: node bun deno, addon: x86_64-unknown-linux-gnu, supervisor: x86_64-unknown-linux-musl }
-          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, build: zig, runtimes: node bun deno, addon: aarch64-unknown-linux-gnu, supervisor: aarch64-unknown-linux-musl }
-          - { id: linux-x64-musl, os: ubuntu-24.04, build: alpine, runtimes: node bun, addon: x86_64-unknown-linux-musl, supervisor: x86_64-unknown-linux-musl }
-          - { id: linux-arm64-musl, os: ubuntu-24.04-arm, build: alpine, runtimes: node bun, addon: aarch64-unknown-linux-musl, supervisor: aarch64-unknown-linux-musl }
-          - { id: darwin-arm64, os: macos-14, build: native, runtimes: node bun deno, addon: aarch64-apple-darwin, supervisor: aarch64-apple-darwin }
-          - { id: darwin-x64, os: macos-15-intel, build: native, runtimes: node bun deno, addon: x86_64-apple-darwin, supervisor: x86_64-apple-darwin }
-          - { id: win32-x64-msvc, os: windows-2022, build: native, runtimes: node bun deno, addon: x86_64-pc-windows-msvc, supervisor: x86_64-pc-windows-msvc }
-          - { id: win32-arm64-msvc, os: windows-11-arm, build: native, runtimes: node bun deno, addon: aarch64-pc-windows-msvc, supervisor: aarch64-pc-windows-msvc }
+          - { id: linux-x64-gnu, os: ubuntu-24.04, build: zig, runtimes: node bun deno }
+          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, build: zig, runtimes: node bun deno }
+          - { id: linux-x64-musl, os: ubuntu-24.04, build: alpine, runtimes: node bun }
+          - { id: linux-arm64-musl, os: ubuntu-24.04-arm, build: alpine, runtimes: node bun }
+          - { id: darwin-arm64, os: macos-14, build: native, runtimes: node bun deno }
+          - { id: darwin-x64, os: macos-15-intel, build: native, runtimes: node bun deno }
+          - { id: win32-x64-msvc, os: windows-2022, build: native, runtimes: node bun deno }
+          - { id: win32-arm64-msvc, os: windows-11-arm, build: native, runtimes: node bun deno }
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     env:
@@ -34,55 +35,33 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
-      # The musl rows build inside rust:alpine (below), with the toolchain rust-toolchain.toml names.
-      - name: Rust toolchain and targets
-        if: matrix.build != 'alpine'
+      # The musl rows build inside rust:alpine (scripts/build-artifacts.mjs), with the toolchain rust-toolchain.toml names.
+      # An image without rustup (windows-11-arm may be one) gets it here; build-artifacts.mjs installs the toolchain.
+      - name: rustup (Windows images without it)
+        if: runner.os == 'Windows'
         shell: bash
         run: |
-          # (an image without rustup, such as windows-11-arm may be: install it)
-          if ! command -v rustup >/dev/null && [ "$RUNNER_OS" = Windows ]; then
-            curl -sSfL -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/${{ matrix.addon }}/rustup-init.exe"
+          if ! command -v rustup >/dev/null; then
+            host=$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64-pc-windows-msvc || echo x86_64-pc-windows-msvc)
+            curl -sSfL -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/$host/rustup-init.exe"
             "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
-            export PATH="$HOME/.cargo/bin:$PATH"
-            echo "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
+            printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
           fi
-          rustup toolchain install
-          rustup target add ${{ matrix.addon }} ${{ matrix.supervisor }}
       - if: matrix.build != 'alpine'
         uses: Swatinem/rust-cache@v2
         with:
           key: release-${{ matrix.id }}
           save-if: false
-      # glibc Linux: the addon at the glibc 2.17 floor (zig), the supervisor static (musl).
+      # glibc Linux builds with zig and cargo-zigbuild.
       - if: matrix.build == 'zig'
         uses: mlugg/setup-zig@v2
       - if: matrix.build == 'zig'
         uses: taiki-e/install-action@v2
         with: { tool: cargo-zigbuild }
-      - name: Build (Linux, glibc)
-        if: matrix.build == 'zig'
-        run: |
-          cargo zigbuild --release -p hugr-omni-node --target ${{ matrix.addon }}.2.17
-          cargo build --release -p omni-supervisor --target ${{ matrix.supervisor }}
-          F=$(objdump -T target/${{ matrix.addon }}/release/libhugr_omni_node.so | grep -o 'GLIBC_[0-9.]*' | sort -V | tail -1)
-          [ "$F" = GLIBC_2.17 ] || { echo "the addon needs $F, above the 2.17 floor"; exit 1; }
-      # musl Linux, natively on Alpine (as napi-rs builds it): the supervisor static (the target's default), the addon a
-      # cdylib that links musl dynamically (-crt-static, set here and not in .cargo/config.toml: it must not reach the
-      # supervisor), so a musl Node or Bun can dlopen it. The runner's CPU is the image's.
-      - name: Build (Linux, musl)
-        if: matrix.build == 'alpine'
-        run: |
-          docker run --rm -v "$PWD":/w -w /w rust:1-alpine sh -euc '
-            apk add --no-cache gcc musl-dev >/dev/null
-            rustup toolchain install
-            cargo build --release -p omni-supervisor --target ${{ matrix.supervisor }}
-            RUSTFLAGS="-C target-feature=-crt-static" cargo build --release -p hugr-omni-node --target ${{ matrix.addon }}'
-          readelf -d target/${{ matrix.addon }}/release/libhugr_omni_node.so | tee "$RUNNER_TEMP/dynamic.txt"
-          grep -Eq 'NEEDED.*\[(libc\.musl-[^]]*|libc\.so)\]' "$RUNNER_TEMP/dynamic.txt" || { echo "the addon does not link musl dynamically"; exit 1; }
-      - name: Build (macOS, Windows)
-        if: matrix.build == 'native'
+      # The addon and the supervisor, with the checks of each build (glibc floor, musl linking, static C runtime).
+      - name: Build (${{ matrix.build }})
         shell: bash
-        run: cargo build --release -p hugr-omni-node -p omni-supervisor --target ${{ matrix.addon }}
+        run: node scripts/build-artifacts.mjs ${{ matrix.id }}
       - name: Pack
         shell: bash
         run: node bindings/node/npm/pack.mjs dist ${{ matrix.id }}
