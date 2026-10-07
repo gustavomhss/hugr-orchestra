@@ -11,9 +11,11 @@ import os from "node:os"
 import path from "node:path"
 import { Cause, Effect, Exit, Fiber, Layer, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
+import { BackgroundJob } from "@opencode-ai/core/background-job"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Omni } from "@opencode-ai/core/omni"
 import { OmniAdoption } from "@opencode-ai/core/omni-adoption"
+import { OmniBackground } from "@opencode-ai/core/omni-background"
 import { omniSpawner } from "@opencode-ai/core/flag/flag"
 import { AppProcess } from "@opencode-ai/core/process"
 import { gone, sweep, tree } from "../fixture/process-tree"
@@ -440,6 +442,48 @@ describe("omni spawner", () => {
             .map((line) => line.trim())
             .filter(Boolean),
         ).toEqual(["c", "d"])
+      }),
+    LONG,
+  )
+
+  fx.live(
+    "11. a background grandchild is adopted by the real registry, its later output reaches the ring, stopSession ends it",
+    () =>
+      Effect.gen(function* () {
+        const svc = yield* Spawner
+        const registry = OmniBackground.make(yield* BackgroundJob.make, { pollMs: 50 })
+        const nonce = `omni-background-${crypto.randomUUID()}`
+        // `sleep 600 &` in any shell: the root starts a grandchild on its own stdout that ticks forever, then exits.
+        const ticker = `setInterval(() => process.getBuiltinModule("node:fs").writeSync(1, "tick " + process.argv.at(-1) + "\\n"), 100)`
+        const root = `
+const cp = process.getBuiltinModule("node:child_process")
+cp.spawn(process.execPath, ["-e", ${JSON.stringify(ticker)}, process.argv.at(-1)], { stdio: ["ignore", "inherit", "inherit"], windowsHide: true })
+setTimeout(() => process.exit(0), 300)`
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const handle = yield* svc.spawn(ChildProcess.make(process.execPath, ["-e", root, nonce]))
+            yield* Effect.all([bytes(handle.all), handle.exitCode], { concurrency: "unbounded" })
+          }),
+        ).pipe(
+          Effect.provideService(OmniAdoption.Service, { sessionID: "ses_wp1", policy: "tool" }),
+          Effect.provideService(OmniAdoption.Registry, registry),
+        )
+        const listed = yield* registry.list("ses_wp1")
+        expect(listed.length).toBe(1)
+        expect(listed[0]?.processes.length).toBeGreaterThan(0)
+        const first = listed[0]?.written ?? 0
+        // The host streams ended at the grace; ticks since then go to the ring the registry took over.
+        let later = first
+        const deadline = Date.now() + BOUND
+        while (later <= first && Date.now() < deadline) {
+          yield* Effect.sleep("200 millis")
+          later = (yield* registry.list("ses_wp1"))[0]?.written ?? 0
+        }
+        expect(later).toBeGreaterThan(first)
+        expect((yield* registry.list("ses_wp1"))[0]?.output).toContain(`tick ${nonce}`)
+        yield* registry.stopSession("ses_wp1")
+        expect(yield* Effect.promise(() => swept(nonce))).toEqual([])
+        expect(yield* registry.list("ses_wp1")).toEqual([])
       }),
     LONG,
   )

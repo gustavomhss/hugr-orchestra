@@ -14,7 +14,8 @@ export * as OmniSpawner from "./omni-spawner"
 //
 // Completion (D-L6). `exitCode` resolves when the root exited and the output ended, or DRAIN_GRACE after the root
 // exited; then the host streams end (a stream whose data was still unread in omni fails instead of ending short). The
-// pump then keeps draining and discards, so a descendant that holds the pipe never blocks. Kill and the scope
+// pump then keeps draining, so a descendant that holds the pipe never blocks: into the background registry's ring
+// when the tree may still be adopted (OmniAdoption with policy "tool", R2-4), otherwise it discards. Kill and the scope
 // release stop the tree with `forceKillAfter ?? 2000` (bounded); the release adopts through OmniAdoption.release.
 
 import { Cause, Context, Deferred, Duration, Effect, Exit, Sink, Stream } from "effect"
@@ -27,6 +28,7 @@ import path from "node:path"
 import { describe, kind, millis, stdinConfig, toError, toPlatformError, transduce } from "./child-process-common"
 import { Omni } from "./omni"
 import { OmniAdoption } from "./omni-adoption"
+import { OmniBackground } from "./omni-background"
 import { Shell } from "./shell"
 
 /** After the root exits, how long descendants may hold the output open before the host streams end (D-L6). */
@@ -120,6 +122,7 @@ const start = Effect.fnUntraced(function* (
   const run = program(command)
   if (!run) return yield* Effect.die(new Error("omni-spawner: start() reached a command it does not support"))
   const policy = yield* GapPolicy
+  const adoptable = yield* Effect.serviceOption(OmniAdoption.Service)
   const context = yield* Effect.context()
   const stdinCfg = stdinConfig(opts)
   const graceMs = millis(opts.forceKillAfter) ?? STOP_GRACE_MS
@@ -147,6 +150,10 @@ const start = Effect.fnUntraced(function* (
         // Claimed now, synchronously, so no output is ever kept under omni's no-consumer budget.
         const output = drain(child.output[Symbol.asyncIterator](), {
           policy,
+          overflow:
+            adoptable._tag === "Some" && adoptable.value.policy === "tool"
+              ? () => OmniBackground.sink(child)
+              : undefined,
           ignored: { stdout: kind(opts.stdout) === "ignore", stderr: kind(opts.stderr) === "ignore" },
           gap: (stream, bytes) =>
             log(
@@ -163,9 +170,10 @@ const start = Effect.fnUntraced(function* (
     }),
     ([child, output], result) =>
       Effect.gen(function* () {
-        output.close()
         const adoption = yield* Effect.serviceOption(OmniAdoption.Service)
-        if (Exit.isSuccess(result) && adoption._tag === "Some" && adoption.value.policy === "tool")
+        const adopting = Exit.isSuccess(result) && adoption._tag === "Some" && adoption.value.policy === "tool"
+        output.close(adopting)
+        if (adopting)
           yield* Effect.logInfo("omni adoption", { event: "omni.adoption", pid: child.pid, command: describe(command) })
         // Not adopted: stop here with the Effect-clock escalation; release()'s own stop is then a no-op.
         else yield* Effect.ignore(stop(child, opts.forceKillAfter, command))
@@ -240,6 +248,8 @@ function drain(
   source: AsyncIterator<Item>,
   input: {
     policy: "fail" | "marker"
+    /** Where output goes once the host streams ended, while the tree may still be adopted (R2-4). */
+    overflow?: () => OmniBackground.Sink
     ignored: Record<Kind, boolean>
     gap: (stream: Kind, bytes: number) => void
     ended: () => void
@@ -248,6 +258,7 @@ function drain(
   let seq = 0
   let ended = false
   let discard = false
+  let spill: OmniBackground.Sink | undefined
   let halted = false
   let paused: (() => void) | undefined
   let graceDue = false
@@ -281,7 +292,10 @@ function drain(
   })()
 
   function push(item: Item) {
-    if (discard) return
+    if (discard) {
+      spill?.write(item.data)
+      return
+    }
     const key: Kind = item.stream === "stderr" ? "stderr" : "stdout"
     if (input.ignored[key] || failed[key]) return
     if (item.lostBefore) {
@@ -326,6 +340,7 @@ function drain(
           `fromOmni(${key})`,
           `${key} was not read before the drain grace ended`,
         )
+    if (!force) spill = input.overflow?.()
     resume()
     finish()
   }
@@ -394,8 +409,12 @@ function drain(
       halted = true
       if (paused) expire(true)
     },
-    /** The spawn scope closed: readers are gone; the pump discards from now on and never blocks the child. */
-    close: () => {
+    /**
+     * The spawn scope closed: readers are gone and the pump never blocks the child from now on. An adopted tree's
+     * output goes to the registry's ring; any other is discarded.
+     */
+    close: (adopted: boolean) => {
+      spill = adopted ? (spill ?? input.overflow?.()) : undefined
       resume()
       finish()
     },
