@@ -89,9 +89,11 @@ docker run --rm -v "$PWD":/w -w /w -v omni-cargo:/usr/local/cargo/registry -v om
 
 - **Supervisor tests in Docker** need `--privileged`: the Linux PID-reuse test steers `ns_last_pid`, and it fails
   rather than skips without it.
-- **CI** is one script, `node scripts/ci.mjs` (the fast gate; `--release` adds the release checks), run by
-  GitHub Actions (`.github/workflows/ci.yml`: Ubuntu 24.04, macOS 14 arm64, Windows Server 2022) on pushes to `main`
-  and `bundle/**`, pull requests to `main`, tags `v*` and by hand. `wp/**` never runs. Only the lead pushes.
+- **CI** is one script, `node scripts/ci.mjs` (the fast gate; `--release` adds the release checks). The source of truth
+  is Orchestra's `packages/omni`; Orchestra's `.github/workflows/omni.yml` runs it on Ubuntu 24.04, macOS 14 arm64 and
+  Windows Server 2022 for pull requests and `dev` pushes that touch `packages/omni`, and by hand (`ref`,
+  `test_filter`). `omni-mirror.yml` publishes the folder to the read-only mirror; the mirror's own `ci.yml` runs only on
+  tags and by hand. Only the lead pushes.
 - **First time:** `rustup target add x86_64-pc-windows-msvc --toolchain 1.98.0`.
 - **Disk is limited:** at most 2 heavy Rust builds at once on this machine. Delete your worktree's `target/` when
   you stop.

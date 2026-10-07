@@ -59,7 +59,7 @@ hand. Read its header for the authoritative step list.
 
 - The script stops at the first failing step and prints how long each step took.
 - `TEST_FILTER` is passed to `cargo test`, for example `TEST_FILTER=stopped_arrives node scripts/ci.mjs`. On GitHub,
-  start the workflow by hand with the `test_filter` input. Use it to rerun one suspect test on the OS where it
+  start Orchestra's `omni.yml` by hand with the `ref` and `test_filter` inputs. Use it to rerun one suspect test on the OS where it
   failed, several times, before you change anything.
 
 ## Linux in Docker
@@ -73,7 +73,7 @@ docker run --rm --privileged -v "$PWD":/w -w /w -v omni-cargo:/usr/local/cargo/r
 - `--privileged` is required for the supervisor tests. The Linux PID-reuse test steers `ns_last_pid`, and without
   privilege it fails rather than skips.
 - GitHub's Ubuntu runner also needs unprivileged user namespaces (`kernel.apparmor_restrict_unprivileged_userns=0`).
-  `ci.yml` sets this.
+  `omni.yml` sets this.
 - Use your own target volume per work package (`omni-target-<WP>`), so parallel agents do not share a build.
 
 ## Triage: is the product wrong or the test?

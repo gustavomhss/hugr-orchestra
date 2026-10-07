@@ -216,6 +216,10 @@ import type {
   SessionMessageResponses,
   SessionMessagesErrors,
   SessionMessagesResponses,
+  SessionProcessesErrors,
+  SessionProcessesResponses,
+  SessionProcessStopErrors,
+  SessionProcessStopResponses,
   SessionPromptAsyncErrors,
   SessionPromptAsyncResponses,
   SessionPromptErrors,
@@ -4621,6 +4625,74 @@ export class Session2 extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<SessionUnrevertResponses, SessionUnrevertErrors, ThrowOnError>({
       url: "/session/{sessionID}/unrevert",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List background processes
+   *
+   * List the process trees a session's shell tool left running, each with its live processes and the tail of its output.
+   */
+  public processes<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      directory?: string
+      workspace?: string
+      tail?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "query", key: "tail" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<SessionProcessesResponses, SessionProcessesErrors, ThrowOnError>({
+      url: "/session/{sessionID}/processes",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Stop background process
+   *
+   * Stop one background process tree of a session, with every process it started.
+   */
+  public processStop<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      processID: string
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "path", key: "processID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<SessionProcessStopResponses, SessionProcessStopErrors, ThrowOnError>({
+      url: "/session/{sessionID}/processes/{processID}/stop",
       ...options,
       ...params,
     })
