@@ -15,6 +15,9 @@ an authentication credential or a guarantee that a hosted model will accept a re
   selected-variant headers have been merged. V1 applies it after model headers and
   the `chat.headers` plugin hook, including regular and context-maintenance requests.
   V1 checks the base cost, `tiers`, and legacy `experimentalOver200K` cost.
+  Its config reconstruction preserves catalog tiers and adapts configured
+  `context_over_200k`; the native adapter reapplies the rule after its final
+  provider/model/prepared header merge.
 - Existing `User-Agent` keys are removed case-insensitively before one canonical
   header is set. Other headers and credentials are preserved; input maps are not mutated.
 - AI SDK may append its own version/runtime tokens after the OpenCode prefix.

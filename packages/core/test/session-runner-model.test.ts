@@ -71,6 +71,7 @@ describe("SessionRunnerModel", () => {
         { providerID: "opencode#credential", cost: [free], expected: `opencode/${InstallationVersion}` },
         { providerID: "opencode", cost: [{ ...free, input: 1 }], expected: "orchestra/config" },
         { providerID: "opencode", cost: [{ ...free, output: 1 }], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [{ ...free, input: -1 }], expected: "orchestra/config" },
         { providerID: "opencode", cost: [free, { ...free, input: 1 }], expected: "orchestra/config" },
         { providerID: "opencode", cost: [], expected: "orchestra/config" },
         { providerID: "openrouter", cost: [free], expected: "orchestra/config" },
@@ -82,8 +83,23 @@ describe("SessionRunnerModel", () => {
             providerID: ProviderV2.ID.make(item.providerID),
             cost: item.cost,
             request: { headers: { "user-agent": "orchestra/config", "x-test": "header" }, body: { apiKey: "public" } },
+            variants: [
+              { id: ModelV2.VariantID.make("custom"), headers: { "USER-AGENT": "orchestra/config" }, body: {} },
+            ],
           })
-          const resolved = yield* SessionRunnerModel.fromCatalogModel(catalog)
+          const resolved = yield* SessionRunnerModel.resolve(
+            SessionV2.Info.make({
+              id: SessionV2.ID.make("ses_free_variant"),
+              projectID: ProjectV2.ID.global,
+              title: "test",
+              model: { id: catalog.id, providerID: catalog.providerID, variant: ModelV2.VariantID.make("custom") },
+              cost: 0,
+              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+              time: { created: DateTime.makeUnsafe(0), updated: DateTime.makeUnsafe(0) },
+              location: { directory: AbsolutePath.make("/project") },
+            }),
+            catalog,
+          )
           yield* LLMClient.generate(LLM.request({ model: resolved, prompt: "Hello" })).pipe(
             Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
           )
