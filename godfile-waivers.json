@@ -439,9 +439,9 @@
       "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 16042,
+      "maximumLines": 16192,
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign. Raised for the Relay document, publish and hook routes (WP14).",
-      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for the Relay HttpApi and the relay.hook.decided event",
       "authorizedAt": "2026-10-06"
     },
     "packages/stats/app/src/routes/index.tsx": {

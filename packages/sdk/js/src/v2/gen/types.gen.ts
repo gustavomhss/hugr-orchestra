@@ -82,6 +82,7 @@ export type Event =
   | EventQuestionV2Asked
   | EventQuestionV2Replied
   | EventQuestionV2Rejected
+  | EventRelayHookDecided
   | EventTodoUpdated
   | EventLspUpdated
   | EventPermissionAsked
@@ -1719,6 +1720,39 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "relay.hook.decided"
+        properties: {
+          decisionID: string
+          installID: string
+          version: string
+          sha256: string
+          nodeID: string
+          action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+          trigger: string
+          tool?: string
+          sessionID: string
+          callID?: string
+          assistantMessageID?: string
+          agent?: string
+          subject: string
+          outcome:
+            | "blocked"
+            | "approved"
+            | "rejected"
+            | "cancelled"
+            | "passed"
+            | "failed"
+            | "unavailable"
+            | "repair-required"
+            | "reminded"
+            | "recorded"
+            | "allowed"
+          replier?: string
+          durationMs: number
+        }
+      }
+    | {
+        id: string
         type: "todo.updated"
         properties: {
           sessionID: string
@@ -2010,6 +2044,7 @@ export type GlobalEvent = {
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
     | SyncEventMaestroTaskBound
+    | SyncEventRelayHookDecided
 }
 
 /**
@@ -3442,6 +3477,7 @@ export type V2Event =
   | QuestionV2Asked
   | QuestionV2Replied
   | QuestionV2Rejected
+  | RelayHookDecided
   | TodoUpdated
   | LspUpdated
   | PermissionAsked
@@ -5025,6 +5061,46 @@ export type SyncEventMaestroTaskBound = {
       executionSessionID: string
       authoritySessionID: string
       source: "host" | "user" | "dispatch" | "governed"
+    }
+  }
+}
+
+export type SyncEventRelayHookDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "relay.hook.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      decisionID: string
+      installID: string
+      version: string
+      sha256: string
+      nodeID: string
+      action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+      trigger: string
+      tool?: string
+      sessionID: string
+      callID?: string
+      assistantMessageID?: string
+      agent?: string
+      subject: string
+      outcome:
+        | "blocked"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "passed"
+        | "failed"
+        | "unavailable"
+        | "repair-required"
+        | "reminded"
+        | "recorded"
+        | "allowed"
+      replier?: string
+      durationMs: number
     }
   }
 }
@@ -7416,6 +7492,49 @@ export type QuestionV2Rejected = {
   }
 }
 
+export type RelayHookDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "relay.hook.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    decisionID: string
+    installID: string
+    version: string
+    sha256: string
+    nodeID: string
+    action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+    trigger: string
+    tool?: string
+    sessionID: string
+    callID?: string
+    assistantMessageID?: string
+    agent?: string
+    subject: string
+    outcome:
+      | "blocked"
+      | "approved"
+      | "rejected"
+      | "cancelled"
+      | "passed"
+      | "failed"
+      | "unavailable"
+      | "repair-required"
+      | "reminded"
+      | "recorded"
+      | "allowed"
+    replier?: string
+    durationMs: number
+  }
+}
+
 export type TodoUpdated = {
   id: string
   metadata?: {
@@ -9244,6 +9363,40 @@ export type EventQuestionV2Rejected = {
   properties: {
     sessionID: string
     requestID: string
+  }
+}
+
+export type EventRelayHookDecided = {
+  id: string
+  type: "relay.hook.decided"
+  properties: {
+    decisionID: string
+    installID: string
+    version: string
+    sha256: string
+    nodeID: string
+    action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+    trigger: string
+    tool?: string
+    sessionID: string
+    callID?: string
+    assistantMessageID?: string
+    agent?: string
+    subject: string
+    outcome:
+      | "blocked"
+      | "approved"
+      | "rejected"
+      | "cancelled"
+      | "passed"
+      | "failed"
+      | "unavailable"
+      | "repair-required"
+      | "reminded"
+      | "recorded"
+      | "allowed"
+    replier?: string
+    durationMs: number
   }
 }
 
