@@ -137,6 +137,13 @@ export function RelayDialog(props: {
       ref={dialog}
       class={`mx-dialog${props.wide ? " wide" : ""}`}
       aria-label={props.label ?? props.title}
+      // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
+      // document and cancels the native close. The modal is the top layer, so it takes Escape first.
+      on:keydown={(event) => {
+        if (event.key !== "Escape" || event.defaultPrevented) return
+        event.preventDefault()
+        props.onClose()
+      }}
       onCancel={(event) => {
         event.preventDefault()
         props.onClose()
