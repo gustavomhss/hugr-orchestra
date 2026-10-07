@@ -26,15 +26,15 @@ export async function add(id: string, role: string, directory = path.resolve(imp
   const parents = [...new Set([root, path.dirname(definition), path.dirname(prompt), path.dirname(tree)])]
   for (const parent of parents) await requireCanonicalDirectory(parent)
   const original = await readRegular(index)
-  // Refuse occupied paths, including symlinks and empty trees, before creating any artifact.
-  for (const file of [definition, prompt, tree]) {
-    if (await occupied(file)) throw new Error(`Seat scaffold collision: ${file}`)
-  }
   const lockPath = `${index}.seat-lock`
   const lock = await acquireLock(lockPath)
   const owned: { file: string; stat: Stats }[] = []
   const own = async (file: string) => owned.push({ file, stat: await fs.lstat(file) })
   try {
+    // Refuse occupied paths, including symlinks and empty trees, before creating any artifact.
+    for (const file of [definition, prompt, tree]) {
+      if (await occupied(file)) throw new Error(`Seat scaffold collision: ${file}`)
+    }
     const barrel = original.text
     if (barrel.split("// seat-imports:end").length !== 2 || barrel.split("  // seat-entries:end").length !== 2)
       throw new Error("Seat registry scaffold markers are missing or duplicated")
@@ -151,21 +151,8 @@ async function acquireLock(file: string): Promise<FileHandle> {
       if (error.code !== "EEXIST") throw error
       const lock = await readRegular(file)
       const pid = Number(lock.text.trim())
-      if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Seat scaffold lock has no valid owner: ${file}`)
-      const live = (() => {
-        try {
-          process.kill(pid, 0)
-          return true
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code === "ESRCH") return false
-          throw error
-        }
-      })()
-      if (live) throw new Error(`Seat scaffold lock owner is alive: ${pid}`)
-      const current = await readRegular(file)
-      if (!sameFile(lock.stat, current.stat) || lock.text !== current.text) throw new Error(`Seat scaffold lock changed: ${file}`)
-      await fs.unlink(file)
-      return fs.open(file, constants.O_RDWR | constants.O_CREAT | constants.O_EXCL | (constants.O_NOFOLLOW ?? 0))
+      // A dead PID cannot establish ownership of interrupted artifacts. Only the owner may reconcile them.
+      throw new Error(`Seat scaffold lock already exists; owner review and reconciliation required: ${file} (owner PID: ${Number.isSafeInteger(pid) && pid > 0 ? pid : "unknown"})`)
     })
   try {
     await handle.writeFile(`${process.pid}\n`)

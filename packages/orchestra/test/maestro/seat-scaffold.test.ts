@@ -197,20 +197,49 @@ describe("seat scaffold lock", () => {
     process.kill(process.pid, 0)
     await fs.writeFile(tmp.extra.lock, `${process.pid}\n`)
     const before = await snapshot(tmp.path)
-    await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow("Seat scaffold lock owner is alive")
+    const lock = await fs.lstat(tmp.extra.lock)
+    await expect(add("sample-seat", "role", tmp.extra.root)).rejects.toThrow(`owner PID: ${process.pid}`)
     await absent(tmp.extra.root)
     expect(await snapshot(tmp.path)).toEqual(before)
+    expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
   })
 
-  test("interrupted owner's lock recovers only after observed process exit", async () => {
+  test("dead-PID lock preserves interrupted artifacts under simultaneous attempts", async () => {
     await using tmp = await fixture()
     const child = Bun.spawn([process.execPath, "-e", "process.exit(0)"], { stdout: "pipe", stderr: "pipe" })
     expect(await child.exited).toBe(0)
     expect(() => process.kill(child.pid, 0)).toThrow()
-    await fs.writeFile(tmp.extra.lock, `${child.pid}\n`)
-    await add("sample-seat", "role", tmp.extra.root)
-    expect(await fs.readFile(tmp.extra.index, "utf8")).toContain('import seatSampleSeat from "./sample-seat"')
-    await expect(fs.lstat(tmp.extra.lock)).rejects.toMatchObject({ code: "ENOENT" })
+    const bytes = `${child.pid}\n`
+    await fs.writeFile(tmp.extra.lock, bytes)
+    const artifacts = targets(tmp.extra.root)
+    await fs.writeFile(artifacts[0]!, "// interrupted definition\n")
+    await fs.mkdir(path.join(artifacts[2]!, "skills/sample-seat-work"), { recursive: true })
+    await fs.writeFile(path.join(artifacts[2]!, "skills/sample-seat-work/SKILL.md"), "interrupted skill\n")
+    const before = await snapshot(tmp.path)
+    const lock = await fs.lstat(tmp.extra.lock)
+    await Promise.all(["sample-seat", "other-seat"].map((id) =>
+      expect(add(id, "role", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
+    expect(await snapshot(tmp.path)).toEqual(before)
+    expect(await fs.readFile(tmp.extra.lock, "utf8")).toBe(bytes)
+    expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
+    await absent(tmp.extra.root, "other-seat")
+    await expect(fs.lstat(artifacts[1]!)).rejects.toMatchObject({ code: "ENOENT" })
+  })
+
+  test("empty and malformed locks fail closed under simultaneous attempts", async () => {
+    for (const bytes of ["", "not-a-pid\n"]) {
+      await using tmp = await fixture()
+      await fs.writeFile(tmp.extra.lock, bytes)
+      const before = await snapshot(tmp.path)
+      const lock = await fs.lstat(tmp.extra.lock)
+      await Promise.all(["sample-seat", "other-seat"].map((id) =>
+        expect(add(id, "role", tmp.extra.root)).rejects.toThrow("Seat scaffold lock already exists; owner review and reconciliation required")))
+      expect(await snapshot(tmp.path)).toEqual(before)
+      expect(await fs.readFile(tmp.extra.lock, "utf8")).toBe(bytes)
+      expect(await fs.lstat(tmp.extra.lock)).toMatchObject({ dev: lock.dev, ino: lock.ino })
+      await absent(tmp.extra.root)
+      await absent(tmp.extra.root, "other-seat")
+    }
   })
 })
 
