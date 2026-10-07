@@ -9,26 +9,30 @@ import { BUN, OPENCODE, ROOT, cleanup, fileTree, isolated, kill9, remaining, sup
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
+const METACHARS = ["space", "quote", "ampersand", "pipe", "parentheses", "caret", "percent"] as const
+const HOST_NAMES = ["cmd.exe", ".cmd-tool", "npx-positive", ...METACHARS.map((name) => `npx-metachar/${name}`), "powershell-shell", "ConPTY-close"]
 
 export async function run() {
   authorized()
   if (!win) return record("v8-windows", { pass: false, status: "unrun", reason: "Requires real Windows cmd.exe, PowerShell, npx.cmd and ConPTY" })
   const scratch = isolated("v8", {})
+  const tree = fileTree(scratch.home, 2)
   try {
     const env = { ...deliveryEnv(scratch.env), OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
       ...(process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
       ...(process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
     }
-    const observed = await execute(BUN, [import.meta.filename, "--host", scratch.home, scratch.project], env, ROOT, 120_000)
+    const observed = await execute(BUN, [import.meta.filename, "--host", scratch.home, scratch.project, JSON.stringify(tree)], env, ROOT, 180_000, [scratch.home, tree.nonce])
     const line = observed.stdout.split("\n").find((line) => line.startsWith("V8_HOST_RESULT "))
     const cells = line ? JSON.parse(line.slice("V8_HOST_RESULT ".length)) as Cell[] : []
     cells.push(await powershellBash(scratch, env))
-    return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && cells.length === 7 && cells.every((cell) => cell.pass),
+    const names = [...HOST_NAMES, "powershell-bash"].toSorted()
+    return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(names) && cells.every((cell) => cell.pass),
       status: "executed-windows", cells, evidence: evidence("v8-windows", { home: scratch.home, observed, cells }) })
   } catch (error) {
     return record("v8-windows", { pass: false, error: String(error), evidence: evidence("v8-failure", String(error)) })
   } finally {
-    await cleanup(scratch.home, [])
+    await cleanup(scratch.home, [tree.nonce])
   }
 }
 
@@ -71,7 +75,7 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
   }
 }
 
-async function host(home: string, project: string) {
+async function host(home: string, project: string, tree: ReturnType<typeof fileTree>) {
   if (!win) throw new Error("V8 host requires Windows")
   const { Effect, ChildProcess } = await effectModules()
   const { AppProcess } = await import("../../core/src/process.ts")
@@ -79,7 +83,6 @@ async function host(home: string, project: string) {
   const { PtyOmni } = await import("../../core/src/pty/omni.ts")
   const runtime = await appRuntime()
   const cells: Cell[] = []
-  const tree = fileTree(home, 2)
   const terminal = { proc: undefined as OmniProc | undefined }
   try {
     await runtime.context()
@@ -113,38 +116,69 @@ async function host(home: string, project: string) {
       throw new Error(`V8 offline npm fixture setup failed: ${JSON.stringify(install)}`)
     const npx = await command("npx.cmd", ["--offline", "--no-install", "v8-argv", "plain"])
     cells.push({ name: "npx-positive", ...npx, pass: npx.exitCode === 0 && npx.stdout.trim() === 'V8_ARGV ["plain"]' && npx.spawns === 1 && npx.delegations === 0 })
-    const sentinel = path.join(project, "V8_INJECTED")
-    const payload = ["with space", 'a"b', `x&echo PWNED>${sentinel}`, "a|b", "(a)", "a^b", "%V8_SECRET%"]
     process.env.V8_SECRET = "EXPANSION_IS_A_FAILURE"
-    const beforeMetachar = Omni.snapshot()
-    const metachar = await command("npx.cmd", ["--offline", "--no-install", "v8-argv", ...payload]).then(
-      (result) => ({ ...result, clearRefusal: result.exitCode !== 0 && /invalid.argument|unsupported|not supported|refus/i.test(result.stderr) }),
-      (error: unknown) => ({ error: String(error), clearRefusal: /invalid.argument|unsupported|not supported|refus/i.test(String(error)) }),
-    )
-    const exact = "stdout" in metachar && metachar.exitCode === 0 && metachar.stdout.trim() === `V8_ARGV ${JSON.stringify(payload)}` && metachar.spawns === 1 && metachar.delegations === 0
-    const afterMetachar = Omni.snapshot()
-    cells.push({ name: "npx-metachar", payload, ...metachar, injected: existsSync(sentinel),
-      delegationsAfterAttempt: afterMetachar.delegations - beforeMetachar.delegations,
-      pass: !existsSync(sentinel) && afterMetachar.delegations === beforeMetachar.delegations && (exact || metachar.clearRefusal) })
+    for (const name of METACHARS) {
+      const sentinel = path.join(project, `V8_INJECTED_${name}`)
+      const payload = { space: "with space", quote: 'a"b', ampersand: `x&echo PWNED>${sentinel}`, pipe: `x|echo PWNED>${sentinel}`,
+        parentheses: "(a)", caret: "a^b", percent: "%V8_SECRET%" }[name]
+      const before = Omni.snapshot()
+      const observed = await command("npx.cmd", ["--offline", "--no-install", "v8-argv", payload]).then(
+        (result) => ({ result, refusal: undefined }),
+        (error: unknown) => ({ error: String(error), refusal: typedRefusal(error) }),
+      )
+      const after = Omni.snapshot()
+      const spawns = after.spawns - before.spawns
+      const delegations = after.delegations - before.delegations
+      const exact = "result" in observed && observed.result.exitCode === 0 && observed.result.stdout.trim() === `V8_ARGV ${JSON.stringify([payload])}`
+      cells.push({ name: `npx-metachar/${name}`, payload, ...observed, spawns, delegations, injected: existsSync(sentinel),
+        pass: !existsSync(sentinel) && spawns === 1 && delegations === 0 && (exact || observed.refusal?.code === "INVALID_ARGUMENT") })
+    }
 
     const ps = await command("Write-Output", ["'V8_PS_OK'"], { shell: "powershell.exe" })
     cells.push({ name: "powershell-shell", ...ps, pass: ps.exitCode === 0 && ps.stdout.trim() === "V8_PS_OK" && ps.spawns === 1 && ps.delegations === 0 })
 
-    const backend = await PtyOmni.load()
+    const binding = await Omni.load()
     const before = Omni.snapshot()
-    const proc = backend.spawn("cmd.exe", ["/d", "/q"], { name: "xterm-256color", cwd: project, env: Omni.childEnv(), cols: 120, rows: 30 })
+    const native = binding.spawn("cmd.exe", ["/d", "/q"], { pty: { cols: 120, rows: 30 }, cwd: project, inheritEnv: false, env: Omni.childEnv() })
+    const output = { text: "", ended: false, exited: false, stopped: false, error: "", eofMs: 0, exitMs: 0, stopMs: 0, started: 0 }
+    const eof = Promise.withResolvers<void>()
+    const exited = Promise.withResolvers<void>()
+    const observedOutput = { async *[Symbol.asyncIterator]() {
+      try {
+        for await (const chunk of native.output) yield chunk
+        output.ended = true
+        output.eofMs = performance.now() - output.started
+        eof.resolve()
+      } catch (error) {
+        output.error = String(error)
+        eof.resolve()
+        throw error
+      }
+    } }
+    // Observe the native consumer's real EOF while exercising Orchestra's actual adapter; no second consumer.
+    const proc = PtyOmni.adapt(new Proxy(native, { get(target, key) {
+      if (key === "output") return observedOutput
+      if (key === "stop") return async (options?: { graceMs?: number }) => {
+        const result = await target.stop(options).catch((error: unknown) => { output.error = String(error); throw error })
+        output.stopped = true
+        output.stopMs = performance.now() - output.started
+        return result
+      }
+      const value = Reflect.get(target, key, target)
+      return typeof value === "function" ? value.bind(target) : value
+    } }))
     terminal.proc = proc
-    const output = { text: "", exited: false }
     proc.onData((data) => (output.text += data))
-    proc.onExit(() => (output.exited = true))
+    proc.onExit(() => { output.exited = true; output.exitMs = performance.now() - output.started; exited.resolve() })
     proc.write(tree.line + "\r")
     await until(20_000, "ConPTY nonce tree alive", async () => (await remaining(tree.nonce)) === tree.size ? true : undefined)
     const control = supervised(tree.nonce)
     const started = performance.now()
+    output.started = started
     const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
     try {
-      await Promise.race([proc.stop(), new Promise<never>((_, reject) => {
-        timer.id = setTimeout(() => reject(new Error("ConPTY close watchdog expired after 6500 ms")), 6500)
+      await Promise.race([Promise.all([proc.stop(), eof.promise, exited.promise]), new Promise<never>((_, reject) => {
+        timer.id = setTimeout(() => reject(new Error("ConPTY stop + EOF + onExit watchdog expired after 6000 ms")), 6000)
       })])
     } finally {
       clearTimeout(timer.id)
@@ -153,8 +187,10 @@ async function host(home: string, project: string) {
     const left = await remaining(tree.nonce)
     const reachable = await proc.child.processes()
     const after = Omni.snapshot()
-    cells.push({ name: "ConPTY-close", ms, left, reachable, supervised: control, output: output.text,
-      pass: control && ms <= 6000 && left === 0 && reachable.length === 0 && after.spawns - before.spawns === 1 && after.delegations === before.delegations })
+    cells.push({ name: "ConPTY-close", ms, left, reachable, supervised: control, output,
+      boundary: "native EOF observation through PtyOmni.adapt", spawns: after.spawns - before.spawns, nativePid: native.pid,
+      pass: control && ms <= 6000 && output.ended && output.exited && output.stopped && !output.error &&
+        output.eofMs <= 6000 && output.exitMs <= 6000 && output.stopMs <= 6000 && left === 0 && reachable.length === 0 && after.delegations === before.delegations })
   } catch (error) {
     cells.push({ name: "host-error", pass: false, error: String(error) })
   } finally {
@@ -163,11 +199,23 @@ async function host(home: string, project: string) {
     await cleanup(home, [tree.nonce])
   }
   console.log(`V8_HOST_RESULT ${JSON.stringify(cells)}`)
-  process.exit(cells.length === 6 && cells.every((cell) => cell.pass) ? 0 : 1)
+  process.exit(JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(HOST_NAMES.toSorted()) && cells.every((cell) => cell.pass) ? 0 : 1)
+}
+
+function typedRefusal(error: unknown): { code: "INVALID_ARGUMENT"; message: string } | undefined {
+  const seen = new Set<unknown>()
+  const visit = (value: unknown): { code: "INVALID_ARGUMENT"; message: string } | undefined => {
+    if (!value || typeof value !== "object" || seen.has(value)) return
+    seen.add(value)
+    if ("name" in value && value.name === "OmniError" && "code" in value && value.code === "INVALID_ARGUMENT" && "message" in value && typeof value.message === "string")
+      return { code: "INVALID_ARGUMENT", message: value.message }
+    return ("cause" in value ? visit(value.cause) : undefined) ?? ("reason" in value ? visit(value.reason) : undefined)
+  }
+  return visit(error)
 }
 
 if (import.meta.main) {
-  if (process.argv.includes("--host")) await host(process.argv[3], process.argv[4])
+  if (process.argv.includes("--host")) await host(process.argv[3], process.argv[4], JSON.parse(process.argv[5]) as ReturnType<typeof fileTree>)
   else {
     const result = await run()
     process.exit(result.pass ? 0 : 1)

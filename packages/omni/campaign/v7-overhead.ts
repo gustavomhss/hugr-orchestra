@@ -56,8 +56,8 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean } = 
       spawns: rows.filter((row) => row.arm === arm).reduce((sum, row) => sum + row.sample.spawns, 0),
       delegations: rows.filter((row) => row.arm === arm).reduce((sum, row) => sum + row.sample.delegations, 0),
     }]))
-    if (options.controlOnly) return record("v7-overhead", {
-      pass: true, status: "instrumentation-ready", timingKpiRun: false, counts,
+    if (options.controlOnly) return record("v7-readiness", {
+      pass: false, ready: true, status: "acceptance-unrun", timingKpiRun: false, counts,
       evidence: evidence("v7-control", rows.map((row) => ({ ...row, sample: { ...row.sample, ms: undefined } }))),
     })
     const p50 = (arm: string) => {
@@ -71,7 +71,7 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean } = 
     return record("v7-overhead", { pass: omni <= limit, timingKpiRun: true, warmup, counts,
       p50Ms: { legacy: base, omni, limit }, evidence: evidence("v7-samples", rows) })
   } catch (error) {
-    return record("v7-overhead", { pass: false, timingKpiRun: false, error: String(error),
+    return record(options.controlOnly ? "v7-readiness" : "v7-overhead", { pass: false, ready: false, timingKpiRun: false, error: String(error),
       evidence: evidence("v7-failure", { rows, hosts: hosts.map((host) => host.out()) }) })
   } finally {
     for (const host of hosts) kill9(host.pid)
@@ -114,6 +114,6 @@ if (import.meta.main) {
   if (process.argv.includes("--host")) await host()
   else {
     const result = await run({ controlOnly: process.argv.includes("--control"), quiet: process.argv.includes("--quiet") })
-    process.exit(result.pass ? 0 : 1)
+    process.exit(result.pass || "ready" in result && result.ready ? 0 : 1)
   }
 }

@@ -2,7 +2,7 @@
 import { spawn } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { LOGS, until, verdict } from "./lib.ts"
+import { LOGS, kill9, until, verdict, win } from "./lib.ts"
 
 export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {
   return { ...verdict(name, result), ...result }
@@ -33,8 +33,8 @@ export function evidence(name: string, value: unknown) {
   return file
 }
 
-/** Measures process start through stdio close; a watchdog kill is never a successful cell. */
-export async function execute(bin: string, args: string[], env: Record<string, string>, cwd: string, deadlineMs: number) {
+/** Measures stdio close normally; watchdog resolves independently of descendants retaining those pipes. */
+export async function execute(bin: string, args: string[], env: Record<string, string>, cwd: string, deadlineMs: number, nonces: string[] = []) {
   const started = performance.now()
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
   const state = { stdout: "", stderr: "", timedOut: false, error: "", firstOutputMs: undefined as number | undefined }
@@ -46,19 +46,54 @@ export async function execute(bin: string, args: string[], env: Record<string, s
     state.firstOutputMs ??= performance.now() - started
     state.stderr += chunk
   })
-  const timer = setTimeout(() => {
-    state.timedOut = true
-    proc.kill("SIGKILL")
-  }, deadlineMs)
+  const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
   try {
     const exit = await new Promise<{ code: number | null; signal: string | null }>((resolve) => {
-      proc.once("error", (error) => (state.error = String(error)))
+      proc.once("error", (error) => {
+        state.error = String(error)
+        resolve({ code: null, signal: null })
+      })
       proc.once("close", (code, signal) => resolve({ code, signal }))
+      timer.id = setTimeout(() => {
+        state.timedOut = true
+        proc.kill("SIGKILL")
+        proc.stdout.destroy()
+        proc.stderr.destroy()
+        resolve({ code: proc.exitCode, signal: proc.signalCode })
+      }, deadlineMs)
     })
-    return { ...state, ...exit, ms: performance.now() - started }
+    const observed = { ...state, ...exit, ms: performance.now() - started, pid: proc.pid }
+    clearTimeout(timer.id)
+    // Only nonce-bearing trees owned by this invocation. Inventory itself uses a bounded async child.
+    const cleanup = state.timedOut && nonces.length ? await cleanupOwned(nonces, env, cwd) : undefined
+    return { ...observed, ...(cleanup ? { cleanup } : {}) }
   } finally {
-    clearTimeout(timer)
+    clearTimeout(timer.id)
   }
+}
+
+export async function owned(nonces: string[], env: Record<string, string>, cwd: string): Promise<{ pid: number; args: string }[]> {
+  if (!nonces.length || nonces.some((nonce) => !nonce)) throw new Error("Owned inventory requires nonempty nonce markers")
+  const result = await execute(win ? "powershell.exe" : "ps", win
+    ? ["-NoProfile", "-NonInteractive", "-Command", "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"]
+    : ["-axww", "-o", "pid=,args="], env, cwd, 2000)
+  if (result.timedOut || result.error || result.code !== 0) throw new Error(`Owned inventory failed: ${JSON.stringify(result)}`)
+  const rows = win
+    ? (JSON.parse(result.stdout) as { ProcessId: number; CommandLine: string | null }[])
+      .map((row) => ({ pid: row.ProcessId, args: row.CommandLine ?? "" }))
+    : result.stdout.split("\n").flatMap((line) => {
+      const match = line.trim().match(/^(\d+)\s+(.+)$/)
+      return match ? [{ pid: Number(match[1]), args: match[2] }] : []
+    })
+  if (!rows.some((row) => row.pid === process.pid)) throw new Error("Owned inventory cannot see the harness process; refusing an empty-tree verdict")
+  return rows.filter((row) => row.pid !== process.pid && row.pid !== result.pid && nonces.some((nonce) => row.args.includes(nonce)))
+}
+
+async function cleanupOwned(nonces: string[], env: Record<string, string>, cwd: string) {
+  return owned(nonces, env, cwd).then(async (rows) => {
+    rows.forEach((row) => kill9(row.pid))
+    return { killed: rows, left: await owned(nonces, env, cwd) }
+  }).catch((error: unknown) => ({ error: String(error) }))
 }
 
 /** Unlike a returned-handle-only starter, kills a host that never reports readiness. */
