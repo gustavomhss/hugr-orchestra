@@ -20,6 +20,10 @@ on:
         description: "Branch, tag or commit to run the gate on (default: the dispatched ref)"
         type: string
         default: ""
+      test_filter:
+        description: "Passed to cargo test (rerun one suspect test)"
+        type: string
+        default: ""
 
 concurrency:
   # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
@@ -42,6 +46,7 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       CARGO_INCREMENTAL: "0"
+      TEST_FILTER: ${{ inputs.test_filter }}
     defaults:
       run:
         shell: bash

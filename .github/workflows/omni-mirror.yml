@@ -4,8 +4,8 @@ name: omni-mirror
 # (packages/omni/skills/omni-release/references/mirror.md).
 # - A push to dev that touches packages/omni: `git subtree split --prefix=packages/omni` gives the mirror's history
 #   (the import commit's subtree trailers make it walk only the commits since the import). If the mirror's main is
-#   behind the split, `node scripts/ci.mjs` runs once on Linux in a checkout of the split, which proves that the mirror
-#   builds on its own, and the split is pushed to the mirror's main, fast-forward only. Never forced: a mirror main
+#   behind the split, the split is pushed to the mirror's main, fast-forward only. The gate is not run again here: the
+#   split's tree is packages/omni byte for byte, and omni.yml runs its gate on the same push on three OSes. Never forced: a mirror main
 #   that is not an ancestor of the split turns the job red.
 # - A tag omni-v<version>: the tagged commit's split is pushed as the mirror's tag v<version>, once that split is on the
 #   mirror's main (the dev run above puts it there). An existing tag is never moved.
@@ -97,38 +97,6 @@ jobs:
             echo "::error::not a fast-forward: the mirror has commits Orchestra does not; port them to packages/omni (mirror main $main, split $split)"
             exit 1
           fi
-
-      - name: Checkout the split
-        if: steps.split.outputs.action == 'push'
-        run: git worktree add --detach "$GITHUB_WORKSPACE/_mirror" "${{ steps.split.outputs.sha }}"
-
-      - name: Setup Node
-        if: steps.split.outputs.action == 'push'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "22"
-
-      - name: Rust toolchain (rust-toolchain.toml)
-        if: steps.split.outputs.action == 'push'
-        working-directory: _mirror
-        run: rustup show active-toolchain || rustup toolchain install
-
-      - name: Rust cache
-        if: steps.split.outputs.action == 'push'
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: _mirror -> target
-          shared-key: omni-mirror
-
-      - name: Linux PID-reuse test needs unprivileged user namespaces
-        if: steps.split.outputs.action == 'push'
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      # The mirror builds and passes its gate on its own: nothing outside packages/omni is reachable from here.
-      - name: Gate (the split, standalone)
-        if: steps.split.outputs.action == 'push'
-        working-directory: _mirror
-        run: node scripts/ci.mjs
 
       - name: Push to the mirror's main (fast-forward only)
         if: steps.split.outputs.action == 'push'
