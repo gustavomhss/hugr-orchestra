@@ -98,9 +98,10 @@ function install(dirs: Dirs, snapshot: { readonly name: string }) {
 }
 
 const written = { type: "text", value: "written" }
+// The HOLD text comes from Denied itself, so a remediation line for native codes is included as the model sees it.
 const hold = (reason: string, detail?: string) => ({
   type: "error",
-  value: `Tool safety HOLD: ${reason}${detail === undefined ? "" : `. ${detail}`}`,
+  value: new ToolSafety.Denied(detail === undefined ? { reason } : { reason, detail }).message,
 })
 const rejected = new ToolSafety.Denied({ reason: "approval-native-rejected" })
 const AFTER = " The tool already ran; its effect was not undone."
