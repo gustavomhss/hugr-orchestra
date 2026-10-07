@@ -332,7 +332,11 @@ export const ProvidersLoginCommand = effectCmd({
       }
       yield* Prompt.log.info(`Running \`${wellknown.auth.command.join(" ")}\``)
       const abort = new AbortController()
-      const proc = Process.spawn(wellknown.auth.command, { stdout: "pipe", stderr: "inherit", abort: abort.signal })
+      const proc = Process.interactive(wellknown.auth.command, {
+        stdout: "pipe",
+        stderr: "inherit",
+        abort: abort.signal,
+      })
       if (!proc.stdout) {
         yield* Prompt.log.error("Failed")
         yield* Prompt.outro("Done")
