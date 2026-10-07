@@ -110,6 +110,21 @@ export const protectedStrings: Protected[] = [
   },
   { pattern: /OPENCODE_API_KEY\b/g, reason: "Zen's own API key variable, as published by models.dev" },
   {
+    pattern: /opencode\/\$\{InstallationVersion\}/g,
+    paths: /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+    reason: "Zen free-model transport User-Agent, preserved by dev PR #91",
+  },
+  {
+    pattern: /opencode(?:#credential|-test)\b/g,
+    paths: /^packages\/core\/test\/session-runner-model\.test\.ts$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+    reason: "Zen provider-family fixtures for credential and free-model header eligibility",
+  },
+  {
+    pattern: /`opencode(?:\/<InstallationVersion>)?`/g,
+    paths: /^specs\/v2\/provider-model\.md$/,
+    reason: "documented Zen provider id and compatibility User-Agent",
+  },
+  {
     pattern: /\bx-opencode-(?:project|session|request|client)\b/g,
     reason: "Zen request headers read by Zen's backend",
   },

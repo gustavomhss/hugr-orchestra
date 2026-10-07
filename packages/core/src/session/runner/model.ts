@@ -11,6 +11,7 @@ import { produce } from "immer"
 import { Catalog } from "../../catalog"
 import { Credential } from "../../credential"
 import { Integration } from "../../integration"
+import { InstallationHeaders } from "../../installation/headers"
 import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import { SessionSchema } from "../schema"
@@ -97,7 +98,7 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute) => {
   return route.with({
     provider: model.providerID,
     endpoint: model.api.url === undefined ? undefined : { baseURL: model.api.url },
-    headers: model.request.headers,
+    headers: InstallationHeaders.forFreeModel(model.providerID, model.cost, model.request.headers),
     http: { body: httpBody },
     limits: { context: model.limit.context, output: model.limit.output },
   })

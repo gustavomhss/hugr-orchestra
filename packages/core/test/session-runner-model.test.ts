@@ -1,10 +1,11 @@
 import { describe, expect } from "bun:test"
 import { LLM } from "@orchestra/llm"
-import { LLMClient } from "@orchestra/llm/route"
-import { DateTime, Effect } from "effect"
+import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
+import { DateTime, Effect, Layer } from "effect"
 import { Headers } from "effect/unstable/http"
 import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
+import { InstallationVersion } from "@orchestra/core/installation/version"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ProjectV2 } from "@orchestra/core/project"
@@ -42,6 +43,74 @@ const model = (api: Api, variants: ModelV2.Info["variants"] = []) =>
   })
 
 describe("SessionRunnerModel", () => {
+  it.live("sends the OpenCode Zen user agent for free models after header overrides", () =>
+    Effect.gen(function* () {
+      const captured: Array<{ userAgent: string | null; custom: string | null; auth: string | null }> = []
+      const server = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          Bun.serve({
+            port: 0,
+            fetch: (request) => {
+              captured.push({
+                userAgent: request.headers.get("user-agent"),
+                custom: request.headers.get("x-test"),
+                auth: request.headers.get("authorization"),
+              })
+              return new Response(
+                'data: {"id":"test","choices":[{"index":0,"delta":{"content":"Hello"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n',
+                { headers: { "Content-Type": "text/event-stream" } },
+              )
+            },
+          }),
+        ),
+        (server) => Effect.promise(() => server.stop(true)),
+      )
+      const free = { input: 0, output: 0, cache: { read: 0, write: 0 } }
+      const cases = [
+        { providerID: "opencode", cost: [free], expected: `opencode/${InstallationVersion}` },
+        { providerID: "opencode#credential", cost: [free], expected: `opencode/${InstallationVersion}` },
+        { providerID: "opencode", cost: [{ ...free, input: 1 }], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [{ ...free, output: 1 }], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [{ ...free, input: -1 }], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [free, { ...free, input: 1 }], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [], expected: "orchestra/config" },
+        { providerID: "openrouter", cost: [free], expected: "orchestra/config" },
+      ]
+      yield* Effect.forEach(cases, (item) =>
+        Effect.gen(function* () {
+          const catalog = ModelV2.Info.make({
+            ...model({ type: "aisdk", package: "@ai-sdk/openai-compatible", url: `${server.url.origin}/v1` }),
+            providerID: ProviderV2.ID.make(item.providerID),
+            cost: item.cost,
+            request: { headers: { "user-agent": "orchestra/config", "x-test": "header" }, body: { apiKey: "public" } },
+            variants: [
+              { id: ModelV2.VariantID.make("custom"), headers: { "USER-AGENT": "orchestra/config" }, body: {} },
+            ],
+          })
+          const resolved = yield* SessionRunnerModel.resolve(
+            SessionV2.Info.make({
+              id: SessionV2.ID.make("ses_free_variant"),
+              projectID: ProjectV2.ID.global,
+              title: "test",
+              model: { id: catalog.id, providerID: catalog.providerID, variant: ModelV2.VariantID.make("custom") },
+              cost: 0,
+              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+              time: { created: DateTime.makeUnsafe(0), updated: DateTime.makeUnsafe(0) },
+              location: { directory: AbsolutePath.make("/project") },
+            }),
+            catalog,
+          )
+          yield* LLMClient.generate(LLM.request({ model: resolved, prompt: "Hello" })).pipe(
+            Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
+          )
+          expect(captured.at(-1)).toEqual({ userAgent: item.expected, custom: "header", auth: "Bearer public" })
+          expect(catalog.request.headers["user-agent"]).toBe("orchestra/config")
+        }),
+      )
+      expect(captured).toHaveLength(cases.length)
+    }),
+  )
+
   it.effect("maps catalog OpenAI AI SDK models into native Responses routes", () =>
     Effect.gen(function* () {
       const resolved = yield* SessionRunnerModel.fromCatalogModel(
