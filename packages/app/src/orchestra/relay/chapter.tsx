@@ -1,4 +1,4 @@
-import { getFilename } from "@opencode-ai/core/util/path"
+import { getFilename } from "@orchestra/core/util/path"
 import { useLocation, useNavigate } from "@solidjs/router"
 import { createEffect, createMemo, Match, on, onCleanup, Switch } from "solid-js"
 import { useGlobal } from "@/context/global"

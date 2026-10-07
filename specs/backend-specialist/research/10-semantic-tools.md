@@ -4,7 +4,7 @@ Research date: **2026-10-03**. Primary documentation and source inspection only.
 
 ## Verdict
 
-**Adopt semantic evidence contracts; adapt symbol-oriented workflows; keep Atlas as shared structural Knowledge/Memory foundation.** The backend specialist remains independent OpenCode/Orchestra backend plugin. Maestro consumes same capabilities through optional integration.
+**Adopt semantic evidence contracts; adapt symbol-oriented workflows; keep Atlas as shared structural Knowledge/Memory foundation.** The backend specialist remains independent Orchestra backend plugin. Maestro consumes same capabilities through optional integration.
 
 Highest value: distinguish binding identity, syntax shape, textual occurrence, and unknown coverage. Existing host already exposes definition, references, hover, document/workspace symbols, implementation, and call hierarchy operations. Repackaging those as another generic LSP toolkit adds little. The backend specialist should compose existing capabilities into bounded, revision-bound evidence and edit plans. [O1]
 
@@ -143,7 +143,7 @@ Rule tests supply positive `invalid` cases, negative `valid` cases, and snapshot
 ### Ownership boundaries
 
 - **Atlas:** durable structural/Knowledge/Memory foundation, symbol relationships, imported SCIP provenance and shared evidence pointers.
-- **Host OpenCode/Orchestra:** existing LSP/search/read/edit services, workspace state, permissions, process lifecycle, build/test execution.
+- **Host Orchestra:** existing LSP/search/read/edit services, workspace state, permissions, process lifecycle, build/test execution.
 - **The backend specialist:** task-specific query composition, evidence grading, bounds, impact dossier, revision-bound edit plan, validation record. Session-local handles/cursors can be ephemeral; reuse Atlas/host durability for retained evidence.
 - **Maestro:** optional consumer of same plugin result contract; not required orchestration/runtime owner.
 
@@ -254,7 +254,7 @@ External citations above link primary sources. Blob links pin exact reviewed rev
 
 ### Local host source
 
-**O1:** Git object `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0:packages/opencode/src/tool/lsp.ts`, inspected via `git show` in supplied metadata-only worktree. Operation list and execution path establish existing primitive surface, not plugin API stability or provider completeness.
+**O1:** Git object `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0:packages/orchestra/src/tool/lsp.ts`, inspected via `git show` in supplied metadata-only worktree. Operation list and execution path establish existing primitive surface, not plugin API stability or provider completeness.
 
 ### Local architecture evidence
 

@@ -1,4 +1,4 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { useDialog } from "@orchestra/ui/context/dialog"
 import { useSettingsDialog } from "@/components/settings-dialog"
 import { createMemo, createResource, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"

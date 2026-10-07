@@ -1,5 +1,5 @@
 {
-  "name": "@opencode-ai/atlas-boundary",
+  "name": "@orchestra/atlas-boundary",
   "version": "0.0.0",
   "type": "module",
   "private": true,

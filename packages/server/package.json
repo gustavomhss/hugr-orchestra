@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode-ai/server",
+  "name": "@orchestra/server",
   "version": "1.18.27",
   "private": true,
   "type": "module",
@@ -12,10 +12,10 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@opencode-ai/core": "workspace:*",
-    "@opencode-ai/protocol": "workspace:*",
-    "@opencode-ai/relay": "workspace:*",
-    "@opencode-ai/schema": "workspace:*",
+    "@orchestra/core": "workspace:*",
+    "@orchestra/protocol": "workspace:*",
+    "@orchestra/relay": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

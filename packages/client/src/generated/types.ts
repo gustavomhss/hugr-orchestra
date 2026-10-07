@@ -1,6 +1,6 @@
 import type { SessionEventEncoded } from "../wire"
 
-import type { OpenCodeEventEncoded } from "@opencode-ai/protocol/groups/event"
+import type { OrchestraEventEncoded } from "@orchestra/protocol/groups/event"
 
 export type JsonValue =
   | null
@@ -2398,7 +2398,7 @@ export type BehaviorsSetOutput = {
   readonly data: ReadonlyArray<{ readonly id: string; readonly name: string; readonly instructions: string }>
 }
 
-export type EventsSubscribeOutput = OpenCodeEventEncoded
+export type EventsSubscribeOutput = OrchestraEventEncoded
 
 export type PtysListInput = {
   readonly location?: {

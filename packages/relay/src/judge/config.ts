@@ -46,7 +46,7 @@ export interface Interface {
   readonly judge: (input: Input) => Effect.Effect<JudgeBallot.Response>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/relay/Judge") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/relay/Judge") {}
 
 // Replaces `pick_backend`: the backend comes from config alone, so a provider key in the environment can neither turn
 // the stub into an API call nor become the API's key.

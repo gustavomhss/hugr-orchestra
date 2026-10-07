@@ -7,7 +7,7 @@ import {
   createProbeFailureGate,
   runAddableProbePlan,
   wslDistroReady,
-  wslOpencodeAction,
+  wslOrchestraAction,
   wslRuntimeRetryable,
 } from "./settings-model"
 import type { WslServersState } from "./types"
@@ -20,7 +20,7 @@ function readyState(input: Partial<WslServersState> = {}): WslServersState {
     installed: [],
     online: [],
     distroProbes: {},
-    opencodeChecks: {},
+    orchestraChecks: {},
     pendingRestart: false,
     servers: [],
     job: null,
@@ -55,9 +55,9 @@ describe("WSL server settings presentation", () => {
   })
 
   test("offers install and update only when the server needs attention", () => {
-    expect(wslOpencodeAction(undefined)).toBeUndefined()
+    expect(wslOrchestraAction(undefined)).toBeUndefined()
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
         resolvedPath: null,
         version: null,
@@ -67,9 +67,9 @@ describe("WSL server settings presentation", () => {
       }),
     ).toBe("wsl.onboarding.installServer")
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
-        resolvedPath: "/usr/local/bin/opencode",
+        resolvedPath: "/usr/local/bin/orchestra",
         version: "1.2.2",
         expectedVersion: "1.2.3",
         matchesDesktop: false,
@@ -77,9 +77,9 @@ describe("WSL server settings presentation", () => {
       }),
     ).toBe("wsl.onboarding.updateServer")
     expect(
-      wslOpencodeAction({
+      wslOrchestraAction({
         distro: "Debian",
-        resolvedPath: "/usr/local/bin/opencode",
+        resolvedPath: "/usr/local/bin/orchestra",
         version: "1.2.3",
         expectedVersion: "1.2.3",
         matchesDesktop: true,
@@ -205,10 +205,10 @@ describe("WSL server settings presentation", () => {
         distroProbes: {
           Debian: { name: "Debian", canExecute: true, hasBash: true, error: null },
         },
-        opencodeChecks: {
+        orchestraChecks: {
           Debian: {
             distro: "Debian",
-            resolvedPath: "/home/me/.opencode/bin/opencode",
+            resolvedPath: "/home/me/.orchestra/bin/orchestra",
             version: null,
             expectedVersion: "1.2.3",
             matchesDesktop: null,

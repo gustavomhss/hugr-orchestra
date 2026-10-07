@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
 import { Schema } from "effect"
-import { RelayArm } from "@opencode-ai/schema/relay-arm"
-import { RelayHook } from "@opencode-ai/schema/relay-hook"
-import { RelayLedger } from "@opencode-ai/schema/relay-ledger"
-import { RelaySprint } from "@opencode-ai/schema/relay-sprint"
+import { RelayArm } from "@orchestra/schema/relay-arm"
+import { RelayHook } from "@orchestra/schema/relay-hook"
+import { RelayLedger } from "@orchestra/schema/relay-ledger"
+import { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 // The frozen WP0 contracts decode what the Python Relay actually wrote. Exact shape is proven with
 // `onExcessProperty: "error"` wherever the schema does not pin its own option.

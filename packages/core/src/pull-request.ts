@@ -2,7 +2,7 @@ export * as PullRequest from "./pull-request"
 
 import { Context, Effect, Layer, Option, Predicate, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
-import { PullRequest } from "@opencode-ai/schema/pull-request"
+import { PullRequest } from "@orchestra/schema/pull-request"
 import { makeLocationNode } from "./effect/app-node"
 import { Location } from "./location"
 import { AppProcess } from "./process"
@@ -31,7 +31,7 @@ export interface Interface {
   readonly create: (input: CreateInput) => Effect.Effect<Created, HostError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/PullRequest") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/PullRequest") {}
 
 // Remotes match by exact host name, so a repository's remote URL can never point the CLI's sign-in at
 // another server. Self-hosted GitHub Enterprise and GitLab instances are not matched.

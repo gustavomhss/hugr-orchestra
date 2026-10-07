@@ -1,4 +1,4 @@
-import type { ToolPart } from "@opencode-ai/sdk/v2"
+import type { ToolPart } from "@orchestra/sdk/v2"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import {
   detectTestRunner,

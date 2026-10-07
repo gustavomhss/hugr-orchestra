@@ -27,7 +27,7 @@ Committed `ScopeProposal` is `RESOLVED` for initial draft and plan intent has no
 ```text
 admissionRecordId    durable PlanIntent source
 scopeProposalId       immutable catalog-backed canonical scope proposal
-sessionId            durable OpenCode Session identity
+sessionId            durable Orchestra Session identity
 planIntent           goal, facts, proposals, unknowns, uncertainty, orientation reference
 methodVersion        version of this contract
 ```
@@ -132,7 +132,7 @@ Any stakeholder answer or changed context after v1 enters `revise-plan`; v1 rema
 
 | System   | Seam                                                                                                     |
 | -------- | -------------------------------------------------------------------------------------------------------- |
-| OpenCode | durable Session/message identity, proposed-plan UI, immutable revision records, Task/child-Session fence |
+| Orchestra | durable Session/message identity, proposed-plan UI, immutable revision records, Task/child-Session fence |
 | Atlas    | no direct call/write; only session orientation previously bound at intake                                |
 
 ## Acceptance

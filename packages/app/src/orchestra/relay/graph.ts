@@ -1,4 +1,4 @@
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayKind } from "./client"
 
 // The editable graph behind the canvas. Documents connect nodes by name; the canvas works by ID so a rename

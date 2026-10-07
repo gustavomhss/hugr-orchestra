@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
-import { RelayHook } from "@opencode-ai/schema/relay-hook"
+import { RelayHook } from "@orchestra/schema/relay-hook"
 import { HookEvaluate } from "../src/hook/evaluate"
 
 // WP9: pure hook evaluation. Every install is decoded through the frozen `RelayHook.Install` schema, so the graphs here

@@ -11,7 +11,7 @@ import { CommandGroup } from "./groups/command"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
-import type { Definition } from "@opencode-ai/schema/event"
+import type { Definition } from "@orchestra/schema/event"
 import { AgentGroup } from "./groups/agent"
 import { HealthGroup } from "./groups/health"
 import { PtyGroup } from "./groups/pty"
@@ -66,7 +66,7 @@ const makeApiFromGroup = <
     .add(ScheduleGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
-        title: "opencode HttpApi",
+        title: "orchestra HttpApi",
         version: "0.0.1",
         description: "Experimental HttpApi surface for selected instance routes.",
       }),

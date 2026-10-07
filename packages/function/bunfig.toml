@@ -1,3 +1,0 @@
-[test]
-# Tests run on GitHub Actions; see AGENTS.md (Testing).
-preload = ["../../script/test-guard.ts"]

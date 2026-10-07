@@ -408,25 +408,25 @@
       "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
       "authorizedAt": "2026-10-06"
     },
-    "packages/opencode/src/provider/provider.ts": {
+    "packages/orchestra/src/provider/provider.ts": {
       "maximumLines": 1940,
       "reason": "Human waiver: pre-existing file over Godfile cap.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
-    "packages/opencode/src/session/prompt.ts": {
+    "packages/orchestra/src/session/prompt.ts": {
       "maximumLines": 1543,
       "reason": "Governed lifecycle integration extends pre-existing prompt surface.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-09"
     },
-    "packages/opencode/src/session/session.ts": {
+    "packages/orchestra/src/session/session.ts": {
       "maximumLines": 1002,
       "reason": "Human waiver: pre-existing file over Godfile cap.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
-    "packages/opencode/test/tool/task.test.ts": {
+    "packages/orchestra/test/tool/task.test.ts": {
       "maximumLines": 1188,
       "reason": "Governed lifecycle and stable-resume coverage extends pre-existing task suite.",
       "authorizedBy": "stakeholder",
@@ -443,12 +443,6 @@
       "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request, schedule routes and relay.hook.decided event.",
       "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for the Relay HttpApi and the relay.hook.decided event",
       "authorizedAt": "2026-10-06"
-    },
-    "packages/stats/app/src/routes/index.tsx": {
-      "maximumLines": 1596,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
     }
   }
 }

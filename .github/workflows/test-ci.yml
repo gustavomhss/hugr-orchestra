@@ -78,11 +78,11 @@ jobs:
       - name: Configure git identity
         run: |
           git config --global user.email "bot@opencode.ai"
-          git config --global user.name "opencode"
+          git config --global user.name "orchestra"
 
       - name: Run tests
         env:
-          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
           PACKAGE: ${{ steps.request.outputs.package }}
           RUNNER: ${{ steps.request.outputs.runner }}
         run: |

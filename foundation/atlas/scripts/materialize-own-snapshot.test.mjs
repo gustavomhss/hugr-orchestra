@@ -31,12 +31,12 @@ export function exportOwnSnapshot(input) {
 }
 export function materializeStaticOwnSnapshot(snapshot) {
   const skills = snapshot.units.map(({ unit }) => ({
-    path: \`.opencode/skills/own/\${Buffer.from(unit.id).toString('base64url')}/SKILL.md\`,
+    path: \`.orchestra/skills/own/\${Buffer.from(unit.id).toString('base64url')}/SKILL.md\`,
     content: \`skill:\${unit.id}:\${snapshot.snapshot}\\n\`,
   }));
   return {
     skills,
-    coverage: { path: '.opencode/skills/own/OWN-COVERAGE.json', content: JSON.stringify({ units: snapshot.units.map((entry) => entry.unit.id).sort() }) + '\\n' },
+    coverage: { path: '.orchestra/skills/own/OWN-COVERAGE.json', content: JSON.stringify({ units: snapshot.units.map((entry) => entry.unit.id).sort() }) + '\\n' },
   };
 }
 `
@@ -113,11 +113,11 @@ test("clean write materializes reviewed snapshot and full skill tree", (t) => {
   assert.equal(result.status, 0, result.stderr)
   assert.equal(readFileSync(join(fx.root, "OWN-SNAPSHOT.json"), "utf8"), `${JSON.stringify(value, null, 2)}\n`)
   assert.equal(
-    readFileSync(join(fx.root, ".opencode/skills/own/dW5pdC9vbmU/SKILL.md"), "utf8"),
+    readFileSync(join(fx.root, ".orchestra/skills/own/dW5pdC9vbmU/SKILL.md"), "utf8"),
     "skill:unit/one:reviewed-v1\n",
   )
   assert.equal(
-    readFileSync(join(fx.root, ".opencode/skills/own/OWN-COVERAGE.json"), "utf8"),
+    readFileSync(join(fx.root, ".orchestra/skills/own/OWN-COVERAGE.json"), "utf8"),
     '{"units":["unit/one"]}\n',
   )
 })
@@ -125,21 +125,21 @@ test("clean write materializes reviewed snapshot and full skill tree", (t) => {
 test("review export rejects stale packs and preserves prior outputs", (t) => {
   const fx = fixture()
   t.after(() => rmSync(fx.root, { recursive: true, force: true }))
-  mkdirSync(join(fx.root, ".opencode/skills/own/old"), { recursive: true })
+  mkdirSync(join(fx.root, ".orchestra/skills/own/old"), { recursive: true })
   writeFileSync(join(fx.root, "OWN-SNAPSHOT.json"), "prior snapshot bytes\n")
-  writeFileSync(join(fx.root, ".opencode/skills/own/old/SKILL.md"), "prior skill bytes\n")
+  writeFileSync(join(fx.root, ".orchestra/skills/own/old/SKILL.md"), "prior skill bytes\n")
   const value = snapshot(fx)
   value.units[0].pack.freshness = "STALE"
   writeSnapshot(fx.root, "reviewed.json", value)
   const beforeSnapshot = readFileSync(join(fx.root, "OWN-SNAPSHOT.json"))
-  const beforeTree = tree(fx.root, ".opencode/skills/own")
+  const beforeTree = tree(fx.root, ".orchestra/skills/own")
 
   const result = run(fx.root, ["reviewed.json"])
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /reviewed snapshot export rejected: packs must be fresh/)
   assert.deepEqual(readFileSync(join(fx.root, "OWN-SNAPSHOT.json")), beforeSnapshot)
-  assert.deepEqual(tree(fx.root, ".opencode/skills/own"), beforeTree)
+  assert.deepEqual(tree(fx.root, ".orchestra/skills/own"), beforeTree)
 })
 
 test("second install rename failure restores prior snapshot and skill tree", (t) => {
@@ -181,12 +181,12 @@ test("second install rename failure restores prior snapshot and skill tree", (t)
 test("source mutation refuses stale input and preserves prior output bytes", (t) => {
   const fx = fixture()
   t.after(() => rmSync(fx.root, { recursive: true, force: true }))
-  mkdirSync(join(fx.root, ".opencode/skills/own/old"), { recursive: true })
+  mkdirSync(join(fx.root, ".orchestra/skills/own/old"), { recursive: true })
   writeFileSync(join(fx.root, "OWN-SNAPSHOT.json"), "prior snapshot bytes\n")
-  writeFileSync(join(fx.root, ".opencode/skills/own/old/SKILL.md"), "prior skill bytes\n")
+  writeFileSync(join(fx.root, ".orchestra/skills/own/old/SKILL.md"), "prior skill bytes\n")
   writeSnapshot(fx.root, "reviewed.json", snapshot(fx))
   const beforeSnapshot = readFileSync(join(fx.root, "OWN-SNAPSHOT.json"))
-  const beforeTree = tree(fx.root, ".opencode/skills/own")
+  const beforeTree = tree(fx.root, ".orchestra/skills/own")
   writeFileSync(join(fx.root, "src/unit.txt"), "mutated after review\n")
 
   const result = run(fx.root, ["reviewed.json"])
@@ -194,7 +194,7 @@ test("source mutation refuses stale input and preserves prior output bytes", (t)
   assert.equal(result.status, 1)
   assert.match(result.stderr, /current source blob mismatch: unit\/one -> src\/unit\.txt/)
   assert.deepEqual(readFileSync(join(fx.root, "OWN-SNAPSHOT.json")), beforeSnapshot)
-  assert.deepEqual(tree(fx.root, ".opencode/skills/own"), beforeTree)
+  assert.deepEqual(tree(fx.root, ".orchestra/skills/own"), beforeTree)
 })
 
 test("symlinked source anchor is refused before hashing", (t) => {
@@ -235,7 +235,7 @@ test("replacement removes obsolete skills", (t) => {
 
   assert.equal(result.status, 0, result.stderr)
   assert.deepEqual(
-    tree(fx.root, ".opencode/skills/own")
+    tree(fx.root, ".orchestra/skills/own")
       .map(([path]) => path)
       .sort(),
     ["OWN-COVERAGE.json", "dW5pdC9vbmU/SKILL.md"],

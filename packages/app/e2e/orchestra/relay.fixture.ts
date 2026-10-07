@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import type { Page, Route } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 // The Relay routes as the server answers them after WP14 (server.relay.{document,publish,hook}), for the Workflows and
 // Hooks specs. Workflow documents are the shipped profiles seeded the way AuthoringStore.seedProfiles projects them;
@@ -436,19 +436,19 @@ export async function setupRelay(page: Page, input: { scheme?: "dark" | "light";
         [server]: [{ worktree: directory, expanded: true }],
       }
       const layout = JSON.stringify({ home: { selection: { server, directory } } })
-      localStorage.setItem("opencode.settings.dat:defaultServerUrl", server)
+      localStorage.setItem("orchestra.settings.dat:defaultServerUrl", server)
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem("settings.v3", JSON.stringify({ general }))
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
-      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [server], projects }))
-      localStorage.setItem("opencode.global.dat:layout", layout)
-      localStorage.setItem(`opencode.global.dat:${server}\0layout`, layout)
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", scheme)
+      localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [server], projects }))
+      localStorage.setItem("orchestra.global.dat:layout", layout)
+      localStorage.setItem(`orchestra.global.dat:${server}\0layout`, layout)
     },
     { server, directory, scheme: input.scheme ?? "dark" },
   )
   const time = { created: 1, updated: 1 }
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: "v2",
     eventRetry: 60_000,
     provider: { all: [], connected: [], default: {} },

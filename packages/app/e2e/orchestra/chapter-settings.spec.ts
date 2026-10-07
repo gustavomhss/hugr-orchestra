@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/settings"
@@ -264,7 +264,7 @@ test("providers choose the route for new turns and models toggle their composer 
   await toggle.click()
   await expect(toggle).toHaveAttribute("aria-checked", "false")
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem("opencode.global.dat:model") ?? ""))
+    .poll(() => page.evaluate(() => localStorage.getItem("orchestra.global.dat:model") ?? ""))
     .toMatch(/"providerID":"openai","modelID":"gpt-5","visibility":"hide"/)
 
   const search = view.getByRole("searchbox", { name: "Search models" })
@@ -467,15 +467,15 @@ async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({ projects: { local: [{ worktree: directory, expanded: true }] } }),
       )
-      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     { server, directory },
   )
   const model = (id: string, name: string, context: number) => ({ id, name, limit: { context, output: 32_000 } })
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol,
     provider: {
       all: [

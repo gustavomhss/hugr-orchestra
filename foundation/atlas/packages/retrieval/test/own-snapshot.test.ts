@@ -53,7 +53,7 @@ describe("static Own snapshot", () => {
     expect(snapshot).toBeDefined()
     const output = materializeStaticOwnSnapshot(snapshot!)
     expect(output.skills).toHaveLength(1)
-    expect(output.coverage.path).toBe(".opencode/skills/own/OWN-COVERAGE.json")
+    expect(output.coverage.path).toBe(".orchestra/skills/own/OWN-COVERAGE.json")
     expect(
       verifyStaticOwnSnapshot(
         snapshot!,

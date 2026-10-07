@@ -38,7 +38,7 @@ async function conformance(scenario: "allow" | "deny" | "inputs" | "brief") {
         ...process.env, MAESTRO_CONFORMANCE_ROOT: root,
         MAESTRO_BRIEF_ASSEMBLY: scenario === "brief" || scenario === "inputs" ? assembly : "",
         MAESTRO_CONFORMANCE_DIRECTORY: f.context.directory, MAESTRO_CONFORMANCE_STATE: f.context.stateDirectory,
-        OPENCODE_DB: ":memory:", OPENCODE_TEST_HOME: f.base,
+        ORCHESTRA_DB: ":memory:", ORCHESTRA_TEST_HOME: f.base,
         XDG_DATA_HOME: join(f.base, "xdg-data"), XDG_CONFIG_HOME: join(f.base, "xdg-config"),
         XDG_STATE_HOME: join(f.base, "xdg-state"), XDG_CACHE_HOME: join(f.base, "xdg-cache"),
       },

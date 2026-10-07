@@ -1,7 +1,7 @@
 export * as ConfigExternalPlugin from "./external"
 
-import type { Plugin as EffectPlugin } from "@opencode-ai/plugin/v2/effect"
-import type { Plugin as PromisePlugin } from "@opencode-ai/plugin/v2/promise"
+import type { Plugin as EffectPlugin } from "@orchestra/plugin/v2/effect"
+import type { Plugin as PromisePlugin } from "@orchestra/plugin/v2/promise"
 import { Effect, Schema } from "effect"
 import path from "path"
 import { fileURLToPath, pathToFileURL } from "url"
@@ -11,6 +11,7 @@ import { Location } from "../../location"
 import { Npm } from "../../npm"
 import { define } from "../../plugin/internal"
 import { PluginPromise } from "../../plugin/promise"
+import { PluginSdkRuntime } from "../../plugin/sdk-runtime"
 
 const PluginModule = Schema.Struct({
   default: Schema.Union([
@@ -77,6 +78,7 @@ export const Plugin = define({
             : (yield* npm.add(ref.package)).entrypoint
           if (!entrypoint) return
 
+          yield* Effect.promise(() => PluginSdkRuntime.install())
           const mod = yield* Effect.promise(() => import(entrypoint))
           const value = (yield* Schema.decodeUnknownEffect(PluginModule)(mod)).default
           const plugin = "effect" in value ? value : PluginPromise.fromPromise(value)

@@ -1,5 +1,5 @@
-import { oc2Theme } from "@opencode-ai/ui/theme/default-themes"
-import { resolveThemeVariant } from "@opencode-ai/ui/theme/resolve"
+import { oc2Theme } from "@orchestra/ui/theme/default-themes"
+import { resolveThemeVariant } from "@orchestra/ui/theme/resolve"
 import { COLOR_LITERAL, contrast, extreme, formatColor, fromLch, over, parseColor, toLch, type Rgba } from "./color"
 import type { PaletteRoles } from "./convert"
 import { colorTokens, hasColor, paletteRules, parseCss, type CssNode, type Declaration } from "./css"

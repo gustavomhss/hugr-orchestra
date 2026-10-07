@@ -67,7 +67,7 @@ survive container stop/start and desktop relaunch.
 
 The Electron main process owns Docker commands, persistent ownership metadata,
 the Linux-package file picker, endpoint credentials, and certificate pinning.
-The renderer receives only the DTOs exported by `@opencode-ai/app/app-dock-linux`.
+The renderer receives only the DTOs exported by `@orchestra/app/app-dock-linux`.
 It cannot choose host paths or submit shell commands. Initial package picking
 supports `.deb`; the guest terminal remains available for native Linux package
 management. App enumeration and launching use Gio desktop application metadata.

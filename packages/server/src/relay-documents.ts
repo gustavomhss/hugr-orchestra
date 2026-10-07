@@ -3,9 +3,9 @@ export * as RelayDocuments from "./relay-documents"
 import path from "path"
 import { createHash } from "crypto"
 import { Context, Effect, Layer, RcMap, Result } from "effect"
-import { Location } from "@opencode-ai/core/location"
-import { Relay } from "@opencode-ai/core/relay"
-import { SkillV2 } from "@opencode-ai/core/skill"
+import { Location } from "@orchestra/core/location"
+import { Relay } from "@orchestra/core/relay"
+import { SkillV2 } from "@orchestra/core/skill"
 import {
   RelayConflictError,
   RelayInvalidError,
@@ -13,11 +13,11 @@ import {
   RelayUnavailableError,
   type RelayDocumentCreate,
   type RelayDocumentView,
-} from "@opencode-ai/protocol/groups/relay-document"
-import { AuthoringGraph } from "@opencode-ai/relay/authoring/graph"
-import { AuthoringHook } from "@opencode-ai/relay/authoring/hook"
-import { AuthoringStore } from "@opencode-ai/relay/authoring/store"
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
+} from "@orchestra/protocol/groups/relay-document"
+import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
+import { AuthoringHook } from "@orchestra/relay/authoring/hook"
+import { AuthoringStore } from "@orchestra/relay/authoring/store"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { response } from "./location"
 
 // The authoring application behind the Relay document, publish and hook routes (relay_authoring/application.py): the
@@ -31,7 +31,7 @@ export interface Interface {
   ) => Effect.Effect<A, E, R | Relay.Service | Location.Service>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/server/RelayDocuments") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/server/RelayDocuments") {}
 
 // One store per project, opened on first use and closed once idle. The shipped profiles are seeded the first time a
 // project's store opens in this process, as Python seeds them when its server starts, so a deleted profile document

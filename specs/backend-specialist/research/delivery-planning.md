@@ -5,9 +5,9 @@ Date: 2026-10-04. Owner requests a complete, parallelizable execution plan from 
 ## Verified planning bases
 
 - Orchestra worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin`, HEAD and local `fork/dev` ref `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; `specs/backend-specialist/` is intentional untracked work. Local `dev` and `origin/dev` are different refs and are not interchangeable with this baseline.
-- Canonical Atlas: `/Users/gustavoschneiter/Documents/HuGR/atlas`, HEAD `b319723d5c5c86a45ad362386d8c0583ed3a10f4`; existing untracked `.opencode/` preserved.
+- Canonical Atlas: `/Users/gustavoschneiter/Documents/HuGR/atlas`, HEAD `b319723d5c5c86a45ad362386d8c0583ed3a10f4`; existing untracked `.orchestra/` preserved.
 - Canonical Composer: `/Users/gustavoschneiter/Documents/HuGR/skill-001-fastapi-production`, HEAD `df04cf8f9c9c4307d22b6447d513b05b94c08572`.
-- Host package reports `opencode` 1.18.27; inspected public V1 system-transform hook lacks selected-agent input. Source and transport compatibility must be checked, not inferred from a package version.
+- Host package reports `orchestra` 1.18.27; inspected public V1 system-transform hook lacks selected-agent input. Source and transport compatibility must be checked, not inferred from a package version.
 
 ## Frozen product intent
 

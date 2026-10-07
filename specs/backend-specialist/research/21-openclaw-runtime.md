@@ -2,7 +2,7 @@
 
 Research date: 2026-10-03. Static source analysis; tests inspected, **not executed**. Scope: OpenClaw runtime slice for the backend specialist architecture research. Hermes comparison belongs to separate research.
 
-**Recommendation:** transfer identity, durable admission, owner fencing, cancellation, and completion contracts through native OpenCode/Orchestra capabilities. The backend specialist remains independent plugin; optional Maestro uses same contracts; shared Atlas holds knowledge/memory with native source provenance. Only specialist public labels are configurable; Maestro remains fixed; native IDs stay stable. Host owns execution, scheduling, transcript, and input persistence.
+**Recommendation:** transfer identity, durable admission, owner fencing, cancellation, and completion contracts through native Orchestra capabilities. The backend specialist remains independent plugin; optional Maestro uses same contracts; shared Atlas holds knowledge/memory with native source provenance. Only specialist public labels are configurable; Maestro remains fixed; native IDs stay stable. Host owns execution, scheduling, transcript, and input persistence.
 
 ## Version verdict — official “2.0” positively identified
 

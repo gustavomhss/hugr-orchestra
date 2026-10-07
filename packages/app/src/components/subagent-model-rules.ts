@@ -14,7 +14,7 @@ export function wildcardMatch(str: string, pattern: string): boolean {
 const TASK = "task"
 
 /** True when the session carries model-scoped task rules. Mirrors the
-    detection in TaskTool (packages/opencode/src/tool/task.ts) exactly:
+    detection in TaskTool (packages/orchestra/src/tool/task.ts) exactly:
     permission === "task" with a "/" in the pattern. */
 export function hasModelScope(rules: readonly ModelRule[]): boolean {
   return rules.some((rule) => rule.permission === TASK && rule.pattern.includes("/"))

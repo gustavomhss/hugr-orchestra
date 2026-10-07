@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { fixture, pageMessages } from "./session-timeline.fixture"
 import { trackPageErrors, expectNoSmokeErrors } from "../utils/errors"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { APP_READY_TIMEOUT, expectAppVisible, expectSessionTitle } from "../utils/waits"
 
 const forbiddenText = ["Load details", "Show earlier steps"]
@@ -35,7 +35,7 @@ test.describe("smoke: session timeline", () => {
     // The history page is held until the visible rows are measured instead of racing the 3s delay: frame speed
     // varies (headless glass repaints are slow), and the oracle needs the prepend to land after the measurement.
     const history = Promise.withResolvers<void>()
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -95,7 +95,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("preserves the timeline gap above the composer", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -121,7 +121,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("paints cached session tabs at the latest message", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -132,7 +132,7 @@ test.describe("smoke: session timeline", () => {
     await page.addInitScript(
       ({ dirBase64, sourceID, targetID }) => {
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
@@ -247,7 +247,7 @@ test.describe("smoke: session timeline", () => {
   })
 
   test("paints a cold session tab at the latest message", async ({ page }) => {
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -258,7 +258,7 @@ test.describe("smoke: session timeline", () => {
     await page.addInitScript(
       ({ dirBase64, sourceID, targetID }) => {
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
@@ -326,7 +326,7 @@ test.describe("smoke: session timeline", () => {
 
   test("renders seeded timeline in order while paging through history", async ({ page }) => {
     const errors = trackPageErrors(page)
-    await mockOpenCodeServer(page, {
+    await mockOrchestraServer(page, {
       sessions: fixture.sessions,
       provider: fixture.provider,
       directory: fixture.directory,
@@ -374,7 +374,7 @@ async function configureSmokePage(page: Page, directory: string) {
 
   await page.addInitScript((directory) => {
     localStorage.setItem(
-      "opencode.global.dat:server",
+      "orchestra.global.dat:server",
       JSON.stringify({
         projects: {
           local: [{ worktree: directory, expanded: true }],

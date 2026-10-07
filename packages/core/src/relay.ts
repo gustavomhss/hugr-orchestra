@@ -6,19 +6,19 @@ import { chmodSync, linkSync, lstatSync, mkdirSync, readFileSync, rmdirSync, rmS
 import which from "which"
 import { Clock, Context, Duration, Effect, Layer, Option, Redacted, Result, Schema, Semaphore } from "effect"
 import { ChildProcess } from "effect/unstable/process"
-import { RelayArm } from "@opencode-ai/schema/relay-arm"
-import { ArmCreate } from "@opencode-ai/relay/arm/create"
-import { ArmEvaluate } from "@opencode-ai/relay/arm/evaluate"
-import { ArmLoad } from "@opencode-ai/relay/arm/load"
-import { ArmState } from "@opencode-ai/relay/arm/state"
-import { RelayAudit } from "@opencode-ai/relay/audit"
-import { GateCheck } from "@opencode-ai/relay/gate/check"
-import { GateControl } from "@opencode-ai/relay/gate/control"
-import { GateShell } from "@opencode-ai/relay/gate/shell"
-import { RelayJson } from "@opencode-ai/relay/json"
-import { JudgeConfig } from "@opencode-ai/relay/judge/config"
-import { LedgerChain } from "@opencode-ai/relay/ledger/chain"
-import { LedgerRead } from "@opencode-ai/relay/ledger/read"
+import { RelayArm } from "@orchestra/schema/relay-arm"
+import { ArmCreate } from "@orchestra/relay/arm/create"
+import { ArmEvaluate } from "@orchestra/relay/arm/evaluate"
+import { ArmLoad } from "@orchestra/relay/arm/load"
+import { ArmState } from "@orchestra/relay/arm/state"
+import { RelayAudit } from "@orchestra/relay/audit"
+import { GateCheck } from "@orchestra/relay/gate/check"
+import { GateControl } from "@orchestra/relay/gate/control"
+import { GateShell } from "@orchestra/relay/gate/shell"
+import { RelayJson } from "@orchestra/relay/json"
+import { JudgeConfig } from "@orchestra/relay/judge/config"
+import { LedgerChain } from "@orchestra/relay/ledger/chain"
+import { LedgerRead } from "@orchestra/relay/ledger/read"
 import { Config } from "./config"
 import { ConfigRelay } from "./config/relay"
 import { makeLocationNode } from "./effect/app-node"
@@ -109,7 +109,7 @@ export interface Interface {
   ) => Effect.Effect<LedgerChain.Appended, LedgerChain.AppendError | RelayJson.EncodeError | Unavailable>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/Relay") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/Relay") {}
 
 const layer = Layer.effect(
   Service,

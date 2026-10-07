@@ -23,7 +23,7 @@ function server(respond: (request: Request) => Response) {
     },
     { preconnect: globalThis.fetch.preconnect },
   )
-  const http = { url: "http://127.0.0.1:4096", username: "opencode", password: "secret" }
+  const http = { url: "http://127.0.0.1:4096", username: "orchestra", password: "secret" }
   const client = createRelayClient({ sdk: createSdkForServer({ server: http, fetch: fetcher, directory }), directory })
   const runs = createRunClient({ server: http, directory, fetch: (url, init) => fetcher(url, init) })
   return { client, runs, requests }
@@ -61,7 +61,7 @@ describe("authoring routes through the generated client", () => {
     const url = new URL(request.url)
     expect([request.method, url.pathname]).toEqual(["GET", "/api/relay/document"])
     expect(url.searchParams.get("location[directory]")).toBe(directory)
-    expect(request.headers.get("authorization")).toBe(`Basic ${btoa("opencode:secret")}`)
+    expect(request.headers.get("authorization")).toBe(`Basic ${btoa("orchestra:secret")}`)
     expect([document.description, document.nodeGroups, document.publishedCounter]).toEqual(["", [], undefined])
     expect(document.updated).toBe(Date.parse("2026-10-06T12:30:00Z"))
   })

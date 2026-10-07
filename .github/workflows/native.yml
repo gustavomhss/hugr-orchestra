@@ -121,6 +121,9 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Prewarm production Linux runtime image
+        run: docker build --progress=plain --tag orchestra-linux-prewarm:ci resources/linux-runtime
+
       - name: Runtime cycle with real Docker
         env:
           APP_DOCK_RUNTIME_INTEGRATION: "1"

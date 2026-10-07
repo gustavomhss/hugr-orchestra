@@ -64,9 +64,9 @@ export function preferAppEnv(userDataPath: string) {
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
     ...shellEnv,
-    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
-    OPENCODE_CLIENT: "desktop",
+    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    ORCHESTRA_CLIENT: "desktop",
     XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
   })
   return shellEnv
@@ -91,7 +91,7 @@ export async function spawnLocalServer(
       // repository copy, since the bundled server cannot locate it from its own path.
       ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
         ? join(process.resourcesPath, "playbooks")
-        : resolve(outDir, "../../../opencode/playbooks"),
+        : resolve(outDir, "../../../orchestra/playbooks"),
     },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
@@ -234,7 +234,7 @@ export async function checkHealth(url: string, password?: string | null): Promis
 
   const headers = new Headers()
   if (password) {
-    const auth = Buffer.from(`opencode:${password}`).toString("base64")
+    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
     headers.set("authorization", `Basic ${auth}`)
   }
 

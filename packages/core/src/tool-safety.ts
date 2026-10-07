@@ -11,7 +11,7 @@ import { AppProcess } from "./process"
 import { Global } from "./global"
 import { LayerNode } from "./effect/layer-node"
 import { OutputInspector } from "./output-inspector"
-import type { RelayHook } from "@opencode-ai/schema/relay-hook"
+import type { RelayHook } from "@orchestra/schema/relay-hook"
 import { ToolSafetyHooks } from "./tool-safety-hooks"
 
 /** Host-bound preferences, never decoded from tool arguments or inherited environment waivers. */
@@ -70,7 +70,7 @@ export type ShellFact = {
 }
 
 /** Per-invocation cell that ToolSafetySandbox.wrap fills and ToolSafety.run attaches to its observation. */
-export const ShellReport = Context.Reference<{ fact?: ShellFact } | undefined>("@opencode/ToolSafety/ShellReport", {
+export const ShellReport = Context.Reference<{ fact?: ShellFact } | undefined>("@orchestra/ToolSafety/ShellReport", {
   defaultValue: () => undefined,
 })
 
@@ -88,7 +88,7 @@ export const shellFact = (sessionID: string) => shells.get(sessionID)
 const worse = (current: ShellFact | undefined, next: ShellFact) =>
   current?.shellWrites === "unenforced" ? current : next
 
-export const RuntimeProfile = Context.Reference<Profile | undefined>("@opencode/ToolSafety/Profile", {
+export const RuntimeProfile = Context.Reference<Profile | undefined>("@orchestra/ToolSafety/Profile", {
   defaultValue: () => undefined,
 })
 
@@ -99,7 +99,7 @@ export const NativeContext = Context.Reference<
       readonly projectID?: string
     }
   | undefined
->("@opencode/ToolSafety/NativeContext", { defaultValue: () => undefined })
+>("@orchestra/ToolSafety/NativeContext", { defaultValue: () => undefined })
 
 export type Approval = {
   readonly action: string
@@ -116,10 +116,10 @@ export const NativeHost = Context.Reference<
       readonly ask: (request: Approval) => Effect.Effect<void, Denied>
     }
   | undefined
->("@opencode/ToolSafety/NativeHost", { defaultValue: () => undefined })
+>("@orchestra/ToolSafety/NativeHost", { defaultValue: () => undefined })
 
 export const RuntimeProfileLoader = Context.Reference<(() => Effect.Effect<Profile | undefined, Denied>) | undefined>(
-  "@opencode/ToolSafety/ProfileLoader",
+  "@orchestra/ToolSafety/ProfileLoader",
   { defaultValue: () => undefined },
 )
 
@@ -143,7 +143,7 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied
  * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for V1
  * the session tools boundary inside the native host's wrapper, which a Promise boundary hides from it.
  */
-export const HookedCall = Context.Reference<string | undefined>("@opencode/ToolSafety/HookedCall", {
+export const HookedCall = Context.Reference<string | undefined>("@orchestra/ToolSafety/HookedCall", {
   defaultValue: () => undefined,
 })
 
@@ -315,7 +315,7 @@ export interface Interface {
   readonly session: (input: SessionEvent) => Effect.Effect<void, Denied>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/ToolSafety") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/ToolSafety") {}
 
 const record = (value: unknown): Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {}

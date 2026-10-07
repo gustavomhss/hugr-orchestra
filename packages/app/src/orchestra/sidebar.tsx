@@ -1,8 +1,8 @@
 import { DropdownMenu } from "@kobalte/core/dropdown-menu"
-import { useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog, DialogBody, DialogHeader, DialogTitle, DialogTitleGroup } from "@opencode-ai/ui/v2/dialog-v2"
-import { Icon } from "@opencode-ai/ui/v2/icon"
-import { ProjectAvatar } from "@opencode-ai/ui/v2/project-avatar-v2"
+import { useDialog } from "@orchestra/ui/context/dialog"
+import { Dialog, DialogBody, DialogHeader, DialogTitle, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
+import { Icon } from "@orchestra/ui/v2/icon"
+import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import {

@@ -37,7 +37,7 @@ export interface Interface {
   readonly run: (input: RunInput) => Effect.Effect<RunResult, Unavailable>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/relay/Shell") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/relay/Shell") {}
 
 export interface GitResult {
   readonly exitCode: number
@@ -49,4 +49,4 @@ export interface GitInterface {
   readonly run: (cwd: string, args: ReadonlyArray<string>) => Effect.Effect<GitResult, Unavailable>
 }
 
-export class Git extends Context.Service<Git, GitInterface>()("@opencode/relay/Git") {}
+export class Git extends Context.Service<Git, GitInterface>()("@orchestra/relay/Git") {}

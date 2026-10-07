@@ -4,8 +4,8 @@ import path from "node:path"
 import { mkdirSync, rmdirSync } from "node:fs"
 import { readFile, writeFile } from "node:fs/promises"
 import { Context, Effect, Option, Redacted, Schema } from "effect"
-import { RelayArm } from "@opencode-ai/schema/relay-arm"
-import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
+import { RelayArm } from "@orchestra/schema/relay-arm"
+import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 // Arm state on disk (WP5): file names, the position rule, release normalization and the run lock.
 
@@ -16,7 +16,7 @@ export interface StoreInterface {
   readonly ledgerKey: Option.Option<Redacted.Redacted<string>>
 }
 
-export class Store extends Context.Service<Store, StoreInterface>()("@opencode/relay/ArmStore") {}
+export class Store extends Context.Service<Store, StoreInterface>()("@orchestra/relay/ArmStore") {}
 
 export class Busy extends Schema.TaggedErrorClass<Busy>()("ArmState.Busy", { lock: Schema.String }) {}
 

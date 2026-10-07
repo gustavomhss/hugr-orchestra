@@ -4,21 +4,21 @@ import path from "node:path"
 import { createHash } from "node:crypto"
 import { lstat } from "node:fs/promises"
 import { Effect, Exit, Layer, Option, Schema } from "effect"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Global } from "@opencode-ai/core/global"
-import type { EventV2 } from "@opencode-ai/core/event"
-import { Location } from "@opencode-ai/core/location"
-import { LocationMutation } from "@opencode-ai/core/location-mutation"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
-import { Tool } from "@opencode-ai/core/tool/tool"
-import { Tools } from "@opencode-ai/core/tool/tools"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
-import { ToolSafety } from "@opencode-ai/core/tool-safety"
-import { ToolSafetyProfile } from "@opencode-ai/core/tool-safety-profile"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AgentV2 } from "@orchestra/core/agent"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import type { EventV2 } from "@orchestra/core/event"
+import { Location } from "@orchestra/core/location"
+import { LocationMutation } from "@orchestra/core/location-mutation"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { Tool } from "@orchestra/core/tool/tool"
+import { Tools } from "@orchestra/core/tool/tools"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 
 export const names = {
   catalog: "maestro_arsenal_catalog",
@@ -122,7 +122,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
       : Effect.fail(new Tool.Failure({ message: "Maestro Arsenal requires native Maestro identity." }))
   const load = () =>
     Effect.tryPromise({
-      try: () => import("@opencode-ai/maestro-arsenal"),
+      try: () => import("@orchestra/maestro-arsenal"),
       catch: () => new Tool.Failure({ message: "Maestro Arsenal package is unavailable." }),
     })
   const selected = (name: string) =>
@@ -400,7 +400,7 @@ export function makeProfileLoader(
     )
     if (cache.stamp !== stamp) {
       const { Arsenal } = yield* Effect.tryPromise({
-        try: () => import("@opencode-ai/maestro-arsenal"),
+        try: () => import("@orchestra/maestro-arsenal"),
         catch: () => new ToolSafety.Denied({ reason: "profile-native-snapshot-unavailable" }),
       })
       const snapshot = yield* Effect.tryPromise({
