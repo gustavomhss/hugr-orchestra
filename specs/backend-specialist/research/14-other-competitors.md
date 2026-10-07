@@ -6,7 +6,7 @@ Research date: **2026-10-03**. Research-only; acceptance tests below are propose
 
 Deep selection: **Amp, Factory Droid, Augment/Auggie, Zed Agent, Cline**. Best transfer: spend context deliberately, preserve source links, make capabilities visible in native UI, make correction and recovery cheap. Seven mechanisms below. Selection reflects the backend specialist fit and inspectable mechanisms, not a product-performance ranking.
 
-The backend specialist remains **OpenCode/Orchestra plugin, independent of Maestro**. Atlas owns shared Knowledge/Memory. Reuse host sessions, tools, permissions, model access, diffs and recovery. Configurable names sit above stable IDs. Recommendations describe conceptual behavior, not verified backend specialist/Atlas API availability.
+The backend specialist remains **Orchestra plugin, independent of Maestro**. Atlas owns shared Knowledge/Memory. Reuse host sessions, tools, permissions, model access, diffs and recovery. Configurable names sit above stable IDs. Recommendations describe conceptual behavior, not verified backend specialist/Atlas API availability.
 
 ### Evidence labels
 

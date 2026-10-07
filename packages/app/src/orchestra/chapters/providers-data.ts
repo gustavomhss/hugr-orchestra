@@ -1,4 +1,4 @@
-import { Integration } from "@opencode-ai/schema/integration"
+import { Integration } from "@orchestra/schema/integration"
 import { Option, Schema } from "effect"
 
 // Pure projection of server provider data into the mock's provider cards, popular rows and picker rows.

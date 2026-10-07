@@ -8,7 +8,7 @@ type Locks = { request: <T>(name: string, options: { ifAvailable?: boolean }, ru
 
 // A running claim older than this belongs to a tab that died mid-dispatch; the slot may be retried.
 export const CLAIM_TTL = 120_000
-const PREFIX = "opencode.orchestra.schedule.claim."
+const PREFIX = "orchestra.schedule.claim."
 const decode = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
 export function createClaims(storage: ClaimStorage, locks: Locks | undefined) {

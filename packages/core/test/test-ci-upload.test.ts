@@ -102,13 +102,13 @@ describe("test:ci rate limit", () => {
   })
 })
 
-// The files of packages/opencode the tests below pretend exist; test/cli is a directory.
+// The files of packages/orchestra the tests below pretend exist; test/cli is a directory.
 const files = new Set(["a.test.ts", "test/cli/run/permission.shared.test.ts", "test/cli/tui/editor-context.test.tsx"])
 const isFile = (file: string) => files.has(file)
 
 describe("test:ci test paths", () => {
   test("passes an existing file as ./<file>, nested or not", () => {
-    expect(testPaths("opencode", ["a.test.ts", "test/cli/run/permission.shared.test.ts"], isFile)).toEqual([
+    expect(testPaths("orchestra", ["a.test.ts", "test/cli/run/permission.shared.test.ts"], isFile)).toEqual([
       "./a.test.ts",
       "./test/cli/run/permission.shared.test.ts",
     ])
@@ -117,7 +117,7 @@ describe("test:ci test paths", () => {
   test("keeps the caller's order", () => {
     expect(
       testPaths(
-        "opencode",
+        "orchestra",
         ["test/cli/tui/editor-context.test.tsx", "test/cli/run/permission.shared.test.ts", "a.test.ts"],
         isFile,
       ),
@@ -125,7 +125,7 @@ describe("test:ci test paths", () => {
   })
 
   test("keeps paths that are already explicit", () => {
-    expect(testPaths("opencode", ["./a.test.ts", "./missing.test.ts", "/abs/a.test.ts"], isFile)).toEqual([
+    expect(testPaths("orchestra", ["./a.test.ts", "./missing.test.ts", "/abs/a.test.ts"], isFile)).toEqual([
       "./a.test.ts",
       "./missing.test.ts",
       "/abs/a.test.ts",
@@ -135,12 +135,12 @@ describe("test:ci test paths", () => {
   test("accepts paths from the repository root and with Windows separators", () => {
     expect(
       testPaths(
-        "opencode",
+        "orchestra",
         [
-          "packages/opencode/a.test.ts",
-          "./packages/opencode/test/cli/run/permission.shared.test.ts",
+          "packages/orchestra/a.test.ts",
+          "./packages/orchestra/test/cli/run/permission.shared.test.ts",
           "test\\cli\\tui\\editor-context.test.tsx",
-          "packages\\opencode\\a.test.ts",
+          "packages\\orchestra\\a.test.ts",
           ".\\a.test.ts",
         ],
         isFile,
@@ -156,7 +156,7 @@ describe("test:ci test paths", () => {
 
   test("passes directories and filters through unchanged", () => {
     expect(
-      testPaths("opencode", ["test/cli", "permission", "packages/opencode/test/cli", "*.test.ts", "--bail"], isFile),
+      testPaths("orchestra", ["test/cli", "permission", "packages/orchestra/test/cli", "*.test.ts", "--bail"], isFile),
     ).toEqual(["test/cli", "permission", "test/cli", "*.test.ts", "--bail"])
   })
 })

@@ -48,6 +48,18 @@ function baseFileLoc(cwd: string, base: string, file: string) {
   }
 }
 
+// Only moves within the governed source set retain the old path's baseline and waiver standing.
+// -l0 lifts the rename limit, so a whole-package move still pairs every file.
+function renamedFrom(cwd: string, base: string) {
+  const fields = git(cwd, ["diff", "--name-status", "-z", "-M", "-l0", "--diff-filter=R", base]).split("\0")
+  const map = new Map<string, string>()
+  for (let index = 0; index + 2 < fields.length; index += 3) {
+    if (sourceFile(fields[index + 1]!) && sourceFile(fields[index + 2]!))
+      map.set(fields[index + 2]!, fields[index + 1]!)
+  }
+  return map
+}
+
 function mergeBase(cwd: string, baseRef: string) {
   try {
     return git(cwd, ["merge-base", baseRef, "HEAD"]).trim()
@@ -127,6 +139,7 @@ export function runGodfileGate(input: { cwd: string; baseRef: string }): Report 
 
   const warnings: Finding[] = []
   const errors: string[] = []
+  const moved = renamedFrom(input.cwd, base)
   const waiverLedger = waivers(input.cwd)
   errors.push(...waiverLedger.errors)
   const seenWaivers = new Set<string>()
@@ -140,9 +153,12 @@ export function runGodfileGate(input: { cwd: string; baseRef: string }): Report 
       continue
     }
 
-    const baseLines = baseFileLoc(input.cwd, base, file)
-    const waiver = waiverLedger.entries[file]
-    if (waiver && baseLines !== undefined) seenWaivers.add(file)
+    const basePath = moved.get(file) ?? file
+    const baseLines = baseFileLoc(input.cwd, base, basePath)
+    // Prefer an explicit destination waiver; an old duplicate remains unseen and fails as stale.
+    const waiverPath = waiverLedger.entries[file] ? file : basePath
+    const waiver = waiverLedger.entries[waiverPath]
+    if (waiver && baseLines !== undefined) seenWaivers.add(waiverPath)
     if (baseLines !== undefined && lines <= baseLines) {
       warnings.push({ file, lines, baseLines, kind: "legacy" })
       continue

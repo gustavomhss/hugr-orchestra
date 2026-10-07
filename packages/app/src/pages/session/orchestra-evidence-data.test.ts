@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
-import type { ToolPart } from "@opencode-ai/sdk/v2"
+import type { ToolPart } from "@orchestra/sdk/v2"
 import { normalizeSessionMessages } from "@/utils/session-message"
 import {
   createEvidenceCache,

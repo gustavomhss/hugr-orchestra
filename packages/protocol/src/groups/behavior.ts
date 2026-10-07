@@ -1,5 +1,5 @@
-import { Behavior } from "@opencode-ai/schema/behavior"
-import { Location } from "@opencode-ai/schema/location"
+import { Behavior } from "@orchestra/schema/behavior"
+import { Location } from "@orchestra/schema/location"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { InvalidRequestError } from "../errors"

@@ -4,14 +4,14 @@ import { createHash, randomUUID } from "node:crypto"
 import { lstat, open, realpath } from "node:fs/promises"
 import { basename, dirname, isAbsolute, join, resolve } from "node:path"
 import { parseArgs, promisify } from "node:util"
-import { tool, type ToolContext } from "@opencode-ai/plugin"
+import { tool, type ToolContext } from "@orchestra/plugin"
 import type { AppDockAPI } from "../src/main/app-dock-api"
 import { AppDockRuntime } from "../src/main/app-dock-runtime"
 import { AppDockNativeWorkspace } from "../src/main/app-dock-native-workspace"
 import { NativeDockProtocol } from "../src/main/app-dock-native-protocol"
 import { AppDockRPC } from "../src/main/app-dock-rpc"
 import { DockerEngine } from "../src/main/docker-engine"
-import { createAppDockHooks } from "../../opencode/src/plugin/app-dock"
+import { createAppDockHooks } from "../../orchestra/src/plugin/app-dock"
 
 type Options = { output: string; root?: string; image?: string; context?: string; nativePayload?: string; suppressAction?: boolean; diagnosticCase?: string }
 type Item = { ref: NativeDockProtocol.NativeRef; role: number; name: string; depth: number; states: number[]; interfaces: string[];
@@ -23,7 +23,7 @@ type Trace = { kind: string; at: number; value: unknown }
 type Resource = Awaited<ReturnType<ReturnType<typeof AppDockRuntime.create>["native"]>>
 const checkout = resolve(import.meta.dir, "../../..")
 const manifest = join(import.meta.dir, "../test/native/workspace-scenarios.json")
-const defaultRoot = "/Users/gustavoschneiter/.local/share/opencode/recovery/dock-accessibility-20261002/i1-runtime-state-v2"
+const defaultRoot = "/Users/gustavoschneiter/.local/share/orchestra/recovery/dock-accessibility-20261002/i1-runtime-state-v2"
 const apps = [{ id: "org.xfce.mousepad.desktop", name: "Mousepad", package: "mousepad" }, { id: "featherpad.desktop", name: "FeatherPad", package: "featherpad" },
   { id: "code.desktop", name: "Visual Studio Code", package: "vscode" }]
 const hash = (value: string | Uint8Array) => createHash("sha256").update(value).digest("hex")
@@ -193,7 +193,7 @@ export async function run(options: Options) {
     "app-dock-native-protocol", "app-dock-native", "app-dock-rpc", "app-dock-api", "docker-engine"].map((name) => join(import.meta.dir, `../src/main/${name}.ts`))
   const context = resolve(options.context ?? join(import.meta.dir, "../resources/linux-runtime"))
   const payload = resolve(options.nativePayload ?? join(import.meta.dir, "../resources/linux/app-dock-accessibility"))
-  sources.push(import.meta.path, manifest, join(import.meta.dir, "../../opencode/src/plugin/app-dock.ts"), ...["index", "tool"].map((name) => join(checkout, `packages/plugin/src/${name}.ts`)),
+  sources.push(import.meta.path, manifest, join(import.meta.dir, "../../orchestra/src/plugin/app-dock.ts"), ...["index", "tool"].map((name) => join(checkout, `packages/plugin/src/${name}.ts`)),
     ...["workspace.py", "Dockerfile", "seccomp.json"].map((name) => join(context, name)),
     ...["actions", "bindings", "bus", "context", "keyboard", "main", "refs", "snapshot"].map((name) => join(payload, `${name}.py`)))
   const hashes = () => Promise.all(sources.map(async (path) => { const bytes = await Bun.file(path).bytes(); check(bytes.length > 0, `source-empty:${path}`); return { path, bytes: bytes.length, sha256: hash(bytes) } }))

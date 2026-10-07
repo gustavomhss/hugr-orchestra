@@ -54,7 +54,7 @@ bun run test:app-dock:e2e
 
 The current desktop Electron harness launchers use the macOS executable path. Desktop typecheck excludes `src/**/*.test.ts`; running the named executable harness is a separate requirement. These commands establish existing browser/RPC behavior in their supported environment, not AT-SPI coverage.
 
-Existing commands, cwd `packages/opencode`:
+Existing commands, cwd `packages/orchestra`:
 
 ```sh
 bun typecheck

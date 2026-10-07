@@ -1,9 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { base64Encode } from "@orchestra/core/util/encode"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:/OpenCode/ModelPickerVirtualList"
+const directory = "C:/Orchestra/ModelPickerVirtualList"
 const projectID = "proj_model_picker_virtual_list"
 const sessionID = "ses_model_picker_virtual_list"
 const total = 400
@@ -31,7 +31,7 @@ async function expectContiguous(rows: Locator) {
 }
 
 async function openSession(page: Page) {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     directory,
     project: {
       id: projectID,
@@ -45,7 +45,7 @@ async function openSession(page: Page) {
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "OpenCode Zen",
           models: {
             "free-model": {
               id: "free-model",

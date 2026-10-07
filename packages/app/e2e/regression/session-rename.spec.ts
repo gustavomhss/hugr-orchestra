@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test"
 import { fixture, pageMessages } from "../smoke/session-timeline.fixture"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 test.beforeEach(async ({ page }) => {
   const sessions = fixture.sessions.map((session) => ({ ...session }))
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: "v1",
     sessions,
     provider: fixture.provider,
@@ -32,13 +32,13 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     ({ directory, server }) => {
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
-      localStorage.setItem("opencode.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
     },
     {
       directory: fixture.directory,

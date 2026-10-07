@@ -1,13 +1,13 @@
 # Provider and Model Catalog
 
-## OpenCode Free-Model User Agent
+## OpenCode Zen Free-Model User Agent
 
-Session requests for the OpenCode provider family preserve its transport identity:
+Session requests for the OpenCode Zen provider family preserve its transport identity:
 `User-Agent: opencode/<InstallationVersion>`. This is a compatibility header, not
 an authentication credential or a guarantee that a hosted model will accept a request.
 
 - The rule applies to provider IDs starting with `opencode`, matching the existing
-  V1 OpenCode telemetry convention, including credential-backed virtual IDs.
+  V1 OpenCode Zen telemetry convention, including credential-backed virtual IDs.
 - A model qualifies when its cost list is nonempty and every tier has zero input
   and output cost. Empty cost lists and models with any paid tier do not qualify.
   Cache pricing is not part of this input/output classification.
@@ -20,20 +20,20 @@ an authentication credential or a guarantee that a hosted model will accept a re
   provider/model/prepared header merge.
 - Existing `User-Agent` keys are removed case-insensitively before one canonical
   header is set. Other headers and credentials are preserved; input maps are not mutated.
-- AI SDK may append its own version/runtime tokens after the OpenCode prefix.
+- AI SDK may append its own version/runtime tokens after the OpenCode Zen prefix.
 
 The shared implementation is `packages/core/src/installation/headers.ts`.
 HTTP regression coverage lives in `packages/core/test/session-runner-model.test.ts`
-and `packages/opencode/test/session/llm-free-headers.test.ts`.
+and `packages/orchestra/test/session/llm-free-headers.test.ts`.
 
 To run the scoped regressions on Linux and Windows:
 
 ```sh
 bun run test:ci core test/session-runner-model.test.ts --os both
-bun run test:ci opencode test/session/llm-free-headers.test.ts --os both
+bun run test:ci orchestra test/session/llm-free-headers.test.ts --os both
 ```
 
-These tests check local HTTP requests on CI runners, not the hosted OpenCode gateway.
+These tests check local HTTP requests on CI runners, not the hosted OpenCode Zen gateway.
 Gateway eligibility, quotas, credentials, and service policy remain server-owned.
 
 ## Provider Schema

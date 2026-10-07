@@ -1,4 +1,4 @@
-import type { FileNode } from "@opencode-ai/sdk/v2"
+import type { FileNode } from "@orchestra/sdk/v2"
 
 const documents = /\.(md|mdx|txt)$/i
 const roots = ["README.md", "AGENTS.md"]

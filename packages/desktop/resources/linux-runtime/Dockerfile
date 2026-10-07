@@ -3,6 +3,9 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+# Ubuntu HTTP downloads stall intermittently in CI; use HTTPS after the trusted CA bootstrap.
+RUN sed -i -E 's#http://(archive\.ubuntu\.com|security\.ubuntu\.com|ports\.ubuntu\.com)/#https://\1/#g' \
+    /etc/apt/sources.list.d/ubuntu.sources
 COPY xpra.asc /usr/share/keyrings/xpra.asc
 COPY xpra.sources /etc/apt/sources.list.d/xpra.sources
 COPY xpra.pref /etc/apt/preferences.d/orchestra-xpra

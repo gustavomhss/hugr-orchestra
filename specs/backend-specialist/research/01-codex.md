@@ -4,7 +4,7 @@ Research date: **2026-10-03**. Scope: OpenAI Codex CLI, app-facing interfaces, s
 
 ## Architecture first — recommendation
 
-Build **host-native specialist policy and workflow layer** inside OpenCode/Orchestra. Reuse Codex mechanisms as design references; execution stays in native Session, tool, permission, Location, and context machinery. **Atlas remains shared Knowledge/Memory foundation** for task/PR recall and persistent per-member project rules. Maestro integration consumes same task/result contracts as standalone entrypoint.
+Build **host-native specialist policy and workflow layer** inside Orchestra. Reuse Codex mechanisms as design references; execution stays in native Session, tool, permission, Location, and context machinery. **Atlas remains shared Knowledge/Memory foundation** for task/PR recall and persistent per-member project rules. Maestro integration consumes same task/result contracts as standalone entrypoint.
 
 Proposed boundaries—not claims about existing plugin APIs:
 
@@ -13,7 +13,7 @@ Proposed boundaries—not claims about existing plugin APIs:
 | Task contract | Objective, constraints, target services, allowed changes, acceptance cases, verification commands, evidence requirements | Explicit task plus host policy |
 | Member identity | Stable machine `member_id`; environment-resolved public display name | Plugin identity configuration |
 | Context assembler | Resolve scoped repo instructions, Atlas rule revisions, task/PR recall, selected stack skills; record provenance and omissions | Native context lifecycle; Atlas owns persistent knowledge |
-| Execution adapter | Native prompt admission, session IDs, tools, permissions, interruption, Location/worktree selection | OpenCode/Orchestra runtime |
+| Execution adapter | Native prompt admission, session IDs, tools, permissions, interruption, Location/worktree selection | Orchestra runtime |
 | Evidence projection | Bind checks and artifacts to task, native tool call, environment, source revision, and diff | Actual host events and tool results |
 | Maestro adapter | Translate native contracts and lifecycle events when Maestro present | Optional integration; independent plugin remains usable |
 

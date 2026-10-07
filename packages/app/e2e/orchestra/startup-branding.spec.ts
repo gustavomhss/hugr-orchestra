@@ -13,7 +13,7 @@ for (const scheme of ["light", "dark"] as const) {
     test(`${scheme}: Orchestra branding during ${stage}`, { tag: "@source-fixture" }, async ({ page }) => {
       await page.addInitScript(
         ({ scheme, stage }) => {
-          localStorage.setItem("opencode-color-scheme", scheme)
+          localStorage.setItem("orchestra-color-scheme", scheme)
           // Electron's bridge is unavailable in Chromium. Hold only the startup boundary under test.
           Object.assign(window, {
             api: {

@@ -151,7 +151,7 @@ test.skipIf(!enabled || !degradedImage)(
 )
 
 async function workspace(selected: string) {
-  const base = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "opencode")
+  const base = process.env.APP_DOCK_RUNTIME_TEST_TMP ?? join(tmpdir(), "orchestra")
   await mkdir(base, { recursive: true })
   const root = await mkdtemp(join(base, "orchestra-dock-native-"))
   const runtime = AppDockRuntime.create({ root, context, image: selected, nativePayload })

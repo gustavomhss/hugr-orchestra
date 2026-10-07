@@ -1,17 +1,17 @@
 import { describe, expect } from "bun:test"
-import { LLM } from "@opencode-ai/llm"
-import { LLMClient, RequestExecutor } from "@opencode-ai/llm/route"
+import { LLM } from "@orchestra/llm"
+import { LLMClient, RequestExecutor } from "@orchestra/llm/route"
 import { DateTime, Effect, Layer } from "effect"
 import { Headers } from "effect/unstable/http"
-import { Credential } from "@opencode-ai/core/credential"
-import { Integration } from "@opencode-ai/core/integration"
-import { InstallationVersion } from "@opencode-ai/core/installation/version"
-import { ModelV2 } from "@opencode-ai/core/model"
-import { ProviderV2 } from "@opencode-ai/core/provider"
-import { ProjectV2 } from "@opencode-ai/core/project"
-import { SessionRunnerModel } from "@opencode-ai/core/session/runner/model"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { AbsolutePath } from "@opencode-ai/core/schema"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/core/integration"
+import { InstallationVersion } from "@orchestra/core/installation/version"
+import { ModelV2 } from "@orchestra/core/model"
+import { ProviderV2 } from "@orchestra/core/provider"
+import { ProjectV2 } from "@orchestra/core/project"
+import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
+import { SessionV2 } from "@orchestra/core/session"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { it } from "./lib/effect"
 
 type Api =
@@ -43,7 +43,7 @@ const model = (api: Api, variants: ModelV2.Info["variants"] = []) =>
   })
 
 describe("SessionRunnerModel", () => {
-  it.live("sends the OpenCode user agent for free models after header overrides", () =>
+  it.live("sends the OpenCode Zen user agent for free models after header overrides", () =>
     Effect.gen(function* () {
       const captured: Array<{ userAgent: string | null; custom: string | null; auth: string | null }> = []
       const server = yield* Effect.acquireRelease(

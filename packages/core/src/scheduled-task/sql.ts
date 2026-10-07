@@ -1,5 +1,5 @@
 import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
-import type { ScheduledTask } from "@opencode-ai/schema/scheduled-task"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { absoluteColumn } from "../database/path"
 import { Timestamps } from "../database/schema.sql"
 import type { SessionMessage } from "../session/message"

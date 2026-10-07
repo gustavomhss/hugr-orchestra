@@ -1,8 +1,8 @@
 import { createEffect, on, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { createSimpleContext } from "@opencode-ai/ui/context/helper"
-import { syncThemeBackground, useTheme } from "@opencode-ai/ui/theme/context"
+import { createSimpleContext } from "@orchestra/ui/context/helper"
+import { syncThemeBackground, useTheme } from "@orchestra/ui/theme/context"
 import { findPalette, PALETTE_KEY, PALETTES, recolors, type Palette, type PaletteID } from "./catalog"
 
 const STYLE_ID = "orchestra-palette"
@@ -79,7 +79,7 @@ export const { use: useOrchestraPalette, provider: OrchestraPaletteProvider } = 
 function initial(): Palette {
   const recolored = findPalette(document.documentElement.dataset.orchestraPalette)
   if (recolored && recolors(recolored)) return recolored
-  const scheme = findPalette(read("opencode-color-scheme"))
+  const scheme = findPalette(read("orchestra-color-scheme"))
   return scheme && !recolors(scheme) ? scheme : findPalette("system")!
 }
 

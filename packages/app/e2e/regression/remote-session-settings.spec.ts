@@ -1,4 +1,4 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { installSseTransport } from "../utils/sse-transport"
 import { currentSession } from "../utils/mock-server"
@@ -159,7 +159,7 @@ async function configureServers(page: Page, tabs: { type: "session"; server: str
     ({ serverB, tabs, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: tabs.some((tab) => tab.server === serverB)
@@ -167,7 +167,7 @@ async function configureServers(page: Page, tabs: { type: "session"; server: str
             : undefined,
         }),
       )
-      localStorage.setItem("opencode.window.browser.dat:tabs", JSON.stringify(tabs))
+      localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify(tabs))
     },
     { serverB, tabs, directoryB },
   )
