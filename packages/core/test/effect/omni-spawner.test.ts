@@ -14,8 +14,9 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import { Omni } from "@opencode-ai/core/omni"
 import { OmniAdoption } from "@opencode-ai/core/omni-adoption"
+import { omniSpawner } from "@opencode-ai/core/flag/flag"
 import { AppProcess } from "@opencode-ai/core/process"
-import { alive, gone, sweep, tree } from "../fixture/process-tree"
+import { gone, sweep, tree } from "../fixture/process-tree"
 import { testEffect } from "../lib/effect"
 
 const platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)
@@ -147,9 +148,10 @@ describe("omni spawner", () => {
           }),
         )
         expect(registered.length).toBe(1)
-        expect(yield* Effect.promise(() => alive(adopted.nonce))).toBe(adopted.size)
+        expect((yield* Effect.promise(() => sweep(adopted.nonce))).length).toBe(adopted.size)
         yield* Effect.promise(() => registered[0]?.stop())
         expect(yield* Effect.promise(() => gone(adopted.nonce))).toBe(0)
+        expect(yield* Effect.promise(() => swept(adopted.nonce))).toEqual([])
       }),
     LONG,
   )
@@ -201,7 +203,7 @@ describe("omni spawner", () => {
           Effect.gen(function* () {
             const handle = yield* svc.spawn(exiting(fixture, "ignore"))
             const exit = yield* handle.exitCode
-            expect(yield* Effect.promise(() => alive(fixture.nonce))).toBe(fixture.size)
+            expect((yield* Effect.promise(() => sweep(fixture.nonce))).length).toBe(fixture.size)
             return exit
           }),
         )
@@ -285,10 +287,13 @@ describe("omni spawner", () => {
         expect(Exit.isFailure(yield* Fiber.join(run))).toBe(true)
         expect(yield* Effect.promise(() => gone(aborted.nonce))).toBe(0)
 
+        expect(yield* Effect.promise(() => swept(aborted.nonce))).toEqual([])
+
         const timed = tree(2)
         const exit = yield* Effect.exit(app.run(ChildProcess.make(timed.command, timed.args), { timeout: "3 seconds" }))
         expect(Exit.isFailure(exit)).toBe(true)
         expect(yield* Effect.promise(() => gone(timed.nonce))).toBe(0)
+        expect(yield* Effect.promise(() => swept(timed.nonce))).toEqual([])
 
         const interrupted = tree(2)
         const result = yield* Effect.exit(
@@ -326,7 +331,8 @@ describe("omni spawner", () => {
     LONG,
   )
 
-  on.live(
+  // A delegation would fail a strict run's positive control (D-L1), so this one runs only outside strict runs.
+  ;(omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) === "strict" ? on.live.skip : on.live)(
     "7b. mode 1 delegates a piped command to legacy and counts the delegation",
     () =>
       Effect.gen(function* () {
@@ -405,6 +411,35 @@ describe("omni spawner", () => {
         const collected = JSON.parse((yield* app.run(probe())).stdout.toString())
         expect(Omni.snapshot().spawns - before.spawns).toBe(3)
         for (const seen of [streamed, inherited, collected]) expect(seen).toEqual({ agent: "1", omni: [] })
+      }),
+    LONG,
+  )
+
+  fx.live(
+    "10. shell: true runs through omni with no delegation (cmd.exe on Windows gets Node's verbatim command line)",
+    () =>
+      Effect.gen(function* () {
+        const svc = yield* Spawner
+        const app = yield* AppProcess.Service
+        const before = Omni.snapshot()
+        const streamed = yield* svc.string(ChildProcess.make("echo", ["a&&echo", "b"], { shell: true }))
+        const collected = yield* app.run(ChildProcess.make("echo", ["c&&echo", "d"], { shell: true }))
+        const after = Omni.snapshot()
+        expect(after.spawns - before.spawns).toBe(2)
+        expect(after.delegations - before.delegations).toBe(0)
+        expect(
+          streamed
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+        ).toEqual(["a", "b"])
+        expect(
+          collected.stdout
+            .toString()
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean),
+        ).toEqual(["c", "d"])
       }),
     LONG,
   )

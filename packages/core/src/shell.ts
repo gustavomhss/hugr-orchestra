@@ -202,23 +202,20 @@ export function args(file: string, command: string, cwd: string) {
 /**
  * The explicit program and arguments for a `shell: true | string` spawn option, the way Node joins them: the command
  * and its arguments joined by single spaces, unquoted, handed to the shell's command flag. `true` means /bin/sh on
- * Unix. PowerShell gets `-NoProfile -Command`, every other shell `-c`. It never adds Shell.args' login and rc-file
- * wrapping. cmd.exe (and `true` on Windows, which means cmd.exe) gives undefined: its quoting rules differ, and the
- * caller delegates that spawn.
+ * Unix and ComSpec (cmd.exe) on Windows. PowerShell gets `-NoProfile -Command`, every other shell `-c`. It never adds
+ * Shell.args' login and rc-file wrapping. cmd.exe gets no arguments but a verbatim command-line tail,
+ * `/d /s /c "<joined>"`, exactly what Node builds (omni's `windowsVerbatimArgs`, WP8b): cmd.exe parses its own line.
  */
 export function invocation(
   shell: true | string,
   command: string,
   args: readonly string[],
-): { file: string; args: string[] } | undefined {
+): { file: string; args: string[]; verbatim?: string } | undefined {
   const joined = [command, ...args].join(" ")
-  if (shell === true) {
-    if (process.platform === "win32") return
-    return { file: "/bin/sh", args: ["-c", joined] }
-  }
-  if (name(shell) === "cmd") return
-  if (ps(shell)) return { file: shell, args: ["-NoProfile", "-Command", joined] }
-  return { file: shell, args: ["-c", joined] }
+  const file = shell === true ? (process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "/bin/sh") : shell
+  if (process.platform === "win32" && name(file) === "cmd") return { file, args: [], verbatim: `/d /s /c "${joined}"` }
+  if (ps(file)) return { file, args: ["-NoProfile", "-Command", joined] }
+  return { file, args: ["-c", joined] }
 }
 
 let defaultPreferred: string | undefined

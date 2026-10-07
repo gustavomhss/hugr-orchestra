@@ -2,7 +2,8 @@ export * as OmniSpawner from "./omni-spawner"
 
 // The Effect ChildProcessSpawner over hugr-omni (integration plan WP1: D-L1, D-L3..D-L6, D-L12, R2-1..R2-4, R2-17).
 // cross-spawn-spawner.ts builds it when OPENCODE_EXPERIMENTAL_OMNI_SPAWNER is 1 or strict and hands it the legacy
-// spawn function for what omni does not support: `1` delegates, `strict` refuses (cmd.exe always delegates, D-L4).
+// spawn function for what omni does not support: `1` delegates, `strict` refuses. A cmd.exe
+// shell runs through omni too, with Node's verbatim command line (WP8b).
 //
 // Output (D-L5, R2-1). Every child is spawned with `backpressure: true` and its single omni consumer is claimed at
 // spawn, so omni never drops. One pump per child moves omni's items into two host queues (stdout, stderr) and stops
@@ -51,9 +52,6 @@ type Spawn = (
 type Kind = "stdout" | "stderr"
 type Item = { stream: "stdout" | "stderr" | "pty"; data: Uint8Array; lostBefore?: number }
 
-/** The one delegation `strict` still allows (D-L4): cmd.exe quoting differs, so it stays on legacy until WP8b. */
-const CMD = "a cmd.exe shell"
-
 /**
  * Builds the omni spawn function. Loads hugr-omni now and fails loudly (a defect) when the addon or the supervisor is
  * missing: a caller that asked for omni never falls back silently (D-L2).
@@ -68,7 +66,7 @@ export const make = Effect.fnUntraced(function* (input: {
     const reason = unsupported(command)
     if (reason === undefined && command._tag === "StandardCommand")
       return yield* start(omni, command, yield* input.cwd(command.options))
-    if (input.mode === "strict" && reason !== CMD)
+    if (input.mode === "strict")
       return yield* PlatformError.badArgument({
         module: "ChildProcess",
         method: "spawn",
@@ -85,7 +83,7 @@ export const make = Effect.fnUntraced(function* (input: {
 export function unsupported(command: ChildProcess.Command) {
   if (command._tag === "PipedCommand") return "a piped command (pipeTo)"
   const opts = command.options
-  if (opts.shell && program(command) === undefined) return CMD
+  if (opts.shell && program(command) === undefined) return `shell ${String(opts.shell)}`
   const inherited = (["stdin", "stdout", "stderr"] as const).find((key) => kind(opts[key]) === "inherit")
   if (inherited) return `${inherited}: "inherit"`
   if (opts.additionalFds && Object.keys(opts.additionalFds).length > 0) return "additionalFds"
@@ -96,7 +94,7 @@ export function unsupported(command: ChildProcess.Command) {
 /** The program omni runs: the command itself, or `shell: true | string` made explicit by Shell.invocation (D-L4). */
 export function program(command: ChildProcess.StandardCommand) {
   const shell = command.options.shell
-  if (!shell) return { file: command.command, args: [...command.args] }
+  if (!shell) return { file: command.command, args: [...command.args], verbatim: undefined }
   return Shell.invocation(shell, command.command, command.args)
 }
 
@@ -138,6 +136,7 @@ const start = Effect.fnUntraced(function* (
     Effect.try({
       try: () => {
         const child = omni.spawn(run.file, run.args, {
+          windowsVerbatimArgs: run.verbatim,
           cwd,
           env: environment(opts),
           inheritEnv: false,
@@ -168,6 +167,8 @@ const start = Effect.fnUntraced(function* (
         const adoption = yield* Effect.serviceOption(OmniAdoption.Service)
         if (Exit.isSuccess(result) && adoption._tag === "Some" && adoption.value.policy === "tool")
           yield* Effect.logInfo("omni adoption", { event: "omni.adoption", pid: child.pid, command: describe(command) })
+        // Not adopted: stop here with the Effect-clock escalation; release()'s own stop is then a no-op.
+        else yield* Effect.ignore(stop(child, opts.forceKillAfter, command))
         yield* OmniAdoption.release(child, result, { title: describe(command), graceMs })
       }).pipe(Effect.provide(context)),
   )
@@ -216,10 +217,11 @@ const start = Effect.fnUntraced(function* (
       )
     }),
     kill: (options?: ChildProcess.KillOptions) =>
-      Effect.tryPromise({
-        try: () => child.stop({ graceMs: millis(options?.forceKillAfter) ?? STOP_GRACE_MS }),
-        catch: (err) => fromOmni("kill", err, command),
-      }).pipe(Effect.andThen(Effect.sync(() => output.halt())), Effect.andThen(Deferred.await(exit)), Effect.asVoid),
+      stop(child, options?.forceKillAfter, command).pipe(
+        Effect.andThen(Effect.sync(() => output.halt())),
+        Effect.andThen(Deferred.await(exit)),
+        Effect.asVoid,
+      ),
     unref: Effect.fail(
       PlatformError.badArgument({
         module: "ChildProcess",
@@ -400,6 +402,17 @@ function drain(
   }
 }
 
+/**
+ * Stops the tree. With `forceKillAfter`, omni gets it as the grace and an Effect sleep of the same length forces the
+ * stop, like legacy's SIGKILL escalation, so a test clock drives it too. Bounded either way (D-L6).
+ */
+function stop(child: Omni.Child, after: Duration.Input | undefined, command: ChildProcess.Command) {
+  const ask = (graceMs: number) =>
+    Effect.tryPromise({ try: () => child.stop({ graceMs }), catch: (err) => fromOmni("kill", err, command) })
+  if (after === undefined) return ask(STOP_GRACE_MS)
+  return Effect.timeoutOrElse(ask(millis(after) ?? STOP_GRACE_MS), { duration: after, orElse: () => ask(0) })
+}
+
 /** OmniError code → PlatformError tag (plan WP1). */
 function fromOmni(method: string, err: unknown, command: ChildProcess.Command) {
   const code = typeof err === "object" && err !== null && "code" in err ? String(err.code) : undefined
@@ -442,6 +455,7 @@ export const collect = Effect.fnUntraced(function* (
   const result = yield* Effect.tryPromise({
     try: (interrupt) =>
       omni.run(run.file, run.args, {
+        windowsVerbatimArgs: run.verbatim,
         cwd: command.options.cwd === undefined ? undefined : path.resolve(command.options.cwd),
         env: environment(command.options),
         inheritEnv: false,
