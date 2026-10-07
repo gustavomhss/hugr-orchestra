@@ -2,9 +2,10 @@
 // - script/rename-codemod.ts never rewrites a kept path or a protected string;
 // - packages/core/test/rename-guard.test.ts fails on any "opencode" (any case) that neither covers.
 // Every entry must still match something in the tree; the guard fails on dead entries, so the ledger cannot
-// silently grow into a blanket exemption.
+// silently grow into a blanket exemption. An entry with `requires` is checked only once that directory is tracked,
+// so a branch that has not landed yet (packages/relay) can rely on it when it runs the codemod before merging.
 
-export type Kept = { path: RegExp; reason: string }
+export type Kept = { path: RegExp; reason: string; requires?: string }
 export type Protected = { pattern: RegExp; reason: string; paths?: RegExp }
 
 // Whole files the codemod leaves alone and the guard does not scan.
@@ -23,6 +24,11 @@ export const keptPaths: Kept[] = [
   { path: /(?:^|\/)evidence\//, reason: "evidence archives" },
   { path: /\.log$/, reason: "committed command logs are evidence of past runs" },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
+  {
+    path: /^packages\/relay\/docs\/reviews\/[^/]+\.json$/,
+    reason: "relay review records; their approvals bind artifact hashes taken before the rename",
+    requires: "packages/relay",
+  },
   {
     path: /^packages\/desktop\/docs\/plans\/dock-accessibility\/(?:recovery-\d+|handoff(?:-claude)?)\.md$/,
     reason: "recovery and handoff records that cite the real paths of past sessions",
