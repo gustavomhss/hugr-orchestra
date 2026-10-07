@@ -16,7 +16,7 @@ import { Cause, Context, Deferred, Effect, Layer, Scope } from "effect"
 import { create } from "./context"
 import { carriesMemory, measure, run, snapshot, type ParentRequest, type Pass } from "./fork"
 import { hasArtifact, isCurrent } from "./model"
-import { hardLimit, isSafe, PREPARE_MARGIN, PRUNE_STEP, settings, shouldStart, tokenCount } from "./trigger"
+import { hardLimit, isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
 import { apply as applyMasks, candidates as maskCandidates, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 
@@ -34,8 +34,6 @@ type Entry = {
   failures?: number
   /** How the last maintenance run ended. */
   result?: string
-  /** Context size after the last prune below the trigger; the next one runs PRUNE_STEP of the window later. */
-  pruned?: number
 }
 type State = {
   sessions: Map<SessionID, Entry>
@@ -289,30 +287,13 @@ const layer = Layer.effect(
           }
           if (current.contexts.get(sessionID)?.boundary === message.id) return
           if (!item.refresh && !shouldStart({ tokens: tokenCount(message.tokens), active: false, context,
-            trigger: options.trigger })) {
-            // Below the trigger: prune old tool output once the context grew PRUNE_STEP since the last batch.
-            const tokens = tokenCount(message.tokens)
-            if (tokens < (item.pruned ?? 0)) item.pruned = tokens
-            return pending.canRecall && context > 0 && tokens >= (item.pruned ?? 0) + PRUNE_STEP * context
-              ? "prune" as const : undefined
-          }
+            trigger: options.trigger })) return
           const active: Active = { generation: item.generation, boundary: message.id, done: Deferred.makeUnsafe<void>() }
           item.active = active
           item.attempted = message.id
           item.pending = undefined
           return active
         })
-        if (active === "prune") {
-          // No model call: stub tool output that left the verbatim tail, restorable through context_recall.
-          const tokens = tokenCount(message.tokens)
-          yield* sessions.messages({ sessionID }).pipe(
-            Effect.flatMap((stored) => stubs(current, sessionID, stored, maskCandidates)),
-            Effect.tap((freed) => Effect.sync(() => { entry(current, sessionID).pruned = tokens - freed })),
-            Effect.flatMap((freed) => freed > 0 ? diagnostic(sessionID, message.id, "pruned") : Effect.void),
-            Effect.catchCause(() => diagnostic(sessionID, message.id, "prune-failed")),
-          )
-          return
-        }
         if (!active) return
 
         const result = (value: string) => Effect.sync(() => {
