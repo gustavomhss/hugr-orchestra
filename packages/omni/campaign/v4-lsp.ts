@@ -1,18 +1,18 @@
 // V4: actual typescript-language-server/tsserver behind a node wrapper, launched by compiled Orchestra LSP service.
-// Twenty explicit crash -> Instance.dispose -> restart cycles. Automatic in-instance recovery measured separately.
+// Twenty demand-driven same-instance crash/restart cycles. Every replacement must finish a fresh TLS handshake.
 // npm install --prefix packages/omni/campaign/logs/tools --ignore-scripts typescript-language-server@4.3.4 typescript@5.8.2
 // ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v4-lsp.ts [--mutation-legacy]
 import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync } from "node:fs"
 import path from "node:path"
-import { alive, fileTree, kill9, LOGS, provider, supervised, sweep, until, verdict } from "./lib.ts"
-import { api, evidence, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
+import { alive, fileTree, kill9, LOGS, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
+import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
   const scratch = fixture("v4-lsp")
   const tree = fileTree(scratch.home, 1)
   const cycles: { cycle: number; live: number; tsservers: number; recorded: number; supervised: boolean;
-    crashMs: number; stopMs: number; left: number; idleNonceCount: number }[] = []
+    restartMs: number; oldLeft: number; after: number; freshPID: number; supervisorPID: number }[] = []
   const findings: string[] = []
   let error: string | undefined
   let automaticRestart: boolean | undefined
@@ -100,9 +100,9 @@ setInterval(() => {}, 1e9);
     if (options.mutation) scratch.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER = "0"
     const host = await start(scratch)
     const call = api(host.url, scratch.project)
+    const session = await call<{ id: string }>("POST", "/session", {}, 120_000)
     const trigger = async () => {
       drive.armed = true
-      const session = await call<{ id: string }>("POST", "/session", {}, 120_000)
       const response = await call("POST", `/session/${session.id}/message`, {
         agent: "campaign", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Write b.ts." }],
       }, 120_000)
@@ -110,10 +110,7 @@ setInterval(() => {}, 1e9);
     }
     const rows = () => processTable().filter((row) => row.args.includes(tree.nonce))
     const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; method: string }) : []
-    for (let cycle = 0; cycle < 20; cycle++) {
-      console.error(`[v4-lsp] cycle ${cycle + 1}/20`)
-      await trigger()
-      const live = await until(45_000, "wrapper, real tsserver and nonce tree", async () => {
+    const live = () => until(45_000, "wrapper, real tsservers and fresh protocol handshake", async () => {
         const current = rows()
         const wrapperRow = current.find((row) => row.args.includes(wrapper))
         const tsservers = current.filter((row) => row.args.includes("tsserver.js"))
@@ -123,41 +120,56 @@ setInterval(() => {}, 1e9);
           ["initialize", "initialized", "textDocument/didOpen"].every((method) => rpc().some((event) => event.pid === wrapperRow.pid && event.method === method))
           ? { current, wrapperRow, tsservers, recorded } : undefined
       })
+    await trigger()
+    const supervisor = supervisorsOf([host.pid])
+    const initialOwner = supervisor[0]
+    if (supervisor.length !== 1 || !initialOwner) throw new Error(`expected one process-owned supervisor, found ${supervisor.length}`)
+    for (let cycle = 0; cycle < 20; cycle++) {
+      console.error(`[v4-lsp] automatic cycle ${cycle + 1}/20`)
+      const before = await live()
       const control = supervised(tree.nonce)
       if (!control) throw new Error("LSP supervisor positive control failed (legacy transport)")
-      const server = live.current.find((row) => row.parent === live.wrapperRow.pid && row.args.includes(languageServer))
+      const server = before.current.find((row) => row.parent === before.wrapperRow.pid && row.args.includes(languageServer))
       if (!server) throw new Error("node wrapper did not launch real language server")
       const crashed = Date.now()
       // Crash Orchestra's actual LSP handle (the node/npx-equivalent wrapper), leaving its descendants to shutdown.
-      if (!kill9(live.wrapperRow.pid)) throw new Error("LSP crash injection failed")
-      await until(10_000, "LSP wrapper crash observed", () => rows().every((row) => row.pid !== live.wrapperRow.pid) ? true : undefined)
-      // Cycle 0 also probes natural recovery without clearing cached LSP clients.
-      if (cycle === 0) {
-        await trigger()
-        automaticRestart = rows().some((row) => row.args.includes(wrapper) && row.pid !== live.wrapperRow.pid)
-        autoRecoveryStatus = await call("GET", "/lsp")
-        if (!automaticRestart) findings.push("LSP service reuses dead cached client; another write does not restart server. Explicit /instance/dispose required.")
-      }
-      const stopped = Date.now()
-      await call("POST", "/instance/dispose", {}, 30_000)
-      await until(8_000, "no nonce leftovers after LSP shutdown", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
-      const left = (await sweep(tree.nonce)).length
-      cycles.push({ cycle: cycle + 1, live: live.current.length, tsservers: live.tsservers.length, recorded: live.recorded,
-        supervised: control, crashMs: stopped - crashed, stopMs: Date.now() - stopped, left, idleNonceCount: rows().length })
+      if (!kill9(before.wrapperRow.pid)) throw new Error("LSP crash injection failed")
+      autoRecoveryStatus = await until(10_000, "dead cached LSP error status", async () => {
+        const status = await call<{ id: string; status: string }[]>("GET", "/lsp")
+        return status.some((entry) => entry.id === "campaign" && entry.status === "error") ? status : undefined
+      })
+      if (rows().some((row) => row.args.includes(wrapper) && row.pid !== before.wrapperRow.pid))
+        throw new Error("LSP eagerly respawned without demand")
+      await trigger()
+      const after = await live()
+      automaticRestart = after.wrapperRow.pid !== before.wrapperRow.pid
+      const oldLeft = after.current.filter((row) => before.current.some((old) => old.pid === row.pid)).length
+      const owner = supervisorsOf([host.pid])
+      const owned = owner[0]
+      if (!automaticRestart || oldLeft !== 0 || owner.length !== 1 || !owned || owned.pid !== initialOwner.pid)
+        throw new Error("same-instance restart did not stop old tree, create fresh client, or preserve single supervisor")
+      cycles.push({ cycle: cycle + 1, live: before.current.length, tsservers: after.tsservers.length, recorded: after.recorded,
+        supervised: control, restartMs: Date.now() - crashed, oldLeft, after: after.current.length,
+        freshPID: after.wrapperRow.pid, supervisorPID: owned.pid })
     }
     const counts = cycles.map((cycle) => cycle.live)
-    pass = cycles.length === 20 && new Set(counts).size === 1 && cycles.every((cycle) => cycle.left === 0 && cycle.idleNonceCount === 0)
+    await call("POST", "/instance/dispose", {}, 30_000)
+    await until(8_000, "final LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
+    pass = automaticRestart === true && cycles.length === 20 && new Set(counts).size === 1 &&
+      cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live)
     if (!pass) error = "LSP cycle count/leftovers/process-count KPI failed"
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) { error = String(cause) }
   finally {
     llm?.closeAllConnections()
     llm?.close()
-    await finish(scratch, [tree.nonce]).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` })
+    try { await finalSweep(tree.nonce) }
+    catch (cause) { pass = false; error = `${error ?? ""} oracle: ${String(cause)}` }
+    finally { await finish(scratch, [tree.nonce]).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` }) }
   }
-  const result = verdict("v4-lsp", { ...evidence(scratch), pass, status: pass ? "passed-local-explicit-restart" : "failed-local",
+  const result = verdict("v4-lsp", { ...evidence(scratch), pass, status: pass ? "passed-local-automatic-restart" : "failed-local",
     mutation: options.mutation ?? null, cyclesCompleted: cycles.length, cycles,
-    automaticRecovery: { pass: automaticRestart ?? null, statusAfterCrashAndWrite: autoRecoveryStatus }, findings, error,
+    automaticRecovery: { pass: automaticRestart ?? null, statusBeforeDemand: autoRecoveryStatus }, findings, error,
     wp10Complete: pass && automaticRestart === true,
     protocolLog: rpcLog, wrapperLog, capability: { wrapper: "node (npx-equivalent)", lsp: "typescript-language-server 4.3.4 + TypeScript 5.8.2", oracle: "shared records + independent nonce process-table sweep", skipped: [] },
   })

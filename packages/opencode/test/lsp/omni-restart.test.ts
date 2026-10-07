@@ -27,7 +27,8 @@ it.instance(
     for (let cycle = 0; cycle < 20; cycle++) {
       yield* pollWithTimeout(Effect.promise(async () => {
         const count = (await sweep(nonce.nonce)).length
-        return count === (omni ? 4 : 2) ? count : undefined
+        const recorded = omni ? await alive(nonce.nonce) : 0
+        return count === (omni ? 4 : 2) && (!omni || recorded === nonce.size) ? count : undefined
       }), "live wrapper/tree positive control", "20 seconds")
       if (omni) expect(yield* Effect.promise(() => alive(nonce.nonce))).toBe(nonce.size)
       expect(yield* lsp.status()).toEqual([{ id: "restart", name: "restart", root: "", status: "connected" }])

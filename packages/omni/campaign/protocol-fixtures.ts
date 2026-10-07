@@ -5,7 +5,7 @@ import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, read
 import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { cleanup, cli, isolated, LOGS, table, until } from "./lib.ts"
+import { cleanup, cli, isolated, LOGS, reap, ROOT, sweep, table, until } from "./lib.ts"
 
 export function requireLocal() {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1") throw new Error("campaign requires ORCHESTRA_LOCAL_TESTS=1")
@@ -34,12 +34,20 @@ export type Fixture = ReturnType<typeof fixture>
 
 export function evidence(scratch: Fixture) {
   const bin = cli()
+  const built = JSON.parse(readFileSync(path.join(LOGS, "cli-provenance.json"), "utf8")) as {
+    sourceSHA: string; cliSha256: string; sourceHashes: Record<string, string>; addonSha256: string; supervisorSha256: string
+  }
+  const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
+  if (digest(bin) !== built.cliSha256 || Object.entries(built.sourceHashes).some(([file, hash]) => digest(path.join(ROOT, file)) !== hash))
+    throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
     baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
-    cli: bin, cliSha256: createHash("sha256").update(readFileSync(bin)).digest("hex"),
+    cli: bin, ...built,
+    harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
     fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),
     osCoverage: Object.fromEntries(["darwin", "linux", "win32"].map((os) => [os, os === process.platform ? "executed-local" : "not-run"])),
+    ownedHosts: scratch.hosts.map((proc) => ({ pid: proc.pid, exitCode: proc.exitCode, signalCode: proc.signalCode })),
   }
 }
 
@@ -51,6 +59,7 @@ export function processTable() {
 }
 
 export async function start(scratch: Fixture) {
+  evidence(scratch)
   const proc = spawn(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], {
     env: scratch.env, cwd: scratch.project, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   })
@@ -72,19 +81,32 @@ export async function start(scratch: Fixture) {
 
 export async function finish(scratch: Fixture, nonces: string[] = []) {
   // A serve command line does not contain HOME. Kill only handles created by this fixture.
-  for (const proc of scratch.hosts) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
-  await until(10_000, "owned CLI host exit", () =>
-    scratch.hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
-  await cleanup(scratch.home, nonces)
-  const destination = path.join(LOGS, `${scratch.tag}.evidence`)
-  mkdirSync(destination, { recursive: true })
-  for (const file of readdirSync(scratch.home).filter((file) => /\.(jsonl|json|log|txt|edited|vim-size)$/.test(file)))
-    copyFileSync(path.join(scratch.home, file), path.join(destination, file))
-  for (const nonce of nonces) {
-    const dir = path.join(os.tmpdir(), nonce)
-    for (const file of readdirSync(dir).filter((file) => file.endsWith(".json")))
-      copyFileSync(path.join(dir, file), path.join(destination, `${nonce}-${file}`))
+  try {
+    for (const proc of scratch.hosts) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
+    await until(10_000, "owned CLI host exit", () =>
+      scratch.hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
+  } finally {
+    try { await cleanup(scratch.home, nonces) }
+    finally {
+      try { await Promise.all(nonces.map((nonce) => reap(nonce))) }
+      finally {
+        const destination = path.join(LOGS, `${scratch.tag}.evidence`)
+        mkdirSync(destination, { recursive: true })
+        for (const file of readdirSync(scratch.home).filter((file) => /\.(jsonl|json|log|txt|edited|vim-size)$/.test(file)))
+          copyFileSync(path.join(scratch.home, file), path.join(destination, file))
+        for (const nonce of nonces) {
+          const dir = path.join(os.tmpdir(), nonce)
+          for (const file of readdirSync(dir).filter((file) => file.endsWith(".json")))
+            copyFileSync(path.join(dir, file), path.join(destination, `${nonce}-${file}`))
+        }
+      }
+    }
   }
+}
+
+export function finalSweep(nonce: string) {
+  if (process.env.OMNI_CAMPAIGN_FINAL_ORACLE_FAILURE === "1") throw new Error("injected final oracle query failure")
+  return sweep(nonce)
 }
 
 export function api(url: string, directory: string) {
@@ -121,10 +143,21 @@ export function mcpFixture(scratch: Fixture, nonce: string, fail = false) {
 const fs = require('node:fs');
 const readline = require('node:readline');
 const nonce = process.argv[2];
-const block = 'x'.repeat(1023) + '\\n';
-for (let i = 0; i < 1024; i++) fs.writeSync(2, block);
-fs.writeSync(2, 'LAST-STDERR-' + nonce + '\\n');
-fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.written.json`))}, JSON.stringify({bytes: 1048576, pid: process.pid}));
+function write(data) {
+  let offset = 0;
+  while (offset < data.length) {
+    const count = fs.writeSync(2, data, offset, data.length - offset);
+    if (count <= 0) throw Error('stderr write made no progress');
+    offset += count;
+  }
+  return offset;
+}
+const block = Buffer.from('x'.repeat(1023) + '\\n');
+let bytes = 0;
+for (let i = 0; i < 1024; i++) bytes += write(block);
+const marker = 'LAST-STDERR-' + nonce;
+const markerBytes = write(Buffer.from(marker + '\\n'));
+fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.written.json`))}, JSON.stringify({bytes, markerBytes, marker, pid: process.pid}));
 ${fail ? "process.exit(17);" : ""}
 readline.createInterface({input: process.stdin}).on('line', line => {
   const req = JSON.parse(line);

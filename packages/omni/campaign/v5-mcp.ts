@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 import { supervised, sweep, until, verdict } from "./lib.ts"
-import { api, evidence, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
+import { api, evidence, finalSweep, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
   const scratch = fixture("v5-mcp")
@@ -30,7 +30,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     const tools = await call<Record<string, string[]>>("GET", "/mcp/tools")
     metrics.tools = tools
     if (!tools.campaign?.includes("probe")) throw new Error("connected MCP did not list probe tool")
-    const written = JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.written.json`), "utf8")) as { bytes: number }
+    const written = JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.written.json`), "utf8")) as { bytes: number; marker: string; markerBytes: number }
     metrics.stderrBytesBeforeHandshake = written.bytes
     const lines = await until(10_000, "last stderr line in Orchestra debug log", () => {
       const rows = hostLog(scratch).split("\n").filter((line) => line.includes("MCP stderr"))
@@ -38,8 +38,12 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     })
     metrics.loggedStderrLines = lines.length
     metrics.lastLine = lines.find((line) => line.includes(`LAST-STDERR-${nonce}`))
+    metrics.markerBytes = written.markerBytes
+    metrics.uniqueMarkerLines = lines.filter((line) => line.endsWith(`line=${written.marker}`)).length
     metrics.handshakeRequests = readFileSync(path.join(scratch.home, `${nonce}.requests.jsonl`), "utf8")
-    if (written.bytes !== 1024 * 1024 || !metrics.supervised || Number(metrics.processTablePositive) < 1)
+    if (written.bytes !== 1024 * 1024 || written.marker !== `LAST-STDERR-${nonce}` ||
+      written.markerBytes !== Buffer.byteLength(written.marker + "\n") || metrics.uniqueMarkerLines !== 1 ||
+      !lines.at(-1)?.endsWith(`line=${written.marker}`) || !metrics.supervised || Number(metrics.processTablePositive) < 1)
       throw new Error("MCP payload/supervision positive control failed")
     const failed = await call<Record<string, { status: string; error?: string }>>("POST", "/mcp", {
       name: "failure", config: { type: "local", command: [scratch.node, mcpFixture(scratch, failureNonce, true), failureNonce], timeout: 10_000 },
@@ -55,8 +59,9 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     error = String(cause)
   } finally {
     // Record leftovers before emergency cleanup; cleanup never changes a verdict to green.
-    metrics.beforeCleanup = await sweep(nonce)
-    await finish(scratch).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` })
+    try { metrics.beforeCleanup = await finalSweep(nonce) }
+    catch (cause) { pass = false; error = `${error ?? ""} oracle: ${String(cause)}` }
+    finally { await finish(scratch).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` }) }
   }
   const result = verdict("v5-mcp", { ...evidence(scratch), mutation: options.mutation ?? null, pass,
     status: pass ? "passed-local" : "failed-local", error, metrics,

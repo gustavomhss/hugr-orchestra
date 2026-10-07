@@ -5,13 +5,14 @@ import { randomUUID, createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { supervised, sweep, until, verdict, win } from "./lib.ts"
-import { api, evidence, finish, fixture, main, plain, processTable, script, start } from "./protocol-fixtures.ts"
+import { api, evidence, finalSweep, finish, fixture, main, plain, processTable, script, start } from "./protocol-fixtures.ts"
 
 type Terminal = { id: string; pid: number }
 
-export async function run(options: { mutation?: "missing-replay" } = {}) {
+export async function run(options: { mutation?: "missing-replay" | "truncated-replay" | "gap-count" } = {}) {
   const scratch = fixture("v6-terminal", { lsp: false })
   const nonce = `omni-terminal-${randomUUID()}`
+  const missed = `MISSED-BEGIN-${nonce}-é😀-${randomUUID()}-MISSED-END-${nonce}`
   const metrics: Record<string, unknown> = {}
   const checks: Record<string, string> = { vim: "not-run", resize: "not-run", replay: "not-run", output: "not-run" }
   const sockets: WebSocket[] = []
@@ -25,7 +26,7 @@ export async function run(options: { mutation?: "missing-replay" } = {}) {
     const boot = Date.now()
     await call("GET", "/lsp")
     metrics.bootstrapMs = Date.now() - boot
-    const attach = async (id: string, cursor?: number) => {
+    const attach = async (id: string, cursor?: number, fault?: "truncate" | "gap-count") => {
       const url = new URL(`/pty/${id}/connect`, host.url)
       url.protocol = "ws:"
       url.searchParams.set("directory", scratch.project)
@@ -33,19 +34,26 @@ export async function run(options: { mutation?: "missing-replay" } = {}) {
       const ws = new WebSocket(url)
       sockets.push(ws)
       ws.binaryType = "arraybuffer"
-      const state = { text: "", replay: "", meta: undefined as number | undefined, frames: 0, wireBytes: 0, error: "" }
+      const state = { text: "", replay: "", meta: undefined as number | undefined, frames: 0, wireBytes: 0, error: "", lastDataAt: Date.now(), mutatedGaps: 0 }
       ws.addEventListener("error", () => { state.error = "WebSocket error" })
       ws.addEventListener("message", (event) => {
         state.frames++
+        state.lastDataAt = Date.now()
         const data = typeof event.data === "string" ? new TextEncoder().encode(event.data) : new Uint8Array(event.data as ArrayBuffer)
         state.wireBytes += data.byteLength
         if (data[0] === 0) {
           const frame = JSON.parse(new TextDecoder().decode(data.subarray(1))) as { cursor: number }
+          // Wire-boundary mutation: a consistent truncated prefix plus its shorter cursor fooled the old oracle.
+          if (fault === "truncate") { state.text = state.text.slice(0, -7); frame.cursor -= 7 }
           state.meta = frame.cursor
           state.replay = state.text
           return
         }
-        state.text += new TextDecoder().decode(data)
+        const text = new TextDecoder().decode(data)
+        state.text += fault !== "gap-count" ? text : text.replace(/\[orchestra: (\d+) bytes of output skipped\]/g, (_, bytes: string) => {
+          state.mutatedGaps++
+          return `[orchestra: ${Number(bytes) + 1} bytes of output skipped]`
+        })
       })
       await until(20_000, "terminal WS replay cursor", () => {
         if (state.error) throw new Error(state.error)
@@ -58,6 +66,8 @@ export async function run(options: { mutation?: "missing-replay" } = {}) {
       }
       return { ws, state, close }
     }
+    const quiet = (state: { lastDataAt: number }) => until(20_000, "terminal output quiescence", () =>
+      Date.now() - state.lastDataAt >= 500 ? true : undefined)
 
     // Use an actual editor, not a terminal-shaped fixture. A missing vim is a failed capability, never green.
     try {
@@ -93,25 +103,31 @@ export async function run(options: { mutation?: "missing-replay" } = {}) {
 const fs = require('node:fs');
 const readline = require('node:readline');
 const nonce = process.argv[2];
-process.stdout.write('READY-' + nonce + '\\n');
+function write(text) {
+  const block = Buffer.isBuffer(text) ? text : Buffer.from(text);
+  let offset = 0;
+  while (offset < block.length) {
+    const written = fs.writeSync(1, block, offset, block.length - offset);
+    if (written <= 0) throw Error('producer write made no progress');
+    offset += written;
+  }
+  return offset;
+}
+write('READY-' + nonce + '\\n');
 readline.createInterface({input: process.stdin}).on('line', line => {
-  if (line === 'size') process.stdout.write('SIZE ' + process.stdout.rows + ' ' + process.stdout.columns + '\\n');
-  if (line === 'unicode') process.stdout.write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
-  if (line === 'more') process.stdout.write('MISSED-é😀-' + nonce + '\\n');
+  if (line === 'size') write('SIZE ' + process.stdout.rows + ' ' + process.stdout.columns + '\\n');
+  if (line === 'unicode') write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
+  if (line === 'more') write(${JSON.stringify(missed)} + '\\n');
+  if (line === 'calibrate') write('CAL-' + nonce + '\\n');
+  if (line === 'done') write('PRODUCER-DONE-' + nonce + '\\n');
   if (line === 'flood') {
     const block = Buffer.from(('x'.repeat(1023) + '\\n').repeat(1024));
     const start = Date.now();
     let bytes = 0;
-    for (let i = 0; i < 50; i++) {
-      let offset = 0;
-      while (offset < block.length) {
-        const written = fs.writeSync(1, block, offset, block.length - offset);
-        if (written <= 0) throw Error('producer write made no progress');
-        offset += written; bytes += written;
-      }
-    }
-    fs.writeFileSync(${JSON.stringify(done)}, JSON.stringify({bytes, completed: true, ms: Date.now() - start}));
-    fs.writeSync(1, 'PRODUCER-DONE-' + nonce + '\\n');
+    write('PAYLOAD-BEGIN-' + nonce + '\\n');
+    for (let i = 0; i < 50; i++) bytes += write(block);
+    const lines = block.reduce((count, byte) => count + (byte === 10 ? 1 : 0), 0) * 50;
+    fs.writeFileSync(${JSON.stringify(done)}, JSON.stringify({bytes, lines, completed: true, ms: Date.now() - start}));
   }
 });
 `)
@@ -134,8 +150,9 @@ readline.createInterface({input: process.stdin}).on('line', line => {
     try {
       first.ws.send("unicode\r")
       await until(20_000, "Unicode replay seed", () => plain(first.state.text).includes(`UNICODE-${nonce}`) ? true : undefined)
+      await quiet(first.state)
       const snapshot = await attach(terminal.id, 0)
-      if (snapshot.state.replay !== first.state.text.slice(0, snapshot.state.meta) || snapshot.state.meta !== snapshot.state.replay.length)
+      if (snapshot.state.replay !== first.state.text || snapshot.state.meta !== first.state.text.length)
         throw new Error("initial replay differs from live UTF-16 stream/cursor")
       const cursor = snapshot.state.meta!
       const baseline = snapshot.state.replay
@@ -143,38 +160,67 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await first.close()
       const observer = await attach(terminal.id, -1)
       observer.ws.send("more\r")
-      await until(20_000, "output while original client disconnected", () => observer.state.text.includes(`MISSED-é😀-${nonce}`) ? true : undefined)
-      const reconnect = await attach(terminal.id, options.mutation ? -1 : cursor)
+      await until(20_000, "whole unique output while original client disconnected", () => observer.state.text.includes(missed) ? true : undefined)
+      await quiet(observer.state)
       const whole = await attach(terminal.id, 0)
-      const expected = whole.state.replay.slice(cursor, reconnect.state.meta)
-      metrics.replay = { requestedCursor: cursor, returnedCursor: reconnect.state.meta, wholeCursor: whole.state.meta,
+      const expectedEnd = whole.state.meta
+      const expected = whole.state.replay.slice(cursor)
+      const reconnect = await attach(terminal.id, options.mutation === "missing-replay" ? -1 : cursor,
+        options.mutation === "truncated-replay" ? "truncate" : undefined)
+      metrics.replay = { requestedCursor: cursor, returnedCursor: reconnect.state.meta, expectedEndCursor: expectedEnd,
         expectedUnits: expected.length, receivedUnits: reconnect.state.replay.length,
-        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), utf16: true }
+        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true }
       if (whole.state.replay.slice(0, cursor) !== baseline || expected.length === 0 || expected !== reconnect.state.replay ||
-        reconnect.state.meta !== cursor + reconnect.state.replay.length || whole.state.meta !== whole.state.replay.length)
-        throw new Error("reconnection replay/cursor mismatch (missing replay)")
+        reconnect.state.meta !== expectedEnd || expectedEnd !== cursor + expected.length || expectedEnd !== whole.state.replay.length ||
+        observer.state.text !== expected || !plain(expected).includes(missed) || !plain(reconnect.state.replay).includes(missed))
+        throw new Error("reconnection replay differs from independent whole missed text/end cursor")
       writeFileSync(path.join(scratch.home, "replay.ws.txt"), whole.state.replay)
       await Promise.all([observer.close(), reconnect.close(), whole.close()])
       checks.replay = "passed"
     } catch (cause) { checks.replay = "failed"; errors.push(`replay: ${String(cause)}`) }
     try {
-      const output = await attach(terminal.id, -1)
+      const output = await attach(terminal.id, -1, options.mutation === "gap-count" ? "gap-count" : undefined)
+      output.ws.send("calibrate\r")
+      await until(20_000, "ASCII PTY echo/newline calibration", () => output.state.text.includes(`CAL-${nonce}`) ? true : undefined)
+      await quiet(output.state)
+      const calibration = `calibrate\r\nCAL-${nonce}\r\n`
+      if (output.state.text !== calibration) throw new Error(`PTY byte-accounting capability: non-canonical echo/rendering ${JSON.stringify(output.state.text)}`)
+      const from = output.state.text.length
       const started = Date.now()
       const healthMs: number[] = []
       output.ws.send("flood\r")
-      await until(120_000, "50 MiB producer completion and terminal end marker", async () => {
+      await until(120_000, "50 MiB producer completion", async () => {
         const probe = Date.now()
         await call("GET", "/global/health", undefined, 10_000)
         healthMs.push(Date.now() - probe)
-        return existsSync(done) && output.state.text.includes(`PRODUCER-DONE-${nonce}`) ? true : undefined
+        return existsSync(done) ? true : undefined
       })
-      const produced = JSON.parse(readFileSync(done, "utf8")) as { bytes: number; completed: boolean; ms: number }
+      await quiet(output.state)
+      // Flush a pending final lostBefore only after the producer finished and the consumer caught up.
+      output.ws.send("done\r")
+      await until(20_000, "post-completion terminal marker", () => output.state.text.includes(`PRODUCER-DONE-${nonce}\r\n`) ? true : undefined)
+      await quiet(output.state)
+      const produced = JSON.parse(readFileSync(done, "utf8")) as { bytes: number; lines: number; completed: boolean; ms: number }
       if (!produced.completed || produced.bytes !== 50 * 1024 * 1024) throw new Error("producer did not finish exactly 50 MiB")
-      const from = output.state.text.length
+      const flood = output.state.text.slice(from)
+      const gaps = [...flood.matchAll(/\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g)].map((match) => Number(match[1]))
+      const received = flood.replace(/\x1b\[0m\r\n\[orchestra: \d+ bytes of output skipped\]\r\n/g, "")
+      const prefix = `flood\r\nPAYLOAD-BEGIN-${nonce}\r\n`
+      const suffix = `done\r\nPRODUCER-DONE-${nonce}\r\n`
+      const expectedNativeBytes = produced.bytes + produced.lines + Buffer.byteLength(prefix + suffix)
+      const lostNativeBytes = gaps.reduce((total, bytes) => total + bytes, 0)
+      const receivedNativeBytes = Buffer.byteLength(received)
+      metrics.byteAccounting = { expectedNativeBytes, receivedNativeBytes, lostNativeBytes, producerBytes: produced.bytes,
+        newlineExpansionBytes: produced.lines, echoAndMarkerBytes: Buffer.byteLength(prefix + suffix), mutatedGaps: output.state.mutatedGaps }
+      if (!received.startsWith(prefix) || !received.endsWith(suffix) || !/^[x\r\n]*$/.test(received.slice(prefix.length, -suffix.length)) ||
+        receivedNativeBytes + lostNativeBytes !== expectedNativeBytes)
+        throw new Error("ASCII PTY payload + echo/newlines does not reconcile with received bytes + lostBefore markers")
+      if (options.mutation === "gap-count" && output.state.mutatedGaps === 0) throw new Error("gap-count mutation not applied: no native gap observed")
+      const tail = output.state.text.length
       output.ws.send("size\r")
-      await until(20_000, "terminal responds after flood", () => plain(output.state.text.slice(from)).includes("SIZE 40 120") ? true : undefined)
+      await until(20_000, "terminal responds after flood", () => plain(output.state.text.slice(tail)).includes("SIZE 40 120") ? true : undefined)
       metrics.output = { ...produced, elapsedMs: Date.now() - started, receivedUTF16: output.state.text.length,
-        wireBytes: output.state.wireBytes, frames: output.state.frames, gaps: [...output.state.text.matchAll(/\[orchestra: (\d+) bytes of output skipped\]/g)].map((m) => Number(m[1])),
+        wireBytes: output.state.wireBytes, frames: output.state.frames, gaps,
         healthProbes: healthMs.length, maxHealthMs: Math.max(...healthMs), postFloodResponsive: true }
       await output.close()
       checks.output = "passed"
@@ -194,8 +240,9 @@ readline.createInterface({input: process.stdin}).on('line', line => {
   } catch (cause) { errors.push(String(cause)) }
   finally {
     for (const ws of sockets) if (ws.readyState !== WebSocket.CLOSED) ws.close()
-    metrics.beforeCleanup = await sweep(nonce)
-    await finish(scratch).catch((cause) => { errors.push(`teardown: ${String(cause)}`) })
+    try { metrics.beforeCleanup = await finalSweep(nonce) }
+    catch (cause) { errors.push(`oracle: ${String(cause)}`) }
+    finally { await finish(scratch).catch((cause) => { errors.push(`teardown: ${String(cause)}`) }) }
   }
   const pass = errors.length === 0 && Object.values(checks).every((status) => status === "passed")
   const result = verdict("v6-terminal", { ...evidence(scratch), pass, status: pass ? "passed-local-terminal-slice" : "failed-local",
@@ -207,6 +254,8 @@ readline.createInterface({input: process.stdin}).on('line', line => {
 }
 
 if (main(import.meta.url)) {
-  const result = await run(process.argv.includes("--mutation-missing-replay") ? { mutation: "missing-replay" } : {})
+  const mutation = process.argv.includes("--mutation-truncated-replay") ? "truncated-replay" :
+    process.argv.includes("--mutation-missing-replay") ? "missing-replay" : process.argv.includes("--mutation-gap-count") ? "gap-count" : undefined
+  const result = await run({ mutation })
   process.exitCode = result.pass ? 0 : 1
 }
