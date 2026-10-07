@@ -169,8 +169,9 @@ test.skipIf(!on)(
     const short = await DesktopOmni.terminal(file, [...args], { name: "xterm-256color", cols: 120, rows: 40 })
     const exit = await new Promise<number>((resolve) => short.onExit((event) => resolve(event.exitCode)))
     // Data written before any listener attached is replayed to the first one (D-L7).
-    const text = await new Promise<string>((resolve) => short.onData(resolve))
-    expect(text).toContain("cols=120")
+    const replayed: string[] = []
+    short.onData((data) => replayed.push(data))
+    expect(replayed.join("")).toContain("cols=120")
     expect(exit).toBe(3)
 
     const created = nonceTree()
