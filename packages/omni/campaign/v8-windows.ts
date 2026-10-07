@@ -17,12 +17,15 @@ export async function run() {
   if (!win) return record("v8-windows", { pass: false, status: "unrun", reason: "Requires real Windows cmd.exe, PowerShell, npx.cmd and ConPTY" })
   const scratch = isolated("v8", {})
   const tree = fileTree(scratch.home, 2)
+  const descriptor = path.join(scratch.home, "conpty-fixture.json")
+  writeFileSync(descriptor, JSON.stringify(tree))
   try {
     const env = { ...deliveryEnv(scratch.env), OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
       ...(process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
       ...(process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
     }
-    const observed = await execute(BUN, [import.meta.filename, "--host", scratch.home, scratch.project, JSON.stringify(tree)], env, ROOT, 180_000, [scratch.home, tree.nonce])
+    // Keep the nonce out of harness argv: the independent process-table oracle must see only the actual tree.
+    const observed = await execute(BUN, [import.meta.filename, "--host", scratch.home, scratch.project, descriptor], env, ROOT, 180_000, [scratch.home, tree.nonce])
     const line = observed.stdout.split("\n").find((line) => line.startsWith("V8_HOST_RESULT "))
     const cells = line ? JSON.parse(line.slice("V8_HOST_RESULT ".length)) as Cell[] : []
     cells.push(await powershellBash(scratch, env))
@@ -215,7 +218,7 @@ function typedRefusal(error: unknown): { code: "INVALID_ARGUMENT"; message: stri
 }
 
 if (import.meta.main) {
-  if (process.argv.includes("--host")) await host(process.argv[3], process.argv[4], JSON.parse(process.argv[5]) as ReturnType<typeof fileTree>)
+  if (process.argv.includes("--host")) await host(process.argv[3], process.argv[4], await Bun.file(process.argv[5]).json() as ReturnType<typeof fileTree>)
   else {
     const result = await run()
     process.exit(result.pass ? 0 : 1)

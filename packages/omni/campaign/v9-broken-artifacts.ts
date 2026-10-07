@@ -108,7 +108,7 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
         (entry.slice(0, start) + entry.slice(end, app)).replace('"@opencode-ai/core/omni"', loader) + `
 const { Omni } = await import(${loader});
 const binding = await Omni.load();
-const result = await binding.run("git", ["rev-parse", "HEAD"], { cwd: ${JSON.stringify(ROOT)}, inheritEnv: false, env: Omni.childEnv(), timeoutMs: 5000 });
+const result = await binding.run("git", ["-c", ${JSON.stringify(`orchestra.campaignnonce=${scratch.home}`)}, "rev-parse", "HEAD"], { cwd: ${JSON.stringify(ROOT)}, inheritEnv: false, env: Omni.childEnv(), timeoutMs: 5000 });
 if (!result.success || !/^[0-9a-f]{40}\\n$/.test(result.stdout)) process.exit(1);
 console.log("MUTATION_IMPLICIT_FALLBACK_OK " + JSON.stringify(Omni.locate()));
 process.exit(0);
