@@ -27,6 +27,9 @@ const arch = archMap[os.arch()] ?? os.arch()
 const base = `opencode-${platform}-${arch}`
 const sourceBinary = platform === "windows" ? "opencode.exe" : "opencode"
 const targetBinary = path.join(__dirname, "bin", "opencode.exe")
+// hugr-omni's addon and supervisor ship next to the binary (D-L8): the CLI finds them next to realpath(execPath), so
+// they must sit beside bin/opencode.exe, whatever symlink (npm global, Homebrew) points at it.
+const omniFiles = ["hugr_omni.node", platform === "windows" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor"]
 
 function supportsAvx2() {
   if (arch !== "x64") return false
@@ -137,6 +140,7 @@ function installPackage(name) {
     if (result.status !== 0) return
     const packageDir = path.join(temp, "node_modules", name)
     copyBinary(path.join(packageDir, "bin", sourceBinary), targetBinary)
+    copyOmni(path.join(packageDir, "bin"))
     return true
   } finally {
     fs.rmSync(temp, { recursive: true, force: true })
@@ -155,6 +159,36 @@ function copyBinary(source, target) {
   fs.chmodSync(target, 0o755)
 }
 
+// A target built without omni (OMNI_ENABLED=false) ships no omni files; stale ones from an earlier install go, so a
+// new binary never pairs with an old addon.
+function copyOmni(sourceDir) {
+  for (const name of omniFiles) {
+    const source = path.join(sourceDir, name)
+    const target = path.join(path.dirname(targetBinary), name)
+    if (fs.existsSync(source)) copyBinary(source, target)
+    else if (fs.existsSync(target)) fs.unlinkSync(target)
+  }
+}
+
+// Runs `opencode debug omni` once so the first Gatekeeper/Defender scan of the binary, the addon and the supervisor
+// happens here, not on the user's first spawn. Best effort: its result never fails the install.
+function warmOmni() {
+  if (!omniFiles.every((name) => fs.existsSync(path.join(path.dirname(targetBinary), name)))) return
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.toUpperCase().startsWith("HUGR_OMNI_")),
+  )
+  try {
+    childProcess.spawnSync(targetBinary, ["debug", "omni"], {
+      env: { ...env, OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1" },
+      stdio: "ignore",
+      timeout: 30_000,
+      windowsHide: true,
+    })
+  } catch {
+    // Ignored: the warm-up is an optimisation.
+  }
+}
+
 function verifyBinary() {
   const result = childProcess.spawnSync(targetBinary, ["--version"], {
     encoding: "utf8",
@@ -167,10 +201,12 @@ function verifyBinary() {
 function main() {
   for (const name of packageNames()) {
     try {
-      copyBinary(resolveBinary(name), targetBinary)
-      if (verifyBinary()) return
+      const binary = resolveBinary(name)
+      copyBinary(binary, targetBinary)
+      copyOmni(path.dirname(binary))
+      if (verifyBinary()) return warmOmni()
     } catch {
-      if (installPackage(name) && verifyBinary()) return
+      if (installPackage(name) && verifyBinary()) return warmOmni()
     }
   }
 
