@@ -127,15 +127,19 @@ test("General's theme picker offers only Orchestra palettes and recolors the gla
   await expect(radio("System")).toHaveAttribute("aria-checked", "true")
 
   const sidebar = page.locator('[data-component="orchestra-sidebar"]')
-  const glass = () =>
-    sidebar.evaluate((element) => {
+  // The sidebar's blur is drawn by its glass plate (theme.css).
+  const plate = page.locator('[data-glass-plate="sidebar"]')
+  const glass = async () => {
+    const blur = await plate.evaluate((element) => getComputedStyle(element).backdropFilter)
+    return sidebar.evaluate((element, blur) => {
       const style = getComputedStyle(element)
       const box = element.getBoundingClientRect()
       return {
-        shape: [style.backdropFilter, style.borderRadius, style.borderTopWidth, box.width, box.height],
+        shape: [blur, style.borderRadius, style.borderTopWidth, box.width, box.height],
         tint: [style.backgroundImage, style.borderTopColor],
       }
-    })
+    }, blur)
+  }
   const light = await glass()
   await radio("Graphite").click()
   await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "graphite")

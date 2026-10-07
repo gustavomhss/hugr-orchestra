@@ -263,8 +263,7 @@ test("graphite: a palette recolors the glass and keeps the frozen geometry, radi
   for (const locator of [sidebar, toolbar, tabs, active]) await expect(locator).toBeVisible()
   expectPixels((await readBox(sidebar)).width, 230, "sidebar width")
   expectPixels((await readBox(toolbar)).height, 45, "toolbar height")
-  for (const locator of [sidebar, tabs, active]) {
-    const value = await readGlass(locator)
+  for (const value of [await readPlatedGlass(sidebar), await readPlatedGlass(tabs), await readGlass(active)]) {
     expect(value.backdropFilter, "palette keeps the glass blur").toBe(glass.dark.backdropFilter)
     expect(value.backgroundImage, "palette tints the glass").toMatch(/^linear-gradient\(/)
     expect(value.backgroundImage, "palette tints the glass").not.toBe(glass.dark.backgroundImage)
