@@ -8,7 +8,7 @@ mod codec;
 pub use codec::{decode, encode};
 
 /// Protocol version, sent in `Ready`. The host refuses a supervisor with another version.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 /// Largest frame (length prefix excluded). A bigger or malformed frame ends the connection.
 pub const MAX_FRAME: usize = 1 << 20;
 
@@ -53,6 +53,9 @@ pub struct Spawn {
     pub grace_ms: u32,
     /// Windows: handle values valid in the supervisor for stdin/stdout/stderr (0 = none). Unix: all 0.
     pub handles: [u64; 3],
+    /// Windows only (v2, amendment WP8b): the command-line tail written after the quoted `argv[0]`, unchanged.
+    /// `argv` then holds `argv[0]` alone. The supervisor refuses it on Unix and for a `.cmd`/`.bat` program.
+    pub verbatim: Option<Vec<u8>>,
 }
 
 /// How a root process ended.

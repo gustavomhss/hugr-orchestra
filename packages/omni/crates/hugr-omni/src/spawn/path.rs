@@ -85,7 +85,7 @@ pub(super) fn extension(path: &OsStr) -> Option<&[u8]> {
     }
 }
 
-fn is_sep(b: u8, os: Os) -> bool {
+pub(super) fn is_sep(b: u8, os: Os) -> bool {
     b == b'/' || (os == Os::Windows && b == b'\\')
 }
 

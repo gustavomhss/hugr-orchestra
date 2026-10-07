@@ -136,6 +136,7 @@ pub(super) fn spawn_on(sup: &Arc<Gen>, spec: &Spec) -> Result<Spawned, Error> {
             stderr: if merged { Slot::Merge } else { Slot::Pipe },
             grace_ms: millis(spec.grace),
             handles,
+            verbatim: spec.verbatim.as_deref().map(bytes),
         })
     };
     let answer = sup

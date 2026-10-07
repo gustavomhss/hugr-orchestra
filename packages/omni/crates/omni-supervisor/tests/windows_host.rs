@@ -54,6 +54,8 @@ pub struct Spec {
     pub stderr: Slot,
     /// Grace on host death.
     pub grace_ms: u32,
+    /// The verbatim command-line tail (amendment WP8b); `argv` is then `argv[0]` alone.
+    pub verbatim: Option<OsString>,
 }
 
 impl Spec {
@@ -70,6 +72,7 @@ impl Spec {
             stdin: Slot::Null,
             stderr: Slot::Pipe,
             grace_ms: 1000,
+            verbatim: None,
         }
     }
 
@@ -307,6 +310,7 @@ impl Host {
             stderr: spec.stderr,
             grace_ms: spec.grace_ms,
             handles,
+            verbatim: spec.verbatim.as_deref().map(bytes),
         });
         Prepared {
             req,

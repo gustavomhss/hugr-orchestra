@@ -94,8 +94,9 @@ hugr-omni never adds a shell.
   argument array: `run("git", ["status"])`. Never split a user-provided string on spaces.
 - **The caller truly needs shell syntax** (a user-typed pipeline, `&&`, globbing, a shell builtin). Name the shell
   explicitly, so a reviewer sees it: `spawn("sh", ["-c", script])` on Unix, with the script as one argument. On
-  Windows, `cmd.exe` parses its command line by its own rules. An explicit verbatim option is planned (WP8b). Until
-  then, review each cmd.exe site by hand. In Orchestra, cmd.exe call sites go to the legacy path (D-L4).
+  Windows, `cmd.exe` parses its command line by its own rules, so name it and write that line yourself with
+  `windowsVerbatimArgs` (amendment WP8b): `run("cmd.exe", [], { windowsVerbatimArgs: '/d /s /c "' + line + '"' })`.
+  The text goes after the quoted program unchanged; `args` must be empty, and other systems refuse the option.
 - **A `.cmd` or `.bat` file is not a reason for a shell.** hugr-omni runs it through cmd.exe with safe quoting, or
   refuses it (see the `omni-processes` skill, references/windows.md).
 

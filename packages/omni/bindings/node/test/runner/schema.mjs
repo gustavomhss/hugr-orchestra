@@ -133,7 +133,7 @@ function entry(e) {
 function options(v) {
   for (const [k, o] of Object.entries(object(v))) {
     try {
-      if (k === "cwd") text(o);
+      if (k === "cwd" || k === "windowsVerbatimArgs") text(o);
       else if (k === "env") {
         if (!Object.values(object(o)).every((x) => typeof x === "string" || x === null)) fail("env values are text or null");
       } else if (["inheritEnv", "text", "mergeStderr"].includes(k)) boolean(o);
