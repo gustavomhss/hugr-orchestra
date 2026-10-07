@@ -10,6 +10,7 @@ After this card, read only the references the assigned component uses:
 - [Pydantic v2](../libraries/python/pydantic.md): request, response and settings models.
 - [SQLAlchemy async](../libraries/python/sqlalchemy.md): `AsyncSession` reads and writes.
 - [Django and DRF](../frameworks/python/django.md): DRF views, serializers and permissions on Django.
+- [Kubeflow Pipelines](../frameworks/python/kubeflow.md): pipeline definitions compiled with the project's own kfp.
 
 The general procedures in [cancellation](../lifetimes/cancellation.md) and [atomic writes](../data/transaction.md) still apply; this card gives their Python form.
 

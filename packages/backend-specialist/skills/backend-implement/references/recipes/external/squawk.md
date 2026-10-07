@@ -4,6 +4,8 @@
 
 The packet assigns new or changed PostgreSQL migration files and a migration-safety check on them. The engine is squawk `2.67.0`, provided by the host and run only as `"$BACKEND_TOOLKIT_BIN/squawk"`. It reads SQL text only: no database, no network.
 
+Source: adapted from the official rule documentation, <https://squawkhq.com/docs/rules>, checked against the `v2.67.0` rule set.
+
 ## Non-trigger
 
 - Migrations for any other database, or SQL that is not a migration (queries, views in application code).
@@ -25,8 +27,8 @@ The packet assigns new or changed PostgreSQL migration files and a migration-saf
    "$BACKEND_TOOLKIT_BIN/squawk" --reporter gcc <migration-file>...
    ```
    Add `--pg-version=<major.minor>` when the packet names the target version, and `--assume-in-transaction` when the runner wraps each file in a transaction.
-3. Fix each finding inside the files the change wrote with the safe form the rule names: `CREATE INDEX CONCURRENTLY`, `set lock_timeout` and `set statement_timeout` before locking statements, `NOT VALID` then `VALIDATE CONSTRAINT`, a nullable column or a non-volatile default instead of a bare `NOT NULL`. Keep each fix within what the runner allows: `CONCURRENTLY` cannot run inside a transaction.
-4. A finding the change cannot avoid is reported with its rule name. Suppress it with a `-- squawk-ignore <rule>` line above the statement only when the packet accepts that rule for that statement; otherwise return a `packet` blocker.
+3. Fix each finding inside the files the change wrote with the safe form its rule names: `require-concurrent-index-creation` and `require-concurrent-index-deletion` take `CONCURRENTLY`; `require-timeout-settings` takes `set lock_timeout` and `set statement_timeout` before locking statements; `constraint-missing-not-valid` and `adding-foreign-key-constraint` take `NOT VALID`, then `VALIDATE CONSTRAINT` in a later transaction; `adding-required-field` and `adding-not-nullable-field` take a nullable column or a non-volatile default instead of a bare `NOT NULL`. Keep each fix within what the runner allows: `CONCURRENTLY` cannot run inside a transaction (`ban-concurrent-index-creation-in-transaction`).
+4. A finding the change cannot avoid is reported with its rule name. Suppress it with a `-- squawk-ignore <rule>` line above the statement only when the packet accepts that rule for that statement; otherwise return a `packet` blocker. Never add `-- squawk-ignore-file`.
 5. Rerun step 2 until it is clean, then run the packet's checks.
 
 ## Tools and outputs

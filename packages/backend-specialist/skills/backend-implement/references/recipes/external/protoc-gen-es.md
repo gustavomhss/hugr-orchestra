@@ -4,6 +4,8 @@
 
 The packet assigns TypeScript or JavaScript code generated from `.proto` files in a Buf module (`buf.yaml` present), names the output directory as part of the write paths, and gives the plugin options (`target=ts`, `import_extension=js`, ...) or a `buf.gen.yaml` that holds them. The engine is protoc-gen-es `2.16.0` on the toolkit's own Node.js, run only as a local plugin of the toolkit's buf: `"$BACKEND_TOOLKIT_BIN/protoc-gen-es"` driven by `"$BACKEND_TOOLKIT_BIN/buf" generate`.
 
+Source: adapted from the official protobuf-es documentation (Apache-2.0), <https://github.com/bufbuild/protobuf-es/blob/v2.16.0/packages/protoc-gen-es/README.md#plugin-options> and its agent map <https://github.com/bufbuild/protobuf-es/blob/main/docs/public/llms.txt>.
+
 ## Non-trigger
 
 - Lint, build or breaking checks of the schema: that is the [buf](buf.md) recipe.
@@ -19,7 +21,7 @@ The packet assigns TypeScript or JavaScript code generated from `.proto` files i
 
 ## Steps
 
-1. Check the header of an existing generated file. It names `protoc-gen-es v2.16.0` when this engine produced it. Any other version means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=2.16.0)` and do not regenerate.
+1. Check the header of an existing generated file. It names `protoc-gen-es v2.16.0` when this engine produced it. Any other version means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=2.16.0)` and do not regenerate. With `elide_plugin_version=true` the header carries no version; use the project's `@bufbuild/protoc-gen-es` pin instead, or follow the packet when there is none.
 2. With a project `buf.gen.yaml` whose entry is `local: protoc-gen-es`, let buf find the toolkit's plugin first on `PATH`:
    ```sh
    PATH="$BACKEND_TOOLKIT_BIN:$PATH" "$BACKEND_TOOLKIT_BIN/buf" generate proto
@@ -28,6 +30,7 @@ The packet assigns TypeScript or JavaScript code generated from `.proto` files i
    ```sh
    "$BACKEND_TOOLKIT_BIN/buf" generate proto --template "{version: v2, plugins: [{local: '$BACKEND_TOOLKIT_BIN/protoc-gen-es', out: <out-dir>, opt: [target=ts]}]}"
    ```
+   Without `target` the plugin writes `_pb.js` plus `_pb.d.ts` (`target=js+dts`), so the template always states the packet's target. ECMAScript modules on Node.js need `import_extension=js`. Pass only the options the packet or the config gives.
    An entry that runs the plugin another way (`npx`, `node_modules/.bin`) is a project route, not this recipe: return a `packet` blocker.
 3. Use `clean: true` only when the packet assigns it and the output directory holds nothing but generated files: buf deletes it first.
 4. Read the diff: one `_pb.ts` (or `_pb.js` and `_pb.d.ts`) per changed `.proto` file. Any change outside the output directory is a `packet` blocker.
@@ -45,4 +48,4 @@ The packet assigns TypeScript or JavaScript code generated from `.proto` files i
 - buf reports compile errors in the `.proto` files before the plugin runs; fix them as in the [buf](buf.md) recipe. Modules with `deps` need the local module cache: `network-denied-by-profile` under the sandbox, `project-prerequisite-missing:buf-deps` without one.
 - Any other nonzero exit is `engine-failure:protoc-gen-es:<exit>`.
 - Generated messages check field types, not business rules; validate values the contract constrains.
-- Checks: the project compiles, and a message round-trips through `toBinary` and `fromBinary` with the changed fields intact.
+- Checks: the project compiles, and a message built with `create(FooSchema, {...})` round-trips through `toBinary(FooSchema, msg)` and `fromBinary(FooSchema, bytes)` with the changed fields intact.

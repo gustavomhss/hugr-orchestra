@@ -4,6 +4,8 @@
 
 The packet assigns a change to sqlc inputs (query files or the schema DDL sqlc reads) and names the generated package as part of the write paths. The engine is sqlc `1.31.1`, provided by the host and run only as `"$BACKEND_TOOLKIT_BIN/sqlc"`. Calling the generated Go code is covered by [sqlc generated queries](../../libraries/go/sqlc.md).
 
+Source: adapted from the official sqlc documentation, <https://docs.sqlc.dev/en/latest/llms-full.txt>.
+
 ## Non-trigger
 
 - A change that calls existing generated methods without touching SQL: nothing to generate.
@@ -19,7 +21,7 @@ The packet assigns a change to sqlc inputs (query files or the schema DDL sqlc r
 ## Steps
 
 1. Check the generated headers first. They name `sqlc v1.31.1` when this engine produced them. Any other version means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=1.31.1)` and do not regenerate.
-2. Edit only the SQL the change needs. Each query carries its header, such as `-- name: ListTenantTasks :many`.
+2. Edit only the SQL the change needs. Each query carries its header, such as `-- name: ListTenantTasks :many`; the command after the name (`:one`, `:many`, `:exec`, `:execrows`, ...) sets the method's return shape. Name parameters with `sqlc.arg(tenant_id)`, and use `sqlc.narg(name)` for a parameter that may be null. On PostgreSQL pass a list as `id = ANY(sqlc.arg(ids)::bigint[])`; `sqlc.slice` exists for drivers without array parameters.
 3. Generate from the config directory, offline:
    ```sh
    "$BACKEND_TOOLKIT_BIN/sqlc" generate --no-database --no-remote
@@ -30,8 +32,9 @@ The packet assigns a change to sqlc inputs (query files or the schema DDL sqlc r
    "$BACKEND_TOOLKIT_BIN/sqlc" diff --no-database --no-remote
    ```
    A nonzero exit with a diff means the generated files differ from what the inputs produce.
-5. Read the generated diff. Only files for the changed queries, plus `models.go` or `querier.go` when the schema or interface changed, may move. Any other change is a `packet` blocker.
-6. Compile and run the packet's Go checks against the supplied real PostgreSQL.
+5. When the config enables `rules` for the package, lint the queries too: `"$BACKEND_TOOLKIT_BIN/sqlc" vet --no-database`. A rule that needs a database connection, such as `sqlc/db-prepare`, cannot run here; report it as not run. A `/* @sqlc-vet-disable <rule> */` annotation is added only when the packet accepts that rule for that query.
+6. Read the generated diff. Only files for the changed queries, plus `models.go` or `querier.go` when the schema or interface changed, may move. Any other change is a `packet` blocker.
+7. Compile and run the packet's Go checks against the supplied real PostgreSQL.
 
 ## Tools and outputs
 

@@ -27,6 +27,7 @@ const TUPLES = {
     "libraries/python/pydantic.md": ["2.11.7"],
     "libraries/python/sqlalchemy.md": ["2.0.43"],
     "frameworks/python/django.md": ["6.1.2", "3.18.3", "3.12.11", "3.18.1", "2.4.0", "0.30.0"],
+    "frameworks/python/kubeflow.md": ["2.17.0"],
   },
   "js-ts": {
     "languages/js-ts.md": ["22.18.0", "5.1.0", "2.2.0", "5.6.1", "4.1.8", "8.16.3", "1.3.14"],
