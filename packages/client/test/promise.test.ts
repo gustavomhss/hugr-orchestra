@@ -18,11 +18,13 @@ test("exposes every standard HTTP API group", () => {
     "files",
     "commands",
     "skills",
+    "behaviors",
     "events",
     "ptys",
     "questions",
     "references",
     "projectCopies",
+    "pullRequests",
     "schedules",
   ])
   expect(Object.keys(client.messages)).toEqual(["list"])
