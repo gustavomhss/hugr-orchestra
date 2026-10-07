@@ -15,7 +15,7 @@ const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
 import pkg from "../package.json"
-import { seatSkillsModule } from "./seat-skills"
+import { seatSkillsFiles } from "./seat-skills"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -53,7 +53,7 @@ const createEmbeddedFileMap = async (root: string, include: (file: string) => bo
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
-const seatSkillsFileMap = await seatSkillsModule()
+const seatSkillsFileMap = await seatSkillsFiles()
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {
@@ -188,7 +188,7 @@ for (const item of targets) {
     files: {
       [treeSitterWorkerPath]: treeSitterWorker,
       ...(embeddedFileMap ? { "orchestra-web-ui.gen.ts": embeddedFileMap } : {}),
-      "orchestra-seat-skills.gen.ts": seatSkillsFileMap,
+      ...seatSkillsFileMap,
     },
     entrypoints: [
       "./src/index.ts",
@@ -198,6 +198,7 @@ for (const item of targets) {
       ...(embeddedFileMap ? ["orchestra-web-ui.gen.ts"] : []),
     ],
     define: {
+      ORCHESTRA_COMPILED: "true",
       FFF_LIBC: JSON.stringify(item.abi === "musl" ? "musl" : "gnu"),
       ORCHESTRA_VERSION: `'${Script.version}'`,
       ORCHESTRA_MODELS_DEV: generated.modelsData,

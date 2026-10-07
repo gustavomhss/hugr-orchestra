@@ -3,7 +3,7 @@
 import { Script } from "@orchestra/script"
 import path from "path"
 import { fileURLToPath } from "url"
-import { seatSkillsModule } from "./seat-skills"
+import { seatSkillsFiles } from "./seat-skills"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -21,13 +21,14 @@ await Bun.build({
   sourcemap: "linked",
   external: ["jsonc-parser", "@lydell/node-pty"],
   define: {
+    ORCHESTRA_COMPILED: "true",
     ORCHESTRA_MODELS_DEV: generated.modelsData,
     ORCHESTRA_VERSION: `'${Script.version}'`,
     ORCHESTRA_CHANNEL: `'${Script.channel}'`,
   },
   files: {
     "orchestra-web-ui.gen.ts": "",
-    "orchestra-seat-skills.gen.ts": await seatSkillsModule(),
+    ...await seatSkillsFiles(),
   },
 })
 

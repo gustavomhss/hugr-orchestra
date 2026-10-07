@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { Schema } from "effect"
 import { SeatSkillRoot } from "@/maestro/seat-skill-root"
 import { backendSkills } from "@/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
@@ -99,52 +98,77 @@ describe("backend skill root", () => {
     expect(await tree(second)).toEqual({ "a/SKILL.md": "second" })
   })
 
-  test("a compiled build's extracted backend-implement loads through the real skill service for backend", async () => {
-    // A fresh process is needed: the root is resolved once, when the module is first imported.
-    const child = Bun.spawn(
-      [
-        process.execPath,
-        "test",
-        "--preload",
-        "@opentui/solid/preload",
-        "--preload",
-        "./test/preload.ts",
-        "--preload",
-        "./test/maestro/fixtures/seat-embedded-skills.ts",
-        "./test/maestro/backend-seat-runtime.test.ts",
-        "--timeout",
-        "90000",
-      ],
-      { cwd: path.resolve(import.meta.dir, "../.."), env: process.env, stdout: "pipe", stderr: "pipe" },
-    )
-    const [stdout, stderr, exit] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ])
-    if (exit !== 0) throw new Error(`embedded seat child failed (${exit}):\n${stdout}\n${stderr}`)
+  test("matching external symlink root fails acquisition without touching external bytes", async () => {
+    await using tmp = await tmpdir()
+    const files = { "a/SKILL.md": "alpha", "a/references/b.md": "βeta 日本語\r\n" }
+    const cache = path.join(tmp.path, "cache")
+    const dir = await SeatSkillRoot.extract("backend", files, cache, "local")
+    const external = path.join(tmp.path, "external")
+    await fs.rename(dir, external)
+    await fs.symlink(external, dir, process.platform === "win32" ? "junction" : "dir")
+    await expect(SeatSkillRoot.extract("backend", files, cache, "local")).rejects.toMatchObject({
+      name: "SeatSkillPackagingError",
+      message: `Invalid extracted seat skill root: ${dir}`,
+    })
+    expect(await tree(external)).toEqual(files)
+    expect((await fs.lstat(dir)).isSymbolicLink()).toBe(true)
+  })
 
-    const line = stdout.split("\n").find((value) => value.startsWith('{"backendEmbedded":'))
-    if (!line) throw new Error(`embedded seat child printed no evidence:\n${stdout}`)
-    const evidence = Schema.decodeUnknownSync(
-      Schema.Struct({
-        backendEmbedded: Schema.Struct({
-          root: Schema.String,
-          source: Schema.String,
-          extracted: Schema.Array(Schema.String),
-        }),
-      }),
-    )(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(line)).backendEmbedded
-    expect(evidence.source).toBe(SOURCE)
-    expect(evidence.root).not.toBe(SOURCE)
-    expect(path.dirname(evidence.root).endsWith(path.join("orchestra", "backend-skills"))).toBe(true)
-    expect(path.basename(evidence.root)).toMatch(/^local-[0-9a-f]{12}$/)
-    expect(evidence.extracted).toEqual(await relativeFiles(SOURCE))
-    // Every seat-runtime case ran against the extracted root and none was skipped.
-    expect(stderr).toMatch(/\b3 pass\b/)
-    expect(stderr).toMatch(/\b0 fail\b/)
-    expect(stderr).not.toMatch(/\b[1-9]\d* skip\b/)
-  }, 120000)
+  test("planted companion symlink cannot pass digest verification", async () => {
+    await using tmp = await tmpdir()
+    const files = { "a/SKILL.md": "alpha", "a/ref.md": "βeta" }
+    const dir = await SeatSkillRoot.extract("backend", files, tmp.path, "local")
+    const external = path.join(tmp.path, "external.md")
+    await Bun.write(external, "βeta")
+    await fs.rm(path.join(dir, "a/ref.md"))
+    await fs.symlink(external, path.join(dir, "a/ref.md"))
+    expect(await SeatSkillRoot.extract("backend", files, tmp.path, "local")).toBe(dir)
+    expect((await fs.lstat(path.join(dir, "a/ref.md"))).isFile()).toBe(true)
+    expect(await tree(dir)).toEqual(files)
+    expect(await Bun.file(external).text()).toBe("βeta")
+  })
+
+  test("competing process starts acquire one valid tree without removing its publication", async () => {
+    await using tmp = await tmpdir()
+    const files = Object.fromEntries(Array.from({ length: 128 }, (_, index) => [`a/references/${index}.md`, `日本語 ${index}\r\n`]))
+    const module = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts")
+    const children = Array.from({ length: 4 }, () => Bun.spawn([process.execPath, "--eval", `
+      import fs from "node:fs/promises";
+      const { SeatSkillRoot } = await import(${JSON.stringify(module)});
+      const root = await SeatSkillRoot.extract("backend", ${JSON.stringify(files)}, ${JSON.stringify(tmp.path)}, "local");
+      console.log(JSON.stringify({ root, ino: (await fs.stat(root)).ino }));
+    `], { cwd: path.resolve(import.meta.dir, "../.."), env: process.env, stdout: "pipe", stderr: "pipe" }))
+    const evidence = await Promise.all(children.map(async (child) => {
+      const [stdout, stderr, exit] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+      if (exit !== 0) throw new Error(`Competing seat root acquisition failed (${exit}):\n${stdout}\n${stderr}`)
+      return JSON.parse(stdout) as { root: string; ino: number }
+    }))
+    expect(evidence).toEqual(Array.from({ length: 4 }, () => evidence[0]))
+    expect(await tree(evidence[0].root)).toEqual(files)
+    expect(await fs.readdir(path.dirname(evidence[0].root))).toEqual([path.basename(evidence[0].root)])
+  }, 60000)
+
+  test.each(["../escape.md", "/escape.md", "a/../escape.md", "a\\escape.md", "C:/escape.md", "a//escape.md"])("escaping path %s fails acquisition", async (file) => {
+    await using tmp = await tmpdir()
+    await expect(SeatSkillRoot.extract("backend", { [file]: "bad" }, tmp.path, "local")).rejects.toMatchObject({
+      name: "SeatSkillPackagingError",
+      message: `Invalid seat skill path: backend/${file}`,
+    })
+    expect(await fs.readdir(tmp.path)).toEqual([])
+  })
+
+  test("held publication lock fails acquisition by name, never returns an unchecked tree", async () => {
+    await using tmp = await tmpdir()
+    const files = { "a/SKILL.md": "alpha" }
+    const dir = await SeatSkillRoot.extract("backend", files, tmp.path, "local")
+    await Bun.write(path.join(dir, "a/SKILL.md"), "tampered")
+    await fs.mkdir(`${dir}.lock`)
+    await expect(SeatSkillRoot.extract("backend", files, tmp.path, "local")).rejects.toMatchObject({
+      name: "SeatSkillPackagingError", message: "Cannot acquire seat skill publication lock: backend",
+    })
+    expect(await tree(dir)).toEqual({ "a/SKILL.md": "tampered" })
+    expect((await fs.stat(`${dir}.lock`)).isDirectory()).toBe(true)
+  }, 20000)
 })
 
 // Writes `contents` as real files under `dir` and returns the map the generated module would export.

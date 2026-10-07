@@ -16,6 +16,10 @@ Each native specialist has one definition in `packages/orchestra/src/maestro/sea
 
 Permissions extend shared bases with only the seat's entry skills and read-only external skill root. Native config cannot widen permissions. Existing execution/review members keep their semantics.
 
+Skill trees support UTF-8 text only, including companion references; binary companions are unsupported. Embedding rejects invalid or nonlossless UTF-8 and preserves authored bytes without whole-tree newline normalization. Specialist Markdown checks out with LF on every platform. Source and compiled startup fail closed if a declared tree or entry is missing or invalid; project/global skills cannot substitute for packaged entries. Every `SKILL.md` must be a declared, seat-scoped entry with its matching string name and optional string description, using the runtime frontmatter parser.
+
+Source roots and extracted tree roots must be real directories, not symlinks; tree entries cannot be links or escape their root. Extraction verifies the content digest before reuse and serializes cooperative publication of each cache copy. This confines supported authored trees and cooperative starts, not hostile concurrent filesystem rewrites or symlinked cache ancestors.
+
 Atlas Memory's public boundary and durable receipts have one supported owner: backend. Definitions requesting it for another id fail. Exposure requires the native owner's capability; no new seat is bound to backend memory. Backend toolkit packs, runtimes and skill content remain backend-only; requesting that toolkit from another seat fails. Core derives its closed entry-skill type from the packaged directories via `bun script/toolkit-pack.ts skills` (run in `packages/core`). Core does not import orchestra.
 
 ## Add and qualify a seat
