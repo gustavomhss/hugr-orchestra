@@ -255,7 +255,7 @@ glossary keeps its 15 concepts: `configure` is placed under *spawn* and `backpre
   torn down, its children's trees are force-stopped before the teardown returns (bounded, 5 s), as the end of the host
   process does through the supervisor. The garbage collector still never kills a child (§5).
 
-## Amendment WP8b (proposed)
+## Amendment WP8b (approved by the lead, 2026-10-07)
 
 Additive; written by WP8b, for the lead to approve at merge. Nothing above changes meaning. The glossary keeps its 15
 concepts: `windowsVerbatimArgs` is placed under *spawn* (`scripts/surface-check/parity.txt`), because it says how the
