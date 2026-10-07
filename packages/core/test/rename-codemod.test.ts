@@ -1,10 +1,25 @@
 import { afterEach, describe, expect, test } from "bun:test"
-import { chmod, mkdtemp, rm, stat } from "node:fs/promises"
+import { chmod, lstat, mkdir, mkdtemp, readlink, rm, stat, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 
 const script = path.resolve(import.meta.dir, "../../../script/rename-codemod.ts")
 const repos: string[] = []
+// Linux always runs these cases. Windows skips only when its symlink privilege probe is denied.
+const canSymlink = process.platform !== "win32" || await symlinkPermission()
+
+async function symlinkPermission() {
+  const cwd = await mkdtemp(path.join(tmpdir(), "rename-symlink-probe-"))
+  const allowed = await symlink("missing", path.join(cwd, "link"), "file").then(
+    () => true,
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === "EPERM" || error.code === "EACCES") return false
+      throw error
+    },
+  )
+  await rm(cwd, { recursive: true, force: true })
+  return allowed
+}
 
 afterEach(async () => {
   await Promise.all(repos.splice(0).map((cwd) => rm(cwd, { recursive: true, force: true })))
@@ -73,7 +88,9 @@ describe("rename codemod CLI", () => {
     for (const [file, text] of Object.entries(files))
       expect(await Bun.file(path.join(dry, file)).text()).toBe(text)
     expect(git(dry, "ls-files").split("\n").filter(Boolean).sort()).toEqual(Object.keys(files).sort())
-    expect(run(real).output).toContain("0 paths moved, 0 files rewritten")
+    const rerun = run(real)
+    expect(rerun.code, rerun.output).toBe(0)
+    expect(rerun.output).toContain("0 paths moved, 0 files rewritten")
   })
 
   test("final-path masks preserve legacy branches and provider text in dry and real runs", async () => {
@@ -187,6 +204,70 @@ describe("rename codemod CLI", () => {
       expect(result.code).toBe(1)
       expect(result.output).toContain("Unreadable tracked file missing.ts:")
       expect(await Bun.file(path.join(cwd, "opencode.ts")).text()).toBe("OpenCode\n")
+    }
+  })
+
+  test("leading-dash filenames share preview and real move plans", async () => {
+    const files = { "-opencode.ts": "OpenCode\n" }
+    const dry = await repo(files)
+    const real = await repo(files)
+    for (const result of [run(dry, true), run(real)]) expect(result.code, result.output).toBe(0)
+    expect((await Bun.file(path.join(dry, "report.md")).text()).split("## preview scope")[0]).toBe(
+      await Bun.file(path.join(real, "report.md")).text(),
+    )
+    expect(await Bun.file(path.join(real, "-orchestra.ts")).text()).toBe("Orchestra\n")
+    expect(await Bun.file(path.join(dry, "-opencode.ts")).text()).toBe("OpenCode\n")
+  })
+
+  test.skipIf(!canSymlink)("dangling destination refuses before an early directory move", async () => {
+    for (const dry of [true, false]) {
+      const cwd = await repo({ "opencode-first/name.ts": "OpenCode\n", "opencode.ts": "OpenCode\n" })
+      await symlink("missing", path.join(cwd, "orchestra.ts"), "file")
+      const index = git(cwd, "ls-files", "--stage")
+      const result = run(cwd, dry)
+      expect(result.code).toBe(1)
+      expect(result.output).toContain("Cannot move opencode.ts: orchestra.ts already exists.")
+      expect(git(cwd, "ls-files", "--stage")).toBe(index)
+      expect(await Bun.file(path.join(cwd, "opencode-first/name.ts")).text()).toBe("OpenCode\n")
+      expect((await lstat(path.join(cwd, "orchestra.ts"))).isSymbolicLink()).toBe(true)
+    }
+  })
+
+  test.skipIf(!canSymlink)("affected tracked symlink source, target or content refuses before edits", async () => {
+    for (const kind of ["source", "target", "content"]) {
+      for (const dry of [true, false]) {
+        const source = kind === "source" ? "opencode-link.ts" : "link.ts"
+        const target = kind === "target" ? "opencode-target.ts" : "target.ts"
+        const text = kind === "content" ? "OpenCode\n" : "unchanged\n"
+        const cwd = await repo({ [target]: text, "opencode-first/name.ts": "OpenCode\n" })
+        await symlink(target, path.join(cwd, source), "file")
+        git(cwd, "add", "--", source)
+        const index = git(cwd, "ls-files", "--stage")
+        const result = run(cwd, dry)
+        expect(result.code).toBe(1)
+        expect(result.output).toContain(
+          `Tracked symlink ${source} requires explicit rename handling; nothing was changed.`,
+        )
+        expect(git(cwd, "ls-files", "--stage")).toBe(index)
+        expect(await Bun.file(path.join(cwd, "opencode-first/name.ts")).text()).toBe("OpenCode\n")
+        expect(await Bun.file(path.join(cwd, target)).text()).toBe(text)
+        expect(await readlink(path.join(cwd, source))).toBe(target)
+      }
+    }
+  })
+
+  test.skipIf(!canSymlink)("unaffected custom-elements symlink stays accepted and intact", async () => {
+    for (const dry of [true, false]) {
+      const cwd = await repo({ "packages/ui/src/custom-elements.d.ts": "export {}\n", "opencode.ts": "OpenCode\n" })
+      const source = "packages/app/src/custom-elements.d.ts"
+      await mkdir(path.dirname(path.join(cwd, source)), { recursive: true })
+      await symlink("../../ui/src/custom-elements.d.ts", path.join(cwd, source), "file")
+      git(cwd, "add", "--", source)
+      const result = run(cwd, dry)
+      expect(result.code, result.output).toBe(0)
+      expect((await lstat(path.join(cwd, source))).isSymbolicLink()).toBe(true)
+      expect(await readlink(path.join(cwd, source))).toBe("../../ui/src/custom-elements.d.ts")
+      expect(await Bun.file(path.join(cwd, source)).text()).toBe("export {}\n")
     }
   })
 })

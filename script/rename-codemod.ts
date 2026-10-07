@@ -12,7 +12,7 @@
 // Running it again on its own output changes nothing. Running it on a branch that predates the rename renames that
 // branch's work the same way, so merging the renamed dev afterwards leaves mostly mechanical conflicts.
 
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, lstatSync, readFileSync, readlinkSync } from "node:fs"
 import path from "node:path"
 import { kept, OLD_NAME, oldNames, protectedStrings } from "./rename-ledger"
 
@@ -151,11 +151,27 @@ async function textFiles() {
   const files = tracked()
   const result: { file: string; text: string }[] = []
   for (const file of files) {
+    const symlink = lstatSync(path.join(root, file), { throwIfNoEntry: false })?.isSymbolicLink()
+    const target = symlink
+      ? path.relative(root, path.resolve(root, path.dirname(file), readlinkSync(path.join(root, file))))
+          .split(path.sep)
+          .join("/")
+      : file
+    if (symlink && (rename(file) !== file || rename(target) !== target))
+      fail(`Tracked symlink ${file} requires explicit rename handling; nothing was changed.`)
     const bytes = await Bun.file(path.join(root, file))
       .bytes()
       .catch((error: unknown) => fail(`Unreadable tracked file ${file}: ${String(error)}`))
-    if (kept(file) || bytes.subarray(0, 8000).includes(0)) continue
-    result.push({ file, text: new TextDecoder().decode(bytes) })
+    if (bytes.subarray(0, 8000).includes(0)) continue
+    const text = new TextDecoder().decode(bytes)
+    if (
+      symlink && [file, target].some((candidate) =>
+        !kept(candidate) && !GENERATED.test(candidate) && apply(text, candidate, false) !== text,
+      )
+    )
+      fail(`Tracked symlink ${file} requires explicit rename handling; nothing was changed.`)
+    if (kept(file)) continue
+    result.push({ file, text })
   }
   return result
 }
@@ -250,10 +266,10 @@ function movePaths() {
         break
       }
     }
-    if (original !== undefined && existsSync(path.join(root, original)))
+    if (original !== undefined && lstatSync(path.join(root, original), { throwIfNoEntry: false }))
       fail(`Cannot move ${move.from}: ${move.to} already exists.`)
   })
-  if (!dryRun) for (const move of operations) git(root, "mv", move.from, move.to)
+  if (!dryRun) for (const move of operations) git(root, "mv", "--", move.from, move.to)
   const done = operations.map((move) => `${move.from} -> ${move.to}`)
   report.push("## moves", ...done)
   return done
