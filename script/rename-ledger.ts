@@ -15,11 +15,6 @@ export const keptPaths: Kept[] = [
     reason: "the rename tooling names the old strings it replaces",
   },
   { path: /(?:^|\/)(?:LICENSE|NOTICE)(?:\.[a-z]+)?$/, reason: "license and notice texts keep their copyright lines" },
-  {
-    path: /^README(?:\.[a-z]+)?\.md$/,
-    reason:
-      "upstream README and its translations, pending the owner's rewrite; a mechanical rename would advertise install commands for packages that do not exist",
-  },
   { path: /^specs\/orchestra-visual\/(?:handoff|evidence)\//, reason: "hash-pinned evidence archives" },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {

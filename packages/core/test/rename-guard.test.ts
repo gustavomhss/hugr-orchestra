@@ -33,6 +33,8 @@ describe("rename guard", () => {
     expect(files.length).toBeGreaterThan(5000)
     expect(tracked.filter((file) => !kept(file)).flatMap((file) => oldNames(file, ""))).toEqual([])
     expect(files.flatMap((entry) => oldNames(entry.file, entry.text))).toEqual([])
+    // The README is Orchestra's own text now; no ledger entry may exempt it again.
+    expect(files.map((entry) => entry.file)).toContain("README.md")
   })
 
   test("every ledger entry still matches something, so the ledger cannot outlive its reasons", async () => {
