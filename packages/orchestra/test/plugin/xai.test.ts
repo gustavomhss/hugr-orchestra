@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { accessTokenIsExpiring, pollDeviceCodeToken, requestDeviceCode, XaiAuthPlugin } from "../../src/plugin/xai"
 import { OAUTH_DUMMY_KEY } from "../../src/auth"
 import { rethrow } from "../lib/rejection"
@@ -42,6 +42,12 @@ function serverOptions(server: ReturnType<typeof Bun.serve>) {
 }
 
 describe("plugin.xai", () => {
+  const previousClientID = process.env.ORCHESTRA_XAI_CLIENT_ID
+  beforeAll(() => { process.env.ORCHESTRA_XAI_CLIENT_ID = "fixture-owned-xai" })
+  afterAll(() => {
+    if (previousClientID === undefined) delete process.env.ORCHESTRA_XAI_CLIENT_ID
+    else process.env.ORCHESTRA_XAI_CLIENT_ID = previousClientID
+  })
   describe("accessTokenIsExpiring", () => {
     test("returns true for an already-expired JWT", () => {
       expect(accessTokenIsExpiring(makeJwt({ exp: Math.floor(Date.now() / 1000) - 60 }), 0)).toBe(true)
@@ -212,7 +218,9 @@ describe("plugin.xai", () => {
       using server = makeServer(async (request, url) => {
         if (url.pathname === "/oauth2/token") {
           tokenRequests++
-          expect(await request.text()).toContain("refresh_token=rt-old")
+          const body = new URLSearchParams(await request.text())
+          expect(body.get("refresh_token")).toBe("rt-old")
+          expect(body.get("client_id")).toBe("fixture-owned-xai")
           await new Promise((resolve) => setTimeout(resolve, 30))
           return Response.json({ access_token: "new-access", refresh_token: "rt-new", expires_in: 3600 })
         }
@@ -436,7 +444,7 @@ describe("plugin.xai", () => {
 
       await requestDeviceCode({ deviceAuthorizationUrl: new URL("/oauth2/device/code", server.url).toString() })
       const parsed = new URLSearchParams(capturedBody)
-      expect(parsed.get("client_id")).toBe("b1a00492-073a-47ea-816f-4c329264a828")
+      expect(parsed.get("client_id")).toBe("fixture-owned-xai")
       expect(parsed.get("scope")).toContain("offline_access")
       expect(parsed.get("scope")).toContain("grok-cli:access")
       expect(parsed.get("scope")).toContain("api:access")
@@ -456,6 +464,7 @@ describe("plugin.xai", () => {
         expect(request.headers.get("content-type")).toBe("application/x-www-form-urlencoded")
         const body = new URLSearchParams(await request.text())
         expect(body.get("grant_type")).toBe("urn:ietf:params:oauth:grant-type:device_code")
+        expect(body.get("client_id")).toBe("fixture-owned-xai")
         expect(body.get("device_code")).toBe("DC-1")
         return Response.json({ access_token: "AT", refresh_token: "RT", expires_in: 3600 })
       })

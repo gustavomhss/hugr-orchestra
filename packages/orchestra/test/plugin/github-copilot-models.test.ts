@@ -490,3 +490,34 @@ test("remaps fallback oauth model urls to the enterprise host", async () => {
   expect(models.claude.api.url).toBe("https://copilot-api.ghe.example.com")
   expect(models.claude.api.npm).toBe("@ai-sdk/github-copilot")
 })
+
+test("uses configured Copilot client ID for device authorization and polling over HTTP", async () => {
+  const previous = process.env.ORCHESTRA_COPILOT_CLIENT_ID
+  process.env.ORCHESTRA_COPILOT_CLIENT_ID = "fixture-owned-copilot"
+  using restore = { [Symbol.dispose]() {
+    if (previous === undefined) delete process.env.ORCHESTRA_COPILOT_CLIENT_ID
+    else process.env.ORCHESTRA_COPILOT_CLIENT_ID = previous
+  } }
+  const bodies: Array<{ client_id: string; grant_type?: string }> = []
+  using server = Bun.serve({ port: 0, async fetch(request) {
+    bodies.push(await request.json())
+    return Response.json(new URL(request.url).pathname.endsWith("/device/code")
+      ? { verification_uri: "https://example.invalid/fixture", user_code: "fixture", device_code: "fixture", interval: 1 }
+      : { access_token: "fixture-access" })
+  } })
+  // Reuse this file's fixed-host fetch boundary; responses come from actual local HTTP.
+  globalThis.fetch = ((input, init) => {
+    const url = new URL(input instanceof Request ? input.url : input.toString())
+    if (url.origin !== "https://github.com") throw new Error("Unexpected fixture origin")
+    return originalFetch(new URL(url.pathname, server.url), init)
+  }) as typeof fetch
+  const hooks = await CopilotAuthPlugin({} as never)
+  const method = hooks.auth?.methods.find((method) => method.type === "oauth")
+  if (!method || method.type !== "oauth") throw new Error("Missing Copilot OAuth method")
+  const attempt = await method.authorize({})
+  if (attempt.method !== "auto") throw new Error("Expected device authorization")
+  process.env.ORCHESTRA_COPILOT_CLIENT_ID = "fixture-next-registration"
+  expect(await attempt.callback()).toMatchObject({ type: "success" })
+  expect(bodies.map((body) => body.client_id)).toEqual(["fixture-owned-copilot", "fixture-owned-copilot"])
+  expect(bodies[1].grant_type).toBe("urn:ietf:params:oauth:grant-type:device_code")
+})

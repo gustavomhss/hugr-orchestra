@@ -4,8 +4,8 @@ import { InstallationVersion } from "@orchestra/core/installation/version"
 import { OauthCallbackPage } from "@orchestra/core/oauth/page"
 import { createServer } from "http"
 import open from "open"
+import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 
-const DO_OAUTH_CLIENT_ID = "b1a6c5158156caac821fd1b30253ca8acb52454a48fa744420e41889cb589f82"
 const DO_AUTHORIZE_URL = "https://cloud.digitalocean.com/v1/oauth/authorize"
 const DO_API_BASE = "https://api.digitalocean.com"
 const DO_GENAI_API = `${DO_API_BASE}/v2/gen-ai`
@@ -48,10 +48,10 @@ function redirectUri(): string {
   return `http://localhost:${OAUTH_PORT}${OAUTH_REDIRECT_PATH}`
 }
 
-function buildAuthorizeUrl(state: string): string {
+function buildAuthorizeUrl(state: string, clientID: string): string {
   const params = new URLSearchParams({
     response_type: "token",
-    client_id: DO_OAUTH_CLIENT_ID,
+    client_id: clientID,
     redirect_uri: redirectUri(),
     scope: OAUTH_SCOPES,
     state,
@@ -275,10 +275,11 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
           type: "oauth",
           label: "Login with DigitalOcean",
           async authorize() {
+            const clientID = OwnOAuthApp.requireClientID("digitalocean")
             await startOAuthServer()
             const state = generateState()
             const callbackPromise = waitForOAuthCallback(state)
-            const url = buildAuthorizeUrl(state)
+            const url = buildAuthorizeUrl(state, clientID)
             await open(url).catch(() => undefined)
             return {
               url,
