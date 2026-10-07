@@ -36,6 +36,11 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
+    path: /^packages\/[^/]+\/test\/fixtures\/recordings\//,
+    reason:
+      "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
+  },
+  {
     path: /^packages\/(?:opencode|orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
     reason: "snapshot of the third-party models.dev catalog, which lists the Zen provider",
   },
@@ -55,7 +60,7 @@ export const protectedStrings: Protected[] = [
     pattern: /(?:[A-Za-z0-9-]+\.)*opencode\\?\.(?:ai|cafe)\b/g,
     reason: "upstream-hosted domain; renaming would point at an unrelated domain",
   },
-  { pattern: /\b(?:anomalyco|sst|claudianus)\/opencode\b/g, reason: "upstream repository" },
+  { pattern: /\b(?:anomalyco|sst|claudianus)(?:\/|\\+)opencode\b/g, reason: "upstream repository" },
   { pattern: /\bsst-dev\.opencode\b/g, reason: "upstream VS Code extension id" },
   { pattern: /\bupstream (?:opencode|OpenCode)\b/g, reason: "sentence about the upstream project" },
   { pattern: /\bOpenCode's historical\b/g, reason: "sentence about upstream history" },
@@ -126,6 +131,10 @@ export const protectedStrings: Protected[] = [
       /\bid:\s*(["'])opencode\1|\b(?:v[12]Provider|v2Model|renderConnection|selectOption)\("opencode"|data-provider-id="opencode"/g,
     reason: "the Zen provider id in a provider object or fixture",
   },
+  {
+    pattern: /(?<![\w./-])opencode(?=:\s*\{)/g,
+    reason: "the Zen provider id as a provider config, auth or options key",
+  },
   { pattern: /\bdialog\.provider\.opencode\b/g, reason: "i18n key derived from the Zen provider id" },
   { pattern: /\bopencode\/(?:gpt-[\w.-]+|big-pickle|mimo|other|next)\b/g, reason: "Zen model reference" },
   {
@@ -141,7 +150,7 @@ export const protectedStrings: Protected[] = [
   {
     pattern: /"opencode"/g,
     paths:
-      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app\/src\/hooks\/use-providers\.ts$|^packages\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$|\/test\/fixtures\/recordings\/session\/native-zen-tool-loop\.json$/,
+      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app\/src\/hooks\/use-providers\.ts$|^packages\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
     reason: "the Zen provider id",
   },
   {
@@ -172,6 +181,13 @@ export const protectedStrings: Protected[] = [
     pattern: /\^opencode\\\/|toBe\("opencode"\)/g,
     paths: /\/test\/plugin\/xai\.test\.ts$/,
     reason: "xAI User-Agent and referrer, kept until probed",
+  },
+
+  // Upstream build artifacts the tree downloads until Orchestra publishes its own
+  {
+    pattern: /@opencode-ai\/cli-(?=[a-z])|\bopencode2\b/g,
+    paths: /^packages\/desktop\/scripts\/utils\.ts$/,
+    reason: "upstream's published CLI binary, which the desktop dev build downloads from npm",
   },
 
   // Unrelated words
