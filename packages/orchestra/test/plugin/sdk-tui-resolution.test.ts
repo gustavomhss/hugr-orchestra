@@ -21,22 +21,20 @@ test("mixed public SDK/TUI imports use bundled objects through real OpenTUI, wit
     'throw new Error("planted SDK copy ran")\nexport function tool() {}\nexport function define() {}\nexport function createBindingLookup() {}\n',
   )
   const entry = path.join(tmp.path, "mixed.ts")
-  await Bun.write(
-    entry,
-    [
-      'import { tool } from "@orchestra/plugin"',
-      "export { tool }",
-      'export { tool as subpathTool } from "@orchestra/plugin/tool"',
-      'export { define as effectDefine } from "@orchestra/plugin/v2/effect"',
-      'export { define as pluginDefine } from "@orchestra/plugin/v2/effect/plugin"',
-      'export { define as promiseDefine } from "@orchestra/plugin/v2/promise"',
-      'export { createBindingLookup } from "@orchestra/plugin/tui"',
-      "export const greet = tool({",
-      '  description: "Greets someone",',
-      "  args: { name: tool.schema.string() },",
-      "  execute: async (args) => `hello ${args.name}`,",
-      "})",
-    ].join("\n"),
+  // Read bytes, never import: parent OpenTUI hooks also rewrite import text inside source string literals.
+  await Bun.write(entry, await Bun.file(new URL("./fixtures/sdk-tui-mixed.ts", import.meta.url)).text())
+  const source = await Bun.file(entry).text()
+  expect(source, "SDK/TUI fixture contaminated by parent OpenTUI runtime hook").not.toContain("opentui:runtime-module:")
+  const specifiers = [
+    "@orchestra/plugin",
+    "@orchestra/plugin/tool",
+    "@orchestra/plugin/v2/effect",
+    "@orchestra/plugin/v2/effect/plugin",
+    "@orchestra/plugin/v2/promise",
+    "@orchestra/plugin/tui",
+  ]
+  specifiers.forEach((specifier) =>
+    expect(source, "SDK/TUI fixture must retain original public specifiers").toContain(JSON.stringify(specifier)),
   )
 
   for (const mode of ["normal", "control"]) {
