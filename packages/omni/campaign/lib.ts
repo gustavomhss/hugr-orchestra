@@ -39,10 +39,16 @@ export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve
 export async function until<T>(timeoutMs: number, what: string, probe: () => T | undefined | Promise<T | undefined>) {
   const deadline = Date.now() + timeoutMs
   for (;;) {
-    const value = await probe()
+    const left = deadline - Date.now()
+    if (left <= 0) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const value = await Promise.race([
+      Promise.resolve().then(probe),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)), left) }),
+    ]).finally(() => clearTimeout(timer))
+    if (Date.now() >= deadline) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)
     if (value !== undefined) return value
-    if (Date.now() > deadline) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)
-    await sleep(200)
+    await sleep(Math.min(200, deadline - Date.now()))
   }
 }
 
@@ -177,22 +183,26 @@ export async function fakeLLM(calls: ToolCall[]) {
   return { url: `http://127.0.0.1:${address.port}/v1`, seen, offered, stop: () => server.close() }
 }
 
-export type Started = { proc: ChildProcess; url: string; pid: number; extra: number[]; out: () => string }
+export type Identity = { pid: number; startTime: string }
+export type Started = { proc: ChildProcess; url: string; pid: number; extra: number[]; identity?: Identity; out: () => string }
 
-const hosts = new Map<string, Set<ChildProcess>>()
+const hosts = new Map<string, { proc: ChildProcess; identity: Identity }[]>()
+const pins = new Map<number, Identity>()
 
 /** Retain handles of only campaign-owned hosts: serve's argv contains no isolated HOME marker. */
 export function own(home: string, proc: ChildProcess) {
-  const entries = hosts.get(home) ?? new Set<ChildProcess>()
-  entries.add(proc)
+  const captured = identity(proc.pid!)
+  const entries = hosts.get(home) ?? []
+  entries.push({ proc, identity: captured })
   hosts.set(home, entries)
+  return captured
 }
 
 /** Starts `opencode serve` (or another subcommand that prints `listening on http://...`) and waits for its URL. */
 export async function serve(bin: string, args: string[], env: Record<string, string>, cwd: string): Promise<Started> {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
-  own(env.OPENCODE_TEST_HOME!, proc)
+  const captured = own(env.OPENCODE_TEST_HOME!, proc)
   let out = ""
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
@@ -200,7 +210,7 @@ export async function serve(bin: string, args: string[], env: Record<string, str
     if (proc.exitCode !== null || proc.signalCode !== null) throw new Error(`exited ${proc.exitCode ?? proc.signalCode} before listening: ${out.slice(-2000)}`)
     return out.match(/listening on (http:\/\/\S+)/)?.[1]
   })
-  return { proc, url, pid: proc.pid!, extra: [] as number[], out: () => out }
+  return { proc, url, pid: proc.pid!, extra: [] as number[], identity: captured, out: () => out }
 }
 
 /** JSON calls against an Orchestra server for one project directory. */
@@ -234,8 +244,13 @@ export function fileTree(home: string, depth = 2) {
   return { ...t, args, line: [t.command, ...args].map((value) => `"${slash(value)}"`).join(" ") }
 }
 
-/** The process table as rows (pid, parent, command line). Windows: one CIM query. */
-export function table() {
+const QUERY_MS = 2000
+type Row = Identity & { parent: number; args: string; state: string }
+
+/** Bounded, fail-closed OS table. Only named Windows kernel PIDs may lack command lines. */
+export function table(timeoutMs = QUERY_MS): Row[] {
+  if (timeoutMs <= 0) throw new Error("process table query has no deadline budget")
+  const options = { encoding: "utf8" as const, windowsHide: true, maxBuffer: 64 * 1024 * 1024, timeout: timeoutMs, killSignal: "SIGKILL" as const }
   if (win) {
     const out = spawnSync(
       "powershell",
@@ -243,40 +258,112 @@ export function table() {
         "-NoProfile",
         "-NonInteractive",
         "-Command",
-        "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress",
+        "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine,@{Name='StartTime';Expression={if ($_.CreationDate) {$_.CreationDate.ToFileTimeUtc().ToString()}}} | ConvertTo-Json -Compress",
       ],
-      { encoding: "utf8", windowsHide: true, maxBuffer: 64 * 1024 * 1024 },
+      options,
     )
     if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
-    const rows = JSON.parse(out.stdout) as { ProcessId: number; ParentProcessId: number; CommandLine: string | null }[]
+    const rows = JSON.parse(out.stdout) as { ProcessId: number; ParentProcessId: number; CommandLine: string | null; StartTime: string | null }[]
     if (!Array.isArray(rows) || rows.length === 0) throw new Error("Get-CimInstance returned no process table")
-    if (!rows.some((row) => row.ProcessId === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
-    return rows.filter((row) => row.ProcessId !== out.pid).map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine ?? "" }))
+    const parsed = rows.filter((row) => row.ProcessId !== out.pid && row.ProcessId !== 0 && row.ProcessId !== 4).map((row) => {
+      // PID 0 is System Idle Process; PID 4 is System. Neither can be an owned campaign child.
+      if (!Number.isSafeInteger(row.ProcessId) || row.ProcessId <= 0 || !Number.isSafeInteger(row.ParentProcessId) || typeof row.CommandLine !== "string" || !row.CommandLine.trim() || typeof row.StartTime !== "string" || !/^\d+$/.test(row.StartTime))
+        throw new Error(`Get-CimInstance cannot establish process identity/argv for PID ${row.ProcessId}: ${JSON.stringify(row)}`)
+      return { pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine, startTime: row.StartTime, state: "live" }
+    })
+    if (!parsed.some((row) => row.pid === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
+    parsed.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
+    return parsed
   }
-  const out = spawnSync("ps", process.platform === "darwin" ? ["-axww", "-o", "pid=,ppid=,args="] : ["-eww", "-o", "pid=,ppid=,args="], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+  const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
   const rows = out.stdout.split("\n")
-    .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/))
-    .filter((match) => match !== null)
-    .map((match) => ({ pid: Number(match[1]), parent: Number(match[2]), args: match[3]! }))
+    .filter((line) => line.trim().length > 0)
+    .flatMap((line) => {
+      const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\S+)\s+(\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.*)$/)
+      if (!match) throw new Error(`malformed ps row: ${line}`)
+      const pid = Number(match[1])
+      if (process.platform !== "linux") return [{ pid, parent: Number(match[2]), state: match[3]!, startTime: match[4]!, args: match[5]! }]
+      const observed = (() => {
+        try {
+          const stat = readFileSync(`/proc/${pid}/stat`, "utf8")
+          const args = readFileSync(`/proc/${pid}/cmdline`, "utf8").replaceAll("\0", " ").trim()
+          const checked = readFileSync(`/proc/${pid}/stat`, "utf8")
+          const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ")
+          const now = checked.slice(checked.lastIndexOf(")") + 2).split(" ")
+          if (fields[19] !== now[19]) throw new Error(`PID ${pid} changed identity during /proc query`)
+          if (!args && !now[0]!.startsWith("Z") && Number(now[1]) !== 0 && Number(now[1]) !== 2) throw new Error(`live PID ${pid} has unavailable argv`)
+          return { fields: now, args: args || match[5]! }
+        }
+        catch (error) {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined // It exited after the ps snapshot.
+          throw error
+        }
+      })()
+      if (observed === undefined) return []
+      if (!/^\d+$/.test(observed.fields[19]!)) throw new Error(`malformed /proc/${pid}/stat start time`)
+      return [{ pid, parent: Number(observed.fields[1]), state: observed.fields[0]!, startTime: observed.fields[19]!, args: observed.args }]
+    })
     .filter((row) => row.pid !== out.pid)
   if (!rows.some((row) => row.pid === process.pid)) throw new Error("ps returned an incomplete or malformed process table (querying host missing)")
+  rows.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
   return rows
+}
+
+export function identity(pid: number, rows = table()): Identity {
+  const row = rows.find((row) => row.pid === pid && !row.state.startsWith("Z"))
+  if (!row) throw new Error(`cannot capture live process identity for PID ${pid}`)
+  return { pid: row.pid, startTime: row.startTime }
+}
+
+export function matches(row: Identity, pinned: Identity) {
+  return row.pid === pinned.pid && row.startTime === pinned.startTime
+}
+
+export function hasNonce(args: string, nonce: string) {
+  return new RegExp(`(?:^|[\\s"'])${nonce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s"'])`).test(args)
+}
+
+/** Exact fixture records are members; argv-bearing shells/wrappers are reported separately, never counted as members. */
+export function members(nonce: string, rows = table()) {
+  const live = rows.filter((row) => row.pid !== process.pid && !row.state.startsWith("Z"))
+  const dir = path.join(os.tmpdir(), nonce)
+  if (!nonce.startsWith("omni-tree-")) return { members: live.filter((row) => hasNonce(row.args, nonce)), wrappers: [] as Row[] }
+  const records = readdirSync(dir).filter((name) => name.endsWith(".json")).map((name) => {
+    const record = JSON.parse(readFileSync(path.join(dir, name), "utf8")) as Identity & { nonce: string }
+    if (record.nonce !== nonce || !Number.isSafeInteger(record.pid) || record.pid <= 0 || typeof record.startTime !== "string" || !record.startTime)
+      throw new Error(`malformed fixture identity: ${path.join(dir, name)}`)
+    return record
+  })
+  const found = live.filter((row) => records.some((record) => matches(row, record)))
+  if (found.some((row) => !hasNonce(row.args, nonce))) throw new Error(`fixture ${nonce} retained identity but lost its argv nonce`)
+  return { members: found, wrappers: live.filter((row) => hasNonce(row.args, nonce) && !found.some((member) => matches(member, row))) }
 }
 
 const SUPERVISOR = /(^|[\\/"])hugr-omni-supervisor(\.exe)?("|\s|$)/
 
-/** Positive control: some process carrying the nonce has a hugr-omni-supervisor ancestor (not a legacy spawn). */
-export function supervised(nonce: string) {
-  const rows = new Map(table().map((row) => [row.pid, row]))
-  const above = (pid: number, depth = 0): string[] => {
-    const row = rows.get(pid)
-    if (!row || row.parent <= 1 || depth > 32) return []
-    return [rows.get(row.parent)?.args ?? "", ...above(row.parent, depth + 1)]
+/** Every exact member AND wrapper must have a supervisor under a pinned campaign host. */
+export function control(nonce: string, size: number, hosts: Identity[], rows = table()) {
+  const found = members(nonce, rows)
+  const above = (pid: number, depth = 0): Row[] => {
+    const row = rows.find((row) => row.pid === pid)
+    const parent = rows.find((parent) => parent.pid === row?.parent)
+    if (!parent || depth > 32) return []
+    return [parent, ...above(parent.pid, depth + 1)]
   }
-  return [...rows.values()]
-    .filter((row) => row.args.includes(nonce))
-    .some((row) => above(row.pid).some((args) => SUPERVISOR.test(args)))
+  const protectedMembers = [...found.members, ...found.wrappers].map((row) => ({
+    identity: identity(row.pid, rows),
+    supervisors: above(row.pid).filter((ancestor) => SUPERVISOR.test(ancestor.args) && hosts.some((host) => above(ancestor.pid).some((parent) => matches(parent, host)))).map((row) => identity(row.pid, rows)),
+  }))
+  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.supervisors.length > 0) }
+}
+
+/** Compatibility control, strengthened from any-member to all-member supervision. */
+export function supervised(nonce: string) {
+  const rows = table()
+  const hosts = rows.filter((row) => rows.some((supervisor) => SUPERVISOR.test(supervisor.args) && supervisor.parent === row.pid)).map((row) => identity(row.pid, rows))
+  const found = members(nonce, rows)
+  return control(nonce, found.members.length, hosts, rows).pass
 }
 
 /** Supervisors whose parent is one of `pids` (the ones a given host started). */
@@ -290,9 +377,13 @@ export function mentioning(marker: string) {
 }
 
 /** Kill -9 on Unix; TerminateProcess on Windows (what `taskkill /F` does, without /T: the tree is omni's job). */
-export function kill9(pid: number) {
+export function kill9(target: Identity | number) {
+  // Numeric compatibility uses FIRST observed identity, never a fresh meaning for a retained/reused PID.
+  const pinned = typeof target === "number" ? pins.get(target) : target
+  if (!pinned) throw new Error(`kill9 requires a captured process identity for PID ${target}`)
+  if (!table().some((row) => matches(row, pinned) && !row.state.startsWith("Z"))) return false
   try {
-    process.kill(pid, "SIGKILL")
+    process.kill(pinned.pid, "SIGKILL")
     return true
   } catch {
     return false
@@ -301,17 +392,36 @@ export function kill9(pid: number) {
 
 /** Last resort cleanup: kill every process that mentions the marker, then reap recorded trees. */
 export async function cleanup(marker: string, nonces: string[]) {
-  const owned = [...(hosts.get(marker) ?? [])]
-  for (const proc of owned) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
-  for (const row of mentioning(marker)) kill9(row.pid)
-  await Promise.all(nonces.map((nonce) => reap(nonce).catch(() => undefined)))
-  await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
+  const owned = hosts.get(marker) ?? []
+  for (const host of owned) if (host.proc.exitCode === null && host.proc.signalCode === null) kill9(host.identity)
+  const rows = table()
+  const targets = rows.filter((row) => row.pid !== process.pid && !row.state.startsWith("Z") && (row.args.includes(marker) || nonces.some((nonce) => hasNonce(row.args, nonce))))
+  for (const target of targets) kill9(identity(target.pid, rows))
+  await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((host) => host.proc.exitCode !== null || host.proc.signalCode !== null) ? true : undefined)
   hosts.delete(marker)
 }
 
-/** Counts the nonce trees still alive: records plus the shared sweep and checked table, taking their maximum. */
+/** Same live/zero semantics on every OS: exact records plus exact argv wrappers, excluding zombies. */
 export async function remaining(nonce: string) {
-  return Math.max(await alive(nonce), (await sweep(nonce)).length, mentioning(nonce).length)
+  const found = members(nonce)
+  return found.members.length + found.wrappers.length
+}
+
+/** Retained PID+start-time identities and nonce trees observed only inside the stated deadline. */
+export async function deadlineSnapshots(started: number, boundMs: number, nonces: string[], retained: Identity[]) {
+  const deadline = started + boundMs
+  const samples: { atMs: number; counts: number[]; fixtureIds: Identity[][]; wrappers: Identity[][]; retained: Identity[] }[] = []
+  while (Date.now() < deadline - 250) {
+    const rows = table(Math.min(QUERY_MS, deadline - Date.now()))
+    const found = nonces.map((nonce) => members(nonce, rows))
+    const atMs = Date.now() - started
+    if (atMs >= boundMs) throw new Error(`process observation missed ${boundMs} ms deadline (${atMs} ms)`)
+    samples.push({ atMs, counts: found.map((tree) => tree.members.length + tree.wrappers.length), fixtureIds: found.map((tree) => tree.members.map((row) => identity(row.pid, rows))), wrappers: found.map((tree) => tree.wrappers.map((row) => identity(row.pid, rows))), retained: retained.filter((pinned) => rows.some((row) => matches(row, pinned) && !row.state.startsWith("Z"))) })
+    await sleep(Math.min(250, Math.max(0, deadline - Date.now())))
+  }
+  if (samples.length === 0) throw new Error("deadline observation produced no valid snapshots")
+  await sleep(Math.max(0, deadline - Date.now()))
+  return { samples, zeroAtMs: samples.find((sample) => sample.counts.every((count) => count === 0) && sample.retained.length === 0)?.atMs, last: samples[samples.length - 1]! }
 }
 
 /** Prints the verdict line and appends it to logs/<scenario>.jsonl. */

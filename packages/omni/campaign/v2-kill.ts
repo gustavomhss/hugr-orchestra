@@ -16,19 +16,17 @@ import {
   cleanup,
   cli,
   client,
+  control,
+  deadlineSnapshots,
   fakeLLM,
   fileTree,
   isolated,
+  identity,
   kill9,
   mentioning,
   own,
   provider,
-  remaining,
   serve,
-  sleep,
-  supervised,
-  supervisorsOf,
-  sweep,
   table,
   until,
   verdict,
@@ -47,29 +45,28 @@ async function hold() {
   const bin = cli()
   const { env, home, project } = isolated("v2-hold", {})
   const proc = spawn(bin, ["debug", "omni", "--hold"], { env, cwd: project, stdio: ["ignore", "pipe", "pipe"] })
-  own(home, proc)
+  const hostIdentity = own(home, proc)
   let out = ""
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
-  const nonce = await until(60_000, "holding line", () => out.match(/holding (\S+)/)?.[1]).catch((error) => {
-    throw new Error(`${error}: ${out}`)
-  })
-  const before = (await sweep(nonce)).length
-  const control = supervised(nonce)
-  kill9(proc.pid!)
-  const killed = Date.now()
-  await sleep(KPI_MS)
-  const after = (await sweep(nonce)).length
-  await cleanup(home, [])
-  return verdict("v2-hold", {
-    target: "hold",
-    kpi: "0 nonce processes 8 s after kill -9 of `opencode debug omni --hold` (compiled CLI)",
-    before,
-    supervised: control,
-    after,
-    waitedMs: Date.now() - killed,
-    pass: before >= 2 && control && after === 0,
-  })
+  let nonce: string | undefined
+  try {
+    nonce = await until(60_000, "holding line", () => out.match(/holding (\S+)/)?.[1])
+    const marker = nonce
+    const before = await until(30_000, "both exact debug members protected", () => {
+      const found = control(marker, 2, [hostIdentity])
+      return found.pass ? found : undefined
+    })
+    const supervisors = [...new Map(before.protectedMembers.flatMap((member) => member.supervisors).map((pinned) => [pinned.pid, pinned])).values()]
+    if (!kill9(hostIdentity)) throw new Error("could not kill pinned hold host")
+    const killed = Date.now()
+    const observed = await deadlineSnapshots(killed, KPI_MS, [nonce], [hostIdentity, ...supervisors])
+    return verdict("v2-hold", { target: "hold", nonce, hostIdentity, before, supervisors, observed, pass: observed.zeroAtMs !== undefined && observed.last.counts[0] === 0 && observed.last.retained.length === 0 })
+  } catch (error) {
+    return verdict("v2-hold", { pass: false, error: String(error), output: out })
+  } finally {
+    await cleanup(home, nonce ? [nonce] : [])
+  }
 }
 
 async function host(target: "serve" | "tui") {
@@ -135,95 +132,37 @@ async function host(target: "serve" | "tui") {
     await api.post("/pty", { command: trees.pty2.command, args: trees.pty2.args, cols: 100, rows: 30 })
     step("prompt sent, 2 terminals created")
 
-    const live = await until(90_000, "every tree, the LSP and the MCP server alive", async () => {
-      const counts = {
-        bash: await remaining(trees.bash.nonce),
-        mcp: await remaining(trees.mcp.nonce),
-        pty1: await remaining(trees.pty1.nonce),
-        pty2: await remaining(trees.pty2.nonce),
-        lsp: (await sweep(lspNonce)).length,
-        mcpServer: (await sweep(mcpNonce)).length,
-      }
-      const full =
-        counts.bash === trees.bash.size &&
-        counts.mcp === trees.mcp.size &&
-        counts.pty1 === trees.pty1.size &&
-        counts.pty2 === trees.pty2.size &&
-        counts.lsp >= 1 &&
-        counts.mcpServer >= 1
-      return full ? counts : undefined
-    }).catch(async (error) => {
-      const state = {
-        bash: await remaining(trees.bash.nonce),
-        mcp: await remaining(trees.mcp.nonce),
-        pty1: await remaining(trees.pty1.nonce),
-        pty2: await remaining(trees.pty2.nonce),
-        lsp: (await sweep(lspNonce)).length,
-        mcpServer: (await sweep(mcpNonce)).length,
-        llm: llm.seen,
-        offered: llm.offered,
-      }
-      throw new Error(`${error}; state ${JSON.stringify(state)}; host output: ${started.out().slice(-3000)}`)
-    })
-    step(`live: ${JSON.stringify(live)}`)
-    const control = Object.fromEntries(
-      [...Object.entries(trees).map(([name, t]) => [name, t.nonce]), ["lsp", lspNonce], ["mcpServer", mcpNonce]].map(
-        ([name, nonce]) => [name, supervised(nonce!)],
-      ),
-    )
-    const supervisors = supervisorsOf([started.pid, ...started.extra]).map((row) => row.pid)
-    step(`positive control (supervisor above each): ${JSON.stringify(control)}; supervisors ${supervisors.join(",")}`)
-
-    if (!Object.values(control).every(Boolean) || supervisors.length === 0) throw new Error("positive control failed before host kill")
-    if (!kill9(started.pid)) throw new Error(`could not kill host ${started.pid}`)
+    const hostIdentity = started.identity ?? identity(started.pid)
+    const specs = [...Object.entries(trees).map(([name, tree]) => ({ name, nonce: tree.nonce, size: tree.size })), { name: "lsp", nonce: lspNonce, size: 1 }, { name: "mcpServer", nonce: mcpNonce, size: 1 }]
+    const live = await until(90_000, "every exact fixture member protected under the pinned host", () => {
+      const rows = table()
+      const found = Object.fromEntries(specs.map((spec) => [spec.name, control(spec.nonce, spec.size, [hostIdentity], rows)]))
+      return Object.values(found).every((found) => found.pass) ? found : undefined
+    }).catch((error) => { throw new Error(`${error}; llm ${JSON.stringify(llm.seen)}; offered ${JSON.stringify(llm.offered)}; host ${started.out()}`) })
+    const supervisors = [...new Map(Object.values(live).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
+    step(`exact tree controls: ${JSON.stringify(live)}; supervisors ${JSON.stringify(supervisors)}`)
+    if (supervisors.length === 0) throw new Error("positive control found no pinned supervisors")
+    if (!kill9(hostIdentity)) throw new Error(`could not kill pinned host ${started.pid}`)
     const killed = Date.now()
     step(`kill -9 ${started.pid}`)
-    let zeroAt: number | undefined
     const all = [...nonces, lspNonce, mcpNonce]
-    const samples: { atMs: number; counts: number[]; supervisors: number; host: number }[] = []
-    while (Date.now() - killed < KPI_MS) {
-      // One checked OS snapshot includes the supervisor too; a later final sweep cannot establish the 8 s bound.
-      const rows = table()
-      const sample = {
-        atMs: Date.now() - killed,
-        counts: all.map((nonce) => rows.filter((row) => row.args.includes(nonce)).length),
-        supervisors: rows.filter((row) => supervisors.includes(row.pid)).length,
-        host: rows.filter((row) => row.pid === started.pid).length,
-      }
-      samples.push(sample)
-      if (zeroAt === undefined && sample.counts.every((count) => count === 0) && sample.supervisors === 0 && sample.host === 0) zeroAt = sample.atMs
-      await sleep(250)
-    }
-    await sleep(Math.max(0, KPI_MS - (Date.now() - killed)))
-    const after = {
-      bash: await remaining(trees.bash.nonce),
-      mcp: await remaining(trees.mcp.nonce),
-      pty1: await remaining(trees.pty1.nonce),
-      pty2: await remaining(trees.pty2.nonce),
-      lsp: (await sweep(lspNonce)).length,
-      mcpServer: (await sweep(mcpNonce)).length,
-      supervisors: table().filter((row) => supervisors.includes(row.pid)).length,
-    }
+    const observed = await deadlineSnapshots(killed, KPI_MS, all, [hostIdentity, ...supervisors])
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args.slice(0, 160)}`)
-    step(`final verification at ${Date.now() - killed} ms: ${JSON.stringify(after)}; all trees + supervisors zero at ${zeroAt} ms; leftovers mentioning the temp home: ${leftovers.length}`)
-    const total = Object.values(after).reduce((sum, count) => sum + count, 0)
+    step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
     return verdict(`v2-${target}`, {
       target,
       home,
       nonces: all,
-      hostPid: started.pid,
-      supervisorPids: supervisors,
+      hostIdentity,
+      supervisors,
       observationEndedMs: Date.now() - killed,
-      samples,
+      observed,
       kpi: "0 omni-tree processes 8 s after kill -9 of the host",
       live,
-      supervised: control,
-      after,
-      zeroAtMs: zeroAt ?? null,
       leftovers,
       llm: llm.seen,
       offered: llm.offered,
-      pass: Object.values(control).every(Boolean) && zeroAt !== undefined && zeroAt <= KPI_MS && total === 0 && leftovers.length === 0,
+      pass: observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) && observed.last.retained.length === 0 && leftovers.length === 0,
       steps,
     })
   } catch (error) {
@@ -256,10 +195,10 @@ async function tui(bin: string, env: Record<string, string>, project: string) {
   ).catch((error) => {
     throw new Error(`${error}; TUI output: ${out.slice(-2000)}`)
   })
-  const pid = await until(10_000, "the TUI pid", () =>
-    table().find((row) => row.parent === host.pid && row.args.includes(`--port ${port}`) && row.args.startsWith(bin))?.pid,
+  const captured = await until(10_000, "the TUI identity", () =>
+    table().find((row) => row.parent === host.pid && row.args.includes(`--port ${port}`) && row.args.startsWith(bin)),
   )
-  return { proc: host, url, pid, extra: [] as number[], out: () => out }
+  return { proc: host, url, pid: captured.pid, identity: { pid: captured.pid, startTime: captured.startTime }, extra: [] as number[], out: () => out }
 }
 
 function freePort() {
