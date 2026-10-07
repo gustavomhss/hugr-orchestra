@@ -21,6 +21,23 @@ of `/usr/bin/ldd`, else `process.report`'s `header.glibcVersionRuntime` (absent 
 `libc.musl-<arch>.so.1` dynamically, so a musl Node or Bun can load it; `pack.mjs` checks its `DT_NEEDED`, and that a
 glibc addon needs `libc.so.6` and no musl. Deno has no musl build, so musl is proven with npm and Bun only.
 
+## Build one platform as CI does
+
+```sh
+node scripts/build-artifacts.mjs darwin-arm64     # any id of the table; --out <dir> (default dist/omni)
+```
+
+`scripts/build-artifacts.mjs` is the one build both CI paths run: the mirror's `release.yml` (then `pack.mjs` and
+`verify.mjs`, below) and Orchestra's `omni-artifacts.yml`, which uploads each platform's files as the artifact
+`omni-<id>` and, with its `pack` input, also packs and proves like `release.yml` (artifact `npm-<id>`). Per id it runs
+the build of the table's column with its check: zig with the glibc 2.17 floor read by `objdump -T`; Alpine with the
+addon's musl `DT_NEEDED` read by `readelf -d`; native, and on Windows no `vcruntime`/`msvcp` in either import table.
+The Cargo outputs stay in `target/<triple>/release` for `pack.mjs`; the script also copies them to
+`<out>/<id>/hugr_omni.node` and `<out>/<id>/hugr-omni-supervisor[.exe]`, the layout Orchestra's packaging reads. A
+GitHub artifact does not keep the execute bit: whoever downloads `omni-<id>` sets it on the supervisor again. The zig
+rows need `zig` and `cargo-zigbuild` on the PATH, and the Alpine rows need Docker on a host of the target's CPU. The
+commands below are what it runs, for a build by hand.
+
 ## Build (always with an explicit `--target`, so the files land in `target/<triple>/release/`)
 
 ```sh
