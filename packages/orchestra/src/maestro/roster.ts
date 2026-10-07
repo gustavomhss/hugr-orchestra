@@ -1,5 +1,6 @@
 import path from "path"
 import { Seats, type Seat } from "./seats"
+import { validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
 import { TRUNCATION_DIR } from "../tool/truncation-dir"
 
@@ -23,6 +24,12 @@ export function canonicalMemberId(id: string | undefined): string | undefined
 export function canonicalMemberId(id: string | undefined) {
   return id === LEGACY_BACKEND_ID ? "backend" : id
 }
+
+// Validate installed definitions before creating any profile or roster entry. Scaffold seeds have no prompt yet.
+Object.values(Seats.all).forEach((seat) => {
+  if (canonicalMemberId(seat.id) !== seat.id) throw new Error(`Native seat id must be canonical: ${seat.id}`)
+  validateInstalled(seat)
+})
 
 // Seats never get a permission prompt, so what asks the owner elsewhere, reading .env files and publishing, is denied.
 export const baseProfiles = Object.freeze({
@@ -146,7 +153,8 @@ export function createRoster(members: readonly RosterMember[]): Roster {
   const memberIds = new Set<string>()
   return Object.freeze(
     members.map((member) => {
-      if (!wellFormedMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
+      if (!wellFormedMemberId(member.memberId) || canonicalMemberId(member.memberId) !== member.memberId)
+        throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
       if (memberIds.has(member.memberId)) throw new Error(`Roster memberId must be unique: ${member.memberId}`)
       memberIds.add(member.memberId)
       // Windows checkouts may convert prompt files to CRLF; prompts and their hashes must not depend on the checkout.

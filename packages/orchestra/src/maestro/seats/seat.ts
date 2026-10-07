@@ -39,12 +39,16 @@ export type Seat = {
 export function define<const T extends Seat>(seat: T) {
   if (!/^[a-z]+(?:-[a-z]+)*$/.test(seat.id) || reserved.has(seat.id))
     throw new Error(`Invalid native seat id: ${seat.id}`)
+  if (!seat.role.trim() || !seat.description.trim())
+    throw new Error(`Native seat role and description must be nonempty: ${seat.id}`)
   if (seat.atlasMemory && seat.id !== "backend")
     throw new Error(`Atlas Memory supports only the backend owner: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
   if (seat.writeRoots && seat.profile !== "execution")
     throw new Error(`Write roots require an execution profile: ${seat.id}`)
+  if (seat.profile === "execution" && seat.skills.length > 0 && !seat.writeRoots)
+    throw new Error(`Execution seats with entry skills require write roots: ${seat.id}`)
   if (seat.workResult !== undefined && (!seat.workResult.trim() || !/^[a-z]+(?:-[a-z]+)*$/.test(seat.returnCard)))
     throw new Error(`Work result requires a fenced return-card tag: ${seat.id}`)
   if (seat.skills.some((skill) => !skill.startsWith(`${seat.id}-`) || !/^[a-z]+(?:-[a-z]+)*$/.test(skill)) ||
@@ -57,7 +61,12 @@ export function define<const T extends Seat>(seat: T) {
   return Object.freeze(seat)
 }
 
-const reserved = new Set(["maestro", "general", "explore", "build", "plan", "title", "summary", "compaction", "execution", "review", "seat", "index", "constructor"])
+const reserved = new Set(["maestro", "general", "explore", "build", "plan", "title", "summary", "compaction", "execution", "review", "seat", "index", "constructor", "con", "prn", "aux", "nul"])
+
+export function validateInstalled(seat: Seat) {
+  define(seat)
+  if (!seat.prompt.trim()) throw new Error(`Native seat prompt must be nonempty: ${seat.id}`)
+}
 
 // The authored skill tree of a seat. Running from source reads it in place; compiled builds embed it
 // (script/seat-skills.ts). `import.meta.dirname` works under Bun and the desktop Node sidecar.
