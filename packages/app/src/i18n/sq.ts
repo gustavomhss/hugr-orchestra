@@ -392,7 +392,7 @@ export const dict = {
   "dialog.mcp.description": "{{enabled}} nga {{total}} është aktivizuar",
   "dialog.mcp.empty": "Asnjë MCP nuk është konfiguruar",
   "dialog.lsp.empty": "LSP-të zbulohen automatikisht nga llojet e skedarëve",
-  "dialog.plugins.empty": "Shtojcat e konfiguruara në opencode.json",
+  "dialog.plugins.empty": "Shtojcat e konfiguruara në orchestra.json",
   "mcp.status.connected": "lidhur",
   "mcp.status.failed": "dështoi",
   "mcp.status.needs_auth": "nevojiten auth",
@@ -657,7 +657,7 @@ export const dict = {
   "error.chain.responseBody": "Trupi i përgjigjes:\n{{body}}",
   "error.chain.didYouMean": "A do të thuash: {{suggestions}}",
   "error.chain.modelNotFound": "Modeli nuk u gjet: {{provider}}/{{model}}",
-  "error.chain.checkConfig": "Kontrolloni emrat e ofruesit/modelit tuaj të konfigurimit (opencode.json).",
+  "error.chain.checkConfig": "Kontrolloni emrat e ofruesit/modelit tuaj të konfigurimit (orchestra.json).",
   "error.chain.mcpFailed": 'Serveri MCP "{{name}}" dështoi. Shënim: HuGR Orchestra nuk e mbështet ende vërtetimin MCP.',
   "error.chain.providerAuthFailed": "Autentifikimi i ofruesit dështoi ({{provider}}): {{message}}",
   "error.chain.providerInitFailed":

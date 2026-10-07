@@ -4,17 +4,10 @@ import { ORCHESTRA_COPY } from "./orchestra"
 
 type Dictionaries = Record<string, Record<string, Record<string, string>>>
 
-// The product is HuGR Orchestra, so no copy may name OpenCode. These keys may keep the exact text shown because it
-// names something outside Orchestra: the OpenCode Zen and OpenCode Go model services, the opencode.json config file,
-// the .opencode/ project folder and the opencode command. Only that text is allowed, and only in that key.
-const EXTERNAL_NAMES: Record<string, Record<string, string>> = {
-  app: {
-    "dialog.plugins.empty": "opencode.json",
-    "error.chain.checkConfig": "opencode.json",
-  },
-  desktop: { "desktop.cli.installed.message": "opencode" },
-  orchestra: { "orchestra.skills.dialog.addDetail": ".opencode/" },
-}
+// The product is HuGR Orchestra, so no copy may name OpenCode. A key below may keep the exact text given, because it
+// names something outside Orchestra. Only that text is allowed, and only in that key. Commands, config files and
+// folders shown on screen use Orchestra's own names (orchestra, orchestra.json, .orchestra/), so none is listed.
+const EXTERNAL_NAMES: Record<string, Record<string, string>> = {}
 
 const sources = {
   app: (locale: string) => `./${locale}.ts`,
@@ -34,14 +27,20 @@ describe("product name in copy", () => {
     const dictionaries = structuredClone(await load())
     dictionaries.app!.de!["app.name.desktop"] = "OpenCode Desktop"
     dictionaries.desktop!.ja!["desktop.updater.none.message"] = "opencode"
-    dictionaries.ui!.fr!["dialog.usageExceeded.freeTier.description"] = "OpenCode Go, by OpenCode"
+    // A declared external name is allowed only as its exact text: the rest of the value is still checked.
+    dictionaries.ui!.en!["planted.provider"] = "OpenCode Go"
+    dictionaries.ui!.fr!["planted.provider"] = "OpenCode Go, by OpenCode"
     dictionaries.app!.pt = {}
     expect(
-      problems(dictionaries, { ...EXTERNAL_NAMES, app: { ...EXTERNAL_NAMES.app, "app.name.desktop": "Zen" } }),
+      problems(dictionaries, {
+        ...EXTERNAL_NAMES,
+        app: { "app.name.desktop": "Zen" },
+        ui: { "planted.provider": "OpenCode Go" },
+      }),
     ).toEqual([
       "app/de app.name.desktop: OpenCode Desktop",
       "app/pt: empty dictionary",
-      "ui/fr dialog.usageExceeded.freeTier.description: OpenCode Go, by OpenCode",
+      "ui/fr planted.provider: OpenCode Go, by OpenCode",
       "desktop/ja desktop.updater.none.message: opencode",
       "app app.name.desktop: stale exception, English no longer contains Zen",
     ])

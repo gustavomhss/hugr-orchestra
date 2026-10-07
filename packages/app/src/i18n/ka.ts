@@ -391,7 +391,7 @@ export const dict = {
   "dialog.mcp.description": "{{enabled}} / {{total}}-დან ჩართულია",
   "dialog.mcp.empty": "არა MCPs კონფიგურირებული",
   "dialog.lsp.empty": "LSPs ავტომატურად გამოვლენილია ფაილის ტიპებიდან",
-  "dialog.plugins.empty": "პლაგინები კონფიგურირებულია opencode.json-ში",
+  "dialog.plugins.empty": "პლაგინები კონფიგურირებულია orchestra.json-ში",
   "mcp.status.connected": "დაკავშირებულია",
   "mcp.status.failed": "ვერ მოხერხდა",
   "mcp.status.needs_auth": "საჭიროა ავტორიზაცია",
@@ -652,7 +652,7 @@ export const dict = {
   "error.chain.responseBody": "პასუხის სხეული:\n{{body}}",
   "error.chain.didYouMean": "იგულისხმეთ: {{suggestions}}",
   "error.chain.modelNotFound": "მოდელი ვერ მოიძებნა: {{provider}}/{{model}}",
-  "error.chain.checkConfig": "შეამოწმეთ თქვენი კონფიგურაცია (opencode.json) პროვაიდერის/მოდელების სახელები",
+  "error.chain.checkConfig": "შეამოწმეთ თქვენი კონფიგურაცია (orchestra.json) პროვაიდერის/მოდელების სახელები",
   "error.chain.mcpFailed":
     'MCP სერვერი "{{name}}" ვერ ამუშავდა. შენიშვნა: HuGR Orchestra ჯერ არ უჭერს მხარს MCP ავთენტიფიკაციას.',
   "error.chain.providerAuthFailed": "პროვაიდერის ავთენტიფიკაცია ვერ მოხერხდა ({{provider}}): {{message}}",

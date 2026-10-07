@@ -391,7 +391,7 @@ export const dict = {
   "dialog.mcp.description": "{{total}}-iň {{enabled}} açyk",
   "dialog.mcp.empty": "Hiç hili MCP düzülmedi",
   "dialog.lsp.empty": "LSP-ler faýl görnüşlerinden awtomatiki usulda tapyldy",
-  "dialog.plugins.empty": "opencode.json-de düzülen pluginler",
+  "dialog.plugins.empty": "orchestra.json-de düzülen pluginler",
   "mcp.status.connected": "birikdirildi",
   "mcp.status.failed": "şowsuz",
   "mcp.status.needs_auth": "auth gerek",
@@ -654,7 +654,7 @@ export const dict = {
   "error.chain.responseBody": "Jogap beriji organ:\n{{body}}",
   "error.chain.didYouMean": "Diýjek bolduňmy: {{suggestions}}",
   "error.chain.modelNotFound": "Model tapylmady: {{provider}} / {{model}}",
-  "error.chain.checkConfig": "Konfigurasiýaňyzy (opencode.json) üpjün edijiniň / model atlaryny barlaň",
+  "error.chain.checkConfig": "Konfigurasiýaňyzy (orchestra.json) üpjün edijiniň / model atlaryny barlaň",
   "error.chain.mcpFailed":
     'MCP serweri "{{name}}" şowsuz boldy. Üns beriň, HuGR Orchestra entek MCP tassyklamasyny goldamaýar.',
   "error.chain.providerAuthFailed": "Prowaýderiň tassyklamasy şowsuz ({{provider}}): {{message}}",
