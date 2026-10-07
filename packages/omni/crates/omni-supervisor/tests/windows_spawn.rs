@@ -293,6 +293,50 @@ fn the_child_inherits_its_stdio_and_nothing_else() {
     );
 }
 
+/// Amendment WP8b: a verbatim tail is written after the quoted `argv[0]` exactly as std's `raw_arg` writes it
+/// (differential), parsed by the child's own rules; it never goes to a batch file or with arguments.
+#[test]
+fn a_verbatim_command_line_is_std_raw_arg_and_never_reaches_a_batch_file() {
+    const TAIL: &str = r#""a b" c\"d %PATH% x&y |z ^"#;
+    let mut host = Host::start();
+    let mut spec = Spec::child(&["argv"]);
+    let words: Vec<String> = spec.argv.drain(1..).map(|a| a.into_string().unwrap()).collect();
+    spec.verbatim = Some(format!("{} {TAIL}", words.join(" ")).into());
+    let (code, ours) = run(&mut host, spec);
+    let (_, theirs) = run_std(std::os::windows::process::CommandExt::raw_arg(
+        &mut child_cmd(&["argv"]),
+        TAIL,
+    ));
+    assert_eq!(code, 0, "{ours:?}");
+    assert_eq!(
+        field(&ours, "CMDLINE "),
+        field(&theirs, "CMDLINE "),
+        "differential: std raw_arg"
+    );
+    assert_eq!(
+        field(&ours, "ARGS "),
+        args_line(&["a b", "c\"d", "%PATH%", "x&y", "|z", "^"])
+    );
+
+    let dir = temp_dir("raw");
+    std::fs::write(dir.join("x.cmd"), "@echo INJECTED\r\n").unwrap();
+    let mut code = |spec: Spec| host.spawn(spec).err().map(|e| e.0);
+    let mut batch = Spec::program(&dir.join("x.cmd"), &[]);
+    batch.verbatim = Some("&echo INJECTED".into());
+    assert_eq!(
+        code(batch),
+        Some(FailCode::Invalid),
+        "a batch file needs a cmd.exe the caller names"
+    );
+    let mut with_args = Spec::child(&["exit", "0"]);
+    with_args.verbatim = Some("x".into());
+    assert_eq!(code(with_args), Some(FailCode::Invalid), "argv[0] alone");
+    let mut nul = Spec::child(&[]);
+    nul.argv.truncate(1);
+    nul.verbatim = Some("a\0b".into());
+    assert_eq!(code(nul), Some(FailCode::Invalid));
+}
+
 #[test]
 fn start_failures_are_typed_and_handles_are_validated() {
     let dir = temp_dir("fail");
@@ -346,6 +390,7 @@ fn raw_spawn(req: u64, stderr: Slot, handles: [u64; 3]) -> Msg {
         stderr,
         grace_ms: 0,
         handles,
+        verbatim: None,
     })
 }
 

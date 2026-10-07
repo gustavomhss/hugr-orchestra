@@ -24,6 +24,8 @@ pub(super) fn merge(
             .into_iter()
             .filter(|(name, _)| os.same_name(name, OsStr::new("SystemRoot")))
             .take(1)
+            // The host may spell it `SYSTEMROOT` (an MSYS shell does); the child gets the usual spelling.
+            .map(|(_, value)| (OsString::from("SystemRoot"), value))
             .collect(),
         (false, Os::Unix) => Vec::new(),
     };

@@ -112,9 +112,24 @@ pub(super) fn spawn(
             });
         }
     }
+    let verbatim = match &s.verbatim {
+        Some(tail) => Some(text(tail, "the verbatim command line")?),
+        None => None,
+    };
+    let batch = is_batch(&program_path).map_err(|e| os_failure("program path", &e))?;
+    // A verbatim line (amendment WP8b) goes to the named program as it is: never with arguments to quote, and never
+    // to a batch file, which would need a `cmd.exe` the caller did not name.
+    if verbatim.is_some() && batch {
+        return Err(invalid(
+            "a verbatim command line cannot start a batch file; name cmd.exe as the program",
+        ));
+    }
+    if verbatim.is_some() && !args.is_empty() {
+        return Err(invalid("a verbatim command line takes argv[0] alone"));
+    }
     // A batch file never reaches CreateProcessW by name (it would start cmd.exe with our unescaped line):
     // it runs as `cmd.exe /c` with std's batch quoting, or is refused.
-    let (app, line) = if is_batch(&program_path).map_err(|e| os_failure("program path", &e))? {
+    let (app, line) = if batch {
         if !program_path.is_file() {
             let e = io::Error::from_raw_os_error(ERROR_FILE_NOT_FOUND as i32);
             return Err(os_failure(&program_path.display().to_string(), &e));
@@ -125,7 +140,11 @@ pub(super) fn spawn(
             cmdline::user_path(&program).and_then(|script| cmdline::bat(&script, args)),
         )
     } else {
-        (program, cmdline::exe(argv0, args))
+        let line = match &verbatim {
+            Some(tail) => cmdline::verbatim(argv0, tail),
+            None => cmdline::exe(argv0, args),
+        };
+        (program, line)
     };
     let mut line = line.map_err(invalid)?;
     line.push(0);

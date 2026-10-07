@@ -104,7 +104,7 @@ fn protocol_violations_end_the_generation() {
         info: 0,
     };
     let (started, _peer) = connect(1, BOUND, &old);
-    assert_io(started, "protocol version 2");
+    assert_io(started, &format!("protocol version {}", omni_proto::VERSION + 1));
 }
 
 /// R6, for replies about trees: an answer for another tree, a second exit, a reused tree id.

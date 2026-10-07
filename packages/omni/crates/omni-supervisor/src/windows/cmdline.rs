@@ -35,6 +35,17 @@ pub(super) fn exe(argv0: &[u16], args: &[Vec<u16>]) -> Result<Vec<u16>, &'static
     Ok(cmd)
 }
 
+/// `"argv0" tail` (amendment WP8b): the same quoted `argv[0]` as `exe`, then the caller's tail exactly as given (std's
+/// `CommandExt::raw_arg`). An empty tail adds nothing, not even the space.
+pub(super) fn verbatim(argv0: &[u16], tail: &[u16]) -> Result<Vec<u16>, &'static str> {
+    let mut cmd = exe(argv0, &[])?;
+    if !tail.is_empty() {
+        cmd.push(SPACE);
+        cmd.extend_from_slice(tail);
+    }
+    Ok(cmd)
+}
+
 // std `append_arg` with `Quote::Auto`.
 fn append_arg(cmd: &mut Vec<u16>, arg: &[u16]) {
     let quote = arg.is_empty() || arg.iter().any(|&c| c == SPACE || c == TAB);
@@ -243,6 +254,21 @@ mod tests {
         );
         assert_eq!(exe_line("echo", &[""]), "\"echo\" \"\"");
         assert_eq!(exe(&w("a\"b"), &[]), Err("argv[0] contains a double quote"));
+    }
+
+    #[test]
+    fn verbatim_lines_keep_the_tail_unchanged() {
+        let line = |prog: &str, tail: &str| verbatim(&w(prog), &w(tail)).map(|l| String::from_utf16_lossy(&l));
+        assert_eq!(
+            line("cmd.exe", r#"/d /s /c "echo a&echo b""#).as_deref(),
+            Ok(r#""cmd.exe" /d /s /c "echo a&echo b""#)
+        );
+        assert_eq!(
+            line(r"C:\Program Files\x.exe", r#"  "a b"\ %PATH% ^"#).as_deref(),
+            Ok(r#""C:\Program Files\x.exe"   "a b"\ %PATH% ^"#)
+        );
+        assert_eq!(line("prog", "").as_deref(), Ok(r#""prog""#));
+        assert!(line("a\"b", "x").is_err());
     }
 
     #[test]

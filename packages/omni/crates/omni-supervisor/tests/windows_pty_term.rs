@@ -92,6 +92,7 @@ pub fn spawn_reply(host: &mut Host, args: &[&str], size: (u16, u16)) -> Msg {
         stderr: Slot::Pipe,
         grace_ms: spec.grace_ms,
         handles: [0; 3],
+        verbatim: spec.verbatim.as_deref().map(bytes),
     }));
     host.reply(req)
 }

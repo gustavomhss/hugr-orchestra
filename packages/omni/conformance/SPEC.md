@@ -76,7 +76,8 @@ Settled while writing the first runner; every runner follows them:
 - a `read` consumes whole chunks.
 
 `options` uses the TS names of `docs/api-contract.md` (`cwd`, `env`, `inheritEnv`, `timeoutMs`, `graceMs`, `text`,
-`mergeStderr`, `input`, `maxOutputBytes`, `stdin`, `pty`); each runner maps them to its language.
+`mergeStderr`, `input`, `maxOutputBytes`, `stdin`, `pty`, and `windowsVerbatimArgs` from amendment WP8b); each runner
+maps them to its language.
 
 ## Expectations
 

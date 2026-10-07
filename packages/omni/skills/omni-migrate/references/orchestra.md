@@ -34,7 +34,7 @@ port listed below. This page is the index; the plan holds the detail and wins ov
 - **PTY (D-L7).** The consumer is claimed synchronously at spawn. The exit code is `exitCode ?? 128 + signo`. Sizes
   are clamped to 1..32767 on create and on update.
 - **Shell (D-L4).** `shell: true | string` becomes `[shell, flag, joined]` through `Shell.invocation`. cmd.exe
-  delegates to legacy until WP8b.
+  delegated to legacy until WP8b; with it, cmd.exe can run through omni with `windowsVerbatimArgs`.
 - **Delivery (D-L8).** The addon and the supervisor are real files side by side. The path is given to the binding
   by JS through `configure({ addon, supervisor })`, never through environment variables.
 

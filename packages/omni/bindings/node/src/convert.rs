@@ -155,6 +155,14 @@ pub(crate) fn command(
     if let Some(hold) = field::<bool>(env, &o, "backpressure", "true or false")? {
         cmd.backpressure(hold);
     }
+    if let Some(tail) = field::<String>(
+        env,
+        &o,
+        "windowsVerbatimArgs",
+        "a string, the command line after the program",
+    )? {
+        cmd.windows_verbatim_args(tail);
+    }
     if let Some(stdin) = o.get::<Unknown>("stdin")?.filter(|v| !nullish(v)) {
         cmd.stdin(match text_of(&stdin).as_deref() {
             Some("pipe") => Stdin::Pipe,

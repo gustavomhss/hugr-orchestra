@@ -2,8 +2,9 @@
 
 A target is a platform package (`hugr-omni-<id>`) that holds the addon (`hugr-omni.node`) and the supervisor next to
 it, and installs only on its own `os`, `cpu` and `libc`. The design is [ADR-0004](../../../docs/adr/0004-packaging.md).
-The current five targets and their build commands are in [the npm packaging notes](../../../bindings/node/npm/README.md).
-The integration plan's WP8a (linux-musl x64 and arm64, win32-arm64) is the worked example
+The current eight targets and their build commands are in [the npm packaging notes](../../../bindings/node/npm/README.md).
+The integration plan's WP8a (linux-musl x64 and arm64, win32-arm64) is the worked example: musl builds inside
+`rust:1-alpine` and is proven under `node:22-alpine`
 ([the integration plan](../../../docs/orchestra-integration.md)).
 
 ## Steps
