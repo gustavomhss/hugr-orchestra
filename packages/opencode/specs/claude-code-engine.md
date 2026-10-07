@@ -1,6 +1,6 @@
 # Claude Code as Orchestra's harness
 
-Status: 2026-10-07. Owner approved. Prototype: `script/claude-code-engine/proto.ts` (passes).
+Status: 2026-10-07. Owner approved. Prototype: `script/claude-code-engine/proto.ts` (passes). Design complete (sections 4-10); delivery in three steps (9).
 
 ## 1. Goal
 
@@ -35,22 +35,125 @@ The full transcript stays in Orchestra's archive (`append` mirrors every entry),
 Prototype result (Claude Haiku 4.5): turn 1 read and edited `notes.txt` through Orchestra's tools; the swap loaded 14 of
 37 archived entries; turn 2 answered a codename that existed only in the injected memory and a value from the tail.
 
-## 4. Triggers
+## 4. The mirror: one Orchestra session per Claude Code session
 
-The swap is a turn boundary by nature. After each turn Orchestra reads the context size from the SDK's usage
-(input + cache read + cache write of the last assistant message) and applies the continuity limits: maintenance from
-the trigger (40% of the window), a forced pass at the hard limit (70%). The memory pass itself can run on Claude through
-the SDK (a separate `query()` with no tools), so it uses the same login.
+The key design choice: Orchestra mirrors the Claude Code session into an ordinary Orchestra session, live. Everything
+that already reads Orchestra sessions then works unchanged: the UI, the archive, `context_recall` and the continuity
+service. Claude Code's transcript stays the source of truth for what the model saw; the mirror is Orchestra's view of it.
 
-## 5. Risks and open items
+The engine (`src/claude-code/engine.ts`, new) owns one `query()` per active session in streaming-input mode
+(`prompt: AsyncIterable<SDKUserMessage>`, `Query.streamInput`), so the process stays alive across turns. User input from
+the Orchestra UI goes to `streamInput`; Stop maps to `Query.interrupt()`.
 
-- **Transcript entries are CLI-internal.** The SDK exposes them as opaque JSON, and `sessionStore` is `@alpha`. Orchestra
-  must check the entry `version` and only swap formats it knows; otherwise it leaves the session untouched.
-- **Permissions.** The prototype grants every tool call. The engine must route `ctx.ask` to Orchestra's permission
-  service, and Claude Code's own prompts (Bash) through `canUseTool`.
-- **Converter.** The memory producer reads `SessionV1` messages; Claude Code entries need a converter (user/assistant,
-  `tool_use`/`tool_result` pairs, timestamps) before the continuity pass can run on them.
-- **Checkpoints.** Claude Code's `/rewind` restores only files changed by its own tools; Orchestra's snapshot covers edits
-  made through Orchestra's tools.
+### 4.1 Converter
+
+Two directions, one module (`src/claude-code/convert.ts`), with fixture tests on real transcript entries.
+
+**Claude Code → Orchestra** (live, from SDK messages; and in bulk, from `sessionStore.append` entries):
+
+| Claude Code | Orchestra (`SessionV1`) |
+| --- | --- |
+| `user` entry, string content, not `isMeta` | `User` message with a `text` part |
+| `user` entry with `tool_result` blocks | completes the matching `tool` part (`tool_use_id` → `callID`): `completed` with `output`, or `error` when `is_error` |
+| `assistant` entries sharing `message.id` (one entry per block) | one `Assistant` message: `thinking` → `reasoning` part, `text` → `text` part, `tool_use` → `tool` part (`pending`, then `running`) |
+| `message.usage` on the last entry of an API message | `Assistant.tokens` (input, output, cache read, cache write) and `finish` from `stop_reason` (`tool_use` → `tool-calls`, `end_turn` → `stop`) |
+| `isCompactSummary` user entry | the continuity artifact already in the store (never mirrored as a user message) |
+| `attachment`, `system`, `queue-operation`, `mode`, titles, snapshots | not mirrored; kept in the archive only |
+
+Each mirrored message records its Claude Code `uuid`s (`metadata.claudeCode.uuids`) and each tool part its
+`tool_use_id`, so the swap can map Orchestra IDs (boundary, `tailStart`, masked part IDs) back to entries.
+
+**Orchestra → Claude Code** (the swap only): see 6.
+
+### 4.2 Orchestra's tools
+
+`read`, `edit` and `write` (and, for continuity, `context_recall`) are in-process SDK tools. The handler builds a
+`Tool.Context` for the mirrored session: `sessionID` and `messageID` of the mirror, `messages` = the mirrored history
+(`read` uses it to resolve nested instructions), `abort` from the SDK call, `metadata` writing to the mirrored tool
+part, and `ask` = Orchestra's permission service (5). The tool result returns as MCP `content`; attachments become
+`image` content blocks.
+
+Built-in `Read`, `Edit`, `Write`, `NotebookEdit` are removed with `disallowedTools`; `toolAliases` routes a stray call.
+`Bash`, `Grep`, `Glob`, `WebFetch`, `WebSearch`, `TodoWrite` stay Claude Code's. Subagents (`Task`): Claude Code's own,
+off by default (`disallowedTools: ["Task"]`) until Orchestra decides how they relate to Maestro delegations.
+
+## 5. Permissions
+
+One policy, Orchestra's. Claude Code runs with `permissionMode: "default"` and `permissionPrompts: "host"`, so every
+prompt reaches `canUseTool`.
+
+- **Orchestra's tools** call `ctx.ask` themselves, exactly as in an Orchestra session (`edit` asks with the file pattern,
+  `read` asks for external directories). They are listed in `allowedTools`, so Claude Code does not prompt for them a
+  second time.
+- **Claude Code's tools** reach `canUseTool(toolName, input, { signal, suggestions, title })`. The engine maps them onto
+  Orchestra's permission IDs and patterns and calls `Permission.ask`:
+
+  | Claude Code | Orchestra permission | Patterns |
+  | --- | --- | --- |
+  | `Bash` | `bash` | the shell tool's own scan of `input.command` (arity-based command patterns, external directories) |
+  | `Grep`, `Glob` | `grep`, `glob` | `input.path` (external directory check) |
+  | `WebFetch` | `webfetch` | `input.url` |
+  | `WebSearch` | `websearch` | `*` |
+  | anything else, incl. `mcp__*` from configuration (`options.mcpServer.source !== "sdk"`) | the tool name | `*` |
+
+  `allow` → `{ behavior: "allow" }`; a reject → `{ behavior: "deny", message }`; the user's "always" is stored by
+  Orchestra, so Claude Code's `suggestions` are not used. The prompt text in Orchestra's UI uses the `title` option the
+  SDK passes (the full sentence, e.g. "Claude wants to read foo.txt").
+
+## 6. Continuity
+
+The continuity service runs on the mirrored session as on any Orchestra session. What differs is the transport of the
+memory pass and how the result reaches the model.
+
+- **Trigger.** After each assistant message the engine calls `SessionContinuity.start` with the mirrored message (its
+  tokens come from Claude Code's usage). The window is `modelUsage[model].contextWindow` from the SDK's result message;
+  the engine passes it to the continuity limits instead of Orchestra's model catalog. Trigger 0.4, hard limit 0.7, as in
+  Orchestra.
+- **Memory pass transport.** The replay transport reuses the parent's request, which only Claude Code holds, so the pass
+  uses the isolated transport. Its model call goes through Claude Code too: an `LLM.Interface` adapter backed by a
+  one-shot `query()` (`tools: []`, `systemPrompt: { type: "custom", prompt }`, `maxTurns: 1`, `persistSession: false`,
+  same model). No API key is needed, and the pass counts toward the plan like any Claude Code request.
+- **Swap.** An applied pass leaves an artifact (memory text, `boundary`, `tailStart`) and masks. At the next turn
+  boundary the engine ends the `query()` and starts a new one with `resume: sessionId`. `sessionStore.load()` returns:
+  1. a `compact_boundary` entry, with `compactMetadata.preCompactDiscoveredTools` copied from Claude Code's state
+     (the `deferred_tools_record`/`deferred_tools_delta` attachments), so tools found earlier stay loaded;
+  2. an `isCompactSummary` user entry with the memory text;
+  3. every chain entry from `tailStart` on (user, assistant and attachment entries), re-chained after the summary;
+  4. in those entries, each `tool_result` whose `tool_use_id` maps to a masked part replaced by the stub, and its
+     attachments dropped.
+- **Past the hard limit** the engine does not start the next turn until the swap is done (`SessionContinuity.compact`),
+  as `prompt.ts` does for Orchestra's own loop.
+- **Recall.** `context_recall` is an Orchestra tool in the engine, reading the archive the mirror publishes.
+- **`context_compact`.** Available as an Orchestra tool; it forces a pass, and the swap happens at the end of the turn.
+
+## 7. Version gate
+
+The engine reads `version` from the transcript entries and keeps a list of Claude Code versions whose entry shape the
+converter and the swap were tested on. On an unknown version it still mirrors what it can, and it does not swap: Claude
+Code's own auto-compaction is turned back on for that session (`autoCompactEnabled: true`), so the session never
+outgrows its window. The UI shows "continuity paused: Claude Code <version> not yet supported".
+
+## 8. Checkpoints and files
+
+Claude Code's `/rewind` restores only files its own tools changed, and edits go through Orchestra's `edit`/`write`, so
+the undo is Orchestra's: `enableFileCheckpointing` stays off. In an Orchestra session the processor takes the snapshots
+(`Snapshot.Service.track()` at the start and end of each step, `processor.ts`) that `revert.ts` restores. The engine has
+no processor, so it calls `track()` itself at the same points of the mirror: when an assistant message starts and when
+its last tool result arrives. Revert from Orchestra's UI then works on Claude Code sessions, including files Bash changed.
+
+## 9. Delivery
+
+1. **Converter and mirror** (no swap): Claude Code sessions visible in Orchestra's UI, Orchestra's file tools,
+   permissions through Orchestra. Fixture tests from recorded transcripts; a live test on Haiku.
+2. **Continuity**: trigger from SDK usage, memory pass through the SDK adapter, swap through `sessionStore`, version gate.
+   Benchmark: the same long task with Claude Code's auto-compaction and with Orchestra's continuity.
+3. **Product**: engine selection per session in the UI ("Orchestra" or "Claude Code"), settings, docs.
+
+## 10. Risks
+
+- **Transcript entries are CLI-internal** and `sessionStore` is `@alpha`. Mitigated by the version gate (7) and by
+  recorded-fixture tests run against each new Claude Code version before it joins the list.
+- **The plan's limits.** Each session, and each memory pass, consumes the Claude Code plan like any Claude Code request.
 - **Cache.** A swap rewrites the prefix, so the next request re-caches it once, as any compaction does.
-- **Usage.** Each session consumes the Claude Code plan's limits like any Claude Code session.
+- **Distribution.** Fine for the owner's own use. Offering a Claude subscription login inside a distributed Orchestra
+  needs Anthropic's approval.
