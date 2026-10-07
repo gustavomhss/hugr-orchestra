@@ -78,7 +78,7 @@ export async function installWslArtifact(
   const source = await command(["wslpath", "-u", "--", artifact.path])
   if (!source.startsWith("/") || /[\r\n\0]/.test(source)) throw new WslArtifactError("path")
   await command([
-    "timeout", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version,
+    "timeout", "--kill-after=1s", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version,
   ])
 }
 

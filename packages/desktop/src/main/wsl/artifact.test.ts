@@ -22,7 +22,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
   const bytes = "#!/bin/bash\nprintf '1.16.2\\n'\n"
   const digest = createHash("sha256").update(bytes).digest("hex")
   const execute = (file: string, hash = digest, version = "1.16.2", timeout = "5s") => shell(
-    ["timeout", timeout, "bash", "-c", installGuestScript, "install", file, hash, version], root,
+    ["timeout", "--kill-after=1s", timeout, "bash", "-c", installGuestScript, "install", file, hash, version], root,
   )
   try {
     await Bun.write(source, bytes)
@@ -45,6 +45,10 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
     expect(await readdir(join(root, ".orchestra/bin"))).toEqual(["orchestra"])
+    const hung = "#!/bin/bash\ntrap '' TERM\nsleep 10\n"
+    await Bun.write(source, hung)
+    expect((await execute(source, createHash("sha256").update(hung).digest("hex"), "1.16.2", "0.1s")).code).toBe(137)
+    expect(await readFile(destination, "utf8")).toBe("foreign-old")
     await rm(destination)
     await symlink(source, destination)
     expect((await execute(source)).code).toBe(85)
@@ -77,6 +81,7 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   }
   await installWslArtifact("Ubuntu Preview", "1.16.2", options)
   expect(commands[1]).toEqual(["wslpath", "-u", "--", "C:\\CLI ' $()\\owned"])
+  expect(commands[2]?.slice(0, 4)).toEqual(["timeout", "--kill-after=1s", "18s", "bash"])
   expect(commands[2]?.slice(-3)).toEqual(["/mnt/c/CLI ' $()/owned", "a".repeat(64), "1.16.2"])
   abort.abort()
   await expect(installWslArtifact("Ubuntu Preview", "1.16.2", options)).rejects.toThrow()
