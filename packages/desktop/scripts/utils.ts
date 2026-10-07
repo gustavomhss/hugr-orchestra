@@ -4,6 +4,7 @@ import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
 import { nativeCliTarget } from "../src/main/cli-artifacts"
 
 export type Channel = "dev" | "beta" | "prod"
+export const RUST_TARGET = Bun.env.RUST_TARGET
 
 export function resolveChannel(): Channel {
   const raw = Bun.env.ORCHESTRA_CHANNEL
@@ -15,9 +16,7 @@ export async function buildCliToResources() {
   const cli = resolve(desktop, "../cli")
   const version =
     process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(desktop, "../orchestra/package.json")).json()).version
-  const targets = process.env.RUST_TARGET
-    ? targetsForRust(process.env.RUST_TARGET)
-    : desktopCliTargets(process.platform, process.arch)
+  const targets = RUST_TARGET ? targetsForRust(RUST_TARGET) : desktopCliTargets(process.platform, process.arch)
   await targets.reduce(async (previous, target) => {
     await previous
     await $`bun script/build.ts --target ${target}`.cwd(cli).env({ ...process.env, ORCHESTRA_VERSION: version })

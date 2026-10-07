@@ -82,7 +82,8 @@ test("owned W2 builder stages native/WSL bytes and real Electron background serv
       import { startBackgroundCli } from ${JSON.stringify(pathToFileURL(join(desktop, "out/main/background-cli.js")).href)};
       app.setPath("userData", ${JSON.stringify(join(home, "desktop"))});
       app.setPath("appData", ${JSON.stringify(join(home, "desktop-data"))});
-      await app.whenReady();
+      app.whenReady().then(async () => {
+      console.log("isolated Electron ready");
       const service = await startBackgroundCli({ log() {}, error() {} }, ${JSON.stringify(join(home, "state"))});
       const headers = { authorization: "Basic " + Buffer.from("orchestra:" + service.password).toString("base64") };
       const good = await fetch(new URL("/api/health", service.url), { headers, signal: AbortSignal.timeout(10000) });
@@ -91,6 +92,7 @@ test("owned W2 builder stages native/WSL bytes and real Electron background serv
       if (bad.status !== 401) throw new Error("Wrong credential was accepted");
       console.log("owned background service authenticated");
       app.exit(0);
+      }).catch((error) => { console.error(error); app.exit(1); });
     `,
       )
       const electron = join(
