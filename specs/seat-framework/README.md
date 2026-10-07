@@ -32,4 +32,6 @@ bun script/seat.ts add <id> --role "<role>"
 
 The scaffold creates a definition, prompt, initial skill/reference tree and barrel entry. Invalid/reserved ids and occupied paths are refused. It seeds scoped execution, strict resume and the shared return card, without Atlas or toolkit grants.
 
+Owner decision (2026-10-07): interrupted creation fails closed. An existing scaffold lock and any partial artifacts are preserved for owner review; another invocation never deletes them or steals the lock. Ordinary failures roll back only artifacts created by that invocation. Automatic crash recovery is outside this scaffold's contract.
+
 Qualification sequence: **charter → skills/references → fit-qualified toolkit packs → return card → charter plus real Maestro seat evaluation**. The scaffold is a starting point, not a qualified specialist. New toolkit ownership needs a separately supported boundary; do not flip a capability to reuse backend engines. Evaluate real dispatch, permission/write scope, result evidence and domain task quality before adoption.
