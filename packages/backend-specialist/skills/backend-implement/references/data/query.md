@@ -26,6 +26,7 @@ An assigned query or write, result mapping or repository change on the existing 
 ## Tools and outputs
 
 - The selected query generator and driver.
+- Toolkit checks, only when the packet assigns them: [postgres-language-server](../recipes/external/postgres-language-server.md) type-checks PostgreSQL SQL against a supplied database; [sqlglot](../recipes/external/sqlglot.md) parses or transpiles Spark and other-dialect SQL.
 - Output: the query, the bindings and the repository delta.
 
 ## Limits and checks

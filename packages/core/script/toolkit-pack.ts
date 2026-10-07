@@ -3,6 +3,7 @@
 //   bun script/toolkit-pack.ts add <id> --kind <binary|npm|pip|jar|go-source|cargo-source> --upstream <owner/repo|npm-name|pypi-name>
 //     --version <v> [--asset '<target>=<glob>' ...] [--role generator|check] [--input <text>] [--skill <entry-skill> ...]
 //   bun script/toolkit-pack.ts bump <id> <version>
+//   bun script/toolkit-pack.ts index          (regenerate the recipe index only, e.g. after merging pack branches)
 // `add` writes packs/<id>.ts, a recipe stub with the card headings, the barrel import and entry. `binary` pins each
 // target to the GitHub release asset matching its --asset glob (sha256 from the release API's digest); `npm` reads
 // license, bin and dist.integrity from the registry and writes the lock with `npm install --package-lock-only`.
@@ -48,9 +49,10 @@ const args = parseArgs({
 const [command, id, bumped] = args.positionals
 
 const valid =
-  (command === "add" && args.values.kind && args.values.upstream && args.values.version) ||
-  (command === "bump" && bumped)
-if (!valid || !id) {
+  command === "index" ||
+  (id && command === "add" && args.values.kind && args.values.upstream && args.values.version) ||
+  (id && command === "bump" && bumped)
+if (!valid) {
   console.error("usage: see the header of script/toolkit-pack.ts")
   process.exit(1)
 }

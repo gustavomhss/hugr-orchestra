@@ -6,12 +6,16 @@ import gitleaks from "./gitleaks"
 import kiota from "./kiota"
 import kopium from "./kopium"
 import kubeconform from "./kubeconform"
+import kyselyCodegen from "./kysely-codegen"
 import ogen from "./ogen"
 import openapiGenerator from "./openapi-generator"
 import orval from "./orval"
+import postgresLanguageServer from "./postgres-language-server"
 import protocGenEs from "./protoc-gen-es"
 import sqlc from "./sqlc"
+import sqlglot from "./sqlglot"
 import sqlx from "./sqlx"
+import squawk from "./squawk"
 
 // One import and one entry per pack (ruling M6-1); `script/toolkit-pack.ts add` writes both. Keyed by each pack's own
 // id, in the order the toolkit lists them.
@@ -30,4 +34,8 @@ export const ENGINES = {
   [controllerGen.id]: controllerGen,
   [kubeconform.id]: kubeconform,
   [kopium.id]: kopium,
+  [squawk.id]: squawk,
+  [postgresLanguageServer.id]: postgresLanguageServer,
+  [sqlglot.id]: sqlglot,
+  [kyselyCodegen.id]: kyselyCodegen,
 }

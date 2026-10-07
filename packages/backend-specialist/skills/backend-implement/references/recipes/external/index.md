@@ -22,8 +22,12 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 
 ### backend-data
 
+- [kysely-codegen](kysely-codegen.md): generator; input: a disposable PostgreSQL or MySQL database holding the schema.
+- [postgres-language-server](postgres-language-server.md): check; input: the SQL the change wrote and a disposable PostgreSQL database holding the schema.
 - [sqlc](sqlc.md): generator; input: SQL query files and the schema DDL sqlc reads.
+- [sqlglot](sqlglot.md): check; input: the Spark or other-dialect SQL the change wrote.
 - [sqlx](sqlx.md): generator; input: a SQLx project's migrations and a disposable database.
+- [squawk](squawk.md): check; input: the PostgreSQL migration files the change wrote.
 
 ### backend-refactor
 
@@ -32,3 +36,6 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 ### backend-check
 
 - [kubeconform](kubeconform.md): check; input: Kubernetes manifests the change wrote, with the schemas the packet supplies.
+- [postgres-language-server](postgres-language-server.md): check; input: the SQL the change wrote and a disposable PostgreSQL database holding the schema.
+- [sqlglot](sqlglot.md): check; input: the Spark or other-dialect SQL the change wrote.
+- [squawk](squawk.md): check; input: the PostgreSQL migration files the change wrote.
