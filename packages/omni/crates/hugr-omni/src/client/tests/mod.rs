@@ -68,6 +68,7 @@ fn spec(pty: bool) -> Spec {
         stdin: Stdin::Pipe,
         merge_stderr: false,
         grace: Duration::from_millis(1500),
+        verbatim: None,
     }
 }
 

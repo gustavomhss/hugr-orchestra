@@ -1,0 +1,161 @@
+name: omni-cli-smoke
+
+# The compiled-CLI crash smoke (integration plan §4 WP5): build the CLI with `build.ts --single`, the omni addon and
+# supervisor shipped next to it (D-L8), start it with omni on, let it hold a nonce tree, `kill -9` it, and require 0
+# nonce processes 8 s later. Runs by hand and on pull requests that touch the build scripts or omni.
+#
+# What runs the tree: no CLI subcommand on this branch keeps an omni tree alive (`debug omni`, WP3, starts one and
+# stops it at once). So the shipped executable runs a hold script as Bun (BUN_BE_BUN=1): the binary, its compiled
+# runtime, process.execPath and its realpath (reached through a symlink on Unix), the shipped addon and the shipped
+# supervisor are all the real ones; only the yargs layer is bypassed. The script fails unless the core loader took
+# both files from next to the binary. When `debug omni` exists, a second step requires it to print `nonce tree: ok`,
+# which covers the import of hugr-omni from inside the compiled bundle.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "packages/opencode/script/**"
+      - "packages/omni/**"
+      - ".github/workflows/omni-cli-smoke.yml"
+
+concurrency:
+  group: omni-cli-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: compiled CLI crash smoke (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: omni binaries
+        uses: ./.github/actions/omni-binaries
+
+      # build.ts takes OMNI_ARTIFACTS=<dir>/<omni id>/{hugr_omni.node,hugr-omni-supervisor[.exe]}.
+      - name: Stage omni artifacts
+        run: |
+          case "$RUNNER_OS-$RUNNER_ARCH" in
+            Linux-X64) id=linux-x64-gnu ;;
+            Linux-ARM64) id=linux-arm64-gnu ;;
+            macOS-ARM64) id=darwin-arm64 ;;
+            macOS-X64) id=darwin-x64 ;;
+            Windows-X64) id=win32-x64-msvc ;;
+            *) echo "::error::no omni build for $RUNNER_OS-$RUNNER_ARCH"; exit 1 ;;
+          esac
+          dir="$RUNNER_TEMP/omni-artifacts"
+          mkdir -p "$dir/$id"
+          cp "$HUGR_OMNI_ADDON" "$dir/$id/hugr_omni.node"
+          cp "$HUGR_OMNI_SUPERVISOR" "$dir/$id/"
+          echo "OMNI_ARTIFACTS=$dir" >> "$GITHUB_ENV"
+
+      - name: Build the CLI (--single)
+        working-directory: packages/opencode
+        run: |
+          bun script/build.ts --single --skip-install --skip-embed-web-ui
+          ls -l dist/*/bin
+
+      - name: Crash smoke
+        working-directory: packages/opencode
+        run: |
+          mkdir -p .omni-cli-smoke
+          # Run by the shipped binary as Bun: load omni through the core loader, start a 3-process nonce tree, hold it.
+          cat > .omni-cli-smoke/hold.ts <<'EOF'
+          import { realpathSync } from "node:fs"
+          import path from "node:path"
+          import { Omni } from "@opencode-ai/core/omni"
+          import { tree } from "../../core/test/fixture/process-tree.ts"
+
+          const shipped = path.dirname(realpathSync(process.execPath))
+          const found = Omni.locate()
+          if (path.dirname(found.addon) !== shipped || path.dirname(found.supervisor) !== shipped)
+            throw new Error(`omni was not taken from next to the binary (${shipped}): ${JSON.stringify(found)}`)
+          const binding = await Omni.load()
+          const fixture = tree(2)
+          const child = binding.spawn(fixture.command, fixture.args, { inheritEnv: false, env: Omni.childEnv() })
+          for await (const line of child.lines()) if (line.text === fixture.ready) break
+          console.log(`held ${fixture.nonce} ${(await child.processes()).length} ${found.supervisor}`)
+          setInterval(() => {}, 1 << 30)
+          EOF
+          # Run by this repo's Bun: start the CLI (through a symlink on Unix), kill -9 it once it holds the tree, and
+          # require the tree gone within 8 s, by the fixture's records and by a process-table sweep.
+          cat > .omni-cli-smoke/driver.ts <<'EOF'
+          import { spawn } from "node:child_process"
+          import { mkdtempSync, readdirSync, symlinkSync } from "node:fs"
+          import os from "node:os"
+          import path from "node:path"
+          import { alive, gone, reap, sweep } from "../../core/test/fixture/process-tree.ts"
+
+          const fail = (message: string) => {
+            console.error(`::error::${message}`)
+            process.exit(1)
+          }
+          const targets = readdirSync("dist").filter((name) => name.startsWith("opencode-"))
+          if (targets.length !== 1) fail(`expected one built target in dist, found ${targets.join(", ")}`)
+          const real = path.resolve("dist", targets[0], "bin", process.platform === "win32" ? "opencode.exe" : "opencode")
+          const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "opencode")
+          if (process.platform !== "win32") symlinkSync(real, link)
+          const bin = process.platform === "win32" ? real : link
+          const env: Record<string, string | undefined> = { ...process.env, BUN_BE_BUN: "1", OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1" }
+          for (const key of Object.keys(env)) if (key.toUpperCase().startsWith("HUGR_OMNI_")) delete env[key]
+          console.log(`starting ${bin}`)
+          const cli = spawn(bin, [path.resolve(".omni-cli-smoke/hold.ts")], { env, stdio: ["ignore", "pipe", "inherit"] })
+          const held = await new Promise<string[]>((resolve) => {
+            let out = ""
+            const timer = setTimeout(() => fail(`the CLI printed no 'held' line within 60 s: ${out}`), 60_000)
+            cli.stdout.on("data", (chunk) => {
+              out += chunk
+              const match = out.match(/held (\S+) (\d+) (.+)/)
+              if (!match) return
+              clearTimeout(timer)
+              resolve(match.slice(1))
+            })
+            cli.on("exit", (code) => fail(`the CLI exited (${code}) before it held the tree: ${out}`))
+          })
+          const nonce = held[0]
+          console.log(`held ${nonce}: omni sees ${held[1]} processes; supervisor ${held[2]}`)
+          // Positive control: the oracle sees the live tree before the kill.
+          const before = { alive: await alive(nonce), swept: (await sweep(nonce)).length }
+          console.log(`before kill -9: alive=${before.alive} swept=${before.swept}`)
+          if (before.alive !== 3 || before.swept !== 3) fail(`the oracle does not see the 3-process tree: ${JSON.stringify(before)}`)
+          cli.removeAllListeners("exit")
+          process.kill(cli.pid!, "SIGKILL")
+          const left = await gone(nonce, 8_000)
+          const swept = await sweep(nonce)
+          console.log(`8 s after kill -9: alive=${left} swept=${swept.length}`)
+          if (left !== 0 || swept.length !== 0) {
+            await reap(nonce)
+            fail(`${Math.max(left, swept.length)} nonce process(es) outlived the CLI by 8 s: ${swept.join(", ")}`)
+          }
+          console.log("PASS: 0 nonce processes 8 s after kill -9 of the compiled CLI")
+          process.exit(0)
+          EOF
+          bun .omni-cli-smoke/driver.ts
+
+      # `debug omni` comes with WP3. Until then this step only warns; after, it must print `nonce tree: ok`.
+      - name: debug omni (in-bundle import)
+        working-directory: packages/opencode
+        run: |
+          bin=$(ls dist/*/bin/opencode dist/*/bin/opencode.exe 2>/dev/null | head -1)
+          if ! "$bin" debug --help 2>&1 | grep -q "debug omni"; then
+            echo "::warning::this tree has no 'opencode debug omni' (WP3); the in-bundle import was not exercised"
+            exit 0
+          fi
+          out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=1 "$bin" debug omni)
+          echo "$out"
+          echo "$out" | grep -q "nonce tree: ok"

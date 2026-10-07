@@ -10,6 +10,10 @@ const fff = process.env["OPENCODE_DISABLE_FFF"]
 
 export type OmniSpawner = "off" | "on" | "strict"
 
+// Set by the CLI build per target (packages/opencode/script/build.ts): false where omni ships no addon yet (D-L9).
+// Undefined in dev, tests and the desktop bundle, where the flag alone decides.
+declare const OMNI_ENABLED: boolean | undefined
+
 const omniWarned = new Set<string>()
 
 /**
@@ -19,6 +23,13 @@ const omniWarned = new Set<string>()
  */
 export function omniSpawner(value: string | undefined): OmniSpawner {
   if (value === undefined || value === "" || value === "0") return "off"
+  if (typeof OMNI_ENABLED !== "undefined" && !OMNI_ENABLED) {
+    if (!omniWarned.has("")) {
+      omniWarned.add("")
+      console.warn("OPENCODE_EXPERIMENTAL_OMNI_SPAWNER is set, but this build has no hugr-omni for its platform; omni stays off.")
+    }
+    return "off"
+  }
   if (value === "1") return "on"
   if (value === "strict") return "strict"
   if (!omniWarned.has(value)) {

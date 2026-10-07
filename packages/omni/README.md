@@ -19,8 +19,8 @@ bun add hugr-omni         # Bun
 deno add npm:hugr-omni    # Deno
 ```
 
-Node 22+, Bun or Deno; prebuilt for Windows x64, macOS (arm64, x64) and Linux (x64, arm64, glibc). Nothing is compiled
-or downloaded at install time.
+Node 22+, Bun or Deno; prebuilt for Windows (x64, arm64), macOS (arm64, x64) and Linux (x64, arm64; glibc, and musl
+for Node and Bun on Alpine). Nothing is compiled or downloaded at install time.
 
 ## Quickstart
 

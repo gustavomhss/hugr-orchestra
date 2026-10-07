@@ -118,8 +118,14 @@ if (!Script.preview) {
     `source_x86_64=("\${pkgname}_\${pkgver}_x86_64.tar.gz::https://github.com/anomalyco/opencode/releases/download/v\${pkgver}\${_subver}/opencode-linux-x64.tar.gz")`,
     `sha256sums_x86_64=('${x64Sha}')`,
     "",
+    // The binary, hugr-omni's addon and its supervisor live side by side (D-L8, O6); /usr/bin holds only a symlink,
+    // which the CLI resolves through realpath(execPath).
     "package() {",
-    '  install -Dm755 ./opencode "${pkgdir}/usr/bin/opencode"',
+    '  install -Dm755 ./opencode "${pkgdir}/usr/lib/opencode/opencode"',
+    '  install -Dm755 ./hugr_omni.node "${pkgdir}/usr/lib/opencode/hugr_omni.node"',
+    '  install -Dm755 ./hugr-omni-supervisor "${pkgdir}/usr/lib/opencode/hugr-omni-supervisor"',
+    '  install -dm755 "${pkgdir}/usr/bin"',
+    '  ln -s /usr/lib/opencode/opencode "${pkgdir}/usr/bin/opencode"',
     "}",
     "",
   ].join("\n")
@@ -143,7 +149,12 @@ if (!Script.preview) {
     }
   }
 
-  // Homebrew formula
+  // Homebrew formula. The binary, hugr-omni's addon and its supervisor stay together in libexec (D-L8, O6), and bin
+  // gets only a symlink to the binary, so the supervisor never lands on PATH.
+  const homebrewInstall = [
+    'libexec.install "opencode", "hugr_omni.node", "hugr-omni-supervisor"',
+    'bin.install_symlink libexec/"opencode"',
+  ]
   const homebrewFormula = [
     "# typed: false",
     "# frozen_string_literal: true",
@@ -162,7 +173,7 @@ if (!Script.preview) {
     `      sha256 "${macX64Sha}"`,
     "",
     "      def install",
-    '        bin.install "opencode"',
+    ...homebrewInstall.map((line) => `        ${line}`),
     "      end",
     "    end",
     "    if Hardware::CPU.arm?",
@@ -170,7 +181,7 @@ if (!Script.preview) {
     `      sha256 "${macArm64Sha}"`,
     "",
     "      def install",
-    '        bin.install "opencode"',
+    ...homebrewInstall.map((line) => `        ${line}`),
     "      end",
     "    end",
     "  end",
@@ -180,14 +191,14 @@ if (!Script.preview) {
     `      url "https://github.com/anomalyco/opencode/releases/download/v${Script.version}/opencode-linux-x64.tar.gz"`,
     `      sha256 "${x64Sha}"`,
     "      def install",
-    '        bin.install "opencode"',
+    ...homebrewInstall.map((line) => `        ${line}`),
     "      end",
     "    end",
     "    if Hardware::CPU.arm? and Hardware::CPU.is_64_bit?",
     `      url "https://github.com/anomalyco/opencode/releases/download/v${Script.version}/opencode-linux-arm64.tar.gz"`,
     `      sha256 "${arm64Sha}"`,
     "      def install",
-    '        bin.install "opencode"',
+    ...homebrewInstall.map((line) => `        ${line}`),
     "      end",
     "    end",
     "  end",

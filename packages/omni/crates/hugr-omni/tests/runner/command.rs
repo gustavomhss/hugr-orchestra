@@ -50,6 +50,9 @@ pub fn build(argv: &Value, options: Option<&Value>, token: &CancellationToken) -
             "mergeStderr" => {
                 cmd.merge_stderr(v.as_bool().ok_or_else(bad)?);
             }
+            "windowsVerbatimArgs" => {
+                cmd.windows_verbatim_args(v.as_str().ok_or_else(bad)?);
+            }
             "input" => {
                 cmd.input(bytes(v)?);
             }

@@ -186,6 +186,7 @@ impl Looped {
                 stderr: Slot::Merge,
                 grace_ms: 0,
                 handles: [inh, out, 0],
+                verbatim: None,
             })
         });
         match self.until(|m| matches!(m, Msg::Spawned { req: r, .. } | Msg::SpawnFailed { req: r, .. } if *r == req)) {
@@ -342,6 +343,7 @@ fn a_spawn_over_the_tree_cap_is_refused_and_its_handles_are_closed() {
             stderr: Slot::Merge,
             grace_ms: 0,
             handles: [0, w.into_raw_handle() as u64, 0],
+            verbatim: None,
         })
     });
     match l

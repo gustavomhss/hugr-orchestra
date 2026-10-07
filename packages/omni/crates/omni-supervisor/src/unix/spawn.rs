@@ -45,6 +45,9 @@ impl Prepared {
         if s.argv.is_empty() {
             return Err(invalid("argv is empty"));
         }
+        if s.verbatim.is_some() {
+            return Err(invalid("a verbatim command line exists only on Windows"));
+        }
         let mut envp = Vec::with_capacity(s.env.len());
         for (k, v) in &s.env {
             if k.is_empty() || k.contains(&b'=') {

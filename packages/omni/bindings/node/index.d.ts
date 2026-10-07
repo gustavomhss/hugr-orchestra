@@ -68,6 +68,16 @@ export interface CommonOptions {
   text?: boolean;
   /** Pipe mode: stderr goes into the stdout pipe at the OS level (one chronological stream). */
   mergeStderr?: boolean;
+  /**
+   * Windows only (amendment WP8b): the exact command line after the program, for a program that parses its own
+   * command line, such as `cmd.exe`. The child's command line is the quoted command, a space and this text, unchanged:
+   * no quoting, and the library still adds no shell. `INVALID_ARGUMENT` on other systems, together with `args`, with a
+   * NUL, or when the command resolves to a `.cmd`/`.bat` (name `cmd.exe` yourself).
+   *
+   * @example
+   * run("cmd.exe", [], { windowsVerbatimArgs: '/d /s /c "echo a&echo b"' });
+   */
+  windowsVerbatimArgs?: string;
 }
 export interface RunOptions extends CommonOptions {
   /** Pipe mode: fed to stdin, then stdin is closed. */

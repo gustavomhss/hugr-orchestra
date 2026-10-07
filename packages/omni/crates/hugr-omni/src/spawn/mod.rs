@@ -55,6 +55,8 @@ pub(crate) struct Request {
     pub grace: Duration,
     /// Validated here, enforced by `process`.
     pub timeout: Option<Duration>,
+    /// Windows only (amendment WP8b): the command-line tail written after the quoted `argv[0]`, unchanged.
+    pub verbatim: Option<OsString>,
 }
 
 impl Request {
@@ -70,6 +72,7 @@ impl Request {
             merge_stderr: false,
             grace: DEFAULT_GRACE,
             timeout: None,
+            verbatim: None,
         }
     }
 }
@@ -90,6 +93,9 @@ pub(crate) struct Spec {
     pub stdin: Stdin,
     pub merge_stderr: bool,
     pub grace: Duration,
+    /// Windows only: the command-line tail after the quoted `argv[0]` (then `argv` is `argv[0]` alone, and `program`
+    /// is never a `.cmd`/`.bat`).
+    pub verbatim: Option<OsString>,
 }
 
 /// Validates `req` per contract §3 (InvalidArgument / InvalidCwd), builds the final environment and resolves the program
@@ -99,6 +105,9 @@ pub(crate) fn prepare(req: &Request) -> Result<Spec, Error> {
     let env = env::build(req);
     let cwd = validate::cwd(req)?;
     let program = resolve::program(&req.program, &env, &cwd)?;
+    if req.verbatim.is_some() {
+        validate::verbatim_program(&req.program, &program, HOST)?;
+    }
     Ok(Spec {
         program,
         argv: std::iter::once(req.program.clone())
@@ -110,5 +119,6 @@ pub(crate) fn prepare(req: &Request) -> Result<Spec, Error> {
         stdin: req.stdin,
         merge_stderr: req.merge_stderr,
         grace: req.grace,
+        verbatim: req.verbatim.clone(),
     })
 }

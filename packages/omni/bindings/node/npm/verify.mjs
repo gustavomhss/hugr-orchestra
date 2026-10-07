@@ -6,7 +6,7 @@
 // The tarballs (from pack.mjs) are served by a read-only registry on 127.0.0.1, so each package manager resolves the
 // optionalDependencies with its own os/cpu/libc logic; nothing is published. The directory needs hugr-omni and the
 // package of the platform this runs on; the other platform packages are answered with a bare packument (Deno reads all
-// five, and never fetches the ones that do not match). Bun and Deno come from HUGR_BUN / HUGR_DENO (default `bun`,
+// eight, and never fetches the ones that do not match). Deno has no musl build: on musl (Alpine) only node and bun run. Bun and Deno come from HUGR_BUN / HUGR_DENO (default `bun`,
 // `deno`; e.g. `npx -y deno@2`). Any failure throws, and so does an install or a quickstart that takes 30 s.
 
 import assert from "node:assert/strict";
@@ -20,11 +20,27 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-const IDS = { "win32-x64": "win32-x64-msvc", "darwin-arm64": "darwin-arm64", "darwin-x64": "darwin-x64", "linux-x64": "linux-x64-gnu", "linux-arm64": "linux-arm64-gnu" };
+/** The platform packages by id, with the `os`, `cpu` and (Linux) `libc` each declares. */
+const PLATFORMS = {
+  "win32-x64-msvc": { os: "win32", cpu: "x64" },
+  "win32-arm64-msvc": { os: "win32", cpu: "arm64" },
+  "darwin-arm64": { os: "darwin", cpu: "arm64" },
+  "darwin-x64": { os: "darwin", cpu: "x64" },
+  "linux-x64-gnu": { os: "linux", cpu: "x64", libc: "glibc" },
+  "linux-arm64-gnu": { os: "linux", cpu: "arm64", libc: "glibc" },
+  "linux-x64-musl": { os: "linux", cpu: "x64", libc: "musl" },
+  "linux-arm64-musl": { os: "linux", cpu: "arm64", libc: "musl" },
+};
 const [tarballs, runtime] = process.argv.slice(2);
 assert(tarballs && ["node", "bun", "deno"].includes(runtime), "usage: node verify.mjs <tarballs-dir> <node|bun|deno>");
-const id = IDS[`${process.platform}-${process.arch}`];
-assert(id, `${process.platform}-${process.arch} is not a hugr-omni platform`);
+// This script runs on Node, whose report names the glibc it runs on; a musl Node has none.
+const libc = process.platform === "linux" ? (process.report.getReport().header.glibcVersionRuntime ? "glibc" : "musl") : undefined;
+const id = Object.keys(PLATFORMS).find((k) => {
+  const p = PLATFORMS[k];
+  return p.os === process.platform && p.cpu === process.arch && p.libc === libc;
+});
+assert(id, `${process.platform}-${process.arch}${libc ? `-${libc}` : ""} is not a hugr-omni platform`);
+assert(!(runtime === "deno" && libc === "musl"), "Deno has no musl build: on musl, verify with node and bun only");
 const quickstart = join(dirname(fileURLToPath(import.meta.url)), "..", "examples", "quickstart.ts");
 
 // The registry: the packuments of the tarballs in the directory, and the tarballs themselves.
@@ -38,20 +54,35 @@ const entries = readdirSync(tarballs)
 const names = entries.map((e) => e.json.name);
 assert(names.includes("hugr-omni") && names.includes(`hugr-omni-${id}`), `${tarballs} needs hugr-omni and hugr-omni-${id}`);
 const version = entries.find((e) => e.json.name === "hugr-omni").json.version;
-const absent = Object.entries(IDS).filter(([, other]) => !names.includes(`hugr-omni-${other}`));
+const absent = Object.keys(PLATFORMS).filter((other) => !names.includes(`hugr-omni-${other}`));
+const tmp = mkdtempSync(join(tmpdir(), "hugr-omni-k9-"));
+
+// A package that only its `libc` keeps off this machine (the other libc's package, same os and cpu) gets a stub tarball
+// (its package.json, no addon): Bun and Deno do not read `libc` (measured: bun 1.x, deno 2.x) and install it, as they
+// will install the published one. npm must skip it; under Bun and Deno the loader must still pick this machine's package
+// (the stub has no addon, and the decoy below would fail the quickstart).
+const libcOnly = absent.filter((other) => PLATFORMS[other].os === process.platform && PLATFORMS[other].cpu === process.arch);
+for (const other of libcOnly) {
+  const { os, cpu, libc: lib } = PLATFORMS[other];
+  const dir = join(tmp, "stubs", other);
+  mkdirSync(join(dir, "package"), { recursive: true });
+  const json = { name: `hugr-omni-${other}`, version, os: [os], cpu: [cpu], libc: [lib], main: "hugr-omni.node" };
+  writeFileSync(join(dir, "package", "package.json"), JSON.stringify(json));
+  execFileSync("tar", ["-czf", "stub.tgz", "package"], { cwd: dir });
+  entries.push({ file: join(dir, "stub.tgz"), json });
+}
 
 const registry = http.createServer((req, res) => {
   const base = `http://${req.headers.host}`;
   const path = decodeURIComponent(new URL(req.url, base).pathname).slice(1);
   const tarball = (e) => `-/${e.json.name}-${e.json.version}.tgz`;
   const entry = entries.find((e) => e.json.name === path || tarball(e) === path);
-  const bare = absent.find(([, other]) => `hugr-omni-${other}` === path);
+  const bare = absent.find((other) => !libcOnly.includes(other) && `hugr-omni-${other}` === path);
   const packument = (json, dist) => JSON.stringify({ name: json.name, "dist-tags": { latest: version }, versions: { [version]: { ...json, dist } } });
   if (req.method !== "GET" || (!entry && !bare)) return void res.writeHead(404).end("{}");
   if (bare) {
-    const [key, other] = bare;
-    const [os, cpu] = key.split("-");
-    const json = { name: `hugr-omni-${other}`, version, os: [os], cpu: [cpu], ...(os === "linux" && { libc: ["glibc"] }) };
+    const { os, cpu, libc: lib } = PLATFORMS[bare];
+    const json = { name: `hugr-omni-${bare}`, version, os: [os], cpu: [cpu], ...(lib && { libc: [lib] }) };
     return void res.writeHead(200, { "content-type": "application/json" }).end(packument(json, { tarball: `${base}/-/never-fetched.tgz` }));
   }
   const bytes = readFileSync(entry.file);
@@ -65,7 +96,6 @@ const registry = http.createServer((req, res) => {
 });
 await new Promise((ready) => registry.listen(0, "127.0.0.1", ready));
 
-const tmp = mkdtempSync(join(tmpdir(), "hugr-omni-k9-"));
 const project = join(tmp, "project");
 mkdirSync(project);
 writeFileSync(join(project, ".npmrc"), `registry=http://127.0.0.1:${registry.address().port}/\n`);
@@ -139,14 +169,15 @@ try {
   // Installed: the main package and only this platform's, no lifecycle script, nothing compiled, supervisor next to the addon.
   const main = createRequire(join(project, "package.json")).resolve("hugr-omni");
   const addon = createRequire(main).resolve(`hugr-omni-${id}`);
-  for (const other of Object.values(IDS).filter((o) => o !== id)) {
-    assert.throws(() => createRequire(main).resolve(`hugr-omni-${other}`), `hugr-omni-${other} must not be installed on ${id}`);
+  for (const other of Object.keys(PLATFORMS).filter((o) => o !== id)) {
+    if (runtime !== "node" && libcOnly.includes(other)) continue; // declared: Bun and Deno do not read `libc`
+    assert.throws(() => createRequire(main).resolve(`hugr-omni-${other}/package.json`), `hugr-omni-${other} must not be installed on ${id}`);
   }
   const supervisor = join(dirname(addon), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor");
   assert(existsSync(supervisor), "the supervisor is not next to the addon");
   if (process.platform === "win32") {
-    // H5: built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the positive control:
-    // an import table read as empty would otherwise pass.
+    // H5 (x64 and arm64): built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the
+    // positive control: an import table read as empty would otherwise pass.
     for (const file of [addon, supervisor]) {
       const dlls = peImports(readFileSync(file));
       assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
@@ -184,7 +215,7 @@ try {
     writeFileSync(join(alone, "probe.cjs"), `if (process.argv[2]) Object.defineProperty(process, "platform", { value: process.argv[2] });\ntry { require("hugr-omni").spawn("x"); console.log("LOADED"); } catch (e) { console.log(e.message); }\n`);
     const probe = (...args) => execFileSync(process.execPath, ["probe.cjs", ...args], { cwd: alone, env, encoding: "utf8" });
     const unsupported = probe("freebsd");
-    for (const supported of Object.values(IDS)) assert(unsupported.includes(supported), `the unsupported-platform message does not list ${supported}: ${unsupported}`);
+    for (const supported of Object.keys(PLATFORMS)) assert(unsupported.includes(supported), `the unsupported-platform message does not list ${supported}: ${unsupported}`);
     assert(unsupported.includes(`freebsd-${process.arch}`), `the unsupported-platform message does not name the platform: ${unsupported}`);
     assert.match(probe(), new RegExp(`hugr-omni-${id} .* is not installed`), "the missing-package message does not name the package");
   }

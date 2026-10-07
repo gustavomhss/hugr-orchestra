@@ -35,6 +35,8 @@ pub struct Cmd {
     pub stdin: bool,
     pub merge: bool,
     pub grace_ms: u32,
+    /// A Windows command-line tail (amendment WP8b): the Unix supervisor refuses it.
+    pub verbatim: Option<Vec<u8>>,
 }
 
 impl Cmd {
@@ -49,6 +51,7 @@ impl Cmd {
             stdin: false,
             merge: true,
             grace_ms: 300,
+            verbatim: None,
         }
     }
 
@@ -103,6 +106,7 @@ impl Cmd {
             stderr: if self.merge { Slot::Merge } else { Slot::Pipe },
             grace_ms: self.grace_ms,
             handles: [0; 3],
+            verbatim: self.verbatim.clone(),
         }
     }
 }

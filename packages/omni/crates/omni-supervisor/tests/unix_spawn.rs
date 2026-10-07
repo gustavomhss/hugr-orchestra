@@ -136,12 +136,15 @@ fn spawn_failures_are_typed_and_leave_nothing_behind() {
     bad_cwd.cwd = dir.join("missing");
     let mut nul = Cmd::new("/bin/cat", &[]);
     nul.argv.push("a\0b".into());
+    let mut verbatim = Cmd::new("/bin/cat", &[]);
+    verbatim.verbatim = Some(b"x".to_vec()); // amendment WP8b: a Windows command line
     let cases = [
         (Cmd::new("/nonexistent/omni-sup", &[]), FailCode::NotFound),
         (Cmd::new(plain.to_str().unwrap(), &[]), FailCode::NotExecutable),
         (bad_cwd, FailCode::BadCwd),
         (Cmd::new("cat", &[]), FailCode::Invalid), // not absolute: the host resolves programs
         (nul, FailCode::Invalid),
+        (verbatim, FailCode::Invalid),
     ];
     for (cmd, code) in cases {
         let cmd = cmd.stdin();
