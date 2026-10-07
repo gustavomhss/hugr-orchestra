@@ -105,6 +105,12 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   await search.fill("no-such-shortcut")
   await expect(chapter.getByRole("status")).toHaveText("No shortcuts match your search.")
   await expect(chapter.locator("[data-shortcut-id]")).toHaveCount(0)
+  // Commands registered without a binding, such as the Relay palette entries, read "Unassigned" before any edit.
+  await search.fill("unassigned")
+  await expect(row(page, "relay.workflows.open")).toBeVisible()
+  await expect(row(page, "home.toggle")).toHaveCount(0)
+  await expect(row(page, "tab.new")).toHaveCount(0)
+  const unbound = await chapter.locator("[data-shortcut-id]").count()
   await search.fill("")
   await expect(row(page, "tab.new")).toBeVisible()
 
@@ -136,9 +142,9 @@ test("search, cancel keeps the stored binding, Backspace unassigns, the default 
   await dialog.getByRole("button", { name: "Save" }).click()
   await expect(row(page, "home.toggle").locator("kbd")).toHaveText(["Unassigned"])
   await expect.poll(() => keybinds(page)).toEqual({ "home.toggle": "none" })
-  // The visible "Unassigned" label is searchable too.
+  // The visible "Unassigned" label is searchable too: exactly the unassigned binding joins the unbound rows.
   await search.fill("unassigned")
-  await expect(chapter.locator("[data-shortcut-id]")).toHaveCount(1)
+  await expect(chapter.locator("[data-shortcut-id]")).toHaveCount(unbound + 1)
   await expect(row(page, "home.toggle")).toBeVisible()
   await search.fill("")
 
