@@ -19,9 +19,7 @@ export async function buildCliToResources() {
     : desktopCliTargets(process.platform, process.arch)
   await targets.reduce(async (previous, target) => {
     await previous
-    await $`bun script/build.ts --target ${target} --skip-install`
-      .cwd(cli)
-      .env({ ...process.env, ORCHESTRA_VERSION: version })
+    await $`bun script/build.ts --target ${target}`.cwd(cli).env({ ...process.env, ORCHESTRA_VERSION: version })
   }, Promise.resolve())
   return stageCliArtifacts({
     dist: join(cli, "dist"),
@@ -31,7 +29,14 @@ export async function buildCliToResources() {
     sign: async (path, target) => {
       if (target.startsWith("windows-") && process.platform === "win32" && process.env.GITHUB_ACTIONS === "true")
         await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ${join(desktop, "../../script/sign-windows.ps1")} ${path}`
-      if (target.startsWith("darwin-") && process.platform === "darwin") await $`codesign --force --sign - ${path}`
+      if (target.startsWith("darwin-") && process.platform === "darwin") {
+        const identity = process.env.CSC_NAME ?? "-"
+        const options =
+          identity === "-"
+            ? []
+            : ["--options", "runtime", "--timestamp", "--entitlements", join(desktop, "resources/entitlements.plist")]
+        await $`codesign --force --sign ${identity} ${options} ${path}`
+      }
     },
   })
 }

@@ -25,7 +25,7 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
     : await verifyCliArtifact(directory, target)
   const binary = artifact.path
   logger.log("v2 CLI executable resolved", { binary, version: artifact.version, packaged: app.isPackaged })
-  if ((await run(binary, ["--version"], logger)) !== artifact.version)
+  if (![artifact.version, `orchestra v${artifact.version}`].includes(await run(binary, ["--version"], logger)))
     throw new Error("Owned CLI executable version differs from its manifest")
 
   const candidates = [
