@@ -1,4 +1,5 @@
 export * as BackendWork from "./backend-work"
+export * as SeatWork from "./backend-work"
 
 import { Effect } from "effect"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
@@ -7,11 +8,13 @@ import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
+import type { Seat } from "./seats"
 
-// F4 cl.6: the backend seat's work result, streamed onto the Task tool part as `metadata.workResult`. Every operation
-// is a no-op for other seats.
+// F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
+// Definition supplies the fenced tag, schema id and memory capability; seats without workResult opt out.
 export function track(input: {
   readonly enabled: boolean
+  readonly seat?: Seat
   readonly sessionID: SessionID
   // Host fact: the logical task bound to the child (F2.11); absent for a seat without a binding.
   readonly taskId?: string
@@ -34,14 +37,14 @@ export function track(input: {
       ...metadata,
       ...(evidence.value ? { workResult: evidence.value } : {}),
     }),
-    record: Effect.fn("BackendWork.record")(function* (message: SessionV1.WithParts) {
+    record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      evidence.value = yield* bound(BackendResult.assemble(message, yield* history()))
+      evidence.value = yield* bound(BackendResult.assemble(message, yield* history(), input.seat))
       yield* input.publish(evidence.value)
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
     // stand behind: the card already assembled, else the child's last assistant message, else no card.
-    hostEnded: Effect.fn("BackendWork.hostEnded")(function* (
+    hostEnded: Effect.fn("SeatWork.hostEnded")(function* (
       reason: "failed" | "interrupted" | "running",
       detail: string,
     ) {
@@ -49,21 +52,21 @@ export function track(input: {
       const session = evidence.value ? [] : yield* history()
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }))
+        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat))
       yield* input.publish(evidence.value)
     }),
     // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
     // the final work result, read from the child's durable last assistant message (a resumed job may have run several
     // turns).
-    notice: Effect.fn("BackendWork.notice")(function* (state: "completed" | "error", text: string) {
+    notice: Effect.fn("SeatWork.notice")(function* (state: "completed" | "error", text: string) {
       if (!input.enabled) return undefined
       const session = yield* history()
       const last = lastAssistant(session)
       if (state === "error")
-        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }))
-      if (last) return yield* bound(BackendResult.assemble(last, session))
+        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat))
+      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat))
       return yield* bound(
-        BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }),
+        BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
       )
     }),
   }

@@ -6,8 +6,9 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 import { ToolSafety } from "@opencode-ai/core/tool-safety"
 import { InstanceState } from "@/effect/instance-state"
 import type { Session } from "@/session/session"
+import { Seats } from "./seats"
 
-// The backend seat's write scope is bound by the host at Task dispatch (F2.14) and enforced by ToolSafety, never by the
+// A write-roots seat's scope is bound by the host at Task dispatch (F2.14) and enforced by ToolSafety, never by the
 // charter. It is stored as reserved rules in the child Session's permission ruleset, so it is durable, travels through
 // governed and authorized reservation snapshots unchanged, and no tool permission ever matches it. Only the host
 // writes these rules: client payloads that carry them are refused and ruleset replacements keep them (`keep`).
@@ -15,14 +16,14 @@ export const PERMISSION = "tool_safety_write_root"
 
 export type Rule = { readonly permission: string; readonly pattern: string; readonly action: "allow" | "deny" | "ask" }
 
-/** The Task tool parameter through which Maestro (or the user) declares the backend seat's write scope. */
+/** The Task tool parameter through which Maestro (or the user) declares a capable seat's write scope. */
 export const Param = Schema.optional(Schema.Array(Schema.String)).annotate({
   description:
-    "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
+    "Worktree-relative files or directories a write-roots seat may write; the host enforces them. Absent or empty: that seat is read-only. Ignored for agents without this capability.",
 })
 
 /**
- * Append the backend seat's write-root rules to a child ruleset. Other members ignore `writePaths`. For the backend
+ * Append a capable seat's write-root rules to a child ruleset. Other members ignore `writePaths`. For a capable
  * seat an absent or empty list binds a read-only child. Paths are worktree-relative files or directories, stored as
  * canonical absolute paths after validation.
  */
@@ -31,7 +32,7 @@ export const bind = Effect.fn("WriteRoots.bind")(function* <T extends Rule>(
   writePaths: ReadonlyArray<string> | undefined,
   permission: ReadonlyArray<T>,
 ) {
-  if (memberID !== "backend") return [...permission]
+  if (!Seats.find(memberID)?.writeRoots) return [...permission]
   return [...permission.filter((rule) => rule.permission !== PERMISSION), ...reserved(yield* validate(writePaths ?? []))]
 })
 
@@ -49,7 +50,7 @@ export function read(permission: ReadonlyArray<Rule> | undefined) {
   return permission.filter((rule) => rule.permission === PERMISSION && rule.action === "allow").map((rule) => rule.pattern)
 }
 
-/** A plain resume of a backend child adopts the write roots of the dispatch that resumes it. */
+/** A plain resume of a scoped child adopts the write roots of the dispatch that resumes it. */
 export const rebind = Effect.fn("WriteRoots.rebind")(function* (
   sessions: Session.Interface,
   resumed: Session.Info | undefined,

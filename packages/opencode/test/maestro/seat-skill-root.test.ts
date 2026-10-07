@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Schema } from "effect"
-import { BackendSkillRoot } from "@/maestro/backend-skill-root"
+import { SeatSkillRoot } from "@/maestro/seat-skill-root"
 import { backendSkills } from "@/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
 
@@ -10,7 +10,7 @@ const SOURCE = path.resolve(import.meta.dir, "../../../backend-specialist/skills
 
 describe("backend skill root", () => {
   test("running from source resolves the authored tree in place", async () => {
-    expect(BackendSkillRoot.root).toBe(SOURCE)
+    expect(SeatSkillRoot.roots.backend).toBe(SOURCE)
     expect(backendSkills.root).toBe(SOURCE)
     expect(await fs.exists(path.join(SOURCE, "backend-implement", "SKILL.md"))).toBe(true)
   })
@@ -20,7 +20,7 @@ describe("backend skill root", () => {
     const files = await embed(tmp.path, { "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
     const cache = path.join(tmp.path, "cache")
 
-    const dir = await BackendSkillRoot.extract(files, cache, "1.0.0")
+    const dir = await SeatSkillRoot.extract("backend", files, cache, "1.0.0")
     // The copy is keyed by version and content digest, and the root is canonical (no 8.3 short names or symlinked temp
     // prefixes), so permission checks match it.
     expect(path.basename(dir)).toMatch(/^1\.0\.0-[0-9a-f]{12}$/)
@@ -29,17 +29,17 @@ describe("backend skill root", () => {
 
     // A verified copy is left alone: the directory is not replaced.
     const first = await fs.stat(dir)
-    expect(await BackendSkillRoot.extract(files, cache, "1.0.0")).toBe(dir)
+    expect(await SeatSkillRoot.extract("backend", files, cache, "1.0.0")).toBe(dir)
     expect((await fs.stat(dir)).ino).toBe(first.ino)
 
     await Bun.write(path.join(dir, "a", "references", "b.md"), "tampered")
-    await BackendSkillRoot.extract(files, cache, "1.0.0")
+    await SeatSkillRoot.extract("backend", files, cache, "1.0.0")
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
 
     // A partial copy (missing file) and a planted extra file are both redone.
     await fs.rm(path.join(dir, "a", "SKILL.md"))
     await Bun.write(path.join(dir, "a", "planted.md"), "x")
-    await BackendSkillRoot.extract(files, cache, "1.0.0")
+    await SeatSkillRoot.extract("backend", files, cache, "1.0.0")
     expect(await tree(dir)).toEqual({ "a/SKILL.md": "alpha", "a/references/b.md": "beta" })
     expect((await fs.readdir(path.dirname(dir))).toSorted()).toEqual([path.basename(dir)])
   })
@@ -47,9 +47,9 @@ describe("backend skill root", () => {
   test("each installation version keeps its own copy", async () => {
     await using tmp = await tmpdir()
     const cache = path.join(tmp.path, "cache")
-    const older = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
+    const older = await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
     const before = await fs.stat(older)
-    const newer = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "1.1.0")
+    const newer = await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "1.1.0")
 
     expect(newer).not.toBe(older)
     expect(await tree(older)).toEqual({ "a/SKILL.md": "v1" })
@@ -62,11 +62,11 @@ describe("backend skill root", () => {
     await using tmp = await tmpdir()
     const cache = path.join(tmp.path, "cache")
     const v1 = await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" })
-    const first = await BackendSkillRoot.extract(v1, cache, "1.0.0")
+    const first = await SeatSkillRoot.extract("backend", v1, cache, "1.0.0")
     const before = await fs.stat(first)
-    const second = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "2.0.0")
+    const second = await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "v2"), { "a/SKILL.md": "v2" }), cache, "2.0.0")
 
-    expect(await BackendSkillRoot.extract(v1, cache, "1.0.0")).toBe(first)
+    expect(await SeatSkillRoot.extract("backend", v1, cache, "1.0.0")).toBe(first)
     expect((await fs.stat(first)).ino).toBe(before.ino)
     expect(await tree(first)).toEqual({ "a/SKILL.md": "v1" })
     expect(await tree(second)).toEqual({ "a/SKILL.md": "v2" })
@@ -80,7 +80,7 @@ describe("backend skill root", () => {
     await Bun.write(other, "other")
     await Bun.write(sibling, "older install")
 
-    await BackendSkillRoot.extract(await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
+    await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "v1"), { "a/SKILL.md": "v1" }), cache, "1.0.0")
     expect(await Bun.file(other).text()).toBe("other")
     expect(await Bun.file(sibling).text()).toBe("older install")
   })
@@ -88,9 +88,9 @@ describe("backend skill root", () => {
   test("two builds with the same version string keep separate copies", async () => {
     await using tmp = await tmpdir()
     const cache = path.join(tmp.path, "cache")
-    const first = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "a"), { "a/SKILL.md": "first" }), cache, "local")
+    const first = await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "a"), { "a/SKILL.md": "first" }), cache, "local")
     const before = await fs.stat(first)
-    const second = await BackendSkillRoot.extract(await embed(path.join(tmp.path, "b"), { "a/SKILL.md": "second" }), cache, "local")
+    const second = await SeatSkillRoot.extract("backend", await embed(path.join(tmp.path, "b"), { "a/SKILL.md": "second" }), cache, "local")
 
     expect(second).not.toBe(first)
     expect(path.basename(second)).toMatch(/^local-[0-9a-f]{12}$/)
@@ -110,7 +110,7 @@ describe("backend skill root", () => {
         "--preload",
         "./test/preload.ts",
         "--preload",
-        "./test/maestro/fixtures/backend-embedded-skills.ts",
+        "./test/maestro/fixtures/seat-embedded-skills.ts",
         "./test/maestro/backend-seat-runtime.test.ts",
         "--timeout",
         "90000",
@@ -148,7 +148,7 @@ describe("backend skill root", () => {
 })
 
 // Writes `contents` as real files under `dir` and returns the map the generated module would export.
-// The generated module maps tree-relative paths to file text (script/backend-skills.ts).
+// The generated module maps seat id to tree-relative paths to file text (script/seat-skills.ts).
 async function embed(_dir: string, contents: Record<string, string>) {
   return contents
 }

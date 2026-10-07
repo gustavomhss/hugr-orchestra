@@ -3,7 +3,7 @@
 import { Script } from "@opencode-ai/script"
 import path from "path"
 import { fileURLToPath } from "url"
-import { backendSkillsModule } from "./backend-skills"
+import { seatSkillsModule } from "./seat-skills"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -27,7 +27,7 @@ await Bun.build({
   },
   files: {
     "opencode-web-ui.gen.ts": "",
-    "opencode-backend-skills.gen.ts": await backendSkillsModule(path.join(dir, "../backend-specialist/skills")),
+    "opencode-seat-skills.gen.ts": await seatSkillsModule(),
   },
 })
 

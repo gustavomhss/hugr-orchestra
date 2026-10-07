@@ -12,7 +12,7 @@ import { canonicalMemberId } from "./roster"
 export const restore = Effect.fn("AtlasResumeRestore.restore")(
   function* (input: { session: Session.Interface; sessionID: SessionID; messageID: MessageID }) {
     const info = yield* input.session.get(input.sessionID)
-    if (canonicalMemberId(info.agent) !== AtlasMemory.MEMBER) return
+    if (!AtlasMemory.supports({ id: canonicalMemberId(info.agent), native: true })) return
     const history = yield* input.session.messages({ sessionID: input.sessionID })
     const all = admissions(history)
     const latest = all.findLast((admission) => admission.residency === "admitted")

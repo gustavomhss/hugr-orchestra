@@ -4,8 +4,9 @@ import { Effect } from "effect"
 import type { Agent } from "@/agent/agent"
 import { InstanceRef } from "@/effect/instance-ref"
 import { LEGACY_BACKEND_ID } from "./roster"
+import { AtlasMemory } from "./atlas-memory"
 
-const MEMBER = "backend"
+const MEMBER = AtlasMemory.MEMBER
 
 // F3 A4: the backend seat's running Atlas header (Awareness, Orientation and its own top-12 project rules) as one
 // system part of every provider turn it executes (F3 cl. 6-10, F2.8). The member comes from the executing agent's
@@ -13,7 +14,7 @@ const MEMBER = "backend"
 // execution worktree's root (owner ruling F3-D5). The read never writes and never throws into the turn: an
 // unreadable or partial store renders an explicit degraded marker, which the charter tells the specialist to act on.
 export const render = Effect.fn("AtlasHeader.render")(function* (agent: Pick<Agent.Info, "id" | "native">) {
-  if (agent.native !== true || agent.id !== MEMBER) return undefined
+  if (!AtlasMemory.supports(agent)) return undefined
   const instance = yield* InstanceRef
   if (!instance) return degraded("no project placement is bound to this turn")
   const root = instance.worktree === "/" ? instance.directory : instance.worktree

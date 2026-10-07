@@ -12,11 +12,18 @@ import { Effect, Schema } from "effect"
 import { InstanceRef } from "@/effect/instance-ref"
 import { Git } from "@/git"
 import { LEGACY_BACKEND_ID } from "./roster"
+import { Seats } from "./seats"
 
 // The host side of the backend seat's bound Atlas Memory (F3): one binding per tool execution, the receipt every
 // recall/emit persists in its tool part, and the once-only resume admission a logical resume leaves in the Session.
 
 export const MEMBER = "backend"
+
+// The public Atlas boundary and durable receipts support one owner. Definitions reject other owners rather than
+// routing a new seat into backend memory. Capability controls exposure, not ownership or the public Atlas schema.
+export function supports(agent: { id?: string; native?: boolean }) {
+  return agent.native === true && agent.id === MEMBER && Seats.find(agent.id)?.atlasMemory === true
+}
 
 export const UnitParam = Schema.optional(
   Schema.Union([

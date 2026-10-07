@@ -26,7 +26,7 @@ import { KeyedMutex } from "@opencode-ai/core/effect/keyed-mutex"
 import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AtlasResume } from "@/maestro/atlas-resume"
-import { BackendWork } from "@/maestro/backend-work"
+import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@opencode-ai/core/fs-util"
@@ -34,6 +34,7 @@ import { AppProcess } from "@opencode-ai/core/process"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
+import { Seats } from "@/maestro/seats"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -157,7 +158,7 @@ export const TaskTool = Tool.define(
         ? roster.find((member) => member.memberId === caller.id && member.nativeProfile)
         : undefined
       if (nativeSeat?.nativeProfile) {
-        const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.nativeProfile])
+        const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.memberId])
         if (Permission.evaluate(id, params.subagent_type, nativePermission).action === "deny") {
           return yield* new PermissionV1.DeniedError({ ruleset: nativePermission })
         }
@@ -186,6 +187,7 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
+      const seat = next.native === true ? Seats.find(nextID) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
         params.writePaths,
@@ -216,7 +218,7 @@ export const TaskTool = Tool.define(
         replayReserved = true
         requireCompletedReplay = true
       }
-      const strictTask = nextID === "backend" || params.governed !== undefined || params.authorizationID !== undefined
+      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined
       const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
         parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
       if (params.task_id && !resumed) {
@@ -457,8 +459,9 @@ export const TaskTool = Tool.define(
         ...(runInBackground ? { background: true } : {}),
       }
       const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
-      const work = BackendWork.track({
-        enabled: nextID === "backend",
+      const work = SeatWork.track({
+        enabled: seat?.workResult !== undefined,
+        seat,
         sessionID: nextSession.id,
         taskId: logical?.taskId,
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),

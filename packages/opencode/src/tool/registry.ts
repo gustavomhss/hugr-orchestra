@@ -6,6 +6,7 @@ import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
 import { ShellPrompt } from "./shell/prompt"
 import { roster } from "@/maestro/roster"
+import { AtlasMemory } from "@/maestro/atlas-memory"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
@@ -472,7 +473,7 @@ const layer = Layer.effect(
           (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro") ||
           // Bound to the backend seat's Memory owner: a configured agent that merely reuses the id gets neither.
           ((tool.id === AtlasMemoryRecallTool.id || tool.id === AtlasMemoryEmitTool.id) &&
-            (input.agent.id !== "backend" || input.agent.native !== true))
+            !AtlasMemory.supports(input.agent))
         ) {
           return false
         }

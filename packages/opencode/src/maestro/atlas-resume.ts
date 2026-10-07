@@ -25,7 +25,7 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
 }) {
   const unit = input.unit
   const callID = input.ctx.callID
-  if (!unit || input.agent.id !== AtlasMemory.MEMBER || input.agent.native !== true || !callID) return []
+  if (!unit || !AtlasMemory.supports(input.agent) || !callID) return []
   const instance = yield* InstanceRef
   const key: AtlasMemory.AdmissionKey = {
     projectID: instance?.project.id ?? "",

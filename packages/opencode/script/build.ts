@@ -15,7 +15,7 @@ const generated = await import("./generate.ts")
 
 import { Script } from "@opencode-ai/script"
 import pkg from "../package.json"
-import { backendSkillsModule } from "./backend-skills"
+import { seatSkillsModule } from "./seat-skills"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -53,7 +53,7 @@ const createEmbeddedFileMap = async (root: string, include: (file: string) => bo
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
-const backendSkillsFileMap = await backendSkillsModule(path.join(dir, "../backend-specialist/skills"))
+const seatSkillsFileMap = await seatSkillsModule()
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {
@@ -188,13 +188,13 @@ for (const item of targets) {
     files: {
       [treeSitterWorkerPath]: treeSitterWorker,
       ...(embeddedFileMap ? { "opencode-web-ui.gen.ts": embeddedFileMap } : {}),
-      "opencode-backend-skills.gen.ts": backendSkillsFileMap,
+      "opencode-seat-skills.gen.ts": seatSkillsFileMap,
     },
     entrypoints: [
       "./src/index.ts",
       workerPath,
       treeSitterWorkerPath,
-      "opencode-backend-skills.gen.ts",
+      "opencode-seat-skills.gen.ts",
       ...(embeddedFileMap ? ["opencode-web-ui.gen.ts"] : []),
     ],
     define: {

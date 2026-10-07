@@ -19,7 +19,8 @@ import { Glob } from "@opencode-ai/core/util/glob"
 import { Discovery } from "./discovery"
 import { isRecord } from "@/util/record"
 import { escapeHtml } from "@/util/html"
-import { backendSkills, roster } from "@/maestro/roster"
+import { Seats } from "@/maestro/seats"
+import { SeatSkillRoot } from "@/maestro/seat-skill-root"
 
 const CLAUDE_EXTERNAL_DIR = ".claude"
 const AGENTS_EXTERNAL_DIR = ".agents"
@@ -83,14 +84,14 @@ type State = {
   skills: Record<string, Info>
   dirs: Set<string>
   // Host-registered native-seat skills. Offered only to native seats, never listed by `all()`.
-  seat: Record<string, Info>
+  seat: Record<string, Record<string, Info>>
 }
 
 type DiscoveryState = {
   playbooks: string[]
   matches: string[]
   dirs: string[]
-  seat: string[]
+  seat: Record<string, string[]>
 }
 
 type ScanState = {
@@ -284,15 +285,20 @@ const discoverSkills = Effect.fnUntraced(function* (
     }
   }
 
-  // The backend specialist's skill root, scanned like a `skills.paths` entry (F6-D1) but kept out of the instance-wide list.
-  const seat: ScanState = { matches: new Set(), dirs: new Set() }
-  if (yield* fsys.isDir(backendSkills.root)) yield* scan(seat, backendSkills.root, SKILL_PATTERN)
+  // Packaged skills are isolated per seat, including name collisions with project/global skill trees.
+  const seat = Object.fromEntries(yield* Effect.forEach(Object.entries(SeatSkillRoot.roots), ([id, root]) =>
+    Effect.gen(function* () {
+      const scoped: ScanState = { matches: new Set(), dirs: new Set() }
+      yield* scan(scoped, root, SKILL_PATTERN)
+      return [id, Array.from(scoped.matches)] as const
+    }),
+  ))
 
   return {
     playbooks: Array.from(playbooks.matches),
     matches: Array.from(state.matches),
     dirs: Array.from(state.dirs),
-    seat: Array.from(seat.matches),
+    seat,
   }
 })
 
@@ -348,9 +354,11 @@ const layer = Layer.effect(
         const s: State = { skills: {}, dirs: new Set(), seat: {} }
         const found = yield* InstanceState.get(discovered)
         yield* loadSkills(s, found, events, fsys)
-        const seat: State = { skills: {}, dirs: new Set(), seat: {} }
-        yield* loadSkills(seat, { playbooks: [], matches: found.seat, dirs: [], seat: [] }, events, fsys)
-        s.seat = seat.skills
+        yield* Effect.forEach(Object.entries(found.seat), ([id, matches]) => Effect.gen(function* () {
+          const seat: State = { skills: {}, dirs: new Set(), seat: {} }
+          yield* loadSkills(seat, { playbooks: [], matches, dirs: [], seat: {} }, events, fsys)
+          s.seat[id] = seat.skills
+        }))
         return s
       }),
     )
@@ -362,7 +370,7 @@ const layer = Layer.effect(
 
     const require = Effect.fn("Skill.require")(function* (name: string, agentID?: string) {
       const s = yield* InstanceState.get(state)
-      const visible = nativeSeat(agentID) ? { ...s.skills, ...s.seat } : s.skills
+      const visible = agentID && Seats.find(agentID) ? { ...s.skills, ...s.seat[agentID] } : s.skills
       const info = visible[name]
       if (info) return info
       return yield* new NotFoundError({ name, available: Object.keys(visible).toSorted() })
@@ -379,7 +387,7 @@ const layer = Layer.effect(
 
     const available = Effect.fn("Skill.available")(function* (agent?: Agent.Info) {
       const s = yield* InstanceState.get(state)
-      const list = Object.values(nativeSeat(agent?.id) ? { ...s.skills, ...s.seat } : s.skills).toSorted((a, b) =>
+      const list = Object.values(agent?.native && agent.id && Seats.find(agent.id) ? { ...s.skills, ...s.seat[agent.id] } : s.skills).toSorted((a, b) =>
         a.name.localeCompare(b.name),
       )
       if (!agent) return list
@@ -418,12 +426,6 @@ const layer = Layer.effect(
     return Service.of({ get, require, all, dirs, available, save, remove })
   }),
 )
-
-// Native seat IDs are fixed by the roster and cannot be redefined by config, so the stable ID decides.
-// Which seat skills a seat may load is still decided by its native permission profile.
-function nativeSeat(agentID?: string) {
-  return roster.some((member) => member.memberId === agentID && member.nativeProfile !== undefined)
-}
 
 export function fmt(list: Info[], opts: { verbose: boolean }) {
   const described = list.filter((skill) => skill.description !== undefined)

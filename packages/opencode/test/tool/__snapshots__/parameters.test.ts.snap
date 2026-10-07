@@ -447,7 +447,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "type": "string",
     },
     "writePaths": {
-      "description": "Worktree-relative files or directories the backend seat may write; the host enforces them. Absent or empty: the backend seat is read-only. Ignored for other agents.",
+      "description": "Worktree-relative files or directories a write-roots seat may write; the host enforces them. Absent or empty: that seat is read-only. Ignored for agents without this capability.",
       "items": {
         "type": "string",
       },
