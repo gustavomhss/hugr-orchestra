@@ -1,10 +1,11 @@
 import { execFile } from "node:child_process"
 import { existsSync } from "node:fs"
-import { chmod, copyFile, mkdir, rename, rm } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import { app } from "electron"
+import { nativeCliTarget, verifyCliArtifact } from "./cli-artifacts"
+import { installCliArtifact } from "./cli-install"
 
 const execFileAsync = promisify(execFile)
 const root = dirname(fileURLToPath(import.meta.url))
@@ -17,12 +18,15 @@ type Logger = {
 }
 
 export async function startBackgroundCli(logger: Logger, shellStateHome?: string) {
-  const bundled = app.isPackaged
-    ? join(process.resourcesPath, executableName())
-    : join(root, "../../resources", executableName())
-  logger.log("v2 CLI executable resolved", { bundled, packaged: app.isPackaged })
-  const version = await run(bundled, ["--version"], logger)
-  const binary = app.isPackaged ? await installCli(bundled, version, logger) : bundled
+  const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
+  const target = nativeCliTarget(process.platform, process.arch)
+  const artifact = app.isPackaged
+    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"))
+    : await verifyCliArtifact(directory, target)
+  const binary = artifact.path
+  logger.log("v2 CLI executable resolved", { binary, version: artifact.version, packaged: app.isPackaged })
+  if ((await run(binary, ["--version"], logger)) !== artifact.version)
+    throw new Error("Owned CLI executable version differs from its manifest")
 
   const candidates = [
     ...new Set([stateHome, shellStateHome, ...desktopStateNames.map((name) => join(app.getPath("appData"), name))]),
@@ -41,7 +45,7 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
 
   const daemonStateHome = found?.stateHome ?? stateHome
   const url = await run(binary, ["service", "start"], logger, { stateHome: daemonStateHome })
-  const password = await run(binary, ["service", "get", "password"], logger, {
+  const password = await run(binary, ["service", "password"], logger, {
     redact: true,
     stateHome: daemonStateHome,
   })
@@ -55,26 +59,6 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
     username: "orchestra",
     password,
   }
-}
-
-async function installCli(source: string, version: string, logger: Logger) {
-  const directory = join(app.getPath("userData"), "cli", version.replace(/[^a-zA-Z0-9._-]/g, "-"))
-  const destination = join(directory, executableName())
-  if (existsSync(destination)) {
-    logger.log("v2 CLI staged executable reused", { path: destination, version })
-    return destination
-  }
-
-  const temp = destination + `.${process.pid}.tmp`
-  await mkdir(directory, { recursive: true })
-  await copyFile(source, temp)
-  if (process.platform !== "win32") await chmod(temp, 0o755)
-  await rename(temp, destination).catch(async (error) => {
-    await rm(temp, { force: true })
-    throw error
-  })
-  logger.log("v2 CLI executable staged", { source, path: destination, version })
-  return destination
 }
 
 async function run(
@@ -91,16 +75,20 @@ async function run(
     (result) => {
       const stdout = result.stdout.trim()
       const stderr = result.stderr.trim()
-      logger.log("v2 CLI command completed", { args, stdout: options.redact ? "[redacted]" : stdout, stderr })
+      logger.log("v2 CLI command completed", {
+        args,
+        stdout: options.redact ? "[redacted]" : stdout,
+        stderr: options.redact ? "[redacted]" : stderr,
+      })
       return stdout
     },
     (error: unknown) => {
       const output = error as { stdout?: string; stderr?: string }
       logger.error("v2 CLI command failed", {
         args,
-        error: error instanceof Error ? error.message : String(error),
+        error: options.redact ? "[redacted]" : error instanceof Error ? error.message : String(error),
         stdout: options.redact && output.stdout ? "[redacted]" : (output.stdout?.trim() ?? ""),
-        stderr: output.stderr?.trim() ?? "",
+        stderr: options.redact ? "[redacted]" : (output.stderr?.trim() ?? ""),
       })
       throw error
     },
@@ -118,8 +106,4 @@ function endpoint(url: string | undefined) {
   if (!url || !URL.canParse(url)) return {}
   const parsed = new URL(url)
   return { url, hostname: parsed.hostname, port: parsed.port }
-}
-
-function executableName() {
-  return process.platform === "win32" ? "orchestra-cli.exe" : "orchestra-cli"
 }

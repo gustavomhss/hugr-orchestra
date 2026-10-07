@@ -67,7 +67,7 @@ test("keeps a hidden prod launcher for old Linux pins", async () => {
   const previous = process.env.ORCHESTRA_CHANNEL
   process.env.ORCHESTRA_CHANNEL = "prod"
 
-  const module = await import("./electron-builder.config.ts?compat=prod")
+  const module = await import(`./electron-builder.config.ts?compat=${"prod"}`)
   const config = module.default as Configuration
 
   if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
@@ -107,5 +107,9 @@ for (const channel of ["dev", "beta", "prod"] as const) {
       to: "cli",
     })
     expect(typeof config.beforePack).toBe("function")
+    expect(typeof config.afterPack).toBe("function")
+    expect(typeof config.afterSign).toBe("function")
+    expect(config.mac?.signIgnore).toContain("/Resources/cli/")
+    expect(config.extraMetadata?.version).toBe(process.env.ORCHESTRA_VERSION ?? "1.18.27")
   })
 }
