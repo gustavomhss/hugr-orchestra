@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdtemp, readFile, rm, stat, symlink } from "node:fs/promises"
+import { chmod, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { installGuestScript, installWslArtifact, linuxGuestTarget, WslArtifactError } from "./artifact"
+import { guestEnvironment, installGuestScript, installWslArtifact, linuxGuestTarget, WslArtifactError } from "./artifact"
 import { checkWslAuthentication } from "./startup"
+import { wslServeScript } from "./sidecar"
+import { shellEscape } from "./runtime"
 
 test("guest architecture/ABI selects Linux baseline only", () => {
   expect(linuxGuestTarget("x86_64", "glibc 2.39")).toBe("linux-x64-baseline")
@@ -32,6 +34,9 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
     expect((await execute(source, digest, "wrong-version")).code).toBe(82)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect((await execute(source)).code).toBe(0)
+    expect(await readFile(destination, "utf8")).toBe(bytes)
+    await Bun.write(destination, "foreign-old")
     await Bun.write(source, "not an executable\n")
     expect((await execute(source, createHash("sha256").update("not an executable\n").digest("hex"))).code).toBe(83)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
@@ -39,6 +44,7 @@ test("Linux transfer verifies bytes/version, replaces foreign executable, preser
     expect((await shell(["mkfifo", fifo], root)).code).toBe(0)
     expect((await execute(fifo, digest, "1.16.2", "0.1s")).code).not.toBe(0)
     expect(await readFile(destination, "utf8")).toBe("foreign-old")
+    expect(await readdir(join(root, ".orchestra/bin"))).toEqual(["orchestra"])
     await rm(destination)
     await symlink(source, destination)
     expect((await execute(source)).code).toBe(85)
@@ -77,8 +83,8 @@ test("manifest seam bounds commands, converts host path as one argument, cancell
   expect(commands.length).toBe(3)
 })
 
-test("protected health rejects open/unhealthy servers", async () => {
-  const server = Bun.serve({ port: 0, fetch: () => Response.json({ healthy: true }) })
+test.each([false, true])("protected health rejects open/unhealthy servers (protected=%s)", async (protectedServer) => {
+  const server = Bun.serve({ port: 0, fetch: (request) => protectedServer && request.headers.get("authorization") !== `Basic ${Buffer.from("orchestra:credential").toString("base64")}` ? new Response(null, { status: 401 }) : Response.json({ healthy: !protectedServer }) })
   try {
     expect(await checkWslAuthentication(server.url.toString(), "credential")).toBe(false)
   } finally {
@@ -90,18 +96,21 @@ test("real owned V2 CLI guest credential authenticates foreground server in isol
   const root = await mkdtemp(join(tmpdir(), "w4-service-"))
   const env = isolatedEnv(root)
   const cli = join(import.meta.dir, "../../../../cli/src/index.ts")
-  const credential = Bun.spawn([process.execPath, cli, "service", "password"], { env, stdout: "pipe", stderr: "pipe" })
+  const executable = join(root, "orchestra ' $()")
+  await Bun.write(executable, `#!/bin/bash\nexec ${shellEscape(process.execPath)} ${shellEscape(cli)} "$@"\n`)
+  await chmod(executable, 0o755)
+  const credential = Bun.spawn(["bash", "-c", `${guestEnvironment}\nexec ${shellEscape(executable)} service password`], { env, stdout: "pipe", stderr: "pipe" })
   const password = (await new Response(credential.stdout).text()).trim()
   expect(await credential.exited).toBe(0)
   expect(password.length).toBeGreaterThan(20)
-  const server = Bun.spawn([process.execPath, cli, "serve", "--hostname", "127.0.0.1", "--port", "0"], { env, stdout: "pipe", stderr: "pipe" })
+  const server = Bun.spawn(["bash", "-c", wslServeScript(executable, 0)], { env, stdout: "pipe", stderr: "pipe" })
   try {
     const reader = server.stdout.getReader()
     const output = await Promise.race([reader.read(), Bun.sleep(20_000).then(() => { throw new Error("V2 startup timed out") })])
     const url = new TextDecoder().decode(output.value).match(/http:\/\/[^\s]+/)?.[0]
     expect(url).toBeDefined()
     expect(await checkWslAuthentication(url!, password)).toBe(true)
-    expect((await stat(join(root, "state/orchestra/password"))).mode & 0o777).toBe(0o600)
+    expect((await stat(join(root, ".local/state/orchestra/password"))).mode & 0o777).toBe(0o600)
   } finally {
     server.kill()
     await server.exited

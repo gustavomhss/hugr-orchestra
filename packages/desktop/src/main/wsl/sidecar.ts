@@ -22,34 +22,29 @@ export async function spawnWslSidecar(
 
   const port = await allocatePort()
   const credential = await runWslInDistro(
-    ["bash", "-c", `${guestEnvironment}\nexec ${shellEscape(orchestra)} service password`], distro, { signal: opts.signal },
+    ["bash", "-c", `${guestEnvironment}\nexec ${shellEscape(orchestra)} service password`],
+    distro,
+    { signal: opts.signal },
   )
   const password = credential.stdout.trim()
   if (credential.code !== 0 || !password || /[\r\n]/.test(password)) {
     throw new Error(nativeT("desktop.wsl.error.serverCannotRun"))
   }
   const username = "orchestra"
-  const script = [
-    guestEnvironment,
-    'cd "$HOME" || cd /',
-    "export ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER=true",
-    "export ORCHESTRA_CLIENT=desktop",
-    `exec ${shellEscape(orchestra)} serve --hostname ${shellEscape("0.0.0.0")} --port ${shellEscape(String(port))}`,
-  ].join("\n")
   const child = spawn("wsl", wslArgs(["bash", "-se"], distro), {
     stdio: ["pipe", "pipe", "pipe"],
     windowsHide: true,
     signal: opts.signal,
   })
-  child.stdin.end(script)
+  child.stdin.end(wslServeScript(orchestra, port))
 
   const recentOutput: string[] = []
   const emit = (line: WslCommandLine) => {
-    line = { ...line, text: line.text.replaceAll(password, "[redacted]") }
-    if (!line.text.trim()) return
-    recentOutput.push(`[${line.stream}] ${line.text}`)
+    const safe = { ...line, text: line.text.replaceAll(password, "[redacted]") }
+    if (!safe.text.trim()) return
+    recentOutput.push(`[${safe.stream}] ${safe.text}`)
     if (recentOutput.length > 12) recentOutput.shift()
-    opts.onLine?.(line)
+    opts.onLine?.(safe)
   }
   forwardLines(child.stdout, "stdout", emit)
   forwardLines(child.stderr, "stderr", emit)
@@ -61,8 +56,9 @@ export async function spawnWslSidecar(
   const url = `http://127.0.0.1:${port}`
   const startup = new AbortController()
   const healthSignal = opts.signal ? AbortSignal.any([opts.signal, startup.signal]) : startup.signal
-  const health = pollWslHealth(() => checkWslAuthentication(url, password, healthSignal).catch(() => false), healthSignal)
-    .then(() => healthSignal.throwIfAborted())
+  const health = pollWslHealth(
+    () => checkWslAuthentication(url, password, healthSignal).catch(() => false), healthSignal,
+  ).then(() => healthSignal.throwIfAborted())
   const timeoutMs = opts.healthTimeoutMs ?? 20_000
   let timeout: ReturnType<typeof setTimeout>
   const timedOut = new Promise<never>(
@@ -91,6 +87,16 @@ export async function spawnWslSidecar(
     username,
     password,
   }
+}
+
+export function wslServeScript(orchestra: string, port: number) {
+  return [
+    guestEnvironment,
+    'cd "$HOME" || cd /',
+    "export ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER=true",
+    "export ORCHESTRA_CLIENT=desktop",
+    `exec ${shellEscape(orchestra)} serve --hostname ${shellEscape("0.0.0.0")} --port ${shellEscape(String(port))}`,
+  ].join("\n")
 }
 
 function allocatePort() {

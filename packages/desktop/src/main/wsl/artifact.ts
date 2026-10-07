@@ -60,13 +60,16 @@ export async function installWslArtifact(
     opts.signal?.throwIfAborted()
     const result = await run(args, distro, { signal: opts.signal, timeoutMs: Math.min(opts.timeoutMs ?? 20_000, 20_000) })
     if (result.code !== 0) {
-      throw new WslArtifactError(result.code === 82 ? "version" : result.code === 83 ? "abi" : result.code === 84 ? "bytes" : result.code === 85 ? "path" : "command")
+      throw new WslArtifactError(
+        result.code === 82 ? "version" : result.code === 83 ? "abi" :
+        result.code === 84 ? "bytes" : result.code === 85 ? "path" : "command",
+      )
     }
     return result.stdout.trim()
   }
   const probe = (await command(["bash", "-c", `${guestEnvironment}\nuname -m\ngetconf GNU_LIBC_VERSION || exit 83`])).split(/\r?\n/)
   const target = linuxGuestTarget(probe[0] ?? "", probe[1] ?? "")
-  const directory = opts.directory ?? await cliArtifactDirectory()
+  const directory = opts.directory ?? (await cliArtifactDirectory())
   const manifest = await (opts.readManifest ?? readCliManifest)(directory)
   const artifact = await (opts.verifyArtifact ?? verifyCliArtifact)(directory, target)
   if (manifest.version !== expectedVersion || artifact.version !== manifest.version) throw new WslArtifactError("version")
@@ -74,7 +77,9 @@ export async function installWslArtifact(
   if (!entry || !/^[a-f0-9]{64}$/.test(entry.sha256)) throw new WslArtifactError("bytes")
   const source = await command(["wslpath", "-u", "--", artifact.path])
   if (!source.startsWith("/") || /[\r\n\0]/.test(source)) throw new WslArtifactError("path")
-  await command(["timeout", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version])
+  await command([
+    "timeout", "18s", "bash", "-c", installGuestScript, "orchestra-install", source, entry.sha256, manifest.version,
+  ])
 }
 
 async function cliArtifactDirectory() {
