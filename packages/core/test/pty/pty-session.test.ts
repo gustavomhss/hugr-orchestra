@@ -4,6 +4,7 @@ import { Config } from "@opencode-ai/core/config"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { EventV2 } from "@opencode-ai/core/event"
+import { omniSpawner } from "@opencode-ai/core/flag/flag"
 import { Location } from "@opencode-ai/core/location"
 import { Pty } from "@opencode-ai/core/pty"
 import type { PtyID } from "@opencode-ai/core/pty/schema"
@@ -25,6 +26,9 @@ const it = testEffect(
   ]),
 )
 const ptyTest = process.platform === "win32" ? it.live.skip : it.live
+// Tests that hold the legacy backend's first read (bun-pty/node-pty) only mean something when that backend runs;
+// omni's terminal claims its output at spawn (test/pty/omni.test.ts covers that race for it).
+const legacyPtyTest = omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) === "off" ? ptyTest : it.live.skip
 
 const subscribePtyEvents = Effect.fn("PtySessionTest.subscribePtyEvents")(function* () {
   const source = yield* EventV2.Service
@@ -169,7 +173,7 @@ describe("pty", () => {
     30000,
   )
 
-  ptyTest("reports the exit of a command that ends before its PTY is first read", () =>
+  legacyPtyTest("reports the exit of a command that ends before its PTY is first read", () =>
     Effect.gen(function* () {
       const hold = yield* holdFirstReadUntilExit
       const pty = yield* Pty.Service

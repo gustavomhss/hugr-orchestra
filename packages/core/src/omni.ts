@@ -64,10 +64,10 @@ async function open(): Promise<Binding> {
  * CLI), then process.resourcesPath/omni (the desktop), then this checkout's packages/omni/target/{release,debug}.
  * A non-explicit location counts only when it holds both files, so a release addon never pairs a debug supervisor.
  */
-export function locate(): Found {
+export function locate(given: Paths = injected): Found {
   const explicit = {
-    addon: injected.addon ?? process.env.HUGR_OMNI_ADDON,
-    supervisor: injected.supervisor ?? process.env.HUGR_OMNI_SUPERVISOR,
+    addon: given.addon ?? process.env.HUGR_OMNI_ADDON,
+    supervisor: given.supervisor ?? process.env.HUGR_OMNI_SUPERVISOR,
   }
   const missing = [explicit.addon, explicit.supervisor].filter((file) => file !== undefined && !existsSync(file))
   if (missing.length > 0) throw new Error(`hugr-omni: the configured file ${missing.join(" and ")} does not exist.`)
