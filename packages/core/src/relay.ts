@@ -11,12 +11,14 @@ import { ArmCreate } from "@opencode-ai/relay/arm/create"
 import { ArmEvaluate } from "@opencode-ai/relay/arm/evaluate"
 import { ArmLoad } from "@opencode-ai/relay/arm/load"
 import { ArmState } from "@opencode-ai/relay/arm/state"
+import { RelayAudit } from "@opencode-ai/relay/audit"
 import { GateCheck } from "@opencode-ai/relay/gate/check"
 import { GateControl } from "@opencode-ai/relay/gate/control"
 import { GateShell } from "@opencode-ai/relay/gate/shell"
 import { RelayJson } from "@opencode-ai/relay/json"
 import { JudgeConfig } from "@opencode-ai/relay/judge/config"
 import { LedgerChain } from "@opencode-ai/relay/ledger/chain"
+import { LedgerRead } from "@opencode-ai/relay/ledger/read"
 import { Config } from "./config"
 import { ConfigRelay } from "./config/relay"
 import { makeLocationNode } from "./effect/app-node"
@@ -88,6 +90,14 @@ export interface Interface {
     token: RelayArm.Token,
     reason: string,
   ) => Effect.Effect<void, ArmState.StateError | ArmState.Busy | Unavailable>
+  // Whether the arm is parked awaiting its owner, read without the run lock and without running a check.
+  readonly parked: (
+    token: RelayArm.Token,
+  ) => Effect.Effect<Option.Option<ArmEvaluate.Parked>, ArmState.StateError | Unavailable>
+  // `relay verify` of the arm with this project's key: chain integrity, controls and the oracle recheck.
+  readonly audit: (
+    token: RelayArm.Token,
+  ) => Effect.Effect<RelayAudit.VerifyReport, ArmState.StateError | LedgerRead.Missing | Unavailable>
   // Clears a stale `.run.lock` with a `gate-recovered` note (R6); true when one was cleared.
   readonly recover: (
     token: RelayArm.Token,
@@ -359,6 +369,14 @@ const layer = Layer.effect(
         yield* recover(token).pipe(Effect.ignore)
         return yield* armed(ArmEvaluate.release(token, reason))
       }),
+      parked: Effect.fn("Relay.parked")(function* (token: RelayArm.Token) {
+        return yield* armed(ArmEvaluate.parked(token))
+      }),
+      audit: Effect.fn("Relay.audit")(function* (token: RelayArm.Token) {
+        const key = yield* ledgerKey
+        const arm = yield* ArmState.dir(token).pipe(Effect.provideService(ArmState.Store, store(key)))
+        return yield* RelayAudit.verify(arm, { key })
+      }),
       recover,
       record,
     })
@@ -370,6 +388,10 @@ export const node = makeLocationNode({
   layer,
   deps: [Global.node, Location.node, Config.node, AppProcess.node, FSUtil.node],
 })
+
+// The completion HOLD code of an arm evaluation and the parked text after it, as the evaluator defines them (§9).
+export const hold = ArmEvaluate.hold
+export const parkedHold = ArmEvaluate.parkedHold
 
 // Project and install IDs name directories, so they stay path-safe.
 const ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/

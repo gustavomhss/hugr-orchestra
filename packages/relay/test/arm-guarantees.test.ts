@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
 import path from "node:path"
 import { Deferred, Effect, Fiber, Option } from "effect"
@@ -6,6 +7,7 @@ import { TestClock } from "effect/testing"
 import type { RelayArm } from "@opencode-ai/schema/relay-arm"
 import { ArmCost } from "../src/arm/cost"
 import { ArmEvaluate } from "../src/arm/evaluate"
+import { RelayAudit } from "../src/audit"
 import { GateShell } from "../src/gate/shell"
 import { LedgerVerify } from "../src/ledger/verify"
 import {
@@ -213,6 +215,61 @@ describe("host_check controls", () => {
   })
 })
 
+describe("host_check re-runs and audit (WP18)", () => {
+  const plan = [{ id: "A", checklist: [host("a", "check-a")] }, { id: "B", checklist: [host("b", "check-b")] }]
+
+  test("an accepted host check is re-run when a later evaluation grades the next gate, once per evaluation", async () => {
+    const arm = await armed(plan)
+    const runs: string[] = []
+    const status: Record<string, RelayArm.HostCheckResult["status"]> = { a: "pass", b: "fail" }
+    const graded: RelayArm.HostCheck = (input) => Effect.sync(() => (runs.push(input.check.id), result(status[input.check.id]!)))
+    const bound = checks({ "check-a": graded, "check-b": graded })
+    expect(await arm.fire({ mode: "all-gates", hostChecks: bound })).toMatchObject({ outcome: "gate-fail", wp: "B", failing: ["b"] })
+    // Gate A passed in this evaluation, so gate B does not run it again.
+    expect(runs).toEqual(["a", "b"])
+    status.a = "fail"
+    status.b = "pass"
+    runs.length = 0
+    const regressed = await arm.fire({ mode: "all-gates", hostChecks: bound })
+    expect(regressed).toMatchObject({ outcome: "regression-fail", wp: "B", failing: ["a"] })
+    expect(runs).toEqual(["b", "a"])
+    expect(regressed.capture?.results.map((entry) => entry.name)).toEqual(["b", "a"])
+    expect((await entries(arm.env)).findLast((entry) => entry.event === "regression-item")).toMatchObject({
+      item: "a",
+      verdict: "fail",
+      graded_by: "deterministic",
+      oracle: createHash("sha256").update("host_check:check-a").digest("hex"),
+      origin: "regression",
+      host_check: "check-a",
+      revision: "revision-1",
+      event_id: "event-1",
+    })
+    status.a = "pass"
+    expect((await arm.fire({ mode: "all-gates", hostChecks: bound })).outcome).toBe("complete")
+    expect((await verify(arm.env)).exit).toBe(0)
+  })
+
+  test("relay verify takes a host check's name as its oracle, and problems reads its records", async () => {
+    const arm = await armed([{ id: "gate", checklist: [host("perm", "permissions")] }])
+    const permissions: RelayArm.HostCheck = () => Effect.succeed(result("pass"))
+    expect((await arm.fire({ hostChecks: checks({ permissions }) })).outcome).toBe("complete")
+    const audit = () => Effect.runPromise(RelayAudit.verify(arm.env.arm))
+    expect(await audit()).toMatchObject({ chain_intact: true, result: "PASS", oracle_recheck: { status: "ok", items: [] } })
+    expect(await Effect.runPromise(RelayAudit.problems(arm.env.arm))).toMatchObject({ problems: [] })
+    // A renamed check is a different oracle; a check name that is not text makes the sprint unreadable.
+    await write(arm.env.arm, { "sprint.json": JSON.stringify({ work_packages: [{ id: "gate", checklist: [host("perm", "renamed")] }] }) })
+    expect(await audit()).toMatchObject({
+      result: "SPRINT-DIVERGED",
+      oracle_recheck: { status: "diverged", items: [{ id: "perm", kind: "changed", recorded: PERMISSIONS.slice(0, 12) }] },
+    })
+    await write(arm.env.arm, { "sprint.json": JSON.stringify({ work_packages: [{ id: "gate", checklist: [{ id: "perm", host_check: 7 }] }] }) })
+    expect(await audit()).toMatchObject({
+      result: "SPRINT-INVALID",
+      oracle_recheck: { status: "invalid", reason: "work_packages[0].checklist[0].host_check must be a string" },
+    })
+  })
+})
+
 describe("revision guard", () => {
   const plan = [{ id: "gate", checklist: [host("perm", "permissions")] }]
 
@@ -291,7 +348,7 @@ describe("Maestro conditions (§9)", () => {
     const spent = await arm.fire()
     expect([spent.outcome, ArmEvaluate.hold(spent)]).toEqual(["escalate", "completion-parked-awaiting-owner"])
     expect(ArmEvaluate.parkedHold(spent.wp!, spent.failing)).toBe(
-      "completion-parked-awaiting-owner: gate 'A' is parked awaiting the owner because its retry budget is spent. " +
+      "Gate 'A' is parked awaiting the owner because its retry budget is spent. " +
         "Failing: A-file. Do not dispatch again; tell the owner what failed and why. Only the owner can release or " +
         "cancel it, and a release resets the retry budget of gate 'A' only.",
     )

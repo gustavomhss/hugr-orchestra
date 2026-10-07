@@ -60,6 +60,11 @@ selected operation's exact inputSchema/effects before `maestro_arsenal_execute`.
 `wave-scheduler`, `wave-ledger`, `plan-to-dag`, `stub-gen`, `plan-to-barrel`, and `relay-arm` are selected
 capabilities, not an assumed all-loaded fleet. Missing operations/bindings stay UNKNOWN.
 Generated completion chains are proposals until host execution proves lifecycle binding.
+An armed `relay-arm` contract is graded on the host's Relay arm when each bound Task completes: every gate in
+order, each with its own retry budget (`retryBudget`, default 3; 0 parks on the first failure). A spent budget parks
+the arm, and every later dispatch on it HOLDs `completion-parked-awaiting-owner` before a worker starts: report what
+failed and why to the owner. Only the owner's approval of a `relay-arm` `release` request resets that gate's budget.
+An arm that passed every gate verifies no new work; arm a new contract for the next task.
 
 ```sh
 git status --short

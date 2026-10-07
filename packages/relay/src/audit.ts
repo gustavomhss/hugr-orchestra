@@ -424,6 +424,14 @@ function sprintOracles(text: string): Result.Result<ReadonlyMap<string, string>,
         if (typeof id !== "string" || LedgerRead.strip(id) === "")
           return yield* Result.fail(`${where}.id must be a nonempty string`)
         if (oracles.has(id)) return yield* Result.fail(`duplicate checklist id ${RelayJson.reprString(id)}`)
+        // An Arsenal host check is graded by its registered callback, never by a cmd or judge; the arm records its
+        // name as the oracle (arm/round.ts), and it takes precedence over any cmd as it does in the gate core.
+        const host = get(control, "host_check") ?? null
+        if (host !== null) {
+          if (typeof host !== "string") return yield* Result.fail(`${where}.host_check must be a string`)
+          oracles.set(id, yield* sha256(`host_check:${host}`))
+          continue
+        }
         const cmd = get(control, "cmd") ?? null
         const judge = get(control, "judge") ?? null
         if (cmd !== null && typeof cmd !== "string") return yield* Result.fail(`${where}.cmd must be a string`)

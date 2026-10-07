@@ -65,6 +65,7 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
+import { LocationServiceMap } from "@opencode-ai/core/location-services"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@opencode-ai/llm"
 
@@ -1646,6 +1647,8 @@ export const node = LayerNode.make({
     InstanceStore.node,
     ArsenalObservations.node,
     Git.node,
+    // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
+    LocationServiceMap.node,
   ],
 })
 

@@ -6,7 +6,7 @@ import { EventTable } from "@opencode-ai/core/event/sql"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { filesystem } from "@opencode-ai/core/effect/app-node-platform"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -42,6 +42,7 @@ import { TestInstance, tmpdirScoped } from "../fixture/fixture"
 
 
 import { ref, layer, dispatch } from "./governed-fixture"
+import { relayFor } from "./relay-fixture"
 import path from "node:path"
 import { realpath } from "node:fs/promises"
 import { WriteRoots } from "@/maestro/write-roots"
@@ -60,20 +61,14 @@ it.instance("completion-bearing governed replay requires actual terminal worker 
       contract: { sessionID: chat.id, label: "terminal replay", chain: [{ id: "gate", checks: [{ id: "file", hostCheck: "file" }] }] },
     }))
     yield* fs.writeFileString(`${instance.directory}/worker-check`, "accepted")
-    const implementation = yield* Effect.tryPromise({
-      try: async (): Promise<unknown> => import(process.env.ARSENAL_COMPLETION_TEST_MODULE ?? "@opencode-ai/maestro-arsenal"),
-      catch: () => new Error("D_COMPLETION_FIXTURE_EXPORT_UNAVAILABLE"),
-    }).pipe(Effect.map((value) => value && typeof value === "object" && "Arsenal" in value ? value.Arsenal : value),
-      Effect.flatMap(Schema.decodeUnknownEffect(Schema.Struct({ evaluateCompletion: Schema.declare<ArsenalCompletion.Host["evaluateCompletion"]>(
-        (value): value is ArsenalCompletion.Host["evaluateCompletion"] => typeof value === "function",
-      ) }))))
+    const relay = yield* relayFor({ directory: instance.directory, projectID: chat.projectID })
     const captures: ArsenalCompletion.Capture[] = []
     const host: ArsenalCompletion.Host = {
       resolve: (dispatch) => Effect.succeed({ ...dispatch, planID: input.governed.planRevisionID, token: "replay", stateDirectory, ownedPaths: ["worker-check"] }),
       checks: new Map([["file", () => fs.readFileString(`${instance.directory}/worker-check`).pipe(
         Effect.map((text) => ({ status: text === "accepted" ? "pass" as const : "fail" as const, exitCode: text === "accepted" ? 0 : 1 })),
       )]]),
-      evaluateCompletion: implementation.evaluateCompletion,
+      relay: () => Effect.succeed(relay),
       observe: (_binding, capture) => Effect.sync(() => { captures.push(capture) }),
     }
     const configured = yield* TaskTool.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host))
@@ -94,6 +89,8 @@ it.instance("completion-bearing governed replay requires actual terminal worker 
     yield* sessions.updateMessage({ ...worker, finish: "stop" })
     expect((yield* checked.execute(input, context)).metadata.completion).toMatchObject({ verified: true })
     expect(captures).toHaveLength(1)
+    // The governed task's arm ledger is Relay's keyed chain, and it audits PASS.
+    expect(yield* relay.audit("replay")).toMatchObject({ chain_intact: true, result: "PASS" })
     yield* sessions.updateMessage({ ...worker, id: MessageID.ascending(), finish: undefined, time: { created: Date.now() + 2 } })
     const newer = yield* Effect.exit(checked.execute(input, context))
     expect(Exit.isFailure(newer)).toBe(true)

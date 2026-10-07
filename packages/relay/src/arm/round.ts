@@ -104,14 +104,19 @@ export const grade = (
  * Keep-best: earlier gates' commands are re-run, but only for controls this chain accepted (a recorded pass anywhere
  * on the ledger). A control spliced in behind the cursor was never accepted, so there is nothing to regress. A
  * re-run that cannot start is a fail (PARITY-EXCEPTIONS WP6-7).
+ *
+ * An accepted `host_check` control is re-run through its callback too (TS-only, §6): a completion then certifies every
+ * gate at the revision it ends on, as the Arsenal evaluator re-ran every check. `graded` names the host checks this
+ * evaluation already ran at its guarded revision; they are not run twice.
  */
 export const regressions = (
   input: Input,
   owner: Owner,
   ledger: string,
   earlier: ReadonlyArray<unknown>,
+  graded: ReadonlySet<string> = new Set(),
 ): Effect.Effect<
-  Pick<Graded, "lines" | "failing">,
+  Graded,
   Defect | LedgerRead.ReadError | LedgerRead.Missing | RelayJson.EncodeError,
   GateShell.Service
 > =>
@@ -125,11 +130,44 @@ export const regressions = (
     const shell = yield* GateShell.Service
     const lines: string[] = []
     const failing: string[] = []
+    const results: RelayArm.HostCheckResult[] = []
+    const unbound: string[] = []
     // `.checklist[]? | select(.cmd != null)`: a null control has no command; any other non-object breaks the selection.
-    const controls = earlier.flatMap((wp) => members(field(wp, "checklist")))
-    for (const control of controls) {
+    const controls = earlier.flatMap((wp) => members(field(wp, "checklist")).map((control) => ({ wp, control })))
+    for (const { wp, control } of controls) {
       if (control !== null && !isObject(control))
         return yield* new Defect({ reason: "an earlier checklist control is not an object" })
+      const host = field(control, "host_check")
+      if (host !== undefined && host !== null) {
+        const id = GateControl.text(field(control, "id"))
+        if (id === undefined) return yield* new Defect({ reason: "an earlier control has an invalid id" })
+        if (!accepted.has(id) || graded.has(id)) continue
+        const name = typeof host === "string" ? host : JSON.stringify(host)
+        const checked = yield* hostCheck(input, GateControl.text(field(wp, "id")) ?? "", control, name)
+        const pass = checked.verdict.verdict === "pass"
+        if (!pass) failing.push(id)
+        if (checked.result === undefined) unbound.push(id)
+        if (checked.result !== undefined) results.push(checked.result)
+        const provenance = checked.result?.provenance
+        lines.push(
+          yield* RelayJson.compact({
+            arm: input.token,
+            wp: owner.wp,
+            i: owner.i,
+            event: "regression-item",
+            item: id,
+            verdict: pass ? "pass" : "fail",
+            graded_by: "deterministic",
+            oracle: checked.verdict.oracle,
+            origin: "regression",
+            ...labels(owner),
+            host_check: name,
+            ...(provenance?.revision === undefined ? {} : { revision: provenance.revision }),
+            ...(provenance === undefined ? {} : { event_id: provenance.eventID }),
+          }),
+        )
+        continue
+      }
       const command = field(control, "cmd")
       if (command === undefined || command === null) continue
       const id = GateControl.text(field(control, "id"))
@@ -155,7 +193,7 @@ export const regressions = (
         }),
       )
     }
-    return { lines, failing }
+    return { lines, failing, results, unbound }
   })
 
 // The revision guard's HEAD (§6): a commit ID read with the sandboxed git, or the round cannot be bound to a revision.
@@ -220,6 +258,7 @@ const hostCheck = (input: Input, gate: string, control: unknown, host: string) =
       ...(input.meta.session_id === undefined ? {} : { sessionID: input.meta.session_id }),
       gateID: gate,
       check: { id: item, hostCheck: host },
+      ...(input.revision === undefined ? {} : { revision: input.revision }),
     }).pipe(
       Effect.timeoutOrElse({ duration: "60 seconds", orElse: () => Effect.succeed("timeout" as const) }),
       Effect.exit,
