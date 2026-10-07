@@ -33,7 +33,7 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-/** `dropped` counts ops whose exact value or error was not found; the rest of the pass still applies. */
+/** `dropped` counts ops whose exact value, error or user quote was not found; the rest of the pass still applies. */
 export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
@@ -120,8 +120,8 @@ export function decode(input: {
           return fail("C7", `retiring the objective ${op.id} cites the user's message in the new span that changed it`)
       } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
-        const found = quote(op.quote, ctx, op.src ?? [], true)
-        if ("check" in found) return found
+        // Revoking words that are not found drop the retire: the user's item stays.
+        if ("check" in quote(op.quote, ctx, op.src ?? [], true)) continue
       }
       items.delete(op.id)
       applied.push(op)
@@ -138,12 +138,11 @@ export function decode(input: {
       else if (!EXACT.has(name)) fields[name] = value.replace(/\s+/g, " ").trim()
       else {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
-        // A wrong exact value or error costs only its own op; a wrong user quote rejects the pass.
-        if ("check" in found && name !== "quote") {
+        // A wrong exact value, error or user quote costs only its own op; nothing unverified is stored.
+        if ("check" in found) {
           if (op.op === "add" && op.key) lost.add(op.key)
           continue each
         }
-        if ("check" in found) return found
         fields[name] = found.text
         src.push(found.alias)
         evidence.push(found.alias)

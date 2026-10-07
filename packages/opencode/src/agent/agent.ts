@@ -10,11 +10,7 @@ import { Auth } from "../auth"
 import { ProviderTransform } from "@/provider/transform"
 
 import PROMPT_GENERATE from "./generate.txt"
-import PROMPT_COMPACTION from "./prompt/compaction.txt"
-import PROMPT_EXPLORE from "./prompt/explore.txt"
-import PROMPT_MAESTRO from "./prompt/maestro.txt"
-import PROMPT_SUMMARY from "./prompt/summary.txt"
-import PROMPT_TITLE from "./prompt/title.txt"
+import { AgentPrompt } from "@opencode-ai/core/agent/prompt"
 import { Permission } from "@/permission"
 import { mergeDeep, values } from "remeda"
 import { Global } from "@opencode-ai/core/global"
@@ -35,6 +31,8 @@ import { PluginV2 } from "@opencode-ai/core/plugin"
 import {
   roster,
   nativeProfiles,
+  envRead,
+  publishRules,
   backendSkills,
   canonicalMemberId,
   LEGACY_BACKEND_ID,
@@ -70,6 +68,13 @@ export const Info = Schema.Struct({
   steps: Schema.optional(Schema.Finite),
 }).annotate({ identifier: "Agent" })
 export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
+
+// What each roster native profile lets a teammate do, as the task tool lists it.
+const nativeAccess = {
+  execution: "Edits files and runs shell commands.",
+  backend: "Edits files and runs shell commands.",
+  review: "Read-only: reads and searches files; cannot edit or run commands.",
+} satisfies Record<keyof typeof nativeProfiles, string>
 
 const GeneratedAgent = Schema.Struct({
   identifier: Schema.String,
@@ -110,6 +115,7 @@ const layer = Layer.effect(
     const skill = yield* Skill.Service
     const provider = yield* Provider.Service
     const locations = yield* LocationServiceMap.Service
+    const global = yield* Global.Service
     const flags = yield* RuntimeFlags.Service
     const events = yield* EventV2Bridge.Service
 
@@ -142,14 +148,17 @@ const layer = Layer.effect(
             ...Object.fromEntries(whitelistedDirs.map((dir) => [dir, "allow"])),
           },
           question: "deny",
-          plan_enter: "deny",
-          plan_exit: "deny",
-          // mirrors github.com/github/gitignore Node.gitignore pattern for .env files
-          read: {
-            "*": "allow",
-            "*.env": "ask",
-            "*.env.*": "ask",
-            "*.env.example": "allow",
+          read: envRead("ask"),
+        })
+
+        // Maestro and general ask before publishing, and user config can allow it. Their skill list leaves out the
+        // skills in the global Claude and agents directories, which are written for other tools. Location rules
+        // affect only that list (see Skill.available).
+        const team = Permission.fromConfig({
+          bash: publishRules("ask"),
+          skill: {
+            [path.join(global.home, ".claude", "skills", "*")]: "deny",
+            [path.join(global.home, ".agents", "skills", "*")]: "deny",
           },
         })
 
@@ -163,74 +172,27 @@ const layer = Layer.effect(
             })
 
         const agents: Record<string, Info> = {
-          build: {
-            id: "build",
-            name: "build",
-            description: "The default agent. Executes tools based on configured permissions.",
-            options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-                plan_enter: "allow",
-              }),
-              user,
-            ),
-            mode: "primary",
-            native: true,
-          },
-          plan: {
-            id: "plan",
-            name: "plan",
-            description: "Plan mode. Disallows all edit tools.",
-            options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-                plan_exit: "allow",
-                task: {
-                  general: "deny",
-                },
-                external_directory: {
-                  [path.join(Global.Path.data, "plans", "*")]: "allow",
-                },
-                edit: {
-                  "*": "deny",
-                  [path.join(".opencode", "plans", "*.md")]: "allow",
-                  [path.relative(ctx.worktree, path.join(Global.Path.data, path.join("plans", "*.md")))]: "allow",
-                },
-              }),
-              user,
-            ),
-            mode: "primary",
-            native: true,
-          },
           maestro: {
             id: "maestro",
             name: "maestro",
             description: "High-agency development orchestrator. Uses governed approval only when explicitly requested.",
-            prompt: PROMPT_MAESTRO,
+            prompt: AgentPrompt.maestro,
             options: {},
-            permission: Permission.merge(
-              defaults,
-              Permission.fromConfig({
-                question: "allow",
-              }),
-              user,
-            ),
+            permission: Permission.merge(defaults, Permission.fromConfig({ question: "allow" }), team, user),
             mode: "primary",
             native: true,
           },
           general: {
             id: "general",
             name: "general",
-            description: `General-purpose agent for researching complex questions and executing multi-step tasks. Use this agent to execute multiple units of work in parallel.`,
+            description:
+              "General-purpose work from a full brief: research, analysis or multi-step changes no seat covers. Edits files and runs shell commands; cannot ask the owner questions or start teammates. Returns the outcome, what changed, how it was checked and what is left.",
+            prompt: AgentPrompt.general,
             permission: Permission.merge(
               defaults,
-              Permission.fromConfig({
-                todowrite: "deny",
-              }),
+              // Playbooks are Maestro's procedures: general's skill list leaves them out, but a brief can still name one.
+              Permission.fromConfig({ todowrite: "deny", skill: { [path.join(Skill.PLAYBOOKS_DIR, "*")]: "deny" } }),
+              team,
               user,
             ),
             options: {},
@@ -247,16 +209,18 @@ const layer = Layer.effect(
                 grep: "allow",
                 glob: "allow",
                 list: "allow",
-                bash: "allow",
+                // Explore only reads, so it never publishes.
+                bash: { "*": "allow", ...publishRules("deny") },
                 webfetch: "allow",
                 websearch: "allow",
-                read: "allow",
+                read: envRead("ask"),
                 external_directory: readonlyExternalDirectory,
               }),
               user,
             ),
-            description: `Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions.`,
-            prompt: PROMPT_EXPLORE,
+            description:
+              'Read-only codebase exploration: finds files and code and explains how they work. Reads and searches files and the web, and runs read-only shell commands; cannot edit. Say how thorough to be: "quick", "medium" or "very thorough". Returns findings with file and line references.',
+            prompt: AgentPrompt.explore,
             options: {},
             mode: "subagent",
             native: true,
@@ -267,7 +231,7 @@ const layer = Layer.effect(
             mode: "primary",
             native: true,
             hidden: true,
-            prompt: PROMPT_COMPACTION,
+            prompt: AgentPrompt.compaction,
             permission: Permission.merge(
               defaults,
               Permission.fromConfig({
@@ -292,7 +256,7 @@ const layer = Layer.effect(
               }),
               user,
             ),
-            prompt: PROMPT_TITLE,
+            prompt: AgentPrompt.title,
           },
           summary: {
             id: "summary",
@@ -308,7 +272,7 @@ const layer = Layer.effect(
               }),
               user,
             ),
-            prompt: PROMPT_SUMMARY,
+            prompt: AgentPrompt.summary,
           },
           ...Object.fromEntries(
             roster
@@ -323,8 +287,9 @@ const layer = Layer.effect(
                     Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
                     member.nativeProfile === "backend" ? backendReadOnly : [],
                   ),
-                  // The backend specialist is primary-capable and still delegatable (F1.6); primary use adds no permissions.
-                  mode: member.memberId === "backend" ? ("all" as const) : ("subagent" as const),
+                  // The user talks only to Maestro, so every seat, the backend specialist included, works only as
+                  // Maestro's teammate and never as a primary agent.
+                  mode: "subagent" as const,
                   native: true,
                 },
               ]),
@@ -366,7 +331,8 @@ const layer = Layer.effect(
             item.temperature = value.temperature ?? item.temperature
             continue
           }
-          if (value.disable) {
+          // Every session runs on Maestro, so configuration may neither disable it nor take it out of primary mode.
+          if (value.disable && key !== "maestro") {
             delete agents[key]
             continue
           }
@@ -386,7 +352,7 @@ const layer = Layer.effect(
           item.description = value.description ?? item.description
           item.temperature = value.temperature ?? item.temperature
           item.topP = value.top_p ?? item.topP
-          item.mode = value.mode ?? item.mode
+          item.mode = key === "maestro" ? item.mode : (value.mode ?? item.mode)
           item.color = value.color ?? item.color
           item.hidden = value.hidden ?? item.hidden
           if (key !== "maestro") item.name = value.name ?? item.name
@@ -447,7 +413,7 @@ const layer = Layer.effect(
 
         const list = Effect.fnUntraced(function* () {
           const cfg = yield* config.get()
-          const defaultID = cfg.default_agent ?? "build"
+          const defaultID = cfg.default_agent || "maestro"
           return values(agents).toSorted((a, b) => {
             if (a.id === defaultID) return -1
             if (b.id === defaultID) return 1
@@ -455,24 +421,16 @@ const layer = Layer.effect(
           })
         })
 
+        // Maestro is the default. Another primary agent becomes the default only when default_agent names it, so
+        // disabling Maestro without naming a replacement fails instead of picking a configured agent.
         const defaultInfo = Effect.fnUntraced(function* () {
-          const c = yield* config.get()
-          if (c.default_agent) {
-            const agent = agents[c.default_agent]
-            if (!agent) throw new Error(`default agent "${c.default_agent}" not found`)
-            if (agent.mode === "subagent") throw new Error(`default agent "${c.default_agent}" is a subagent`)
-            if (agent.hidden === true) throw new Error(`default agent "${c.default_agent}" is hidden`)
-            return agent
-          }
-          // Primary-capable specialist seats are chosen explicitly, never as the implicit default.
-          const visible = Object.values(agents).find(
-            (a) =>
-              a.mode !== "subagent" &&
-              a.hidden !== true &&
-              !roster.some((member) => member.memberId === a.id && member.nativeProfile),
-          )
-          if (!visible) throw new Error("no primary visible agent found")
-          return visible
+          const cfg = yield* config.get()
+          const id = cfg.default_agent || "maestro"
+          const agent = agents[id]
+          if (!agent) throw new Error(`default agent "${id}" not found`)
+          if (agent.mode === "subagent") throw new Error(`default agent "${id}" is a subagent`)
+          if (agent.hidden === true) throw new Error(`default agent "${id}" is hidden`)
+          return agent
         })
 
         const defaultAgent = Effect.fnUntraced(function* () {
@@ -575,14 +533,16 @@ const layer = Layer.effect(
   }),
 )
 
-// Renders a native seat's presentation from its label.
+// Renders a native seat's presentation from its label. The description is how the task tool lists the seat, so it
+// gives the role, access and return and never the label.
 function present(member: RosterMember, label: string) {
+  const access = nativeAccess[member.nativeProfile!]
   return {
     name: label,
     description:
       member.memberId === "backend"
-        ? "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. It returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review."
-        : `${label} native team specialist.`,
+        ? `Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. ${access} Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.`
+        : `${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}. ${access} Returns ${member.returnCard}.`,
     prompt: renderPrompt(member, label),
   }
 }
@@ -620,6 +580,7 @@ export const node = LayerNode.make({
     Skill.node,
     Provider.node,
     locationServiceMapNode,
+    Global.node,
     RuntimeFlags.node,
     EventV2Bridge.node,
   ],

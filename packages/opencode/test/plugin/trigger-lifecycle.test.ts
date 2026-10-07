@@ -83,7 +83,7 @@ describe("plugin.trigger (lifecycle events E2E with real plugin file)", () => {
         {
           sessionID: "sess_loaded_1",
           cwd: "/tmp/proj",
-          agent: "build",
+          agent: "maestro",
           timestamp: 1700000000000,
         },
         out,
@@ -92,7 +92,7 @@ describe("plugin.trigger (lifecycle events E2E with real plugin file)", () => {
       expect(bus.starts.length).toBe(1)
       expect(bus.starts[0].sessionID).toBe("sess_loaded_1")
       expect(bus.starts[0].cwd).toBe("/tmp/proj")
-      expect(bus.starts[0].agent).toBe("build")
+      expect(bus.starts[0].agent).toBe("maestro")
       expect(bus.starts[0].timestamp).toBe(1700000000000)
     }),
   )
@@ -131,7 +131,7 @@ describe("plugin.trigger (lifecycle events E2E with real plugin file)", () => {
         "stop",
         {
           sessionID: "sess_loaded_3",
-          agent: "build",
+          agent: "maestro",
           messageID: "msg_loaded_3",
           reason: "completed",
         },

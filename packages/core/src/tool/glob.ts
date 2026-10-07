@@ -18,7 +18,7 @@ export const name = "glob"
 export const Input = Schema.Struct({
   pattern: FileSystem.GlobInput.fields.pattern.annotate({ description: "Glob pattern to match files against" }),
   path: RelativePath.pipe(Schema.optional).annotate({
-    description: "Relative directory to search. Defaults to the active Location.",
+    description: "The directory to search, relative to the working directory, which is the default",
   }),
   limit: FileSystem.GlobInput.fields.limit.annotate({
     description: "Maximum results to return",
@@ -45,8 +45,11 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description:
-            "Find files by glob pattern within the active Location. Returns concise relative file resources. Use a relative path to narrow the search and limit to bound the result count.",
+          description: `Find files whose paths match a glob pattern, such as \`**/*.tsx\` or \`src/**/config.*\`. A pattern without \`/\`, such as \`*.ts\`, matches file names at any depth.
+
+- \`path\` is the directory to search, the working directory by default.
+- Hidden files and directories, and those excluded by \`.gitignore\`, are not searched.
+- The result is a list of absolute paths in no particular order, or "No files found". \`limit\` caps how many come back; without it, every match does.`,
           input: Input,
           output: Output,
           toModelOutput: ({ output }) => [

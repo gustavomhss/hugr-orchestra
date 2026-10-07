@@ -21,7 +21,7 @@ export const Input = Schema.Struct({
     description: "Regex pattern to search for in file contents",
   }),
   path: RelativePath.pipe(Schema.optional).annotate({
-    description: "Relative directory to search. Defaults to the active Location.",
+    description: "The file or directory to search, relative to the working directory, which is the default",
   }),
   include: FileSystem.GrepInput.fields.include.annotate({
     description: 'File glob to include in the search (for example, "*.js" or "*.{ts,tsx}")',
@@ -61,8 +61,12 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description:
-            "Search file contents by regular expression within the active Location or an absolute managed tool-output file. Use a path to narrow the search, include to filter files by glob, and limit to bound the match count. Returns concise file resources, line numbers, and bounded line previews.",
+          description: `Search file contents with a regular expression in ripgrep syntax, such as \`function\\s+\\w+\` or \`TODO|FIXME\`.
+
+- \`path\` is a directory or a single file, such as one a long tool result was saved to; the working directory by default. \`include\` limits the search to file names that match a glob, such as \`*.ts\` or \`*.{ts,tsx}\`.
+- Matching is case-sensitive and works line by line; start the pattern with \`(?i)\` to ignore case.
+- Hidden files are searched; files and directories excluded by \`.gitignore\` are not.
+- The result counts the matches and lists each matching line with its line number, grouped by file. \`limit\` caps the number of matches; without it, every match is listed.`,
           input: Input,
           output: Output,
           toModelOutput: ({ output }) => [

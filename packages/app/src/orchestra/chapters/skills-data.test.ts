@@ -25,9 +25,9 @@ describe("skills catalog", () => {
 })
 
 describe("skill source", () => {
-  test("marks the V1 and V2 bundled skill as built in", () => {
+  test("marks V1 and V2 built-in skills as built in", () => {
     expect(skillSource("<built-in>", "/repo")).toBe("builtin")
-    expect(skillSource("/builtin/customize-opencode.md", "/repo")).toBe("builtin")
+    expect(skillSource("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
   test("marks files inside the profile directory as project skills", () => {
     expect(skillSource("/repo/.opencode/skills/review/SKILL.md", "/repo")).toBe("project")
@@ -72,7 +72,7 @@ describe("skill access", () => {
     expect(skillAccess("/home/me/.config/opencode/skills/a/SKILL.md", "/repo")).toBe("global")
     expect(skillAccess("/repo-other/.opencode/skills/a/SKILL.md", "/repo")).toBe("global")
     expect(skillAccess("<built-in>", "/repo")).toBe("builtin")
-    expect(skillAccess("/builtin/customize-opencode.md", "/repo")).toBe("builtin")
+    expect(skillAccess("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
 })
 

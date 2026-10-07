@@ -8,6 +8,7 @@ import PROMPT_LUCY from "../agent/prompt/lucy.txt"
 import PROMPT_PATTY from "../agent/prompt/patty.txt"
 import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
 import { BackendSkillRoot } from "./backend-skill-root"
+import { TRUNCATION_DIR } from "../tool/truncation-dir"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({
@@ -37,13 +38,14 @@ export function canonicalMemberId(id: string | undefined) {
   return id === LEGACY_BACKEND_ID ? "backend" : id
 }
 
+// Seats never get a permission prompt, so what asks the owner elsewhere, reading .env files and publishing, is denied.
 export const nativeProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
-    read: "allow",
+    read: envRead("deny"),
     glob: "allow",
     grep: "allow",
-    bash: "allow",
+    bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
   } as const),
   // Backend-specialist-only (F1.8): the execution set plus its bound Atlas Memory tools (F3 clause 29), its six entry
@@ -51,10 +53,10 @@ export const nativeProfiles = Object.freeze({
   // root read-only.
   backend: Object.freeze({
     "*": "deny",
-    read: "allow",
+    read: envRead("deny"),
     glob: "allow",
     grep: "allow",
-    bash: "allow",
+    bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
     atlas_memory_recall: "allow",
     atlas_memory_emit: "allow",
@@ -64,14 +66,32 @@ export const nativeProfiles = Object.freeze({
     }),
     external_directory: Object.freeze({ "*": "deny", [path.join(backendSkills.root, "*")]: "allow" } as const),
   } as const),
+  // A truncated tool result points at its saved full output, so review seats may read that directory. External access
+  // also covers bash and edit, so only this profile, which holds neither, gets it; the others get no saved-file hint.
   review: Object.freeze({
     "*": "deny",
-    read: "allow",
+    read: envRead("deny"),
     glob: "allow",
     grep: "allow",
     maestro_record_review: "allow",
+    external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),
 } as const)
+
+// Reads every file but .env files, which hold secrets; .env.example stays readable.
+// Mirrors the github.com/github/gitignore Node.gitignore pattern for .env files.
+export function envRead<Action extends "ask" | "deny">(action: Action) {
+  return Object.freeze({ "*": "allow", "*.env": action, "*.env.*": action, "*.env.example": "allow" } as const)
+}
+
+// Commands that publish work. Maestro and general ask the owner before them; seats and explore are denied them.
+export function publishRules<Action extends "ask" | "deny">(action: Action) {
+  return Object.fromEntries(
+    ["git push *", "git -C * push *", "gh pr create *", "gh pr merge *", "gh release *"].map(
+      (command) => [command, action] as const,
+    ),
+  )
+}
 
 export type RosterMember = {
   readonly displayName: string
@@ -140,7 +160,7 @@ export const roster = createRoster([
   {
     displayName: "Lucy",
     memberId: "lucy",
-    role: "cold review",
+    role: "cold code review; records governed reviews",
     abilityClass: "read-only artifact review",
     returnCard: "cited APPROVE/FIX_FIRST/REJECT card",
     forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
@@ -150,7 +170,7 @@ export const roster = createRoster([
   {
     displayName: "Bobby",
     memberId: "bobby",
-    role: "architecture",
+    role: "architecture review",
     abilityClass: "read-only contract review",
     returnCard: "seam/contract verdict",
     forbiddenActions: ["implement product", "merge"],
@@ -160,7 +180,7 @@ export const roster = createRoster([
   {
     displayName: "Billy",
     memberId: "billy",
-    role: "security",
+    role: "security review",
     abilityClass: "read-only threat review",
     returnCard: "threat verdict and cited controls",
     forbiddenActions: ["implement product", "merge"],
@@ -170,7 +190,7 @@ export const roster = createRoster([
   {
     displayName: "Jimmy",
     memberId: "jimmy",
-    role: "exploration",
+    role: "codebase exploration",
     abilityClass: "read-only discovery",
     returnCard: "grounded findings card",
     forbiddenActions: ["ratify alone", "edit product"],
@@ -180,7 +200,7 @@ export const roster = createRoster([
   {
     displayName: "Rosie",
     memberId: "rosie",
-    role: "documentation",
+    role: "documentation changes",
     abilityClass: "scoped docs write",
     returnCard: "docs evidence card",
     forbiddenActions: ["decide product behavior"],

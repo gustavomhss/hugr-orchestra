@@ -27,13 +27,13 @@ const it = testEffect(Layer.empty)
 
 it.live("default native registry captures explicit approval before a real filesystem effect", () =>
   Effect.promise(async () => {
-    await using tmp = await tmpdir({ git: true, config: { agent: { build: { permission: { "*": "allow" } } } } })
+    await using tmp = await tmpdir({ git: true, config: { agent: { maestro: { permission: { "*": "allow" } } } } })
     await prepareArsenalSDK(tmp.path, Global.Path.config)
     await AppRuntime.runPromise(Effect.scoped(Effect.gen(function* () {
       const instances = yield* InstanceStore.Service
       const instance = yield* instances.load({ directory: tmp.path })
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" }).pipe(Effect.provideService(InstanceRef, instance))
+      const session = yield* sessions.create({ agent: "maestro" }).pipe(Effect.provideService(InstanceRef, instance))
       const store = yield* SessionStore.Service
       const projected = yield* store.get(session.id)
       if (!projected) throw new Error("Actual native Session placement missing")
@@ -53,7 +53,7 @@ it.live("default native registry captures explicit approval before a real filesy
         }) })
         const materialized = yield* registry.materialize()
         const assistantMessageID = SessionMessage.ID.make("msg_default_native_approval")
-        yield* events.publish(SessionEvent.Step.Started, { sessionID: session.id, assistantMessageID, agent: "build",
+        yield* events.publish(SessionEvent.Step.Started, { sessionID: session.id, assistantMessageID, agent: "maestro",
           model: ModelV2.Ref.make({ id: ModelV2.ID.make("fixture"), providerID: ProviderV2.ID.make("fixture") }), timestamp: yield* DateTime.now })
         const replies = ["reject", "once"] as const
         yield* Effect.forEach(replies, (reply) => Effect.gen(function* () {
@@ -64,7 +64,7 @@ it.live("default native registry captures explicit approval before a real filesy
           const state: { settled?: unknown } = {}
           const pending = yield* materialized.settle({
             sessionID: session.id,
-            agent: AgentV2.ID.make("build"),
+            agent: AgentV2.ID.make("maestro"),
             assistantMessageID,
             call: { type: "tool-call", id: `default-approval-${reply}`, name: action, input: {} },
           }).pipe(

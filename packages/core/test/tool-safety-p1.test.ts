@@ -87,7 +87,7 @@ it.live("real Core Bash denies post-capture credential; native outcomes classify
       const script = `process.stdout.write('ordinary\\n'.repeat(150000)+${JSON.stringify(secret)})`
       const denied = yield* run("secret", nodeCommand(script))
       expect(denied.result.type).toBe("error")
-      expect(denied.result).toEqual({ type: "error", value: "Tool safety HOLD: recognized-secret-output" })
+      expect(denied.result).toEqual({ type: "error", value: new ToolSafety.Denied({ reason: "recognized-secret-output" }).message })
       expect(denied.outputPaths).toBeUndefined()
       expect((yield* run("exit", nodeCommand("process.exit(17)"))).output?.structured).toMatchObject({ exit: 17 })
       expect((yield* run("timeout", nodeCommand("setTimeout(() => {}, 5000)"), 10)).output?.structured).toMatchObject({ timeout: true })
@@ -97,7 +97,7 @@ it.live("real Core Bash denies post-capture credential; native outcomes classify
       const error = yield* settleTool(registry, { sessionID, ...toolIdentity,
         call: { type: "tool-call", name: "exploding", id: "error", input: {} },
       })
-      expect(error.result).toEqual({ type: "error", value: "Tool safety HOLD: recognized-secret-output" })
+      expect(error.result).toEqual({ type: "error", value: new ToolSafety.Denied({ reason: "recognized-secret-output" }).message })
       yield* registry.register({ cancelled: Tool.make({ description: "native interruption", input: Schema.Struct({}), output: Schema.String,
         execute: () => Effect.interrupt,
       }) })

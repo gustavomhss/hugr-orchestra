@@ -546,7 +546,7 @@ export function AppsPanel(
               props.placeholder
             ) : (
               <div class="zen-empty-state">
-                <strong>Browser needs OpenCode Desktop.</strong>
+                <strong>Browser needs the desktop app.</strong>
                 <span>Native browser tabs are unavailable in web app.</span>
               </div>
             )}

@@ -9,7 +9,7 @@ const groupLabels = {
   General: "settings.shortcuts.group.general",
   Session: "settings.shortcuts.group.session",
   Navigation: "settings.shortcuts.group.navigation",
-  "Model and agent": "settings.shortcuts.group.modelAndAgent",
+  "Model and MCP": "settings.shortcuts.group.modelAndMcp",
   Terminal: "settings.shortcuts.group.terminal",
   Prompt: "settings.shortcuts.group.prompt",
 } as const

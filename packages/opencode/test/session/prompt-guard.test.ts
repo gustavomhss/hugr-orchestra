@@ -64,7 +64,7 @@ it.instance(
       const result = yield* prompt
         .prompt({
           sessionID: chat.id,
-          agent: "build",
+          agent: "maestro",
           model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
           parts: [{ type: "text", text: "guarded work" }],
         })

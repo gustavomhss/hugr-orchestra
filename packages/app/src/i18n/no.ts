@@ -114,7 +114,6 @@ export const dict = {
   "command.category.terminal": "Terminal",
   "command.category.model": "Modell",
   "command.category.mcp": "MCP",
-  "command.category.agent": "Agent",
   "command.category.permissions": "Tillatelser",
   "command.category.workspace": "Arbeidsområde",
   "command.category.settings": "Innstillinger",
@@ -166,10 +165,6 @@ export const dict = {
   "command.model.choose.description": "Velg en annen modell",
   "command.mcp.toggle": "Veksle MCP-er",
   "command.mcp.toggle.description": "Veksle MCP-er",
-  "command.agent.cycle": "Bytt agent",
-  "command.agent.cycle.description": "Bytt til neste agent",
-  "command.agent.cycle.reverse": "Bytt agent bakover",
-  "command.agent.cycle.reverse.description": "Bytt til forrige agent",
   "command.model.variant.cycle": "Bytt tenkeinnsats",
   "command.model.variant.cycle.description": "Bytt til neste innsatsnivå",
   "command.prompt.mode.shell": "Shell",
@@ -420,8 +415,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.title": "Ikke støttet vedlegg",
   "prompt.toast.attachmentDuplicate.title": "Denne filen er allerede lastet opp",
   "prompt.toast.pasteUnsupported.description": "Kun bilder, PDF-er eller tekstfiler kan legges ved her.",
-  "prompt.toast.modelAgentRequired.title": "Velg en agent og modell",
-  "prompt.toast.modelAgentRequired.description": "Velg en agent og modell før du sender en forespørsel.",
+  "prompt.toast.modelRequired.title": "Velg en modell",
+  "prompt.toast.modelRequired.description": "Velg en modell før du sender en forespørsel.",
   "prompt.toast.worktreeCreateFailed.title": "Kunne ikke opprette worktree",
   "prompt.toast.sessionCreateFailed.title": "Kunne ikke opprette sesjon",
   "prompt.toast.shellSendFailed.title": "Kunne ikke sende shell-kommando",
@@ -938,7 +933,7 @@ export const dict = {
   "settings.shortcuts.group.general": "Generelt",
   "settings.shortcuts.group.session": "Sesjon",
   "settings.shortcuts.group.navigation": "Navigasjon",
-  "settings.shortcuts.group.modelAndAgent": "Modell og agent",
+  "settings.shortcuts.group.modelAndMcp": "Modell og MCP",
   "settings.shortcuts.group.terminal": "Terminal",
   "settings.shortcuts.group.prompt": "Prompt",
 
@@ -1298,9 +1293,6 @@ export const dict = {
   "settings.general.row.mobileTitlebarBottom.title": "Navigasjon nederst",
   "settings.general.row.mobileTitlebarBottom.description":
     "Plasser tittellinjen og sesjonsfanene nederst på mobilskjermen",
-  "settings.general.row.showCustomAgents.title": "Vis agent",
-  "settings.general.row.showCustomAgents.description":
-    "Bytt mellom agenter i skrivefeltet. Når velgeren er skjult, brukes Build-agenten som standard.",
   "settings.general.row.newInterface.title": "Nytt oppsett",
   "settings.general.row.newInterface.badge": "Ny",
   "settings.general.row.newInterface.description":

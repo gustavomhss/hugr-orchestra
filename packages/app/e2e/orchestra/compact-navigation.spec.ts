@@ -28,8 +28,8 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   expect(rows[0][0]).toBeCloseTo(brand.y + brand.height + 2, 1)
   expect(rows.map((row) => row[1])).toEqual(rows.map(() => 31))
   expect(rows[1][0] - rows[0][0]).toBeCloseTo(32, 1)
-  // The mock server lists build plus Orchestra's native maestro agent.
-  await expect(sidebar.locator('[data-slot="orchestra-profile"] small')).toHaveText("2 agents · main")
+  // The mock server lists only Orchestra's native maestro agent.
+  await expect(sidebar.locator('[data-slot="orchestra-profile"] small')).toHaveText("1 agent · main")
   await expect(sidebar.locator('[data-slot="project-avatar-surface"]')).toHaveCSS(
     "background-color",
     "rgb(44, 112, 189)",
@@ -142,7 +142,7 @@ test("V2 profile card counts agents and shows the branch only when the server re
   // Home's dashboard reads the branch for itself; on a chapter page the card is the only reader.
   await page.goto("/orchestra/skills")
   const meta = page.locator('[data-slot="orchestra-profile"] small')
-  await expect(meta).toHaveText("2 agents")
+  await expect(meta).toHaveText("1 agent")
   await expect.poll(() => vcs.length).toBe(1)
   // A retry would follow the 404 after about a second.
   await page.waitForTimeout(1_500)
@@ -150,7 +150,7 @@ test("V2 profile card counts agents and shows the branch only when the server re
   // The same V2 server answering the legacy endpoint shows the branch it reports.
   await page.unroute(legacyVcs)
   await page.reload()
-  await expect(meta).toHaveText("2 agents · main")
+  await expect(meta).toHaveText("1 agent · main")
 })
 
 test("WIP chapters mark their page above its content; other pages do not", async ({ page }) => {

@@ -71,14 +71,13 @@ opencode ยังรองรับการอ่านไฟล์ `AGENTS.md
 สำหรับผู้ใช้ที่ย้ายจาก Claude Code นั้น OpenCode รองรับรูปแบบไฟล์ของ Claude Code เป็นทางเลือก:
 
 - **กฎของโครงการ**: `CLAUDE.md` ในไดเรกทอรีโครงการของคุณ (ใช้หากไม่มี `AGENTS.md`)
-- **กฎสากล**: `~/.claude/CLAUDE.md` (ใช้หากไม่มี `~/.config/opencode/AGENTS.md`)
 - **ทักษะ**: `~/.claude/skills/` — ดูรายละเอียด [ทักษะตัวแทน](/docs/skills/)
 
 หากต้องการปิดใช้งานความเข้ากันได้ของ Claude Code ให้ตั้งค่าหนึ่งในตัวแปรสภาพแวดล้อมเหล่านี้:
 
 ```bash
 export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only project CLAUDE.md files
 export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
@@ -90,9 +89,8 @@ export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 
 1. **ไฟล์ในเครื่อง** โดยการสำรวจจากไดเรกทอรีปัจจุบัน (`AGENTS.md`, `CLAUDE.md`)
 2. **ไฟล์ทั่วโลก** ที่ `~/.config/opencode/AGENTS.md`
-3. **Claude Code files** ที่ `~/.claude/CLAUDE.md` (ยกเว้นปิดการใช้งาน)
 
-ไฟล์ที่ตรงกันไฟล์แรกจะชนะในแต่ละหมวดหมู่ ตัวอย่างเช่น หากคุณมีทั้ง `AGENTS.md` และ `CLAUDE.md` ระบบจะใช้เฉพาะ `AGENTS.md` ในทำนองเดียวกัน `~/.config/opencode/AGENTS.md` จะมีความสำคัญมากกว่า `~/.claude/CLAUDE.md`
+ไฟล์ที่ตรงกันไฟล์แรกจะชนะในแต่ละหมวดหมู่ ตัวอย่างเช่น หากคุณมีทั้ง `AGENTS.md` และ `CLAUDE.md` ระบบจะใช้เฉพาะ `AGENTS.md`
 
 ---
 

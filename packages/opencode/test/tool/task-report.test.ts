@@ -53,7 +53,7 @@ it.instance("an empty final turn returns a bounded summary of the subagent's run
     const sessions = yield* Session.Service
     const chat = yield* sessions.create({ title: "Parent" })
     const user = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: chat.id,
-      agent: "build", model, time: { created: Date.now() } })
+      agent: "maestro", model, time: { created: Date.now() } })
     const caller = yield* sessions.updateMessage(assistant(chat.id, user.id))
     const tool = yield* TaskTool
     const def = yield* tool.init()
@@ -80,7 +80,7 @@ it.instance("an empty final turn returns a bounded summary of the subagent's run
 
     const result = yield* def.execute(
       { description: "toggle line numbers", prompt: "turn on line numbers", subagent_type: "general" },
-      { sessionID: chat.id, messageID: caller.id, agent: "build", abort: new AbortController().signal, extra: { promptOps },
+      { sessionID: chat.id, messageID: caller.id, agent: "maestro", abort: new AbortController().signal, extra: { promptOps },
         messages: [], metadata: () => Effect.void, ask: () => Effect.void },
     )
 

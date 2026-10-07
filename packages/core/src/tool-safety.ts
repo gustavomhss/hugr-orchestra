@@ -85,10 +85,114 @@ export const RuntimeProfileLoader = Context.Reference<(() => Effect.Effect<Profi
 export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied", {
   reason: Schema.String,
 }) {
+  /** Keep the first line exactly `Tool safety HOLD: <reason>`; tests match it. */
   override get message() {
-    return `Tool safety HOLD: ${this.reason}`
+    const remediation = remediations.find((entry) => entry[0].test(this.reason))?.[1]
+    return remediation ? `Tool safety HOLD: ${this.reason}\n${remediation}` : `Tool safety HOLD: ${this.reason}`
   }
 }
+
+// Second HOLD line, written for the model: the cause, that nothing ran, and the next step.
+// Only codes raised by the safety modules are listed; approval, completion and Maestro
+// profile-snapshot codes belong to their owners and keep the bare first line.
+const remediations: ReadonlyArray<readonly [RegExp, string]> = [
+  [
+    /^known-(?:destructive-operation|catastrophic-delete|catastrophic-find-delete|unrecoverable-git-clean)$/,
+    "This destructive command is blocked for every agent and no approval unlocks it, so it did not run. Do not retry it another way; if it is really needed, give the owner the exact command to run themselves (if the match is only words in a message, reword them).",
+  ],
+  [
+    /^known-gate-bypass$/,
+    "Hooks and verification gates cannot be skipped (`--no-verify`, `-n`, `HUSKY=0`, `--no-hooks`), so the command did not run. Fix what the hook reports and rerun without the bypass; words such as `-n` or `-json` in a `git commit` message also match, so reword them.",
+  ],
+  [
+    /^git-hygiene-dynamic-command$/,
+    "`git add` and `git commit` commands cannot contain `$`, backticks, parentheses, redirects or heredocs (or `\\` inside double quotes), so the command did not run. Do not work around it; write the message literally, as in `git commit -m 'subject' -m 'body'`.",
+  ],
+  [
+    /^git-hygiene-unsupported-shell-operator$/,
+    "A single `|` or `&` cannot appear in a command that runs `git add` or `git commit`, so it did not run. Chain steps with `&&` or `;`, or run the rest in a separate call.",
+  ],
+  [/^git-hygiene-incomplete-command$/, "The command has an unclosed quote or a trailing `\\`, so it did not run. Close the quote and retry."],
+  [
+    /^git-hygiene-preceding-command-unbound$/,
+    "When a call runs `git add` or `git commit`, every command except the last must be `cd <dir>`, `git add`, `git commit` or a read-only git command (status, diff, log, show, ls-files, rev-parse), so it did not run. Run the other commands in a separate call.",
+  ],
+  [
+    /^git-hygiene-placement-environment$/,
+    "`GIT_*` overrides are not allowed with `git add` or `git commit`, so the command did not run. Remove `GIT_*=` assignments from the command; if it has none, the session environment sets `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` or `GIT_CONFIG_*`, so report that to the owner.",
+  ],
+  [
+    /^git-hygiene-cwd-(?:unparsed|acquisition)$/,
+    "The directory for this git command must be one existing path, given by `workdir`, `cd <dir>` or `git -C <dir>`, so the command did not run. Check the path and retry.",
+  ],
+  [
+    /^git-hygiene-global-option-unbound$/,
+    "Only `-C <dir>` may come between `git` and `add` or `commit`, so the command did not run. Drop other global options such as `-c` or `--git-dir`, and run git commands that merely mention `add` or `commit` in a separate call.",
+  ],
+  [/^git-hygiene-message-unparsed$/, "`-m` needs a message after it, so the command did not run. Use `git commit -m 'subject'`."],
+  [
+    /^git-hygiene-stage-option-unbound$/,
+    "The command used a `git add` or `git commit` option the guard does not accept, so it did not run. Use plain flags such as `git add <paths>` and `git commit -m '…'` (`-a`, `--amend`, `--allow-empty`, `-q` and `-s` also work); `-am`, `--no-edit`, `-F`, `--author`, `-p` and `commit -v` are refused.",
+  ],
+  [
+    /^git-hygiene-managed-or-protected-data$/,
+    "The command would stage or commit a managed or protected file (tool state such as `.techlead/` or audit and budget logs, caches, credentials, or a never-touch path), so it did not run. Stage explicit paths that leave it out and unstage it if it is already staged; only the owner may commit such files.",
+  ],
+  [
+    /^git-hygiene-root-outside-project$/,
+    "The repository this command would change is outside the current project, so it did not run. Run `git add` and `git commit` only inside this project; the owner can commit elsewhere.",
+  ],
+  [
+    /^git-hygiene-(?:query-failed-or-overflow|path-acquisition)$/,
+    "The guard could not list what this command would stage (not a git repository, a path outside it, or too many files), so it did not run. Check the directory and stage fewer, explicit paths.",
+  ],
+  [
+    /^recognized-secret-output$/,
+    "The tool ran, but its output contained a credential-shaped value (a private key, or an AWS, GitHub, Stripe or OpenAI key), so the output was discarded. Do not print secrets or try to reveal them another way; to check that one is set, test it without printing its value.",
+  ],
+  [
+    /^output-inspection-budget$/,
+    "The tool ran, but its output was too large or too deeply nested to scan for secrets, so it was discarded. Ask for a smaller result.",
+  ],
+  [
+    /^project-never-touch$/,
+    "The project's safety profile marks this path never-touch, so the call did not run. Leave it alone and do not reach it another way; only the owner can change the profile.",
+  ],
+  [
+    /^protected-instruction-or-config-write$/,
+    "The project's safety profile protects this instruction or config file, so nothing was written. Leave it, or ask the owner to make the change.",
+  ],
+  [
+    /^write-outside-physical-roots$/,
+    "The project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner.",
+  ],
+  [
+    /^defense-corpus-bulk-read$/,
+    "The project's safety profile allows this file to be read only in slices, so nothing was read. Pass `limit` as a whole number from 1 to 400 and page with `offset`.",
+  ],
+  [
+    /^transcript-context-budget$/,
+    "This transcript file is larger than the project's transcript budget, so it was not read. Do not read it another way; ask the owner if you need it.",
+  ],
+  [/^invalid-patch-acquisition$/, "The patch could not be parsed, so nothing was applied. Fix the patch format and retry."],
+  [/^missing-native-path$/, "The call names no file path the guard can check, so it did not run. Pass the file path argument."],
+  [
+    /^required-process-sandbox-unbound$/,
+    "The project's safety profile requires commands to run in a process sandbox and this tool cannot, so it did not run. Run commands with the shell tool, or ask the owner.",
+  ],
+  [
+    /^(?:required-process-sandbox-unavailable|sandbox-.+)$/,
+    "The project's safety profile requires a process sandbox that could not be set up here, so the command did not run. Do not run it another way; report the reason to the owner.",
+  ],
+  [
+    /^profile-(?:project-invalid|state-root-acquisition|project-root-acquisition|state-inside-project|stat-acquisition|not-file-or-overflow|path-acquisition|symlink-denied|changed-during-read|invalid|read-acquisition)$/,
+    "The project's safety profile could not be loaded, so the call did not run. Do not work around it; report the reason to the owner, who can fix the profile.",
+  ],
+  [
+    /^(?:filesystem-acquisition|binding-acquisition|path-acquisition(?:-.+)?|missing-native-binding|ask-before-native-binding-missing|write-root-(?:acquisition|stat|not-directory)|corpus-(?:stat-acquisition|not-file)|transcript-(?:stat-acquisition|not-file)|invalid-transcript-budget|output-inspection-acquisition|git-hygiene-(?:native-binding-missing|command-acquisition|project-acquisition|query-acquisition|root-acquisition))$/,
+    "The safety guard hit an internal error and could not check this call, so it did not run. Do not retry it another way; report the reason to the owner.",
+  ],
+]
 
 export type Invocation = {
   readonly tool: string
@@ -196,6 +300,7 @@ export const make = Effect.gen(function* () {
     const writing = ["write", "edit", "multiedit", "apply_patch"].includes(input.tool)
     const reading = input.tool === "read"
     if (!writing && !reading) return
+    // Patch.parse is the grammar the apply_patch tools apply, so these are exactly the files a patch writes
     const paths = input.tool === "apply_patch"
       ? yield* Effect.try({
           try: () => Patch.parse(typeof args.patchText === "string" ? args.patchText : "").flatMap((hunk) =>

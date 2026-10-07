@@ -1,10 +1,11 @@
-Read a file or directory from local filesystem. Missing paths return an error.
+Read a file, or list a directory.
 
-- `filePath` is absolute path.
-- Default read returns up to 2000 lines from start.
-- Positive `offset` is 1-indexed start line. Negative `offset` reads from end: `-3` starts last 3 lines.
-- `limit` is positive maximum line count.
-- Use `glob` to locate unknown paths. Use `grep` for large-file search.
-- Lines have `<line>: <content>` prefixes. Directory entries have trailing `/`.
-- Lines longer than 2000 characters truncate.
-- Images and PDFs return file attachments.
+- Output is `<path>`, `<type>`, then `<content>` with each line as `N: text`. The `N: ` prefix is not part of the file; never copy it into an edit or a patch.
+- A read returns at most 2000 lines and 50 KB, and cuts lines longer than 2000 characters. The content ends with `(End of file…)` when nothing remains, or with `(PARTIAL view… Use offset=N limit=M to continue.)` when more does.
+- Continue with exactly that offset and limit: an explicit range whose slice exceeds 50 KB fails instead of truncating.
+- `offset` is the first line, counted from 1; 0 is invalid. A negative offset returns the last lines, such as `-200` for the end of a log.
+- Prefer one large window to many small slices. Each call reads one path; read several files with parallel calls.
+- A directory lists one level, including hidden and ignored entries; subdirectories end in `/`. `offset` and `limit` page the entries.
+- JPEG, PNG, GIF, WebP and PDF files up to 20 MB come back whole as attachments. Archives, Office files and other binaries are refused.
+- The first time you read a text file under a directory with its own AGENTS.md, CLAUDE.md or CONTEXT.md, its rules follow `</content>` in a `<system-reminder>`; follow them. Image and PDF reads, shell reads, searches and directory listings never load these rules.
+- Nothing is cached, and edits and writes do not check what you have read.

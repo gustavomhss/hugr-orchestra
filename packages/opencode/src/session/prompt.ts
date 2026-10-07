@@ -65,7 +65,6 @@ import { ModelV2 } from "@opencode-ai/core/model"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@opencode-ai/core/session/sql"
-import { SessionReminders } from "./reminders"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@opencode-ai/llm"
 
@@ -701,6 +700,8 @@ const layer = Layer.effect(
         ...part,
         id: part.id ? PartID.make(part.id) : PartID.ascending(),
       })
+      // Briefs attach files the same way, so only a top-level session's attachments come from the owner.
+      const sender = current.parentID ? "Your caller" : "The owner"
 
       const resolvePart: (part: PromptInput["parts"][number]) => Effect.Effect<Draft<SessionV1.Part>[]> = Effect.fn(
         "SessionPrompt.resolveUserPart",
@@ -798,7 +799,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify({ filePath: part.filename })}`,
+                    text: `${sender} attached ${part.filename ?? "a text file"}. Its content as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -864,7 +865,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                   },
                 ]
                 const exit = yield* provider.getModel(info.model.providerID, info.model.modelID).pipe(
@@ -906,7 +907,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                    text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                   })
                 }
                 return pieces
@@ -929,7 +930,7 @@ const layer = Layer.effect(
                       sessionID: input.sessionID,
                       type: "text",
                       synthetic: true,
-                      text: `Read tool failed to read ${filepath} with the following error: ${message}`,
+                      text: `${sender} attached ${filepath}, but it could not be read: ${message}`,
                     },
                   ]
                 }
@@ -939,7 +940,7 @@ const layer = Layer.effect(
                     sessionID: input.sessionID,
                     type: "text",
                     synthetic: true,
-                    text: `Called the Read tool with the following input: ${JSON.stringify(args)}`,
+                    text: `${sender} attached the directory ${filepath}. Its listing as of when they sent this message:`,
                   },
                   {
                     messageID: info.id,
@@ -958,7 +959,7 @@ const layer = Layer.effect(
                   sessionID: input.sessionID,
                   type: "text",
                   synthetic: true,
-                  text: `Called the Read tool with the following input: {"filePath":"${filepath}"}`,
+                  text: `${sender} attached ${filepath}. Its content as of when they sent this message:`,
                 },
                 {
                   id: part.id,
@@ -1097,7 +1098,7 @@ const layer = Layer.effect(
           yield* status.set(sessionID, { type: "busy" })
           yield* Effect.logInfo("loop", { "session.id": sessionID, step })
 
-          let msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
+          const msgs = yield* MessageV2.filterCompactedEffect(sessionID).pipe(
             Effect.provideService(Database.Service, database),
           )
 
@@ -1182,11 +1183,6 @@ const layer = Layer.effect(
           }
           const maxSteps = agent.steps ?? Infinity
           const isLastStep = step >= maxSteps
-          msgs = yield* SessionReminders.apply({ messages: msgs, agent, session }).pipe(
-            Effect.provideService(RuntimeFlags.Service, flags),
-            Effect.provideService(FSUtil.Service, fsys),
-            Effect.provideService(Session.Service, sessions),
-          )
 
           const msg: SessionV1.Assistant = {
             id: MessageID.ascending(),

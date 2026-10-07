@@ -6,7 +6,6 @@ export type ScheduleTask = {
   id: string
   name: string
   prompt: string
-  agent: string
   cadence: Cadence
   // Epoch milliseconds of the next slot; shown in the browser's local timezone.
   next: number
@@ -165,7 +164,7 @@ function hash(text: string, seed: number) {
 function isTask(value: unknown): value is ScheduleTask {
   if (!isRecord(value)) return false
   if (typeof value.id !== "string" || typeof value.name !== "string" || typeof value.prompt !== "string") return false
-  if (typeof value.agent !== "string" || !CADENCES.some((cadence) => cadence === value.cadence)) return false
+  if (!CADENCES.some((cadence) => cadence === value.cadence)) return false
   if (!Number.isFinite(value.next) || typeof value.enabled !== "boolean" || !Number.isInteger(value.runs)) return false
   if (
     value.minute !== undefined &&

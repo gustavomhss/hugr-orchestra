@@ -95,7 +95,7 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
   const atlas = maintenance ? undefined : yield* AtlasHeader.render(input.agent)
   const system = [
     [
-      ...(maintenance ? [role] : input.agent.prompt ? [input.agent.prompt] : SystemPrompt.provider(input.model)),
+      ...(maintenance ? [role] : [input.agent.prompt || SystemPrompt.base]),
       ...(maintenance ? [] : input.system),
       ...(!maintenance && input.user.system ? [input.user.system] : []),
       ...(atlas ? [atlas] : []),

@@ -199,7 +199,7 @@ async function renderFooter(
           theme={input.theme ?? (() => RUN_THEME_FALLBACK)}
           tuiConfig={config}
           backgroundSubagents={input.backgroundSubagents ?? true}
-          agent="opencode"
+          agent="Maestro"
           onSubmit={input.onSubmit ?? (() => true)}
           onPermissionReply={() => {}}
           onQuestionReply={() => {}}
@@ -988,7 +988,7 @@ test("direct footer shows editable prompts and additional queued work while runn
           theme={() => RUN_THEME_FALLBACK}
           tuiConfig={tuiConfig}
           backgroundSubagents={true}
-          agent="opencode"
+          agent="Maestro"
           onSubmit={() => true}
           onPermissionReply={() => {}}
           onQuestionReply={() => {}}
@@ -1155,10 +1155,10 @@ test("direct footer mode label keeps left padding without a status pill", async 
     const statusline = app
       .captureCharFrame()
       .split("\n")
-      .find((line) => line.includes("BUILD") && line.includes("cmd"))
+      .find((line) => line.includes("MAESTRO") && line.includes("cmd"))
 
     expect(statusline).toBeDefined()
-    expect(statusline?.startsWith(" BUILD ")).toBe(true)
+    expect(statusline?.startsWith(" MAESTRO ")).toBe(true)
   } finally {
     app.cleanup()
   }

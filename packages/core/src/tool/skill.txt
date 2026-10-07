@@ -1,0 +1,1 @@
+Load a skill from the skills list by its exact `name`. The result holds the skill's instructions, its base directory and a sample of the files in it; relative paths in the skill resolve against that directory.

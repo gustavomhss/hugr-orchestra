@@ -1,6 +1,8 @@
 // One-shot comparison: compact the same span of a real trace once with the legacy compaction and once with a
 // continuity memory pass, and save both outputs side by side.
-// Usage: BENCH_DIR=<scratch> BENCH_TRACE=<name> BENCH_MODEL=file bun script/continuity-bench/oneshot.ts <legacy|continuity>
+// Usage: BENCH_DIR=<scratch> BENCH_TRACE=<name> BENCH_MODEL=file bun script/continuity-bench/oneshot.ts <legacy|continuity|replay>
+//   replay: the continuity pass on the replay transport, as production runs it: the producer reads the parent's request.
+//   BENCH_PRUNE=1 stubs, in that request, every tool result older than the last TAIL_STEPS steps, as pruning would have.
 import { Database } from "bun:sqlite"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
@@ -12,6 +14,8 @@ import { LLM } from "@/session/llm"
 import { MessageID, SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
 import { run } from "@/continuity/fork"
+import { apply as applyMasks, candidates } from "@/continuity/masking"
+import { MessageV2 } from "@/session/message-v2"
 import { child } from "@/continuity/alias"
 import { buildPrompt } from "@opencode-ai/core/session/compaction"
 import PROMPT_COMPACTION from "@/agent/prompt/compaction.txt"
@@ -21,7 +25,9 @@ import { serialize } from "./legacy"
 
 const DIR = process.env.BENCH_DIR!
 const TRACE = process.env.BENCH_TRACE!
-const ARM = process.argv[2] as "legacy" | "continuity"
+const ARM = process.argv[2] as "legacy" | "continuity" | "replay"
+const PRUNE = process.env.BENCH_PRUNE === "1"
+const NAME = ARM === "replay" ? `replay-${PRUNE ? "pruned" : "raw"}` : ARM
 const BASE = path.join(DIR, "traces", TRACE)
 const config = JSON.parse(readFileSync(path.join(BASE, "config.json"), "utf8"))
 const OUT = path.join(BASE, "oneshot")
@@ -39,7 +45,7 @@ const cut = messages.findLastIndex((message, index) => index <= messages.length 
 const head = messages.slice(0, cut)
 const tail = messages.slice(cut)
 const user = messages.findLast((message) => message.info.role === "user")!.info as SessionV1.User
-const model = transport({ dir: DIR, exchange: OUT, ledger: `ledger-oneshot-${TRACE}.jsonl`, version: `${TRACE}-oneshot-${ARM}`,
+const model = transport({ dir: DIR, exchange: OUT, ledger: `ledger-oneshot-${TRACE}.jsonl`, version: `${TRACE}-oneshot-${NAME}`,
   transport: "file", reserve: 12_000 })
 
 const program = Effect.gen(function* () {
@@ -64,13 +70,26 @@ const program = Effect.gen(function* () {
     const delegations = Object.fromEntries([...new Set(messages.flatMap((message) => message.parts.flatMap((part) => child(part) ?? [])))]
       .map((id) => [id, { member: agents.get(id), status: undefined }]))
     const captured = { sessionID: SID, boundary: messages.at(-1)!.info.id, tailStart: tail[0].info.id, head, tail, canRecall: true }
-    const result = yield* run(captured, { provider, llm }, { history: messages, delegations, member: false })
+    let parent
+    if (ARM === "replay") {
+      // The parent's last request: the agent's view of head and tail, stubbed where pruning would have stubbed it.
+      const masks = new Map<string, string>()
+      if (PRUNE) for (const candidate of candidates(messages, masks)) masks.set(candidate.part.id, `arc_${candidate.messageID}`)
+      const sessionID = SID
+      const agent = { name: "build", mode: "primary" as const, permission: [], prompt: "You are a coding agent.", options: {} }
+      parent = { messageIDs: messages.map((message) => message.info.id), input: {
+        user: { ...user }, sessionID, agent, model: shaped, system: ["You are a coding agent."], tools: {},
+        messages: yield* MessageV2.toModelMessagesEffect(applyMasks(messages, masks), shaped),
+      } as LLM.StreamInput }
+      console.log(`${TRACE} ${NAME}: ${masks.size} tool results stubbed`)
+    }
+    const result = yield* run(captured, { provider, llm }, { history: messages, delegations, member: false }, { parent })
     if (!result.artifact) throw new Error(`pass not applied: ${JSON.stringify({ ...result, artifact: undefined })}`)
     text = result.artifact.text
-    writeFileSync(path.join(OUT, `${ARM}.pass.json`), JSON.stringify({ ...result, artifact: undefined }, null, 2))
+    writeFileSync(path.join(OUT, `${NAME}.pass.json`), JSON.stringify({ ...result, artifact: undefined }, null, 2))
   }
-  writeFileSync(path.join(OUT, `${ARM}.md`), text)
-  console.log(`${TRACE} ${ARM}: head ${head.length} messages, output ~${Token.estimate(text)} tokens`)
+  writeFileSync(path.join(OUT, `${NAME}.md`), text)
+  console.log(`${TRACE} ${NAME}: head ${head.length} messages, output ~${Token.estimate(text)} tokens`)
 })
 
 const directory = path.join(DIR, "instance")

@@ -206,7 +206,6 @@ export const dict = {
   "ui.promptInput.attachments": "Billeder og filer",
   "ui.promptInput.context": "Kontekst",
   "ui.promptInput.shell": "Shell-kommando",
-  "ui.promptInput.chooseAgent": "Vælg agent",
   "ui.promptInput.chooseModel": "Vælg model",
   "ui.promptInput.chooseVariant": "Vælg modelvariant",
   "ui.promptInput.send": "Send",

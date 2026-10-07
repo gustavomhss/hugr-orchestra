@@ -196,7 +196,7 @@ export type Pass = {
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
-  /** Ops dropped because their exact value or error was not found. */
+  /** Ops dropped because their exact value, error or user quote was not found. */
   dropped?: number
   size: number
 }

@@ -63,7 +63,7 @@ const harness = (bindings: ReadonlyArray<string[] | undefined>, run: (input: {
           if (!found) throw new Error(`native ${id} tool missing`)
           return found
         }
-        const parent = yield* sessions.create({ agent: "build" })
+        const parent = yield* sessions.create({ agent: "maestro" })
         const context = (sessionID: SessionID): Tool.Context => ({
           sessionID, messageID: MessageID.ascending(), callID: `call-${MessageID.ascending()}`, agent: "backend",
           agentID: "backend", abort: new AbortController().signal, messages: [], metadata: () => Effect.void,

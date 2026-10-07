@@ -82,7 +82,20 @@ it.instance(
         contextHash: context.contextHash,
         projectID: session.projectID,
         workCardID: "card_authorization",
-        workCard: "# card\n",
+        workCard: [
+          "# Card",
+          "## Definition of Done",
+          "The routed card is implemented.",
+          "## Invariants",
+          "Only an approved, current validation is authorized.",
+          "## Quality Standards",
+          "Route checks pass.",
+          "## Completeness Criteria",
+          "Every authorization precondition is exercised.",
+          "## Success Criteria",
+          "The backend specialist receives exactly one authorized dispatch.",
+          "",
+        ].join("\n"),
         routedMemberID: "backend",
         validatorID: "maestro",
         validatorVersion: "validation-v1",
@@ -94,6 +107,10 @@ it.instance(
         approvalMessageID: "msg_missing",
       }).pipe(Effect.flip)
       expect(denied).toMatchObject({ reason: "review-not-approved" })
+      // The model sees only the message, so it must carry the reason and the step that satisfies it.
+      expect(denied instanceof Error && denied.message).toBe(
+        "MaestroAuthorizationRejected: review-not-approved. Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+      )
       yield* events.publish(MaestroEvent.Review.Received, {
         sessionID: session.id,
         projectID: session.projectID,
@@ -207,6 +224,9 @@ it.instance(
         approvalMessageID: direct.id,
       }).pipe(Effect.flip)
       expect(tampered).toMatchObject({ reason: "approval-binding-mismatch" })
+      expect(tampered instanceof Error && tampered.message).toBe(
+        "MaestroAuthorizationRejected: approval-binding-mismatch. Pass approvalMessageID from the maestro_record_approval Bindings line and the validationRecordID that was presented.",
+      )
       yield* db
         .update(EventTable)
         .set({ data: validationRow.data })
@@ -221,6 +241,9 @@ it.instance(
         approvalMessageID: direct.id,
       }).pipe(Effect.flip)
       expect(stale).toMatchObject({ reason: "context-not-current" })
+      expect(stale instanceof Error && stale.message).toBe(
+        "MaestroAuthorizationRejected: context-not-current. HEAD, the working tree or the Own source changed since the context was recorded; record a new plan revision (change any field, such as methodVersion), rerun the checks, then record a new context and a new validation.",
+      )
       yield* Effect.promise(() => Bun.file(`${test.directory}/stale.txt`).delete())
       const granted = yield* grantAuthorization({
         sessionID: session.id,
@@ -240,6 +263,9 @@ it.instance(
         permission: [],
       }).pipe(Effect.flip)
       expect(staleDispatch).toMatchObject({ reason: "context-not-current" })
+      expect(staleDispatch instanceof Error && staleDispatch.message).toBe(
+        "MaestroDispatchRejected: context-not-current. HEAD, the working tree or the Own source changed since the context was recorded; keep the tree untouched from context until the task returns, and restart from a new plan revision.",
+      )
       yield* Effect.promise(() => Bun.file(`${test.directory}/stale.txt`).delete())
       const reservations = yield* Effect.all(
         [

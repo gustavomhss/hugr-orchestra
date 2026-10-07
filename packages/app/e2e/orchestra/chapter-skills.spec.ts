@@ -117,9 +117,9 @@ for (const protocol of ["v1", "v2"] as const) {
   }) => {
     const writes: { method: string; url: string; body: unknown }[] = []
     const builtin = {
-      name: "customize-opencode",
-      description: "Configure opencode",
-      location: protocol === "v1" ? "<built-in>" : "/builtin/customize-opencode.md",
+      name: "style-guide",
+      description: "Follow the house style",
+      location: protocol === "v1" ? "<built-in>" : "/builtin/style-guide.md",
       content: "# Built in\n",
     }
     const governed = {
@@ -140,7 +140,7 @@ for (const protocol of ["v1", "v2"] as const) {
 
     await cards.last().getByRole("button", { name: "Read", exact: true }).click()
     await expect(dialog.locator("h2")).toHaveText(`Read ${builtin.name}`)
-    await expect(dialog.locator(".mx-dialog-head p")).toHaveText("Built into opencode. Read-only.")
+    await expect(dialog.locator(".mx-dialog-head p")).toHaveText("Built into the server. Read-only.")
     await expect(dialog.getByRole("textbox", { name: "Instructions" })).toHaveValue(builtin.content)
     await expect(dialog.getByRole("textbox", { name: "Instructions" })).not.toBeEditable()
     await expect(dialog.getByRole("textbox", { name: "Name" })).not.toBeEditable()

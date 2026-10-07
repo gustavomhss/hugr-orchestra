@@ -121,7 +121,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "სურათები და ფაილები",
   "ui.promptInput.context": "კონტექსტი",
   "ui.promptInput.shell": "Shell ბრძანება",
-  "ui.promptInput.chooseAgent": "აირჩიე აგენტი",
   "ui.promptInput.chooseModel": "აირჩიე მოდელი",
   "ui.promptInput.chooseVariant": "აირჩიე მოდელის ვარიანტი",
   "ui.promptInput.send": "გაგზავნა",

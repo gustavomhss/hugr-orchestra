@@ -83,7 +83,7 @@ export const Info = Schema.Struct({
   }),
   default_agent: Schema.optional(Schema.String).annotate({
     description:
-      "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",
+      "Default agent to use when none is specified. Must be a primary agent. Falls back to 'maestro' if not set or if the specified agent is invalid.",
   }),
   subagent_depth: Schema.optional(NonNegativeInt).annotate({
     description: "Maximum subagent nesting depth. Defaults to 1, which prevents subagents from launching subagents.",
@@ -91,17 +91,13 @@ export const Info = Schema.Struct({
   username: Schema.optional(Schema.String).annotate({
     description: "Custom username to display in conversations instead of system username",
   }),
-  mode: Schema.optional(
-    Schema.StructWithRest(
-      Schema.Struct({ build: Schema.optional(ConfigAgentV1.Info), plan: Schema.optional(ConfigAgentV1.Info) }),
-      [Schema.Record(Schema.String, ConfigAgentV1.Info)],
-    ),
-  ).annotate({ description: "@deprecated Use `agent` field instead." }),
+  mode: Schema.optional(Schema.Record(Schema.String, ConfigAgentV1.Info)).annotate({
+    description: "@deprecated Use `agent` field instead.",
+  }),
   agent: Schema.optional(
     Schema.StructWithRest(
       Schema.Struct({
-        plan: Schema.optional(ConfigAgentV1.Info),
-        build: Schema.optional(ConfigAgentV1.Info),
+        maestro: Schema.optional(ConfigAgentV1.Info),
         general: Schema.optional(ConfigAgentV1.Info),
         explore: Schema.optional(ConfigAgentV1.Info),
         title: Schema.optional(ConfigAgentV1.Info),

@@ -20,7 +20,7 @@ async function wait(fn: () => boolean, timeout = 2000) {
 
 // F1.11: the agent dialog (DialogAgent) lists agents through `agentOption` in DialogSelect. DialogAgent itself needs the
 // full Local/Sync stack, so this renders the same select with the same options.
-test("agent dialog lists a renamed seat by its label and selects its id", async () => {
+test("agent dialog lists a renamed agent by its label and selects its id", async () => {
   await using tmp = await tmpdir()
   const state = path.join(tmp.path, "state")
   await mkdir(state, { recursive: true })
@@ -60,10 +60,10 @@ test("agent dialog lists a renamed seat by its label and selects its id", async 
                   <DialogProvider>
                     <DialogSelect
                       title="Select agent"
-                      current="backend"
+                      current="maestro"
                       options={[
-                        agentOption({ id: "build", name: "build", native: true }),
-                        agentOption({ id: "backend", name: "Pikachu", native: true }),
+                        agentOption({ id: "maestro", name: "Conductor", native: true }),
+                        agentOption({ id: "reviewer", name: "reviewer", description: "Custom reviewer" }),
                       ]}
                       onSelect={(option) => selected.push(option.value)}
                     />
@@ -81,12 +81,12 @@ test("agent dialog lists a renamed seat by its label and selects its id", async 
   try {
     await wait(() => {
       void app.renderOnce()
-      return app.captureCharFrame().includes("Pikachu")
+      return app.captureCharFrame().includes("Conductor")
     })
-    expect(app.captureCharFrame()).not.toContain("backend")
+    expect(app.captureCharFrame()).not.toContain("maestro")
     app.mockInput.pressEnter()
     await wait(() => selected.length > 0)
-    expect(selected).toEqual(["backend"])
+    expect(selected).toEqual(["maestro"])
   } finally {
     app.renderer.destroy()
   }

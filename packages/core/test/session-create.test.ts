@@ -86,10 +86,10 @@ describe("SessionV2.create", () => {
       expect(
         yield* session.create({
           location: Location.Ref.make({ directory: location.directory, workspaceID }),
-          agent: AgentV2.ID.make("build"),
+          agent: AgentV2.ID.make("maestro"),
           model,
         }),
-      ).toMatchObject({ location: { directory: location.directory, workspaceID }, agent: "build", model })
+      ).toMatchObject({ location: { directory: location.directory, workspaceID }, agent: "maestro", model })
     }),
   )
 
@@ -99,7 +99,7 @@ describe("SessionV2.create", () => {
       const created = yield* session.create({ id, location })
       const changed = [
         { id, location: Location.Ref.make({ directory: AbsolutePath.make("/other") }) },
-        { id, location, agent: AgentV2.ID.make("build") },
+        { id, location, agent: AgentV2.ID.make("maestro") },
         {
           id,
           location,
@@ -133,9 +133,9 @@ describe("SessionV2.create", () => {
       const input = { id, location }
       const created = yield* session.create(input)
 
-      yield* db.update(SessionTable).set({ agent: "build" }).where(eq(SessionTable.id, id)).run().pipe(Effect.orDie)
+      yield* db.update(SessionTable).set({ agent: "maestro" }).where(eq(SessionTable.id, id)).run().pipe(Effect.orDie)
 
-      expect(yield* session.create(input)).toMatchObject({ id: created.id, agent: "build" })
+      expect(yield* session.create(input)).toMatchObject({ id: created.id, agent: "maestro" })
     }),
   )
 
@@ -155,12 +155,12 @@ describe("SessionV2.create", () => {
           projectID: created.projectID,
           directory: created.location.directory,
           title: "updated",
-          agent: "build",
+          agent: "maestro",
           time: { created: 0, updated: 1 },
         }),
       })
 
-      expect(yield* session.create(input)).toMatchObject({ id, agent: "build" })
+      expect(yield* session.create(input)).toMatchObject({ id, agent: "maestro" })
     }),
   )
 
@@ -327,12 +327,12 @@ describe("SessionV2.create", () => {
       const session = yield* SessionV2.Service
       const created = yield* session.create({ location })
 
-      yield* session.switchAgent({ sessionID: created.id, agent: "plan" })
+      yield* session.switchAgent({ sessionID: created.id, agent: "reviewer" })
 
-      expect(yield* session.get(created.id)).toMatchObject({ agent: "plan" })
+      expect(yield* session.get(created.id)).toMatchObject({ agent: "reviewer" })
       expect(
         Array.from(yield* session.events({ sessionID: created.id }).pipe(Stream.take(1), Stream.runCollect)),
-      ).toMatchObject([{ type: "session.next.agent.switched", data: { agent: "plan" } }])
+      ).toMatchObject([{ type: "session.next.agent.switched", data: { agent: "reviewer" } }])
     }),
   )
 
@@ -342,7 +342,7 @@ describe("SessionV2.create", () => {
       const missing = SessionV2.ID.make("ses_missing_agent_switch")
 
       expect(
-        yield* session.switchAgent({ sessionID: missing, agent: "plan" }).pipe(
+        yield* session.switchAgent({ sessionID: missing, agent: "reviewer" }).pipe(
           Effect.flip,
           Effect.map((error) => error._tag),
         ),
