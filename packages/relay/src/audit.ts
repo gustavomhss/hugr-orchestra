@@ -14,7 +14,7 @@ import { LedgerVerify } from "./ledger/verify"
 // and messages are the Python JSON's. Values `problems` and `cost` copy from the ledger keep whatever type was recorded,
 // as Python passes them through, so they are typed `unknown`. Where Python raised on a record it could not process
 // (a traceback, exit 1, no JSON), `problems` and `cost` fail with `LedgerRead.ReadError` carrying the exception's
-// message. Runtime APIs are Node's only: the desktop server runs this under Node, not Bun.
+// message. Runtime APIs are Node's only, because the desktop server runs this module under Node.
 
 export interface Control {
   readonly id: string
