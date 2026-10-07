@@ -11,6 +11,8 @@ import { AppProcess } from "./process"
 import { Global } from "./global"
 import { LayerNode } from "./effect/layer-node"
 import { OutputInspector } from "./output-inspector"
+import type { RelayHook } from "@opencode-ai/schema/relay-hook"
+import { ToolSafetyHooks } from "./tool-safety-hooks"
 
 /** Host-bound preferences, never decoded from tool arguments or inherited environment waivers. */
 export type Profile = {
@@ -33,6 +35,29 @@ export type Profile = {
     /** Where no sandbox can run, run the command without the write jail and report it instead of holding it. */
     readonly unconfinedFallback?: boolean
   }
+  /** Installed Relay hooks (`hooks.json`), pinned per install. Only ToolSafety.run enforces them; they grant nothing. */
+  readonly hooks?: ReadonlyArray<RelayHook.Install>
+}
+
+// Profiles a loader made only to carry hooks: to the native checks and to the tool they are no profile at all, as
+// before any hook was installed.
+const hookCarriers = new WeakSet<Profile>()
+
+/** Attaches installed hooks to a loaded profile without making a profile where there was none. */
+export const withHooks = (profile: Profile | undefined, hooks: ReadonlyArray<RelayHook.Install>): Profile | undefined => {
+  if (hooks.length === 0) return profile
+  const base = native(profile)
+  if (base) return { ...base, hooks } satisfies Profile
+  const carrier = { hooks } satisfies Profile
+  hookCarriers.add(carrier)
+  return carrier
+}
+
+// The profile the native checks and the tool see; hooks are ToolSafety.run's alone.
+const native = (profile: Profile | undefined): Profile | undefined => {
+  if (!profile?.hooks) return profile
+  if (hookCarriers.has(profile)) return undefined
+  return { ...profile, hooks: undefined }
 }
 
 /** Host fact about the write jail of sandbox-bound shell commands. */
@@ -72,6 +97,8 @@ export type Approval = {
   readonly action: string
   readonly resources: readonly string[]
   readonly invocation: Invocation
+  /** A hook's own words for the approval card; askBefore approvals have none. */
+  readonly message?: string
 }
 export const NativeHost = Context.Reference<{
   /** Must await actual native permission decision; preferences never grant authority. */
@@ -84,11 +111,18 @@ export const RuntimeProfileLoader = Context.Reference<(() => Effect.Effect<Profi
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied", {
   reason: Schema.String,
+  /** Words for the model after the reason, such as the message of the hook that denied the call. */
+  detail: Schema.optional(Schema.String),
 }) {
   override get message() {
-    return `Tool safety HOLD: ${this.reason}`
+    return this.detail === undefined ? `Tool safety HOLD: ${this.reason}` : `Tool safety HOLD: ${this.reason}. ${this.detail}`
   }
 }
+
+// The call whose hooks an outer ToolSafety.run already enforces; a nested run of the same call does not repeat them.
+const HookedCall = Context.Reference<string | undefined>("@opencode/ToolSafety/HookedCall", {
+  defaultValue: () => undefined,
+})
 
 export type Invocation = {
   readonly tool: string
@@ -141,6 +175,8 @@ export const make = Effect.gen(function* () {
   const fs = Option.getOrUndefined(yield* Effect.serviceOption(FSUtil.Service))
   const processService = Option.getOrUndefined(yield* Effect.serviceOption(AppProcess.Service))
   const global = Option.getOrUndefined(yield* Effect.serviceOption(Global.Service))
+  // Hook services missing from a call's context are looked up where ToolSafety was built.
+  const ambient = yield* Effect.context<never>()
 
   const canonical = Effect.fnUntraced(function* (target: string): Effect.fn.Return<string, Denied> {
     if (!fs) return yield* new Denied({ reason: "filesystem-acquisition" })
@@ -167,7 +203,7 @@ export const make = Effect.gen(function* () {
       const reason = ToolSafetyCommands.reason(command)
       if (reason) return yield* new Denied({ reason })
     }
-    const profile = yield* RuntimeProfile
+    const profile = native(yield* RuntimeProfile)
     if (command && /\bgit\b[^\n;&|]*\b(?:add|commit)\b/.test(command)) {
       if (!input.directory || !fs || !processService)
         return yield* new Denied({ reason: "git-hygiene-native-binding-missing" })
@@ -268,15 +304,24 @@ export const make = Effect.gen(function* () {
     return Effect.gen(function* () {
       report.cell = (yield* ShellReport) ?? report.cell
       const loader = yield* RuntimeProfileLoader
-      const profile = loader ? yield* loader() : yield* RuntimeProfile
+      // Loaded once: the whole call, its after hooks included, keeps this snapshot even if hooks.json changes meanwhile.
+      const loaded = loader ? yield* loader() : yield* RuntimeProfile
+      const profile = native(loaded)
       yield* before(input).pipe(Effect.provideService(RuntimeProfile, profile))
+      const outer = yield* HookedCall
+      const hooked = loaded?.hooks && outer !== input.callID
+        ? yield* ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
+        : undefined
       yield* observe({ ...observation, outcome: "started" })
-      return yield* effect.pipe(
+      const value = yield* effect.pipe(
         Effect.provideService(RuntimeProfile, profile),
         Effect.provideService(NativeContext, input.directory ? { directory: input.directory, projectID: input.projectID } : undefined),
         Effect.provideService(ShellReport, report.cell),
+        Effect.provideService(HookedCall, hooked ? input.callID : outer),
         sanitizeFailure,
       )
+      if (!hooked) return value
+      return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
     }).pipe(Effect.onExit((exit) => {
       const shell = report.cell.fact
       if (shell) {
