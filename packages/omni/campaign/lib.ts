@@ -54,8 +54,6 @@ export function isolated(name: string, config: Record<string, unknown>) {
   const home = realpathSync(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
   const project = path.join(home, "project")
   mkdirSync(project, { recursive: true })
-  const git = spawnSync("git", ["init", "-q"], { cwd: project })
-  if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)
   writeFileSync(path.join(project, "a.ts"), "export const a = 1\n")
   const env: Record<string, string> = {}
   for (const [key, value] of Object.entries(process.env))
@@ -64,11 +62,19 @@ export function isolated(name: string, config: Record<string, unknown>) {
     OPENCODE_TEST_HOME: home,
     HOME: home,
     USERPROFILE: home,
+    APPDATA: path.join(home, "AppData/Roaming"),
+    LOCALAPPDATA: path.join(home, "AppData/Local"),
+    PWD: project,
+    GIT_CONFIG_GLOBAL: path.join(home, ".gitconfig"),
+    GIT_CONFIG_NOSYSTEM: "1",
     XDG_CONFIG_HOME: path.join(home, ".config"),
     XDG_DATA_HOME: path.join(home, ".local/share"),
     XDG_STATE_HOME: path.join(home, ".local/state"),
     XDG_CACHE_HOME: path.join(home, ".cache"),
-    OPENCODE_CONFIG_CONTENT: JSON.stringify(config.provider ? { ...config, agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } }, ...(config.agent as Record<string, unknown>) } } : config),
+    OPENCODE_CONFIG_CONTENT: JSON.stringify(config.provider ? {
+      ...config,
+      agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } }, ...(config.agent as Record<string, unknown>) },
+    } : config),
     OPENCODE_DISABLE_PROJECT_CONFIG: "1",
     OPENCODE_PURE: "1",
     OPENCODE_DISABLE_AUTOUPDATE: "1",
@@ -79,6 +85,8 @@ export function isolated(name: string, config: Record<string, unknown>) {
     OPENCODE_DISABLE_EXTERNAL_SKILLS: "1",
     OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
   })
+  const git = spawnSync("git", ["init", "-q"], { cwd: project, env })
+  if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)
   return { home, project, env }
 }
 
@@ -112,8 +120,8 @@ export function provider(url: string) {
 export type ToolCall = { name: string; args: Record<string, unknown> }
 
 /**
- * A minimal OpenAI-compatible chat-completions server. The first request that offers any of `calls` gets those it
- * offers as parallel tool calls; every other request (tool results, titles) gets a short text answer.
+ * A minimal OpenAI-compatible chat-completions server. The first request offering all requested tools gets them
+ * as parallel tool calls; every other request (tool results, titles) gets a short text answer.
  */
 export async function fakeLLM(calls: ToolCall[]) {
   const seen: string[] = []
@@ -235,22 +243,25 @@ export function table() {
         "-NoProfile",
         "-NonInteractive",
         "-Command",
-        "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress",
+        "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine | ConvertTo-Json -Compress",
       ],
       { encoding: "utf8", windowsHide: true, maxBuffer: 64 * 1024 * 1024 },
     )
     if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
     const rows = JSON.parse(out.stdout) as { ProcessId: number; ParentProcessId: number; CommandLine: string | null }[]
     if (!Array.isArray(rows) || rows.length === 0) throw new Error("Get-CimInstance returned no process table")
+    if (!rows.some((row) => row.ProcessId === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
     return rows.filter((row) => row.ProcessId !== out.pid).map((row) => ({ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine ?? "" }))
   }
   const out = spawnSync("ps", process.platform === "darwin" ? ["-axww", "-o", "pid=,ppid=,args="] : ["-eww", "-o", "pid=,ppid=,args="], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
-  return out.stdout.split("\n")
+  const rows = out.stdout.split("\n")
     .map((line) => line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/))
     .filter((match) => match !== null)
     .map((match) => ({ pid: Number(match[1]), parent: Number(match[2]), args: match[3]! }))
     .filter((row) => row.pid !== out.pid)
+  if (!rows.some((row) => row.pid === process.pid)) throw new Error("ps returned an incomplete or malformed process table (querying host missing)")
+  return rows
 }
 
 const SUPERVISOR = /(^|[\\/"])hugr-omni-supervisor(\.exe)?("|\s|$)/
@@ -298,7 +309,7 @@ export async function cleanup(marker: string, nonces: string[]) {
   hosts.delete(marker)
 }
 
-/** Counts the nonce trees still alive: records and process-table sweep, the max of both. */
+/** Counts the nonce trees still alive: records plus the shared sweep and checked table, taking their maximum. */
 export async function remaining(nonce: string) {
   return Math.max(await alive(nonce), (await sweep(nonce)).length, mentioning(nonce).length)
 }

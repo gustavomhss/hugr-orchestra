@@ -92,7 +92,7 @@ export async function run() {
     step(`recovery: ${JSON.stringify(recovered)}; supervisors now ${fresh.join(",")}; new tree supervised ${newSupervised}`)
 
     // Then the host dies: the tree under the new supervisor must go; the orphaned ones are the declared Unix hole.
-    kill9(host.pid)
+    if (!kill9(host.pid)) throw new Error(`could not kill host ${host.pid}`)
     await sleep(8_000)
     const afterHost = {
       after: await remaining(trees.after.nonce),
@@ -107,6 +107,8 @@ export async function run() {
           matches: after.bash === trees.bash.size && after.pty === trees.pty.size,
         }
     return verdict("v3-supervisor", {
+      home: scratch.home,
+      nonces,
       kpi: "outcome matches GUARANTEES tier; the server recovers on the next spawn",
       supervised: control,
       killedSupervisors: supervisors,

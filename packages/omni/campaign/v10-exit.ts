@@ -3,9 +3,10 @@
 // Desktop V10 belongs to the lead's Electron harness.
 // Run: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v10-exit.ts
 import path from "node:path"
-import { BUN, OPENCODE, cleanup, cli, client, fakeLLM, fileTree, isolated, mentioning, provider, remaining, serve, supervised, supervisorsOf, table, until, verdict } from "./lib.ts"
+import { BUN, OPENCODE, cleanup, cli, client, fakeLLM, fileTree, isolated, mentioning, provider, remaining, serve, supervised, supervisorsOf, table, until, verdict, win } from "./lib.ts"
 
 export async function run() {
+  if (win) return verdict("v10-exit", { target: "serve", pass: false, error: "Windows V10 needs a real console graceful-quit harness; SIGTERM there terminates instead of running Unix shutdown handlers" })
   const scratch = isolated("v10", {})
   const tree = fileTree(scratch.home, 1)
   const lspNonce = `omni-lsp-${tree.nonce.slice(10)}`

@@ -3,7 +3,7 @@
 // Run: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v1-background.ts
 import { appendFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { alive, cleanup, cli, client, fakeLLM, fileTree, isolated, mentioning, provider, remaining, serve, sleep, supervised, until, verdict } from "./lib.ts"
+import { alive, cleanup, cli, client, fakeLLM, fileTree, isolated, mentioning, provider, remaining, serve, sleep, supervised, until, verdict, win } from "./lib.ts"
 
 type Message = {
   info: { role: string; finish?: string; error?: unknown }
@@ -12,6 +12,7 @@ type Message = {
 type Listed = { id: string; pid: number; title: string; output: string; written: number; processes: { pid: number }[] }
 
 export async function run() {
+  if (win) return verdict("v1-background", { pass: false, error: "Windows V1 needs a shell-specific background/readiness barrier; this harness uses Unix bash" })
   const scratch = isolated("v1", {})
   const tree = fileTree(scratch.home, 2)
   // Keep output flowing after the two-second drain grace, so the registry's ring is exercised.
@@ -20,7 +21,7 @@ export async function run() {
   // Background descendants reparent to init when bash exits; measure supervisor ancestry before that boundary.
   const llm = await fakeLLM([{ name: "bash", args: { command: `${tree.line} & while [ ! -f "${release}" ]; do sleep 0.05; done`, timeout: 600_000, description: "Start background dev-server tree" } }])
   const config = {
-    formatter: false, lsp: false, share: "disabled", model: "test/test-model", provider: provider(llm.url),
+    formatter: false, lsp: false, shell: "/bin/bash", share: "disabled", model: "test/test-model", provider: provider(llm.url),
     permission: { "*": "allow" }, agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
   }
   const env = { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) }

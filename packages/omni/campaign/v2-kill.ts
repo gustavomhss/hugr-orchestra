@@ -73,7 +73,6 @@ async function hold() {
 }
 
 async function host(target: "serve" | "tui") {
-  if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   if (target === "tui" && win) return verdict("v2-tui", { target, pass: false, error: "Windows TUI requires a real console harness; python pty is Unix-only" })
   const bin = cli()
   const scratch = isolated(`v2-${target}`, {})
@@ -181,9 +180,18 @@ async function host(target: "serve" | "tui") {
     step(`kill -9 ${started.pid}`)
     let zeroAt: number | undefined
     const all = [...nonces, lspNonce, mcpNonce]
+    const samples: { atMs: number; counts: number[]; supervisors: number; host: number }[] = []
     while (Date.now() - killed < KPI_MS) {
-      const counts = await Promise.all(all.map((nonce) => sweep(nonce).then((rows) => rows.length)))
-      if (zeroAt === undefined && counts.every((count) => count === 0)) zeroAt = Date.now() - killed
+      // One checked OS snapshot includes the supervisor too; a later final sweep cannot establish the 8 s bound.
+      const rows = table()
+      const sample = {
+        atMs: Date.now() - killed,
+        counts: all.map((nonce) => rows.filter((row) => row.args.includes(nonce)).length),
+        supervisors: rows.filter((row) => supervisors.includes(row.pid)).length,
+        host: rows.filter((row) => row.pid === started.pid).length,
+      }
+      samples.push(sample)
+      if (zeroAt === undefined && sample.counts.every((count) => count === 0) && sample.supervisors === 0 && sample.host === 0) zeroAt = sample.atMs
       await sleep(250)
     }
     await sleep(Math.max(0, KPI_MS - (Date.now() - killed)))
@@ -197,10 +205,16 @@ async function host(target: "serve" | "tui") {
       supervisors: table().filter((row) => supervisors.includes(row.pid)).length,
     }
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args.slice(0, 160)}`)
-    step(`8 s after the kill: ${JSON.stringify(after)}; zero at ${zeroAt} ms; leftovers mentioning the temp home: ${leftovers.length}`)
+    step(`final verification at ${Date.now() - killed} ms: ${JSON.stringify(after)}; all trees + supervisors zero at ${zeroAt} ms; leftovers mentioning the temp home: ${leftovers.length}`)
     const total = Object.values(after).reduce((sum, count) => sum + count, 0)
     return verdict(`v2-${target}`, {
       target,
+      home,
+      nonces: all,
+      hostPid: started.pid,
+      supervisorPids: supervisors,
+      observationEndedMs: Date.now() - killed,
+      samples,
       kpi: "0 omni-tree processes 8 s after kill -9 of the host",
       live,
       supervised: control,
@@ -209,7 +223,7 @@ async function host(target: "serve" | "tui") {
       leftovers,
       llm: llm.seen,
       offered: llm.offered,
-      pass: Object.values(control).every(Boolean) && total === 0 && leftovers.length === 0,
+      pass: Object.values(control).every(Boolean) && zeroAt !== undefined && zeroAt <= KPI_MS && total === 0 && leftovers.length === 0,
       steps,
     })
   } catch (error) {
