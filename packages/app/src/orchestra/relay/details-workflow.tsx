@@ -42,6 +42,9 @@ export function WorkflowDetails(props: Props) {
   const copy = useRelayCopy()
   const order = () => chain(props.flow)
   const index = () => order().findIndex((node) => node.id === props.node.id)
+  // Kept out of the JSX: a condition inside a prop compiles to a memo, and NodeDetails reads `next` in its click
+  // handler, where that memo has no owner, outlives the layer and throws a stale read when the layer closes.
+  const next = () => (index() >= 0 ? order()[index() + 1] : undefined)
   const kindLabel = () => {
     if (props.node.type === START) return copy.t("orchestra.workflows.details.startKind")
     const key = workflowKey(props.node.type)
@@ -60,7 +63,7 @@ export function WorkflowDetails(props: Props) {
       node={props.node}
       kind={kindLabel()}
       previous={order()[index() - 1]}
-      next={index() >= 0 ? order()[index() + 1] : undefined}
+      next={next()}
       input={<Input {...props} />}
       params={<Params {...props} />}
       output={<Output {...props} />}
