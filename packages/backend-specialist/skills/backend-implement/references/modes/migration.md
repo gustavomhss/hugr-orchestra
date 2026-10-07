@@ -25,6 +25,7 @@ An assigned transition between supported states or versions: a schema or data ph
 ## Tools and outputs
 
 - The project's migration runner or contract generator; the recipe depends on the domain.
+- Toolkit engine, only for a SQLx project's assigned migrations or query metadata: [sqlx](../recipes/external/sqlx.md).
 - Output: the phase artifacts, the affected queries or bindings, and the transition evidence.
 
 ## Limits and checks

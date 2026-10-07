@@ -14,12 +14,29 @@ const targets = engines.flatMap((engine) =>
 )
 
 describe("backend toolkit manifest", () => {
-  test("the second cut adds exactly four hosted engines, each on a declared runtime", () => {
+  test("the second and source cuts add exactly six hosted engines, each on a declared runtime", () => {
     const hosted = Object.values(BackendToolkitManifest.ENGINES).filter(
       (engine): engine is BackendToolkitManifest.HostedEngine => "runtime" in engine,
     )
-    expect(hosted.map((engine) => engine.id).sort()).toEqual(["datamodel-codegen", "openapi-generator", "orval", "protoc-gen-es"])
+    expect(hosted.map((engine) => engine.id).sort()).toEqual([
+      "datamodel-codegen",
+      "ogen",
+      "openapi-generator",
+      "orval",
+      "protoc-gen-es",
+      "sqlx",
+    ])
     for (const engine of hosted) expect(BackendToolkitManifest.RUNTIMES[engine.runtime].id).toBe(engine.runtime)
+  })
+
+  test("ogen is built from source by the Go toolchain and sqlx by the Rust toolchain (ruling M5-1)", () => {
+    const built = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).flatMap((engine) =>
+      "runtime" in engine && engine.install.kind === "source" ? [[engine.id, engine.runtime, engine.install.build, engine.launch.length]] : [],
+    )
+    expect(built.sort()).toEqual([
+      ["ogen", "go", "go", 0],
+      ["sqlx", "rust", "cargo", 0],
+    ])
   })
 
   test("pins exactly the five first-cut native engines at their ruled versions and licenses", () => {

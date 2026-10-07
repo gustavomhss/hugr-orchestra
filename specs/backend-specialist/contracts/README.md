@@ -114,3 +114,12 @@ Ruling M4-1, written into `f5-f6-toolkit-skills.md` as "Amendment M4":
 - npm and pip closures are pinned by lockfile and hash list: `npm ci --ignore-scripts` over a lockfile with an integrity for every package, `pip install --require-hashes --no-deps --only-binary=:all:` over a list with a sha256 for every wheel; a jar is pinned by its own digest.
 - Runtimes are shared per user cache: one install per version and target under `<TK>/runtimes/<id>/<version>-<target>/`, used by every engine on it.
 - A runtime that cannot be made ready blocks its engines with `toolkit-not-ready:failed:<engine>:runtime-<cause>`.
+
+## 8. F5 Amendment M5 (2026-10-06)
+
+Ruling M5-1, written into `f5-f6-toolkit-skills.md` as "Amendment M5":
+
+- `ogen` and `sqlx` (sqlx-cli) are built by the host once per user cache from pinned source with a pinned toolchain runtime (`go`, `rust`); no third-party binary is hosted or signed by us.
+- Sources are pinned archives (Go module zip, published `.crate`); dependencies are pinned by `go.sum` with the checksum DB and `-mod=readonly`, and by the packaged `Cargo.lock` with `--locked`.
+- The built binary is the engine's executable and the shim execs it; a failed build is `install:go` or `install:cargo`, a missing toolchain `runtime-<cause>`.
+- Prefetch for another target refuses a source engine with `cross-target:source`. An engine can be unsupported on one target with its own reason (`sqlx` on Windows: `needs-msvc-linker`).

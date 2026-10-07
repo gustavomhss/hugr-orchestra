@@ -3,7 +3,7 @@ export * as BackendToolkit from "./index"
 import path from "path"
 import { randomUUID } from "crypto"
 import { execFile } from "child_process"
-import { chmod, mkdir, readFile, rename, rm, writeFile } from "fs/promises"
+import { access, chmod, mkdir, readFile, rename, rm, writeFile } from "fs/promises"
 import { promisify } from "util"
 import { Context, Effect, Schema } from "effect"
 import { Global } from "../global"
@@ -18,6 +18,8 @@ import { detect, type TargetId } from "./target"
 // A hosted engine (ruling M4-1) first needs its private runtime, installed once per user into
 // `<root>/runtimes/<id>/<version>-<target>/` and shared by every engine on it. Its own install then carries a launcher
 // `<id>` (`<id>.cmd` for Windows) that runs the runtime with the engine's arguments; that launcher is its executable.
+// A source engine (ruling M5-1) is instead built once from its pinned source by the runtime toolchain; the built binary
+// is its executable and the shim execs it.
 
 export type EngineState =
   | { readonly status: "absent" }
@@ -29,7 +31,10 @@ export type EngineState =
 /** One engine's state on one target; `target` is absent only when the host has no supported target. */
 export type State = { readonly engine: EngineId; readonly version: string; readonly target?: TargetId } & EngineState
 
-/** `reason` is `toolkit-not-ready:failed:<engine>:<cause>` or `unsupported-target:<reason>`. */
+/**
+ * `reason` is `toolkit-not-ready:failed:<engine>:<cause>` or `unsupported-target:<reason>`, where an engine's own
+ * unsupported target gives its manifest reason.
+ */
 export class NotReady extends Schema.TaggedErrorClass<NotReady>()("BackendToolkit.NotReady", {
   reason: Schema.String,
 }) {
@@ -58,7 +63,8 @@ export const Target = Context.Reference<ReturnType<typeof detect>>("@opencode/Ba
 
 // A failed fetch is retried by a later need after this window, not by every command.
 const RETRY_MS = 5 * 60_000
-const INSTALL_MS = 10 * 60_000
+// A cold cargo build of a CLI with its whole dependency graph takes minutes.
+const INSTALL_MS = 30 * 60_000
 
 // Keyed by install directory. Concurrent needs share the running fetch, which resolves to its failure cause.
 const attempts = new Map<string, { readonly running?: Promise<string | undefined>; readonly failed?: string; readonly at: number }>()
@@ -120,6 +126,8 @@ const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, hos
   const engine = (yield* Manifest)[id]
   const runtimes = yield* Runtimes
   const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
+  const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
+  if (unsupported) return yield* new NotReady({ reason: `unsupported-target:${unsupported}` })
   const work =
     "runtime" in engine
       ? hosted(root, engine, runtimes[engine.runtime], directory, target, host)
@@ -163,8 +171,8 @@ const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect
 })
 
 /**
- * Install the engine's runtime (shared, `runtime-<cause>` on failure), then the engine with its launcher. npm and pip
- * run the target's own interpreter, so they install only for the host target.
+ * Install the engine's runtime (shared, `runtime-<cause>` on failure), then the engine with its launcher. npm, pip and
+ * source builds run the target's own interpreter or toolchain, so they install only for the host target.
  */
 function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
   const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
@@ -174,12 +182,16 @@ function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory:
   const expand = (text: string) => text.replaceAll("{install}", directory).replaceAll("{runtime}", home)
   const install = engine.install
   const env = Object.entries({ ...(install.kind === "pip" ? { PYTHONPATH: "{install}" } : {}), ...engine.env })
-  const text = launcher(windows, [interpreter, ...engine.launch.map(expand)], Object.fromEntries(env.map(([key, value]) => [key, expand(value)])))
+  const text = launcher(
+    windows,
+    install.kind === "source" ? [executable(engine, directory, target)] : [interpreter, ...engine.launch.map(expand)],
+    Object.fromEntries(env.map(([key, value]) => [key, expand(value)])),
+  )
   return Effect.gen(function* () {
     if (install.kind !== "jar" && !host) return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
     const cause = yield* once(home, PinnedArtifact.install(home, [pin.artifact]))
     if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
-    yield* PinnedArtifact.install(directory, install.kind === "jar" ? [install.artifact] : [], (staging) =>
+    yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source" ? [install.artifact] : [], (staging) =>
       Effect.tryPromise({
         try: async () => {
           if (install.kind === "npm") {
@@ -204,11 +216,45 @@ function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory:
               { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
             )
           }
+          // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
+          if (install.kind === "source" && install.build === "go")
+            await run(interpreter, ["build", "-trimpath", "-o", executable(engine, staging, target), install.path], path.join(staging, "src"), {
+              GOFLAGS: "-mod=readonly",
+              GOTOOLCHAIN: "local",
+              GOPATH: path.join(root, "cache", "go"),
+              GOCACHE: path.join(root, "cache", "go-build"),
+              GOPROXY: "https://proxy.golang.org",
+              GOSUMDB: "sum.golang.org",
+              CGO_ENABLED: "0",
+            })
+          // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
+          // RUSTC names one, so it names the toolchain's own.
+          if (install.kind === "source" && install.build === "cargo")
+            await run(
+              interpreter,
+              [
+                "install",
+                "--path",
+                path.join(staging, "src", install.path),
+                "--locked",
+                "--root",
+                staging,
+                "--no-default-features",
+                ...(install.features?.length ? ["--features", install.features.join(",")] : []),
+              ],
+              path.join(staging, "src"),
+              {
+                CARGO_HOME: path.join(root, "cache", "cargo"),
+                CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
+                RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
+              },
+            )
+          if (install.kind === "source") return access(executable(engine, staging, target))
           const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
           await writeFile(file, text)
           await chmod(file, 0o755)
         },
-        catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind}` }),
+        catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind === "source" ? install.build : install.kind}` }),
       }),
     )
     if (host) yield* shim(root, engine.id, text)
@@ -219,6 +265,12 @@ const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record
   promisify(execFile)(file, [...args], { cwd, env: { ...process.env, ...env }, timeout: INSTALL_MS, maxBuffer: 64 * 1024 * 1024 })
 
 function executable(engine: Engine, directory: string, target: TargetId) {
+  const install = "runtime" in engine ? engine.install : undefined
+  if (install?.kind === "source") {
+    const name = target === "win32-x64" ? `${install.binary}.exe` : install.binary
+    // `go build -o` writes where it is told; `cargo install --root` writes under bin/.
+    return install.build === "go" ? path.join(directory, name) : path.join(directory, "bin", name)
+  }
   if ("runtime" in engine) return path.join(directory, target === "win32-x64" ? `${engine.id}.cmd` : engine.id)
   return path.join(directory, engine.targets[target].executable)
 }
@@ -231,6 +283,8 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       const engine = manifest[id]
       const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
       const base = { engine: id, version: engine.version, target }
+      const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
+      if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State
       if (yield* PinnedArtifact.installed(directory))
         return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State
       const attempt = attempts.get(directory)
