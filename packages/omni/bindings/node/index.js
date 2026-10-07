@@ -4,17 +4,49 @@
 // handler and no exit hook: when the host dies, the supervisor stops its trees (ADR-0005 §9).
 "use strict";
 
-const { existsSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
-/** The platform packages `hugr-omni-<id>` (ADR-0004): each holds the addon and, next to it, the supervisor. */
+/**
+ * The platform packages `hugr-omni-<id>` (ADR-0004), by `<process.platform>-<process.arch>` and, on Linux, the C
+ * library: each holds the addon and, next to it, the supervisor.
+ */
 const PLATFORMS = {
   "win32-x64": "win32-x64-msvc",
+  "win32-arm64": "win32-arm64-msvc",
   "darwin-arm64": "darwin-arm64",
   "darwin-x64": "darwin-x64",
-  "linux-x64": "linux-x64-gnu",
-  "linux-arm64": "linux-arm64-gnu",
+  "linux-x64-glibc": "linux-x64-gnu",
+  "linux-arm64-glibc": "linux-arm64-gnu",
+  "linux-x64-musl": "linux-x64-musl",
+  "linux-arm64-musl": "linux-arm64-musl",
 };
+
+/**
+ * The C library this Linux process runs on, `"glibc"` or `"musl"`, the way napi-rs's loader and detect-libc tell them
+ * apart, without a child process or a dependency: first the text of `/usr/bin/ldd` (glibc's script names the GNU C
+ * Library, Alpine's runs the musl loader); else the diagnostic report, whose `header.glibcVersionRuntime` a glibc runtime
+ * fills (Node, Bun and Deno) and a musl one leaves out (Node and Bun on Alpine, measured). With neither, glibc.
+ */
+function linuxLibc() {
+  try {
+    const ldd = readFileSync("/usr/bin/ldd", "latin1");
+    if (ldd.includes("musl")) return "musl";
+    if (ldd.includes("GNU C Library") || ldd.includes("GNU libc")) return "glibc";
+  } catch {
+    // no ldd (a distroless image), or reading it is denied (Deno without --allow-read): ask the report
+  }
+  try {
+    const header = typeof process.report?.getReport === "function" ? process.report.getReport()?.header : undefined;
+    if (header !== undefined && header !== null && typeof header === "object") return header.glibcVersionRuntime ? "glibc" : "musl";
+  } catch {
+    // no report (Deno without --allow-sys): undecided
+  }
+  return "glibc";
+}
+
+/** This process's key in PLATFORMS: `<platform>-<arch>`, plus `-<libc>` on Linux. */
+const platformKey = () => `${process.platform}-${process.arch}${process.platform === "linux" ? `-${linuxLibc()}` : ""}`;
 
 /** This checkout's Cargo build (`cargo build -p hugr-omni-node`), or `undefined`. */
 function checkoutBuild() {
@@ -44,18 +76,18 @@ const given = (path) => (typeof path === "string" && path !== "" ? path : undefi
 function addonPath() {
   const explicit = given(config.addon) ?? given(process.env.HUGR_OMNI_ADDON);
   if (explicit !== undefined) return explicit;
-  const platform = `${process.platform}-${process.arch}`;
+  const platform = platformKey();
   const id = PLATFORMS[platform];
   const installed = platformPackage(id);
   if (installed !== undefined) return installed;
   const built = config.explicit ? undefined : checkoutBuild();
   if (built !== undefined) return built;
   if (id === undefined) {
-    throw new Error(`hugr-omni: ${platform} is not supported. Supported: ${Object.values(PLATFORMS).join(", ")} (Linux needs glibc).`);
+    throw new Error(`hugr-omni: ${platform} is not supported. Supported: ${Object.values(PLATFORMS).join(", ")}.`);
   }
   throw new Error(
     `hugr-omni: the package hugr-omni-${id} (the native addon for ${platform}) is not installed. Reinstall hugr-omni with optional ` +
-      `dependencies enabled (no --omit=optional / --no-optional)${process.platform === "linux" ? "; Linux needs glibc, Alpine (musl) is not supported" : ""}. ` +
+      `dependencies enabled (no --omit=optional / --no-optional). ` +
       "In a checkout, run `cargo build -p hugr-omni-node`; configure({ addon }) or HUGR_OMNI_ADDON sets the path.",
   );
 }

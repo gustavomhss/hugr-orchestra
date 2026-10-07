@@ -20,9 +20,12 @@
   },
   "optionalDependencies": {
     "hugr-omni-win32-x64-msvc": "0.1.0",
+    "hugr-omni-win32-arm64-msvc": "0.1.0",
     "hugr-omni-darwin-arm64": "0.1.0",
     "hugr-omni-darwin-x64": "0.1.0",
     "hugr-omni-linux-x64-gnu": "0.1.0",
-    "hugr-omni-linux-arm64-gnu": "0.1.0"
+    "hugr-omni-linux-arm64-gnu": "0.1.0",
+    "hugr-omni-linux-x64-musl": "0.1.0",
+    "hugr-omni-linux-arm64-musl": "0.1.0"
   }
 }

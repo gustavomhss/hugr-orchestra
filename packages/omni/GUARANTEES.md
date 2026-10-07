@@ -42,3 +42,15 @@ The promises themselves are `docs/api-contract.md`; the items are `docs/acceptan
 | ConPTY on builds < 26100: per-pseudoconsole handle leak | – | – | declared: 1 handle per terminal session stays in the supervisor on build 20348 (Server 2022); 0 on 26100 and later | W12w, windows.yml run 37067122812 (CONPTY-HANDLES) |
 | C-TS-01 / C-TS-02 TS on Node 22 | green (run 37509111310) | green (run 37509111310) | green (run 37509111310) | runner + ci.yml run 37509111310 |
 | C-TS-02 TS on Bun (fast gate from WP-H on), Node 24 and Deno (release gate) | planned | planned | planned | runner |
+
+## Platform packages (K9)
+
+The OS columns above are Linux (glibc, x64 and arm64), macOS and Windows x64, as CI runs them. The three packages
+WP8a adds inherit a column's design but none of its evidence: each promise there is **planned** until a release run
+(`release.yml`) installs the package clean and runs the quickstart, and the contract suite has run on that platform.
+
+| Package | Column it inherits | Clean install + quickstart (K9) | Contract suite |
+|---|---|---|---|
+| `linux-x64-musl` | Linux (static musl supervisor, as on glibc; the addon links musl dynamically) | planned (node, bun under Alpine; Deno has no musl build) | planned |
+| `linux-arm64-musl` | Linux (same) | planned (node, bun under Alpine; no Deno) | planned |
+| `win32-arm64-msvc` | Windows (Job objects, ConPTY; static CRT, H5) | planned (node, bun, deno on `windows-11-arm`) | planned |
