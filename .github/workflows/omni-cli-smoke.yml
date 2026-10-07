@@ -147,15 +147,12 @@ jobs:
           EOF
           bun .omni-cli-smoke/driver.ts
 
-      # `debug omni` comes with WP3. Until then this step only warns; after, it must print `nonce tree: ok`.
+      # The shipped binary finds the addon and the supervisor next to itself, with no HUGR_OMNI_* to help it.
       - name: debug omni (in-bundle import)
         working-directory: packages/opencode
         run: |
-          bin=$(ls dist/*/bin/opencode dist/*/bin/opencode.exe 2>/dev/null | head -1)
-          if ! "$bin" debug --help 2>&1 | grep -q "debug omni"; then
-            echo "::warning::this tree has no 'opencode debug omni' (WP3); the in-bundle import was not exercised"
-            exit 0
-          fi
+          bin=$(find dist -path '*/bin/opencode' -o -path '*/bin/opencode.exe' | head -1)
+          [ -n "$bin" ] || { echo "::error::no built opencode binary under dist"; exit 1; }
           out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=1 "$bin" debug omni)
           echo "$out"
-          echo "$out" | grep -q "nonce tree: ok"
+          grep -q "nonce tree: ok" <<<"$out"
