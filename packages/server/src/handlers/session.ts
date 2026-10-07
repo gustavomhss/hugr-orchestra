@@ -165,6 +165,10 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
                     }),
                   ),
                 ),
+                // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
+                Effect.catchTag("Session.PromptBlockedError", (error) =>
+                  Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
+                ),
               ),
           }
         }),

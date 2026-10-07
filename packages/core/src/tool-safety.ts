@@ -107,6 +107,8 @@ export type Approval = {
   readonly invocation: Invocation
   /** A hook's own words for the approval card; askBefore approvals have none. */
   readonly message?: string
+  /** A Session event's hook asks with no tool call to bind: its event, such as `prompt.before`. */
+  readonly trigger?: string
 }
 export const NativeHost = Context.Reference<
   | {
@@ -137,8 +139,11 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied
   }
 }
 
-// The call whose hooks an outer ToolSafety.run already enforces; a nested run of the same call does not repeat them.
-const HookedCall = Context.Reference<string | undefined>("@opencode/ToolSafety/HookedCall", {
+/**
+ * The call whose hooks another ToolSafety.run of it enforces, so this run does not repeat them: an outer run, or for V1
+ * the session tools boundary inside the native host's wrapper, which a Promise boundary hides from it.
+ */
+export const HookedCall = Context.Reference<string | undefined>("@opencode/ToolSafety/HookedCall", {
   defaultValue: () => undefined,
 })
 
@@ -269,6 +274,21 @@ export type Invocation = {
   readonly projectDirectory?: string
 }
 
+/**
+ * A Session event installed hooks fire on: `session-start` once a new Session is stored and `session-idle` once a
+ * drain settles, both after the event, and `prompt` before admission. The placement is the Session's Location.
+ */
+export type SessionEvent = {
+  readonly operation: "session-start" | "prompt" | "session-idle"
+  readonly sessionID: string
+  readonly agent?: string
+  readonly directory?: string
+  readonly projectID?: string
+  readonly projectDirectory?: string
+  /** The prompt's text; hooks record only its sha256. */
+  readonly text?: string
+}
+
 /** Audit observations carry identities and outcomes only; they never grant execution authority. */
 export type Observation = {
   readonly tool: string
@@ -291,6 +311,8 @@ export interface Interface {
     observe: (observation: Observation) => Effect.Effect<void>,
     outcome?: (value: A) => "success" | "failure" | "cancelled",
   ) => Effect.Effect<A, E | Denied, R>
+  /** Installed hooks on a Session event, over the profile loaded for it; only a `prompt` denial has an effect to stop. */
+  readonly session: (input: SessionEvent) => Effect.Effect<void, Denied>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/ToolSafety") {}
@@ -523,7 +545,15 @@ export const make = Effect.gen(function* () {
     )
   }
 
-  return Service.of({ before, inspect, run })
+  const session: Interface["session"] = (input) =>
+    Effect.gen(function* () {
+      const loader = yield* RuntimeProfileLoader
+      const loaded = loader ? yield* loader() : yield* RuntimeProfile
+      if (!loaded?.hooks) return
+      yield* ToolSafetyHooks.session({ installs: loaded.hooks, event: input, profile: native(loaded), ambient })
+    })
+
+  return Service.of({ before, inspect, run, session })
 })
 
 /** Stateless boundary usable by native producers before retention, including plugin producers. */

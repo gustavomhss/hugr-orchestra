@@ -666,7 +666,7 @@ export const make = Effect.gen(function* () {
                     Effect.promise(async () => execute(args, options)),
                     true,
                     () => options.abortSignal?.aborted === true,
-                  ).pipe(Effect.orDie),
+                  ).pipe(Effect.provideService(ToolSafety.HookedCall, options.toolCallId), Effect.orDie),
                 ),
             },
           ]

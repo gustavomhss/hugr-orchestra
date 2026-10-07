@@ -19,6 +19,13 @@ export function SessionPermissionDock(props: {
     return value
   }
 
+  // A Relay hook's Ask carries the hook's own words, and each one takes a live reply, so it offers no "always".
+  const hookAsk = () => props.request.metadata?.action === "relay_hook"
+  const hookMessage = () => {
+    const message = props.request.metadata?.message
+    return hookAsk() && typeof message === "string" ? message : ""
+  }
+
   return (
     <DockPrompt
       kind="permission"
@@ -37,14 +44,16 @@ export function SessionPermissionDock(props: {
             <Button variant="ghost" size="normal" onClick={() => props.onDecide("reject")} disabled={props.responding}>
               {language.t("ui.permission.deny")}
             </Button>
-            <Button
-              variant="secondary"
-              size="normal"
-              onClick={() => props.onDecide("always")}
-              disabled={props.responding}
-            >
-              {language.t("ui.permission.allowAlways")}
-            </Button>
+            <Show when={!hookAsk()}>
+              <Button
+                variant="secondary"
+                size="normal"
+                onClick={() => props.onDecide("always")}
+                disabled={props.responding}
+              >
+                {language.t("ui.permission.allowAlways")}
+              </Button>
+            </Show>
             <Button variant="primary" size="normal" onClick={() => props.onDecide("once")} disabled={props.responding}>
               {language.t("ui.permission.allowOnce")}
             </Button>
@@ -52,6 +61,13 @@ export function SessionPermissionDock(props: {
         </>
       }
     >
+      <Show when={hookMessage()}>
+        <div data-slot="permission-row">
+          <span data-slot="permission-spacer" aria-hidden="true" />
+          <div data-slot="permission-hint">{hookMessage()}</div>
+        </div>
+      </Show>
+
       <Show when={toolDescription()}>
         <div data-slot="permission-row">
           <span data-slot="permission-spacer" aria-hidden="true" />

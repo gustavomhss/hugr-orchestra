@@ -23,6 +23,7 @@ import { InstallationVersion } from "./installation/version"
 import { Slug } from "./util/slug"
 import { ProjectTable } from "./project/sql"
 import path from "path"
+import { existsSync } from "fs"
 import { fromRow } from "./session/info"
 import { SessionRunner } from "./session/runner/index"
 import { SessionStore } from "./session/store"
@@ -36,6 +37,8 @@ import { Snapshot } from "./snapshot"
 import { SessionRevert } from "./session/revert"
 import { Revert } from "@opencode-ai/schema/revert"
 import { FSUtil } from "./fs-util"
+import { Global } from "./global"
+import type { ToolSafety } from "./tool-safety"
 import { SessionDurable } from "@opencode-ai/schema/durable-event-manifest"
 
 export const RevertState = Revert.State
@@ -105,10 +108,21 @@ export class PromptConflictError extends Schema.TaggedErrorClass<PromptConflictE
   sessionID: SessionSchema.ID,
   messageID: SessionMessage.ID,
 }) {}
+/** An installed `prompt` hook refused the prompt before admission; `detail` is what the person reads. */
+export class PromptBlockedError extends Schema.TaggedErrorClass<PromptBlockedError>()("Session.PromptBlockedError", {
+  sessionID: SessionSchema.ID,
+  reason: Schema.String,
+  detail: Schema.String,
+}) {}
 export const MessageNotFoundError = SessionRevert.MessageNotFoundError
 export type MessageNotFoundError = SessionRevert.MessageNotFoundError
 
-export type Error = NotFoundError | MessageDecodeError | OperationUnavailableError | PromptConflictError
+export type Error =
+  | NotFoundError
+  | MessageDecodeError
+  | OperationUnavailableError
+  | PromptConflictError
+  | PromptBlockedError
 
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
@@ -150,7 +164,7 @@ export interface Interface {
     prompt: PromptInput.Prompt
     delivery?: SessionInput.Delivery
     resume?: boolean
-  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError>
+  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | PromptBlockedError>
   readonly shell: (input: {
     id?: EventV2.ID
     sessionID: SessionSchema.ID
@@ -191,6 +205,7 @@ const layer = Layer.effect(
     const execution = yield* SessionExecution.Service
     const store = yield* SessionStore.Service
     const locations = yield* LocationServiceMap.Service
+    const global = yield* Global.Service
     const decodeMessage = Schema.decodeUnknownEffect(SessionMessage.Message)
     const isDurableSessionEvent = Schema.is(SessionEvent.Durable)
     const decode = (row: typeof SessionMessageTable.$inferSelect) =>
@@ -203,6 +218,43 @@ const layer = Layer.effect(
             }),
         ),
       )
+
+    // Installed hooks on a Session event, through its Location's tool registry: the profile loader and ToolSafety its
+    // tool calls use. Only a project with a hooks.json opens its Location for them.
+    const hook = Effect.fnUntraced(function* (
+      session: SessionSchema.Info,
+      event: Pick<ToolSafety.SessionEvent, "operation" | "text">,
+    ) {
+      const { RelayHookInstall } = yield* Effect.promise(() => import("./relay-hook-install"))
+      if (!existsSync(RelayHookInstall.file(global.data, session.projectID))) return
+      const { ToolRegistry } = yield* Effect.promise(() => import("./tool/registry"))
+      yield* ToolRegistry.Service.use((registry) =>
+        registry.session({ ...event, sessionID: session.id, ...(session.agent ? { agent: session.agent } : {}) }),
+      ).pipe(Effect.provide(locations.get(session.location)))
+    })
+
+    // Before admission and interruptible, since an Ask waits for a person: a refused prompt is never admitted. A message
+    // ID that already names a durable prompt is left to admission, which reconciles an exact retry or refuses a
+    // conflict, without asking again. It reads the Session first, as admission did.
+    const promptHooks = Effect.fnUntraced(function* (input: {
+      readonly id?: SessionMessage.ID
+      readonly sessionID: SessionSchema.ID
+      readonly prompt: PromptInput.Prompt
+    }) {
+      const session = yield* result.get(input.sessionID)
+      if (input.id && ((yield* SessionInput.find(db, input.id)) || (yield* store.message(input.id)))) return
+      yield* hook(session, { operation: "prompt", text: input.prompt.text }).pipe(
+        Effect.catch((error) =>
+          Effect.fail(
+            new PromptBlockedError({
+              sessionID: session.id,
+              reason: error._tag === "ToolSafety.Denied" ? error.reason : "relay-hook-location-acquisition",
+              detail: error._tag === "ToolSafety.Denied" ? error.message : "Prompt hooks could not be evaluated.",
+            }),
+          ),
+        ),
+      )
+    })
 
     const result = Service.of({
       create: Effect.fn("V2Session.create")(function* (input) {
@@ -258,7 +310,10 @@ const layer = Layer.effect(
           )
         if (projected.type === "existing") return projected.session
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
-        return yield* result.get(sessionID).pipe(Effect.orDie)
+        const created = yield* result.get(sessionID).pipe(Effect.orDie)
+        // `session-start` hooks run once a new Session is stored; their outcome never undoes it.
+        yield* hook(created, { operation: "session-start" }).pipe(Effect.exit)
+        return created
       }),
       get: Effect.fn("V2Session.get")(function* (sessionID) {
         const session = yield* store.get(sessionID)
@@ -358,9 +413,9 @@ const layer = Layer.effect(
         })
       }),
       prompt: Effect.fn("V2Session.prompt")((input) =>
-        Effect.uninterruptible(
+        Effect.uninterruptibleMask((restore) =>
           Effect.gen(function* () {
-            yield* result.get(input.sessionID)
+            yield* restore(promptHooks(input))
             const prompt = resolvePrompt(input.prompt)
             const messageID = input.id ?? SessionMessage.ID.create()
             const delivery = input.delivery ?? "steer"
@@ -482,5 +537,6 @@ export const node = makeGlobalNode({
     SessionStore.node,
     LocationServiceMap.node,
     SessionProjector.node,
+    Global.node,
   ],
 })
