@@ -50,7 +50,8 @@ function runPowerShell(command: string, opts: RunWslOptions = {}) {
   )
 }
 
-function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
+// Exported for its test: wsl.exe writes UTF-16LE, and every command runs through here.
+export function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   return new Promise<WslCommandResult>((resolve, reject) => {
     const child = spawn(command, args, {
       stdio: ["ignore", "pipe", "pipe"],
