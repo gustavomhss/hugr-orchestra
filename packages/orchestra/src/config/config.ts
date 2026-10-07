@@ -11,14 +11,13 @@ import { Flag } from "@orchestra/core/flag/flag"
 import { Auth } from "../auth"
 import { Env } from "../env"
 import { applyEdits, modify } from "jsonc-parser"
-import { InstallationLocal, InstallationVersion } from "@orchestra/core/installation/version"
 import { existsSync } from "fs"
 import { Account } from "@/account/account"
 import { isRecord } from "@/util/record"
 import type { ConsoleState } from "@orchestra/core/v1/config/console-state"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { InstanceState } from "@/effect/instance-state"
-import { Context, Duration, Effect, Exit, Fiber, Layer, Option, Schema } from "effect"
+import { Context, Duration, Effect, Layer, Option, Schema } from "effect"
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { EffectFlock } from "@orchestra/core/util/effect-flock"
 import { containsPath, type InstanceContext } from "../project/instance-context"
@@ -34,7 +33,6 @@ import { ConfigPaths } from "./paths"
 import { ConfigPlugin } from "./plugin"
 import { ConfigVariable } from "./variable"
 import { ConfigV2Compat } from "./v2-compat"
-import { Npm } from "@orchestra/core/npm"
 import { withTransientReadRetry } from "@/util/effect-http-client"
 
 // Custom merge function that concatenates array fields instead of replacing them
@@ -118,7 +116,6 @@ type Info = ConfigV1.Info & {
 type State = {
   config: Info
   directories: string[]
-  deps: Fiber.Fiber<void>[]
   consoleState: ConsoleState
 }
 
@@ -180,7 +177,6 @@ const layer = Layer.effect(
     const authSvc = yield* Auth.Service
     const accountSvc = yield* Account.Service
     const env = yield* Env.Service
-    const npmSvc = yield* Npm.Service
     const http = yield* HttpClient.HttpClient
 
     const readConfigFile = (filepath: string) => fs.readFileStringSafe(filepath).pipe(Effect.orDie)
@@ -416,8 +412,6 @@ const layer = Layer.effect(
           yield* Effect.logDebug("loading config from ORCHESTRA_CONFIG_DIR", { path: Flag.ORCHESTRA_CONFIG_DIR })
         }
 
-        const deps: Fiber.Fiber<void>[] = []
-
         for (const dir of directories) {
           if (dir.endsWith(".orchestra") || dir === Flag.ORCHESTRA_CONFIG_DIR) {
             for (const file of ["orchestra.json", "orchestra.jsonc"]) {
@@ -430,28 +424,9 @@ const layer = Layer.effect(
             }
           }
 
+          // Plugins in this directory import the plugin SDK bundled with Orchestra (PluginSdkRuntime), so nothing is
+          // installed here.
           yield* ensureGitignore(dir).pipe(Effect.orDie)
-
-          const dep = yield* npmSvc
-            .install(dir, {
-              add: [
-                {
-                  name: "@orchestra/plugin",
-                  version: InstallationLocal ? undefined : InstallationVersion,
-                },
-              ],
-            })
-            .pipe(
-              Effect.exit,
-              Effect.tap((exit) =>
-                Exit.isFailure(exit)
-                  ? Effect.logWarning("background dependency install failed", { dir, error: String(exit.cause) })
-                  : Effect.void,
-              ),
-              Effect.asVoid,
-              Effect.forkDetach,
-            )
-          deps.push(dep)
 
           result.command = mergeDeep(result.command ?? {}, yield* Effect.promise(() => ConfigCommand.load(dir)))
           result.agent = mergeDeep(result.agent ?? {}, yield* Effect.promise(() => ConfigAgent.load(dir)))
@@ -583,7 +558,6 @@ const layer = Layer.effect(
         return {
           config: result,
           directories,
-          deps,
           consoleState: {
             consoleManagedProviders: Array.from(consoleManagedProviders),
             activeOrgName,
@@ -612,11 +586,8 @@ const layer = Layer.effect(
       return yield* InstanceState.use(state, (s) => s.consoleState)
     })
 
-    const waitForDependencies = Effect.fn("Config.waitForDependencies")(function* () {
-      yield* InstanceState.useEffect(state, (s) =>
-        Effect.forEach(s.deps, Fiber.join, { concurrency: "unbounded" }).pipe(Effect.asVoid),
-      )
-    })
+    // Config directories no longer receive installed dependencies, so there is nothing left to wait for.
+    const waitForDependencies = () => Effect.void
 
     const update = Effect.fn("Config.update")(function* (config: Info) {
       const dir = yield* InstanceState.directory
@@ -678,7 +649,7 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [FSUtil.node, Auth.node, Account.node, Env.node, Npm.node, httpClient],
+  deps: [FSUtil.node, Auth.node, Account.node, Env.node, httpClient],
 })
 
 export * as Config from "./config"

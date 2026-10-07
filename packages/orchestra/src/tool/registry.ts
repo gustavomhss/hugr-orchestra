@@ -50,6 +50,7 @@ import { LspTool } from "./lsp"
 import * as Truncate from "./truncate"
 import { ApplyPatchTool } from "./apply_patch"
 import { Glob } from "@orchestra/core/util/glob"
+import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
 import path from "path"
 import { pathToFileURL } from "url"
 import { Effect, Layer, Context } from "effect"
@@ -277,6 +278,7 @@ const layer = Layer.effect(
           Glob.scanSync("{tool,tools}/*.{js,ts}", { cwd: dir, absolute: true, dot: true, symlink: true }),
         )
         if (matches.length) yield* config.waitForDependencies()
+        if (matches.length) yield* Effect.promise(() => PluginSdkRuntime.install())
         for (const match of matches) {
           const namespace = path.basename(match, path.extname(match))
           // `match` is an absolute filesystem path from `Glob.scanSync(..., { absolute: true })`.

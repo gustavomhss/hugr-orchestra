@@ -44,7 +44,10 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Effect } from "effect"
 import { createPluginRuntime, type PluginRuntime, type TuiPluginHost } from "@orchestra/tui/plugin/runtime"
 
-ensureRuntimePluginSupport({ additional: keymapRuntimeModules })
+// TUI plugins get the TUI half of the plugin SDK from this process too; PluginSdkRuntime covers the rest.
+ensureRuntimePluginSupport({
+  additional: { ...keymapRuntimeModules, "@orchestra/plugin/tui": () => import("@orchestra/plugin/tui") },
+})
 
 type PluginLoad = {
   options: ConfigPluginV1.Options | undefined
