@@ -250,6 +250,51 @@ describe("opencode run (non-interactive subprocess)", () => {
   )
 
   cliIt.serial(
+    "--format json reports a provider retry and continues after a short retry-after",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.error(429, { error: { message: "Rate limit exceeded" } }, { "retry-after-ms": "10" })
+        yield* llm.text("recovered")
+        const result = yield* opencode.run("retry once", { format: "json" })
+
+        opencode.expectExit(result, 0)
+        const events = opencode.parseJsonEvents(result.stdout)
+        expect(events.map((event) => event.type)).toEqual(["retry", "step_start", "text", "step_finish"])
+        expect(events[0]?.retry).toEqual(
+          expect.objectContaining({ type: "retry", attempt: 1, sessionID: events[0]?.sessionID }),
+        )
+      }),
+    60_000,
+  )
+
+  // A quota answers 429 with a retry-after of hours; run must fail fast instead of sleeping through it silently.
+  cliIt.serial(
+    "aborts with an error when the provider asks to retry later than run waits",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.error(429, { error: { message: "Rate limit exceeded" } }, { "retry-after": "75600" })
+        const json = yield* opencode.run("hit the quota", { format: "json" })
+
+        expect(json.exitCode).not.toBe(0)
+        const events = opencode.parseJsonEvents(json.stdout)
+        expect(events[0]?.type).toBe("retry")
+        expect(events).toContainEqual(
+          expect.objectContaining({
+            type: "error",
+            error: { name: "RetryWaitTooLong", data: { message: expect.stringContaining("retry in 20h 59m") } },
+          }),
+        )
+
+        yield* llm.error(429, { error: { message: "Rate limit exceeded" } }, { "retry-after": "75600" })
+        const text = yield* opencode.run("hit the quota again")
+        expect(text.exitCode).not.toBe(0)
+        expect(text.stderr).toContain("retry 1 in 20h 59m")
+        expect(text.stderr).toContain("longer than run waits (10m 0s)")
+      }),
+    60_000,
+  )
+
+  cliIt.serial(
     "rejects requested permissions by default and allows them with the dangerous flag",
     ({ home, llm, opencode }) =>
       Effect.gen(function* () {
