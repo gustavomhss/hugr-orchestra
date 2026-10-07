@@ -302,14 +302,11 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.wsl.error.executeDistro": "Cannot execute commands in distro",
   "desktop.wsl.error.installWsl": "WSL installation failed",
   "desktop.wsl.error.installDistro": "Failed to install distro: {{distro}}",
-  "desktop.wsl.error.installOpencode": "Server installation failed",
+  "desktop.wsl.error.installUnavailable": "Installing the server in WSL is not available yet",
   "desktop.wsl.error.alreadyAdded": "{{distro}} is already added",
-  "desktop.wsl.error.opencodeMissing": "The server is not installed in this distro",
-  "desktop.wsl.error.opencodeCannotRun": "The server is installed but could not run",
-  "desktop.wsl.error.opencodeNotInstalled": "The server is not installed in {{distro}}",
-  "desktop.wsl.error.updateVersion":
-    "Server update finished but {{distro}} still reports {{installed}}; expected {{expected}}",
-  "desktop.wsl.error.noVersion": "no version",
+  "desktop.wsl.error.serverMissing": "The server is not installed in this distro",
+  "desktop.wsl.error.serverCannotRun": "The server is installed but could not run",
+  "desktop.wsl.error.serverNotInstalled": "The server is not installed in {{distro}}",
   "desktop.wsl.error.serverExited": "WSL server exited after startup (code={{code}} signal={{signal}})",
   "desktop.wsl.error.serverExitedBeforeHealthy":
     "WSL server exited before becoming healthy (code={{code}} signal={{signal}}){{output}}",

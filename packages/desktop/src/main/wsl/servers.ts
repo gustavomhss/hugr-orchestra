@@ -13,12 +13,11 @@ import type {
 } from "../../preload/types"
 import { WSL_SERVERS_KEY } from "../store-keys"
 import { getStore } from "../store"
-import { expectOpencodeVersion, pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
-import { clearWslDistroState, wslServerIdToRestart } from "./policy"
+import { pendingRestartAfterWslInstall, wslServerIdsToStartOnInitialize } from "./startup"
+import { clearWslDistroState } from "./policy"
 import { nativeT } from "../native-translations"
 import {
   installWslDistro,
-  installWslOpencode,
   installWslRuntimeElevated,
   listInstalledWslDistros,
   listOnlineWslDistros,
@@ -137,10 +136,6 @@ export function createWslServersController(
       ? await (options?.readCommandVersion ?? readWslCommandVersion)(resolved, distro, opts)
       : null
     return opencodeCheck(distro, resolved, version, appVersion)
-  }
-
-  const refreshOpencodeCheck = async (distro: string, opts?: { signal?: AbortSignal }) => {
-    setOpencodeCheck(distro, await checkOpencode(distro, opts))
   }
 
   const probeAddableDistros = async (distros: string[], opts?: { signal?: AbortSignal }) => {
@@ -360,17 +355,9 @@ export function createWslServersController(
       })
     },
 
-    async installOpencode(name: string) {
-      await runJob({ kind: "install-opencode", distro: name, startedAt: Date.now() }, async (abort) => {
-        const result = await installWslOpencode(appVersion, name, { signal: abort.signal })
-        if (result.code !== 0) {
-          throw new Error(summarize(result.stderr || result.stdout) || nativeT("desktop.wsl.error.installOpencode"))
-        }
-        await refreshOpencodeCheck(name, { signal: abort.signal })
-        expectOpencodeVersion(state.opencodeChecks[name]?.version ?? null, appVersion, name)
-        const id = wslServerIdToRestart(state.servers, name)
-        if (id) await startServer(id)
-      })
+    // Orchestra has no Linux server binary yet, and installing the upstream one is refused, so nothing runs.
+    async installServer(_name: string) {
+      throw new Error(nativeT("desktop.wsl.error.installUnavailable"))
     },
 
     async openTerminal(name: string) {
@@ -477,7 +464,7 @@ function opencodeCheck(
       version: null,
       expectedVersion,
       matchesDesktop: null,
-      error: nativeT("desktop.wsl.error.opencodeMissing"),
+      error: nativeT("desktop.wsl.error.serverMissing"),
     }
   }
   if (!version) {
@@ -487,7 +474,7 @@ function opencodeCheck(
       version: null,
       expectedVersion,
       matchesDesktop: null,
-      error: nativeT("desktop.wsl.error.opencodeCannotRun"),
+      error: nativeT("desktop.wsl.error.serverCannotRun"),
     }
   }
   return {
@@ -501,7 +488,7 @@ function opencodeCheck(
 }
 
 function distroProbeReady(probe: WslDistroProbe | undefined) {
-  return !!probe?.canExecute && probe.hasBash && probe.hasCurl
+  return !!probe?.canExecute && probe.hasBash
 }
 
 function startupFailure(code: number | null, signal: NodeJS.Signals | null) {

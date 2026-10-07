@@ -1,17 +1,6 @@
 import { expect, test } from "bun:test"
-import {
-  clearWslDistroState,
-  requireWslIpcString,
-  requireWslIpcStrings,
-  wslServerIdToRestart,
-  wslTerminalArgs,
-} from "./policy"
-import {
-  expectOpencodeVersion,
-  pendingRestartAfterWslInstall,
-  pollWslHealth,
-  wslServerIdsToStartOnInitialize,
-} from "./startup"
+import { clearWslDistroState, requireWslIpcString, requireWslIpcStrings, wslTerminalArgs } from "./policy"
+import { pendingRestartAfterWslInstall, pollWslHealth, wslServerIdsToStartOnInitialize } from "./startup"
 import { createWslServersController, type WslServerConfig } from "./servers"
 
 let persistedServers: WslServerConfig[] = []
@@ -26,32 +15,27 @@ test("starts every configured WSL server on initialization", () => {
   ).toEqual(["wsl:Debian", "wsl:Ubuntu-24.04"])
 })
 
-test("rejects an update that did not install the desktop version", () => {
-  expect(() => expectOpencodeVersion("1.16.2", "1.16.2")).not.toThrow()
-  expect(() => expectOpencodeVersion("1.14.35", "1.16.2")).toThrow(
-    "Server update finished but Debian still reports 1.14.35; expected 1.16.2",
-  )
-})
+// Orchestra has no Linux server binary yet, and installing the upstream one is refused.
+test("refuses to install or update the server in a distro and runs nothing", async () => {
+  persistedServers = []
+  const resolved: string[] = []
+  const controller = createWslServersController("1.16.2", async () => new Promise<never>(() => undefined), {
+    ...testControllerOptions(),
+    resolveOpencode: async (distro) => {
+      resolved.push(distro)
+      return null
+    },
+  })
 
-test("restarts an existing distro server after updating OpenCode", () => {
-  expect(
-    wslServerIdToRestart(
-      [
-        {
-          config: { id: "wsl:Debian", distro: "Debian" },
-          runtime: { kind: "ready", url: "", username: null, password: null },
-        },
-      ],
-      "Debian",
-    ),
-  ).toBe("wsl:Debian")
-  expect(wslServerIdToRestart([], "Debian")).toBeUndefined()
+  await expect(controller.installServer("Debian")).rejects.toThrow("Installing the server in WSL is not available yet")
+  expect(controller.getState().job).toBeNull()
+  expect(resolved).toEqual([])
 })
 
 test("clears cached distro probes when removing a WSL server", () => {
   expect(
     clearWslDistroState(
-      { Debian: { name: "Debian", canExecute: true, hasBash: true, hasCurl: true, error: null } },
+      { Debian: { name: "Debian", canExecute: true, hasBash: true, error: null } },
       {
         Debian: {
           distro: "Debian",
@@ -160,7 +144,7 @@ test("probes addable distros in parallel before checking OpenCode", async () => 
     probeDistro: async (distro) => {
       started.push(distro)
       await new Promise<void>((resolve) => release.set(distro, resolve))
-      return { name: distro, canExecute: true, hasBash: true, hasCurl: true, error: null }
+      return { name: distro, canExecute: true, hasBash: true, error: null }
     },
     resolveOpencode: async (distro) => {
       opencode.push(distro)
@@ -190,7 +174,6 @@ test("does not check OpenCode in addable distros that cannot execute commands", 
       name: distro,
       canExecute: distro === "Debian",
       hasBash: distro === "Debian",
-      hasCurl: distro === "Debian",
       error: distro === "Debian" ? null : "Open Ubuntu once to finish setup",
     }),
     resolveOpencode: async (distro) => {
