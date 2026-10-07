@@ -94,7 +94,7 @@ export const SessionListCommand = effectCmd({
 
     if (shouldPaginate) {
       yield* Effect.promise(async () => {
-        const proc = Process.spawn(pagerCmd(), {
+        const proc = Process.interactive(pagerCmd(), {
           stdin: "pipe",
           stdout: "inherit",
           stderr: "inherit",
