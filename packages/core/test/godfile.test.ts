@@ -85,6 +85,117 @@ describe("godfile", () => {
     )
   })
 
+  test.each(["foundation/atlas/vendor.ts", "vendor.txt"])(
+    "a rename from %s into governed source has no legacy baseline",
+    (original) => {
+      const cwd = repo()
+      if (original === "vendor.txt") {
+        writeFileSync(join(cwd, original), lines(HARD_LIMIT_LOC + 1))
+        git(cwd, "add", original)
+        git(cwd, "commit", "-m", "non-source baseline")
+      }
+      mkdirSync(join(cwd, "src"))
+      git(cwd, "mv", original, "src/vendor.ts")
+      const report = runGodfileGate({ cwd, baseRef: "HEAD" })
+      expect(report.errors).toEqual([
+        `src/vendor.ts: ${HARD_LIMIT_LOC + 1} LOC exceeds ${HARD_LIMIT_LOC} (new file). Split file or reduce it.`,
+      ])
+      expect(report.warnings.some((finding) => finding.file === "src/vendor.ts")).toBeFalse()
+    },
+  )
+
+  test.each([HARD_LIMIT_LOC + 1, HARD_LIMIT_LOC + 2, HARD_LIMIT_LOC + 3, HARD_LIMIT_LOC + 4])(
+    "a moved legacy file retains its old waiver identity at %i LOC",
+    (count) => {
+      const cwd = repo()
+      writeFileSync(
+        join(cwd, "godfile-waivers.json"),
+        JSON.stringify({
+          waivers: {
+            "legacy.ts": {
+              maximumLines: HARD_LIMIT_LOC + 3,
+              reason: "Human-authorized legacy exception",
+              authorizedBy: "stakeholder",
+              authorizedAt: "2026-09-08",
+            },
+          },
+        }),
+      )
+      mkdirSync(join(cwd, "moved"))
+      git(cwd, "mv", "legacy.ts", "moved/legacy.ts")
+      writeFileSync(join(cwd, "moved/legacy.ts"), lines(count))
+      const report = runGodfileGate({ cwd, baseRef: "HEAD" })
+      if (count > HARD_LIMIT_LOC + 3) {
+        expect(report.errors).toEqual([
+          `moved/legacy.ts: ${count} LOC exceeds approved waiver maximum ${HARD_LIMIT_LOC + 3}.`,
+        ])
+        return
+      }
+      expect(report.errors).toEqual([])
+      expect(report.warnings).toContainEqual({
+        file: "moved/legacy.ts",
+        lines: count,
+        baseLines: HARD_LIMIT_LOC + 1,
+        kind: count === HARD_LIMIT_LOC + 1 ? "legacy" : "waiver",
+        ...(count === HARD_LIMIT_LOC + 1 ? {} : { reason: "Human-authorized legacy exception" }),
+      })
+      writeFileSync(join(cwd, "moved/legacy.ts"), lines(HARD_LIMIT_LOC))
+      expect(runGodfileGate({ cwd, baseRef: "HEAD" }).errors).toEqual([
+        "godfile-waivers.json: stale waiver for legacy.ts; reduce/remove it or restore the named legacy file.",
+      ])
+    },
+  )
+
+  test.each([false, true])("destination waiver takes precedence; duplicate old waiver=%s", (duplicate) => {
+    const cwd = repo()
+    const waiver = {
+      maximumLines: HARD_LIMIT_LOC + 2,
+      reason: "Destination authorization",
+      authorizedBy: "stakeholder",
+      authorizedAt: "2026-09-08",
+    }
+    writeFileSync(
+      join(cwd, "godfile-waivers.json"),
+      JSON.stringify({
+        waivers: {
+          "moved/legacy.ts": waiver,
+          ...(duplicate ? { "legacy.ts": { ...waiver, maximumLines: HARD_LIMIT_LOC + 3 } } : {}),
+        },
+      }),
+    )
+    mkdirSync(join(cwd, "moved"))
+    git(cwd, "mv", "legacy.ts", "moved/legacy.ts")
+    writeFileSync(join(cwd, "moved/legacy.ts"), lines(HARD_LIMIT_LOC + 3))
+    expect(runGodfileGate({ cwd, baseRef: "HEAD" }).errors).toEqual([
+      `moved/legacy.ts: ${HARD_LIMIT_LOC + 3} LOC exceeds approved waiver maximum ${HARD_LIMIT_LOC + 2}.`,
+      ...(duplicate
+        ? ["godfile-waivers.json: stale waiver for legacy.ts; reduce/remove it or restore the named legacy file."]
+        : []),
+    ])
+  })
+
+  test("a waiver cannot supply a missing new-file baseline", () => {
+    const cwd = repo()
+    writeFileSync(join(cwd, "new.ts"), lines(HARD_LIMIT_LOC + 1))
+    writeFileSync(
+      join(cwd, "godfile-waivers.json"),
+      JSON.stringify({
+        waivers: {
+          "new.ts": {
+            maximumLines: HARD_LIMIT_LOC + 2,
+            reason: "Cannot authorize a new file",
+            authorizedBy: "stakeholder",
+            authorizedAt: "2026-09-08",
+          },
+        },
+      }),
+    )
+    expect(runGodfileGate({ cwd, baseRef: "HEAD" }).errors).toEqual([
+      `new.ts: ${HARD_LIMIT_LOC + 1} LOC exceeds ${HARD_LIMIT_LOC} (new file). Split file or reduce it.`,
+      "godfile-waivers.json: stale waiver for new.ts; reduce/remove it or restore the named legacy file.",
+    ])
+  })
+
   test("permits only named pre-existing files through an explicit fixed maximum", () => {
     const cwd = repo()
     writeFileSync(
