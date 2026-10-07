@@ -43,7 +43,7 @@ it.instance("shell emits intermediate metadata before a real child can complete"
       sessionID: SessionID.make("ses_shell_progress"),
       messageID: MessageID.make("msg_shell_progress"),
       callID: "shell-progress",
-      agent: "build",
+      agent: "maestro",
       abort: new AbortController().signal,
       messages: [],
       ask: () => Effect.void,

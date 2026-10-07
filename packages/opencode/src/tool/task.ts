@@ -17,7 +17,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@opencode-ai/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { reserveDispatch } from "@/maestro/dispatch"
-import { authorizationTaskIntentHash } from "@/maestro/authorization"
+import { authorizedTaskMismatch, readAuthorization } from "@/maestro/authorization"
 import { canonicalMemberId, nativeProfiles, roster } from "@/maestro/roster"
 import { Permission } from "@/permission"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
@@ -47,35 +47,34 @@ export interface TaskPromptOps {
 const id = "task"
 const dispatchLock = KeyedMutex.makeUnsafe<string>()
 const BACKGROUND_DESCRIPTION = [
-  "Background mode: background=true launches the subagent asynchronously and returns immediately.",
-  "Foreground is the default; use it when you need the result before continuing.",
-  "Use background only for independent work that can run while you continue elsewhere.",
-  "You will be notified automatically when it finishes.",
+  "`background: true` starts the teammate and returns at once; its result arrives later as a new message.",
+  "Use it only for independent work whose result you do not need before you continue. Without it, the call waits for the result.",
 ].join(" ")
 const BACKGROUND_STARTED = [
-  "The task is working in the background. You will be notified automatically when it finishes.",
-  "DO NOT sleep, poll for progress, ask the task for status, or duplicate this task's work — avoid working with the same files or topics it is using.",
-  "Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.",
+  "The teammate is working in the background. Its result arrives as a new message when it finishes.",
+  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
+  "Continue with other work, or tell the owner what you started and end your turn.",
 ].join("\n")
 const BACKGROUND_UPDATED = [
-  "Additional context sent to the running background task.",
-  "The task is still working in the background. You will be notified automatically when it finishes.",
-  "DO NOT sleep, poll for progress, ask the task for status, or duplicate this task's work — avoid working with the same files or topics it is using.",
-  "Work on non-overlapping tasks, or briefly tell the user what you sent and end your response.",
+  "The added context was sent to the teammate, which is still working in the background. Its result arrives as a new message when it finishes.",
+  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
+  "Continue with other work, or tell the owner what you sent and end your turn.",
 ].join("\n")
 
 const BaseParameterFields = {
-  description: Schema.String.annotate({ description: "A short (3-5 words) description of the task" }),
-  prompt: Schema.String.annotate({ description: "The task for the agent to perform" }),
-  subagent_type: Schema.String.annotate({ description: "The type of specialized agent to use for this task" }),
+  description: Schema.String.annotate({ description: "A 3-5 word label the owner sees for this task" }),
+  prompt: Schema.String.annotate({ description: "The teammate's whole brief" }),
+  subagent_type: Schema.String.annotate({
+    description: "The teammate to start, from the list in this tool's description",
+  }),
   task_id: Schema.optional(Schema.String).annotate({
     description:
-      "This should only be set if you mean to resume a previous task (you can pass a prior task_id and the task will continue the same subagent session as before instead of creating a fresh one)",
+      "Set only to continue an earlier task: the exact task_id that call returned. The teammate resumes with its earlier context. An unknown id fails.",
   }),
   command: Schema.optional(Schema.String).annotate({ description: "The command that triggered this task" }),
   model: Schema.optional(Schema.String).annotate({
     description:
-      "Run the subagent on a specific model as 'providerID/modelID' (e.g. 'openrouter/deepseek/deepseek-chat', 'groq/llama-3.3-70b-versatile'). Overrides the subagent's configured model and the parent session model. The provider part also selects credentials: OAuth subscriptions (Claude Max, ChatGPT) and API keys resolve per providerID at run time — use a custom provider alias in opencode.json to pin a second key for the same backend.",
+      "The model to run the teammate on, as 'providerID/modelID'. Without it, the teammate runs on its configured model, or else on yours.",
   }),
   governed: Schema.optional(
     Schema.Struct({
@@ -107,7 +106,7 @@ export const Parameters = Schema.Struct({
   ...BaseParameterFields,
   background: Schema.optional(Schema.Boolean).annotate({
     description:
-      "Run the agent in the background. You will be notified when it completes. DO NOT sleep, poll, or proactively check on its progress",
+      "Return at once while the teammate works; its result arrives as a new message when it finishes, so do not wait for it or poll it.",
   }),
 })
 
@@ -171,7 +170,9 @@ export const TaskTool = Tool.define(
       let requireCompletedReplay = false
       if (runInBackground && !flags.experimentalBackgroundSubagents) {
         return yield* Effect.fail(
-          new Error("Background subagents require OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true"),
+          new Error(
+            "Background tasks are not enabled in this session. Leave out `background` to run the task and wait for its result.",
+          ),
         )
       }
 
@@ -195,24 +196,21 @@ export const TaskTool = Tool.define(
         if (caller?.id !== "maestro" || caller.native !== true) {
           return yield* Effect.fail(new Error("Authorized Task requires Maestro"))
         }
+        // The reservation is write-once and snapshots the child's permissions, so check the approved seat and
+        // intent before reserving; a wrong subagent_type would otherwise pin its snapshot and spend the approval.
+        const mismatch = authorizedTaskMismatch(yield* readAuthorization(params.authorizationID), {
+          sessionID: ctx.sessionID,
+          memberID: nextID,
+          subagentType: params.subagent_type,
+          prompt: params.prompt,
+          model: params.model,
+        })
+        if (mismatch) return yield* Effect.fail(new Error(mismatch))
         const reservation = yield* reserveDispatch({
           sessionID: ctx.sessionID,
           authorizationID: params.authorizationID,
           permission: childPermissions,
         })
-        if (reservation.routedMemberID !== nextID) {
-          return yield* Effect.fail(new Error("Authorized Task denied: routed-seat-mismatch"))
-        }
-        if (
-          reservation.taskIntentHash !==
-          authorizationTaskIntentHash({
-            subagentType: params.subagent_type,
-            prompt: params.prompt,
-            model: params.model,
-          })
-        ) {
-          return yield* Effect.fail(new Error("Authorized Task denied: task-intent-mismatch"))
-        }
         governedChildID = SessionID.make(reservation.childSessionID)
         reservedChildPermissions = reservation.permission
         replayReserved = true
@@ -221,6 +219,13 @@ export const TaskTool = Tool.define(
       const strictTask = nextID === "backend" || params.governed !== undefined || params.authorizationID !== undefined
       const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
         parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
+      if (params.task_id && !resumed) {
+        return yield* Effect.fail(
+          new Error(
+            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
+          ),
+        )
+      }
       if (params.governed) {
         const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
           Effect.provideService(Database.Service, database),
@@ -230,11 +235,7 @@ export const TaskTool = Tool.define(
         if (params.model) {
           const parsed = Provider.parseModel(params.model)
           if (!parsed.providerID || !parsed.modelID) {
-            return yield* Effect.fail(
-              new Error(
-                `Invalid model "${params.model}". Use the 'providerID/modelID' format, e.g. 'openrouter/deepseek/deepseek-chat'.`,
-              ),
-            )
+            return yield* Effect.fail(new Error(`Invalid model "${params.model}". Use the form 'providerID/modelID'.`))
           }
         }
         let ancestor = parent
@@ -246,7 +247,7 @@ export const TaskTool = Tool.define(
         if (ancestorDepth >= (cfg.subagent_depth ?? 1)) {
           return yield* Effect.fail(
             new Error(
-              `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
+              "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
             ),
           )
         }
@@ -307,7 +308,7 @@ export const TaskTool = Tool.define(
       if (depth >= (cfg.subagent_depth ?? 1)) {
         return yield* Effect.fail(
           new Error(
-            `Subagent depth limit reached (${cfg.subagent_depth ?? 1}). Increase "subagent_depth" to allow nested subagents.`,
+            "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
           ),
         )
       }
@@ -327,11 +328,7 @@ export const TaskTool = Tool.define(
       if (params.model) {
         const parsed = Provider.parseModel(params.model)
         if (!parsed.providerID || !parsed.modelID) {
-          return yield* Effect.fail(
-            new Error(
-              `Invalid model "${params.model}". Use the 'providerID/modelID' format, e.g. 'openrouter/deepseek/deepseek-chat'.`,
-            ),
-          )
+          return yield* Effect.fail(new Error(`Invalid model "${params.model}". Use the form 'providerID/modelID'.`))
         }
         explicitModel = true
         model = { modelID: parsed.modelID, providerID: parsed.providerID }
@@ -535,7 +532,9 @@ export const TaskTool = Tool.define(
             Effect.provideService(Session.Service, sessions),
           )
         }
-        const parts = yield* ops.resolvePromptParts(params.prompt)
+        // A brief names other agents as plain text. As an @mention, an agent part would tell the child to
+        // delegate to that agent and skip its own task permission prompt.
+        const parts = (yield* ops.resolvePromptParts(params.prompt)).filter((part) => part.type !== "agent")
         const own = params.authorizationID
           ? yield* GroundedSkills.parts(params.authorizationID).pipe(Effect.provideService(Database.Service, database))
           : []

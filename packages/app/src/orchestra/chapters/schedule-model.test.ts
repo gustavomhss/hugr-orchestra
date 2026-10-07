@@ -24,7 +24,6 @@ const task = (input: Partial<ScheduleTask> = {}): ScheduleTask => ({
   id: "daily",
   name: "Daily review",
   prompt: "Review the changes",
-  agent: "build",
   cadence: "daily",
   next: base,
   minute: 9 * 60 + 30,
@@ -170,11 +169,14 @@ describe("schedule model", () => {
   test("saved data keeps valid tasks, fills the time of day and drops malformed rows", () => {
     const valid = task({ last: { time: base, sessionID: "ses_1" }, missed: base - DAY })
     const legacy = { ...task({ id: "legacy" }), minute: undefined }
+    // Rows saved while tasks still named an agent keep loading; every run now goes to Maestro.
+    const named = { ...task({ id: "named" }), agent: "review" }
     expect(
       readTasks({
         tasks: [
           valid,
           legacy,
+          named,
           { ...valid, id: 1 },
           { ...valid, cadence: "monthly" },
           { ...valid, next: "tomorrow" },
@@ -185,7 +187,7 @@ describe("schedule model", () => {
           null,
         ],
       }),
-    ).toEqual({ tasks: [valid, task({ id: "legacy" })] })
+    ).toEqual({ tasks: [valid, task({ id: "legacy" }), named] })
     expect(readTasks({ tasks: "nope" })).toEqual({ tasks: [] })
     expect(readTasks(undefined)).toEqual({ tasks: [] })
   })

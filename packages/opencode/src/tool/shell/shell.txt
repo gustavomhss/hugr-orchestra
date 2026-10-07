@@ -1,21 +1,19 @@
-${intro}
+Run a command in a fresh, non-interactive process. Shell: ${shell}. OS: ${os}.
 
-Be aware: OS: ${os}, Shell: ${shell}
+- `cd`, variables and other shell state do not carry over between calls. Commands run in the working directory; to run one elsewhere, set `workdir` rather than starting with `cd`.
+- Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as `-m` for `git commit`. Credential-like variables such as `GH_TOKEN` and the SSH agent are removed.
+- `${tmp}` exists and is pre-approved for temporary files outside the repository.
+- Read files and edit their contents with the file tools rather than shell commands.
+- ${chain}
+- Without `timeout` (in milliseconds), commands will time out after ${timeout}ms.${notes}
 
-${workdirSection}
-
-Use `${tmp}` for temporary work outside the workspace. This directory has already been created, already exists, and is pre-approved for external directory access.
-
-IMPORTANT: This tool is for terminal operations like git, npm, docker, etc. DO NOT use it for file operations (reading, writing, editing, searching, finding files) - use the specialized tools for this instead.
-
-${commandSection}
+# Results
+- A non-zero exit code is reported as `exit code: N` before the output.
+- Output over ${maxLines} lines or ${maxBytes} bytes keeps only its end, and the full output is saved to a file the result names, so there is no need to cut it yourself.
+- The app shows a test evidence card only for one direct runner command (`bun test`, `vitest`, `jest`, `playwright test`, `pytest`, `go test`, `cargo test`; `npx`/`bunx` and a trailing `2>&1` are fine), with no pipes, `;`, `&&`, redirects or package scripts like `npm test`.
 
 # Git and GitHub
-- Only commit, amend, push, or create PRs when explicitly requested.
-- Before committing, inspect `git status`, `git diff`, and `git log --oneline -10`; stage only intended files and never commit secrets.
-- Write a concise commit message that matches the repo style.
-- Do not update git config, skip hooks, use interactive `-i`, force-push, or create empty commits unless explicitly requested.
-- If a commit fails or hooks reject it, fix the issue and create a new commit; do not amend the failed commit.
-- Before creating a PR, inspect status, diff, remote tracking, recent commits, and the diff from the base branch.
-- Review all commits included in the PR, not just the latest commit.
-- Use `gh` for GitHub tasks, including PRs, issues, checks, and releases; return the PR URL when done.
+- Commit, push or open a pull request only when asked. Before committing, check `git status` and `git diff`, and stage the files you changed by path.
+- Match the repository's commit style and give each paragraph its own `-m`: `${commitExample}`. A safety guard refuses `git add` and `git commit` commands that contain `$`, backticks, heredocs or redirects, or options such as `-am`, `--no-edit`, `-F` and `--author`. It also refuses skipping hooks, force-pushing without `--force-with-lease` and `git reset --hard`.
+- If a hook rejects a commit, fix the cause and commit again rather than amending the previous commit, and leave git config unchanged.
+- Use `gh` for pull requests, issues, checks and releases. Before opening a pull request, review every commit it includes against the base branch, and return its URL.

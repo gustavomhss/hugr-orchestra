@@ -92,7 +92,10 @@ export const Plugin = define({
         for (const document of documents) {
           for (const [id, item] of Object.entries(document.info.agents ?? {})) {
             const agentID = AgentV2.ID.make(id)
-            if (item.disabled) {
+            // Every session runs on Maestro, so no configuration source (a JSON document or an agent file) may disable
+            // it or take it out of primary mode.
+            const maestro = agentID === AgentV2.defaultID
+            if (item.disabled && !maestro) {
               draft.remove(agentID)
               continue
             }
@@ -113,7 +116,7 @@ export const Plugin = define({
               }
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
-              if (item.mode !== undefined) agent.mode = item.mode
+              if (item.mode !== undefined && !maestro) agent.mode = item.mode
               if (item.hidden !== undefined) agent.hidden = item.hidden
               if (item.color !== undefined) agent.color = item.color
               if (item.steps !== undefined) agent.steps = item.steps

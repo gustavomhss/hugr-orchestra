@@ -180,7 +180,8 @@ const layer: Layer.Layer<
       const ctx = yield* InstanceState.context
       for (const attempt of Array.from({ length: MAX_NAME_ATTEMPTS }, (_, i) => i)) {
         const name = input.name ? (attempt === 0 ? input.name : `${input.name}-${Slug.create()}`) : Slug.create()
-        const branch = input.detached ? undefined : `opencode/${name}`
+        // Older releases named these branches `opencode/<name>`; list and remove take any branch, so those still work.
+        const branch = input.detached ? undefined : `orchestra/${name}`
         const directory = pathSvc.join(input.root, name)
 
         if (yield* fs.exists(directory).pipe(Effect.orDie)) continue

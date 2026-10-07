@@ -18,7 +18,7 @@ export const SKILLS_COPY = {
   "orchestra.skills.dialog.addDetail": "Saved as .opencode/skills/<name>/SKILL.md in this profile's repository.",
   "orchestra.skills.dialog.edit": "Edit {{name}}",
   "orchestra.skills.dialog.read": "Read {{name}}",
-  "orchestra.skills.dialog.builtin": "Built into opencode. Read-only.",
+  "orchestra.skills.dialog.builtin": "Built into the server. Read-only.",
   "orchestra.skills.dialog.global": "Stored at {{location}}. Global skills are read-only here.",
   "orchestra.skills.dialog.governed": "Stored at {{location}}. Governed by Atlas, so it is read-only.",
   "orchestra.skills.dialog.fixed":

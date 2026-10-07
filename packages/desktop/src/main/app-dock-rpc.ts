@@ -459,7 +459,7 @@ export class AppDockRPC {
       if (placement && !tab) throw new NativeDockProtocol.NativeError("wrong-scope", "Native workspace viewer is not current")
       const workspace = tab && this.classifyWorkspace(dock, senderID, tab, placement)
       if (world === "browser" && workspace)
-        throw new NativeDockProtocol.NativeError("wrong-scope", "dock_* tools operate browser tabs; apps in the Linux workspace are operated by the linux agent")
+        throw new NativeDockProtocol.NativeError("wrong-scope", "dock_* tools operate only browser tabs; apps in the Linux workspace are operated by the linux agent, so hand that work to it")
       if (world === "linux" && !workspace)
         throw new NativeDockProtocol.NativeError("wrong-scope", "Linux workspace tools only address the Linux workspace")
       const stored = this.nativeTargets.get(JSON.stringify([senderID, tabID]))
@@ -681,14 +681,14 @@ export class AppDockRPC {
     if (world === "linux") {
       const workspace = all.find(linux)
       if (!workspace) throw new NativeDockProtocol.NativeError("not-ready",
-        "The Linux workspace is not open in the App Dock; report back that the user must open Apps > Linux workspace")
+        "The Linux workspace is not open in the App Dock; stop and report that the owner must open Apps > Linux workspace")
       return workspace.tabID
     }
     const tabs = world === "browser" ? all.filter((tab) => !linux(tab)) : all
     const active = tabs.find((tab) => typeof tab === "object" && tab !== null && "active" in tab && tab.active === true)
     const target = active ?? tabs[0]
     if (!target && world === "browser" && all.length)
-      throw new Error("App Dock has no open browser tabs; apps in the Linux workspace are operated by the linux agent")
+      throw new Error("App Dock has no open browser tabs; open one with dock_open. Apps in the Linux workspace are operated by the linux agent, so hand that work to it")
     if (!target) throw new Error("App Dock has no open tabs")
     return target.tabID
   }

@@ -225,8 +225,8 @@ describe("ACP service sessions", () => {
         agents: () =>
           Promise.resolve({
             data: [
-              { name: "build", mode: "primary", permission: [], options: {} },
-              { name: "plan", mode: "primary", description: "Plan first", permission: [], options: {} },
+              { name: "maestro", mode: "primary", permission: [], options: {} },
+              { name: "reviewer", mode: "primary", description: "Review first", permission: [], options: {} },
               { name: "hidden", mode: "primary", hidden: true, permission: [], options: {} },
             ],
           }),
@@ -365,7 +365,7 @@ describe("ACP service sessions", () => {
           providerID: "test",
           modelID: "test-model",
           variant: "high",
-          mode: "plan",
+          mode: "reviewer",
         },
         parts: [],
       },
@@ -375,7 +375,7 @@ describe("ACP service sessions", () => {
     )
 
     expect(result.configOptions?.find((option) => option.id === "effort")?.currentValue).toBe("high")
-    expect(result.configOptions?.find((option) => option.id === "mode")?.currentValue).toBe("plan")
+    expect(result.configOptions?.find((option) => option.id === "mode")?.currentValue).toBe("reviewer")
   })
 
   it("replays loaded session transcript chunks", async () => {
@@ -459,7 +459,7 @@ describe("ACP service sessions", () => {
           sessionID: "ses_resume",
           role: "user",
           model: { providerID: "test", modelID: "test-model", variant: "high" },
-          agent: "plan",
+          agent: "reviewer",
         },
         parts: [{ id: "part_user", sessionID: "ses_resume", messageID: "msg_user", type: "text", text: "hello" }],
       },
@@ -540,7 +540,7 @@ describe("ACP service sessions", () => {
           providerID: "test",
           modelID: "second-model",
           variant: "medium",
-          mode: "plan",
+          mode: "reviewer",
         },
         parts: [],
       },
@@ -565,7 +565,7 @@ describe("ACP service sessions", () => {
         info: {
           role: "user",
           model: { providerID: "test", modelID: "test-model", variant: "default" },
-          agent: "build",
+          agent: "maestro",
         },
         parts: [],
       },
@@ -573,7 +573,7 @@ describe("ACP service sessions", () => {
         info: {
           role: "user",
           model: { providerID: "test", modelID: "test-model", variant: "high" },
-          agent: "plan",
+          agent: "reviewer",
         },
         parts: [],
       },
@@ -583,7 +583,7 @@ describe("ACP service sessions", () => {
     )
 
     expect(result.configOptions?.find((option) => option.id === "effort")?.currentValue).toBe("high")
-    expect(result.configOptions?.find((option) => option.id === "mode")?.currentValue).toBe("plan")
+    expect(result.configOptions?.find((option) => option.id === "mode")?.currentValue).toBe("reviewer")
   })
 
   it("maps provider auth failures to auth-required request errors", async () => {
@@ -625,7 +625,7 @@ describe("ACP service sessions", () => {
         get: () => Promise.resolve({ data: {} }),
       },
       app: {
-        agents: () => Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] }),
+        agents: () => Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] }),
         skills: () => Promise.resolve({ data: [] }),
       },
       command: {
@@ -662,7 +662,7 @@ describe("ACP service sessions", () => {
         get: () => Promise.resolve({ data: {} }),
       },
       app: {
-        agents: () => Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] }),
+        agents: () => Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] }),
         skills: () => Promise.resolve({ data: [] }),
       },
       command: {
@@ -709,7 +709,7 @@ describe("ACP service sessions", () => {
         get: () => Promise.resolve({ data: { model: "test/configured-model" } }),
       },
       app: {
-        agents: () => Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] }),
+        agents: () => Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] }),
         skills: () => Promise.resolve({ data: [] }),
       },
       command: {
@@ -739,7 +739,7 @@ describe("ACP service sessions", () => {
         get: () => Promise.resolve({ data: {} }),
       },
       app: {
-        agents: () => Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] }),
+        agents: () => Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] }),
         skills: () => Promise.resolve({ data: [] }),
       },
       command: {
@@ -808,11 +808,11 @@ describe("ACP service sessions", () => {
       service.setSessionConfigOption({
         sessionId: session.sessionId,
         configId: "mode",
-        value: "plan",
+        value: "reviewer",
       }),
     )
 
-    expect(select(updated, "mode")?.currentValue).toBe("plan")
+    expect(select(updated, "mode")?.currentValue).toBe("reviewer")
   })
 
   it("maps invalid model effort mode and config id to invalid params", async () => {
@@ -855,7 +855,7 @@ describe("ACP service sessions", () => {
       app: {
         agents: () => {
           calls.agents++
-          return Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] })
+          return Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] })
         },
         skills: () => {
           calls.skills++
@@ -913,7 +913,7 @@ describe("ACP service sessions", () => {
       app: {
         agents: () => {
           calls.agents++
-          return Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] })
+          return Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] })
         },
         skills: () => {
           calls.skills++
@@ -973,7 +973,7 @@ describe("ACP service sessions", () => {
       app: {
         agents: () => {
           calls.agents++
-          return Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] })
+          return Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] })
         },
         skills: () => {
           calls.skills++
@@ -1037,7 +1037,7 @@ describe("ACP service sessions", () => {
       service.setSessionConfigOption({
         sessionId: session.sessionId,
         configId: "mode",
-        value: "plan",
+        value: "reviewer",
       }),
     )
 
@@ -1055,7 +1055,7 @@ describe("ACP service sessions", () => {
         model: { providerID, modelID },
         variant: "high",
         parts: [{ type: "text", text: "hello" }],
-        agent: "plan",
+        agent: "reviewer",
         directory: "/workspace",
       },
     ])
@@ -1212,7 +1212,7 @@ describe("ACP service sessions", () => {
         { type: "text", text: "assistant context", synthetic: true },
         { type: "text", text: "user context", ignored: true },
       ],
-      agent: "build",
+      agent: "maestro",
       directory: "/workspace",
     })
   })
@@ -1270,7 +1270,7 @@ describe("ACP service sessions", () => {
         arguments: "now",
         model: "test/test-model",
         variant: "default",
-        agent: "build",
+        agent: "maestro",
         directory: "/workspace",
       },
     ])
@@ -1307,7 +1307,7 @@ describe("ACP service sessions", () => {
           get: () => Promise.resolve({ data: {} }),
         },
         app: {
-          agents: () => Promise.resolve({ data: [{ name: "build", mode: "primary", permission: [], options: {} }] }),
+          agents: () => Promise.resolve({ data: [{ name: "maestro", mode: "primary", permission: [], options: {} }] }),
           skills: () => Promise.resolve({ data: [] }),
         },
         command: {

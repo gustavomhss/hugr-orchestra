@@ -88,9 +88,10 @@ export const read = Effect.fn("LogicalTask.read")(function* (executionSessionID:
 })
 
 /**
- * Resolve a Task `task_id` to the child Session it resumes. Lenient callers keep the generic lookup: an unknown
- * Session ID starts a fresh child. Strict callers (F2-D2: the backend seat and governed or authorized dispatch)
- * resume only existing retained work of the same project and member, and refuse anything else before a child exists.
+ * Resolve a Task `task_id` to the child Session it resumes. Lenient callers keep the generic lookup and see only
+ * direct children of their Session: an unknown, malformed or foreign id resolves to nothing. Strict callers (F2-D2:
+ * the backend seat and governed or authorized dispatch) resume only existing retained work of the same project and
+ * member, and refuse anything else before a child exists.
  * A Session ID is accepted there as an execution reference to the logical task bound to it, or to a child created
  * before bindings existed.
  */
@@ -101,11 +102,16 @@ export const resolveResume = Effect.fn("LogicalTask.resolveResume")(function* (i
   projectID: string
   memberID: string
 }) {
-  if (!input.taskID) return undefined
+  const taskID = input.taskID
+  if (!taskID) return undefined
   const sessions = yield* Session.Service
   const session = input.strict
-    ? yield* strictSession({ ...input, taskID: input.taskID })
-    : yield* sessions.get(SessionID.make(input.taskID)).pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+    ? yield* strictSession({ ...input, taskID })
+    : // SessionID.make throws on ids without the session prefix, so the lookup is suspended to catch it.
+      yield* Effect.suspend(() => sessions.get(SessionID.make(taskID))).pipe(
+        Effect.map((found) => (found.parentID === input.parentSessionID ? found : undefined)),
+        Effect.catchCause(() => Effect.succeed(undefined)),
+      )
   if (session && (session.parentID !== input.parentSessionID || canonicalMemberId(session.agent) !== input.memberID))
     return yield* new Denied({ stage: "resume", reason: "task is not direct child for selected agent" })
   return session

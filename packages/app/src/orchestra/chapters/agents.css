@@ -65,6 +65,11 @@
 .agents-draft-error {
   margin-block-start: 15px;
 }
+/* Takes the Open Chat slot on every card but Maestro's, so it sits in the footer row. */
+.mx-card-foot .agents-note {
+  margin: 0;
+  text-align: end;
+}
 
 html[data-color-scheme="light"] .agents-kicker {
   color: #6f7883;

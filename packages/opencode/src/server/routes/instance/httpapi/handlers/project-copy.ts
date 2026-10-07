@@ -14,7 +14,9 @@ const COPY_NAME_AGENT: Agent.Info = {
   permission: [],
   options: {},
   native: true,
-  prompt: "",
+  // An empty prompt would fall back to the model's general coding prompt.
+  prompt:
+    "You name a copy of a project after the task it is for. Reply with only the name: two or three plain English words, with no punctuation, quotes or explanation.",
 }
 
 export const projectCopyHandlers = HttpApiBuilder.group(InstanceHttpApi, "projectCopyName", (handlers) =>

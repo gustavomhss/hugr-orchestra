@@ -101,8 +101,8 @@ const seed = Effect.fn("TaskLogicalIdTest.seed")(function* () {
     role: "assistant",
     parentID: MessageID.ascending(),
     sessionID: chat.id,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     cost: 0,
     path: { cwd: "/tmp", root: "/tmp" },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -130,8 +130,8 @@ const run = Effect.fn("TaskLogicalIdTest.run")(function* (
       {
         sessionID: seeded.chat.id,
         messageID: seeded.assistant.id,
-        agent: "build",
-        agentID: "build",
+        agent: "maestro",
+        agentID: "maestro",
         abort: new AbortController().signal,
         extra: { promptOps: ops(seeded.prompts) },
         messages: [],
@@ -162,15 +162,16 @@ describe("tool.task logical task id", () => {
     }),
   )
 
-  it.instance("a general Task with an unknown task_id still starts a fresh child", () =>
+  it.instance("a general Task with an unknown task_id fails and creates no child Session", () =>
     Effect.gen(function* () {
       const seeded = yield* seed()
-      const exit = yield* run(seeded, { subagent: "general", taskID: "ses_unknown" })
-      if (!Exit.isSuccess(exit)) throw new Error(`expected task success: ${Cause.pretty(exit.cause)}`)
-      const children = yield* (yield* Session.Service).children(seeded.chat.id)
-      expect(children.map((child) => child.id)).toEqual([exit.value.metadata.sessionId])
-      expect(exit.value.metadata.sessionId).not.toBe("ses_unknown")
-      expect(taskIdOf(exit.value.metadata)).toBeUndefined()
+      for (const taskID of ["ses_unknown", "not-a-task"]) {
+        const exit = yield* run(seeded, { subagent: "general", taskID })
+        expect(Exit.isFailure(exit)).toBe(true)
+        if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain(`No task ${taskID} in this session.`)
+      }
+      expect(yield* (yield* Session.Service).children(seeded.chat.id)).toEqual([])
+      expect(seeded.prompts).toEqual([])
     }),
   )
 

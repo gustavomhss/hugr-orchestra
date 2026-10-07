@@ -26,9 +26,9 @@ export const MAX_TIMEOUT_MS = 10 * 60 * 1_000
 export const MAX_CAPTURE_BYTES = 1024 * 1024
 
 export const Input = Schema.Struct({
-  command: Schema.String.annotate({ description: "Shell command string to execute" }),
+  command: Schema.String.annotate({ description: "The command to execute" }),
   workdir: Schema.String.pipe(Schema.optional).annotate({
-    description: "Working directory. Defaults to the active Location; relative paths resolve from that Location.",
+    description: "The directory to run the command in, relative to the working directory, which is the default",
   }),
   timeout: PositiveInt.check(Schema.isLessThanOrEqualTo(MAX_TIMEOUT_MS))
     .pipe(Schema.optional)
@@ -52,6 +52,9 @@ const Output = Schema.Struct({
 type Output = typeof Output.Type
 
 const defaultShell = () => (process.platform === "win32" ? (process.env.COMSPEC ?? "cmd.exe") : "/bin/sh")
+// cmd.exe, the default shell on Windows, does not treat single quotes as quoting.
+const commitExample =
+  process.platform === "win32" ? `git commit -m "subject" -m "body"` : "git commit -m 'subject' -m 'body'"
 
 const modelOutput = (output: Output) => {
   const warnings = output.warnings?.length
@@ -112,7 +115,22 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         [name]: Tool.make({
-          description: `Execute one shell command string with the host user's filesystem, process, and network authority. The active Location is the default working directory. Relative workdir values resolve from that Location. External workdir values require external_directory approval; best-effort command-argument path warnings are advisory only. Timeout values are milliseconds (default: ${DEFAULT_TIMEOUT_MS}; maximum: ${MAX_TIMEOUT_MS}). Uses the configured shell when set; otherwise uses /bin/sh on POSIX and COMSPEC or cmd.exe on Windows.`,
+          description: `Run a command in a fresh, non-interactive process, with the configured shell or else \`/bin/sh\` (\`cmd.exe\` on Windows).
+
+- \`cd\`, variables and other shell state do not carry over between calls. Commands run in the working directory; to run one elsewhere, set \`workdir\` rather than starting with \`cd\`. A \`workdir\` outside the working directory asks the owner first.
+- Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as \`-m\` for \`git commit\`. Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
+- Read files and edit their contents with the file tools rather than shell commands.
+- \`timeout\` is in milliseconds: ${DEFAULT_TIMEOUT_MS} by default, ${MAX_TIMEOUT_MS} at most.
+
+# Results
+- The result is the combined stdout and stderr, then the exit code, or a note that the command timed out. Only the first ${MAX_CAPTURE_BYTES / 1024 / 1024} MB of output is kept.
+- A long result keeps its start and end, and the full output is saved to a file the result names, so there is no need to cut it yourself.
+
+# Git and GitHub
+- Commit, push or open a pull request only when asked. Before committing, check \`git status\` and \`git diff\`, and stage the files you changed by path.
+- Give each paragraph of a commit message its own \`-m\`: \`${commitExample}\`. A safety guard refuses \`git add\` and \`git commit\` commands that contain \`$\`, backticks, heredocs or redirects, or options such as \`-am\`, \`--no-edit\`, \`-F\` and \`--author\`. It also refuses skipping hooks, force-pushing without \`--force-with-lease\` and \`git reset --hard\`.
+- If a hook rejects a commit, fix the cause and commit again rather than amending the previous commit, and leave git config unchanged.
+- Use \`gh\` for pull requests, issues, checks and releases. Before opening a pull request, review every commit it includes against the base branch, and return its URL.`,
           input: Input,
           output: Output,
           structured: StructuredOutput,

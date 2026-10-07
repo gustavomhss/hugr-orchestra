@@ -127,7 +127,7 @@ describe("tool.shell backend toolkit preparation", () => {
   it.live("another agent gets no preparation: nothing is fetched and the command runs without the variable", () =>
     Effect.gen(function* () {
       const f = yield* fixture
-      const result = yield* f.execute("build")
+      const result = yield* f.execute("maestro")
       expect(result.metadata.exit).toBe(0)
       expect(f.hits).toEqual([])
       expect(yield* f.sentinel).toBe(String(process.env.BACKEND_TOOLKIT_BIN))

@@ -55,11 +55,17 @@ it.live("Arsenal package conformance: bounded metadata and selected schema come 
       yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "profile", arguments: {} })),
     ).toMatchObject({
       type: "error",
-      value: "Describe this Arsenal capability in the current Session and agent before executing it.",
+      value:
+        'Describe this Arsenal capability in the current Session and agent before executing it: call maestro_arsenal_describe with name "profile" first, then pass arguments that match its inputSchema.',
+    })
+    expect(yield* executeTool(registry, call(MaestroArsenal.names.describe, { name: "no-such-capability" }))).toEqual({
+      type: "error",
+      value: "Unknown Arsenal capability; use an exact name from maestro_arsenal_catalog.",
     })
     const descriptor = yield* Effect.promise(() => Arsenal.describe("profile"))
     const result = yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "profile" }))
     expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.output?.structured)).toEqual(descriptor)
+    // The backend's own validator reports the code and the offending argument path, never host state.
     expect(
       yield* executeTool(
         registry,
@@ -68,7 +74,11 @@ it.live("Arsenal package conformance: bounded metadata and selected schema come 
           arguments: { action: "set", patch: { scrutiny: "invalid" } },
         }),
       ),
-    ).toMatchObject({ type: "error" })
+    ).toEqual({
+      type: "error",
+      value:
+        "Arsenal capability failed (invalid_arguments): invalid arguments for profile: args.patch.scrutiny: value outside enum. Fix the arguments to match the inputSchema from maestro_arsenal_describe; no successful outcome was recorded.",
+    })
   }),
 )
 

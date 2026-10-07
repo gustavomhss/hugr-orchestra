@@ -2,6 +2,7 @@ import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Database } from "@opencode-ai/core/database/database"
 import { FSUtil } from "@opencode-ai/core/fs-util"
+import { Npm } from "@opencode-ai/core/npm"
 import { Auth } from "../../src/auth"
 import { Workspace } from "../../src/control-plane/workspace"
 import { RuntimeFlags } from "../../src/effect/runtime-flags"
@@ -12,7 +13,11 @@ import { Vcs } from "../../src/project/vcs"
 import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
+import { NpmTest } from "../fake/npm"
 
+// Instance bootstrap loads Config, which starts a detached npm install into every .opencode directory it loads, the
+// repository's own when a request falls back to the working directory. A real one outlives its test and, on Windows,
+// starves file I/O for later test files in the same process.
 export const workspaceLayerWithRuntimeFlags = (overrides: Partial<RuntimeFlags.Info>) =>
   AppNodeBuilder.build(
     LayerNode.group([
@@ -30,5 +35,6 @@ export const workspaceLayerWithRuntimeFlags = (overrides: Partial<RuntimeFlags.I
     [
       [InstanceStore.bootstrapNode, InstanceBootstrap.node],
       [RuntimeFlags.node, RuntimeFlags.layer(overrides)],
+      [Npm.node, NpmTest.noop],
     ],
   )

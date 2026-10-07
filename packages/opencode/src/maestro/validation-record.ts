@@ -84,7 +84,11 @@ export class ValidationConflictError extends Schema.TaggedErrorClass<ValidationC
     sessionID: Schema.String,
     workCardID: Schema.String,
   },
-) {}
+) {
+  override get message() {
+    return `${this._tag}: workCardID ${this.workCardID} is already recorded in this Session with different content. Record this validation under a new workCardID.`
+  }
+}
 
 export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedError>()("MaestroReviewRejected", {
   reason: Schema.String,
@@ -99,7 +103,11 @@ export class ReviewRejectedError extends Schema.TaggedErrorClass<ReviewRejectedE
 export class ReviewConflictError extends Schema.TaggedErrorClass<ReviewConflictError>()("MaestroReviewConflict", {
   sessionID: Schema.String,
   validationRecordID: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `${this._tag}: validation ${this.validationRecordID} already has a different review receipt. The first receipt stands; a new review needs a new validation with a new workCardID.`
+  }
+}
 
 function hash(value: unknown) {
   return createHash("sha256").update(stable(value)).digest("hex")
@@ -144,9 +152,16 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["5a2df5f95e6c6783322fcf59f39af317639f9fdec9ad1a704e4b9ad75661ea3a", ROSTER_V2],
   // Backend charter v2, before the v3a checks rule.
   ["8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", ROSTER_V2],
+  // Before the harness rewrite reworded the review, exploration and documentation seats' roles.
+  ["d409ee796e265fb4f6ed0908bef20e2c5ac36b173231b7b86719ddd1d5e247f5", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
+  // Before the harness rewrite reworded the cold reviewer's role and denied seats .env reads.
+  ["3d84eb72e8c4bc22d0e4cbb50affaab01f45b0fb2a41c7375d02640d095a9f2a", REVIEW_POLICY_V2],
+  // Before review seats could read saved tool output. The current hash holds that directory's absolute path, so it
+  // varies with the data directory; this one does not.
+  ["b6996d6a55dfa44e2b781b06bb8ddac2be43c7c1f8b7c1d63b2068b985de4a22", REVIEW_POLICY_V2],
 ])
 
 /** The hash version a recorded roster hash verifies under against `members`, if any. */

@@ -24,6 +24,7 @@ import { TestLLMServer } from "../lib/llm-server"
 import path from "path"
 import { resetDatabase } from "../fixture/db"
 import { disposeAllInstances, TestInstance, tmpdirScoped } from "../fixture/fixture"
+import { markPluginDependenciesReady } from "../fixture/plugin"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { testProviderConfig } from "../lib/test-provider"
 import { ProviderV2 } from "@opencode-ai/core/provider"
@@ -186,13 +187,6 @@ function sessionTitles(value: unknown) {
     .sort()
 }
 
-function resetState() {
-  return Effect.promise(async () => {
-    await disposeAllInstances()
-    await resetDatabase()
-  })
-}
-
 function httpapi<A, E>(name: string, effect: Effect.Effect<A, E, TestScope>) {
   it.live(name, effect)
 }
@@ -282,6 +276,8 @@ function writeStandardFiles(dir: string) {
   )
 }
 
+// The server builds Config with the real Npm, so marking the plugin dependencies of .opencode ready keeps it from
+// installing them. A real install outlives its test and, on Windows, starves file I/O for later test files.
 function writeProjectSkill(dir: string) {
   return FSUtil.Service.use((fs) =>
     fs.writeWithDirs(
@@ -294,7 +290,7 @@ description: A project skill visible to REST API prompts.
 # Project REST Skill
 `,
     ),
-  )
+  ).pipe(Effect.andThen(Effect.promise(() => markPluginDependenciesReady(path.join(dir, ".opencode")))))
 }
 
 function seedMessage(directory: string, sessionID: string) {
@@ -742,7 +738,7 @@ describe("HttpApi SDK", () => {
         const prompt = yield* capture(() =>
           sdk.session.prompt({
             sessionID,
-            agent: "build",
+            agent: "maestro",
             noReply: true,
             parts: [{ type: "text", text: "hello" }],
           }),
@@ -750,7 +746,7 @@ describe("HttpApi SDK", () => {
         const asyncPrompt = yield* capture(() =>
           sdk.session.promptAsync({
             sessionID,
-            agent: "build",
+            agent: "maestro",
             noReply: true,
             parts: [{ type: "text", text: "async hello" }],
           }),
@@ -785,7 +781,7 @@ describe("HttpApi SDK", () => {
         const prompt = yield* capture(() =>
           sdk.session.prompt({
             sessionID,
-            agent: "build",
+            agent: "maestro",
             model: { providerID: "test", modelID: "test-model" },
             parts: [{ type: "text", text: "hello llm" }],
           }),
@@ -820,7 +816,7 @@ describe("HttpApi SDK", () => {
         const prompt = yield* capture(() =>
           sdk.session.prompt({
             sessionID,
-            agent: "build",
+            agent: "maestro",
             model: { providerID: "test", modelID: "test-model" },
             parts: [{ type: "text", text: "hello skill context" }],
           }),

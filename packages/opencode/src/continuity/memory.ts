@@ -33,7 +33,7 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-/** `dropped` counts ops whose exact value or error was not found; the rest of the pass still applies. */
+/** `dropped` counts ops whose exact value, error or user quote was not found; the rest of the pass still applies. */
 export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
@@ -120,8 +120,8 @@ export function decode(input: {
           return fail("C7", `retiring the objective ${op.id} cites the user's message in the new span that changed it`)
       } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
-        const found = quote(op.quote, ctx, op.src ?? [], true)
-        if ("check" in found) return found
+        // Revoking words that are not found drop the retire: the user's item stays.
+        if ("check" in quote(op.quote, ctx, op.src ?? [], true)) continue
       }
       items.delete(op.id)
       applied.push(op)
@@ -138,12 +138,11 @@ export function decode(input: {
       else if (!EXACT.has(name)) fields[name] = value.replace(/\s+/g, " ").trim()
       else {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
-        // A wrong exact value or error costs only its own op; a wrong user quote rejects the pass.
-        if ("check" in found && name !== "quote") {
+        // A wrong exact value, error or user quote costs only its own op; nothing unverified is stored.
+        if ("check" in found) {
           if (op.op === "add" && op.key) lost.add(op.key)
           continue each
         }
-        if ("check" in found) return found
         fields[name] = found.text
         src.push(found.alias)
         evidence.push(found.alias)
@@ -430,7 +429,8 @@ const BY: Record<string, string> = { user: "user", agent: "agent", agreed: "agen
 const DETAIL: Record<string, string> = { done: "Outcome", doing: "Progress", verify: "To check", waiting: "Waiting on", todo: "Note" }
 // Open steps first: whoever resumes reads where the work stands and the next move before anything else.
 const PLAN = ["doing", "waiting", "verify", "todo", "done"]
-// Commands listed one by one in Activity; older successful ones are counted per program.
+// Commands and returned delegations listed one by one in Activity; older successful commands are counted per
+// program, older returns per member.
 const RECENT = 8
 
 function renderItem(item: MemoryItem, ctx: Scope) {
@@ -474,6 +474,16 @@ function within(entries: { text: string; pinned?: boolean }[], budget: number) {
   return { kept: kept.map((entry) => entry.text), omitted: entries.length - kept.length }
 }
 
+/** One line counting entries per name, e.g. `22 earlier successful commands: sqlite3 ×14, ls ×8 (t4–t25)`. */
+function tally(label: string, entries: { program: string; alias: string }[]) {
+  if (!entries.length) return []
+  const names = new Map<string, number>()
+  for (const entry of entries) names.set(entry.program, (names.get(entry.program) ?? 0) + 1)
+  const aliases = entries.map((entry) => entry.alias).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
+  return [`${entries.length} ${label}: ` + [...names].sort((a, b) => b[1] - a[1]).map(([name, count]) => `${name} ×${count}`).join(", ") +
+    ` (${aliases[0]}${aliases.length > 1 ? `–${aliases.at(-1)}` : ""})`]
+}
+
 function activity(ctx: Scope, host: Host, budget: number) {
   const end = ctx.end
   const delegations = [...ctx.team.launches.entries()].map(([id, launch]) => {
@@ -482,10 +492,15 @@ function activity(ctx: Scope, host: Host, budget: number) {
     const back = ctx.team.returns.get(id)
     const running = host.delegations[id]?.status ?? "unknown"
     const head = `${ctx.team.member(id)} "${ctx.team.description(id)}" · launched ${stamp(start)} (${launch.alias})`
-    return { open: !back, time: back?.time ?? start, pinned: !back && running === "running", text: back
-      ? `${head} → returned ${stamp(back.time)} (${back.alias}) · task_id ${id}`
-      : `${head} → no return through ${end?.alias} (${end ? stamp(end.time) : ""}); job ${running} · task_id ${id}` }
+    return { open: !back, time: back?.time ?? start, pinned: !back && running === "running", member: ctx.team.member(id),
+      alias: back?.alias, text: back
+        ? `${head} → returned ${stamp(back.time)} (${back.alias}) · task_id ${id}`
+        : `${head} → no return through ${end?.alias} (${end ? stamp(end.time) : ""}); job ${running} · task_id ${id}` }
   }).reverse().sort((a, b) => Number(b.open) - Number(a.open) || b.time - a.time)
+  // Open delegations and the most recent returns stay listed; older returns are only counted, per member.
+  const returns = delegations.filter((entry) => !entry.open)
+  const folded = returns.slice(RECENT)
+  const listed = delegations.filter((entry) => !folded.includes(entry))
   const work = new Map<string, { time: number; text: string; command?: { program: string; alias: string; ok: boolean } }>()
   for (const source of ctx.covered) {
     const part = source.part
@@ -512,18 +527,16 @@ function activity(ctx: Scope, host: Host, budget: number) {
   const recent = new Set(ordered.filter((entry) => entry.command).slice(0, RECENT))
   const counted = ordered.filter((entry) => entry.command?.ok && !recent.has(entry))
   const files = ordered.filter((entry) => !counted.includes(entry))
-  const programs = new Map<string, number>()
-  for (const entry of counted) programs.set(entry.command!.program, (programs.get(entry.command!.program) ?? 0) + 1)
-  const aliases = counted.map((entry) => entry.command!.alias).sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
-  const summary = counted.length ? [`${counted.length} earlier successful commands: ` +
-    [...programs].sort((a, b) => b[1] - a[1]).map(([name, count]) => `${name} ×${count}`).join(", ") +
-    ` (${aliases[0]}${aliases.length > 1 ? `–${aliases.at(-1)}` : ""})`] : []
-  const { kept, omitted } = within([...delegations, ...files], budget)
+  const summary = tally(`earlier successful commands`, counted.map((entry) => entry.command!))
+  const earlier = tally(`earlier returned delegations`, folded.map((entry) => ({ program: entry.member, alias: entry.alias! })))
+  const { kept, omitted } = within([...listed, ...files], budget)
   const shown = new Set(kept)
   return [
     "## Activity (host-collected)",
     "Delegations",
-    ...delegations.filter((entry) => shown.has(entry.text)).map((entry) => entry.text).concat(delegations.some((entry) => shown.has(entry.text)) ? [] : ["(none)"]),
+    ...listed.filter((entry) => shown.has(entry.text)).map((entry) => entry.text)
+      .concat(listed.some((entry) => shown.has(entry.text)) || earlier.length ? [] : ["(none)"]),
+    ...earlier,
     "Files and commands, latest first",
     ...files.filter((entry) => shown.has(entry.text)).map((entry) => entry.text)
       .concat(files.some((entry) => shown.has(entry.text)) || summary.length ? [] : ["(none)"]),

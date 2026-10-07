@@ -38,11 +38,12 @@ this reply, for a new item; use it only in needs.
 
 src: aliases from the index (uN user, aN assistant, tN tool call or delegation return). Copy
 exact strings only from what you can see, one value or error per item, never joined (two errors
-are two failures); otherwise cite the alias. An error or value the host cannot find drops only its own op. Retire what is disproven,
+are two failures); otherwise cite the alias. An error, value or quote the host cannot find drops only its own op,
+so a rule whose quote is not the user's exact words is lost. Retire what is disproven,
 finished with or no longer true; keep a dead end worth remembering as a failure.
 
-The host rejects the reply (you get one retry) unless:
-- every quote is found in the user text of the cited sources or the new span;
+Quotes are found in the user text of the cited sources or the new span. The host rejects the
+reply (you get one retry) unless:
 - rules, objectives and user or agreed decisions cite the user and are never updated: retire
   with the user's revoking words as quote, then add (a may rule retires without quote, an
   objective by citing the user's message that changed it). Tool

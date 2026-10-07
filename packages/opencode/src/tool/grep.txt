@@ -1,8 +1,6 @@
-- Fast content search tool that works with any codebase size
-- Searches file contents using regular expressions
-- Supports full regex syntax (eg. "log.*Error", "function\s+\w+", etc.)
-- Filter files by pattern with the include parameter (eg. "*.js", "*.{ts,tsx}")
-- Returns file paths and line numbers with matching lines
-- Use this tool when you need to find files containing specific patterns
-- If you need to identify/count the number of matches within files, use the Bash tool with `rg` (ripgrep) directly. Do NOT use `grep`.
-- When you are doing an open-ended search that may require multiple rounds of globbing and grepping, use the Task tool instead
+Search file contents with a regular expression in ripgrep syntax, such as `function\s+\w+` or `TODO|FIXME`.
+
+- `path` is a directory or a single file, the working directory by default. `include` limits the search to file names that match a glob, such as `*.ts` or `*.{ts,tsx}`.
+- Matching is case-sensitive and works line by line; start the pattern with `(?i)` to ignore case.
+- Hidden files are searched; files and directories excluded by `.gitignore` are not.
+- The result lists matching lines with their line numbers, grouped by file, and stops at 100 matches. For complete counts or file lists, use `bash`, for example `git grep -c` or `rg -l`.

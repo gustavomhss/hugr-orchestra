@@ -1,8 +1,8 @@
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 
-/** User turns, with everything after them, that always stay verbatim. */
-export const TAIL_TURNS = 5
+/** Assistant steps, with everything after them, whose tool output always stays verbatim. */
+export const TAIL_STEPS = 5
 
 /** Failed output keeps this many leading lines verbatim; errors are high-value evidence. */
 export const ERROR_LINES = 20
@@ -12,6 +12,22 @@ const PROTECTED = new Set(["skill", "todowrite", "todoread", "context_recall", "
 
 // Tool arguments that identify a call well enough to re-run or recover it.
 export const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query", "include", "description"]
+
+// What one inline file (an image, a PDF page) costs a model request; its base64 length says nothing about it.
+export const ATTACHMENT_TOKENS = 1_600
+
+const INLINE = /^(data:[^,]*,)?[A-Za-z0-9+/=\r\n]+$/
+
+/** Token estimate of a request value; each inline base64 file counts ATTACHMENT_TOKENS. */
+export function estimate(value: unknown) {
+  let files = 0
+  const text = JSON.stringify(value, (_key, item) => {
+    if (typeof item !== "string" || item.length < 4 * ATTACHMENT_TOKENS || !INLINE.test(item)) return item
+    files++
+    return ""
+  })
+  return Token.estimate(text ?? "") + files * ATTACHMENT_TOKENS
+}
 
 /** Masked tool part IDs mapped to the archive reference holding the full output. */
 export type Masks = ReadonlyMap<string, string>
@@ -52,22 +68,17 @@ export function stub(part: CompletedTool, reference: string) {
 }
 
 /**
- * Completed tool results older than the last TAIL_TURNS user turns that are not protected
- * and not yet masked, with the tokens masking them would free.
+ * Completed tool results older than the last TAIL_STEPS assistant steps that are not protected
+ * and not yet masked, with the tokens masking them would free. Steps, not user turns: one long
+ * autonomous turn is pruned as it grows.
  */
 export function candidates(messages: SessionV1.WithParts[], masks: Masks) {
-  let turns = 0
-  let cutoff = 0
+  let steps = 0
   for (let index = messages.length - 1; index >= 0; index--) {
-    if (messages[index].info.role !== "user") continue
-    turns++
-    if (turns === TAIL_TURNS) {
-      cutoff = index
-      break
-    }
+    if (messages[index].info.role !== "assistant") continue
+    if (++steps === TAIL_STEPS) return before(messages, index, masks)
   }
-  if (turns < TAIL_TURNS) return []
-  return before(messages, cutoff, masks)
+  return []
 }
 
 /** The last resort at the hard limit: every maskable result except those of the latest message. */
@@ -78,7 +89,9 @@ export function urgent(messages: SessionV1.WithParts[], masks: Masks) {
 function before(messages: SessionV1.WithParts[], cutoff: number, masks: Masks) {
   return messages.slice(0, cutoff).flatMap((message) => message.parts.flatMap((part) => {
     if (!completed(part) || PROTECTED.has(part.tool) || masks.has(part.id)) return []
-    const saved = Token.estimate(part.state.output) - Token.estimate(stub(part, "x".repeat(64)))
+    // The stub drops attachments too: an old screenshot is often the largest thing in the request.
+    const saved = Token.estimate(part.state.output) - Token.estimate(stub(part, "x".repeat(64))) +
+      (part.state.attachments?.length ?? 0) * ATTACHMENT_TOKENS
     return saved > 0 ? [{ messageID: message.info.id, part, saved }] : []
   }))
 }

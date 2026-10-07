@@ -2,6 +2,8 @@ import { afterEach, describe, expect, mock, spyOn, test } from "bun:test"
 import { OpencodeClient } from "@opencode-ai/sdk/v2"
 import { runInteractiveMode } from "@/cli/cmd/run/runtime"
 import type { FooterApi, RunProvider } from "@/cli/cmd/run/types"
+import { TuiConfig } from "@/config/tui"
+import { createTuiResolvedConfig } from "../../fixture/tui-runtime"
 
 type SessionMessage = NonNullable<Awaited<ReturnType<OpencodeClient["session"]["messages"]>>["data"]>[number]
 
@@ -139,6 +141,9 @@ describe("run interactive runtime", () => {
   test("waits for provider metadata before eager replay transport bootstrap", async () => {
     const providersStarted = defer<void>()
     const providers = defer<void>()
+    // The real TuiConfig loads the working directory, the checkout, whose .opencode/tui.json lists a plugin, so it
+    // starts an npm install there that outlives the test and, on Windows, starves file I/O for later test files.
+    spyOn(TuiConfig, "get").mockResolvedValue(createTuiResolvedConfig())
 
     const sdk = new OpencodeClient()
     spyOn(sdk.config, "providers").mockImplementation(async () => {
@@ -156,7 +161,7 @@ describe("run interactive runtime", () => {
             time: {
               created: 1,
             },
-            agent: "build",
+            agent: "maestro",
             model: {
               providerID: "openai",
               modelID: "gpt-5",
@@ -189,7 +194,7 @@ describe("run interactive runtime", () => {
         resume: true,
         replay: true,
         replayLimit: 100,
-        agent: "build",
+        agent: "maestro",
         model: {
           providerID: "openai",
           modelID: "gpt-5",

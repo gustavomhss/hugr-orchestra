@@ -112,6 +112,16 @@ describe("persist localStorage resilience", () => {
     expect(result).toBeUndefined()
   })
 
+  test("normalizer keeps payloads that still carry a removed setting", () => {
+    // A stored profile from before a setting was removed must load with its other preferences, not reset.
+    const result = persistTesting.normalize(
+      { general: { autoSave: true, followup: "steer" } },
+      '{"general":{"autoSave":false,"removed":true}}',
+    )
+    expect(result).toBeDefined()
+    expect(JSON.parse(result!)).toMatchObject({ general: { autoSave: false, followup: "steer" } })
+  })
+
   test("workspace storage sanitizes Windows filename characters", () => {
     const result = persistTesting.workspaceStorage("C:\\Users\\foo")
 

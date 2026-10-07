@@ -79,7 +79,7 @@ export const modes = (agents: readonly ModeAgent[]): ModeOption[] =>
 
 export const defaultModeID = (agents: readonly ModeAgent[]) => {
   const primary = agents.find((agent) => agent.mode === "primary" && agent.hidden !== true)
-  return primary ? (primary.id ?? primary.name) : "build"
+  return primary ? (primary.id ?? primary.name) : "maestro"
 }
 
 export const build = (input: {

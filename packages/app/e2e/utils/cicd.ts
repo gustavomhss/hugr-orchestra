@@ -261,8 +261,8 @@ export async function setup(
         location: { directory },
         data: [
           {
-            id: "build",
-            name: "Build",
+            id: "maestro",
+            name: "Maestro",
             mode: "primary",
             hidden: false,
             request: { settings: {}, headers: {}, body: {} },

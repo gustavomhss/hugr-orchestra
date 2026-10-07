@@ -31,14 +31,14 @@ describe("V1 Maestro Arsenal native identity", () => {
       const sessions = yield* Session.Service
       const permission = yield* Permission.Service
       const agents = yield* Agent.Service
-      const session = yield* sessions.create({ title: "arsenal identity", agent: "build" })
-      const agent = yield* agents.get("build")
+      const session = yield* sessions.create({ title: "arsenal identity", agent: "general" })
+      const agent = yield* agents.get("general")
       const metadata: unknown[] = []
       const context: Tool.Context = {
         sessionID: session.id,
         messageID: MessageID.ascending(),
         agent: "maestro",
-        agentID: "build",
+        agentID: "general",
         abort: new AbortController().signal,
         messages: [],
         metadata: (input) =>

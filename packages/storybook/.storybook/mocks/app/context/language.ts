@@ -104,7 +104,6 @@ const dict: Record<string, string> = {
   "common.key.esc": "Esc",
   "command.category.file": "File",
   "command.category.session": "Session",
-  "command.agent.cycle": "Cycle agent",
   "command.model.choose": "Choose model",
   "command.model.variant.cycle": "Cycle model variant",
   "command.prompt.mode.shell": "Switch to shell mode",

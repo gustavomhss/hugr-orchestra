@@ -128,12 +128,12 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
   const selected = (name: string) =>
     Effect.gen(function* () {
       const { Arsenal } = yield* load()
+      // The registry throws only for names it does not know.
       const descriptor = yield* Effect.tryPromise({
         try: () => Arsenal.describe(name),
-        catch: () => new Tool.Failure({ message: "Unable to describe selected Arsenal capability." }),
+        catch: () => new Tool.Failure({ message: unknownCapability }),
       })
-      if (!descriptor || descriptor.name !== name)
-        return yield* new Tool.Failure({ message: "Unknown Arsenal capability." })
+      if (!descriptor || descriptor.name !== name) return yield* new Tool.Failure({ message: unknownCapability })
       const contract = JSON.stringify(descriptor)
       // Never turn an incomplete/truncated schema into a usable execution contract.
       if (Buffer.byteLength(contract, "utf8") > MAX_DESCRIPTOR_BYTES)
@@ -196,7 +196,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
         const result = yield* selected(input.name)
         if (receipts.get(key(context, host, input.name)) !== createHash("sha256").update(result.contract).digest("hex"))
           return yield* new Tool.Failure({
-            message: "Describe this Arsenal capability in the current Session and agent before executing it.",
+            message: `Describe this Arsenal capability in the current Session and agent before executing it: call ${names.describe} with name ${JSON.stringify(input.name)} first, then pass arguments that match its inputSchema.`,
           })
         const args = input.arguments
         if (host.beforeExecute) yield* host.beforeExecute(input.name, args)
@@ -263,8 +263,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
         // Restore permission failures/defects even if a backend converts rejection into isError.
         if (rejected[0]) yield* rejected[0]
         if (pending._tag === "Failure") return yield* pending.failure
-        if (pending.success.isError)
-          return yield* new Tool.Failure({ message: "Arsenal capability failed; no successful outcome was recorded." })
+        if (pending.success.isError) return yield* new Tool.Failure({ message: capabilityFailure(pending.success) })
         if (evidence && (evidence.coverage || integrity)) {
           const coverage = evidence.coverage
           const response = { ...pending.success, content: pending.success.content.map((item) => {
@@ -281,6 +280,23 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
         return JSON.stringify(pending.success)
       }),
   }
+}
+
+const unknownCapability = `Unknown Arsenal capability; use an exact name from ${names.catalog}.`
+
+const BackendFailure = Schema.Struct({ error: Schema.String, message: Schema.optional(Schema.String) })
+
+/**
+ * Backends fail as `{ error, message }`. The code is always safe to return; only argument-validation text, which
+ * names paths into the model's own arguments and never values or host state, is safe to return as well.
+ */
+function capabilityFailure(result: { readonly content: readonly { readonly text: string }[] }) {
+  const failure = Schema.decodeUnknownOption(Schema.fromJsonString(BackendFailure))(result.content[0]?.text)
+  if (Option.isNone(failure) || !/^[a-z][a-z0-9_]{0,63}$/.test(failure.value.error))
+    return "Arsenal capability failed; no successful outcome was recorded."
+  if (failure.value.error === "invalid_arguments" && failure.value.message)
+    return `Arsenal capability failed (invalid_arguments): ${failure.value.message.slice(0, 1024)}. Fix the arguments to match the inputSchema from ${names.describe}; no successful outcome was recorded.`
+  return `Arsenal capability failed (${failure.value.error}); no successful outcome was recorded.`
 }
 
 export const stateDirectory = (data: string, projectID: string) =>
