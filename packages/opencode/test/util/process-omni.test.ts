@@ -73,6 +73,12 @@ describe("util.process (omni)", () => {
     expect(out.stdout.toString().trim()).toBe("via-shell")
   })
 
+  test.skipIf(process.platform !== "win32")("shell: true on Windows hands cmd.exe the line verbatim", async () => {
+    const out = await Process.run(["echo a&echo b"], { shell: true })
+    expect(out.code).toBe(0)
+    expect(out.stdout.toString().split(/\r?\n/).filter(Boolean)).toEqual(["a", "b"])
+  })
+
   test("deadline stops a process that never exits", async () => {
     // Legacy stops the root only, and the tree's descendants would hold the pipes: it gets a lone process.
     const t = tree(omni ? 1 : 0)

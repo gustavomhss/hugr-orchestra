@@ -15,8 +15,8 @@
 // | stdout/stderr "ignore" / unset          | pumped and discarded; the stream is null                                |
 // | Stdio "inherit", number, Stream         | unsupported. Flag "1" delegates to legacy (counted, logged); "strict"   |
 // |                                         | rejects `exited` with code EINVAL. Terminal callers use interactive().  |
-// | shell: true / string                    | Shell.invocation() -> [shell, flag, joined]; cmd.exe (undefined)        |
-// |                                         | delegates to legacy in "1" and "strict" alike (D-L4), counted           |
+// | shell: true / string                    | Shell.invocation() -> [shell, flag, joined]; cmd.exe (undefined) runs   |
+// |                                         | ComSpec, args [], windowsVerbatimArgs '/d /s /c "<joined>"' (WP8b)      |
 // | abort (AbortSignal)                     | tree stop({graceMs}); surfaces as an exit code: RunFailedError, or the  |
 // |                                         | nothrow result. Never an OmniError.                                     |
 // | abort already aborted                   | throws synchronously, as legacy (nothing runs)                          |
@@ -128,13 +128,13 @@ type Pipe = {
 type Collected = { exitCode: number | null; signal: string | null; stdout: Uint8Array; stderr: Uint8Array }
 type Route =
   | { kind: "legacy" | "delegate" | "refuse"; reason?: string }
-  | { kind: "omni"; file: string; args: string[] }
+  | { kind: "omni"; file: string; args: string[]; verbatim?: string }
 
 export function spawn(cmd: string[], opts: Options = {}): Child {
   if (cmd.length === 0) throw new Error("Command is required")
   opts.abort?.throwIfAborted()
   const way = route(cmd, opts)
-  if (way.kind === "omni") return new OmniChild(way.file, way.args, opts)
+  if (way.kind === "omni") return new OmniChild(way.file, way.args, { ...opts, verbatim: way.verbatim })
   if (way.kind === "refuse") return new OmniChild(cmd[0], [], opts, () => Promise.reject(refused(way.reason)))
   if (way.kind === "delegate") {
     Omni.count("delegations")
@@ -215,7 +215,7 @@ export async function run(cmd: string[], opts: RunOptions = {}): Promise<Result>
   const way = route(cmd, { stdin: opts.stdin, shell: opts.shell })
   const collected =
     way.kind === "omni"
-      ? runOmni(way.file, way.args, opts)
+      ? runOmni(way.file, way.args, { ...opts, verbatim: way.verbatim })
       : collect(spawn(cmd, { ...opts, stdout: "pipe", stderr: "pipe" }))
 
   const out = await collected.catch((err: unknown) => {
@@ -236,7 +236,7 @@ async function collect(proc: Child): Promise<Result> {
   return { code, stdout, stderr }
 }
 
-async function runOmni(file: string, args: string[], opts: RunOptions): Promise<Result> {
+async function runOmni(file: string, args: string[], opts: RunOptions & { verbatim?: string }): Promise<Result> {
   const binding = await Omni.load()
   const pending = binding.run(file, args, { ...common(opts), text: false, maxOutputBytes: MAX_OUTPUT })
   Omni.count("spawns")
@@ -305,13 +305,15 @@ function route(cmd: string[], opts: Pick<Options, "stdin" | "stdout" | "stderr" 
   }
   if (!opts.shell) return { kind: "omni", file: cmd[0], args: cmd.slice(1) }
   const shell = ShellPath.invocation(opts.shell, cmd[0], cmd.slice(1))
-  // cmd.exe needs its own command line; it stays on legacy until WP8b, in strict mode too (D-L4).
-  if (!shell) return { kind: "delegate", reason: "cmd.exe shell" }
-  return { kind: "omni", file: shell.file, args: shell.args }
+  if (shell) return { kind: "omni", file: shell.file, args: shell.args }
+  // cmd.exe parses its own command line: name it and hand it the line verbatim, as cross-spawn does (WP8b).
+  const file = opts.shell === true ? (process.env.ComSpec ?? "cmd.exe") : String(opts.shell)
+  return { kind: "omni", file, args: [], verbatim: `/d /s /c "${cmd.join(" ")}"` }
 }
 
-function common(opts: Options) {
+function common(opts: Options & { verbatim?: string }) {
   return {
+    ...(opts.verbatim === undefined ? {} : { windowsVerbatimArgs: opts.verbatim }),
     cwd: opts.cwd,
     inheritEnv: false,
     env: opts.env === null ? {} : Omni.childEnv(opts.env),
@@ -426,7 +428,12 @@ class OmniChild implements Child {
   private stopping?: Promise<void>
   private paused = false
 
-  constructor(file: string, args: string[], opts: Options, start = () => launchOmni(file, args, opts)) {
+  constructor(
+    file: string,
+    args: string[],
+    opts: Options & { verbatim?: string },
+    start = () => launchOmni(file, args, opts),
+  ) {
     this.grace = common(opts).graceMs
     const started = start()
     this.child = started.catch(() => undefined)
@@ -510,7 +517,11 @@ class OmniChild implements Child {
   }
 }
 
-async function launchOmni(file: string, args: string[], opts: Options): Promise<Pipe | undefined> {
+async function launchOmni(
+  file: string,
+  args: string[],
+  opts: Options & { verbatim?: string },
+): Promise<Pipe | undefined> {
   const binding = await Omni.load()
   if (opts.abort?.aborted) return
   try {
