@@ -21,7 +21,7 @@ describe("product name in copy", () => {
     expect(DESKTOP_NATIVE_LOCALES).toContain("en")
     expect(DESKTOP_NATIVE_LOCALES.length).toBeGreaterThan(1)
     expect(problems(await load(), EXTERNAL_NAMES)).toEqual([])
-  })
+  }, 30_000) // Cold compilation of every locale is a corpus gate, not a UI-response latency check.
 
   test("names each planted mention, empty dictionary and stale exception", async () => {
     const dictionaries = structuredClone(await load())
@@ -50,11 +50,12 @@ describe("product name in copy", () => {
 async function load() {
   const dictionaries: Dictionaries = { orchestra: { en: ORCHESTRA_COPY } }
   for (const [domain, source] of Object.entries(sources)) {
-    dictionaries[domain] = {}
-    for (const locale of DESKTOP_NATIVE_LOCALES) {
-      const module: { dict: Record<string, string> } = await import(source(locale))
-      dictionaries[domain][locale] = module.dict
-    }
+    dictionaries[domain] = Object.fromEntries(
+      await Promise.all(DESKTOP_NATIVE_LOCALES.map(async (locale) => {
+        const module: { dict: Record<string, string> } = await import(source(locale))
+        return [locale, module.dict] as const
+      })),
+    )
   }
   return dictionaries
 }
