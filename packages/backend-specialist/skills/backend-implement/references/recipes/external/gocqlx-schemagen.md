@@ -23,7 +23,7 @@ The packet assigns Go table models (gocqlx `table.Table` values and UDT structs)
 1. Check the project's pin first. A `go.mod` that requires `github.com/scylladb/gocqlx/v3` at any version other than `v3.0.4` means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=3.0.4)` and do not regenerate. A project on an older major (`gocqlx/v2`) cannot use this output: a `packet` blocker.
 2. Generate, with the packet's values (flags take one dash):
    ```sh
-   "$BACKEND_TOOLKIT_BIN/gocqlx-schemagen" -cluster <host:port> -keyspace <keyspace> -pkgname <name> -output <pkg-dir>
+   "$BACKEND_TOOLKIT_BIN/gocqlx-schemagen" -cluster <hosts> -keyspace <keyspace> -pkgname <name> -output <pkg-dir>
    ```
    It writes one file, `<pkg-dir>/<name>.go`, and replaces it whole. Add `-user`/`-password`, `-ignore-names <a,b>` or `-ignore-indexes` only as the packet supplies them.
 3. The first run on a machine compiles the engine once; it can take a few minutes before generation starts. Later runs reuse that build. Do not interrupt it or retry in a loop.
