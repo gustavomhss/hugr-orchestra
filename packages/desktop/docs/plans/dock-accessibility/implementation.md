@@ -44,6 +44,6 @@ Plugin retains permissions, numeric browser refs, coordinate precedence and old 
 
 ## Ownership / wave
 
-Parallel A: refs.py + snapshot.py + test_snapshot.py. B: actions.py + test_actions.py. C: app-dock-native-client.ts + sibling test. D: app-dock-native.ts + sibling test + opencode plugin pair. Shared context/bus/keyboard/protocol/bootstrap/RPC/API/packaging/docs remain lead-owned, read-only during wave. Agents have separate lightweight worktrees at baseline; source scaffold digest recorded by lead before dispatch. No commits/push/PR/merge.
+Parallel A: refs.py + snapshot.py + test_snapshot.py. B: actions.py + test_actions.py. C: app-dock-native-client.ts + sibling test. D: app-dock-native.ts + sibling test + orchestra plugin pair. Shared context/bus/keyboard/protocol/bootstrap/RPC/API/packaging/docs remain lead-owned, read-only during wave. Agents have separate lightweight worktrees at baseline; source scaffold digest recorded by lead before dispatch. No commits/push/PR/merge.
 
 Acceptance: real helper/app paths in isolated guest, shared goldens, bounds/foreign/stale/disabled/false results, cancellation/EOF/late replies with no replay, plugin/web regression controls. Agent tests must have measured mutation controls; integration verifies actual modules, not a test copy of behavior. Lead repeats critical checks and obtains independent cold review. Packaged runtime/Xpra is a separate joint gate requiring the runtime handoff; no universal toolkit/performance claim.

@@ -195,8 +195,8 @@ console.log(`\nFetched ${releases.length} releases total\n`)
 
 const { total: githubTotal } = calculate(releases)
 
-console.log("Fetching npm all-time downloads for opencode-ai...\n")
-const npmDownloads = await fetchNpmDownloads("opencode-ai")
+console.log("Fetching npm all-time downloads for orchestra-ai...\n")
+const npmDownloads = await fetchNpmDownloads("orchestra-ai")
 console.log(`Fetched npm all-time downloads: ${npmDownloads.toLocaleString()}\n`)
 
 await save(githubTotal, npmDownloads)

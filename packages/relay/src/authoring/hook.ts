@@ -1,8 +1,8 @@
 export * as AuthoringHook from "./hook"
 
 import { Effect, Option, Schema } from "effect"
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
-import { RelayHook } from "@opencode-ai/schema/relay-hook"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
+import { RelayHook } from "@orchestra/schema/relay-hook"
 import { AuthoringGraph } from "./graph"
 
 // Hook documents (relay_authoring/hooks.py; WP7), with the additive Allow node, Verify Pass/Fail ports and session

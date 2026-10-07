@@ -1,7 +1,7 @@
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
-import type { RelayHook } from "@opencode-ai/schema/relay-hook"
-import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
-import type { OpencodeClient } from "@opencode-ai/sdk/v2/client"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
+import type { RelayHook } from "@orchestra/schema/relay-hook"
+import type { RelayLedger } from "@orchestra/schema/relay-ledger"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 
 // The Relay authoring routes (`server.relay.document`, `server.relay.publish`, `server.relay.hook`), called through
 // the generated V2 client. The types are the frozen schema contracts: the generator drops `NullOr` (an unpublished
@@ -70,7 +70,7 @@ export type RelayClient = ReturnType<typeof createRelayClient>
 
 type Answer = { data?: unknown; error?: unknown; response?: Response }
 
-export function createRelayClient(input: { sdk: OpencodeClient; directory: string }) {
+export function createRelayClient(input: { sdk: OrchestraClient; directory: string }) {
   const location = { directory: input.directory }
   const relay = input.sdk.v2.relay
   const off = { throwOnError: false } as const

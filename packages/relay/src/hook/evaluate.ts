@@ -1,7 +1,7 @@
 export * as HookEvaluate from "./evaluate"
 
-import { RelayHook } from "@opencode-ai/schema/relay-hook"
-import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
+import { RelayHook } from "@orchestra/schema/relay-hook"
+import type { RelayLedger } from "@orchestra/schema/relay-ledger"
 import { HookGlob } from "./glob"
 
 // Pure hook evaluation (WP9): which installed actions fire for one invocation, in what order. Core enforces them

@@ -1,5 +1,5 @@
 import { expect, type Page, type Request } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 export const serverA = "http://127.0.0.1:4096"
 export const serverB = "http://127.0.0.1:4097"
@@ -97,7 +97,7 @@ export async function openAgents(page: Page, ready = true) {
 
 function requestDirectory(request: Request) {
   const url = new URL(request.url())
-  const header = request.headers()["x-opencode-directory"]
+  const header = request.headers()["x-orchestra-directory"]
   return (
     url.searchParams.get("location[directory]") ??
     url.searchParams.get("directory") ??
@@ -143,7 +143,7 @@ export async function setup(
   })
   await page.addInitScript(
     ({ serverA, serverB, directory, otherDirectory, scheme }) => {
-      localStorage.setItem("opencode.settings.dat:defaultServerUrl", serverA)
+      localStorage.setItem("orchestra.settings.dat:defaultServerUrl", serverA)
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({
@@ -154,10 +154,10 @@ export async function setup(
           },
         }),
       )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", scheme)
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverA, serverB],
           projects: {
@@ -174,17 +174,17 @@ export async function setup(
         }),
       )
       localStorage.setItem(
-        "opencode.global.dat:layout",
+        "orchestra.global.dat:layout",
         JSON.stringify({ home: { selection: { server: serverA, directory } } }),
       )
       localStorage.setItem(
-        `opencode.global.dat:${serverA}\0layout`,
+        `orchestra.global.dat:${serverA}\0layout`,
         JSON.stringify({ home: { selection: { server: serverA, directory } } }),
       )
     },
     { serverA, serverB, directory, otherDirectory, scheme: input.scheme ?? "dark" },
   )
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol: input.protocol,
     eventRetry: 60_000,
     provider: input.models
@@ -240,7 +240,7 @@ export async function setup(
         return route.fulfill({ status: 200, contentType: "text/html", body: "<!doctype html><title>app</title>" })
       const name = decodeURIComponent(file[1])
       const location = { directory, project: { id: "Atlas", directory } }
-      const fallback = { path: `${directory}/.opencode/agent/${name}.md`, exists: false, revision: "" }
+      const fallback = { path: `${directory}/.orchestra/agent/${name}.md`, exists: false, revision: "" }
       if (request.method() === "GET") {
         await input.fileGate
         answered.push(name)

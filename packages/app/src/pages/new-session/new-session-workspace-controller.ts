@@ -7,7 +7,7 @@ import { preferredSandbox } from "@/orchestra/chapters/workspaces-model"
 import { persistedWorkspaces } from "@/orchestra/chapters/workspaces-store"
 import { pathKey } from "@/utils/path-key"
 
-const workspaceBarEnabled = import.meta.env.VITE_OPENCODE_CHANNEL !== "prod"
+const workspaceBarEnabled = import.meta.env.VITE_ORCHESTRA_CHANNEL !== "prod"
 
 export function resolveNewSessionWorktree(input: {
   enabled: boolean

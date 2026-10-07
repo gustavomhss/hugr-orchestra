@@ -14,7 +14,7 @@ import os from "node:os"
 import path from "node:path"
 import { Effect, Fiber, Scope } from "effect"
 import { TestClock } from "effect/testing"
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { AuthoringGraph } from "../src/authoring/graph"
 import { AuthoringStore } from "../src/authoring/store"
 

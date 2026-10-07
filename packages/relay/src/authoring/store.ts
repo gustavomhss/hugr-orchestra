@@ -5,8 +5,8 @@ import { mkdirSync, readdirSync, statSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { Clock, Context, Effect, Layer, Scope } from "effect"
-import type { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
-import type { RelaySprint } from "@opencode-ai/schema/relay-sprint"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
+import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { RelayJson } from "../json"
 import { AuthoringGraph } from "./graph"
 import { connect } from "#sqlite"
@@ -58,7 +58,7 @@ export interface Interface {
   readonly removeScope: (id: string) => Effect.Effect<void, AuthoringGraph.Refusal>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/relay/AuthoringStore") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/relay/AuthoringStore") {}
 
 // Opens `<dataDir>/authoring.sqlite3` scoped to one workspace (WAL, foreign keys on); closing the scope closes it.
 export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interface, never, Scope.Scope> =>

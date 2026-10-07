@@ -1,5 +1,5 @@
 import { Dialog } from "@kobalte/core/dialog"
-import { getFilename } from "@opencode-ai/core/util/path"
+import { getFilename } from "@orchestra/core/util/path"
 import { createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"

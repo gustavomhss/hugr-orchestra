@@ -1,20 +1,20 @@
 import path from "path"
 import { createHash } from "crypto"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Location } from "@opencode-ai/core/location"
-import { Relay } from "@opencode-ai/core/relay"
-import { RelayHookInstall } from "@opencode-ai/core/relay-hook-install"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Location } from "@orchestra/core/location"
+import { Relay } from "@orchestra/core/relay"
+import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
 import {
   RelayConflictError,
   RelayInvalidError,
   RelayNotFoundError,
   RelayUnavailableError,
-} from "@opencode-ai/protocol/groups/relay-document"
-import { RelayHookDecision } from "@opencode-ai/protocol/groups/relay-hook"
-import { AuthoringHook } from "@opencode-ai/relay/authoring/hook"
-import type { AuthoringStore } from "@opencode-ai/relay/authoring/store"
-import { RelayJson } from "@opencode-ai/relay/json"
-import { LedgerRead } from "@opencode-ai/relay/ledger/read"
+} from "@orchestra/protocol/groups/relay-document"
+import { RelayHookDecision } from "@orchestra/protocol/groups/relay-hook"
+import { AuthoringHook } from "@orchestra/relay/authoring/hook"
+import type { AuthoringStore } from "@orchestra/relay/authoring/store"
+import { RelayJson } from "@orchestra/relay/json"
+import { LedgerRead } from "@orchestra/relay/ledger/read"
 import { Effect, Layer, Schema } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"

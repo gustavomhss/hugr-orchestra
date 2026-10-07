@@ -14,7 +14,7 @@ per-session state in your plugin (background workers, telemetry handles, audit
 log entries).
 
 ```ts
-import type { Hooks } from "@opencode-ai/plugin"
+import type { Hooks } from "@orchestra/plugin"
 
 const plugin: Hooks = {
   "session.start": async (input, output) => {
@@ -50,7 +50,7 @@ message (or the turn aborts/errors). The most common use is post-turn work
 (commit, summarize, notify) or requesting another turn.
 
 ```ts
-import type { Hooks } from "@opencode-ai/plugin"
+import type { Hooks } from "@orchestra/plugin"
 
 const plugin: Hooks = {
   stop: async (input, output) => {
@@ -94,7 +94,7 @@ entries). The hook is hard-capped at 5 seconds; slow plugins are timed out, not
 allowed to block shutdown.
 
 ```ts
-import type { Hooks } from "@opencode-ai/plugin"
+import type { Hooks } from "@orchestra/plugin"
 
 const plugin: Hooks = {
   "session.end": async (input) => {
@@ -130,7 +130,7 @@ a turn. If you need to enforce a policy, use the permission system instead.
 ## Example: a telemetry plugin
 
 ```ts
-import type { Hooks } from "@opencode-ai/plugin"
+import type { Hooks } from "@orchestra/plugin"
 
 const startTimes = new Map<string, number>()
 

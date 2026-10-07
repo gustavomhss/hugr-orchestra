@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
-  "name": "@opencode-ai/relay",
+  "name": "@orchestra/relay",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,7 +21,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@opencode-ai/schema": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

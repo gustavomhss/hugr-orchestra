@@ -1,6 +1,6 @@
 # The backend specialist frozen interfaces F1 and F2 — draft for LEAD-0
 
-Status: draft contract text, 2026-10-05. Source baseline: Orchestra worktree `_worktrees/backend-plugin`, HEAD `d11d8652aa` (`fork/dev`). Source-read only; no test, typecheck or install was run. Anchors are `file:line @ d11d8652aa`; **O** = `packages/opencode/src`, **C** = `packages/core/src`, **P** = `packages/plugin/src`.
+Status: draft contract text, 2026-10-05. Source baseline: Orchestra worktree `_worktrees/backend-plugin`, HEAD `d11d8652aa` (`fork/dev`). Source-read only; no test, typecheck or install was run. Anchors are `file:line @ d11d8652aa`; **O** = `packages/orchestra/src`, **C** = `packages/core/src`, **P** = `packages/plugin/src`.
 
 Normative words: MUST / MUST NOT / MAY. "Existing" means the behavior is in source at HEAD. "Required new (WP)" means the work package that owns it must add it; no signature below is claimed to exist unless it is marked existing.
 
@@ -59,7 +59,7 @@ Owner rulings this draft applies and does not reopen: Maestro owns scope and per
 
 **Support and inference**
 
-- **F1.12 Support claim.** The backend specialist is supported only on Orchestra builds that contain the F1 and F2 host seams. Neither the backend specialist package nor its docs offer a stock-OpenCode path: no custom-agent emulation and no degraded "works on stock" mode. Any loadable backend specialist artifact that finds itself on a host without these seams MUST refuse with an explicit unsupported-host diagnostic. *Required new (H1):* a host capability marker, if a loadable artifact exists outside the built-in registration.
+- **F1.12 Support claim.** The backend specialist is supported only on Orchestra builds that contain the F1 and F2 host seams. Neither the backend specialist package nor its docs offer a stock-Orchestra path: no custom-agent emulation and no degraded "works on stock" mode. Any loadable backend specialist artifact that finds itself on a host without these seams MUST refuse with an explicit unsupported-host diagnostic. *Required new (H1):* a host capability marker, if a loadable artifact exists outside the built-in registration.
 - **F1.13 Forbidden inference.** No component may infer the backend specialist's identity from a display name, charter or prompt text, a Session title, a model-authored argument or a `.name` string comparison. A missing or malformed member ID fails closed (F2.15).
 
 ### Source anchors (@ d11d8652aa)
@@ -100,7 +100,7 @@ H1 (registration, profile, resolver), H4 (presentation and payloads), H5 (hash p
 - Changing Maestro's fixed name.
 - A V2 (`SessionV2`, Core agent) registration path.
 - Plugin-driven agent registration.
-- Stock OpenCode support.
+- Stock Orchestra support.
 - Any backend-specialist-side permission or scope logic.
 
 ### Open owner decisions

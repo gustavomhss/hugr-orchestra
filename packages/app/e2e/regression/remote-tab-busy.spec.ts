@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { currentSession } from "../utils/mock-server"
 
 const serverA = "http://127.0.0.1:4096"
@@ -15,9 +15,9 @@ test.describe("legacy tab strip", () => {
     await page.addInitScript(
       ({ serverA, serverB, sessionA, sessionB }) => {
         localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
-        localStorage.setItem("opencode.global.dat:server", JSON.stringify({ list: [serverB] }))
+        localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify([
             { type: "session", server: serverA, sessionId: sessionA },
             { type: "session", server: serverB, sessionId: sessionB },
@@ -49,7 +49,7 @@ test("desktop tabs filter by profile and show each server's own busy state", asy
     ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverB],
           projects: {
@@ -59,7 +59,7 @@ test("desktop tabs filter by profile and show each server's own busy state", asy
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "orchestra.window.browser.dat:tabs",
         JSON.stringify([
           { type: "session", server: serverA, sessionId: sessionA },
           { type: "session", server: serverB, sessionId: sessionB },

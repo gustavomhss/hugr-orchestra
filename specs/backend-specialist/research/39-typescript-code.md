@@ -129,7 +129,7 @@ export const renameProfile = authClient
 
 ## Evidence ledger — primary sources
 
-- Local host root: `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`. Inspected `package.json`, Effect patch, `packages/protocol/src/api.ts`, Protocol/Server `middleware/schema-error.ts`. Available reference: `/Users/gustavoschneiter/.local/share/opencode/repos/github.com/Effect-TS/effect-smol/packages/effect/package.json`.
+- Local host root: `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical`. Inspected `package.json`, Effect patch, `packages/protocol/src/api.ts`, Protocol/Server `middleware/schema-error.ts`. Available reference: `/Users/gustavoschneiter/.local/share/orchestra/repos/github.com/Effect-TS/effect-smol/packages/effect/package.json`.
 - [E1] Effect beta.83 [release](https://github.com/Effect-TS/effect-smol/releases/tag/effect%404.0.0-beta.83), [endpoint API/source](https://raw.githubusercontent.com/Effect-TS/effect-smol/effect%404.0.0-beta.83/packages/effect/src/unstable/httpapi/HttpApiEndpoint.ts), [MIT license](https://raw.githubusercontent.com/Effect-TS/effect-smol/effect%404.0.0-beta.83/LICENSE).
 - [E2] Exact beta.83 [HttpApiBuilder source](https://raw.githubusercontent.com/Effect-TS/effect-smol/effect%404.0.0-beta.83/packages/effect/src/unstable/httpapi/HttpApiBuilder.ts): `Handlers.ValidateReturn`, `handlerToHttpEffect`, `decodePayload`, response encoders.
 - [E3] Exact beta.83 [HttpApiMiddleware source/docs](https://raw.githubusercontent.com/Effect-TS/effect-smol/effect%404.0.0-beta.83/packages/effect/src/unstable/httpapi/HttpApiMiddleware.ts): `Service`, `layerSchemaErrorTransform`.

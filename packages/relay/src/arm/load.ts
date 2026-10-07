@@ -3,8 +3,8 @@ export * as ArmLoad from "./load"
 import path from "node:path"
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync } from "node:fs"
 import { Effect, Schema } from "effect"
-import { RelayArm } from "@opencode-ai/schema/relay-arm"
-import { RelaySprint } from "@opencode-ai/schema/relay-sprint"
+import { RelayArm } from "@orchestra/schema/relay-arm"
+import { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 // The strict loader for arm files and the Arsenal state file (WP5): no symlink, at most 512 KB, size and mtime
 // unchanged across the read, then a schema decode.

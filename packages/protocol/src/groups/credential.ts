@@ -1,4 +1,4 @@
-import { Credential } from "@opencode-ai/schema/credential"
+import { Credential } from "@orchestra/schema/credential"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError } from "../errors"

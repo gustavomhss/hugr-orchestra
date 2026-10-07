@@ -9,7 +9,7 @@ Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude C
 ## 1. Where we are (2026-10-06)
 
 - Phase 1 is in `dev` (PR #21, merge `2bb9192f52`). Phase 2 is open as PR #54 (branch `specialist-phase2`, `epic` label, auto-fix on).
-- The specialist's stable id is `backend`. Its display name is a variable whose default lives only in `BACKEND_DEFAULT_LABEL` (`packages/opencode/src/maestro/roster.ts`); `test/agent/specialist-name-guard.test.ts` rejects any other occurrence of that name in the repo. Refer to it by role or by id.
+- The specialist's stable id is `backend`. Its display name is a variable whose default lives only in `BACKEND_DEFAULT_LABEL` (`packages/orchestra/src/maestro/roster.ts`); `test/agent/specialist-name-guard.test.ts` rejects any other occurrence of that name in the repo. Refer to it by role or by id.
 - Charter v3a is installed (`agent/prompt/backend.txt` = `charter-draft.md`). Evaluation lives in github.com/gustavomhss/backend-bench.
 - Open owner confirmation: Maestro's display name fixed (not configurable) while other seats stay configurable; then document the name rule in `AGENTS.md` and make the guard's message explain it.
 

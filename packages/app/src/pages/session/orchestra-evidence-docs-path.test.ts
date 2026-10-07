@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { FileNode } from "@opencode-ai/sdk/v2"
+import type { FileNode } from "@orchestra/sdk/v2"
 import { documentationRoots, isDocument, resolveDocumentLink } from "./orchestra-evidence-docs-path"
 
 const node = (path: string, type: FileNode["type"] = "file"): FileNode => ({

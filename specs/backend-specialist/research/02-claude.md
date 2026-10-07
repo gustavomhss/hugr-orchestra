@@ -4,7 +4,7 @@ Research date: **2026-10-03**. Primary sources: current Anthropic documentation,
 
 ## 1. Architecture verdict
 
-**Build specialist as host-owned member profile + progressive skills + thin integration adapter. OpenCode/Orchestra executes; Atlas remembers; Maestro coordinates when present.**
+**Build specialist as host-owned member profile + progressive skills + thin integration adapter. Orchestra executes; Atlas remembers; Maestro coordinates when present.**
 
 ```text
 User request or Maestro assignment
@@ -12,16 +12,16 @@ User request or Maestro assignment
   → stable specialist identity + task contract
   → project/member rules + explicit Atlas task/PR recall
   → selected skill/reference material
-  → existing OpenCode/Orchestra runner, tools, permissions
+  → existing Orchestra runner, tools, permissions
   → evidence-bearing result + Atlas memory updates
   → optional Maestro progress/handoff projection
 ```
 
-These are **proposed architectural responsibilities**, not claims that named plugin APIs already exist. OpenCode/Atlas/Maestro requirements come from research brief and supplied repository instructions; R02 did not audit their implementation surfaces.
+These are **proposed architectural responsibilities**, not claims that named plugin APIs already exist. Orchestra/Atlas/Maestro requirements come from research brief and supplied repository instructions; R02 did not audit their implementation surfaces.
 
 Host boundaries:
 
-- **OpenCode/Orchestra:** session identity, durable prompt admission, execution, cancellation, tools, permission decisions, context assembly, transcript ownership. Preserve supplied SessionV2 admission/execution separation, process-local coordination, and explicit provider-turn boundaries. Specialist task IDs must not become durable identities for execution drains.
+- **Orchestra:** session identity, durable prompt admission, execution, cancellation, tools, permission decisions, context assembly, transcript ownership. Preserve supplied SessionV2 admission/execution separation, process-local coordination, and explicit provider-turn boundaries. Specialist task IDs must not become durable identities for execution drains.
 - **Atlas:** shared native Knowledge+Memory, including persistent project/member rules, sourced knowledge, task/PR episodes, retrieval, revisions, deletion, access scope. Plugin carries references and projections; Atlas remains authoritative.
 - **Specialist:** backend expertise, activation descriptions, proportional procedures, task/result contracts, concise evidence and learning proposals. Existing runner performs all reasoning. Any summarization or memory curation requiring a model uses host execution.
 - **Maestro:** optional assignment, dependencies, scheduling policy, progress and outcome aggregation. Standalone invocation supplies same contract locally. Installing/removing Maestro must not change memory ownership or specialist identity.
@@ -33,9 +33,9 @@ Claude Agent SDK is useful evidence, but wrong execution dependency for this des
 
 | Evidence class | What research establishes | What it does not establish |
 | --- | --- | --- |
-| **Documented runtime behavior** | Claude skill discovery, memory loading, permission ordering, lifecycle hooks, subagent inheritance, session/workflow resume | Independent verification of closed Claude Code implementation or matching behavior in OpenCode |
+| **Documented runtime behavior** | Claude skill discovery, memory loading, permission ordering, lifecycle hooks, subagent inheritance, session/workflow resume | Independent verification of closed Claude Code implementation or matching behavior in Orchestra |
 | **Inspectable implementation** | Python SDK option translation, callback routing, public agent/skill/workflow examples, evaluation scripts | Internal Claude Code scheduler, skill-selection algorithm, memory-writer policy, permission classifier correctness |
-| **Architecture adaptation** | How mechanisms could fit supplied host/Atlas/Maestro constraints | Existing Atlas schemas, available OpenCode hook names, delivery estimates, measured quality gains |
+| **Architecture adaptation** | How mechanisms could fit supplied host/Atlas/Maestro constraints | Existing Atlas schemas, available Orchestra hook names, delivery estimates, measured quality gains |
 
 Claude Code repository and TypeScript SDK repository carry **“All rights reserved” / Commercial Terms** notices. Python SDK source carries MIT. Public examples and skill folders require their own license checks; “Anthropic repo” does not imply one reusable license. [S05L][S07][S08][S01R]
 
@@ -144,7 +144,7 @@ Important limits:
 
 **Inspectable counterexample.** Research demo tracker attributes activity through mutable `_current_parent_id`, updated from latest message. Its code does not bind each hook to incoming native `agent_id`. Interleaving is therefore a design concern to test, not a measured runtime bug here. Current Python types explicitly document per-event identity for interleaving subagent hooks. [S06T][S05T]
 
-**Orchestra adaptation.** Attach to verified native events only; names above are Claude names, not promised OpenCode hooks. Build attribution from explicit host session/member/task/tool-call identity. Deterministic handlers record context provenance, tool outcomes, handoff status, and Atlas persistence receipts. Use idempotent writes keyed to native event/operation identity; avoid global “current agent.”
+**Orchestra adaptation.** Attach to verified native events only; names above are Claude names, not promised Orchestra hooks. Build attribution from explicit host session/member/task/tool-call identity. Deterministic handlers record context provenance, tool outcomes, handoff status, and Atlas persistence receipts. Use idempotent writes keyed to native event/operation identity; avoid global “current agent.”
 
 Commit important task state as work progresses through host/Atlas boundaries, not exclusively on Stop/SessionEnd. Keep optional telemetry failures separate from authoritative state failures. Any continuation feedback needs bounded retries/cancellation; no hidden verifier model, recurrent prompt hook, or independent LLM loop.
 
@@ -230,11 +230,11 @@ Pins:
 
 ## 7. Source limitations and next architecture evidence
 
-- Research verifies current written contracts and inspected source shapes. No Claude/OpenCode execution, behavioral benchmark, model-quality claim, or measured integration cost.
+- Research verifies current written contracts and inspected source shapes. No Claude/Orchestra execution, behavioral benchmark, model-quality claim, or measured integration cost.
 - Closed runtime's memory selection, hook firing/order, permissions, and workflow replay treated as documented behavior. Python callback plumbing does not expose those internals.
 - Current docs are mutable; pinned public sample revisions are independently reproducible. Version constraints matter, especially hooks, agent inheritance, configuration defaults, session APIs.
 - Public source defects/risks described as static findings or deductions. No claim that proposed interleaving/error scenario has been reproduced.
-- Before implementation, map proposed responsibilities to actual OpenCode extension points, native member identity, Atlas record/retrieval authority, and Maestro assignment/result contracts. Confirm which invariants host already enforces; extend native host only where required. Do not invent matching Claude-style hooks to fill gaps.
+- Before implementation, map proposed responsibilities to actual Orchestra extension points, native member identity, Atlas record/retrieval authority, and Maestro assignment/result contracts. Confirm which invariants host already enforces; extend native host only where required. Do not invent matching Claude-style hooks to fill gaps.
 - Highest-value next architecture artifact: one standalone backend task and same task under Maestro, both showing identical stable identity, effective permissions, Atlas context provenance, task/PR recall, result evidence, and explicit resume disposition. This is bounded design validation, not mandatory ceremony for every future task.
 
 ## 8. Primary source register

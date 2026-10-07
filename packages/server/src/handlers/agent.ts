@@ -1,8 +1,8 @@
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { ConfigAgentFile } from "@opencode-ai/core/config/agent-file"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Location } from "@opencode-ai/core/location"
-import { ConflictError, InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { AgentV2 } from "@orchestra/core/agent"
+import { ConfigAgentFile } from "@orchestra/core/config/agent-file"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Location } from "@orchestra/core/location"
+import { ConflictError, InvalidRequestError, UnknownError } from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -47,7 +47,7 @@ export const AgentHandler = HttpApiBuilder.group(Api, "server.agent", (handlers)
                 : failure(error),
             ),
           )
-          // The config agent plugin rescans `.opencode` on reload, including a folder this write created.
+          // The config agent plugin rescans `.orchestra` on reload, including a folder this write created.
           yield* agents.reload()
           return yield* response(Effect.succeed(file))
         }),

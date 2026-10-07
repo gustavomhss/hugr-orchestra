@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import { createStore } from "solid-js/store"
 import { QueryClient } from "@tanstack/solid-query"
-import type { Config, OpencodeClient, Project } from "@opencode-ai/sdk/v2/client"
+import type { Config, OrchestraClient, Project } from "@orchestra/sdk/v2/client"
 import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@opencode-ai/client/promise"
-import type { NormalizedProviderListResponse } from "@opencode-ai/session-ui/context"
+import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import {
   bootstrapDirectory,
   loadAgentsQuery,
@@ -97,7 +97,7 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
       question: { list: async () => ({ data: [] }) },
       v2: { reference: { list: async () => ({ data: { data: [] } }) } },
       provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-    } as unknown as OpencodeClient,
+    } as unknown as OrchestraClient,
     api,
     store: state[0],
     setStore: state[1],
@@ -160,7 +160,7 @@ describe("bootstrapDirectory", () => {
           },
         },
         provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-      } as unknown as OpencodeClient,
+      } as unknown as OrchestraClient,
       api,
       store,
       setStore,
@@ -200,7 +200,7 @@ describe("bootstrapDirectory", () => {
             throw new Error("legacy directory config should not be called")
           },
         },
-      } as unknown as OpencodeClient,
+      } as unknown as OrchestraClient,
       api,
       store,
       setStore,
@@ -244,7 +244,7 @@ describe("bootstrapDirectory", () => {
           question: { list: async () => ({ data: [] }) },
           v2: { reference: { list: async () => ({ data: { data: [] } }) } },
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as OpencodeClient,
+        } as unknown as OrchestraClient,
         api,
         store,
         setStore,
@@ -296,7 +296,7 @@ describe("bootstrapDirectory", () => {
             question: { list: async () => ({ data: [] }) },
             v2: { reference: { list: async () => ({ data: { data: [] } }) } },
             provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-          } as unknown as OpencodeClient,
+          } as unknown as OrchestraClient,
           api,
           store,
           setStore,
@@ -340,7 +340,7 @@ describe("bootstrapDirectory", () => {
           question: { list: async () => ({ data: [] }) },
           v2: { reference: { list: async () => ({ data: { data: [] } }) } },
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as OpencodeClient,
+        } as unknown as OrchestraClient,
         api,
         store,
         setStore,
@@ -409,7 +409,7 @@ describe("config queries", () => {
           },
         },
       },
-    } as unknown as OpencodeClient
+    } as unknown as OrchestraClient
 
     const result = await new QueryClient().fetchQuery(
       loadGlobalConfigQuery(ServerScope.local, sdk, Promise.resolve("v2")),
@@ -430,7 +430,7 @@ describe("config queries", () => {
           },
         },
       },
-    } as unknown as OpencodeClient
+    } as unknown as OrchestraClient
 
     const result = await new QueryClient().fetchQuery(
       loadGlobalConfigQuery(ServerScope.local, sdk, Promise.resolve("v1")),

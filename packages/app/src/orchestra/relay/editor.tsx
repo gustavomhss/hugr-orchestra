@@ -1,4 +1,4 @@
-import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { useDialog } from "@orchestra/ui/context/dialog"
 import { useCommand } from "@/context/command"
 import { showToast } from "@/utils/toast"
 import { skipToken, useQuery } from "@tanstack/solid-query"

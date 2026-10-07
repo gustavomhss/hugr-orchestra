@@ -1,11 +1,11 @@
 import type { APIEvent } from "@solidjs/start/server"
-import { and, Database, eq, isNull } from "@opencode-ai/console-core/drizzle/index.js"
-import { BillingTable, LiteTable } from "@opencode-ai/console-core/schema/billing.sql.js"
-import { KeyTable } from "@opencode-ai/console-core/schema/key.sql.js"
-import { UserTable } from "@opencode-ai/console-core/schema/user.sql.js"
-import { WorkspaceTable } from "@opencode-ai/console-core/schema/workspace.sql.js"
-import { LiteData } from "@opencode-ai/console-core/lite.js"
-import { Subscription } from "@opencode-ai/console-core/subscription.js"
+import { and, Database, eq, isNull } from "@orchestra/console-core/drizzle/index.js"
+import { BillingTable, LiteTable } from "@orchestra/console-core/schema/billing.sql.js"
+import { KeyTable } from "@orchestra/console-core/schema/key.sql.js"
+import { UserTable } from "@orchestra/console-core/schema/user.sql.js"
+import { WorkspaceTable } from "@orchestra/console-core/schema/workspace.sql.js"
+import { LiteData } from "@orchestra/console-core/lite.js"
+import { Subscription } from "@orchestra/console-core/subscription.js"
 
 export async function GET(input: APIEvent) {
   const apiKey = input.request.headers.get("authorization")?.match(/^Bearer (\S+)$/)?.[1]

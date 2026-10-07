@@ -1,7 +1,7 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
-  "globalPassThroughEnv": ["CI", "OPENCODE_DISABLE_SHARE"],
+  "globalEnv": ["CI", "ORCHESTRA_DISABLE_SHARE"],
+  "globalPassThroughEnv": ["CI", "ORCHESTRA_DISABLE_SHARE"],
   "tasks": {
     "typecheck": {},
     "build": {
@@ -14,76 +14,76 @@
     "transit": {
       "dependsOn": ["^transit"]
     },
-    "opencode#test": {
+    "orchestra#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": [],
       "passThroughEnv": ["*"]
     },
-    "@opencode-ai/core#test": {
+    "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/function#test": {
+    "@orchestra/function#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/app#test": {
+    "@orchestra/app#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/ui#test": {
+    "@orchestra/ui#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/session-ui#test": {
+    "@orchestra/session-ui#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": []
     },
-    "@opencode-ai/codemode#test": {
+    "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/effect-drizzle-sqlite#test": {
+    "@orchestra/effect-drizzle-sqlite#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/http-recorder#test": {
+    "@orchestra/http-recorder#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/httpapi-codegen#test": {
+    "@orchestra/httpapi-codegen#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/llm#test": {
+    "@orchestra/llm#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/maestro-arsenal#test": {
+    "@orchestra/maestro-arsenal#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/relay#test": {
+    "@orchestra/relay#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/client#test": {
+    "@orchestra/client#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/atlas-boundary#test": {
+    "@orchestra/atlas-boundary#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/sdk-next#test": {
+    "@orchestra/sdk-next#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/tui#test": {
+    "@orchestra/tui#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
-    "@opencode-ai/desktop#test": {
+    "@orchestra/desktop#test": {
       "dependsOn": ["transit"],
       "outputs": []
     }

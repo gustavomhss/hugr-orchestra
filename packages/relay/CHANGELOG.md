@@ -17,7 +17,7 @@ All notable changes to HuGR Relay are documented here. Format loosely follows
   `relay.hook.v1` export, publication, execution receipts, ledger audit and a server-sent event stream.
 - Evaluation delegates to the original daemon with frozen retry snapshots and same-run budgets.
   Hook installation, agent dispatch and authentication remain host work.
-- Moved the operational skills from `.opencode/skills/` to `docs/skills/`.
+- Moved the operational skills from `.orchestra/skills/` to `docs/skills/`.
 
 ### Runtime — repair failures exposed by independent review
 

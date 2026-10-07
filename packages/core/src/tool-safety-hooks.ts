@@ -3,10 +3,10 @@ export * as ToolSafetyHooks from "./tool-safety-hooks"
 import path from "path"
 import { createHash, randomUUID } from "crypto"
 import { Cause, Clock, Context, Effect, Exit, Option, Schema } from "effect"
-import type { ToolOutput, ToolResultValue } from "@opencode-ai/llm"
-import { RelayHook } from "@opencode-ai/schema/relay-hook"
-import type { RelayLedger } from "@opencode-ai/schema/relay-ledger"
-import { HookEvaluate } from "@opencode-ai/relay/hook/evaluate"
+import type { ToolOutput, ToolResultValue } from "@orchestra/llm"
+import { RelayHook } from "@orchestra/schema/relay-hook"
+import type { RelayLedger } from "@orchestra/schema/relay-ledger"
+import { HookEvaluate } from "@orchestra/relay/hook/evaluate"
 import type { Database } from "./database/database"
 import type { EventV2 } from "./event"
 import type { Location } from "./location"
@@ -41,7 +41,7 @@ export interface Scope {
  */
 export const Placement = Context.Reference<
   { readonly location: Location.Ref; readonly relay: Effect.Effect<Relay.Interface | undefined> } | undefined
->("@opencode/ToolSafetyHooks/Placement", { defaultValue: () => undefined })
+>("@orchestra/ToolSafetyHooks/Placement", { defaultValue: () => undefined })
 
 /** What `before` decided, for the same call's `after`. */
 export interface Hooked {

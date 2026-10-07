@@ -1,8 +1,8 @@
 export * as AuthoringGraph from "./graph"
 
 import { Effect, Option, Schema } from "effect"
-import { RelayAuthoring } from "@opencode-ai/schema/relay-authoring"
-import { RelaySprint } from "@opencode-ai/schema/relay-sprint"
+import { RelayAuthoring } from "@orchestra/schema/relay-authoring"
+import { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 // Workflow graphs (relay_authoring/graph.py; WP7): validate, compile to a flat sprint, project a sprint back.
 //

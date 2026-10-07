@@ -1,12 +1,12 @@
-// Requires the actual assembled @opencode-ai/maestro-arsenal package. Never mock its validator/handlers.
+// Requires the actual assembled @orchestra/maestro-arsenal package. Never mock its validator/handlers.
 import { expect } from "bun:test"
 import { Effect, Schema } from "effect"
 import { realpath } from "node:fs/promises"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Global } from "@opencode-ai/core/global"
-import { Location } from "@opencode-ai/core/location"
-import { MaestroArsenal } from "@opencode-ai/core/tool/maestro-arsenal"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { Location } from "@orchestra/core/location"
+import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { testEffect } from "./lib/effect"
 import { executeTool, settleTool, toolIdentity } from "./lib/tool"
 import { hostLayer, maestro, sessionID, setup } from "./maestro-arsenal.test"
@@ -35,7 +35,7 @@ it.live("native managed root keeps OS identity when the assembled SDK re-resolve
 
 it.live("Arsenal package conformance: bounded metadata and selected schema come from the actual registry", () =>
   Effect.gen(function* () {
-    const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+    const { Arsenal } = yield* Effect.promise(() => import("@orchestra/maestro-arsenal"))
     const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
     yield* MaestroArsenal.registerScoped({
       nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
@@ -84,7 +84,7 @@ it.live("Arsenal package conformance: bounded metadata and selected schema come 
 
 it.live("Arsenal package conformance: real edit denial prevents profile persistence; allow control creates state", () =>
   Effect.gen(function* () {
-    const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+    const { Arsenal } = yield* Effect.promise(() => import("@orchestra/maestro-arsenal"))
     expect(yield* Effect.promise(() => Arsenal.describe("profile"))).toBeDefined()
     const agents = yield* setup([
       { action: "*", resource: "*", effect: "allow" },
@@ -118,7 +118,7 @@ it.live(
   "Arsenal package conformance: swallowed process denial remains failure; model observations cannot replace host binding",
   () =>
     Effect.gen(function* () {
-      const { Arsenal } = yield* Effect.promise(() => import("@opencode-ai/maestro-arsenal"))
+      const { Arsenal } = yield* Effect.promise(() => import("@orchestra/maestro-arsenal"))
       expect(yield* Effect.promise(() => Arsenal.describe("repo-hygiene-check"))).toBeDefined()
       const agents = yield* setup([
         { action: "*", resource: "*", effect: "allow" },

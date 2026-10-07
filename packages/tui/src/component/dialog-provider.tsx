@@ -8,7 +8,7 @@ import { DialogPrompt } from "../ui/dialog-prompt"
 import { Link } from "../ui/link"
 import { useTheme } from "../context/theme"
 import { TextAttributes } from "@opentui/core"
-import type { ProviderAuthAuthorization, ProviderAuthMethod } from "@opencode-ai/sdk/v2"
+import type { ProviderAuthAuthorization, ProviderAuthMethod } from "@orchestra/sdk/v2"
 import { DialogModel } from "./dialog-model"
 import { useToast } from "../ui/toast"
 import { isConsoleManagedProvider } from "../util/provider-origin"
@@ -17,7 +17,7 @@ import { useBindings } from "../keymap"
 import { useClipboard } from "../context/clipboard"
 
 const PROVIDER_PRIORITY: Record<string, number> = {
-  opencode: 0,
+  orchestra: 0,
   "opencode-go": 1,
   openai: 2,
   "github-copilot": 3,
@@ -25,7 +25,7 @@ const PROVIDER_PRIORITY: Record<string, number> = {
   google: 5,
 }
 
-const CUSTOM_PROVIDER_OPTION_VALUE = "__opencode_custom_provider__"
+const CUSTOM_PROVIDER_OPTION_VALUE = "__orchestra_custom_provider__"
 const CUSTOM_PROVIDER_ID = /^[a-z0-9][a-z0-9-_]*$/
 
 type ProviderOptionBase = {
@@ -59,7 +59,7 @@ export function providerOptions(list: { id: string; name: string }[]): ProviderO
         value: provider.id,
         providerID: provider.id,
         description: {
-          opencode: "(Recommended)",
+          orchestra: "(Recommended)",
           anthropic: "(API key)",
           openai: "(ChatGPT Plus/Pro or API key)",
           "opencode-go": "Low cost subscription for everyone",
@@ -96,7 +96,7 @@ export function createDialogProviderOptions() {
       placeholder: "Provider id",
       description: () => (
         <text fg={theme.textMuted}>
-          This only stores a credential. Configure the provider in opencode.json to use it.
+          This only stores a credential. Configure the provider in orchestra.json to use it.
         </text>
       ),
     })
@@ -368,7 +368,7 @@ function ApiMethod(props: ApiMethodProps) {
       placeholder="API key"
       description={() =>
         ({
-          opencode: (
+          orchestra: (
             <box gap={1}>
               <text fg={theme.textMuted}>
                 OpenCode Zen gives you access to all the best coding models at the cheapest prices with a single API
@@ -407,7 +407,7 @@ function ApiMethod(props: ApiMethodProps) {
         if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {
           toast.show({
             variant: "info",
-            message: `Saved credential for ${props.providerID}. Configure it in opencode.json to use it.`,
+            message: `Saved credential for ${props.providerID}. Configure it in orchestra.json to use it.`,
           })
           dialog.clear()
           return

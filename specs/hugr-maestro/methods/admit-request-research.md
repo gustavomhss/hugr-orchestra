@@ -2,20 +2,20 @@
 
 Status: deterministic kernel and durable record writer implemented; automatic per-message trigger remains unimplemented.
 
-## Verified OpenCode Seams
+## Verified Orchestra Seams
 
 | Need                                     | Source                                                                                      | Verdict                                                                                                                       |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Durable user message identity/read       | `packages/opencode/src/session/message-v2.ts:506`                                           | available: `(sessionID, messageID)` lookup reads persisted message/parts                                                      |
-| Prompt entry after user message persists | `packages/opencode/src/session/prompt.ts:1052-1070`                                         | available: `createUserMessage` precedes LLM loop                                                                              |
-| Agent prompt and skills                  | `packages/opencode/src/session/llm/request.ts:56-66`; `packages/opencode/src/tool/skill.ts` | available: Maestro prompt replaces provider prompt; `frame-request` is OpenCode-discoverable, permissioned, lazy-loaded skill |
-| Session metadata                         | `packages/opencode/src/session/session.ts:223,800-802`                                      | inadequate alone: untyped record replacement, not append-only admission evidence                                              |
-| Child Session creation                   | `packages/opencode/src/tool/task.ts:198-214`                                                | available but unfenced: Task has no governed revision identity and creates Session directly                                   |
-| Per-message deterministic admission hook | prompt loop inspected through `packages/opencode/src/session/prompt.ts:1052-1286`           | absent: no Maestro-specific pre-LLM method runner or durable method projection                                                |
+| Durable user message identity/read       | `packages/orchestra/src/session/message-v2.ts:506`                                           | available: `(sessionID, messageID)` lookup reads persisted message/parts                                                      |
+| Prompt entry after user message persists | `packages/orchestra/src/session/prompt.ts:1052-1070`                                         | available: `createUserMessage` precedes LLM loop                                                                              |
+| Agent prompt and skills                  | `packages/orchestra/src/session/llm/request.ts:56-66`; `packages/orchestra/src/tool/skill.ts` | available: Maestro prompt replaces provider prompt; `frame-request` is Orchestra-discoverable, permissioned, lazy-loaded skill |
+| Session metadata                         | `packages/orchestra/src/session/session.ts:223,800-802`                                      | inadequate alone: untyped record replacement, not append-only admission evidence                                              |
+| Child Session creation                   | `packages/orchestra/src/tool/task.ts:198-214`                                                | available but unfenced: Task has no governed revision identity and creates Session directly                                   |
+| Per-message deterministic admission hook | prompt loop inspected through `packages/orchestra/src/session/prompt.ts:1052-1286`           | absent: no Maestro-specific pre-LLM method runner or durable method projection                                                |
 
 ## Consequence
 
-`frame-request` is an actual OpenCode skill for controlled judgment. `admission-record.ts` now writes one deterministic
+`frame-request` is an actual Orchestra skill for controlled judgment. `admission-record.ts` now writes one deterministic
 `maestro.admission.decided` event keyed by `(sessionID, messageID, methodVersion)` into EventV2's existing Session
 aggregate. It does not use Session metadata or a new table. Automatic invocation after one user message is still absent.
 
@@ -28,7 +28,7 @@ evidence, but no V1 source-level invariant is treated as re-verified here.
 
 ## First Implementable Contract
 
-Implemented: `packages/opencode/src/maestro/admit-request.ts` exports pure
+Implemented: `packages/orchestra/src/maestro/admit-request.ts` exports pure
 `decideAdmission(assessment)`. It validates an untrusted model/skill assessment then applies only deterministic outcome
 seven acceptance cases.
 
@@ -41,11 +41,11 @@ work + usable goal + no conflict     -> READY_TO_DRAFT
 invalid assessment or active conflict -> CLARIFY
 ```
 
-`packages/opencode/src/maestro/admission-record.ts` owns durable record/replay. `TaskTool` owns governed fence.
+`packages/orchestra/src/maestro/admission-record.ts` owns durable record/replay. `TaskTool` owns governed fence.
 
 ## RED Acceptance Contract
 
-`packages/opencode/test/maestro/admit-request.test.ts` passes these pure acceptance cases:
+`packages/orchestra/test/maestro/admit-request.test.ts` passes these pure acceptance cases:
 
 1. Valid orient assessment returns `ORIENT`; no plan/task capability exists in function API.
 2. `work` without goal returns `CLARIFY` with one visible reason.

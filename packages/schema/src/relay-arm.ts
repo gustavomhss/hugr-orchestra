@@ -190,7 +190,7 @@ export const CheckOutcome = Schema.Union([
 ]).annotate({ identifier: "RelayArm.CheckOutcome" })
 export type CheckOutcome = typeof CheckOutcome.Type
 
-// ---- Arsenal completion contract, verbatim from opencode/src/maestro/arsenal-completion.ts (moves here in WP18). ----
+// ---- Arsenal completion contract, verbatim from orchestra/src/maestro/arsenal-completion.ts (moves here in WP18). ----
 // The ≤1000 total checks and unique gate/check IDs rule stays in the host, where it maps to
 // `completion-callback-cap-or-duplicate` rather than to a decode failure.
 

@@ -1,6 +1,6 @@
 # Method: Resolve Scope
 
-Status: proposed V2 method, blocked on OpenCode-to-Atlas adapter freeze. ID: `resolve-scope`. Composition:
+Status: proposed V2 method, blocked on Orchestra-to-Atlas adapter freeze. ID: `resolve-scope`. Composition:
 M1 Frame + M2 Ground.
 
 V1 internal territory names are reference only. Current Atlas `Territory` is a distinct contract

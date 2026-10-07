@@ -30,13 +30,13 @@ describe("skill source", () => {
     expect(skillSource("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
   test("marks files inside the profile directory as project skills", () => {
-    expect(skillSource("/repo/.opencode/skills/review/SKILL.md", "/repo")).toBe("project")
-    expect(skillSource("/repo/.opencode/skills/review/SKILL.md", "/repo/")).toBe("project")
-    expect(skillSource("C:\\repo\\.opencode\\skills\\a\\SKILL.md", "C:\\repo")).toBe("project")
+    expect(skillSource("/repo/.orchestra/skills/review/SKILL.md", "/repo")).toBe("project")
+    expect(skillSource("/repo/.orchestra/skills/review/SKILL.md", "/repo/")).toBe("project")
+    expect(skillSource("C:\\repo\\.orchestra\\skills\\a\\SKILL.md", "C:\\repo")).toBe("project")
   })
   test("does not treat a sibling directory sharing the prefix as the project", () => {
-    expect(skillSource("/repo-other/.opencode/skills/a/SKILL.md", "/repo")).toBe("global")
-    expect(skillSource("/home/me/.config/opencode/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillSource("/repo-other/.orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillSource("/home/me/.config/orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
   })
   test("orders project, then global, then built-in, then by name", () => {
     const entry = (name: string, location: string) => ({ name, location, content: "" })
@@ -45,9 +45,9 @@ describe("skill source", () => {
         [
           entry("zeta", "<built-in>"),
           entry("beta", "/home/me/.claude/skills/beta/SKILL.md"),
-          entry("gamma", "/repo/.opencode/skills/gamma/SKILL.md"),
-          entry("alpha", "/home/me/.config/opencode/skills/alpha/SKILL.md"),
-          entry("delta", "/repo/.opencode/skills/delta/SKILL.md"),
+          entry("gamma", "/repo/.orchestra/skills/gamma/SKILL.md"),
+          entry("alpha", "/home/me/.config/orchestra/skills/alpha/SKILL.md"),
+          entry("delta", "/repo/.orchestra/skills/delta/SKILL.md"),
         ],
         "/repo",
       ).map((skill) => skill.name),
@@ -57,20 +57,20 @@ describe("skill source", () => {
 
 describe("skill access", () => {
   test("allows edits only in the project's own skill folders", () => {
-    for (const folder of [".opencode/skills", ".opencode/skill", ".claude/skills", ".agents/skills"])
+    for (const folder of [".orchestra/skills", ".orchestra/skill", ".claude/skills", ".agents/skills"])
       expect(skillAccess(`/repo/${folder}/review/SKILL.md`, "/repo")).toBe("edit")
-    expect(skillAccess("/repo/.opencode/skills/flat.md", "/repo")).toBe("edit")
+    expect(skillAccess("/repo/.orchestra/skills/flat.md", "/repo")).toBe("edit")
   })
   test("keeps Atlas-governed skills read-only", () => {
-    expect(skillAccess("/repo/.opencode/skills/own/own_policy/SKILL.md", "/repo")).toBe("governed")
+    expect(skillAccess("/repo/.orchestra/skills/own/own_policy/SKILL.md", "/repo")).toBe("governed")
   })
   test("keeps project skills outside the skill folders read-only", () => {
     expect(skillAccess("/repo/docs/skills/review/SKILL.md", "/repo")).toBe("fixed")
-    expect(skillAccess("/repo/.opencode/skills/review/SKILL.txt", "/repo")).toBe("fixed")
+    expect(skillAccess("/repo/.orchestra/skills/review/SKILL.txt", "/repo")).toBe("fixed")
   })
   test("keeps global and built-in skills read-only", () => {
-    expect(skillAccess("/home/me/.config/opencode/skills/a/SKILL.md", "/repo")).toBe("global")
-    expect(skillAccess("/repo-other/.opencode/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillAccess("/home/me/.config/orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
+    expect(skillAccess("/repo-other/.orchestra/skills/a/SKILL.md", "/repo")).toBe("global")
     expect(skillAccess("<built-in>", "/repo")).toBe("builtin")
     expect(skillAccess("/builtin/style-guide.md", "/repo")).toBe("builtin")
   })
