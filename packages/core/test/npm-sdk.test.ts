@@ -105,3 +105,19 @@ test("fixture control without adapter observes SDK metadata, tarball and planted
   expect(http.hits).toContain(`tarballs/${sdk.name}.tgz`)
   await expect(import(path.join(tmp.path, "node_modules", sdk.name, "index.js"))).rejects.toThrow("planted SDK copy ran")
 })
+
+test("warm install admits new ordinary dependencies after SDK reconciliation without retaining its lock", async () => {
+  await using tmp = await tmpdir()
+  await using http = await registry(tmp.path)
+  await http.publish(sdk.name, { exports: { ".": "./index.js", "./*": "./index.js" } }, { "index.js": planted })
+  await http.publish("extra")
+  await http.config(tmp.path)
+  await Bun.write(path.join(tmp.path, "package.json"), JSON.stringify({ dependencies: { [sdk.name]: sdk.version } }))
+  await new Arborist({ path: tmp.path, registry: http.url, cache: path.join(tmp.path, "npm-cache"), ignoreScripts: true, audit: false }).reify()
+  http.hits.length = 0
+  await Npm.install(tmp.path, { add: [{ name: "extra", version: sdk.version }] })
+  expect(http.hits).toContain("extra")
+  expect(http.hits).toContain("tarballs/extra.tgz")
+  expect(http.hits.filter((hit) => hit.includes(sdk.name))).toEqual([])
+  expect((await import(path.join(tmp.path, "node_modules", "extra", "index.js"))).ordinary).toBe(42)
+}, 30_000)

@@ -132,6 +132,7 @@ const layer = Layer.effect(
             }),
         }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError>
       }).pipe(
+        Effect.scoped,
         Effect.withSpan("Npm.reify", {
           attributes: input,
         }),
