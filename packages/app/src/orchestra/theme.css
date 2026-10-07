@@ -288,7 +288,9 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(70, 84, 98, 0.2);
   --orchestra-sidebar-secondary: #5c646e;
-  --orchestra-sidebar-key-text: var(--orchestra-sidebar-secondary);
+  /* The nav labels' ink. The Workflows row moved the Search key lower on the glass, over a darker part of the
+     photograph, where the secondary ink measures under 4.5:1. */
+  --orchestra-sidebar-key-text: var(--orchestra-sidebar-text);
   --orchestra-sidebar-rule: rgba(70, 84, 98, 0.16);
   --orchestra-sidebar-profile-background: rgba(255, 255, 255, 0.62);
   --orchestra-sidebar-profile-border: rgba(70, 84, 98, 0.2);
