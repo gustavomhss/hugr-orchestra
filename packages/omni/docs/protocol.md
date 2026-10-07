@@ -1,6 +1,6 @@
-# Host ↔ supervisor protocol (v1)
+# Host ↔ supervisor protocol (v2)
 
-Frozen in W00. Why and how it was proven: ADR-0005. Types and codec: `crates/omni-proto` (W00). Host client: W04.
+Frozen in W00. v2 (amendment WP8b) appends `verbatim` and `tail` to `Spawn`; nothing else changed since v1. Why and how it was proven: ADR-0005. Types and codec: `crates/omni-proto` (W00). Host client: W04.
 Supervisor: W05 (Unix), W06 (Windows).
 
 **Start.** On its first spawn the host execs `hugr-omni-supervisor --host-pid <pid> [--pipe <name>]`. The binary is
@@ -19,15 +19,16 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 
 **Frame.** `u32 LE length` (1..=1 MiB, of what follows), then `u8 kind`, then the fields in the order below.
 - Integers are LE. `bytes` = `u32 len` + data. `list` = `u32 count` + items. `bool` = `u8` 0 or 1.
-- OS strings (`program`, `argv`, `env`, `cwd`) are raw bytes on Unix and WTF-8 on Windows. `msg` and `name` are
+- OS strings (`program`, `argv`, `env`, `cwd`, `tail`) are raw bytes on Unix and WTF-8 on Windows. `msg` and `name` are
   UTF-8: the supervisor converts lossily on every OS; an empty `name` = unknown.
 - Without a PTY, `pty` = 0 and `cols` = `rows` = 0.
+- Without a verbatim command line, `verbatim` = 0 and `tail` is empty.
 - Any other value is malformed: unknown kind, bad length, trailing bytes, a non-0/1 `bool`, a slot not allowed for its
-  field, or a signal outside 1..=127. A malformed frame ends the connection; for the supervisor that is host death.
+  field, a `tail` without `verbatim`, or a signal outside 1..=127. A malformed frame ends the connection; for the supervisor that is host death.
 
 | kind | message | fields |
 |---|---|---|
-| 0x01 | `Spawn` | req u64 · program bytes · argv list<bytes> · env list<(bytes, bytes)> · cwd bytes · pty bool · cols u16 · rows u16 · stdin u8 (0 null, 1 pipe) · stderr u8 (1 pipe, 2 merge) · grace_ms u32 · handles 3×u64 |
+| 0x01 | `Spawn` | req u64 · program bytes · argv list<bytes> · env list<(bytes, bytes)> · cwd bytes · pty bool · cols u16 · rows u16 · stdin u8 (0 null, 1 pipe) · stderr u8 (1 pipe, 2 merge) · grace_ms u32 · handles 3×u64 · verbatim bool · tail bytes |
 | 0x02 | `Go` | req u64 · id u64 |
 | 0x03 | `Stop` | req u64 · id u64 · grace_ms u32 |
 | 0x04 | `Resize` | req u64 · id u64 · cols u16 · rows u16 |
@@ -40,6 +41,11 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x85 | `Stopped` | req u64 · id u64 |
 | 0x86 | `Processes` | req u64 · id u64 · list<(pid u32 · ppid u32, 0 = parent not in list · name bytes)> |
 | 0x87 | `Ack` | req u64 · id u64 · result u8 (0 ok, 2 unknown, 3 error, 4 closed; 1 is reserved) |
+
+**Verbatim command line (v2, Windows).** With `verbatim` = 1, `argv` holds `argv[0]` alone, and the root's command line
+is `argv[0]` in double quotes, then, unless `tail` is empty, a space and `tail` unchanged (Rust std's `raw_arg`). The
+supervisor answers `SpawnFailed invalid` when `argv` has more than `argv[0]`, when `program` is a `.cmd`/`.bat` (it never
+adds `cmd.exe` to a caller's line), and on Unix, which has no command line.
 
 stdout is always a pipe. A `null` stdin is the null device opened for reading by the supervisor (`/dev/null`,
 `NUL`), so the child reads end of input at once.

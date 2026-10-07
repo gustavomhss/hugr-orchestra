@@ -54,6 +54,8 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
             for h in s.handles {
                 w.u64(h);
             }
+            w.bool(s.verbatim.is_some())
+                .bytes(s.verbatim.as_deref().unwrap_or_default())?;
         }
         Msg::Go { req, id } => _ = w.u8(GO).u64(*req).u64(*id),
         Msg::Stop { req, id, grace_ms } => _ = w.u8(STOP).u64(*req).u64(*id).u32(*grace_ms),
@@ -239,6 +241,10 @@ fn spawn(r: &mut Reader<'_>) -> Result<Spawn, ProtoError> {
     };
     let grace_ms = r.u32()?;
     let handles = [r.u64()?, r.u64()?, r.u64()?];
+    let (verbatim, tail) = (r.bool()?, r.bytes()?);
+    if !verbatim && !tail.is_empty() {
+        return Err(ProtoError("a command-line tail without verbatim".into()));
+    }
     let pty = pty.then_some((cols, rows));
     Ok(Spawn {
         req,
@@ -251,6 +257,7 @@ fn spawn(r: &mut Reader<'_>) -> Result<Spawn, ProtoError> {
         stderr,
         grace_ms,
         handles,
+        verbatim: verbatim.then_some(tail),
     })
 }
 

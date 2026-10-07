@@ -13,6 +13,7 @@ fn spawn() -> Spawn {
         stderr: Slot::Merge,
         grace_ms: 2000,
         handles: [0, 0, 0],
+        verbatim: None,
     }
 }
 
@@ -25,6 +26,15 @@ fn all() -> Vec<Msg> {
             stdin: Slot::Null,
             stderr: Slot::Pipe,
             handles: [1, 2, 3],
+            ..spawn()
+        }),
+        Msg::Spawn(Spawn {
+            argv: vec![b"cmd.exe".to_vec()],
+            verbatim: Some(b"/d /s /c \"echo a&echo b\"".to_vec()),
+            ..spawn()
+        }),
+        Msg::Spawn(Spawn {
+            verbatim: Some(Vec::new()),
             ..spawn()
         }),
         Msg::Go { req: 1, id: 2 },
@@ -139,12 +149,21 @@ fn malformed_frames_are_errors() {
     let mut unknown = go.clone();
     unknown[0] = 0x7f;
     let mut bad_bool = body(&Msg::Spawn(spawn()));
-    let pty_at = bad_bool.len() - (2 + 2 + 1 + 1 + 4 + 24) - 1;
+    // Everything after `pty`: cols, rows, stdin, stderr, grace_ms, handles, verbatim bool, tail length.
+    let verbatim_at = bad_bool.len() - 4 - 1;
+    let pty_at = verbatim_at - (2 + 2 + 1 + 1 + 4 + 24) - 1;
     bad_bool[pty_at] = 2;
     let mut size_without_pty = body(&Msg::Spawn(spawn()));
     size_without_pty[pty_at + 1] = 80;
     let mut bad_slot = body(&Msg::Spawn(spawn()));
     bad_slot[pty_at + 5] = 2; // stdin = merge
+    let mut bad_verbatim = body(&Msg::Spawn(spawn()));
+    bad_verbatim[verbatim_at] = 2;
+    // verbatim = 0 with a one-byte tail: the tail exists only with verbatim.
+    let mut stray_tail = body(&Msg::Spawn(spawn()));
+    stray_tail.truncate(verbatim_at + 1);
+    stray_tail.extend(1u32.to_le_bytes());
+    stray_tail.push(b'x');
     let exited_sig0 = [&[0x84][..], &2u64.to_le_bytes(), &[1], &0u32.to_le_bytes()].concat();
     let list_bomb = [
         &[0x86][..],
@@ -168,6 +187,8 @@ fn malformed_frames_are_errors() {
         ("bool 2", framed(&bad_bool)),
         ("size without pty", framed(&size_without_pty)),
         ("stdin merge", framed(&bad_slot)),
+        ("verbatim 2", framed(&bad_verbatim)),
+        ("tail without verbatim", framed(&stray_tail)),
         ("signal 0", framed(&exited_sig0)),
         ("count bomb", framed(&list_bomb)),
         ("invalid UTF-8 msg", framed(&bad_utf8)),

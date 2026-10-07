@@ -30,6 +30,17 @@ pub(super) fn check(req: &Request, os: Os) -> Result<(), Error> {
             return Err(Error::nul_in_arg(index, at));
         }
     }
+    if let Some(tail) = &req.verbatim {
+        if os != Os::Windows {
+            return Err(Error::verbatim_not_windows());
+        }
+        if !req.args.is_empty() {
+            return Err(Error::verbatim_with_args(req.args.len()));
+        }
+        if let Some(at) = nul(tail) {
+            return Err(Error::nul_in_verbatim(at));
+        }
+    }
     if let Some(cwd) = &req.cwd
         && let Some(at) = nul(cwd.as_os_str())
     {
@@ -57,6 +68,31 @@ pub(super) fn check(req: &Request, os: Os) -> Result<(), Error> {
         millis("timeoutMs", timeout)?;
     }
     millis("graceMs", req.grace)
+}
+
+/// A verbatim command line (amendment WP8b) never reaches a batch file: Windows would run it through `cmd.exe` with
+/// the caller's tail unescaped, so the caller must name `cmd.exe` itself. `resolved` is the program as resolved; its
+/// last component is compared the way Windows opens it (trailing dots and spaces dropped, any case).
+pub(super) fn verbatim_program(command: &OsStr, resolved: &Path, os: Os) -> Result<(), Error> {
+    let bytes = resolved.as_os_str().as_encoded_bytes();
+    let name = match bytes.iter().rposition(|&b| path::is_sep(b, os)) {
+        Some(at) => bytes.get(at + 1..).unwrap_or_default(),
+        None => bytes,
+    };
+    let end = name
+        .iter()
+        .rposition(|&b| b != b'.' && b != b' ')
+        .map_or(0, |last| last + 1);
+    let name = name.get(..end).unwrap_or_default();
+    let ext = name
+        .len()
+        .checked_sub(4)
+        .and_then(|at| name.get(at..))
+        .unwrap_or_default();
+    if os == Os::Windows && (ext.eq_ignore_ascii_case(b".bat") || ext.eq_ignore_ascii_case(b".cmd")) {
+        return Err(Error::verbatim_batch(command, resolved));
+    }
+    Ok(())
 }
 
 /// The absolute working directory (`InvalidCwd` if it is missing or not a directory).

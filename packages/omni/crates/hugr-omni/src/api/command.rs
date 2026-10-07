@@ -57,6 +57,16 @@ impl Command {
         self
     }
 
+    /// Windows only (amendment WP8b): the exact command line after the program, for a program that parses its own
+    /// command line (e.g. `cmd.exe` with `/d /s /c "..."`). The child's command line is `argv[0]` in quotes, a space
+    /// and `tail`, unchanged: no quoting, no escaping, and the library still adds no shell. It fails with
+    /// `InvalidArgument` on other systems, together with `arg`/`args`, with a NUL, or when the program resolves to a
+    /// `.cmd`/`.bat` (name `cmd.exe` yourself).
+    pub fn windows_verbatim_args(&mut self, tail: impl AsRef<OsStr>) -> &mut Self {
+        self.req.verbatim = Some(tail.as_ref().to_os_string());
+        self
+    }
+
     /// Working directory of the child (default: the host's). A relative path resolves against the host's.
     pub fn cwd(&mut self, dir: impl AsRef<Path>) -> &mut Self {
         self.req.cwd = Some(dir.as_ref().to_path_buf());

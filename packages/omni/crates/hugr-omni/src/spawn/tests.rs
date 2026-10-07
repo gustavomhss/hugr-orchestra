@@ -3,6 +3,7 @@
 //! a process.
 
 mod resolve;
+mod verbatim;
 
 use std::ffi::OsString;
 use std::io;
