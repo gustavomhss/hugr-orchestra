@@ -3098,6 +3098,22 @@ export type SessionBusyError = {
   message: string
 }
 
+export type SessionProcessNode = {
+  pid: number
+  parentPid?: number
+  name?: string
+}
+
+export type SessionProcess = {
+  id: string
+  pid: number
+  title: string
+  started: number
+  processes: Array<SessionProcessNode>
+  output: string
+  written: number
+}
+
 export type EventTuiPromptAppend = {
   type: "tui.prompt.append"
   properties: {
@@ -12574,6 +12590,72 @@ export type PartUpdateResponses = {
 }
 
 export type PartUpdateResponse = PartUpdateResponses[keyof PartUpdateResponses]
+
+export type SessionProcessesData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+    tail?: string
+  }
+  url: "/session/{sessionID}/processes"
+}
+
+export type SessionProcessesErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type SessionProcessesError = SessionProcessesErrors[keyof SessionProcessesErrors]
+
+export type SessionProcessesResponses = {
+  /**
+   * Running background processes
+   */
+  200: Array<SessionProcess>
+}
+
+export type SessionProcessesResponse = SessionProcessesResponses[keyof SessionProcessesResponses]
+
+export type SessionProcessStopData = {
+  body?: never
+  path: {
+    sessionID: string
+    processID: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/session/{sessionID}/processes/{processID}/stop"
+}
+
+export type SessionProcessStopErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * NotFoundError
+   */
+  404: NotFoundError
+}
+
+export type SessionProcessStopError = SessionProcessStopErrors[keyof SessionProcessStopErrors]
+
+export type SessionProcessStopResponses = {
+  /**
+   * Process tree stopped
+   */
+  200: boolean
+}
+
+export type SessionProcessStopResponse = SessionProcessStopResponses[keyof SessionProcessStopResponses]
 
 export type SyncStartData = {
   body?: never
