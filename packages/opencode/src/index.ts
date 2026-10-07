@@ -196,17 +196,9 @@ const cli = yargs(args)
   .command(
     lazy({
       command: "import <file>",
-      describe: "import session data from JSON file or URL",
+      describe: "import session data from a JSON file",
       load: () => import("./cli/cmd/import"),
       resolve: (m) => m.ImportCommand,
-    }),
-  )
-  .command(
-    lazy({
-      command: "github",
-      describe: "manage GitHub agent",
-      load: () => import("./cli/cmd/github"),
-      resolve: (m) => m.GithubCommand,
     }),
   )
   .command(

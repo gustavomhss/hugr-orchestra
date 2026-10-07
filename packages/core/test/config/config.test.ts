@@ -365,8 +365,8 @@ describe("Config", () => {
             expect(documents[0]?.info.model).toBe("anthropic/claude")
             expect(documents[0]?.info.default_agent).toBe("reviewer")
             expect(documents[0]?.info.autoupdate).toBe("notify")
-            expect(documents[0]?.info.share).toBe("disabled")
-            expect(documents[0]?.info.enterprise).toEqual({ url: "https://share.example.com" })
+            expect(Object.keys(documents[0]?.info ?? {})).not.toContain("share")
+            expect(Object.keys(documents[0]?.info ?? {})).not.toContain("enterprise")
             expect(documents[0]?.info.username).toBe("test-user")
             expect(documents[0]?.info.permissions).toEqual([
               { action: "bash", resource: "*", effect: "ask" },
@@ -582,7 +582,7 @@ describe("Config", () => {
             expect(documents[0]?.info.shell).toBe("/bin/zsh")
             expect(documents[0]?.info.default_agent).toBe("reviewer")
             expect(documents[0]?.info.snapshots).toBe(false)
-            expect(documents[0]?.info.share).toBe("auto")
+            expect(Object.keys(documents[0]?.info ?? {})).not.toContain("share")
             expect(documents[0]?.info.permissions).toEqual([
               { action: "bash", resource: "*", effect: "ask" },
               { action: "edit", resource: "*.md", effect: "allow" },

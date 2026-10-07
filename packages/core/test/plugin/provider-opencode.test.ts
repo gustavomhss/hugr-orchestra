@@ -158,7 +158,6 @@ describe("OpencodePlugin", () => {
               const origin = new URL(request.url).origin
               return Response.json({
                 config: {
-                  enterprise: { url: origin },
                   provider: {
                     remote: {
                       name: "Remote",

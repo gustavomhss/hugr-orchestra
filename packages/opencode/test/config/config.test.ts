@@ -861,16 +861,13 @@ it.instance("handles command configuration", () =>
   }),
 )
 
-it.instance("migrates autoshare to share field", () =>
+it.instance("ignores the retired sharing keys", () =>
   Effect.gen(function* () {
     const test = yield* TestInstance
-    yield* writeConfigEffect(test.directory, {
-      $schema: "https://opencode.ai/config.json",
-      autoshare: true,
-    })
+    yield* writeConfigEffect(test.directory, { model: "test/model", autoshare: true, share: "auto", enterprise: {} })
     const config = yield* Config.use.get()
-    expect(config.share).toBe("auto")
-    expect(config.autoshare).toBe(true)
+    expect(config.model).toBe("test/model")
+    expect(Object.keys(config).filter((key) => ["share", "autoshare", "enterprise"].includes(key))).toEqual([])
   }),
 )
 
@@ -1361,15 +1358,15 @@ it.instance(
     yield* writeManagedSettingsEffect({
       $schema: "https://opencode.ai/config.json",
       model: "managed/model",
-      share: "disabled",
+      snapshot: false,
     })
 
     const config = yield* Config.use.get()
     expect(config.model).toBe("managed/model")
-    expect(config.share).toBe("disabled")
+    expect(config.snapshot).toBe(false)
     expect(config.username).toBe("testuser")
   }),
-  { config: { model: "user/model", share: "auto", username: "testuser" } },
+  { config: { model: "user/model", snapshot: true, username: "testuser" } },
 )
 
 it.instance(
@@ -2124,7 +2121,7 @@ test("parseManagedPlist strips MDM metadata keys", async () => {
           PayloadUUID: "AAAA-BBBB-CCCC",
           PayloadVersion: 1,
           _manualProfile: true,
-          share: "disabled",
+          snapshot: false,
           model: "mdm/model",
         }),
       ),
@@ -2132,7 +2129,7 @@ test("parseManagedPlist strips MDM metadata keys", async () => {
     ),
     "test:mobileconfig",
   )
-  expect(config.share).toBe("disabled")
+  expect(config.snapshot).toBe(false)
   expect(config.model).toBe("mdm/model")
   // MDM keys must not leak into the parsed config
   expect((config as any).PayloadUUID).toBeUndefined()
