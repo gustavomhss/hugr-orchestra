@@ -148,6 +148,83 @@ describe("backend skill root", () => {
     expect(await fs.readdir(path.dirname(evidence[0].root))).toEqual([path.basename(evidence[0].root)])
   }, 60000)
 
+  test.each(["readFile", "readdir"] as const)("cooperative corrupt-copy repair rechecks after actual %s ENOENT", async (operation) => {
+    await using tmp = await tmpdir()
+    const files = { "a/SKILL.md": "alpha", "a/ref.md": "日本語\n" }
+    const dir = await SeatSkillRoot.extract("backend", files, tmp.path, "local")
+    await Bun.write(path.join(dir, "a/SKILL.md"), "corrupt")
+    const obsolete = path.join(dir, "a", operation === "readFile" ? "obsolete.md" : "obsolete")
+    if (operation === "readFile") await Bun.write(obsolete, "old copy")
+    if (operation === "readdir") await fs.mkdir(obsolete)
+    expect((await fs.lstat(obsolete))[operation === "readFile" ? "isFile" : "isDirectory"]()).toBe(true)
+    const module = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts")
+    // Insert a scheduling barrier only. Both verification and replacement still execute the real filesystem calls:
+    // the reader has enumerated an old entry, then another process repairs the corrupt tree before that entry is read.
+    const observation = `
+      async function observe<T>(target: string, operation: () => Promise<T>): Promise<T> {
+        if (target === ${JSON.stringify(obsolete)}) {
+          process.stdout.write("verification-ready\\n");
+          await new Promise(resolve => process.stdin.once("data", resolve));
+        }
+        return operation().catch((cause: NodeJS.ErrnoException) => {
+          if (target === ${JSON.stringify(obsolete)} && cause.code === "ENOENT")
+            process.stdout.write(JSON.stringify({ observedENOENT: target }) + "\\n");
+          throw cause;
+        });
+      }
+    `
+    const child = Bun.spawn([process.execPath, "--eval", `
+      import { plugin } from "bun";
+      const needle = ${JSON.stringify(operation === "readFile" ? "await fs.readFile(target)" : "await fs.readdir(current, { withFileTypes: true })")};
+      const replacement = ${JSON.stringify(operation === "readFile" ? "await observe(target, () => fs.readFile(target))" : "await observe(current, () => fs.readdir(current, { withFileTypes: true }))")};
+      plugin({ name: "seat-repair-scheduling", setup(build) {
+        build.onLoad({ filter: /seat-skill-root\\.ts$/ }, async (args) => {
+          const source = await Bun.file(args.path).text();
+          if (!source.includes(needle)) throw new Error("Seat repair scheduling boundary not found");
+          return { loader: "ts", contents: source.replace(needle, replacement) + ${JSON.stringify(observation)} };
+        });
+      }});
+      const { SeatSkillRoot } = await import(${JSON.stringify(module)});
+      const root = await SeatSkillRoot.extract("backend", ${JSON.stringify(files)}, ${JSON.stringify(tmp.path)}, "local");
+      console.log(JSON.stringify({ root }));
+    `], { cwd: path.resolve(import.meta.dir, "../.."), env: process.env, stdin: "pipe", stdout: "pipe", stderr: "pipe" })
+    const ready = Promise.withResolvers<void>()
+    const stdout = (async () => {
+      const chunks: string[] = []
+      const decoder = new TextDecoder()
+      const reader = child.stdout.getReader()
+      const consume = async (): Promise<string> => {
+        const chunk = await reader.read()
+        if (chunk.done) return chunks.join("")
+        chunks.push(decoder.decode(chunk.value, { stream: true }))
+        if (chunks.join("").includes("verification-ready\n")) ready.resolve()
+        return consume()
+      }
+      return consume()
+    })()
+    const stderr = new Response(child.stderr).text()
+    try {
+      await Promise.race([ready.promise, child.exited.then(async (exit) => {
+        throw new Error(`Seat repair reader exited before scheduling barrier (${exit}):\n${await stdout}\n${await stderr}`)
+      })])
+      expect(await Bun.file(path.join(dir, "a/SKILL.md")).text()).toBe("corrupt")
+      expect(await SeatSkillRoot.extract("backend", files, tmp.path, "local")).toBe(dir)
+      await expect(fs.lstat(obsolete)).rejects.toMatchObject({ code: "ENOENT" })
+      expect(await tree(dir)).toEqual(files)
+      child.stdin.write("continue\n")
+      child.stdin.end()
+      const [out, err, exit] = await Promise.all([stdout, stderr, child.exited])
+      // No synthetic exception: the child's real syscall must have reported the vanished old path.
+      expect(out).toContain(JSON.stringify({ observedENOENT: obsolete }))
+      if (exit !== 0) throw new Error(`Cooperative repair acquisition failed (${exit}):\n${out}\n${err}`)
+      expect(out).toContain(JSON.stringify({ root: dir }))
+      expect(await tree(dir)).toEqual(files)
+    } finally {
+      if (child.exitCode === null) child.kill()
+      await child.exited
+    }
+  }, 60000)
+
   test.each(["../escape.md", "/escape.md", "a/../escape.md", "a\\escape.md", "C:/escape.md", "a//escape.md"])("escaping path %s fails acquisition", async (file) => {
     await using tmp = await tmpdir()
     await expect(SeatSkillRoot.extract("backend", { [file]: "bad" }, tmp.path, "local")).rejects.toMatchObject({

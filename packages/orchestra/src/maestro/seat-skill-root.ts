@@ -128,7 +128,12 @@ async function readTree(dir: string) {
       return [[file, new Uint8Array(await fs.readFile(target))] as const]
     }),
   )).flat()
-  return visit(dir)
+  return visit(dir).catch((cause: NodeJS.ErrnoException) => {
+    // A cooperative publisher can replace a corrupt tree after our lstat or directory listing. An ENOENT invalidates
+    // this unlocked verification; acquire the publication lock and recheck instead of accepting an incomplete digest.
+    if (cause.code === "ENOENT") return undefined
+    throw new SeatSkillContent.PackagingError(`Cannot acquire extracted seat skill tree: ${dir}`, { cause })
+  })
 }
 
 function digest(entries: readonly (readonly [string, Uint8Array])[]) {

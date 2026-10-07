@@ -114,26 +114,35 @@ describe("seat skill packaging", () => {
     expect(result.stderr).toContain(`SeatSkillPackagingError: ${error}`)
   }, 60000)
 
-  test("specialist Markdown stays LF under LF and CRLF checkouts; binary stays exact", async () => {
+  test("specialist Markdown, JSON and TypeScript stay LF under LF and CRLF checkouts; binary stays exact", async () => {
     await using tmp = await tmpdir()
     const root = path.resolve(import.meta.dir, "../../../..")
     await Bun.write(path.join(tmp.path, ".gitattributes"), Bun.file(path.join(root, ".gitattributes")))
-    const markdown = "packages/cold-specialist/skills/cold-review/SKILL.md"
-    const companion = "packages/cold-specialist/skills/cold-review/references/notes.md"
-    const binary = "packages/cold-specialist/skills/cold-review/references/data.bin"
+    const files = Object.fromEntries(["cold", "backend"].flatMap((id) => [
+      [`packages/${id}-specialist/skills/${id}-review/SKILL.md`, valid],
+      [`packages/${id}-specialist/skills/${id}-review/references/notes.md`, "日本語\n"],
+      [`packages/${id}-specialist/skills/${id}-review/references/config.json`, '{"name":"日本語"}\n'],
+      [`packages/${id}-specialist/skills/${id}-review/references/example.ts`, 'export const name = "日本語"\n'],
+    ]))
+    const binary = ["cold", "backend"].map((id) => `packages/${id}-specialist/skills/${id}-review/references/data.bin`)
     const bytes = new Uint8Array([0, 0xff, 10, 13, 10])
-    await Bun.write(path.join(tmp.path, markdown), valid)
-    await Bun.write(path.join(tmp.path, companion), "日本語\n")
-    await Bun.write(path.join(tmp.path, binary), bytes)
+    await Promise.all(Object.entries(files).map(([file, text]) => Bun.write(path.join(tmp.path, file), text)))
+    await Promise.all(binary.map((file) => Bun.write(path.join(tmp.path, file), bytes)))
+    // Outside the packaged tree the same checkout must really exercise CRLF conversion.
+    await Bun.write(path.join(tmp.path, "control.ts"), "export const control = true\n")
     await git(tmp.path, ["init"])
     await git(tmp.path, ["-c", "core.autocrlf=false", "add", "."])
     await Promise.all(["false", "true"].map(async (autocrlf) => {
       const checkout = path.join(tmp.path, `checkout-${autocrlf}`)
       await fs.mkdir(checkout)
       await git(tmp.path, ["-c", `core.autocrlf=${autocrlf}`, "checkout-index", "--all", "--force", `--prefix=${checkout}${path.sep}`])
-      expect(await Bun.file(path.join(checkout, markdown)).text()).toBe(valid)
-      expect(await Bun.file(path.join(checkout, companion)).text()).toBe("日本語\n")
-      expect(new Uint8Array(await Bun.file(path.join(checkout, binary)).arrayBuffer())).toEqual(bytes)
+      await Promise.all(Object.entries(files).map(async ([file, text]) => {
+        expect(await Bun.file(path.join(checkout, file)).text()).toBe(text)
+      }))
+      await Promise.all(binary.map(async (file) => {
+        expect(new Uint8Array(await Bun.file(path.join(checkout, file)).arrayBuffer())).toEqual(bytes)
+      }))
+      expect(await Bun.file(path.join(checkout, "control.ts")).text()).toBe(`export const control = true${autocrlf === "true" ? "\r\n" : "\n"}`)
     }))
   })
 })
