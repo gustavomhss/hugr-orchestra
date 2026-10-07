@@ -7,18 +7,19 @@ import path from "node:path"
 import { kept, keptPaths, oldNames, protectedStrings } from "../../../script/rename-ledger"
 
 const root = path.resolve(import.meta.dir, "../../..")
-const tracked = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root }).stdout.toString().split("\0").filter(Boolean)
+const listing = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root })
+if (listing.exitCode !== 0) throw new Error(`rename guard: git ls-files failed: ${listing.stderr.toString().trim()}`)
+const tracked = listing.stdout.toString().split("\0").filter(Boolean)
+if (!tracked.length) throw new Error("rename guard: git ls-files returned no tracked files")
 const decoder = new TextDecoder()
 
 async function scanned() {
   const files: { file: string; text: string }[] = []
   for (const file of tracked) {
     if (kept(file)) continue
-    const bytes = await Bun.file(path.join(root, file))
-      .bytes()
-      .catch(() => undefined)
-    // Deleted in the working tree, or binary.
-    if (!bytes || bytes.subarray(0, 8000).includes(0)) continue
+    const bytes = await Bun.file(path.join(root, file)).bytes()
+    // Binary contents are skipped, but their paths are checked below.
+    if (bytes.subarray(0, 8000).includes(0)) continue
     files.push({ file, text: decoder.decode(bytes) })
   }
   return files
@@ -30,6 +31,7 @@ describe("rename guard", () => {
     // A broken listing would scan nothing and pass.
     expect(tracked.length).toBeGreaterThan(5000)
     expect(files.length).toBeGreaterThan(5000)
+    expect(tracked.filter((file) => !kept(file)).flatMap((file) => oldNames(file, ""))).toEqual([])
     expect(files.flatMap((entry) => oldNames(entry.file, entry.text))).toEqual([])
   })
 
@@ -60,5 +62,9 @@ describe("rename guard", () => {
     ])
     expect(oldNames("packages/opencode/src/a.ts", "")).toEqual(["packages/opencode/src/a.ts: path"])
     expect(oldNames("packages/x/src/a.ts", 'fetch("https://models.opencode.ai/api.json")')).toEqual([])
+    expect(oldNames("packages/codemode/test/openapi.test.ts", 'Bun.file("./fixtures/opencode-v2-openapi.json")')).toEqual([])
+    expect(oldNames("packages/x/src/a.ts", 'Bun.file("./fixtures/opencode-v2-openapi.json")')).toEqual([
+      'packages/x/src/a.ts:1: Bun.file("./fixtures/opencode-v2-openapi.json")',
+    ])
   })
 })

@@ -11,7 +11,7 @@ export type Protected = { pattern: RegExp; reason: string; paths?: RegExp }
 // Whole files the codemod leaves alone and the guard does not scan.
 export const keptPaths: Kept[] = [
   {
-    path: /^script\/rename-(?:codemod|ledger)\.ts$|^packages\/core\/test\/rename-guard\.test\.ts$/,
+    path: /^script\/rename-(?:codemod|ledger)\.ts$|^packages\/core\/test\/rename-(?:guard|codemod)\.test\.ts$/,
     reason: "the rename tooling names the old strings it replaces",
   },
   { path: /(?:^|\/)(?:LICENSE|NOTICE)(?:\.[a-z]+)?$/, reason: "license and notice texts keep their copyright lines" },
@@ -168,6 +168,11 @@ export const protectedStrings: Protected[] = [
     pattern: /repo: "opencode"/g,
     paths: /\/test\/cli\/github-remote\.test\.ts$/,
     reason: "repository name parsed from the upstream URL",
+  },
+  {
+    pattern: /\bopencode-v2-openapi\.json\b/g,
+    paths: /^packages\/codemode\/test\/openapi\.test\.ts$/,
+    reason: "reference to the frozen upstream OpenAPI fixture, whose basename is kept",
   },
 
   // Provider identity still under a live probe (rename-external-plan.md items 8b-8e, 8i)
