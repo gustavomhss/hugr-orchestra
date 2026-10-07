@@ -203,14 +203,6 @@ const cli = yargs(args)
   )
   .command(
     lazy({
-      command: "github",
-      describe: "manage GitHub agent",
-      load: () => import("./cli/cmd/github"),
-      resolve: (m) => m.GithubCommand,
-    }),
-  )
-  .command(
-    lazy({
       command: "pr <number>",
       describe: "fetch and checkout a GitHub PR branch, then run Orchestra",
       load: () => import("./cli/cmd/pr"),
