@@ -3,8 +3,9 @@
 // Readiness: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v7-overhead.ts --control
 // Quiet timing: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v7-overhead.ts --quiet
 import os from "node:os"
-import { BUN, ROOT, cleanup, isolated, kill9, load, serve } from "./lib.ts"
-import { appRuntime, authorized, effectModules, evidence, record } from "./delivery-fixtures.ts"
+import { inspect } from "node:util"
+import { BUN, ROOT, cleanup, isolated, kill9, load } from "./lib.ts"
+import { appRuntime, authorized, deliveryEnv, effectModules, evidence, record, startServer } from "./delivery-fixtures.ts"
 
 type Sample = { ms: number; stdout: string; spawns: number; delegations: number; mode: string; pid: number }
 
@@ -12,15 +13,15 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean } = 
   authorized()
   const scratch = isolated("v7", {})
   const rows: { pair: number; arm: string; sample: Sample; load: string }[] = []
-  const hosts: Awaited<ReturnType<typeof serve>>[] = []
+  const hosts: Awaited<ReturnType<typeof startServer>>[] = []
   const quiet = () => process.platform === "win32" || os.loadavg()[0] <= os.availableParallelism() * 0.5
   try {
     if (!options.controlOnly && (!options.quiet || !quiet()))
       throw new Error(`V7 timing requires --quiet and load1 <= 0.5 * CPUs; current load=${load()}`)
     // Both arms use the same real git checkout and caller. Only the process-start flag differs.
     for (const flag of ["0", "1"])
-      hosts.push(await serve(BUN, [import.meta.filename, "--host"], {
-        ...scratch.env,
+      hosts.push(await startServer(BUN, [import.meta.filename, "--host", scratch.home], {
+        ...deliveryEnv(scratch.env),
         OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: flag,
         ...(flag === "1" && process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
         ...(flag === "1" && process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
@@ -29,7 +30,7 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean } = 
       const response = await fetch(new URL(`/sample?cwd=${encodeURIComponent(ROOT)}`, hosts[arm].url), {
         signal: AbortSignal.timeout(20_000),
       })
-      if (!response.ok) throw new Error(`V7 host ${arm}: ${await response.text()}`)
+      if (!response.ok) throw new Error(`V7 host ${arm}: ${(await response.text()).slice(0, 12_000)}`)
       const result = await response.json() as Sample
       if (!Number.isFinite(result.ms) || result.ms <= 0 || !/^[0-9a-f]{40}\n$/.test(result.stdout))
         throw new Error(`V7 invalid real git result: ${JSON.stringify(result)}`)
@@ -86,7 +87,9 @@ async function host() {
   const runtime = await appRuntime()
   // Build services before reporting readiness: lazy startup is never a measured sample.
   await runtime.context()
-  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0,
+    error(error) { return new Response(inspect(error, { depth: 10 }), { status: 500 }) },
+    async fetch(request) {
     const cwd = new URL(request.url).searchParams.get("cwd")
     if (cwd !== ROOT) return new Response("Unexpected git cwd", { status: 400 })
     const before = Omni.snapshot()

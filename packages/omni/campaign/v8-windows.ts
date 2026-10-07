@@ -4,8 +4,8 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { OmniProc } from "../../core/src/pty/omni.ts"
-import { BUN, ROOT, cleanup, fileTree, isolated, remaining, supervised, until, win } from "./lib.ts"
-import { appRuntime, authorized, effectModules, evidence, execute, record } from "./delivery-fixtures.ts"
+import { BUN, OPENCODE, ROOT, cleanup, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
+import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
 
@@ -14,19 +14,59 @@ export async function run() {
   if (!win) return record("v8-windows", { pass: false, status: "unrun", reason: "Requires real Windows cmd.exe, PowerShell, npx.cmd and ConPTY" })
   const scratch = isolated("v8", {})
   try {
-    const env = { ...scratch.env, OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
+    const env = { ...deliveryEnv(scratch.env), OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
       ...(process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
       ...(process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
     }
     const observed = await execute(BUN, [import.meta.filename, "--host", scratch.home, scratch.project], env, ROOT, 120_000)
     const line = observed.stdout.split("\n").find((line) => line.startsWith("V8_HOST_RESULT "))
     const cells = line ? JSON.parse(line.slice("V8_HOST_RESULT ".length)) as Cell[] : []
-    return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && cells.length === 6 && cells.every((cell) => cell.pass),
+    cells.push(await powershellBash(scratch, env))
+    return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && cells.length === 7 && cells.every((cell) => cell.pass),
       status: "executed-windows", cells, evidence: evidence("v8-windows", { home: scratch.home, observed, cells }) })
   } catch (error) {
     return record("v8-windows", { pass: false, error: String(error), evidence: evidence("v8-failure", String(error)) })
   } finally {
     await cleanup(scratch.home, [])
+  }
+}
+
+/** User bash route, using the real server's configured PowerShell and spawner; no model/provider request. */
+async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<string, string>) {
+  const tree = fileTree(scratch.home, 1)
+  const hosts: Awaited<ReturnType<typeof startServer>>[] = []
+  try {
+    const server = await startServer(BUN, [path.join(OPENCODE, "src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
+      ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify({ shell: "powershell.exe", formatter: false, lsp: false, plugin: [],
+        permission: { "*": "allow" }, share: "disabled" }),
+    }, scratch.project)
+    hosts.push(server)
+    const post = async (route: string, body: unknown) => {
+      const response = await fetch(new URL(route, server.url), { method: "POST", signal: AbortSignal.timeout(15_000),
+        headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(scratch.project) },
+        body: JSON.stringify(body) })
+      if (!response.ok) throw new Error(`PowerShell bash ${route}: ${response.status} ${await response.text()}`)
+      return response.json()
+    }
+    const session = await post("/session", {}) as { id: string }
+    const pending = fetch(new URL(`/session/${session.id}/shell`, server.url), {
+      method: "POST", signal: AbortSignal.timeout(45_000),
+      headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(scratch.project) },
+      body: JSON.stringify({ agent: "maestro", model: { providerID: "test", modelID: "test-model" }, command: `& ${tree.line}` }),
+    }).then(async (response) => ({ status: response.status, text: await response.text() }),
+      (error: unknown) => ({ status: 0, text: String(error) }))
+    await until(25_000, "PowerShell bash nonce tree", async () => (await remaining(tree.nonce)) === tree.size ? true : undefined)
+    const control = supervised(tree.nonce)
+    await post(`/session/${session.id}/abort`, {})
+    const result = await pending
+    const left = await remaining(tree.nonce)
+    return { name: "powershell-bash", ...result, supervised: control, left,
+      pass: control && result.status === 200 && result.text.includes(tree.ready) && left === 0 }
+  } catch (error) {
+    return { name: "powershell-bash", pass: false, error: String(error), server: hosts.map((host) => host.out()) }
+  } finally {
+    for (const host of hosts) kill9(host.pid)
+    await cleanup(scratch.home, [tree.nonce])
   }
 }
 
@@ -75,13 +115,16 @@ async function host(home: string, project: string) {
     const sentinel = path.join(project, "V8_INJECTED")
     const payload = ["with space", 'a"b', `x&echo PWNED>${sentinel}`, "a|b", "(a)", "a^b", "%V8_SECRET%"]
     process.env.V8_SECRET = "EXPANSION_IS_A_FAILURE"
+    const beforeMetachar = Omni.snapshot()
     const metachar = await command("npx.cmd", ["--offline", "--no-install", "v8-argv", ...payload]).then(
       (result) => ({ ...result, clearRefusal: result.exitCode !== 0 && /invalid.argument|unsupported|not supported|refus/i.test(result.stderr) }),
       (error: unknown) => ({ error: String(error), clearRefusal: /invalid.argument|unsupported|not supported|refus/i.test(String(error)) }),
     )
     const exact = "stdout" in metachar && metachar.exitCode === 0 && metachar.stdout.trim() === `V8_ARGV ${JSON.stringify(payload)}` && metachar.spawns === 1 && metachar.delegations === 0
+    const afterMetachar = Omni.snapshot()
     cells.push({ name: "npx-metachar", payload, ...metachar, injected: existsSync(sentinel),
-      pass: !existsSync(sentinel) && (exact || metachar.clearRefusal) })
+      delegationsAfterAttempt: afterMetachar.delegations - beforeMetachar.delegations,
+      pass: !existsSync(sentinel) && afterMetachar.delegations === beforeMetachar.delegations && (exact || metachar.clearRefusal) })
 
     const ps = await command("Write-Output", ["'V8_PS_OK'"], { shell: "powershell.exe" })
     cells.push({ name: "powershell-shell", ...ps, pass: ps.exitCode === 0 && ps.stdout.trim() === "V8_PS_OK" && ps.spawns === 1 && ps.delegations === 0 })
