@@ -25,6 +25,7 @@ An assigned transition between supported states or versions: a schema or data ph
 ## Tools and outputs
 
 - The project's migration runner or contract generator; the recipe depends on the domain.
+- Toolkit engines, only for the migrations and checks the packet assigns: [sqlx](../recipes/external/sqlx.md) for a SQLx project's migrations or query metadata, [squawk](../recipes/external/squawk.md) for PostgreSQL migration-safety lint, [postgres-language-server](../recipes/external/postgres-language-server.md) for type checks against a supplied PostgreSQL database.
 - Output: the phase artifacts, the affected queries or bindings, and the transition evidence.
 
 ## Limits and checks

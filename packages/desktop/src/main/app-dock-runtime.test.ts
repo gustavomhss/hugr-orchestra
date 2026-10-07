@@ -212,6 +212,22 @@ subprocess.run(['dpkg-deb','--build','--root-owner-group',str(base),'/tmp/orches
           ])
         ).stdout.trim(),
       ).toBe("True")
+      // The probe was still open at the stop, so the restarted session reopens it without any launch.
+      const reopened = Date.now() + 10_000
+      const restored = async (): Promise<boolean> => {
+        const result = await docker([
+          "exec",
+          cleanup.id,
+          "python3",
+          "-c",
+          "from pathlib import Path; print(any(b'launch probe.py' in p.read_bytes() for p in Path('/proc').glob('[0-9]*/cmdline')))",
+        ]).catch(() => undefined)
+        if (result?.stdout.trim() === "True") return true
+        if (Date.now() >= reopened) return false
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        return restored()
+      }
+      expect(await restored()).toBe(true)
       await reloaded.launch("orchestra-runtime-test.desktop")
       await reloaded.stop()
     } catch (error) {

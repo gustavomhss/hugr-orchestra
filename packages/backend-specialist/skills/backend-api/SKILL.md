@@ -40,7 +40,7 @@ Read only the reference whose facts the packet supplies:
 
 A mixed assignment, such as an ingress route carrying a binary payload, composes two references only when the packet supplies both sets of facts. Framework, library and version details live in the references your stack selects; a protocol reference never selects a framework. Stream body and producer lifetimes are in `backend-concurrency`.
 
-Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md). Read only the packet's language.
+Stack references: [Go](../backend-implement/references/languages/go.md), [Python](../backend-implement/references/languages/python.md), [JavaScript/TypeScript](../backend-implement/references/languages/js-ts.md), [Ruby](../backend-implement/references/languages/ruby.md), [PHP](../backend-implement/references/languages/php.md). Read only the packet's language.
 
 ## Common procedure
 

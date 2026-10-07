@@ -1,15 +1,9 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
-import type { TargetId } from "../target"
-import orvalLock from "./node-orval.package-lock.json"
-import protocGenEsLock from "./node-protoc-gen-es.package-lock.json"
-import type { HostedEngine, Runtime } from "../manifest"
+import type { Runtime } from "../manifest"
 
-// Node pins are the sha256 lines of nodejs.org's SHASUMS256.txt for the release, in SRI form. The engine locks were
-// written by `npm install --package-lock-only --ignore-scripts` with npm 10.9.8 (the npm this Node bundles); they keep
-// every platform's optional packages (esbuild's among them), so one lock installs on all five targets.
+// Node pins are the sha256 lines of nodejs.org's SHASUMS256.txt for the release, in SRI form. Engine locks on this
+// runtime are written by `npm install --package-lock-only --ignore-scripts` with the npm it bundles (10.9.8).
 const NODE_VERSION = "22.23.2"
-const ORVAL_VERSION = "8.39.0"
-const PROTOC_GEN_ES_VERSION = "2.16.0"
 
 // Only the interpreter, the bundled npm and the license are installed. Archive symlinks (bin/npm, bin/npx) are left
 // out: npm runs as `<node> lib/node_modules/npm/bin/npm-cli.js` (Windows: `node_modules/npm/bin/npm-cli.js`).
@@ -27,7 +21,7 @@ const unix = (asset: string, integrity: PinnedArtifact.Artifact["integrity"]) =>
   executable: "bin/node",
 })
 
-export const NODE: Runtime = {
+export default {
   id: "node",
   version: NODE_VERSION,
   license: "MIT",
@@ -51,37 +45,4 @@ export const NODE: Runtime = {
       executable: "node.exe",
     },
   },
-}
-
-export const ORVAL: HostedEngine = {
-  id: "orval",
-  version: ORVAL_VERSION,
-  license: "MIT",
-  upstream: "orval-labs/orval",
-  runtime: "node",
-  install: {
-    kind: "npm",
-    packageJson: packageJson("backend-toolkit-orval", { orval: ORVAL_VERSION }),
-    lock: JSON.stringify(orvalLock, null, 2) + "\n",
-  },
-  launch: ["{install}/node_modules/orval/dist/bin/orval.mjs"],
-}
-
-export const PROTOC_GEN_ES: HostedEngine = {
-  id: "protoc-gen-es",
-  version: PROTOC_GEN_ES_VERSION,
-  license: "Apache-2.0",
-  upstream: "bufbuild/protobuf-es",
-  runtime: "node",
-  install: {
-    kind: "npm",
-    packageJson: packageJson("backend-toolkit-protoc-gen-es", { "@bufbuild/protoc-gen-es": PROTOC_GEN_ES_VERSION }),
-    lock: JSON.stringify(protocGenEsLock, null, 2) + "\n",
-  },
-  launch: ["{install}/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es"],
-}
-
-/** The package.json text the lock was written from, in npm's own formatting. */
-function packageJson(name: string, dependencies: Record<string, string>) {
-  return JSON.stringify({ name, private: true, dependencies }, null, 2) + "\n"
-}
+} satisfies Runtime

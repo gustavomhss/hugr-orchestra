@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
+import { BackendToolkitManifest } from "@opencode-ai/core/backend-toolkit/manifest"
 
 // Family layout of the backend specialist's shared references (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
-// F6.4), the per-reference word cap S-1b, the frozen family tuples and the engine recipe pins (F6.11). Discovery, link
+// F6.4), the per-reference word cap S-1b, the frozen family tuples, the engine recipe pins (F6.11) and the recipe index. Discovery, link
 // resolution and depth-2 reachability are covered by backend-skills.test.ts; this file checks what that one cannot see:
 // which family a reference belongs to and which versions it may name.
 
@@ -25,24 +26,26 @@ const TUPLES = {
     "frameworks/python/fastapi.md": ["0.118.0", "0.48.0"],
     "libraries/python/pydantic.md": ["2.11.7"],
     "libraries/python/sqlalchemy.md": ["2.0.43"],
+    "frameworks/python/django.md": ["6.1.2", "3.18.3", "3.12.11", "3.18.1", "2.4.0", "0.30.0"],
+    "frameworks/python/kubeflow.md": ["2.17.0"],
   },
   "js-ts": {
     "languages/js-ts.md": ["22.18.0", "5.1.0", "2.2.0", "5.6.1", "4.1.8", "8.16.3", "1.3.14"],
     "frameworks/js-ts/express.md": ["5.1.0", "2.2.0", "4.21.2"],
     "frameworks/js-ts/fastify.md": ["5.6.1", "4.29.1"],
   },
+  ruby: {
+    "languages/ruby.md": ["4.0.7", "8.1.4", "0.6.13532", "0.20.0", "4.2.0", "2.1.0", "0.13.1"],
+    "frameworks/ruby/rails.md": ["4.0.7", "8.1.4", "0.6.13532", "0.20.0", "4.2.0", "2.1.0", "0.13.1"],
+  },
+  php: {
+    "languages/php.md": ["8.5.11", "13.35.0", "3.12.3", "2.3.0"],
+    "frameworks/php/laravel.md": ["8.5.11", "13.35.0", "3.12.3", "2.3.0"],
+  },
 } as Record<string, Record<string, string[]>>
-// Ruling M3-3 (F5.5 pins): the first toolkit cut, one recipe per engine. gitleaks is a host-side scanner with none.
-const ENGINE_PINS = {
-  "ast-grep": "0.45.3",
-  sqlc: "1.31.1",
-  buf: "1.73.0",
-  kiota: "1.35.0",
-  "openapi-generator": "7.25.0",
-  "datamodel-codegen": "0.83.0",
-  orval: "8.39.0",
-  "protoc-gen-es": "2.16.0",
-} as Record<string, string>
+// Ruling M6-1: the toolkit packs are the pin source. Every pack that serves an entry skill has one recipe, and the
+// generated recipe index lists exactly those packs under their entry skills. gitleaks is a host-side scanner with none.
+const PACKS = Object.values<BackendToolkitManifest.Pack>(BackendToolkitManifest.ENGINES).filter((pack) => pack.fit.skills.length > 0)
 // A recipe may also run the engine that drives it: protoc-gen-es is a buf plugin.
 const ENGINE_DRIVERS: Record<string, string[]> = { "protoc-gen-es": ["buf"] }
 
@@ -185,36 +188,46 @@ describe("backend skill family tuples and engine recipes", () => {
 
   test("pins each engine recipe and runs it only through the toolkit path", async () => {
     const recipes = (await listReferences()).filter((file) => file.startsWith("recipes/external/"))
-    expect(recipes).toEqual(
-      Object.keys(ENGINE_PINS)
-        .map((id) => `recipes/external/${id}.md`)
-        .toSorted(),
-    )
+    expect(recipes).toEqual([...PACKS.map((pack) => `recipes/external/${pack.id}.md`), "recipes/external/index.md"].toSorted())
 
     const results = await Promise.all(
-      Object.entries(ENGINE_PINS).map(async ([id, pin]) => {
-        const text = await Bun.file(path.join(REFERENCES, `recipes/external/${id}.md`)).text()
+      PACKS.map(async (pack) => {
+        const text = await Bun.file(path.join(REFERENCES, `recipes/external/${pack.id}.md`)).text()
         return {
-          id,
-          pin: text.includes(`\`${pin}\``),
-          invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${id}"`),
+          id: pack.id,
+          pin: text.includes(`\`${pack.version}\``),
+          invokes: text.includes(`"$BACKEND_TOOLKIT_BIN/${pack.id}"`),
           // F5.31 outcomes the recipe must turn into a `tool` blocker.
           outcomes: text.includes("toolkit-not-ready:") && text.includes("unsupported-target:"),
-          otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pin),
+          otherVersions: [...text.matchAll(/\b\d+\.\d+\.\d+\b/g)].map((match) => match[0]).filter((v) => v !== pack.version),
           otherEngines: [...text.matchAll(/\$\{?BACKEND_TOOLKIT_BIN\}?"?\/([a-z0-9-]+)/g)]
             .map((match) => match[1])
-            .filter((engine) => engine !== id && !(ENGINE_DRIVERS[id] ?? []).includes(engine)),
+            .filter((engine) => engine !== pack.id && !(ENGINE_DRIVERS[pack.id] ?? []).includes(engine)),
         }
       }),
     )
     expect(results).toEqual(
-      Object.keys(ENGINE_PINS).map((id) => ({
-        id,
-        pin: true,
-        invokes: true,
-        outcomes: true,
-        otherVersions: [],
-        otherEngines: [],
+      PACKS.map((pack) => ({ id: pack.id, pin: true, invokes: true, outcomes: true, otherVersions: [], otherEngines: [] })),
+    )
+  })
+
+  test("indexes exactly the packs' recipes under their entry skills", async () => {
+    const text = await Bun.file(path.join(REFERENCES, "recipes/external/index.md")).text()
+    // `### <entry skill>` headings, each followed by the recipe links of that group.
+    const groups = text
+      .split(/^### /m)
+      .slice(1)
+      .map((section) => ({
+        skill: section.split("\n")[0].trim(),
+        recipes: [...section.matchAll(/\]\(([a-z0-9-]+)\.md\)/g)].map((match) => match[1]).toSorted(),
+      }))
+    const skills = [...new Set(PACKS.flatMap((pack) => pack.fit.skills))]
+    expect(groups.toSorted((a, b) => a.skill.localeCompare(b.skill))).toEqual(
+      skills.toSorted().map((skill) => ({
+        skill,
+        recipes: PACKS.filter((pack) => pack.fit.skills.includes(skill))
+          .map((pack) => pack.id)
+          .toSorted(),
       })),
     )
   })

@@ -1,11 +1,9 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
-import type { TargetId } from "../target"
-import type { HostedEngine, Runtime } from "../manifest"
+import type { Runtime } from "../manifest"
 
-// GitHub pins are the Temurin release assets' sha256 digests in SRI form; each `.sha256.txt` companion agreed with them
-// when pinning. The Maven Central pin is the jar's sha256, computed from the download, whose `.sha1` and `.md5` agreed.
+// Pins are the Temurin release assets' sha256 digests in SRI form; each `.sha256.txt` companion agreed with them when
+// pinning.
 const TEMURIN = "17.0.20.1+1"
-const OPENAPI_GENERATOR_VERSION = "7.25.0"
 
 // Every archive holds one JRE home with these six children. They move as whole directories, so the installed tree is
 // the complete JRE with its tar modes intact. macOS nests the home in a bundle whose launcher stub and signature
@@ -24,7 +22,7 @@ const temurin = (asset: string, integrity: PinnedArtifact.Artifact["integrity"])
   }
 }
 
-export const JAVA: Runtime = {
+export default {
   id: "java",
   version: TEMURIN,
   license: "GPL-2.0-only WITH Classpath-exception-2.0",
@@ -36,22 +34,4 @@ export const JAVA: Runtime = {
     "linux-x64": temurin("x64_linux", "sha256-CytkDjBGtkyOxQTeCrnZG7VhAYK9oh+tRUaBzlTUWmI="),
     "win32-x64": temurin("x64_windows", "sha256-vCGpOSMQPNqsk+4zewrkNl5zn94234I91Fa8Z8ip01I="),
   },
-}
-
-export const OPENAPI_GENERATOR: HostedEngine = {
-  id: "openapi-generator",
-  version: OPENAPI_GENERATOR_VERSION,
-  license: "Apache-2.0",
-  upstream: "OpenAPITools/openapi-generator",
-  runtime: "java",
-  install: {
-    kind: "jar",
-    artifact: {
-      url: `https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${OPENAPI_GENERATOR_VERSION}/openapi-generator-cli-${OPENAPI_GENERATOR_VERSION}.jar`,
-      integrity: "sha256-Qc5PawfxlmdkOdcQdZ+hzteggGbQb/G/MUaBRwKJ764=",
-      format: "raw",
-      entries: [{ from: `openapi-generator-cli-${OPENAPI_GENERATOR_VERSION}.jar`, to: "openapi-generator-cli.jar" }],
-    },
-  },
-  launch: ["-jar", "{install}/openapi-generator-cli.jar"],
-}
+} satisfies Runtime
