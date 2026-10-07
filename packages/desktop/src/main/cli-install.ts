@@ -5,6 +5,7 @@ import { readCliManifest, verifyCliArtifact } from "./cli-artifacts"
 export async function installCliArtifact(source: string, target: string, cache: string) {
   const manifest = await readCliManifest(source)
   const bundled = await verifyCliArtifact(source, target)
+  if (manifest.version !== bundled.version) throw new Error("CLI source manifest changed during installation")
   const artifact = manifest.artifacts.find((entry) => entry.target === target)!
   const directory = join(cache, `${manifest.version.replace(/[^a-zA-Z0-9._-]/g, "-")}-${target}-${artifact.sha256}`)
   const existing = await readCliManifest(directory)

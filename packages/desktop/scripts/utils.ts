@@ -1,6 +1,7 @@
 import { $ } from "bun"
 import { join, resolve } from "node:path"
 import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
+import { nativeCliTarget } from "../src/main/cli-artifacts"
 
 export type Channel = "dev" | "beta" | "prod"
 
@@ -36,6 +37,11 @@ export async function buildCliToResources() {
             ? []
             : ["--options", "runtime", "--timestamp", "--entitlements", join(desktop, "resources/entitlements.plist")]
         await $`codesign --force --sign ${identity} ${options} ${path}`
+      }
+      if (target === nativeCliTarget(process.platform, process.arch)) {
+        const reported = (await $`${path} --version`.text()).trim()
+        if (![version, `orchestra v${version}`].includes(reported))
+          throw new Error(`Owned CLI compiled version mismatch: ${target}`)
       }
     },
   })

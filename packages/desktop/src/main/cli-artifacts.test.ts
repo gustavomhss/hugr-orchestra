@@ -118,3 +118,11 @@ test("owned artifact rejects symlink binary and symlink descriptor", async () =>
   await symlink(join(input.root, "descriptor"), join(input.root, "manifest.json"))
   await expect(readCliManifest(input.root)).rejects.toThrow("regular")
 })
+
+test("owned manifest rejects symlink roots", async () => {
+  const input = await fixture()
+  const link = `${input.root}-link`
+  roots.push(link)
+  await symlink(input.root, link, process.platform === "win32" ? "junction" : "dir")
+  await expect(readCliManifest(link)).rejects.toThrow("real directory")
+})

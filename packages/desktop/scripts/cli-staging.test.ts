@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
@@ -108,4 +108,15 @@ test("staging rejects empty, duplicate and traversal targets before touching out
   await expect(stageCliArtifacts({ ...input, targets: [] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: ["../foreign"] })).rejects.toThrow("target")
   await expect(stageCliArtifacts({ ...input, targets: [...input.targets, ...input.targets] })).rejects.toThrow("target")
+})
+
+test("staging rejects symlink output directories and keeps previous resources", async () => {
+  const input = await fixture()
+  await stageCliArtifacts(input)
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const binaryDirectory = join(input.dist, `cli-${input.targets[0]}`, "bin")
+  await rename(binaryDirectory, join(input.root, "foreign-bin"))
+  await symlink(join(input.root, "foreign-bin"), binaryDirectory, process.platform === "win32" ? "junction" : "dir")
+  await expect(stageCliArtifacts(input)).rejects.toThrow("regular")
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
 })

@@ -90,7 +90,7 @@ async function run(
         stdout: options.redact && output.stdout ? "[redacted]" : (output.stdout?.trim() ?? ""),
         stderr: options.redact ? "[redacted]" : (output.stderr?.trim() ?? ""),
       })
-      throw error
+      throw options.redact ? new Error("Owned CLI credential command failed") : error
     },
   )
 }

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
+import { realpath } from "node:fs/promises"
 import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
@@ -40,7 +41,12 @@ export async function stageCliArtifacts(input: {
       if (!metadata || typeof metadata !== "object" || !("version" in metadata) || metadata.version !== input.version)
         throw new Error(`Owned CLI artifact version mismatch: ${target}`)
       const executable = target.startsWith("windows-") ? "orchestra.exe" : "orchestra"
-      if (!(await lstat(join(source, "bin", executable))).isFile())
+      if (
+        !(await lstat(source)).isDirectory() ||
+        !(await lstat(join(source, "bin"))).isDirectory() ||
+        !(await lstat(join(source, "bin", executable))).isFile() ||
+        (await realpath(join(source, "bin", executable))) !== join(await realpath(source), "bin", executable)
+      )
         throw new Error(`Owned CLI output must be regular: ${target}`)
       const file = `orchestra-${target}${target.startsWith("windows-") ? ".exe" : ""}`
       const path = join(staging, file)
