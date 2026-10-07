@@ -134,12 +134,12 @@ function alive(process_: number) {
 const gone = (process_: number) => Effect.promise(() => poll(() => (alive(process_) ? undefined : true)))
 
 // Node reports a native PID, not Git Bash's POSIX $!. A real-time watchdog bounds even a broken cleanup probe.
-function slowCheck(dirs: Dirs) {
+function slowCheck(dirs: Dirs, watchdog = 30_000) {
   return Effect.acquireRelease(
     Effect.sync(() => {
       writeFileSync(
         path.join(dirs.work, "child.cjs"),
-        'require("fs").writeFileSync("child.pid", String(process.pid)); setTimeout(() => process.exit(0), 30000)',
+        `const fs = require("fs"); fs.writeFileSync("child.pid", String(process.pid)); setTimeout(() => { fs.writeFileSync("watchdog-fired", "watchdog-fired"); process.exit(0) }, ${watchdog})`,
       )
       return `${process.platform === "win32" ? 'read -r native < /proc/$$/winpid; echo "$native"' : "echo $$"} > "$PWD/shell.pid"; node child.cjs & wait`
     }),
@@ -391,6 +391,35 @@ describe("Relay.Service", () => {
     }),
   )
 
+  it.live("observes the watchdog sentinel when a live child exits naturally", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      const check = yield* slowCheck(dirs, 3000)
+      yield* use(dirs, (relay) =>
+        Effect.gen(function* () {
+          const fiber = yield* relay
+            .verify({
+              installID: "h-watchdog",
+              nodeID: "watchdog",
+              message: "Watchdog",
+              check,
+              workdir: dirs.work,
+            })
+            .pipe(Effect.forkChild)
+          const shell = yield* pid(path.join(dirs.work, "shell.pid"))
+          const child = yield* pid(path.join(dirs.work, "child.pid"))
+          expect(alive(shell)).toBe(true)
+          expect(alive(child)).toBe(true)
+          expect(existsSync(path.join(dirs.work, "watchdog-fired"))).toBe(false)
+          expect(yield* Fiber.join(fiber)).toMatchObject({ verdict: "pass", ledgerSeq: 0 })
+          yield* gone(shell)
+          yield* gone(child)
+          expect(readFileSync(path.join(dirs.work, "watchdog-fired"), "utf8")).toBe("watchdog-fired")
+        }),
+      )
+    }),
+  )
+
   it.effect("kills a verify's process group at 60 seconds", () =>
     Effect.gen(function* () {
       const dirs = yield* fixture
@@ -418,6 +447,7 @@ describe("Relay.Service", () => {
           expect(yield* Fiber.join(fiber)).toMatchObject({ verdict: "unavailable", reason: "timeout", ledgerSeq: 0 })
           yield* gone(shell)
           yield* gone(child)
+          expect(existsSync(path.join(dirs.work, "watchdog-fired"))).toBe(false)
           // The fixture watchdog must never satisfy the timeout's cleanup oracle.
           expect(performance.now() - boundary).toBeLessThan(10_000)
         }),
@@ -461,6 +491,7 @@ describe("Relay.Service", () => {
           expect(yield* Fiber.join(fiber)).toEqual({ outcome: "check", i: 0, wp: "build", failing: ["slow"] })
           yield* gone(shell)
           yield* gone(child)
+          expect(existsSync(path.join(dirs.work, "watchdog-fired"))).toBe(false)
           expect(performance.now() - boundary).toBeLessThan(10_000)
         }),
       )
