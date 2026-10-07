@@ -4,6 +4,8 @@
 
 The packet assigns a TypeScript client, Zod schemas or mocks generated from a local OpenAPI description, names the output paths as part of the write paths, and supplies the project's Orval config (`orval.config.ts`, `.js` or `.mjs`) or the values for a new one. The engine is Orval `8.39.0` on the toolkit's own Node.js, provided by the host and run only as `"$BACKEND_TOOLKIT_BIN/orval"`.
 
+Source: adapted from Orval's official skill (MIT), <https://github.com/orval-labs/orval/tree/master/skills/orval>, and <https://orval.dev/llms.txt>.
+
 ## Non-trigger
 
 - Server handlers or request validation wired into routes: Orval writes the client side and schemas only; the handler code is yours.
@@ -28,8 +30,9 @@ The packet assigns a TypeScript client, Zod schemas or mocks generated from a lo
    ```sh
    "$BACKEND_TOOLKIT_BIN/orval" --input <contract.yaml> --output <client-dir>/<file>.ts --client <client>
    ```
+   Never pass `--watch`. With a config, never override its `client`, `mode` or `mock` with flags.
 3. Use `output.clean` only when the packet assigns it and the output directory holds nothing but generated files: it deletes them first.
-4. Read the diff: models, operations and mocks may move. Any change outside the named outputs is a `packet` blocker.
+4. Read the diff: models, operations and mocks may move. Function and hook names come from each operation's `operationId`, so a renamed or missing `operationId` renames exports; an export rename the change did not intend is a `packet` blocker. The `mode` sets which files move: `single` one file, `split` separate schema and mock files, `tags` and `tags-split` one file or folder per OpenAPI tag. Any change outside the named outputs is a `packet` blocker.
 5. Compile the project and run the packet's client checks against a local test endpoint.
 
 ## Tools and outputs
@@ -37,7 +40,7 @@ The packet assigns a TypeScript client, Zod schemas or mocks generated from a lo
 - The host fetches the engine and its Node.js on first use; the seat's shell has no network. Never install, download or substitute it (`npx orval`, `npm install`, the project's `node_modules/.bin/orval`, a copy on `PATH`).
 - When the shell output reports `toolkit-not-ready:...` or `unsupported-target:...`, stop and return a `tool` blocker whose code is that text verbatim.
 - Generated and owned by Orval: everything under the configured outputs. Never edit those files. Handwritten and yours: the code that calls the client, any custom `mutator` the config names, and tests.
-- Project prerequisites outside the toolkit: the packages the generated code imports (`axios`, `@tanstack/*-query`, `zod`, `msw`) and any formatter the config enables (`prettier`, `biome`). A missing one is `project-prerequisite-missing:<package>`; installing it is a `packet` decision.
+- Project prerequisites outside the toolkit: the packages the generated code imports (`axios`, `@tanstack/*-query`, `zod`, `msw`) and any formatter or command the config enables (`prettier`, `biome`, `hooks.afterAllFilesWrite`). A missing one is `project-prerequisite-missing:<package>`; installing it is a `packet` decision.
 
 ## Limits and checks
 

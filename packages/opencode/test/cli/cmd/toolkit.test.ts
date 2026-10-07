@@ -17,12 +17,15 @@ describe("toolkit command", () => {
         const result = yield* opencode.spawn(["toolkit", "status", "--json"], {
           env: { BACKEND_TOOLKIT_ROOT: path.join(home, "toolkit") },
         })
-        const expected: BackendToolkit.State[] = Object.values(BackendToolkitManifest.ENGINES).map((engine) =>
-          "target" in detected
-            ? { engine: engine.id, version: engine.version, target: detected.target, status: "absent" }
-            : { engine: engine.id, version: engine.version, status: "unsupported", reason: detected.unsupported },
-        )
-        opencode.expectExit(result, "target" in detected ? 0 : 1, "toolkit status --json")
+        // An engine can be unsupported on a target the host supports (sqlx needs the MSVC linker on Windows).
+        const expected: BackendToolkit.State[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
+          if (!("target" in detected))
+            return { engine: engine.id, version: engine.version, status: "unsupported", reason: detected.unsupported }
+          const reason = "runtime" in engine ? engine.unsupported?.[detected.target] : undefined
+          if (reason) return { engine: engine.id, version: engine.version, target: detected.target, status: "unsupported", reason }
+          return { engine: engine.id, version: engine.version, target: detected.target, status: "absent" }
+        })
+        opencode.expectExit(result, expected.some((state) => state.status === "unsupported") ? 1 : 0, "toolkit status --json")
         expect(JSON.parse(result.stdout)).toEqual(expected)
       }),
     60_000,

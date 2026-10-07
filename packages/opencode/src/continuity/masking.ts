@@ -70,7 +70,7 @@ export function stub(part: CompletedTool, reference: string) {
 /**
  * Completed tool results older than the last TAIL_STEPS assistant steps that are not protected
  * and not yet masked, with the tokens masking them would free. Steps, not user turns: one long
- * autonomous turn is pruned as it grows.
+ * autonomous turn is pruned too once maintenance runs.
  */
 export function candidates(messages: SessionV1.WithParts[], masks: Masks) {
   let steps = 0
