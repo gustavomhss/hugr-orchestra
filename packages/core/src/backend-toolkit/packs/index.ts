@@ -1,12 +1,15 @@
 import astGrep from "./ast-grep"
 import buf from "./buf"
 import controllerGen from "./controller-gen"
+import datafusionCli from "./datafusion-cli"
 import datamodelCodegen from "./datamodel-codegen"
 import gitleaks from "./gitleaks"
+import gocqlxSchemagen from "./gocqlx-schemagen"
 import kiota from "./kiota"
 import kopium from "./kopium"
 import kubeconform from "./kubeconform"
 import kyselyCodegen from "./kysely-codegen"
+import modelina from "./modelina"
 import ogen from "./ogen"
 import openapiGenerator from "./openapi-generator"
 import orval from "./orval"
@@ -38,4 +41,7 @@ export const ENGINES = {
   [postgresLanguageServer.id]: postgresLanguageServer,
   [sqlglot.id]: sqlglot,
   [kyselyCodegen.id]: kyselyCodegen,
+  [datafusionCli.id]: datafusionCli,
+  [gocqlxSchemagen.id]: gocqlxSchemagen,
+  [modelina.id]: modelina,
 }

@@ -15,6 +15,7 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 - [datamodel-codegen](datamodel-codegen.md): generator; input: an OpenAPI document or JSON Schema.
 - [kiota](kiota.md): generator; input: an OpenAPI description.
 - [kopium](kopium.md): generator; input: a CustomResourceDefinition file the packet supplies.
+- [modelina](modelina.md): generator; input: an AsyncAPI document.
 - [ogen](ogen.md): generator; input: an OpenAPI description.
 - [openapi-generator](openapi-generator.md): generator; input: an OpenAPI description.
 - [orval](orval.md): generator; input: an OpenAPI description.
@@ -22,6 +23,8 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 
 ### backend-data
 
+- [datafusion-cli](datafusion-cli.md): check; input: the schema DDL and the SQL the change wrote.
+- [gocqlx-schemagen](gocqlx-schemagen.md): generator; input: a disposable Cassandra or Scylla cluster holding the packet's keyspace schema.
 - [kysely-codegen](kysely-codegen.md): generator; input: a disposable PostgreSQL or MySQL database holding the schema.
 - [postgres-language-server](postgres-language-server.md): check; input: the SQL the change wrote and a disposable PostgreSQL database holding the schema.
 - [sqlc](sqlc.md): generator; input: SQL query files and the schema DDL sqlc reads.
@@ -35,6 +38,7 @@ Read one recipe only when the packet assigns that engine's artifacts. Engines ar
 
 ### backend-check
 
+- [datafusion-cli](datafusion-cli.md): check; input: the schema DDL and the SQL the change wrote.
 - [kubeconform](kubeconform.md): check; input: Kubernetes manifests the change wrote, with the schemas the packet supplies.
 - [postgres-language-server](postgres-language-server.md): check; input: the SQL the change wrote and a disposable PostgreSQL database holding the schema.
 - [sqlglot](sqlglot.md): check; input: the Spark or other-dialect SQL the change wrote.
