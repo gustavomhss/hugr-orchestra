@@ -3,7 +3,7 @@ import { execFile } from "node:child_process"
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { promisify } from "node:util"
 import { pathToFileURL } from "node:url"
 import { nativeCliTarget, verifyCliArtifact } from "../src/main/cli-artifacts"
@@ -106,10 +106,11 @@ test("owned native CLI authenticates through Electron without changing workspace
       }).catch((error) => { console.error(error); app.exit(1); });
     `,
       )
+      const electronDirectory = dirname(createRequire(import.meta.url).resolve("electron/package.json"))
       const electron = join(
-        desktop,
-        "node_modules/electron/dist",
-        (await readFile(join(desktop, "node_modules/electron/path.txt"), "utf8")).trim(),
+        electronDirectory,
+        "dist",
+        (await readFile(join(electronDirectory, "path.txt"), "utf8")).trim(),
       )
       const command = process.platform === "linux" ? "xvfb-run" : electron
       const args = [...(process.platform === "linux" ? ["-a", electron] : []), "--no-sandbox", worker]
