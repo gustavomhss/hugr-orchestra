@@ -367,7 +367,7 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 /* The reference's chapter marker (.mx-origin), marking screens to revisit before production. */
-:is(.orchestra-wip-chip, .orchestra-wip-mark) {
+:is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
   border: 1px solid var(--orchestra-border-muted);
   border-radius: 6px;
   background: var(--orchestra-wip-background);
@@ -380,11 +380,17 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   white-space: nowrap;
 }
 
-.orchestra-wip-chip {
+.orchestra-wip-chip,
+.orchestra-attention-chip {
   flex-shrink: 0;
   margin-inline-start: auto;
   padding-block: 1px;
   padding-inline: 6px;
+}
+
+/* Runs waiting for a human: the WIP chip's shape, with the count in warm ink. */
+.orchestra-attention-chip {
+  font-variant-numeric: tabular-nums;
 }
 
 /* In flow above the page, so it never covers a page's own eyebrow, title or header action. Pages use
@@ -712,7 +718,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 }
 
 /* The compact rail keeps the mark as a dot on the icon. */
-[data-navigation="compact"] .orchestra-wip-chip {
+[data-navigation="compact"] .orchestra-wip-chip,
+[data-navigation="compact"] .orchestra-attention-chip {
   position: absolute;
   inset-inline-end: 4px;
   inset-block-start: 4px;
@@ -724,7 +731,8 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   background: var(--orchestra-wip-text);
 }
 
-[data-navigation="compact"] .orchestra-wip-chip > span {
+[data-navigation="compact"] .orchestra-wip-chip > span,
+[data-navigation="compact"] .orchestra-attention-chip > span[aria-hidden] {
   display: none;
 }
 

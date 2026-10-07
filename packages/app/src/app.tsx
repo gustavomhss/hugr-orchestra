@@ -723,7 +723,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         <Route path="/" component={NewHome} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
-        <Route path="/orchestra/:chapter" component={OrchestraChapterRoute} />
+        <Route path="/orchestra/:chapter/*rest" component={OrchestraChapterRoute} />
       </Show>
       <Route path="/new-session" component={DraftRoute} />
     </>
