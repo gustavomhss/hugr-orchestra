@@ -30,8 +30,8 @@ import { ConfigMigrateV1 } from "../src/v1/config/migrate"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
-// WP10: the Relay engine bound as a Location node, against a real bash, the real AppProcess and real files. Linux-only
-// like every check test (R11).
+// WP10: real bash, AppProcess and files on Linux and Windows (Git Bash). Mode bits assert POSIX permissions only;
+// key refusal, symlinks, HMAC, isolation and native process-tree timeout controls run on both OSes.
 const it = testEffect(Layer.empty)
 const projectID = "relay-project"
 
@@ -116,6 +116,14 @@ const pid = (file: string) =>
 
 // A killed process whose parent died can stay a zombie until init reaps it; a zombie runs nothing.
 function alive(process_: number) {
+  if (process.platform === "win32") {
+    const listing = Bun.spawnSync(["tasklist.exe", "/FI", `PID eq ${process_}`, "/FO", "CSV", "/NH"])
+    expect(listing.exitCode).toBe(0)
+    return listing.stdout
+      .toString()
+      .split(/\r?\n/)
+      .some((line) => line.split('","')[1] === String(process_))
+  }
   if (Result.isFailure(Result.try(() => process.kill(process_, 0)))) return false
   const state = Bun.spawnSync(["ps", "-o", "stat=", "-p", String(process_)])
     .stdout.toString()
@@ -124,6 +132,34 @@ function alive(process_: number) {
 }
 
 const gone = (process_: number) => Effect.promise(() => poll(() => (alive(process_) ? undefined : true)))
+
+// Node reports a native PID, not Git Bash's POSIX $!. A real-time watchdog bounds even a broken cleanup probe.
+function slowCheck(dirs: Dirs) {
+  return Effect.acquireRelease(
+    Effect.sync(() => {
+      writeFileSync(
+        path.join(dirs.work, "child.cjs"),
+        'require("fs").writeFileSync("child.pid", String(process.pid)); setTimeout(() => process.exit(0), 30000)',
+      )
+      return `${process.platform === "win32" ? 'read -r native < /proc/$$/winpid; echo "$native"' : "echo $$"} > "$PWD/shell.pid"; node child.cjs & wait`
+    }),
+    () =>
+      Effect.sync(() => {
+        // Runs after observations, never as part of the death oracle; protects failed assertions too.
+        ;["shell.pid", "child.pid"].forEach((name) => {
+          const file = path.join(dirs.work, name)
+          if (!existsSync(file)) return
+          const native = Number(readFileSync(file, "utf8").trim())
+          if (!Number.isSafeInteger(native) || native <= 0 || !alive(native)) return
+          if (process.platform === "win32") {
+            Bun.spawnSync(["taskkill.exe", "/PID", String(native), "/T", "/F"])
+            return
+          }
+          Result.try(() => process.kill(native, "SIGKILL"))
+        })
+      }),
+  )
+}
 
 function lines(file: string) {
   return readFileSync(file, "utf8").trimEnd().split("\n")
@@ -171,8 +207,11 @@ describe("Relay.Service", () => {
           expect((yield* relay.record("../escape", installed).pipe(Effect.flip)).reason).toBe("install-invalid")
         }),
       )
-      expect(statSync(root).mode & 0o777).toBe(0o700)
-      expect(statSync(path.join(root, "ledger.key")).mode & 0o777).toBe(0o600)
+      // Windows stat modes do not represent owner-only ACLs.
+      if (process.platform !== "win32") {
+        expect(statSync(root).mode & 0o777).toBe(0o700)
+        expect(statSync(path.join(root, "ledger.key")).mode & 0o777).toBe(0o600)
+      }
       const key = readFileSync(path.join(root, "ledger.key"), "utf8")
       expect(key).toMatch(/^[0-9a-f]{64}$/)
       expect(existsSync(path.join(root, "arms", "run-1", "sprint.json"))).toBe(true)
@@ -221,7 +260,7 @@ describe("Relay.Service", () => {
       writeFileSync(file, key)
       chmodSync(file, 0o644)
       yield* record
-      expect(statSync(file).mode & 0o777).toBe(0o600)
+      if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
       expect(readFileSync(file, "utf8")).toBe(key)
       expect(
         (yield* LedgerVerify.verify(path.join(root, "hooks", "h-0123", "ledger.jsonl"), Redacted.make(key))).exit,
@@ -229,7 +268,7 @@ describe("Relay.Service", () => {
     }),
   )
 
-  it.live("runs a check with PATH, HOME and the run's params only", () =>
+  it.live("isolates check env to PATH, HOME, params and closed shell/runtime defaults", () =>
     Effect.gen(function* () {
       const dirs = yield* fixture
       const startup = path.join(dirs.home, "startup.sh")
@@ -257,12 +296,40 @@ describe("Relay.Service", () => {
       )
       expect(verified).toEqual({ verdict: "pass", oracle: sha256(check), ledgerSeq: 0 })
       const dump = readFileSync(path.join(dirs.work, "env.txt"), "utf8")
+      // Closed defaults observed in Windows run 37697058225: MSYS/Git Bash restores OS identity/runtime keys.
+      const defaults =
+        process.platform === "win32"
+          ? [
+              "HOMEDRIVE",
+              "HOMEPATH",
+              "LOGONSERVER",
+              "SYSTEMDRIVE",
+              "SYSTEMROOT",
+              "TEMP",
+              "TERM",
+              "USERDOMAIN",
+              "USERNAME",
+              "USERPROFILE",
+              "WINDIR",
+            ]
+          : []
       const names = dump
         .split("\n")
         .flatMap((line) => /^([A-Za-z_][A-Za-z0-9_]*)=/.exec(line)?.[1] ?? [])
         // Bash sets these itself.
-        .filter((name) => !["PWD", "OLDPWD", "SHLVL", "_"].includes(name))
+        .filter((name) => !["PWD", "OLDPWD", "SHLVL", "_", ...defaults].includes(name))
       expect(names.toSorted()).toEqual(["HOME", "PATH", "test_cmd"])
+      const excluded = [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GITHUB_TOKEN",
+        "RELAY_LEDGER_KEY",
+        "RELAY_JUDGE_API_KEY",
+        "BASH_ENV",
+      ]
+      excluded.forEach((name) => expect(dump).not.toMatch(new RegExp(`^${name}=`, "m")))
+      const secrets = ["sk-ant-provider-key", "sk-provider-key", "ghp_provider_token", "c".repeat(64), "judge-from-env"]
+      secrets.forEach((secret) => expect(dump).not.toContain(secret))
       expect(dump).toContain(`HOME=${dirs.home}\n`)
       expect(dump).toContain("test_cmd=bun test\n")
       // BASH_ENV never reached the fresh bash, from the process or from the params.
@@ -323,6 +390,7 @@ describe("Relay.Service", () => {
   it.effect("kills a verify's process group at 60 seconds", () =>
     Effect.gen(function* () {
       const dirs = yield* fixture
+      const check = yield* slowCheck(dirs)
       yield* use(dirs, (relay) =>
         Effect.gen(function* () {
           const fiber = yield* relay
@@ -330,12 +398,14 @@ describe("Relay.Service", () => {
               installID: "h-slow",
               nodeID: "slow",
               message: "Slow",
-              check: 'echo $$ > "$PWD/shell.pid"; sleep 1000 & echo $! > "$PWD/child.pid"; wait',
+              check,
               workdir: dirs.work,
             })
             .pipe(Effect.forkChild)
           const shell = yield* pid(path.join(dirs.work, "shell.pid"))
           const child = yield* pid(path.join(dirs.work, "child.pid"))
+          expect(alive(shell)).toBe(true)
+          expect(alive(child)).toBe(true)
           yield* TestClock.adjust("59 seconds")
           expect(fiber.pollUnsafe()).toBeUndefined()
           expect(alive(child)).toBe(true)
@@ -351,6 +421,7 @@ describe("Relay.Service", () => {
   it.effect("kills a gate check's process group at 15 minutes", () =>
     Effect.gen(function* () {
       const dirs = yield* fixture
+      const check = yield* slowCheck(dirs)
       yield* use(dirs, (relay) =>
         Effect.gen(function* () {
           const fiber = yield* relay
@@ -361,7 +432,7 @@ describe("Relay.Service", () => {
                     id: "build",
                     checklist: [
                       { id: "quick", cmd: "true" },
-                      { id: "slow", cmd: 'echo $$ > "$PWD/shell.pid"; sleep 3600 & echo $! > "$PWD/child.pid"; wait' },
+                      { id: "slow", cmd: check },
                     ],
                   },
                 ],
@@ -372,6 +443,8 @@ describe("Relay.Service", () => {
             .pipe(Effect.forkChild)
           const shell = yield* pid(path.join(dirs.work, "shell.pid"))
           const child = yield* pid(path.join(dirs.work, "child.pid"))
+          expect(alive(shell)).toBe(true)
+          expect(alive(child)).toBe(true)
           yield* TestClock.adjust("14 minutes")
           yield* TestClock.adjust("59 seconds")
           expect(fiber.pollUnsafe()).toBeUndefined()
