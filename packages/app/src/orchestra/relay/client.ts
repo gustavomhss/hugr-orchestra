@@ -144,6 +144,9 @@ function contract<T>(value: unknown) {
 // A Location-scoped success is `{location, data}`; anything else from a 2xx is not the Relay API.
 async function body<T>(call: Promise<Answer>, empty = false): Promise<T> {
   const result = await call.catch((cause: unknown) => {
+    // The SDK rejects a bare `text/html` answer (a server's embedded web app) before the body can be read.
+    if (cause instanceof Error && cause.message.includes("Server responded with text/html"))
+      throw new RelayError(0, "The server did not answer as Relay")
     throw new RelayError(-1, cause instanceof Error ? cause.message : String(cause), "transport")
   })
   const status = result.response?.status ?? -1

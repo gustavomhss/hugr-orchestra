@@ -61,7 +61,7 @@ describe("documents and flows", () => {
     expect(fields.connections).toEqual({ START: link("Renamed"), Renamed: link("G"), G: link("B") })
     expect(fields.nodes.find((item) => item.id === "a")?.position).toEqual([0, 0])
     // Positions leave the canvas as whole numbers.
-    const dragged = { ...flow, nodes: flow.nodes.map((item) => ({ ...item, x: item.x + 10.6, y: item.y - 0.4 })) }
+    const dragged = { ...flow, nodes: flow.nodes.map((item) => ({ ...item, x: item.x + 10.6, y: item.y + 0.4 })) }
     expect(documentFields(dragged).nodes.map((item) => item.position)).toEqual(flow.nodes.map(() => [11, 0]))
     expect("nodeGroups" in fields && fields.nodeGroups).toEqual([
       { id: "p", name: "Phase", description: "", nodeIds: ["a", "g"] },

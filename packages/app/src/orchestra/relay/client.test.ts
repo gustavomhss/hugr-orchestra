@@ -100,8 +100,13 @@ describe("authoring routes through the generated client", () => {
   test("refusals keep their tag, code and message; only a route the server lacks reads as unsupported", async () => {
     const missing = server(() => new Response("Not Found", { status: 404, headers: { "content-type": "text/plain" } }))
     expect(relayUnsupported(await missing.client.documents().catch((error: unknown) => error))).toBe(true)
-    const page = server(() => new Response("<!doctype html>", { headers: { "content-type": "text/html" } }))
-    expect(relayUnsupported(await page.client.documents().catch((error: unknown) => error))).toBe(true)
+    // The web app's page, both the bare type the SDK rejects and one with a charset that reaches the body.
+    for (const type of ["text/html", "text/html; charset=utf-8"]) {
+      const page = server(() => new Response("<!doctype html>", { headers: { "content-type": type } }))
+      const error = await page.client.documents().catch((cause: unknown) => cause)
+      expect(error instanceof RelayError && error.status).toBe(0)
+      expect(relayUnsupported(error)).toBe(true)
+    }
     const unknown = server(() =>
       refusal(404, { _tag: "RelayNotFoundError", code: "document-missing", message: "No document gone." }),
     )
