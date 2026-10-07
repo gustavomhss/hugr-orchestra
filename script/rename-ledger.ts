@@ -120,7 +120,7 @@ export const protectedStrings: Protected[] = [
     reason: "Zen provider-family fixtures for credential and free-model header eligibility",
   },
   {
-    pattern: /`opencode(?:\/<InstallationVersion>)?`/g,
+    pattern: /opencode\/<InstallationVersion>|`opencode`/g,
     paths: /^specs\/v2\/provider-model\.md$/,
     reason: "documented Zen provider id and compatibility User-Agent",
   },

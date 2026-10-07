@@ -3,7 +3,7 @@
 ## OpenCode Zen Free-Model User Agent
 
 Session requests for the OpenCode Zen provider family preserve its transport identity:
-`User-Agent: orchestra/<InstallationVersion>`. This is a compatibility header, not
+`User-Agent: opencode/<InstallationVersion>`. This is a compatibility header, not
 an authentication credential or a guarantee that a hosted model will accept a request.
 
 - The rule applies to provider IDs starting with `opencode`, matching the existing
