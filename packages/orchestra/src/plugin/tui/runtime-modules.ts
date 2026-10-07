@@ -1,8 +1,10 @@
 import { runtimeModules } from "@opentui/keymap/runtime-modules"
+import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
 
-// Modules that TUI plugins import and resolve to this process's copies. That includes the TUI half of the plugin SDK,
-// so no plugin needs a registry copy of it; PluginSdkRuntime covers the rest of the SDK.
+// OpenTUI rewrites remaining bare imports to disk paths after runtime imports. Register the whole public SDK here
+// too, so mixed SDK/TUI imports keep using this process's copies through that rewrite.
 export const tuiRuntimeModules = {
   ...runtimeModules,
+  ...PluginSdkRuntime.modules,
   "@orchestra/plugin/tui": () => import("@orchestra/plugin/tui"),
 }

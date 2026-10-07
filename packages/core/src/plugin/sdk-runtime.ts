@@ -5,7 +5,7 @@ import { lazy } from "../util/lazy"
 // Local plugins, custom tools and npm plugins import the plugin SDK by its package name. Orchestra never installs
 // that package from a registry, because anyone could publish under the name. Instead every import of these
 // specifiers resolves to the SDK bundled with the running Orchestra, ahead of any copy on disk.
-const modules = {
+export const modules = {
   // The package root re-exports tool.ts and adds only types, whose declarations core cannot compile.
   "@orchestra/plugin": () => import("@orchestra/plugin/tool"),
   "@orchestra/plugin/tool": () => import("@orchestra/plugin/tool"),
