@@ -115,7 +115,7 @@ selects one, never auto-merge.
 
 | System   | Seam                                                                                           |
 | -------- | ---------------------------------------------------------------------------------------------- |
-| OpenCode | immutable revision/diff/projection records; visible superseded state; Task/child-Session fence |
+| Orchestra | immutable revision/diff/projection records; visible superseded state; Task/child-Session fence |
 | Atlas    | no direct call/write; successor requires later assemble-context binding                        |
 
 ## Acceptance

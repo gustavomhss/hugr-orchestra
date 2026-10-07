@@ -5,7 +5,7 @@ import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 
 // Ruling M6-1: one generic check over every pack and runtime. Versions are not repeated here; a pin lives only in its
-// pack file, and the recipe guard in packages/opencode/test/skill/backend-families.test.ts holds each recipe to it.
+// pack file, and the recipe guard in packages/orchestra/test/skill/backend-families.test.ts holds each recipe to it.
 
 const HOSTS = [
   "github.com",

@@ -23,7 +23,7 @@ const pass = (id: string, detail: string) => cases.push({ id, status: "pass", de
 
 const skipReason = (): string | null => {
   if (process.env.APP_DOCK_YOUTUBE !== "1") return "APP_DOCK_YOUTUBE != 1 (opt-in LLM test)"
-  if (!process.env.OPENCODE_AUTH_CONTENT) return "OPENCODE_AUTH_CONTENT missing (provider auth)"
+  if (!process.env.ORCHESTRA_AUTH_CONTENT) return "ORCHESTRA_AUTH_CONTENT missing (provider auth)"
   if (!process.env.APP_DOCK_YOUTUBE_MODEL) return "APP_DOCK_YOUTUBE_MODEL missing (provider/model)"
   return null
 }
@@ -72,11 +72,11 @@ async function child() {
   const modelID = rawModel.slice(slash + 1)
   check(providerID.length > 0 && modelID.length > 0, "APP_DOCK_YOUTUBE_MODEL must be provider/model")
   Object.assign(process.env, {
-    OPENCODE_CLIENT: "desktop",
+    ORCHESTRA_CLIENT: "desktop",
     XDG_STATE_HOME: userDataPath,
-    OPENCODE_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    OPENCODE_EXPERIMENTAL_FILEWATCHER: "true",
-    OPENCODE_PERMISSION: "allow",
+    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    ORCHESTRA_PERMISSION: "allow",
   })
   const doc = createAppDock({ developmentMode: () => false })
   registerAppDockBridge(doc)
@@ -96,7 +96,7 @@ async function child() {
   try {
     await server.health.wait
     const url = `http://127.0.0.1:${port}`
-    const auth = Buffer.from(`opencode:${password}`).toString("base64")
+    const auth = Buffer.from(`orchestra:${password}`).toString("base64")
     const headers = { authorization: `Basic ${auth}`, "content-type": "application/json" }
     const query = `directory=${encodeURIComponent(userDataPath)}`
 
@@ -114,7 +114,7 @@ async function child() {
     pass("Y01", "real sidecar created a live session")
 
     const promptText =
-      "Your first action MUST be a dock_open tool call. Never answer from memory. Use only the dock_open, dock_read and dock_click tools. Open https://www.youtube.com/results?search_query=opencode, read the page, click the first video result, then reply with that video's title. Do nothing else."
+      "Your first action MUST be a dock_open tool call. Never answer from memory. Use only the dock_open, dock_read and dock_click tools. Open https://www.youtube.com/results?search_query=orchestra, read the page, click the first video result, then reply with that video's title. Do nothing else."
     const toolListResponse = await fetch(
       `${url}/experimental/tool?provider=${encodeURIComponent(providerID)}&model=${encodeURIComponent(modelID)}&${query}`,
       { headers, signal: AbortSignal.timeout(30_000) },

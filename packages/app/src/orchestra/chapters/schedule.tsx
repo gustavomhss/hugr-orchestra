@@ -1,4 +1,4 @@
-import { getFilename } from "@opencode-ai/core/util/path"
+import { getFilename } from "@orchestra/core/util/path"
 import {
   createMemo,
   createSignal,

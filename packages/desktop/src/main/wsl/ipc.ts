@@ -80,7 +80,7 @@ function registerUnavailableWslIpcHandlers() {
     installed: [],
     online: [],
     distroProbes: {},
-    opencodeChecks: {},
+    orchestraChecks: {},
     pendingRestart: false,
     servers: [],
     job: null,

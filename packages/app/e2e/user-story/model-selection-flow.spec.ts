@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
 
-const directory = "C:\\OpenCode\\NewProject"
+const directory = "C:\\Orchestra\\NewProject"
 
 // A fresh install has no provider: nothing is connected for free, so the model control asks for a provider and
 // OpenCode Go is connected like any other provider, from the full list.
@@ -10,7 +10,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   let connectedGo = false
   const connections: Array<{ integrationID: string; body: unknown }> = []
 
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     directory,
     project: {
       id: "proj_model_selection_flow",
@@ -24,7 +24,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
       all: [
         {
           id: "opencode",
-          name: "OpenCode",
+          name: "Orchestra",
           models: {
             "free-model": {
               id: "free-model",
@@ -66,8 +66,8 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
       "settings.v3",
       JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
     )
-    if (localStorage.getItem("opencode.global.dat:server") === null)
-      localStorage.setItem("opencode.global.dat:server", JSON.stringify({ projects: { local: [] } }))
+    if (localStorage.getItem("orchestra.global.dat:server") === null)
+      localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ projects: { local: [] } }))
   })
 
   await page.goto("/")

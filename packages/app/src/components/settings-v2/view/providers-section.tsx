@@ -1,4 +1,4 @@
-import { ProviderIcon } from "@opencode-ai/ui/provider-icon"
+import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { createMemo, For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerSync } from "@/context/server-sync"

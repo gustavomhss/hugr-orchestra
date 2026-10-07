@@ -1,7 +1,7 @@
 # R55 — .NET/C# backend implementation skill variations
 
 Research date: 2026-10-04. Status: source-only research; proposed selection cases and behavior controls **UNEXECUTED**. Cards are extraction candidates, not installed/exercised skills.
-Own metadata-only detached worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r55-dotnet-variants`; `git rev-parse --show-toplevel --git-dir HEAD` returned baseline `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; `git rev-parse --abbrev-ref HEAD` returned `HEAD`.
+Own metadata-only detached worktree: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r55-dotnet-variants`; `git rev-parse --show-toplevel --git-dir HEAD` returned baseline `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; `git rev-parse --abbrev-ref HEAD` returned `HEAD`.
 Inputs read: [frozen skill-variants brief][brief] and [.NET source lead R40][lead]. R40's JSON generator boundary retained; broader packet requirements refined by frozen contract's explicit local coding freedom.
 
 ## Version and evidence boundary

@@ -7,7 +7,7 @@ import MAESTRO from "./prompt/maestro.txt"
 import SUMMARY from "./prompt/summary.txt"
 import TITLE from "./prompt/title.txt"
 
-// Prompts of the agents both session paths define. They live in Core because Core cannot import opencode.
+// Prompts of the agents both session paths define. They live in Core because Core cannot import the CLI package.
 export const maestro = MAESTRO
 export const general = GENERAL
 export const explore = EXPLORE

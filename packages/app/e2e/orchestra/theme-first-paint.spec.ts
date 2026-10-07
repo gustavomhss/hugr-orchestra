@@ -18,7 +18,7 @@ for (const mode of ["light", "dark"] as const) {
       await page.addInitScript(() => {
         if (sessionStorage.getItem("seeded")) return
         sessionStorage.setItem("seeded", "1")
-        localStorage.setItem("opencode-color-scheme", "system")
+        localStorage.setItem("orchestra-color-scheme", "system")
       })
       await paused(page)
       await page.goto("/")
@@ -56,7 +56,7 @@ for (const palette of [
     await page.emulateMedia({ colorScheme: palette.mode === "dark" ? "light" : "dark" })
     await page.addInitScript((id) => {
       localStorage.setItem("orchestra-palette", id)
-      localStorage.setItem("opencode-color-scheme", "system")
+      localStorage.setItem("orchestra-color-scheme", "system")
     }, palette.id)
     await paused(page)
     await page.goto("/")
@@ -79,7 +79,7 @@ for (const id of ["monokai", "dracula", "catppuccin"]) {
       await page.emulateMedia({ colorScheme: "light" })
       await page.addInitScript((id) => {
         localStorage.setItem("orchestra-palette", id)
-        localStorage.setItem("opencode-color-scheme", "light")
+        localStorage.setItem("orchestra-color-scheme", "light")
       }, id)
       await paused(page)
       await page.goto("/")
@@ -99,10 +99,10 @@ test(
     await page.addInitScript(() => {
       if (sessionStorage.getItem("seeded")) return
       sessionStorage.setItem("seeded", "1")
-      localStorage.setItem("opencode-theme-id", "nightowl")
-      localStorage.setItem("opencode-color-scheme", "light")
+      localStorage.setItem("orchestra-theme-id", "nightowl")
+      localStorage.setItem("orchestra-color-scheme", "light")
       // A stale inherited cache must not paint before Orchestra.
-      localStorage.setItem("opencode-theme-css-light", "--background-base:#123456;--v2-background-bg-deep:#654321;")
+      localStorage.setItem("orchestra-theme-css-light", "--background-base:#123456;--v2-background-bg-deep:#654321;")
     })
     await paused(page)
     await page.goto("/")
@@ -110,15 +110,15 @@ test(
     await expect(page.locator("#oc-theme-preload")).toHaveCount(0)
     expect(
       await page.evaluate(() => [
-        localStorage.getItem("opencode-theme-id"),
-        localStorage.getItem("opencode-theme-css-light"),
+        localStorage.getItem("orchestra-theme-id"),
+        localStorage.getItem("orchestra-theme-css-light"),
       ]),
     ).toEqual(["oc-2", null])
     expect(await storage(page)).toEqual({ palette: "dark", scheme: "dark" })
 
     await page.evaluate(() => {
       localStorage.removeItem("orchestra-palette")
-      localStorage.setItem("opencode-theme-id", "gruvbox")
+      localStorage.setItem("orchestra-theme-id", "gruvbox")
     })
     await page.reload()
     await expect(page.locator("html")).toHaveAttribute("data-orchestra-palette", "gruvbox")
@@ -141,7 +141,7 @@ async function mount(page: Page) {
 function storage(page: Page) {
   return page.evaluate(() => ({
     palette: localStorage.getItem("orchestra-palette"),
-    scheme: localStorage.getItem("opencode-color-scheme"),
+    scheme: localStorage.getItem("orchestra-color-scheme"),
   }))
 }
 

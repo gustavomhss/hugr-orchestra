@@ -24,13 +24,13 @@
 
   // Orchestra shows only its own palettes. An inherited theme chosen before palettes existed becomes the palette
   // of the same name when one ships, and Orchestra Dark otherwise.
-  const legacy = read("opencode-theme-id")
+  const legacy = read("orchestra-theme-id")
   const stored = read("orchestra-palette")
   const requested = stored || (legacy && legacy !== "oc-1" && legacy !== "oc-2" ? legacy : null)
   if (legacy && legacy !== "oc-2") {
-    write("opencode-theme-id", "oc-2")
-    drop("opencode-theme-css-light")
-    drop("opencode-theme-css-dark")
+    write("orchestra-theme-id", "oc-2")
+    drop("orchestra-theme-css-light")
+    drop("orchestra-theme-css-dark")
   }
 
   // A recolored palette's first-paint rules are inlined before this script; they name the palette's scheme.
@@ -39,17 +39,17 @@
     const scheme = getComputedStyle(root).getPropertyValue("--orchestra-palette-scheme").trim()
     if (scheme === "dark" || scheme === "light") {
       write("orchestra-palette", requested)
-      write("opencode-color-scheme", scheme)
+      write("orchestra-color-scheme", scheme)
     }
     if (scheme !== "dark" && scheme !== "light") {
       // Unknown or removed palette: Orchestra Dark.
       delete root.dataset.orchestraPalette
       write("orchestra-palette", "dark")
-      write("opencode-color-scheme", "dark")
+      write("orchestra-color-scheme", "dark")
     }
   }
 
-  const savedScheme = read("opencode-color-scheme")
+  const savedScheme = read("orchestra-color-scheme")
   const scheme = savedScheme === "dark" || savedScheme === "light" ? savedScheme : "system"
   const isDark = scheme === "dark" || (scheme === "system" && matchMedia("(prefers-color-scheme: dark)").matches)
   const mode = isDark ? "dark" : "light"

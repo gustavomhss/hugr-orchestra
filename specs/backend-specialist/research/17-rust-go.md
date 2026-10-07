@@ -298,7 +298,7 @@ Order results:
 
 Separate Atlas benefit trial: resume exact task in new Session after meaningful failed approach, with/without relevant native memory; then rename display label and retry recall under stable member identity. Change source/version to invalidate old lesson; record whether candidate reconciles drift. Never mix fixture solutions into project memory shared with fresh benchmark runs.
 
-Minimal host conformance alongside backend trials: direct selection without Maestro; same work via optional Maestro adapter; display rename preserving identity/Atlas ownership; real native Atlas write/read/resume and capability-specific degradation. Results apply only to exercised OpenCode/Orchestra loader versions. No V1/V2 or cross-platform parity inferred.
+Minimal host conformance alongside backend trials: direct selection without Maestro; same work via optional Maestro adapter; display rename preserving identity/Atlas ownership; real native Atlas write/read/resume and capability-specific degradation. Results apply only to exercised Orchestra loader versions. No V1/V2 or cross-platform parity inferred.
 
 ## 8. Primary source register
 

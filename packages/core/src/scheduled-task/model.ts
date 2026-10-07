@@ -1,7 +1,7 @@
 export * as ScheduledTaskModel from "./model"
 
 import { DateTime, Option } from "effect"
-import type { ScheduledTask } from "@opencode-ai/schema/scheduled-task"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
 
 type Recurring = Exclude<ScheduledTask.Cadence, "once">
 

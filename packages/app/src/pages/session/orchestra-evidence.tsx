@@ -1,5 +1,5 @@
-import type { Message, Part } from "@opencode-ai/sdk/v2"
-import { Icon } from "@opencode-ai/ui/v2/icon"
+import type { Message, Part } from "@orchestra/sdk/v2"
+import { Icon } from "@orchestra/ui/v2/icon"
 import {
   type Accessor,
   createEffect,

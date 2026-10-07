@@ -1,6 +1,6 @@
 # R56 — Ruby/Rails skill variants, source-only
 
-Inspected 2026-10-04. Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r56-ruby-variants` HEAD verified: `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; source worktree HEAD matches.
+Inspected 2026-10-04. Metadata worktree `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r56-ruby-variants` HEAD verified: `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`; source worktree HEAD matches.
 Read `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin/specs/backend-specialist/research/skill-variants-plan.md` and sibling `42-web-backends.md`. R42 supplies serializer/type-generation lead; those integrations do not establish controller authorization or transactional job semantics.
 Evidence: primary documentation and implementation inspection only. Every application command, artifact path and acceptance case below is proposed/unexecuted. Research created only this report; no application execution or compatibility-suite result claimed.
 

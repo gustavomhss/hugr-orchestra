@@ -6,7 +6,7 @@ import type {
   Part,
   ToolPart,
   ToolStateCompleted,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import type { SessionMessageAssistantTool, SessionMessageInfo } from "@opencode-ai/client/promise"
 import type { State } from "@/context/global-sync/types"
 import type { ServerProtocol } from "@/utils/server-protocol"

@@ -1,10 +1,9 @@
-sst-env.d.ts
 packages/desktop/src/bindings.ts
 packages/client/src/generated/
 packages/client/src/generated-effect/
 # Exact-byte Atlas boundary bundles belong to their canonical generator.
 packages/atlas-boundary/src/generated/
 # Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
-foundation/atlas/.opencode/skills/own/
+foundation/atlas/.orchestra/skills/own/
 # Exact-byte palette stylesheets belong to packages/app/script/orchestra-palettes.ts.
 packages/app/src/orchestra/palette/generated/

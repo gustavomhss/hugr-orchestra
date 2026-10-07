@@ -2,7 +2,7 @@ export * as ScheduledTask from "./scheduled-task"
 
 import { and, asc, desc, eq, inArray, lt, lte, ne, notInArray } from "drizzle-orm"
 import { Cause, Clock, Context, Duration, Effect, Exit, Layer, Schedule, Schema } from "effect"
-import { ScheduledTask } from "@opencode-ai/schema/scheduled-task"
+import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { AgentV2 } from "./agent"
 import { Database } from "./database/database"
 import { makeGlobalNode } from "./effect/app-node"
@@ -60,7 +60,7 @@ export interface Interface {
   readonly tick: Effect.Effect<void>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/ScheduledTask") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/ScheduledTask") {}
 
 type Task = typeof ScheduledTaskTable.$inferSelect
 type RunRow = typeof ScheduledTaskRunTable.$inferSelect

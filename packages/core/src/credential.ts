@@ -5,10 +5,10 @@ import { resolve } from "path"
 import { pathToFileURL } from "url"
 import { asc, eq, isNotNull } from "drizzle-orm"
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
-import { EffectDrizzleSqlite } from "@opencode-ai/effect-drizzle-sqlite"
+import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { layer } from "#sqlite"
-import { Credential } from "@opencode-ai/schema/credential"
-import { Integration } from "@opencode-ai/schema/integration"
+import { Credential } from "@orchestra/schema/credential"
+import { Integration } from "@orchestra/schema/integration"
 import { Database } from "./database/database"
 import { makeGlobalNode } from "./effect/app-node"
 import { Flag } from "./flag/flag"
@@ -45,8 +45,8 @@ export class InheritedError extends Schema.TaggedErrorClass<InheritedError>()("C
 }) {
   override get message() {
     if (this.reason === "refresh")
-      return `Credential ${this.credentialID} is inherited from the installed app (${this.source}) and needs a refresh, which this build never performs. Use the installed app to refresh it, or log in separately in this build. Set OPENCODE_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
-    return `Credential ${this.credentialID} is inherited read-only from the installed app (${this.source}). Remove it from the installed app, or set OPENCODE_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
+      return `Credential ${this.credentialID} is inherited from the installed app (${this.source}) and needs a refresh, which this build never performs. Use the installed app to refresh it, or log in separately in this build. Set ORCHESTRA_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
+    return `Credential ${this.credentialID} is inherited read-only from the installed app (${this.source}). Remove it from the installed app, or set ORCHESTRA_INHERIT_CREDENTIALS=0 to stop inheriting credentials.`
   }
 }
 
@@ -76,14 +76,14 @@ export interface Interface {
   readonly remove: (id: ID) => Effect.Effect<void, InheritedError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Credential") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Credential") {}
 
 /**
  * Returns the release database to inherit credentials from, or undefined when
  * this build must stay isolated.
  */
 export function inheritedPath(active = Database.path(), release = Database.releasePath()) {
-  const flag = Flag.OPENCODE_INHERIT_CREDENTIALS
+  const flag = Flag.ORCHESTRA_INHERIT_CREDENTIALS
   if (flag === false) return
   if (active === ":memory:" && flag !== true) return
   if (active !== ":memory:" && resolve(active) === resolve(release)) return

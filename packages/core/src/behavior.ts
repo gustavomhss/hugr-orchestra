@@ -3,7 +3,7 @@ export * as BehaviorV2 from "./behavior"
 import { randomUUID } from "crypto"
 import path from "path"
 import { Context, Effect, Layer, Option, Schema } from "effect"
-import { Behavior } from "@opencode-ai/schema/behavior"
+import { Behavior } from "@orchestra/schema/behavior"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
@@ -35,7 +35,7 @@ export interface Interface {
   readonly set: (behaviors: ReadonlyArray<Info>) => Effect.Effect<ReadonlyArray<Info>, DuplicateError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Behavior") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Behavior") {}
 
 const Stored = Schema.fromJsonString(Schema.Struct({ behaviors: Schema.Array(Info) }))
 const decodeStored = Schema.decodeUnknownOption(Stored)

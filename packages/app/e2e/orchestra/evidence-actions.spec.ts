@@ -119,7 +119,7 @@ for (const entry of [
   { name: "distinct POSIX backslash", directory: "/repo/a/b", workdir: "/repo/a\\b", allowed: false },
   { name: "backslash-relative POSIX", directory: "/repo/a/b", workdir: "\\repo\\a\\b", allowed: false },
   { name: "matching POSIX", directory: "/repo/a/b", workdir: "/repo/a/b/", allowed: true },
-  { name: "matching Windows drive root", directory, workdir: "C:\\OpenCode\\TimelineStability\\", allowed: true },
+  { name: "matching Windows drive root", directory, workdir: "C:\\Orchestra\\TimelineStability\\", allowed: true },
   { name: "UNC root distinction", directory: "//server/share/repo", workdir: "/server/share/repo", allowed: false },
   { name: "UNC different share", directory: "//server/share/repo", workdir: "//server/other/repo", allowed: false },
   { name: "parent traversal", directory: "/repo", workdir: "/repo/link/..", allowed: false },

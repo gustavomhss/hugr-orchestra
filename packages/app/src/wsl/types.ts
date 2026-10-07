@@ -22,7 +22,7 @@ export type WslDistroProbe = {
   error: string | null
 }
 
-export type WslOpencodeCheck = {
+export type WslOrchestraCheck = {
   distro: string
   resolvedPath: string | null
   version: string | null
@@ -60,7 +60,7 @@ export type WslServersState = {
   installed: WslInstalledDistro[]
   online: WslOnlineDistro[]
   distroProbes: Record<string, WslDistroProbe>
-  opencodeChecks: Record<string, WslOpencodeCheck>
+  orchestraChecks: Record<string, WslOrchestraCheck>
   pendingRestart: boolean
   servers: WslServerItem[]
   job: WslJob | null

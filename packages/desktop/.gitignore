@@ -25,7 +25,7 @@ dist-ssr
 out/
 native/build/
 
-resources/opencode-cli*
+resources/orchestra-cli*
 resources/icons
 resources/*.metainfo.xml
 artifacts/

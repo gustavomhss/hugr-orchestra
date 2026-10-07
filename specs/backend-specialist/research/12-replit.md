@@ -1,6 +1,6 @@
 # R12 — Replit Agent: fast outcomes, recovery, cost, and trust
 
-Research date: **2026-10-03**. Research only. Audience: the backend specialist owner. Target: backend plugin running inside **OpenCode/Orchestra**, with **native Atlas** shared across Knowledge, tasks, PRs, and project Memory. Maestro optional; public names configurable; persistent IDs stable.
+Research date: **2026-10-03**. Research only. Audience: the backend specialist owner. Target: backend plugin running inside **Orchestra**, with **native Atlas** shared across Knowledge, tasks, PRs, and project Memory. Maestro optional; public names configurable; persistent IDs stable.
 
 ## Decision
 
@@ -42,7 +42,7 @@ Firsthand report by `sgt101` describes Replit reaching roughly “90%” before 
 
 **Expected recurring costs.** Generation tokens, dependency/setup compute, preview process uptime, and human validation. Biggest avoidable spend: rebuilding environment and rereading project after each prompt. Reuse warm process and compact project context; expire idle previews. Hosting remains separate recurring expense.
 
-**Falsifiable user scenario — PROPOSAL.** In OpenCode with Maestro absent, user asks for local issue tracker supporting create/edit/filter. Candidate target: usable preview within ten minutes, followed by successful user-performed flow and one refinement preserving prior behavior. Compare same task with plain host agent; record setup interventions, wall time, total model/tool cost, and regressions. Attractive screenshot with broken create flow fails. Timing target applies only to declared fixture/environment.
+**Falsifiable user scenario — PROPOSAL.** In Orchestra with Maestro absent, user asks for local issue tracker supporting create/edit/filter. Candidate target: usable preview within ten minutes, followed by successful user-performed flow and one refinement preserving prior behavior. Compare same task with plain host agent; record setup interventions, wall time, total model/tool cost, and regressions. Attractive screenshot with broken create flow fails. Timing target applies only to declared fixture/environment.
 
 ## 2. Scoped checkpoints plus database isolation
 
@@ -126,7 +126,7 @@ Persistent project/task/PR/knowledge/evidence IDs survive renamed public labels.
 
 **Expected recurring costs.** Atlas storage/indexing and backup, bounded retrieval tokens, evidence retention, obsolete-knowledge review, host adapter compatibility. Reuse native indexing/search; add embeddings only if existing retrieval misses measured tasks. Human correction burden counts against claimed efficiency.
 
-**Falsifiable user scenario — PROPOSAL.** User starts task in OpenCode, renames public plugin labels, then resumes in Orchestra with Maestro absent. Same task/evidence IDs and blocker survive. Another project with identical display name gets no cross-project context. Rolled-back schema causes obsolete advice to be marked superseded. Cancelled task remains searchable but never becomes accepted PR outcome. New explicit instruction overrides conflicting remembered preference.
+**Falsifiable user scenario — PROPOSAL.** User starts task in Orchestra, renames public plugin labels, then resumes in Orchestra with Maestro absent. Same task/evidence IDs and blocker survive. Another project with identical display name gets no cross-project context. Rolled-back schema causes obsolete advice to be marked superseded. Cancelled task remains searchable but never becomes accepted PR outcome. New explicit instruction overrides conflicting remembered preference.
 
 ## Incident and mitigation timeline
 
@@ -163,7 +163,7 @@ Measure **cost and user-minutes per accepted outcome**, **time to first working 
 
 ## Minimal backend shape and adoption order — proposals
 
-1. **Thin host adapter:** discover run/test/preview capabilities; execute through existing OpenCode/Orchestra Session tools and cancellation. Durable admission stays host-owned; one provider stream per turn. Local drains remain process-local. No extra scheduler, provider loop, or Maestro dependency.
+1. **Thin host adapter:** discover run/test/preview capabilities; execute through existing Orchestra Session tools and cancellation. Durable admission stays host-owned; one provider stream per turn. Local drains remain process-local. No extra scheduler, provider loop, or Maestro dependency.
 2. **Atlas references:** use native Atlas contracts for project/task/PR/Knowledge records linked to compact outcome, cost, test, and recovery receipts. Exact schema integration needs implementation discovery. Small shared receipt vocabulary; no new graph framework or duplicate memory database.
 3. **Initial vertical slice:** runnable-preview receipt + bounded attempt/spend policy + one real behavioral check + honest code-snapshot scope. DB backup adapter only where supported and needed; publish/export adapters follow real project needs.
 4. **Evidence before expansion:** run proposed scenarios against plain host baseline. Add automation only when user corrections, accepted-outcome time, recovery time, or spend improve without deleting coverage.

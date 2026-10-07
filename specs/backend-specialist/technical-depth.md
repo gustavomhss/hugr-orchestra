@@ -131,7 +131,7 @@ Lock custody needs its own control: establish SQLite's held lock, run a same-pro
 
 **Healthy/control pair:** pre-dispatch reconnect performs the intended effect once; post-dispatch uncertainty remains visible and reconciles; normal commit succeeds. Inspect destination state and actual intent identity. A local call counter or HTTP status alone is not proof of remote outcome.
 
-**Small path:** a naturally idempotent conditional update can remain simple. No generic outbox/payment engine is required for harmless reads. OpenCode's advisory inbox wake remains separate from automatic post-crash provider continuation. Sources: [R19 retries](research/19-data-api.md), [R26 MCP](research/26-hermes-tools.md), [R28 R4](research/28-backend-depth.md).
+**Small path:** a naturally idempotent conditional update can remain simple. No generic outbox/payment engine is required for harmless reads. Orchestra's advisory inbox wake remains separate from automatic post-crash provider continuation. Sources: [R19 retries](research/19-data-api.md), [R26 MCP](research/26-hermes-tools.md), [R28 R4](research/28-backend-depth.md).
 
 ## T7 — Cache freshness, authority and context residency separately
 

@@ -453,7 +453,7 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme][dir="rtl"] body[data-n
   }
   [data-orchestra-palette="gruvbox"] body[data-new-layout]
       [data-session-layout="surface"]
-      [data-component="icon"]:has(use[href="#opencode-icon-branch"])
+      [data-component="icon"]:has(use[href="#orchestra-icon-branch"])
       + span {
     color: var(--orchestra-branch-color);
   }

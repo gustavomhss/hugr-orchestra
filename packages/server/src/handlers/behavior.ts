@@ -1,5 +1,5 @@
-import { BehaviorV2 } from "@opencode-ai/core/behavior"
-import { InvalidRequestError } from "@opencode-ai/protocol/errors"
+import { BehaviorV2 } from "@orchestra/core/behavior"
+import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"

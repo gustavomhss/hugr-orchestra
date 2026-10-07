@@ -114,7 +114,7 @@ hit zones and whole-frame equality across differing fonts/data remain unmeasured
 
 ## History: evidence locations
 
-Temporary root: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode`.
+Temporary root: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra`.
 
 - `orchestra-identity-baseline/`: pinned baseline logs, bundle and screenshots.
 - `visual-evidence-final/`: same-viewport reference/production captures and geometry.

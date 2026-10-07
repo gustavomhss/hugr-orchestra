@@ -121,7 +121,7 @@ describe("createOrchestraPanelSizing", () => {
     expect(fixture.sizing.width()).toBe("1070px")
     fixture.sizing.resize(600)
     expect(fixture.sizing.width()).toBe("600px")
-    expect(localStorage.getItem(`opencode.global.dat:${fixture.scope}\0orchestra-session-panel`)).toBe(
+    expect(localStorage.getItem(`orchestra.global.dat:${fixture.scope}\0orchestra-session-panel`)).toBe(
       '{"resized":true}',
     )
     fixture.setState("rowWidth", 806)

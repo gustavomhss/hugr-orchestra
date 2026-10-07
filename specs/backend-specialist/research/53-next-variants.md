@@ -1,7 +1,7 @@
 # R53 — Next server-side implementation variants
 
 Research date: 2026-10-04. Evidence: official docs and tagged framework source; snippets and assigned checks **unexecuted**.
-Verified with `git rev-parse --show-toplevel HEAD`: both `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin` and metadata-only `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/backend-r53-next-variants` resolve HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0` (macOS reports latter under `/private/var`).
+Verified with `git rev-parse --show-toplevel HEAD`: both `/Users/gustavoschneiter/Documents/HuGR/_worktrees/backend-plugin` and metadata-only `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/orchestra/backend-r53-next-variants` resolve HEAD `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0` (macOS reports latter under `/private/var`).
 Read baseline `specs/backend-specialist/research/skill-variants-plan.md` and `39-typescript-code.md`. R39 supplies next-safe-action precedent; this report supplies native Next boundary procedures. Historical next-skills collection is not API authority; vendor survey remains R64-owned.
 
 ## Selection and ownership contract
