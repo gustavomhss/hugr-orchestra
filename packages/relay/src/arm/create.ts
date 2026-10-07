@@ -3,7 +3,7 @@ export * as ArmCreate from "./create"
 import path from "node:path"
 import { randomUUID } from "node:crypto"
 import { rmSync } from "node:fs"
-import { lstat, mkdir, rename, writeFile } from "node:fs/promises"
+import { lstat, mkdir, rename, rmdir, writeFile } from "node:fs/promises"
 import { Effect, Option, Schema } from "effect"
 import { RelayArm } from "@opencode-ai/schema/relay-arm"
 import { RelaySprint } from "@opencode-ai/schema/relay-sprint"
@@ -44,6 +44,9 @@ export const create = (
     ])
     if (input.agentID !== undefined && (!input.agentID || input.agentID.includes("\u0000")))
       return yield* new ArmState.StateError({ path: target, reason: "invalid agent id" })
+    // Windows may rename over a symlink where POSIX refuses, so a symlinked token is refused before anything is staged.
+    if (yield* io(target, () => lstat(target).then((info) => info.isSymbolicLink(), () => false)))
+      return yield* new ArmState.StateError({ path: target, reason: "symlink" })
 
     // `~` is outside the token alphabet, so a staging directory can never be mistaken for an arm.
     const staging = path.join(path.dirname(target), `.${input.token}~${randomUUID()}`)
@@ -60,7 +63,7 @@ export const create = (
       await Promise.all(files.map(([name, data]) => writeFile(path.join(staging, name), data)))
       return rename(staging, target).then(
         () => true,
-        () => false,
+        () => replaceEmpty(staging, target),
       )
     }).pipe(
       // Synchronous: with effect 4.0.0-beta.83 an async finalizer is dropped when the fiber is interrupted.
@@ -101,6 +104,20 @@ function existing(file: string) {
     ),
     Effect.mapError((error) => new ArmState.StateError({ path: error.path, reason: error.reason })),
   )
+}
+
+// Windows renames a directory only onto a missing path, where POSIX also replaces an empty one. An empty real directory
+// at the target is removed and the rename tried once more; rmdir refuses a populated directory and lstat sees a symlink
+// as one, so an arm is never removed and a symlinked token still reaches the symlink refusal.
+async function replaceEmpty(staging: string, target: string) {
+  const found = await lstat(target).catch(() => undefined)
+  if (!found?.isDirectory()) return false
+  return rmdir(target)
+    .then(() => rename(staging, target))
+    .then(
+      () => true,
+      () => false,
+    )
 }
 
 function equal(found: Option.Option<Uint8Array>, expected: Buffer) {
