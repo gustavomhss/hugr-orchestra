@@ -377,6 +377,26 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
   align-items: center;
 }
 
+/* The HuGR symbol in place of a product mark; its width comes from the caller. */
+.orchestra-mark {
+  display: block;
+}
+
+.orchestra-mark img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.orchestra-mark [data-slot="orchestra-brand-logo-light"],
+html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo-dark"] {
+  display: none;
+}
+
+html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo-light"] {
+  display: block;
+}
+
 @media (min-width: 768px) {
   body[data-new-layout] #root {
     padding: 0;
