@@ -166,3 +166,21 @@ pass counted toward the failure breaker, and the context kept growing. Now that 
 `dropped`, as C8 does for exact values and errors. Nothing unverified is stored: a rule or decision whose quote is not
 the user's words is not added, and a retire whose revoking words are not found leaves the user's item in place. The
 structural checks (C2, C5, C7, C9, C10, C14) still reject the pass.
+
+## 8. Does pruning cost facts? (replay transport)
+
+`oneshot.ts replay` runs the continuity pass as production does: the producer reads the parent's own request, so it sees
+what the agent sees. `BENCH_PRUNE=1` stubs every tool result older than the last 5 steps in that request, which is what
+continuous pruning leaves. Same spans and gold lists as §3, one fresh Claude Sonnet subagent per request.
+
+| Trace | Legacy | Continuity (isolated, §4) | Replay, no pruning | Replay, pruned |
+| --- | --- | --- | --- | --- |
+| Maestro dark-mode session | 15/19 | 18/19 | 19/19 (~35k request) | 19/19 (~16k request, 17 stubs) |
+| Codex auth debugging | 14/24 | 18/24 | 17/24 (~61k request) | 19/24 (~26k request, 34 stubs) |
+| **Total** | **29/43** | **36/43** | **36/43** | **38/43** |
+
+- Pruning lost no fact on these spans, and it cut the producer's request by more than half. Each column is one sample,
+  so a difference of one or two facts is within noise.
+- No reply needed a retry. The pruned replies dropped 2 and 3 ops at the exact checks (C6/C8), the raw ones 0 and 1.
+- The facts every arm missed (`3182342144`, the API URL, `invalid_api_key`, `not_started`) appeared only in long
+  tool output. They stay one `context_recall` away.
