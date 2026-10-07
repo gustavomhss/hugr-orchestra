@@ -12,6 +12,7 @@ import { filesystem } from "./effect/app-node-platform"
 import { LayerNode } from "./effect/layer-node"
 import { makeRuntime } from "./effect/runtime"
 import { NpmConfig } from "./npm-config"
+import { PluginSdkPackage } from "./plugin/sdk-package"
 
 export class InstallFailedError extends Schema.TaggedErrorClass<InstallFailedError>()("NpmInstallFailedError", {
   add: Schema.Array(Schema.String).pipe(Schema.optional),
@@ -25,7 +26,7 @@ export interface EntryPoint {
 }
 
 export interface Interface {
-  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | EffectFlock.LockError>
+  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | EffectFlock.LockError>
   readonly install: (
     dir: string,
     input?: {
@@ -34,7 +35,7 @@ export interface Interface {
         version?: string
       }[]
     },
-  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError>
+  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError>
   readonly which: (pkg: string, bin?: string) => Effect.Effect<string | undefined>
 }
 
@@ -77,12 +78,18 @@ const layer = Layer.effect(
     const fs = yield* FileSystem.FileSystem
     const flock = yield* EffectFlock.Service
     const directory = (pkg: string) => path.join(global.cache, "packages", sanitize(pkg))
-    const reify = (input: { dir: string; add?: string[] }) =>
+    const reify = (input: { dir: string; add?: string[]; inspect?: boolean }) =>
       Effect.gen(function* () {
         yield* flock.acquire(`npm-install:${input.dir}`)
         const { Arborist } = yield* Effect.promise(() => import("@npmcli/arborist"))
+        const { PluginSdkRegistry } = yield* Effect.promise(() => import("./plugin/sdk-registry"))
+        const { PluginSdkReconcile } = yield* Effect.promise(() => import("./plugin/sdk-reconcile"))
+        const sdk = yield* Effect.acquireRelease(Effect.promise(() => PluginSdkRegistry.open()), (sdk) => Effect.promise(() => sdk.close()))
         const add = input.add ?? []
         const npmOptions = yield* NpmConfig.load(input.dir)
+        yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
+          Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
+        )
         const arborist = new Arborist({
           ...npmOptions,
           path: input.dir,
@@ -90,22 +97,40 @@ const layer = Layer.effect(
           progress: false,
           savePrefix: "",
           ignoreScripts: true,
+          packumentCache: sdk.packumentCache,
         })
         return yield* Effect.tryPromise({
-          try: () =>
-            arborist.reify({
+          try: async () => {
+            add.forEach((pkg) => {
+              const parsed = npa(pkg)
+              if (parsed.name) PluginSdkPackage.request(parsed.name, parsed.rawSpec)
+            })
+            const actual = await arborist.loadActual()
+            const virtual = await arborist.loadVirtual().catch((error: unknown) => {
+              if (error && typeof error === "object" && "code" in error && error.code === "ENOLOCK") return
+              throw error
+            })
+            if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, true)
+            await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, true)
+            if (input.inspect) return actual
+            const tree = await arborist.reify({
               ...npmOptions,
               add,
               save: true,
               saveType: "prod",
-            }),
+              packumentCache: sdk.packumentCache,
+            })
+            await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, true)
+            return tree
+          },
           catch: (cause) =>
+            PluginSdkPackage.versionFailure(cause) ??
             new InstallFailedError({
               cause,
               add,
               dir: input.dir,
             }),
-        }) as Effect.Effect<ArboristTree, InstallFailedError>
+        }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError>
       }).pipe(
         Effect.withSpan("Npm.reify", {
           attributes: input,
@@ -123,6 +148,7 @@ const layer = Layer.effect(
       })()
 
       if (yield* afs.existsSafe(path.join(dir, "node_modules", name))) {
+        yield* reify({ dir, inspect: true })
         return resolveEntryPoint(name, path.join(dir, "node_modules", name))
       }
 
@@ -144,6 +170,7 @@ const layer = Layer.effect(
       if (!canWrite) return
 
       const add = input?.add.map((pkg) => [pkg.name, pkg.version].filter(Boolean).join("@")) ?? []
+      if (yield* afs.existsSafe(path.join(dir, "node_modules"))) yield* reify({ dir, inspect: true })
       if (
         yield* Effect.gen(function* () {
           const nodeModulesExists = yield* afs.existsSafe(path.join(dir, "node_modules"))
