@@ -16,8 +16,6 @@ type ProviderSource = "env" | "api" | "config" | "custom"
 export type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
 
 const PROVIDER_NOTES = [
-  { match: (id: string) => id === "opencode", key: "dialog.provider.opencode.note" },
-  { match: (id: string) => id === "opencode-go", key: "dialog.provider.opencodeGo.tagline" },
   { match: (id: string) => id === "anthropic", key: "dialog.provider.anthropic.note" },
   { match: (id: string) => id.startsWith("github-copilot"), key: "dialog.provider.copilot.note" },
   { match: (id: string) => id === "openai", key: "dialog.provider.openai.note" },
@@ -40,9 +38,7 @@ export function createProviderSettingsController(input: {
   const providers = useProviders(input.directory)
   const providerConnect = useProviderConnectController({ onBack: input.onBack })
 
-  const connected = createMemo(() =>
-    providers.connected().filter((p) => p.id !== "opencode" || Object.values(p.models).find((m) => m.cost?.input)),
-  )
+  const connected = createMemo(() => providers.connected())
 
   const popular = createMemo(() => {
     const connectedIDs = new Set(connected().map((p) => p.id))

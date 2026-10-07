@@ -90,7 +90,7 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
     },
     sdk: {
       app: { agents: async () => ({ data: [{ name: "maestro", mode: "primary" }] }) },
-      config: { get: () => gate.then(() => ({ data: { share: "manual" } })) },
+      config: { get: () => gate.then(() => ({ data: { model: "anthropic/claude" } })) },
       session: { status: () => gate.then(() => ({ data: {} })) },
       vcs: { get: async () => ({ data: undefined }) },
       permission: { list: async () => ({ data: [] }) },
@@ -233,7 +233,7 @@ describe("bootstrapDirectory", () => {
         },
         sdk: {
           app: { agents },
-          config: { get: async () => ({ data: { share: "manual" } }) },
+          config: { get: async () => ({ data: { model: "anthropic/claude" } }) },
           session: { status: async () => ({ data: {} }) },
           vcs: {
             get: async () => {
@@ -263,7 +263,7 @@ describe("bootstrapDirectory", () => {
     const loaded = await run(async () => ({ data: [{ name: "maestro", mode: "primary" }] }))
     expect(loaded.status).toBe("partial")
     expect(loaded.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
-    expect(loaded.config).toEqual({ share: "manual" })
+    expect(loaded.config).toEqual({ model: "anthropic/claude" })
     expect(loaded.agent.map((agent) => agent.name)).toEqual(["maestro"])
 
     const failed = await run(async () => {
@@ -378,7 +378,7 @@ describe("bootstrapDirectory", () => {
       expect({ newerFirst, load: state[0].load, config: state[0].config }).toEqual({
         newerFirst,
         load: { agent: "ready", config: "ready", session_status: "ready" },
-        config: { share: "manual" },
+        config: { model: "anthropic/claude" },
       })
     }
   })

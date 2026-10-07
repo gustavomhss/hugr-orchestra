@@ -17,3 +17,5 @@ packages/opencode/src/agent/prompt/*.txt text eol=lf
 # Generated Atlas boundary: the contract is its bytes. A CRLF checkout would also add a carriage return to the line
 # break inside a joined template literal, changing what the code produces, so Windows checkouts must not convert it.
 packages/atlas-boundary/src/generated/** -text
+# Generated palette stylesheets: the palette test compares them byte for byte with the generator's LF output.
+packages/app/src/orchestra/palette/generated/** text eol=lf

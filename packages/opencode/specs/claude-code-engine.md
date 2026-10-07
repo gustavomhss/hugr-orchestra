@@ -149,6 +149,35 @@ its last tool result arrives. Revert from Orchestra's UI then works on Claude Co
    Benchmark: the same long task with Claude Code's auto-compaction and with Orchestra's continuity.
 3. **Product**: engine selection per session in the UI ("Orchestra" or "Claude Code"), settings, docs.
 
+### Step 1 as delivered
+
+Code: `src/claude-code/` (`engine.ts`, `mirror.ts`, `tools.ts`, `permissions.ts`, `sdk.ts`), `src/tool/shell/scan.ts`,
+one line in `prompt.ts`. Selection: `"agent": { "<name>": { "engine": "claude-code", "model": "anthropic/<model>" } }`
+(Maestro always stays on Orchestra's loop).
+
+Where it differs from sections 4-5, and why:
+- **One `query()` per turn with `resume`**, not one long-lived streaming-input process. It fits the loop's
+  one-pass-per-turn shape, keeps the Runner's busy/idle, queueing and cancel, and is where step 2's swap plugs in
+  (`sessionStore.load` runs on every resume). Prompts queued during a turn are sent together on the next one.
+- **The loop branch is one line**, `if (yield* claudeCode.turn({ sessionID, user: lastUser })) continue`. A turn always
+  ends with an assistant message answering the user (`finish: "error"` and `error` when it failed), so the loop's own
+  exit check ends the run; tool parts carry `metadata.providerExecuted`, so the loop never waits on them.
+- **Permissions use a `PreToolUse` hook and `settingSources: []`**, with `canUseTool` as a fallback. The live run showed
+  that `canUseTool` alone is bypassed: Claude Code's own settings (`~/.claude/settings.json` allow rules) and
+  `allowedTools` approve calls before the callback. The hook sees every call. With no settings, Claude Code loads no
+  `CLAUDE.md`; Orchestra's instructions are appended instead (its loader reads the repository's `AGENTS.md` or
+  `CLAUDE.md`, not the user's global `~/.claude/CLAUDE.md`).
+- **Orchestra's tools load up front** (`alwaysLoad`). Without it Claude Code defers MCP tools behind its tool search,
+  and the live run fell back to editing through Bash.
+- **Mirrored tool names** use Orchestra's IDs where the input matches (`Bash`→`bash`, `Grep`→`grep`, `Glob`→`glob`,
+  `WebFetch`→`webfetch`, `WebSearch`→`websearch`, Orchestra's tools→`read`/`edit`/`write`), so the UI renders them.
+- **Text only**: file parts of a user message are not sent to Claude Code yet.
+
+Verification: unit tests (`test/claude-code/mirror.test.ts`, `permissions.test.ts`), integration tests with a scripted
+SDK through `SessionPrompt.prompt` (`engine.test.ts`: turn mirrored and loop exit, resume, failure, cancel), and a live
+run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and `edit` used, `edit ["notes.txt"]` and
+`bash ["ls"]` asked through Orchestra, file changed, `patch` part written, loop ended with `finish: "stop"`.
+
 ## 10. Risks
 
 - **Transcript entries are CLI-internal** and `sessionStore` is `@alpha`. Mitigated by the version gate (7) and by

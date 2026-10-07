@@ -50,7 +50,7 @@ export function DialogEditProject(props: { project: LocalProject; server: Server
                   onClick={model.iconClick}
                 >
                   <Show
-                    when={getProjectAvatarSource(props.project.id, {
+                    when={getProjectAvatarSource({
                       color: model.store.color,
                       url: props.project.icon?.url,
                       override: model.store.iconOverride,

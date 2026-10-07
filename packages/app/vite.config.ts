@@ -26,11 +26,6 @@ export default defineConfig({
     allowedHosts: true,
     port: 3000,
   },
-  optimizeDeps: {
-    // The dependency scan does not follow `?worker` imports, so without this entry the markdown worker's packages
-    // were found only when a page first rendered markdown, and Vite then reloaded every open page mid-session.
-    entries: ["**/*.html", "../session-ui/src/components/markdown.worker.ts"],
-  },
   build: {
     target: "esnext",
     sourcemap: true,

@@ -66,6 +66,8 @@ export const Info = Schema.Struct({
   prompt: Schema.optional(Schema.String),
   options: Schema.Record(Schema.String, Schema.Unknown),
   steps: Schema.optional(Schema.Finite),
+  /** Harness that runs this agent's turns; unset is Orchestra's own loop. */
+  engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])),
 }).annotate({ identifier: "Agent" })
 export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
 
@@ -357,6 +359,8 @@ const layer = Layer.effect(
           item.hidden = value.hidden ?? item.hidden
           if (key !== "maestro") item.name = value.name ?? item.name
           item.steps = value.steps ?? item.steps
+          // Maestro always runs on Orchestra's loop: it coordinates the other engines.
+          if (key !== "maestro") item.engine = value.engine ?? item.engine
           item.options = mergeDeep(item.options, value.options ?? {})
           item.permission = Permission.merge(item.permission, Permission.fromConfig(value.permission ?? {}))
         }

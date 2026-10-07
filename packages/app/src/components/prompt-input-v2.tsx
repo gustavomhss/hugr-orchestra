@@ -100,9 +100,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
             providerID={props.controller.model.selection.current()?.provider?.id}
             modelName={props.controller.model.selection.current()?.name ?? language.t("dialog.model.select.title")}
             onClose={props.controller.restoreFocus}
-            onUnpaidClick={() =>
-              dialog.show(() => <DialogSelectModelUnpaidV2 model={props.controller.model.selection} />)
-            }
+            onUnpaidClick={() => dialog.show(() => <DialogSelectModelUnpaidV2 />)}
           />
         }
       />

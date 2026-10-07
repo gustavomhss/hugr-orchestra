@@ -134,7 +134,7 @@ describe("App Dock controller", () => {
     // while occluded and shows its active tab on release, so no stale tab can come back.
     expect(dock.calls.slice(before)).toEqual([
       ["occlude", true],
-      ["open", "https://opencode.ai", profileA],
+      ["open", "https://www.google.com", profileA],
       ["select", tab("tab-2", 2)],
       ["select", tab("tab-1", 1)],
       ["occlude", false],
@@ -266,7 +266,7 @@ describe("App Dock controller", () => {
     await until(() => dock.manifest().tabs[profileA]?.length === 3)
     expect(controller.state.tabs.map((item) => item.tabID)).toEqual(["tab-1", "tab-2", "popup"])
     expect(controller.state.active).toEqual(tab("tab-2", 2))
-    expect(controller.state.url).toBe("https://opencode.ai")
+    expect(controller.state.url).toBe("https://www.google.com")
     expect(dock.calls.slice(before)).toEqual([])
 
     // Selecting it is what shows it.

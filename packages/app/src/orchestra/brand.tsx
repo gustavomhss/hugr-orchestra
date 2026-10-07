@@ -19,6 +19,16 @@ export function HugrSplash(props: { class?: string }) {
   )
 }
 
+// The HuGR symbol where a screen shows a product mark, such as a faint empty state. The caller sets the width.
+export function HugrMark(props: { class?: string }) {
+  return (
+    <span classList={{ "orchestra-mark": true, [props.class ?? ""]: !!props.class }} aria-hidden="true">
+      <img data-slot="orchestra-brand-logo-dark" src="/orchestra/hugr-symbol-inverse.svg" alt="" />
+      <img data-slot="orchestra-brand-logo-light" src="/orchestra/hugr-symbol-primary.svg" alt="" />
+    </span>
+  )
+}
+
 function HugrImages(props: { compact?: boolean }) {
   return (
     <>

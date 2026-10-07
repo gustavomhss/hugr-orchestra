@@ -1,5 +1,8 @@
 export const dict = {
-  "desktop.menu.app": "OpenCode",
+  "desktop.menu.app": "HuGR Orchestra",
+  "desktop.menu.about": "Про HuGR Orchestra",
+  "desktop.menu.hide": "Сховати HuGR Orchestra",
+  "desktop.menu.quit": "Вийти з HuGR Orchestra",
   "desktop.menu.file": "Файл",
   "desktop.menu.edit": "Редагування",
   "desktop.menu.view": "Вигляд",
@@ -39,11 +42,7 @@ export const dict = {
   "desktop.menu.nextProject": "Наступний проєкт",
   "desktop.menu.minimize": "Згорнути",
   "desktop.menu.maximize": "Розгорнути",
-  "desktop.menu.documentation": "Документація OpenCode",
-  "desktop.menu.supportForum": "Форум підтримки",
-  "desktop.menu.shareFeedback": "Надіслати відгук",
-  "desktop.menu.reportBug": "Повідомити про помилку",
-  "desktop.menu.ariaLabel": "Меню OpenCode",
+  "desktop.menu.ariaLabel": "Меню HuGR Orchestra",
 
   "desktop.updater.dialog.checkFailed.message": "Не вдалося перевірити наявність оновлень.",
   "desktop.updater.dialog.checkFailed.title": "Помилка оновлення",
@@ -58,9 +57,9 @@ export const dict = {
   "desktop.recovery.action.exportLogs": "Експортувати журнали",
   "desktop.recovery.action.keepWaiting": "Продовжити очікування",
   "desktop.recovery.action.quit": "Завершити роботу",
-  "desktop.recovery.loadFailed": "Не вдалося завантажити OpenCode",
-  "desktop.recovery.terminated": "Роботу вікна OpenCode несподівано завершено",
-  "desktop.recovery.unresponsive": "OpenCode не відповідає",
+  "desktop.recovery.loadFailed": "Не вдалося завантажити HuGR Orchestra",
+  "desktop.recovery.terminated": "Роботу вікна HuGR Orchestra несподівано завершено",
+  "desktop.recovery.unresponsive": "HuGR Orchestra не відповідає",
   "desktop.recovery.unresponsive.detail":
     "Ви можете повторно запустити програму, відкрити журнали або продовжити очікування.",
   "desktop.recovery.loadFailed.detail": "Вікно: {{window}}\nURL: {{url}}\nПомилка: {{code}} {{description}}",
@@ -80,14 +79,11 @@ export const dict = {
   "desktop.wsl.error.executeDistro": "Не вдалося виконати команди в дистрибутиві",
   "desktop.wsl.error.installWsl": "Не вдалося встановити WSL",
   "desktop.wsl.error.installDistro": "Не вдалося встановити дистрибутив: {{distro}}",
-  "desktop.wsl.error.installOpencode": "Не вдалося встановити OpenCode",
+  "desktop.wsl.error.installUnavailable": "Встановлення сервера у WSL поки недоступне",
   "desktop.wsl.error.alreadyAdded": "{{distro}} уже додано",
-  "desktop.wsl.error.opencodeMissing": "opencode не встановлено в цьому дистрибутиві",
-  "desktop.wsl.error.opencodeCannotRun": "opencode встановлено, але його не вдалося запустити",
-  "desktop.wsl.error.opencodeNotInstalled": "OpenCode не встановлено в {{distro}}",
-  "desktop.wsl.error.updateVersion":
-    "Оновлення OpenCode завершено, але {{distro}} усе ще повідомляє про версію {{installed}}; очікувалася {{expected}}",
-  "desktop.wsl.error.noVersion": "версію не вказано",
+  "desktop.wsl.error.serverMissing": "Сервер не встановлено в цьому дистрибутиві",
+  "desktop.wsl.error.serverCannotRun": "Сервер встановлено, але його не вдалося запустити",
+  "desktop.wsl.error.serverNotInstalled": "Сервер не встановлено в {{distro}}",
   "desktop.wsl.error.serverExited": "Сервер WSL завершив роботу після запуску (code={{code}} signal={{signal}})",
   "desktop.wsl.error.serverExitedBeforeHealthy":
     "Сервер WSL завершив роботу, не досягнувши працездатного стану (code={{code}} signal={{signal}}){{output}}",
@@ -183,10 +179,6 @@ export const dict = {
   "command.session.compact.description": "Підсумувати сесію, щоб зменшити розмір контексту",
   "command.session.fork": "Відгалузити від повідомлення",
   "command.session.fork.description": "Створити нову сесію з попереднього повідомлення",
-  "command.session.share": "Поділитися сесією",
-  "command.session.share.description": "Поділитися цією сесією та скопіювати URL у буфер обміну",
-  "command.session.unshare": "Припинити поширення сесії",
-  "command.session.unshare.description": "Припинити поширення цієї сесії",
 
   "command.session.export": "Експортувати сесію",
   "command.session.export.description": "Експортувати повну історію сесії у форматі JSON",
@@ -202,10 +194,6 @@ export const dict = {
   "dialog.provider.group.popular": "Популярні",
   "dialog.provider.group.other": "Інші",
   "dialog.provider.custom.label": "Користувацький провайдер, сумісний з OpenAI",
-  "dialog.provider.tag.recommended": "Рекомендовані",
-  "dialog.provider.opencode.note": "Відібрані моделі, включаючи Claude, GPT, Gemini та інші",
-  "dialog.provider.opencode.tagline": "Надійні оптимізовані моделі",
-  "dialog.provider.opencodeGo.tagline": "Недорога підписка для всіх",
   "dialog.provider.anthropic.note": "Прямий доступ до моделей Claude, включаючи Pro та Max",
   "dialog.provider.copilot.note": "Моделі ШІ для допомоги в кодуванні через GitHub Copilot",
   "dialog.provider.openai.note": "Моделі GPT для швидких і універсальних завдань ШІ",
@@ -220,7 +208,6 @@ export const dict = {
   "dialog.model.manage.description": "Налаштуйте, які моделі відображатимуться у виборі моделей.",
   "dialog.model.manage.provider.toggle": "Перемкнути всі моделі {{provider}}",
 
-  "dialog.model.unpaid.freeModels.title": "Безкоштовні моделі від OpenCode",
   "dialog.model.unpaid.addMore.title": "Додати більше моделей від популярних провайдерів",
   "dialog.model.unpaid.viewMoreProviders": "Переглянути ще понад 70 провайдерів",
 
@@ -236,24 +223,17 @@ export const dict = {
   "provider.connect.status.waiting": "Очікування авторизації...",
   "provider.connect.status.failed": "Авторизація не вдалася: {{error}}",
   "provider.connect.apiKey.description":
-    "Введіть ключ API {{provider}}, щоб підключити обліковий запис і використовувати моделі {{provider}} у OpenCode.",
+    "Введіть ключ API {{provider}}, щоб підключити обліковий запис і використовувати моделі {{provider}} у HuGR Orchestra.",
   "provider.connect.apiKey.label": "Ключ API {{provider}}",
   "provider.connect.apiKey.labelOptional": "Label (optional)",
   "provider.connect.apiKey.labelPlaceholder": "e.g. personal, work, team",
   "settings.providers.addKey": "Add key",
   "provider.connect.apiKey.placeholder": "Ключ API",
   "provider.connect.apiKey.required": "Ключ API обов'язковий",
-  "provider.connect.opencodeZen.line1":
-    "OpenCode Zen надає доступ до відібраного набору надійних оптимізованих моделей для агентів кодування.",
-  "provider.connect.opencodeZen.line2":
-    "З одним ключем API ви отримаєте доступ до таких моделей, як Claude, GPT, Gemini, GLM та інших.",
-  "provider.connect.opencodeZen.visit.prefix": "Відвідайте ",
-  "provider.connect.opencodeZen.visit.link": "opencode.ai/zen",
-  "provider.connect.opencodeZen.visit.suffix": ", щоб отримати ключ API.",
   "provider.connect.oauth.code.visit.prefix": "Відвідайте ",
   "provider.connect.oauth.code.visit.link": "це посилання",
   "provider.connect.oauth.code.visit.suffix":
-    ", щоб отримати код авторизації, підключити обліковий запис і використовувати моделі {{provider}} у OpenCode.",
+    ", щоб отримати код авторизації, підключити обліковий запис і використовувати моделі {{provider}} у HuGR Orchestra.",
   "provider.connect.oauth.code.label": "Код авторизації {{method}}",
   "provider.connect.oauth.code.placeholder": "Код авторизації",
   "provider.connect.oauth.code.required": "Код авторизації обов'язковий",
@@ -261,16 +241,14 @@ export const dict = {
   "provider.connect.oauth.auto.visit.prefix": "Відвідайте ",
   "provider.connect.oauth.auto.visit.link": "це посилання",
   "provider.connect.oauth.auto.visit.suffix":
-    " і введіть код нижче, щоб підключити обліковий запис і використовувати моделі {{provider}} у OpenCode.",
+    " і введіть код нижче, щоб підключити обліковий запис і використовувати моделі {{provider}} у HuGR Orchestra.",
   "provider.connect.oauth.auto.confirmationCode": "Код підтвердження",
   "provider.connect.toast.connected.title": "{{provider}} підключено",
   "provider.connect.toast.connected.description": "Моделі {{provider}} тепер доступні для використання.",
 
   "provider.custom.title": "Користувацький провайдер",
   "provider.custom.unavailable": "Користувацькі провайдери недоступні на цьому сервері",
-  "provider.custom.description.prefix": "Налаштуйте провайдера, сумісного з OpenAI. Перегляньте ",
-  "provider.custom.description.link": "документацію з налаштування провайдера",
-  "provider.custom.description.suffix": ".",
+  "provider.custom.description": "Налаштуйте провайдера, сумісного з OpenAI.",
   "provider.custom.field.providerID.label": "ID провайдера",
   "provider.custom.field.providerID.placeholder": "myprovider",
   "provider.custom.field.providerID.description": "Малі літери, цифри, дефіси або підкреслення",
@@ -440,7 +418,7 @@ export const dict = {
   "dialog.mcp.empty": "MCP не налаштовано",
 
   "dialog.lsp.empty": "Сервери LSP автоматично виявляються за типами файлів",
-  "dialog.plugins.empty": "Плагіни налаштовані в opencode.json",
+  "dialog.plugins.empty": "Плагіни налаштовані в orchestra.json",
 
   "mcp.status.connected": "підключено",
   "mcp.status.failed": "помилка",
@@ -463,7 +441,7 @@ export const dict = {
   "app.server.otherServers": "Інші сервери",
 
   "dialog.server.title": "Сервери",
-  "dialog.server.description": "Перемкніть сервер OpenCode, до якого підключається ця програма.",
+  "dialog.server.description": "Перемкніть сервер, до якого підключається ця програма.",
   "dialog.server.search.placeholder": "Пошук серверів",
   "dialog.server.empty": "Ще немає серверів",
   "dialog.server.add.title": "Додати сервер",
@@ -500,7 +478,7 @@ export const dict = {
   "wsl.server.retryStart": "Повторити запуск",
   "wsl.server.updating": "Оновлення...",
   "wsl.onboarding.step.distro": "Вибрати дистрибутив",
-  "wsl.onboarding.step.opencode": "OpenCode",
+  "wsl.onboarding.step.opencode": "Сервер",
   "wsl.onboarding.checkingRuntime": "Перевірка WSL...",
   "wsl.onboarding.restartRequired": "Щоб завершити встановлення WSL, потрібно перезапустити Windows.",
   "wsl.onboarding.ready": "WSL готова до роботи.",
@@ -514,16 +492,16 @@ export const dict = {
   "wsl.onboarding.openDistroOnce": "Відкрийте {{distro}} один раз, щоб завершити налаштування.",
   "wsl.onboarding.finishingDistro": "Завершення налаштування {{distro}}.",
   "wsl.onboarding.pickDistro": "Виберіть дистрибутив або встановіть один із наведених нижче.",
-  "wsl.onboarding.checkingOpencode": "Перевірка OpenCode...",
-  "wsl.onboarding.checkingOpencodeIn": "Перевірка OpenCode у {{distro}}...",
-  "wsl.onboarding.updatingOpencode": "Оновлення OpenCode...",
-  "wsl.onboarding.updatingOpencodeIn": "Оновлення OpenCode у {{distro}}...",
-  "wsl.onboarding.updateOpencodeIn": "Оновіть OpenCode у {{distro}}.",
-  "wsl.onboarding.updateOpencode": "Оновити OpenCode",
-  "wsl.onboarding.opencodeReadyIn": "OpenCode готовий до роботи у {{distro}}.",
-  "wsl.onboarding.opencodeReady": "OpenCode готовий до роботи.",
-  "wsl.onboarding.installOpencodeIn": "Встановіть OpenCode у {{distro}}.",
-  "wsl.onboarding.installOpencode": "Встановити OpenCode",
+  "wsl.onboarding.checkingOpencode": "Перевірка сервера...",
+  "wsl.onboarding.checkingOpencodeIn": "Перевірка сервера у {{distro}}...",
+  "wsl.onboarding.updatingServer": "Оновлення сервера...",
+  "wsl.onboarding.updatingOpencodeIn": "Оновлення сервера у {{distro}}...",
+  "wsl.onboarding.updateOpencodeIn": "Оновіть сервер у {{distro}}.",
+  "wsl.onboarding.updateServer": "Оновити сервер",
+  "wsl.onboarding.opencodeReadyIn": "Сервер готовий до роботи у {{distro}}.",
+  "wsl.onboarding.opencodeReady": "Сервер готовий до роботи.",
+  "wsl.onboarding.installOpencodeIn": "Встановіть сервер у {{distro}}.",
+  "wsl.onboarding.installServer": "Встановити сервер",
   "wsl.onboarding.chooseDistroFirst": "Спочатку виберіть дистрибутив.",
   "wsl.onboarding.loadFailed": "Не вдалося завантажити стан WSL.",
   "wsl.onboarding.loading": "Завантаження...",
@@ -531,19 +509,19 @@ export const dict = {
   "wsl.onboarding.checkAgain": "Перевірити ще раз",
   "wsl.onboarding.distroStatus.ready": "Готовий",
   "wsl.onboarding.distroStatus.checking": "Перевірка...",
-  "wsl.onboarding.distroStatus.opencodeMissing": "OpenCode не встановлено",
-  "wsl.onboarding.distroStatus.missingTools": "Немає bash і curl",
+  "wsl.onboarding.distroStatus.serverMissing": "Сервер не встановлено",
+  "wsl.onboarding.distroStatus.missingTools": "Немає bash",
   "wsl.onboarding.distroStatus.unsupported": "Не підтримується · Використовуйте WSL 2",
   "wsl.onboarding.needAnotherDistro": "Потрібен інший дистрибутив?",
   "wsl.onboarding.needAnotherDistroHint": "Встановіть дистрибутив Linux із каталогу WSL",
   "wsl.onboarding.wslNotInstalled.title": "WSL не встановлено",
   "wsl.onboarding.wslNotInstalled.description":
-    "Для додавання сервера WSL в OpenCode потрібна WSL (Підсистема Windows для Linux)",
+    "Для додавання сервера WSL у HuGR Orchestra потрібна WSL (Підсистема Windows для Linux)",
   "wsl.onboarding.wslUnavailable.title": "WSL недоступна",
-  "wsl.onboarding.wslUnavailable.description": "OpenCode не вдалося перевірити WSL на цьому комп'ютері.",
+  "wsl.onboarding.wslUnavailable.description": "Програмі HuGR Orchestra не вдалося перевірити WSL на цьому комп'ютері.",
   "wsl.onboarding.installWsl": "Встановити WSL",
   "wsl.onboarding.windowsRestartRequired":
-    "Перезапустіть Windows, щоб завершити встановлення WSL, а потім знову відкрийте OpenCode.",
+    "Перезапустіть Windows, щоб завершити встановлення WSL, а потім знову відкрийте HuGR Orchestra.",
   "wsl.onboarding.next": "Далі",
   "wsl.onboarding.refresh": "Оновити",
   "wsl.onboarding.allDistrosAdded": "Усі встановлені дистрибутиви вже додано.",
@@ -553,7 +531,7 @@ export const dict = {
   "wsl.onboarding.installDistro": "Встановити дистрибутив",
   "wsl.onboarding.searchDistros": "Пошук дистрибутивів",
   "wsl.onboarding.wsl2Required": "Для роботи потрібна WSL 2.",
-  "wsl.onboarding.toolsRequired": "Для цього дистрибутива потрібні bash і curl.",
+  "wsl.onboarding.toolsRequired": "Для цього дистрибутива потрібен bash.",
   "wsl.onboarding.openTerminal": "Відкрити термінал",
   "wsl.onboarding.path": "Шлях: {{path}}",
   "wsl.onboarding.notFound": "не знайдено",
@@ -568,7 +546,7 @@ export const dict = {
   "help.tabs.title": "Представляємо вкладки",
   "help.tabs.description": "Упорядковуйте роботу й активні сесії за допомогою вкладок",
   "help.tabs.date": "14 липня",
-  "help.tabs.introduction": "OpenCode Desktop тепер побудовано навколо вкладок.",
+  "help.tabs.introduction": "HuGR Orchestra тепер побудовано навколо вкладок.",
   "help.tabs.sessions":
     "Почніть нову сесію у вкладці або відкрийте наявну сесію з будь-якого свого проєкту. Відкривайте нову вкладку, коли починаєте щось нове, і закривайте її після завершення.",
   "help.tabs.organize":
@@ -591,13 +569,6 @@ export const dict = {
   "dialog.project.edit.worktree.startup": "Скрипт запуску робочої області",
   "dialog.project.edit.worktree.startup.description": "Виконується після створення нової робочої області (worktree).",
   "dialog.project.edit.worktree.startup.placeholder": "напр. bun install",
-
-  "dialog.releaseNotes.action.getStarted": "Розпочати",
-  "dialog.releaseNotes.action.next": "Далі",
-  "dialog.releaseNotes.action.hideFuture": "Не показувати це в майбутньому",
-  "dialog.releaseNotes.media.alt": "Попередній перегляд релізу",
-
-  "dialog.usageExceeded.dontShowAgain": "Більше не показувати",
 
   "context.breakdown.title": "Розподіл контексту",
   "context.breakdown.note":
@@ -680,17 +651,6 @@ export const dict = {
   "toast.context.noLineSelection.title": "Не вибрано рядків",
   "toast.context.noLineSelection.description": "Спочатку виберіть діапазон рядків у вкладці файлу.",
 
-  "toast.session.share.copyFailed.title": "Не вдалося скопіювати URL у буфер обміну",
-  "toast.session.share.success.title": "Сесію опубліковано",
-  "toast.session.share.success.description": "Посилання скопійовано в буфер обміну!",
-  "toast.session.share.failed.title": "Не вдалося опублікувати сесію",
-  "toast.session.share.failed.description": "Під час публікації сесії сталася помилка",
-
-  "toast.session.unshare.success.title": "Поширення сесії припинено",
-  "toast.session.unshare.success.description": "Поширення сесії успішно припинено!",
-  "toast.session.unshare.failed.title": "Не вдалося припинити поширення сесії",
-  "toast.session.unshare.failed.description": "Під час припинення поширення сесії сталася помилка",
-
   "toast.session.export.success.title": "Сесію експортовано",
   "toast.session.export.success.description": "Сесію збережено у файл {{filename}}",
   "toast.session.export.failed.title": "Не вдалося експортувати сесію",
@@ -700,7 +660,7 @@ export const dict = {
   "toast.project.reloadFailed.title": "Не вдалося перезавантажити {{project}}",
 
   "toast.update.title": "Доступне оновлення",
-  "toast.update.description": "Нова версія OpenCode ({{version}}) тепер доступна для встановлення.",
+  "toast.update.description": "Нова версія HuGR Orchestra ({{version}}) тепер доступна для встановлення.",
   "toast.update.action.installRestart": "Встановити та перезапустити",
   "toast.update.action.notYet": "Не зараз",
 
@@ -716,8 +676,6 @@ export const dict = {
   "error.page.action.checkUpdates": "Перевірити оновлення",
   "error.page.action.updateTo": "Оновити до {{version}}",
   "error.page.circular": "[Циклічне]",
-  "error.page.report.prefix": "Будь ласка, повідомте про цю помилку команді OpenCode",
-  "error.page.report.discord": "у Discord",
   "error.page.version": "Версія: {{version}}",
 
   "error.dev.rootNotFound":
@@ -741,9 +699,9 @@ export const dict = {
   "error.chain.responseBody": "Тіло відповіді:\n{{body}}",
   "error.chain.didYouMean": "Можливо, ви мали на увазі: {{suggestions}}",
   "error.chain.modelNotFound": "Модель не знайдено: {{provider}}/{{model}}",
-  "error.chain.checkConfig": "Перевірте назви провайдерів/моделей у конфігурації (opencode.json)",
+  "error.chain.checkConfig": "Перевірте назви провайдерів/моделей у конфігурації (orchestra.json)",
   "error.chain.mcpFailed":
-    'Сервер MCP "{{name}}" не працює. Зверніть увагу, OpenCode ще не підтримує автентифікацію MCP.',
+    'Сервер MCP "{{name}}" не працює. Зверніть увагу, HuGR Orchestra ще не підтримує автентифікацію MCP.',
   "error.chain.providerAuthFailed": "Автентифікація провайдера не вдалася ({{provider}}): {{message}}",
   "error.chain.providerInitFailed":
     'Не вдалося ініціалізувати провайдера "{{provider}}". Перевірте облікові дані та конфігурацію.',
@@ -925,20 +883,6 @@ export const dict = {
   "status.popover.tab.plugins": "Плагіни",
   "status.popover.action.manageServers": "Керувати серверами",
 
-  "session.share.popover.title": "Опублікувати в інтернеті",
-  "session.share.popover.description.shared":
-    "Ця сесія є публічною в інтернеті. Вона доступна будь-кому за посиланням.",
-  "session.share.popover.description.unshared":
-    "Опублікуйте сесію публічно в інтернеті. Вона буде доступна будь-кому за посиланням.",
-  "session.share.action.share": "Поділитися",
-  "session.share.action.publish": "Опублікувати",
-  "session.share.action.publishing": "Публікація...",
-  "session.share.action.unpublish": "Скасувати публікацію",
-  "session.share.action.unpublishing": "Скасування публікації...",
-  "session.share.action.view": "Переглянути",
-  "session.share.copy.copied": "Скопійовано",
-  "session.share.copy.copyLink": "Копіювати посилання",
-
   "lsp.tooltip.none": "Немає серверів LSP",
   "lsp.label.connected": "{{count}} LSP",
 
@@ -997,13 +941,8 @@ export const dict = {
   "sidebar.menu.toggle": "Перемкнути меню",
   "sidebar.nav.projectsAndSessions": "Проєкти та сесії",
   "sidebar.settings": "Налаштування",
-  "sidebar.help": "Довідка",
   "sidebar.workspaces.enable": "Увімкнути робочі області",
   "sidebar.workspaces.disable": "Вимкнути робочі області",
-  "sidebar.gettingStarted.title": "Початок роботи",
-  "sidebar.gettingStarted.line1": "OpenCode містить безкоштовні моделі, тому ви можете почати негайно.",
-  "sidebar.gettingStarted.line2":
-    "Підключіть будь-якого провайдера, щоб використовувати моделі, включаючи Claude, GPT, Gemini тощо.",
   "sidebar.project.recentSessions": "Нещодавні сесії",
   "sidebar.project.viewAllSessions": "Переглянути всі сесії",
   "sidebar.project.clearNotifications": "Очистити сповіщення",
@@ -1042,7 +981,7 @@ export const dict = {
   "debugBar.direction.ltr": "LTR",
   "debugBar.direction.rtl": "RTL",
 
-  "app.name.desktop": "OpenCode Desktop",
+  "app.name.desktop": "HuGR Orchestra",
 
   "settings.section.desktop": "Десктопний застосунок",
   "settings.section.server": "Сервер",
@@ -1050,7 +989,7 @@ export const dict = {
   "settings.tab.shortcuts": "Клавіатурні скорочення",
   "settings.desktop.section.wsl": "WSL",
   "settings.desktop.wsl.title": "Інтеграція WSL",
-  "settings.desktop.wsl.description": "Запускати сервер OpenCode всередині WSL на Windows.",
+  "settings.desktop.wsl.description": "Запускати сервер всередині WSL на Windows.",
 
   "settings.general.section.appearance": "Зовнішній вигляд",
   "settings.general.section.advanced": "Додатково",
@@ -1061,18 +1000,19 @@ export const dict = {
   "settings.general.section.display": "Дисплей",
 
   "settings.general.row.language.title": "Мова",
-  "settings.general.row.language.description": "Змінити мову інтерфейсу OpenCode",
+  "settings.general.row.language.description": "Змінити мову інтерфейсу HuGR Orchestra",
   "settings.general.row.shell.title": "Командна оболонка термінала",
   "settings.general.row.shell.description":
     "Виберіть оболонку для термінала. Сумісні оболонки також використовуються для викликів інструментів агента.",
   "settings.general.row.shell.autoDefault": "Автоматично (за замовчуванням)",
   "settings.general.row.shell.terminalOnly": "тільки термінал",
   "settings.general.row.appearance.title": "Зовнішній вигляд",
-  "settings.general.row.appearance.description": "Налаштуйте вигляд OpenCode на вашому пристрої",
+  "settings.general.row.appearance.description": "Налаштуйте вигляд HuGR Orchestra на вашому пристрої",
   "settings.general.row.colorScheme.title": "Кольорова схема",
-  "settings.general.row.colorScheme.description": "Виберіть, чи OpenCode використовує системну, світлу або темну тему",
+  "settings.general.row.colorScheme.description":
+    "Виберіть, чи HuGR Orchestra використовує системну, світлу або темну тему",
   "settings.general.row.theme.title": "Тема",
-  "settings.general.row.theme.description": "Налаштуйте тему OpenCode.",
+  "settings.general.row.theme.description": "Налаштуйте тему HuGR Orchestra.",
   "settings.general.row.font.title": "Шрифт коду",
   "settings.general.row.font.description": "Налаштуйте шрифт, який використовується в блоках коду",
   "settings.general.row.terminalFont.title": "Шрифт термінала",
@@ -1122,11 +1062,9 @@ export const dict = {
   "settings.general.row.wayland.tooltip":
     "На Linux з моніторами з різною частотою оновлення нативний Wayland може бути більш стабільним.",
 
-  "settings.general.row.releaseNotes.title": "Нотатки до релізу",
-  "settings.general.row.releaseNotes.description": 'Показувати спливаючі вікна "Що нового" після оновлень',
-
   "settings.updates.row.startup.title": "Перевіряти оновлення під час запуску",
-  "settings.updates.row.startup.description": "Автоматично перевіряти наявність оновлень під час запуску OpenCode",
+  "settings.updates.row.startup.description":
+    "Автоматично перевіряти наявність оновлень під час запуску HuGR Orchestra",
   "settings.updates.row.check.title": "Перевірити оновлення",
   "settings.updates.row.check.description": "Вручну перевірити наявність оновлень і встановити, якщо доступні",
   "settings.updates.action.checkNow": "Перевірити зараз",
@@ -1134,7 +1072,7 @@ export const dict = {
   "settings.updates.action.downloading": "Завантаження...",
   "settings.updates.action.installing": "Встановлення...",
   "settings.updates.toast.latest.title": "У вас актуальна версія",
-  "settings.updates.toast.latest.description": "Ви використовуєте останню версію OpenCode.",
+  "settings.updates.toast.latest.description": "Ви використовуєте останню версію HuGR Orchestra.",
   "sound.option.none": "Немає",
   "sound.option.alert01": "Alert 01",
   "sound.option.alert02": "Alert 02",
