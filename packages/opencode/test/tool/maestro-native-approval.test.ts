@@ -27,7 +27,7 @@ import { recordReview, recordValidation, validationRecordHash } from "@/maestro/
 import { MessageID, PartID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { Skill } from "@/skill"
-import { MaestroPresentApprovalTool } from "@/tool/maestro-approval"
+import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "@/tool/maestro-approval"
 import { Truncate } from "@/tool/truncate"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -161,7 +161,20 @@ const evidence = Effect.fn("MaestroNativeApprovalTest.evidence")(function* (
     risks: [],
   })
   const context = yield* recordContext(plan.id, fixture.session.id)
-  const workCard = "# Card\nImplement exact card.\n"
+  const workCard = [
+    "# Card",
+    "## Definition of Done",
+    "proof.txt carries the exact card result.",
+    "## Invariants",
+    "The approved intent stays byte-identical.",
+    "## Quality Standards",
+    "Typecheck passes.",
+    "## Completeness Criteria",
+    "The single proof file is covered.",
+    "## Success Criteria",
+    "The owner approves and the exact card is dispatched.",
+    "",
+  ].join("\n")
   const validation = yield* recordValidation({
     sessionID: fixture.session.id,
     projectID: fixture.session.projectID,
@@ -312,6 +325,13 @@ describe("native Maestro approval admission", () => {
             time: { start: 2, end: 3 },
           },
         })
+        const recordTool = yield* MaestroRecordApprovalTool
+        const record = yield* recordTool.init()
+        const early = yield* record.execute({}, fixture.caller)
+        expect(early.metadata).toEqual({ status: "HOLD", approvalMessageID: "", truncated: false })
+        expect(early.output).toBe(
+          "HOLD: reply-not-after-presentation. The owner has not replied since the presentation; end the turn and wait for the owner.",
+        )
         const reply = yield* sessions.updateMessage({
           id: MessageID.ascending(),
           role: "user",
@@ -331,6 +351,15 @@ describe("native Maestro approval admission", () => {
           status: "APPROVED",
           decision: { taskHash: row.taskHash, approvalMessageID: reply.id },
         })
+        // maestro_grant_authorization needs the approval message ID; it must reach the model, not only metadata.
+        const approved = yield* record.execute({}, fixture.caller)
+        expect(approved.metadata).toEqual({ status: "APPROVED", approvalMessageID: reply.id, truncated: false })
+        expect(approved.output).toBe(
+          `APPROVED: exact plan revision ${chain.plan.id}\n\nBindings: ${JSON.stringify({
+            approvalMessageID: reply.id,
+            planRevisionID: chain.plan.id,
+          })}`,
+        )
       }),
     { git: true, config: { tool_output: { max_lines: 1, max_bytes: 1 } } },
   )
@@ -470,7 +499,7 @@ describe("native Maestro approval admission", () => {
           "session mismatch",
         )
         expectRejected(
-          yield* Effect.exit(def.execute(chain.params, { ...fixture.caller, agentID: "build" })),
+          yield* Effect.exit(def.execute(chain.params, { ...fixture.caller, agentID: "general" })),
           "requires Maestro",
         )
         yield* FileSystem.FileSystem.use((fs) => fs.writeFileString(`${fixture.session.directory}/proof.txt`, "changed\n"))

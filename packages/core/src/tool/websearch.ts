@@ -14,6 +14,7 @@ import { Tools } from "./tools"
 import { collectBoundedResponseBody } from "./http-body"
 import { checksum } from "../util/encode"
 import { ToolRegistry } from "./registry"
+import { ToolText } from "./text"
 
 export const name = "websearch"
 export const NO_RESULTS = "No search results found. Please try a different query."
@@ -29,13 +30,7 @@ export const MAX_RESPONSE_BYTES = 256 * 1024
  * from provider-hosted web search tools, which remain route-owned and execute
  * at the model provider. Ownership of this compromise can be revisited later.
  */
-export const description = `Search the web using the session's local web search provider. Use this for current information beyond knowledge cutoff.
-
-This is a provider-independent local tool backed by Exa or Parallel. Provider-hosted web search tools are separate and execute at the model provider.
-
-Optional controls support result count, live crawling ('fallback' or 'preferred'), search type ('auto', 'fast', or 'deep'), and maximum context characters.
-
-The current year is ${new Date().getFullYear()}. Use this year when searching for recent information or current events.`
+export const description = ToolText.websearch(new Date().getFullYear())
 
 export const Input = Schema.Struct({
   query: Schema.String.annotate({ description: "Websearch query" }),

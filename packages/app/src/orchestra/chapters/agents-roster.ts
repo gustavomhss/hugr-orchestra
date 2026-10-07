@@ -5,6 +5,7 @@ import type {
   AgentFileInput,
   AgentFilePermission,
 } from "@opencode-ai/sdk/v2/client"
+import { agentKey } from "@/context/agent-identity"
 
 // The tool permissions an agent file can override, in the order the profile settings list them.
 export const PERMISSION_TOOLS = [
@@ -48,7 +49,8 @@ export function agentRoster(agents: readonly Agent[]) {
     .map((agent) => ({
       agent,
       subagent: agent.mode === "subagent",
-      chat: agent.mode === "primary" || agent.mode === "all",
+      // The user talks only to Maestro; every other agent works through it. Its id is stable, its name configurable.
+      chat: agentKey(agent) === "maestro",
     }))
 }
 
@@ -71,12 +73,20 @@ export function modelKey(agent: Agent) {
   return agent.model ? `${agent.model.providerID}/${agent.model.modelID}` : ""
 }
 
-/** Seeds the editor from the project file first, then from the agent the server resolved. */
+/** Every session runs on Maestro, so the editor keeps it primary and never removes it. */
+export function isMaestro(agent: Agent | undefined) {
+  return (agent?.id ?? agent?.name) === "maestro"
+}
+
+/**
+ * Seeds the editor from the project file first, then from the agent the server resolved. Maestro is always primary,
+ * whatever a hand-edited file says, so saving writes it back as primary.
+ */
 export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undefined): AgentDraft {
   const steps = file?.steps ?? agent?.steps
   return {
     name: agent?.name ?? "",
-    mode: file?.mode ?? agent?.mode ?? "subagent",
+    mode: isMaestro(agent) ? "primary" : (file?.mode ?? agent?.mode ?? "subagent"),
     description: file?.description ?? agent?.description ?? "",
     model: file?.model ?? (agent ? modelKey(agent) : ""),
     steps: steps === undefined ? "" : String(steps),

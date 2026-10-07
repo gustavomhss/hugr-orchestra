@@ -14,6 +14,7 @@ import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { Skill } from "../../src/skill"
+import { Truncate } from "../../src/tool/truncate"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -24,25 +25,58 @@ const it = testEffect(
   ),
 )
 
+const execution = "Edits files and runs shell commands."
+const review = "Read-only: reads and searches files; cannot edit or run commands."
+
 const nativeTeam = [
   {
     id: "backend",
     profile: "backend",
-    mode: "all",
     prompt: "You are the backend implementation specialist on the Orchestra native team.",
+    description: `Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. ${execution} Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.`,
   },
-  { id: "patty", profile: "execution", mode: "subagent", prompt: "You are Patty, frontend execution specialist." },
-  { id: "lucy", profile: "review", mode: "subagent", prompt: "You are Lucy, cold code reviewer." },
-  { id: "bobby", profile: "review", mode: "subagent", prompt: "You are Bobby, architecture reviewer." },
-  { id: "billy", profile: "review", mode: "subagent", prompt: "You are Billy, security reviewer." },
-  { id: "jimmy", profile: "review", mode: "subagent", prompt: "You are Jimmy, exploration reviewer." },
+  {
+    id: "patty",
+    profile: "execution",
+    prompt: "You are Patty, frontend execution specialist.",
+    description: `Frontend execution. ${execution} Returns implementation card, sensory evidence, diff receipt.`,
+  },
+  {
+    id: "lucy",
+    profile: "review",
+    prompt: "You are Lucy, cold code reviewer.",
+    description: `Cold code review; records governed reviews. ${review} Returns cited APPROVE/FIX_FIRST/REJECT card.`,
+  },
+  {
+    id: "bobby",
+    profile: "review",
+    prompt: "You are Bobby, architecture reviewer.",
+    description: `Architecture review. ${review} Returns seam/contract verdict.`,
+  },
+  {
+    id: "billy",
+    profile: "review",
+    prompt: "You are Billy, security reviewer.",
+    description: `Security review. ${review} Returns threat verdict and cited controls.`,
+  },
+  {
+    id: "jimmy",
+    profile: "review",
+    prompt: "You are Jimmy, exploration reviewer.",
+    description: `Codebase exploration. ${review} Returns grounded findings card.`,
+  },
   {
     id: "rosie",
     profile: "execution",
-    mode: "subagent",
     prompt: "You are Rosie, documentation execution specialist.",
+    description: `Documentation changes. ${execution} Returns docs evidence card.`,
   },
-  { id: "frankie", profile: "review", mode: "subagent", prompt: "You are Frankie, process auditor." },
+  {
+    id: "frankie",
+    profile: "review",
+    prompt: "You are Frankie, process auditor.",
+    description: `Process audit. ${review} Returns audit verdict.`,
+  },
 ] as const
 
 function load<A>(fn: (service: Agent.Interface) => Effect.Effect<A>) {
@@ -62,7 +96,9 @@ it.instance("registers native team specialists with fixed profiles", () =>
   Effect.gen(function* () {
     for (const seat of nativeTeam) {
       const agent = yield* load((service) => service.get(seat.id))
-      expect(agent).toMatchObject({ id: seat.id, mode: seat.mode, native: true })
+      // The user talks only to Maestro: every seat, the backend specialist included, is a subagent.
+      expect(agent).toMatchObject({ id: seat.id, mode: "subagent", native: true })
+      expect(agent.description).toBe(seat.description)
       expect(agent.prompt).toStartWith(seat.prompt)
       expect(agent.prompt).toContain("Return card:")
       expect(agent.prompt).toContain("Forbidden:")
@@ -74,6 +110,10 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "websearch")).toBe("deny")
       expect(evaluate(agent, "skill")).toBe("deny")
       expect(evaluate(agent, "external_directory")).toBe("deny")
+      // External access covers bash and edit too, so only the review profile, which holds neither, reaches saved output.
+      expect(Permission.evaluate("external_directory", Truncate.GLOB, agent.permission).action).toBe(
+        seat.profile === "review" ? "allow" : "deny",
+      )
       expect(evaluate(agent, "bash")).toBe(seat.profile === "review" ? "deny" : "allow")
       expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
@@ -91,7 +131,7 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
 
     expect(backendSkills.root).toBe(path.resolve(import.meta.dir, "../../../backend-specialist/skills"))
     for (const name of backendSkills.names) expect(check("skill", name)).toBe("allow")
-    expect(check("skill", "customize-opencode")).toBe("deny")
+    expect(check("skill", "maestro-governed")).toBe("deny")
     expect(check("skill", "own_backend-implement")).toBe("deny")
     expect(check("external_directory", path.join(backendSkills.root, "backend-implement", "references", "*"))).toBe(
       "allow",
@@ -111,21 +151,34 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
     expect(check("atlas_memory_header", "*")).toBe("deny")
 
     // The shared profiles stay exactly as they were for every other native seat.
+    const envRead = { "*": "allow", "*.env": "deny", "*.env.*": "deny", "*.env.example": "allow" } as const
+    const publishDenied = {
+      "*": "allow",
+      "git push *": "deny",
+      "git -C * push *": "deny",
+      "gh pr create *": "deny",
+      "gh pr merge *": "deny",
+      "gh release *": "deny",
+    } as const
     expect(nativeProfiles.execution).toEqual({
       "*": "deny",
-      read: "allow",
+      read: envRead,
       glob: "allow",
       grep: "allow",
-      bash: "allow",
+      bash: publishDenied,
       edit: "allow",
     })
     expect(nativeProfiles.review).toEqual({
       "*": "deny",
-      read: "allow",
+      read: envRead,
       glob: "allow",
       grep: "allow",
       maestro_record_review: "allow",
+      external_directory: { "*": "deny", [Truncate.GLOB]: "allow" },
     })
+    // The backend specialist keeps the seat rules: no .env reads and no publishing.
+    expect(nativeProfiles.backend.read).toEqual(envRead)
+    expect(nativeProfiles.backend.bash).toEqual(publishDenied)
     expect(roster.filter((member) => member.nativeProfile === "backend").map((member) => member.memberId)).toEqual([
       "backend",
     ])
@@ -139,6 +192,21 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
       expect(
         Permission.evaluate("external_directory", path.join(backendSkills.root, "*"), agent.permission).action,
       ).toBe("deny")
+    }
+  }),
+)
+
+it.instance("native team seats cannot read .env files but can read .env.example", () =>
+  Effect.gen(function* () {
+    for (const seat of nativeTeam) {
+      const agent = yield* load((service) => service.get(seat.id))
+      // The runtime check reads the native profile directly; the agent carries the same rules.
+      for (const ruleset of [agent.permission, Permission.fromConfig(nativeProfiles[seat.profile])]) {
+        for (const file of [".env", ".env.local", "config/.env.production", "deploy/prod.env", "../other/.env"])
+          expect(Permission.evaluate("read", file, ruleset).action).toBe("deny")
+        for (const file of [".env.example", "config/.env.example", "src/index.ts", "environment.ts"])
+          expect(Permission.evaluate("read", file, ruleset).action).toBe("allow")
+      }
     }
   }),
 )

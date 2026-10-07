@@ -71,14 +71,13 @@ Vous pouvez également avoir des règles globales dans un fichier `~/.config/ope
 Pour les utilisateurs migrant depuis Claude Code, OpenCode prend en charge les conventions de fichiers de Claude Code comme solutions de secours :
 
 - **Règles du projet** : `CLAUDE.md` dans le répertoire de votre projet (utilisé si aucun `AGENTS.md` n'existe)
-- **Règles globales** : `~/.claude/CLAUDE.md` (utilisé si aucun `~/.config/opencode/AGENTS.md` n'existe)
 - **Compétences** : `~/.claude/skills/` — voir [Compétences de l'agent](/docs/skills/) pour plus de détails
 
 Pour désactiver la compatibilité Claude Code, définissez l'une de ces variables d'environnement :
 
 ```bash
 export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only project CLAUDE.md files
 export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
@@ -90,9 +89,8 @@ Lorsque opencode démarre, il recherche les fichiers de règles dans cet ordre 
 
 1. **Fichiers locaux** en parcourant le répertoire actuel (`AGENTS.md`, `CLAUDE.md`)
 2. **Fichier global** à `~/.config/opencode/AGENTS.md`
-3. **Fichier Claude Code** à `~/.claude/CLAUDE.md` (sauf si désactivé)
 
-Le premier fichier correspondant gagne dans chaque catégorie. Par exemple, si vous possédez à la fois `AGENTS.md` et `CLAUDE.md`, seul `AGENTS.md` est utilisé. De même, `~/.config/opencode/AGENTS.md` a priorité sur `~/.claude/CLAUDE.md`.
+Le premier fichier correspondant gagne dans chaque catégorie. Par exemple, si vous possédez à la fois `AGENTS.md` et `CLAUDE.md`, seul `AGENTS.md` est utilisé.
 
 ---
 

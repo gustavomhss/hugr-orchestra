@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect"
 import * as Tool from "./tool"
-import DESCRIPTION_WRITE from "./todowrite.txt"
+import { ToolText } from "@opencode-ai/core/tool/text"
 import { Todo } from "../session/todo"
 
 export const Parameters = Schema.Struct({
@@ -17,7 +17,7 @@ export const TodoWriteTool = Tool.define<typeof Parameters, Metadata, Todo.Servi
     const todo = yield* Todo.Service
 
     return {
-      description: DESCRIPTION_WRITE,
+      description: ToolText.todowrite,
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context<Metadata>) =>
         Effect.gen(function* () {

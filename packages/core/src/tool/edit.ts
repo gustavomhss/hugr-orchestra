@@ -23,8 +23,7 @@ export const name = "edit"
 
 export const Input = Schema.Struct({
   path: Schema.String.annotate({
-    description:
-      "File path to edit. Relative paths resolve within the active Location. Absolute paths inside that Location are accepted; external absolute paths require external_directory approval.",
+    description: "The file to edit, absolute or relative to the working directory",
   }),
   oldString: Schema.String.annotate({ description: "Exact text to replace" }),
   newString: Schema.String.annotate({ description: "Replacement text, which must differ from oldString" }),
@@ -99,8 +98,13 @@ const layer = Layer.effectDiscard(
       .register({
         [name]: Tool.withPermission(
           Tool.make({
-            description:
-              "Replace exact text in one file. Relative paths resolve within the active Location. Absolute paths inside the Location are accepted. Explicit external absolute paths require external_directory approval before edit approval.",
+            description: `Replace text in a file: \`oldString\` becomes \`newString\`.
+
+- \`oldString\` must match the file exactly, including whitespace and indentation: copy it from a current read, with enough surrounding lines that it occurs once. One found more than once fails unless \`replaceAll\` is set, which replaces every occurrence.
+- \`oldString\` cannot be empty and must differ from \`newString\`; to create a file, use \`write\`.
+- The file keeps its line endings and any byte-order mark.
+- A relative \`path\` resolves from the working directory; a path outside it asks the owner first.
+- The result names the file and the number of replacements.`,
             input: Input,
             output: Output,
             toModelOutput: ({ input, output }) => [

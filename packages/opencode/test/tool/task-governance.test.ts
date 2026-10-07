@@ -68,7 +68,7 @@ const seed = Effect.fn("TaskGovernanceTest.seed")(function* () {
     id: MessageID.ascending(),
     role: "user",
     sessionID: chat.id,
-    agent: "build",
+    agent: "maestro",
     model,
     time: { created: Date.now() },
   })
@@ -77,8 +77,8 @@ const seed = Effect.fn("TaskGovernanceTest.seed")(function* () {
     role: "assistant",
     parentID: user.id,
     sessionID: chat.id,
-    mode: "build",
-    agent: "build",
+    mode: "maestro",
+    agent: "maestro",
     cost: 0,
     path: { cwd: "/tmp", root: "/tmp" },
     tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
@@ -129,69 +129,75 @@ afterEach(async () => {
   await disposeAllInstances()
 })
 
+// Records the plan, context, validation and authorization that route "implement card" to the backend seat.
+const grant = Effect.fn("TaskGovernanceTest.grant")(function* () {
+  const events = yield* EventV2Bridge.Service
+  const { chat, assistant } = yield* seed()
+  const planRevisionID = EventV2.ID.make("evt_maestro_plan_task_test")
+  yield* events.publish(
+    MaestroEvent.PlanRevision.Recorded,
+    {
+      id: planRevisionID,
+      sessionID: chat.id,
+      admissionMessageID: "msg_admission",
+      methodVersion: "draft-plan-v1",
+      revision: "v1",
+      goal: { value: "implement card", source: "maestro" },
+      acceptance: [{ value: "tests pass", source: "maestro" }],
+      scope: [{ value: "card", source: "maestro" }],
+      constraints: [],
+      reviewRequirement: { value: "Lucy", source: "maestro" },
+      contextRequirement: "PENDING",
+      assumptions: [],
+      risks: [],
+      status: "PROPOSED",
+      revisionHash: "a".repeat(64),
+      createdAt: 1,
+    },
+    { id: planRevisionID },
+  )
+  const contextRecord = yield* recordContext(planRevisionID, chat.id)
+  const validation = yield* recordValidation({
+    sessionID: chat.id,
+    planRevisionID,
+    contextRecordID: contextRecord.id,
+    contextHash: contextRecord.contextHash,
+    projectID: chat.projectID,
+    workCardID: "card_task_test",
+    workCard: "# Card\n",
+    routedMemberID: "backend",
+    validatorID: "maestro",
+    validatorVersion: "validation-v1",
+    checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
+  })
+  const authorizationID = EventV2.ID.make("evt_maestro_authorization_task_test")
+  yield* events.publish(
+    MaestroEvent.Authorization.Granted,
+    {
+      sessionID: chat.id,
+      projectID: chat.projectID,
+      approvalMessageID: "msg_approval",
+      validationRecordID: validation.id,
+      workCardHash: validation.workCardHash,
+      routedMemberID: validation.routedMemberID,
+      rosterHash: validation.rosterHash,
+      grantHash: validation.grantHash,
+      reviewPolicyHash: validation.reviewPolicyHash,
+      actor: validation.actor,
+      reviewerID: "lucy",
+      taskIntentHash: authorizationTaskIntentHash({ subagentType: "backend", prompt: "implement card" }),
+      methodVersion: "authorization-v1",
+    },
+    { id: authorizationID },
+  )
+  return { chat, assistant, authorizationID }
+})
+
 it.instance(
   "dispatches exact routed child from AuthorizationGranted",
   () =>
     Effect.gen(function* () {
-      const events = yield* EventV2Bridge.Service
-      const { chat, assistant } = yield* seed()
-      const planRevisionID = EventV2.ID.make("evt_maestro_plan_task_test")
-      yield* events.publish(
-        MaestroEvent.PlanRevision.Recorded,
-        {
-          id: planRevisionID,
-          sessionID: chat.id,
-          admissionMessageID: "msg_admission",
-          methodVersion: "draft-plan-v1",
-          revision: "v1",
-          goal: { value: "implement card", source: "maestro" },
-          acceptance: [{ value: "tests pass", source: "maestro" }],
-          scope: [{ value: "card", source: "maestro" }],
-          constraints: [],
-          reviewRequirement: { value: "Lucy", source: "maestro" },
-          contextRequirement: "PENDING",
-          assumptions: [],
-          risks: [],
-          status: "PROPOSED",
-          revisionHash: "a".repeat(64),
-          createdAt: 1,
-        },
-        { id: planRevisionID },
-      )
-      const contextRecord = yield* recordContext(planRevisionID, chat.id)
-      const validation = yield* recordValidation({
-        sessionID: chat.id,
-        planRevisionID,
-        contextRecordID: contextRecord.id,
-        contextHash: contextRecord.contextHash,
-        projectID: chat.projectID,
-        workCardID: "card_task_test",
-        workCard: "# Card\n",
-        routedMemberID: "backend",
-        validatorID: "maestro",
-        validatorVersion: "validation-v1",
-        checks: [{ id: "typecheck", status: "PASS", detail: "clean" }],
-      })
-      const authorizationID = EventV2.ID.make("evt_maestro_authorization_task_test")
-      yield* events.publish(
-        MaestroEvent.Authorization.Granted,
-        {
-          sessionID: chat.id,
-          projectID: chat.projectID,
-          approvalMessageID: "msg_approval",
-          validationRecordID: validation.id,
-          workCardHash: validation.workCardHash,
-          routedMemberID: validation.routedMemberID,
-          rosterHash: validation.rosterHash,
-          grantHash: validation.grantHash,
-          reviewPolicyHash: validation.reviewPolicyHash,
-          actor: validation.actor,
-          reviewerID: "lucy",
-          taskIntentHash: authorizationTaskIntentHash({ subagentType: "backend", prompt: "implement card" }),
-          methodVersion: "authorization-v1",
-        },
-        { id: authorizationID },
-      )
+      const { chat, assistant, authorizationID } = yield* grant()
       const config = yield* Config.Service
       const entered = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
@@ -383,6 +389,54 @@ it.instance(
   { git: true },
 )
 
+it.instance(
+  "a wrong seat or intent fails before reserving, so the authorization still dispatches",
+  () =>
+    Effect.gen(function* () {
+      const { chat, assistant, authorizationID } = yield* grant()
+      const tool = yield* TaskTool
+      const def = yield* tool.init()
+      let prompts = 0
+      const context = {
+        sessionID: chat.id,
+        messageID: assistant.id,
+        agent: "maestro",
+        agentID: "maestro",
+        abort: new AbortController().signal,
+        extra: { promptOps: stubOps(() => prompts++) },
+        messages: [],
+        metadata: () => Effect.void,
+        ask: () => Effect.void,
+      }
+      const approved = {
+        description: "implement card",
+        prompt: "implement card",
+        subagent_type: "backend",
+        authorizationID,
+      }
+      // general carries its own todowrite rule, so a reservation made for it would pin a different permission
+      // snapshot and the approved retry would fail reservation-binding-mismatch.
+      const wrongSeat = yield* def.execute({ ...approved, subagent_type: "general" }, context).pipe(Effect.exit)
+      expect(Exit.isFailure(wrongSeat)).toBe(true)
+      if (Exit.isFailure(wrongSeat))
+        expect(Cause.pretty(wrongSeat.cause)).toContain(
+          "routed-seat-mismatch. This authorization dispatches only backend",
+        )
+      const wrongIntent = yield* def.execute({ ...approved, prompt: "different work" }, context).pipe(Effect.exit)
+      expect(Exit.isFailure(wrongIntent)).toBe(true)
+      if (Exit.isFailure(wrongIntent)) expect(Cause.pretty(wrongIntent.cause)).toContain("task-intent-mismatch")
+      expect(prompts).toBe(0)
+
+      const result = yield* def.execute(approved, context)
+      const sessions = yield* Session.Service
+      const child = (yield* sessions.children(chat.id))[0]
+      expect(child?.agent).toBe("backend")
+      expect(result.metadata.sessionId).toBe(child?.id)
+      expect(prompts).toBe(1)
+    }),
+  { git: true },
+)
+
 it.instance("resumes exact native task session from task_id", () =>
   Effect.gen(function* () {
     const sessions = yield* Session.Service
@@ -440,7 +494,7 @@ it.instance("resumes exact native task session from task_id", () =>
           {
             sessionID: chat.id,
             messageID: assistant.id,
-            agent: "build",
+            agent: "maestro",
             abort: new AbortController().signal,
             extra: { promptOps: stubOps((input) => (seen = input)) },
             messages: [],
@@ -485,7 +539,7 @@ it.instance("denies task_id with different parent or agent", () =>
         {
           sessionID: chat.id,
           messageID: assistant.id,
-          agent: "build",
+          agent: "maestro",
           abort: new AbortController().signal,
           extra: { promptOps: stubOps() },
           messages: [],
@@ -493,12 +547,14 @@ it.instance("denies task_id with different parent or agent", () =>
           ask: () => Effect.void,
         },
       )
-    for (const taskID of [wrongParent.id, wrongAgent.id]) {
+    const denied = [
+      [wrongParent.id, `No task ${wrongParent.id} in this session.`],
+      [wrongAgent.id, "Task resume denied: task is not direct child for selected agent"],
+    ]
+    for (const [taskID, message] of denied) {
       const exit = yield* execute(taskID).pipe(Effect.exit)
       expect(Exit.isFailure(exit)).toBe(true)
-      if (Exit.isFailure(exit)) {
-        expect(Cause.pretty(exit.cause)).toContain("Task resume denied: task is not direct child for selected agent")
-      }
+      if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain(message)
     }
     expect(yield* sessions.children(chat.id)).toEqual([wrongAgent])
     expect(yield* sessions.children(otherParent.id)).toEqual([wrongParent])

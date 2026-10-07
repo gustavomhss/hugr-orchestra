@@ -38,7 +38,7 @@ const messageUpdated = (
       files: [],
       agents: [],
       text: "hello",
-      agent: "build",
+      agent: "maestro",
       model: { providerID: "openrouter", modelID: "test/model" },
     },
   }) as never

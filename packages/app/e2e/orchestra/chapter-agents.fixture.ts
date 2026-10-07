@@ -17,7 +17,17 @@ type MockAgent = {
   permission: { permission: string; pattern: string; action: string }[]
   options: Record<string, unknown>
 }
+// The server lists its default agent, maestro, first. The other names stand for any agent a profile defines.
 const agents: MockAgent[] = [
+  {
+    name: "maestro",
+    description: "Orchestrates repository work",
+    mode: "primary",
+    native: true,
+    model: { providerID: "example", modelID: "reasoner" },
+    permission: [{ permission: "*", pattern: "*", action: "allow" }],
+    options: {},
+  },
   {
     name: "build",
     description: "Implements repository changes",
@@ -139,8 +149,6 @@ export async function setup(
         JSON.stringify({
           general: {
             newLayoutDesigns: true,
-            agentVisibilityInitialized: true,
-            showCustomAgents: false,
             shouldDisplayTabsToast: false,
             newInterfaceNoticeDismissed: true,
           },

@@ -1,10 +1,8 @@
-Performs exact string replacements in files. 
+Replace text in a file: `oldString` becomes `newString`.
 
-Usage:
-- You must use your `Read` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file. 
-- When editing text from Read tool output, ensure you preserve the exact indentation (tabs/spaces) as it appears AFTER the line number prefix. The line number prefix format is: line number + colon + space (e.g., `1: `). Everything after that space is the actual file content to match. Never include any part of the line number prefix in the oldString or newString.
-- ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
-- Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
-- The edit will FAIL if `oldString` is not found in the file with an error "oldString not found in content".
-- The edit will FAIL if `oldString` is found multiple times in the file with an error "Found multiple matches for oldString. Provide more surrounding lines in oldString to identify the correct match." Either provide a larger string with more surrounding context to make it unique or use `replaceAll` to change every instance of `oldString`. 
-- Use `replaceAll` for replacing and renaming strings across the file. This parameter is useful if you want to rename a variable for instance.
+- Copy `oldString` from a current read of the file, with enough surrounding lines that it occurs once. An `oldString` found more than once fails unless `replaceAll` is set, which replaces every occurrence.
+- When `oldString` has no exact match, looser matches are tried: ignoring indentation and spacing, reading escapes such as `\n` as the characters they stand for, or taking a block of three or more lines whose first and last lines match and whose middle lines are only similar. The text found in the file is then replaced with `newString` as written, even where it differs from `oldString`.
+- The result says only that the edit was applied, so re-read the changed lines when `oldString` was not copied exactly from the current file.
+- When nothing matches closely enough, or the match is much larger than `oldString`, the edit fails; re-read the file before trying again.
+- An empty `oldString` creates a new file with `newString` as its content, and fails if the file exists.
+- The file keeps its line endings and any byte-order mark. A formatter the project configured may reformat it afterwards.

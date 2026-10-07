@@ -156,7 +156,7 @@ const seed = Effect.fn("SessionActivityTest.seed")(function* () {
   )
   const v2 = (input: { created: number; completed: number; error?: string; tokens: number }) => ({
     time: { created: input.created, completed: input.completed },
-    agent: "build",
+    agent: "maestro",
     model: { id: "sonnet", providerID: "anthropic" },
     content: [],
     tokens: usage(input.tokens),

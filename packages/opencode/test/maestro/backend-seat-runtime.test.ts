@@ -134,8 +134,8 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     expect((yield* skills.available(backend)).map((item) => item.name).toSorted()).toEqual(
       backendSkills.names.toSorted(),
     )
-    const offeredToBuild = (yield* skills.available(yield* agents.get("build"))).map((item) => item.name)
-    expect(backendSkills.names.filter((name) => offeredToBuild.includes(name))).toEqual([])
+    const offeredToMaestro = (yield* skills.available(yield* agents.get("maestro"))).map((item) => item.name)
+    expect(backendSkills.names.filter((name) => offeredToMaestro.includes(name))).toEqual([])
 
     const loaded = yield* call(tools.skill, { name: "backend-implement" })
     expect(Exit.isSuccess(loaded)).toBe(true)
@@ -150,7 +150,7 @@ it.instance("backend loads its entry skill, reads a companion and cannot load an
     expect(Exit.isSuccess(read)).toBe(true)
     if (Exit.isSuccess(read)) expect(JSON.stringify(read.value)).toContain("continuity.md")
 
-    const other = yield* call(tools.skill, { name: "customize-opencode" })
+    const other = yield* call(tools.skill, { name: "maestro-governed" })
     expect(Exit.isFailure(other)).toBe(true)
     if (Exit.isFailure(other)) expect(String(other.cause)).toContain("PermissionDeniedError")
 
@@ -182,13 +182,13 @@ it.instance("native execution seats get a shell description without commit or tm
     const agents = yield* Agent.Service
     for (const id of ["backend", "patty", "rosie"]) {
       const description = (yield* resolve(yield* agents.get(id))).bash?.description ?? ""
-      expect(description).toContain("Executes a given")
+      expect(description).toContain("Run a command in a fresh, non-interactive process.")
       expect(description).not.toContain("# Git and GitHub")
-      expect(description).not.toContain("commit, amend, push")
+      expect(description).not.toContain("Commit, push or open a pull request")
       expect(description).not.toContain(Global.Path.tmp)
     }
-    const build = (yield* resolve(yield* agents.get("build"))).bash?.description ?? ""
-    expect(build).toContain("# Git and GitHub")
-    expect(build).toContain(Global.Path.tmp)
+    const maestro = (yield* resolve(yield* agents.get("maestro"))).bash?.description ?? ""
+    expect(maestro).toContain("# Git and GitHub")
+    expect(maestro).toContain(Global.Path.tmp)
   }),
 )

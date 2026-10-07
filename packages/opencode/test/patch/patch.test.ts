@@ -82,8 +82,32 @@ describe("Patch namespace", () => {
       expect(hunk.type).toBe("update")
       expect(hunk.path).toBe("old-name.txt")
       if (hunk.type === "update") {
-        expect(hunk.move_path).toBe("new-name.txt")
+        expect(hunk.movePath).toBe("new-name.txt")
       }
+    })
+
+    test("should parse *** End of File and keep the hunks after it", () => {
+      const patchText = `*** Begin Patch
+*** Update File: tail.txt
+@@
+-last
++end
+*** End of File
+@@
++appended
+*** End Patch`
+
+      const result = Patch.parsePatch(patchText)
+      expect(result.hunks).toEqual([
+        {
+          type: "update",
+          path: "tail.txt",
+          chunks: [
+            { oldLines: ["last"], newLines: ["end"], endOfFile: true },
+            { oldLines: [], newLines: ["appended"] },
+          ],
+        },
+      ])
     })
 
     test("should throw error for invalid patch format", () => {

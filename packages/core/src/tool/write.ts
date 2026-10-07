@@ -21,8 +21,7 @@ export const name = "write"
 // TODO: Revisit whether model-facing mutation schemas should prefer absolute `filePath` naming for trained-in compatibility after evaluating model behavior.
 export const Input = Schema.Struct({
   path: Schema.String.annotate({
-    description:
-      "File path to write. Relative paths resolve within the active Location. Absolute paths inside that Location are accepted; external absolute paths require external_directory approval.",
+    description: "The file to write, absolute or relative to the working directory",
   }),
   content: Schema.String.annotate({ description: "Content to write to the file" }),
 })
@@ -55,8 +54,11 @@ const layer = Layer.effectDiscard(
       .register({
         [name]: Tool.withPermission(
           Tool.make({
-            description:
-              "Write content to one file. Relative paths resolve within the active Location. Absolute paths inside the Location are accepted. Explicit external absolute paths require external_directory approval before edit approval.",
+            description: `Write a whole file: create it, or replace everything in it with \`content\`.
+
+- Missing parent directories are created. An existing file is overwritten without any check that you have read it, so read it first when its content matters; to change part of a file, use \`edit\`.
+- \`content\` is written as given, and a byte-order mark the file already had is kept.
+- A relative \`path\` resolves from the working directory; a path outside it asks the owner first.`,
             input: Input,
             output: Output,
             toModelOutput: ({ output }) => [{ type: "text", text: toModelOutput(output) }],

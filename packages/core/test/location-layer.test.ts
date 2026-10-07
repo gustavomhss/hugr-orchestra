@@ -118,6 +118,12 @@ describe("LocationServiceMap", () => {
             "websearch",
             "write",
           ])
+          // Built-in tools describe themselves in Orchestra's words, never as the upstream product.
+          expect(
+            blockedState.tools
+              .filter((tool) => `${tool.description} ${JSON.stringify(tool.inputSchema)}`.toLowerCase().includes("opencode"))
+              .map((tool) => tool.name),
+          ).toEqual([])
           const allowedState = yield* update(allowed.path)
           expect(allowedState.providers.some((provider) => provider.id === ProviderV2.ID.make("test"))).toBe(true)
           expect(allowedState.tools.map((tool) => tool.name).sort()).toEqual([
@@ -200,7 +206,7 @@ describe("LocationServiceMap", () => {
           const agents = yield* AgentV2.Service
           // Read before anything else yields: the first request on a new location must not see the roster empty.
           expect((yield* agents.all()).map((agent) => agent.id)).toEqual(
-            expect.arrayContaining([AgentV2.ID.make("build"), AgentV2.ID.make("plan")]),
+            expect.arrayContaining([AgentV2.ID.make("maestro"), AgentV2.ID.make("general")]),
           )
         }).pipe(
           Effect.scoped,

@@ -71,14 +71,13 @@ Bu Git'e kaydedilmediği veya ekibinizle paylaşılmadığı için, LLM'ın uyma
 opencode, Claude Code'dan geçiş yapan kullanıcılar için yedek olarak Claude Code'un dosya kurallarını destekler:
 
 - **Proje kuralları**: Proje dizininizdeki `CLAUDE.md` (`AGENTS.md` yoksa kullanılır)
-- **Global kurallar**: `~/.claude/CLAUDE.md` (`~/.config/opencode/AGENTS.md` yoksa kullanılır)
 - **Beceriler**: `~/.claude/skills/` — ayrıntılar için [Agent Skills](/docs/skills/)'e bakın
 
 Claude Code uyumluluğunu kapatmak için aşağıdaki ortam değişkenlerinden birini ayarlayın:
 
 ```bash
 export OPENCODE_DISABLE_CLAUDE_CODE=1        # Disable all .claude support
-export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only ~/.claude/CLAUDE.md
+export OPENCODE_DISABLE_CLAUDE_CODE_PROMPT=1 # Disable only project CLAUDE.md files
 export OPENCODE_DISABLE_CLAUDE_CODE_SKILLS=1 # Disable only .claude/skills
 ```
 
@@ -90,9 +89,8 @@ Opencode başlatıldığında kural dosyalarını şu sırayla arar:
 
 1. **Yerel dosyalar** geçerli dizinden yukarıya doğru giderek (`AGENTS.md`, `CLAUDE.md`)
 2. **Global dosya** `~/.config/opencode/AGENTS.md` adresinde
-3. `~/.claude/CLAUDE.md` adresindeki **Claude Kod dosyası** (devre dışı bırakılmadığı sürece)
 
-Her kategoride ilk eşleşen dosya kazanır. Örneğin, hem `AGENTS.md` hem de `CLAUDE.md` varsa yalnızca `AGENTS.md` kullanılır. Benzer şekilde, `~/.config/opencode/AGENTS.md`, `~/.claude/CLAUDE.md`'ye göre önceliklidir.
+Her kategoride ilk eşleşen dosya kazanır. Örneğin, hem `AGENTS.md` hem de `CLAUDE.md` varsa yalnızca `AGENTS.md` kullanılır.
 
 ---
 

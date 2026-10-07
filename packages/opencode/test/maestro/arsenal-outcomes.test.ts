@@ -31,14 +31,14 @@ import { SessionMessage } from "@opencode-ai/core/session/message"
 const it = testEffect(Layer.empty)
 
 it.live("one native owner persists one started/terminal pair; nonzero exits and aborts cannot mint success", () => Effect.promise(async () => {
-  await using tmp = await tmpdir({ git: true, config: { agent: { build: { permission: { "*": "allow" } } } } })
+  await using tmp = await tmpdir({ git: true, config: { agent: { maestro: { permission: { "*": "allow" } } } } })
   await prepareArsenalSDK(tmp.path, Global.Path.config)
   await AppRuntime.runPromise(Effect.scoped(Effect.gen(function* () {
     const instances = yield* InstanceStore.Service
     const instance = yield* instances.load({ directory: tmp.path })
     yield* Effect.gen(function* () {
       const sessions = yield* Session.Service
-      const session = yield* sessions.create({ agent: "build" })
+      const session = yield* sessions.create({ agent: "maestro" })
       const native = yield* ArsenalBindings.make
       const input = { tool: "native-check", args: {}, sessionID: session.id, assistantMessageID: MessageID.ascending(), callID: "single-owner", directory: tmp.path, projectID: session.projectID }
       yield* native.withSession(session.id, native.run(input, native.run(input, Effect.succeed({ output: "failed command", metadata: { exit: 7 } }), false)))
@@ -54,8 +54,8 @@ it.live("one native owner persists one started/terminal pair; nonzero exits and 
       if (!bash) throw new Error("Actual native Bash producer missing")
       const permission = yield* Permission.Service
       const agents = yield* Agent.Service
-      const actor = yield* agents.get("build")
-      const context: Tool.Context = { sessionID: session.id, messageID: MessageID.ascending(), callID: "actual-bash", agent: "build", abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: (request) => permission.ask({ ...request, sessionID: session.id, ruleset: actor.permission }).pipe(Effect.orDie) }
+      const actor = yield* agents.get("maestro")
+      const context: Tool.Context = { sessionID: session.id, messageID: MessageID.ascending(), callID: "actual-bash", agent: "maestro", abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: (request) => permission.ask({ ...request, sessionID: session.id, ruleset: actor.permission }).pipe(Effect.orDie) }
       const output = yield* bash.execute({ command: "exit 7", description: "Native outcome control" }, context)
       expect(output.metadata.exit).toBe(7)
       const actual = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, session.id), eq(EventTable.type, EventV2.versionedType(SessionEvent.Tool.Progress.type, 1)))).all().pipe(Effect.orDie)
@@ -67,7 +67,7 @@ it.live("one native owner persists one started/terminal pair; nonzero exits and 
       yield* Effect.gen(function* () {
         const registry = yield* ToolRegistry.Service
         const materialized = yield* registry.materialize()
-        const result = yield* materialized.settle({ sessionID: session.id, agent: AgentV2.ID.make("build"), assistantMessageID: SessionMessage.ID.make(context.messageID), call: { type: "tool-call", id: "actual-v2-bash", name: "bash", input: { command: "exit 7" } } })
+        const result = yield* materialized.settle({ sessionID: session.id, agent: AgentV2.ID.make("maestro"), assistantMessageID: SessionMessage.ID.make(context.messageID), call: { type: "tool-call", id: "actual-v2-bash", name: "bash", input: { command: "exit 7" } } })
         expect(result.output?.structured).toMatchObject({ exit: 7 })
       }).pipe(Effect.provide(locations.get(projected.location)))
       const v2 = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, session.id), eq(EventTable.type, EventV2.versionedType(SessionEvent.Tool.Progress.type, 1)))).all().pipe(Effect.orDie)

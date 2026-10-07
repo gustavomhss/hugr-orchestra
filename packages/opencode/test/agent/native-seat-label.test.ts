@@ -58,7 +58,7 @@ describe("native seat label", () => {
   it.instance("defaults to the roster display name", () =>
     Effect.gen(function* () {
       const result = yield* resolve("backend")
-      expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "all", native: true })
+      expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "subagent", native: true })
       expect(result.errors).toEqual([])
     }),
   )
@@ -68,7 +68,7 @@ describe("native seat label", () => {
     () =>
       Effect.gen(function* () {
         const result = yield* resolve("backend")
-        expect(result.agent).toMatchObject({ id: "backend", name: "Pikachu", mode: "all", native: true })
+        expect(result.agent).toMatchObject({ id: "backend", name: "Pikachu", mode: "subagent", native: true })
         expect(result.agent.prompt).toStartWith("You are the backend implementation specialist")
         expect(result.agent.prompt).not.toContain("Pikachu")
         expect(allowedSkills(result.agent)).toEqual([...backendSkills.names])
@@ -102,7 +102,9 @@ describe("native seat label", () => {
         const result = yield* resolve("patty")
         expect(result.agent).toMatchObject({ id: "patty", name: "Mãe", mode: "subagent", native: true })
         expect(result.agent.prompt).toStartWith("You are Mãe, frontend execution specialist.")
-        expect(result.agent.description).toBe("Mãe native team specialist.")
+        expect(result.agent.description).toBe(
+          "Frontend execution. Edits files and runs shell commands. Returns implementation card, sensory evidence, diff receipt.",
+        )
         const lucy = yield* Agent.Service.use((service) => service.get("lucy"))
         expect(lucy.prompt).toStartWith("You are Lucy, cold code reviewer.")
       }),
@@ -138,7 +140,7 @@ describe("native seat label", () => {
       () =>
         Effect.gen(function* () {
           const result = yield* resolve("backend")
-          expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "all" })
+          expect(result.agent).toMatchObject({ id: "backend", name: BACKEND_DEFAULT_LABEL, mode: "subagent" })
           expect(result.errors).toHaveLength(1)
           expect(result.errors[0]?.name).toBe("UnknownError")
           expect(result.errors[0]?.message).toStartWith("Invalid configuration agent.backend.name: label ")

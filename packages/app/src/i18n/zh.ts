@@ -114,7 +114,6 @@ export const dict = {
   "command.category.terminal": "终端",
   "command.category.model": "模型",
   "command.category.mcp": "MCP",
-  "command.category.agent": "智能体",
   "command.category.permissions": "权限",
   "command.category.workspace": "工作区",
   "command.category.settings": "设置",
@@ -187,11 +186,6 @@ export const dict = {
 
   "command.mcp.toggle": "启用或禁用 MCP 服务器",
   "command.mcp.toggle.description": "启用或禁用 MCP 服务器",
-
-  "command.agent.cycle": "切换智能体",
-  "command.agent.cycle.description": "切换到下一个智能体",
-  "command.agent.cycle.reverse": "反向切换智能体",
-  "command.agent.cycle.reverse.description": "切换到上一个智能体",
 
   "command.model.variant.cycle": "切换思考强度",
   "command.model.variant.cycle.description": "切换到下一个强度等级",
@@ -446,8 +440,8 @@ export const dict = {
   "prompt.toast.pasteUnsupported.title": "不支持的附件",
   "prompt.toast.attachmentDuplicate.title": "此文件已上传",
   "prompt.toast.pasteUnsupported.description": "此处仅能附加图片、PDF 或文本文件。",
-  "prompt.toast.modelAgentRequired.title": "请选择智能体和模型",
-  "prompt.toast.modelAgentRequired.description": "发送提示前请先选择智能体和模型。",
+  "prompt.toast.modelRequired.title": "请选择模型",
+  "prompt.toast.modelRequired.description": "发送提示前请先选择模型。",
   "prompt.toast.worktreeCreateFailed.title": "创建工作区失败",
   "prompt.toast.sessionCreateFailed.title": "创建会话失败",
   "prompt.toast.shellSendFailed.title": "发送 shell 命令失败",
@@ -976,8 +970,6 @@ export const dict = {
   "settings.general.row.showStatus.description": "在标题栏中显示服务器状态按钮",
   "settings.general.row.mobileTitlebarBottom.title": "底部导航",
   "settings.general.row.mobileTitlebarBottom.description": "在移动设备上将标题栏和会话标签页置于屏幕底部",
-  "settings.general.row.showCustomAgents.title": "显示智能体",
-  "settings.general.row.showCustomAgents.description": "在输入框中切换智能体。隐藏时默认使用 Build 智能体。",
   "settings.general.row.reasoningSummaries.title": "显示推理摘要",
   "settings.general.row.reasoningSummaries.description": "在时间线中显示模型推理摘要",
   "settings.general.row.shellToolPartsExpanded.title": "展开 Shell 工具调用",
@@ -1082,7 +1074,7 @@ export const dict = {
   "settings.shortcuts.group.general": "通用",
   "settings.shortcuts.group.session": "会话",
   "settings.shortcuts.group.navigation": "导航",
-  "settings.shortcuts.group.modelAndAgent": "模型与智能体",
+  "settings.shortcuts.group.modelAndMcp": "模型与 MCP",
   "settings.shortcuts.group.terminal": "终端",
   "settings.shortcuts.group.prompt": "提示",
 

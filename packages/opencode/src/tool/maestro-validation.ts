@@ -9,7 +9,8 @@ import { SessionTable } from "@opencode-ai/core/session/sql"
 import { eq } from "drizzle-orm"
 import { recordReview, recordValidation, validationRecordHash } from "@/maestro/validation-record"
 import { readPlanRevision } from "@/maestro/plan-revision"
-import { contextIsCurrent, readContext } from "@/maestro/context-record"
+import { contextIsCurrent, readContext, STALE_CONTEXT_NEXT_STEP } from "@/maestro/context-record"
+import { validateWorkContract, workContractSections, type WorkContractValidation } from "@/maestro/work-contract"
 import { Database } from "@opencode-ai/core/database/database"
 import { Tool } from "./tool"
 
@@ -89,6 +90,10 @@ export const MaestroRecordValidationTool = Tool.define(
             return yield* Effect.fail(
               new Error("Validation requires non-empty planRevisionID, contextRecordID, and contextHash"),
             )
+          // A routed card is one seat-bound unit of work, a work package. Every known kind applies the same
+          // five-section rule; an unknown kind would hold every card as unsupported-kind.
+          const contract = validateWorkContract({ kind: "work-package", body: params.workCard })
+          if (contract.status === "HOLD") return yield* Effect.fail(new Error(workCardRejection(contract)))
           const plan = yield* readPlanRevision(params.planRevisionID)
           const context = yield* readContext(params.contextRecordID)
           if (!plan) return yield* Effect.fail(new Error("Validation planRevisionID not found"))
@@ -97,7 +102,8 @@ export const MaestroRecordValidationTool = Tool.define(
             return yield* Effect.fail(new Error("Validation context does not match PlanRevision"))
           if (context.contextHash !== params.contextHash)
             return yield* Effect.fail(new Error("Validation contextHash does not match ContextRecord"))
-          if (!(yield* contextIsCurrent(context))) return yield* Effect.fail(new Error("Validation context is stale"))
+          if (!(yield* contextIsCurrent(context)))
+            return yield* Effect.fail(new Error(`Validation context is stale: ${STALE_CONTEXT_NEXT_STEP}`))
           const sessionRow = yield* database.db
             .select()
             .from(SessionTable)
@@ -151,6 +157,17 @@ export const MaestroRecordValidationTool = Tool.define(
     }
   }),
 )
+
+function workCardRejection(contract: Extract<WorkContractValidation, { status: "HOLD" }>) {
+  const offending = contract.reasons.map(
+    (reason) =>
+      `${reason} (${contract.issues
+        .filter((issue) => issue.reason === reason)
+        .map((issue) => `## ${issue.section}`)
+        .join(", ")})`,
+  )
+  return `Validation rejected workCard: ${offending.join("; ")}. Write exactly one non-empty section under each of these exact headings, each alone on its line at column zero and outside code fences: ${workContractSections.map((name) => `## ${name}`).join(", ")}.`
+}
 
 export const MaestroRecordReviewTool = Tool.define(
   "maestro_record_review",

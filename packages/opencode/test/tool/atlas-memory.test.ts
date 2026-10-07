@@ -125,8 +125,8 @@ it.instance(
       const registry = yield* ToolRegistry.Service
       const agents = yield* Agent.Service
       const backend = yield* agents.get("backend")
-      const build = yield* agents.get("build")
-      if (!backend || !build) throw new Error("native agents missing")
+      const maestro = yield* agents.get("maestro")
+      if (!backend || !maestro) throw new Error("native agents missing")
       expect(backend.native).toBe(true)
       const visible = (agent: Agent.Info) =>
         registry
@@ -136,7 +136,7 @@ it.instance(
       // A configured agent that reuses the id, even with every tool allowed, is not the bound seat.
       expect(yield* visible({ ...backend, native: false, permission: [] })).toEqual([])
       expect(yield* visible({ ...backend, native: undefined })).toEqual([])
-      expect(yield* visible(build)).toEqual([])
+      expect(yield* visible(maestro)).toEqual([])
       const schemas = (yield* registry.tools({ ...ref, agent: backend })).filter((tool) =>
         tool.id.startsWith("atlas_memory_"),
       )

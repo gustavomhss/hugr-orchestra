@@ -41,7 +41,7 @@ it.live("native V2 registry captures actual Location/Event services and durably 
       } })).result.type).toBe("text")
       expect((yield* materialized.settle({ sessionID, ...toolIdentity, call: {
         type: "tool-call", name: "write", id: "denied", input: { filePath: "outside" },
-      } })).result).toEqual({ type: "error", value: "Tool safety HOLD: write-outside-physical-roots" })
+      } })).result).toEqual({ type: "error", value: new ToolSafety.Denied({ reason: "write-outside-physical-roots" }).message })
       expect(yield* fs.exists(path.join(tmp.path, "outside"))).toBe(false)
       const evidence = yield* Stream.runCollect(events.durable({ aggregateID: sessionID }).pipe(Stream.take(3))).pipe(Effect.timeout("3 seconds"))
       const decode = Schema.decodeUnknownSync(Schema.Struct({ structured: Schema.Struct({ toolSafety: Schema.Struct({

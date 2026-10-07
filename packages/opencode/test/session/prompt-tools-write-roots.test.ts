@@ -37,7 +37,7 @@ it.instance(
 
       yield* prompt.prompt({
         sessionID: child.id,
-        agent: "build",
+        agent: "general",
         model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
         noReply: true,
         tools: { bash: false, [WriteRoots.PERMISSION]: true },

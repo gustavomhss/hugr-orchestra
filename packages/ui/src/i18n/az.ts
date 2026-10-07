@@ -121,7 +121,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Şəkillər və fayllar",
   "ui.promptInput.context": "Kontekst",
   "ui.promptInput.shell": "Shell əmri",
-  "ui.promptInput.chooseAgent": "Agent seçin",
   "ui.promptInput.chooseModel": "Model seçin",
   "ui.promptInput.chooseVariant": "Model variantını seçin",
   "ui.promptInput.send": "Göndər",

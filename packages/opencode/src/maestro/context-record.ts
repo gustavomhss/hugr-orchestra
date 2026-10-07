@@ -24,10 +24,21 @@ const MEMORY = MEMORY_LOGS.map((file) => `:(exclude)${file}`)
 type LegacyContextData = Schema.Schema.Type<typeof MaestroEvent.Context.Recorded.data> & { readonly mode: "UNGROUNDED" }
 type ContextData = LegacyContextData | Schema.Schema.Type<typeof MaestroEvent.Context.RecordedV2.data>
 
+// A context's identity is its Session and plan revision, so a changed repository needs a new plan revision.
+export const STALE_CONTEXT_NEXT_STEP =
+  "HEAD, the working tree or the Own source changed since the context was recorded; record a new plan revision (change any field, such as methodVersion), rerun the checks, then record a new context and a new validation."
+
+export const DIRTY_CONTEXT_NEXT_STEP =
+  "The context was recorded with uncommitted or untracked changes; leave the tree clean, then record a new plan revision (change any field, such as methodVersion), rerun the checks, and record a new context and a new validation."
+
 export class ContextConflictError extends Schema.TaggedErrorClass<ContextConflictError>()("MaestroContextConflict", {
   sessionID: Schema.String,
   planRevisionID: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `${this._tag}: plan revision ${this.planRevisionID} cannot take this context (not a plan revision of this Session, unreadable Git state, or HEAD or the tree changed since its context was recorded). Record a new plan revision (change any field, such as methodVersion), rerun the checks, then record a new context and a new validation.`
+  }
+}
 
 function stable(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`

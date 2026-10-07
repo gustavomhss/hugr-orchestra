@@ -4,12 +4,12 @@ import * as Tool from "./tool"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Watcher } from "@opencode-ai/core/filesystem/watcher"
 import { InstanceState } from "@/effect/instance-state"
-import { Patch } from "../patch"
 import { createTwoFilesPatch, diffLines } from "diff"
 import { assertExternalDirectoryEffect } from "./external-directory"
 import { trimDiff } from "./edit"
 import { LSP } from "@/lsp/lsp"
 import { FSUtil } from "@opencode-ai/core/fs-util"
+import { Patch } from "@opencode-ai/core/patch"
 import DESCRIPTION from "./apply_patch.txt"
 import { FileSystem } from "@opencode-ai/core/filesystem"
 import { Format } from "../format"
@@ -35,14 +35,11 @@ export const ApplyPatchTool = Tool.define(
         return yield* Effect.fail(new Error("patchText is required"))
       }
 
-      // Parse the patch to get hunks
-      let hunks: Patch.Hunk[]
-      try {
-        const parseResult = Patch.parsePatch(params.patchText)
-        hunks = parseResult.hunks
-      } catch (error) {
-        return yield* Effect.fail(new Error(`apply_patch verification failed: ${error}`))
-      }
+      // ToolSafety reads the patch with this same parser, so the files written here are the ones it checked
+      const hunks = yield* Effect.try({
+        try: () => Patch.parse(params.patchText),
+        catch: (error) => new Error(`apply_patch verification failed: ${error}`),
+      })
 
       if (hunks.length === 0) {
         const normalized = params.patchText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim()
@@ -114,21 +111,13 @@ export const ApplyPatchTool = Tool.define(
 
             const source = yield* Bom.readFile(afs, filePath)
             const oldContent = source.text
-            let newContent = oldContent
-            let bom = source.bom
 
             // Apply the update chunks to get new content
-            try {
-              const fileUpdate = Patch.deriveNewContentsFromChunks(
-                filePath,
-                hunk.chunks,
-                Bom.join(source.text, source.bom),
-              )
-              newContent = fileUpdate.content
-              bom = fileUpdate.bom
-            } catch (error) {
-              return yield* Effect.fail(new Error(`apply_patch verification failed: ${error}`))
-            }
+            const fileUpdate = yield* Effect.try({
+              try: () => Patch.derive(filePath, hunk.chunks, Bom.join(source.text, source.bom)),
+              catch: (error) => new Error(`apply_patch verification failed: ${error}`),
+            })
+            const newContent = fileUpdate.content
 
             const diff = trimDiff(createTwoFilesPatch(filePath, filePath, oldContent, newContent))
 
@@ -139,19 +128,19 @@ export const ApplyPatchTool = Tool.define(
               if (change.removed) deletions += change.count || 0
             }
 
-            const movePath = hunk.move_path ? path.resolve(instance.directory, hunk.move_path) : undefined
+            const movePath = hunk.movePath ? path.resolve(instance.directory, hunk.movePath) : undefined
             yield* assertExternalDirectoryEffect(ctx, movePath)
 
             fileChanges.push({
               filePath,
               oldContent,
               newContent,
-              type: hunk.move_path ? "move" : "update",
+              type: hunk.movePath ? "move" : "update",
               movePath,
               diff,
               additions,
               deletions,
-              bom,
+              bom: fileUpdate.bom,
             })
 
             totalDiff += diff + "\n"

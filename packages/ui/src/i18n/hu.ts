@@ -123,7 +123,6 @@ export const dict: Record<string, string> = {
   "ui.promptInput.attachments": "Képek és fájlok",
   "ui.promptInput.context": "Kontextus",
   "ui.promptInput.shell": "Shell parancs",
-  "ui.promptInput.chooseAgent": "Válasszon ügynököt",
   "ui.promptInput.chooseModel": "Válasszon modellt",
   "ui.promptInput.chooseVariant": "Válasszon modellváltozatot",
   "ui.promptInput.send": "Elküld",

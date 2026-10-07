@@ -37,7 +37,7 @@ test("embedded client uses the real router and handlers", async () => {
 
       const created = yield* opencode.sessions.create({
         id: sessionID,
-        agent: Agent.ID.make("build"),
+        agent: Agent.ID.make("maestro"),
         location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
       })
       yield* opencode.sessions.switchModel({ sessionID, model })
@@ -177,7 +177,7 @@ test("independent embedded hosts do not share live notifications", async () => {
         id: sessionID,
         location: Location.Ref.make({ directory: AbsolutePath.make(directory) }),
       })
-      yield* first.sessions.switchAgent({ sessionID, agent: Agent.ID.make("plan") })
+      yield* first.sessions.switchAgent({ sessionID, agent: Agent.ID.make("reviewer") })
 
       yield* firstEvent.await.pipe(Effect.timeout("2 seconds"))
       expect(Option.isNone(yield* secondEvent.await.pipe(Effect.timeoutOption("100 millis")))).toBe(true)
