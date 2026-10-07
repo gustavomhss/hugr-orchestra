@@ -72,7 +72,7 @@ export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
 // What each roster native profile lets a teammate do, as the task tool lists it.
 const nativeAccess = {
   execution: "Edits files and runs shell commands.",
-  backend: "Edits files and runs shell commands.",
+  backend: "Edits only the paths passed in `writePaths` (read-only without them) and runs shell commands.",
   review: "Read-only: reads and searches files; cannot edit or run commands.",
 } satisfies Record<keyof typeof nativeProfiles, string>
 

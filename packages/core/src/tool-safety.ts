@@ -164,7 +164,7 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   ],
   [
     /^write-outside-physical-roots$/,
-    "The project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner.",
+    "Writes are allowed only inside this session's write roots, set by the project's safety profile or by the `writePaths` its task dispatch granted, and this path is outside them, so nothing was written. Do not write it another way: a teammate returns a blocker that names the path, anyone else asks the owner.",
   ],
   [
     /^defense-corpus-bulk-read$/,

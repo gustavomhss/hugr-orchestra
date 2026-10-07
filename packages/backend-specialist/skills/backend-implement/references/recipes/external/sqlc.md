@@ -24,15 +24,15 @@ Source: adapted from the official sqlc documentation, <https://docs.sqlc.dev/en/
 2. Edit only the SQL the change needs. Each query carries its header, such as `-- name: ListTenantTasks :many`; the command after the name (`:one`, `:many`, `:exec`, `:execrows`, ...) sets the method's return shape. Name parameters with `sqlc.arg(tenant_id)`, and use `sqlc.narg(name)` for a parameter that may be null. On PostgreSQL pass a list as `id = ANY(sqlc.arg(ids)::bigint[])`; `sqlc.slice` exists for drivers without array parameters.
 3. Generate from the config directory, offline:
    ```sh
-   "$BACKEND_TOOLKIT_BIN/sqlc" generate --no-database --no-remote
+   "$BACKEND_TOOLKIT_BIN/sqlc" generate --no-remote
    ```
-   Add `--file <path>` when the config is not in the working directory. `--no-database` keeps analysis on the schema files; `--no-remote` refuses remote execution.
+   Add `--file <path>` when the config is not in the working directory. `--no-remote` refuses remote execution. Analysis runs on the schema files unless the config has a `database` block; then sqlc connects to that database, and when it is unreachable, report a `tool` blocker instead of editing the config.
 4. Confirm the output is current:
    ```sh
-   "$BACKEND_TOOLKIT_BIN/sqlc" diff --no-database --no-remote
+   "$BACKEND_TOOLKIT_BIN/sqlc" diff --no-remote
    ```
    A nonzero exit with a diff means the generated files differ from what the inputs produce.
-5. When the config enables `rules` for the package, lint the queries too: `"$BACKEND_TOOLKIT_BIN/sqlc" vet --no-database`. A rule that needs a database connection, such as `sqlc/db-prepare`, cannot run here; report it as not run. A `/* @sqlc-vet-disable <rule> */` annotation is added only when the packet accepts that rule for that query.
+5. When the config enables `rules` for the package, lint the queries too: `"$BACKEND_TOOLKIT_BIN/sqlc" vet --no-remote`. A rule that needs a database connection, such as `sqlc/db-prepare`, runs only against a reachable configured database; otherwise report it as not run. A `/* @sqlc-vet-disable <rule> */` annotation is added only when the packet accepts that rule for that query.
 6. Read the generated diff. Only files for the changed queries, plus `models.go` or `querier.go` when the schema or interface changed, may move. Any other change is a `packet` blocker.
 7. Compile and run the packet's Go checks against the supplied real PostgreSQL.
 
