@@ -4,6 +4,8 @@
 
 The packet assigns Pydantic v2 models generated from a local OpenAPI document or JSON Schema, names the generated module or package as part of the write paths, and supplies the generation options (in `[tool.datamodel-codegen]` of `pyproject.toml`, or as flags in the packet). The engine is datamodel-code-generator `0.83.0` on a host-provided CPython `3.13`, run only as `"$BACKEND_TOOLKIT_BIN/datamodel-codegen"`. Writing code against the generated models is covered by [Pydantic v2](../../libraries/python/pydantic.md).
 
+Source: adapted from the project's official skill (MIT), <https://github.com/datamodel-code-generator/datamodel-code-generator/tree/main/skills/datamodel-code-generator>, checked against the `0.83.0` CLI.
+
 ## Non-trigger
 
 - Handwritten models, or a change that only uses existing generated models without touching the schema: nothing to generate.
@@ -28,13 +30,14 @@ The packet assigns Pydantic v2 models generated from a local OpenAPI document or
    ```
    Use `--input-file-type jsonschema` for a JSON Schema. Options from `[tool.datamodel-codegen]` apply on their own; pass a flag only when the packet supplies it and the config does not.
 4. Confirm the output is current: rerun the exact command of step 3 with `--check` appended. Exit 1 with a diff means the generated file differs from what the inputs produce. Unless the project passes `--disable-timestamp`, the header's `timestamp:` line always differs; a diff limited to that line is current.
-5. Read the generated diff. Only the models for the changed components, and the models that reference them, may move. The header's `timestamp:` line moves on every run. Renamed classes or reordered unrelated models mean the options differ from the project's: a `packet` blocker.
+5. Read the generated diff. Only the models for the changed components, and the models that reference them, may move. Renamed classes or reordered unrelated models mean the options differ from the project's: a `packet` blocker.
 6. Type-check and run the packet's tests for the code that uses the changed models.
 
 ## Tools and outputs
 
 - The host fetches the engine and its Python runtime on first use; the seat's shell has no network. Never install, download or substitute it (`pip install`, `pipx`, `uvx`, a virtualenv, a container, a copy on `PATH`).
 - When the shell output reports `toolkit-not-ready:...` or `unsupported-target:...`, stop and return a `tool` blocker whose code is that text verbatim.
+- When the effect of a supplied option is unclear, ask the generator's offline advisor: append `--generate-prompt "<question>" --output-format json` to the step 3 command. It reads only its own option metadata, prints the current options, related options and verification steps, and writes nothing. It explains options; it never licenses one the packet did not supply.
 - Generated and owned by datamodel-codegen: the output module or package. Never edit it. Handwritten and yours: the schema change, the code that uses the models, and tests.
 - Project prerequisites outside the toolkit: the project's own Python and its Pydantic, which the generated code imports at runtime.
 

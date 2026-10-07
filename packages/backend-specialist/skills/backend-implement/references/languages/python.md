@@ -9,6 +9,8 @@ After this card, read only the references the assigned component uses:
 - [FastAPI](../frameworks/python/fastapi.md): path operations, dependencies and responses on FastAPI.
 - [Pydantic v2](../libraries/python/pydantic.md): request, response and settings models.
 - [SQLAlchemy async](../libraries/python/sqlalchemy.md): `AsyncSession` reads and writes.
+- [Django and DRF](../frameworks/python/django.md): DRF views, serializers and permissions on Django.
+- [Kubeflow Pipelines](../frameworks/python/kubeflow.md): pipeline definitions compiled with the project's own kfp.
 
 The general procedures in [cancellation](../lifetimes/cancellation.md) and [atomic writes](../data/transaction.md) still apply; this card gives their Python form.
 
@@ -16,7 +18,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - A package that merely appears in the lock file or a neighbor service. Select by the component the packet assigns.
 - Choosing a framework, ORM, driver or async runtime, or raising the Python line or a dependency to reach a newer helper. Each is a `packet` blocker.
-- Django, DRF, Flask, plain Starlette or synchronous SQLAlchemy components: no reference is authored for them. Follow the packet and the surrounding code; never port async code into them.
+- Flask, plain Starlette or synchronous SQLAlchemy components: no reference is authored for them. Follow the packet and the surrounding code; never port async code into them.
 
 ## Inputs
 
@@ -38,7 +40,7 @@ The general procedures in [cancellation](../lifetimes/cancellation.md) and [atom
 
 - Scoped to the packet's modules: `python -m pytest <assigned-nodeid>` from the runner's working directory, plus the type checker and linter the packet names.
 - Outputs: handwritten route, service, repository and test code. Generated code is regenerated from its inputs, never edited.
-- Toolkit engines, only for the artifacts the packet assigns: [ast-grep](../recipes/external/ast-grep.md) for bounded syntax rewrites, [buf](../recipes/external/buf.md) for Protobuf schema checks, [kiota](../recipes/external/kiota.md) for API clients from an OpenAPI description, [datamodel-codegen](../recipes/external/datamodel-codegen.md) for Pydantic v2 models from an OpenAPI document or JSON Schema.
+- Toolkit engines ([recipes](../recipes/external/index.md)), only for the artifacts the packet assigns: ast-grep for bounded syntax rewrites, buf for Protobuf schema checks, kiota for API clients from an OpenAPI description, datamodel-codegen for Pydantic v2 models from an OpenAPI document or JSON Schema.
 
 ## Limits and checks
 

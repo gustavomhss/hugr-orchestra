@@ -1,11 +1,9 @@
 import type { PinnedArtifact } from "../../pinned-artifact"
-import type { TargetId } from "../target"
-import type { HostedEngine, Runtime } from "../manifest"
+import type { Runtime } from "../manifest"
 
-// Pins are the sha256 digests in SRI form: each toolchain's from its static.rust-lang.org `.sha256` companion, which
-// the downloaded darwin-x64 archive matched; the crate's from the crates.io index `cksum`, which its download matched.
+// Pins are the sha256 digests in SRI form, each from its static.rust-lang.org `.sha256` companion, which the downloaded
+// darwin-x64 archive matched.
 const RUST_VERSION = "1.99.0"
-const SQLX_VERSION = "0.9.0"
 
 // The standalone archive expects its `install.sh`; moving these component directories instead lays out the same
 // sysroot. `rustc` finds `lib/rustlib/<triple>/lib` (from rust-std) relative to its own `bin`, and none of these
@@ -30,7 +28,7 @@ const rust = (triple: string, integrity: PinnedArtifact.Artifact["integrity"]) =
   }
 }
 
-export const RUST: Runtime = {
+export default {
   id: "rust",
   version: RUST_VERSION,
   license: "MIT OR Apache-2.0",
@@ -42,37 +40,4 @@ export const RUST: Runtime = {
     "linux-x64": rust("x86_64-unknown-linux-gnu", "sha256-3gWByp1zIpWmR0z70CRh2yfWms1QUKggZSOo1voVmds="),
     "win32-x64": rust("x86_64-pc-windows-msvc", "sha256-2MIRV+cNhsboYdV9nBkaefR7lAtPzUjClECy9KPIqlE="),
   },
-}
-
-// The feature set of research/delivery-toolkit.md: rustls instead of the default native-tls, so no system OpenSSL.
-// ring (rustls) and the bundled SQLite still compile C, so the build host needs a C compiler and linker: the Xcode
-// command line tools on macOS, cc on Linux.
-export const SQLX: HostedEngine = {
-  id: "sqlx",
-  version: SQLX_VERSION,
-  license: "MIT OR Apache-2.0",
-  upstream: "transact-rs/sqlx",
-  runtime: "rust",
-  install: {
-    kind: "source",
-    artifact: {
-      url: `https://static.crates.io/crates/sqlx-cli/sqlx-cli-${SQLX_VERSION}.crate`,
-      integrity: "sha256-k+84V6SgtI/L9Ta3epEio1x2MWhvLM+8deYWM1dx6NA=",
-      format: "tar.gz",
-      // PinnedArtifact refuses `.` as a destination, so the crate root is lifted member by member; `tests` comes along
-      // so every target path the manifest declares exists.
-      entries: ["Cargo.toml", "Cargo.lock", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "src", "tests"].map((name) => ({
-        from: `sqlx-cli-${SQLX_VERSION}/${name}`,
-        to: `src/${name}`,
-      })),
-    },
-    build: "cargo",
-    path: ".",
-    binary: "sqlx",
-    features: ["rustls", "postgres", "mysql", "sqlite", "sqlx-toml"],
-  },
-  launch: [],
-  // The msvc toolchain links only through Microsoft's `link.exe`, and the standalone gnu toolchain ships a linker but
-  // no C compiler for ring and SQLite.
-  unsupported: { "win32-x64": "needs-msvc-linker" },
-}
+} satisfies Runtime
