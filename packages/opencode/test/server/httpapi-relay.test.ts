@@ -416,7 +416,9 @@ describe("relay hooks", () => {
 
     const repaired = await ok(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true }, ALICE)
     expect(repaired.installs).toEqual([])
-    expect(path.dirname(repaired.backup)).toBe(path.dirname(file))
+    // The server reports its own spelling of the data path; Windows may short-name it (RUNNER~1), so both sides are
+    // compared resolved.
+    expect(await fs.realpath(path.dirname(repaired.backup))).toBe(path.dirname(file))
     expect(path.basename(repaired.backup)).toMatch(/^hooks\.json\.corrupt-\d+-[0-9a-f]{8}$/)
     expect(await fs.readFile(repaired.backup, "utf8")).toBe("{not json")
     expect(JSON.parse(await fs.readFile(file, "utf8"))).toEqual({ installs: [] })

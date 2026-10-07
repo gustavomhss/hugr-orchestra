@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { SessionEvent } from "@opencode-ai/core/session/event"
 import { EventManifest as SchemaEventManifest } from "@opencode-ai/schema/event-manifest"
+import { RelayHook } from "@opencode-ai/schema/relay-hook"
 import { Todo } from "@/session/todo"
 import { EventManifest } from "@/event-manifest"
 
@@ -9,9 +10,10 @@ describe("public event manifest", () => {
     expect(EventManifest.Definitions).toBe(SchemaEventManifest.Definitions)
     expect(EventManifest.Latest).toBe(SchemaEventManifest.Latest)
     expect(EventManifest.Durable).toBe(SchemaEventManifest.Durable)
-    expect(EventManifest.Latest.size).toBe(103)
+    expect(EventManifest.Latest.size).toBe(104)
     expect(EventManifest.Latest.get("session.next.step.ended")).toBe(SessionEvent.Step.Ended)
     expect(EventManifest.Latest.get("todo.updated")).toBe(Todo.Event.Updated)
+    expect(EventManifest.Latest.get("relay.hook.decided")).toBe(RelayHook.Decided)
     expect(EventManifest.Latest.has("ide.installed")).toBe(false)
     expect(EventManifest.Latest.has("server.connected")).toBe(true)
     expect(EventManifest.Latest.has("global.disposed")).toBe(true)
