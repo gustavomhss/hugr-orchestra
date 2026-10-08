@@ -89,6 +89,10 @@ source-addition/overlap, parsed reference-link/image, recursive-index, and byte-
 It also probes test-path traversal, external source/test file symlinks, and monkeypatched scandir permission/missing-subtree errors.
 Repository/source-coverage checks cover only fixed-root `.py`, `.sh`, and extensionless-shebang sources, not all languages.
 They also detect removal of an actual catalog row in an isolated copy; other-language sources are outside this inventory.
+The separate current-authoring test reads the explicitly delimited handler/source table and checks native
+file existence, today's `HttpApiBuilder.group` export spelling and Server registration. It rejects retired
+launcher names in code spans/blocks in its named current authoring pages; it is not a TypeScript parser
+or a general prose-freshness guard. The structural guard's language inventory remains unchanged.
 Inspect positive/negative controls and what they execute; these tests do not judge prose truth or review independence.
 Guard `--root <fixture>` is read-only; index generation writes the target index. Keep destructive probes isolated.
 

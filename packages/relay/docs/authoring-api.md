@@ -14,11 +14,15 @@ and `sdk.v2.relay.hook` with Location identity. Protocol definitions live in
 `packages/protocol/src/groups/relay-document.ts` and `packages/protocol/src/groups/relay-hook.ts`.
 Successful resource responses use the Location envelope; errors are typed Protocol errors.
 
+<!-- native-authoring-handlers:begin -->
+
 | Handler | Source |
 |---|---|
 | `RelayDocumentHandler` | `packages/server/src/handlers/relay-document.ts` |
 | `RelayPublishHandler` | `packages/server/src/handlers/relay-document.ts` |
 | `RelayHookHandler` | `packages/server/src/handlers/relay-hook.ts` |
+
+<!-- native-authoring-handlers:end -->
 
 `packages/server/src/handlers.ts` registers these handlers. `packages/server/src/relay-documents.ts`
 owns the project store and editor view, using native `src/authoring/{store,graph,hook}.ts` and
