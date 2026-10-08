@@ -1,11 +1,13 @@
 import { expect } from "bun:test"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Effect, Exit, Fiber } from "effect"
+import path from "node:path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ArsenalOutcome } from "@/maestro/arsenal-outcome"
 import { ShellTool } from "@/tool/shell"
+import { approve } from "@/tool/shell/scan"
 import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
 import { Agent } from "@/agent/agent"
@@ -18,7 +20,7 @@ import { InstanceState } from "@/effect/instance-state"
 import { MessageID, SessionID } from "@/session/schema"
 import { TestConfig } from "../fixture/config"
 import { TestInstance } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { pollWithTimeout, testEffect } from "../lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([
   FSUtil.node, CrossSpawnSpawner.node, Truncate.node, Agent.node, Plugin.node, Permission.node, Config.node, RuntimeFlags.node, Instruction.node,
@@ -28,6 +30,62 @@ const it = testEffect(LayerNode.compile(LayerNode.group([
 ]))
 
 const nodeCommand = (script: string) => `"${process.execPath}" -e "eval(Buffer.from('${Buffer.from(`(async () => { ${script} })()`).toString("base64")}','base64').toString())"`
+
+it.instance("actual no-op cd, empty and comments keep bash ask UX without implicit parent approval", () =>
+  Effect.gen(function* () {
+    const permission = yield* Permission.Service
+    const fs = yield* FSUtil.Service
+    const instance = yield* TestInstance
+    const definition = yield* ShellTool
+    const tool = yield* Tool.init(definition)
+    const sessionID = SessionID.descending()
+    const requests: string[] = []
+    const context: Tool.Context = {
+      sessionID, messageID: MessageID.ascending(), callID: "noop", agent: "maestro",
+      abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
+      ask: (request) => Effect.sync(() => requests.push(request.permission)).pipe(Effect.andThen(
+        permission.ask({ ...request, sessionID, ruleset: [{ permission: "bash", pattern: "*", action: "ask" }] }).pipe(Effect.orDie),
+      )),
+    }
+    yield* Effect.forEach(["cd .", "", "# only a comment"], (command) => Effect.gen(function* () {
+      expect(yield* approve(context, { command, cwd: instance.directory, shell: process.platform === "win32" ? process.env.COMSPEC ?? "cmd.exe" : "/bin/sh" })).toBe(false)
+      const params = { command, timeout: 5000 }
+      Reflect.set(params, "prepareParents", true)
+      const result = yield* tool.execute(params, context).pipe(
+        Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["pending/deep/out.ts"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true } }),
+        Effect.timeout("10 seconds"),
+        Effect.exit,
+      )
+      // Without a sandbox executable prefix, cross-spawn rejects the existing empty-command spelling.
+      // Assert that exact outcome; it must still neither ask nor prepare any directories.
+      if (Exit.isFailure(result)) {
+        expect(command).toBe("")
+        expect(Cause.pretty(result.cause)).toContain("The argument 'file' cannot be empty.")
+      }
+      expect(requests).toEqual([])
+      expect(yield* permission.list()).toEqual([])
+      expect(yield* fs.exists(path.join(instance.directory, "pending"))).toBe(false)
+    }), { discard: true })
+  }),
+)
+
+it.instance("shell scan returns true only after actual bash permission reply", () =>
+  Effect.gen(function* () {
+    const permission = yield* Permission.Service
+    const instance = yield* TestInstance
+    const sessionID = SessionID.descending()
+    const context: Tool.Context = {
+      sessionID, messageID: MessageID.ascending(), callID: "approval-result", agent: "maestro",
+      abort: new AbortController().signal, messages: [], metadata: () => Effect.void,
+      ask: (request) => permission.ask({ ...request, sessionID, ruleset: [{ permission: "bash", pattern: "*", action: "ask" }] }).pipe(Effect.orDie),
+    }
+    const fiber = yield* approve(context, { command: "echo approval-control", cwd: instance.directory, shell: process.platform === "win32" ? process.env.COMSPEC ?? "cmd.exe" : "/bin/sh" }).pipe(Effect.forkScoped)
+    const pending = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) => requests.find((request) => request.sessionID === sessionID))), "Bash permission was never requested")
+    expect(pending.permission).toBe("bash")
+    yield* permission.reply({ requestID: pending.id, reply: "once" })
+    expect(yield* Fiber.join(fiber)).toBe(true)
+  }),
+)
 
 it.instance("actual V1 split credential prefix stays out of retained artifact and progress; safe overflow remains usable", () =>
   Effect.gen(function* () {

@@ -122,6 +122,7 @@ export const ShellTool = Tool.define(
         cwd: string
         env: NodeJS.ProcessEnv
         timeout: number
+        prepareParents: boolean
       },
       ctx: Tool.Context,
     ) {
@@ -178,7 +179,7 @@ export const ShellTool = Tool.define(
       const code: number | null = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Effect.addFinalizer(closeSink)
-          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: true }).pipe(
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
           )
@@ -344,7 +345,7 @@ export const ShellTool = Tool.define(
               }
               const timeout = params.timeout ?? defaultTimeoutMs
               const ps = Shell.ps(shell)
-              yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
+              const prepareParents = yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
 
               // Only the native backend seat gets its toolkit engines fetched; a blocked engine is the tool's output.
               const seat = Seats.find(ctx.agentID)?.toolkit ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
@@ -358,6 +359,7 @@ export const ShellTool = Tool.define(
                   cwd,
                   env: { ...(yield* shellEnv(ctx, cwd)), ...toolkit?.env },
                   timeout,
+                  prepareParents,
                 },
                 ctx,
               )

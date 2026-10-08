@@ -229,7 +229,7 @@ const ask = Effect.fn("ShellScan.ask")(function* (ctx: Tool.Context, scan: Scan,
     })
   }
 
-  if (scan.patterns.size === 0) return
+  if (scan.patterns.size === 0) return false
   yield* ctx.ask({
     permission: ShellID.ToolID,
     patterns: Array.from(scan.patterns),
@@ -238,6 +238,7 @@ const ask = Effect.fn("ShellScan.ask")(function* (ctx: Tool.Context, scan: Scan,
       command: input.command,
     },
   })
+  return true
 })
 
 const parser = lazy(async () => {
@@ -336,19 +337,19 @@ const collect = Effect.fn("ShellScan.collect")(function* (
   return scan
 })
 
-/** Ask every permission the command line needs before it runs: directories outside the instance, then the commands. */
+/** Ask required permissions; return true only when the Bash permission ask completed, never for a no-op scan. */
 export const approve = Effect.fn("ShellScan.approve")(function* (
   ctx: Tool.Context,
   input: { command: string; cwd: string; shell: string },
 ) {
   const instance = yield* InstanceState.context
   const ps = Shell.ps(input.shell)
-  yield* Effect.scoped(
+  return yield* Effect.scoped(
     Effect.gen(function* () {
       const tree = yield* Effect.acquireRelease(parse(input.command, ps), (tree) => Effect.sync(() => tree.delete()))
       const scan = yield* collect(tree.rootNode, input.cwd, ps, input.shell, instance)
       if (!containsPath(input.cwd, instance)) scan.dirs.add(input.cwd)
-      yield* ask(ctx, scan, input)
+      return yield* ask(ctx, scan, input)
     }),
   )
 })
