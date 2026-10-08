@@ -74,25 +74,30 @@ for (const candidate of ["native", "admitted"] as const) for (const phase of ["p
       if (result._tag === "Success") expect(result.value).toEqual(prepared)
     }))
 
-it.live("fresh admission rejects a caller arriving while commit is held", Effect.gen(function* () {
+for (const change of ["caller", "epoch", "generation", "none"] as const) it.live(`fresh admission checks ${change} after held commit`, Effect.gen(function* () {
   const history = messages(["user", "assistant", "user"])
   const caller = { current: history[2] }
+  const owner = { boundary: history[1].info.id, epoch: 0, generation: 0 }
   const reached = yield* Deferred.make<void>()
   const release = yield* Deferred.make<void>()
   yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
-  const admit = ContinuityAdmission.create({ settle: () => Effect.void, candidate: () => Effect.succeed({ boundary: history[1].info.id, epoch: 0, generation: 0 }),
+  const prepared = { messages: [history[2]], system: [FIRST], coverage: { version: 5 as const, boundary: history[1].info.id, coveredThrough: history[1].info.id } }
+  const admit = ContinuityAdmission.create({ settle: () => Effect.void, candidate: () => Effect.sync(() => ({ ...owner })),
     current: () => Effect.sync(() => caller.current), history: () => Effect.succeed(history),
     latest: () => history[1].info.role === "assistant" ? history[1].info : undefined,
     compact: () => Effect.die("Current candidate must not compact"), fits: () => Effect.succeed(true),
-    prepare: () => Effect.succeed({ messages: [history[2]], system: [FIRST], coverage: { version: 5, boundary: history[1].info.id, coveredThrough: history[1].info.id } }),
+    prepare: () => Effect.succeed(prepared),
     commit: () => Deferred.succeed(reached, undefined).pipe(Effect.andThen(Deferred.await(release)), Effect.as(true)) })
   const task = yield* admit({ sessionID: history[0].info.sessionID, messages: history }).pipe(Effect.exit, Effect.forkChild)
   yield* awaitWithTimeout(Deferred.await(reached), "Fresh admission did not commit")
-  caller.current = { ...history[2], info: { ...history[2].info, id: MessageID.ascending() } }
+  if (change === "caller") caller.current = { ...history[2], info: { ...history[2].info, id: MessageID.ascending() } }
+  if (change === "epoch") owner.epoch++
+  if (change === "generation") owner.generation++
   yield* Deferred.succeed(release, undefined)
   const result = yield* Fiber.join(task)
-  expect(result._tag).toBe("Failure")
-  if (result._tag === "Failure") expect(Cause.squash(result.cause)).toMatchObject({ reason: "complete-prefix-caller-stale" })
+  expect(result._tag).toBe(change === "none" ? "Success" : "Failure")
+  if (result._tag === "Failure") expect(Cause.squash(result.cause)).toMatchObject({ reason: change === "caller" ? "complete-prefix-caller-stale" : "complete-prefix-admission-stale" })
+  if (result._tag === "Success") expect(result.value).toEqual(prepared)
 }))
 
 for (const phase of ["publish", "list"] as const) for (const change of ["invalidate", "advance", "none"] as const)
