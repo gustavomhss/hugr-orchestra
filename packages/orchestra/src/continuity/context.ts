@@ -29,7 +29,7 @@ export function create() {
       if (!entry || !hasArtifact(entry)) return { messages, system: [] }
       if (entry.artifact.version === 5) {
         const index = completeIndex(entry, messages)
-        if (index === undefined) { entries.delete(sessionID); return { messages, system: [] } }
+        if (index === undefined) return { messages, system: [] }
         const current = RequestSource.latest(messages, original, sessionID)
         const newer = messages.slice(index)
         return { messages: [...current && !newer.some((message) => message.info.id === current.info.id) ? [current] : [],

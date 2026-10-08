@@ -16,7 +16,7 @@ import { Cause, Context, Deferred, Effect, Layer, Scope, Semaphore, Stream } fro
 import { isDeepStrictEqual } from "node:util"
 import { create } from "./context"
 import { completeSnapshot, measure, run, type ParentRequest, type Pass } from "./fork"
-import { completeIndex, hasArtifact, isCurrent } from "./model"
+import { completeIndex, fingerprint, hasArtifact, isCurrent } from "./model"
 import { hardLimit, isSafe, settings, shouldStart, tokenCount } from "./trigger"
 import { ContinuityMasking, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@orchestra/core/v1/session"
@@ -28,7 +28,7 @@ import { ParentReceipt } from "./parent-receipt"
 type Backend = { readonly model: Provider.Model; readonly llm: LLM.Interface; readonly revision: number }
 type Active = { generation: number; epoch: number; backend: Backend | null | undefined; boundary: MessageID;
   registered: Deferred.Deferred<void>; done: Deferred.Deferred<void> }
-type Pending = { message: SessionV1.Assistant; canRecall: boolean }
+type Pending = { message: SessionV1.Assistant; canRecall: boolean; model?: Provider.Model }
 type Entry = {
   generation: number
   safe?: MessageID
@@ -68,7 +68,7 @@ const MAX_OBSERVED_REQUESTS = 4
 
 export interface Interface {
   /** Session-local transport and limits. Configured sessions never replay an API request. */
-  readonly configure: (input: { sessionID: SessionID; model: Provider.Model; llm: LLM.Interface }) => Effect.Effect<void>
+  readonly configure: (input: { sessionID: SessionID; model: Provider.Model; llm: LLM.Interface; overhead?: number }) => Effect.Effect<void>
   readonly pause: (sessionID: SessionID) => Effect.Effect<void>
   readonly cancel: (sessionID: SessionID) => Effect.Effect<void>
   /** Return a session to its ordinary provider/LLM without discarding durable memory. */
@@ -92,7 +92,7 @@ export interface Interface {
    * Bring the context under the hard limit before the next model request: wait for running maintenance, run a
    * pass when still over (or when forced), then mask every old tool result the recall can restore.
    */
-  readonly compact: (input: { sessionID: SessionID; canRecall?: boolean; force?: boolean }) => Effect.Effect<Compacted>
+  readonly compact: (input: { sessionID: SessionID; canRecall?: boolean; force?: boolean; model?: Provider.Model }) => Effect.Effect<Compacted>
   readonly advance: (sessionID: SessionID) => Effect.Effect<void>
   readonly invalidate: (sessionID: SessionID) => Effect.Effect<void>
   readonly forget: (sessionID: SessionID) => Effect.Effect<void>
@@ -162,17 +162,14 @@ const layer = Layer.effect(
     })
     const cancel: Interface["cancel"] = Effect.fn("SessionContinuity.cancel")(function* (sessionID) {
       const current = yield* InstanceState.get(state)
-      const token = yield* gate(current, sessionID).withPermit(Effect.sync(() => {
+      yield* gate(current, sessionID).withPermit(Effect.gen(function* () {
         const previous = current.backends.get(sessionID)
         const token = fence(current, sessionID)
         current.backends.set(sessionID, null)
-        return { ...token, previous }
-      }))
-      yield* join(sessionID, token.active)
-      yield* gate(current, sessionID).withPermit(Effect.sync(() => {
+        yield* join(sessionID, token.active)
         if (current.epochs.get(sessionID) !== token.epoch) return
-        if (token.previous === undefined) current.backends.delete(sessionID)
-        else current.backends.set(sessionID, token.previous)
+        if (previous === undefined) current.backends.delete(sessionID)
+        else current.backends.set(sessionID, previous)
       }))
     }, Effect.uninterruptible)
     const gate = (current: State, sessionID: SessionID) => {
@@ -185,8 +182,11 @@ const layer = Layer.effect(
       const token = yield* gate(current, input.sessionID).withPermit(Effect.sync(() => {
         const previous = current.backends.get(input.sessionID)
         current.requests.delete(input.sessionID)
+        if (previous && previous.llm === input.llm && isDeepStrictEqual(previous.model, input.model)) {
+          if (input.overhead !== undefined) current.overheads.set(input.sessionID, input.overhead)
+          return
+        }
         current.overheads.delete(input.sessionID)
-        if (previous && previous.llm === input.llm && isDeepStrictEqual(previous.model, input.model)) return
         const token = fence(current, input.sessionID)
         current.backends.set(input.sessionID, null)
         return token
@@ -196,6 +196,7 @@ const layer = Layer.effect(
       yield* gate(current, input.sessionID).withPermit(Effect.sync(() => {
         if (current.epochs.get(input.sessionID) !== token.epoch) return
         current.backends.set(input.sessionID, Object.freeze({ model: structuredClone(input.model), llm: input.llm, revision: token.epoch }))
+        if (input.overhead !== undefined) current.overheads.set(input.sessionID, input.overhead)
       }))
     }, Effect.uninterruptible)
     const pause: Interface["pause"] = Effect.fn("SessionContinuity.pause")(function* (sessionID) {
@@ -238,8 +239,7 @@ const layer = Layer.effect(
           if (memory.context) current.contexts.set(memory.context)
           if (memory.masks.length) current.masks.set(sessionID, new Map(memory.masks))
         })),
-        Effect.catch((error) => memoryDiagnostic(sessionID, error).pipe(Effect.andThen(error.reason === "archive-corrupt-memory"
-          ? archive.removeMemory(sessionID).pipe(Effect.catch((error) => memoryDiagnostic(sessionID, error))) : Effect.void))),
+        Effect.catch((error) => memoryDiagnostic(sessionID, error)),
         Effect.ensuring(Deferred.succeed(done, undefined)),
         Effect.uninterruptible,
       )
@@ -269,13 +269,7 @@ const layer = Layer.effect(
 
     const memory = Effect.fn("SessionContinuity.memory")(function* (input: Parameters<Interface["prepare"]>[0]) {
       const current = yield* InstanceState.get(state)
-      const previous = current.contexts.get(input.sessionID)
       const prepared = current.contexts.prepare(input.sessionID, input.messages, input.originalRequest)
-      if (previous?.artifact?.version === 5 && !prepared.coverage) {
-        current.requests.delete(input.sessionID)
-        current.masks.delete(input.sessionID)
-        yield* unload(current, input.sessionID)
-      }
       if (!prepared.system.length) return prepared
       const artifact = current.contexts.get(input.sessionID)?.artifact
       if (!artifact) return { messages: input.messages, system: [] }
@@ -283,7 +277,7 @@ const layer = Layer.effect(
       const generation = item?.generation
       const user = RequestSource.latest(input.messages, input.originalRequest)?.info
       if (!user || user.role !== "user") return { messages: input.messages, system: [] }
-      const capacity = yield* resolve(current, input.sessionID, user.model.providerID, user.model.modelID).pipe(
+      const capacity = yield* (input.model ? Effect.succeed(input.model) : resolve(current, input.sessionID, user.model.providerID, user.model.modelID)).pipe(
         Effect.map((model) => Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)),
         Effect.catch(() => Effect.succeed(0)),
       )
@@ -296,7 +290,7 @@ const layer = Layer.effect(
 
     const observe: Interface["observe"] = Effect.fn("SessionContinuity.observe")(function* (input) {
       const current = yield* InstanceState.get(state)
-      if (current.backends.has(input.sessionID)) return
+      if (current.backends.get(input.sessionID) === null) return
       const epoch = current.epochs.get(input.sessionID) ?? 0
       const backend = current.backends.get(input.sessionID)
       const overhead = yield* measure({ input: input.request, messageIDs: input.messageIDs }, current.contexts.get(input.sessionID)?.text)
@@ -304,6 +298,7 @@ const layer = Layer.effect(
         if ((current.epochs.get(input.sessionID) ?? 0) !== epoch || current.backends.get(input.sessionID) !== backend) return
         current.overheads.set(input.sessionID, overhead)
         current.requests.delete(input.sessionID)
+        if (backend) return
         const request = { input: input.request, messageIDs: [...input.messageIDs] }
         current.requests.set(input.sessionID, input.responseMessageID && input.sources ? ParentReceipt.capture(request, input.responseMessageID, input.sources) : request)
         for (const key of current.requests.keys()) {
@@ -361,16 +356,25 @@ const layer = Layer.effect(
 
     /** Stub the selected tool results of the stored history, publishing first what the archive has not seen. */
     const stubs = (current: State, sessionID: SessionID, stored: SessionV1.WithParts[],
-      select: (messages: SessionV1.WithParts[], masks: Map<string, string>) => { messageID: string; part: { id: string }; saved: number }[]) =>
+      select: (messages: SessionV1.WithParts[], masks: Map<string, string>) => { messageID: string; part: { id: string }; saved: number }[], owner?: () => boolean) =>
       Effect.gen(function* () {
         const item = entry(current, sessionID)
+        const generation = item.generation
+        const epoch = current.epochs.get(sessionID)
+        const backend = current.backends.get(sessionID)
+        const live = () => current.sessions.get(sessionID) === item && item.generation === generation && current.epochs.get(sessionID) === epoch &&
+          current.backends.get(sessionID) === backend && (!owner || owner())
+        if (!live()) return 0
         const archivedIndex = item.archived ? stored.findIndex((message) => message.info.id === item.archived) : -1
         yield* archive.publish({ sessionID, messages: stored.slice(archivedIndex + 1) })
+        if (!live()) return 0
         item.archived = stored.at(-1)?.info.id
         const references = yield* archive.list(sessionID)
         const firstFragment = new Map<string, string>()
         for (const reference of references) if (!firstFragment.has(reference.first)) firstFragment.set(reference.first, reference.id)
         const view = yield* prepare({ sessionID, messages: MessageV2.filterCompacted(stored.toReversed()), canRecall: true })
+        const latest = yield* sessions.messages({ sessionID })
+        if (!live() || stored.length > latest.length || stored.some((message, index) => fingerprint(message) !== fingerprint(latest[index]))) return 0
         const masks = current.masks.get(sessionID) ?? new Map<string, string>()
         let freed = 0
         for (const candidate of select(view.messages, masks)) {
@@ -397,7 +401,7 @@ const layer = Layer.effect(
         const options = yield* enabled
         if (!live() || !options.enabled || token.backend === null) return
         yield* restore(current, sessionID)
-        const model = token.backend?.model ?? (yield* provider.getModel(message.providerID, message.modelID).pipe(Effect.orElseSucceed(() => undefined)))
+        const model = pending.model ?? token.backend?.model ?? (yield* provider.getModel(message.providerID, message.modelID).pipe(Effect.orElseSucceed(() => undefined)))
         if (!live() || !model) return
         const context = model.limit.context
         const active = yield* gate(current, sessionID).withPermit(Effect.sync(() => {
@@ -482,7 +486,7 @@ const layer = Layer.effect(
               yield* archive.publish({ sessionID, messages: history.slice(archivedIndex + 1) })
               if (currentEntry?.generation === active.generation) currentEntry.archived = history.at(-1)?.info.id
               const activeHistory = MessageV2.filterCompacted(history.toReversed())
-              const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall })
+              const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall, model })
               // A successful producer replaces the entire prefix. Masking is only the emergency fallback in compact.
               const backend = token.backend
               const request = backend ? undefined : current.requests.get(sessionID)
@@ -514,7 +518,7 @@ const layer = Layer.effect(
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
               if (!live()) return "discarded"
               const { artifact, ...pass } = yield* run(selected, {
-                provider: backend ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
+                provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                 llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
               }, { history, delegations, member }, { parent: request })
@@ -522,7 +526,7 @@ const layer = Layer.effect(
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.failure ?? (pass.skip ? `skipped-${pass.skip}` : "invalid-schema"), pass)
                 // Reversible relief on producer failure never claims complete semantic coverage.
-                if (live() && pending.canRecall && (yield* stubs(current, sessionID, history, ContinuityMasking.candidates))) {
+                if (live() && pending.canRecall && (yield* stubs(current, sessionID, history, ContinuityMasking.candidates, live))) {
                   yield* result("masked")
                   yield* outcome(false)
                   return "masked"
@@ -648,13 +652,13 @@ const layer = Layer.effect(
       const last = (yield* sessions.messages({ sessionID })).findLast((message) =>
         message.info.role === "assistant" && isSafe(message.info))?.info
       if (!last || last.role !== "assistant") return "fits" as const
-      const model = yield* resolve(current, sessionID, last.providerID, last.modelID).pipe(Effect.orDie)
+      const model = input.model ?? (yield* resolve(current, sessionID, last.providerID, last.modelID).pipe(Effect.orDie))
       const limit = hardLimit(model)
       // The context the next request would carry: memory, masks and native tail, plus the measured system and tools.
       const pressure = Effect.gen(function* () {
         const stored = yield* sessions.messages({ sessionID })
         const history = MessageV2.filterCompacted(stored.toReversed())
-        const view = yield* prepare({ sessionID, messages: history, canRecall: input.canRecall })
+        const view = yield* prepare({ sessionID, messages: history, canRecall: input.canRecall, model })
         const sent = yield* MessageV2.toModelMessagesEffect(view.messages, model).pipe(Effect.orElseSucceed(() => view.messages))
         return { stored, history,
           tokens: (current.overheads.get(sessionID) ?? 0) + Token.estimate(view.system.join("\n")) + estimate(sent) }
@@ -667,7 +671,7 @@ const layer = Layer.effect(
         item.attempted = undefined
         item.result = undefined
       })
-      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true })
+      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model })
       yield* settle(current, sessionID)
       const after = yield* pressure
       const ran = item.result === "applied" ? "applied" as const : item.result === "masked" ? "masked" as const : undefined
@@ -695,10 +699,13 @@ const layer = Layer.effect(
         if (!(yield* enabled).enabled || current.backends.get(id) === null)
           return { epoch: current.epochs.get(id) ?? 0, generation: entry(current, id).generation }
         yield* restore(current, id)
-        return { boundary: current.contexts.get(id)?.artifact?.version === 5 ? current.contexts.get(id)?.boundary : undefined,
+        const context = current.contexts.get(id)
+        const history = context?.artifact?.version === 5 ? yield* sessions.messages({ sessionID: id }).pipe(Effect.orDie) : undefined
+        return { boundary: context?.artifact?.version === 5 && current.contexts.get(id) === context && history &&
+          completeIndex(context, MessageV2.filterCompacted(history.toReversed())) !== undefined ? context.boundary : undefined,
           admitted: current.sessions.get(id)?.admittedBoundary, epoch: current.epochs.get(id) ?? 0, generation: entry(current, id).generation }
       }),
-      compact: (sessionID, canRecall) => compact({ sessionID, canRecall, force: true }),
+      compact: (sessionID, canRecall, model) => compact({ sessionID, canRecall, force: true, model }),
       commit: (id, boundary, epoch, generation) => Effect.gen(function* () {
         const current = yield* InstanceState.get(state)
         const history = yield* sessions.messages({ sessionID: id }).pipe(Effect.orDie)
