@@ -1,0 +1,16 @@
+name: omni-artifacts-call-control
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    if: github.head_ref == 'omni-call-control'
+    uses: ./.github/workflows/omni-artifacts.yml
+    with:
+      pack: false
+      ref: edc12db0a31ecb15f6af73b2e4e99a4fed4fbd0c
