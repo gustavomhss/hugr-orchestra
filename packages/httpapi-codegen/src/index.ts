@@ -431,21 +431,27 @@ function renderPromiseTypes(
     types.set(projected.ast, type)
     return type
   }
-  const errors = new Map(
-    groups.flatMap((group) =>
-      group.endpoints.flatMap((endpoint) =>
-        endpoint.errors.flatMap((error) => {
-          const tagged = declaredErrorFields(error.schema)
-          return tagged === undefined ? [] : [[tagged.tag, tagged] as const]
-        }),
-      ),
-    ),
-  )
-  const errorTypes = Array.from(errors.values()).map((error) => {
+  const errors = new Map<string, NonNullable<ReturnType<typeof declaredErrorFields>>>()
+  for (const error of groups.flatMap((group) => group.endpoints.flatMap((endpoint) => endpoint.errors))) {
+    const tagged = declaredErrorFields(error.schema)
+    if (tagged === undefined) continue
+    const identifier = declaredErrorIdentifier(tagged.identifier)
+    const previous = errors.get(identifier)
+    if (
+      previous !== undefined &&
+      (previous.identifier !== tagged.identifier || previous.key !== tagged.key || previous.ast !== tagged.ast)
+    ) {
+      throw new GenerationError({
+        reason: `Promise error name collision: ${previous.identifier} and ${tagged.identifier} normalize to ${identifier}`,
+      })
+    }
+    errors.set(identifier, tagged)
+  }
+  const errorTypes = Array.from(errors, ([identifier, error]) => {
     const fields = error.fields
       .map(([name, schema, optional]) => `readonly ${JSON.stringify(name)}${optional ? "?" : ""}: ${typeOf(schema)}`)
       .join("; ")
-    return `export type ${error.identifier} = { readonly ${JSON.stringify(error.key)}: ${JSON.stringify(error.tag)}; ${fields} }\nexport const is${error.identifier} = (value: unknown): value is ${error.identifier} => typeof value === "object" && value !== null && ${JSON.stringify(error.key)} in value && value[${JSON.stringify(error.key)}] === ${JSON.stringify(error.tag)}`
+    return `export type ${identifier} = { readonly ${JSON.stringify(error.key)}: ${JSON.stringify(error.tag)}; ${fields} }\nexport const is${identifier} = (value: unknown): value is ${identifier} => typeof value === "object" && value !== null && ${JSON.stringify(error.key)} in value && value[${JSON.stringify(error.key)}] === ${JSON.stringify(error.tag)}`
   })
   const operations = groups
     .flatMap((group) =>
@@ -482,11 +488,18 @@ function renderPromiseTypes(
       }),
     )
     .join("\n\n")
-  const json = operations.includes("JsonValue")
+  const json = [operations, ...errorTypes].some((type) => type.includes("JsonValue"))
     ? "export type JsonValue = null | boolean | number | string | ReadonlyArray<JsonValue> | { readonly [key: string]: JsonValue }"
     : ""
   const imports = [...new Set(Object.values(outputTypes ?? {}).map((override) => override.import))]
   return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
+}
+
+function declaredErrorIdentifier(value: string) {
+  // Match Promise type prefixes: PascalCase ASCII words, dropping separators/non-ASCII.
+  // Capitalization avoids keywords; empty or digit-leading names need a legal prefix.
+  const identifier = identifierPart(value)
+  return /^[A-Z]/.test(identifier) ? identifier : `Error${identifier}`
 }
 
 function renderPromiseClient(groups: ReadonlyArray<Group>) {
@@ -953,6 +966,7 @@ function declaredErrorFields(schema: Schema.Top) {
   const tag = fields.propertySignatures.find((field) => field.name === key)?.type
   if (tag === undefined || !SchemaAST.isLiteral(tag) || typeof tag.literal !== "string") return undefined
   return {
+    ast: fields,
     key,
     tag: tag.literal,
     identifier: SchemaAST.resolveIdentifier(schema.ast) ?? tag.literal,
