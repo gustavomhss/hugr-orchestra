@@ -1,6 +1,11 @@
 import { Buffer, isUtf8 } from "node:buffer"
 import { Option, Schema } from "effect"
 
+// XML 1.0 name ranges; qualified names have at most one colon, with a legal name on each side.
+const xmlStart = String.raw`[A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u{10000}-\u{EFFFF}]`
+const xmlChar = xmlStart.slice(0, -1) + String.raw`\-.0-9\u00B7\u0300-\u036F\u203F-\u2040]`
+const xmlName = `${xmlStart}${xmlChar}*(?::${xmlStart}${xmlChar}*)?`
+
 export function validMime(mime: string) {
   return typeof mime === "string" && mime.length <= 256 &&
     /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+(?:; charset=utf-8)?(?![\s\S])/.test(mime)
@@ -18,8 +23,8 @@ export function matchesMime(data: Uint8Array, mime: string) {
   if (["application/xml", "text/xml", "image/svg+xml"].includes(type)) {
     if (!isUtf8(data)) return false
     const text = new TextDecoder().decode(data).trim()
-    return type === "image/svg+xml" ? /^(?:<\?xml[^>]*>\s*)?<svg(?:\s|>)/.test(text) && /(?:<\/svg>|\/>)(?![\s\S])/.test(text)
-      : /^(?:<\?xml[^>]*>\s*)?<[^!?][\s\S]*>(?![\s\S])/.test(text)
+    const root = xmlRoot(text)
+    return root !== undefined && (type !== "image/svg+xml" || root === "svg")
   }
   if (mime !== type) return false
   if (type === "application/pdf") {
@@ -50,6 +55,37 @@ export function matchesMime(data: Uint8Array, mime: string) {
     return names.includes("[Content_Types].xml") && names.includes(document)
   }
   return false
+}
+
+/** Bounded root lexical check, not a tree/decoder oracle. No DTD, custom entities or external resource resolution. */
+function xmlRoot(input: string) {
+  if (/<!(?:DOCTYPE|ENTITY)\b/i.test(input) || /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/u.test(input) ||
+    /&(?!(?:amp|lt|gt|apos|quot|#[0-9]+|#x[0-9A-Fa-f]+);)/.test(input)) return undefined
+  const declaration = input.startsWith("<?xml") ? input.indexOf("?>") : -1
+  if (input.startsWith("<?xml") && (declaration < 0 || declaration > 1024 ||
+    !/^<\?xml[ \t\r\n]+version=(["'])1\.[01]\1(?:[ \t\r\n]+encoding=(["'])(?:UTF-8|utf-8)\2)?(?:[ \t\r\n]+standalone=(["'])(?:yes|no)\3)?[ \t\r\n]*\?>(?![\s\S])/.test(input.slice(0, declaration + 2)))) return undefined
+  const text = declaration < 0 ? input : input.slice(declaration + 2).trimStart()
+  const header = text.slice(0, 64 * 1024)
+  const root = new RegExp(`^<(${xmlName})(?=[ \\t\\r\\n/>])`, "u").exec(header)
+  if (!root) return undefined
+  const attribute = new RegExp(String.raw`[ \t\r\n]+(${xmlName})[ \t\r\n]*=[ \t\r\n]*(?:"[^"<]*"|'[^'<]*')`, "uy")
+  const names = new Set<string>()
+  let offset = root[0].length
+  while (offset < header.length) {
+    if (/^[ \t\r\n]*(?:\/>|>)/.test(header.slice(offset))) {
+      const end = header.indexOf(">", offset)
+      if (header[end - 1] === "/") return end + 1 === text.length ? root[1] : undefined
+      const closing = text.lastIndexOf("</")
+      return closing > end && text.slice(closing + 2).startsWith(root[1]) &&
+        /^[ \t\r\n]*>(?![\s\S])/.test(text.slice(closing + 2 + root[1].length)) ? root[1] : undefined
+    }
+    attribute.lastIndex = offset
+    const value = attribute.exec(header)
+    if (!value || names.has(value[1])) return undefined
+    names.add(value[1])
+    offset = attribute.lastIndex
+  }
+  return undefined
 }
 
 function png(data: Uint8Array) {

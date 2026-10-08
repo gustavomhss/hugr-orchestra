@@ -23,6 +23,7 @@ import { matchesMime, validMime } from "./mime"
 
 export { Failure }
 
+// Fixture adapters may omit storageID. Persistent DB providers must supply it: object identity cannot survive reopening.
 const identities = new WeakMap<Database.Interface["db"], string>()
 
 export type Input = {

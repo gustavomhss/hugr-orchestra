@@ -13,7 +13,12 @@ export function hash(data: Uint8Array | string) {
   return createHash("sha256").update(data).digest("hex")
 }
 
-/** Node descriptors are intentional: FSUtil.readFile cannot provide no-follow, same-FD bounded reads. */
+/**
+ * No model/worker-selected paths: private canonical roots and checked file lifetimes limit their authority.
+ * Lifetimes retain root/staging identity and stop on observed legitimate host replacement. Node path APIs
+ * cannot anchor every directory-relative syscall, so check-to-syscall races remain; postchecks do not prove
+ * absolute confinement against a malicious same-UID host. Reads still bind no-follow, bounded I/O to one FD.
+ */
 export function make(input: { root: string; boundedBytes: number; storageID: string; fs: FSUtil.Interface }) {
   const root = resolve(input.root)
   const identity = new TextEncoder().encode(hash(input.storageID))
@@ -58,14 +63,23 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
     const info = yield* io(() => claimedRoot(true))
     yield* Effect.scoped(Effect.gen(function* () {
       const staging = yield* Effect.acquireRelease(
-        input.fs.makeTempDirectory({ directory: root, prefix: "stage-" }),
-        // Failed removal leaves explicitly TTL-eligible scratch; no host-path-bearing finalizer defect.
-        (path) => input.fs.remove(path, { recursive: true }).pipe(Effect.catch(() => Effect.void)),
+        Effect.gen(function* () {
+          yield* io(() => unchangedRoot(info))
+          const path = yield* input.fs.makeTempDirectory({ directory: root, prefix: "stage-" })
+          const stat = yield* io(async () => {
+            await unchangedRoot(info)
+            return directory(path, true)
+          })
+          return { path, stat }
+        }),
+        // Observed identity loss leaves scratch for later verified GC; no unlink after a failed check.
+        (staging) => removeChecked(staging.path, staging.stat, info, true).pipe(Effect.catch(() => Effect.void)),
       )
-      const path = join(staging, "blob")
+      const path = join(staging.path, "blob")
       yield* io(async () => {
         await unchangedRoot(info)
-        await directory(staging, true)
+        if (!sameFile(staging.stat, await directory(staging.path, true)))
+          throw failure("artifact_io_failed", "Artifact staging directory changed during access")
         await withFile(path, writeFlags(), 0o600, async (file) => {
           regular(await file.stat({ bigint: true }), false, 1)
           await file.writeFile(data)
@@ -112,7 +126,7 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
         if (current.isSymbolicLink()) throw failure("artifact_io_failed", "Artifact cleanup entry is unsafe")
         return current
       })
-      if (stat.mtimeMs < BigInt(cutoff)) yield* input.fs.remove(path, { recursive: name.startsWith("stage-") })
+      if (stat.mtimeMs < BigInt(cutoff)) yield* removeChecked(path, stat, info, name.startsWith("stage-"))
     }))
     yield* io(() => unchangedRoot(info))
   })
@@ -120,6 +134,20 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
   async function unchangedRoot(info: BigIntStats) {
     if (!sameFile(info, await rootInfo())) throw failure("artifact_io_failed", "Artifact root changed during access")
   }
+
+  const removeChecked = Effect.fn("ArtifactBlobs.removeChecked")(function* (
+    path: string, expected: BigIntStats, rootStat: BigIntStats, recursive: boolean,
+  ) {
+    yield* io(async () => {
+      await unchangedRoot(rootStat)
+      const current = await lstat(path, { bigint: true })
+      if (current.isSymbolicLink() || !sameFile(expected, current) || current.isDirectory() !== expected.isDirectory())
+        throw failure("artifact_io_failed", "Artifact cleanup entry identity changed")
+      if (current.isDirectory()) await directory(path, false)
+      await unchangedRoot(rootStat)
+    })
+    yield* input.fs.remove(path, { recursive })
+  })
 
   async function readBytes(path: string, bytes: number, rootStat: BigIntStats, links: number, limit = input.boundedBytes) {
     if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > limit)

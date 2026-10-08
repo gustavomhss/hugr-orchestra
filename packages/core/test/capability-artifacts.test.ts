@@ -1,7 +1,7 @@
 import { describe, expect } from "bun:test"
 import { Buffer } from "node:buffer"
 import { createHash } from "node:crypto"
-import { join } from "node:path"
+import { basename, dirname, join } from "node:path"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityArtifacts } from "../src/capability/artifact"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
@@ -510,6 +510,87 @@ describe("CapabilityArtifacts durable lifecycle", () => {
       expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(good.length)
     }))
   }), 30_000)
+
+  it.live("XML root lexical checks reject illegal names, malformed headers and entity declarations without resources", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const fs = yield* FSUtil.Service
+    const store = yield* CapabilityArtifacts.make({ root: f.root })
+    yield* CapabilityInvocation.withContext(f.binding, Effect.gen(function* () {
+      yield* Effect.forEach([
+        "< >", "<123>", "<root invalid>", "<root a='x' a='y'/>", "<root a='unclosed>",
+        "<root></other>", "<root>&external;</root>",
+        '<!DOCTYPE root [<!ENTITY external SYSTEM "file:///unread">]><root>&external;</root>',
+        `<root a="${"x".repeat(64 * 1024)}"/>`,
+      ], (text) => store.publish(f.context, { ...input, mime: "application/xml", data: Buffer.from(text) }).pipe(
+        Effect.flip, Effect.tap((error) => Effect.sync(() => expectCode(error, "invalid_input"))),
+      ))
+      expect(yield* fs.exists(f.root)).toBe(false)
+      const good = [
+        { mime: "application/xml", text: "<root/>" },
+        { mime: "application/xml", text: '<root data="a > b" />' },
+        { mime: "text/xml", text: '<?xml version="1.0" encoding="UTF-8"?><r a="x &amp; y"><child/></r>' },
+        { mime: "application/xml", text: '<p:根 xmlns:p="urn:scope"/>' },
+        { mime: "image/svg+xml", text: '<svg xmlns="http://www.w3.org/2000/svg" width="1"></svg>' },
+      ]
+      yield* Effect.forEach(good, (value) => Effect.gen(function* () {
+        const ref = yield* store.publish(f.context, { ...input, mime: value.mime, data: Buffer.from(value.text) })
+        expect(new TextDecoder().decode((yield* store.read(f.context, ref)).data)).toBe(value.text)
+      }))
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(good.length)
+    }))
+  }), 30_000)
+
+  Array.of("root", "staging").forEach((replacement) => it.live(
+    `scratch finalizer leaves replacement ${replacement} untouched and later verified GC removes original scratch`,
+    () => Effect.gen(function* () {
+      const f = yield* fixture()
+      const fs = yield* FSUtil.Service
+      const placement = yield* Location.Service
+      const removed = yield* Ref.make<string[]>([])
+      const stage = yield* Ref.make<string | undefined>(undefined)
+      const gcRoot = replacement === "root" ? join(placement.directory, "moved-artifacts") : f.root
+      const observed = {
+        ...fs, remove: (path: string, options?: Parameters<FSUtil.Interface["remove"]>[1]) =>
+          Ref.update(removed, (paths) => [...paths, path]).pipe(Effect.andThen(fs.remove(path, options))),
+      }
+      const normal = yield* CapabilityArtifacts.make({ root: f.root }).pipe(Effect.provideService(FSUtil.Service, observed))
+      yield* CapabilityInvocation.withContext(f.binding, normal.publish(f.context, {
+        ...input, data: Buffer.from("retained normal publication"),
+      }))
+      const normalRemovals = yield* Ref.get(removed)
+      expect(normalRemovals).toHaveLength(1)
+      expect(yield* fs.exists(normalRemovals[0])).toBe(false)
+      yield* Ref.set(removed, [])
+      const store = yield* CapabilityArtifacts.make({ root: f.root }).pipe(Effect.provideService(FSUtil.Service, {
+        ...observed, link: (from, to) => Effect.gen(function* () {
+          yield* fs.link(from, to)
+          yield* Ref.set(stage, dirname(from))
+          yield* fs.rename(replacement === "root" ? f.root : dirname(from), replacement === "root"
+            ? gcRoot : join(f.root, `stage-retained-${basename(dirname(from))}`))
+          if (replacement === "root") yield* fs.makeDirectory(f.root, { mode: 0o700 })
+          yield* fs.makeDirectory(dirname(from), { mode: 0o700 })
+          yield* fs.writeFileString(join(dirname(from), "sentinel"), "replacement must survive")
+        }),
+      }))
+      expectCode(yield* CapabilityInvocation.withContext(f.binding, store.publish(f.context, input)).pipe(Effect.flip),
+        replacement === "root" ? "artifact_io_failed" : "artifact_corrupt")
+      const path = yield* Ref.get(stage)
+      if (!path) return yield* Effect.die("Expected actual staging path")
+      const original = replacement === "root" ? join(gcRoot, basename(path))
+        : join(f.root, `stage-retained-${basename(path)}`)
+      expect(yield* fs.readFileString(join(path, "sentinel"))).toBe("replacement must survive")
+      expect(yield* fs.readFile(join(original, "blob"))).toEqual(input.data)
+      expect(yield* Ref.get(removed)).toEqual([])
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+      yield* fs.utimes(original, new Date(1), new Date(1))
+      yield* fs.utimes(join(gcRoot, createHash("sha256").update(input.data).digest("hex")), new Date(1), new Date(1))
+      const gc = yield* CapabilityArtifacts.make({ root: gcRoot, scratchTTL: 60_000 })
+      yield* gc.cleanup()
+      expect(yield* fs.exists(original)).toBe(false)
+      expect(yield* fs.readFileString(join(path, "sentinel"))).toBe("replacement must survive")
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+    }), 30_000,
+  ))
 
   it.live("symlink matching external bytes and symlink roots are rejected; writable or foreign hard-linked dedup fails", () => Effect.gen(function* () {
     const f = yield* fixture()
