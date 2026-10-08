@@ -73,8 +73,10 @@ export const make = Effect.gen(function* () {
       if (effects.includes("ask")) {
         yield* permissions.askExplicit(request)
         yield* validate(binding)
+        // One-time explicit approval covers ask/allow; current configured deny still revokes it.
+        if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
+        return
       }
-      // Kernel owns current rules and saved approvals; recheck after waiting for explicit intent.
       yield* permissions.assert(request)
     }).pipe(
       Effect.catchTags({

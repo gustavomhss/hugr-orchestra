@@ -8,6 +8,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { Location } from "@orchestra/core/location"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -30,6 +31,7 @@ import { testEffect } from "./lib/effect"
 const placement = location({ directory: AbsolutePath.make("/project") })
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   Database.node, EventV2.node, SessionProjector.node, SessionStore.node, PermissionV2.node, AgentV2.node, Location.node,
+  PermissionSaved.node,
 ]), [[Location.node, Layer.succeed(Location.Service, Location.Service.of(placement))]]))
 const allow: PermissionV2.Ruleset = [{ action: "read", resource: "*", effect: "allow" }]
 const deny: PermissionV2.Ruleset = [{ action: "read", resource: "*", effect: "deny" }]
@@ -150,6 +152,50 @@ describe("CapabilityPolicy", () => {
       })
       expect(yield* Ref.get(f.effects)).toBe(1)
       expect(yield* f.permissions.list()).toEqual([])
+    }))
+  }).pipe(Effect.timeout("10 seconds")))
+
+  it.live("captured allow still waits for current kernel ask approval", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* setRules([])
+    const q = yield* queued(f.run())
+    expect(yield* Ref.get(f.effects)).toBe(0)
+    expect(yield* f.permissions.list()).toEqual([q.request])
+    yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
+    expect(yield* Fiber.join(q.fiber)).toMatchObject({ _tag: "Success" })
+    expect(yield* Ref.get(f.effects)).toBe(1)
+    expect(yield* f.permissions.list()).toEqual([])
+  }).pipe(Effect.timeout("10 seconds")))
+
+  it.live("captured ask with current ask completes after exactly one approval and writes no saved grant", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const saved = yield* PermissionSaved.Service
+    yield* setRules([])
+    yield* Effect.forEach([1, 2], (executed) => Effect.gen(function* () {
+      const asked = yield* Ref.make(0)
+      const second = yield* Deferred.make<number>()
+      const unsubscribe = yield* f.events.listen((event) => Effect.gen(function* () {
+        if (event.type !== PermissionV2.Event.Asked.type) return
+        const count = yield* Ref.updateAndGet(asked, (n) => n + 1)
+        if (count > 1) yield* Deferred.succeed(second, count)
+      }))
+      yield* Effect.addFinalizer(() => unsubscribe)
+      const q = yield* queued(f.run({ ...f.binding, effectiveRules: [] }))
+      expect(yield* Ref.get(f.effects)).toBe(executed - 1)
+      expect(yield* Ref.get(asked)).toBe(1)
+      expect(yield* f.permissions.list()).toEqual([q.request])
+      yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
+      const result = yield* Effect.raceFirst(Fiber.join(q.fiber), Deferred.await(second).pipe(
+        Effect.map((count) => expect(count).toBe(1)),
+      ))
+      expect(result).toMatchObject({ _tag: "Success" })
+      expect(yield* Ref.get(asked)).toBe(1)
+      expect(yield* Ref.get(f.effects)).toBe(executed)
+      expect(yield* f.permissions.list()).toEqual([])
+      expect(yield* saved.list()).toEqual([])
+      expect(yield* f.permissions.evaluate({ ...input, sessionID: f.context.sessionID, agent: f.context.agent }))
+        .toBe("ask")
+      yield* unsubscribe
     }))
   }).pipe(Effect.timeout("10 seconds")))
 
