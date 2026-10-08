@@ -1,4 +1,4 @@
-import { chmod, stat } from "node:fs/promises"
+import { chmod, lstat, stat } from "node:fs/promises"
 import { join, resolve } from "node:path"
 
 // Independent read-back oracle. Do not import the production protection script.
@@ -55,4 +55,56 @@ async function powershell(filename: string, body: string, inheritance = false) {
   })
   const [code, stderr] = await Promise.all([child.exited, new Response(child.stderr).text()])
   if (child.signalCode || code !== 0) throw new Error(`Private-file oracle: native ACL read/write failed (${child.signalCode ?? code}): ${stderr.trim()}`)
+}
+
+/** Keep the file regular and owned while making the native chmod/DACL operation fail. */
+export async function preventNativeProtection(filename: string) {
+  if (process.platform === "linux") {
+    // Immutable is an inode flag, not a permission guard or a fabricated FS error.
+    await immutable(filename, "+i")
+    return { [Symbol.asyncDispose]: () => immutable(filename, "-i") }
+  }
+  if (process.platform !== "win32") throw new Error("Native protection failure fixture requires Linux chattr or Windows sharing locks")
+  if (!process.env.SystemRoot) throw new Error("Native protection failure fixture: missing Windows SystemRoot")
+  const script = `
+    $ErrorActionPreference = 'Stop'
+    try {
+      $file = [System.IO.File]::Open($env:ORCHESTRA_PRIVATE_TEST_FILE,
+        [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+      try { [Console]::WriteLine('locked'); [Console]::In.ReadLine() | Out-Null }
+      finally { $file.Dispose() }
+    } catch { [Console]::Error.WriteLine($_.Exception.ToString()); exit 1 }
+  `
+  const child = Bun.spawn([
+    join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
+    "-NoLogo", "-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64"),
+  ], {
+    env: { ...process.env, ORCHESTRA_PRIVATE_TEST_FILE: resolve(filename) },
+    stdin: "pipe", stdout: "pipe", stderr: "pipe", timeout: 30_000,
+  })
+  const reader = child.stdout.getReader()
+  const ready = await reader.read()
+  reader.releaseLock()
+  if (ready.done || new TextDecoder().decode(ready.value).trim() !== "locked") {
+    child.stdin.end()
+    await child.exited
+    throw new Error(`Native protection failure fixture: lock failed: ${await new Response(child.stderr).text()}`)
+  }
+  // Metadata lookup must still succeed, or this would only test the path guard.
+  if (!(await lstat(filename)).isFile()) throw new Error("Native protection failure fixture: file ceased to be regular")
+  return {
+    async [Symbol.asyncDispose]() {
+      child.stdin.end()
+      const [code, stderr] = await Promise.all([child.exited, new Response(child.stderr).text()])
+      if (child.signalCode || code !== 0) throw new Error(`Native protection failure fixture: lock release failed (${child.signalCode ?? code}): ${stderr}`)
+    },
+  }
+}
+
+async function immutable(filename: string, flag: "+i" | "-i") {
+  const child = Bun.spawn(["sudo", "-n", "chattr", flag, filename], {
+    stdin: "ignore", stdout: "ignore", stderr: "pipe", timeout: 30_000,
+  })
+  const [code, stderr] = await Promise.all([child.exited, new Response(child.stderr).text()])
+  if (child.signalCode || code !== 0) throw new Error(`Native protection failure fixture: chattr ${flag} failed (${child.signalCode ?? code}): ${stderr.trim()}`)
 }
