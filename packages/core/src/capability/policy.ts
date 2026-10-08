@@ -70,14 +70,10 @@ export const make = Effect.gen(function* () {
       source: { type: "tool" as const, messageID: context.assistantMessageID, callID: context.toolCallID },
     }
     yield* Effect.gen(function* () {
-      if (effects.includes("ask")) {
-        yield* permissions.askExplicit(request)
-        yield* validate(binding)
-        // One-time explicit approval covers ask/allow; current configured deny still revokes it.
-        if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
-        return
-      }
-      yield* permissions.assert(request)
+      yield* effects.includes("ask") ? permissions.askExplicit(request) : permissions.assert(request)
+      yield* validate(binding)
+      // Approval covers ask/allow on either path; a current configured deny still revokes it.
+      if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
     }).pipe(
       Effect.catchTags({
         "PermissionV2.BlockedError": () => Effect.fail(denied()),
