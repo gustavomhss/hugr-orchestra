@@ -2,6 +2,7 @@ import "./init-projectors"
 
 import { NodeHttpServer } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ConfigProvider, Context, Effect, Exit, Layer, Scope } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { OpenApi } from "effect/unstable/httpapi"
@@ -35,6 +36,7 @@ type ListenOptions = CorsOptions & {
   hostname: string
   mdns?: boolean
   mdnsDomain?: string
+  toolSafetyProfile?: ToolSafety.Profile
 }
 type ListenerState = {
   scope: Scope.Scope
@@ -72,7 +74,9 @@ export async function openapi() {
 export let url: URL | undefined
 
 export async function listen(opts: ListenOptions): Promise<Listener> {
-  const listener = await Effect.runPromise(listenEffect(opts))
+  // Copy all nested grant objects/arrays before the first await, including Unix sockets and loopback endpoints.
+  const profile = opts.toolSafetyProfile === undefined ? undefined : structuredClone(opts.toolSafetyProfile)
+  const listener = await Effect.runPromise(listenEffect({ ...opts, toolSafetyProfile: profile }))
   return {
     hostname: listener.hostname,
     port: listener.port,
@@ -113,6 +117,7 @@ function listenerLayer(opts: ListenOptions, port: number) {
     // result on a module-singleton Reference; without overriding it here,
     // every later `Server.listen()` keeps observing that initial snapshot.
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv())),
+    Layer.provide(Layer.succeed(ToolSafety.RuntimeProfile)(opts.toolSafetyProfile)),
   )
 }
 
