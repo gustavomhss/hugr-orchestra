@@ -81,9 +81,15 @@ async function launch(runtime: "bun" | "node", depth: number, fault?: "missing" 
   const scratch = fixture("fixture-identity", { lsp: false })
   const sample = fileTree(scratch.home, depth)
   if (fault === "missing") {
+    const rows = table()
+    if (!rows.some((row) => row.pid === process.pid && row.args !== null)) throw new Error("missing-birth inventory positive control failed")
+    // BSD ps rejects PIDs above its kernel range; an absent valid PID must exercise missing creation time, not syntax.
+    const missing = Array.from({ length: 100 }, (_, index) => (process.platform === "darwin" ? 90000 : 2147483647) - index)
+      .find((pid) => !rows.some((row) => row.pid === pid))
+    if (missing === undefined) throw new Error("missing-birth control has no unallocated PID")
     const source = readFileSync(sample.args[0]!, "utf8")
     if (!source.includes("startTimes([process.pid]")) throw new Error("missing-birth fault boundary absent")
-    writeFileSync(sample.args[0]!, source.replace("startTimes([process.pid]", "startTimes([2147483647]"))
+    writeFileSync(sample.args[0]!, source.replace("startTimes([process.pid]", `startTimes([${missing}]`))
   }
   const binding = await Omni.load()
   const child = binding.spawn(scratch.node, ["-e", `
