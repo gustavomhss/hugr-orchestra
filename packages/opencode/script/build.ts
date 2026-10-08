@@ -248,7 +248,7 @@ for (const { item, name, omni, omniFiles } of builds) {
       "opencode-backend-skills.gen.ts": backendSkillsFileMap,
     },
     entrypoints: [
-      "./src/index.ts",
+      "./src/cli/omni-entry.ts",
       workerPath,
       treeSitterWorkerPath,
       "opencode-backend-skills.gen.ts",

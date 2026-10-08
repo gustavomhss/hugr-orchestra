@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { spawn } from "node:child_process"
-import { mkdtemp, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, unlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { Flag, omniSpawner } from "@opencode-ai/core/flag/flag"
@@ -112,7 +112,61 @@ describe("Omni.locate", () => {
     )
     expect(Omni.locate(files)).toEqual(files)
   })
+
+  test("explicit addon with a missing sibling never borrows another candidate's supervisor", async () => {
+    await using fixture = await locateFixture()
+    expect(Omni.locate({})).toEqual(fixture.shipped)
+    const addon = path.join(fixture.dir, "orphan", "hugr_omni.node")
+    await mkdir(path.dirname(addon))
+    await writeFile(addon, "")
+    expect(() => Omni.locate({ addon })).toThrow(`configured supervisor ${path.join(path.dirname(addon), fixture.name)} does not exist`)
+    expect(Omni.locate({ addon, supervisor: fixture.shipped.supervisor })).toEqual({ addon, supervisor: fixture.shipped.supervisor })
+  })
+
+  test("missing shipped supervisor is diagnosed as supervisor, not addon", async () => {
+    await using fixture = await locateFixture()
+    await unlink(fixture.shipped.supervisor)
+    expect(() => Omni.locate(fixture.shipped)).toThrow(`configured supervisor ${fixture.shipped.supervisor} does not exist`)
+  })
+
+  test("missing explicitly configured addon never falls back to an intact candidate", async () => {
+    await using fixture = await locateFixture()
+    expect(Omni.locate({})).toEqual(fixture.shipped)
+    const missing = { addon: path.join(fixture.dir, "missing.node"), supervisor: fixture.shipped.supervisor }
+    expect(() => Omni.locate(missing)).toThrow(`configured addon ${missing.addon} does not exist`)
+  })
+
+  test("given paths override environment; environment addon also requires its own sibling", async () => {
+    await using fixture = await locateFixture()
+    const addon = path.join(fixture.dir, "env", "hugr_omni.node")
+    await mkdir(path.dirname(addon))
+    await writeFile(addon, "")
+    process.env.HUGR_OMNI_ADDON = addon
+    expect(Omni.locate(fixture.shipped)).toEqual(fixture.shipped)
+    expect(() => Omni.locate({})).toThrow("configured supervisor")
+    process.env.HUGR_OMNI_SUPERVISOR = fixture.shipped.supervisor
+    expect(Omni.locate({})).toEqual({ addon, supervisor: fixture.shipped.supervisor })
+  })
 })
+
+// No native load or spawn: provide a real on-disk alternate candidate to expose silent fallback.
+async function locateFixture() {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "omni-locate-candidate-"))
+  const name = `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`
+  const shipped = { addon: path.join(dir, "hugr_omni.node"), supervisor: path.join(dir, name) }
+  const executable = path.join(dir, "opencode")
+  await Promise.all([executable, ...Object.values(shipped)].map((file) => writeFile(file, "")))
+  const saved = { executable: process.execPath, addon: process.env.HUGR_OMNI_ADDON, supervisor: process.env.HUGR_OMNI_SUPERVISOR }
+  process.execPath = executable
+  delete process.env.HUGR_OMNI_ADDON
+  delete process.env.HUGR_OMNI_SUPERVISOR
+  return { dir, name, shipped, async [Symbol.asyncDispose]() {
+    process.execPath = saved.executable
+    restore("HUGR_OMNI_ADDON", saved.addon)
+    restore("HUGR_OMNI_SUPERVISOR", saved.supervisor)
+    await rm(dir, { recursive: true, force: true })
+  } }
+}
 
 describe("Shell.invocation", () => {
   test.if(process.platform !== "win32")("true is /bin/sh -c with the command and args joined like Node", () => {
