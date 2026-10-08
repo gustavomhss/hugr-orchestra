@@ -452,7 +452,7 @@ it.instance("legacy prompt emits one atomic Core admission per User without sess
       agent: "maestro",
       model: { providerID: ref.providerID, id: ref.modelID },
     })
-    expect(seen.map((event) => event.type)).toContain(Session.Event.Updated.type)
+    expect(seen.map((event) => event.type)).toEqual([SessionV1.Event.PromptAdmitted.type, SessionV1.Event.PromptAdmitted.type])
     const admissions = seen.filter((event) => event.type === SessionV1.Event.PromptAdmitted.type)
       .map((event) => Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data))
     expect<unknown>(admissions.map((event) => ({ info: event.info, parts: event.parts }))).toEqual([first, second])

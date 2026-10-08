@@ -19,6 +19,7 @@ import { SessionV1 } from "@orchestra/core/v1/session"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Plugin } from "@/plugin"
+import { Permission } from "@/permission"
 import { SessionPrompt } from "@/session/prompt"
 import { PromptIdentity } from "@/session/prompt-identity"
 import { MessageID, SessionID } from "@/session/schema"
@@ -406,6 +407,9 @@ it.instance(
         pattern: "*",
         action: "deny",
       })
+      expect(Permission.evaluate("write", "file.txt", (yield* sessions.get(session.id)).permission ?? []).action).toBe(
+        "deny",
+      )
       expect(request.tools).toEqual({ write: false })
       expect(yield* prompts.prompt(request)).toEqual(winner)
       expect(yield* Effect.promise(() => Bun.file(marker).text())).toBe("call\n")
@@ -455,15 +459,22 @@ race.instance(
       })
       const winner = yield* prompts.prompt(request)
       expect(winner.info).toMatchObject({ promptContext: { reminders: ["Hook 'Race': Winning caller."] } })
+      const newer = yield* prompts.prompt({
+        ...request,
+        messageID: MessageID.ascending(),
+        parts: [{ type: "text", text: "newer" }],
+      })
+      yield* sessions.setRevert({ sessionID: session.id, revert: { messageID: newer.info.id }, summary: undefined })
       const before = yield* rows
       yield* Deferred.succeed(release, undefined)
       expect(yield* Fiber.join(first)).toEqual(winner)
       expect(yield* rows).toEqual(before)
-      expect(before.filter((row) => row.type === "session.v1.prompt.admitted.1")).toHaveLength(1)
-      expect(before.filter((row) => row.type === "relay.hook.decided.1")).toHaveLength(2)
+      expect(before.filter((row) => row.type === "session.v1.prompt.admitted.1")).toHaveLength(2)
+      expect(before.filter((row) => row.type === "relay.hook.decided.1")).toHaveLength(3)
       const database = yield* Database.Service
       expect((yield* PromptAdmission.find(database.db, request.messageID))?.snapshot).toEqual(winner)
-      expect(yield* database.db.select().from(MessageTable).all()).toHaveLength(1)
+      expect(yield* database.db.select().from(MessageTable).all()).toHaveLength(2)
+      expect((yield* sessions.get(session.id)).revert?.messageID).toBe(newer.info.id)
     }),
   { git: true },
 )
@@ -563,12 +574,18 @@ it.instance(
       yield* llm.text("resumed")
       const resumed = yield* prompts.prompt({ ...request, noReply: false })
       expect(resumed.info.role).toBe("assistant")
+      expect(resumed.info.role === "assistant" ? resumed.info.parentID : undefined).toBe(request.messageID)
       expect(resumed.parts.flatMap((part) => (part.type === "text" ? [part.text] : []))).toEqual(["resumed"])
       expect(yield* llm.calls).toBe(1)
       const database = yield* Database.Service
       expect((yield* PromptAdmission.find(database.db, request.messageID))?.snapshot).toEqual(winner)
       expect((yield* rows).filter((row) => row.type === "session.v1.prompt.admitted.1")).toHaveLength(1)
       expect((yield* rows).filter((row) => row.type === "relay.hook.decided.1")).toHaveLength(1)
+      expect(
+        (yield* database.db.select().from(MessageTable).all())
+          .filter((row) => row.data.role === "user")
+          .map((row) => row.id),
+      ).toEqual([request.messageID])
     }),
   { git: true },
 )
