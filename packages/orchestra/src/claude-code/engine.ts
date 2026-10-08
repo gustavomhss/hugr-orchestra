@@ -111,7 +111,7 @@ const layer = Layer.effect(
       })
       const gate = { run, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
         shell: (ctx: Tool.Context, command: string) => ShellScan.approve(ctx, { command, cwd: instance.directory, shell }).pipe(
-          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)) }
+          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
 
