@@ -15,7 +15,8 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
   const nonce = `omni-terminal-${randomUUID()}`
   adoptTree(scratch.home, nonce)
   markerArgument(nonce, path.join(scratch.home, `${nonce}.edited`))
-  const missed = `MISSED-BEGIN-${nonce}-é😀-${randomUUID()}-MISSED-END-${nonce}`
+  const missedID = randomUUID()
+  const missed = `MISSED-BEGIN-${nonce}-é😀-${missedID}-MISSED-END-${nonce}`
   const metrics: Record<string, unknown> = {}
   const checks: Record<string, string> = { vim: "not-run", resize: "not-run", replay: "not-run", output: "not-run", rawAccounting: "not-run" }
   const sockets: WebSocket[] = []
@@ -24,6 +25,7 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
   const hash = (text: string) => createHash("sha256").update(text).digest("hex")
   // ConPTY can physically wrap printable text; replay comparison below still uses exact wire text/cursors.
   const visible = (text: string) => win ? plain(text).replaceAll("\r", "").replaceAll("\n", "") : plain(text)
+  const containsMissed = (text: string) => visible(text).includes(win ? missedID : missed)
   const gap = /\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g
   try {
     processTable()
@@ -123,9 +125,21 @@ function write(text) {
 }
 write('READY-' + nonce + '\\n');
 readline.createInterface({input: process.stdin}).on('line', line => {
-  if (line === 'size') { const size = process.stdout.getWindowSize(); write('SIZE ' + size[1] + ' ' + size[0] + '\\n'); }
+  if (line === 'size') {
+    // Node's getWindowSize returns cached properties; Windows has no SIGWINCH refresh path.
+    if (process.platform === 'win32') {
+      if (typeof process.stdout._refreshSize !== 'function') throw Error('native Node TTY size refresh unavailable');
+      process.stdout._refreshSize();
+    }
+    const size = process.stdout.getWindowSize();
+    fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.size.json`))}, JSON.stringify({rows: size[1], cols: size[0]}));
+    write('SIZE ' + size[1] + ' ' + size[0] + '\\n');
+  }
   if (line === 'unicode') write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
-  if (line === 'more') write(${JSON.stringify(missed)} + '\\n');
+  if (line === 'more') {
+    const written = write(${JSON.stringify(missed)} + '\\n');
+    fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.missed.json`))}, JSON.stringify({written, token: ${JSON.stringify(missedID)}}));
+  }
   if (line === 'calibrate') write('CAL-' + nonce + '\\n');
   if (line === 'gap-control') write('\\x1b[0m\\n[orchestra: 7 bytes of output skipped]\\n');
   if (line === 'done') write('PRODUCER-DONE-' + nonce + '\\n');
@@ -169,7 +183,9 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await first.close()
       const observer = await attach(terminal.id, -1)
       observer.ws.send("more\r")
-      await until(20_000, "whole unique output while original client disconnected", () => visible(observer.state.text).includes(missed) ? true : undefined)
+      await until(20_000, "whole unique output while original client disconnected", () => containsMissed(observer.state.text) ? true : undefined)
+        .catch((cause) => { metrics.replayFailure = { receivedTail: observer.state.text.slice(-4000), expectedToken: missedID,
+          producer: existsSync(path.join(scratch.home, `${nonce}.missed.json`)) ? JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.missed.json`), "utf8")) : null }; throw cause })
       await quiet(observer.state)
       const whole = await attach(terminal.id, 0)
       const expectedEnd = whole.state.meta
@@ -178,10 +194,12 @@ readline.createInterface({input: process.stdin}).on('line', line => {
         options.mutation === "truncated-replay" ? "truncate" : undefined)
       metrics.replay = { requestedCursor: cursor, returnedCursor: reconnect.state.meta, expectedEndCursor: expectedEnd,
         expectedUnits: expected.length, receivedUnits: reconnect.state.replay.length,
-        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true }
+        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true,
+        tier: win ? "exact ConPTY rendered wire replay; producer Unicode byte identity not claimed" : "exact POSIX wire replay",
+        producer: JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.missed.json`), "utf8")) }
       if (whole.state.replay.slice(0, cursor) !== baseline || expected.length === 0 || expected !== reconnect.state.replay ||
         reconnect.state.meta !== expectedEnd || expectedEnd !== cursor + expected.length || expectedEnd !== whole.state.replay.length ||
-        observer.state.text !== expected || !visible(expected).includes(missed) || !visible(reconnect.state.replay).includes(missed))
+        observer.state.text !== expected || !containsMissed(expected) || !containsMissed(reconnect.state.replay))
         throw new Error("reconnection replay differs from independent whole missed text/end cursor")
       writeFileSync(path.join(scratch.home, "replay.ws.txt"), whole.state.replay)
       await Promise.all([observer.close(), reconnect.close(), whole.close()])

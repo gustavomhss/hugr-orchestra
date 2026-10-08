@@ -5,7 +5,7 @@
 import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync } from "node:fs"
 import path from "node:path"
-import { alive, fileTree, kill9, LOGS, markerArgument, members, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
+import { fileTree, kill9, LOGS, markerArgument, members, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
@@ -119,10 +119,12 @@ setInterval(() => {}, 1e9);
     }
     const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; method: string }) : []
     const live = () => until(45_000, "wrapper, real tsservers and fresh protocol handshake", async () => {
-        const current = rows()
+        const found = members(tree.nonce, processTable())
+        const current = [...found.members, ...found.wrappers]
         const wrapperRow = current.find((row) => row.args?.includes(wrapper))
         const tsservers = current.filter((row) => row.args?.includes("tsserver.js"))
-        const recorded = await alive(tree.nonce)
+        // Core's signal-0 probe can miss live Bun/Windows children. Use its exact records joined to validated CIM.
+        const recorded = found.members.length
         // Pinned TLS starts syntax and semantic tsservers; wait for both before counting processes.
         return wrapperRow && tsservers.length === 2 && recorded === tree.size &&
           ["initialize", "initialized", "textDocument/didOpen"].every((method) => rpc().some((event) => event.pid === wrapperRow.pid && event.method === method))
@@ -179,7 +181,9 @@ setInterval(() => {}, 1e9);
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) {
     error = String(cause)
-    findings.push(JSON.stringify({ rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
+    findings.push(JSON.stringify({ inventory: processTable().filter((row) => row.args?.includes(tree.nonce))
+      .map((row) => ({ ...row, args: row.args?.slice(-1500) })),
+      rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
       wrapper: existsSync(wrapperLog) ? readFileSync(wrapperLog, "utf8").slice(-2000) : null,
       stderr: existsSync(path.join(scratch.home, "language-server.stderr.log")) ? readFileSync(path.join(scratch.home, "language-server.stderr.log"), "utf8").slice(-4000) : null,
       prompt: existsSync(path.join(scratch.home, "prompt.responses.jsonl")) ? readFileSync(path.join(scratch.home, "prompt.responses.jsonl"), "utf8").slice(-4000) : null }))

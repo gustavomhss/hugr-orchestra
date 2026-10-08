@@ -21,13 +21,19 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
   delete env.ORCHESTRA_SERVER_PASSWORD
   delete env.ORCHESTRA_SERVER_USERNAME
-  const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p", "process.execPath"], {
+  const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p",
+    "JSON.stringify({node:process.execPath,home:require('node:fs').realpathSync.native(process.argv[1])})", scratch.home], {
     env, encoding: "utf8", windowsHide: true, timeout: 10_000,
   })
   if (resolved.status !== 0) throw new Error(`node unavailable: ${resolved.stderr}`)
+  const native = JSON.parse(resolved.stdout.trim()) as { node: string; home: string }
+  // Bun may retain Windows TEMP's 8.3 spelling; CLI/Node module loading canonicalizes it. One spelling makes
+  // copied TLS/tsserver marker arguments join the real OS argv instead of silently excluding those processes.
+  Object.entries(env).forEach(([key, value]) => { env[key] = value.replaceAll(scratch.home, native.home) })
   mkdirSync(LOGS, { recursive: true })
   const tag = `${name}-${Date.now()}-${randomUUID().slice(0, 8)}`
-  return { ...scratch, env, node: resolved.stdout.trim(), tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
+  return { ...scratch, home: native.home, project: path.join(native.home, "project"), env, node: native.node,
+    tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
 }
 
 export type Fixture = ReturnType<typeof fixture>
