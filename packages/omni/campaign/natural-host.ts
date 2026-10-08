@@ -26,14 +26,13 @@ export async function naturalHost(input: {
       res.setHeader("content-type", "application/json")
       res.end(JSON.stringify(result))
       if (req.url !== "/dispose") return
-      control.close(() => {
-        control.closeAllConnections()
-        const evidence = { event: "disposed", pid: process.pid, requests, resources: process.getActiveResourcesInfo() }
-        writeFileSync(process.env.NATURAL_DISPOSED!, JSON.stringify(evidence))
-        console.log("NATURAL_EVENT " + JSON.stringify(evidence))
-        // Mutation changes only the event-loop boundary, after the very same real disposal.
-        if (process.env.NATURAL_MUTATION === "timer") setInterval(() => {}, 1000)
-      })
+      // Bun may exit before a Node-compatible server.close callback runs. Disposal has already completed.
+      const evidence = { event: "disposed", pid: process.pid, requests, resources: process.getActiveResourcesInfo() }
+      writeFileSync(process.env.NATURAL_DISPOSED!, JSON.stringify(evidence))
+      console.log("NATURAL_EVENT " + JSON.stringify(evidence))
+      // Mutation changes only the event-loop boundary, after the very same real disposal.
+      if (process.env.NATURAL_MUTATION === "timer") setInterval(() => {}, 1000)
+      control.close()
       control.closeIdleConnections()
     }, (error: unknown) => {
       console.error("NATURAL_FAILURE " + String(error))
