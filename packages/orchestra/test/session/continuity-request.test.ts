@@ -6,7 +6,7 @@ import { LLMEvent, ModelID, ProviderID, type LLMRequest } from "@orchestra/llm"
 import { LLMClient } from "@orchestra/llm/route"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
-import { tool } from "ai"
+import { jsonSchema, tool } from "ai"
 import z from "zod"
 import { Plugin } from "@/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -338,4 +338,74 @@ it.instance("actual Codex plugin clears output cap to match CLI without running 
     message: { id: value.user.id, sessionID: value.user.sessionID, role: "user", agent: value.user.agent,
       model: value.user.model, time: value.user.time } }, output))
   expect(output.maxOutputTokens).toBeUndefined()
+}))
+
+for (const native of [false, true]) it.instance(`one-shot preflight captures effective high variant, params and tool schema; receipt mutations cannot alter execution, native=${native}`, () => Effect.gen(function* () {
+  const value = request()
+  value.model.variants = { high: { reasoningEffort: "high" } }
+  value.user.model.variant = "high"
+  value.user.tools = undefined
+  value.tools = { bash: tool({ description: "CAPTURED_TOOL", inputSchema: jsonSchema({ type: "object", properties: { command: { type: "string" } } }), execute: async () => "unused" }) }
+  const calls: string[] = []
+  const wire: unknown[] = []
+  const requests: LLMRequest[] = []
+  const languageCalls: string[] = []
+  const capture: typeof fetch = Object.assign(async (_url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+    wire.push(JSON.parse(await new Response(init?.body).text()))
+    return new Response([
+      { type: "response.created", response: { id: "resp-preflight", created_at: 0, model: value.model.api.id } },
+      { type: "response.completed", response: { incomplete_details: null, usage: { input_tokens: 1, output_tokens: 1 } } },
+    ].map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""), { headers: { "Content-Type": "text/event-stream" } })
+  }, { preconnect: () => { throw new Error("unexpected preconnect") } })
+  const plugin = Layer.succeed(Plugin.Service, Plugin.Service.of({ init: () => Effect.void, list: () => Effect.succeed([]),
+    trigger: (name, _input, output) => Effect.sync(() => {
+      calls.push(name)
+      if (!record(output)) return output
+      if (name === "experimental.chat.system.transform" && Array.isArray(output.system)) output.system.push("CAPTURED_SYSTEM")
+      if (name === "chat.params") Object.assign(output, { maxOutputTokens: 1234 })
+      return output
+    }) }))
+  const fake = ProviderTest.fake({ model: value.model, info: ProviderTest.info({ options: { apiKey: "local-capture-only" } }, value.model), getLanguage: (selected) => Effect.sync(() => {
+    languageCalls.push(selected.api.id)
+    return createOpenAI({ apiKey: "local-capture-only", fetch: capture }).responses(selected.api.id)
+  }) })
+  const layer = AppNodeBuilder.build(LLM.node, [[Provider.node, fake.layer], [Plugin.node, plugin],
+    [Auth.node, Layer.mock(Auth.Service, { get: () => Effect.succeed(undefined) })],
+    [Config.node, Layer.mock(Config.Service, { get: () => Effect.succeed({}) })],
+    [RuntimeFlags.node, RuntimeFlags.layer({ experimentalNativeLlm: native })],
+    [LayerNodePlatform.llmClient, Layer.succeed(LLMClient.Service, LLMClient.Service.of({
+      prepare: () => Effect.die("Unexpected client prepare"), generate: () => Effect.die("Unexpected client generate"),
+      stream: (input) => { requests.push(input); return Stream.make(LLMEvent.finish({ reason: "stop" })) },
+    }))]])
+  yield* LLM.Service.use((llm) => Effect.gen(function* () {
+    if (!llm.preflight || !llm.receipt) throw new Error("Real preflight/receipt required")
+    const plan = yield* llm.preflight(value)
+    const receipt = llm.receipt(plan)
+    if (!receipt) throw new Error("Missing prepared receipt")
+    expect(receipt.preflightParams?.options.reasoningEffort).toBe("high")
+    expect(receipt.preflightParams?.maxOutputTokens).toBe(1234)
+    expect(receipt.user.model.variant).toBe("high")
+    receipt.messages.push({ role: "user", content: "RECEIPT_MUTATION" })
+    receipt.system.push("RECEIPT_MUTATION")
+    receipt.tools.bash.description = "RECEIPT_MUTATION"
+    value.messages.push({ role: "user", content: "CALLER_MUTATION" })
+    value.model.options.reasoningEffort = "low"
+    value.tools.bash.description = "CALLER_MUTATION"
+    yield* llm.stream({ ...value, prepared: plan }).pipe(Stream.runDrain)
+  })).pipe(Effect.provide(layer))
+  expect(calls).toEqual(["experimental.chat.system.transform", "chat.params", "chat.headers"])
+  expect(languageCalls).toHaveLength(1)
+  const sent = JSON.stringify(native ? requests : wire)
+  expect(sent).toContain("CAPTURED_SYSTEM")
+  expect(sent).toContain("CAPTURED_TOOL")
+  expect(sent).not.toContain("MUTATION")
+  if (native) {
+    expect(requests).toHaveLength(1)
+    expect(requests[0].generation).toMatchObject({ maxTokens: 1234 })
+    expect(requests[0].providerOptions).toMatchObject({ openai: { reasoningEffort: "high" } })
+  }
+  if (!native) {
+    expect(wire).toHaveLength(1)
+    expect(wire[0]).toMatchObject({ max_output_tokens: 1234, reasoning: { effort: "high" } })
+  }
 }))

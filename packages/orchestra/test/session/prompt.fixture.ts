@@ -40,6 +40,9 @@ import { Snapshot } from "../../src/snapshot"
 import { ToolRegistry } from "../../src/tool/registry"
 import { Truncate } from "../../src/tool/truncate"
 import { TestLLMServer } from "../lib/llm-server"
+import { SessionContinuity } from "@/continuity/service"
+import { Archive } from "@/continuity/archive"
+import { EffectFlock } from "@orchestra/core/util/effect-flock"
 
 const summary = Layer.succeed(
   SessionSummary.Service,
@@ -144,6 +147,9 @@ const promptRoot = LayerNode.group([
   Instruction.node,
   SystemPrompt.node,
   CrossSpawnSpawner.node,
+  SessionContinuity.node,
+  Archive.node,
+  EffectFlock.node,
   RuntimeFlags.node,
 ])
 

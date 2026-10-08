@@ -4,8 +4,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Provider } from "@/provider/provider"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { serviceUse } from "@orchestra/core/effect/service-use"
-import { Context, Effect, Layer } from "effect"
-import * as Stream from "effect/Stream"
+import { Context, Effect, Layer, Stream, Option } from "effect"
 import { streamText, wrapLanguageModel, Output, jsonSchema, type JSONSchema7, type ModelMessage, type Tool } from "ai"
 import type { LLMEvent } from "@orchestra/llm"
 import { LLMClient } from "@orchestra/llm/route"
@@ -24,13 +23,13 @@ import { SessionID } from "@/session/schema"
 import { Auth } from "@/auth"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
-import * as Option from "effect/Option"
 import * as OtelTracer from "@effect/opentelemetry/Tracer"
 import { LLMAISDK } from "./llm/ai-sdk"
 import { LLMNativeRuntime } from "./llm/native-runtime"
 import { LLMRequestPrep } from "./llm/request"
 import { LLMContextBudget } from "./llm/context-budget"
 import { PromptGuard } from "./prompt-guard"
+import { LLMPrepared } from "./llm/prepared"
 
 export const OUTPUT_TOKEN_MAX = ProviderTransform.OUTPUT_TOKEN_MAX
 
@@ -52,6 +51,9 @@ export type StreamInput = {
   contextMemory?: boolean
   /** Internal request isolation; agent names do not confer maintenance privileges. */
   purpose?: "context-maintenance"
+  /** Opaque service-owned result of real one-shot preparation. Never a serialized request flag. */
+  prepared?: LLMPrepared.Plan
+  preflightParams?: Effect.Success<ReturnType<typeof LLMRequestPrep.prepare>>["params"]
 }
 
 export type StreamRequest = StreamInput & {
@@ -60,7 +62,13 @@ export type StreamRequest = StreamInput & {
 
 export interface Interface {
   readonly stream: (input: StreamInput) => Stream.Stream<LLMEvent, unknown>
+  readonly preflight?: (input: StreamInput) => Effect.Effect<LLMPrepared.Plan, unknown>
+  readonly receipt?: (plan: LLMPrepared.Plan) => StreamInput | undefined
 }
+
+type PlanData = { input: StreamInput; language: Effect.Success<ReturnType<Provider.Interface["getLanguage"]>>;
+  cfg: Effect.Success<ReturnType<Config.Interface["get"]>>; item: Provider.Info; info: Effect.Success<ReturnType<Auth.Interface["get"]>>;
+  prepared: Effect.Success<ReturnType<typeof LLMRequestPrep.prepare>>; isWorkflow: boolean; outputReserve: number }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/LLM") {}
 
@@ -89,14 +97,10 @@ const live: Layer.Layer<
     const llmClient = yield* LLMClient.Service
     const flags = yield* RuntimeFlags.Service
 
-    const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
-      const contextMemory = request.contextMemory === true || request.purpose === "context-maintenance"
-      const input = request.purpose === "context-maintenance" ? yield* Effect.try({ try: () => ({
-        ...request,
-        ...structuredClone({ model: request.model, user: request.user, agent: request.agent,
-          system: request.system, messages: request.messages, permission: request.permission, responseSchema: request.responseSchema }),
-      }), catch: (cause) => cause }) : request
-      const toolChoice = input.purpose === "context-maintenance" ? "none" : input.toolChoice
+    const plans = new WeakMap<LLMPrepared.Plan, PlanData>()
+    const preflight = Effect.fn("LLM.preflight")(function* (request: StreamInput) {
+      const input = yield* Effect.try({ try: () => LLMPrepared.snapshot(request), catch: (cause) => cause })
+      const outputReserve = ProviderTransform.maxOutputTokens(input.model, flags.outputTokenMax)
       yield* Effect.logInfo("stream", {
         providerID: input.model.providerID,
         modelID: input.model.id,
@@ -125,7 +129,47 @@ const live: Layer.Layer<
         flags,
         isWorkflow,
       })
-      if (contextMemory) yield* LLMContextBudget.check(prepared, input.responseSchema, isWorkflow ? prepared.system : undefined)
+      prepared.tools = yield* Effect.tryPromise(() => LLMPrepared.tools(prepared.tools))
+      yield* Effect.try({ try: () => Object.assign(prepared, structuredClone({ model: prepared.model, system: prepared.system, messages: prepared.messages,
+        params: prepared.params, messageTransformOptions: prepared.messageTransformOptions, headers: prepared.headers })), catch: (cause) => cause })
+      yield* LLMContextBudget.check({ ...prepared, outputReserve }, input.responseSchema, isWorkflow ? prepared.system : undefined,
+        cfg.continuity?.enabled !== false && input.purpose !== "context-maintenance")
+      const plan = LLMPrepared.token()
+      plans.set(plan, { input, language, cfg, item, info, prepared, isWorkflow, outputReserve })
+      return plan
+    })
+
+    const receipt = (plan: LLMPrepared.Plan) => {
+      const value = plans.get(plan)
+      return value && LLMPrepared.snapshot({ ...value.input, model: value.prepared.model, messages: value.prepared.messages,
+        system: value.prepared.system, tools: value.prepared.tools,
+        agent: { ...value.input.agent, options: value.prepared.params.options }, preflightParams: value.prepared.params, prepared: plan })
+    }
+
+    const run = Effect.fn("LLM.run")(function* (request: StreamRequest) {
+      const plan = request.prepared ?? (yield* preflight(request))
+      const data = plans.get(plan)
+      if (!data) return yield* Effect.fail(new Error("LLM prepared plan is unavailable for this service"))
+      const input = { ...data.input, abort: request.abort }
+      const language = data.language
+      const cfg = data.cfg
+      const item = data.item
+      const info = data.info
+      const prepared = { ...data.prepared, ...structuredClone({ model: data.prepared.model, system: data.prepared.system,
+        messages: data.prepared.messages, params: data.prepared.params, headers: data.prepared.headers, messageTransformOptions: data.prepared.messageTransformOptions }) }
+      if (request.preflightParams) {
+        const size = data.prepared.messages.length
+        if (JSON.stringify(request.messages.slice(0, size)) !== JSON.stringify(data.prepared.messages) ||
+          JSON.stringify(request.preflightParams) !== JSON.stringify(data.prepared.params))
+          return yield* Effect.fail(new Error("LLM prepared replay prefix changed"))
+        prepared.messages = [...prepared.messages, ...structuredClone(request.messages.slice(size))]
+        prepared.tools = Object.fromEntries(Object.entries(data.prepared.tools).map(([name, tool]) => [name, { ...tool, execute: request.tools[name]?.execute ?? tool.execute }]))
+      }
+      const isWorkflow = data.isWorkflow
+      const toolChoice = input.purpose === "context-maintenance" ? "none" : input.toolChoice
+      // Defense in depth over the same captured payload. No hooks or mutable preparation are rerun.
+      yield* LLMContextBudget.check({ ...prepared, outputReserve: data.outputReserve }, input.responseSchema, isWorkflow ? prepared.system : undefined,
+        cfg.continuity?.enabled !== false && input.purpose !== "context-maintenance")
 
       // Wire up toolExecutor for DWS workflow models so that tool calls
       // from the workflow service are executed via Orchestra's tool system
@@ -398,7 +442,7 @@ const live: Layer.Layer<
         ),
       )
 
-    return Service.of({ stream })
+    return Service.of({ stream, preflight, receipt })
   }),
 )
 
