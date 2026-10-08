@@ -12,21 +12,35 @@ function fixture(maxEntries = 8) {
   const clock = { value: 1000 }
   const input = {
     owner: {
-      projectID: Project.ID.make("project"), location: { directory: AbsolutePath.make("/workspace") },
-      sessionID: SessionID.create(), agentID: Agent.ID.make("backend"),
+      projectID: Project.ID.make("project"),
+      location: { directory: AbsolutePath.make("/workspace") },
+      sessionID: SessionID.create(),
+      agentID: Agent.ID.make("backend"),
     },
-    connectionGeneration: 2, targetGeneration: 3, canonicalName: "logical.echo",
+    connectionGeneration: 2,
+    targetGeneration: 3,
+    canonicalName: "logical.echo",
     canonicalIdentity: { privateToken: "do-not-serialize" },
     inputSchema: { type: "object", rawRootData: { required: ["text"] } },
-    outputSchema: { type: "string" }, operationID: "echo", schemaHash: "a".repeat(64), catalogGeneration: 4,
-    connectionID: Capability.ConnectionID.create(), targetID: Capability.TargetID.create(),
+    outputSchema: { type: "string" },
+    operationID: "echo",
+    schemaHash: "a".repeat(64),
+    catalogGeneration: 4,
+    connectionID: Capability.ConnectionID.create(),
+    targetID: Capability.TargetID.create(),
   } satisfies CapabilityDescriptors.IssueInput
   const scope: CapabilityDescriptors.ReadScope = {
-    owner: input.owner, connectionGeneration: input.connectionGeneration, targetGeneration: input.targetGeneration,
-    canonicalIdentity: input.canonicalIdentity, catalogGeneration: input.catalogGeneration, schemaHash: input.schemaHash,
+    owner: input.owner,
+    connectionGeneration: input.connectionGeneration,
+    targetGeneration: input.targetGeneration,
+    canonicalIdentity: input.canonicalIdentity,
+    catalogGeneration: input.catalogGeneration,
+    schemaHash: input.schemaHash,
   }
   return {
-    clock, input, scope,
+    clock,
+    input,
+    scope,
     store: Effect.runSync(CapabilityDescriptors.make({ maxEntries, ttlMillis: 50, now: () => clock.value })),
   }
 }
@@ -110,10 +124,15 @@ describe("capability descriptor metadata", () => {
       { ...record.ref, targetID: Capability.TargetID.create() },
       { ...record.ref, secret: "unexpected" },
     ]
-    refs.forEach((ref) => denied(f.store.read(ref, f.scope), "stale_descriptor"))
+    refs.forEach((ref) => {
+      denied(f.store.read(ref, f.scope), "stale_descriptor")
+      denied(f.store.reissue(ref, f.scope, f.input.owner), "stale_descriptor")
+    })
     const scopes = [
-      { ...f.scope, connectionGeneration: 3 }, { ...f.scope, targetGeneration: 4 },
-      { ...f.scope, catalogGeneration: 5 }, { ...f.scope, schemaHash: "b".repeat(64) },
+      { ...f.scope, connectionGeneration: 3 },
+      { ...f.scope, targetGeneration: 4 },
+      { ...f.scope, catalogGeneration: 5 },
+      { ...f.scope, schemaHash: "b".repeat(64) },
       { ...f.scope, canonicalIdentity: { privateToken: "do-not-serialize" } },
     ]
     scopes.forEach((scope) => {
@@ -132,8 +151,17 @@ describe("capability descriptor metadata", () => {
     denied(f.store.read(old.ref, { ...f.scope, owner: newOwner }), "target_denied")
     denied(f.store.reissue(old.ref, { ...f.scope, owner: newOwner }, newOwner), "target_denied")
     denied(f.store.reissue(old.ref, f.scope, { ...newOwner, projectID: Project.ID.make("other") }), "target_denied")
-    denied(f.store.reissue(old.ref, f.scope, { ...newOwner, location: { directory: AbsolutePath.make("/other") } }), "target_denied")
-    denied(f.store.reissue(old.ref, f.scope, { ...newOwner, location: { ...newOwner.location, workspaceID: WorkspaceID.create() } }), "target_denied")
+    denied(
+      f.store.reissue(old.ref, f.scope, { ...newOwner, location: { directory: AbsolutePath.make("/other") } }),
+      "target_denied",
+    )
+    denied(
+      f.store.reissue(old.ref, f.scope, {
+        ...newOwner,
+        location: { ...newOwner.location, workspaceID: WorkspaceID.create() },
+      }),
+      "target_denied",
+    )
     f.clock.value += 10
     const next = Effect.runSync(f.store.reissue(old.ref, f.scope, newOwner))
     expect(next.ref.id).not.toBe(old.ref.id)
@@ -176,7 +204,9 @@ describe("capability descriptor metadata", () => {
 
   test("requires positive configured bounds and rejects invalid wire fields", () => {
     ;[0, -1, 1.5, NaN, Infinity].forEach((maxEntries) =>
-      expect(() => Effect.runSync(CapabilityDescriptors.make({ maxEntries, ttlMillis: 50, now: () => 1000 }))).toThrow(),
+      expect(() =>
+        Effect.runSync(CapabilityDescriptors.make({ maxEntries, ttlMillis: 50, now: () => 1000 })),
+      ).toThrow(),
     )
     ;[0, -1, NaN, Infinity].forEach((ttlMillis) =>
       expect(() => Effect.runSync(CapabilityDescriptors.make({ maxEntries: 1, ttlMillis, now: () => 1000 }))).toThrow(),
@@ -185,5 +215,12 @@ describe("capability descriptor metadata", () => {
     denied(f.store.issue({ ...f.input, schemaHash: "bad" }), "stale_descriptor")
     denied(f.store.issue({ ...f.input, connectionGeneration: -1 }), "stale_descriptor")
     denied(f.store.issue({ ...f.input, targetGeneration: 0.5 }), "stale_descriptor")
+    const invalid = { type: "object" }
+    Reflect.set(invalid, "execute", () => "not metadata")
+    denied(f.store.issue({ ...f.input, inputSchema: invalid }), "unsupported_schema")
+    denied(f.store.issue({ ...f.input, outputSchema: invalid }), "unsupported_schema")
+    Reflect.deleteProperty(invalid, "execute")
+    Reflect.set(invalid, "number", Infinity)
+    denied(f.store.issue({ ...f.input, inputSchema: invalid }), "unsupported_schema")
   })
 })
