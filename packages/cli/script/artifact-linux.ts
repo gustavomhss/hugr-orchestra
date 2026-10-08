@@ -1,12 +1,19 @@
 import { constants } from "node:fs"
 import { artifactPosix } from "./artifact-posix"
+import { artifactLinuxRuntime } from "./artifact-elf"
+import { artifactDirectoryName, requireArtifactHost } from "./artifact-native"
+import type { ArtifactPosixInput } from "./artifact-posix"
 
 export async function artifactLinux() {
-  if (process.arch !== "x64" && process.arch !== "arm64")
-    throw new Error(`Unsupported artifact host CPU: ${process.arch}`)
-  const { CString, dlopen, ptr, read, toArrayBuffer } = await import("bun:ffi")
-  const musl = `/lib/ld-musl-${process.arch === "arm64" ? "aarch64" : "x86_64"}.so.1`
-  const library = dlopen((await Bun.file(musl).exists()) ? musl : "libc.so.6", {
+  return artifactPosix(await artifactLinuxOperations())
+}
+
+export async function artifactLinuxOperations(): Promise<ArtifactPosixInput> {
+  requireArtifactHost(process.platform, process.arch)
+  if (process.platform !== "linux") throw new Error("Unsupported artifact Linux producer host")
+  const { dlopen, ptr, read, toArrayBuffer, toBuffer } = await import("bun:ffi")
+  const runtime = await artifactLinuxRuntime()
+  const library = dlopen(runtime.library, {
     openat: { args: ["i32", "ptr", "i32", "u32"], returns: "i32" },
     mkdirat: { args: ["i32", "ptr", "u32"], returns: "i32" },
     unlinkat: { args: ["i32", "ptr", "i32"], returns: "i32" },
@@ -25,7 +32,7 @@ export async function artifactLinux() {
   // Authoritative Linux UAPI: arch/x86/entry/syscalls/syscall_64.tbl (316);
   // include/uapi/asm-generic/unistd.h (276), included by arm64's UAPI.
   const renameat2 = process.arch === "x64" ? 316n : 276n
-  return artifactPosix({
+  return {
     open: (parent, name, flags, mode) =>
       library.symbols.openat(parent === -1 ? -100 : parent, ptr(Buffer.from(`${name}\0`)), flags, mode),
     mkdir: (parent, name) => library.symbols.mkdirat(parent, ptr(Buffer.from(`${name}\0`)), 0o700),
@@ -62,7 +69,12 @@ export async function artifactLinux() {
             if (errno()) throw new Error(`Artifact readdir failed: ${errno()}`)
             return names
           }
-          const name = new CString(entry, 19).toString()
+          const size = read.u16(entry, 16)
+          if (size < 20) throw new Error("Invalid artifact Linux directory record")
+          const bytes = toBuffer(entry, 19, size - 19)
+          const end = bytes.indexOf(0)
+          if (end < 0) throw new Error("Unterminated artifact Linux directory record")
+          const name = artifactDirectoryName(bytes.subarray(0, end))
           if (name !== "." && name !== "..") names.push(name)
         }
       } finally {
@@ -78,5 +90,5 @@ export async function artifactLinux() {
       write: constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | 0x80000,
     },
     close: () => library.close(),
-  })
+  }
 }

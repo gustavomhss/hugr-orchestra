@@ -1,29 +1,53 @@
 import { constants } from "node:fs"
 import { artifactPosix } from "./artifact-posix"
 import type { Pointer } from "bun:ffi"
+import { artifactDirectoryName, requireArtifactHost } from "./artifact-native"
+import type { ArtifactPosixInput } from "./artifact-posix"
+import { join } from "node:path"
 
 export async function artifactDarwin() {
-  const { CString, dlopen, ptr, read, toArrayBuffer } = await import("bun:ffi")
+  return artifactPosix(await artifactDarwinOperations())
+}
+
+export async function artifactDarwinOperations(): Promise<ArtifactPosixInput> {
+  requireArtifactHost(process.platform, process.arch)
+  if (process.platform !== "darwin") throw new Error("Unsupported artifact Darwin producer host")
+  const { cc, dlopen, ptr, read, toArrayBuffer, toBuffer } = await import("bun:ffi")
+  const sdk = process.env.ORCHESTRA_ARTIFACT_DARWIN_SDK
+  if (!sdk) throw new Error("Darwin artifact C shim requires ORCHESTRA_ARTIFACT_DARWIN_SDK")
+  const shim = cc({
+    source: new URL("./artifact-darwin.c", import.meta.url),
+    include: join(sdk, "usr/include"),
+    library: "System",
+    define: process.arch === "arm64" ? { __arm64__: "1" } : { __x86_64__: "1" },
+    symbols: { orchestra_artifact_openat: { args: ["i32", "ptr", "i32", "u32"], returns: "i32" } },
+  })
   // Darwin sys/cdefs.h: Intel keeps legacy inode32 symbols; ARM64 has only
   // inode64. Match the SDK's __DARWIN_ALIAS_I/__DARWIN_INODE64 selection.
   const suffix = process.arch === "x64" ? "$INODE64" : ""
-  const library = dlopen("/usr/lib/libSystem.B.dylib", {
-    openat: { args: ["i32", "ptr", "i32", "u32"], returns: "i32" },
-    mkdirat: { args: ["i32", "ptr", "u32"], returns: "i32" },
-    unlinkat: { args: ["i32", "ptr", "i32"], returns: "i32" },
-    renameatx_np: { args: ["i32", "ptr", "i32", "ptr", "u32"], returns: "i32" },
-    __error: { args: [], returns: "ptr" },
-    dup: { args: ["i32"], returns: "i32" },
-    [`fdopendir${suffix}`]: { args: ["i32"], returns: "ptr" },
-    [`rewinddir${suffix}`]: { args: ["ptr"], returns: "void" },
-    [`readdir${suffix}`]: { args: ["ptr"], returns: "ptr" },
-    closedir: { args: ["ptr"], returns: "i32" },
-    close: { args: ["i32"], returns: "i32" },
-  })
+  const library = (() => {
+    try {
+      return dlopen("/usr/lib/libSystem.B.dylib", {
+        mkdirat: { args: ["i32", "ptr", "u32"], returns: "i32" },
+        unlinkat: { args: ["i32", "ptr", "i32"], returns: "i32" },
+        renameatx_np: { args: ["i32", "ptr", "i32", "ptr", "u32"], returns: "i32" },
+        __error: { args: [], returns: "ptr" },
+        dup: { args: ["i32"], returns: "i32" },
+        [`fdopendir${suffix}`]: { args: ["i32"], returns: "ptr" },
+        [`rewinddir${suffix}`]: { args: ["ptr"], returns: "void" },
+        [`readdir${suffix}`]: { args: ["ptr"], returns: "ptr" },
+        closedir: { args: ["ptr"], returns: "i32" },
+        close: { args: ["i32"], returns: "i32" },
+      })
+    } catch (error) {
+      shim.close()
+      throw error
+    }
+  })()
   const errno = () => read.i32(library.symbols.__error()!)
-  return artifactPosix({
+  return {
     open: (parent, name, flags, mode) =>
-      library.symbols.openat(parent === -1 ? -2 : parent, ptr(Buffer.from(`${name}\0`)), flags, mode),
+      shim.symbols.orchestra_artifact_openat(parent === -1 ? -2 : parent, ptr(Buffer.from(`${name}\0`)), flags, mode),
     mkdir: (parent, name) => library.symbols.mkdirat(parent, ptr(Buffer.from(`${name}\0`)), 0o700),
     unlink: (parent, name, directory) =>
       library.symbols.unlinkat(parent, ptr(Buffer.from(`${name}\0`)), directory ? 0x80 : 0),
@@ -48,7 +72,9 @@ export async function artifactDarwin() {
             return names
           }
           // Darwin struct dirent: ino64/seekoff64/reclen16/namlen16/type8/name.
-          const name = new CString(entry, 21).toString()
+          const length = read.u16(entry, 18)
+          if (read.u16(entry, 16) < 22 + length) throw new Error("Invalid artifact Darwin directory record")
+          const name = artifactDirectoryName(toBuffer(entry, 21, length))
           if (name !== "." && name !== "..") names.push(name)
         }
       } finally {
@@ -63,6 +89,9 @@ export async function artifactDarwin() {
       read: constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK | 0x1000000,
       write: constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW | 0x1000000,
     },
-    close: () => library.close(),
-  })
+    close: () => {
+      library.close()
+      shim.close()
+    },
+  }
 }
