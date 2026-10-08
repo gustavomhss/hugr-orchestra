@@ -307,6 +307,7 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
           resources: resources(scope),
           invocation: scope.call,
           message,
+          ...(scope.messageID === undefined ? {} : { messageID: scope.messageID }),
           ...(scope.invocation.tool === undefined ? { trigger: `${scope.invocation.operation}.${timing}` } : {}),
         }),
       ).pipe(Effect.exit)
