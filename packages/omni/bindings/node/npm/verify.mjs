@@ -19,6 +19,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { inspect, validateBinaries, validateRuntimeIdentity } from "./pack.mjs";
 
 /** The platform packages by id, with the `os`, `cpu` and (Linux) `libc` each declares. */
 const PLATFORMS = {
@@ -40,6 +41,7 @@ const id = Object.keys(PLATFORMS).find((k) => {
   return p.os === process.platform && p.cpu === process.arch && p.libc === libc;
 });
 assert(id, `${process.platform}-${process.arch}${libc ? `-${libc}` : ""} is not a hugr-omni platform`);
+if (process.env.HUGR_PROOF_ID) assert.equal(id, process.env.HUGR_PROOF_ID, "verification host does not match requested target");
 assert(!(runtime === "deno" && libc === "musl"), "Deno has no musl build: on musl, verify with node and bun only");
 const quickstart = join(dirname(fileURLToPath(import.meta.url)), "..", "examples", "quickstart.ts");
 
@@ -158,7 +160,18 @@ function peImports(pe) {
 try {
   // `npx -y deno@2` run in the project would read its .npmrc (the fixture registry): the binary itself runs there.
   const launcher = { bun: [process.env.HUGR_BUN ?? "bun", "-e", `"console.log(process.execPath)"`], deno: [process.env.HUGR_DENO ?? "deno", "eval", `"console.log(Deno.execPath())"`] }[runtime];
-  const exe = launcher ? `"${(await sh(launcher.join(" "), { cwd: tmp, env })).stdout.trim()}"` : "node";
+  const execPath = launcher ? (await sh(launcher.join(" "), { cwd: tmp, env, timeout: 120_000 })).stdout.trim() : process.execPath;
+  const exe = `"${execPath}"`;
+  writeFileSync(join(project, "identity.cjs"), `console.log(JSON.stringify({runtime:globalThis.Deno?'deno':process.versions.bun?'bun':'node',os:process.platform,cpu:process.arch,version:globalThis.Deno?Deno.version.deno:process.versions.bun||process.versions.node,execPath:process.execPath}));\n`);
+  const identity = JSON.parse((await timed(`${exe} ${runtime === "deno" ? "run --allow-env --allow-read " : ""}identity.cjs`)).out.trim());
+  validateRuntimeIdentity(identity, runtime, id);
+  const runtimeBinary = inspect(execPath);
+  assert.equal(runtimeBinary.cpu, process.arch, "runtime binary header CPU differs from executing runtime");
+  if (runtime === "bun" && libc === "musl") {
+    assert(runtimeBinary.needed.some((n) => /^libc\.musl-|^ld-musl-|^libc\.so$/.test(n)), `Bun is not a musl runtime: ${JSON.stringify(runtimeBinary)}`);
+    assert(!runtimeBinary.needed.includes("libc.so.6"), "Bun is a glibc build on musl");
+  }
+  console.log(`runtime proof ${JSON.stringify({ id, identity, runtimeBinary })}`);
   const install = {
     node: ["npm install --no-audit --no-fund --foreground-scripts --loglevel=verbose", { npm_config_cache: join(tmp, "cache") }],
     bun: [`${exe} install`, { BUN_INSTALL_CACHE_DIR: join(tmp, "cache") }],
@@ -175,6 +188,8 @@ try {
   }
   const supervisor = join(dirname(addon), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor");
   assert(existsSync(supervisor), "the supervisor is not next to the addon");
+  const binaries = validateBinaries(id, addon, supervisor);
+  const crtImports = {};
   if (process.platform === "win32") {
     // H5 (x64 and arm64): built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the
     // positive control: an import table read as empty would otherwise pass.
@@ -183,6 +198,7 @@ try {
       assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
       const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));
       assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(", ")}): build it with +crt-static (.cargo/config.toml)`);
+      crtImports[file === addon ? "addon" : "supervisor"] = dlls;
     }
   }
   for (const dir of [dirname(main), dirname(addon)]) assert.equal(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts, undefined, `${dir} has scripts`);
@@ -206,6 +222,14 @@ try {
   assert.match(hello.out, /^true /, "run() of the quickstart did not succeed");
   assert.match(hello.out, /parentPid/, "processes() of the quickstart listed nothing");
   console.log(`K9 ok  ${runtime}  ${id}  install ${installed.seconds.toFixed(1)} s  quickstart ${hello.seconds.toFixed(1)} s`);
+  const proofs = resolve(tarballs, "..", "proofs");
+  mkdirSync(proofs, { recursive: true });
+  writeFileSync(join(proofs, `${id}-${runtime}.json`), JSON.stringify({
+    id, identity, runtimeBinary, binaries, crtImports,
+    sha256: Object.fromEntries([["hugr_omni.node", addon], [process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor", supervisor]].map(([name, file]) => [name, createHash("sha256").update(readFileSync(file)).digest("hex")])),
+    tarballs: entries.filter((e) => names.includes(e.json.name)).map((e) => ({ name: e.json.name, sha256: createHash("sha256").update(readFileSync(e.file)).digest("hex") })),
+    installSeconds: installed.seconds, quickstartSeconds: hello.seconds, quickstart: hello.out,
+  }, null, 2));
 
   if (runtime === "node") {
     // The loader's messages, from the package alone (no platform package, no checkout): unsupported, and not installed.

@@ -4,7 +4,7 @@ name: omni-artifacts
 # script the mirror's release.yml also calls) on that platform's own OS and CPU and uploads `omni-<id>`, a directory
 # with hugr_omni.node and hugr-omni-supervisor[.exe]. With `pack`, it also packs the npm packages and proves a clean
 # install (bindings/node/npm/{pack,verify}.mjs), as release.yml does, and uploads `npm-<id>`. Called by other
-# workflows, or started by hand.
+# workflows, or started by hand. omni-artifacts-proof.yml owns the PR label trigger.
 on:
   workflow_call:
     inputs:
@@ -53,6 +53,7 @@ jobs:
       CARGO_TERM_COLOR: always
       HUGR_BUN: npx -y bun@1
       HUGR_DENO: npx -y deno@2
+      HUGR_PROOF_ID: ${{ matrix.id }}
     defaults:
       run:
         shell: bash
@@ -62,11 +63,15 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           ref: ${{ inputs.ref || '' }}
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "22"
+
+      - name: Artifact gate controls
+        run: node --test scripts/artifacts.node-smoke.mjs
 
       # An image without rustup (windows-11-arm may be one) gets it here; build-artifacts.mjs installs the toolchain.
       - name: rustup (Windows images without it)
@@ -101,6 +106,9 @@ jobs:
       - name: Build (${{ matrix.build }})
         run: node scripts/build-artifacts.mjs ${{ matrix.id }}
 
+      - name: Real artifact mutation controls
+        run: HUGR_PROOF_REAL=true node --test scripts/artifacts.node-smoke.mjs
+
       - name: Upload omni-${{ matrix.id }}
         uses: actions/upload-artifact@v4
         with:
@@ -121,7 +129,8 @@ jobs:
       - name: Clean install and run on Alpine (${{ matrix.runtimes }})
         if: inputs.pack && matrix.build == 'alpine'
         run: |
-          docker run --rm -v "$PWD":/w -w /w -e HUGR_BUN node:22-alpine sh -euc '
+          echo 'Deno: N/A on musl; no supported musl runtime build (GUARANTEES.md platform tiers).'
+          docker run --rm -v "$PWD":/w -w /w -e HUGR_BUN -e HUGR_PROOF_ID node:22-alpine sh -euc '
             apk add --no-cache git tar >/dev/null
             for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/npm/tarballs $rt; done'
 
@@ -130,5 +139,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: npm-${{ matrix.id }}
-          path: packages/omni/dist/npm/tarballs/*.tgz
+          path: |
+            packages/omni/dist/npm/tarballs/*.tgz
+            packages/omni/dist/npm/proofs/*.json
           if-no-files-found: error

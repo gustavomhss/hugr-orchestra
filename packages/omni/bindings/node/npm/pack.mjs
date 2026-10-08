@@ -22,7 +22,7 @@ const target = process.env.CARGO_TARGET_DIR ?? join(root, "target");
  * a musl addon is a cdylib linked against musl dynamically (built with `-C target-feature=-crt-static`), so a musl
  * Node or Bun can dlopen it.
  */
-const PLATFORMS = {
+export const PLATFORMS = {
   "win32-x64-msvc": { os: "win32", cpu: "x64", addon: "x86_64-pc-windows-msvc", supervisor: "x86_64-pc-windows-msvc", lib: "hugr_omni_node.dll" },
   "win32-arm64-msvc": { os: "win32", cpu: "arm64", addon: "aarch64-pc-windows-msvc", supervisor: "aarch64-pc-windows-msvc", lib: "hugr_omni_node.dll" },
   "darwin-arm64": { os: "darwin", cpu: "arm64", addon: "aarch64-apple-darwin", supervisor: "aarch64-apple-darwin", lib: "libhugr_omni_node.dylib" },
@@ -38,11 +38,14 @@ const licenses = Object.fromEntries(["LICENSE-MIT", "LICENSE-APACHE"].map((name)
 /** What a binary is, from its headers: format, CPU and, for ELF, the libraries it needs (its DT_NEEDED names) and
  * whether it is statically linked: no PT_INTERP and no DT_NEEDED in its dynamic table (a static-pie keeps a PT_DYNAMIC
  * for its own relocations, with no DT_NEEDED). */
-function inspect(file) {
+export function inspect(file) {
   const b = readFileSync(file);
+  assert(b.length >= 64, `${file}: empty or truncated binary (${b.length} bytes)`);
   if (b.readUInt32BE(0) === 0x7f454c46 && b[4] === 2) {
+    assert.equal(b[5], 1, `${file}: expected little-endian ELF`);
     const [phoff, size, count] = [Number(b.readBigUInt64LE(32)), b.readUInt16LE(54), b.readUInt16LE(56)];
     const headers = Array.from({ length: count }, (_, i) => phoff + i * size);
+    assert(count > 0 && size >= 56 && phoff + count * size <= b.length, `${file}: empty or truncated ELF program headers`);
     const interp = headers.some((h) => b.readUInt32LE(h) === 3);
     // A virtual address to a file offset, through the PT_LOAD segment that maps it.
     const offset = (addr) => {
@@ -72,13 +75,50 @@ function inspect(file) {
     return { format: "elf", cpu: { 62: "x64", 183: "arm64" }[b.readUInt16LE(18)], static: !interp && names.length === 0, needed: names };
   }
   if (b.readUInt32LE(0) === 0xfeedfacf) return { format: "macho", cpu: { 0x01000007: "x64", 0x0100000c: "arm64" }[b.readUInt32LE(4)] };
-  if (b.readUInt16LE(0) === 0x5a4d) return { format: "pe", cpu: { 0x8664: "x64", 0xaa64: "arm64" }[b.readUInt16LE(b.readUInt32LE(0x3c) + 4)] };
-  return {};
+  if (b.readUInt16LE(0) === 0x5a4d) {
+    const at = b.readUInt32LE(0x3c);
+    assert.equal(b.readUInt32LE(at), 0x4550, `${file}: missing PE signature`);
+    assert.equal(b.readUInt16LE(at + 24), 0x20b, `${file}: not a PE32+ image`);
+    return { format: "pe", cpu: { 0x8664: "x64", 0xaa64: "arm64" }[b.readUInt16LE(at + 4)] };
+  }
+  throw new Error(`${file}: unknown binary format`);
+}
+
+/** Checks the actual shipped bytes, shared by build, pack and clean-install proofs. */
+export function validateBinaries(id, addon, supervisor) {
+  const p = PLATFORMS[id];
+  assert(p, `unknown platform ${id}`);
+  for (const file of [addon, supervisor]) assert(existsSync(file), `${file} is missing: build it first (npm/README.md)`);
+  const want = { format: FORMAT[p.os], cpu: p.cpu };
+  const lib = inspect(addon);
+  assert.deepEqual({ format: lib.format, cpu: lib.cpu }, want, `${addon} is not a ${id} addon`);
+  const sup = inspect(supervisor);
+  assert.deepEqual({ format: sup.format, cpu: sup.cpu }, want, `${supervisor} is not a ${id} supervisor`);
+  if (p.os === "linux") {
+    assert(sup.static, `${supervisor} is dynamically linked: the Linux supervisor is the static musl build`);
+    const musl = lib.needed.filter((n) => /^libc\.musl-|^ld-musl-|^libc\.so$/.test(n));
+    const glibc = lib.needed.filter((n) => n === "libc.so.6");
+    assert.equal(
+      p.libc === "musl" ? musl.length > 0 && glibc.length === 0 : glibc.length > 0 && musl.length === 0,
+      true,
+      `${addon} is not a ${p.libc} addon: it needs ${JSON.stringify(lib.needed)}${p.libc === "musl" ? " (build it with RUSTFLAGS=\"-C target-feature=-crt-static\")" : ""}`,
+    );
+  }
+  return { addon: lib, supervisor: sup };
+}
+
+export function validateRuntimeIdentity(identity, runtime, id) {
+  assert(PLATFORMS[id], `unknown platform ${id}`);
+  assert.equal(identity.runtime, runtime, `launcher did not execute ${runtime}`);
+  assert.equal(identity.os, PLATFORMS[id].os, `${runtime}: wrong runtime OS for ${id}`);
+  assert.equal(identity.cpu, PLATFORMS[id].cpu, `${runtime}: wrong runtime CPU for ${id}`);
+  assert(identity.version && identity.execPath, `${runtime}: empty runtime identity`);
 }
 
 /** `npm` with `args` in `cwd` (no spaces in any argument; `npm` is a `.cmd` on Windows). */
 const npm = (args, cwd) => execFileSync("npm", args, { cwd, encoding: "utf8", shell: process.platform === "win32" });
 
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
 const [outArg, ...wanted] = process.argv.slice(2);
 assert(outArg, "usage: node pack.mjs <out-dir> [platform ...]");
 const out = resolve(outArg);
@@ -124,25 +164,7 @@ for (const id of ids) {
   const exe = `hugr-omni-supervisor${p.os === "win32" ? ".exe" : ""}`;
   const addon = join(target, p.addon, "release", p.lib);
   const supervisor = join(target, p.supervisor, "release", exe);
-  for (const file of [addon, supervisor]) assert(existsSync(file), `${file} is missing: build it first (npm/README.md)`);
-  const want = { format: FORMAT[p.os], cpu: p.cpu };
-  assert.deepEqual({ format: inspect(addon).format, cpu: inspect(addon).cpu }, want, `${addon} is not a ${id} addon`);
-  const sup = inspect(supervisor);
-  assert.deepEqual({ format: sup.format, cpu: sup.cpu }, want, `${supervisor} is not a ${id} supervisor`);
-  if (p.os === "linux") assert(sup.static, `${supervisor} is dynamically linked: the Linux supervisor is the static musl build`);
-  // The addon's C library is the package's: a musl addon links musl's libc dynamically (Alpine: libc.musl-<arch>.so.1,
-  // or a bare libc.so), never glibc's libc.so.6; a glibc addon never needs musl. The positive control is that the libc
-  // is named at all: a table read as empty would otherwise pass.
-  if (p.os === "linux") {
-    const { needed } = inspect(addon);
-    const musl = needed.filter((n) => /^libc\.musl-|^ld-musl-|^libc\.so$/.test(n));
-    const glibc = needed.filter((n) => n === "libc.so.6");
-    assert.equal(
-      p.libc === "musl" ? musl.length > 0 && glibc.length === 0 : glibc.length > 0 && musl.length === 0,
-      true,
-      `${addon} is not a ${p.libc} addon: it needs ${JSON.stringify(needed)}${p.libc === "musl" ? " (build it with RUSTFLAGS=\"-C target-feature=-crt-static\")" : ""}`,
-    );
-  }
+  console.log(`binary proof ${id}: ${JSON.stringify(validateBinaries(id, addon, supervisor))}`);
 
   pack(
     {
@@ -172,3 +194,4 @@ pack({ ...main, files: [...main.files, ...Object.keys(licenses)] }, {
   ...licenses,
   ...(existsSync(readme) && { "README.md": readme }),
 });
+}
