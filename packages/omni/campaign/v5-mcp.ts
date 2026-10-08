@@ -6,7 +6,7 @@ import path from "node:path"
 import { adoptTree, supervised, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
 
-export async function run(options: { mutation?: "legacy" } = {}) {
+export async function run(options: { mutation?: "legacy" | "missing-marker" } = {}) {
   const scratch = fixture("v5-mcp")
   const nonce = `omni-mcp-${randomUUID()}`
   const failureNonce = `${nonce}-failure`
@@ -22,7 +22,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     const call = api(server.url, scratch.project)
     const before = Date.now()
     const connected = await call<Record<string, { status: string; error?: string }>>("POST", "/mcp", {
-      name: "campaign", config: { type: "local", command: [scratch.node, mcpFixture(scratch, nonce), nonce], timeout: 10_000 },
+      name: "campaign", config: { type: "local", command: [scratch.node, mcpFixture(scratch, nonce, false, options.mutation === "missing-marker"), nonce], timeout: 10_000 },
     }, 25_000)
     metrics.connectMs = Date.now() - before
     metrics.connected = connected

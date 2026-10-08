@@ -4,9 +4,9 @@
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { adoptTree, cli, markerArgument, supervised, sweep, until, verdict, win } from "./lib.ts"
+import { adoptTree, markerArgument, supervised, sweep, until, verdict, win } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, plain, processTable, script, start } from "./protocol-fixtures.ts"
-import { byteFixture, byteStats, cookedCertificate, exactRaw } from "./pty-byte-probe.ts"
+import { byteFixture, byteStats, exactRaw } from "./pty-byte-probe.ts"
 
 type Terminal = { id: string; pid: number }
 
@@ -15,13 +15,17 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
   const nonce = `omni-terminal-${randomUUID()}`
   adoptTree(scratch.home, nonce)
   markerArgument(nonce, path.join(scratch.home, `${nonce}.edited`))
-  const missed = `MISSED-BEGIN-${nonce}-é😀-${randomUUID()}-MISSED-END-${nonce}`
+  const missedID = randomUUID()
+  const missed = `MISSED-BEGIN-${nonce}-é😀-${missedID}-MISSED-END-${nonce}`
   const metrics: Record<string, unknown> = {}
   const checks: Record<string, string> = { vim: "not-run", resize: "not-run", replay: "not-run", output: "not-run", rawAccounting: "not-run" }
   const sockets: WebSocket[] = []
   const errors: string[] = []
   const ids: string[] = []
   const hash = (text: string) => createHash("sha256").update(text).digest("hex")
+  // ConPTY can physically wrap printable text; replay comparison below still uses exact wire text/cursors.
+  const visible = (text: string) => win ? plain(text).replaceAll("\r", "").replaceAll("\n", "") : plain(text)
+  const containsMissed = (text: string) => visible(text).includes(win ? missedID : missed)
   const gap = /\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g
   try {
     processTable()
@@ -121,9 +125,21 @@ function write(text) {
 }
 write('READY-' + nonce + '\\n');
 readline.createInterface({input: process.stdin}).on('line', line => {
-  if (line === 'size') write('SIZE ' + process.stdout.rows + ' ' + process.stdout.columns + '\\n');
+  if (line === 'size') {
+    // Node's getWindowSize returns cached properties; Windows has no SIGWINCH refresh path.
+    if (process.platform === 'win32') {
+      if (typeof process.stdout._refreshSize !== 'function') throw Error('native Node TTY size refresh unavailable');
+      process.stdout._refreshSize();
+    }
+    const size = process.stdout.getWindowSize();
+    fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.size.json`))}, JSON.stringify({rows: size[1], cols: size[0]}));
+    write('SIZE ' + size[1] + ' ' + size[0] + '\\n');
+  }
   if (line === 'unicode') write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
-  if (line === 'more') write(${JSON.stringify(missed)} + '\\n');
+  if (line === 'more') {
+    const written = write(${JSON.stringify(missed)} + '\\n');
+    fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.missed.json`))}, JSON.stringify({written, token: ${JSON.stringify(missedID)}}));
+  }
   if (line === 'calibrate') write('CAL-' + nonce + '\\n');
   if (line === 'gap-control') write('\\x1b[0m\\n[orchestra: 7 bytes of output skipped]\\n');
   if (line === 'done') write('PRODUCER-DONE-' + nonce + '\\n');
@@ -167,7 +183,9 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await first.close()
       const observer = await attach(terminal.id, -1)
       observer.ws.send("more\r")
-      await until(20_000, "whole unique output while original client disconnected", () => observer.state.text.includes(missed) ? true : undefined)
+      await until(20_000, "whole unique output while original client disconnected", () => containsMissed(observer.state.text) ? true : undefined)
+        .catch((cause) => { metrics.replayFailure = { receivedTail: observer.state.text.slice(-4000), expectedToken: missedID,
+          producer: existsSync(path.join(scratch.home, `${nonce}.missed.json`)) ? JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.missed.json`), "utf8")) : null }; throw cause })
       await quiet(observer.state)
       const whole = await attach(terminal.id, 0)
       const expectedEnd = whole.state.meta
@@ -176,28 +194,30 @@ readline.createInterface({input: process.stdin}).on('line', line => {
         options.mutation === "truncated-replay" ? "truncate" : undefined)
       metrics.replay = { requestedCursor: cursor, returnedCursor: reconnect.state.meta, expectedEndCursor: expectedEnd,
         expectedUnits: expected.length, receivedUnits: reconnect.state.replay.length,
-        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true }
+        expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true,
+        tier: win ? "exact ConPTY rendered wire replay; producer Unicode byte identity not claimed" : "exact POSIX wire replay",
+        producer: JSON.parse(readFileSync(path.join(scratch.home, `${nonce}.missed.json`), "utf8")) }
       if (whole.state.replay.slice(0, cursor) !== baseline || expected.length === 0 || expected !== reconnect.state.replay ||
         reconnect.state.meta !== expectedEnd || expectedEnd !== cursor + expected.length || expectedEnd !== whole.state.replay.length ||
-        observer.state.text !== expected || !plain(expected).includes(missed) || !plain(reconnect.state.replay).includes(missed))
+        observer.state.text !== expected || !containsMissed(expected) || !containsMissed(reconnect.state.replay))
         throw new Error("reconnection replay differs from independent whole missed text/end cursor")
       writeFileSync(path.join(scratch.home, "replay.ws.txt"), whole.state.replay)
       await Promise.all([observer.close(), reconnect.close(), whole.close()])
       checks.replay = "passed"
     } catch (cause) { checks.replay = "failed"; errors.push(`replay: ${String(cause)}`) }
     try {
-      metrics.cookedOSOracle = cookedCertificate(createHash("sha256").update(readFileSync(cli())).digest("hex"))
+      metrics.outputTier = win ? "ConPTY cooked render/frame; no lossless byte promise" : "POSIX cooked responsiveness; raw identity checked separately"
       const output = await attach(terminal.id, -1)
       output.ws.send("calibrate\r")
       await until(20_000, "ASCII PTY echo/newline calibration", () => output.state.text.includes(`CAL-${nonce}`) ? true : undefined)
       await quiet(output.state)
       const calibration = `calibrate\r\nCAL-${nonce}\r\n`
-      if (output.state.text !== calibration) throw new Error(`PTY byte-accounting capability: non-canonical echo/rendering ${JSON.stringify(output.state.text)}`)
-      output.ws.send("gap-control\r")
+      if (!win && output.state.text !== calibration) throw new Error(`PTY byte-accounting capability: non-canonical echo/rendering ${JSON.stringify(output.state.text)}`)
+      if (!win) output.ws.send("gap-control\r")
       await until(20_000, "gap annotation parser positive control", () =>
-        [...output.state.text.matchAll(gap)].some((match) => Number(match[1]) === 7) ? true : undefined)
+        win || [...output.state.text.matchAll(gap)].some((match) => Number(match[1]) === 7) ? true : undefined)
       await quiet(output.state)
-      metrics.syntheticGapParserPositiveControl = 7
+      metrics.syntheticGapParserPositiveControl = win ? "not applicable to ConPTY render frames" : 7
       const from = output.state.text.length
       const started = Date.now()
       const healthMs: number[] = []
@@ -211,7 +231,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await quiet(output.state)
       // Flush a pending final lostBefore only after the producer finished and the consumer caught up.
       output.ws.send("done\r")
-      await until(20_000, "post-completion terminal marker", () => output.state.text.includes(`PRODUCER-DONE-${nonce}\r\n`) ? true : undefined)
+      await until(20_000, "post-completion terminal marker", () => plain(output.state.text).includes(`PRODUCER-DONE-${nonce}`) ? true : undefined)
       await quiet(output.state)
       const produced = JSON.parse(readFileSync(done, "utf8")) as { bytes: number; lines: number; completed: boolean; ms: number }
       if (!produced.completed || produced.bytes !== 50 * 1024 * 1024) throw new Error("producer did not finish exactly 50 MiB")
@@ -250,8 +270,43 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       metrics.outputFailure = { producer: existsSync(done) ? JSON.parse(readFileSync(done, "utf8")) : null,
         healthTimeoutMs: 10_000, failure: String(cause) }
     }
-    try {
+    if (win) {
+      checks.rawAccounting = "unsupported-ConPTY-no-POSIX-slave-termios"
+      metrics.rawAccounting = { supported: false, pass: null, reason: "ConPTY render/frame output has no POSIX raw slave or lossless byte contract" }
+    }
+    if (!win) try {
       const files = byteFixture(scratch, nonce, "raw", "v6-raw")
+      // Node/libuv can initialize TTY mode after the Python exec shim. Set/observe the actual slave after stdin
+      // has received `go`, immediately before payload writes; the pre-exec snapshot alone cannot certify raw output.
+      const configureRaw = `const configureRaw = () => {
+        const configured = require('node:child_process').spawnSync('python3', ['-c', ${JSON.stringify(`
+import termios, tty, fcntl, struct, json, os
+def snapshot():
+    a = termios.tcgetattr(1)
+    return {'OPOST': bool(a[1] & termios.OPOST), 'ONLCR': bool(a[1] & termios.ONLCR),
+      'ECHO': bool(a[3] & termios.ECHO), 'ICANON': bool(a[3] & termios.ICANON),
+      'size': list(struct.unpack('HHHH', fcntl.ioctl(1, termios.TIOCGWINSZ, bytes(8))))[:2]}
+before = snapshot()
+tty.setraw(0, termios.TCSANOW)
+record = {'before': before, 'after': snapshot(), 'phase': 'after-Node-stdio-initialization-before-payload'}
+json.dump(record, open(${JSON.stringify(files.termios)}, 'w'))
+if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(record, open(${JSON.stringify(`${files.termios}.initial`)}, 'w'))
+`)}], {stdio: ['inherit', 'inherit', 'pipe']});
+        if (configured.status !== 0) throw Error('actual slave raw configuration failed: ' + configured.stderr);
+      };\n`
+      // Terminals have a bounded dropping queue, not pipe backpressure (api-contract §WP-H). ACK each 64 KiB
+      // raw block after its trailing marker reaches the real WS. Cooked flood above remains an unpaced 50 MiB burst.
+      const rawProducer = readFileSync(`${files.base}.cjs`, "utf8")
+        .replace(/out\('READY-' \+ nonce \+ '\\n'\);\nfs\.writeFileSync\([^\n]+\);/, (ready) => `setImmediate(() => { configureRaw(); ${ready} });`)
+        .replace(".on('line', line => {", ".on('line', async line => {")
+        .replace("if (line === 'go') {", "if (line === 'ack') { const grant = credits.shift(); if (!grant) throw Error('unexpected raw ACK'); grant(); return; }\nif (line === 'go') { configureRaw();")
+        .replace(".repeat(1024));", ".repeat(64));")
+        .replace("for (let i = 0; i < 50; i++) written += out(block);", `for (let i = 0; i < 800; i++) {
+          const credit = Promise.withResolvers(); credits.push(credit.resolve);
+          written += out(block); out('RAW-BLOCK-' + i + '-' + nonce + '\\n'); await credit.promise;
+        }`)
+      if (!rawProducer.includes("setImmediate(() => { configureRaw();")) throw new Error("raw fixture readiness composition boundary changed")
+      writeFileSync(`${files.base}.cjs`, "const credits = [];\n" + configureRaw + rawProducer)
       const raw = await call<Terminal>("POST", "/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })
       ids.push(raw.id)
       const stream = await attach(raw.id, 0)
@@ -259,10 +314,33 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       const mode = JSON.parse(readFileSync(files.termios, "utf8")) as { after: { OPOST: boolean; ECHO: boolean; ICANON: boolean; size: number[] } }
       if (mode.after.OPOST || mode.after.ECHO || mode.after.ICANON || mode.after.size.join(" ") !== "40 120")
         throw new Error("raw/no-translation terminal mode not observed on actual slave")
+      const flow = { acknowledgments: 0 }
+      stream.ws.addEventListener("message", () => {
+        if (!stream.state.text.slice(-256).includes(`RAW-BLOCK-${flow.acknowledgments}-${nonce}\n`)) return
+        stream.ws.send("ack\n")
+        flow.acknowledgments++
+      })
       stream.ws.send("go\n")
       await until(120_000, "raw 50 MiB producer completion", () => existsSync(files.receipt) ? true : undefined)
+      const actualMode = JSON.parse(readFileSync(files.termios, "utf8")) as typeof mode & { phase: string }
+      metrics.rawSlaveMode = actualMode
+      metrics.rawStartupMode = JSON.parse(readFileSync(`${files.termios}.initial`, "utf8"))
+      metrics.rawFlowControl = { ...flow, blockBytes: 64 * 1024, blocks: 800,
+        tier: "receiver-acknowledged raw byte identity; unpaced burst losslessness not claimed" }
+      if (flow.acknowledgments !== 800) throw new Error("raw transfer did not acknowledge every payload block")
+      if (actualMode.phase !== "after-Node-stdio-initialization-before-payload" || actualMode.after.OPOST ||
+        actualMode.after.ECHO || actualMode.after.ICANON || actualMode.after.size.join(" ") !== "40 120")
+        throw new Error("raw flags missing on actual slave at payload boundary")
       stream.ws.send("done\n")
-      await until(20_000, "raw terminal responds after completion", () => stream.state.text.includes(`PRODUCER-DONE-${nonce}\n`) ? true : undefined)
+      await until(20_000, "raw terminal responds after completion", () => stream.state.text.includes(`PRODUCER-DONE-${nonce}`) ? true : undefined)
+        .catch((cause) => {
+          writeFileSync(files.output, stream.state.text)
+          metrics.rawFailure = { files, mode: actualMode, receipt: JSON.parse(readFileSync(files.receipt, "utf8")),
+            source: byteStats(readFileSync(files.source)), observed: byteStats(Buffer.from(stream.state.text)),
+            sourceTail: readFileSync(files.source).subarray(-256).toString(), observedTail: stream.state.text.slice(-256),
+            frames: stream.state.frames, socketError: stream.state.error }
+          throw cause
+        })
       stream.ws.send("quit\n")
       await until(20_000, "raw output drained and producer exited", () => stream.ws.readyState === WebSocket.CLOSED ? true : undefined)
       const source = readFileSync(files.source)
@@ -272,7 +350,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       writeFileSync(files.output, observed)
       const lost = [...observed.toString("utf8").matchAll(gap)].map((match) => Number(match[1]))
       const receipt = JSON.parse(readFileSync(files.receipt, "utf8")) as { written: number; sourceBytes: number; sourceSHA256: string }
-      metrics.rawAccounting = { files, mode, receipt, actualWire: byteStats(actual), observed: byteStats(observed), source: byteStats(source), lostBefore: lost }
+      metrics.rawAccounting = { files, mode: actualMode, preExecMode: mode, receipt, actualWire: byteStats(actual), observed: byteStats(observed), source: byteStats(source), lostBefore: lost }
       if (receipt.written !== 50 * 1024 * 1024 || byteStats(source.subarray(0, receipt.sourceBytes)).sha256 !== receipt.sourceSHA256 ||
         !exactRaw(observed, source, lost)) throw new Error("raw PTY output differs from actual producer stdout or contains a gap")
       checks.rawAccounting = "passed"
@@ -290,7 +368,8 @@ readline.createInterface({input: process.stdin}).on('line', line => {
     catch (cause) { errors.push(`oracle: ${String(cause)}`) }
     finally { await finish(scratch).catch((cause) => { errors.push(`teardown: ${String(cause)}`) }) }
   }
-  const pass = errors.length === 0 && Object.values(checks).every((status) => status === "passed")
+  const pass = errors.length === 0 && Object.entries(checks).every(([cell, status]) => status === "passed" ||
+    win && cell === "rawAccounting" && status === "unsupported-ConPTY-no-POSIX-slave-termios")
   const result = verdict("v6-terminal", { ...evidence(scratch), pass, status: pass ? "passed-local-terminal-slice" : "failed-local",
     wp10Complete: false, tuiQuit: { status: "not-run", owner: "lifecycle", pass: null },
     mutation: options.mutation ?? null, checks, metrics, errors,

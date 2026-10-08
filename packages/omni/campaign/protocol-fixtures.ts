@@ -15,19 +15,26 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   requireLocal()
   const scratch = isolated(name, { plugin: [], ...config })
   // Do not inherit provider tokens, server credentials, npm/git auth, or a user configuration path.
+  // Keep Windows machine/module discovery for Core's real PowerShell/CIM birth recorder; HOME/AppData stay isolated.
   const env = Object.fromEntries(Object.entries(scratch.env).filter(([key]) =>
-    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
+    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|COMPUTERNAME|OS|PROCESSOR_.*|NUMBER_OF_PROCESSORS|PSMODULEPATH|PROGRAMFILES(?:\(X86\))?|PROGRAMW6432|COMMONPROGRAMFILES(?:\(X86\))?|PROGRAMDATA|ALLUSERSPROFILE|APPDATA|LOCALAPPDATA|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
   ))
   Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
   delete env.ORCHESTRA_SERVER_PASSWORD
   delete env.ORCHESTRA_SERVER_USERNAME
-  const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p", "process.execPath"], {
+  const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p",
+    "JSON.stringify({node:process.execPath,home:require('node:fs').realpathSync.native(process.argv[1])})", scratch.home], {
     env, encoding: "utf8", windowsHide: true, timeout: 10_000,
   })
   if (resolved.status !== 0) throw new Error(`node unavailable: ${resolved.stderr}`)
+  const native = JSON.parse(resolved.stdout.trim()) as { node: string; home: string }
+  // Bun may retain Windows TEMP's 8.3 spelling; CLI/Node module loading canonicalizes it. One spelling makes
+  // copied TLS/tsserver marker arguments join the real OS argv instead of silently excluding those processes.
+  Object.entries(env).forEach(([key, value]) => { env[key] = value.replaceAll(scratch.home, native.home) })
   mkdirSync(LOGS, { recursive: true })
   const tag = `${name}-${Date.now()}-${randomUUID().slice(0, 8)}`
-  return { ...scratch, env, node: resolved.stdout.trim(), tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
+  return { ...scratch, home: native.home, project: path.join(native.home, "project"), env, node: native.node,
+    tag, hosts: [] as ChildProcess[], log: path.join(LOGS, `${tag}.host.log`) }
 }
 
 export type Fixture = ReturnType<typeof fixture>
@@ -39,11 +46,17 @@ export function evidence(scratch: Fixture) {
   }
   const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
   if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||
+    digest(path.join(path.dirname(bin), "hugr_omni.node")) !== built.addonSha256 ||
+    digest(path.join(path.dirname(bin), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor")) !== built.supervisorSha256 ||
     ["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
-    baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
-    cli: bin, ...Object.fromEntries(Object.entries(built).map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
+    baseline: "3d1fc21428",
+    // GitHub log lines truncate at 64 KiB. Full source manifests stay in cli-provenance.json; emit checked keys + digest.
+    cli: bin, ...Object.fromEntries(Object.entries(built).filter(([key]) => key !== "sourceHashes" && key !== "nativeSourceHashes")
+      .map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
+    sourceHashes: Object.fromEntries(["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"]
+      .map((file) => [file, built.sourceHashes[file]])),
     harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "pty-byte-probe.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
     fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),
@@ -140,7 +153,7 @@ export function main(url: string) {
 export const plain = (text: string) => text.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78]/g, "")
 
 /** A real stdio MCP peer; synchronous stderr writes precede every initialize response. */
-export function mcpFixture(scratch: Fixture, nonce: string, fail = false) {
+export function mcpFixture(scratch: Fixture, nonce: string, fail = false, omitMarker = false) {
   return script(scratch, nonce, `
 const fs = require('node:fs');
 const readline = require('node:readline');
@@ -158,7 +171,7 @@ const block = Buffer.from('x'.repeat(1023) + '\\n');
 let bytes = 0;
 for (let i = 0; i < 1024; i++) bytes += write(block);
 const marker = 'LAST-STDERR-' + nonce;
-const markerBytes = write(Buffer.from(marker + '\\n'));
+const markerBytes = ${omitMarker ? "0" : "write(Buffer.from(marker + '\\n'))"};
 fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.written.json`))}, JSON.stringify({bytes, markerBytes, marker, pid: process.pid}));
 ${fail ? "process.exit(17);" : ""}
 readline.createInterface({input: process.stdin}).on('line', line => {
