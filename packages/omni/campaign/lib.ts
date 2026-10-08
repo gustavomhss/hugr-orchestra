@@ -5,7 +5,7 @@
 // hosts, supervisors and observed members retain PID/start-time identities. OS queries fail closed and are bounded.
 // Each scenario prints one `CAMPAIGN_VERDICT {...}` JSON line.
 //
-// Plain node: builtins only, so the scripts run under bun on every OS and can be imported by bun:test wrappers.
+// Scripts run under Bun on every OS and can be imported by bun:test wrappers.
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpath
 import os from "node:os"
 import path from "node:path"
 import { tree } from "../../core/test/fixture/process-tree.ts"
+import { WindowsInventory } from "./windows-inventory.ts"
 
 export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
 
@@ -187,15 +188,23 @@ export async function fakeLLM(calls: ToolCall[]) {
 export type Identity = { pid: number; startTime: string }
 export type Started = { proc: ChildProcess; url: string; pid: number; extra: number[]; identity?: Identity; out: () => string }
 
-const hosts = new Map<string, { proc: ChildProcess; identity: Identity }[]>()
-const pins = new Map<number, Identity>()
+const owners = new Map<string, { proc: ChildProcess; identity: Identity }[]>()
+const pins = new Map<number, { identity: Identity; owner: string }>()
+const treeOwners = new Map<string, string>()
+const treeRoots = new Map<string, Identity[]>()
+const established = new Map<string, Identity[]>()
+const pendingVerdicts: ((error?: unknown) => void)[] = []
 
 /** Retain handles of only campaign-owned hosts: serve's argv contains no isolated HOME marker. */
 export function own(home: string, proc: ChildProcess) {
-  const captured = identity(proc.pid!)
-  const entries = hosts.get(home) ?? []
+  return retain(home, proc, identity(proc.pid!))
+}
+
+function retain(home: string, proc: ChildProcess, captured: Identity) {
+  if (!pins.has(captured.pid)) pins.set(captured.pid, { identity: captured, owner: home })
+  const entries = owners.get(home) ?? []
   entries.push({ proc, identity: captured })
-  hosts.set(home, entries)
+  owners.set(home, entries)
   return captured
 }
 
@@ -238,6 +247,7 @@ export function client(url: string, directory: string) {
 /** A nonce tree written as a script file, so a shell command line carries only plain words (and the nonce). */
 export function fileTree(home: string, depth = 2) {
   const t = tree(depth)
+  adoptTree(home, t.nonce)
   const file = path.join(home, `${t.nonce}.js`)
   writeFileSync(file, t.args[1]!)
   const slash = (value: string) => value.replaceAll("\\", "/")
@@ -245,34 +255,53 @@ export function fileTree(home: string, depth = 2) {
   return { ...t, args, line: [t.command, ...args].map((value) => `"${slash(value)}"`).join(" ") }
 }
 
-const QUERY_MS = 2000
-type Row = Identity & { parent: number; args: string; state: string }
+/** A descriptor crossing into another campaign process must retain its explicit owner roots. */
+export function adoptTree(marker: string, nonce: string, roots: Identity[] = []) {
+  if (treeOwners.has(nonce) && treeOwners.get(nonce) !== marker) throw new Error(`nonce owner conflict for ${nonce}`)
+  treeOwners.set(nonce, marker)
+  if (roots.length) treeRoots.set(nonce, roots)
+}
 
-/** Bounded, fail-closed OS table. Only named Windows kernel PIDs may lack command lines. */
+const QUERY_MS = 10_000
+export type Row = Identity & { parent: number; args: string | null; state: string; session?: number }
+
+/** Bounded live inventory. Unavailable argv remains unknown, never evidence of absence. */
 export function table(timeoutMs = QUERY_MS): Row[] {
   if (timeoutMs <= 0) throw new Error("process table query has no deadline budget")
   const options = { encoding: "utf8" as const, windowsHide: true, maxBuffer: 64 * 1024 * 1024, timeout: timeoutMs, killSignal: "SIGKILL" as const }
   if (win) {
-    const out = spawnSync(
-      "powershell",
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine,@{Name='StartTime';Expression={if ($_.CreationDate) {$_.CreationDate.ToFileTimeUtc().ToString()}}} | ConvertTo-Json -Compress",
-      ],
-      options,
-    )
-    if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
-    const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid)
-    parsed.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
+    const out = WindowsInventory.query(WindowsInventory.CIM, timeoutMs)
+    if (out.status !== 0) throw new Error(`Get-CimInstance failed: ${out.stderr}`)
+    const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid).filter((row) => !matches(row, out.instrument))
     return parsed
   }
   const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
   const rows = decodeUnixTable(out.stdout, out.pid)
-  rows.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
   return rows
+}
+
+/** Start the OS recorder before the KPI clock: creating PowerShell during a cell can block Bun's stdio delivery. */
+export async function prepareCapture() {
+  if (win) await WindowsInventory.prepare()
+}
+
+/** Request identity immediately after spawn; short exited commands retain only their exact ChildProcess handle. */
+export async function captureStarted(home: string, proc: ChildProcess) {
+  if (!win) {
+    const rows = table()
+    if (!rows.some((row) => row.pid === proc.pid && !row.state.startsWith("Z"))) {
+      // Missing inventory alone is not absence. The exact child handle must confirm OS exit.
+      await until(QUERY_MS, "short campaign process exit after missing identity", () => proc.exitCode !== null || proc.signalCode !== null ? true : undefined)
+      return
+    }
+    return retain(home, proc, identity(proc.pid!, rows))
+  }
+  if (proc.pid === undefined) throw new Error("spawned campaign process has no PID")
+  const captured = await WindowsInventory.capture(proc.pid)
+  if (proc.exitCode !== null || proc.signalCode !== null) return
+  if (!captured) throw new Error(`cannot capture live process identity for PID ${proc.pid}`)
+  return retain(home, proc, captured)
 }
 
 /** Exact ps decoding boundary; Linux cross-checks start time and argv through the same /proc identity. */
@@ -292,8 +321,7 @@ export function decodeUnixTable(stdout: string, queryPID: number): Row[] {
           const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ")
           const now = checked.slice(checked.lastIndexOf(")") + 2).split(" ")
           if (fields[19] !== now[19]) throw new Error(`PID ${pid} changed identity during /proc query`)
-          if (!args && !now[0]!.startsWith("Z") && Number(now[1]) !== 0 && Number(now[1]) !== 2) throw new Error(`live PID ${pid} has unavailable argv`)
-          return { fields: now, args: args || match[5]! }
+          return { fields: now, args: args || null }
         }
         catch (error) {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined // It exited after the ps snapshot.
@@ -311,18 +339,7 @@ export function decodeUnixTable(stdout: string, queryPID: number): Row[] {
 
 /** Pure CIM decoding boundary, separately falsifiable without claiming a Windows runtime run. */
 export function decodeWindowsTable(input: unknown, queryPID: number): Row[] {
-  if (!Array.isArray(input) || input.length === 0) throw new Error("Get-CimInstance returned no process table")
-  const rows = input.flatMap((value: unknown) => {
-    if (typeof value !== "object" || value === null) throw new Error("malformed Get-CimInstance row")
-    const row = value as Record<string, unknown>
-    // PID 0 is System Idle Process; PID 4 is System. Neither can be an owned campaign child.
-    if (row.ProcessId === queryPID || row.ProcessId === 0 || row.ProcessId === 4) return []
-    if (typeof row.ProcessId !== "number" || !Number.isSafeInteger(row.ProcessId) || row.ProcessId <= 0 || typeof row.ParentProcessId !== "number" || !Number.isSafeInteger(row.ParentProcessId) || row.ParentProcessId < 0 || typeof row.CommandLine !== "string" || !row.CommandLine.trim() || typeof row.StartTime !== "string" || !/^\d+$/.test(row.StartTime))
-      throw new Error(`Get-CimInstance cannot establish process identity/argv for PID ${row.ProcessId}: ${JSON.stringify(row)}`)
-    return [{ pid: row.ProcessId, parent: row.ParentProcessId, args: row.CommandLine, startTime: row.StartTime, state: "live" }]
-  })
-  if (!rows.some((row) => row.pid === process.pid)) throw new Error("Get-CimInstance returned an incomplete process table (querying host missing)")
-  return rows
+  return WindowsInventory.decode(input, queryPID)
 }
 
 export function identity(pid: number, rows = table()): Identity {
@@ -335,30 +352,71 @@ export function matches(row: Identity, pinned: Identity) {
   return row.pid === pinned.pid && row.startTime === pinned.startTime
 }
 
-export function hasNonce(args: string, nonce: string) {
-  return new RegExp(`(?:^|[\\s"'])${nonce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s"'])`).test(args)
+export function hasNonce(args: string | null, nonce: string) {
+  return args !== null && new RegExp(`(?:^|[\\s"'])${nonce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s"'])`).test(args)
+}
+
+/** Nonce search covers the campaign-launched owner subtree plus named identities, not the system table.
+ * Named fixtures and previously observed descendants survive reparenting; every live fixture enters this scope.
+ * Unknown rows outside it are not nonce-negative proof. Unknown rows inside it make discovery red.
+ */
+export function inventoryScope(rows: Row[], named: Identity[] = []) {
+  const host = rows.find((row) => row.pid === process.pid && !row.state.startsWith("Z"))
+  if (!host || !host.args) throw new Error("campaign querying host identity/argv unavailable")
+  const live = rows.filter((row) => !row.state.startsWith("Z"))
+  // The querying host is a visibility control, not an implicit owner of every tree.
+  const roots = named.length ? named : [host]
+  const scope = new Set(live.filter((row) => roots.some((id) => matches(row, id))).map((row) => row.pid))
+  for (;;) {
+    const descendants = live.filter((row) => !scope.has(row.pid) && scope.has(row.parent))
+    if (!descendants.length) return live.filter((row) => row.pid === host.pid || scope.has(row.pid))
+    descendants.forEach((row) => scope.add(row.pid))
+  }
+}
+
+function ownerScope(marker: string, rows: Row[], named: Identity[] = []) {
+  const owner = treeOwners.get(marker) ?? marker
+  const roots = [...(treeRoots.get(marker) ?? []), ...(owners.get(owner) ?? []).map((host) => host.identity)]
+  // Foreign exact ownership cuts discovery at that root/member; it never establishes membership here.
+  const foreign = [...owners.entries()].flatMap(([home, entries]) => home === owner ? [] : entries.map((host) => host.identity))
+    .concat([...established.entries()].flatMap(([key, ids]) => key !== marker && ((treeOwners.get(key) ?? key) !== owner || marker.startsWith("omni-tree-") && key.startsWith("omni-tree-")) ? ids : []))
+    .filter((id) => !roots.some((root) => matches(root, id)))
+  const available = rows.filter((row) => row.pid === process.pid || !foreign.some((id) => matches(row, id)))
+  return inventoryScope(available, [...roots, ...named, ...(!roots.length && !named.length ? [identity(process.pid, rows)] : [])])
 }
 
 /** Exact fixture records are members; argv-bearing shells/wrappers are reported separately, never counted as members. */
 export function members(nonce: string, rows = table()) {
-  const live = rows.filter((row) => row.pid !== process.pid && !row.state.startsWith("Z"))
   const dir = path.join(os.tmpdir(), nonce)
-  if (!nonce.startsWith("omni-tree-")) return { members: live.filter((row) => hasNonce(row.args, nonce)), wrappers: [] as Row[] }
-  const records = readdirSync(dir).filter((name) => name.endsWith(".json")).map((name) => {
+  const records = !nonce.startsWith("omni-tree-") ? (owners.get(nonce) ?? []).map((host) => host.identity) : readdirSync(dir).filter((name) => name.endsWith(".json")).map((name) => {
     const record = JSON.parse(readFileSync(path.join(dir, name), "utf8")) as Identity & { nonce: string }
     if (record.nonce !== nonce || !Number.isSafeInteger(record.pid) || record.pid <= 0 || typeof record.startTime !== "string" || !record.startTime)
       throw new Error(`malformed fixture identity: ${path.join(dir, name)}`)
     return record
   })
+  const known = established.get(nonce) ?? []
+  const named = [...records, ...known]
+  const live = ownerScope(nonce, rows, named).filter((row) => row.pid !== process.pid)
+  const roots = [...(treeRoots.get(nonce) ?? []), ...(owners.get(treeOwners.get(nonce) ?? nonce) ?? []).map((host) => host.identity)]
+  const unknown = live.filter((row) => row.args === null && ![...named, ...roots].some((id) => matches(row, id)))
+  if (unknown.length) throw new Error(`campaign nonce discovery has unknown argv in owner scope: ${JSON.stringify(unknown)}`)
   const found = live.filter((row) => records.some((record) => matches(row, record)))
-  // macOS may drop argv during kernel teardown before the PID disappears. A retained identity still counts live.
-  return { members: found, wrappers: live.filter((row) => hasNonce(row.args, nonce) && !found.some((member) => matches(member, row))) }
+  // Only this nonce's records or previously observed exact marker-bearing rows can survive argv loss.
+  const wrappers = live.filter((row) => (nonce.startsWith("omni-tree-") ? hasNonce(row.args, nonce) : row.args?.includes(nonce)) || known.some((id) => matches(row, id)))
+    .filter((row) => !found.some((member) => matches(member, row)))
+  const admitted = [...found, ...wrappers].map((row) => identity(row.pid, rows))
+  established.set(nonce, [...known, ...admitted.filter((id) => !known.some((old) => matches(old, id)))])
+  admitted.forEach((id) => { if (!pins.has(id.pid)) pins.set(id.pid, { identity: id, owner: nonce }) })
+  return { members: found, wrappers }
 }
 
 const SUPERVISOR = /(^|[\\/"])hugr-omni-supervisor(\.exe)?("|\s|$)/
 
 /** Every exact member AND wrapper must have a supervisor under a pinned campaign host. */
 export function control(nonce: string, size: number, hosts: Identity[], rows = table()) {
+  treeRoots.set(nonce, hosts)
+  const owner = [...owners.entries()].find(([, entries]) => entries.some((entry) => hosts.some((host) => matches(entry.identity, host))))?.[0]
+  if (owner && !treeOwners.has(nonce)) treeOwners.set(nonce, owner)
   const found = members(nonce, rows)
   const above = (pid: number, depth = 0): Row[] => {
     const row = rows.find((row) => row.pid === pid)
@@ -369,34 +427,44 @@ export function control(nonce: string, size: number, hosts: Identity[], rows = t
   const protectedMembers = [...found.members, ...found.wrappers].map((row) => ({
     identity: identity(row.pid, rows),
     argvPresent: hasNonce(row.args, nonce),
-    supervisors: above(row.pid).filter((ancestor) => SUPERVISOR.test(ancestor.args) && hosts.some((host) => above(ancestor.pid).some((parent) => matches(parent, host)))).map((row) => identity(row.pid, rows)),
+    supervisors: above(row.pid).filter((ancestor) => ancestor.args !== null && SUPERVISOR.test(ancestor.args) && hosts.some((host) => above(ancestor.pid).some((parent) => matches(parent, host)))).map((row) => identity(row.pid, rows)),
   }))
-  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }
+  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: hosts.length > 0 && hosts.every((host) => rows.some((row) => matches(row, host) && row.args !== null)) && found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }
 }
 
 /** Compatibility control, strengthened from any-member to all-member supervision. */
 export function supervised(nonce: string) {
   const rows = table()
-  const hosts = rows.filter((row) => rows.some((supervisor) => SUPERVISOR.test(supervisor.args) && supervisor.parent === row.pid)).map((row) => identity(row.pid, rows))
   const found = members(nonce, rows)
-  return control(nonce, found.members.length, hosts, rows).pass
+  const roots = (treeRoots.get(nonce) ?? (owners.get(treeOwners.get(nonce) ?? nonce) ?? []).map((host) => host.identity))
+    .filter((root) => rows.some((row) => matches(row, root) && !row.state.startsWith("Z")))
+  return control(nonce, found.members.length, roots, rows).pass
 }
 
 /** Supervisors whose parent is one of `pids` (the ones a given host started). */
 export function supervisorsOf(pids: number[]) {
-  return table().filter((row) => SUPERVISOR.test(row.args) && pids.includes(row.parent))
+  return table().filter((row) => row.args !== null && SUPERVISOR.test(row.args) && pids.includes(row.parent))
 }
 
 /** Every process whose command line mentions `marker` (a temp home, a nonce), except this one. */
 export function mentioning(marker: string) {
-  return table().filter((row) => row.pid !== process.pid && row.args.includes(marker))
+  const found = members(marker)
+  return [...found.members, ...found.wrappers]
+}
+
+/** Already owned identities are live even when their command lines become unavailable. */
+export function ownedIdentities(marker: string) {
+  return [...(owners.get(marker) ?? []).map((host) => host.identity), ...(established.get(marker) ?? [])]
 }
 
 /** Kill -9 on Unix; TerminateProcess on Windows (what `taskkill /F` does, without /T: the tree is omni's job). */
 export function kill9(target: Identity | number) {
   // Numeric compatibility uses FIRST observed identity, never a fresh meaning for a retained/reused PID.
-  const pinned = typeof target === "number" ? pins.get(target) : target
+  const pinned = typeof target === "number" ? pins.get(target)?.identity : target
   if (!pinned) throw new Error(`kill9 requires a captured process identity for PID ${target}`)
+  if (!Number.isSafeInteger(pinned.pid) || pinned.pid <= 0 || typeof pinned.startTime !== "string" || !pinned.startTime)
+    throw new Error("kill9 requires a valid captured process identity")
+  if (win) return WindowsInventory.kill(pinned)
   if (!table().some((row) => matches(row, pinned) && !row.state.startsWith("Z"))) return false
   try {
     process.kill(pinned.pid, "SIGKILL")
@@ -406,15 +474,44 @@ export function kill9(target: Identity | number) {
   }
 }
 
-/** Last resort cleanup: kill every process that mentions the marker, then reap recorded trees. */
+/** Last resort cleanup: exact owned identities and scoped markers; failed inventory cannot print green. */
 export async function cleanup(marker: string, nonces: string[]) {
-  const owned = hosts.get(marker) ?? []
-  for (const host of owned) if (host.proc.exitCode === null && host.proc.signalCode === null) kill9(host.identity)
-  const rows = table()
-  const targets = rows.filter((row) => row.pid !== process.pid && !row.state.startsWith("Z") && (row.args.includes(marker) || nonces.some((nonce) => hasNonce(row.args, nonce))))
-  for (const target of targets) kill9(identity(target.pid, rows))
-  await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((host) => host.proc.exitCode !== null || host.proc.signalCode !== null) ? true : undefined)
-  hosts.delete(marker)
+  const owned = owners.get(marker) ?? []
+  try {
+    if (win) await WindowsInventory.stop()
+    nonces.forEach((nonce) => adoptTree(marker, nonce))
+    const rows = table()
+    const fixtures = [...nonces, marker].flatMap((nonce) => { const found = members(nonce, rows); return [...found.members, ...found.wrappers] })
+    const named = [...owned.map((host) => host.identity), ...fixtures]
+    const scope = ownerScope(marker, rows, named)
+    const unknown = scope.filter((row) => row.args === null && !named.some((id) => matches(row, id)))
+    const targets = scope.filter((row) => row.pid !== process.pid && (named.some((id) => matches(row, id)) || row.args?.includes(marker)))
+    for (const target of targets) kill9(identity(target.pid, rows))
+    if (unknown.length) throw new Error(`cleanup has unknown argv in owner scope: ${JSON.stringify(unknown)}`)
+    const deadline = Date.now() + 10_000
+    await until(10_000, "campaign cleanup inventory empty", () => {
+      const current = table(Math.max(1, deadline - Date.now()))
+      const found = [...nonces, marker].flatMap((nonce) => { const found = members(nonce, current); return [...found.members, ...found.wrappers] })
+      const live = ownerScope(marker, current, named)
+      if (live.some((row) => row.args === null && !named.some((id) => matches(row, id)))) throw new Error("cleanup verification has unknown argv in owner scope")
+      return found.length === 0 && !live.some((row) => row.pid !== process.pid && (targets.some((id) => matches(row, id)) || row.args?.includes(marker))) ? true : undefined
+    })
+  } catch (error) {
+    pendingVerdicts.splice(0).forEach((print) => print(error))
+    throw error
+  } finally {
+    // Retained OS child handles still guarantee host teardown if the inventory oracle failed.
+    for (const host of owned) if (host.proc.exitCode === null && host.proc.signalCode === null) host.proc.kill("SIGKILL")
+    await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((host) => host.proc.exitCode !== null || host.proc.signalCode !== null) ? true : undefined).catch((error) => { pendingVerdicts.splice(0).forEach((print) => print(error)); throw error })
+    if (win) await WindowsInventory.stop().catch((error) => { pendingVerdicts.splice(0).forEach((print) => print(error)); throw error })
+    owners.delete(marker)
+  }
+  pendingVerdicts.splice(0).forEach((print) => print())
+}
+
+/** Delivery scripts return inside try/finally: publish only after their cleanup succeeds. */
+export function afterCleanup(print: (error?: unknown) => void) {
+  pendingVerdicts.push(print)
 }
 
 /** Same live/zero semantics on every OS: exact records plus exact argv wrappers, excluding zombies. */
@@ -428,7 +525,7 @@ export async function deadlineSnapshots(started: number, boundMs: number, nonces
   const deadline = started + boundMs
   const samples: { atMs: number; counts: number[]; fixtureIds: Identity[][]; wrappers: Identity[][]; retained: Identity[] }[] = []
   while (Date.now() < deadline - 250) {
-    const rows = table(Math.min(QUERY_MS, deadline - Date.now()))
+    const rows = table(Math.min(2000, deadline - Date.now()))
     const found = nonces.map((nonce) => members(nonce, rows))
     const atMs = Date.now() - started
     if (atMs >= boundMs) throw new Error(`process observation missed ${boundMs} ms deadline (${atMs} ms)`)
