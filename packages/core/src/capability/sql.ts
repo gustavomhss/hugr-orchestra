@@ -73,6 +73,18 @@ export const CapabilityArtifactReferenceTable = sqliteTable("capability_artifact
   foreignKey({ columns: [table.artifact_id, table.revision], foreignColumns: [CapabilityArtifactTable.id, CapabilityArtifactTable.revision] }).onDelete("cascade"),
 ])
 
+// Pins remain durable when their creating Session reference is removed.
+export const CapabilityArtifactPinTable = sqliteTable("capability_artifact_pin", {
+  artifact_id: text().$type<Capability.ArtifactID>().notNull(),
+  revision: integer().notNull(),
+  owner: text({ mode: "json" }).$type<Capability.Owner>().notNull(),
+  session_id: text().$type<SessionID>().notNull(),
+  time_created: Timestamps.time_created,
+}, (table) => [
+  primaryKey({ columns: [table.artifact_id, table.revision, table.session_id] }),
+  foreignKey({ columns: [table.artifact_id, table.revision], foreignColumns: [CapabilityArtifactTable.id, CapabilityArtifactTable.revision] }).onDelete("cascade"),
+])
+
 // Durable observations never imply permission to redispatch provider work after restart.
 export const CapabilityJobTable = sqliteTable("capability_job", {
   id: text().$type<Capability.JobID>().primaryKey(),
@@ -80,6 +92,7 @@ export const CapabilityJobTable = sqliteTable("capability_job", {
   invocation: text({ mode: "json" }).$type<Capability.InvocationRef>().notNull(),
   kind: text().$type<"provider" | "local-process" | "worker" | "script">().notNull(),
   operation: text().notNull(),
+  creation_key: text().unique(),
   state: text().notNull(),
   connection: text({ mode: "json" }).$type<Capability.ConnectionRef>(),
   target: text({ mode: "json" }).$type<Capability.TargetRef>(),

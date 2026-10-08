@@ -1,0 +1,59 @@
+import { expect } from "bun:test"
+import { AgentV2 } from "@orchestra/core/agent"
+import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { eq } from "drizzle-orm"
+import { Deferred, Effect, Fiber, Ref } from "effect"
+import { CapabilityPolicyFixture } from "./fixture/capability-policy"
+import { testEffect } from "./lib/effect"
+
+const it = testEffect(CapabilityPolicyFixture.layer)
+
+it.live("authorized commits hold actor policy stable through SQLite commit", () => Effect.gen(function* () {
+  const f = yield* CapabilityPolicyFixture.fixture()
+  const agents = yield* AgentV2.Service
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  const attempted = yield* Deferred.make<void>()
+  const changed = yield* Ref.make(false)
+  yield* CapabilityInvocation.withContext(f.binding, Effect.gen(function* () {
+    const permit = yield* f.policy.authorize(f.context, CapabilityPolicyFixture.input)
+    const commit = yield* f.policy.commit(permit, (tx) => Effect.gen(function* () {
+      yield* Deferred.succeed(entered, undefined)
+      yield* Deferred.await(release)
+      yield* tx.update(SessionTable).set({ title: "committed" }).where(eq(SessionTable.id, f.context.sessionID)).run()
+    })).pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    const revocation = yield* Effect.gen(function* () {
+      yield* Deferred.succeed(attempted, undefined)
+      yield* agents.transform((editor) => editor.update(f.context.agent, (agent) => {
+        agent.permissions = [...CapabilityPolicyFixture.deny]
+      }))
+      yield* Ref.set(changed, true)
+    }).pipe(Effect.forkChild)
+    yield* Deferred.await(attempted)
+    expect(yield* Ref.get(changed)).toBe(false)
+    yield* Deferred.succeed(release, undefined)
+    yield* Fiber.join(commit)
+    yield* Fiber.join(revocation)
+    expect(yield* Ref.get(changed)).toBe(true)
+    expect(yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.context.sessionID)).get())
+      .toMatchObject({ title: "committed" })
+    const error = yield* f.policy.commit(permit, () => f.target).pipe(Effect.flip)
+    yield* CapabilityPolicyFixture.expectFailure(error)
+    expect(yield* Ref.get(f.effects)).toBe(0)
+  }))
+}).pipe(Effect.timeout("10 seconds")))
+
+it.effect("permits cannot cross root scope or be minted from public claims", () => Effect.gen(function* () {
+  const f = yield* CapabilityPolicyFixture.fixture()
+  const permit = yield* CapabilityInvocation.withContext(f.binding,
+    f.policy.authorize(f.context, CapabilityPolicyFixture.input))
+  const absent = yield* f.policy.commit(permit, () => f.target).pipe(Effect.flip)
+  yield* CapabilityPolicyFixture.expectFailure(absent, "invocation_binding_missing")
+  const fake = { ...permit }
+  Object.getOwnPropertySymbols(fake).forEach((key) => Reflect.deleteProperty(fake, key))
+  const forged = yield* CapabilityInvocation.withContext(f.binding, f.policy.commit(fake, () => f.target)).pipe(Effect.flip)
+  yield* CapabilityPolicyFixture.expectFailure(forged, "invocation_binding_mismatch")
+  expect(yield* Ref.get(f.effects)).toBe(0)
+}))
