@@ -65,65 +65,63 @@ describe("Auth", () => {
     }),
   )
 
-  it.instance("native auth protection failure blocks publication and cleans revision or credential scratch", () =>
+  Array.of("revision", "credential").forEach((phase) => it.instance(`native auth protection failure blocks ${phase} publication and cleans scratch`, () =>
     Effect.gen(function* () {
       const auth = yield* Auth.Service
       const fsys = yield* FSUtil.Service
       const key = "native-failure-fixture"
       const old = new Auth.Api({ type: "api", key: "fixture-old" })
       const next = new Auth.Api({ type: "api", key: "fixture-next" })
-      yield* Effect.forEach(["revision", "credential"] as const, (phase) => Effect.gen(function* () {
-        yield* auth.set(key, old)
-        const before = yield* auth.snapshot(key)
-        const oldContent = yield* fsys.readFileString(join(Global.Path.data, "auth.json"))
-        const sources: string[] = []
-        const publications: string[] = []
-        const control: { release?: () => Promise<void>; source?: string } = {}
-        yield* Effect.addFinalizer(() => Effect.promise(async () => { await control.release?.() }))
-        const observed = Layer.succeed(FSUtil.Service, FSUtil.Service.of({
-          ...fsys,
-          writeJson: (source, data, mode) => fsys.writeJson(source, data, mode).pipe(
-            Effect.andThen(Effect.promise(async () => {
-              sources.push(source)
-              if (typeof data !== "object" || data === null || !(key in data)) throw new Error("Missing native-failure fixture record")
-              const kind = typeof data[key] === "string" ? "revision" : "credential"
-              if (kind !== phase) return
-              control.source = source
-              const failure = await preventNativeProtection(source)
-              control.release = async () => { await failure[Symbol.asyncDispose](); delete control.release }
-              expect((await lstat(source)).isFile()).toBe(true)
-            })),
-          ),
-          rename: (source, destination) => Effect.sync(() => { publications.push(destination) }).pipe(
-            Effect.andThen(fsys.rename(source, destination)),
-          ),
-          remove: (filename, options) => Effect.promise(async () => { await control.release?.() }).pipe(
-            Effect.andThen(fsys.remove(filename, options)),
-          ),
-        }))
-        const result = yield* Effect.gen(function* () {
-          const store = yield* Auth.Service
-          yield* store.set(key, next)
-        }).pipe(Effect.provide(Layer.fresh(LayerNode.compile(Auth.node, [[FSUtil.node, observed]]))), Effect.exit)
-        expect(Exit.isFailure(result)).toBe(true)
-        if (Exit.isSuccess(result)) throw new Error("Native protection failure was swallowed")
-        expect(Cause.pretty(result.cause)).toContain("PrivateFile.protect failed")
-        expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "Executable not found in $PATH" : "EPERM")
-        expect(control.source).toBeDefined()
-        expect(control.release).toBeUndefined()
-        expect(publications).toEqual(phase === "revision" ? [] : [join(Global.Path.data, "auth-revisions.json")])
-        expect(yield* fsys.readFileString(join(Global.Path.data, "auth.json"))).toBe(oldContent)
-        expect(yield* auth.get(key)).toEqual(old)
-        const after = yield* auth.snapshot(key)
-        if (phase === "revision") expect(after.revision).toBe(before.revision)
-        if (phase === "credential") expect(after.revision).not.toBe(before.revision)
-        yield* Effect.promise(async () => {
-          for (const source of sources) expect(await readdir(Global.Path.data)).not.toContain(basename(dirname(source)))
-        })
+      yield* auth.set(key, old)
+      const before = yield* auth.snapshot(key)
+      const oldContent = yield* fsys.readFileString(join(Global.Path.data, "auth.json"))
+      const sources: string[] = []
+      const publications: string[] = []
+      const control: { release?: () => Promise<void>; source?: string } = {}
+      yield* Effect.addFinalizer(() => Effect.promise(async () => { await control.release?.() }))
+      const observed = Layer.succeed(FSUtil.Service, FSUtil.Service.of({
+        ...fsys,
+        writeJson: (source, data, mode) => fsys.writeJson(source, data, mode).pipe(
+          Effect.andThen(Effect.promise(async () => {
+            sources.push(source)
+            if (typeof data !== "object" || data === null || !(key in data)) throw new Error("Missing native-failure fixture record")
+            const kind = typeof data[key] === "string" ? "revision" : "credential"
+            if (kind !== phase) return
+            control.source = source
+            const failure = await preventNativeProtection(source)
+            control.release = async () => { await failure[Symbol.asyncDispose](); delete control.release }
+            expect((await lstat(source)).isFile()).toBe(true)
+          })),
+        ),
+        rename: (source, destination) => Effect.sync(() => { publications.push(destination) }).pipe(
+          Effect.andThen(fsys.rename(source, destination)),
+        ),
+        remove: (filename, options) => Effect.promise(async () => { await control.release?.() }).pipe(
+          Effect.andThen(fsys.remove(filename, options)),
+        ),
       }))
+      const result = yield* Effect.gen(function* () {
+        const store = yield* Auth.Service
+        yield* store.set(key, next)
+      }).pipe(Effect.provide(Layer.fresh(LayerNode.compile(Auth.node, [[FSUtil.node, observed]]))), Effect.exit)
+      expect(Exit.isFailure(result)).toBe(true)
+      if (Exit.isSuccess(result)) throw new Error("Native protection failure was swallowed")
+      expect(Cause.pretty(result.cause)).toContain("PrivateFile.protect failed")
+      expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "Executable not found in $PATH" : "EPERM")
+      expect(control.source).toBeDefined()
+      expect(control.release).toBeUndefined()
+      expect(publications).toEqual(phase === "revision" ? [] : [join(Global.Path.data, "auth-revisions.json")])
+      expect(yield* fsys.readFileString(join(Global.Path.data, "auth.json"))).toBe(oldContent)
+      expect(yield* auth.get(key)).toEqual(old)
+      const after = yield* auth.snapshot(key)
+      if (phase === "revision") expect(after.revision).toBe(before.revision)
+      if (phase === "credential") expect(after.revision).not.toBe(before.revision)
+      yield* Effect.promise(async () => {
+        for (const source of sources) expect(await readdir(Global.Path.data)).not.toContain(basename(dirname(source)))
+      })
       yield* auth.remove(key)
     }),
-  )
+  ))
 
   it.instance("malformed auth revisions fail closed instead of becoming initial generations", () =>
     Effect.gen(function* () {
