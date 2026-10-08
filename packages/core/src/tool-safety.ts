@@ -27,6 +27,10 @@ export type Profile = {
   readonly sandbox?: {
     readonly enabled: boolean
     readonly allowedDomains?: ReadonlyArray<string>
+    /** Exact existing local sockets, granted only by the programmatic host and bound to native placement. */
+    readonly allowedUnixSockets?: readonly { readonly directory: string; readonly path: string }[]
+    /** Host-only exact IPv4 loopback destinations; the kernel endpoint rule is not a TCP-only grant. */
+    readonly allowedLoopbackEndpoints?: readonly { readonly directory: string; readonly host: "127.0.0.1"; readonly port: number }[]
     readonly denyPaths?: ReadonlyArray<string>
     /** Give each sandboxed command a fresh writable directory as TMPDIR, removed when the command ends. */
     readonly scratch?: boolean
