@@ -21,7 +21,7 @@ const it = testEffect(CapabilityPolicyFixture.layer)
 describe("CapabilityPolicy", () => {
   it.live("allows real pending/running roots; captured denies and invalid inputs stop target before queue", () => Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture()
-    const observation = yield* CapabilityPolicyFixture.observeAsked()
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
     yield* f.run()
     yield* f.events.publish(SessionEvent.Tool.Called, {
       sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
@@ -47,7 +47,7 @@ describe("CapabilityPolicy", () => {
     yield* f.run({ ...f.binding, nativeDenyFloor: [{ action: "read", resource: "*", effect: "ask" }] })
     expect(yield* Ref.get(f.effects)).toBe(3)
     // Positive control proves the same listener sees a real queue event.
-    const q = yield* CapabilityPolicyFixture.queued(f.run({ ...f.binding, effectiveRules: [] }))
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run({ ...f.binding, effectiveRules: [] }))
     expect(yield* Ref.get(observation.count)).toBe(1)
     yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
     expect((yield* q.join)._tag).toBe("Success")
@@ -57,7 +57,7 @@ describe("CapabilityPolicy", () => {
   it.live("captured ask really queues despite configured allow; once/reject/correction use kernel reply", () => Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture()
     yield* Effect.forEach(["once", "reject", "correct"] as const, (reply) => Effect.gen(function* () {
-      const q = yield* CapabilityPolicyFixture.queued(f.run({ ...f.binding, effectiveRules: [] }))
+      const q = yield* CapabilityPolicyFixture.queued(f.context, f.run({ ...f.binding, effectiveRules: [] }))
       expect(q.request).toMatchObject({ sessionID: f.context.sessionID, ...CapabilityPolicyFixture.input, source: {
         type: "tool", messageID: f.context.assistantMessageID, callID: f.context.toolCallID,
       } })
@@ -79,7 +79,7 @@ describe("CapabilityPolicy", () => {
   it.live("captured allow still waits for current kernel ask approval", () => Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture()
     yield* CapabilityPolicyFixture.setRules([])
-    const q = yield* CapabilityPolicyFixture.queued(f.run())
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run())
     expect(yield* Ref.get(f.effects)).toBe(0)
     expect(yield* f.permissions.list()).toEqual([q.request])
     yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
@@ -94,7 +94,7 @@ describe("CapabilityPolicy", () => {
     const saved = yield* PermissionSaved.Service
     yield* CapabilityPolicyFixture.setRules([])
     yield* Effect.forEach([1, 2], (executed) => Effect.gen(function* () {
-      const q = yield* CapabilityPolicyFixture.queued(f.run({ ...f.binding, effectiveRules: [] }))
+      const q = yield* CapabilityPolicyFixture.queued(f.context, f.run({ ...f.binding, effectiveRules: [] }))
       expect(yield* Ref.get(f.effects)).toBe(executed - 1)
       expect(yield* f.permissions.list()).toEqual([q.request])
       yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
@@ -117,7 +117,7 @@ describe("CapabilityPolicy", () => {
       timestamp: CapabilityPolicyFixture.timestamp,
     })
     yield* f.run()
-    const q = yield* CapabilityPolicyFixture.queued(f.run({ ...f.binding, effectiveRules: [] }))
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run({ ...f.binding, effectiveRules: [] }))
     yield* CapabilityPolicyFixture.setRules(CapabilityPolicyFixture.allow, AgentV2.ID.make("reviewer"))
     yield* CapabilityPolicyFixture.setRules(CapabilityPolicyFixture.deny)
     yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
@@ -205,7 +205,7 @@ describe("CapabilityPolicy", () => {
 
   it.live("settled root before/during approval cannot authorize; interruption survives and clears queue", () => Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture()
-    const q = yield* CapabilityPolicyFixture.queued(f.run({ ...f.binding, effectiveRules: [] }))
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run({ ...f.binding, effectiveRules: [] }))
     yield* f.events.publish(SessionEvent.Tool.Failed, {
       sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
       callID: f.context.toolCallID, error: { type: "unknown", message: "done" }, provider: { executed: false },
@@ -220,7 +220,7 @@ describe("CapabilityPolicy", () => {
     expect(yield* f.permissions.list()).toEqual([])
     yield* q.observation.unsubscribe
     const active = yield* CapabilityPolicyFixture.fixture()
-    const waiting = yield* CapabilityPolicyFixture.queued(active.run({ ...active.binding, effectiveRules: [] }))
+    const waiting = yield* CapabilityPolicyFixture.queued(active.context, active.run({ ...active.binding, effectiveRules: [] }))
     yield* Fiber.interrupt(waiting.fiber)
     const exit = yield* Fiber.await(waiting.fiber)
     expect(exit._tag).toBe("Failure")

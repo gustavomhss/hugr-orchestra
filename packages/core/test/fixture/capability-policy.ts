@@ -94,7 +94,7 @@ export function fixture(options: { message?: boolean; part?: boolean; agent?: st
   })
 }
 
-export function observeAsked() {
+export function observeAsked(context: Tool.Context) {
   return Effect.gen(function* () {
     const events = yield* EventV2.Service
     const count = yield* Ref.make(0)
@@ -102,8 +102,11 @@ export function observeAsked() {
     const repeated = yield* Deferred.make<void>()
     const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
       if (event.type !== PermissionV2.Event.Asked.type) return
+      const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+      if (request.sessionID !== context.sessionID || request.source?.type !== "tool" ||
+        request.source.messageID !== context.assistantMessageID || request.source.callID !== context.toolCallID) return
       const n = yield* Ref.updateAndGet(count, (n) => n + 1)
-      yield* Deferred.succeed(first, Schema.decodeUnknownSync(PermissionV2.Request)(event.data))
+      yield* Deferred.succeed(first, request)
       if (n > 1) yield* Deferred.succeed(repeated, undefined)
     }))
     yield* Effect.addFinalizer(() => unsubscribe)
@@ -111,9 +114,9 @@ export function observeAsked() {
   })
 }
 
-export function queued(effect: Effect.Effect<void, Capability.Failure>) {
+export function queued(context: Tool.Context, effect: Effect.Effect<void, Capability.Failure>) {
   return Effect.gen(function* () {
-    const observation = yield* observeAsked()
+    const observation = yield* observeAsked(context)
     const fiber = yield* effect.pipe(Effect.result, Effect.forkChild)
     const request = yield* Effect.raceFirst(Deferred.await(observation.first), Fiber.join(fiber).pipe(
       Effect.andThen(Effect.fail(new Error("POLICY_BYPASSED_PERMISSION_QUEUE"))),
