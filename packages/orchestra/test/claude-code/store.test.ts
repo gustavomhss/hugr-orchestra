@@ -106,7 +106,8 @@ it.instance("full native archive and mapping survive reload; masks remove only t
   expect(native.keys[0].entries).toEqual(f.entries)
   expect(native.mapping.api).toBe(f.assistant.id)
   expect(native.mapping.u).toBe(f.user.id)
-  expect((yield* f.fs.stat(path.join(store.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
+  // Windows stat exposes synthetic POSIX bits rather than ACL permissions.
+  if (process.platform !== "win32") expect((yield* f.fs.stat(path.join(store.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
   expect((yield* f.fs.stat(store.directory)).mode & 0o777).toBe(0o700)
 }), 60_000)
 

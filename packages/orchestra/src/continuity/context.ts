@@ -30,7 +30,7 @@ export function create() {
       if (entry.artifact.version === 5) {
         const index = completeIndex(entry, messages)
         if (index === undefined) { entries.delete(sessionID); return { messages, system: [] } }
-        const current = RequestSource.latest(messages, original)
+        const current = RequestSource.latest(messages, original, sessionID)
         const newer = messages.slice(index)
         return { messages: [...current && !newer.includes(current) ? [current] : [], ...newer], system: [entry.artifact.text],
           coverage: { version: 5, boundary: entry.boundary, coveredThrough: entry.artifact.coveredThrough, currentUserID: current?.info.id } }

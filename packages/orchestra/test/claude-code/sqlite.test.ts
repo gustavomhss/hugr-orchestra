@@ -36,7 +36,8 @@ it.instance("SQLite retains both acknowledged child-process writes when A resume
   a.stdin.end()
   expect(yield* Effect.promise(() => a.exited)).toBe(0)
   expect((yield* storage.read).updates).toEqual(["B", "A"])
-  expect((yield* fs.stat(path.join(instance.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
+  // Windows stat exposes synthetic POSIX bits; durability assertions run on every platform.
+  if (process.platform !== "win32") expect((yield* fs.stat(path.join(instance.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
 }), 120_000)
 
 it.instance("an existing empty SQLite placeholder still migrates retained legacy history", () => Effect.gen(function* () {

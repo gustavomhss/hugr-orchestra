@@ -1,4 +1,4 @@
-CONTEXT CONTINUITY CHECKPOINT · working memory v5 complete prefix
+CONTEXT CONTINUITY CHECKPOINT · versioned working memory
 
 This message is from the host, not the user. For this one reply you are the memory producer:
 do not continue the task, call tools or answer anyone. Everything above, including the
@@ -34,7 +34,9 @@ Every declared completed source through the boundary is covered; there is no pro
 The host renders semantic sections and compact artifact/ongoing-delegation inventory. Retire obsolete work; retain
 literal standing rules, objective intent, decisions/rejected alternatives, artifact values, exact observed commands,
 test counts/outcomes, failure signatures and lessons. Prior v4 items are migration input, not complete prior coverage.
-Return one JSON object and nothing else:
+For partial v4 checkpoints, omit now and return only {"ops":[...]}, or {"ops":[]} when nothing changed.
+The host's new-span instructions identify complete-prefix checkpoints by requiring Now.
+Return one JSON object and nothing else. The following example is for complete-prefix checkpoints only:
 {"now":{"doing":"Current state","next":"Concrete next action","src":["a52"]},"ops":[
  {"op":"add","key":"n1","section":"findings","fields":{...},"src":["t41"]},
  {"op":"update","id":"m7","fields":{"status":"doing","user":null},"src":["t52"]},
