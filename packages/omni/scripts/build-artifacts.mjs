@@ -17,15 +17,17 @@
 
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { PLATFORMS, validateBinaries } from "../bindings/node/npm/pack.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const target = process.env.CARGO_TARGET_DIR ?? join(root, "target");
 
 /** The platforms: how each is built and the Rust triples of what it carries (the same triples as pack.mjs). */
-const PLATFORMS = {
+const BUILDS = {
   "linux-x64-gnu": { build: "zig", addon: "x86_64-unknown-linux-gnu", supervisor: "x86_64-unknown-linux-musl" },
   "linux-arm64-gnu": { build: "zig", addon: "aarch64-unknown-linux-gnu", supervisor: "aarch64-unknown-linux-musl" },
   "linux-x64-musl": { build: "alpine", addon: "x86_64-unknown-linux-musl", supervisor: "x86_64-unknown-linux-musl" },
@@ -42,8 +44,10 @@ const out = resolve(root, outAt >= 0 ? (args.splice(outAt, 2)[1] ?? "") : "dist/
 assert(outAt < 0 || out !== root, "--out needs a directory");
 const [id, ...extra] = args;
 assert(id && extra.length === 0, `usage: node scripts/build-artifacts.mjs <id> [--out <dir>] (id: one of ${Object.keys(PLATFORMS).join(", ")})`);
-const p = PLATFORMS[id];
+const p = BUILDS[id];
 assert(p, `unknown platform ${id} (one of ${Object.keys(PLATFORMS).join(", ")})`);
+assert.equal(process.platform, PLATFORMS[id].os, `${id} requires its native OS`);
+assert.equal(process.arch, PLATFORMS[id].cpu, `${id} requires its native CPU`);
 
 /** Runs `cmd` in this repository with its output on ours; a non-zero exit throws. */
 function run(cmd, cmdArgs, env = {}) {
@@ -52,6 +56,13 @@ function run(cmd, cmdArgs, env = {}) {
 }
 /** The output of `cmd` run in this repository. */
 const read = (cmd, cmdArgs) => execFileSync(cmd, cmdArgs, { cwd: root, encoding: "utf8" });
+const source = {
+  headSHA: read("git", ["rev-parse", "HEAD"]).trim(),
+  treeHash: read("git", ["rev-parse", "HEAD^{tree}"]).trim(),
+  omniTreeHash: read("git", ["rev-parse", "HEAD:packages/omni"]).trim(),
+};
+if (process.env.HUGR_PROOF_HEAD) assert.equal(source.headSHA, process.env.HUGR_PROOF_HEAD, "checkout is not the current PR head");
+console.log(`source proof ${JSON.stringify(source)}`);
 
 const windows = id.startsWith("win32-");
 const lib = windows ? "hugr_omni_node.dll" : id.startsWith("darwin-") ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so";
@@ -96,6 +107,7 @@ if (p.build === "zig") {
     // same way). KERNEL32 is the positive control: an import table read as empty would otherwise pass.
     for (const file of [addon, supervisor]) {
       const dlls = peImports(readFileSync(file));
+      console.log(`CRT proof ${file}: ${JSON.stringify(dlls)}`);
       assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
       const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));
       assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(", ")}): build it with +crt-static (.cargo/config.toml)`);
@@ -105,11 +117,17 @@ if (p.build === "zig") {
 
 // The artifact: the two files under the names the packages and Orchestra's loader use.
 const dir = join(out, id);
+const binaries = validateBinaries(id, addon, supervisor);
 rmSync(dir, { recursive: true, force: true });
 mkdirSync(dir, { recursive: true });
 copyFileSync(addon, join(dir, "hugr_omni.node"));
 copyFileSync(supervisor, join(dir, exe));
 if (!windows) chmodSync(join(dir, exe), 0o755);
+writeFileSync(join(dir, "proof.json"), JSON.stringify({
+  id, source, host: { os: process.platform, cpu: process.arch }, binaries,
+  sha256: Object.fromEntries(["hugr_omni.node", exe].map((name) => [name, createHash("sha256").update(readFileSync(join(dir, name))).digest("hex")])),
+  deno: p.build === "alpine" ? "N/A: Deno has no musl build" : "required clean-install proof",
+}, null, 2));
 console.log(`built ${id}: ${join(dir, "hugr_omni.node")} ${join(dir, exe)}`);
 
 /** The DLL names a PE file imports (directly and delay-loaded); the same reader as verify.mjs. */
