@@ -139,6 +139,8 @@ export namespace PluginLoader {
   export async function load(row: Resolved): Promise<{ ok: true; value: Loaded } | { ok: false; error: unknown }> {
     let mod
     try {
+      // Runtime hooks alone do not admit footprints. Admission must precede
+      // import, which can trigger OpenTUI's source prescan or bare-to-disk rewrite.
       await PluginSdkRuntime.prepareExternalImport(row.entry, row.pkg?.dir ?? path.dirname(row.entry.startsWith("file:") ? fileURLToPath(row.entry) : row.entry))
       await PluginSdkRuntime.install()
       mod = await import(row.entry)

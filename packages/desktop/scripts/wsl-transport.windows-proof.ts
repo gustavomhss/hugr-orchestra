@@ -3,8 +3,8 @@ import { createHash } from "node:crypto"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { installWslArtifact } from "./artifact"
-import { runWsl, runWslInDistro, shellEscape } from "./runtime"
+import { installWslArtifact } from "../src/main/wsl/artifact"
+import { runWsl, runWslInDistro, shellEscape } from "../src/main/wsl/runtime"
 
 // Required Windows-only lane: missing WSL is a failure, never a skipped proof.
 test("real Windows/WSL transport copies verified host bytes to isolated guest HOME", async () => {

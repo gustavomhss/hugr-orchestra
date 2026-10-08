@@ -11,22 +11,26 @@ export function resolveChannel(): Channel {
   return raw === "beta" || raw === "prod" ? raw : "dev"
 }
 
-export async function buildCliToResources(input: { targets?: readonly string[] } = {}) {
+export async function buildCliToResources(input: { targets?: readonly string[]; prebuilt?: string } = {}) {
   const desktop = resolve(import.meta.dir, "..")
   const cli = resolve(desktop, "../cli")
   const version =
     process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(desktop, "../orchestra/package.json")).json()).version
   const targets =
     input.targets ?? (RUST_TARGET ? targetsForRust(RUST_TARGET) : desktopCliTargets(process.platform, process.arch))
-  await targets.reduce(async (previous, target) => {
-    await previous
-    // Workspace setup owns dependency provisioning; reinstalling here can replace the runner's hoisted layout.
-    await $`bun script/build.ts --target ${target} --skip-install`
-      .cwd(cli)
-      .env({ ...process.env, ORCHESTRA_VERSION: version })
-  }, Promise.resolve())
+  const prebuilt = input.prebuilt ?? process.env.ORCHESTRA_CLI_PREBUILT_DIR
+  if (prebuilt === undefined) {
+    await targets.reduce(async (previous, target) => {
+      await previous
+      // Workspace setup owns dependency provisioning; reinstalling here can replace the runner's hoisted layout.
+      await $`bun script/build.ts --target ${target} --skip-install`
+        .cwd(cli)
+        .env({ ...process.env, ORCHESTRA_VERSION: version })
+    }, Promise.resolve())
+  }
   return stageCliArtifacts({
     dist: join(cli, "dist"),
+    prebuilt,
     directory: join(desktop, "resources/cli"),
     version,
     targets,

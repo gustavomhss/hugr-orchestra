@@ -14,6 +14,8 @@ Product architecture steering: the owner decided to transfer decomposition, plan
 
 ## Recovered implementation facts
 
+These observations describe the frozen baseline, before the implementation wave; current closure status is tracked by acceptance evidence.
+
 - Desktop still installs upstream CLI packages and expects a Rust service-password command its owned V2 CLI does not implement.
 - The owned V2 CLI builder emits a differently named executable and its entrypoint reports `local` even in compiled builds.
 - WSL installation is disabled; its foreground startup arguments/password convention belong to the other runtime.
@@ -81,6 +83,8 @@ export function verifyCliArtifact(directory: string, target: string): Promise<{ 
 ```
 
 Packaging includes the CLI directory outside app.asar for every channel. The descriptor version is authoritative for WSL server checks; desktop release metadata must align with its built artifacts. No binary cache hit is trusted without checking its bytes.
+
+Cross-runner handoff accepts a producer's schema-1 CLI directory through `buildCliToResources({ prebuilt: directory })` or `ORCHESTRA_CLI_PREBUILT_DIR`. An explicit producer source disables local CLI compilation; missing/malformed input never falls back to a build or download. Staging checks the expected version, every required target, confined source files and producer digests; copied bytes are checked again before native signing, then consumer digests are computed after signing. Producer and destination paths must contain no `..` segments and their trees must not overlap, including canonical aliases and symlinked ancestors. Parent traversal is rejected because Bun's filesystem operations do not resolve symlink/`..` spellings consistently. The helper retains native executable/version checks. This source seam does not itself prove a Linux-producer/Windows-consumer workflow or native WSL execution.
 
 ### SDK closure
 

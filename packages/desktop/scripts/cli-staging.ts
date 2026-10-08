@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
-import { dirname, join } from "node:path"
+import { basename, dirname, isAbsolute, join, relative, sep } from "node:path"
 import { realpath } from "node:fs/promises"
 import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
@@ -11,6 +11,7 @@ export function desktopCliTargets(platform: string, arch: string) {
 
 export async function stageCliArtifacts(input: {
   dist: string
+  prebuilt?: string
   directory: string
   version: string
   targets: readonly string[]
@@ -32,25 +33,47 @@ export async function stageCliArtifacts(input: {
     )
   )
     throw new Error("Unsupported or duplicate desktop CLI artifact target")
+  // Bun's realpath and rename can disagree on symlink/.. traversal. Reject
+  // parent segments rather than checking one path spelling and replacing another.
+  if (input.prebuilt !== undefined && [input.prebuilt, input.directory].some((path) => path.split(/[\\/]/).includes("..")))
+    throw new Error("Owned CLI prebuilt source/output overlap or ambiguous traversal")
+  const prebuilt = input.prebuilt === undefined ? undefined : await readCliManifest(input.prebuilt)
+  if (prebuilt && prebuilt.version !== input.version) throw new Error("Owned CLI prebuilt version mismatch")
+  if (input.prebuilt !== undefined) {
+    const producer = await realpath(input.prebuilt)
+    const destination = await canonicalDirectory(input.directory)
+    if ([relative(producer, destination), relative(destination, producer)].some(
+      (path) => path === "" || (path !== ".." && !path.startsWith(`..${sep}`) && !isAbsolute(path)),
+    )) throw new Error("Owned CLI prebuilt source/output overlap")
+  }
   await mkdir(dirname(input.directory), { recursive: true })
   const staging = await mkdtemp(join(dirname(input.directory), ".cli-stage-"))
   return Promise.allSettled(
     input.targets.map(async (target) => {
       const source = join(input.dist, `cli-${target}`)
-      const metadata: unknown = JSON.parse(await readFile(join(source, "package.json"), "utf8"))
-      if (!metadata || typeof metadata !== "object" || !("version" in metadata) || metadata.version !== input.version)
-        throw new Error(`Owned CLI artifact version mismatch: ${target}`)
+      const incoming = prebuilt?.artifacts.find((entry) => entry.target === target)
+      if (prebuilt && !incoming) throw new Error(`Owned CLI prebuilt artifact missing: ${target}`)
+      const verified = input.prebuilt === undefined ? undefined : await verifyCliArtifact(input.prebuilt, target)
       const executable = target.startsWith("windows-") ? "orchestra.exe" : "orchestra"
-      if (
-        !(await lstat(source)).isDirectory() ||
-        !(await lstat(join(source, "bin"))).isDirectory() ||
-        !(await lstat(join(source, "bin", executable))).isFile() ||
-        (await realpath(join(source, "bin", executable))) !== join(await realpath(source), "bin", executable)
-      )
-        throw new Error(`Owned CLI output must be regular: ${target}`)
+      if (!prebuilt) {
+        const metadata: unknown = JSON.parse(await readFile(join(source, "package.json"), "utf8"))
+        if (!metadata || typeof metadata !== "object" || !("version" in metadata) || metadata.version !== input.version)
+          throw new Error(`Owned CLI artifact version mismatch: ${target}`)
+        if (
+          !(await lstat(source)).isDirectory() ||
+          !(await lstat(join(source, "bin"))).isDirectory() ||
+          !(await lstat(join(source, "bin", executable))).isFile() ||
+          (await realpath(join(source, "bin", executable))) !== join(await realpath(source), "bin", executable)
+        )
+          throw new Error(`Owned CLI output must be regular: ${target}`)
+      }
       const file = `orchestra-${target}${target.startsWith("windows-") ? ".exe" : ""}`
       const path = join(staging, file)
-      await copyFile(join(source, "bin", executable), path)
+      await copyFile(verified?.path ?? join(source, "bin", executable), path)
+      // Check the copied bytes against the producer descriptor before signing;
+      // verification of the source alone leaves a copy-time race.
+      if (incoming && createHash("sha256").update(await readFile(path)).digest("hex") !== incoming.sha256)
+        throw new Error(`Owned CLI prebuilt digest mismatch: ${target}`)
       if (!target.startsWith("windows-")) await chmod(path, 0o755)
       await input.sign?.(path, target)
       return {
@@ -86,4 +109,13 @@ export async function stageCliArtifacts(input: {
       return readCliManifest(input.directory)
     })
     .finally(() => rm(staging, { recursive: true, force: true }))
+}
+
+// Resolve existing ancestors too: a new destination may be nested under a
+// symlinked parent, even though realpath cannot resolve the final directory yet.
+async function canonicalDirectory(directory: string): Promise<string> {
+  return realpath(directory).catch(async (error: NodeJS.ErrnoException) => {
+    if (error.code !== "ENOENT" || dirname(directory) === directory) throw error
+    return join(await canonicalDirectory(dirname(directory)), basename(directory))
+  })
 }

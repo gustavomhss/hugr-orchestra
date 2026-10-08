@@ -100,6 +100,7 @@ export interface Interface {
 
 interface BrowserAttempt {
   expected: Auth.Info | undefined
+  revision: string
   method: number
   result?: AuthOAuthResult
 }
@@ -184,8 +185,8 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
             current.browser.attempt = undefined
             if (!current.browser.active) return yield* new OauthMissing({ providerID: input.providerID })
             if (method.type !== "oauth") return
-            const expected = yield* auth.get(input.providerID)
-            const attempt: BrowserAttempt = { expected, method: input.method }
+            const snapshot = yield* auth.snapshot(input.providerID)
+            const attempt: BrowserAttempt = { expected: snapshot.value, revision: snapshot.revision, method: input.method }
             current.browser.attempt = attempt
             return attempt
           })) : undefined
@@ -242,7 +243,7 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
             if (!current.browser.active || current.browser.attempt !== attempt) return yield* new OauthCallbackFailed({})
             // Consume once while replacement/cancel/scope expiry share this lock.
             current.browser.attempt = undefined
-            if (!(yield* auth.replaceIf(input.providerID, attempt.expected, next))) return yield* new OauthCallbackFailed({})
+            if (!(yield* auth.replaceIf(input.providerID, attempt.expected, next, attempt.revision))) return yield* new OauthCallbackFailed({})
           })) : auth.set(input.providerID, next)
 
       if ("key" in result) {

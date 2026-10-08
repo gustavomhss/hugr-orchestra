@@ -75,6 +75,86 @@ test("Windows staging carries both Linux WSL architectures", async () => {
   await Promise.all(targets.map((target) => verifyCliArtifact(input.directory, target)))
 })
 
+test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  const producer = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const received = {
+    ...input,
+    dist: join(input.root, "no-local-build"),
+    prebuilt: input.directory,
+    directory: join(input.root, "consumer"),
+    sign: async (path: string, target: string) => {
+      expect(await readFile(path, "utf8")).toBe(`owned ${target}`)
+      if (target.startsWith("windows-")) await writeFile(path, `signed ${target}`)
+    },
+  }
+  await stageCliArtifacts(received)
+  const manifest = await readCliManifest(received.directory)
+  expect(manifest.artifacts.map((entry) => entry.target)).toEqual(input.targets)
+  expect(manifest.artifacts[0]!.sha256).toBe(createHash("sha256").update(`signed ${input.targets[0]}`).digest("hex"))
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(producer)
+  expect(await readFile((await verifyCliArtifact(input.directory, input.targets[0]!)).path, "utf8")).toBe(`owned ${input.targets[0]}`)
+  const before = await readFile(join(received.directory, "manifest.json"), "utf8")
+  await expect(stageCliArtifacts({ ...received, version: "wrong-version" })).rejects.toThrow("version")
+  const native = await fixture([input.targets[0]!])
+  await stageCliArtifacts(native)
+  await expect(stageCliArtifacts({ ...received, prebuilt: native.directory })).rejects.toThrow("missing")
+  const guest = await verifyCliArtifact(input.directory, "linux-arm64")
+  await writeFile(guest.path, "changed in transit")
+  await expect(stageCliArtifacts(received)).rejects.toThrow("digest")
+  expect(await readFile(join(received.directory, "manifest.json"), "utf8")).toBe(before)
+})
+
+test("build helper uses explicit or environment prebuilt input without compiler fallback", async () => {
+  const input = await fixture()
+  await stageCliArtifacts(input)
+  await writeFile(join(input.directory, "manifest.json"), "{}")
+  await Promise.all(["explicit", "environment"].map(async (source) => {
+    const worker = Bun.spawn([process.execPath, "-e", `
+      const { buildCliToResources } = await import(${JSON.stringify(new URL("./utils.ts", import.meta.url).href)});
+      await buildCliToResources(${source === "explicit" ? JSON.stringify({ prebuilt: input.directory }) : "{}"})
+        .then(() => { throw new Error("Invalid prebuilt input accepted"); })
+        .catch((error) => { console.log(error.message); process.exit(0); });
+    `], {
+      cwd: join(import.meta.dir, ".."), timeout: 15000, stdout: "pipe", stderr: "pipe",
+      env: { ...process.env, PATH: "", RUST_TARGET: "", ORCHESTRA_VERSION: input.version,
+        ORCHESTRA_CLI_PREBUILT_DIR: source === "environment" ? input.directory : "" },
+    })
+    const [code, stdout, stderr] = await Promise.all([worker.exited, new Response(worker.stdout).text(), new Response(worker.stderr).text()])
+    if (code !== 0) throw new Error(`Prebuilt helper child failed: ${stderr}`)
+    expect(stdout.trim()).toBe("Invalid CLI manifest schema/version/artifacts")
+  }))
+})
+
+test("prebuilt source/output overlap is rejected before signing or replacing producer", async () => {
+  const input = await fixture(desktopCliTargets("win32", "x64"))
+  await stageCliArtifacts(input)
+  const before = await readFile(join(input.directory, "manifest.json"), "utf8")
+  const alias = join(input.root, "producer-alias")
+  await symlink(input.directory, alias, process.platform === "win32" ? "junction" : "dir")
+  await mkdir(join(input.root, "child"))
+  await mkdir(join(input.root, "other"))
+  await symlink(join(input.root, "child"), join(input.root, "other", "alias"), process.platform === "win32" ? "junction" : "dir")
+  const signed: string[] = []
+  // POSIX traverses the symlink before '..'; keep the raw spelling rather than
+  // letting path.join normalize it into a different destination.
+  const traversal = process.platform === "win32" ? [] : [`${join(input.root, "other", "alias")}/../cli`]
+  await [...traversal, input.directory, alias, join(input.directory, "consumer"), join(alias, "new", "consumer"), input.root].reduce(async (previous, directory) => {
+    await previous
+    await expect(stageCliArtifacts({
+      ...input, prebuilt: input.directory, directory, targets: ["linux-x64-baseline"],
+      sign: async (_path, target) => { signed.push(target) },
+    })).rejects.toThrow("overlap")
+    expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+    await Promise.all(input.targets.map((target) => verifyCliArtifact(input.directory, target)))
+  }, Promise.resolve())
+  await expect(stageCliArtifacts({ ...input, prebuilt: `${input.directory}/../cli`, directory: join(input.root, "consumer") })).rejects.toThrow("ambiguous traversal")
+  await expect(stageCliArtifacts({ ...input, prebuilt: input.directory, directory: `${input.directory}\\..\\consumer` })).rejects.toThrow("ambiguous traversal")
+  expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
+  expect(signed).toEqual([])
+})
+
 test("installed cache checks bytes, repairs tampering, rejects tampered source", async () => {
   const input = await fixture()
   await stageCliArtifacts(input)

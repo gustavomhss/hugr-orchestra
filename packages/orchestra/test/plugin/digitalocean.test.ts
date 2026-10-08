@@ -84,7 +84,7 @@ it.live("DigitalOcean PKCE, callback rejection, bound-ID rotation and inherited 
       expect(forms[0].get("redirect_uri")).toBe(redirect)
       expect(forms[0].get("grant_type")).toBe("authorization_code")
       expect(forms[0].has("client_secret")).toBe(false)
-      expect(Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forms[0].get("code_verifier")!))).toString("base64url")).toBe(url.searchParams.get("code_challenge"))
+      expect(Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forms[0].get("code_verifier")!))).toString("base64url")).toBe(Schema.decodeUnknownSync(Schema.NonEmptyString)(url.searchParams.get("code_challenge")))
       await Effect.runPromise(auth.set("digitalocean", { ...stored, expires: 1 }))
       const before = await stat(path.join(Global.Path.data, "auth.json"))
       const getAuth = async () => (await Effect.runPromise(auth.get("digitalocean")))!
@@ -111,7 +111,7 @@ it.live("DigitalOcean PKCE, callback rejection, bound-ID rotation and inherited 
         if (change === "api") await Effect.runPromise(peer.set("digitalocean", new Auth.Api({ type: "api", key: "fixture-new-key" })))
         barrier.release.resolve()
         expect(await pending).toBe(change === "disconnect" ? "rejected" : "sent")
-        expect(await getAuth()).toEqual(change === "disconnect" ? undefined : new Auth.Api({ type: "api", key: "fixture-new-key" }))
+        expect(await Effect.runPromise(auth.get("digitalocean"))).toEqual(change === "disconnect" ? undefined : new Auth.Api({ type: "api", key: "fixture-new-key" }))
         if (change === "api") expect(bearers.at(-1)).toBe("Bearer fixture-new-key")
         barrier = undefined
       }

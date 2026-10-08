@@ -398,7 +398,7 @@ it.live("ProviderAuth CAS preserves B/disconnect while saved A callback awaits s
   }).pipe(Effect.provide(providerLayer(hook)), provideInstance(f.tmp.path), Effect.provide(testInstanceStoreLayer))
 }))
 
-it.live("ProviderAuth attempt replacement, explicit cancel and scope expiry reject stale absent-row callbacks", () => Effect.gen(function* () {
+it.live("ProviderAuth attempt replacement, disconnect and scope expiry reject stale absent-row callbacks", () => Effect.gen(function* () {
   const f = yield* Effect.acquireRelease(Effect.promise(fixture), (value) => Effect.promise(() => value[Symbol.asyncDispose]()))
   const unrelated = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (value) => Effect.promise(() => value[Symbol.asyncDispose]()))
   const hook = yield* Effect.promise(() => f.plugin())
@@ -407,7 +407,7 @@ it.live("ProviderAuth attempt replacement, explicit cancel and scope expiry reje
     const provider = yield* ProviderAuth.Service
     const instances = yield* InstanceStore.Service
     const providerID = ProviderV2.ID.make("openai")
-    yield* Effect.forEach(["replace", "cancel", "new-slot", "scope"] as const, (change) => Effect.gen(function* () {
+    yield* Effect.forEach(["replace", "cancel", "new-slot", "disconnect", "slot-aba", "scope"] as const, (change) => Effect.gen(function* () {
       yield* auth.remove(providerID)
       const authorization = yield* provider.authorize({ providerID, method: 0, inputs: { account: "new" } })
       if (!authorization) return yield* Effect.die("Missing new browser attempt")
@@ -427,11 +427,24 @@ it.live("ProviderAuth attempt replacement, explicit cancel and scope expiry reje
       if (change === "cancel") yield* provider.cancel({ providerID })
       const slot = new Auth.Api({ type: "api", key: "new-slot-B" })
       if (change === "new-slot") yield* auth.set(providerID, slot)
+      if (change === "disconnect") yield* auth.remove(providerID)
+      if (change === "slot-aba") yield* Effect.promise(async () => {
+        const worker = Bun.spawn([process.execPath, "-e", `import { Auth } from ${JSON.stringify(new URL("../../src/auth/index.ts", import.meta.url).href)};
+          await Auth.runPromise((store) => store.set("openai", new Auth.Api({ type: "api", key: "peer-account-B" })));
+          await Auth.runPromise((store) => store.remove("openai"));
+          process.exit(0);`], {
+          cwd: join(import.meta.dir, "../.."),
+          env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 30000,
+        })
+        const [code, stderr] = await Promise.all([worker.exited, new Response(worker.stderr).text()])
+        if (code !== 0) throw new Error(`Auth ABA peer failed: ${stderr}`)
+      })
       if (change === "scope") yield* instances.disposeDirectory(f.tmp.path)
       release.resolve()
       expect((yield* Fiber.join(response)).status).toBe(200)
       expect(Exit.isFailure(yield* Fiber.join(callback))).toBe(true)
       expect(yield* auth.get(providerID)).toEqual(change === "new-slot" ? slot : undefined)
+      expect((yield* Effect.promise(() => stat(join(Global.Path.data, "auth-revisions.json")))).mode & 0o777).toBe(0o600)
       f.protocol.beforeExchange = async () => {}
       if (newer) {
         yield* Effect.promise(() => f.deliver(newer, "replacement-accepted"))
