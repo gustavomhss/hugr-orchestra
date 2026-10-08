@@ -3,17 +3,21 @@ import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
 import type { LLM } from "@/session/llm"
 import { MessageID, SessionID } from "@/session/schema"
-import { Effect, Pull, Stream } from "effect"
+import { Cause, Effect, Pull, Stream } from "effect"
 import type { LLMEvent } from "@orchestra/llm"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Token } from "@/util/token"
 import { asSchema, type Tool } from "ai"
 import { decode, index, scope, type Decoded, type Failure } from "./memory"
-import { ownedHistory, tailIndex, validSnapshot } from "./model"
+import { completeIndex, ownedHistory, tailIndex, validSnapshot } from "./model"
+import { isSafe } from "./trigger"
 import { Transcript } from "./transcript"
 import { HARD_LIMIT } from "./trigger"
 import type { Host, MemoryArtifact, MemorySnapshot } from "./memory-types"
 import PROMPT from "./prompt.txt"
+import { RequestSource } from "./request-source"
+import { ParentReceipt } from "./parent-receipt"
+import { DryRequestCaptured } from "./dry-transport"
 
 const TAIL_SIZE = 8
 
@@ -74,8 +78,10 @@ export function replay(
   if (input.toolChoice === "required" || input.responseSchema !== undefined) return
   if (input.model.providerID !== model.providerID || input.model.id !== model.id) return
   if (!carriesMemory(parent, captured.previous)) return
+  if (!ParentReceipt.matches(parent, captured, model)) return
   const sent = new Set(parent.messageIDs)
-  if (!captured.head.length || !captured.head.every((message) => sent.has(message.info.id))) return
+  if (!captured.head.length || !captured.head.every((message, index) => sent.has(message.info.id) ||
+    captured.complete === true && index === captured.head.length - 1 && message.info.role === "assistant")) return
   const tools = Object.entries(input.tools)
   // Provider-executed tools run remotely; host-side denial cannot stop them.
   if (tools.some(([, tool]) => tool.type === "provider" || typeof tool.execute !== "function")) return
@@ -126,6 +132,28 @@ export function snapshot(
   }
 }
 
+/** Complete uncapped declared prefix, ending at an actual safe completed assistant boundary. */
+export function completeSnapshot(sessionID: SessionID, messages: SessionV1.WithParts[], previous?: MemoryArtifact, canRecall = false,
+  boundary?: MessageID, delivered: readonly MessageID[] = []): MemorySnapshot | undefined {
+  if (!ownedHistory(sessionID, messages)) return undefined
+  const safe = boundary ? messages.findIndex((message) => message.info.id === boundary) : messages.findLastIndex((message) =>
+    message.info.role === "assistant" && isSafe(message.info) && !message.parts.some((part) => part.type === "tool" && ["pending", "running"].includes(part.state.status)))
+  if (safe < 0) return undefined
+  // A queued user can precede a late assistant for the earlier turn. It is not completed source coverage.
+  const admitted = RequestSource.answered(messages.slice(0, safe + 1), delivered)
+  const queued = messages.findIndex((message, index) => index <= safe && index > admitted && RequestSource.actual(message))
+  const end = queued < 0 ? safe : messages.findLastIndex((message, index) => index < queued && message.info.role === "assistant" && isSafe(message.info))
+  if (end < 0 || boundary && messages[end].info.id !== boundary) return undefined
+  const covered = messages.slice(0, end + 1)
+  if (covered.some((message) => message.info.role === "assistant" && message.info.time.completed === undefined ||
+    message.parts.some((part) => part.type === "tool" && ["pending", "running"].includes(part.state.status)))) return undefined
+  const start = previous?.version === 5 ? completeIndex({ sessionID, boundary: previous.boundary, text: previous.text, artifact: previous }, messages) : 0
+  if (start === undefined || start >= covered.length) return undefined
+  const captured: MemorySnapshot = { complete: true, sessionID, boundary: messages[end].info.id, covered,
+    head: covered.slice(start), tail: [], previous, canRecall }
+  return validSnapshot(captured) ? captured : undefined
+}
+
 /**
  * Where the native tail starts: the last user turn that leaves TAIL_SIZE messages, when it fits maxTokens.
  * A longer turn is cut between its steps, keeping the most recent messages that fit and at least the last one.
@@ -159,7 +187,7 @@ function labelled(captured: MemorySnapshot, host: Host) {
     const key = source.part && source.alias.startsWith("t") || source.answers ? source.part!.id : source.message.info.id
     labels.set(key, [...labels.get(key) ?? [], source.alias])
   }
-  return Transcript.transcript(clip(captured.head)).replace(/^(## \w+ message (\S+)|### .* — (\S+))$/gm,
+  return Transcript.transcript(captured.complete ? captured.head : clip(captured.head)).replace(/^(## \w+ message (\S+)|### .* — (\S+))$/gm,
     (line, _heading, message?: string, part?: string) => {
       const names = labels.get(message ?? part ?? "")
       return names ? `${line} · ${names.join(", ")}` : line
@@ -193,6 +221,7 @@ export function request(captured: MemorySnapshot, host: Host, appended: string) 
 export type Pass = {
   artifact?: MemoryArtifact
   skip?: "precondition" | "workflow" | "input-limit"
+  failure?: "timeout" | "input-budget" | "invalid-schema" | "provider" | "dry-captured"
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
@@ -203,15 +232,15 @@ export type Pass = {
 
 export const run = Effect.fn("ContinuityFork.run")(function* (
   captured: MemorySnapshot,
-  services: { provider: Provider.Interface; llm: LLM.Interface },
+  services: { provider: Pick<Provider.Interface, "getModel">; llm: LLM.Interface },
   host: Host,
-  options: { parent?: ParentRequest } = {},
+  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void> } = {},
 ) {
   const previous = captured.previous?.text ?? ""
   const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ...rest })
   if (!validSnapshot(captured)) return pass({ skip: "precondition" })
   // A long turn can leave no user message in the head or the tail: its user message is earlier in the history.
-  const asker = (messages: SessionV1.WithParts[]) => messages.findLast((message) => message.info.role === "user")?.info
+  const asker = (messages: SessionV1.WithParts[]) => RequestSource.latest(messages)?.info
   const parent = asker([...captured.head, ...captured.tail]) ?? asker(host.history.slice(0, host.history.indexOf(captured.head[0])))
   if (!parent || parent.role !== "user") return pass({ skip: "precondition" })
   const model = yield* services.provider.getModel(parent.model.providerID, parent.model.modelID)
@@ -220,17 +249,20 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   const inputLimit = Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output)
   // No size limit on the memory: the producer judges what stays. The window only sizes the host-collected sections.
   const budget = Math.floor(HARD_LIMIT * model.limit.context)
-  const last = captured.tail.findLast((message) => message.info.role === "assistant")?.info
-  const observed = last?.role === "assistant" ? last.tokens.input + last.tokens.cache.read + last.tokens.cache.write : 0
+  const last = (captured.complete ? captured.covered ?? captured.head : captured.tail).findLast((message) => message.info.role === "assistant")?.info
+  const observed = options.parent ? ParentReceipt.usage(options.parent, captured, model) ?? 0 : 0
   const sessionID = SessionID.descending()
   const appended = index(captured, host, Token.estimate(previous))
-  const instruction = `${PROMPT}\n${REPLAY_NOTE}\n\n${appended}`
+  const requestIDs = new Set(options.parent?.messageIDs ?? [])
+  // Full original source supplement is conservative even for matching logical hashes: provider projection may omit
+  // compacted outputs or ignored parts. Never declare complete coverage from a masked prefix or clipped index alone.
+  const missing = captured.complete && options.parent ? captured.head : []
+  const instruction = `${PROMPT}\n${REPLAY_NOTE}\n\n${missing.length ? Transcript.transcript(missing) + "\n\n" : ""}${appended}`
   // The replayed parent request already fit; only the appended instruction is new.
-  const replayed = options.parent && observed + Token.estimate(instruction) <= inputLimit
+  const replayed = options.parent && observed > 0 && observed + Token.estimate(instruction) <= inputLimit
     ? replay(options.parent, captured, model, instruction) : undefined
   const prepared = request(captured, host, appended)
   const size = replayed ? observed + Token.estimate(instruction) : Token.estimate(PROMPT + "\n" + prepared.messages[0].content)
-  if (!replayed && size > inputLimit) return pass({ skip: "input-limit" })
   const defaults = ProviderTransform.options({ model, sessionID })
   const verbosity = parent.model.variant ? model.variants?.[parent.model.variant]?.textVerbosity : undefined
   const agent: Agent.Info = {
@@ -248,6 +280,8 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     user, agent, permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
     purpose: "context-maintenance", model, ...prepared,
   }
+  if (options.onRequest) yield* options.onRequest(first)
+  if (!replayed && size > inputLimit) return pass({ skip: "input-limit", failure: "input-budget" })
   // Bind transport pulls to this Effect's scope. The runFold/Channel.runWith
   // runner owns a separate scope; cancellation must join transport cleanup before
   // the timeout worker exits and the service releases its maintenance slot.
@@ -269,14 +303,22 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
       "Reply with one complete, corrected ops object for the same new span, and nothing else."
     // A paid reply that failed and cannot be retried is a failure, so the breaker can stop it.
-    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check })
-    outcome = check(yield* ask({ ...first, messages: [...first.messages,
-      { role: "assistant", content: reply.text || "(empty reply)" }, { role: "user", content: note }] }))
-    if ("check" in outcome) return pass({ check: outcome.check, retried: true })
+    if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check, failure: "invalid-schema" })
+    const retry = { ...first, messages: [...first.messages,
+      { role: "assistant" as const, content: reply.text || "(empty reply)" }, { role: "user" as const, content: note }] }
+    if (options.onRequest) yield* options.onRequest(retry)
+    outcome = check(yield* ask(retry))
+    if ("check" in outcome) return pass({ check: outcome.check, retried: true, failure: "invalid-schema" })
     return accepted(outcome, true)
   }
   return accepted(outcome, false)
-}, Effect.timeout("180 seconds"))
+}, Effect.timeout("600 seconds"), Effect.catchCause((cause) => {
+  if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt
+  const error = Cause.squash(cause)
+  const failed: Pass = { retried: false, ops: [], size: 0,
+    failure: error instanceof DryRequestCaptured ? "dry-captured" : error && typeof error === "object" && "_tag" in error && error._tag === "TimeoutError" ? "timeout" : "provider" }
+  return Effect.succeed(failed)
+}))
 
 const accepted = (decoded: Decoded, retried: boolean): Pass => ({
   artifact: decoded.artifact, retried, size: Token.estimate(decoded.artifact.text), dropped: decoded.dropped,
