@@ -295,12 +295,14 @@ c.setTimeout(1000, () => { c.destroy(); process.exitCode = 4 })
         yield* f.prompt(listener, child.id, "Run grant probe once.")
         const calls = yield* f.tools(listener, child.id)
         expect(calls).toHaveLength(1)
-        if (process.platform === "darwin") {
+        if (process.platform === "darwin" && kind === "unix-socket") {
           expect(calls[0].state.status).toBe("completed")
           expect(calls[0].state.status === "completed" && calls[0].state.output).toBe("nested-grant-response\n")
           return
         }
-        const suffix = process.platform === "linux" ? "exact-policy-unsupported" : "platform-unsupported"
+        const suffix = kind === "loopback-endpoint" || process.platform === "linux"
+          ? "exact-policy-unsupported"
+          : "platform-unsupported"
         expect(calls[0].state.status).toBe("error")
         expect(calls[0].state.status === "error" && calls[0].state.error).toContain(
           `Tool safety HOLD: sandbox-${kind}-${suffix}`,
