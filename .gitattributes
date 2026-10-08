@@ -19,3 +19,6 @@ packages/orchestra/src/agent/prompt/*.txt text eol=lf
 packages/atlas-boundary/src/generated/** -text
 # Generated palette stylesheets: the palette test compares them byte for byte with the generator's LF output.
 packages/app/src/orchestra/palette/generated/** text eol=lf
+# Generated HttpApi fixtures: strict consumer tests compare exact bytes with the generator's LF output.
+# Keep that byte contract deterministic on Windows checkouts without relaxing fixture comparisons.
+packages/httpapi-codegen/test/generated/** text eol=lf
