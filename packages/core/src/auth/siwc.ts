@@ -142,7 +142,7 @@ export async function exchange(
     type: "oauth", methodID, access: tokens.value.access_token, refresh: tokens.value.refresh_token,
     expires: Date.now() + tokens.value.expires_in * 1000,
     metadata: { clientId: grant.clientId, hostId: attempt.hostId, issuer, subject: identity.payload.sub,
-       idToken: tokens.value.id_token, scopes: granted, validatedIdentity: validatedIdentity.value },
+      idToken: tokens.value.id_token, scopes: granted, validatedIdentity: validatedIdentity.value },
   })
 }
 

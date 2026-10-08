@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { Context, Effect, Fiber, Layer } from "effect"
+import { Context, Effect, Fiber, Layer, Schema } from "effect"
 import { exportJWK, generateKeyPair, SignJWT } from "jose"
 import { Credential } from "../../src/credential"
 import { Database } from "../../src/database/database"
@@ -208,6 +208,10 @@ it.live("retired original key is unnecessary; optional refresh fields retain the
   expect(original).toMatchObject({ issuer: Siwc.issuer, clientId: "fixture-issued-client", subject: "fixture-subject",
     audiences: ["fixture-issued-client"], authTime: f.authTime })
   f.control.retired = true
+  const jwks = yield* Effect.promise(async () => Schema.decodeUnknownSync(Schema.fromJsonString(
+    Schema.Struct({ keys: Schema.Array(Schema.Struct({ kid: Schema.String })) }),
+  ))(await (await fetch(new URL("/jwks", f.server.url))).text()))
+  expect(jwks.keys.map((key) => key.kid)).toEqual(["refresh-key"])
   // First refresh rotates with new-key-only JWKS, then omission must retain
   // that replacement rather than the pre-rotation refresh token or grant.
   const rotated = yield* f.resolve()
