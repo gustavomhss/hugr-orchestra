@@ -8,6 +8,7 @@ import { PinnedArtifact } from "../src/pinned-artifact"
 import { BackendToolkit } from "../src/backend-toolkit"
 import { BackendToolkitCassandra } from "../src/backend-toolkit/cassandra-metadata"
 import pack from "../src/backend-toolkit/packs/gocqlx-schemagen"
+import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { it } from "./lib/effect"
 
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
@@ -76,9 +77,18 @@ it.live("source mutations, empty/malformed bytes and missing inputs produce type
 it.live("original 3.0.4 ready binary cannot satisfy owned cache identity", () => Effect.gen(function* () {
   const root = yield* Effect.acquireRelease(
     Effect.promise(() => mkdtemp(path.join(tmpdir(), "cassandra-cache-"))),
-    (root) => Effect.promise(() => rm(root, { recursive: true, force: true })),
+    (root) => Effect.promise(async () => {
+      // Go's downloaded module directories are readonly by default; only this disposable install is made removable.
+      if (process.platform !== "win32") {
+        const child = Bun.spawn(["chmod", "-R", "u+w", root], { stdout: "ignore", stderr: "inherit" })
+        if (await child.exited !== 0) throw new Error("cannot clean private Go cache")
+      }
+      await rm(root, { recursive: true, force: true })
+    }),
   )
-  const old = path.join(root, "engines/gocqlx-schemagen/3.0.4-linux-x64")
+  const host = BackendToolkitTarget.detect()
+  if (!("target" in host)) throw new Error(`unsupported host: ${host.unsupported}`)
+  const old = path.join(root, `engines/gocqlx-schemagen/3.0.4-${host.target}`)
   yield* Effect.promise(async () => {
     await mkdir(old, { recursive: true })
     await writeFile(path.join(old, ".complete"), "")
@@ -89,6 +99,17 @@ it.live("original 3.0.4 ready binary cannot satisfy owned cache identity", () =>
   expect(pack.install.artifact.url).toEndWith("/v3.0.4.zip")
   expect(yield* BackendToolkit.status("gocqlx-schemagen").pipe(
     Effect.provideService(BackendToolkit.Root, root),
-    Effect.provideService(BackendToolkit.Target, { target: "linux-x64" }),
+    Effect.provideService(BackendToolkit.Target, host),
   )).toMatchObject([{ version: "3.0.4+orchestra.cassandra1", status: "absent" }])
-}))
+  // Real production acquisition must reach the helper before building, not merely pass its isolated unit checks.
+  const owned = yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
+  expect(path.dirname(owned.executable)).toBe(path.join(root, `engines/gocqlx-schemagen/${pack.version}-${host.target}`))
+  expect(digest(yield* Effect.promise(() => readFile(path.join(path.dirname(owned.executable), "driver/metadata_scylla.go"))))).toBe(BackendToolkitCassandra.AFTER)
+  const help = yield* Effect.promise(async () => {
+    const child = Bun.spawn([owned.executable, "-help"], { stdout: "pipe", stderr: "pipe" })
+    return { exit: await child.exited, text: await new Response(child.stderr).text() }
+  })
+  expect(help.exit).toBe(0)
+  expect(help.text).toContain("-cluster")
+  expect(yield* Effect.promise(() => readFile(path.join(old, "gocqlx-schemagen"), "utf8"))).toBe("old binary")
+}), 5 * 60_000)
