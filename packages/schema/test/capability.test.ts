@@ -276,7 +276,19 @@ describe("capability contracts", () => {
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Error" })).toThrow()
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Failure" })).toThrow()
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, secret: "secret" })).toThrow()
-    expect(() => Schema.encodeSync(Capability.Failure)(Object.assign(decoded, { secret: "secret" }))).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, runtime: "local diagnostic" })).toThrow()
+    // Error codecs project declared wire fields; runtime additions must never leak into the encoded object.
+    const encoded = Schema.encodeSync(Capability.Failure)(
+      Object.assign(decoded, {
+        runtime: "local diagnostic",
+        secret: "secret",
+        stack: "local stack",
+        cause: new Error("local cause"),
+      }),
+    )
+    expect(encoded).toEqual(failure)
+    expect(Object.keys(encoded).sort()).toEqual(["_tag", "code", "detail", "message"])
+    ;["runtime", "secret", "stack", "cause"].forEach((key) => expect(encoded).not.toHaveProperty(key))
     const leaked = { ...failure, secret: "secret" }
     expect(() => new Capability.Failure(leaked)).toThrow()
     expect(Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4094))).toHaveLength(4094)
