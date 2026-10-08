@@ -184,7 +184,7 @@ it.instance("admission-selected model controls catch-up stream and render capaci
   yield* Effect.gen(function* () {
     const continuity = yield* SessionContinuity.Service
     const sessions = yield* Session.Service
-    const sessionID = yield* seed()
+    const sessionID = yield* seed(undefined, undefined, "HISTORICAL_LARGE_RECEIPT ".repeat(100_000))
     const hit = yield* entered(first)
     yield* Deferred.succeed(first.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
@@ -195,6 +195,8 @@ it.instance("admission-selected model controls catch-up stream and render capaci
     const admitting = yield* continuity.admit({ sessionID, messages: yield* sessions.messages({ sessionID }), model: selected, expectedUserID: current.id, canRecall: true }).pipe(Effect.forkChild)
     const next = yield* entered(catchup)
     expect(next.request.model).toEqual(selected)
+    expect(JSON.stringify(next.request.messages)).toContain(FIRST)
+    expect(JSON.stringify(next.request.messages)).not.toContain("HISTORICAL_LARGE_RECEIPT")
     expect(next.request.user.model).toMatchObject({ modelID: selected.id, providerID: selected.providerID })
     yield* Deferred.succeed(catchup.release, undefined)
     const view = yield* Fiber.join(admitting)
@@ -202,8 +204,8 @@ it.instance("admission-selected model controls catch-up stream and render capaci
     expect(view.messages.map((message) => message.info.id)).toEqual([current.id])
     expect((yield* continuity.prepare({ sessionID, messages: yield* sessions.messages({ sessionID }), model: small })).system).toEqual([])
     expect((yield* continuity.prepare({ sessionID, messages: yield* sessions.messages({ sessionID }), model: selected })).system).toEqual(view.system)
-  }).pipe(Effect.provide(environment([first, catchup], { getModel: (providerID, id) => Effect.succeed(
-    ProviderTest.model({ providerID, id, ...(id === small.id ? { limit: small.limit } : {}) }),
+  }).pipe(Effect.provide(environment([first, catchup], { config: { continuity: { trigger: 0.01 } }, getModel: (providerID, id) => Effect.succeed(
+    ProviderTest.model({ providerID, id, limit: id === small.id ? small.limit : { context: 2_000_000, output: 20_000 } }),
   ) })))
 }), 120_000)
 

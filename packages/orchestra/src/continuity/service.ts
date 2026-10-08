@@ -486,7 +486,7 @@ const layer = Layer.effect(
               yield* archive.publish({ sessionID, messages: history.slice(archivedIndex + 1) })
               if (currentEntry?.generation === active.generation) currentEntry.archived = history.at(-1)?.info.id
               const activeHistory = MessageV2.filterCompacted(history.toReversed())
-              const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall })
+              const prepared = yield* prepare({ sessionID, messages: activeHistory, canRecall: pending.canRecall, model })
               // A successful producer replaces the entire prefix. Masking is only the emergency fallback in compact.
               const backend = token.backend
               const request = backend ? undefined : current.requests.get(sessionID)
