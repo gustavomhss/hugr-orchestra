@@ -1141,6 +1141,7 @@ describe("session.compaction.process", () => {
       const session = yield* ssn.create({})
       yield* createUserMessage(session.id, "root")
       const replay = yield* createUserMessage(session.id, "image")
+      yield* ssn.updateMessage({ ...replay, promptContext: { reminders: ["replay first note", "replay second note"] } })
       yield* ssn.updatePart({
         id: PartID.ascending(),
         messageID: replay.id,
@@ -1169,6 +1170,17 @@ describe("session.compaction.process", () => {
       expect(
         last?.parts.some((part) => part.type === "text" && part.text.includes("Attached image/png: cat.png")),
       ).toBe(true)
+      expect(last?.info).toMatchObject({ promptContext: { reminders: ["replay first note", "replay second note"] } })
+      if (!last) throw new Error("expected replay")
+      const rendered = yield* MessageV2.toModelMessagesEffect([last], wide().model)
+      expect(rendered).toEqual([{ role: "user", content: [
+        { type: "text", text: "image" },
+        { type: "text", text: "[Attached image/png: cat.png]" },
+        { type: "text", text: "Hook reminder:\nreplay first note" },
+        { type: "text", text: "Hook reminder:\nreplay second note" },
+      ] }])
+      expect((yield* MessageV2.get({ sessionID: session.id, messageID: replay.id })).parts)
+        .toEqual(msgs.find((message) => message.info.id === replay.id)?.parts)
     }),
   )
 
@@ -1179,6 +1191,7 @@ describe("session.compaction.process", () => {
       const session = yield* ssn.create({})
       yield* createUserMessage(session.id, "earlier")
       const msg = yield* createUserMessage(session.id, "current")
+      yield* ssn.updateMessage({ ...msg, promptContext: { reminders: ["not a fresh reminder"] } })
       const msgs = yield* ssn.messages({ sessionID: session.id })
 
       const result = yield* SessionCompaction.use.process({
@@ -1194,6 +1207,7 @@ describe("session.compaction.process", () => {
       expect(result).toBe("continue")
       expect(last?.info.role).toBe("user")
       if (last?.parts[0]?.type === "text") {
+        expect(last.info.role === "user" && last.info.promptContext).toBeUndefined()
         expect(last.parts[0].text).toContain("previous request exceeded the provider's size limit")
       }
     }),
@@ -1382,8 +1396,10 @@ describe("session.compaction.process", () => {
       return Effect.gen(function* () {
         const ssn = yield* SessionNs.Service
         const session = yield* ssn.create({})
-        yield* createUserMessage(session.id, "older context")
-        yield* createUserMessage(session.id, "keep this turn")
+        const head = yield* createUserMessage(session.id, "older context")
+        const tail = yield* createUserMessage(session.id, "keep this turn")
+        yield* ssn.updateMessage({ ...head, promptContext: { reminders: ["head first note", "head second note"] } })
+        yield* ssn.updateMessage({ ...tail, promptContext: { reminders: ["tail note"] } })
         yield* createUserMessage(session.id, "and this one too")
         yield* createCompactionMarker(session.id)
 
@@ -1409,6 +1425,18 @@ describe("session.compaction.process", () => {
         expect(captured).not.toContain("keep this turn")
         expect(captured).not.toContain("and this one too")
         expect(captured).not.toContain("What did we do so far?")
+        expect(captured).toContain("[Hook reminder]: head first note")
+        expect(captured.indexOf("[User]: older context")).toBeLessThan(captured.indexOf("head first note"))
+        expect(captured.indexOf("head first note")).toBeLessThan(captured.indexOf("head second note"))
+        expect(captured.indexOf("head second note")).toBeLessThan(captured.indexOf("</conversation>"))
+        expect(captured).not.toContain("tail note")
+        const retained = MessageV2.filterCompacted(yield* MessageV2.stream(session.id))
+        const rendered = yield* MessageV2.toModelMessagesEffect(retained, wide().model)
+        expect(JSON.stringify(rendered)).toContain("Hook reminder:\\ntail note")
+        expect(JSON.stringify(rendered)).not.toContain("head first note")
+        expect((yield* MessageV2.get({ sessionID: session.id, messageID: head.id })).info).toMatchObject({
+          promptContext: { reminders: ["head first note", "head second note"] },
+        })
       }).pipe(
         withCompaction({
           llm: stub.llmLayer,

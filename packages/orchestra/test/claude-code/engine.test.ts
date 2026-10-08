@@ -41,6 +41,31 @@ const setup = Effect.gen(function* () {
 })
 const say = (text: string) => ({ agent: "claude", parts: [{ type: "text" as const, text }] })
 
+it.instance("hook reminders batch beside their own prompt and never reappear on resumed Claude turns", () =>
+  Effect.gen(function* () {
+    queries.length = 0
+    const state = yield* setup
+    const first = yield* state.prompt.prompt({ sessionID: state.chat.id, noReply: true, ...say("  first\r\n ") })
+    const second = yield* state.prompt.prompt({ sessionID: state.chat.id, noReply: true, ...say(" second ") })
+    if (first.info.role !== "user" || second.info.role !== "user") throw new Error("expected pending users")
+    yield* state.sessions.updateMessage({ ...first.info, promptContext: { reminders: ["first note", "next note"] } })
+    const user = yield* state.sessions.updateMessage({ ...second.info, promptContext: { reminders: ["second note"] } })
+    if (user.role !== "user") throw new Error("expected user")
+    const before = yield* state.sessions.messages({ sessionID: state.chat.id })
+    scripts.push(reply("batch answer", "msg_batch"), reply("later answer", "msg_later"))
+    const answer = yield* state.prompt.loop({ sessionID: state.chat.id })
+    expect(answer.info.role).toBe("assistant")
+    expect(queries[0].prompt).toBe("first\r\n \n\nHook reminder:\nfirst note\n\nHook reminder:\nnext note\n\n second \n\nHook reminder:\nsecond note")
+    expect(JSON.stringify(queries[0].options.systemPrompt)).not.toContain("note")
+    const stored = yield* state.sessions.messages({ sessionID: state.chat.id })
+    expect(stored.filter((message) => message.info.role === "user")).toEqual(before)
+    yield* state.prompt.prompt({ sessionID: state.chat.id, ...say(" later ") })
+    expect(queries).toHaveLength(2)
+    expect(queries[1].prompt).toBe("later")
+    expect(queries[1].options.resume).toBe("sdk-1")
+    expect(JSON.stringify(queries[1].options.systemPrompt)).not.toContain("note")
+  }), 30_000)
+
 it.instance("a Claude Code agent's turn is mirrored and the loop ends on it; the next turn resumes the same session", () =>
   Effect.gen(function* () {
     queries.length = 0
