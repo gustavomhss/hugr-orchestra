@@ -240,7 +240,7 @@ def test_repository_structure_and_real_source_coverage():
 
 def test_real_catalog_row_removal_is_detected(tmp_path):
     """Probe an actual catalog against actual sources, not only a synthetic expected list."""
-    for folder in (*guard.SOURCE_ROOTS, "docs", "tests", "profiles", "specs", "policies"):
+    for folder in (*guard.SOURCE_ROOTS, "docs", "tests", "test", "profiles", "specs", "policies"):
         shutil.copytree(ROOT / folder, tmp_path / folder, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("__pycache__", "_gen*", "_runs", ".relay-ledger"))
     for path in [*ROOT.glob("*.md"), ROOT / "requirements-dev.txt"]:

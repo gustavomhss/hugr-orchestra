@@ -146,7 +146,7 @@ test("canvas: inspect a step, walk to its neighbour and close only the top layer
     .getByRole("tab", { name: /Executions/ })
     .click()
   await expect(page.locator('[data-slot="relay-runs-unsupported"]')).toHaveText(RUNS_MISSING)
-  await editor(page).getByRole("button", { name: "Back to Workflows" }).click()
+  await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
   await expect(page).toHaveURL(/\/orchestra\/workflows$/)
 })
 
