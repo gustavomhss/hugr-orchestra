@@ -2,53 +2,45 @@
 
 Audience: agents. Status: current.
 
-The authoring service stores workflow and hook documents for one workspace, compiles workflows to Relay
-sprints, publishes definitions and evaluates them through the Relay daemon. Orchestra's Workflows and
-Hooks screens consume it. It ships no UI. Source: [lib/relay_authoring/](../lib/relay_authoring/),
-entrypoint [bin/relay-api](../bin/relay-api), maintenance [relay-authoring](skills/relay-authoring/SKILL.md).
+Orchestra's Workflows and Hooks screens consume the native Server `HttpApi` through the generated
+Client. Maintenance: [relay-authoring](skills/relay-authoring/SKILL.md). All monorepo paths below are
+relative to the Orchestra checkout root; they are outside the Relay-only documentation link inventory.
 
-## Run
+## Installed routing
 
-```sh
-python3 bin/relay-api serve --workspace /absolute/project --port 8790
-```
+Use the Orchestra server already serving the app. Authoring needs no Python sidecar. The app adapter
+is `packages/app/src/orchestra/relay/client.ts`; it calls `sdk.v2.relay.document`, `sdk.v2.relay.publish`
+and `sdk.v2.relay.hook` with Location identity. Protocol definitions live in
+`packages/protocol/src/groups/relay-document.ts` and `packages/protocol/src/groups/relay-hook.ts`.
+Successful resource responses use the Location envelope; errors are typed Protocol errors.
 
-| Option | Default and role |
+| Handler | Source |
 |---|---|
-| `--workspace` | Current directory; checks run here |
-| `--data-dir` | `~/.relay/authoring`; workspace-scoped SQLite documents, versions, scopes, executions, uploads and run state |
-| `--base-path` | `/relay/`; the API lives under `<base>api/v1/` and health under `<base>healthz` |
-| `--host-origin` | Repeatable exact HTTP(S) origins allowed as `Host` and `Origin` besides loopback |
-| `--skill-root` | Repeatable extra skill roots; the host passes its own skill directories here |
-| `--relay-root`, `--relay-url` | Relay checkout for profiles and the daemon; or an already running daemon |
+| `RelayDocumentHandler` | `packages/server/src/handlers/relay-document.ts` |
+| `RelayPublishHandler` | `packages/server/src/handlers/relay-document.ts` |
+| `RelayHookHandler` | `packages/server/src/handlers/relay-hook.ts` |
 
-The service binds `127.0.0.1` and trusts its caller: it has no authentication. The host owns
-authentication, authorization and same-origin proxying. Startup seeds one document per shipped
-`profiles/*.sprint.json` (named `Relay · <profile>`); profile files are never edited.
+`packages/server/src/handlers.ts` registers these handlers. `packages/server/src/relay-documents.ts`
+owns the project store and editor view, using native `src/authoring/{store,graph,hook}.ts` and
+Location-scoped `SkillV2`. Storage is `<Global.data>/relay/<projectID>/authoring.sqlite3`.
+Profiles seed once per project per server process; seed failure leaves user documents usable.
 
 ## Endpoints
 
-All bodies are JSON objects. Errors return `{message, code}` with an HTTP status (400 invalid,
-403 host or origin refused, 404 unknown, 409 conflict or state refusal, 502 daemon protocol fault).
+Paths below use the native `/api/relay` prefix. Consult Protocol for payloads and typed errors.
 
 | Method and path | Result |
 |---|---|
-| `GET bootstrap` | Protocol version, workspace identity and feature flags (`hookExecution`, `cancelEvaluation`, `dispatchAgent` are `false`) |
-| `GET node-types` | `{workflow, hook}` node catalogs: type, label, ports, parameters with defaults and options |
-| `GET events` | Server-sent events, see below |
-| `GET documents`, `GET documents/<id>` | Documents with `checksum`, `activeVersion` and expanded scopes |
-| `POST documents`, `PATCH documents/<id>` | Save a draft; `versionId` and `expectedChecksum` guard against stale writes, `?force=true` overwrites |
-| `DELETE documents/<id>` | Delete a document |
-| `POST documents/<id>/publish` | Mark a valid version as the published definition (`versionId`, optional `expectedChecksum`) |
-| `POST documents/<id>/unpublish` | Withdraw the published definition |
-| `GET documents/<id>/sprint` | Compiled sprint and skill bindings (digests, not contents) |
-| `GET documents/<id>/export` | `{kind: "workflow", definition: <sprint>}` or `{kind: "hook", definition: <relay.hook.v1>}` |
-| `GET/POST scopes`, `PATCH/DELETE scopes/<id>` | User scopes; documents reference them in `tags` |
-| `GET skills`, `POST skills/refresh`, `POST skills/upload` | Skill catalog from the workspace, the machine and `--skill-root`; uploads take `{filename, content}` for one `.md` |
-| `GET executions[?documentId=]`, `GET executions/<id>` | Execution receipts |
-| `POST executions` | `{documentId, destination?}` starts an evaluation; `destination` (a step name) evaluates the prefix up to it |
-| `POST executions/<id>/retry` | Retry the latest failed attempt of a run with its frozen sprint, state and budget |
-| `GET executions/<id>/audit` | `relay verify` report over the run's ledger |
+| `GET/POST /document`, `GET/PATCH/DELETE /document/:documentID` | List, create, read, save or remove workflow/hook drafts |
+| `GET /document/:documentID/version[/:versionID]` | Saved versions |
+| `POST /document/:documentID/publish`, `/unpublish` | Publish a compiled current version or withdraw publication |
+| `GET /document/:documentID/sprint`, `/export` | Compiled sprint with binding digests, or workflow/hook definition |
+| `POST /document/:documentID/check` | 403 `maestro-execution-required`; executable workflow checks are owned by Maestro |
+| `GET /node-types` | Workflow and hook catalogs |
+| `GET/POST /scope`, `PATCH/DELETE /scope/:scopeID` | Project document scopes |
+| `GET/POST /hook`, `PATCH/DELETE /hook/:installID` | List, install, update or uninstall published hook snapshots |
+| `POST /hook/:installID/enable`, `/disable`; `PATCH /hook/order` | Hook activation and order |
+| `GET /hook/:installID/decisions`, `POST /hook/repair` | Recorded decisions and explicit store repair |
 
 ## Documents
 
@@ -69,22 +61,24 @@ All bodies are JSON objects. Errors return `{message, code}` with an HTTP status
   before/after), optional `relay.hookCondition` nodes (outputs Yes and No) and actions
   (`relay.hookRemind|Block|Approve|Verify|Repair|Record`). Block and Approve need a `before`
   event. Export is `relay.hook.v1` with `installed: false` and `binding: "host-required"`; the
-  service never installs or runs hooks.
+  export itself does not install hooks. Explicit native install uses the published snapshot.
 
-## Executions and events
+## Native save and execution boundary
 
-An execution records `status` (`running`, `success`, `error`, `crashed`), the frozen document in
-`workflowData`, `relay` (run ID, sprint, skill bindings, destination, outcome, state and ledger
-paths) and `data.resultData.runData[<step name>]` steps with `status`, timings and the daemon
-`output`. Evaluation calls the original daemon; it does not dispatch agents. Escalation blocks
-every retry of the run; a restart marks in-flight executions `crashed` and never reruns them.
-Kind `human` cannot run on the CLI driver.
+Native updates require `versionId` or `expectedChecksum`, unless payload `force` is true.
+Stale guards return 409; an unguarded, unforced update returns 400. Saves do not publish.
+Publishing compiles first and records the signed-in principal. Installing a hook pins its published
+version; republishing or editing the document does not update an existing install automatically.
 
-`GET events` streams `document.saved`, `execution.started`, `node.started`, `node.finished` and
-`execution.finished`, each with `workspaceId`. A lagging client is disconnected; streams have no
-replay, so reload resources after a reconnect.
+Authoring routes do not provide the Python host's `bootstrap`, SSE, execution-retry or skill-upload
+API. Use the host's Skill catalog and approved native execution binding. Profiles requiring tools
+without native implementations remain unavailable; retaining standalone tools does not enable them.
 
-## Not in this service
+## Retained Python regression reference
 
-Hook installation on host events, agent dispatch per WP, cancellation, ARM release and
-authentication belong to the Orchestra host.
+The former Python `api/v1` host is not the installed API. Its application, HTTP server and runner
+remain in [lib/relay_authoring/](../lib/relay_authoring/) for
+`tests/test_authoring.py` and `tests/test_authoring_hooks.py`, which import them directly.
+Its daemon-backed receipts, prefix evaluation, frozen retry budgets and no-replay events describe
+that regression surface only. The Python authoring launch pair is retired; historical changelog
+entries record its original delivery rather than current startup instructions.
