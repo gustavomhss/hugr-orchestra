@@ -1,7 +1,6 @@
 export * as CapabilityArtifacts from "./index"
 
-import { isUtf8 } from "node:buffer"
-import { createHash } from "node:crypto"
+import { randomUUID } from "node:crypto"
 import { isAbsolute, join } from "node:path"
 import { and, desc, eq, lt, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
@@ -17,15 +16,14 @@ import { SessionStore } from "../../session/store"
 import type { Tool } from "../../tool/tool"
 import { CapabilityInvocation } from "../invocation"
 import { CapabilityPolicy } from "../policy"
-import { CapabilityArtifactReferenceTable, CapabilityArtifactTable } from "../sql"
+import { CapabilityArtifactPinTable, CapabilityArtifactReferenceTable, CapabilityArtifactTable } from "../sql"
+import { ArtifactBlobs } from "./blob"
+import { Failure, failure } from "./error"
+import { matchesMime, validMime } from "./mime"
 
-export class Failure extends Schema.TaggedErrorClass<Failure>()("CapabilityArtifacts.Failure", {
-  code: Schema.Literals([
-    "invalid_input", "artifact_not_found", "revision_conflict", "artifact_corrupt",
-    "artifact_io_failed", "artifact_storage_failed", "reference_pinned",
-  ]),
-  message: Schema.String,
-}) {}
+export { Failure }
+
+const identities = new WeakMap<Database.Interface["db"], string>()
 
 export type Input = {
   readonly data: Uint8Array
@@ -37,6 +35,7 @@ export type Input = {
 
 export type Options = {
   readonly boundedBytes?: number
+  /** Logical committed raw + UTF-8 JSON bytes per placement, not a physical disk/orphan-burst cap. */
   readonly quota?: number
   /** Trusted host fixture override; never accepted through a model-facing input. */
   readonly root?: string
@@ -57,9 +56,11 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   const boundedBytes = options.boundedBytes ?? 16 * 1024 * 1024
   const quota = options.quota ?? 256 * 1024 * 1024
   const scratchTTL = options.scratchTTL ?? 24 * 60 * 60 * 1000
-  const root = options.root ?? join(global.data, "capability-artifacts")
+  const storageID = database.storageID ?? databaseIdentity(database.db)
+  const root = options.root ?? join(global.data, "capability-artifacts", ArtifactBlobs.hash(storageID))
   if (![boundedBytes, quota, scratchTTL].every((n) => Number.isSafeInteger(n) && n > 0) || !isAbsolute(root))
     return yield* failure("invalid_input", "Artifact store options are invalid")
+  const blobs = ArtifactBlobs.make({ root, boundedBytes, storageID, fs })
   const placement = {
     projectID: location.project.id,
     location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
@@ -87,7 +88,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     context: Tool.Context, action: string, resources: readonly string[],
   ) {
     yield* binding(context)
-    yield* policy.assert(context, { action, resources })
+    return yield* policy.authorize(context, { action, resources })
   })
 
   const resolve = Effect.fn("CapabilityArtifacts.resolve")(function* (
@@ -98,55 +99,26 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const reference = yield* tx.select().from(CapabilityArtifactReferenceTable).where(referenceKey(ref, context.sessionID)).get()
     if (!record || !reference) return yield* failure("artifact_not_found", "Artifact reference is unavailable")
     if (!samePlacement(record.owner, issued.owner)) return yield* denied()
-    return { record, reference, issued }
-  })
-
-  const verified = Effect.fn("CapabilityArtifacts.verified")(function* (path: string, hash: string, bytes: number, mime: string) {
-    if (!/^[0-9a-f]{64}$/.test(hash) || !Number.isSafeInteger(bytes) || bytes < 0 || !validMime(mime))
-      return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
-    const info = yield* fs.stat(path).pipe(Effect.mapError(() => failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")))
-    if (info.type !== "File" || Number(info.size) !== bytes || bytes > boundedBytes)
-      return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
-    const data = yield* fs.readFile(path).pipe(Effect.mapError(() => failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")))
-    if (data.byteLength !== bytes || digest(data) !== hash || !matchesMime(data, mime))
-      return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
-    return data
+    const pinned = yield* tx.select().from(CapabilityArtifactPinTable).where(pinKey(ref, context.sessionID)).get()
+    return { record, reference, issued, pinned: reference.pinned || !!pinned }
   })
 
   const store = Effect.fn("CapabilityArtifacts.store")(function* (
     tx: Transaction, context: Tool.Context, ref: Capability.ArtifactRef, input: Input,
   ) {
     const issued = yield* binding(context)
-    const value = yield* snapshot(input, boundedBytes)
     const rows = yield* tx.select().from(CapabilityArtifactTable)
     const used = rows.filter((row) => samePlacement(row.owner, issued.owner))
       .reduce((n, row) => n + row.bytes + jsonBytes(row.metadata), 0)
-    if (used + value.data.byteLength + jsonBytes(value.metadata) > quota) return yield* quotaFailure()
-    const hash = digest(value.data)
-    const blob = join(root, hash)
-    // Holding the immediate transaction prevents cleanup from removing a just-published orphan before insertion.
-    yield* Effect.scoped(Effect.gen(function* () {
-      yield* fs.makeDirectory(root, { recursive: true, mode: 0o700 })
-      const staging = yield* Effect.acquireRelease(
-        fs.makeTempDirectory({ directory: root, prefix: "stage-" }),
-        // Cleanup failure leaves TTL-eligible scratch, never an unredacted finalizer defect.
-        (path) => fs.remove(path, { recursive: true }).pipe(Effect.catch(() => Effect.void)),
-      )
-      const path = join(staging, "blob")
-      yield* fs.writeFile(path, value.data, { flag: "wx", mode: 0o600 })
-      yield* verified(path, hash, value.data.byteLength, value.mime)
-      yield* fs.chmod(path, 0o400)
-      yield* fs.link(path, blob).pipe(Effect.catchIf(
-        (error) => error.reason._tag === "AlreadyExists", () => Effect.void,
-      ))
-      yield* verified(blob, hash, value.data.byteLength, value.mime)
-    })).pipe(Effect.catchTag("PlatformError", () => Effect.fail(failure("artifact_io_failed", "Artifact blob publication failed"))))
+    if (used + input.data.byteLength + jsonBytes(input.metadata) > quota) return yield* quotaFailure()
+    // Policy holds actor state before the SQLite writer; GC cannot remove publication before insertion.
+    const hash = yield* blobs.publish(input.data, input.mime)
     const record: Record = {
-      ...ref, owner: issued.owner, producer: issued.invocation, mime: value.mime, kind: value.kind,
-      verification: value.verification, metadata: value.metadata, hash, bytes: value.data.byteLength, time_created: Date.now(),
+      ...ref, owner: issued.owner, producer: issued.invocation, mime: input.mime, kind: input.kind,
+      verification: input.verification, metadata: input.metadata, hash, bytes: input.data.byteLength, time_created: Date.now(),
     }
     // Drizzle treats JS null as SQL NULL even in a JSON column. Keep JSON null as the non-null JSON text "null".
-    yield* tx.insert(CapabilityArtifactTable).values({ ...record, metadata: sql`${JSON.stringify(value.metadata)}` }).run()
+    yield* tx.insert(CapabilityArtifactTable).values({ ...record, metadata: sql`${JSON.stringify(input.metadata)}` }).run()
     yield* tx.insert(CapabilityArtifactReferenceTable).values({
       artifact_id: ref.id, revision: ref.revision, session_id: context.sessionID,
     }).run()
@@ -154,9 +126,11 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
 
   const publish = Effect.fn("CapabilityArtifacts.publish")(function* (context: Tool.Context, input: Input) {
+    yield* binding(context)
+    const value = yield* snapshot(input, boundedBytes)
     const ref = Capability.ArtifactRef.make({ id: Capability.ArtifactID.create(), revision: 0 })
-    yield* authorize(context, "artifact.write", [resource(ref)])
-    return yield* database.db.transaction((tx) => store(tx, context, ref, input), { behavior: "immediate" })
+    const permit = yield* authorize(context, "artifact.write", [resource(ref)])
+    return yield* policy.commit(permit, (tx) => store(tx, context, ref, value))
       .pipe(storageErrors)
   })
 
@@ -164,46 +138,44 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     context: Tool.Context, expectedRef: Capability.ArtifactRef, input: Input,
   ) {
     const ref = yield* requireRef(expectedRef)
-    yield* authorize(context, "artifact.write", [resource(ref)])
-    return yield* database.db.transaction((tx) => Effect.gen(function* () {
+    yield* binding(context)
+    const value = yield* snapshot(input, boundedBytes)
+    const permit = yield* authorize(context, "artifact.write", [resource(ref)])
+    return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
       yield* resolve(tx, context, ref)
       const latest = yield* tx.select().from(CapabilityArtifactTable).where(eq(CapabilityArtifactTable.id, ref.id))
         .orderBy(desc(CapabilityArtifactTable.revision)).get()
       if (!latest || latest.revision !== ref.revision || !Number.isSafeInteger(ref.revision + 1))
         return yield* failure("revision_conflict", "Artifact revision no longer matches")
-      return yield* store(tx, context, Capability.ArtifactRef.make({ id: ref.id, revision: ref.revision + 1 }), input)
-    }), { behavior: "immediate" }).pipe(storageErrors)
+      return yield* store(tx, context, Capability.ArtifactRef.make({ id: ref.id, revision: ref.revision + 1 }), value)
+    })).pipe(storageErrors)
   })
 
   /** Host-only byte access. Model adapters should expose describe, never paths or this result. */
   const read = Effect.fn("CapabilityArtifacts.read")(function* (context: Tool.Context, supplied: Capability.ArtifactRef) {
     const ref = yield* requireRef(supplied)
-    yield* authorize(context, "artifact.read", [resource(ref)])
-    return yield* database.db.transaction((tx) => Effect.gen(function* () {
+    const permit = yield* authorize(context, "artifact.read", [resource(ref)])
+    return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
       const found = yield* resolve(tx, context, ref)
-      if (!/^[0-9a-f]{64}$/.test(found.record.hash))
-        return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
-      return { metadata: found.record, data: yield* verified(
-        join(root, found.record.hash), found.record.hash, found.record.bytes, found.record.mime,
+      return { metadata: found.record, data: yield* blobs.read(
+        found.record.hash, found.record.bytes, found.record.mime,
       ) }
-    }), { behavior: "immediate" }).pipe(storageErrors)
+    })).pipe(storageErrors)
   })
 
   const describe = Effect.fn("CapabilityArtifacts.describe")(function* (context: Tool.Context, supplied: Capability.ArtifactRef) {
     const ref = yield* requireRef(supplied)
-    yield* authorize(context, "artifact.read", [resource(ref)])
-    return yield* database.db.transaction((tx) => Effect.gen(function* () {
+    const permit = yield* authorize(context, "artifact.read", [resource(ref)])
+    return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
       const found = yield* resolve(tx, context, ref)
-      if (!/^[0-9a-f]{64}$/.test(found.record.hash))
-        return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
-      yield* verified(join(root, found.record.hash), found.record.hash, found.record.bytes, found.record.mime)
+      yield* blobs.read(found.record.hash, found.record.bytes, found.record.mime)
       // User metadata and producer/owner placement are host-only; arbitrary metadata may contain secrets.
       return {
         id: found.record.id, revision: found.record.revision, mime: found.record.mime, kind: found.record.kind,
         hash: found.record.hash, bytes: found.record.bytes, verification: found.record.verification,
-        timeCreated: found.record.time_created, pinned: found.reference.pinned,
+        timeCreated: found.record.time_created, pinned: found.pinned,
       }
-    }), { behavior: "immediate" }).pipe(storageErrors)
+    })).pipe(storageErrors)
   })
 
   const share = Effect.fn("CapabilityArtifacts.share")(function* (
@@ -212,8 +184,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const ref = yield* requireRef(supplied)
     const target = Schema.decodeUnknownOption(SessionID)(targetSessionID)
     if (Option.isNone(target)) return yield* failure("invalid_input", "Artifact target Session is invalid")
-    yield* authorize(context, "artifact.share", [resource(ref), `session:${target.value}`])
-    yield* database.db.transaction((tx) => Effect.gen(function* () {
+    const permit = yield* authorize(context, "artifact.share", [resource(ref), `session:${target.value}`])
+    yield* policy.commit(permit, (tx) => Effect.gen(function* () {
       const found = yield* resolve(tx, context, ref)
       const session = yield* sessions.get(target.value)
       if (!session || session.projectID !== found.issued.owner.projectID ||
@@ -222,31 +194,35 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       yield* tx.insert(CapabilityArtifactReferenceTable).values({
         artifact_id: ref.id, revision: ref.revision, session_id: target.value,
       }).onConflictDoNothing().run()
-    }), { behavior: "immediate" }).pipe(storageErrors)
+    })).pipe(storageErrors)
   })
 
   const pin = Effect.fn("CapabilityArtifacts.pin")(function* (
     context: Tool.Context, supplied: Capability.ArtifactRef, pinned: boolean,
   ) {
     const ref = yield* requireRef(supplied)
-    yield* authorize(context, "artifact.write", [resource(ref)])
     if (typeof pinned !== "boolean") return yield* failure("invalid_input", "Artifact pin is invalid")
-    yield* database.db.transaction((tx) => Effect.gen(function* () {
-      yield* resolve(tx, context, ref)
+    const permit = yield* authorize(context, "artifact.write", [resource(ref)])
+    yield* policy.commit(permit, (tx) => Effect.gen(function* () {
+      const found = yield* resolve(tx, context, ref)
+      if (pinned) yield* tx.insert(CapabilityArtifactPinTable).values({
+        artifact_id: ref.id, revision: ref.revision, session_id: context.sessionID, owner: found.issued.owner,
+      }).onConflictDoNothing().run()
+      if (!pinned) yield* tx.delete(CapabilityArtifactPinTable).where(pinKey(ref, context.sessionID)).run()
       yield* tx.update(CapabilityArtifactReferenceTable).set({ pinned }).where(referenceKey(ref, context.sessionID)).run()
-    }), { behavior: "immediate" }).pipe(storageErrors)
+    })).pipe(storageErrors)
   })
 
   const deleteReference = Effect.fn("CapabilityArtifacts.deleteReference")(function* (
     context: Tool.Context, supplied: Capability.ArtifactRef,
   ) {
     const ref = yield* requireRef(supplied)
-    yield* authorize(context, "artifact.write", [resource(ref)])
-    yield* database.db.transaction((tx) => Effect.gen(function* () {
+    const permit = yield* authorize(context, "artifact.write", [resource(ref)])
+    yield* policy.commit(permit, (tx) => Effect.gen(function* () {
       const found = yield* resolve(tx, context, ref)
-      if (found.reference.pinned) return yield* failure("reference_pinned", "Artifact reference must be unpinned before deletion")
+      if (found.pinned) return yield* failure("reference_pinned", "Artifact reference must be unpinned before deletion")
       yield* tx.delete(CapabilityArtifactReferenceTable).where(referenceKey(ref, context.sessionID)).run()
-    }), { behavior: "immediate" }).pipe(storageErrors)
+    })).pipe(storageErrors)
   })
 
   /** Host-only GC. A linked revision keeps the entire immutable revision chain, including its CAS head. */
@@ -254,32 +230,20 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     yield* database.db.transaction((tx) => Effect.gen(function* () {
       const cutoff = Date.now() - scratchTTL
       const refs = yield* tx.select().from(CapabilityArtifactReferenceTable)
-      const linked = new Set(refs.map((ref) => ref.artifact_id))
+      const pins = yield* tx.select().from(CapabilityArtifactPinTable)
+      const linked = new Set([...refs, ...pins].map((ref) => ref.artifact_id))
       const records = yield* tx.select().from(CapabilityArtifactTable)
       yield* Effect.forEach(records.filter((row) => !linked.has(row.id) && row.time_created < cutoff),
         (row) => tx.delete(CapabilityArtifactTable).where(and(key(row), lt(CapabilityArtifactTable.time_created, cutoff))).run())
       const retained = new Set((yield* tx.select({ hash: CapabilityArtifactTable.hash }).from(CapabilityArtifactTable))
         .map((row) => row.hash))
-      const names = yield* fs.readDirectory(root).pipe(Effect.catchIf(
-        (error) => error.reason._tag === "NotFound", () => Effect.succeed([] as string[]),
-      ))
-      yield* Effect.forEach(names.filter((name) => !retained.has(name) &&
-        (/^[0-9a-f]{64}$/.test(name) || /^stage-[a-zA-Z0-9_-]+$/.test(name))), (name) => Effect.gen(function* () {
-        const path = join(root, name)
-        const info = yield* fs.stat(path)
-        if (Option.isSome(info.mtime) && info.mtime.value.getTime() < cutoff)
-          yield* fs.remove(path, { recursive: name.startsWith("stage-") })
-      }))
+      yield* blobs.cleanup(retained, cutoff)
     }), { behavior: "immediate" }).pipe(storageErrors,
       Effect.catchTag("PlatformError", () => Effect.fail(failure("artifact_io_failed", "Artifact cleanup failed"))))
   })
 
   return { publish, update, read, describe, share, pin, deleteReference, cleanup }
 })
-
-function failure(code: Failure["code"], message: string) {
-  return new Failure({ code, message })
-}
 
 function storageErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
   return effect.pipe(Effect.catchIf(
@@ -297,10 +261,6 @@ function quotaFailure() {
   return new Capability.Failure({ code: "quota_exceeded", message: "Artifact byte budget exceeded" })
 }
 
-function digest(data: Uint8Array) {
-  return createHash("sha256").update(data).digest("hex")
-}
-
 function resource(ref: Capability.ArtifactRef) {
   return `artifact:${ref.id}:${ref.revision}`
 }
@@ -312,6 +272,19 @@ function key(ref: Capability.ArtifactRef) {
 function referenceKey(ref: Capability.ArtifactRef, sessionID: SessionID) {
   return and(eq(CapabilityArtifactReferenceTable.artifact_id, ref.id),
     eq(CapabilityArtifactReferenceTable.revision, ref.revision), eq(CapabilityArtifactReferenceTable.session_id, sessionID))
+}
+
+function pinKey(ref: Capability.ArtifactRef, sessionID: SessionID) {
+  return and(eq(CapabilityArtifactPinTable.artifact_id, ref.id),
+    eq(CapabilityArtifactPinTable.revision, ref.revision), eq(CapabilityArtifactPinTable.session_id, sessionID))
+}
+
+function databaseIdentity(db: Database.Interface["db"]) {
+  const current = identities.get(db)
+  if (current) return current
+  const id = randomUUID()
+  identities.set(db, id)
+  return id
 }
 
 function samePlacement(left: Capability.Owner, right: Capability.Owner) {
@@ -356,17 +329,4 @@ function snapshot(input: Input, boundedBytes: number) {
     catch: (error) => error instanceof Failure || error instanceof Capability.Failure
       ? error : failure("invalid_input", "Artifact input is invalid"),
   })
-}
-
-function matchesMime(data: Uint8Array, mime: string) {
-  if (!mime.startsWith("text/") && !/^application\/(?:json|[^;]+\+json)(?:;|$)/.test(mime)) return true
-  if (!isUtf8(data)) return false
-  return mime.startsWith("text/") || Option.isSome(
-    Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(new TextDecoder().decode(data)),
-  )
-}
-
-function validMime(mime: string) {
-  return typeof mime === "string" && mime.length <= 256 &&
-    /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+(?:; charset=utf-8)?$/.test(mime)
 }
