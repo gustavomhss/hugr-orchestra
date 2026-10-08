@@ -1,0 +1,67 @@
+{
+  "brief": "Implement repo/billing/core.py (classes Billing, BillingError) so the usage->billing path is lossless, tenant-isolated, correctly priced, and auditable. The public API names are fixed. Each work package names the exact requirements it must satisfy.",
+  "retry_budget": 3,
+  "work_packages": [
+    {
+      "id": "wp1-store",
+      "title": "Ingest & store (dedup, reject-negative)",
+      "instructions": "Implement ingest(...) and usage_for(...). Record events; dedup by (tenant_id, request_id) as a no-op; reject a negative quantity with BillingError. Requirements: R1, R2, R12.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R1_ingest -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R2_dedup -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R12_reject_negative -q"}
+      ]
+    },
+    {
+      "id": "wp2-audit",
+      "title": "Append-only ingest audit",
+      "instructions": "Append a 'usage.ingested' audit entry on every accepted ingest; expose audit_log as an immutable tuple. Requirement: R3.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R3_audit_append_only -q"}
+      ]
+    },
+    {
+      "id": "wp3-query",
+      "title": "Tenant-isolated metering",
+      "instructions": "Implement usage_for(tenant) (only that tenant's events) and metered(tenant, metric) (summed deduped quantity). Requirements: R4, R5.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R4_tenant_isolation -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R5_metered_aggregate -q"}
+      ]
+    },
+    {
+      "id": "wp4-price",
+      "title": "Tiered pricing, minimum, rounding",
+      "instructions": "Implement pricing in issue_invoice: tiered (first 1000 units @ $0.01, the rest @ $0.008), a $5.00 minimum total, and all amounts rounded to 2 decimals. Returns {id, tenant_id, lines: {metric: {qty, amount}}, total}. Requirements: R6, R7, R8.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R6_tiered_pricing -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R7_minimum_charge -q"},
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R8_rounding -q"}
+      ]
+    },
+    {
+      "id": "wp5-issue",
+      "title": "Idempotent issuance",
+      "instructions": "Make issue_invoice idempotent: freeze the invoice on first issue; re-issuing returns the same id and totals. Requirement: R9.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R9_invoice_idempotent -q"}
+      ]
+    },
+    {
+      "id": "wp6-reconcile",
+      "title": "Reconciliation drift",
+      "instructions": "Implement reconcile(tenant): the drift between the issued invoice's per-metric quantities and current metered usage; 0.0 when consistent. Requirement: R10.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R10_reconcile_zero_drift -q"}
+      ]
+    },
+    {
+      "id": "wp7-issue-audit",
+      "title": "Audit on issuance",
+      "instructions": "Append an 'invoice.issued' audit entry when an invoice is issued. Requirement: R11.",
+      "dod": [
+        {"type": "test", "cmd": "python3 -m pytest checks/test_billing.py::test_R11_audit_on_issue -q"}
+      ]
+    }
+  ]
+}

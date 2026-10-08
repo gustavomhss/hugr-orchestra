@@ -1,0 +1,51 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "A-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "instructions": "do B",
+        "checklist": [
+          {
+            "id": "B-ok",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "C",
+        "instructions": "do C",
+        "checklist": [
+          {
+            "id": "C-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {
+      "at": 1700000000
+    },
+    {
+      "at": 1700000137
+    },
+    {
+      "at": 1700000200
+    }
+  ]
+}

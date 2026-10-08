@@ -10,8 +10,8 @@ export const VercelPlugin = define({
           if (item.provider.api.type !== "aisdk") continue
           if (item.provider.api.package !== "@ai-sdk/vercel") continue
           evt.provider.update(item.provider.id, (provider) => {
-            provider.request.headers["http-referer"] = "https://opencode.ai/"
-            provider.request.headers["x-title"] = "opencode"
+            // App attribution is optional; Orchestra has no site URL to send as http-referer.
+            provider.request.headers["x-title"] = "Orchestra"
           })
         }
       }),

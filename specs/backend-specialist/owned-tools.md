@@ -162,6 +162,6 @@ Implementation work stays narrow: qualify producer identity/mode/callable/effect
 
 ## Source basis
 
-- Orchestra baseline `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`: `packages/opencode/src/plugin/hugr-composer/tools.ts`, `client.ts`, `packages/plugin/src/tool.ts`, native `packages/opencode/src/tool/edit.ts`.
+- Orchestra baseline `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`: `packages/orchestra/src/plugin/hugr-composer/tools.ts`, `client.ts`, `packages/plugin/src/tool.ts`, native `packages/orchestra/src/tool/edit.ts`.
 - Composer HEAD rechecked as `df04cf8f9c9c4307d22b6447d513b05b94c08572`; selected working-tree sources re-read: `mcp_tools/compose.py:473–675`, `mcp_tools/tier1.py:442–506`, `generators/database/model.py`.
 - [R38](research/38-python-composer.md) records the output modes, adapter mismatch, overwrite/CWD paths, partial reports and distinction between kit audit and emitted-app validation. Those source observations motivate qualification requirements, not claims that the new contract already runs.

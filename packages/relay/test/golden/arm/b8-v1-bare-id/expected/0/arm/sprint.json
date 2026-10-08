@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"A-file","cmd":"test -f a.txt"}],"macro":"m"},{"id":"B","instructions":"do B","checklist":[{"id":"B-ok","cmd":"true"}],"macro":"m"}]}

@@ -1,6 +1,6 @@
 export * as ToolSafetyOutput from "./tool-safety-output"
 
-import type { ToolOutput } from "@opencode-ai/llm"
+import type { ToolOutput } from "@orchestra/llm"
 
 /** Native producer metadata determines process failure; a successful Effect alone does not. */
 export function outcome(output: ToolOutput | undefined): "success" | "failure" | "cancelled" {

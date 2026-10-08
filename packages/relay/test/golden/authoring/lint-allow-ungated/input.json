@@ -1,0 +1,25 @@
+{
+  "op": "lint",
+  "sprint": {
+    "brief": "x",
+    "work_packages": [
+      {
+        "id": "a",
+        "instructions": "do a",
+        "checklist": []
+      },
+      {
+        "id": "b",
+        "instructions": "do b",
+        "checklist": [
+          {
+            "id": "c1",
+            "assert": "the suite is green",
+            "cmd": "pytest -q"
+          }
+        ]
+      }
+    ]
+  },
+  "allowUngated": true
+}

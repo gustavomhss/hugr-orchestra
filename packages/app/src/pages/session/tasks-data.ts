@@ -8,7 +8,7 @@ import type {
   QuestionRequest,
   Session,
   SessionStatus,
-} from "@opencode-ai/sdk/v2/client"
+} from "@orchestra/sdk/v2/client"
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
@@ -414,7 +414,7 @@ function label(input: TasksInput, id: string | undefined) {
 
 function shortModel(providerID: string | undefined, modelID: string | undefined) {
   if (!providerID || !modelID) return undefined
-  return `${providerID}/${modelID.replace(/^(anthropic|openai|google|opencode)-/i, "")}`
+  return `${providerID}/${modelID.replace(/^(anthropic|openai|google|orchestra)-/i, "")}`
 }
 
 function text(value: unknown) {

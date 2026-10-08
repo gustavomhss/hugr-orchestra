@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test"
 import { Duration, Effect, Fiber, Layer, Schema } from "effect"
 import * as TestClock from "effect/testing/TestClock"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { LayerNodePlatform } from "@opencode-ai/core/effect/app-node-platform"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
-import { WebFetchTool } from "@opencode-ai/core/tool/webfetch"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { SessionV2 } from "@orchestra/core/session"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { WebFetchTool } from "@orchestra/core/tool/webfetch"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { testEffect } from "./lib/effect"
 import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/tool"
 
@@ -31,6 +31,8 @@ const http = Layer.succeed(
 const permission = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
+    evaluate: () => Effect.die("unused permission evaluation"),
+    authorize: () => Effect.die("unused permission authorization"),
     askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
     assert: (input) => Effect.sync(() => assertions.push(input)),
     ask: () => Effect.die("unused"),
@@ -261,7 +263,7 @@ describe("WebFetchTool registration", () => {
       })
       expect(requests).toHaveLength(2)
       expect(requests[0]?.headers["user-agent"]).toContain("Mozilla/5.0")
-      expect(requests[1]?.headers["user-agent"]).toBe("opencode")
+      expect(requests[1]?.headers["user-agent"]).toBe("orchestra")
     }),
   )
 

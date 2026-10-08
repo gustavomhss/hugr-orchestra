@@ -1,6 +1,6 @@
 import { For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Agent, AgentFileInfo, AgentFileInput } from "@opencode-ai/sdk/v2/client"
+import type { Agent, AgentFileInfo, AgentFileInput } from "@orchestra/sdk/v2/client"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
 import {

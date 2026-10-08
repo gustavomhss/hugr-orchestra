@@ -1,5 +1,5 @@
 import { writeFile } from "node:fs/promises"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import { setupCompactNavigation } from "../orchestra/compact-navigation.fixture"
 import { editor, evidencePage, runCard } from "../orchestra/evidence.fixture"

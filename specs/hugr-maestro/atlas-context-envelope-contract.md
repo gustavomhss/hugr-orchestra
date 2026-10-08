@@ -79,7 +79,7 @@ its materialized ownership state is complete enough to validate the proposed Pla
 ## Boundary
 
 Maestro consumes only verified static Own skills. It may not call `atlas-query`, runtime Atlas `own()`, Atlas writes,
-memory writes, shell, network, model, V1 storage, or OpenCode Task APIs to replace them. Atlas remains one-way: it
+memory writes, shell, network, model, V1 storage, or Orchestra Task APIs to replace them. Atlas remains one-way: it
 never imports Maestro actor, approval, or plan types.
 
 ## Non-Goals

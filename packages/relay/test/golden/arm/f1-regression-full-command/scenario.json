@@ -1,0 +1,41 @@
+{
+  "sprint": {
+    "gen": 7,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "kept\nfull-id\n",
+            "cmd": "\ttrue\n# second line\n\ttest -f kept\n\n"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "instructions": "do B",
+        "checklist": [
+          {
+            "id": "B-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "tree": {
+    "kept": "accepted\n"
+  },
+  "fires": [
+    {},
+    {
+      "tree": {
+        "kept": null
+      }
+    }
+  ]
+}

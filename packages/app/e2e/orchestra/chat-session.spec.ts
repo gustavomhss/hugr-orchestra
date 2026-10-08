@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page } from "@playwright/test"
 import { expectSessionTitle } from "../utils/waits"
 import { directory, setupTimeline } from "../performance/timeline-stability/fixture"
@@ -27,7 +27,7 @@ test("a fresh profile opens the rail on Review once; the header's Review button 
   await expect(railTab(page, "review")).toHaveAttribute("aria-selected", "true")
   await expect(reviewButton(page)).toHaveAttribute("aria-pressed", "true")
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem("opencode.global.dat:orchestra.chat.rail")))
+    .poll(() => page.evaluate(() => localStorage.getItem("orchestra.global.dat:orchestra.chat.rail")))
     .toBe(JSON.stringify({ defaulted: true }))
 
   await reviewButton(page).click()
@@ -303,7 +303,7 @@ test("V2: Steer is the default delivery and the Queue choice is sent with the ne
   await page.route("**/api/**", (route) => {
     const path = new URL(route.request().url()).pathname
     if (path === "/api/provider")
-      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "OpenCode", settings: {} }] } })
+      return route.fulfill({ json: { location, data: [{ id: "opencode", name: "Orchestra", settings: {} }] } })
     if (path === "/api/model") return route.fulfill({ json: { location, data: [model] } })
     if (path === "/api/model/default") return route.fulfill({ json: { location, data: model } })
     return route.fallback()

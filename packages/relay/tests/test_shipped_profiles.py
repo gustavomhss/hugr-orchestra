@@ -1,0 +1,147 @@
+"""Every profile shipped in `profiles/` must stay compiled, and must gate everything it can.
+
+A profile and its compiled sprint are two committed artifacts, so they can fork — and a compiled
+sprint that has drifted from its source is two state machines wearing one name. `--check` is the
+same discipline `bin/gen-doc-index.py --check` already enforces, and it runs from HERE because this
+repo has no CI configured: a check nobody runs is a comment.
+
+The lint runs against each shipped sprint for the same reason the lint was built before the
+compiler. A migrated profile that quietly lost a control would otherwise look exactly like one that
+never had it.
+"""
+import json
+import os
+import subprocess
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+PROF = ROOT / "bin" / "relay-profile.py"
+SPEC = ROOT / "bin" / "relay-spec.py"
+PROFILES = ROOT / "profiles"
+
+pytest.importorskip("yaml", reason="the compiler reads real YAML")
+
+SHIPPED = sorted(PROFILES.glob("*.yaml")) if PROFILES.is_dir() else []
+# Compilation options a profile needs, kept here rather than inferred: --qualify-ids is a real
+# authoring fact (this profile reuses a sub-state id across macros), not a default to guess at.
+OPTS = {"tdd_feature": ["--qualify-ids"], "wp-execute": ["--qualify-ids"],
+        "spec-decompose": ["--qualify-ids"], "research-v2": ["--qualify-ids"],
+        "design": ["--qualify-ids"]}
+
+# Profiles whose commands are parameterized templates: `${param}` is rendered by
+# `relay-spec.py instantiate` when the profile is bound to a project, so the shipped sprint is not
+# directly runnable and is not supposed to be.
+TEMPLATED = {"tdd_feature", "planning", "wp-execute", "spec-decompose", "research-v2",
+             "design"}
+
+
+@pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
+def test_the_shipped_sprint_is_not_stale(profile):
+    sprint = profile.with_suffix(".sprint.json")
+    assert sprint.exists(), f"{profile.name} ships no compiled sprint"
+    r = subprocess.run(["python3", str(PROF), str(profile), "-o", str(sprint), "--check",
+                        *OPTS.get(profile.stem, [])], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+
+
+@pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
+def test_the_shipped_sprint_gates_every_state_it_can(profile):
+    sprint = profile.with_suffix(".sprint.json")
+    r = subprocess.run(["python3", str(SPEC), "lint", str(sprint), "--json"],
+                       capture_output=True, text=True)
+    findings = json.loads(r.stdout)["findings"]
+    errors = [f for f in findings if f["severity"] == "error"]
+    assert errors == [], errors
+
+
+@pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
+def test_every_control_is_reachable_from_a_declared_macro(profile):
+    """The compiler emits macros[] and per-WP macro fields from the same pipeline, so a mismatch
+    would mean the compiler contradicted itself rather than the author making a mistake."""
+    sprint = json.loads(profile.with_suffix(".sprint.json").read_text())
+    declared = {m["id"] for m in sprint.get("macros", [])}
+    for wp in sprint["work_packages"]:
+        assert wp["macro"] in declared, (wp["id"], wp["macro"], declared)
+
+
+@pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
+def test_a_templated_profile_declares_every_placeholder_it_uses(profile):
+    """A `${param}` nobody binds is a command that runs with an empty string in it — which for
+    `--plan-dir ${plan_dir}` silently grades the wrong directory rather than failing. Every
+    placeholder in a shipped sprint must therefore be nameable, so instantiation can refuse when one
+    is unsupplied (relay-spec already fails loudly on an unbound placeholder; this asserts they are
+    all spelled consistently rather than a typo creating a second, never-bound name)."""
+    import re
+    text = profile.with_suffix(".sprint.json").read_text()
+    names = sorted(set(re.findall(r"\$\{([a-z_][a-z0-9_]*)\}", text)))
+    if not names:
+        return
+    assert profile.stem in TEMPLATED, f"{profile.stem} uses {names} but is not marked as a template"
+    for n in names:
+        assert text.count("${" + n + "}") >= 1
+    assert len(names) == len(set(n.lower() for n in names)), names
+
+
+@pytest.mark.parametrize("profile", SHIPPED, ids=lambda p: p.stem)
+def test_no_control_command_is_empty_after_compilation(profile):
+    """A criterion that compiled to an empty string would pass `test -z` style checks by accident and
+    read as a control. The compiler emits nothing at all instead of an empty command; this holds it."""
+    sprint = json.loads(profile.with_suffix(".sprint.json").read_text())
+    for wp in sprint["work_packages"]:
+        for c in wp.get("checklist", []):
+            if "cmd" in c:
+                assert c["cmd"].strip(), (wp["id"], c["id"])
+
+
+def test_a_diff_control_sees_files_git_does_not_track_yet(tmp_path):
+    """Found by the first LIVE agent run of `tdd_feature`, not by any test here.
+
+    The agent did the ordinary TDD thing — wrote its tests in a NEW file — and `tests_written`
+    reported that no tests had been written, because `git diff <base>` only shows files git already
+    tracks. `write-produced-a-change` had carried the untracked fallback since V5 and the two
+    per-criterion controls beside it had not, so the same profile answered the same question two
+    different ways depending on which control asked it.
+
+    Asserted over every control that diffs against a base ref, in every shipped profile: a change that
+    exists only as an untracked file must still count as a change.
+    """
+    import re
+    import subprocess
+    base_env = {k: v for k, v in os.environ.items() if not k.startswith("RELAY_")}
+
+    work = tmp_path / "repo"
+    (work / "src").mkdir(parents=True)
+    (work / "tests").mkdir()
+    (work / "README").write_text("seed\n")
+    git = ["git", "-C", str(work)]
+    subprocess.run(git + ["init", "-q"], check=True, env=base_env)
+    subprocess.run(git + ["add", "-A"], check=True, env=base_env)
+    subprocess.run(git + ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "seed"],
+                   check=True, env=base_env)
+    base = subprocess.run(git + ["rev-parse", "HEAD"], capture_output=True, text=True,
+                          check=True, env=base_env).stdout.strip()
+    # The whole point: these exist only in the working tree.
+    (work / "tests" / "test_new.py").write_text("def test_x():\n    assert True\n")
+    (work / "src" / "new.py").write_text("VALUE = 1\n")
+
+    params = {"base_ref": base, "src_path": "src", "test_path": "tests"}
+    checked = 0
+    for profile in SHIPPED:
+        sprint = json.loads(profile.with_suffix(".sprint.json").read_text())
+        for wp in sprint["work_packages"]:
+            for c in wp.get("checklist", []):
+                cmd = c.get("cmd", "")
+                if "git diff --name-only ${base_ref}" not in cmd:
+                    continue
+                names = set(re.findall(r"\$\{([a-z_][a-z0-9_]*)\}", cmd))
+                if not names <= set(params):
+                    continue      # parameterised on something this fixture does not model
+                env = dict(base_env, **params)
+                r = subprocess.run(["bash", "-c", cmd], cwd=work, env=env,
+                                   capture_output=True, text=True)
+                assert r.returncode == 0, (
+                    f"{profile.stem}:{wp['id']}:{c['id']} does not see an untracked change\n{cmd}")
+                checked += 1
+    assert checked >= 4, f"expected the diff-based controls to be exercised, saw {checked}"

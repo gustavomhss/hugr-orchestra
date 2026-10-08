@@ -2,7 +2,7 @@ export * as EventCompaction from "./compaction"
 
 import { Effect } from "effect"
 import { inArray, sql } from "drizzle-orm"
-import { Event } from "@opencode-ai/schema/event"
+import { Event } from "@orchestra/schema/event"
 import type { Database } from "../database/database"
 import { EventTable } from "./sql"
 

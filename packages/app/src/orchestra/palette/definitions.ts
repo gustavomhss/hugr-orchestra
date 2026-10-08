@@ -1,4 +1,4 @@
-import { amoledTheme, githubTheme, gruvboxTheme, nordTheme } from "@opencode-ai/ui/theme/default-themes"
+import { amoledTheme, githubTheme, gruvboxTheme, nordTheme } from "@orchestra/ui/theme/default-themes"
 import { PALETTES, type RecolorPalette } from "./catalog"
 import { convertTheme, type PaletteRoles } from "./convert"
 

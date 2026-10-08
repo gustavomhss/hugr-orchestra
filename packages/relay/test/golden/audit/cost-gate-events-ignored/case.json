@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/cost-gate-events-ignored/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

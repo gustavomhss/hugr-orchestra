@@ -1,6 +1,7 @@
 export { Agent } from "./agent"
 export { AgentFile } from "./agent-file"
 export { Behavior } from "./behavior"
+export { Capability } from "./capability"
 export { Command } from "./command"
 export { Connection } from "./connection"
 export { Credential } from "./credential"

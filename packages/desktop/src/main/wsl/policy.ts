@@ -1,15 +1,15 @@
-import type { WslDistroProbe, WslOpencodeCheck } from "../../preload/types"
+import type { WslDistroProbe, WslOrchestraCheck } from "../../preload/types"
 
 export function clearWslDistroState(
   distroProbes: Record<string, WslDistroProbe>,
-  opencodeChecks: Record<string, WslOpencodeCheck>,
+  orchestraChecks: Record<string, WslOrchestraCheck>,
   distro: string,
 ) {
   const nextDistroProbes = { ...distroProbes }
-  const nextOpencodeChecks = { ...opencodeChecks }
+  const nextOrchestraChecks = { ...orchestraChecks }
   delete nextDistroProbes[distro]
-  delete nextOpencodeChecks[distro]
-  return { distroProbes: nextDistroProbes, opencodeChecks: nextOpencodeChecks }
+  delete nextOrchestraChecks[distro]
+  return { distroProbes: nextDistroProbes, orchestraChecks: nextOrchestraChecks }
 }
 
 export function wslTerminalArgs(distro?: string | null) {

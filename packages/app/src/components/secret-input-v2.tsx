@@ -1,5 +1,5 @@
-import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
-import { TextInputV2, type TextInputV2Props } from "@opencode-ai/ui/v2/text-input-v2"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { TextInputV2, type TextInputV2Props } from "@orchestra/ui/v2/text-input-v2"
 import { createSignal, createUniqueId, type JSX, splitProps } from "solid-js"
 import { useLanguage } from "@/context/language"
 

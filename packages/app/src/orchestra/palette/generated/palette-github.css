@@ -47,7 +47,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-l
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(101, 110, 119, 0.2);
   --orchestra-sidebar-secondary: #777f87;
-  --orchestra-sidebar-key-text: var(--orchestra-sidebar-secondary);
+  --orchestra-sidebar-key-text: var(--orchestra-sidebar-text);
   --orchestra-sidebar-rule: rgba(101, 110, 119, 0.16);
   --orchestra-sidebar-profile-background: rgba(255, 255, 255, 0.62);
   --orchestra-sidebar-profile-border: rgba(101, 110, 119, 0.2);
@@ -190,7 +190,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
 [data-orchestra-palette="github"] .orchestra-pending-dot {
   background: var(--v2-state-fg-warning);
 }
-[data-orchestra-palette="github"] :is(.orchestra-wip-chip, .orchestra-wip-mark) {
+[data-orchestra-palette="github"] :is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
   border: 1px solid var(--orchestra-border-muted);
   background: var(--orchestra-wip-background);
   color: var(--orchestra-wip-text);
@@ -250,7 +250,8 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
 [data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }
-[data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-wip-chip {
+[data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-wip-chip,
+[data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-attention-chip {
   border: 0;
   background: var(--orchestra-wip-text);
 }
@@ -464,7 +465,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   }
   [data-orchestra-palette="github"] body[data-new-layout]
       [data-session-layout="surface"]
-      [data-component="icon"]:has(use[href="#opencode-icon-branch"])
+      [data-component="icon"]:has(use[href="#orchestra-icon-branch"])
       + span {
     color: var(--orchestra-branch-color);
   }

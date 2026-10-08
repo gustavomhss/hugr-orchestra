@@ -190,6 +190,16 @@ import type {
   QuestionReplyErrors,
   QuestionReplyResponses,
   QuestionV2Reply,
+  RelayCheckInput,
+  RelayDocumentCreate,
+  RelayDocumentUpdate,
+  RelayHookInstallInput,
+  RelayHookOrderInput,
+  RelayHookRepairInput,
+  RelayHookUpdateInput,
+  RelayPublishInput,
+  RelayScopeInput,
+  RelayUnpublishInput,
   ScheduledTaskCreateInput,
   ScheduledTaskUpdateInput,
   SessionAbortErrors,
@@ -226,8 +236,6 @@ import type {
   SessionPromptResponses,
   SessionRevertErrors,
   SessionRevertResponses,
-  SessionShareErrors,
-  SessionShareResponses,
   SessionShellErrors,
   SessionShellResponses,
   SessionStatusErrors,
@@ -238,8 +246,6 @@ import type {
   SessionTodoResponses,
   SessionUnrevertErrors,
   SessionUnrevertResponses,
-  SessionUnshareErrors,
-  SessionUnshareResponses,
   SessionUpdateErrors,
   SessionUpdateResponses,
   SkillSaveInput,
@@ -364,6 +370,58 @@ import type {
   V2QuestionRequestListResponses,
   V2ReferenceListErrors,
   V2ReferenceListResponses,
+  V2RelayDocumentCheckErrors,
+  V2RelayDocumentCheckResponses,
+  V2RelayDocumentCreateErrors,
+  V2RelayDocumentCreateResponses,
+  V2RelayDocumentExportErrors,
+  V2RelayDocumentExportResponses,
+  V2RelayDocumentGetErrors,
+  V2RelayDocumentGetResponses,
+  V2RelayDocumentListErrors,
+  V2RelayDocumentListResponses,
+  V2RelayDocumentNodeTypesErrors,
+  V2RelayDocumentNodeTypesResponses,
+  V2RelayDocumentRemoveErrors,
+  V2RelayDocumentRemoveResponses,
+  V2RelayDocumentSprintErrors,
+  V2RelayDocumentSprintResponses,
+  V2RelayDocumentUpdateErrors,
+  V2RelayDocumentUpdateResponses,
+  V2RelayDocumentVersionErrors,
+  V2RelayDocumentVersionResponses,
+  V2RelayDocumentVersionsErrors,
+  V2RelayDocumentVersionsResponses,
+  V2RelayHookDecisionsErrors,
+  V2RelayHookDecisionsResponses,
+  V2RelayHookDisableErrors,
+  V2RelayHookDisableResponses,
+  V2RelayHookEnableErrors,
+  V2RelayHookEnableResponses,
+  V2RelayHookInstallErrors,
+  V2RelayHookInstallResponses,
+  V2RelayHookListErrors,
+  V2RelayHookListResponses,
+  V2RelayHookOrderErrors,
+  V2RelayHookOrderResponses,
+  V2RelayHookRepairErrors,
+  V2RelayHookRepairResponses,
+  V2RelayHookUninstallErrors,
+  V2RelayHookUninstallResponses,
+  V2RelayHookUpdateErrors,
+  V2RelayHookUpdateResponses,
+  V2RelayPublishPublishErrors,
+  V2RelayPublishPublishResponses,
+  V2RelayPublishUnpublishErrors,
+  V2RelayPublishUnpublishResponses,
+  V2RelayScopeCreateErrors,
+  V2RelayScopeCreateResponses,
+  V2RelayScopeListErrors,
+  V2RelayScopeListResponses,
+  V2RelayScopeRemoveErrors,
+  V2RelayScopeRemoveResponses,
+  V2RelayScopeUpdateErrors,
+  V2RelayScopeUpdateResponses,
   V2ScheduleCreateErrors,
   V2ScheduleCreateResponses,
   V2ScheduleListErrors,
@@ -488,7 +546,7 @@ class HeyApiRegistry<T> {
   get(key?: string): T {
     const instance = this.instances.get(key ?? this.defaultKey)
     if (!instance) {
-      throw new Error(`No SDK client found. Create one with "new OpencodeClient()" to fix this error.`)
+      throw new Error(`No SDK client found. Create one with "new OrchestraClient()" to fix this error.`)
     }
     return instance
   }
@@ -603,7 +661,7 @@ export class App extends HeyApiClient {
   /**
    * List agents
    *
-   * Get a list of all available AI agents in the OpenCode system.
+   * Get a list of all available AI agents in the Orchestra system.
    */
   public agents<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -665,7 +723,7 @@ export class App extends HeyApiClient {
   /**
    * List skills
    *
-   * Get a list of all available skills in the OpenCode system.
+   * Get a list of all available skills in the Orchestra system.
    */
   public skills<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -695,7 +753,7 @@ export class App extends HeyApiClient {
   /**
    * Save skill
    *
-   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   * Create a project skill under .orchestra/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
    */
   public skillSave<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -777,7 +835,7 @@ export class Capabilities extends HeyApiClient {
   /**
    * Get experimental capabilities
    *
-   * Get experimental features enabled on the OpenCode server.
+   * Get experimental features enabled on the Orchestra server.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -881,7 +939,7 @@ export class Console extends HeyApiClient {
   /**
    * Switch active Console org
    *
-   * Persist a new active Console account/org selection for the current local OpenCode state.
+   * Persist a new active Console account/org selection for the current local Orchestra state.
    */
   public switchOrg<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -922,7 +980,7 @@ export class Session extends HeyApiClient {
   /**
    * List sessions
    *
-   * Get a list of all OpenCode sessions across projects, sorted by most recently updated. Archived sessions are excluded by default.
+   * Get a list of all Orchestra sessions across projects, sorted by most recently updated. Archived sessions are excluded by default.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1397,7 +1455,7 @@ export class Config extends HeyApiClient {
   /**
    * Get global configuration
    *
-   * Retrieve the current global OpenCode configuration settings and preferences.
+   * Retrieve the current global Orchestra configuration settings and preferences.
    */
   public get<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<GlobalConfigGetResponses, GlobalConfigGetErrors, ThrowOnError>({
@@ -1409,7 +1467,7 @@ export class Config extends HeyApiClient {
   /**
    * Update global configuration
    *
-   * Update global OpenCode configuration settings and preferences.
+   * Update global Orchestra configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1435,7 +1493,7 @@ export class Global extends HeyApiClient {
   /**
    * Get health
    *
-   * Get health information about the OpenCode server.
+   * Get health information about the Orchestra server.
    */
   public health<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<GlobalHealthResponses, GlobalHealthErrors, ThrowOnError>({
@@ -1447,7 +1505,7 @@ export class Global extends HeyApiClient {
   /**
    * Get global events
    *
-   * Subscribe to global events from the OpenCode system using server-sent events.
+   * Subscribe to global events from the Orchestra system using server-sent events.
    */
   public event<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).sse.get<GlobalEventResponses, GlobalEventErrors, ThrowOnError>({
@@ -1459,7 +1517,7 @@ export class Global extends HeyApiClient {
   /**
    * Dispose instance
    *
-   * Clean up and dispose all OpenCode instances, releasing all resources.
+   * Clean up and dispose all Orchestra instances, releasing all resources.
    */
   public dispose<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).post<GlobalDisposeResponses, GlobalDisposeErrors, ThrowOnError>({
@@ -1469,9 +1527,9 @@ export class Global extends HeyApiClient {
   }
 
   /**
-   * Upgrade opencode
+   * Upgrade orchestra
    *
-   * Upgrade opencode to the specified version.
+   * Upgrade orchestra to the specified version.
    */
   public upgrade<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1534,7 +1592,7 @@ export class Config2 extends HeyApiClient {
   /**
    * Get configuration
    *
-   * Retrieve the current OpenCode configuration settings and preferences.
+   * Retrieve the current Orchestra configuration settings and preferences.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -1564,7 +1622,7 @@ export class Config2 extends HeyApiClient {
   /**
    * Update configuration
    *
-   * Update OpenCode configuration settings and preferences.
+   * Update Orchestra configuration settings and preferences.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2042,7 +2100,7 @@ export class Instance extends HeyApiClient {
   /**
    * Dispose instance
    *
-   * Clean up and dispose the current OpenCode instance, releasing all resources.
+   * Clean up and dispose the current Orchestra instance, releasing all resources.
    */
   public dispose<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2074,7 +2132,7 @@ export class Path extends HeyApiClient {
   /**
    * Get paths
    *
-   * Retrieve the current working directory and related path information for the OpenCode instance.
+   * Retrieve the current working directory and related path information for the Orchestra instance.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2310,7 +2368,7 @@ export class Command extends HeyApiClient {
   /**
    * List commands
    *
-   * Get a list of all available commands in the OpenCode system.
+   * Get a list of all available commands in the Orchestra system.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2819,7 +2877,7 @@ export class Project extends HeyApiClient {
   /**
    * List all projects
    *
-   * Get a list of projects that have been opened with OpenCode.
+   * Get a list of projects that have been opened with Orchestra.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -2849,7 +2907,7 @@ export class Project extends HeyApiClient {
   /**
    * Get current project
    *
-   * Retrieve the currently active project that OpenCode is working with.
+   * Retrieve the currently active project that Orchestra is working with.
    */
   public current<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3016,7 +3074,7 @@ export class Pty extends HeyApiClient {
   /**
    * List PTY sessions
    *
-   * Get a list of all active pseudo-terminal (PTY) sessions managed by OpenCode.
+   * Get a list of all active pseudo-terminal (PTY) sessions managed by Orchestra.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3651,7 +3709,7 @@ export class Session2 extends HeyApiClient {
   /**
    * List sessions
    *
-   * Get a list of all OpenCode sessions, sorted by most recently updated.
+   * Get a list of all Orchestra sessions, sorted by most recently updated.
    */
   public list<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3693,7 +3751,7 @@ export class Session2 extends HeyApiClient {
   /**
    * Create session
    *
-   * Create a new OpenCode session for interacting with AI assistants and managing conversations.
+   * Create a new Orchestra session for interacting with AI assistants and managing conversations.
    */
   public create<ThrowOnError extends boolean = false>(
     parameters?: {
@@ -3842,7 +3900,7 @@ export class Session2 extends HeyApiClient {
   /**
    * Get session
    *
-   * Retrieve detailed information about a specific OpenCode session.
+   * Retrieve detailed information about a specific Orchestra session.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters: {
@@ -4297,70 +4355,6 @@ export class Session2 extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
-    })
-  }
-
-  /**
-   * Unshare session
-   *
-   * Remove the shareable link for a session, making it private again.
-   */
-  public unshare<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).delete<SessionUnshareResponses, SessionUnshareErrors, ThrowOnError>({
-      url: "/session/{sessionID}/share",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Share session
-   *
-   * Create a shareable link for a session, allowing others to view the conversation.
-   */
-  public share<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<SessionShareResponses, SessionShareErrors, ThrowOnError>({
-      url: "/session/{sessionID}/share",
-      ...options,
-      ...params,
     })
   }
 
@@ -5383,7 +5377,7 @@ export class File2 extends HeyApiClient {
   /**
    * Get agent file
    *
-   * Read the agent definition stored in this location's .opencode/agent directory.
+   * Read the agent definition stored in this location's .orchestra/agent directory.
    */
   public get<ThrowOnError extends boolean = false>(
     parameters: {
@@ -5416,7 +5410,7 @@ export class File2 extends HeyApiClient {
   /**
    * Update agent file
    *
-   * Write the agent definition to this location's .opencode/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.
+   * Write the agent definition to this location's .orchestra/agent directory and reload the registered agents. Fails with 409 when `revision` no longer matches the file.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters: {
@@ -5908,7 +5902,7 @@ export class Session3 extends HeyApiClient {
   /**
    * List active sessions
    *
-   * Retrieve foreground Session drains currently owned by this OpenCode process. Sessions absent from the result are inactive.
+   * Retrieve foreground Session drains currently owned by this Orchestra process. Sessions absent from the result are inactive.
    */
   public active<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
     return (options?.client ?? this.client).get<V2SessionActiveResponses, V2SessionActiveErrors, ThrowOnError>({
@@ -6177,7 +6171,7 @@ export class Session3 extends HeyApiClient {
   /**
    * Interrupt session execution
    *
-   * Interrupt active execution owned by this OpenCode process. Idle interruption is a no-op.
+   * Interrupt active execution owned by this Orchestra process. Idle interruption is a no-op.
    */
   public interrupt<ThrowOnError extends boolean = false>(
     parameters: {
@@ -6981,7 +6975,7 @@ export class Skill extends HeyApiClient {
   /**
    * Save skill
    *
-   * Create a project skill under .opencode/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
+   * Create a project skill under .orchestra/skills, or rewrite a registered project skill file given its path. Global, built-in and Atlas-governed skills are read-only. Front matter is re-serialized as YAML.
    */
   public save<ThrowOnError extends boolean = false>(
     parameters: {
@@ -7498,6 +7492,973 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class Document extends HeyApiClient {
+  /**
+   * List Relay documents
+   *
+   * The project's workflow and hook documents, newest first. The shipped profiles are seeded once per server.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayDocumentListResponses, V2RelayDocumentListErrors, ThrowOnError>({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay document
+   *
+   * Create a document. A draft that does not compile yet is saved with its diagnostics.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentCreate: RelayDocumentCreate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayDocumentCreate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCreateResponses,
+      V2RelayDocumentCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay document
+   *
+   * Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayDocumentRemoveResponses,
+      V2RelayDocumentRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get Relay document
+   *
+   * One document with its checksum and published version.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayDocumentGetResponses, V2RelayDocumentGetErrors, ThrowOnError>({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save Relay document
+   *
+   * Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentUpdate: RelayDocumentUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayDocumentUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<
+      V2RelayDocumentUpdateResponses,
+      V2RelayDocumentUpdateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List document versions
+   *
+   * A document's saved versions, newest first.
+   */
+  public versions<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionsResponses,
+      V2RelayDocumentVersionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get document version
+   *
+   * One saved version of a document.
+   */
+  public version<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      versionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "path", key: "versionID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionResponses,
+      V2RelayDocumentVersionErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version/{versionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Compile workflow
+   *
+   * Compile a workflow document to its sprint and the skill bindings resolved from the skill catalog.
+   */
+  public sprint<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentSprintResponses,
+      V2RelayDocumentSprintErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/sprint",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Export Relay document
+   *
+   * A hook document as its relay.hook.v1 export, a workflow document as its compiled sprint.
+   */
+  public export<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentExportResponses,
+      V2RelayDocumentExportErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/export",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Check workflow step
+   *
+   * Grade one step of a workflow in the project directory without recording anything or charging retries.
+   */
+  public check<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayCheckInput: RelayCheckInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayCheckInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCheckResponses,
+      V2RelayDocumentCheckErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/check",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List Relay node types
+   *
+   * The workflow and hook node catalogs.
+   */
+  public nodeTypes<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentNodeTypesResponses,
+      V2RelayDocumentNodeTypesErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/node-types",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Scope extends HeyApiClient {
+  /**
+   * List Relay scopes
+   *
+   * The project's document scopes.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayScopeListResponses, V2RelayScopeListErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay scope
+   *
+   * Create a scope. A name equal to another scope's under case folding is a 409 duplicate-scope.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayScopeCreateResponses, V2RelayScopeCreateErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay scope
+   *
+   * Delete a scope and remove it from every document's tags.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2RelayScopeRemoveResponses, V2RelayScopeRemoveErrors, ThrowOnError>(
+      {
+        url: "/api/relay/scope/{scopeID}",
+        ...options,
+        ...params,
+      },
+    )
+  }
+
+  /**
+   * Update Relay scope
+   *
+   * Rename or describe a scope.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayScopeUpdateResponses, V2RelayScopeUpdateErrors, ThrowOnError>({
+      url: "/api/relay/scope/{scopeID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Publish extends HeyApiClient {
+  /**
+   * Publish Relay document
+   *
+   * Publish the document's current version once it compiles. The signed-in principal is recorded as publishedBy.
+   */
+  public publish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayPublishInput: RelayPublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayPublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishPublishResponses,
+      V2RelayPublishPublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/publish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Unpublish Relay document
+   *
+   * Withdraw the published version. The signed-in principal is recorded as unpublishedBy.
+   */
+  public unpublish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayUnpublishInput: RelayUnpublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayUnpublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishUnpublishResponses,
+      V2RelayPublishUnpublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/unpublish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Hook extends HeyApiClient {
+  /**
+   * List installed hooks
+   *
+   * The project's installed hooks in evaluation order. A corrupt hooks.json is a 409 profile-invalid.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayHookListResponses, V2RelayHookListErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Install hook
+   *
+   * Pin the published version of a hook document for every session of the project, recording the signed-in principal.
+   */
+  public install<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookInstallInput: RelayHookInstallInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookInstallInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookInstallResponses, V2RelayHookInstallErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Update installed hook
+   *
+   * Repin an install to its document's published version, keeping its ID, order and enabled state.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookUpdateInput: RelayHookUpdateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+            { key: "relayHookUpdateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookUpdateResponses, V2RelayHookUpdateErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/update",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Enable installed hook
+   *
+   * Enable an install; recorded.
+   */
+  public enable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookEnableResponses, V2RelayHookEnableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/enable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Disable installed hook
+   *
+   * Disable an install; recorded.
+   */
+  public disable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookDisableResponses, V2RelayHookDisableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/disable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Reorder installed hooks
+   *
+   * Set the evaluation order. The list must name every install exactly once, else 409 order-mismatch.
+   */
+  public order<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookOrderInput: RelayHookOrderInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookOrderInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayHookOrderResponses, V2RelayHookOrderErrors, ThrowOnError>({
+      url: "/api/relay/hook/order",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Uninstall hook
+   *
+   * Remove an install; recorded. Its ledger is kept.
+   */
+  public uninstall<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayHookUninstallResponses,
+      V2RelayHookUninstallErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List hook decisions
+   *
+   * The most recent 500 decisions in the install's ledger, oldest first.
+   */
+  public decisions<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayHookDecisionsResponses,
+      V2RelayHookDecisionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}/decisions",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Repair hooks.json
+   *
+   * Only on this explicit request: a corrupt hooks.json (a regular file that does not decode or verify, or is over the size cap) is moved aside to a backup and replaced by an empty install list. A valid file, a symlink, a non-file or an unreadable file is never touched and answers 409.
+   */
+  public repair<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookRepairInput: RelayHookRepairInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookRepairInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookRepairResponses, V2RelayHookRepairErrors, ThrowOnError>({
+      url: "/api/relay/hook/repair",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Relay extends HeyApiClient {
+  private _document?: Document
+  get document(): Document {
+    return (this._document ??= new Document({ client: this.client }))
+  }
+
+  private _scope?: Scope
+  get scope(): Scope {
+    return (this._scope ??= new Scope({ client: this.client }))
+  }
+
+  private _publish?: Publish
+  get publish(): Publish {
+    return (this._publish ??= new Publish({ client: this.client }))
+  }
+
+  private _hook?: Hook
+  get hook(): Hook {
+    return (this._hook ??= new Hook({ client: this.client }))
+  }
+}
+
 export class PullRequest extends HeyApiClient {
   /**
    * List open pull requests
@@ -7821,6 +8782,11 @@ export class V2 extends HeyApiClient {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
   }
 
+  private _relay?: Relay
+  get relay(): Relay {
+    return (this._relay ??= new Relay({ client: this.client }))
+  }
+
   private _pullRequest?: PullRequest
   get pullRequest(): PullRequest {
     return (this._pullRequest ??= new PullRequest({ client: this.client }))
@@ -7832,12 +8798,12 @@ export class V2 extends HeyApiClient {
   }
 }
 
-export class OpencodeClient extends HeyApiClient {
-  public static readonly __registry = new HeyApiRegistry<OpencodeClient>()
+export class OrchestraClient extends HeyApiClient {
+  public static readonly __registry = new HeyApiRegistry<OrchestraClient>()
 
   constructor(args?: { client?: Client; key?: string }) {
     super(args)
-    OpencodeClient.__registry.set(this, args?.key)
+    OrchestraClient.__registry.set(this, args?.key)
   }
 
   private _auth?: Auth

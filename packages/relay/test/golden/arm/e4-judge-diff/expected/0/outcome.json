@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'A' is NOT satisfied. Still failing:; DIFF-NARROW. Address these, then finish. Instructions: do A"
+  },
+  "stderr": ""
+}

@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'target\r' is NOT satisfied. Still failing:; actual. Address these, then finish. Instructions: do target\r"
+  },
+  "stderr": ""
+}

@@ -1,4 +1,5 @@
-import type { PermissionActionConfig, PermissionRuleConfig } from "@opencode-ai/sdk/v2/client"
+import type { PermissionActionConfig, PermissionRuleConfig } from "@orchestra/sdk/v2/client"
+import { matchWildcard } from "@/utils/wildcard"
 
 // Sections of the routed Settings view, in navigation order. The first six are the approved
 // mock's; General and Servers keep the remaining real settings reachable.
@@ -40,7 +41,7 @@ export const PERMISSION_ACTIONS = ["allow", "ask", "deny"] as const
 
 type Rule = { key: string; pattern: string; action: PermissionActionConfig }
 
-// The server's own defaults (packages/opencode/src/agent/agent.ts). It evaluates them first, then each agent's
+// The server's own defaults (packages/orchestra/src/agent/agent.ts). It evaluates them first, then each agent's
 // built-in rules (plan denies edits, for example), then the configured rules; the last matching rule wins. Only
 // their "*" defaults are listed: everything is allowed except doom_loop and external_directory, which ask.
 const BUILT_IN: Rule[] = [
@@ -61,7 +62,8 @@ export function permissionMap(config: unknown): Record<string, PermissionRuleCon
 // cover every input ("*") decide the default.
 export function permissionAction(config: unknown, tool: PermissionTool): PermissionActionConfig {
   return (
-    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matches(tool, item.key))?.action ?? "ask"
+    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matchWildcard(tool, item.key))?.action ??
+    "ask"
   )
 }
 
@@ -97,15 +99,6 @@ function rules(config: unknown): Rule[] {
       return valid ? [{ key, pattern, action: valid }] : []
     })
   })
-}
-
-// The server's Wildcard.match: "*" matches any run, "?" one character.
-function matches(input: string, pattern: string) {
-  const escaped = pattern
-    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".")
-  return new RegExp(`^${escaped}$`, "s").test(input)
 }
 
 function actionOf(value: unknown) {

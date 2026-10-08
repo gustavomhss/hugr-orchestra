@@ -2,6 +2,8 @@ name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
 # with a .ci-run.json request ({ package, args }). This workflow runs exactly those tests, then deletes the branch.
+# The request names its runner (`bun` or `pytest`). A request without one falls back to the files: a package.json means
+# `bun test`, otherwise requirements-dev.txt means pytest.
 on:
   push:
     branches:
@@ -27,17 +29,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun
-
-      - name: Configure git identity
-        run: |
-          git config --global user.email "bot@opencode.ai"
-          git config --global user.name "opencode"
-
-      - name: Run tests
-        env:
-          OPENCODE_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+      - name: Read request
+        id: request
         run: |
           package=$(jq -r '.package' .ci-run.json | tr -d '\r')
           case "$package" in
@@ -46,13 +39,60 @@ jobs:
               exit 2
               ;;
           esac
-          if [ ! -f "packages/$package/package.json" ]; then
-            echo "::error::packages/$package does not exist"
+          runner=$(jq -r '.runner // ""' .ci-run.json | tr -d '\r')
+          if [ -z "$runner" ] && [ -f "packages/$package/package.json" ]; then
+            runner=bun
+          elif [ -z "$runner" ] && [ -f "packages/$package/requirements-dev.txt" ]; then
+            runner=pytest
+          fi
+          case "$runner" in
+            bun) required=package.json ;;
+            pytest) required=requirements-dev.txt ;;
+            *) required="" ;;
+          esac
+          if [ -z "$required" ] || [ ! -f "packages/$package/$required" ]; then
+            echo "::error::packages/$package cannot run ${runner:-any} tests"
             exit 2
           fi
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "runner=$runner" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Bun
+        if: steps.request.outputs.runner == 'bun'
+        uses: ./.github/actions/setup-bun
+
+      - name: Setup Python
+        if: steps.request.outputs.runner == 'pytest'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packages/${{ steps.request.outputs.package }}/requirements-dev.txt
+
+      - name: Install Python test dependencies
+        if: steps.request.outputs.runner == 'pytest'
+        env:
+          PACKAGE: ${{ steps.request.outputs.package }}
+        run: python -m pip install -r "packages/$PACKAGE/requirements-dev.txt"
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "bot@opencode.ai"
+          git config --global user.name "orchestra"
+
+      - name: Run tests
+        env:
+          ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+          PACKAGE: ${{ steps.request.outputs.package }}
+          RUNNER: ${{ steps.request.outputs.runner }}
+        run: |
           mapfile -t args < <(jq -r '.args[]' .ci-run.json | tr -d '\r')
-          cd "packages/$package"
-          GITHUB_ACTIONS=false bun test "${args[@]}"
+          cd "packages/$PACKAGE"
+          if [ "$RUNNER" = pytest ]; then
+            python -m pytest -p no:cacheprovider "${args[@]}"
+          else
+            GITHUB_ACTIONS=false bun test "${args[@]}"
+          fi
 
   cleanup:
     needs: test

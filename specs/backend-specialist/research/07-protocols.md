@@ -2,7 +2,7 @@
 
 Research date: **2026-10-03**. Worktree base: `76015a9dcd5b0c77164a3f1bee49b0060a4d37f0`.
 
-**Recommendation:** borrow contracts; keep the backend specialist independent backend-specialist plugin. OpenCode/Orchestra owns model loop, Session lifecycle, execution, permissions, durable admission, and result acceptance. Maestro supplies optional native orchestration. The backend specialist uses native Atlas Knowledge/Memory through host-granted capabilities. Environment-configurable names are display/routing aliases; persisted specialist, capability, task, approval, and knowledge identities stay stable.
+**Recommendation:** borrow contracts; keep the backend specialist independent backend-specialist plugin. Orchestra owns model loop, Session lifecycle, execution, permissions, durable admission, and result acceptance. Maestro supplies optional native orchestration. The backend specialist uses native Atlas Knowledge/Memory through host-granted capabilities. Environment-configurable names are display/routing aliases; persisted specialist, capability, task, approval, and knowledge identities stay stable.
 
 Evidence below covers official OpenAI Agents **Python** SDK, LangGraph Python, and PydanticAI sources/docs, including current PydanticAI Harness persistence. Source revisions are inspected repository HEADs, not claims about installed packages or TypeScript API parity. Host mappings are **proposals constrained by supplied Session V2 rules**, not assertions that new extension points already exist.
 

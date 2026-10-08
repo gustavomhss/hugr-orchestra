@@ -2,7 +2,7 @@ export * as PermissionV2 from "./permission"
 
 import { makeLocationNode } from "./effect/app-node"
 import { Context, Deferred, Effect as EffectRuntime, Layer, Schema } from "effect"
-import { Permission } from "@opencode-ai/schema/permission"
+import { Permission } from "@orchestra/schema/permission"
 import { EventV2 } from "./event"
 import { Location } from "./location"
 import { AgentV2 } from "./agent"
@@ -11,7 +11,7 @@ import { SessionStore } from "./session/store"
 import { Wildcard } from "./util/wildcard"
 import { PermissionSaved } from "./permission/saved"
 
-export { Effect, Rule, Ruleset } from "@opencode-ai/schema/permission"
+export { Effect, Rule, Ruleset } from "@orchestra/schema/permission"
 const missingAgentPermissions: Permission.Ruleset = [{ action: "*", resource: "*", effect: "deny" }]
 
 export const ID = Permission.ID
@@ -90,8 +90,12 @@ export function merge(...rulesets: Permission.Ruleset[]): Permission.Ruleset {
 }
 
 export interface Interface {
+  /** Read-only current policy assessment; never queues, publishes, or grants approval. */
+  readonly evaluate: (input: AssertInput) => EffectRuntime.Effect<Permission.Effect, SessionV2.NotFoundError>
   readonly ask: (input: AssertInput) => EffectRuntime.Effect<AskResult, SessionV2.NotFoundError>
   readonly assert: (input: AssertInput) => EffectRuntime.Effect<void, Error | SessionV2.NotFoundError>
+  /** Ordinary authorization with typed rejection; legacy assert retains rejection as a defect. */
+  readonly authorize: (input: AssertInput) => EffectRuntime.Effect<void, Error | DeclinedError | SessionV2.NotFoundError>
   /** Native host intent check. Configured deny wins; agent/saved allow cannot replace a live reply. */
   readonly askExplicit: (input: AssertInput) => EffectRuntime.Effect<void, Error | DeclinedError | SessionV2.NotFoundError>
   readonly reply: (input: ReplyInput) => EffectRuntime.Effect<void, NotFoundError>
@@ -100,7 +104,7 @@ export interface Interface {
   readonly list: () => EffectRuntime.Effect<ReadonlyArray<Request>>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Permission") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Permission") {}
 
 interface Pending {
   readonly request: Request
@@ -197,7 +201,7 @@ const layer = Layer.effect(
       return { id: value.id, effect: result.effect }
     })
 
-    const assert = EffectRuntime.fn("PermissionV2.assert")((input: AssertInput) =>
+    const authorize = EffectRuntime.fn("PermissionV2.authorize")((input: AssertInput) =>
       EffectRuntime.uninterruptibleMask((restore) =>
         EffectRuntime.gen(function* () {
           const result = yield* evaluateInput(input)
@@ -209,7 +213,6 @@ const layer = Layer.effect(
           if (result.effect === "allow") return
           const item = yield* create(request(input), input.agent)
           return yield* restore(Deferred.await(item.deferred)).pipe(
-            EffectRuntime.catchTag("PermissionV2.DeclinedError", (error) => EffectRuntime.die(error)),
             EffectRuntime.ensuring(
               EffectRuntime.sync(() => {
                 pending.delete(item.request.id)
@@ -218,6 +221,10 @@ const layer = Layer.effect(
           )
         }),
       ),
+    )
+
+    const assert = EffectRuntime.fn("PermissionV2.assert")((input: AssertInput) =>
+      authorize(input).pipe(EffectRuntime.catchTag("PermissionV2.DeclinedError", (error) => EffectRuntime.die(error))),
     )
 
     const askExplicit = EffectRuntime.fn("PermissionV2.askExplicit")((input: AssertInput) =>
@@ -314,7 +321,12 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.request).filter((request) => request.sessionID === sessionID)
     })
 
-    return Service.of({ ask, assert, askExplicit, reply, get, forSession, list })
+    return Service.of({
+      evaluate: EffectRuntime.fn("PermissionV2.evaluate")((input: AssertInput) =>
+        evaluateInput(input).pipe(EffectRuntime.map((result) => result.effect)),
+      ),
+      ask, assert, authorize, askExplicit, reply, get, forSession, list,
+    })
   }),
 )
 

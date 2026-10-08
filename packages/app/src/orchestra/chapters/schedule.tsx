@@ -1,4 +1,4 @@
-import { getFilename } from "@opencode-ai/core/util/path"
+import { getFilename } from "@orchestra/core/util/path"
 import {
   createMemo,
   createSignal,
@@ -394,6 +394,13 @@ function ScheduleDialog(props: {
       ref={dialog}
       class="mx-dialog schedule-dialog"
       aria-labelledby={id}
+      // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
+      // document and cancels the native close. The modal is the top layer, so it takes Escape first.
+      on:keydown={(event) => {
+        if (event.key !== "Escape" || event.defaultPrevented) return
+        event.preventDefault()
+        dialog.close()
+      }}
       onClose={() => props.onClose()}
       onClick={(event) => {
         if (event.target !== dialog) return

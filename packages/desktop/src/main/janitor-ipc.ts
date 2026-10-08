@@ -47,7 +47,7 @@ function readStoredState(store: Store) {
 }
 
 export function registerJanitorIpcHandlers(deps: Deps) {
-  const store = deps.getStore("opencode.janitor")
+  const store = deps.getStore("orchestra.janitor")
   const janitor = readStoredState(store)
   const persist = () => {
     if (janitor.reportJson === null) store.delete("reportJson")

@@ -46,7 +46,7 @@ ORCHESTRA_VISUAL_OUT=/tmp/orchestra-visual-pack PLAYWRIGHT_PORT=5121 \
 ```
 
 It builds and previews the production bundle like the integration runner, but on the
-release `prod` channel; set `OPENCODE_CHANNEL=dev` to match the integration bundle.
+release `prod` channel; set `ORCHESTRA_CHANNEL=dev` to match the integration bundle.
 It covers dark and light, English LTR and Arabic RTL, at 1672×941, 1366×768, 1152×720
 and 900×700, plus a few 2x shots, using the existing mocked-API fixtures. Without
 `ORCHESTRA_VISUAL_OUT`, each test writes to its own Playwright output directory.

@@ -1,20 +1,20 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Fiber, Layer, Schema } from "effect"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { Database } from "@opencode-ai/core/database/database"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Location } from "@opencode-ai/core/location"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { PermissionTable } from "@opencode-ai/core/permission/sql"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
-import { Project } from "@opencode-ai/core/project"
-import { ProjectTable } from "@opencode-ai/core/project/sql"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SessionTable } from "@opencode-ai/core/session/sql"
-import { SessionStore } from "@opencode-ai/core/session/store"
+import { Cause, Deferred, Effect, Fiber, Layer, Ref, Schema } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
+import { Database } from "@orchestra/core/database/database"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { Location } from "@orchestra/core/location"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { PermissionTable } from "@orchestra/core/permission/sql"
+import { PermissionSaved } from "@orchestra/core/permission/saved"
+import { Project } from "@orchestra/core/project"
+import { ProjectTable } from "@orchestra/core/project/sql"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionStore } from "@orchestra/core/session/store"
 import { eq } from "drizzle-orm"
 import { location } from "./fixture/location"
 import { testEffect } from "./lib/effect"
@@ -90,13 +90,14 @@ function waitForRequest() {
     const service = yield* PermissionV2.Service
     const events = yield* EventV2.Service
     const asked = yield* Deferred.make<PermissionV2.Request>()
-    const unsubscribe = yield* events.listen((event) =>
-      event.type === PermissionV2.Event.Asked.type
-        ? Deferred.succeed(asked, event.data as PermissionV2.Request).pipe(Effect.asVoid)
-        : Effect.void,
-    )
+    const input = assertion()
+    const unsubscribe = yield* events.listen((event) => {
+      if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+      const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+      return request.id === input.id ? Deferred.succeed(asked, request).pipe(Effect.asVoid) : Effect.void
+    })
     yield* Effect.addFinalizer(() => unsubscribe)
-    const fiber = yield* service.assert(assertion()).pipe(Effect.forkScoped)
+    const fiber = yield* service.assert(input).pipe(Effect.forkScoped)
     const request = yield* Deferred.await(asked)
     return { service, fiber, request }
   })
@@ -120,6 +121,72 @@ function waitExplicit(input: PermissionV2.AssertInput) {
 }
 
 describe("PermissionV2", () => {
+  it.effect("authorize queues and preserves plain rejection as a typed failure with cleanup", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const service = yield* PermissionV2.Service
+      const events = yield* EventV2.Service
+      const input = assertion({ id: PermissionV2.ID.create("per_authorize_reject") })
+      const asked = yield* Deferred.make<PermissionV2.Request>()
+      const unsubscribe = yield* events.listen((event) => {
+        if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+        const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+        return request.id === input.id ? Deferred.succeed(asked, request).pipe(Effect.asVoid) : Effect.void
+      })
+      yield* Effect.addFinalizer(() => unsubscribe)
+      const fiber = yield* service.authorize(input).pipe(Effect.result, Effect.forkChild)
+      const request = yield* Effect.raceFirst(Deferred.await(asked), Fiber.join(fiber).pipe(
+        Effect.andThen(Effect.fail(new Error("AUTHORIZATION_BYPASSED_PERMISSION_QUEUE"))),
+      ))
+      expect(request.id).toBe(input.id)
+      expect(yield* service.list()).toEqual([request])
+      yield* service.reply({ requestID: request.id, reply: "reject" })
+      const result = yield* Fiber.join(fiber)
+      expect(result._tag).toBe("Failure")
+      if (result._tag === "Failure") expect(result.failure).toBeInstanceOf(PermissionV2.DeclinedError)
+      expect(yield* service.list()).toEqual([])
+      expect(yield* service.get(request.id)).toBeUndefined()
+    }),
+  )
+
+  it.effect("read-only assessment uses current issuer and saved rules without pending requests or events", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const service = yield* PermissionV2.Service
+      const events = yield* EventV2.Service
+      const saved = yield* PermissionSaved.Service
+      const asked = yield* Ref.make(0)
+      const unsubscribe = yield* events.listen((event) => event.type === PermissionV2.Event.Asked.type
+        ? Ref.update(asked, (count) => count + 1) : Effect.void)
+      yield* Effect.addFinalizer(() => unsubscribe)
+      expect(yield* service.evaluate(assertion())).toBe("ask")
+      expect(yield* service.list()).toEqual([])
+      yield* setRules([{ action: "read", resource: "*", effect: "allow" }])
+      expect(yield* service.evaluate(assertion())).toBe("allow")
+      yield* setRules([])
+      yield* saved.add({ projectID: Project.ID.global, action: "read", resources: ["*"] })
+      const approvals = yield* saved.list()
+      expect(yield* service.evaluate(assertion())).toBe("allow")
+      yield* setRules([{ action: "read", resource: "*", effect: "deny" }])
+      expect(yield* service.evaluate(assertion({ agent: AgentV2.ID.make("test") }))).toBe("deny")
+      expect(yield* service.evaluate(assertion({ agent: AgentV2.ID.make("missing-agent") }))).toBe("deny")
+      expect((yield* service.evaluate(assertion({ sessionID: SessionV2.ID.make("ses_missing") })).pipe(Effect.flip)))
+        .toBeInstanceOf(SessionV2.NotFoundError)
+      expect(yield* saved.list()).toEqual(approvals)
+      expect(yield* service.list()).toEqual([])
+      expect(yield* Ref.get(asked)).toBe(0)
+      // Positive control: the same kernel really queues and publishes an ordinary ask.
+      yield* Effect.forEach(approvals, (approval) => saved.remove(approval.id))
+      yield* setRules([])
+      const request = yield* service.ask(assertion())
+      expect(request.effect).toBe("ask")
+      expect((yield* service.list()).map((item) => item.id)).toEqual([request.id])
+      expect(yield* Ref.get(asked)).toBe(1)
+      yield* service.reply({ requestID: request.id, reply: "once" })
+      expect(yield* service.list()).toEqual([])
+    }),
+  )
+
   it.effect("explicit native intent queues despite agent or saved allow and waits for actual once/reject", () => Effect.gen(function* () {
     yield* setup([{ action: "read", resource: "*", effect: "allow" }])
     const saved = yield* PermissionSaved.Service

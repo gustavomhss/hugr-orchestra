@@ -2,15 +2,15 @@ import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { AbsolutePath } from "@opencode-ai/core/schema"
-import { SessionV2 } from "@opencode-ai/core/session"
-import { SkillV2 } from "@opencode-ai/core/skill"
-import { SkillTool } from "@opencode-ai/core/tool/skill"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionV2 } from "@orchestra/core/session"
+import { SkillV2 } from "@orchestra/core/skill"
+import { SkillTool } from "@orchestra/core/tool/skill"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { tmpdir } from "./fixture/tmpdir"
 import { it } from "./lib/effect"
 import { toolIdentity, executeTool, settleTool, toolDefinitions } from "./lib/tool"
@@ -45,6 +45,8 @@ describe("SkillTool", () => {
           const permission = Layer.succeed(
             PermissionV2.Service,
             PermissionV2.Service.of({
+              evaluate: () => Effect.die("unused permission evaluation"),
+              authorize: () => Effect.die("unused permission authorization"),
     askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
               assert: (input) =>
                 Effect.sync(() => assertions.push(input)).pipe(

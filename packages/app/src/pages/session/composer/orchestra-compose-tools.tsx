@@ -1,5 +1,5 @@
 import { createUniqueId, Show } from "solid-js"
-import type { PromptInputV2Interaction } from "@opencode-ai/session-ui/v2/prompt-input/interaction"
+import type { PromptInputV2Interaction } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { useLanguage } from "@/context/language"
 import { useSessionDelivery } from "./delivery"
 

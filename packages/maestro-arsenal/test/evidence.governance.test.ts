@@ -2,9 +2,11 @@ import { expect, test } from "bun:test"
 import { join } from "node:path"
 import { acceptance } from "../src/governance/acceptance.ts"
 import { telemetry, estimate, type Observations, type Price } from "../src/governance/telemetry.ts"
-import relay, { evaluateCompletion, type CompletionContract } from "../src/tools/relay-arm.ts"
+import relay, { type CompletionContract } from "../src/tools/relay-arm.ts"
 import { fixture, capture, check, provenance, operation, result } from "./fixtures.governance.ts"
 import { rethrow } from "./rejection.ts"
+import { validateArgs } from "../src/validate.ts"
+import governance from "../src/tools/governance.ts"
 const price: Price = { provider: "provider", model: "model", input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5, currency: "USD", source: "provider-contract", asOf: "2026-09-30" }
 function observations(): Observations {
   return Object.freeze({ complete: true, usage: Object.freeze([{ provider: "provider", model: "model", input: 1000000, output: 100000, cacheRead: 100000, cacheWrite: 100000, provenance: provenance("usage") }]), actions: Object.freeze([{ tool: "native-tool", outcome: "succeeded" as const, provenance: provenance("action") }]), checks: capture(check("suite")) })
@@ -72,13 +74,8 @@ test("Relay stores canonical project contract, host must bind checks; no Claude 
   expect(armed.enforced).toBe(false)
   expect(result<{ token: string }>(await relay.handler({ action: "arm", contract }, f.context)).token).toBe(armed.token)
   expect(result<{ contract: CompletionContract }>(await relay.handler({ action: "read", token: armed.token }, f.context)).contract).toEqual(contract)
-  const missing = evaluateCompletion("project", contract, capture(check("suite")), [])
-  expect(missing.failures).toContain("HOST_CHECK_UNBOUND: bun-tests")
-  expect(missing.currentGate).toBe("verify")
-  const green = await operation<{ status: string; hookInstalled: boolean }>({ operation: "completion-check", contract, checks: capture(check("suite")), bindings: ["bun-tests"] }, f.context)
-  expect(green.status).toBe("PASS")
-  expect(green.hookInstalled).toBe(false)
-  expect(evaluateCompletion("project", contract, capture(check("suite", "skip")), ["bun-tests"]).status).toBe("FAIL")
+  // Supplied captures never grade a contract here: completion runs only on the native host's Relay arm.
+  expect(validateArgs(governance.inputSchema, { operation: "completion-check", contract, checks: capture(check("suite")), bindings: ["bun-tests"] }).ok).toBe(false)
   expect(await rethrow(relay.handler({ action: "arm", contract: { ...contract, chain: [] } }, f.context))).toThrow("COMPLETION_CHAIN_EMPTY_OR_OVERFLOW")
 })
 test("native acceptance operation executes exact contract", async () => {

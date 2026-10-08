@@ -1,13 +1,13 @@
-import { makeDefaultApi } from "@opencode-ai/protocol/api"
-import { InvalidRequestError, SessionNotFoundError } from "@opencode-ai/protocol/errors"
+import { makeDefaultApi } from "@orchestra/protocol/api"
+import { InvalidRequestError, SessionNotFoundError } from "@orchestra/protocol/errors"
 import { HttpApiMiddleware } from "effect/unstable/httpapi"
 
 class LocationMiddleware extends HttpApiMiddleware.Service<LocationMiddleware>()(
-  "@opencode-ai/client/LocationMiddleware",
+  "@orchestra/client/LocationMiddleware",
 ) {}
 
 class SessionLocationMiddleware extends HttpApiMiddleware.Service<SessionLocationMiddleware>()(
-  "@opencode-ai/client/SessionLocationMiddleware",
+  "@orchestra/client/SessionLocationMiddleware",
   { error: [InvalidRequestError, SessionNotFoundError] },
 ) {}
 
@@ -36,6 +36,9 @@ export const groupNames = {
   "server.question": "questions",
   "server.reference": "references",
   "server.projectCopy": "projectCopies",
+  "server.relay.document": "relayDocuments",
+  "server.relay.publish": "relayPublish",
+  "server.relay.hook": "relayHooks",
   "server.pullRequest": "pullRequests",
   "server.schedule": "schedules",
 } as const
@@ -53,6 +56,11 @@ export const endpointNames = {
   "permission.saved.list": "listSaved",
   "permission.saved.remove": "removeSaved",
   "question.request.list": "listRequests",
+  "relay.document.export": "definition",
+  "relay.scope.list": "listScopes",
+  "relay.scope.create": "createScope",
+  "relay.scope.update": "updateScope",
+  "relay.scope.remove": "removeScope",
 } as const
 
 export const omitEndpoints = new Set(["fs.read", "pty.connect", "pty.connectToken"])

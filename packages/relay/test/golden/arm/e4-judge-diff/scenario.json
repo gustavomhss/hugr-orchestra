@@ -1,0 +1,53 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "DIFF-ALL",
+            "judge": "change ok",
+            "diff": true,
+            "blocking": true
+          },
+          {
+            "id": "DIFF-NARROW",
+            "judge": "seed only",
+            "diff": true,
+            "blocking": true,
+            "paths": [
+              "seed.txt"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>",
+    "base_ref": {
+      "commit": 0
+    }
+  },
+  "commits": [
+    {
+      "message": "seed",
+      "files": {
+        "seed.txt": "seed\n"
+      }
+    }
+  ],
+  "tree": {
+    "seed.txt": "seed\nchanged\n",
+    "result.md": "RELAY_JUDGE_OK\n"
+  },
+  "fires": [
+    {},
+    {
+      "tree": {
+        "seed.txt": "seed\nRELAY_JUDGE_OK\n"
+      }
+    }
+  ]
+}

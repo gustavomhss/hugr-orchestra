@@ -26,7 +26,7 @@ import { TabMenu } from "./apps-panel-tab-menu"
 import { createLinuxMenuController, LinuxMenu } from "./linux-menu"
 import "./apps-panel.css"
 
-const sidebarCollapsedKey = "opencode.app-dock.sidebar-collapsed"
+const sidebarCollapsedKey = "orchestra.app-dock.sidebar-collapsed"
 export type DockAddressDraft = { owner?: string; tab?: TabIdentity; value: string }
 
 // A view of the window's App Dock. The live tabs belong to the controller and the repository
