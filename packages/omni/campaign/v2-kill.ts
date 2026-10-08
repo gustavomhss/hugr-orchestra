@@ -33,8 +33,8 @@ import {
   verdict,
   win,
 } from "./lib.ts"
-import { record, deliveryEnv } from "./delivery-fixtures.ts"
-import { consoleHost, consoleInput, gracefulEvidence, isolatedEnvironment, windowsInventory, windowsSnapshots } from "./windows-lifecycle.ts"
+import { deliveryEnv } from "./delivery-fixtures.ts"
+import { consoleHost, consoleInput, finishCampaign, gracefulEvidence, isolatedEnvironment, windowsInventory, windowsSnapshots } from "./windows-lifecycle.ts"
 import { PtyOmni } from "../../core/src/pty/omni.ts"
 
 const KPI_MS = 8_000
@@ -125,13 +125,14 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
   const outside = { terminal: undefined as PtyOmni.OmniProc | undefined }
   const probes = { controls: undefined as Record<string, ReturnType<typeof control>> | undefined }
   const recorder = { inventory: undefined as Awaited<ReturnType<typeof windowsInventory>> | undefined }
+  const teardown = { recorder: undefined as ReturnType<Awaited<ReturnType<typeof windowsInventory>>["snapshot"]> | undefined, cleanupComplete: false }
   const nonces = Object.values(trees).map((t) => t.nonce)
   const steps: string[] = []
   const step = (line: string) => {
     steps.push(`${new Date().toISOString()} ${line}`)
     console.error(`[v2-${target}] ${line}`)
   }
-  try {
+  return finishCampaign(scenario, async () => { try {
     if (win) recorder.inventory = await windowsInventory(env)
     const started = win && (target === "tui" || action === "quit") ? await consoleHost(env, project, target, [], recorder.inventory) : target === "serve" ? await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, project) : await tui(bin, env, project)
     if ("terminal" in started) terminalHost.host = started
@@ -180,7 +181,7 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
     const shutdown = action === "quit" ? gracefulEvidence(target, terminalHost.host!, input) : undefined
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args?.slice(0, 160) ?? "<argv unavailable>"}`)
     step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
-    return record(scenario, {
+    return {
       target,
       home,
       nonces: all,
@@ -194,12 +195,13 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
       leftovers,
       llm: llm.seen,
       offered: llm.offered,
+      teardown,
       pass: (shutdown === undefined || shutdown.pass) && observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) && observed.last.retained.length === 0 && leftovers.length === 0,
       steps,
-    })
+    }
   } catch (error) {
-    return record(scenario, { target, pass: false, error: String(error).slice(0, 4000), controls: probes.controls, output: terminalHost.host?.out().slice(-4000), steps })
-  } finally {
+    return { target, pass: false, error: String(error).slice(0, 4000), home, teardown, controls: probes.controls, output: terminalHost.host?.out().slice(-4000), steps }
+  } }, async () => {
     llm.stop()
     try {
       await outside.terminal?.stop()
@@ -216,9 +218,13 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
       })
     } finally {
       try { await recorder.inventory?.stop() }
-      finally { await cleanup(home, nonces) }
+      finally {
+        teardown.recorder = recorder.inventory?.snapshot()
+        await cleanup(home, nonces)
+        teardown.cleanupComplete = true
+      }
     }
-  }
+  })
 }
 
 /** The TUI on a fixed port inside a python pty; its pid is the orchestra process under python. */

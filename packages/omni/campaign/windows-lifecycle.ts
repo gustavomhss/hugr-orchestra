@@ -2,9 +2,10 @@
 // Outer terminal ownership is never evidence that the CLI supervised its own children.
 import { createServer } from "node:net"
 import { spawn } from "node:child_process"
+import http from "node:http"
 import { PtyOmni } from "../../core/src/pty/omni.ts"
-import { adoptTree, cli, identity, matches, members, sleep, table, until, win } from "./lib.ts"
-import type { Identity, Row } from "./lib.ts"
+import { adoptTree, cli, fakeLLM, identity, matches, members, sleep, table, until, verdict, win } from "./lib.ts"
+import type { Identity, Row, ToolCall } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
@@ -15,7 +16,7 @@ export function backgroundCommand(tree: { command: string; args: string[] }, rel
   return `$ErrorActionPreference='Stop'; $p=Start-Process -FilePath ${quote(tree.command)} -ArgumentList ${quote(args)} -NoNewWindow -PassThru; while (!(Test-Path -LiteralPath ${quote(release)})) { if ($p.HasExited) { throw 'background tree exited before release' }; Start-Sleep -Milliseconds 50 }; exit 0`
 }
 
-export async function consoleHost(env: Record<string, string>, project: string, target: "tui" | "serve" = "tui", args: string[] = [], inventory?: Awaited<ReturnType<typeof windowsInventory>>) {
+export async function consoleHost(env: Record<string, string>, project: string, target: "tui" | "serve" | { attach: string; sessionID: string } = "tui", args: string[] = [], inventory?: Awaited<ReturnType<typeof windowsInventory>>) {
   if (!win || !process.env.CI) throw new Error("Windows lifecycle requires real Windows CI")
   const preparation = performance.now()
   const backend = await PtyOmni.load()
@@ -28,14 +29,14 @@ export async function consoleHost(env: Record<string, string>, project: string, 
     })
   })
   const preparationMs = performance.now() - preparation
-  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), ["--print-logs", "--log-level", "DEBUG", ...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1", ...args], {
+  const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), ["--print-logs", "--log-level", "DEBUG", ...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
     name: "xterm-256color", cols: 120, rows: 40, cwd: project,
     env: { ...deliveryEnv(env), TERM: "xterm-256color", COLUMNS: "120", LINES: "40" },
   }))
   const state = { output: "", exit: undefined as { exitCode: number; signal?: number | string } | undefined }
   terminal.onData((data) => { state.output += data })
   terminal.onExit((exit) => { state.exit = exit })
-  const url = `http://127.0.0.1:${port}`
+  const url = typeof target === "object" ? target.attach : `http://127.0.0.1:${port}`
   try {
     const recording = performance.now()
     const rows = inventory ? await inventory.query() : table()
@@ -51,12 +52,68 @@ export async function consoleHost(env: Record<string, string>, project: string, 
           return response.ok && typeof body === "object" && body !== null && "healthy" in body && body.healthy === true ? true : undefined
         }).catch(() => undefined)
     })
-    if (target === "tui") await until(30_000, "fullscreen TUI rendered in ConPTY", () => state.output.includes("\x1b[?1049h") ? true : undefined)
+    if (target !== "serve") await until(30_000, "fullscreen TUI rendered in ConPTY", () => state.output.includes("\x1b[?1049h") ? true : undefined)
     return { pid: captured.pid, identity: captured, url, extra: [] as number[], out: () => state.output, terminal, state, preparationMs, identityCaptureMs }
   } catch (error) {
     await terminal.stop()
     throw new Error(`${error}; console output: ${state.output.slice(-4000)}`)
   }
+}
+
+/** Two real protocol stages, reusing the existing SSE fixture. A second user prompt selects stage 2;
+ * tool-result continuation stays on its stage and cannot start foreground work ahead of admission. */
+export async function twoStageLLM(calls: [ToolCall, ToolCall], foregroundPrompt: string) {
+  const stages = await Promise.all(calls.map((call) => fakeLLM([call])))
+  const errors: string[] = []
+  const server = http.createServer((request, response) => {
+    void (async () => {
+      const chunks: Buffer[] = []
+      for await (const chunk of request) chunks.push(Buffer.from(chunk))
+      const body = Buffer.concat(chunks).toString("utf8")
+      const input = JSON.parse(body) as { messages?: { role: string; content?: unknown }[] }
+      const stage = JSON.stringify(input.messages?.filter((message) => message.role === "user").at(-1)?.content ?? "").includes(foregroundPrompt) ? 1 : 0
+      const result = await fetch(`${stages[stage]!.url}/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body })
+      response.writeHead(result.status, { "content-type": result.headers.get("content-type") ?? "text/event-stream" })
+      if (!result.body) throw new Error("two-stage LLM response has no body")
+      for await (const chunk of result.body) response.write(chunk)
+      response.end()
+    })().catch((error) => { errors.push(String(error)); response.writeHead(500); response.end(String(error)) })
+  })
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+  return {
+    url: `http://127.0.0.1:${(server.address() as { port: number }).port}/v1`,
+    get seen() { return stages.flatMap((stage) => stage.seen) },
+    get offered() { return stages.flatMap((stage) => stage.offered) },
+    stages, errors,
+    async stop() {
+      stages.forEach((stage) => stage.stop())
+      await until(2000, "two-stage LLM proxy close", () => new Promise<true>((resolve, reject) => server.close((error) => error ? reject(error) : resolve(true))))
+    },
+  }
+}
+
+/** Only the attached frontend connects here. Parent prompts use the upstream URL directly;
+ * captured abort requests therefore witness the real UI handler, never a harness fallback. */
+export function observeFrontend(upstream: string) {
+  const requests: { method: string; path: string; at: number; status?: number; error?: string }[] = []
+  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
+    const url = new URL(request.url)
+    const observed = { method: request.method, path: url.pathname, at: Date.now(), status: undefined as number | undefined, error: undefined as string | undefined }
+    requests.push(observed)
+    return fetch(new Request(new URL(url.pathname + url.search, upstream), request)).then((response) => {
+      observed.status = response.status
+      return response
+    }, (error) => { observed.error = String(error); throw error })
+  } })
+  return { url: server.url.toString(), requests, stop: () => server.stop(true) }
+}
+
+/** Never enqueue a green before teardown: recorder, frontend and shared cleanup errors all reach
+ * the one published verdict. The teardown callback's nested finally always runs shared cleanup. */
+export async function finishCampaign<T extends Record<string, unknown> & { pass: boolean }>(scenario: string, execute: () => Promise<T>, teardown: () => Promise<void>) {
+  const result = await execute().catch((error) => ({ pass: false, error: String(error) }))
+  const error = await teardown().then(() => undefined, (error) => String(error))
+  return verdict(scenario, error === undefined ? result : { ...result, measurementPass: result.pass, pass: false, teardownError: error })
 }
 
 export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnType<typeof consoleHost>>, input: string) {
@@ -141,6 +198,7 @@ while ($line=[Console]::ReadLine()) {
       await until(2000, "forced CIM recorder OS/stdio close", () => closed.promise.then(() => true))
       throw new Error("CIM recorder required forced teardown")
     })
+    if (process.env.OMNI_CAMPAIGN_MUTATION === "recorder-stop-error") throw new Error("CIM recorder injected stop error after confirmed OS/stdio close")
   }
   try {
     await until(30_000, "CIM recorder warmup before KPI", () => ready.promise)
@@ -161,7 +219,7 @@ while ($line=[Console]::ReadLine()) {
     // Warm lib's separate exact-identity kill watchdog too: its first pwsh startup belongs to setup,
     // not the 8 s host-death clock. Its table retains the existing independent visibility control.
     table()
-    return { query, stop, preparationMs: performance.now() - started, identity: state.identity! }
+    return { query, stop, preparationMs: performance.now() - started, identity: state.identity!, snapshot: () => ({ identity: state.identity, closed: state.closed, pending: pending.size }) }
   } catch (error) {
     proc.kill("SIGKILL")
     await until(2000, "failed CIM recorder OS/stdio close", () => closed.promise.then(() => true))
