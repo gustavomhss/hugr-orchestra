@@ -2,10 +2,10 @@ import { describe, expect } from "bun:test"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionEvent } from "@orchestra/core/session/event"
-import { SessionTable } from "@orchestra/core/session/sql"
+import { SessionTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionStore } from "@orchestra/core/session/store"
 import { eq } from "drizzle-orm"
-import { Deferred, Effect, Fiber, Ref } from "effect"
+import { Cause, Deferred, Effect, Fiber, Ref } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { testEffect } from "./lib/effect"
 
@@ -139,6 +139,39 @@ describe("CapabilityPolicy boundaries", () => {
       expect(yield* f.permissions.list()).toEqual([])
       yield* q.observation.unsubscribe
     }))
+  }).pipe(Effect.timeout("10 seconds")))
+
+  it.live("captured allow preserves interruption while current ask is queued and clears pending approval", () => Effect.gen(function* () {
+    const f = yield* CapabilityPolicyFixture.fixture()
+    yield* CapabilityPolicyFixture.setRules([])
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run())
+    expect(yield* f.permissions.list()).toEqual([q.request])
+    yield* Fiber.interrupt(q.fiber)
+    const exit = yield* Fiber.await(q.fiber)
+    expect(exit._tag).toBe("Failure")
+    if (exit._tag === "Failure") expect(exit.cause.reasons.some(Cause.isInterruptReason)).toBe(true)
+    expect(yield* Ref.get(f.effects)).toBe(0)
+    expect(yield* Ref.get(q.observation.count)).toBe(1)
+    expect(yield* f.permissions.list()).toEqual([])
+  }).pipe(Effect.timeout("10 seconds")))
+
+  it.live("captured allow preserves a postapproval projection defect instead of returning a typed failure", () => Effect.gen(function* () {
+    const f = yield* CapabilityPolicyFixture.fixture()
+    yield* CapabilityPolicyFixture.setRules([])
+    const q = yield* CapabilityPolicyFixture.queued(f.context, f.run())
+    expect(yield* f.permissions.list()).toEqual([q.request])
+    yield* f.database.db.update(SessionMessageTable).set({ data: { time: { created: 1 } } })
+      .where(eq(SessionMessageTable.id, f.context.assistantMessageID)).run().pipe(Effect.orDie)
+    yield* f.permissions.reply({ requestID: q.request.id, reply: "once" })
+    const exit = yield* Fiber.await(q.fiber)
+    expect(exit._tag).toBe("Failure")
+    if (exit._tag === "Failure") {
+      expect(exit.cause.reasons.some(Cause.isDieReason)).toBe(true)
+      expect(exit.cause.reasons.some(Cause.isFailReason)).toBe(false)
+    }
+    expect(yield* Ref.get(f.effects)).toBe(0)
+    expect(yield* Ref.get(q.observation.count)).toBe(1)
+    expect(yield* f.permissions.list()).toEqual([])
   }).pipe(Effect.timeout("10 seconds")))
 
   Array.of("before", "during").forEach((timing) => it.live(
