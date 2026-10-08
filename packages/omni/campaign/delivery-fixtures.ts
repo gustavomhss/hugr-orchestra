@@ -6,7 +6,7 @@ import { LOGS, afterCleanup, captureStarted, inventoryScope, kill9, matches, mem
 
 export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {
   if (!result.pass) return { ...verdict(name, result), ...result }
-  afterCleanup(() => verdict(name, result))
+  afterCleanup((error) => verdict(name, error === undefined ? result : { ...result, pass: false, cleanupError: String(error) }))
   return result
 }
 
@@ -42,6 +42,8 @@ export async function execute(bin: string, args: string[], env: Record<string, s
   proc.stdout.setEncoding("utf8")
   proc.stderr.setEncoding("utf8")
   const state = { stdout: "", stderr: "", timedOut: false, error: "", firstOutputMs: undefined as number | undefined }
+  const closed = { value: false }
+  proc.once("close", () => (closed.value = true))
   proc.stdout.on("data", (chunk) => {
     state.firstOutputMs ??= performance.now() - started
     state.stdout += chunk
@@ -73,6 +75,7 @@ export async function execute(bin: string, args: string[], env: Record<string, s
     clearTimeout(timer.id)
     const capture = await captured
     const observed = { ...state, ...exit, error: state.error || capture.error, pid: proc.pid, identity: capture.identity }
+    if (state.timedOut) await until(10_000, "watchdog host handle close", () => closed.value ? true : undefined)
     const cleanup = state.timedOut && nonces.length ? await cleanupOwned(nonces) : undefined
     return { ...observed, ...(cleanup ? { cleanup } : {}) }
   } finally {

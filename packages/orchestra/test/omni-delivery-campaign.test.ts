@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import path from "node:path"
 import { ORCHESTRA, ROOT, cli } from "../../omni/campaign/lib.ts"
 import { run } from "../../omni/campaign/v8-windows.ts"
+import { appRuntime, effectModules } from "../../omni/campaign/delivery-fixtures.ts"
 
 // Explicit Windows-only request. A wrong runner is red, never an unexecuted Windows green.
 test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", async () => {
@@ -10,6 +11,19 @@ test("V8 Windows actual delivery campaign and V9 shipped-artifact rejection", as
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
   expect(existsSync(process.env.HUGR_OMNI_ADDON ?? "")).toBe(true)
   expect(existsSync(process.env.HUGR_OMNI_SUPERVISOR ?? "")).toBe(true)
+  const { Effect, ChildProcess } = await effectModules()
+  const { AppProcess } = await import("@orchestra/core/process")
+  const runtime = await appRuntime()
+  try {
+    const result = await runtime.runPromise(Effect.gen(function* () {
+      const app = yield* AppProcess.Service
+      return yield* app.run(ChildProcess.make("git", ["--version"]), { timeout: "10 seconds" })
+    }))
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.toString()).toContain("git version")
+  } finally {
+    await runtime.dispose()
+  }
   if (!existsSync(path.join(ORCHESTRA, "dist", "orchestra-windows-x64", "bin", "orchestra.exe"))) {
     const build = Bun.spawn([process.execPath, "script/build.ts", "--single", "--skip-install", "--skip-embed-web-ui"], {
       cwd: ORCHESTRA, stdout: "inherit", stderr: "inherit", timeout: 180_000,

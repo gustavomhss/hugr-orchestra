@@ -67,8 +67,16 @@ test("real execute captures live child before watchdog and preserves measured cl
 
 test("real query failure remains red; finally kills retained host; no premature green verdict", async () => {
   const scratch = isolated("cleanup-control", {})
-  const lib = JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts"))
-  const delivery = JSON.stringify(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts"))
+  // Fault the actual query executable, not PATH: Bun may cache a previously resolved executable.
+  const source = await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text()
+  const missing = JSON.stringify(path.join(scratch.home, "absent-oracle-executable"))
+  await Bun.write(path.join(scratch.home, "lib.ts"), source
+    .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))
+    .replace('Bun.spawnSync(["powershell",', `Bun.spawnSync([process.env.CONTROL_BROKEN ? ${missing} : "powershell",`)
+    .replace('spawnSync("ps",', `spawnSync(process.env.CONTROL_BROKEN ? ${missing} : "ps",`))
+  await Bun.write(path.join(scratch.home, "delivery-fixtures.ts"), await Bun.file(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts")).text())
+  const lib = JSON.stringify(path.join(scratch.home, "lib.ts"))
+  const delivery = JSON.stringify(path.join(scratch.home, "delivery-fixtures.ts"))
   const script = `const { own, cleanup } = await import(${lib});
 const { record } = await import(${delivery});
 const { spawn } = await import('node:child_process');
@@ -76,7 +84,7 @@ const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)']);
 const captured = own(${JSON.stringify(scratch.home)}, child);
 console.log('CONTROL_ID ' + JSON.stringify(captured));
 record('inventory-cleanup-control', { pass: true });
-process.env.PATH = ${JSON.stringify(scratch.home)};
+process.env.CONTROL_BROKEN = '1';
 await cleanup(${JSON.stringify(scratch.home)}, []);`
   const proc = spawn(BUN, ["-e", script], { cwd: ROOT, env: scratch.env, stdio: ["ignore", "pipe", "pipe"] })
   const output = { stdout: "", stderr: "" }
@@ -84,8 +92,8 @@ await cleanup(${JSON.stringify(scratch.home)}, []);`
   proc.stderr.on("data", (chunk) => (output.stderr += chunk))
   const code = await new Promise<number | null>((resolve, reject) => { proc.once("close", resolve); proc.once("error", reject) })
   expect(code).not.toBe(0)
-  expect(output.stderr).toContain(process.platform === "win32" ? "Get-CimInstance failed" : "ps failed")
-  expect(output.stdout).not.toContain("CAMPAIGN_VERDICT")
+  expect(output.stderr + output.stdout).toContain("absent-oracle-executable")
+  expect(output.stdout).not.toContain('"pass":true')
   const line = output.stdout.split("\n").find((line) => line.startsWith("CONTROL_ID "))
   expect(line).toBeDefined()
   const captured = JSON.parse(line!.slice("CONTROL_ID ".length)) as { pid: number; startTime: string }

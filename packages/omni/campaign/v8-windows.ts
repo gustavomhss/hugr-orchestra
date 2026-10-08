@@ -31,7 +31,7 @@ export async function run() {
     cells.push(await powershellBash(scratch, env))
     const names = [...HOST_NAMES, "powershell-bash"].toSorted()
     return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(names) && cells.every((cell) => cell.pass),
-      status: "executed-windows", cells, evidence: evidence("v8-windows", { home: scratch.home, observed, cells }) })
+      status: "executed-windows", cells, observed, evidence: evidence("v8-windows", { home: scratch.home, observed, cells }) })
   } catch (error) {
     return record("v8-windows", { pass: false, error: String(error), evidence: evidence("v8-failure", String(error)) })
   } finally {

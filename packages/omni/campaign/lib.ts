@@ -5,7 +5,7 @@
 // hosts, supervisors and observed members retain PID/start-time identities. OS queries fail closed and are bounded.
 // Each scenario prints one `CAMPAIGN_VERDICT {...}` JSON line.
 //
-// Plain node: builtins only, so the scripts run under bun on every OS and can be imported by bun:test wrappers.
+// Scripts run under Bun on every OS and can be imported by bun:test wrappers.
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
@@ -189,7 +189,7 @@ export type Started = { proc: ChildProcess; url: string; pid: number; extra: num
 
 const hosts = new Map<string, { proc: ChildProcess; identity: Identity }[]>()
 const pins = new Map<number, Identity>()
-const pendingVerdicts: (() => void)[] = []
+const pendingVerdicts: ((error?: unknown) => void)[] = []
 
 /** Retain handles of only campaign-owned hosts: serve's argv contains no isolated HOME marker. */
 export function own(home: string, proc: ChildProcess) {
@@ -249,25 +249,18 @@ export function fileTree(home: string, depth = 2) {
 
 const QUERY_MS = 10_000
 export type Row = Identity & { parent: number; args: string | null; state: string; session?: number }
-const CIM = "$ErrorActionPreference='Stop'; ConvertTo-Json -Compress -InputObject @(Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,CommandLine,SessionId,@{Name='StartTime';Expression={if ($_.CreationDate) {$_.CreationDate.ToFileTimeUtc().ToString()}}})"
+// CIM can retain an exited row. Only the OS's missing/exited process result removes it; access denial keeps unknown.
+const CIM = "$ErrorActionPreference='Stop'; ConvertTo-Json -Compress -InputObject @(Get-CimInstance Win32_Process | Where-Object {if ($null -ne $_.CommandLine) {return $true}; $p=$null; try {$p=[Diagnostics.Process]::GetProcessById([int]$_.ProcessId); return !$p.HasExited} catch [ArgumentException] {return $false} catch {return $true} finally {if ($p) {$p.Dispose()}}} | Select-Object ProcessId,ParentProcessId,CommandLine,SessionId,@{Name='StartTime';Expression={if ($_.CreationDate) {$_.CreationDate.ToFileTimeUtc().ToString()}}})"
 
 /** Bounded live inventory. Unavailable argv remains unknown, never evidence of absence. */
 export function table(timeoutMs = QUERY_MS): Row[] {
   if (timeoutMs <= 0) throw new Error("process table query has no deadline budget")
   const options = { encoding: "utf8" as const, windowsHide: true, maxBuffer: 64 * 1024 * 1024, timeout: timeoutMs, killSignal: "SIGKILL" as const }
   if (win) {
-    const out = spawnSync(
-      "powershell",
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        CIM,
-      ],
-      options,
-    )
-    if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
-    const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid)
+    const started = Date.now()
+    const out = Bun.spawnSync(["powershell", "-NoProfile", "-NonInteractive", "-Command", CIM], { timeout: timeoutMs, windowsHide: true, stdout: "pipe", stderr: "pipe" })
+    if (!out.success) throw new Error(`Get-CimInstance failed after ${Date.now() - started} ms (budget ${timeoutMs}): ${out.stderr.toString()} signal=${out.signalCode} exit=${out.exitCode}`)
+    const parsed = decodeWindowsTable(JSON.parse(out.stdout.toString()), out.pid)
     return parsed
   }
   const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
@@ -395,8 +388,8 @@ export function members(nonce: string, rows = table()) {
   })
   const named = [...records, ...pins.values()]
   const live = inventoryScope(rows, named).filter((row) => row.pid !== process.pid)
-  if (live.some((row) => row.args === null && !named.some((id) => matches(row, id))))
-    throw new Error("campaign nonce discovery has unknown argv in owner scope")
+  const unknown = live.filter((row) => row.args === null && !named.some((id) => matches(row, id)))
+  if (unknown.length) throw new Error(`campaign nonce discovery has unknown argv in owner scope: ${JSON.stringify(unknown)}`)
   live.forEach((row) => { if (!pins.has(row.pid)) pins.set(row.pid, { pid: row.pid, startTime: row.startTime }) })
   const found = live.filter((row) => records.some((record) => matches(row, record)))
   // macOS may drop argv during kernel teardown before the PID disappears. A retained identity still counts live.
@@ -493,19 +486,19 @@ export async function cleanup(marker: string, nonces: string[]) {
       return found.length === 0 && !live.some((row) => row.pid !== process.pid && (targets.some((id) => matches(row, id)) || row.args?.includes(marker))) ? true : undefined
     })
   } catch (error) {
-    pendingVerdicts.length = 0
+    pendingVerdicts.splice(0).forEach((print) => print(error))
     throw error
   } finally {
     // Retained OS child handles still guarantee host teardown if the inventory oracle failed.
     for (const host of owned) if (host.proc.exitCode === null && host.proc.signalCode === null) host.proc.kill("SIGKILL")
-    await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((host) => host.proc.exitCode !== null || host.proc.signalCode !== null) ? true : undefined).catch((error) => { pendingVerdicts.length = 0; throw error })
+    await until(10_000, "owned campaign hosts exiting during cleanup", () => owned.every((host) => host.proc.exitCode !== null || host.proc.signalCode !== null) ? true : undefined).catch((error) => { pendingVerdicts.splice(0).forEach((print) => print(error)); throw error })
     hosts.delete(marker)
   }
   pendingVerdicts.splice(0).forEach((print) => print())
 }
 
 /** Delivery scripts return inside try/finally: publish only after their cleanup succeeds. */
-export function afterCleanup(print: () => void) {
+export function afterCleanup(print: (error?: unknown) => void) {
   pendingVerdicts.push(print)
 }
 
