@@ -333,7 +333,37 @@ describe("capability contracts", () => {
     })
   })
 
+  test.each([
+    { label: "ASCII", value: "a".repeat(4094), oversize: "a".repeat(4095) },
+    { label: "quotes", value: '"'.repeat(2047), oversize: '"'.repeat(2048) },
+    { label: "backslashes", value: "\\".repeat(2047), oversize: "\\".repeat(2048) },
+    { label: "newlines", value: "\n".repeat(2047), oversize: "\n".repeat(2048) },
+    { label: "control escapes", value: "\0".repeat(682) + "aa", oversize: "\0".repeat(682) + "aaa" },
+    { label: "multibyte", value: "é".repeat(2047), oversize: "é".repeat(2048) },
+    { label: "astral", value: "😀".repeat(1023) + "aa", oversize: "😀".repeat(1023) + "aaa" },
+    { label: "object", value: { value: "a".repeat(4084) }, oversize: { value: "a".repeat(4085) } },
+  ])("$label detail budget preserves JSON and rejects oversize in both directions", ({ value, oversize }) => {
+    expect(new TextEncoder().encode(JSON.stringify(value)).byteLength).toBe(4096)
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)(value)).toEqual(value)
+    expect(Schema.encodeSync(Capability.FailureDetail)(value)).toEqual(value)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)(oversize)).toThrow(
+      "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+    )
+    expect(() => Schema.encodeSync(Capability.FailureDetail)(oversize)).toThrow(
+      "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+    )
+    const failure = { _tag: "Failure", code: "outcome_unknown", message: "Uncertain" } satisfies Capability.Failure
+    expect(Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: value })).toEqual({
+      ...failure,
+      detail: value,
+    })
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: oversize })).toThrow()
+    expect(() => Schema.encodeSync(Capability.Failure)({ ...failure, detail: oversize })).toThrow()
+  })
+
   test("public identifiers remain stable and unique", () => {
+    expect(SchemaAST.resolveIdentifier(Capability.FailureDetail.ast)).toBe("Capability.FailureDetail")
+    expect(SchemaAST.resolveIdentifier(Capability.Failure.ast)).toBe("Capability.Failure")
     ids.forEach(({ schema, name }) => {
       expect(SchemaAST.resolveIdentifier(schema.ast)).toBe(`Capability.${name}`)
       expect(SchemaAST.resolve(schema.ast)?.brands).toEqual([`Capability.${name}`])

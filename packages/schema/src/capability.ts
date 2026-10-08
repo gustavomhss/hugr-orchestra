@@ -1,6 +1,6 @@
 export * as Capability from "./capability"
 
-import { Schema } from "effect"
+import { Effect, Schema, SchemaGetter } from "effect"
 import { Agent } from "./agent"
 import { ascending } from "./identifier"
 import { Location } from "./location"
@@ -173,10 +173,16 @@ export const ErrorCode = Schema.Literals([
 export type ErrorCode = typeof ErrorCode.Type
 
 // At most 4 KiB of serialized UTF-8 JSON. Producers must redact provider detail before projection.
-export const FailureDetail = Schema.Json.check(
-  Schema.makeFilter((value) => new TextEncoder().encode(JSON.stringify(value)).byteLength <= 4096, {
-    message: "Failure detail must not exceed 4096 UTF-8 JSON bytes",
-  }),
+const detailBudget = SchemaGetter.checkEffect<Schema.Json>((value) =>
+  Effect.succeed(
+    new TextEncoder().encode(JSON.stringify(value)).byteLength <= 4096
+      ? undefined
+      : "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+  ),
+)
+// A real transformation retains validation through authoritative imported clients.
+export const FailureDetail = Schema.Json.pipe(
+  Schema.decodeTo(Schema.Json, { decode: detailBudget, encode: detailBudget }),
 ).annotate({ identifier: "Capability.FailureDetail" })
 export type FailureDetail = typeof FailureDetail.Type
 
