@@ -6,6 +6,24 @@ const input = JSON.parse(process.argv[2]) as {
   sockets: string[]
   shell: string
   artifact: string
+  production?: number
+  source?: string
+  argv?: string[]
+}
+if (input.production) {
+  if (!input.source) throw new Error("missing owned native source")
+  const source = input.source
+  // Override only the frozen SOURCE module in this private proof process.
+  // Compiler/cache/broker acquisition executes the production implementation.
+  Bun.plugin({
+    name: "owned-native-source",
+    setup(builder) {
+      builder.onLoad({ filter: /(?:^|\/)tcp-proxy-native\.ts$/ }, async () => ({
+        contents: await Bun.file(source).text(),
+        loader: "ts",
+      }))
+    },
+  })
 }
 const { Effect } = await import(`${input.runtime}/packages/core/node_modules/effect/dist/index.js`)
 const { ChildProcess } = await import(
@@ -15,13 +33,25 @@ const { LayerNode } = await import(`${input.runtime}/packages/core/src/effect/la
 const { FSUtil } = await import(`${input.runtime}/packages/core/src/fs-util.ts`)
 const { ToolSafety } = await import(`${input.runtime}/packages/core/src/tool-safety.ts`)
 const { ToolSafetySandbox } = await import(`${input.runtime}/packages/core/src/tool-safety-sandbox.ts`)
+const production = input.production ? await import(`${input.runtime}/packages/core/src/tcp-proxy.ts`) : undefined
 
 const report = {}
 await Effect.runPromise(
   Effect.scoped(
     Effect.gen(function* () {
+      const proxy = production ? yield* production.TcpProxy.open([input.production]) : undefined
+      if (proxy && !input.argv?.length) throw new Error("missing production proof command")
+      const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'"
+      const shell = proxy
+        ? "export " +
+          Object.entries({ ...proxy.env, DYLD_INSERT_LIBRARIES: proxy.library })
+            .map(([key, value]) => key + "=" + quote(String(value)))
+            .join(" ") +
+          "; exec " +
+          input.argv?.map(quote).join(" ")
+        : input.shell
       const command = yield* ToolSafetySandbox.wrap(
-        ChildProcess.make("/bin/sh", ["-c", input.shell], {
+        ChildProcess.make("/bin/sh", ["-c", shell], {
           cwd: input.root,
           env: { PATH: "/usr/local/bin:/usr/bin:/bin", HOME: input.root },
           extendEnv: false,
@@ -33,7 +63,10 @@ await Effect.runPromise(
           sandbox: {
             enabled: true,
             scratch: true,
-            allowedUnixSockets: input.sockets.map((path) => ({ directory: input.root, path })),
+            allowedUnixSockets: (proxy?.sockets ?? input.sockets).map((path: string) => ({
+              directory: input.root,
+              path,
+            })),
           },
         }),
         Effect.provideService(ToolSafety.NativeContext, { directory: input.root }),
@@ -49,6 +82,7 @@ await Effect.runPromise(
               args: command.args,
               options: command.options,
               report,
+              proxy,
             },
             null,
             2,
