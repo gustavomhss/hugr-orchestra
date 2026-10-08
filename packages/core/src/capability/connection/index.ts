@@ -258,7 +258,7 @@ export const make = Effect.gen(function* () {
         // Gate and writer are already held. Reassessment is read-only and consumes the original permit.
         if ((yield* permissions.evaluate({ sessionID: supplied.sessionID, agent: supplied.agent,
           action: candidate.permit.action, resources: [...candidate.permit.resources],
-        })) === "deny") return undefined
+        }).pipe(Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("invocation_binding_mismatch"))))) === "deny") return undefined
         return row
       }))).filter((row) => row !== undefined)
       if (!permitted.length) return yield* failure("connection_unavailable")
