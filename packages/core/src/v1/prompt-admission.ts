@@ -1,10 +1,11 @@
 export * as PromptAdmission from "./prompt-admission"
 
-import { eq, inArray } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { eq, inArray, or, sql } from "drizzle-orm"
+import { Effect, Option, Schema } from "effect"
+import { isDeepStrictEqual } from "node:util"
 import { SessionID } from "@orchestra/schema/session-id"
 import type { Database } from "../database/database"
-import { MessageTable, PartTable } from "../session/sql"
+import { MessageTable, PartTable, SessionTable } from "../session/sql"
 import { SessionV1 } from "./session"
 import { PromptAdmissionTable } from "./prompt-admission.sql"
 
@@ -71,6 +72,9 @@ export const reconcile = Effect.fn("PromptAdmission.reconcile")(function* (
 
 // EventV2 supplies the immediate transaction. Never start another transaction or publish here.
 export const project = Effect.fn("PromptAdmission.project")(function* (db: DB, payload: Payload) {
+  // A race loser must not validate or apply its stale transition against the winner's newer Session state.
+  const existing = yield* reconcile(db, payload).pipe(Effect.orDie)
+  if (existing) return yield* Effect.die(new AlreadyAdmitted(payload))
   if (payload.identityVersion !== 1)
     return yield* Effect.die(new Conflict({ ...payload, reason: "unsupported-identity-version" }))
   if (
@@ -82,8 +86,6 @@ export const project = Effect.fn("PromptAdmission.project")(function* (db: DB, p
     return yield* Effect.die(new Conflict({ ...payload, reason: "ownership-mismatch" }))
   if (new Set(payload.parts.map((part) => part.id)).size !== payload.parts.length)
     return yield* Effect.die(new Conflict({ ...payload, reason: "duplicate-part-id" }))
-  const existing = yield* reconcile(db, payload).pipe(Effect.orDie)
-  if (existing) return yield* Effect.die(new AlreadyAdmitted(payload))
   if (payload.parts.length) {
     const occupied = yield* db
       .select({ id: PartTable.id })
@@ -102,6 +104,14 @@ export const project = Effect.fn("PromptAdmission.project")(function* (db: DB, p
     info: payload.info,
     parts: payload.parts,
   }) as SessionV1.WithParts
+  const session = yield* db
+    .select()
+    .from(SessionTable)
+    .where(eq(SessionTable.id, payload.sessionID))
+    .get()
+    .pipe(Effect.orDie)
+  if (!session) return yield* Effect.die(new Conflict({ ...payload, reason: "session-missing" }))
+  if (payload.transition) yield* projectTransition(db, payload, session)
   yield* db
     .insert(PromptAdmissionTable)
     .values({
@@ -127,4 +137,99 @@ export const project = Effect.fn("PromptAdmission.project")(function* (db: DB, p
       .run()
       .pipe(Effect.orDie)
   })
+})
+
+const projectTransition = Effect.fn("PromptAdmission.projectTransition")(function* (
+  db: DB,
+  payload: Payload,
+  session: typeof SessionTable.$inferSelect,
+) {
+  const transition = payload.transition
+  if (!transition) return
+  const encoded = Schema.encodeSync(SessionV1.Event.PromptAdmitted.data)(payload).transition
+  if (!isDeepStrictEqual(session.revert, encoded?.expectedRevert))
+    return yield* Effect.die(new Conflict({ ...payload, reason: "revert-changed" }))
+  if (
+    transition.permission !== undefined &&
+    transition.expectedPermission !== undefined &&
+    !isDeepStrictEqual(session.permission, encoded?.expectedPermission)
+  )
+    return yield* Effect.die(new Conflict({ ...payload, reason: "permission-changed" }))
+  if (
+    transition.removeMessageIDs.includes(payload.messageID) ||
+    transition.removePartIDs.some((id) => payload.parts.some((part) => part.id === id))
+  )
+    return yield* Effect.die(new Conflict({ ...payload, reason: "transition-removes-admission" }))
+  const messages = transition.removeMessageIDs.length
+    ? yield* db
+        .select()
+        .from(MessageTable)
+        .where(inArray(MessageTable.id, [...transition.removeMessageIDs]))
+        .all()
+        .pipe(Effect.orDie)
+    : []
+  if (messages.some((message) => message.session_id !== payload.sessionID))
+    return yield* Effect.die(new Conflict({ ...payload, reason: "foreign-message-removal" }))
+  const parts =
+    transition.removeMessageIDs.length || transition.removePartIDs.length
+      ? yield* db
+          .select({ part: PartTable, messageSession: MessageTable.session_id })
+          .from(PartTable)
+          .leftJoin(MessageTable, eq(PartTable.message_id, MessageTable.id))
+          .where(
+            or(
+              inArray(PartTable.message_id, [...transition.removeMessageIDs]),
+              inArray(PartTable.id, [...transition.removePartIDs]),
+            ),
+          )
+          .all()
+          .pipe(Effect.orDie)
+      : []
+  if (parts.some((row) => row.part.session_id !== payload.sessionID || row.messageSession !== payload.sessionID))
+    return yield* Effect.die(new Conflict({ ...payload, reason: "foreign-part-removal" }))
+
+  // Match ordinary removals' accounting without publishing nested events. Each deleted part contributes once.
+  const usage = parts.flatMap((row) => {
+    const decoded = Schema.decodeUnknownOption(SessionV1.StepFinishPart)({
+      ...row.part.data,
+      id: row.part.id,
+      sessionID: row.part.session_id,
+      messageID: row.part.message_id,
+    })
+    return Option.isSome(decoded) ? [decoded.value] : []
+  })
+  if (transition.removePartIDs.length)
+    yield* db
+      .delete(PartTable)
+      .where(inArray(PartTable.id, [...transition.removePartIDs]))
+      .run()
+      .pipe(Effect.orDie)
+  if (transition.removeMessageIDs.length)
+    yield* db
+      .delete(MessageTable)
+      .where(inArray(MessageTable.id, [...transition.removeMessageIDs]))
+      .run()
+      .pipe(Effect.orDie)
+  yield* db
+    .update(SessionTable)
+    .set({
+      agent: payload.info.agent,
+      model: {
+        id: payload.info.model.modelID,
+        providerID: payload.info.model.providerID,
+        variant: payload.info.model.variant ?? "default",
+      },
+      ...(transition.permission === undefined ? {} : { permission: [...transition.permission] }),
+      revert: null,
+      time_updated: transition.timeUpdated,
+      cost: sql`${SessionTable.cost} - ${usage.reduce((sum, part) => sum + part.cost, 0)}`,
+      tokens_input: sql`${SessionTable.tokens_input} - ${usage.reduce((sum, part) => sum + part.tokens.input, 0)}`,
+      tokens_output: sql`${SessionTable.tokens_output} - ${usage.reduce((sum, part) => sum + part.tokens.output, 0)}`,
+      tokens_reasoning: sql`${SessionTable.tokens_reasoning} - ${usage.reduce((sum, part) => sum + part.tokens.reasoning, 0)}`,
+      tokens_cache_read: sql`${SessionTable.tokens_cache_read} - ${usage.reduce((sum, part) => sum + part.tokens.cache.read, 0)}`,
+      tokens_cache_write: sql`${SessionTable.tokens_cache_write} - ${usage.reduce((sum, part) => sum + part.tokens.cache.write, 0)}`,
+    })
+    .where(eq(SessionTable.id, payload.sessionID))
+    .run()
+    .pipe(Effect.orDie)
 })
