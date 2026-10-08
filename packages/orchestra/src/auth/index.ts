@@ -1,6 +1,9 @@
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import path from "path"
-import { Effect, Layer, Record, Result, Schema, Context } from "effect"
+import { Effect, Layer, Record, Result, Schema, Context, Semaphore } from "effect"
+import { isDeepStrictEqual } from "node:util"
+import { Flock } from "@orchestra/core/util/flock"
+import { makeRuntime } from "../effect/run-service"
 import { NonNegativeInt } from "@orchestra/core/schema"
 import { Global } from "@orchestra/core/global"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -8,6 +11,24 @@ import { FSUtil } from "@orchestra/core/fs-util"
 export const OAUTH_DUMMY_KEY = "orchestra-oauth-dummy-key"
 
 const file = path.join(Global.Path.data, "auth.json")
+const locks = new Map<string, Semaphore.Semaphore>()
+
+// Only public store paths/provider names enter lock keys; the critical body stays
+// masked until native promises settle, so cancellation cannot release a live lease.
+function locked<A, E, R>(key: string, body: Effect.Effect<A, E, R>) {
+  const semaphore = locks.get(key) ?? Semaphore.makeUnsafe(1)
+  locks.set(key, semaphore)
+  return Effect.uninterruptibleMask((restore) => restore(semaphore.take(1)).pipe(
+    Effect.flatMap(() => Effect.acquireUseRelease(
+      Effect.tryPromise({ try: () => Flock.acquire(key, { dir: path.join(path.dirname(file), ".auth-locks") }), catch: fail("Failed to acquire auth lease") }),
+      () => body,
+      (lease) => Effect.tryPromise({ try: () => lease.release(), catch: fail("Failed to release auth lease") }),
+    ).pipe(Effect.ensuring(semaphore.release(1)))),
+  ))
+}
+
+export const withRefreshLease = <A, E, R>(providerID: string, body: Effect.Effect<A, E, R>) =>
+  locked(`auth-refresh:${file}:${providerID}`, body)
 
 const fail = (message: string) => (cause: unknown) => new AuthError({ message, cause })
 
@@ -46,6 +67,7 @@ export interface Interface {
   readonly all: () => Effect.Effect<Record<string, Info>, AuthError>
   readonly set: (key: string, info: Info) => Effect.Effect<void, AuthError>
   readonly remove: (key: string) => Effect.Effect<void, AuthError>
+  readonly replaceIf: (providerID: string, expected: Info, next: Info) => Effect.Effect<boolean, AuthError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Auth") {}
@@ -71,31 +93,43 @@ const layer = Layer.effect(
       return (yield* all())[providerID]
     })
 
-    const set = Effect.fn("Auth.set")(function* (key: string, info: Info) {
+    const write = (data: Record<string, Info>) => Effect.acquireUseRelease(
+        fsys.makeTempFile({ directory: path.dirname(file), prefix: ".auth-" }),
+        (temporary) => fsys.writeJson(temporary, data, 0o600).pipe(Effect.andThen(fsys.rename(temporary, file))),
+        (temporary) => fsys.remove(path.dirname(temporary), { recursive: true }).pipe(Effect.ignore),
+      ).pipe(Effect.mapError(fail("Failed to write auth data")))
+
+    const set = (key: string, info: Info) => locked(`auth-store:${file}`, Effect.gen(function* () {
       const norm = key.replace(/\/+$/, "")
       const data = yield* all()
       if (norm !== key) delete data[key]
       delete data[norm + "/"]
-      yield* Effect.acquireUseRelease(
-        fsys.makeTempFile({ directory: path.dirname(file), prefix: ".auth-" }),
-        (temporary) => fsys.writeJson(temporary, { ...data, [norm]: info }, 0o600).pipe(Effect.andThen(fsys.rename(temporary, file))),
-        (temporary) => fsys.remove(path.dirname(temporary), { recursive: true }).pipe(Effect.ignore),
-      )
-        .pipe(Effect.mapError(fail("Failed to write auth data")))
-    })
+      yield* write({ ...data, [norm]: info })
+    }))
 
-    const remove = Effect.fn("Auth.remove")(function* (key: string) {
+    const remove = (key: string) => locked(`auth-store:${file}`, Effect.gen(function* () {
       const norm = key.replace(/\/+$/, "")
       const data = yield* all()
       delete data[key]
       delete data[norm]
-      yield* fsys.writeJson(file, data, 0o600).pipe(Effect.mapError(fail("Failed to write auth data")))
-    })
+      yield* write(data)
+    }))
 
-    return Service.of({ get, all, set, remove })
+    const replaceIf = (key: string, expected: Info, next: Info) => locked(`auth-store:${file}`, Effect.gen(function* () {
+      if (process.env.ORCHESTRA_AUTH_CONTENT) return false
+      const norm = key.replace(/\/+$/, "")
+      const data = yield* all()
+      const current = data[norm]
+      if (!current || !isDeepStrictEqual(Schema.encodeSync(Info)(current), Schema.encodeSync(Info)(expected))) return false
+      yield* write({ ...data, [norm]: next })
+      return true
+    }))
+
+    return Service.of({ get, all, set, remove, replaceIf })
   }),
 )
 
 export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node] })
+export const runPromise = makeRuntime(Service, LayerNode.compile(node)).runPromise
 
 export * as Auth from "."
