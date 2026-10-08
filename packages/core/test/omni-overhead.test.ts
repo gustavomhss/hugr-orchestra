@@ -5,8 +5,10 @@ import path from "node:path"
 import { BUN, ROOT } from "../../omni/campaign/lib.ts"
 import { run, settle } from "../../omni/campaign/v7-attribution.ts"
 
-test("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop boundaries", async () => {
-  expect(process.platform === "linux" || process.platform === "darwin").toBe(true)
+// This Linux benchmark needs the release binaries supplied by test:ci's omni flag; ordinary suites skip explicitly.
+const native = test.skipIf(process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
+
+native("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop boundaries", async () => {
   const { Effect } = await import("effect")
   const { ChildProcess } = await import("effect/unstable/process")
   const { Omni } = await import("../src/omni.ts")
@@ -20,12 +22,11 @@ test("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop bou
   expect(result.staged.count).toBe(1000)
 }, 900_000)
 
-test("V7 Linux syscall attribution (unprivileged native strace)", async () => {
-  if (process.platform !== "linux") return
+native("V7 Linux syscall attribution (unprivileged native strace)", async () => {
   await run(true)
 }, 900_000)
 
-test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
+native("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
   await settle()
   const { run } = await import("../../omni/campaign/v7-overhead.ts")
   const result = await run({ quiet: true })

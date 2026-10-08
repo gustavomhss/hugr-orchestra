@@ -9,11 +9,10 @@ type Sample = { ms: number; stdout: string; spawns: number; delegations: number;
 
 export async function settle() {
   const quiet = { since: Date.now() }
-  await until(600_000, "V7 quiet host (unchanged load1 <= 0.5 * CPUs)", () =>
-    {
-      if (os.loadavg()[0] > os.availableParallelism() * 0.5) quiet.since = Date.now()
-      return Date.now() - quiet.since >= 30_000 ? true : undefined
-    })
+  await until(600_000, "V7 quiet host (unchanged load1 <= 0.5 * CPUs)", () => {
+    if (os.loadavg()[0] > os.availableParallelism() * 0.5) quiet.since = Date.now()
+    return Date.now() - quiet.since >= 30_000 ? true : undefined
+  })
 }
 
 export async function run(trace = false) {
