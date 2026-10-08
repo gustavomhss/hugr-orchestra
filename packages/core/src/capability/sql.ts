@@ -93,6 +93,7 @@ export const CapabilityJobTable = sqliteTable("capability_job", {
   kind: text().$type<"provider" | "local-process" | "worker" | "script">().notNull(),
   operation: text().notNull(),
   creation_key: text().unique(),
+  request_hash: text(),
   state: text().notNull(),
   connection: text({ mode: "json" }).$type<Capability.ConnectionRef>(),
   target: text({ mode: "json" }).$type<Capability.TargetRef>(),
