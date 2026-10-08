@@ -21,6 +21,7 @@ import {
 const Create = Schema.Struct({
   kind: Capability.JobKind,
   operation: Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9._:-]{0,127}(?![\s\S])/)),
+  // Scoped to producer invocation + operation; another key deliberately creates another subjob.
   creationKey: Schema.optional(Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]{0,63}(?![\s\S])/))),
   connection: Schema.optional(Capability.ConnectionRef),
   target: Schema.optional(Capability.TargetRef),
@@ -129,8 +130,9 @@ export const make = Effect.gen(function* () {
       return yield* failure("target_denied")
     // Already-acquired facts need provenance, not fresh permission to perform external effects.
     if (!read) return
-    if (resources(row).some((resource) => PermissionV2.evaluate("read", resource,
-      stored.nativeDenyFloor.filter((rule) => rule.effect === "deny")).effect === "deny"))
+    if (resources(row).some((resource) =>
+      PermissionV2.evaluate("read", resource, stored.nativeDenyFloor.filter((rule) => rule.effect === "deny")).effect === "deny" ||
+      PermissionV2.evaluate("read", resource, stored.effectiveRules).effect !== "allow"))
       return yield* failure("target_denied")
     const current = yield* permissions.evaluate({ sessionID: row.owner.sessionID, agent: row.owner.agentID,
       action: "read", resources: resources(row) }).pipe(
@@ -417,24 +419,28 @@ function boundedJson(value: unknown, bytes = 4096, nodes = 256) {
       return budget.bytes <= bytes
     }
     if (typeof item !== "object" || seen.has(item)) return false
-    // Sparse or giant arrays must fail before descriptors or JSON.stringify allocate from their length.
-    if (Array.isArray(item) && item.length > nodes - budget.nodes) return false
-    if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null)
+    const length = Array.isArray(item) ? item.length : undefined
+    // Giant arrays fail before enumeration; no custom serialization hooks enter the JSON boundary.
+    if (length !== undefined && length > nodes - budget.nodes) return false
+    const prototype = Object.getPrototypeOf(item)
+    if (length !== undefined ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null)
       return false
+    if (Object.hasOwn(item, "toJSON")) return false
     seen.add(item)
-    const descriptors = Object.getOwnPropertyDescriptors(item)
-    const entries = Object.entries(descriptors)
-    if (Array.isArray(item) && (entries.length !== item.length + 1 ||
-      !Array.from({ length: item.length }, (_, index) => Object.hasOwn(descriptors, String(index))).every(Boolean)))
-      return false
-    const result = entries.every(([key, descriptor]) => {
-      if (Array.isArray(item) && key === "length") return true
-      if (!("value" in descriptor) || !descriptor.enumerable || key.length > bytes - budget.bytes) return false
+    const visited = { keys: 0 }
+    // Stop per-key work at the budget; do not first materialize a wide object's complete descriptor map.
+    for (const key in item) {
+      if (!Object.hasOwn(item, key)) continue
+      if (budget.nodes >= nodes || key.length > bytes - budget.bytes) return false
+      if (length !== undefined && (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= length)) return false
+      const descriptor = Object.getOwnPropertyDescriptor(item, key)
+      if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) return false
       budget.bytes += new TextEncoder().encode(key).byteLength
-      return budget.bytes <= bytes && valid(descriptor.value, depth + 1)
-    })
+      if (budget.bytes > bytes || !valid(descriptor.value, depth + 1)) return false
+      visited.keys++
+    }
     seen.delete(item)
-    return result
+    return length === undefined || visited.keys === length
   }
   return valid(value, 0) && new TextEncoder().encode(JSON.stringify(value)).byteLength <= bytes
 }

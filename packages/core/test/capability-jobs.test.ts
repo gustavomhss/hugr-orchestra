@@ -350,6 +350,29 @@ describe("CapabilityJobs durable receipts", () => {
       observation: { remoteOutcome: "completed", materialization: "failed" } })
   }))
 
+  it.live("host receipt read requires captured and current read allow; deny/ask do not become current grants", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* Effect.forEach(["deny", "ask", "allow"] as const, (effect) => Effect.gen(function* () {
+      const binding = { ...f.binding, effectiveRules: [
+        { action: "effect", resource: "*", effect: "allow" as const }, { action: "read", resource: "*", effect },
+      ] }
+      const ref = yield* CapabilityInvocation.withContext(binding,
+        f.jobs.create(f.context, { kind: "provider", operation: "render", creationKey: effect }))
+      // Current configuration allows read throughout; persisted root's captured rules still restrict disclosure.
+      expect(yield* f.permissions.evaluate({ sessionID: f.context.sessionID, agent: f.context.agent,
+        action: "read", resources: ["capability:job:render"] })).toBe("allow")
+      if (effect !== "allow") yield* rejected(f.jobs.readHost(f.proof, ref), "target_denied")
+      if (effect === "allow") expect((yield* f.jobs.readHost(f.proof, ref)).receipt).toMatchObject({ state: "intent", generation: 0 })
+      yield* CapabilityInvocation.withContext(binding, f.jobs.transition(f.context, ref, {
+        expectedGeneration: 0, state: "submitting", observation: {},
+      }))
+      // Acquired-fact recording is provenance-only, including when this producer cannot disclose receipts.
+      expect(yield* f.jobs.observeHost(f.proof, ref, { expectedGeneration: 1, state: "completed", providerID: "remote-123",
+        observation: { remoteOutcome: "completed", materialization: "failed" } })).toMatchObject({ state: "completed" })
+      if (effect !== "allow") yield* rejected(f.jobs.readHost(f.proof, ref), "target_denied")
+    }))
+  }))
+
   it.live("fresh real owner root can read; different producer or actor cannot transition", () => Effect.gen(function* () {
     const f = yield* fixture()
     const ref = yield* f.create()
@@ -428,6 +451,7 @@ describe("CapabilityJobs durable receipts", () => {
       { raw: Array.from({ length: 257 }, () => null) }, cyclic, deep,
       { artifactRefs: new Array<Schema.Json>(3) }, { artifactRefs: new Array<Schema.Json>(1_000_000_000) },
       { ["x".repeat(4097)]: null },
+      Object.fromEntries(Array.from({ length: 1024 }, (_, index) => [`key${index}`, null])),
     ], (value) => rejected(f.change(ref, 1, "running", value), "quota_exceeded"))
     const invalid: Schema.Json[] = [
       { progress: 2 }, { url: "https://secret.example/file?signature=secret" },
