@@ -10,6 +10,7 @@ import { Cause, Context, Effect, Schema } from "effect"
 import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
 import { BackendToolkitAcquisition } from "./acquisition"
+import { BackendToolkitCassandra } from "./cassandra-metadata"
 import { BackendToolkitDiagnostics } from "./diagnostics"
 import { ENGINES, RUNTIMES, type Engine, type EngineId, type HostedEngine, type Runtime, type RuntimeId } from "./manifest"
 import { detect, type TargetId } from "./target"
@@ -222,8 +223,12 @@ function hosted(root: string, engine: HostedEngine, runtimes: Readonly<Record<Ru
     if (install.kind !== "jar" && !host) return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
     const cause = yield* attempts.once(home, PinnedArtifact.install(home, [pin.artifact]))
     if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
-    yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source" ? [install.artifact] : [], (staging) =>
-      Effect.tryPromise({
+    if (install.kind === "source" && install.compatibility && (engine.id !== "gocqlx-schemagen" || install.build !== "go"))
+      return yield* new PinnedArtifact.Failed({ cause: "compatibility:cassandra-metadata:unsupported-engine" })
+    yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source"
+      ? [install.artifact, ...(install.kind === "source" && install.compatibility ? [BackendToolkitCassandra.artifact] : [])] : [], (staging) =>
+      (install.kind === "source" && install.compatibility ? BackendToolkitCassandra.prepare(staging) : Effect.void).pipe(
+        Effect.andThen(Effect.tryPromise({
         try: async () => {
           if (install.kind === "npm") {
             await writeFile(path.join(staging, "package.json"), install.packageJson)
@@ -288,7 +293,8 @@ function hosted(root: string, engine: HostedEngine, runtimes: Readonly<Record<Ru
           await chmod(file, 0o755)
         },
         catch: (error) => new PinnedArtifact.Failed({ cause: installerCause(install.kind === "source" ? install.build : install.kind, error) }),
-      }),
+        })),
+      ),
     )
     // Existing complete pip caches used the engine id beside the packages. Refresh the private launcher without
     // reinstalling or touching pinned package bytes, so their advertised executable exists after a layout upgrade.
