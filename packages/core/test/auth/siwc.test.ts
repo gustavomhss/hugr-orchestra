@@ -61,6 +61,13 @@ describe("ChatGPT OSS registration scaffold", () => {
   })
 
   test("checks exact state before error, error before code/client; rejects incomplete or changed registration", async () => {
+    const pending = Siwc.begin({ hostId, redirect })
+    for (const unrelated of [returned(pending, { state: "wrong" }), new URL("http://127.0.0.1:54321/unrelated")])
+      expect(() => Siwc.callback(pending, unrelated)).toThrow("Invalid OAuth state")
+    expect(Siwc.callback(pending, returned(pending)).clientId).toBe(saved.clientId)
+    const declined = Siwc.begin({ hostId, redirect })
+    expect(() => Siwc.callback(declined, returned(declined, { error: "access_denied" }))).toThrow("denied")
+    expect(() => Siwc.callback(declined, returned(declined))).toThrow("already consumed")
     const cases: Array<{ values: Record<string, string>; message: string }> = [
       { values: { state: "wrong", error: "access_denied" }, message: "Invalid OAuth state" },
       { values: { error: "access_denied", client_id: "" }, message: "authorization denied" },
@@ -75,6 +82,26 @@ describe("ChatGPT OSS registration scaffold", () => {
     }
     const attempt = await Siwc.begin({ hostId, redirect, registration: saved })
     expect(() => Siwc.callback(attempt, returned(attempt, { client_id: "another-client" }))).toThrow("registration changed")
+  })
+
+  test("invalid_grant retains issued client and returning identity for fresh reauthorization", async () => {
+    const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => Response.json({ error: "invalid_grant" }, { status: 400 }) })
+    try {
+      for (const registration of [undefined, saved]) {
+        const attempt = Siwc.begin({ hostId, redirect, registration })
+        const error = await Siwc.exchange(attempt, returned(attempt), methodID,
+          (_url, init) => fetch(server.url, init)).catch((cause: unknown) => cause)
+        expect(error).toBeInstanceOf(Siwc.InvalidGrantError)
+        if (!(error instanceof Siwc.InvalidGrantError)) throw new Error("Expected invalid_grant context")
+        const retry = Siwc.begin({ ...error.context, redirect })
+        expect(new URL(retry.url).searchParams.get("client_id")).toBe(saved.clientId)
+        expect(new URL(retry.url).searchParams.has("agent_name_hint")).toBe(false)
+        expect(retry.state).not.toBe(attempt.state)
+        expect(retry.nonce).not.toBe(attempt.nonce)
+        expect(retry.verifier).not.toBe(attempt.verifier)
+        expect(retry.saved?.subject).toBe(registration?.subject)
+      }
+    } finally { server.stop(true) }
   })
 
   test("exchanges over HTTP, verifies real JWKS signatures and rejects invalid identities before producing credentials", async () => {

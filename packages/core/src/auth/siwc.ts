@@ -27,8 +27,15 @@ const Tokens = Schema.Struct({
 })
 export type Attempt = ReturnType<typeof begin>
 
+export class InvalidGrantError extends Error {
+  override name = "InvalidGrantError"
+  constructor(readonly context: { clientId: string; hostId: string; registration?: Registration }) {
+    super("ChatGPT authorization code expired; retry with the issued registration")
+  }
+}
+
 /** The caller must bind the listener and persist this host ID before calling. */
-export function begin(input: { hostId: string; redirect: string; registration?: Registration }) {
+export function begin(input: { hostId: string; redirect: string; registration?: Registration; clientId?: string }) {
   const redirect = new URL(input.redirect)
   if (redirect.protocol !== "http:" || redirect.hostname !== "127.0.0.1" || !redirect.port ||
     redirect.pathname !== "/auth/callback" || redirect.search || redirect.hash || redirect.username || redirect.password)
@@ -36,12 +43,14 @@ export function begin(input: { hostId: string; redirect: string; registration?: 
   if (!input.hostId.trim()) throw new Error("Missing ChatGPT host ID")
   const saved = input.registration ? registration(input.registration) : undefined
   if (saved && saved.hostId !== input.hostId) throw new Error("ChatGPT registration belongs to another host")
+  const clientId = input.clientId ? issuedClientID(input.clientId) : saved?.clientId
+  if (saved && clientId !== saved.clientId) throw new Error("ChatGPT registration changed")
   const verifier = randomBytes(32).toString("base64url")
   const state = randomBytes(32).toString("base64url")
   const nonce = randomBytes(32).toString("base64url")
   const url = new URL(`${issuer}/api/accounts/authorize`)
   url.search = new URLSearchParams({
-    client_id: saved?.clientId ?? "dynamic_agent_client",
+    client_id: clientId ?? "dynamic_agent_client",
     ext_agent_host_id: input.hostId,
     response_type: "code",
     redirect_uri: input.redirect,
@@ -51,29 +60,34 @@ export function begin(input: { hostId: string; redirect: string; registration?: 
     nonce,
     code_challenge_method: "S256",
     code_challenge: createHash("sha256").update(verifier).digest("base64url"),
-    ...(saved ? { id_token_hint: saved.idToken } : { agent_name_hint: "Orchestra" }),
+    ...(saved ? { id_token_hint: saved.idToken } : clientId ? {} : { agent_name_hint: "Orchestra" }),
   }).toString()
   // Authorization URLs may contain an ID-token hint; never log them.
-  return Object.freeze({ url: url.href, redirect: input.redirect, hostId: input.hostId, saved,
+  return Object.freeze({ url: url.href, redirect: input.redirect, hostId: input.hostId, saved, clientId,
     verifier, state, nonce, expires: Date.now() + 10 * 60 * 1000 })
 }
 
 /** Consume once, validate state, handle errors, then accept the issued client. */
 export function callback(attempt: Attempt, url: URL) {
   if (consumed.has(attempt)) throw new Error("ChatGPT callback already consumed")
+  validateBinding(attempt, url)
   consumed.add(attempt)
+  if (url.searchParams.has("error")) throw new Error("ChatGPT authorization denied")
+  if (url.searchParams.getAll("client_id").length > 1) throw new Error("Ambiguous ChatGPT client ID")
+  const supplied = url.searchParams.get("client_id")
+  const clientId = issuedClientID(supplied ?? attempt.clientId ?? "")
+  if (attempt.clientId && clientId !== attempt.clientId) throw new Error("ChatGPT registration changed")
+  const code = url.searchParams.get("code")
+  if (!code || url.searchParams.getAll("code").length !== 1) throw new Error("Missing or ambiguous authorization code")
+  return { code, clientId }
+}
+
+/** Unrelated HTTP requests must not consume or fail a pending sign-in. */
+export function validateBinding(attempt: Attempt, url: URL) {
   const redirect = new URL(attempt.redirect)
   if (Date.now() >= attempt.expires || url.origin !== redirect.origin || url.pathname !== redirect.pathname ||
     url.searchParams.getAll("state").length !== 1 || url.searchParams.get("state") !== attempt.state)
     throw new Error("Invalid OAuth state or expired ChatGPT callback")
-  if (url.searchParams.has("error")) throw new Error("ChatGPT authorization denied")
-  if (url.searchParams.getAll("client_id").length > 1) throw new Error("Ambiguous ChatGPT client ID")
-  const supplied = url.searchParams.get("client_id")
-  const clientId = issuedClientID(supplied ?? attempt.saved?.clientId ?? "")
-  if (attempt.saved && clientId !== attempt.saved.clientId) throw new Error("ChatGPT registration changed")
-  const code = url.searchParams.get("code")
-  if (!code || url.searchParams.getAll("code").length !== 1) throw new Error("Missing or ambiguous authorization code")
-  return { code, clientId }
 }
 
 /** Returns a complete credential only after cryptographic identity validation. */
@@ -91,7 +105,12 @@ export async function exchange(
     body: new URLSearchParams({ grant_type: "authorization_code", client_id: grant.clientId,
       code: grant.code, code_verifier: attempt.verifier, redirect_uri: attempt.redirect, resource }),
   })
-  if (response.status !== 200) throw new Error(`ChatGPT token exchange failed: ${response.status}`)
+  if (response.status !== 200) {
+    const error = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Struct({ error: Schema.String })))(await response.text())
+    if (Option.isSome(error) && error.value.error === "invalid_grant")
+      throw new InvalidGrantError({ clientId: grant.clientId, hostId: attempt.hostId, registration: attempt.saved })
+    throw new Error(`ChatGPT token exchange failed: ${response.status}`)
+  }
   const tokens = Schema.decodeUnknownOption(Schema.fromJsonString(Tokens))(await response.text())
   if (Option.isNone(tokens)) throw new Error("Invalid ChatGPT token response")
   const { createRemoteJWKSet, jwtVerify } = await import("jose")
