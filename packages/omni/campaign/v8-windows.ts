@@ -1,11 +1,11 @@
 // V8 must execute on Windows; importing/run() on macOS reports unrun, never Windows green.
 // CI wrapper in orchestra/test: import { run } from '../../omni/campaign/v8-windows.ts'; expect((await run()).pass).toBe(true)
 // Run alongside util/process.test.ts: the preload's process-local control cannot see this harness's child counters.
-// The wrapper belongs in orchestra/test and is deliberately outside this work package's write-set.
+// The wrapper builds the actual CLI once on Windows using CI's restored release native artifacts.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { OmniProc } from "../../core/src/pty/omni.ts"
-import { BUN, ORCHESTRA, ROOT, cleanup, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
+import { BUN, ROOT, cleanup, cli, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
@@ -44,7 +44,7 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
   const tree = fileTree(scratch.home, 1)
   const hosts: Awaited<ReturnType<typeof startServer>>[] = []
   try {
-    const server = await startServer(BUN, [path.join(ORCHESTRA, "src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
+    const server = await startServer(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], {
       ...env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ shell: "powershell.exe", formatter: false, lsp: false, plugin: [],
         permission: { "*": "allow" }, share: "disabled" }),
     }, scratch.project)
@@ -73,8 +73,11 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
   } catch (error) {
     return { name: "powershell-bash", pass: false, error: String(error), server: hosts.map((host) => host.out()) }
   } finally {
-    for (const host of hosts) kill9(host.pid)
-    await cleanup(scratch.home, [tree.nonce])
+    try {
+      for (const host of hosts) kill9(host.identity)
+    } finally {
+      await cleanup(scratch.home, [tree.nonce])
+    }
   }
 }
 
@@ -197,9 +200,15 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
   } catch (error) {
     cells.push({ name: "host-error", pass: false, error: String(error) })
   } finally {
-    await terminal.proc?.stop(0)
-    await runtime.dispose()
-    await cleanup(home, [tree.nonce])
+    try {
+      await terminal.proc?.stop(0)
+    } finally {
+      try {
+        await runtime.dispose()
+      } finally {
+        await cleanup(home, [tree.nonce])
+      }
+    }
   }
   console.log(`V8_HOST_RESULT ${JSON.stringify(cells)}`)
   process.exit(JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(HOST_NAMES.toSorted()) && cells.every((cell) => cell.pass) ? 0 : 1)

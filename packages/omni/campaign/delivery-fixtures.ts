@@ -2,10 +2,12 @@
 import { spawn } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { LOGS, kill9, until, verdict, win } from "./lib.ts"
+import { LOGS, afterCleanup, captureStarted, inventoryScope, kill9, matches, members, own, ownedIdentities, table, until, verdict } from "./lib.ts"
 
 export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {
-  return { ...verdict(name, result), ...result }
+  if (!result.pass) return { ...verdict(name, result), ...result }
+  afterCleanup(() => verdict(name, result))
+  return result
 }
 
 export function authorized() {
@@ -48,54 +50,56 @@ export async function execute(bin: string, args: string[], env: Record<string, s
     state.firstOutputMs ??= performance.now() - started
     state.stderr += chunk
   })
+  const captured = captureStarted(env.ORCHESTRA_TEST_HOME ?? env.HOME, proc).then(
+    (identity) => ({ identity, error: "" }),
+    (error: unknown) => ({ identity: undefined, error: String(error) }),
+  )
   const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
   try {
-    const exit = await new Promise<{ code: number | null; signal: string | null }>((resolve) => {
+    const exit = await new Promise<{ code: number | null; signal: string | null; ms: number }>((resolve) => {
       proc.once("error", (error) => {
         state.error = String(error)
-        resolve({ code: null, signal: null })
+        resolve({ code: null, signal: null, ms: performance.now() - started })
       })
-      proc.once("close", (code, signal) => resolve({ code, signal }))
+      proc.once("close", (code, signal) => resolve({ code, signal, ms: performance.now() - started }))
       timer.id = setTimeout(() => {
         state.timedOut = true
         proc.kill("SIGKILL")
         proc.stdout.destroy()
         proc.stderr.destroy()
-        resolve({ code: proc.exitCode, signal: proc.signalCode })
+        resolve({ code: proc.exitCode, signal: proc.signalCode, ms: performance.now() - started })
       }, deadlineMs)
     })
-    const observed = { ...state, ...exit, ms: performance.now() - started, pid: proc.pid }
     clearTimeout(timer.id)
-    // Only nonce-bearing trees owned by this invocation. Inventory itself uses a bounded async child.
-    const cleanup = state.timedOut && nonces.length ? await cleanupOwned(nonces, env, cwd) : undefined
+    const capture = await captured
+    const observed = { ...state, ...exit, error: state.error || capture.error, pid: proc.pid, identity: capture.identity }
+    const cleanup = state.timedOut && nonces.length ? await cleanupOwned(nonces) : undefined
     return { ...observed, ...(cleanup ? { cleanup } : {}) }
   } finally {
     clearTimeout(timer.id)
   }
 }
 
-export async function owned(nonces: string[], env: Record<string, string>, cwd: string): Promise<{ pid: number; args: string }[]> {
+export async function owned(nonces: string[], _env?: Record<string, string>, _cwd?: string) {
   if (!nonces.length || nonces.some((nonce) => !nonce)) throw new Error("Owned inventory requires nonempty nonce markers")
-  const result = await execute(win ? "powershell.exe" : "ps", win
-    ? ["-NoProfile", "-NonInteractive", "-Command", "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"]
-    : ["-axww", "-o", "pid=,args="], env, cwd, 2000)
-  if (result.timedOut || result.error || result.code !== 0) throw new Error(`Owned inventory failed: ${JSON.stringify(result)}`)
-  const rows = win
-    ? (JSON.parse(result.stdout) as { ProcessId: number; CommandLine: string | null }[])
-      .map((row) => ({ pid: row.ProcessId, args: row.CommandLine ?? "" }))
-    : result.stdout.split("\n").flatMap((line) => {
-      const match = line.trim().match(/^(\d+)\s+(.+)$/)
-      return match ? [{ pid: Number(match[1]), args: match[2] }] : []
-    })
-  if (!rows.some((row) => row.pid === process.pid)) throw new Error("Owned inventory cannot see the harness process; refusing an empty-tree verdict")
-  return rows.filter((row) => row.pid !== process.pid && row.pid !== result.pid && nonces.some((nonce) => row.args.includes(nonce)))
+  const rows = table()
+  const fixtures = nonces.flatMap((nonce) => {
+    const found = members(nonce, rows)
+    return [...found.members, ...found.wrappers]
+  })
+  const named = [...fixtures, ...nonces.flatMap(ownedIdentities)]
+  const scope = inventoryScope(rows, named)
+  if (scope.some((row) => row.args === null && !named.some((member) => matches(row, member))))
+    throw new Error("Owned inventory has unknown argv in owner scope")
+  return scope.filter((row) => row.pid !== process.pid && (named.some((member) => matches(row, member)) || nonces.some((nonce) => row.args?.includes(nonce))))
 }
 
-async function cleanupOwned(nonces: string[], env: Record<string, string>, cwd: string) {
-  return owned(nonces, env, cwd).then(async (rows) => {
-    rows.forEach((row) => kill9(row.pid))
-    return { killed: rows, left: await owned(nonces, env, cwd) }
-  }).catch((error: unknown) => ({ error: String(error) }))
+async function cleanupOwned(nonces: string[]) {
+  const rows = await owned(nonces)
+  rows.forEach((row) => kill9(row))
+  const left = await owned(nonces)
+  if (left.length) throw new Error(`Owned cleanup left live processes: ${JSON.stringify(left)}`)
+  return { killed: rows, left }
 }
 
 /** Unlike a returned-handle-only starter, kills a host that never reports readiness. */
@@ -108,13 +112,14 @@ export async function startServer(bin: string, args: string[], env: Record<strin
   proc.stderr.on("data", (chunk) => (state.text += chunk))
   proc.on("error", (error) => (state.error = String(error)))
   try {
+    const captured = own(env.ORCHESTRA_TEST_HOME ?? env.HOME, proc)
     const url = await until(120_000, "campaign host readiness", () => {
       if (state.error || proc.exitCode !== null || proc.signalCode !== null)
         throw new Error(`Host startup failed: ${state.error} rc=${proc.exitCode} signal=${proc.signalCode}\n${state.text}`)
       return state.text.match(/listening on (http:\/\/\S+)/)?.[1]
     })
     if (proc.pid === undefined) throw new Error("Campaign host has no PID")
-    return { proc, pid: proc.pid, url, out: () => state.text }
+    return { proc, pid: proc.pid, identity: captured, url, out: () => state.text }
   } catch (error) {
     proc.kill("SIGKILL")
     throw error
