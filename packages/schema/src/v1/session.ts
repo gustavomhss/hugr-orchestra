@@ -525,7 +525,7 @@ const SessionTokens = Schema.Struct({
   }),
 })
 
-const SessionRevert = Schema.Struct({
+export const SessionRevert = Schema.Struct({
   messageID: MessageID,
   partID: optional(PartID),
   snapshot: optional(Schema.String),
@@ -600,6 +600,15 @@ const events = {
       identity: Schema.String,
       info: User,
       parts: Schema.Array(Part),
+      transition: optional(Schema.Struct({
+        expectedRevert: Schema.NullOr(SessionRevert),
+        removeMessageIDs: Schema.Array(MessageID),
+        removePartIDs: Schema.Array(PartID),
+        permission: optional(PermissionV1.Ruleset),
+        // Let the projector name omission/undefined consistently for both typed publication and replay.
+        expectedPermission: Schema.optional(Schema.NullOr(PermissionV1.Ruleset)),
+        timeUpdated: NonNegativeInt,
+      })),
     },
   }),
   MessageUpdated: define({
