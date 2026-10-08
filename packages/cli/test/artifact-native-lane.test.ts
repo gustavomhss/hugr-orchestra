@@ -30,6 +30,19 @@ if (lane.startsWith("linux-musl-")) {
   const version = Bun.spawnSync([loader], { stdout: "pipe", stderr: "pipe" })
   if (!`${version.stdout.toString()}${version.stderr.toString()}`.includes("Version 1.2.5\n"))
     throw new Error("Native musl regression lane requires actual musl 1.2.5")
+  test("native musl old renameat2 symbol binding fails while exported syscall is available", async () => {
+    const { dlopen } = await import("bun:ffi")
+    // Positive symbol control distinguishes a missing wrapper from a bad loader.
+    const available = dlopen(loader, {
+      syscall: { args: ["i64", "i64", "ptr", "i64", "ptr", "i64", "i64"], returns: "i64" },
+    })
+    expect(typeof available.symbols.syscall).toBe("function")
+    available.close()
+    expect(() => {
+      const legacy = dlopen(loader, { renameat2: { args: ["i32", "ptr", "i32", "ptr", "u32"], returns: "i32" } })
+      legacy.close()
+    }).toThrow()
+  })
 }
 
 test("required native artifact lane reports actual OS CPU Bun and libc gate", () => {
