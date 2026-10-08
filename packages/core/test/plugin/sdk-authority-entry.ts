@@ -2,10 +2,12 @@ import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 import { PluginSdkRuntime } from "../../src/plugin/sdk-runtime"
 
-if (process.env.SKIP_SDK_RUNTIME !== "1") await PluginSdkRuntime.install()
+const admission = process.env.SKIP_SDK_RUNTIME === "1" ? undefined : await PluginSdkRuntime.prepareExternalImport(process.argv[2]).then(() => undefined, (error: unknown) => String(error))
+if (!admission && process.env.SKIP_SDK_RUNTIME !== "1") await PluginSdkRuntime.install()
 const expected = Object.fromEntries(await Promise.all(Object.entries(PluginSdkRuntime.modules).map(async ([key, load]) => [key, await load()])))
 const require = createRequire(pathToFileURL(process.argv[2]).href)
 const results = await Promise.all(process.argv.slice(3).map(async (specifier) => {
+  if (admission) return { specifier, error: admission }
   const module = await import(pathToFileURL(process.argv[2]).href + `?sdk=${encodeURIComponent(specifier)}`)
   return module.load(specifier).then((value: Record<string, unknown>) => ({
     specifier,

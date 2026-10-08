@@ -11,6 +11,12 @@ import { planted, registry, sdk } from "./fixture/sdk-registry"
 
 const forms = ["direct", "transitive", "two-depths", "alias", "peer", "optional", "ranges", "bundled"] as const
 
+const installOwned = (cache: string, directory: string, input?: Parameters<Npm.Interface["install"]>[1]) =>
+  Effect.gen(function* () {
+    const npm = yield* Npm.Service
+    yield* npm.install(directory, input)
+  }).pipe(Effect.scoped, Effect.provide(AppNodeBuilder.build(Npm.node, [[Global.node, Global.layerWith({ cache, state: path.join(cache, "state") })]])), Effect.runPromise)
+
 for (const form of forms) for (const warm of [false, true]) {
   test(`SDK closure ${form} ${warm ? "warm" : "cold"}: real registry keeps ordinary deps functional`, async () => {
     await using tmp = await tmpdir()
@@ -28,8 +34,9 @@ for (const form of forms) for (const warm of [false, true]) {
         "node_modules/@orchestra/plugin/index.js": planted,
       } : {})
     await http.publish("middle", { dependencies: { consumer: sdk.version } })
-    const project = path.join(tmp.path, "project")
-    await mkdir(project)
+    const cache = path.join(tmp.path, "cache")
+    const project = path.join(cache, "packages", "fixture")
+    await mkdir(project, { recursive: true })
     await http.config(project)
     const root = { name: "fixture", version: "1.0.0", private: true, dependencies: {
       ordinary: sdk.version,
@@ -43,7 +50,7 @@ for (const form of forms) for (const warm of [false, true]) {
       await new Arborist({ path: project, registry: http.url, cache: path.join(tmp.path, "npm-cache"), ignoreScripts: true, audit: false }).reify()
       http.hits.length = 0
     }
-    await Npm.install(project)
+    await installOwned(cache, project)
     const ordinary = await import(path.join(project, "node_modules", "ordinary", "index.js"))
     expect(ordinary.ordinary).toBe(42)
     if (!warm) {
@@ -111,13 +118,16 @@ test("warm install admits new ordinary dependencies after SDK reconciliation wit
   await using http = await registry(tmp.path)
   await http.publish(sdk.name, { exports: { ".": "./index.js", "./*": "./index.js" } }, { "index.js": planted })
   await http.publish("extra")
-  await http.config(tmp.path)
-  await Bun.write(path.join(tmp.path, "package.json"), JSON.stringify({ dependencies: { [sdk.name]: sdk.version } }))
-  await new Arborist({ path: tmp.path, registry: http.url, cache: path.join(tmp.path, "npm-cache"), ignoreScripts: true, audit: false }).reify()
+  const cache = path.join(tmp.path, "cache")
+  const project = path.join(cache, "packages", "fixture")
+  await mkdir(project, { recursive: true })
+  await http.config(project)
+  await Bun.write(path.join(project, "package.json"), JSON.stringify({ dependencies: { [sdk.name]: sdk.version } }))
+  await new Arborist({ path: project, registry: http.url, cache: path.join(tmp.path, "npm-cache"), ignoreScripts: true, audit: false }).reify()
   http.hits.length = 0
-  await Npm.install(tmp.path, { add: [{ name: "extra", version: sdk.version }] })
+  await installOwned(cache, project, { add: [{ name: "extra", version: sdk.version }] })
   expect(http.hits).toContain("extra")
   expect(http.hits).toContain("tarballs/extra.tgz")
   expect(http.hits.filter((hit) => hit.includes(sdk.name))).toEqual([])
-  expect((await import(path.join(tmp.path, "node_modules", "extra", "index.js"))).ordinary).toBe(42)
+  expect((await import(path.join(project, "node_modules", "extra", "index.js"))).ordinary).toBe(42)
 }, 30_000)

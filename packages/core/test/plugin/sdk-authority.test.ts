@@ -5,7 +5,7 @@ import { planted, sdk } from "../fixture/sdk-registry"
 import { PluginSdkRuntime } from "../../src/plugin/sdk-runtime"
 
 for (const runtime of ["bun", "node", "compiled"] as const) {
-  test(`SDK authority ${runtime}: all public exports and unknown imports`, async () => {
+  test(`SDK authority ${runtime}: foreign footprint is rejected before public or unknown imports`, async () => {
     await using tmp = await tmpdir()
     const directory = path.join(tmp.path, "node_modules", sdk.name)
     await Bun.write(path.join(directory, "package.json"), JSON.stringify({ name: sdk.name, type: "module", exports: { ".": "./index.js", "./*": "./index.js" } }))
@@ -38,9 +38,8 @@ for (const runtime of ["bun", "node", "compiled"] as const) {
     const control = await run(true)
     control.forEach((row) => expect(row.error).toContain("planted SDK copy ran"))
     const result = await run(false)
-    result.slice(0, publicSpecifiers.length).forEach((row) => expect(row).toMatchObject({ bundled: true, require: true }))
-    result.slice(publicSpecifiers.length).forEach((row) => {
-      expect(row.error).toContain("PluginSdkImportError")
+    result.forEach((row) => {
+      expect(row.error).toContain("PluginSdkSetupError")
       expect(row.error).not.toContain("planted SDK copy ran")
     })
     expect(Object.keys(PluginSdkRuntime.modules)).toEqual(publicSpecifiers)
