@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { constants, type BigIntStats } from "node:fs"
 import { lstat, mkdir, open, realpath, type FileHandle } from "node:fs/promises"
 import { dirname, join, resolve } from "node:path"
-import { Effect } from "effect"
+import { Effect, Ref } from "effect"
 import type { FSUtil } from "../../fs-util"
 import { Failure, failure } from "./error"
 import { matchesMime } from "./mime"
@@ -61,6 +61,7 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
       return yield* failure("invalid_input", "Artifact blob exceeds byte bound")
     const digest = hash(data)
     const info = yield* io(() => claimedRoot(true))
+    const cleanupFailure = yield* Ref.make<Failure | undefined>(undefined)
     yield* Effect.scoped(Effect.gen(function* () {
       const staging = yield* Effect.acquireRelease(
         Effect.gen(function* () {
@@ -72,8 +73,11 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
           })
           return { path, stat }
         }),
-        // Observed identity loss leaves scratch for later verified GC; no unlink after a failed check.
-        (staging) => removeChecked(staging.path, staging.stat, info, true).pipe(Effect.catch(() => Effect.void)),
+        // Finalizers cannot fail typed. Retain the failure so successful body verification cannot erase identity loss.
+        (staging) => removeChecked(staging.path, staging.stat, info, true).pipe(Effect.catch((error) =>
+          Ref.set(cleanupFailure, error instanceof Failure ? error
+            : failure("artifact_io_failed", "Artifact scratch cleanup failed")),
+        )),
       )
       const path = join(staging.path, "blob")
       yield* io(async () => {
@@ -97,8 +101,12 @@ export function make(input: { root: string; boundedBytes: number; storageID: str
       if (hash(linked) !== digest || !matchesMime(linked, mime))
         return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
     })).pipe(Effect.catchTag("PlatformError", () => Effect.fail(failure("artifact_io_failed", "Artifact blob publication failed"))))
-    // The staging hard link is gone before metadata can be inserted. Existing hard-linked foreign files are rejected.
-    yield* read(digest, data.byteLength, mime)
+    const failed = yield* Ref.get(cleanupFailure)
+    if (failed) return yield* failed
+    // Final verification belongs to the original root lifetime, never a freshly adopted replacement root.
+    const final = yield* io(() => readBytes(join(root, digest), data.byteLength, info, 1))
+    if (hash(final) !== digest || !matchesMime(final, mime))
+      return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
     return digest
   })
 

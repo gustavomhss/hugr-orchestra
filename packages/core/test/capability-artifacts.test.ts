@@ -572,8 +572,7 @@ describe("CapabilityArtifacts durable lifecycle", () => {
           yield* fs.writeFileString(join(dirname(from), "sentinel"), "replacement must survive")
         }),
       }))
-      expectCode(yield* CapabilityInvocation.withContext(f.binding, store.publish(f.context, input)).pipe(Effect.flip),
-        replacement === "root" ? "artifact_io_failed" : "artifact_corrupt")
+      expectCode(yield* CapabilityInvocation.withContext(f.binding, store.publish(f.context, input)).pipe(Effect.flip), "artifact_io_failed")
       const path = yield* Ref.get(stage)
       if (!path) return yield* Effect.die("Expected actual staging path")
       const original = replacement === "root" ? join(gcRoot, basename(path))
@@ -589,6 +588,58 @@ describe("CapabilityArtifacts durable lifecycle", () => {
       expect(yield* fs.exists(original)).toBe(false)
       expect(yield* fs.readFileString(join(path, "sentinel"))).toBe("replacement must survive")
       expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+    }), 30_000,
+  ))
+
+  Array.of("before cleanup check", "after scratch removal").forEach((timing) => it.live(
+    `publication fails when finalization replaces root ${timing} with matching readonly marker and blob`,
+    () => Effect.gen(function* () {
+      const f = yield* fixture()
+      const fs = yield* FSUtil.Service
+      const placement = yield* Location.Service
+      const moved = join(placement.directory, "finalization-original")
+      const originalStage = yield* Ref.make<string | undefined>(undefined)
+      const replaced = yield* Ref.make(false)
+      const removals = yield* Ref.make<string[]>([])
+      const hash = createHash("sha256").update(input.data).digest("hex")
+      const replace = Effect.gen(function* () {
+        yield* fs.rename(f.root, moved)
+        yield* fs.makeDirectory(f.root, { mode: 0o700 })
+        yield* fs.copyFile(join(moved, ".store"), join(f.root, ".store"))
+        yield* fs.copyFile(join(moved, hash), join(f.root, hash))
+        yield* fs.chmod(join(f.root, ".store"), 0o400)
+        yield* fs.chmod(join(f.root, hash), 0o400)
+        expect(yield* fs.readFile(join(f.root, hash))).toEqual(input.data)
+        expect(yield* fs.readFile(join(f.root, ".store"))).toEqual(yield* fs.readFile(join(moved, ".store")))
+        yield* Ref.set(replaced, true)
+      })
+      const store = yield* CapabilityArtifacts.make({ root: f.root }).pipe(Effect.provideService(FSUtil.Service, {
+        ...fs,
+        remove: (path, options) => Effect.gen(function* () {
+          yield* Ref.update(removals, (paths) => [...paths, path])
+          yield* fs.remove(path, options)
+          if (timing === "after scratch removal") yield* replace
+        }),
+        link: (from, to) => Effect.gen(function* () {
+          yield* fs.link(from, to)
+          yield* Ref.set(originalStage, join(moved, basename(dirname(from))))
+          // LIFO scope cleanup runs this after linked-byte verification, before the store's scratch finalizer.
+          if (timing === "before cleanup check") yield* Effect.addFinalizer(() => replace.pipe(Effect.orDie))
+        }),
+      }))
+      expectCode(yield* CapabilityInvocation.withContext(f.binding, store.publish(f.context, input)).pipe(Effect.flip), "artifact_io_failed")
+      expect(yield* Ref.get(replaced)).toBe(true)
+      const stage = yield* Ref.get(originalStage)
+      if (!stage) return yield* Effect.die("Expected original staging path")
+      if (timing === "before cleanup check") expect(yield* fs.readFile(join(stage, "blob"))).toEqual(input.data)
+      if (timing === "after scratch removal") expect(yield* fs.exists(stage)).toBe(false)
+      expect(yield* Ref.get(removals)).toHaveLength(timing === "before cleanup check" ? 0 : 1)
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual([])
+      expect(yield* f.database.db.select().from(CapabilityArtifactReferenceTable)).toEqual([])
+      // Replacement has valid bytes/marker/permissions: a fresh factory could otherwise silently adopt it.
+      const control = yield* CapabilityArtifacts.make({ root: f.root })
+      const ref = yield* CapabilityInvocation.withContext(f.binding, control.publish(f.context, input))
+      expect((yield* CapabilityInvocation.withContext(f.binding, control.read(f.context, ref))).data).toEqual(input.data)
     }), 30_000,
   ))
 
