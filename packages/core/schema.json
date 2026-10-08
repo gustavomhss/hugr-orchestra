@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "b31de7b7-673c-4d16-8675-b677ce8f0872",
+  "id": "d97d2802-5634-4627-8057-cc2d2b4b77de",
   "prevIds": [
-    "01c44789-486e-45cd-80d2-d40cd25d9c03"
+    "b31de7b7-673c-4d16-8675-b677ce8f0872"
   ],
   "ddl": [
     {
@@ -24,6 +24,10 @@
     },
     {
       "name": "control_account",
+      "entityType": "tables"
+    },
+    {
+      "name": "capability_artifact_pin",
       "entityType": "tables"
     },
     {
@@ -403,6 +407,56 @@
       "name": "time_updated",
       "entityType": "columns",
       "table": "control_account"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "artifact_id",
+      "entityType": "columns",
+      "table": "capability_artifact_pin"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "revision",
+      "entityType": "columns",
+      "table": "capability_artifact_pin"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "capability_artifact_pin"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "capability_artifact_pin"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "capability_artifact_pin"
     },
     {
       "type": "text",
@@ -811,6 +865,16 @@
       "default": null,
       "generated": null,
       "name": "operation",
+      "entityType": "columns",
+      "table": "capability_job"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "creation_key",
       "entityType": "columns",
       "table": "capability_job"
     },
@@ -2376,6 +2440,23 @@
     },
     {
       "columns": [
+        "artifact_id",
+        "revision"
+      ],
+      "tableTo": "capability_artifact",
+      "columnsTo": [
+        "id",
+        "revision"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_capability_artifact_pin_artifact_id_revision_capability_artifact_id_revision_fk",
+      "entityType": "fks",
+      "table": "capability_artifact_pin"
+    },
+    {
+      "columns": [
         "session_id"
       ],
       "tableTo": "session",
@@ -2670,6 +2751,17 @@
       "name": "control_account_pk",
       "entityType": "pks",
       "table": "control_account"
+    },
+    {
+      "columns": [
+        "artifact_id",
+        "revision",
+        "session_id"
+      ],
+      "nameExplicit": false,
+      "name": "capability_artifact_pin_pk",
+      "entityType": "pks",
+      "table": "capability_artifact_pin"
     },
     {
       "columns": [
@@ -3289,6 +3381,15 @@
       "name": "todo_session_idx",
       "entityType": "indexes",
       "table": "todo"
+    },
+    {
+      "columns": [
+        "creation_key"
+      ],
+      "nameExplicit": false,
+      "name": "capability_job_creation_key_unique",
+      "entityType": "uniques",
+      "table": "capability_job"
     }
   ],
   "renames": []

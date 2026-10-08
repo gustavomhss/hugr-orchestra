@@ -2,16 +2,30 @@ export * as CapabilityPolicy from "./policy"
 
 import { Capability } from "@orchestra/schema/capability"
 import { Effect } from "effect"
+import { AgentV2 } from "../agent"
+import { Database } from "../database/database"
 import { Location } from "../location"
 import { PermissionV2 } from "../permission"
 import { SessionStore } from "../session/store"
 import type { Tool } from "../tool/tool"
 import { CapabilityInvocation } from "./invocation"
 
+const approved = Symbol("CapabilityPolicy.approved")
+type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+export type Permit = Readonly<{
+  readonly [approved]: true
+  context: Tool.Context
+  binding: CapabilityInvocation.Binding
+  action: string
+  resources: readonly string[]
+}>
+
 export const make = Effect.gen(function* () {
   const location = yield* Location.Service
   const sessions = yield* SessionStore.Service
   const permissions = yield* PermissionV2.Service
+  const agents = yield* AgentV2.Service
+  const database = yield* Database.Service
 
   const validate = Effect.fn("CapabilityPolicy.validate")(function* (binding: CapabilityInvocation.Binding) {
     const session = yield* sessions.get(binding.owner.sessionID)
@@ -38,10 +52,10 @@ export const make = Effect.gen(function* () {
       return yield* mismatch()
   })
 
-  const assert = Effect.fn("CapabilityPolicy.assert")(function* (
+  const authorize = Effect.fn("CapabilityPolicy.authorize")(function* (
     context: Tool.Context,
     input: { action: string; resources: readonly string[] },
-  ): Effect.fn.Return<void, Capability.Failure> {
+  ): Effect.fn.Return<Permit, Capability.Failure> {
     const binding = yield* CapabilityInvocation.require(context, {
       projectID: location.project.id,
       location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
@@ -83,9 +97,33 @@ export const make = Effect.gen(function* () {
       }),
     )
     yield* validate(binding)
+    return Object.freeze({
+      [approved]: true as const,
+      context: Object.freeze({ ...context }), binding,
+      action: request.action, resources: Object.freeze([...request.resources]),
+    })
   })
 
-  return { assert }
+  const commit = <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
+    Effect.suspend(() => {
+      if (!permit || permit[approved] !== true) return Effect.fail(mismatch())
+      // Lock ordering is actor state -> SQLite writer. Approval never happens under either lock.
+      return agents.withPermissions(permit.context.agent, () => database.db.transaction((tx) => Effect.gen(function* () {
+        const current = yield* CapabilityInvocation.require(permit.context, {
+          projectID: location.project.id,
+          location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+        })
+        if (current !== permit.binding) return yield* mismatch()
+        yield* validate(current)
+        const request = { sessionID: permit.context.sessionID, agent: permit.context.agent,
+          action: permit.action, resources: [...permit.resources] }
+        if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
+        return yield* write(tx)
+      }), { behavior: "immediate" })).pipe(Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())))
+    })
+
+  return { authorize, commit, assert: (context: Tool.Context, input: { action: string; resources: readonly string[] }) =>
+    authorize(context, input).pipe(Effect.asVoid) }
 })
 
 function mismatch() {

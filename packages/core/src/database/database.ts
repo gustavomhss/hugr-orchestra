@@ -3,9 +3,10 @@ export * as Database from "./database"
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { layer as sqliteLayer } from "#sqlite"
 import { Context, Effect, Layer } from "effect"
+import { createHash, randomUUID } from "crypto"
 import { Global } from "../global"
 import { Flag } from "../flag/flag"
-import { isAbsolute, join } from "path"
+import { isAbsolute, join, resolve } from "path"
 import { DatabaseMigration } from "./migration"
 import { InstallationChannel } from "../installation/version"
 import { makeGlobalNode } from "../effect/app-node"
@@ -15,7 +16,11 @@ type DatabaseShape = Effect.Success<typeof makeDatabase>
 
 export interface Interface {
   db: DatabaseShape
+  /** Stable store namespace; in-memory databases intentionally receive independent identities. */
+  storageID?: string
 }
+
+const Filename = Context.Reference<string>("@orchestra/Database/Filename", { defaultValue: () => path() })
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/storage/Database") {}
 
@@ -32,12 +37,14 @@ const layer = Layer.effect(
     yield* db.run("PRAGMA wal_checkpoint(PASSIVE)")
     yield* DatabaseMigration.apply(db)
 
-    return { db }
+    const filename = yield* Filename
+    return { db, storageID: filename === ":memory:" ? randomUUID()
+      : createHash("sha256").update(resolve(filename)).digest("hex") }
   }).pipe(Effect.orDie),
 )
 
 export function layerFromPath(filename: string) {
-  return layer.pipe(Layer.provide(sqliteLayer({ filename })))
+  return layer.pipe(Layer.provide(sqliteLayer({ filename })), Layer.provide(Layer.succeed(Filename, filename)))
 }
 
 export function path() {
