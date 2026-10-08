@@ -17,6 +17,9 @@ import { TestLLMServer } from "../lib/llm-server"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 
 const it = testEffect(Layer.mergeAll(TestLLMServer.layer, NodeServices.layer, LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node]))))
+const sandbox = await Effect.runPromise(ToolSafetySandbox.status())
+const prepared = sandbox.shellWrites === "enforced" ? it.live : it.live.skip
+if (sandbox.shellWrites === "unenforced") console.info(`Native preparation conformance skipped: ${sandbox.shellSandbox.reason}`)
 
 const fixture = (shell: "allow" | "ask" = "allow") => Effect.gen(function* () {
   const llm = yield* TestLLMServer
@@ -154,7 +157,29 @@ it.live("native shell permission refusal leaves missing output ancestors untouch
   }), 60_000,
 )
 
-it.live("listener loopback grant objects snapshot into actual V1 child shell without widening roots", () =>
+prepared("approved native shell prepares missing parents only after permission reply", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture("ask")
+    yield* f.fs.writeFileString(path.join(f.directory, "probe.cjs"), "require('fs').writeFileSync('nested/deep/out.ts','approved');console.log('generated')")
+    const listener = yield* f.start({ requireSandbox: true, writeRoots: ["nested/deep/out.ts"], sandbox: { enabled: true, scratch: true } })
+    const child = yield* f.child(listener)
+    const invocation = yield* Effect.forkScoped(f.invoke(listener, child, "bash", { command: "node probe.cjs", description: "approved generator", timeout: 5000 }))
+    const pending = yield* pollWithTimeout(Effect.gen(function* () {
+      const response = yield* f.request(listener, "/permission")
+      expect(response.status).toBe(200)
+      const requests = yield* Schema.decodeUnknownEffect(Schema.Array(PermissionV1.Request))(yield* Effect.promise(() => response.json()))
+      return requests.find((request) => request.sessionID === child.id && request.permission === "bash")
+    }), "native shell permission was never requested", "15 seconds")
+    expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
+    const approved = yield* f.request(listener, `/permission/${pending.id}/reply`, { reply: "once" })
+    expect(approved.status).toBe(200)
+    const tools = yield* Fiber.join(invocation)
+    expect(tools.some((part) => part.state.status === "completed" && part.state.metadata.exit === 0 && part.state.output === "generated\n")).toBe(true)
+    expect(yield* f.fs.readFileString(path.join(f.directory, "nested", "deep", "out.ts"))).toBe("approved")
+  }), 60_000,
+)
+
+it.live("listener loopback request objects snapshot into actual V1 child shell; unsupported exact policy HOLDs", () =>
   Effect.gen(function* () {
     const f = yield* fixture()
     const server = yield* Effect.acquireRelease(
@@ -178,12 +203,7 @@ it.live("listener loopback grant objects snapshot into actual V1 child shell wit
     })))
     const child = yield* f.child(listener)
     const tools = yield* f.invoke(listener, child, "bash", { command: "node probe.cjs", description: "listener loopback endpoint probe", timeout: 5000 })
-    if (process.platform === "darwin") {
-      expect(tools.some((part) => part.state.status === "completed" && part.state.output === "siblingDenied:true\nlistener-loopback-response\n" && part.state.metadata.exit === 0)).toBe(true)
-      expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
-      return
-    }
-    const reason = process.platform === "linux" ? "sandbox-loopback-endpoint-exact-policy-unsupported" : "sandbox-loopback-endpoint-platform-unsupported"
+    const reason = "sandbox-loopback-endpoint-exact-policy-unsupported"
     expect(tools.some((part) => part.state.status === "error" && part.state.error.includes(`Tool safety HOLD: ${reason}`))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
     expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)

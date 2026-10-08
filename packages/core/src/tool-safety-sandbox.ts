@@ -45,6 +45,8 @@ export const status = Effect.fn("ToolSafetySandbox.status")(function* () {
 /** Caller keeps this Scope open through child exit; policy file is removed on success/failure/cancellation. */
 export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   command: ChildProcess.Command,
+  /** Native host only, after the shell's permission approval; prehooks must leave this absent. */
+  options?: { readonly prepareParents?: boolean },
 ): Effect.fn.Return<ChildProcess.Command, ToolSafety.Denied, FSUtil.Service | Scope.Scope> {
   const profile = yield* ToolSafety.RuntimeProfile
   if (command._tag !== "StandardCommand") {
@@ -56,7 +58,17 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ? command.options.env ?? {}
     : { ...process.env, ...command.options.env })
   const ordinary = ChildProcess.make(command.command, command.args, { ...command.options, env, extendEnv: false })
-  const grants = (profile?.sandbox?.allowedUnixSockets ?? []).map((entry) => ({ ...entry }))
+  const requestedSockets = profile?.sandbox?.allowedUnixSockets
+  if (requestedSockets !== undefined && !Array.isArray(requestedSockets))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-grants" })
+  const grants = yield* Effect.forEach(requestedSockets ?? [], (entry) => Effect.gen(function* () {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry) ||
+      typeof entry.directory !== "string" || typeof entry.path !== "string")
+      return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-entry" })
+    if (!path.isAbsolute(entry.directory) || !path.isAbsolute(entry.path) || /[*?\[\]\0]/.test(entry.directory + entry.path))
+      return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-path" })
+    return { directory: entry.directory, path: entry.path }
+  }))
   const requestedEndpoints = profile?.sandbox?.allowedLoopbackEndpoints
   if (requestedEndpoints !== undefined && !Array.isArray(requestedEndpoints))
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-grants" })
@@ -71,7 +83,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   if (!profile?.requireSandbox && !profile?.sandbox?.enabled && grants.length === 0 && endpointGrants.length === 0) return ordinary
   // Exact endpoint/socket capabilities never permit unconfined fallback, including during runtime acquisition.
   if (endpointGrants.length && process.platform !== "darwin" && process.platform !== "linux")
-    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-platform-unsupported" })
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
   if (grants.length && process.platform !== "darwin" && process.platform !== "linux")
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-platform-unsupported" })
   if (endpointGrants.length && profile?.sandbox?.allowedDomains?.length)
@@ -102,15 +114,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     )
     return placement === directory ? [entry.port] : []
   })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
-  // SRT domain proxies do not enforce an exact raw IPv4 destination/port capability.
-  if (endpointGrants.length && process.platform === "linux")
+  // SRT domain proxies do not enforce raw endpoint grants. Our measured seatbelt localhost filter also admits
+  // host LAN IPv4 at the same port, so it cannot honor the requested exact 127.0.0.1 capability either.
+  if ((endpointGrants.length && process.platform === "linux") || endpoints.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
   const sockets = yield* Effect.forEach(grants, (entry) => Effect.gen(function* () {
-    if (!path.isAbsolute(entry.directory) || !path.isAbsolute(entry.path) || /[*?\[\]\0]/.test(entry.directory + entry.path))
-      return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-path" })
     const placement = yield* fs.realPath(entry.directory).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-unix-socket-directory-acquisition" })),
     )
+    if (placement !== directory) return []
     // Bun's realpath rejects Unix socket leaves on macOS (EOPNOTSUPP). Resolve the parent, then lstat the exact leaf.
     const parent = yield* fs.realPath(path.dirname(entry.path)).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-unix-socket-path-acquisition" })),
@@ -121,7 +133,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
       catch: () => new ToolSafety.Denied({ reason: "sandbox-unix-socket-stat-acquisition" }),
     })
     if (!info.isSocket()) return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-not-socket" })
-    return placement === directory ? [socket] : []
+    return [socket]
   })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
   // SRT 0.0.78's allowUnixSockets is macOS-only; Linux only exposes allowAllUnixSockets.
   // Never silently widen an exact-path grant to all AF_UNIX endpoints.
@@ -159,7 +171,9 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     return yield* new ToolSafety.Denied({ reason: "sandbox-config-write-exception-unenforceable" })
   if (sockets.some((socket) => deny.some((entry) => FSUtil.contains(entry, socket))))
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-denied-path" })
-  const parents = yield* SandboxParents.plan(fs, directory, requested, [...deny, ...protectedWrites])
+  const parents = options?.prepareParents === true
+    ? yield* SandboxParents.plan(fs, directory, requested, [...deny, ...protectedWrites])
+    : []
   const scratch = profile?.sandbox?.scratch
     ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
@@ -188,12 +202,10 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     const outside = `(require-all (require-not (literal "/dev/null")) ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})`
     const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
       ...sockets.map((socket) => `(allow network-outbound (remote unix-socket (literal ${JSON.stringify(socket)})))`),
-      // Seatbelt accepts localhost, not numeric IPs. AF_INET excludes ::1 and IPv4-mapped IPv6; bind stays denied.
-      ...endpoints.map((port) => `(allow network-outbound (require-all (remote ip "localhost:${port}") (socket-domain AF_INET)))`),
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
       ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
-    yield* SandboxParents.prepare(fs, directory, parents)
+    if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
     yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
     return ChildProcess.make(sandbox.binary, ["-p", policy, ...invocation], {
       ...command.options, cwd, shell: false, env: confined, extendEnv: false,
@@ -209,7 +221,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
     ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
-  yield* SandboxParents.prepare(fs, directory, parents)
+  if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
   yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
   return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--", ...invocation], {
