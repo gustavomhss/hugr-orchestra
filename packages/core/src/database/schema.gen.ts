@@ -195,6 +195,7 @@ export default {
           \`id\` text PRIMARY KEY,
           \`session_id\` text NOT NULL,
           \`prompt\` text NOT NULL,
+          \`prompt_context\` text,
           \`delivery\` text NOT NULL,
           \`admitted_seq\` integer NOT NULL,
           \`promoted_seq\` integer,

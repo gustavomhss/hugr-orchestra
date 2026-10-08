@@ -3,6 +3,7 @@ export * as SessionInput from "./input"
 import { and, asc, eq, isNull, lte } from "drizzle-orm"
 import { DateTime, Effect, Schema } from "effect"
 import { Admitted, Delivery } from "@orchestra/schema/session-input"
+import { PromptContext } from "@orchestra/schema/prompt-context"
 import type { Database } from "../database/database"
 import type { EventV2 } from "../event"
 import { SessionEvent } from "./event"
@@ -24,6 +25,7 @@ const fromRow = (row: typeof SessionInputTable.$inferSelect): Admitted =>
     id: SessionMessage.ID.make(row.id),
     sessionID: SessionSchema.ID.make(row.session_id),
     prompt: decodePrompt(row.prompt),
+    ...(row.prompt_context === null ? {} : { promptContext: row.prompt_context }),
     delivery: row.delivery,
     timeCreated: DateTime.makeUnsafe(row.time_created),
     ...(row.promoted_seq === null ? {} : { promotedSeq: row.promoted_seq }),
@@ -45,6 +47,7 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
     readonly id: SessionMessage.ID
     readonly sessionID: SessionSchema.ID
     readonly prompt: Prompt
+    readonly promptContext?: PromptContext.Info
     readonly delivery: Delivery
   },
 ) {
@@ -57,21 +60,17 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
       sessionID: input.sessionID,
       timestamp,
       prompt: input.prompt,
+      promptContext: input.promptContext,
       delivery: input.delivery,
     })
     .pipe(
       Effect.flatMap((event) =>
         event.durable === undefined
           ? Effect.die("Prompt admission event is missing aggregate sequence")
-          : Effect.succeed(
-              Admitted.make({
-                admittedSeq: event.durable.seq,
-                id: input.id,
-                sessionID: input.sessionID,
-                prompt: input.prompt,
-                delivery: input.delivery,
-                timeCreated: timestamp,
-              }),
+          : find(db, input.id).pipe(
+              Effect.flatMap((stored) =>
+                stored === undefined ? Effect.die("Prompt admission projection is missing") : Effect.succeed(stored),
+              ),
             ),
       ),
       Effect.catchDefect((defect) =>
@@ -87,6 +86,7 @@ export const projectAdmitted = Effect.fn("SessionInput.projectAdmitted")(functio
     readonly id: SessionMessage.ID
     readonly sessionID: SessionSchema.ID
     readonly prompt: Prompt
+    readonly promptContext?: PromptContext.Info
     readonly delivery: Delivery
     readonly timeCreated: DateTime.Utc
   },
@@ -105,6 +105,7 @@ export const projectAdmitted = Effect.fn("SessionInput.projectAdmitted")(functio
       session_id: input.sessionID,
       admitted_seq: input.admittedSeq,
       prompt: encodePrompt(input.prompt),
+      prompt_context: input.promptContext,
       delivery: input.delivery,
       time_created: DateTime.toEpochMillis(input.timeCreated),
     })
@@ -121,6 +122,7 @@ export const projectPrompted = Effect.fn("SessionInput.projectPrompted")(functio
     readonly id: SessionMessage.ID
     readonly sessionID: SessionSchema.ID
     readonly prompt: Prompt
+    readonly promptContext?: PromptContext.Info
     readonly delivery: Delivery
     readonly timeCreated: DateTime.Utc
     readonly promotedSeq: number
@@ -158,6 +160,7 @@ export const projectPrompted = Effect.fn("SessionInput.projectPrompted")(functio
       id: input.id,
       session_id: input.sessionID,
       prompt: encodePrompt(input.prompt),
+      prompt_context: input.promptContext,
       delivery: input.delivery,
       admitted_seq: input.promotedSeq,
       promoted_seq: input.promotedSeq,
@@ -206,11 +209,13 @@ const matchesProjection = (
   expected: {
     readonly sessionID: SessionSchema.ID
     readonly prompt: Prompt
+    readonly promptContext?: PromptContext.Info
     readonly delivery: Delivery
     readonly timeCreated: DateTime.Utc
   },
 ) =>
   equivalent(input, expected) &&
+  JSON.stringify(input.promptContext) === JSON.stringify(expected.promptContext) &&
   DateTime.toEpochMillis(input.timeCreated) === DateTime.toEpochMillis(expected.timeCreated)
 
 const publish = Effect.fn("SessionInput.publish")(function* (
@@ -227,6 +232,7 @@ const publish = Effect.fn("SessionInput.publish")(function* (
         timestamp: DateTime.makeUnsafe(row.time_created),
         messageID: id,
         prompt: decodePrompt(row.prompt),
+        ...(row.prompt_context === null ? {} : { promptContext: row.prompt_context }),
         delivery: row.delivery,
       })
       .pipe(
