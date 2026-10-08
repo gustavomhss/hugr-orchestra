@@ -28,17 +28,23 @@ export async function protect(filename: string): Promise<void> {
   await (async () => {
     if (!(await lstat(filename)).isFile()) throw new Error("Expected a regular private file")
     if (process.platform !== "win32") return chmod(filename, 0o600)
-    if (!process.env.SystemRoot) throw new Error("Windows SystemRoot is unavailable")
-    const child = Bun.spawn([
-      join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
-      "-NoLogo", "-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64"),
-    ], {
-      env: { ...process.env, ORCHESTRA_PRIVATE_FILE: resolve(filename) },
-      stdin: "ignore", stdout: "ignore", stderr: "pipe", timeout: 30_000,
+    const root = process.env.SystemRoot
+    if (!root) throw new Error("Windows SystemRoot is unavailable")
+    const { execFile } = await import("node:child_process")
+    await new Promise<void>((done, reject) => {
+      execFile(
+        join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
+        ["-NoLogo", "-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")],
+        { env: { ...process.env, ORCHESTRA_PRIVATE_FILE: resolve(filename) }, timeout: 30_000, windowsHide: true },
+        (error) => {
+          if (error) {
+            reject(error)
+            return
+          }
+          done()
+        },
+      )
     })
-    const [code, stderr] = await Promise.all([child.exited, new Response(child.stderr).text()])
-    if (child.signalCode) throw new Error(`Windows DACL protection terminated: ${child.signalCode}`)
-    if (code !== 0) throw new Error(`Windows DACL protection failed (${code}): ${stderr.trim()}`)
   })().catch((cause: unknown) => {
     throw new Error(`PrivateFile.protect failed (${process.platform}): ${filename}`, { cause })
   })

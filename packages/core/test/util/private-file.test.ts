@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { link, lstat, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { pathToFileURL } from "node:url"
 import { PrivateFile } from "../../src/util/private-file"
 import { SiwcHost } from "../../src/auth/siwc-host"
 import { assertPrivateFile, broadenPrivateFile, preventNativeProtection } from "../fixture/private-file"
@@ -74,7 +75,69 @@ test("host native protection failure forbids publication and cleans completed sc
   expect(sources).toHaveLength(1)
   expect(published).toEqual([])
   expect(failures).toHaveLength(1)
-  if (process.platform === "win32") expect(String(failures[0].cause)).toContain("Executable not found in $PATH")
+  if (process.platform === "win32") expect(failures[0].cause).toMatchObject({ code: "ENOENT" })
   if (process.platform === "linux") expect(failures[0].cause).toMatchObject({ code: "EPERM", syscall: "chmod" })
   expect(await readdir(root)).toEqual([])
+})
+
+test("real Node runtime protects normal and broad files and propagates native backend failure", async () => {
+  const root = await mkdtemp(join(tmpdir(), "private-node-test-"))
+  await using cleanup = { [Symbol.asyncDispose]: () => rm(root, { recursive: true, force: true }) }
+  const built = await Bun.build({
+    entrypoints: [join(import.meta.dir, "../../src/util/private-file.ts")],
+    target: "node", format: "esm", outdir: root, naming: "[name].mjs",
+  })
+  expect(built.success).toBe(true)
+  expect(built.outputs).toHaveLength(1)
+  const run = async (filename: string, operation: "create" | "protect" | "failure", env = process.env) => {
+    const child = Bun.spawn(["node", "--input-type=module", "-e", `
+      import { strict } from "node:assert";
+      import { lstat, readFile, writeFile } from "node:fs/promises";
+      const { PrivateFile } = await import(process.env.ORCHESTRA_NODE_PRIVATE_MODULE);
+      strict.equal(typeof Bun, "undefined");
+      strict.ok(process.versions.node);
+      const filename = process.env.ORCHESTRA_NODE_PRIVATE_FILE;
+      const operation = process.env.ORCHESTRA_NODE_PRIVATE_OPERATION;
+      if (operation === "create") await writeFile(filename, "node fixture-only", { mode: 0o644 });
+      strict.equal((await lstat(filename)).isFile(), true);
+      if (operation === "failure") {
+        await strict.rejects(() => PrivateFile.protect(filename), (error) => {
+          strict.match(error.message, /^PrivateFile.protect failed/);
+          strict.equal(error.cause.code, process.platform === "win32" ? "ENOENT" : "EPERM");
+          if (process.platform !== "win32") strict.equal(error.cause.syscall, "chmod");
+          return true;
+        });
+      } else {
+        strict.ok(["create", "protect"].includes(operation));
+        await PrivateFile.protect(filename);
+      }
+      strict.equal(await readFile(filename, "utf8"), "node fixture-only");
+      console.log(JSON.stringify({ runtime: "node", version: process.version, operation }));
+    `], {
+      cwd: root, stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout: 60_000,
+      env: { ...env, ORCHESTRA_NODE_PRIVATE_MODULE: pathToFileURL(built.outputs[0].path).href,
+        ORCHESTRA_NODE_PRIVATE_FILE: filename, ORCHESTRA_NODE_PRIVATE_OPERATION: operation },
+    })
+    const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()])
+    if (child.signalCode || code !== 0) throw new Error(`Node private-file conformance failed (${child.signalCode ?? code}): ${stderr.trim()}`)
+    expect(JSON.parse(stdout)).toMatchObject({ runtime: "node", version: expect.stringMatching(/^v\d+\./), operation })
+  }
+  const normal = join(root, "node normal ' $ ; [file].json")
+  await run(normal, "create")
+  await assertPrivateFile(normal)
+  const broad = join(root, "node broad ' $ ; [file].json")
+  await writeFile(broad, "node fixture-only")
+  await broadenPrivateFile(broad, true)
+  await expect(assertPrivateFile(broad)).rejects.toThrow("Private-file oracle")
+  await run(broad, "protect")
+  await assertPrivateFile(broad)
+  if (process.platform === "win32") {
+    // Child-only environment fault: real Node execFile must report native ENOENT.
+    await run(broad, "failure", { ...process.env, SystemRoot: join(root, "unavailable-windows-backend") })
+  }
+  if (process.platform === "linux") {
+    await using failure = await preventNativeProtection(broad)
+    await run(broad, "failure")
+  }
+  await assertPrivateFile(broad)
 })

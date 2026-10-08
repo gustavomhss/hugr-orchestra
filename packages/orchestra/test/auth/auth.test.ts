@@ -107,7 +107,7 @@ describe("Auth", () => {
       expect(Exit.isFailure(result)).toBe(true)
       if (Exit.isSuccess(result)) throw new Error("Native protection failure was swallowed")
       expect(Cause.pretty(result.cause)).toContain("PrivateFile.protect failed")
-      expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "Executable not found in $PATH" : "EPERM")
+      expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "ENOENT" : "EPERM")
       expect(control.source).toBeDefined()
       expect(control.release).toBeUndefined()
       expect(publications).toEqual(phase === "revision" ? [] : [join(Global.Path.data, "auth-revisions.json")])
