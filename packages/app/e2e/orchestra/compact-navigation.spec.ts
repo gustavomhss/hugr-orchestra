@@ -3,7 +3,7 @@ import { setupCompactNavigation } from "./compact-navigation.fixture"
 
 test.use({ viewport: { width: 1672, height: 941 }, serviceWorkers: "block" })
 
-const wipItems = ["Agents", "MCP", "Hooks", "CI/CD", "Workspaces"]
+const wipItems = ["Agents", "MCP", "CI/CD", "Workspaces"]
 const wipText = "Work in progress, revisit before production"
 
 test("collapse preserves names, focus, routes, profile and titlebar geometry across reload", async ({ page }) => {
@@ -36,7 +36,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   )
   await expect(crumb.last()).toHaveText("home")
   await expect(crumb.last()).toHaveCSS("font-size", "12px")
-  // Exactly the owner's five revisit-before-production screens carry the WIP mark, described to assistive tech.
+  // Exactly the owner's four revisit-before-production screens carry the WIP mark, described to assistive tech.
   const marked = sidebar
     .locator(".orchestra-nav-button")
     .filter({ has: page.locator('[data-slot="orchestra-nav-wip"]') })
@@ -59,7 +59,7 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   expect(chip.x + chip.width, "the WIP mark fits the 230px row").toBeLessThanOrEqual(
     (await sidebar.boundingBox())!.x + 230 - 10,
   )
-  await sidebar.getByRole("button", { name: "Hooks", exact: true }).hover()
+  await sidebar.getByRole("button", { name: "MCP", exact: true }).hover()
   await expect(page.getByRole("tooltip", { name: wipText, exact: true })).toBeVisible()
   await page.mouse.move(900, 500)
   await expect(page.getByRole("tooltip")).toHaveCount(0)

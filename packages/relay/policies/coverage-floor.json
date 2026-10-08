@@ -1,0 +1,7 @@
+[
+  {
+    "id": "ORG-COVERAGE-FLOOR",
+    "assert": "test coverage is at or above the org floor (default 80%) — edit RELAY_COV_MIN to change the threshold",
+    "cmd": "RELAY_COV_MIN=80; python3 -m pytest -q --cov=. --cov-report= 2>/dev/null && python3 -m coverage report 2>/dev/null | awk 'END{gsub(/%/,\"\",$NF); exit !($NF+0 >= '\"$RELAY_COV_MIN\"')}'"
+  }
+]

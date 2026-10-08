@@ -1,4 +1,5 @@
 import type { PermissionActionConfig, PermissionRuleConfig } from "@orchestra/sdk/v2/client"
+import { matchWildcard } from "@/utils/wildcard"
 
 // Sections of the routed Settings view, in navigation order. The first six are the approved
 // mock's; General and Servers keep the remaining real settings reachable.
@@ -61,7 +62,8 @@ export function permissionMap(config: unknown): Record<string, PermissionRuleCon
 // cover every input ("*") decide the default.
 export function permissionAction(config: unknown, tool: PermissionTool): PermissionActionConfig {
   return (
-    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matches(tool, item.key))?.action ?? "ask"
+    [...BUILT_IN, ...rules(config)].findLast((item) => item.pattern === "*" && matchWildcard(tool, item.key))?.action ??
+    "ask"
   )
 }
 
@@ -97,15 +99,6 @@ function rules(config: unknown): Rule[] {
       return valid ? [{ key, pattern, action: valid }] : []
     })
   })
-}
-
-// The server's Wildcard.match: "*" matches any run, "?" one character.
-function matches(input: string, pattern: string) {
-  const escaped = pattern
-    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".")
-  return new RegExp(`^${escaped}$`, "s").test(input)
 }
 
 function actionOf(value: unknown) {

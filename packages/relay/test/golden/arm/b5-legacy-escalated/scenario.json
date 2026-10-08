@@ -1,0 +1,28 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "create done",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "state": "escalated",
+    "position": "A",
+    "counter": "1\n"
+  },
+  "fires": [
+    {}
+  ]
+}

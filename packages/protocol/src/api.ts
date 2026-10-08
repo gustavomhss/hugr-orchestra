@@ -22,6 +22,8 @@ import { LocationGroup } from "./groups/location"
 import { IntegrationGroup } from "./groups/integration"
 import { CredentialGroup } from "./groups/credential"
 import { ProjectCopyGroup } from "./groups/project-copy"
+import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
+import { RelayHookGroup } from "./groups/relay-hook"
 import { PullRequestGroup } from "./groups/pull-request"
 import { ScheduleGroup } from "./groups/schedule"
 
@@ -57,6 +59,9 @@ const makeApiFromGroup = <
     .add(makeQuestionGroup(locationMiddleware, sessionLocationMiddleware))
     .add(ReferenceGroup.middleware(locationMiddleware))
     .add(ProjectCopyGroup.middleware(locationMiddleware))
+    .add(RelayDocumentGroup.middleware(locationMiddleware))
+    .add(RelayPublishGroup.middleware(locationMiddleware))
+    .add(RelayHookGroup.middleware(locationMiddleware))
     .add(PullRequestGroup.middleware(locationMiddleware))
     .add(ScheduleGroup.middleware(locationMiddleware))
     .annotateMerge(

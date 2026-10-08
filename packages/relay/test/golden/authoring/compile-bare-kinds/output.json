@@ -1,0 +1,46 @@
+{
+  "sprint": {
+    "brief": "Chain",
+    "gen": 0,
+    "retry_budget": 3,
+    "macros": [],
+    "work_packages": [
+      {
+        "id": "load",
+        "title": "load",
+        "kind": "inject",
+        "instructions": "",
+        "checklist": [],
+        "text": "Rules\n",
+        "file": "rules.md"
+      },
+      {
+        "id": "gate",
+        "title": "gate",
+        "kind": "gate",
+        "instructions": "",
+        "checklist": [
+          {
+            "id": "g",
+            "cmd": "true"
+          }
+        ]
+      },
+      {
+        "id": "approve",
+        "title": "approve",
+        "kind": "human",
+        "instructions": "",
+        "checklist": []
+      },
+      {
+        "id": "look",
+        "title": "look",
+        "kind": "review",
+        "instructions": "",
+        "checklist": []
+      }
+    ]
+  },
+  "bindings": []
+}

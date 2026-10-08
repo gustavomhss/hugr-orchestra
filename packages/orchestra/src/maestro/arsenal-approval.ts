@@ -36,7 +36,13 @@ export const makeApprovalHost = Effect.gen(function* () {
         sessionID: session.id,
         patterns: [...request.resources],
         always: [],
-        metadata: { nativeSafety: true, action: request.action, callID: request.invocation.callID, projectID: session.projectID },
+        metadata: {
+          nativeSafety: true,
+          action: request.action,
+          callID: request.invocation.callID,
+          projectID: session.projectID,
+          ...(request.message === undefined ? {} : { message: request.message }),
+        },
         ruleset: [{ permission: "*", pattern: "*", action: "ask" }],
       })).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "approval-native-rejected" })))
     }),
@@ -59,8 +65,20 @@ export const makeV2ApprovalHost = Effect.gen(function* () {
         session.location.directory !== location.directory ||
         session.location.workspaceID !== location.workspaceID ||
         request.invocation.directory !== location.directory ||
-        request.invocation.projectID !== location.project.id ||
-        !request.invocation.callID || !request.resources.length)
+        request.invocation.projectID !== location.project.id || !request.resources.length)
+        return yield* new ToolSafety.Denied({ reason: "approval-native-placement-mismatch" })
+      // A hook's ask is `relay_hook` with the hook's own words for the card; askExplicit offers no "always".
+      const hook = request.action === "relay_hook"
+      const message = request.message === undefined ? {} : { message: request.message }
+      // A Session event's hook (`prompt`) has no tool call to bind: the Session in this Location is the binding.
+      if (hook && request.trigger !== undefined)
+        return yield* permissions.askExplicit({
+          sessionID,
+          action: "relay_hook",
+          resources: [...request.resources],
+          metadata: { nativeSafety: true, action: request.action, trigger: request.trigger, projectID: location.project.id, ...message },
+        }).pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof PermissionV2.BlockedError ? "approval-native-policy-denied" : "approval-native-rejected" })))
+      if (!request.invocation.callID)
         return yield* new ToolSafety.Denied({ reason: "approval-native-placement-mismatch" })
       if (!request.invocation.assistantMessageID || !request.invocation.agent)
         return yield* new ToolSafety.Denied({ reason: "approval-v2-invocation-identity-missing" })
@@ -80,14 +98,14 @@ export const makeV2ApprovalHost = Effect.gen(function* () {
         : ["read", "write", "edit", "multiedit"].includes(request.invocation.tool) && file._tag === "Some" && file.value.filePath
           ? [file.value.filePath] : []
       const resources = paths.length ? yield* Effect.forEach(paths, (path) => mutation.resolve({ path, kind: request.invocation.tool === "read" ? "directory" : "file" }).pipe(Effect.map((target) => target.resource), Effect.mapError(() => new ToolSafety.Denied({ reason: "approval-native-resources-invalid" })))) : request.resources
-      const action = ["write", "edit", "multiedit", "apply_patch"].includes(request.invocation.tool) ? "edit" : ["bash", "shell"].includes(request.invocation.tool) ? "bash" : request.invocation.tool
+      const action = hook ? "relay_hook" : ["write", "edit", "multiedit", "apply_patch"].includes(request.invocation.tool) ? "edit" : ["bash", "shell"].includes(request.invocation.tool) ? "bash" : request.invocation.tool
       return yield* permissions.askExplicit({
         sessionID,
         agent: agent.id,
         action,
         resources,
         source: { type: "tool", messageID: record.message.id, callID: request.invocation.callID },
-        metadata: { nativeSafety: true, action: request.action, callID: request.invocation.callID, projectID: location.project.id },
+        metadata: { nativeSafety: true, action: request.action, callID: request.invocation.callID, projectID: location.project.id, ...message },
       }).pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof PermissionV2.BlockedError ? "approval-native-policy-denied" : "approval-native-rejected" })))
     }),
   }
@@ -107,6 +125,7 @@ export const nativeSafetyNode = {
       run: (input, effect, observe, outcome) => safety.run(
         MaestroArsenal.nativeInvocation(input), effect, observe, outcome,
       ).pipe(Effect.provideService(ToolSafety.NativeHost, host)),
+      session: (input) => safety.session(input).pipe(Effect.provideService(ToolSafety.NativeHost, host)),
     }))
   })),
   dependencies: [...MaestroArsenal.nativeSafetyNode.dependencies, Location.node, SessionStore.node, PermissionV2.node, AgentV2.node, LocationMutation.node],

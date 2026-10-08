@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"GLOB","judge":"docs","context":"a.md","paths":["*.md"]},{"id":"PARAM","judge":"docs","context":"${wp_dir}/x.md","paths":["${wp_dir}/x.md"]}]}]}

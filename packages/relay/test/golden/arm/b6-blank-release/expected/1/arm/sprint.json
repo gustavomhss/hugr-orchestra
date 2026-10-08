@@ -1,0 +1,1 @@
+{"retry_budget":3,"work_packages":[{"id":"A","instructions":"create done","checklist":[{"id":"A-file","cmd":"test -f done"}]}]}

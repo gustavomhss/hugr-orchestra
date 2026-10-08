@@ -1,0 +1,59 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "DIFF",
+            "judge": "inspect change",
+            "diff": true,
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "counter": "99",
+    "base_ref": "invalid-state-base"
+  },
+  "commits": [
+    {
+      "message": "seed",
+      "files": {
+        "seed.txt": "seed\n"
+      }
+    }
+  ],
+  "tree": {
+    "result.txt": "RELAY_JUDGE_OK\n"
+  },
+  "fires": [
+    {
+      "check": {
+        "position": "target"
+      }
+    },
+    {
+      "check": {
+        "position": "target",
+        "baseRef": {
+          "commit": 0
+        }
+      }
+    },
+    {
+      "tree": {
+        "result.txt": "nothing the judge accepts\n"
+      },
+      "check": {
+        "position": "target",
+        "baseRef": {
+          "commit": 0
+        }
+      }
+    }
+  ]
+}

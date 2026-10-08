@@ -1,0 +1,23 @@
+{
+  "ledger": "test/fixtures/fanout-armB.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "armB-wp1",
+      "macro": null,
+      "elapsed_s": null
+    },
+    {
+      "wp": "armB-wp2",
+      "macro": null,
+      "elapsed_s": null
+    },
+    {
+      "wp": "armB-wp3",
+      "macro": null,
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

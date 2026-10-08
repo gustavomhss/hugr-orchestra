@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/trailing-space.ledger.jsonl",
+  "problems": []
+}

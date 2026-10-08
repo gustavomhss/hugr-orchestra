@@ -256,7 +256,7 @@ jobs:
 
   unit-rest:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
-    name: unit (${{ matrix.settings.name }} other packages${{ matrix.settings.name == 'linux' && ', godfile, httpapi' || '' }})
+    name: unit (${{ matrix.settings.name }} other packages${{ matrix.settings.name == 'linux' && ', godfile, httpapi, relay' || '' }})
     strategy:
       fail-fast: false
       matrix:
@@ -348,6 +348,30 @@ jobs:
         timeout-minutes: 15
         working-directory: packages/orchestra
         run: bun run test:httpapi
+
+      # packages/relay is Python. Its steps run even when an earlier step failed, so one failure does not
+      # hide the other. Benchmark runtime tests nest real pytest campaigns and stay manual:
+      # `python -m pytest tests/test_benchmark_runtime.py` from packages/relay.
+      - name: Setup Python for Relay
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packages/relay/requirements-dev.txt
+
+      - name: Install Relay test dependencies
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        run: python -m pip install -r packages/relay/requirements-dev.txt
+
+      - name: Test Relay
+        if: ${{ !cancelled() && runner.os == 'Linux' }}
+        timeout-minutes: 10
+        working-directory: packages/relay
+        # tests/test_docs.py already runs the doc structure guard on the real tree; only the index check is extra.
+        run: |
+          python -m pytest tests -q -p no:cacheprovider --ignore=tests/test_benchmark_runtime.py
+          python bin/gen-doc-index.py --check
 
   e2e:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'

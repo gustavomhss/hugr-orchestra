@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "Connect the event to the next hook steps"
+}

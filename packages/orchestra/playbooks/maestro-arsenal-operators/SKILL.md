@@ -24,7 +24,7 @@ For policy adoption, inspect proposed resources against the actual host placemen
 ## Existing capability routes
 
 - `change-budget`, `ci-select`, `metrics-snapshot`, `metrics-report`, `loc-cap`, `changelog-check`, `changelog-propose`, `commitlint`, `repo-hygiene-check`: inspect actual scoped facts and proposals; run selected verification with native `bash` when requested.
-- `preflight-arm`, `preflight-check`, `preflight-disarm`, `relay-arm`, `completion-check`, `acceptance`: bind named checks to actual host-observed results and the existing dispatch/completion lifecycle. A declared check is not an executed check. These capabilities do not create an extra mandatory work ceremony.
+- `preflight-arm`, `preflight-check`, `preflight-disarm`, `relay-arm`, `acceptance`: bind named checks to actual host-observed results and the existing dispatch/completion lifecycle. A declared check is not an executed check. An armed `relay-arm` contract is graded on the host's Relay arm when a bound native Task completes; its `release` action only asks the owner, whose approval is what releases a parked arm. These capabilities do not create an extra mandatory work ceremony.
 - `recovery-begin`, `recovery-prepare`, `recovery-status`, `recovery-replay`, `recovery-restore`: preserve the actual baseline, owned paths and native authorization. Recovery is selective and evidence-bound. Whole-repository destructive cleanup is not atomic recovery.
 - `profile`, `wave-ledger`, `wave-scheduler`: use project-isolated managed state and replay-pure advice. Preferences and scheduling advice remain subordinate to the actual host's permissions and placement.
 

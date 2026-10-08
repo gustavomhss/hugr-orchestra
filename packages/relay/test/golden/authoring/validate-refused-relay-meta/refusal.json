@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "invalid-request",
+  "message": "Relay metadata must be an object"
+}

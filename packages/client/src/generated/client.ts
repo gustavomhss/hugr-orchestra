@@ -122,6 +122,58 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  RelayDocumentsListInput,
+  RelayDocumentsListOutput,
+  RelayDocumentsCreateInput,
+  RelayDocumentsCreateOutput,
+  RelayDocumentsGetInput,
+  RelayDocumentsGetOutput,
+  RelayDocumentsUpdateInput,
+  RelayDocumentsUpdateOutput,
+  RelayDocumentsRemoveInput,
+  RelayDocumentsRemoveOutput,
+  RelayDocumentsVersionsInput,
+  RelayDocumentsVersionsOutput,
+  RelayDocumentsVersionInput,
+  RelayDocumentsVersionOutput,
+  RelayDocumentsSprintInput,
+  RelayDocumentsSprintOutput,
+  RelayDocumentsDefinitionInput,
+  RelayDocumentsDefinitionOutput,
+  RelayDocumentsCheckInput,
+  RelayDocumentsCheckOutput,
+  RelayDocumentsNodeTypesInput,
+  RelayDocumentsNodeTypesOutput,
+  RelayDocumentsListScopesInput,
+  RelayDocumentsListScopesOutput,
+  RelayDocumentsCreateScopeInput,
+  RelayDocumentsCreateScopeOutput,
+  RelayDocumentsUpdateScopeInput,
+  RelayDocumentsUpdateScopeOutput,
+  RelayDocumentsRemoveScopeInput,
+  RelayDocumentsRemoveScopeOutput,
+  RelayPublishPublishInput,
+  RelayPublishPublishOutput,
+  RelayPublishUnpublishInput,
+  RelayPublishUnpublishOutput,
+  RelayHooksListInput,
+  RelayHooksListOutput,
+  RelayHooksInstallInput,
+  RelayHooksInstallOutput,
+  RelayHooksUpdateInput,
+  RelayHooksUpdateOutput,
+  RelayHooksEnableInput,
+  RelayHooksEnableOutput,
+  RelayHooksDisableInput,
+  RelayHooksDisableOutput,
+  RelayHooksOrderInput,
+  RelayHooksOrderOutput,
+  RelayHooksUninstallInput,
+  RelayHooksUninstallOutput,
+  RelayHooksDecisionsInput,
+  RelayHooksDecisionsOutput,
+  RelayHooksRepairInput,
+  RelayHooksRepairOutput,
   PullRequestsListInput,
   PullRequestsListOutput,
   PullRequestsCreateInput,
@@ -1087,6 +1139,361 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    relayDocuments: {
+      list: (input?: RelayDocumentsListInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsListOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input?: RelayDocumentsCreateInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document`,
+            query: { location: input?.["location"] },
+            body: {
+              name: input?.["name"],
+              description: input?.["description"],
+              nodes: input?.["nodes"],
+              connections: input?.["connections"],
+              nodeGroups: input?.["nodeGroups"],
+              tags: input?.["tags"],
+              meta: input?.["meta"],
+              isArchived: input?.["isArchived"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: RelayDocumentsGetInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: RelayDocumentsUpdateInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              description: input["description"],
+              nodes: input["nodes"],
+              connections: input["connections"],
+              nodeGroups: input["nodeGroups"],
+              tags: input["tags"],
+              meta: input["meta"],
+              isArchived: input["isArchived"],
+              versionId: input["versionId"],
+              expectedChecksum: input["expectedChecksum"],
+              force: input["force"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      remove: (input: RelayDocumentsRemoveInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      versions: (input: RelayDocumentsVersionsInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsVersionsOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/version`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      version: (input: RelayDocumentsVersionInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsVersionOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/version/${encodeURIComponent(input.versionID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      sprint: (input: RelayDocumentsSprintInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsSprintOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/sprint`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      definition: (input: RelayDocumentsDefinitionInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsDefinitionOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/export`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      check: (input: RelayDocumentsCheckInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCheckOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/check`,
+            query: { location: input["location"] },
+            body: {
+              position: input["position"],
+              counter: input["counter"],
+              baseRef: input["baseRef"],
+              params: input["params"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      nodeTypes: (input?: RelayDocumentsNodeTypesInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsNodeTypesOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/node-types`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      listScopes: (input?: RelayDocumentsListScopesInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsListScopesOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/scope`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      createScope: (input: RelayDocumentsCreateScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsCreateScopeOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/scope`,
+            query: { location: input["location"] },
+            body: { name: input["name"], description: input["description"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      updateScope: (input: RelayDocumentsUpdateScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsUpdateScopeOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/scope/${encodeURIComponent(input.scopeID)}`,
+            query: { location: input["location"] },
+            body: { name: input["name"], description: input["description"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeScope: (input: RelayDocumentsRemoveScopeInput, requestOptions?: RequestOptions) =>
+        request<RelayDocumentsRemoveScopeOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/scope/${encodeURIComponent(input.scopeID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    relayPublish: {
+      publish: (input: RelayPublishPublishInput, requestOptions?: RequestOptions) =>
+        request<RelayPublishPublishOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/publish`,
+            query: { location: input["location"] },
+            body: { versionId: input["versionId"], expectedChecksum: input["expectedChecksum"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      unpublish: (input: RelayPublishUnpublishInput, requestOptions?: RequestOptions) =>
+        request<RelayPublishUnpublishOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/document/${encodeURIComponent(input.documentID)}/unpublish`,
+            query: { location: input["location"] },
+            body: { expectedChecksum: input["expectedChecksum"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    relayHooks: {
+      list: (input?: RelayHooksListInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksListOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/hook`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      install: (input: RelayHooksInstallInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksInstallOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook`,
+            query: { location: input["location"] },
+            body: { document: input["document"], version: input["version"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: RelayHooksUpdateInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksUpdateOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/update`,
+            query: { location: input["location"] },
+            body: { version: input["version"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      enable: (input: RelayHooksEnableInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksEnableOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/enable`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      disable: (input: RelayHooksDisableInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksDisableOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/disable`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      order: (input: RelayHooksOrderInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksOrderOutput>(
+          {
+            method: "PATCH",
+            path: `/api/relay/hook/order`,
+            query: { location: input["location"] },
+            body: { installIDs: input["installIDs"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      uninstall: (input: RelayHooksUninstallInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksUninstallOutput>(
+          {
+            method: "DELETE",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      decisions: (input: RelayHooksDecisionsInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksDecisionsOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/hook/${encodeURIComponent(input.installID)}/decisions`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      repair: (input: RelayHooksRepairInput, requestOptions?: RequestOptions) =>
+        request<RelayHooksRepairOutput>(
+          {
+            method: "POST",
+            path: `/api/relay/hook/repair`,
+            query: { location: input["location"] },
+            body: { confirm: input["confirm"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
           },
           requestOptions,
         ),
