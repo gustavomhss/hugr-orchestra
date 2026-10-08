@@ -3,6 +3,7 @@ import { Effect, FileSystem, PlatformError, Schema, SchemaAST, SchemaRepresentat
 import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
+import { errorSymbols, GenerationError, identifierPart } from "./error-symbol"
 
 export type InputField = {
   readonly name: string
@@ -30,13 +31,7 @@ export type Contract = {
   readonly groups: ReadonlyArray<Group>
 }
 
-export class GenerationError extends Schema.TaggedErrorClass<GenerationError>()("GenerationError", {
-  reason: Schema.String,
-}) {
-  override get message() {
-    return this.reason
-  }
-}
+export { GenerationError } from "./error-symbol"
 
 export type Endpoint = {
   readonly group: string
@@ -431,22 +426,16 @@ function renderPromiseTypes(
     types.set(projected.ast, type)
     return type
   }
-  const errors = new Map<string, NonNullable<ReturnType<typeof declaredErrorFields>>>()
-  for (const error of groups.flatMap((group) => group.endpoints.flatMap((endpoint) => endpoint.errors))) {
-    const tagged = declaredErrorFields(error.schema)
-    if (tagged === undefined) continue
-    const identifier = declaredErrorIdentifier(tagged.identifier)
-    const previous = errors.get(identifier)
-    if (
-      previous !== undefined &&
-      (previous.identifier !== tagged.identifier || previous.key !== tagged.key || previous.ast !== tagged.ast)
-    ) {
-      throw new GenerationError({
-        reason: `Promise error name collision: ${previous.identifier} and ${tagged.identifier} normalize to ${identifier}`,
-      })
-    }
-    errors.set(identifier, tagged)
-  }
+  const errors = errorSymbols(
+    groups.flatMap((group) =>
+      group.endpoints.flatMap((endpoint) =>
+        endpoint.errors.flatMap((error) => {
+          const tagged = declaredErrorFields(error.schema)
+          return tagged === undefined ? [] : [tagged]
+        }),
+      ),
+    ),
+  )
   const errorTypes = Array.from(errors, ([identifier, error]) => {
     const fields = error.fields
       .map(([name, schema, optional]) => `readonly ${JSON.stringify(name)}${optional ? "?" : ""}: ${typeOf(schema)}`)
@@ -493,13 +482,6 @@ function renderPromiseTypes(
     : ""
   const imports = [...new Set(Object.values(outputTypes ?? {}).map((override) => override.import))]
   return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
-}
-
-function declaredErrorIdentifier(value: string) {
-  // Match Promise type prefixes: PascalCase ASCII words, dropping separators/non-ASCII.
-  // Capitalization avoids keywords; empty or digit-leading names need a legal prefix.
-  const identifier = identifierPart(value)
-  return /^[A-Z]/.test(identifier) ? identifier : `Error${identifier}`
 }
 
 function renderPromiseClient(groups: ReadonlyArray<Group>) {
@@ -556,14 +538,6 @@ function promiseTypePrefix(group: string, endpoint: string) {
 
 function clientEndpointName(name: string) {
   return name.slice(name.lastIndexOf(".") + 1)
-}
-
-function identifierPart(value: string) {
-  return value
-    .split(/[^A-Za-z0-9]+/)
-    .filter(Boolean)
-    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-    .join("")
 }
 
 function structuralType(schema: Schema.Top) {
