@@ -136,11 +136,13 @@ it.instance(
       const priorDurable = [...durable]
       const before = yield* ProjectionState.capture(db)
       const { expectedPermission: _, ...omission } = payload.transition
-      expect(
-        yield* sessions.admitPrompt({ ...payload, transition: omission }).pipe(Effect.catchDefect(Effect.succeed)),
-      ).toMatchObject({
-        _tag: "PromptAdmission.Conflict",
-        reason: "permission-expectation-missing",
+      const rejected: unknown = yield* sessions.admitPrompt({ ...payload, transition: omission }).pipe(Effect.result)
+      expect(rejected).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "PromptAdmission.Conflict",
+          reason: "permission-expectation-missing",
+        },
       })
       expect(yield* ProjectionState.capture(db)).toEqual(before)
       expect(core).toEqual([])
