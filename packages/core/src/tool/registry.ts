@@ -26,7 +26,10 @@ export type ExecuteInput = {
 }
 
 export interface Interface {
-  readonly materialize: (permissions?: PermissionV2.Ruleset) => Effect.Effect<Materialization>
+  readonly materialize: (
+    permissions?: PermissionV2.Ruleset,
+    options?: { readonly advertisedNames?: readonly string[] },
+  ) => Effect.Effect<Materialization>
   /** Internal registration capability exposed publicly only through Tools.Service. */
   readonly register: (tools: Readonly<Record<string, AnyTool>>) => Effect.Effect<void, RegistrationError, Scope.Scope>
   /** Installed hooks on a Session event of this Location, over the profile its tool calls load. */
@@ -37,6 +40,8 @@ export interface Interface {
 
 export interface Materialization {
   readonly definitions: ReadonlyArray<ToolDefinition>
+  /** Captured eligible metadata, including unadvertised tools; not execution authorization. */
+  readonly definition: (name: string) => ToolDefinition | undefined
   readonly settle: (input: ExecuteInput) => Effect.Effect<Settlement, ToolOutputStore.Error>
 }
 
@@ -190,7 +195,7 @@ const registryLayer = Layer.effect(
           }),
         )
       }),
-      materialize: Effect.fn("ToolRegistry.materialize")(function* (permissions = []) {
+      materialize: Effect.fn("ToolRegistry.materialize")(function* (permissions = [], options) {
         const registrations = new Map(applications.entries())
         for (const [name, entries] of local) {
           const registration = entries.at(-1)?.registration
@@ -198,8 +203,15 @@ const registryLayer = Layer.effect(
         }
         for (const [name, registration] of registrations)
           if (whollyDisabled(permission(registration.tool, name), permissions)) registrations.delete(name)
+        const definitions = new Map(
+          Array.from(registrations, ([name, registration]) => [name, definition(name, registration.tool)] as const),
+        )
+        const advertised = options?.advertisedNames === undefined ? undefined : new Set(options.advertisedNames)
         return {
-          definitions: Array.from(registrations, ([name, registration]) => definition(name, registration.tool)),
+          definitions: Array.from(definitions.values()).filter((definition) =>
+            advertised === undefined || advertised.has(definition.name),
+          ),
+          definition: (name) => definitions.get(name),
           settle: (input) => {
             const registration = registrations.get(input.call.name)
             if (registration) return settleWith(input, registration.identity)
