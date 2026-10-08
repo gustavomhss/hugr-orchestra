@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Context, Deferred, Effect, Fiber, Layer, Schema } from "effect"
+import { Context, Deferred, Effect, Fiber, Layer, Option, Schema } from "effect"
 import path from "node:path"
 import { createHash } from "node:crypto"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -34,6 +34,25 @@ const CacheGate = Context.Reference<
   | undefined
 >("test/V1AdmissionCacheGate", { defaultValue: () => undefined })
 const flags = RuntimeFlags.layer({ disableDefaultPlugins: true, experimentalEventSystem: true })
+const ReadRequested = Context.Reference<Deferred.Deferred<void> | undefined>("test/V1AdmissionReadRequested", {
+  defaultValue: () => undefined,
+})
+// Signal at the actual Session placement read (withSession reads it before reconcile); delegate all SQL work.
+const sessionsLayer: Layer.Layer<Session.Service> = Layer.effect(
+  Session.Service,
+  Effect.gen(function* () {
+    const real = yield* Session.Service
+    return Session.Service.of({
+      ...real,
+      get: (id) =>
+        Effect.gen(function* () {
+          const requested = yield* ReadRequested
+          if (requested) yield* Deferred.succeed(requested, undefined)
+          return yield* real.get(id)
+        }),
+    })
+  }),
+).pipe(Layer.provide(LayerNode.compile(Session.node, [[RuntimeFlags.node, flags]])))
 const continuity: Layer.Layer<SessionContinuity.Service> = Layer.effect(
   SessionContinuity.Service,
   Effect.gen(function* () {
@@ -63,6 +82,7 @@ const it = testEffect(
     replacements: [
       [RuntimeFlags.node, flags],
       [SessionContinuity.node, continuity],
+      [Session.node, sessionsLayer],
     ],
   }),
 )
@@ -138,15 +158,16 @@ it.instance(
         .pipe(Effect.provideService(CacheGate, { ready, release, calls }), Effect.forkScoped)
       yield* Deferred.await(ready).pipe(Effect.timeout("10 seconds"))
       yield* fixture.llm.text("done")
-      const started = yield* Deferred.make<void>()
-      const retry = yield* Deferred.succeed(started, undefined).pipe(
-        Effect.andThen(fixture.prompts.prompt({ ...request, noReply: false })),
-        Effect.forkScoped,
-      )
-      yield* Deferred.await(started)
-      yield* Effect.yieldNow
-      expect(yield* fixture.llm.calls).toBe(0)
+      const requested = yield* Deferred.make<void>()
+      const retry = yield* fixture.prompts
+        .prompt({ ...request, noReply: false })
+        .pipe(Effect.provideService(ReadRequested, requested), Effect.forkScoped)
+      yield* Deferred.await(requested).pipe(Effect.timeout("10 seconds"))
+      // Keep cache closed for a bounded real HTTP callback observation window, not a scheduler turn.
+      const earlyHTTP = yield* fixture.llm.wait(1).pipe(Effect.timeout("5 seconds"), Effect.option)
+      expect(Option.isNone(earlyHTTP)).toBe(true)
       yield* Deferred.succeed(release, undefined)
+      yield* fixture.llm.wait(1).pipe(Effect.timeout("10 seconds"))
       const winner = yield* Fiber.join(first)
       const answer = yield* Fiber.join(retry)
       expect(answer.info.role === "assistant" ? answer.info.parentID : undefined).toBe(request.messageID)
@@ -154,6 +175,21 @@ it.instance(
       expect(inputs).toContain("original committed input")
       expect(inputs).not.toContain("must disappear")
       expect(yield* fixture.llm.calls).toBe(1)
+      const outbound = Schema.decodeUnknownSync(
+        Schema.Array(
+          Schema.Struct({
+            messages: Schema.Array(
+              Schema.Struct({
+                role: Schema.String,
+                content: Schema.Unknown,
+              }),
+            ),
+          }),
+        ),
+      )(yield* fixture.llm.inputs)
+      expect(outbound.flatMap((request) => request.messages.filter((message) => message.role === "user"))).toEqual([
+        { role: "user", content: "original committed input" },
+      ])
       expect(calls).toEqual(["invalidate", "advance"])
       expect((yield* fixture.sessions.get(fixture.session.id)).revert).toBeUndefined()
       expect(
@@ -276,7 +312,8 @@ it.instance(
       const ready = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
       yield* events.listen((event) =>
-        event.type === RelayHook.Decided.type && Schema.decodeUnknownSync(RelayHook.Decided.data)(event.data).sessionID === fixture.session.id
+        event.type === RelayHook.Decided.type &&
+        Schema.decodeUnknownSync(RelayHook.Decided.data)(event.data).sessionID === fixture.session.id
           ? Deferred.succeed(ready, undefined).pipe(Effect.andThen(Deferred.await(release)))
           : Effect.void,
       )

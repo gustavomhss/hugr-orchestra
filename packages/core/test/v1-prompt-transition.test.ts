@@ -210,12 +210,13 @@ it.effect("CAS and removal ownership failures precede all writes; missing remova
           expect(yield* ProjectionState.capture(db)).toEqual(before)
         }),
     )
+    yield* events.publish(SessionV1.Event.MessageRemoved, { sessionID, messageID: historicalID })
     yield* events.publish(SessionV1.Event.PromptAdmitted, {
       ...payload,
       transition: {
         ...transition,
         removeMessageIDs: [historicalID, SessionV1.MessageID.make("msg_absent")],
-        removePartIDs: [SessionV1.PartID.make("prt_absent")],
+        removePartIDs: [SessionV1.PartID.make("prt_transition_old"), SessionV1.PartID.make("prt_absent")],
       },
     })
     expect(yield* PromptAdmission.find(db, payload.messageID)).toBeDefined()
