@@ -12,7 +12,7 @@
 // --env KEY=VALUE passes an allow-listed variable to the tests. --runner node runs named node:test smoke scripts
 // (*.node-smoke.mjs) with node instead of bun test.
 //
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms]
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms]
 //        [--env KEY=VALUE] [--runner bun|node]
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
 // --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
@@ -26,12 +26,12 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 
 const USAGE =
-  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node]"
+  "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|macos-intel|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node]"
 // Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
 const ENV_KEYS = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
 const ENV_VALUE = /^[A-Za-z0-9_]+$/
 // Each value is also a ci-run-<os>-* branch prefix that test-ci.yml maps to its runners.
-const OSES = ["linux", "windows", "macos", "both", "all"]
+const OSES = ["linux", "windows", "macos", "macos-intel", "both", "all"]
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0

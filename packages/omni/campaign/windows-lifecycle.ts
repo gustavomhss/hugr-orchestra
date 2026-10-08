@@ -2,6 +2,7 @@
 // Outer terminal ownership is never evidence that the CLI supervised its own children.
 import { createServer, type Socket } from "node:net"
 import { spawn } from "node:child_process"
+import os from "node:os"
 import http from "node:http"
 import { PtyOmni } from "../../core/src/pty/omni.ts"
 import { adoptTree, cli, fakeLLM, identity, matches, members, sleep, table, until, verdict, win } from "./lib.ts"
@@ -167,10 +168,14 @@ export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnTy
   const events = [...host.out().matchAll(/CLI_SHUTDOWN (\{[^\r\n]+\})/g)].map((match) => JSON.parse(match[1]!) as {
     event: string; level: string; pid: number; signal: string; status: string; elapsedMs: number
   }).filter((event) => event.pid === host.pid)
-  const pass = input === "Ctrl+C" && host.state.exit !== undefined && events.length === 2 &&
+  const expectedExitCode = events[0] && ["SIGINT", "SIGBREAK"].includes(events[0].signal)
+    ? 128 + os.constants.signals[events[0].signal]
+    : undefined
+  const pass = input === "Ctrl+C" && host.state.exit !== undefined && host.state.exit.exitCode === expectedExitCode &&
+    host.state.exit.signal === undefined && Number.isFinite(expectedExitCode) && events.length === 2 &&
     events.every((event) => event.event === "cli.shutdown" && event.level === "DEBUG" && ["SIGINT", "SIGBREAK"].includes(event.signal) && Number.isFinite(event.elapsedMs)) &&
     events[0]!.status === "started" && events[1]!.status === "disposed"
-  return { input, exit: host.state.exit, events, pass,
+  return { input, exit: host.state.exit, expectedExitCode, events, pass,
     ...(!pass ? { blocker: "Windows Ctrl+C did not prove runtime disposal; owner required: packages/orchestra/src/cli/effect-cmd.ts (SIGINT/SIGBREAK shutdown handler)" } : {}) }
 }
 

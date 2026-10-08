@@ -20,8 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         # The branch name carries the requested operating systems: ci-run-linux-*, ci-run-windows-*, ci-run-macos-*,
-        # ci-run-both-* (Linux and Windows) or ci-run-all-*. Every prefix is distinct, so the order of the tests is free.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
+        # ci-run-both-* (Linux and Windows) or ci-run-all-*.
+        # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-latest","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-latest","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
