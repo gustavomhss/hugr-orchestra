@@ -113,7 +113,8 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
         expect(yield* admissionState).toEqual(before)
         expect(yield* PromptAdmission.find(database.db, request.messageID)).toBeUndefined()
         if (reply === "interrupt") {
-          const exit = yield* Fiber.interrupt(pending)
+          yield* Fiber.interrupt(pending)
+          const exit = yield* Fiber.await(pending)
           expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
         }
         if (reply !== "interrupt") {
