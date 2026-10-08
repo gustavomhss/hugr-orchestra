@@ -57,6 +57,17 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`capability_artifact_pin\` (
+          \`artifact_id\` text NOT NULL,
+          \`revision\` integer NOT NULL,
+          \`owner\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          CONSTRAINT \`capability_artifact_pin_pk\` PRIMARY KEY(\`artifact_id\`, \`revision\`, \`session_id\`),
+          CONSTRAINT \`fk_capability_artifact_pin_artifact_id_revision_capability_artifact_id_revision_fk\` FOREIGN KEY (\`artifact_id\`,\`revision\`) REFERENCES \`capability_artifact\`(\`id\`,\`revision\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`capability_artifact_reference\` (
           \`artifact_id\` text NOT NULL,
           \`revision\` integer NOT NULL,
@@ -124,6 +135,7 @@ export default {
           \`invocation\` text NOT NULL,
           \`kind\` text NOT NULL,
           \`operation\` text NOT NULL,
+          \`creation_key\` text UNIQUE,
           \`state\` text NOT NULL,
           \`connection\` text,
           \`target\` text,
