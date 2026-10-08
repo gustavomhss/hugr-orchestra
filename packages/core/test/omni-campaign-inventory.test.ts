@@ -3,7 +3,7 @@ import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT, adoptTree, cleanup, control, decodeWindowsTable, hasNonce, identity, inventoryScope, isolated, kill9, matches, members, own, table, tree, until, win } from "../../omni/campaign/lib.ts"
+import { BUN, ROOT, adoptTree, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until, win } from "../../omni/campaign/lib.ts"
 import { execute, startServer } from "../../omni/campaign/delivery-fixtures.ts"
 import { WindowsInventory } from "../../omni/campaign/windows-inventory.ts"
 import { closeWithinDeadline } from "../../omni/campaign/v8-windows.ts"
@@ -48,6 +48,31 @@ test("real OS sees launched host; stale identity cannot kill; captured numeric i
     expect(kill9(server.pid)).toBe(true)
     await until(10_000, "real host exit", () => server.proc.exitCode !== null || server.proc.signalCode !== null ? true : undefined)
     expect(table().some((row) => matches(row, server.identity) && !row.state.startsWith("Z"))).toBe(false)
+  } finally {
+    server.proc.kill("SIGKILL")
+    await cleanup(scratch.home, [])
+  }
+}, 60_000)
+
+test("registered generic document arguments are exact and preserve owned identity when argv disappears", async () => {
+  const scratch = isolated("marker-contract", {})
+  const marker = path.basename(scratch.home)
+  const argument = path.join(scratch.home, "folder with spaces", `${marker}.edited`)
+  adoptTree(scratch.home, marker)
+  markerArgument(marker, argument)
+  const server = await startServer(BUN, ["-e", 'console.log("listening on http://127.0.0.1:1"); setInterval(() => {}, 1000)', argument], scratch.env, ROOT)
+  try {
+    const rows = table()
+    const row = rows.find((row) => matches(row, server.identity))
+    expect(row).toBeDefined()
+    if (!row) throw new Error("registered fixture process absent from OS inventory")
+    expect(hasNonce(row.args, marker)).toBe(false)
+    expect(hasMarker(row.args, marker)).toBe(true)
+    expect(hasMarker(`node "${argument}-other"`, marker)).toBe(false)
+    expect(hasMarker(null, marker)).toBe(false)
+    expect(members(marker, rows).wrappers.some((row) => matches(row, server.identity))).toBe(true)
+    const unknown = rows.map((row) => matches(row, server.identity) ? { ...row, args: null } : row)
+    expect(members(marker, unknown).wrappers.some((row) => matches(row, server.identity))).toBe(true)
   } finally {
     server.proc.kill("SIGKILL")
     await cleanup(scratch.home, [])

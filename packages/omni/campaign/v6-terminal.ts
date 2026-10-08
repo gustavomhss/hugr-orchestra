@@ -4,7 +4,7 @@
 import { randomUUID, createHash } from "node:crypto"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { cli, supervised, sweep, until, verdict, win } from "./lib.ts"
+import { adoptTree, cli, markerArgument, supervised, sweep, until, verdict, win } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, plain, processTable, script, start } from "./protocol-fixtures.ts"
 import { byteFixture, byteStats, cookedCertificate, exactRaw } from "./pty-byte-probe.ts"
 
@@ -13,6 +13,8 @@ type Terminal = { id: string; pid: number }
 export async function run(options: { mutation?: "missing-replay" | "truncated-replay" | "gap-count" } = {}) {
   const scratch = fixture("v6-terminal", { lsp: false })
   const nonce = `omni-terminal-${randomUUID()}`
+  adoptTree(scratch.home, nonce)
+  markerArgument(nonce, path.join(scratch.home, `${nonce}.edited`))
   const missed = `MISSED-BEGIN-${nonce}-é😀-${randomUUID()}-MISSED-END-${nonce}`
   const metrics: Record<string, unknown> = {}
   const checks: Record<string, string> = { vim: "not-run", resize: "not-run", replay: "not-run", output: "not-run", rawAccounting: "not-run" }

@@ -5,7 +5,7 @@ import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, read
 import os from "node:os"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
-import { cleanup, cli, isolated, LOGS, reap, ROOT, sweep, table, until } from "./lib.ts"
+import { cleanup, cli, isolated, LOGS, own, reap, ROOT, sweep, table, until } from "./lib.ts"
 
 export function requireLocal() {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1") throw new Error("campaign requires ORCHESTRA_LOCAL_TESTS=1")
@@ -54,7 +54,7 @@ export function evidence(scratch: Fixture) {
 
 export function processTable() {
   const rows = table()
-  if (!rows.some((row) => row.pid === process.pid && row.args.length > 0))
+  if (!rows.some((row) => row.pid === process.pid && row.args !== null && row.args.length > 0))
     throw new Error("process-table positive control failed: harness PID absent")
   return rows
 }
@@ -65,6 +65,7 @@ export async function start(scratch: Fixture) {
     env: scratch.env, cwd: scratch.project, stdio: ["ignore", "pipe", "pipe"], windowsHide: true,
   })
   scratch.hosts.push(proc)
+  own(scratch.home, proc)
   let out = ""
   let failure: Error | undefined
   proc.on("error", (error) => { failure = error })

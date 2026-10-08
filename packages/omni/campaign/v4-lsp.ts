@@ -5,7 +5,7 @@
 import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync } from "node:fs"
 import path from "node:path"
-import { alive, fileTree, kill9, LOGS, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
+import { alive, fileTree, kill9, LOGS, markerArgument, members, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
@@ -36,6 +36,8 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     cpSync(tsSource, ts, { recursive: true })
     const languageServer = path.join(scratch.home, tree.nonce, "typescript-language-server/lib/cli.mjs")
     cpSync(path.join(tools, "typescript-language-server"), path.dirname(path.dirname(languageServer)), { recursive: true })
+    markerArgument(tree.nonce, languageServer)
+    markerArgument(tree.nonce, path.join(ts, "lib", "tsserver.js"))
     const wrapper = script(scratch, `${tree.nonce}-wrapper`, `
 const fs = require('node:fs');
 const cp = require('node:child_process');
@@ -109,12 +111,15 @@ setInterval(() => {}, 1e9);
       }, 120_000)
       appendFileSync(path.join(scratch.home, "prompt.responses.jsonl"), JSON.stringify(response) + "\n")
     }
-    const rows = () => processTable().filter((row) => row.args.includes(tree.nonce))
+    const rows = () => {
+      const found = members(tree.nonce, processTable())
+      return [...found.members, ...found.wrappers]
+    }
     const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; method: string }) : []
     const live = () => until(45_000, "wrapper, real tsservers and fresh protocol handshake", async () => {
         const current = rows()
-        const wrapperRow = current.find((row) => row.args.includes(wrapper))
-        const tsservers = current.filter((row) => row.args.includes("tsserver.js"))
+        const wrapperRow = current.find((row) => row.args?.includes(wrapper))
+        const tsservers = current.filter((row) => row.args?.includes("tsserver.js"))
         const recorded = await alive(tree.nonce)
         // Pinned TLS starts syntax and semantic tsservers; wait for both before counting processes.
         return wrapperRow && tsservers.length === 2 && recorded === tree.size &&
@@ -130,7 +135,7 @@ setInterval(() => {}, 1e9);
       const before = await live()
       const control = supervised(tree.nonce)
       if (!control) throw new Error("LSP supervisor positive control failed (legacy transport)")
-      const server = before.current.find((row) => row.parent === before.wrapperRow.pid && row.args.includes(languageServer))
+      const server = before.current.find((row) => row.parent === before.wrapperRow.pid && row.args?.includes(languageServer))
       if (!server) throw new Error("node wrapper did not launch real language server")
       const crashed = Date.now()
       // Crash Orchestra's actual LSP handle (the node/npx-equivalent wrapper), leaving its descendants to shutdown.
@@ -139,7 +144,7 @@ setInterval(() => {}, 1e9);
         const status = await call<{ id: string; status: string }[]>("GET", "/lsp")
         return status.some((entry) => entry.id === "campaign" && entry.status === "error") ? status : undefined
       })
-      if (rows().some((row) => row.args.includes(wrapper) && row.pid !== before.wrapperRow.pid))
+      if (rows().some((row) => row.args?.includes(wrapper) && row.pid !== before.wrapperRow.pid))
         throw new Error("LSP eagerly respawned without demand")
       await trigger()
       const after = await live()

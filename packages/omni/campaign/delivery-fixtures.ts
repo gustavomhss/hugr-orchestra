@@ -135,8 +135,6 @@ export async function appRuntime() {
 
 /** campaign has no manifest: resolve the caller's Effect, preserving its runtime and type identity. */
 export async function effectModules() {
-  const parent = path.resolve(import.meta.dirname, "../../core/package.json")
-  const { Effect, ManagedRuntime } = await import(import.meta.resolve("effect", parent)) as typeof import("effect")
-  const { ChildProcess } = await import(import.meta.resolve("effect/unstable/process", parent)) as typeof import("effect/unstable/process")
+  const { Effect, ManagedRuntime, ChildProcess } = await import("../../core/test/fixture/omni-effect.ts")
   return { Effect, ManagedRuntime, ChildProcess }
 }

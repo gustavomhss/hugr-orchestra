@@ -356,6 +356,20 @@ export function hasNonce(args: string | null, nonce: string) {
   return args !== null && new RegExp(`(?:^|[\\s"'])${nonce.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[\\s"'])`).test(args)
 }
 
+const markerArguments = new Map<string, Set<string>>()
+
+/** Generic fixtures may carry their marker in a known script or document argument, not a standalone nonce. */
+export function markerArgument(marker: string, argument: string) {
+  if (!argument) throw new Error("campaign marker argument must be non-empty")
+  const argumentsForMarker = markerArguments.get(marker) ?? new Set<string>()
+  argumentsForMarker.add(argument)
+  markerArguments.set(marker, argumentsForMarker)
+}
+
+export function hasMarker(args: string | null, marker: string) {
+  return hasNonce(args, marker) || [...(markerArguments.get(marker) ?? [])].some((argument) => hasNonce(args, argument))
+}
+
 /** Nonce search covers the campaign-launched owner subtree plus named identities, not the system table.
  * Named fixtures and previously observed descendants survive reparenting; every live fixture enters this scope.
  * Unknown rows outside it are not nonce-negative proof. Unknown rows inside it make discovery red.
@@ -402,7 +416,7 @@ export function members(nonce: string, rows = table()) {
   if (unknown.length) throw new Error(`campaign nonce discovery has unknown argv in owner scope: ${JSON.stringify(unknown)}`)
   const found = live.filter((row) => records.some((record) => matches(row, record)))
   // Only this nonce's records or previously observed exact marker-bearing rows can survive argv loss.
-  const wrappers = live.filter((row) => (nonce.startsWith("omni-tree-") ? hasNonce(row.args, nonce) : row.args?.includes(nonce)) || known.some((id) => matches(row, id)))
+  const wrappers = live.filter((row) => hasMarker(row.args, nonce) || known.some((id) => matches(row, id)))
     .filter((row) => !found.some((member) => matches(member, row)))
   const admitted = [...found, ...wrappers].map((row) => identity(row.pid, rows))
   established.set(nonce, [...known, ...admitted.filter((id) => !known.some((old) => matches(old, id)))])
@@ -426,10 +440,11 @@ export function control(nonce: string, size: number, hosts: Identity[], rows = t
   }
   const protectedMembers = [...found.members, ...found.wrappers].map((row) => ({
     identity: identity(row.pid, rows),
-    argvPresent: hasNonce(row.args, nonce),
+    argvPresent: hasMarker(row.args, nonce),
     supervisors: above(row.pid).filter((ancestor) => ancestor.args !== null && SUPERVISOR.test(ancestor.args) && hosts.some((host) => above(ancestor.pid).some((parent) => matches(parent, host)))).map((row) => identity(row.pid, rows)),
   }))
-  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: hosts.length > 0 && hosts.every((host) => rows.some((row) => matches(row, host) && row.args !== null)) && found.members.length === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }
+  const counted = nonce.startsWith("omni-tree-") ? found.members.length : protectedMembers.length
+  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: hosts.length > 0 && hosts.every((host) => rows.some((row) => matches(row, host) && row.args !== null)) && counted === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }
 }
 
 /** Compatibility control, strengthened from any-member to all-member supervision. */
@@ -438,7 +453,8 @@ export function supervised(nonce: string) {
   const found = members(nonce, rows)
   const roots = (treeRoots.get(nonce) ?? (owners.get(treeOwners.get(nonce) ?? nonce) ?? []).map((host) => host.identity))
     .filter((root) => rows.some((row) => matches(row, root) && !row.state.startsWith("Z")))
-  return control(nonce, found.members.length, roots, rows).pass
+  const counted = nonce.startsWith("omni-tree-") ? found.members.length : found.members.length + found.wrappers.length
+  return control(nonce, counted, roots, rows).pass
 }
 
 /** Supervisors whose parent is one of `pids` (the ones a given host started). */

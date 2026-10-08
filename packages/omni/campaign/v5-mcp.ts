@@ -3,13 +3,15 @@
 import { randomUUID } from "node:crypto"
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import { supervised, sweep, until, verdict } from "./lib.ts"
+import { adoptTree, supervised, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, hostLog, main, mcpFixture, processTable, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
   const scratch = fixture("v5-mcp")
   const nonce = `omni-mcp-${randomUUID()}`
   const failureNonce = `${nonce}-failure`
+  adoptTree(scratch.home, nonce)
+  adoptTree(scratch.home, failureNonce)
   const metrics: Record<string, unknown> = {}
   let pass = false
   let error: string | undefined

@@ -150,7 +150,7 @@ async function host(target: "serve" | "tui") {
     step(`kill -9 ${started.pid}`)
     const all = [...nonces, lspNonce, mcpNonce]
     const observed = await deadlineSnapshots(killed, KPI_MS, all, [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])])
-    const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args.slice(0, 160)}`)
+    const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args?.slice(0, 160) ?? "<argv unavailable>"}`)
     step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
     return verdict(`v2-${target}`, {
       target,
@@ -193,13 +193,16 @@ async function tui(bin: string, env: Record<string, string>, project: string) {
   const url = `http://127.0.0.1:${port}`
   await until(120_000, "the TUI's server", async () =>
     fetch(new URL("/global/health", url), { signal: AbortSignal.timeout(2000) })
-      .then(async (response) => (response.ok && (await response.json()).healthy === true ? true : undefined))
+      .then(async (response) => {
+        const body: unknown = await response.json()
+        return response.ok && typeof body === "object" && body !== null && "healthy" in body && body.healthy === true ? true : undefined
+      })
       .catch(() => undefined),
   ).catch((error) => {
     throw new Error(`${error}; TUI output: ${out.slice(-2000)}`)
   })
   const captured = await until(10_000, "the TUI identity", () =>
-    table().find((row) => row.parent === host.pid && row.args.includes(`--port ${port}`) && row.args.startsWith(bin)),
+    table().find((row) => row.parent === host.pid && row.args?.includes(`--port ${port}`) && row.args.startsWith(bin)),
   )
   return { proc: host, url, pid: captured.pid, identity: { pid: captured.pid, startTime: captured.startTime }, extra: [] as number[], out: () => out }
 }
