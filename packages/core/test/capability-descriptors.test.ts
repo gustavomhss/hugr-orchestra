@@ -5,6 +5,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
+import { WorkspaceID } from "@orchestra/schema/workspace-id"
 import { CapabilityDescriptors } from "../src/capability/catalog/descriptors"
 
 function fixture(maxEntries = 8, ttlMillis = 50) {
@@ -63,6 +64,12 @@ function denied(effect: Effect.Effect<unknown, Capability.Failure>, code: Capabi
   expect(error.message).toBe("Descriptor unavailable")
   expect(error.detail).toBeUndefined()
   expect(JSON.stringify(error)).not.toContain("logical.echo")
+}
+
+function frozen(value: Schema.Json) {
+  if (value === null || typeof value !== "object") return
+  expect(Object.isFrozen(value)).toBe(true)
+  Object.values(value).forEach(frozen)
 }
 
 describe("capability descriptor metadata", () => {
@@ -166,18 +173,102 @@ describe("capability descriptor metadata", () => {
     denied(fixture().store.read(record.ref, f.scope), "stale_descriptor")
   })
 
-  test("rejects changed generations and expired descriptors", () => {
+  test("snapshots and deep-freezes schema/root data, refs and owners without freezing token", () => {
+    const f = fixture()
+    const schema = { type: "object", rawRootData: { required: ["text"] } }
+    const output = { enum: ["ok"] }
+    const record = Effect.runSync(f.store.issue({ ...f.input, inputSchema: schema, outputSchema: output }))
+    schema.rawRootData.required.push("secret")
+    output.enum.push("changed")
+    f.input.owner.location.directory = AbsolutePath.make("/moved")
+    expect(record.inputSchema).toEqual({ type: "object", rawRootData: { required: ["text"] } })
+    expect(record.outputSchema).toEqual({ enum: ["ok"] })
+    expect(record.owner.location.directory).toBe(AbsolutePath.make("/workspace"))
+    expect(Object.isFrozen(record)).toBe(true)
+    expect(Object.isFrozen(record.ref)).toBe(true)
+    expect(Object.isFrozen(record.owner.location)).toBe(true)
+    expect(Object.isFrozen(record.canonicalIdentity)).toBe(false)
+    expect(() => Reflect.set(record.ref, "schemaHash", "b".repeat(64))).not.toThrow()
+    expect(record.ref.schemaHash).toBe(f.input.schemaHash)
+    frozen(record.inputSchema)
+    if (record.outputSchema !== undefined) frozen(record.outputSchema)
+  })
+
+  test("denies other project, Location, workspace, Session and stable actor", () => {
     const f = fixture()
     const record = Effect.runSync(f.store.issue(f.input))
-    ;[
+    const owners = [
+      { ...f.scope.owner, projectID: Project.ID.make("other") },
+      { ...f.scope.owner, location: { directory: AbsolutePath.make("/elsewhere") } },
+      { ...f.scope.owner, location: { ...f.scope.owner.location, workspaceID: WorkspaceID.create() } },
+      { ...f.scope.owner, sessionID: SessionID.create() },
+      { ...f.scope.owner, agentID: Agent.ID.make("frontend") },
+    ]
+    owners.forEach((owner) => denied(f.store.read(record.ref, { ...f.scope, owner }), "target_denied"))
+    expect(Effect.runSync(f.store.read(record.ref, f.scope))).toBe(record)
+  })
+
+  test("rejects changed ref fields, generations, fingerprints and canonical tokens", () => {
+    const f = fixture()
+    const record = Effect.runSync(f.store.issue(f.input))
+    const refs = [
+      { ...record.ref, id: Capability.DescriptorID.create() },
+      { ...record.ref, schemaHash: "b".repeat(64) },
+      { ...record.ref, catalogGeneration: 5 },
+      { ...record.ref, connectionID: Capability.ConnectionID.create() },
+      { ...record.ref, targetID: Capability.TargetID.create() },
+      { ...record.ref, secret: "unexpected" },
+    ]
+    refs.forEach((ref) => {
+      denied(f.store.read(ref, f.scope), "stale_descriptor")
+      denied(f.store.reissue(ref, f.scope, f.input.owner), "stale_descriptor")
+    })
+    const scopes = [
       { ...f.scope, connectionGeneration: 3 },
       { ...f.scope, targetGeneration: 4 },
       { ...f.scope, catalogGeneration: 5 },
-    ].forEach((scope) => denied(f.store.read(record.ref, scope), "stale_descriptor"))
-    expect(Effect.runSync(f.store.read(record.ref, f.scope))).toBe(record)
+      { ...f.scope, schemaHash: "b".repeat(64) },
+      { ...f.scope, canonicalIdentity: { privateToken: "do-not-serialize" } },
+    ]
+    scopes.forEach((scope) => {
+      denied(f.store.read(record.ref, scope), "stale_descriptor")
+      denied(f.store.reissue(record.ref, scope, f.input.owner), "stale_descriptor")
+    })
     f.clock.value = record.expiresAt
     denied(f.store.read(record.ref, f.scope), "stale_descriptor")
     denied(f.store.reissue(record.ref, f.scope, f.input.owner), "stale_descriptor")
+  })
+
+  test("trusted caller reissues only with current old scope within same project and Location", () => {
+    const f = fixture()
+    const old = Effect.runSync(f.store.issue(f.input))
+    const newOwner = { ...f.input.owner, sessionID: SessionID.create(), agentID: Agent.ID.make("frontend") }
+    denied(f.store.read(old.ref, { ...f.scope, owner: newOwner }), "target_denied")
+    denied(f.store.reissue(old.ref, { ...f.scope, owner: newOwner }, newOwner), "target_denied")
+    denied(f.store.reissue(old.ref, f.scope, { ...newOwner, projectID: Project.ID.make("other") }), "target_denied")
+    denied(
+      f.store.reissue(old.ref, f.scope, { ...newOwner, location: { directory: AbsolutePath.make("/other") } }),
+      "target_denied",
+    )
+    denied(
+      f.store.reissue(old.ref, f.scope, {
+        ...newOwner,
+        location: { ...newOwner.location, workspaceID: WorkspaceID.create() },
+      }),
+      "target_denied",
+    )
+    f.clock.value += 10
+    const next = Effect.runSync(f.store.reissue(old.ref, f.scope, newOwner))
+    expect(next.ref.id).not.toBe(old.ref.id)
+    expect({ ...next.ref, id: old.ref.id }).toEqual(old.ref)
+    expect(next.canonicalIdentity).toBe(old.canonicalIdentity)
+    expect(next.inputSchema).toEqual(old.inputSchema)
+    expect(next.outputSchema).toEqual(old.outputSchema)
+    expect(next.operationID).toBe(old.operationID)
+    expect(next.expiresAt).toBe(1060)
+    expect(Effect.runSync(f.store.read(next.ref, { ...f.scope, owner: newOwner }))).toBe(next)
+    denied(f.store.read(next.ref, f.scope), "target_denied")
+    expect(Effect.runSync(f.store.read(old.ref, f.scope))).toBe(old)
   })
 
   test("live quota preserves active entries; only expired entries reclaim capacity", () => {
@@ -190,5 +281,41 @@ describe("capability descriptor metadata", () => {
     const next = Effect.runSync(f.store.issue(f.input))
     denied(f.store.read(old.ref, f.scope), "stale_descriptor")
     expect(Effect.runSync(f.store.read(next.ref, f.scope))).toBe(next)
+  })
+
+  test("connection invalidation and clear are lazy and store-local", () => {
+    const f = fixture()
+    const old = Effect.runSync(f.store.issue(f.input))
+    const other = Effect.runSync(f.store.issue({ ...f.input, connectionID: Capability.ConnectionID.create() }))
+    const invalidate = f.store.invalidateConnection(old.ref.connectionID)
+    expect(Effect.runSync(f.store.read(old.ref, f.scope))).toBe(old)
+    Effect.runSync(invalidate)
+    denied(f.store.read(old.ref, f.scope), "stale_descriptor")
+    expect(Effect.runSync(f.store.read(other.ref, f.scope))).toBe(other)
+    Effect.runSync(f.store.clear())
+    denied(f.store.read(other.ref, f.scope), "stale_descriptor")
+    expect(Effect.runSync(f.store.issue(f.input)).ref.id).not.toBe(old.ref.id)
+  })
+
+  test("requires positive configured bounds and rejects invalid wire fields", () => {
+    ;[0, -1, 1.5, NaN, Infinity].forEach((maxEntries) =>
+      expect(() =>
+        Effect.runSync(CapabilityDescriptors.make({ maxEntries, ttlMillis: 50, now: () => 1000 })),
+      ).toThrow(),
+    )
+    ;[0, -1, NaN, Infinity].forEach((ttlMillis) =>
+      expect(() => Effect.runSync(CapabilityDescriptors.make({ maxEntries: 1, ttlMillis, now: () => 1000 }))).toThrow(),
+    )
+    const f = fixture()
+    denied(f.store.issue({ ...f.input, schemaHash: "bad" }), "stale_descriptor")
+    denied(f.store.issue({ ...f.input, connectionGeneration: -1 }), "stale_descriptor")
+    denied(f.store.issue({ ...f.input, targetGeneration: 0.5 }), "stale_descriptor")
+    const invalid = { type: "object" }
+    Reflect.set(invalid, "execute", () => "not metadata")
+    denied(f.store.issue({ ...f.input, inputSchema: invalid }), "unsupported_schema")
+    denied(f.store.issue({ ...f.input, outputSchema: invalid }), "unsupported_schema")
+    Reflect.deleteProperty(invalid, "execute")
+    Reflect.set(invalid, "number", Infinity)
+    denied(f.store.issue({ ...f.input, inputSchema: invalid }), "unsupported_schema")
   })
 })
