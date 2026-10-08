@@ -2,7 +2,7 @@
 import { spawn } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { LOGS, afterCleanup, captureStarted, inventoryScope, kill9, matches, members, own, ownedIdentities, prepareCapture, table, until, verdict } from "./lib.ts"
+import { LOGS, afterCleanup, captureStarted, kill9, members, own, prepareCapture, table, until, verdict } from "./lib.ts"
 
 export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {
   if (!result.pass) return { ...verdict(name, result), ...result }
@@ -91,11 +91,7 @@ export async function owned(nonces: string[], _env?: Record<string, string>, _cw
     const found = members(nonce, rows)
     return [...found.members, ...found.wrappers]
   })
-  const named = [...fixtures, ...nonces.flatMap(ownedIdentities)]
-  const scope = inventoryScope(rows, named)
-  if (scope.some((row) => row.args === null && !named.some((member) => matches(row, member))))
-    throw new Error("Owned inventory has unknown argv in owner scope")
-  return scope.filter((row) => row.pid !== process.pid && (named.some((member) => matches(row, member)) || nonces.some((nonce) => row.args?.includes(nonce))))
+  return fixtures.filter((row, index) => fixtures.findIndex((member) => member.pid === row.pid && member.startTime === row.startTime) === index)
 }
 
 async function cleanupOwned(nonces: string[]) {

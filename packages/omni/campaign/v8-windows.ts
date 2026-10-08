@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { OmniProc } from "../../core/src/pty/omni.ts"
-import { BUN, ROOT, cleanup, cli, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
+import { BUN, ROOT, adoptTree, cleanup, cli, fileTree, identity, isolated, kill9, members, remaining, supervised, table, until, win } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
@@ -30,7 +30,7 @@ export async function run() {
     const cells = line ? JSON.parse(line.slice("V8_HOST_RESULT ".length)) as Cell[] : []
     cells.push(await powershellBash(scratch, env))
     const names = [...HOST_NAMES, "powershell-bash"].toSorted()
-    return record("v8-windows", { pass: !observed.timedOut && observed.code === 0 && JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(names) && cells.every((cell) => cell.pass),
+    return record("v8-windows", { pass: !observed.timedOut && !observed.error && observed.code === 0 && JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(names) && cells.every((cell) => cell.pass),
       status: "executed-windows", cells, observed, evidence: evidence("v8-windows", { home: scratch.home, observed, cells }) })
   } catch (error) {
     return record("v8-windows", { pass: false, error: String(error), evidence: evidence("v8-failure", String(error)) })
@@ -83,6 +83,7 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
 
 async function host(home: string, project: string, tree: ReturnType<typeof fileTree>) {
   if (!win) throw new Error("V8 host requires Windows")
+  adoptTree(home, tree.nonce, [identity(process.pid)])
   const { Effect, ChildProcess } = await effectModules()
   const { AppProcess } = await import("../../core/src/process.ts")
   const { Omni } = await import("../../core/src/omni.ts")
@@ -167,7 +168,7 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
       if (key === "stop") return async (options?: { graceMs?: number }) => {
         const result = await target.stop(options).catch((error: unknown) => { output.error = String(error); throw error })
         output.stopped = true
-        output.stopMs = performance.now() - output.started
+        output.stopMs ||= performance.now() - output.started
         return result
       }
       const value = Reflect.get(target, key, target)
@@ -181,22 +182,14 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
     const control = supervised(tree.nonce)
     const started = performance.now()
     output.started = started
-    const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
-    try {
-      await Promise.race([Promise.all([proc.stop(), eof.promise, exited.promise]), new Promise<never>((_, reject) => {
-        timer.id = setTimeout(() => reject(new Error("ConPTY stop + EOF + onExit watchdog expired after 6000 ms")), 6000)
-      })])
-    } finally {
-      clearTimeout(timer.id)
-    }
-    const ms = performance.now() - started
-    const left = await remaining(tree.nonce)
-    const reachable = await proc.child.processes()
+    const closed = await closeWithinDeadline(started, 6000, { stop: () => proc.stop(), eof: eof.promise, exited: exited.promise,
+      remaining: (budget) => { const found = members(tree.nonce, table(budget)); return found.members.length + found.wrappers.length },
+      processes: () => proc.child.processes() })
     const after = Omni.snapshot()
-    cells.push({ name: "ConPTY-close", ms, left, reachable, supervised: control, output,
+    cells.push({ name: "ConPTY-close", ...closed, supervised: control, output: { ...output },
       boundary: "native EOF observation through PtyOmni.adapt", spawns: after.spawns - before.spawns, nativePid: native.pid,
-      pass: control && ms <= 6000 && output.ended && output.exited && output.stopped && !output.error &&
-        output.eofMs <= 6000 && output.exitMs <= 6000 && output.stopMs <= 6000 && left === 0 && reachable.length === 0 && after.delegations === before.delegations })
+      pass: control && closed.ms <= 6000 && output.ended && output.exited && output.stopped && !output.error &&
+        output.eofMs <= 6000 && output.exitMs <= 6000 && output.stopMs <= 6000 && closed.left === 0 && closed.reachable.length === 0 && after.delegations === before.delegations })
   } catch (error) {
     cells.push({ name: "host-error", pass: false, error: String(error) })
   } finally {
@@ -212,6 +205,31 @@ async function host(home: string, project: string, tree: ReturnType<typeof fileT
   }
   console.log(`V8_HOST_RESULT ${JSON.stringify(cells)}`)
   process.exit(JSON.stringify(cells.map((cell) => cell.name).toSorted()) === JSON.stringify(HOST_NAMES.toSorted()) && cells.every((cell) => cell.pass) ? 0 : 1)
+}
+
+/** One absolute close deadline includes stop, exit, EOF, independent OS inventory, and native reachability. */
+export async function closeWithinDeadline(started: number, boundMs: number, input: {
+  stop: () => Promise<unknown>; eof: Promise<void>; exited: Promise<void>
+  remaining: (budgetMs: number) => number | Promise<number>; processes: () => Promise<unknown[]>
+}) {
+  const deadline = started + boundMs
+  const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
+  const within = () => { if (performance.now() >= deadline) throw new Error(`ConPTY complete close exceeded ${boundMs} ms`); return deadline - performance.now() }
+  try {
+    const result = await Promise.race([Promise.all([input.stop(), input.eof, input.exited]).then(async () => {
+      const left = await input.remaining(Math.max(1, within()))
+      within()
+      const reachable = await input.processes()
+      within()
+      return { left, reachable }
+    }), new Promise<never>((_, reject) => {
+      timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), Math.max(0, deadline - performance.now()))
+    })])
+    within()
+    return { ...result, ms: performance.now() - started }
+  } finally {
+    clearTimeout(timer.id)
+  }
 }
 
 function typedRefusal(error: unknown): { code: "INVALID_ARGUMENT"; message: string } | undefined {
