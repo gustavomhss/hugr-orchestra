@@ -27,7 +27,7 @@ Put 'ready.json' @{pid=$PID;startTime=$self.CreationDate.ToFileTimeUtc().ToStrin
 while (!(Test-Path (Join-Path $dir 'stop'))) {
   foreach ($file in [IO.Directory]::GetFiles($dir,'request-*.json')) {
     $key=[IO.Path]::GetFileName($file).Substring(8); $replyFile=Join-Path $dir ('reply-'+$key);
-    if (Test-Path $replyFile) {continue}
+    if (Test-Path $replyFile) {if (Test-Path ($file+'.ack')) {[IO.File]::Delete($file); [IO.File]::Delete($replyFile); [IO.File]::Delete(($file+'.ack'))}; continue}
     $request=ConvertFrom-Json ([IO.File]::ReadAllText($file)); $p=$null; $closed=$true;
     $reply=@{pid=0;status=$null;stdout='';stderr='';closed=$true;timedOut=$false};
     try {
@@ -133,13 +133,13 @@ export function run(command: string, args: string[], timeoutMs = TIMEOUT_MS) {
   const replyFile = path.join(broker.dir!, `reply-${key}`)
   // Two seconds belong to failed-operation teardown only; no late result can pass the caller's KPI.
   while (!existsSync(replyFile) && performance.now() < deadline + 2000) Bun.sleepSync(5)
-  if (!existsSync(replyFile)) throw new Error(`Windows helper deadline expired after ${timeoutMs} ms; OS exit unconfirmed`)
+  if (!existsSync(replyFile)) throw new Error(`Windows helper deadline expired after ${timeoutMs} ms; OS exit unconfirmed: ${readFileSync(path.join(broker.dir!, "stderr"), "utf8").slice(-2000)}`)
   const reply = JSON.parse(readFileSync(replyFile, "utf8")) as { pid: number; status: number | null; stdout: string; stderr: string; closed: boolean; timedOut: boolean; error?: string }
   if (reply.closed !== true) throw Object.assign(new Error("Windows helper OS exit remains unconfirmed"), { helperPID: reply.pid })
   if (typeof reply.timedOut !== "boolean" || reply.error !== undefined && typeof reply.error !== "string") throw new Error("malformed Windows helper closure result")
   rmSync(path.join(broker.dir!, `owned-${key}`), { force: true })
-  rmSync(file)
-  rmSync(replyFile)
+  // Only the watchdog removes request/reply files, after its enumeration has consumed them.
+  writeFileSync(file + ".ack", "ack\n")
   if (reply.timedOut || performance.now() >= deadline) throw Object.assign(new Error(`Windows helper deadline expired after ${timeoutMs} ms`), { helperPID: reply.pid })
   if (reply.error) throw new Error(`Windows helper failed: ${reply.error}`)
   if (!Number.isSafeInteger(reply.pid) || reply.pid <= 0 || !Number.isInteger(reply.status) || typeof reply.stdout !== "string" || typeof reply.stderr !== "string") throw new Error("malformed Windows helper result")

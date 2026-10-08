@@ -197,7 +197,10 @@ const pendingVerdicts: ((error?: unknown) => void)[] = []
 
 /** Retain handles of only campaign-owned hosts: serve's argv contains no isolated HOME marker. */
 export function own(home: string, proc: ChildProcess) {
-  const captured = identity(proc.pid!)
+  return retain(home, proc, identity(proc.pid!))
+}
+
+function retain(home: string, proc: ChildProcess, captured: Identity) {
   if (!pins.has(captured.pid)) pins.set(captured.pid, { identity: captured, owner: home })
   const entries = owners.get(home) ?? []
   entries.push({ proc, identity: captured })
@@ -285,16 +288,20 @@ export async function prepareCapture() {
 
 /** Request identity immediately after spawn; short exited commands retain only their exact ChildProcess handle. */
 export async function captureStarted(home: string, proc: ChildProcess) {
-  if (!win) return own(home, proc)
+  if (!win) {
+    const rows = table()
+    if (!rows.some((row) => row.pid === proc.pid && !row.state.startsWith("Z"))) {
+      // Missing inventory alone is not absence. The exact child handle must confirm OS exit.
+      await until(QUERY_MS, "short campaign process exit after missing identity", () => proc.exitCode !== null || proc.signalCode !== null ? true : undefined)
+      return
+    }
+    return retain(home, proc, identity(proc.pid!, rows))
+  }
   if (proc.pid === undefined) throw new Error("spawned campaign process has no PID")
   const captured = await WindowsInventory.capture(proc.pid)
   if (proc.exitCode !== null || proc.signalCode !== null) return
   if (!captured) throw new Error(`cannot capture live process identity for PID ${proc.pid}`)
-  if (!pins.has(captured.pid)) pins.set(captured.pid, { identity: captured, owner: home })
-  const entries = owners.get(home) ?? []
-  entries.push({ proc, identity: captured })
-  owners.set(home, entries)
-  return captured
+  return retain(home, proc, captured)
 }
 
 /** Exact ps decoding boundary; Linux cross-checks start time and argv through the same /proc identity. */
@@ -429,7 +436,8 @@ export function control(nonce: string, size: number, hosts: Identity[], rows = t
 export function supervised(nonce: string) {
   const rows = table()
   const found = members(nonce, rows)
-  const roots = treeRoots.get(nonce) ?? (owners.get(treeOwners.get(nonce) ?? nonce) ?? []).map((host) => host.identity)
+  const roots = (treeRoots.get(nonce) ?? (owners.get(treeOwners.get(nonce) ?? nonce) ?? []).map((host) => host.identity))
+    .filter((root) => rows.some((row) => matches(row, root) && !row.state.startsWith("Z")))
   return control(nonce, found.members.length, roots, rows).pass
 }
 

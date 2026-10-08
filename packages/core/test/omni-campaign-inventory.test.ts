@@ -167,6 +167,7 @@ try {
     } finally {
       proc.stdin.end("finish\n")
       await until(30_000, "two-owner controller teardown", () => proc.exitCode !== null || proc.signalCode !== null ? true : undefined)
+      if (proc.exitCode !== 0) throw new Error(`two-owner controller teardown rc=${proc.exitCode}: ${output.stderr}`)
       expect(proc.exitCode).toBe(0)
     }
   }
@@ -207,7 +208,7 @@ test("unconfirmed recorder kill keeps its handle; delayed close confirmation per
   await instrumentCopy(scratch.home, (source) => source, (source) => replace(replace(source,
     'proc.on("close", () => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) })',
     'proc.on("close", () => { setTimeout(() => { state.closed = true; close.resolve(); fail(new Error(`identity recorder closed: ${text.stderr}`)) }, 500) })'),
-    'const timer = setTimeout(() => resolve(false), timeoutMs)', 'const timer = setTimeout(() => resolve(false), 100)'))
+    'const timer = setTimeout(() => resolve(false), timeoutMs)\n    state.close!.finally', 'const timer = setTimeout(() => resolve(false), 100)\n    state.close!.finally'))
   const module = await import(path.join(scratch.home, "windows-inventory.ts")) as typeof import("../../omni/campaign/windows-inventory.ts")
   const recorder = module.WindowsInventory.makeRecorder({ command: BUN, args: ["-e", 'console.log(JSON.stringify({ready:true}));process.stdin.resume();process.stdin.on("end",()=>process.exit(0));setInterval(()=>{},1000)'] }, 2000)
   try {
