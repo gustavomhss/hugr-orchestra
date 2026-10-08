@@ -82,7 +82,8 @@ setInterval(() => {}, 1e9);
         })}\n\n`)
         send({ role: "assistant" })
         send(tool ? { tool_calls: [{ index: 0, id: `write_${drive.writes}`, type: "function", function: {
-          name: "write", arguments: JSON.stringify({ filePath: path.join(scratch.project, "b.ts"), content: `export const b = ${drive.writes}\n` }),
+          // Windows CLI canonicalizes 8.3 TEMP paths; resolve the document inside its actual Location.
+          name: "write", arguments: JSON.stringify({ filePath: "b.ts", content: `export const b = ${drive.writes}\n` }),
         } }] } : { content: "done" })
         send({}, tool ? "tool_calls" : "stop")
         response.end("data: [DONE]\n\n")
@@ -176,7 +177,13 @@ setInterval(() => {}, 1e9);
       new Set(handshakes.map((entry) => entry.pid)).size === 22
     if (!pass) error = "LSP cycle count/leftovers/process-count KPI failed"
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
-  } catch (cause) { error = String(cause) }
+  } catch (cause) {
+    error = String(cause)
+    findings.push(JSON.stringify({ rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
+      wrapper: existsSync(wrapperLog) ? readFileSync(wrapperLog, "utf8").slice(-2000) : null,
+      stderr: existsSync(path.join(scratch.home, "language-server.stderr.log")) ? readFileSync(path.join(scratch.home, "language-server.stderr.log"), "utf8").slice(-4000) : null,
+      prompt: existsSync(path.join(scratch.home, "prompt.responses.jsonl")) ? readFileSync(path.join(scratch.home, "prompt.responses.jsonl"), "utf8").slice(-4000) : null }))
+  }
   finally {
     llm?.closeAllConnections()
     llm?.close()

@@ -1,5 +1,5 @@
 // V3: pinned supervisor SIGKILL, exact per-OS tier snapshots inside 8 s, then protected next-spawn recovery.
-import { cleanup, cli, client, control, deadlineSnapshots, fakeLLM, fileTree, identity, isolated, kill9, matches, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
+import { cleanup, cli, client, control, deadlineSnapshots, fakeLLM, fileTree, identity, isolated, kill9, matches, members, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import type { ChildProcess } from "node:child_process"
 
@@ -14,6 +14,7 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
   const nonces = Object.values(trees).map((tree) => tree.nonce)
   const steps: string[] = []
   const hosts: ChildProcess[] = []
+  const result: { value: Record<string, unknown> & { pass: boolean } } = { value: { pass: false } }
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v3] ${line}`) }
   try {
     const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }), scratch.project)
@@ -61,22 +62,30 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
     if (!kill9(pinnedHost)) throw new Error("could not kill pinned server")
     const afterHost = await deadlineSnapshots(Date.now(), 8000, [trees.after.nonce], [pinnedHost, ...fresh, ...recovered.fixtureIds, ...recovered.wrappers])
     step(`recovery ${recoveryMs} ms; new host-owned tree zero at ${afterHost.zeroAtMs} ms`)
-    return verdict("v3-supervisor", {
+    result.value = {
       home: scratch.home, nonces, pinnedHost, before, supervisors, observed, serverAlive, tier,
       recovery: { ms: recoveryMs, control: recovered, supervisors: fresh }, afterHost,
       oldTreesFinal: { bash: await remaining(trees.bash.nonce), pty: await remaining(trees.pty.nonce) },
       pass: tier.matches && serverAlive && observed.last.retained.length === 0 && recoveryMs < 30_000 && afterHost.zeroAtMs !== undefined && afterHost.last.counts[0] === 0 && afterHost.last.retained.length === 0,
       steps,
-    })
+    }
   } catch (error) {
-    return verdict("v3-supervisor", { pass: false, error: String(error), home: scratch.home, nonces, steps })
+    result.value = { pass: false, error: String(error), home: scratch.home, nonces, steps }
   } finally {
     llm.stop()
     // Close retained host handles before inventory teardown; killing an already-exiting numeric PID is not cleanup proof.
     for (const proc of hosts) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
-    await until(10_000, "V3 retained hosts exited", () => hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
-    await cleanup(scratch.home, nonces)
+    await until(10_000, "V3 retained hosts exited", () => hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined).then(async () => {
+      if (win) await until(8_000, "V3 Windows Job teardown before inventory cleanup", () => {
+        const rows = table()
+        return nonces.every((nonce) => { const found = members(nonce, rows); return found.members.length === 0 && found.wrappers.length === 0 }) ? true : undefined
+      })
+      await cleanup(scratch.home, nonces)
+    }).catch((cause) => {
+      result.value = { ...result.value, measurementPass: result.value.pass, pass: false, teardownError: String(cause) }
+    })
   }
+  return verdict("v3-supervisor", result.value)
 }
 
 if (import.meta.main) process.exit((await run()).pass ? 0 : 1)

@@ -22,6 +22,8 @@ export async function run(options: { mutation?: "missing-replay" | "truncated-re
   const errors: string[] = []
   const ids: string[] = []
   const hash = (text: string) => createHash("sha256").update(text).digest("hex")
+  // ConPTY can physically wrap printable text; replay comparison below still uses exact wire text/cursors.
+  const visible = (text: string) => win ? plain(text).replaceAll("\r", "").replaceAll("\n", "") : plain(text)
   const gap = /\x1b\[0m\r\n\[orchestra: (\d+) bytes of output skipped\]\r\n/g
   try {
     processTable()
@@ -121,7 +123,7 @@ function write(text) {
 }
 write('READY-' + nonce + '\\n');
 readline.createInterface({input: process.stdin}).on('line', line => {
-  if (line === 'size') write('SIZE ' + process.stdout.rows + ' ' + process.stdout.columns + '\\n');
+  if (line === 'size') { const size = process.stdout.getWindowSize(); write('SIZE ' + size[1] + ' ' + size[0] + '\\n'); }
   if (line === 'unicode') write('aé😀b '.repeat(500) + 'UNICODE-' + nonce + '\\n');
   if (line === 'more') write(${JSON.stringify(missed)} + '\\n');
   if (line === 'calibrate') write('CAL-' + nonce + '\\n');
@@ -167,7 +169,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       await first.close()
       const observer = await attach(terminal.id, -1)
       observer.ws.send("more\r")
-      await until(20_000, "whole unique output while original client disconnected", () => observer.state.text.includes(missed) ? true : undefined)
+      await until(20_000, "whole unique output while original client disconnected", () => visible(observer.state.text).includes(missed) ? true : undefined)
       await quiet(observer.state)
       const whole = await attach(terminal.id, 0)
       const expectedEnd = whole.state.meta
@@ -179,7 +181,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
         expectedSha256: hash(expected), receivedSha256: hash(reconnect.state.replay), missed, utf16: true }
       if (whole.state.replay.slice(0, cursor) !== baseline || expected.length === 0 || expected !== reconnect.state.replay ||
         reconnect.state.meta !== expectedEnd || expectedEnd !== cursor + expected.length || expectedEnd !== whole.state.replay.length ||
-        observer.state.text !== expected || !plain(expected).includes(missed) || !plain(reconnect.state.replay).includes(missed))
+        observer.state.text !== expected || !visible(expected).includes(missed) || !visible(reconnect.state.replay).includes(missed))
         throw new Error("reconnection replay differs from independent whole missed text/end cursor")
       writeFileSync(path.join(scratch.home, "replay.ws.txt"), whole.state.replay)
       await Promise.all([observer.close(), reconnect.close(), whole.close()])
@@ -274,11 +276,19 @@ if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(
 `)}], {stdio: ['inherit', 'inherit', 'pipe']});
         if (configured.status !== 0) throw Error('actual slave raw configuration failed: ' + configured.stderr);
       };\n`
+      // Terminals have a bounded dropping queue, not pipe backpressure (api-contract §WP-H). ACK each 64 KiB
+      // raw block after its trailing marker reaches the real WS. Cooked flood above remains an unpaced 50 MiB burst.
       const rawProducer = readFileSync(`${files.base}.cjs`, "utf8")
         .replace(/out\('READY-' \+ nonce \+ '\\n'\);\nfs\.writeFileSync\([^\n]+\);/, (ready) => `setImmediate(() => { configureRaw(); ${ready} });`)
-        .replace("if (line === 'go') {", "if (line === 'go') { configureRaw();")
+        .replace(".on('line', line => {", ".on('line', async line => {")
+        .replace("if (line === 'go') {", "if (line === 'ack') { const grant = credits.shift(); if (!grant) throw Error('unexpected raw ACK'); grant(); return; }\nif (line === 'go') { configureRaw();")
+        .replace(".repeat(1024));", ".repeat(64));")
+        .replace("for (let i = 0; i < 50; i++) written += out(block);", `for (let i = 0; i < 800; i++) {
+          const credit = Promise.withResolvers(); credits.push(credit.resolve);
+          written += out(block); out('RAW-BLOCK-' + i + '-' + nonce + '\\n'); await credit.promise;
+        }`)
       if (!rawProducer.includes("setImmediate(() => { configureRaw();")) throw new Error("raw fixture readiness composition boundary changed")
-      writeFileSync(`${files.base}.cjs`, configureRaw + rawProducer)
+      writeFileSync(`${files.base}.cjs`, "const credits = [];\n" + configureRaw + rawProducer)
       const raw = await call<Terminal>("POST", "/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })
       ids.push(raw.id)
       const stream = await attach(raw.id, 0)
@@ -286,11 +296,20 @@ if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(
       const mode = JSON.parse(readFileSync(files.termios, "utf8")) as { after: { OPOST: boolean; ECHO: boolean; ICANON: boolean; size: number[] } }
       if (mode.after.OPOST || mode.after.ECHO || mode.after.ICANON || mode.after.size.join(" ") !== "40 120")
         throw new Error("raw/no-translation terminal mode not observed on actual slave")
+      const flow = { acknowledgments: 0 }
+      stream.ws.addEventListener("message", () => {
+        if (!stream.state.text.slice(-256).includes(`RAW-BLOCK-${flow.acknowledgments}-${nonce}\n`)) return
+        stream.ws.send("ack\n")
+        flow.acknowledgments++
+      })
       stream.ws.send("go\n")
       await until(120_000, "raw 50 MiB producer completion", () => existsSync(files.receipt) ? true : undefined)
       const actualMode = JSON.parse(readFileSync(files.termios, "utf8")) as typeof mode & { phase: string }
       metrics.rawSlaveMode = actualMode
       metrics.rawStartupMode = JSON.parse(readFileSync(`${files.termios}.initial`, "utf8"))
+      metrics.rawFlowControl = { ...flow, blockBytes: 64 * 1024, blocks: 800,
+        tier: "receiver-acknowledged raw byte identity; unpaced burst losslessness not claimed" }
+      if (flow.acknowledgments !== 800) throw new Error("raw transfer did not acknowledge every payload block")
       if (actualMode.phase !== "after-Node-stdio-initialization-before-payload" || actualMode.after.OPOST ||
         actualMode.after.ECHO || actualMode.after.ICANON || actualMode.after.size.join(" ") !== "40 120")
         throw new Error("raw flags missing on actual slave at payload boundary")
