@@ -1,6 +1,6 @@
 export * as Capability from "./capability"
 
-import { Schema } from "effect"
+import { Effect, Schema, SchemaGetter } from "effect"
 import { Agent } from "./agent"
 import { ascending } from "./identifier"
 import { Location } from "./location"
@@ -153,6 +153,48 @@ export const Result = Schema.Union([Completed, Submitted, Pending, Partial, Unkn
   parseOptions: { onExcessProperty: "error" },
 })
 export type Result = typeof Result.Type
+
+// Closed foundation vocabulary: CONTRACTS C2 failures and C1 invocation binding failures.
+export const ErrorCode = Schema.Literals([
+  "connection_unavailable",
+  "authentication_required",
+  "authentication_revoked",
+  "target_denied",
+  "ambiguous_target",
+  "stale_descriptor",
+  "unsupported_operation",
+  "unsupported_schema",
+  "acquisition_failed",
+  "quota_exceeded",
+  "outcome_unknown",
+  "invocation_binding_missing",
+  "invocation_binding_mismatch",
+]).annotate({ identifier: "Capability.ErrorCode" })
+export type ErrorCode = typeof ErrorCode.Type
+
+// At most 4 KiB of serialized UTF-8 JSON. Producers must redact provider detail before projection.
+const detailBudget = SchemaGetter.checkEffect<Schema.Json>((value) =>
+  Effect.succeed(
+    new TextEncoder().encode(JSON.stringify(value)).byteLength <= 4096
+      ? undefined
+      : "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+  ),
+)
+// A real transformation retains validation through authoritative imported clients.
+export const FailureDetail = Schema.Json.pipe(
+  Schema.decodeTo(Schema.Json, { decode: detailBudget, encode: detailBudget }),
+).annotate({ identifier: "Capability.FailureDetail" })
+export type FailureDetail = typeof FailureDetail.Type
+
+export class Failure extends Schema.TaggedErrorClass<Failure>()(
+  "Capability.Failure",
+  Schema.Struct({
+    code: ErrorCode,
+    message: Schema.String,
+    detail: optional(FailureDetail),
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  { identifier: "Capability.Failure", parseOptions: { onExcessProperty: "error" } },
+) {}
 
 export const JobKind = Schema.Literals(["provider", "local-process", "worker", "script"]).annotate({
   identifier: "Capability.JobKind",
