@@ -21,6 +21,7 @@ export const attempt = (directory: string) => attempts.get(path.resolve(director
  * One installation per directory. Interruption cancels a caller's wait, not the shared install, matching
  * BackendToolkit's original once semantics. PinnedArtifact's transport/extractor promises are not abortable:
  * keep the install (and its concurrency permit) alive until atomic completion instead of orphaning its work.
+ * The initiating caller's Context is preserved; lifetime is intentionally detached, only the wait is interruptible.
  */
 export const once = Effect.fn("ToolkitInstall.once")(function* (
   installDirectory: string,
@@ -29,6 +30,7 @@ export const once = Effect.fn("ToolkitInstall.once")(function* (
   const directory = path.resolve(installDirectory)
   return yield* Effect.uninterruptibleMask((restore) =>
     Effect.gen(function* () {
+      const context = yield* Effect.context()
       const previous = attempts.get(directory)
       if (previous?.failed && Date.now() - previous.at < RETRY_MS && !(yield* restore(PinnedArtifact.installed(directory))))
         return previous.failed
@@ -39,6 +41,7 @@ export const once = Effect.fn("ToolkitInstall.once")(function* (
         attempts.set(directory, entry)
         entry.running = Effect.runFork(
           work.pipe(
+            Effect.provideContext(context),
             Effect.match({
               onSuccess: () => undefined,
               onFailure: (error) => {
