@@ -7824,7 +7824,7 @@ export class Document extends HeyApiClient {
   /**
    * Check workflow step
    *
-   * Grade one step of a workflow in the project directory without recording anything or charging retries.
+   * Public authoring cannot execute workflow checks. This endpoint returns 403 maestro-execution-required; executable workflow checks are owned by Maestro through its approved native binding.
    */
   public check<ThrowOnError extends boolean = false>(
     parameters: {

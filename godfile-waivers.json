@@ -403,10 +403,10 @@
       "authorizedAt": "2026-10-06"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 6633,
-      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule groups.",
-      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
-      "authorizedAt": "2026-10-06"
+      "maximumLines": 6646,
+      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Owner approved 13 additional LOC for durable promptContext outputs and RelayForbiddenError.",
+      "authorizedBy": "owner (gustavomhss), explicit approval: Autorizar 6646 LOC",
+      "authorizedAt": "2026-10-08"
     },
     "packages/orchestra/src/provider/provider.ts": {
       "maximumLines": 1940,

@@ -879,6 +879,7 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           prompt: Prompt
+          promptContext?: PromptContextInfo
           delivery: "steer" | "queue"
         }
       }
@@ -890,6 +891,7 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           prompt: Prompt
+          promptContext?: PromptContextInfo
           delivery: "steer" | "queue"
         }
       }
@@ -1730,6 +1732,7 @@ export type GlobalEvent = {
           sessionID: string
           callID?: string
           assistantMessageID?: string
+          messageID?: string
           agent?: string
           subject: string
           outcome:
@@ -3619,6 +3622,12 @@ export type RelayCheckInput = {
   }
 }
 
+export type RelayForbiddenError = {
+  _tag: "RelayForbiddenError"
+  code: string
+  message: string
+}
+
 export type RelayNodeTypes = {
   workflow: Array<RelayAuthoringNodeTypeDescriptor>
   hook: Array<RelayAuthoringNodeTypeDescriptor>
@@ -3820,6 +3829,10 @@ export type PromptFileAttachment = {
 export type PromptAgentAttachment = {
   name: string
   source?: PromptSource
+}
+
+export type PromptContextInfo = {
+  reminders: Array<string>
 }
 
 export type SessionErrorUnknown = {
@@ -4174,6 +4187,7 @@ export type SyncEventSessionNextPrompted = {
       sessionID: string
       messageID: string
       prompt: Prompt
+      promptContext?: PromptContextInfo
       delivery: "steer" | "queue"
     }
   }
@@ -4192,6 +4206,7 @@ export type SyncEventSessionNextPromptAdmitted = {
       sessionID: string
       messageID: string
       prompt: Prompt
+      promptContext?: PromptContextInfo
       delivery: "steer" | "queue"
     }
   }
@@ -5094,6 +5109,7 @@ export type SyncEventRelayHookDecided = {
       sessionID: string
       callID?: string
       assistantMessageID?: string
+      messageID?: string
       agent?: string
       subject: string
       outcome:
@@ -5291,6 +5307,7 @@ export type SessionInputAdmitted = {
   id: string
   sessionID: string
   prompt: Prompt
+  promptContext?: PromptContextInfo
   delivery: "steer" | "queue"
   timeCreated: number
   promotedSeq?: number
@@ -5331,6 +5348,7 @@ export type SessionMessageUser = {
   text: string
   files?: Array<PromptFileAttachment>
   agents?: Array<PromptAgentAttachment>
+  promptContext?: PromptContextInfo
   type: "user"
 }
 
@@ -5589,6 +5607,7 @@ export type SessionNextPrompted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -5610,6 +5629,7 @@ export type SessionNextPromptAdmitted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -7538,6 +7558,7 @@ export type RelayHookDecided = {
     sessionID: string
     callID?: string
     assistantMessageID?: string
+    messageID?: string
     agent?: string
     subject: string
     outcome:
@@ -8593,6 +8614,7 @@ export type EventSessionNextPrompted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -8605,6 +8627,7 @@ export type EventSessionNextPromptAdmitted = {
     sessionID: string
     messageID: string
     prompt: Prompt
+    promptContext?: PromptContextInfo
     delivery: "steer" | "queue"
   }
 }
@@ -9507,6 +9530,7 @@ export type EventRelayHookDecided = {
     sessionID: string
     callID?: string
     assistantMessageID?: string
+    messageID?: string
     agent?: string
     subject: string
     outcome:
@@ -17147,6 +17171,10 @@ export type V2RelayDocumentCheckErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * RelayForbiddenError
+   */
+  403: RelayForbiddenError
   /**
    * RelayNotFoundError
    */
