@@ -137,7 +137,7 @@ for (const change of ["new-user", "source-edit"] as const) it.instance(`first ca
     yield* Deferred.succeed(release, undefined)
     const result = yield* Fiber.join(admitting)
     expect(result._tag).toBe("Failure")
-    if (result._tag === "Failure") expect(Cause.squash(result.cause)).toMatchObject({ reason: "complete-prefix-admission-stale" })
+    if (result._tag === "Failure") expect(Cause.squash(result.cause)).toMatchObject({ reason: change === "new-user" ? "complete-prefix-caller-stale" : "complete-prefix-admission-stale" })
     gate.armed = false
     if (original) yield* sessions.updatePart(original)
     const view = yield* continuity.admit({ sessionID, messages: yield* sessions.messages({ sessionID }), canRecall: true })

@@ -96,7 +96,7 @@ const layer = Layer.effect(
       let actualModel = state.model ?? selected
       let sdkModel: string | undefined
       let limits: { contextWindow?: number; maxOutputTokens?: number } = {}
-      let overheadKnown = false
+      let nativeOverhead: number | undefined
       const metadata = (value: Record<string, unknown>) => Effect.gen(function* () {
         const latest = (yield* sessions.get(sessionID).pipe(Effect.orDie)).metadata ?? {}
         yield* sessions.setMetadata({ sessionID, metadata: { ...latest,
@@ -106,7 +106,7 @@ const layer = Layer.effect(
         const reason = !settings(cfg).enabled ? "disabled" : !ClaudeCodeTranscript.SUPPORTED.includes(nativeVersion ?? "")
           ? `Claude Code ${nativeVersion ?? "unknown"} not yet supported` : !shape || !model || !Number.isFinite(window) ||
             !Number.isFinite(output) || !window || window <= 0 || !output || output <= 0 || output >= window
-            ? "SDK model/window metadata unavailable" : !overheadKnown ? "SDK system/tool snapshot unavailable; native compaction enabled" : undefined
+            ? "SDK model/window metadata unavailable" : nativeOverhead === undefined ? "SDK system/tool snapshot unavailable; native compaction enabled" : undefined
          if (model && window !== undefined && output !== undefined && Number.isFinite(window) && Number.isFinite(output))
            yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output })
          admissionModel = shape && model && window && output && Number.isFinite(window) && Number.isFinite(output) && output < window
@@ -120,7 +120,7 @@ const layer = Layer.effect(
         if (!shape || !model || window === undefined || output === undefined) return
         const resolved = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { context: window, output } }
         effective = resolved
-        yield* continuity.configure({ sessionID, model: resolved, llm: backend })
+        yield* continuity.configure({ sessionID, model: resolved, llm: backend, overhead: nativeOverhead })
         yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output, version: nativeVersion, continuityPaused: null })
       })
       const context = yield* Effect.context<never>()
@@ -206,7 +206,7 @@ const layer = Layer.effect(
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
       const prepare = Effect.gen(function* () {
       const stored = yield* native.read
-      overheadKnown = !!ClaudeCodeNative.overhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
+      nativeOverhead = measureNativeOverhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
       yield* configure(state.selectedModel === selected ? state.model : undefined, state.contextWindow, state.maxOutputTokens)
       stored.delivered.forEach((id) => delivered.add(MessageID.make(id)))
       const remaining = users.filter((message) => !delivered.has(message.info.id))
@@ -253,7 +253,7 @@ const layer = Layer.effect(
         yield* metadata({ nativeAdmission: { ready: materialized?.ready === true, reason: materialized?.reason ?? "missing-native-view", tokens,
           bounded: !!system, priorActual: actual, limit: hardLimit(effective) } })
         if (!system) {
-          overheadKnown = false
+          nativeOverhead = undefined
           effective = undefined
           yield* continuity.pause(sessionID)
           yield* metadata({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
@@ -355,7 +355,7 @@ const layer = Layer.effect(
             }
           }
           const stored = yield* native.read
-          overheadKnown = !!ClaudeCodeNative.overhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
+          nativeOverhead = measureNativeOverhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
           nativeVersion = ClaudeCodeTranscript.version(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries))
           yield* configure(actualModel, limits.contextWindow, limits.maxOutputTokens)
           const { cost } = yield* view.finish(state.cost ?? 0)
@@ -385,6 +385,11 @@ const layer = Layer.effect(
     return Service.of({ turn })
   }),
 )
+
+function measureNativeOverhead(entries: Parameters<typeof ClaudeCodeNative.overhead>[0]) {
+  const snapshot = ClaudeCodeNative.overhead(entries)
+  return snapshot ? estimate({ system: snapshot.systemPrompt, tools: snapshot.tools }) : undefined
+}
 
 export const node = LayerNode.make({
   service: Service,
