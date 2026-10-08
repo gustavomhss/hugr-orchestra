@@ -90,6 +90,8 @@ export function merge(...rulesets: Permission.Ruleset[]): Permission.Ruleset {
 }
 
 export interface Interface {
+  /** Read-only current policy assessment; never queues, publishes, or grants approval. */
+  readonly evaluate: (input: AssertInput) => EffectRuntime.Effect<Permission.Effect, SessionV2.NotFoundError>
   readonly ask: (input: AssertInput) => EffectRuntime.Effect<AskResult, SessionV2.NotFoundError>
   readonly assert: (input: AssertInput) => EffectRuntime.Effect<void, Error | SessionV2.NotFoundError>
   /** Native host intent check. Configured deny wins; agent/saved allow cannot replace a live reply. */
@@ -314,7 +316,12 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.request).filter((request) => request.sessionID === sessionID)
     })
 
-    return Service.of({ ask, assert, askExplicit, reply, get, forSession, list })
+    return Service.of({
+      evaluate: EffectRuntime.fn("PermissionV2.evaluate")((input: AssertInput) =>
+        evaluateInput(input).pipe(EffectRuntime.map((result) => result.effect)),
+      ),
+      ask, assert, askExplicit, reply, get, forSession, list,
+    })
   }),
 )
 

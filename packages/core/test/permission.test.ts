@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Fiber, Layer, Schema } from "effect"
+import { Cause, Deferred, Effect, Fiber, Layer, Ref, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -120,6 +120,44 @@ function waitExplicit(input: PermissionV2.AssertInput) {
 }
 
 describe("PermissionV2", () => {
+  it.effect("read-only assessment uses current issuer and saved rules without pending requests or events", () =>
+    Effect.gen(function* () {
+      yield* setup([])
+      const service = yield* PermissionV2.Service
+      const events = yield* EventV2.Service
+      const saved = yield* PermissionSaved.Service
+      const asked = yield* Ref.make(0)
+      const unsubscribe = yield* events.listen((event) => event.type === PermissionV2.Event.Asked.type
+        ? Ref.update(asked, (count) => count + 1) : Effect.void)
+      yield* Effect.addFinalizer(() => unsubscribe)
+      expect(yield* service.evaluate(assertion())).toBe("ask")
+      expect(yield* service.list()).toEqual([])
+      yield* setRules([{ action: "read", resource: "*", effect: "allow" }])
+      expect(yield* service.evaluate(assertion())).toBe("allow")
+      yield* setRules([])
+      yield* saved.add({ projectID: Project.ID.global, action: "read", resources: ["*"] })
+      const approvals = yield* saved.list()
+      expect(yield* service.evaluate(assertion())).toBe("allow")
+      yield* setRules([{ action: "read", resource: "*", effect: "deny" }])
+      expect(yield* service.evaluate(assertion({ agent: AgentV2.ID.make("test") }))).toBe("deny")
+      expect(yield* service.evaluate(assertion({ agent: AgentV2.ID.make("missing-agent") }))).toBe("deny")
+      expect((yield* service.evaluate(assertion({ sessionID: SessionV2.ID.make("ses_missing") })).pipe(Effect.flip)))
+        .toBeInstanceOf(SessionV2.NotFoundError)
+      expect(yield* saved.list()).toEqual(approvals)
+      expect(yield* service.list()).toEqual([])
+      expect(yield* Ref.get(asked)).toBe(0)
+      // Positive control: the same kernel really queues and publishes an ordinary ask.
+      yield* Effect.forEach(approvals, (approval) => saved.remove(approval.id))
+      yield* setRules([])
+      const request = yield* service.ask(assertion())
+      expect(request.effect).toBe("ask")
+      expect((yield* service.list()).map((item) => item.id)).toEqual([request.id])
+      expect(yield* Ref.get(asked)).toBe(1)
+      yield* service.reply({ requestID: request.id, reply: "once" })
+      expect(yield* service.list()).toEqual([])
+    }),
+  )
+
   it.effect("explicit native intent queues despite agent or saved allow and waits for actual once/reject", () => Effect.gen(function* () {
     yield* setup([{ action: "read", resource: "*", effect: "allow" }])
     const saved = yield* PermissionSaved.Service
