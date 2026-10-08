@@ -22,11 +22,11 @@ const VALUES = new Set([
   "--artifact-version", "--group-id", "--git-host", "--git-user-id", "--git-repo-id",
   "--ignore-file-override", "--openapi-normalizer", "--type-mappings", "--import-mappings",
   "--schema-mappings", "--name-mappings", "--inline-schema-name-mappings", "--inline-schema-options",
-  "--reserved-words-mappings", "--server-variables", "--operation-id-name-mappings",
+  "--reserved-words-mappings", "--server-variables", "--operation-id-name-mappings", "--strict-spec",
 ])
 const SWITCHES = new Set([
   "--dry-run", "--minimal-update", "--skip-overwrite", "--skip-validate-spec", "--enable-post-process-file",
-  "--strict-spec", "--remove-operation-id-prefix", "--log-to-stderr", "-v", "--verbose",
+  "--remove-operation-id-prefix", "--log-to-stderr", "-v", "--verbose",
 ])
 
 /** Checks only owned OpenAPI generation calls; reads no project metadata for read-only subcommands. */
@@ -92,6 +92,7 @@ function generationOptions(argv: readonly string[]) {
     if (!VALUES.has(flag)) throw blocked("unsupported-owned-call")
     const value = equal < 0 ? argv[++i] : argv[i].slice(equal + 1)
     if (!value || value.startsWith("-")) throw blocked("unbound-args")
+    if (flag === "--strict-spec" && value !== "true" && value !== "false") throw blocked("unsupported-owned-call")
     if (flag === "-o" || flag === "--output") {
       if (options.output !== undefined) throw blocked("conflicting-output")
       options.output = value
@@ -151,7 +152,9 @@ const document = Effect.fnUntraced(function* (text: string, kind: string, json =
   if (json) yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(text).pipe(
     Effect.mapError(() => blocked(`malformed-${kind}`)),
   )
-  // Use gray-matter's existing safe YAML engine, with unambiguous delimiters and no cache/sanitized retry.
+  if (!json) yield* Effect.try({ try: () => validateYamlSource(text), catch: (error) =>
+    error instanceof Blocked ? error : blocked("unsupported-yaml-config") })
+  // safeLoad is not Jackson-equivalent. Bind only the closed YAML source grammar checked above, or strict JSON.
   const value: unknown = yield* Effect.try({
     try: () => matter(`\0begin\n${text}\n\0end`, { delimiters: ["\0begin", "\0end"], language: "yaml" }).data,
     catch: () => blocked(`malformed-${kind}`),
@@ -160,3 +163,51 @@ const document = Effect.fnUntraced(function* (text: string, kind: string, json =
     Effect.mapError(() => blocked(`malformed-${kind}`)),
   )
 })
+
+// Supported YAML is block mappings with simple string keys and single-line scalar values. Flow collections,
+// sequences, directives, tags, anchors, aliases, merge keys and folded/block scalars are outside this grammar.
+// Inspect source tokens before safeLoad can resolve/coerce them; quoted punctuation remains literal data.
+function validateYamlSource(text: string) {
+  const ambiguous = new Set(["y", "yes", "n", "no", "true", "false", "on", "off", "null", "~", ".inf", ".nan"])
+  for (const line of text.split("\n")) {
+    const source = line.replace(/\r$/, "").trimStart()
+    if (!source || source.startsWith("#")) continue
+    if (line.includes("\t") || /[\u0085\u2028\u2029]/.test(line)) throw blocked("unsupported-yaml-config")
+    const colon = source.indexOf(":")
+    const key = source.slice(0, colon)
+    if (colon < 1 || !/^[A-Za-z_][A-Za-z0-9_-]*$/.test(key) || (source[colon + 1] !== undefined && source[colon + 1] !== " "))
+      throw blocked("unsupported-yaml-config")
+    const scalar = source.slice(colon + 1).trimStart()
+    const path = key === "outputDir" || key === "inputSpec"
+    if (!scalar || scalar.startsWith("#")) {
+      if (path) throw blocked(`ambiguous-yaml-scalar:${key}`)
+      continue
+    }
+    if (scalar[0] === "'" || scalar[0] === '"') {
+      let end = 1
+      for (; end < scalar.length; end++) {
+        if (scalar[0] === '"' && scalar[end] === "\\") {
+          end++
+          continue
+        }
+        if (scalar[end] !== scalar[0]) continue
+        if (scalar[0] === "'" && scalar[end + 1] === "'") {
+          end++
+          continue
+        }
+        break
+      }
+      const trailing = scalar.slice(end + 1)
+      if (end === scalar.length || (trailing.trim() && (!trailing.startsWith(" ") || !trailing.trimStart().startsWith("#"))))
+        throw blocked("unsupported-yaml-config")
+      if (scalar[0] === '"') Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(scalar.slice(0, end + 1))
+      continue
+    }
+    const comment = scalar.indexOf(" #")
+    const token = (comment < 0 ? scalar : scalar.slice(0, comment)).trimEnd()
+    // This is a closed scalar token alphabet, not a scan for selected YAML features in arbitrary source.
+    if (!/^[A-Za-z0-9_./\\ +~-]+$/.test(token)) throw blocked("unsupported-yaml-config")
+    if (path && (ambiguous.has(token.toLowerCase()) || !/^[A-Za-z_./\\]/.test(token) || /^\.\d/.test(token)))
+      throw blocked(`ambiguous-yaml-scalar:${key}`)
+  }
+}

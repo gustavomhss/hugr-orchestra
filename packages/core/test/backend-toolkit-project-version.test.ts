@@ -92,10 +92,16 @@ it.live("unreadable existing metadata is a named blocker, including broken symli
 
 it.live("malformed config/project declarations and unbound or ambiguous CLI output fail closed", () => Effect.gen(function* () {
   const f = yield* fixture
-  for (const content of ["outputDir: [", "outputDir: 42", "outputDir: generated\noutputDir: other", "outputDir: ''", "- outputDir: generated"]) {
+  for (const content of ["outputDir: generated\noutputDir: other", "outputDir: ''"]) {
     yield* f.write("openapi-generator.yaml", content)
     expect(yield* f.check()).toBe("engine-project-version:malformed-config")
   }
+  for (const content of ["outputDir: [", "- outputDir: generated"]) {
+    yield* f.write("openapi-generator.yaml", content)
+    expect(yield* f.check()).toBe("engine-project-version:unsupported-yaml-config")
+  }
+  yield* f.write("openapi-generator.yaml", "outputDir: 42")
+  expect(yield* f.check()).toBe("engine-project-version:ambiguous-yaml-scalar:outputDir")
   yield* f.write("openapi-generator.yaml", "generatorName: python\n")
   expect(yield* f.check()).toBe("engine-project-version:unbound-output")
   yield* f.write("openapi-generator.yaml", "outputDir: '${OUTPUT}'\n")
@@ -113,6 +119,52 @@ it.live("malformed config/project declarations and unbound or ambiguous CLI outp
     yield* f.write("openapitools.json", content)
     expect(yield* f.check()).toMatch(/^engine-project-version:malformed-(project-metadata|version)$/)
   }
+}))
+
+it.live("YAML aliases cannot substitute an old output behind matching generated metadata", () => Effect.gen(function* () {
+  const f = yield* fixture
+  yield* f.write("generated/.openapi-generator/VERSION", `${openapiGenerator.version}\n`)
+  yield* f.write("old/.openapi-generator/VERSION", "7.10.0\n")
+  yield* f.write("openapi-generator.yaml", "checked: &checked generated\nselected: &old old\noutputDir: *old\ninputSpec: contract.yaml\n")
+  expect(yield* f.check()).toBe("engine-project-version:unsupported-yaml-config")
+  for (const content of [
+    "base: &base\n  outputDir: old\n<<: *base\noutputDir: generated\n",
+    "%YAML 1.1\n---\noutputDir: generated\n", "outputDir: !!str generated\n",
+    "outputDir: !local generated\n", "outputDir: |\n  generated\n", "outputDir: {name: generated}\n",
+  ]) {
+    yield* f.write("openapi-generator.yaml", content)
+    expect(yield* f.check()).toBe("engine-project-version:unsupported-yaml-config")
+  }
+  expect(yield* Effect.promise(() => readFile(path.join(f.project, "old/.openapi-generator/VERSION"), "utf8"))).toBe("7.10.0\n")
+}))
+
+it.live("critical YAML scalars bind quoted strings/plain paths; implicit ambiguous spellings block before coercion", () => Effect.gen(function* () {
+  const f = yield* fixture
+  for (const key of ["outputDir", "inputSpec"]) {
+    for (const scalar of ["on", "OFF", "Yes", "No", "true", "FALSE", "null", "~", "42", "0x10", "7.25", ".nan", "2026-10-08"]) {
+      yield* f.write("openapi-generator.yaml", `outputDir: generated\n${key}: ${scalar}\n`)
+      expect(yield* f.check()).toBe(`engine-project-version:ambiguous-yaml-scalar:${key}`)
+    }
+  }
+  yield* f.write("on/.openapi-generator/VERSION", "7.10.0\n")
+  yield* f.write("openapi-generator.yaml", "outputDir: 'on'\ninputSpec: 'contract.yaml'\n")
+  expect(yield* f.check()).toBe(mismatch("7.10.0"))
+  for (const scalar of ["generated", "'generated'", '"generated"']) {
+    yield* f.write("openapi-generator.yaml", `outputDir: ${scalar}\ninputSpec: "contract.yaml"\nadditionalProperties:\n  packageName: fixture.client\n`)
+    expect(yield* f.check()).toBe("allowed")
+  }
+}))
+
+it.live("strict-spec consumes exactly one boolean argument, including equals spelling", () => Effect.gen(function* () {
+  const f = yield* fixture
+  for (const value of ["true", "false"]) {
+    expect(yield* f.check(["generate", "-c", "openapi-generator.yaml", "--strict-spec", value])).toBe("allowed")
+    expect(yield* f.check(["generate", "--strict-spec=" + value, "-c", "openapi-generator.yaml"])).toBe("allowed")
+  }
+  expect(yield* f.check(["generate", "-o", "out", "--strict-spec"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec", "-o", "out"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec=", "-o", "out"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec=maybe", "-o", "out"])).toBe("engine-project-version:unsupported-owned-call")
 }))
 
 it.live("physical output, config and pin paths cannot read outside the project", () => Effect.gen(function* () {

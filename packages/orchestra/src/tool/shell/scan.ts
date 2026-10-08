@@ -365,27 +365,38 @@ export const ownedToolArgv = Effect.fn("ShellScan.ownedToolArgv")(function* (inp
     const original = yield* Effect.acquireRelease(parse(input.command, ps), (tree) => Effect.sync(() => tree.delete()))
     // The shipped PowerShell grammar stops at an unquoted native --flag=value. Replace only '=' immediately
     // following its parsed command_parameter, then require a clean parse and an adjacent literal value below.
-    const equals = new Set(ps ? original.rootNode.descendantsOfType("command_parameter")
-      .filter((node): node is Node => node !== null && input.command[node.endIndex] === "=")
-      .map((node) => node.endIndex) : [])
-    const tree = equals.size ? yield* Effect.acquireRelease(parse([...equals].reduce((text, index) =>
-      text.slice(0, index) + " " + text.slice(index + 1), input.command), ps), (tree) => Effect.sync(() => tree.delete())) : original
+    const equals = new Set<number>()
+    let tree = original
+    while (ps) {
+      const next = tree.rootNode.descendantsOfType("command_parameter")
+        .filter((node): node is Node => node !== null && input.command[node.endIndex] === "=" && !equals.has(node.endIndex))
+      if (!next.length) break
+      next.forEach((node) => equals.add(node.endIndex))
+      // Each pass exposes later parameters. One-character edits preserve all original argv offsets.
+      tree = yield* Effect.acquireRelease(parse([...equals].reduce((text, index) =>
+        text.slice(0, index) + " " + text.slice(index + 1), input.command), ps), (tree) => Effect.sync(() => tree.delete()))
+    }
     const list = commands(tree.rootNode)
     const owned = list.filter((node) => {
       const name = parts(node)[0]?.node
       const value = name && literalArg(name, ps, true)
-      return value === "\0toolkit/openapi-generator" || (ps && value === "\0toolkit\\openapi-generator.cmd") ||
-        (ps && value === "\0toolkit/openapi-generator.cmd") ||
-        (value !== undefined && path.normalize(value).toLowerCase() ===
-          path.join(input.toolkitBin, process.platform === "win32" ? "openapi-generator.cmd" : "openapi-generator").toLowerCase())
+      return ownedExecutable(value, ps, input.toolkitBin)
     })
     // Variable nodes, not CLI prose, identify unbound owned executable expressions.
-    const mentions = list.some((node) => parts(node).some((part, index) => {
-      const value = literalArg(part.node, ps, true)
-      return value?.startsWith("\0toolkit") && value.toLowerCase().includes("openapi-generator") ||
-        (index === 0 && value === undefined && part.node.descendantsOfType(["simple_expansion", "expansion", "variable", "braced_variable"])
-          .some((child) => child?.text.toUpperCase().includes("BACKEND_TOOLKIT_BIN")))
-    }))
+    const mentions = list.some((node) => {
+      const command = parts(node)
+      const name = command[0] && literalArg(command[0].node, ps)
+      // Executor wrappers are a bounded grammar fence; echo/printf operands remain data.
+      const wrapper = name !== undefined && ["env", "command", "exec", "nice", "nohup", "timeout", "sudo"]
+        .includes(path.basename(name).toLowerCase())
+      return (wrapper ? command : command.slice(0, 1)).some((part) => {
+        const value = literalArg(part.node, ps, true)
+        return ownedExecutable(value, ps, input.toolkitBin) ||
+          value?.startsWith("\0toolkit") && value.toLowerCase().includes("openapi-generator") ||
+          (value === undefined && part.node.descendantsOfType(["simple_expansion", "expansion", "variable", "braced_variable"])
+            .some((child) => child?.text.toUpperCase().includes("BACKEND_TOOLKIT_BIN")))
+      })
+    })
     if (!owned.length) return mentions ? { blocked: "engine-project-version:unsupported-owned-call" } : { calls: [] }
     if (list.some((node) => CWD.has(unquote(parts(node)[0]?.text ?? "").toLowerCase())))
       return { blocked: "engine-project-version:unbound-cwd" }
@@ -423,6 +434,13 @@ export const ownedToolArgv = Effect.fn("ShellScan.ownedToolArgv")(function* (inp
     return { calls: [{ engine: "openapi-generator" as const, argv }] }
   }))
 })
+
+function ownedExecutable(value: string | undefined, ps: boolean, toolkitBin: string) {
+  if (value === undefined) return false
+  if (value === "\0toolkit/openapi-generator" || (ps && ["\0toolkit\\openapi-generator.cmd", "\0toolkit/openapi-generator.cmd"].includes(value))) return true
+  const executable = path.join(toolkitBin, process.platform === "win32" ? "openapi-generator.cmd" : "openapi-generator")
+  return process.platform === "win32" ? path.normalize(value).toLowerCase() === executable.toLowerCase() : path.normalize(value) === executable
+}
 
 function literalArg(node: Node, ps: boolean, executable = false): string | undefined {
   if (executable && ["$BACKEND_TOOLKIT_BIN", "${BACKEND_TOOLKIT_BIN}", "$env:BACKEND_TOOLKIT_BIN", "${env:BACKEND_TOOLKIT_BIN}"].includes(node.text))

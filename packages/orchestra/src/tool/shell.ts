@@ -356,6 +356,8 @@ export const ShellTool = Tool.define(
                 yield* Effect.forEach(owned.calls ?? [], (call) => BackendToolkitProject.checkProjectVersion({
                   ...call, cwd, projectDirectory: instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree,
                 }), { discard: true })
+                // Temporary seam until prepare accepts parsed engine IDs; ensure's installed cache avoids refetching.
+                if (owned.calls?.length) yield* BackendToolkit.ensure("openapi-generator")
               }).pipe(Effect.catch((error) => Effect.succeed(error.reason))) : undefined
               if (blocked)
                 return { title: params.command, output: blocked, metadata: { output: blocked, exit: null, timeout: false, aborted: false, truncated: false } }
