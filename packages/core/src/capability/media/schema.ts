@@ -9,6 +9,9 @@ const selection = {
 const prompt = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(16000))
 const strict = { parseOptions: { onExcessProperty: "error" as const } }
 
+// Durable target carries purpose so settled-root host observation can authorize it independently.
+export const TargetResource = Schema.Struct({ purpose: selection.purpose })
+
 // Qualified request vocabulary from OpenClaw 2a305612, not ambient chat-model configuration.
 export const ImageInput = Schema.Struct({
   ...selection,

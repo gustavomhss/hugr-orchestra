@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer"
+import { Capability } from "@orchestra/schema/capability"
 import { Effect, Option, Schema } from "effect"
 import { failure } from "./schema"
 
@@ -40,7 +41,7 @@ export function request(url: string, init: RequestInit, limit: number, timeoutMi
         clearTimeout(timer)
       }
     },
-    catch: () => failure("acquisition_failed"),
+    catch: (error) => error instanceof Capability.Failure ? error : failure("acquisition_failed"),
   })
 }
 
@@ -53,7 +54,7 @@ export function json<A>(bytes: Uint8Array, schema: Schema.Codec<A>) {
 export function base64(value: string, limit: number) {
   return Effect.try({ try: () => {
     if (!value || value.length > Math.ceil(limit / 3) * 4 || value.length % 4 !== 0 ||
-      !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) throw failure("acquisition_failed")
+      !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw failure("acquisition_failed")
     const data = new Uint8Array(Buffer.from(value, "base64"))
     if (data.byteLength > limit || Buffer.from(data).toString("base64") !== value) throw failure("quota_exceeded")
     return data
@@ -63,6 +64,7 @@ export function base64(value: string, limit: number) {
 /** Preflight dimensions bound decoder allocation; Photon validates actual compressed image and RGBA size. */
 export function image(data: Uint8Array, mime: string, budgets: Budgets) {
   return Effect.gen(function* () {
+    if (!["image/png", "image/jpeg"].includes(mime)) return yield* failure("unsupported_operation")
     const dimensions = yield* Effect.try({ try: () => imageDimensions(data, mime, budgets),
       catch: () => failure("acquisition_failed") })
     const { PhotonImage } = yield* Effect.promise(() => import("@silvia-odwyer/photon-node"))

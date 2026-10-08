@@ -4,7 +4,7 @@ import { Buffer } from "node:buffer"
 import { Capability } from "@orchestra/schema/capability"
 import { Permission } from "@orchestra/schema/permission"
 import { and, eq } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { AgentV2 } from "../../agent"
 import { Credential } from "../../credential"
 import { Database } from "../../database/database"
@@ -18,7 +18,9 @@ import { CapabilityJobs } from "../job"
 import { CapabilityPolicy } from "../policy"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityJobTable, CapabilityTargetTable } from "../sql"
 import { base64, defaults, image, json, request, type Budgets } from "./http"
-import { failure, ImageInput, ObserveInput, validateImage, validateVideo, VideoInput } from "./schema"
+import { failure, ImageInput, ObserveInput, TargetResource, validateImage, validateVideo, VideoInput } from "./schema"
+
+export { ImageInput, VideoInput, TargetResource }
 
 export type Options = {
   /** Trusted host override of transport ONLY. Stored connections still require fixed production endpoint. */
@@ -35,7 +37,7 @@ export type Observe = {
 }
 
 const endpoints = { openai: "https://api.openai.com/v1", runway: "https://api.dev.runwayml.com" }
-const Submitted = Schema.Struct({ id: Schema.String.check(Schema.isPattern(/^[0-9A-Za-z._:-]{1,256}(?![\s\S])/)) })
+const Submitted = Schema.Struct({ id: Schema.String.check(Schema.isPattern(/^[0-9A-Za-z][0-9A-Za-z._:-]{0,255}(?![\s\S])/)) })
 const Images = Schema.Struct({ data: Schema.Array(Schema.Struct({ b64_json: Schema.String })).check(Schema.isMinLength(1), Schema.isMaxLength(4)) })
 const Task = Schema.Struct({ id: Schema.String, status: Schema.Literals(["PENDING", "RUNNING", "THROTTLED", "SUCCEEDED", "FAILED", "CANCELLED"]),
   output: Schema.optionalKey(Schema.Array(Schema.String).check(Schema.isMaxLength(1))) })
@@ -73,10 +75,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     yield* policy.assert(context, { action, resources: [input.provider, input.connection.id, input.target.id, `purpose:${input.purpose}`] })
     const resolved = yield* connections.resolve(context, { provider: input.provider,
       connectionID: input.connection.id, targetID: input.target.id, action }).pipe(
-        Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("target_denied"))))
+        Effect.mapError((error) => error instanceof Capability.Failure ? error : failure("target_denied")))
     if (resolved.connection.generation !== input.connection.generation || resolved.target.generation !== input.target.generation ||
       resolved.target.environment !== input.target.environment) return yield* failure("stale_descriptor")
     if (resolved.endpoint.replace(/\/$/, "") !== endpoints[input.provider]) return yield* failure("unsupported_operation")
+    const resource = Schema.decodeUnknownOption(TargetResource)(resolved.resource)
+    if (Option.isNone(resource) || resource.value.purpose !== input.purpose) return yield* failure("target_denied")
     const credential = yield* connections.loadCredential(context, resolved, action)
     yield* accessToken(credential)
     return resolved
@@ -88,6 +92,14 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
   const record = (ref: Capability.JobRef) => database.db.select().from(CapabilityJobTable)
     .where(eq(CapabilityJobTable.id, ref.id)).get().pipe(Effect.orDie)
+
+  const submitToken = Effect.fn("CapabilityMedia.submitToken")(function* (
+    context: Tool.Context, resolved: CapabilityConnections.Resolution, action: string, purpose: string,
+  ) {
+    yield* policy.assert(context, { action, resources: [resolved.connection.provider, resolved.connection.id, resolved.target.id, `purpose:${purpose}`] })
+    const credential = yield* connections.loadCredential(context, resolved, action)
+    return yield* accessToken(credential)
+  })
 
   // Separate trusted-host authorization. Proof establishes provenance, never grants polling/download authority.
   const hostCredential = Effect.fn("CapabilityMedia.hostCredential")(function* (
@@ -114,7 +126,9 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         ![row.operation, action].every((value) => bound.actions.includes(value) || bound.actions.includes("*")))
         return yield* failure("target_denied")
       const stored = yield* Schema.decodeUnknownEffect(StoredPolicy)(row.observation).pipe(Effect.orDie)
-      const resources = ["runway", connection.id, target.id]
+      const resource = Schema.decodeUnknownOption(TargetResource)(target.resource)
+      if (Option.isNone(resource)) return yield* failure("target_denied")
+      const resources = ["runway", connection.id, target.id, `purpose:${resource.value.purpose}`]
       if (resources.some((resource) =>
         PermissionV2.evaluate(action, resource, stored.nativeDenyFloor.filter((rule) => rule.effect === "deny")).effect === "deny" ||
         PermissionV2.evaluate(action, resource, stored.effectiveRules).effect !== "allow")) return yield* failure("target_denied")
@@ -124,7 +138,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       const saved = yield* credentials.get(connection.credential_id)
       if (!saved || saved.id !== connection.credential_id || saved.integrationID !== connection.integration_id)
         return yield* failure("authentication_revoked")
-      return yield* accessToken(saved.value)
+      const token = yield* accessToken(saved.value)
+      return { token, purpose: resource.value.purpose }
     }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die),
       Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("target_denied"))))
   })
@@ -142,13 +157,18 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     if (!row || row.operation !== "video_create" || !read.providerID) return yield* failure("unsupported_operation")
     if (liveRoot) {
       const active = yield* producer(liveRoot)
-      if (JSON.stringify(active.owner) !== JSON.stringify(proof.owner)) return yield* failure("target_denied")
+      if (active.owner.projectID !== proof.owner.projectID || active.owner.sessionID !== proof.owner.sessionID ||
+        active.owner.agentID !== proof.owner.agentID || active.owner.location.directory !== proof.owner.location.directory ||
+        active.owner.location.workspaceID !== proof.owner.location.workspaceID) return yield* failure("target_denied")
       // Full policy/persisted-root checks via read, not an invented producer Tool.Context.
       yield* jobs.read(liveRoot, ref)
     }
     if (["failed", "cancelled", "lost"].includes(read.receipt.state) || read.receipt.observation.materialization === "complete")
       return project(read.receipt)
-    const token = yield* hostCredential(proof, ref, `video_create.${operation === "cancel" ? "cancel" : "observe"}`)
+    const action = `video_create.${operation === "cancel" ? "cancel" : "observe"}`
+    const authorized = yield* hostCredential(proof, ref, action)
+    if (liveRoot) yield* policy.assert(liveRoot, { action, resources: ["runway", ...(row.connection ? [row.connection.id] : []),
+      ...(row.target ? [row.target.id] : []), `purpose:${authorized.purpose}`] })
     if (operation === "cancel") {
       // Pinned provider declares no cancel endpoint: no DELETE guess and no fabricated confirmation.
       const next = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
@@ -157,7 +177,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         completedEffects: [], unresolvedEffects: ["provider-cancellation-unsupported"], artifactRefs: next.observation.artifactRefs ?? [] }
     }
     const response = yield* request(apiURL("runway", `/v1/tasks/${read.providerID}`),
-      { headers: headers(token, "runway") }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis)
+      { headers: headers(authorized.token, "runway") }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis)
     const task = yield* json(response, Task)
     if (task.id !== read.providerID) return yield* failure("outcome_unknown")
     if (task.status === "FAILED" || task.status === "CANCELLED") {
@@ -169,8 +189,9 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     }
     if (task.status !== "SUCCEEDED") {
       if (read.receipt.state === "completed") return yield* failure("outcome_unknown")
-      return project(yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
-        state: task.status === "RUNNING" ? "running" : read.receipt.state, observation: read.receipt.observation }))
+      const next = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
+        state: task.status === "RUNNING" ? "running" : read.receipt.state, observation: read.receipt.observation })
+      return project(next)
     }
     // Persist remote completion before fetching claim URLs or attempting publication.
     const completed = read.receipt.state === "completed" ? read.receipt : yield* jobs.observeHost(proof, ref,
@@ -179,16 +200,20 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const materialized = yield* Effect.gen(function* () {
       if (!task.output || task.output.length !== 1) return yield* failure("acquisition_failed")
       const url = yield* downloadURL(task.output[0], fixtureOrigin)
-      const downloadToken = yield* hostCredential(proof, ref, "video_create.download")
+      const download = yield* hostCredential(proof, ref, "video_create.download")
+      yield* policy.assert(liveRoot, { action: "video_create.download", resources: ["runway", ...(row.connection ? [row.connection.id] : []),
+        ...(row.target ? [row.target.id] : []), `purpose:${download.purpose}`] })
       const data = yield* request(url, { headers: new URL(url).origin === new URL(endpoints.runway).origin
-        ? headers(downloadToken, "runway") : {} }, budgets.downloadBytes, budgets.timeoutMillis)
+        ? headers(download.token, "runway") : {} }, budgets.downloadBytes, budgets.timeoutMillis)
       // Artifact store is authoritative. Until lead adds structural MP4 support this fails explicitly.
       return yield* artifacts.publish(liveRoot, { data, mime: "video/mp4", kind: "video", verification: "observed",
         metadata: { provider: "runway" } })
-    }).pipe(Effect.result)
-    return project(yield* jobs.observeHost(proof, ref, { expectedGeneration: completed.generation, state: "completed",
+    }).pipe(Effect.result, Effect.onInterrupt(() => jobs.observeHost(proof, ref,
+      { expectedGeneration: completed.generation, state: "completed", observation: { remoteOutcome: "completed", materialization: "failed" } }).pipe(Effect.asVoid)))
+    const published = yield* jobs.observeHost(proof, ref, { expectedGeneration: completed.generation, state: "completed",
       observation: { remoteOutcome: "completed", materialization: materialized._tag === "Success" ? "complete" : "failed",
-        ...(materialized._tag === "Success" ? { artifactRefs: [materialized.success] } : {}) } }))
+        ...(materialized._tag === "Success" ? { artifactRefs: [materialized.success] } : {}) } })
+    return project(published)
   })
 
   const createImage = Effect.fn("CapabilityMedia.createImage")(function* (input: ImageInput, context: Tool.Context) {
@@ -200,8 +225,11 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const current = yield* jobs.read(context, ref)
     if (current.state !== "intent") return project(current)
     const mime = input.options.format === "png" ? "image/png" : "image/jpeg"
+    const captured = { bytes: 0 }
     const inputs = yield* Effect.forEach(input.inputArtifactRefs, (ref) => Effect.gen(function* () {
       const source = yield* artifacts.read(context, ref)
+      captured.bytes += source.data.byteLength
+      if (captured.bytes > budgets.downloadBytes) return yield* failure("quota_exceeded")
       yield* image(source.data, source.metadata.mime, budgets)
       return source
     }))
@@ -213,19 +241,19 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       inputs.forEach((source, index) => form.append("image[]", new Blob([new Uint8Array(source.data)], { type: source.metadata.mime }),
         `input-${index}.${source.metadata.mime === "image/png" ? "png" : "jpeg"}`))
     }
-    if (inputs.reduce((bytes, source) => bytes + source.data.byteLength, 0) > budgets.downloadBytes)
-      return yield* failure("quota_exceeded")
-    const credential = yield* connections.loadCredential(context, resolved, "image_create")
-    const token = yield* accessToken(credential)
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
+    const token = yield* submitToken(context, resolved, "image_create", input.purpose)
     const submitted = yield* request(apiURL("openai", `/images/${input.operation === "edit" ? "edits" : "generations"}`),
       { method: "POST", headers: { ...headers(token, "openai"), ...(form ? {} : { "Content-Type": "application/json" }) },
         body: form ?? JSON.stringify(body) }, budgets.responseBytes, budgets.timeoutMillis).pipe(
         Effect.flatMap((bytes) => json(bytes, Images)), Effect.result,
         Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "unknown", observation: {} }).pipe(Effect.asVoid)),
       )
-    if (submitted._tag === "Failure") return project(yield* jobs.observeHost(proof, ref,
-      { expectedGeneration: submitting.generation, state: "unknown", observation: {} }))
+    if (submitted._tag === "Failure") {
+      const unknown = yield* jobs.observeHost(proof, ref,
+        { expectedGeneration: submitting.generation, state: "unknown", observation: {} })
+      return project(unknown)
+    }
     const completed = yield* jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "completed",
       observation: { remoteOutcome: "completed", materialization: "pending" } })
     const retained: Capability.ArtifactRef[] = []
@@ -238,9 +266,11 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
           metadata: { provider: "openai", model: input.model, ...dimensions } })
         retained.push(ref)
       }))
-    }).pipe(Effect.result)
-    return project(yield* jobs.observeHost(proof, ref, { expectedGeneration: completed.generation, state: "completed",
-      observation: { remoteOutcome: "completed", materialization: publication._tag === "Success" ? "complete" : "failed", artifactRefs: retained } }))
+    }).pipe(Effect.result, Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: completed.generation,
+      state: "completed", observation: { remoteOutcome: "completed", materialization: "failed", artifactRefs: retained } }).pipe(Effect.asVoid)))
+    const published = yield* jobs.observeHost(proof, ref, { expectedGeneration: completed.generation, state: "completed",
+      observation: { remoteOutcome: "completed", materialization: publication._tag === "Success" ? "complete" : "failed", artifactRefs: retained } })
+    return project(published)
   })
 
   const createVideo = Effect.fn("CapabilityMedia.createVideo")(function* (input: VideoInput, context: Tool.Context) {
@@ -259,18 +289,18 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const body = { model: input.model, promptText: input.prompt, ratio: input.options.ratio,
       ...(input.operation === "edit" ? { videoUri: uri } : { duration: input.options.duration }),
       ...(input.operation === "image-to-video" ? { promptImage: uri } : {}) }
-    const credential = yield* connections.loadCredential(context, resolved, "video_create")
-    const token = yield* accessToken(credential)
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
+    const token = yield* submitToken(context, resolved, "video_create", input.purpose)
     const path = input.operation === "generate" ? "/v1/text_to_video" : input.operation === "edit" ? "/v1/video_to_video" : "/v1/image_to_video"
     const submitted = yield* request(apiURL("runway", path), { method: "POST", headers: { ...headers(token, "runway"),
       "Content-Type": "application/json" }, body: JSON.stringify(body) }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis).pipe(
         Effect.flatMap((bytes) => json(bytes, Submitted)), Effect.result,
         Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "unknown", observation: {} }).pipe(Effect.asVoid)),
       )
-    return project(yield* jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation,
+    const acknowledged = yield* jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation,
       state: submitted._tag === "Success" ? "submitted" : "unknown",
-      ...(submitted._tag === "Success" ? { providerID: submitted.success.id } : {}), observation: {} }))
+      ...(submitted._tag === "Success" ? { providerID: submitted.success.id } : {}), observation: {} })
+    return project(acknowledged)
   })
 
   const liveObserve = Effect.fn("CapabilityMedia.liveObserve")(function* (
@@ -297,9 +327,9 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
 export type Interface = Effect.Success<ReturnType<typeof make>>
 
 function accessToken(value: Credential.Value) {
-  if (value.type === "oauth" && value.expires <= Date.now()) return Effect.fail(failure("authentication_required"))
+  if (value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now())) return Effect.fail(failure("authentication_required"))
   const token = value.type === "key" ? value.key : value.access
-  return token.length > 0 && token.length <= 16384 && !/[\r\n\u0000]/.test(token)
+  return token.length > 0 && token.length <= 16384 && !/[\s\u0000-\u001f\u007f]/.test(token)
     ? Effect.succeed(token) : Effect.fail(failure("authentication_required"))
 }
 
@@ -325,11 +355,11 @@ function project(receipt: CapabilityJobs.Receipt): Capability.Result {
 }
 
 function downloadURL(value: string, fixtureOrigin: string | undefined) {
-  if (!URL.canParse(value)) return Effect.fail(failure("target_denied"))
+  if (value !== value.trim() || !URL.canParse(value)) return Effect.fail(failure("target_denied"))
   const url = new URL(value)
   if (url.username || url.password || url.hash || value.length > 8192) return Effect.fail(failure("target_denied"))
   if (fixtureOrigin !== undefined && url.origin === fixtureOrigin) return Effect.succeed(url.href)
-  // Closed CDN allowlist. Unknown vendor hosts require qualification rather than arbitrary signed-URL fetching.
-  return url.protocol === "https:" && !url.port && ["media.runwayml.com", "cdn.runwayml.com", "assets.runwayml.com"].includes(url.hostname)
+  // Pinned source declares only API host. CDN deployments stay unsupported until independently qualified.
+  return url.protocol === "https:" && !url.port && url.hostname === "api.dev.runwayml.com"
     ? Effect.succeed(url.href) : Effect.fail(failure("unsupported_operation"))
 }

@@ -44,6 +44,24 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
 const rules: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allow" }]
 const secret = "media-fixture-selected-token"
 const otherSecret = "media-fixture-newest-token"
+// Two-frame H.264 fixture from OpenClaw 2a305612 extensions/moonshot/moonshot.live.test.ts (MIT).
+const mp4 = new Uint8Array(Buffer.from([
+  "AAAAJGZ0eXBpc29tAAACAGlzb21pc282aXNvMmF2YzFtcDQxAAAC5m1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAA",
+  "AAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "AAAAAAAAAAIAAAHodHJhawAAAFx0a2hkAAAAAwAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAA",
+  "AAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAABAAAAAQAAAAAABhG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAAQAAAAAAA",
+  "VcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAS9taW5mAAAAFHZtaGQAAAABAAAA",
+  "AAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAADvc3RibAAAAKNzdHNkAAAAAAAAAAEAAACTYXZj",
+  "MQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAABAAEAASAAAAEgAAAAAAAAAARVMYXZjNjIuMjguMTAyIGxpYngyNjQAAAAAAAAA",
+  "AAAAABj//wAAAC1hdmNDAULACv/hABZnQsAK2hCbARAAAAMAEAAAAwAo8SJqAQAEaM4PyAAAABBwYXNwAAAAAQAAAAEAAAAQ",
+  "c3R0cwAAAAAAAAAAAAAAEHN0c2MAAAAAAAAAAAAAABRzdHN6AAAAAAAAAAAAAAAAAAAAEHN0Y28AAAAAAAAAAAAAAChtdmV4",
+  "AAAAIHRyZXgAAAAAAAAAAQAAAAEAAAAAAAAAAAAAAAAAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGly",
+  "YXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjYyLjEyLjEwMgAAAHhtb29mAAAAEG1m",
+  "aGQAAAAAAAAAAQAAAGB0cmFmAAAAJHRmaGQAAAA5AAAAAQAAAAAAAAMKAABAAAAAACMBAQAAAAAAFHRmZHQBAAAAAAAAAAAA",
+  "AAAAAAAgdHJ1bgAAAgUAAAACAAAAgAIAAAAAAAAjAAAACgAAADVtZGF0AAAAH2WIhDoRigACGPHAAED2OAAIeUnJyddddddd",
+  "dddddeAAAAAGQZogF6CMAAAAQ21mcmEAAAArdGZyYQEAAAAAAAABAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAMKAQEBAAAAEG1m",
+  "cm8AAAAAAAAAQw==",
+].join(""), "base64"))
 type Captured = { path: string; method: string; authorization: string | null; body: unknown }
 
 function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMedia.Options = {}) {
@@ -58,7 +76,7 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
     const connections = yield* CapabilityConnections.make
     const connection = yield* connections.create({ provider, integrationID, credentialID: selected.id, subjectID: "qualified-fixture-account",
       endpoint: provider === "openai" ? "https://api.openai.com/v1" : "https://api.dev.runwayml.com", scopeHash: "a".repeat(64) })
-    const target = yield* connections.createTarget(connection, { environment: "fixture", resource: { account: "fixture" } })
+    const target = yield* connections.createTarget(connection, { environment: "fixture", resource: { account: "fixture", purpose: "fixture-render" } })
     yield* connections.bind({ target, sessionID: f.context.sessionID, agentID: f.context.agent, actions: ["*"] })
     const { PhotonImage } = yield* Effect.promise(() => import("@silvia-odwyer/photon-node"))
     const image = new PhotonImage(new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]), 2, 1)
@@ -66,8 +84,8 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
     const jpeg = image.get_bytes_jpeg(90)
     image.free()
     const state = { requests: [] as Captured[], response: "ok", format: "png", imageBytes: png, count: 1,
-      status: "RUNNING", output: "", submitID: "remote-task-1", download: new Uint8Array([1, 2, 3]), downloadFail: false,
-      pollWrongID: false, redirect: false, delayed: false }
+      status: "RUNNING", output: "", submitID: "remote-task-1", download: mp4, downloadFail: false,
+      pollWrongID: false, pollFail: false, redirect: false, delayed: false }
     const reached = yield* Deferred.make<void>()
     const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
       async fetch(req) {
@@ -79,11 +97,16 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
         if (state.delayed && req.method === "POST") await new Promise((resolve) => setTimeout(resolve, 500))
         if (state.redirect) return Response.redirect(`${req.url}/redirected`, 302)
         if (state.response === "unknown" && req.method === "POST") return new Response("secret-provider-detail", { status: 500 })
+        if (state.response === "stream" && req.method === "POST") return new Response(new ReadableStream({ start(controller) {
+          Array.from({ length: 8 }).forEach(() => controller.enqueue(new Uint8Array(64).fill(65)))
+          controller.close()
+        } }))
         if (path.startsWith("/v1/images/")) return Response.json({ data: Array.from({ length: state.count }, () => ({
           b64_json: Buffer.from(state.format === "jpeg" ? jpeg : state.imageBytes).toString("base64"),
           revised_prompt: `${secret}:https://signed.example.test?claim=secret`,
         })) })
         if (req.method === "POST") return Response.json({ id: state.submitID })
+        if (path.startsWith("/v1/tasks/") && state.pollFail) return new Response(secret, { status: 500 })
         if (path.startsWith("/v1/tasks/")) return Response.json({ id: state.pollWrongID ? "wrong-task" : state.submitID,
           status: state.status, output: [state.output], failure: `${secret} secret-provider-feedback` })
         return new Response(state.download, { status: state.downloadFail ? 500 : 200, headers: { "Content-Type": "video/mp4" } })
@@ -252,7 +275,8 @@ describe("CapabilityMedia actual HTTP adapters", () => {
 
   it.live("live-root materialization observes known completion, MP4 publication failure stays known and retry never resubmits", () => Effect.gen(function* () {
     const f = yield* fixture("runway")
-    const ref = job(yield* f.result())
+    const submitted = yield* f.result()
+    const ref = job(submitted)
     f.state.status = "SUCCEEDED"
     const output = yield* f.result({ operation: "materialize", jobRef: ref })
     expect(output).toMatchObject({ status: "partial", completedEffects: ["provider-completed"], unresolvedEffects: ["materialization-failed"], artifactRefs: [] })
@@ -268,7 +292,8 @@ describe("CapabilityMedia actual HTTP adapters", () => {
 
   it.live("independent host poll/download/cancel authorization and exact credential expiry prevent foreign effects", () => Effect.gen(function* () {
     const f = yield* fixture("runway")
-    const ref = job(yield* f.result())
+    const submitted = yield* f.result()
+    const ref = job(submitted)
     yield* CapabilityPolicyFixture.setRules([...rules, { action: "video_create.observe", resource: f.target.id, effect: "deny" }])
     const denied = yield* f.media.observeHost({ proof: f.proof, jobRef: ref, operation: "observe" }).pipe(Effect.flip)
     expect(denied.code).toBe("target_denied")
@@ -287,9 +312,10 @@ describe("CapabilityMedia actual HTTP adapters", () => {
   }))
 
   it.live("download failure/host rejection retain known completion; no paid retry or claim URL leak", () => Effect.gen(function* () {
-    yield* Effect.forEach(["download", "host", "deny"] as const, (mode) => Effect.gen(function* () {
-      const f = yield* fixture("runway")
-      const ref = job(yield* f.result())
+    yield* Effect.forEach(["download", "host", "deny", "budget"] as const, (mode) => Effect.gen(function* () {
+      const f = yield* fixture("runway", mode === "budget" ? { budgets: { downloadBytes: 64 } } : {})
+      const submitted = yield* f.result()
+      const ref = job(submitted)
       f.state.status = "SUCCEEDED"
       if (mode === "download") f.state.downloadFail = true
       if (mode === "host") f.state.output = "https://arbitrary.example.test/paid.mp4?claim=host-only-signed-secret"
@@ -297,7 +323,7 @@ describe("CapabilityMedia actual HTTP adapters", () => {
       const output = yield* f.result({ operation: "materialize", jobRef: ref })
       expect(output).toMatchObject({ status: "partial", unresolvedEffects: ["materialization-failed"] })
       expect(f.state.requests.filter((req) => req.method === "POST")).toHaveLength(1)
-      expect(f.state.requests.filter((req) => req.path === "/asset.mp4")).toHaveLength(mode === "download" ? 1 : 0)
+      expect(f.state.requests.filter((req) => req.path === "/asset.mp4")).toHaveLength(mode === "download" || mode === "budget" ? 1 : 0)
       expect(JSON.stringify(output)).not.toContain("host-only-signed-secret")
     }))
   }))
@@ -315,6 +341,83 @@ describe("CapabilityMedia actual HTTP adapters", () => {
     expect(rows[0]?.state).toBe("unknown")
     f.state.delayed = false
     expect((yield* f.result()).status).toBe("unknown")
+    expect(f.state.requests).toHaveLength(1)
+  }))
+
+  it.live("HTTP declared/streamed response byte caps and deadline fail closed without paid retry", () => Effect.gen(function* () {
+    yield* Effect.forEach(["declared", "stream", "deadline"] as const, (mode) => Effect.gen(function* () {
+      const f = yield* fixture("openai", { budgets: mode === "deadline" ? { timeoutMillis: 50 } : { responseBytes: 64 } })
+      if (mode === "stream") f.state.response = "stream"
+      if (mode === "deadline") f.state.delayed = true
+      expect((yield* f.result()).status).toBe("unknown")
+      f.state.response = "ok"
+      f.state.delayed = false
+      expect((yield* f.result()).status).toBe("unknown")
+      expect(f.state.requests).toHaveLength(1)
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable).pipe(Effect.orDie)).toHaveLength(0)
+    }))
+  }))
+
+  it.live("authorized image-to-video submit uses Artifact bytes and rejects mismatched model/input modality", () => Effect.gen(function* () {
+    const f = yield* fixture("runway")
+    const source = yield* f.run(f.store.publish(f.context, { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} }))
+    const output = yield* f.result({ ...f.video, operation: "image-to-video", model: "gen4_turbo", inputArtifactRefs: [source] })
+    expect(output.status).toBe("submitted")
+    expect(f.state.requests[0]).toMatchObject({ path: "/v1/image_to_video", body: { model: "gen4_turbo",
+      promptImage: `data:image/png;base64,${Buffer.from(f.png).toString("base64")}` } })
+    const denied = yield* fixture("runway")
+    expect((yield* denied.settle({ ...denied.video, model: "gen4_turbo" }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+    expect((yield* denied.settle({ ...denied.video, operation: "image-to-video", inputArtifactRefs: [source] }).pipe(Effect.flip)).message).toContain("artifact_not_found")
+    expect(denied.state.requests).toHaveLength(0)
+  }))
+
+  it.live("unexpired selected OAuth works; explicit purpose deny and invocation floor stop HTTP", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* f.credentials.update(f.selected.id, { value: { type: "oauth", methodID: IntegrationMethodID.make("fixture-oauth"),
+      refresh: "host-private-refresh", access: secret, expires: Date.now() + 60000 } })
+    expect((yield* f.result()).status).toBe("completed")
+    expect(f.state.requests[0].authorization).toBe(`Bearer ${secret}`)
+    const denied = yield* fixture()
+    const purpose = yield* denied.settle({ ...denied.input, purpose: "other-purpose" }).pipe(Effect.flip)
+    expect(purpose.message).toContain("target_denied")
+    const floor = { ...denied.binding, nativeDenyFloor: [{ action: "image_create", resource: denied.target.id, effect: "deny" as const }] }
+    const blocked = yield* CapabilityInvocation.withContext(floor, Tool.settle(denied.media.tools.image_create,
+      { type: "tool-call", name: "image_create", id: denied.context.toolCallID, input: denied.input }, denied.context)).pipe(Effect.flip)
+    expect(blocked.message).toContain("target_denied")
+    expect(denied.state.requests).toHaveLength(0)
+  }))
+
+  it.live("known-ID poll failure/mismatch and retargeted binding cannot downgrade or resubmit", () => Effect.gen(function* () {
+    const f = yield* fixture("runway")
+    const output = yield* f.result()
+    const ref = job(output)
+    f.state.pollFail = true
+    expect((yield* f.media.observeHost({ proof: f.proof, jobRef: ref, operation: "observe" }).pipe(Effect.flip)).code).toBe("acquisition_failed")
+    f.state.pollFail = false
+    f.state.pollWrongID = true
+    expect((yield* f.media.observeHost({ proof: f.proof, jobRef: ref, operation: "observe" }).pipe(Effect.flip)).code).toBe("outcome_unknown")
+    const row = yield* f.database.db.select().from(CapabilityJobTable).where(eq(CapabilityJobTable.id, ref.id)).get().pipe(Effect.orDie)
+    expect(row).toMatchObject({ state: "submitted", provider_id: "remote-task-1" })
+    f.state.pollWrongID = false
+    yield* f.connections.retargetTarget(f.target, { environment: "other", resource: { purpose: "fixture-render" } })
+    const before = f.state.requests.length
+    expect((yield* f.media.observeHost({ proof: f.proof, jobRef: ref, operation: "observe" }).pipe(Effect.flip)).code).toBe("target_denied")
+    expect(f.state.requests).toHaveLength(before)
+    expect(f.state.requests.filter((req) => req.method === "POST")).toHaveLength(1)
+  }))
+
+  it.live("same-invocation concurrent submits charge once and actual root floor governs later observation", () => Effect.gen(function* () {
+    const f = yield* fixture("runway")
+    f.state.delayed = true
+    const outputs = yield* Effect.all([f.result().pipe(Effect.result), f.result().pipe(Effect.result)], { concurrency: "unbounded" })
+    const submitted = outputs.find((output) => output._tag === "Success" && output.success.status === "submitted")
+    if (!submitted || submitted._tag !== "Success") throw new Error("Expected one acknowledged durable submission")
+    const ref = job(submitted.success)
+    expect(f.state.requests).toHaveLength(1)
+    const floor = { ...f.binding, nativeDenyFloor: [{ action: "video_create.observe", resource: "purpose:fixture-render", effect: "deny" as const }] }
+    const blocked = yield* CapabilityInvocation.withContext(floor, Tool.settle(f.media.tools.video_create,
+      { type: "tool-call", name: "video_create", id: f.context.toolCallID, input: { operation: "observe", jobRef: ref } }, f.context)).pipe(Effect.flip)
+    expect(blocked.message).toContain("target_denied")
     expect(f.state.requests).toHaveLength(1)
   }))
 })
