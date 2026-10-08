@@ -34,6 +34,9 @@ export type Input = {
   readonly metadata: Schema.Json
 }
 
+/** Additional native actions supplied only by trusted canonical producers, never model data. */
+export type Requirements = readonly { action: string; resources: readonly string[] }[]
+
 export type Options = {
   readonly boundedBytes?: number
   /** Logical committed raw + UTF-8 JSON bytes per placement, not a physical disk/orphan-burst cap. */
@@ -126,23 +129,25 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     return ref
   })
 
-  const publish = Effect.fn("CapabilityArtifacts.publish")(function* (context: Tool.Context, input: Input) {
+  const publish = Effect.fn("CapabilityArtifacts.publish")(function* (context: Tool.Context, input: Input, requirements: Requirements = []) {
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
     const ref = Capability.ArtifactRef.make({ id: Capability.ArtifactID.create(), revision: 0 })
     const permit = yield* authorize(context, "artifact.write", [resource(ref)])
-    return yield* policy.commit(permit, (tx) => store(tx, context, ref, value))
+    const native = yield* Effect.forEach(requirements, (input) => policy.authorize(context, input))
+    return yield* policy.commitMany([permit, ...native], (tx) => store(tx, context, ref, value))
       .pipe(storageErrors)
   })
 
   const update = Effect.fn("CapabilityArtifacts.update")(function* (
-    context: Tool.Context, expectedRef: Capability.ArtifactRef, input: Input,
+    context: Tool.Context, expectedRef: Capability.ArtifactRef, input: Input, requirements: Requirements = [],
   ) {
     const ref = yield* requireRef(expectedRef)
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
     const permit = yield* authorize(context, "artifact.write", [resource(ref)])
-    return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
+    const native = yield* Effect.forEach(requirements, (input) => policy.authorize(context, input))
+    return yield* policy.commitMany([permit, ...native], (tx) => Effect.gen(function* () {
       yield* resolve(tx, context, ref)
       const latest = yield* tx.select().from(CapabilityArtifactTable).where(eq(CapabilityArtifactTable.id, ref.id))
         .orderBy(desc(CapabilityArtifactTable.revision)).get()
