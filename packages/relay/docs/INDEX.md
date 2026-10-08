@@ -5,14 +5,14 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-06T20:31:29Z
+- **Generated:** 2026-10-08T00:53:54Z
 - **Files:** 73
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `d00c40b3f342b32d40caaefcab206f354fefbc60a2619701e71df10bb4ca6972`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `15783b7e0b744ab180a3d79099c50bf3423cd47b1d968fb4ad7947ea6e9819b8`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
 | `AGENTS.md` | 50 | 2553 | `02d23e86df2695b0acaa8bffa338554025ce8777d104167febee7c937f9dd32a` |
-| `CHANGELOG.md` | 312 | 25705 | `55c274fec7d13c2e8f657d85b9087d07c66cdc40acc7f6e53254565091887a1a` |
+| `CHANGELOG.md` | 312 | 25706 | `f3ef66c1910552da64a1ca31951dd857fb73cde9410bec54b675204f8db84273` |
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
 | `PRODUCT.md` | 114 | 11597 | `0fdda087d136eae1e20bd151e2f76a00afa796940783e8148855218fb3b67ad6` |
 | `README.md` | 102 | 6174 | `4e35af897c2a32dbf0221e4d81e6818aa4ea0ed290571418173bc185c4cadce5` |
