@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { statSync } from "node:fs"
 import { mkdir, mkdtemp, readdir, rm } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
@@ -8,6 +9,19 @@ const cli = path.resolve(import.meta.dirname, "..")
 const root = path.resolve(cli, "../..")
 
 test("owned generator emits the live V2 config schema from either working directory", async () => {
+  // Resolve only the pure XDG dependency; never load Core in the test process.
+  const xdg = createRequire(path.join(root, "packages/core/package.json"))("xdg-basedir")
+  const parentRoots = [xdg.xdgConfig, xdg.xdgData, xdg.xdgCache, xdg.xdgState, tmpdir()].map((dir) =>
+    path.join(dir, "orchestra"),
+  )
+  const parentSnapshot = () =>
+    Promise.all(
+      parentRoots.map(async (dir) => ({
+        dir,
+        entries: statSync(dir, { throwIfNoEntry: false }) ? (await readdir(dir, { recursive: true })).sort() : null,
+      })),
+    )
+  const before = await parentSnapshot()
   const home = await mkdtemp(path.join(tmpdir(), "orchestra-schema-"))
   try {
     await Promise.all(["config", "data", "cache", "state", "tmp"].map((dir) => mkdir(path.join(home, dir))))
@@ -65,9 +79,7 @@ test("owned generator emits the live V2 config schema from either working direct
     const orchestra = createRequire(path.join(root, "packages/orchestra/package.json"))
     const sdk = createRequire(orchestra.resolve("@modelcontextprotocol/sdk/client/index.js"))
     const Ajv2020 = sdk("ajv/dist/2020.js").default
-    const { Config } = await import("@orchestra/core/config")
-    const { JsonSchema, Schema } = await import("effect")
-    const document = Schema.toJsonSchemaDocument(Config.Info)
+    const { JsonSchema } = await import("effect")
     const representative = {
       model: "local/test",
       agents: { worker: { model: "local/test", mode: "subagent", steps: 2 } },
@@ -75,6 +87,39 @@ test("owned generator emits the live V2 config schema from either working direct
       permissions: [{ action: "read", resource: "*", effect: "allow" }],
       plugins: ["example-plugin", { package: "another-plugin", options: { enabled: true } }],
     }
+    const oracle = await run(cli, "--eval", [
+      `
+        const { Config } = await import("@orchestra/core/config")
+        const { Global } = await import("@orchestra/core/global")
+        const { Schema } = await import("effect")
+        const representative = ${JSON.stringify(representative)}
+        const decode = Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })
+        const decoded = decode(representative)
+        let invalidRejected = false
+        try {
+          decode({ ...representative, permissions: "allow" })
+        } catch {
+          invalidRejected = true
+        }
+        console.log(JSON.stringify({
+          document: Schema.toJsonSchemaDocument(Config.Info),
+          decoded,
+          invalidRejected,
+          roots: Object.fromEntries(["home", "config", "data", "cache", "state", "tmp"].map(key => [key, Global.Path[key]])),
+        }))
+      `,
+    ])
+    expect(oracle.code).toBe(0)
+    expect(oracle.stderr).toBe("")
+    const live = JSON.parse(oracle.stdout)
+    expect(live.decoded).toMatchObject(representative)
+    expect(live.invalidRejected).toBe(true)
+    expect(live.roots).toEqual({
+      home,
+      ...Object.fromEntries(
+        ["config", "data", "cache", "state", "tmp"].map((dir) => [dir, path.join(home, dir, "orchestra")]),
+      ),
+    })
     for (const [cwd, script] of [
       [root, "packages/cli/script/schema.ts"],
       [cli, "script/schema.ts"],
@@ -84,8 +129,8 @@ test("owned generator emits the live V2 config schema from either working direct
       const emitted = await Bun.file(output).json()
       expect(emitted).toEqual({
         $schema: "https://json-schema.org/draft/2020-12/schema",
-        ...document.schema,
-        $defs: document.definitions,
+        ...live.document.schema,
+        $defs: live.document.definitions,
         allowComments: true,
         allowTrailingCommas: true,
       })
@@ -105,17 +150,16 @@ test("owned generator emits the live V2 config schema from either working direct
       expect(validate(representative)).toBe(true)
       expect(validate({ ...representative, agents: { worker: { steps: "wrong" } } })).toBe(false)
       expect(validate({ agent: {} })).toBe(false)
-      const decode = Schema.decodeUnknownSync(Config.Info, { onExcessProperty: "error" })
-      expect(decode(representative)).toMatchObject(representative)
-      expect(() => decode({ ...representative, permissions: "allow" })).toThrow()
     }
-    // Core's Global module creates directories on import; no app state should be written.
+    // Measure the child sandbox only: Core imports create directories, not app files.
     for (const dir of ["config", "data", "cache", "state", "tmp"])
       expect(
         (await readdir(path.join(home, dir), { recursive: true, withFileTypes: true }))
           .filter((entry) => !entry.isDirectory())
           .map((entry) => path.join(dir, entry.name)),
       ).toEqual([])
+    // Detect accidental parent Core imports even when all child checks still pass.
+    expect(await parentSnapshot()).toEqual(before)
   } finally {
     await rm(home, { recursive: true, force: true })
   }
