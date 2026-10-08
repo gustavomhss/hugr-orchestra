@@ -5,14 +5,13 @@ import { Siwc } from "@orchestra/core/auth/siwc"
 import { SiwcInference } from "@orchestra/core/auth/siwc-inference"
 import { SiwcListener } from "@orchestra/core/auth/siwc-listener"
 import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
-import { Credential } from "@orchestra/schema/credential"
-import { IntegrationMethodID } from "@orchestra/schema/integration-id"
 import { OauthCallbackPage } from "@orchestra/core/oauth/page"
 import { Effect, Exit, Option, Schema, Scope } from "effect"
 import { join } from "node:path"
 import os from "node:os"
 import { Auth, OAUTH_DUMMY_KEY } from "../../auth"
 import { OpenAIWebSocketPool } from "./ws-pool"
+import { LegacySiwc } from "./siwc"
 
 // Compatibility exports are claim inspection only, never identity validation.
 export interface IdTokenClaims {
@@ -58,7 +57,7 @@ export function extractAccountId(tokens: { id_token: string; access_token: strin
 export function extractResidency(token: string) {
   const claims = parseJwtClaims(token)
   const residency = claims?.["https://api.openai.com/auth"]?.chatgpt_compute_residency ?? claims?.chatgpt_compute_residency
-  return residency && residency !== "no_constraint" ? residency : undefined
+  return !residency || residency === "no_constraint" ? undefined : residency
 }
 
 export const renderOAuthError = (error: string) => OauthCallbackPage.error(error, { provider: "ChatGPT" })
@@ -76,12 +75,6 @@ interface CodexAuthPluginOptions {
   /** Deprecated endpoint overrides cannot redirect plan credentials. */
   issuer?: string
   codexApiEndpoint?: string
-}
-
-const methodID = IntegrationMethodID.make("chatgpt-browser")
-
-export function credential(value: Auth.Oauth) {
-  return Credential.OAuth.make({ ...value, methodID })
 }
 
 export async function CodexAuthPlugin(_input: PluginInput, options: CodexAuthPluginOptions = {}): Promise<Hooks> {
@@ -114,7 +107,7 @@ export async function CodexAuthPlugin(_input: PluginInput, options: CodexAuthPlu
       scopes.set(scope, abort)
       const pending = await Effect.runPromise(SiwcListener.authorize({
         hostFile: options.hostFile ?? join(Global.Path.state, "siwc", "host-id"),
-        methodID, registration, clientId, port: options.port, transport: options.transport, jwksURL: options.jwksURL,
+        methodID: LegacySiwc.methodID, registration, clientId, port: options.port, transport: options.transport, jwksURL: options.jwksURL,
       }).pipe(Scope.provide(scope))).catch(async (cause: unknown) => { await close(scope); throw cause })
       if (lifecycle.disposed) { await close(scope); throw new Error("ChatGPT plugin disposed") }
       // Start waiting now, so disposal/timeout also releases an abandoned listener.
@@ -150,7 +143,7 @@ export async function CodexAuthPlugin(_input: PluginInput, options: CodexAuthPlu
       async models(provider, ctx) {
         if (ctx.auth?.type !== "oauth") return provider.models
         const value = Schema.decodeUnknownSync(Auth.Oauth)(ctx.auth)
-        const available = await SiwcInference.models(credential(value), send)
+        const available = await SiwcInference.models(LegacySiwc.credential(value), send)
         return Object.fromEntries(Object.entries(provider.models).flatMap(([id, model]) => {
           const listed = available.find((item) => item.slug === model.api.id)
           return listed ? [[id, { ...model, name: listed.display_name, api: { ...model.api, url: Siwc.resource } }]] : []
@@ -170,14 +163,9 @@ export async function CodexAuthPlugin(_input: PluginInput, options: CodexAuthPlu
         const selected = Siwc.registration(Schema.decodeUnknownSync(Auth.Oauth)(initial).metadata)
         Siwc.requirePlanUsage({ metadata: selected })
         return { apiKey: OAUTH_DUMMY_KEY, baseURL: Siwc.resource,
-          fetch: SiwcInference.transport(selected, async () => {
-            const value = Schema.decodeUnknownSync(Auth.Oauth)(await getAuth())
-            if (value.expires <= Date.now()) {
-              if (await inherited()) throw new Error("Inherited ChatGPT OAuth credentials cannot be refreshed")
-              throw new Error("ChatGPT OAuth credentials expired; sign in again")
-            }
-            return credential(value)
-          }, async (request) => {
+          fetch: SiwcInference.transport(selected, () => LegacySiwc.resolve({
+            getAuth, selected, inherited, transport: options.transport, jwksURL: options.jwksURL,
+          }), async (request) => {
             request.headers.delete(OpenAIWebSocketPool.TITLE_HEADER)
             return send(request)
           }) }

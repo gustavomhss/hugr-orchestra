@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
 import { generateKeyPairSync, sign } from "node:crypto"
+import { stat } from "node:fs/promises"
 import { join } from "node:path"
-import { Effect, Schema } from "effect"
+import { Schema } from "effect"
 import { Siwc } from "@orchestra/core/auth/siwc"
+import { Global } from "@orchestra/core/global"
 import { Auth } from "../../src/auth"
 import { CodexAuthPlugin } from "../../src/plugin/openai/codex"
 import { tmpdir } from "../fixture/fixture"
@@ -13,6 +15,17 @@ async function fixture() {
   const keys = generateKeyPairSync("rsa", { modulusLength: 2048 })
   const other = generateKeyPairSync("rsa", { modulusLength: 2048 })
   const grants = new Map<string, { nonce: string; subject: string; badSignature?: boolean; invalid?: boolean }>()
+  const signed = (audience: string, grant: { nonce: string; subject: string; badSignature?: boolean }) => {
+    const signing = [
+      Buffer.from(JSON.stringify({ alg: "RS256", kid: "fixture" })).toString("base64url"),
+      Buffer.from(JSON.stringify({ iss: Siwc.issuer, aud: audience, sub: grant.subject,
+        nonce: grant.nonce, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url"),
+    ].join(".")
+    return `${signing}.${sign("RSA-SHA256", Buffer.from(signing), grant.badSignature ? other.privateKey : keys.privateKey).toString("base64url")}`
+  }
+  const protocol = { refresh: async (_body: URLSearchParams): Promise<Response> => Response.json({
+    access_token: "fixture-rotated", refresh_token: "fixture-rotated-refresh", token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes,
+  }) }
   const requests: Array<{ path: string; body: string; authorization: string | null }> = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0,
     async fetch(request) {
@@ -22,14 +35,10 @@ async function fixture() {
       if (path === "/jwks") return Response.json({ keys: [{ ...keys.publicKey.export({ format: "jwk" }), kid: "fixture", alg: "RS256" }] })
       if (path === "/api/accounts/oauth/token") {
         const body = new URLSearchParams(text)
+        if (body.get("grant_type") === "refresh_token") return protocol.refresh(body)
         const grant = grants.get(body.get("code") ?? "")
         if (!grant || grant.invalid) return Response.json({ error: "invalid_grant" }, { status: 400 })
-        const signing = [
-          Buffer.from(JSON.stringify({ alg: "RS256", kid: "fixture" })).toString("base64url"),
-          Buffer.from(JSON.stringify({ iss: Siwc.issuer, aud: body.get("client_id"), sub: grant.subject,
-            nonce: grant.nonce, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url"),
-        ].join(".")
-        const id_token = `${signing}.${sign("RSA-SHA256", Buffer.from(signing), grant.badSignature ? other.privateKey : keys.privateKey).toString("base64url")}`
+        const id_token = signed(body.get("client_id") ?? "", grant)
         return Response.json({ id_token, access_token: "fixture-access", refresh_token: "fixture-refresh",
           token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes })
       }
@@ -68,7 +77,7 @@ async function fixture() {
       client_id: url.searchParams.get("client_id") === "dynamic_agent_client" ? "fixture-issued-client" : url.searchParams.get("client_id") ?? "" }).toString()
     return fetch(callback)
   }
-  return { tmp, server, grants, requests, targets, plugin, begin, deliver,
+  return { tmp, server, grants, protocol, signed, requests, targets, plugin, begin, deliver,
     async [Symbol.asyncDispose]() {
       await Promise.all(hooks.map((hook) => hook.dispose?.()))
       server.stop(true)
@@ -106,6 +115,7 @@ test("legacy browser uses own host, dynamic Orchestra hint and signed metadata; 
   expect(value.metadata).toMatchObject({ clientId: "fixture-issued-client", subject: "fixture-subject",
     issuer: Siwc.issuer, resource: Siwc.resource, scopes: Siwc.scopes.split(" ") })
   expect(value.metadata?.idToken).toMatch(/^ey/)
+  expect((await stat(join(f.tmp.path, "siwc", "host-id"))).mode & 0o777).toBe(0o600)
   const body = new URLSearchParams(f.requests.find((item) => item.path.endsWith("/token"))?.body)
   expect(body.get("client_id")).toBe("fixture-issued-client")
   expect(body.get("code_verifier")).toBeTruthy()
@@ -155,4 +165,153 @@ test("forged signature fails; invalid_grant retry retains issued client and host
   expect(retry.searchParams.get("state")).not.toBe(url.searchParams.get("state"))
   expect((await f.deliver({ ...initial, url: href }, "retried")).status).toBe(200)
   expect((await complete(initial)).metadata?.clientId).toBe("fixture-issued-client")
+})
+
+async function storedAuth() {
+  const value = await Auth.runPromise((store) => store.get("openai"))
+  if (!value) throw new Error("Fixture credential removed")
+  return value
+}
+
+async function loaded(hook: Hooks, getAuth = storedAuth) {
+  if (!hook.auth?.loader) throw new Error("Missing legacy loader")
+  return hook.auth.loader(getAuth, {} as never)
+}
+
+const request = () => new Request(`${Siwc.resource}/responses`, { method: "POST",
+  headers: { Authorization: "Bearer stale-sdk-key", "session-id": "fixture-session", originator: "opencode" },
+  body: JSON.stringify({ model: "fixture-model", input: "fixture", tools: [{ type: "function", name: "fixture_tool", parameters: {} }],
+    runtime_grants: { fixture: true }, store: false, stream: true }),
+})
+
+test("two legacy adapters share own-store lease; refresh keeps saved client and metadata, official inference body", async () => {
+  await using f = await fixture()
+  const first = await f.plugin()
+  const initial = await f.begin(first)
+  await f.deliver(initial, "initial")
+  const saved = new Auth.Oauth({ ...await complete(initial), expires: 0 })
+  await Auth.runPromise((store) => store.set("openai", saved))
+  const second = await f.plugin()
+  const started = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  f.protocol.refresh = async (body) => {
+    started.resolve()
+    await release.promise
+    expect(body.get("client_id")).toBe("fixture-issued-client")
+    expect(body.get("resource")).toBe(Siwc.resource)
+    expect(body.get("refresh_token")).toBe("fixture-refresh")
+    return Response.json({ access_token: "fixture-rotated", refresh_token: "fixture-rotated-refresh", token_type: "Bearer",
+      expires_in: 3600, scope: Siwc.scopes, id_token: f.signed("fixture-issued-client", {
+        nonce: new URL(initial.url).searchParams.get("nonce") ?? "", subject: "fixture-subject",
+      }) })
+  }
+  const one = await loaded(first)
+  const two = await loaded(second)
+  const previous = process.env.ORCHESTRA_OPENAI_CLIENT_ID
+  process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-env-drift"
+  using restore = { [Symbol.dispose]() {
+    if (previous === undefined) delete process.env.ORCHESTRA_OPENAI_CLIENT_ID
+    else process.env.ORCHESTRA_OPENAI_CLIENT_ID = previous
+  } }
+  const calls = [one.fetch(request()), two.fetch(request())]
+  await started.promise
+  expect(f.requests.filter((item) => new URLSearchParams(item.body).get("grant_type") === "refresh_token")).toHaveLength(1)
+  release.resolve()
+  await Promise.all(calls)
+  expect(f.requests.filter((item) => new URLSearchParams(item.body).get("grant_type") === "refresh_token")).toHaveLength(1)
+  const stored = await storedAuth()
+  expect(stored).toMatchObject({ refresh: "fixture-rotated-refresh", access: "fixture-rotated", metadata: {
+    clientId: "fixture-issued-client", subject: "fixture-subject", resource: Siwc.resource,
+  } })
+  expect((await stat(join(Global.Path.data, "auth.json"))).mode & 0o777).toBe(0o600)
+  const sent = f.requests.filter((item) => item.path === "/v1/responses")
+  expect(sent).toHaveLength(2)
+  expect(sent[0]?.authorization).toBe("Bearer fixture-rotated")
+  expect(JSON.parse(sent[0]?.body ?? "")).toEqual(JSON.parse(await request().text()))
+  expect(f.targets).toContain(`${Siwc.resource}/models`)
+  expect(f.targets).toContain(`${Siwc.resource}/responses`)
+})
+
+test("disconnect during refresh cannot resurrect credential; signed refresh account change fails", async () => {
+  await using f = await fixture()
+  const hook = await f.plugin()
+  const initial = await f.begin(hook)
+  await f.deliver(initial, "initial")
+  const saved = new Auth.Oauth({ ...await complete(initial), expires: 0 })
+  await Auth.runPromise((store) => store.set("openai", saved))
+  f.protocol.refresh = async (body) => Response.json({ access_token: "wrong", refresh_token: "wrong", token_type: "Bearer",
+    expires_in: 3600, scope: Siwc.scopes, id_token: f.signed(body.get("client_id") ?? "", {
+      nonce: new URL(initial.url).searchParams.get("nonce") ?? "", subject: "other-subject",
+    }) })
+  const transport = await loaded(hook)
+  await expect(transport.fetch(request())).rejects.toThrow()
+  expect(await storedAuth()).toEqual(saved)
+  f.protocol.refresh = async () => {
+    await Auth.runPromise((store) => store.remove("openai"))
+    return Response.json({ access_token: "rotated", refresh_token: "rotated", token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes })
+  }
+  await expect(transport.fetch(request())).rejects.toThrow("changed during refresh")
+  expect(await Auth.runPromise((store) => store.get("openai"))).toBeUndefined()
+  expect(f.requests.filter((item) => item.path === "/v1/responses")).toHaveLength(0)
+})
+
+test("inherited, switched accounts, missing plan scope and old backend fail before inference or token rotation", async () => {
+  await using f = await fixture()
+  const hook = await f.plugin({ readOnlyInheritGuard: async () => true })
+  const initial = await f.begin(hook)
+  await f.deliver(initial, "initial")
+  const saved = new Auth.Oauth({ ...await complete(initial), expires: 0 })
+  await Auth.runPromise((store) => store.set("openai", saved))
+  const transport = await loaded(hook)
+  const before = f.requests.length
+  await expect(transport.fetch(request())).rejects.toThrow("Inherited")
+  expect(f.requests).toHaveLength(before)
+  expect(await storedAuth()).toEqual(saved)
+  const own = await f.plugin()
+  const foreign = await loaded(own, async () => new Auth.Oauth({ ...saved, refresh: "inherited-refresh" }))
+  await expect(foreign.fetch(request())).rejects.toThrow("not owned by this store")
+  expect(f.requests).toHaveLength(before)
+  const ownTransport = await loaded(own)
+  await Auth.runPromise((store) => store.set("openai", new Auth.Oauth({ ...saved,
+    metadata: { ...saved.metadata, subject: "switched" } })))
+  await expect(ownTransport.fetch(request())).rejects.toThrow("account changed")
+  expect(f.requests).toHaveLength(before)
+  await Auth.runPromise((store) => store.set("openai", new Auth.Oauth({ ...saved, expires: Date.now() + 3600000,
+    metadata: { ...saved.metadata, scopes: ["openid"] } })))
+  await expect(loaded(own)).rejects.toThrow("plan use is not authorized")
+  await expect(transport.fetch("https://chatgpt.com/backend-api/codex/responses", { method: "POST" })).rejects.toThrow("endpoint")
+  expect(f.requests).toHaveLength(before)
+})
+
+test("catalog uses saved permission; API key mode and explicit partner confirmation remain separate", async () => {
+  await using f = await fixture()
+  const previous = process.env.ORCHESTRA_OPENAI_CLIENT_ID
+  process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-owned-partner"
+  using restore = { [Symbol.dispose]() {
+    if (previous === undefined) delete process.env.ORCHESTRA_OPENAI_CLIENT_ID
+    else process.env.ORCHESTRA_OPENAI_CLIENT_ID = previous
+  } }
+  const hook = await f.plugin()
+  expect(hook.auth?.methods.map((method) => method.label)).toEqual([
+    "Continue with ChatGPT (Orchestra)", "Continue with ChatGPT (manual browser)", "Manually enter API Key",
+  ])
+  const api = await loaded(hook, async () => ({ type: "api", key: "fixture-key" }))
+  expect(api.fetch).toBeUndefined()
+  const partner = await f.plugin({ partnerGrantConfirmed: true })
+  const method = partner.auth?.methods[2]
+  if (method?.type !== "oauth") throw new Error("Missing confirmed partner method")
+  expect(new URL((await method.authorize({ account: "new" })).url).searchParams.get("client_id")).toBe("fixture-owned-partner")
+  const initial = await f.begin(hook)
+  await f.deliver(initial, "initial")
+  const saved = await complete(initial)
+  expect(saved.metadata?.clientId).toBe("fixture-issued-client")
+  if (!hook.provider?.models) throw new Error("Missing model adapter")
+  const provider = { models: {
+    available: { id: "available", api: { id: "fixture-model", url: "old" }, name: "old", cost: { input: 5 } },
+    unavailable: { id: "unavailable", api: { id: "unavailable" } },
+  } }
+  const models = await hook.provider.models(provider as never, { auth: saved })
+  expect(Object.keys(models)).toEqual(["available"])
+  expect(models.available?.api.url).toBe(Siwc.resource)
+  expect(models.available?.cost.input).toBe(5)
 })
