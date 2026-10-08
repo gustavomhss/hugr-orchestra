@@ -4,20 +4,15 @@ import npa from "npm-package-arg"
 import semver from "semver"
 import { Schema } from "effect"
 import path from "node:path"
-import { lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises"
+import { lstat, mkdir, realpath, rm, writeFile } from "node:fs/promises"
+import { PluginSdkLimits, SetupError } from "./sdk-limits"
+export { SetupError } from "./sdk-limits"
 import sdk from "../../../plugin/package.json"
 
 export class VersionError extends Schema.TaggedErrorClass<VersionError>()("PluginSdkVersionError", {
   requested: Schema.String,
   bundled: Schema.String,
 }) {}
-
-export class SetupError extends Schema.TaggedErrorClass<SetupError>()("PluginSdkSetupError", {
-  path: Schema.String,
-  reason: Schema.String,
-}) {
-  override get message() { return `${this._tag}: ${this.reason} (${this.path})` }
-}
 
 export const manifest = {
   name: sdk.name,
@@ -50,28 +45,46 @@ export function contains(root: string, file: string) {
 
 // Check the complete generated tree, including bytes, closed exports and absence of extra code.
 export async function valid(directory: string): Promise<boolean> {
-  if (!(await exists(directory))) return false
-  const walk = async (dir: string, prefix: string): Promise<string[]> =>
-    (await Promise.all((await readdir(dir, { withFileTypes: true })).map(async (entry) => {
+  const leaf = await exists(directory)
+  if (!leaf || !leaf.isDirectory()) return false
+  const directories = new Set(Object.keys(sources).flatMap((file) => file.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))
+  const quota = PluginSdkLimits.budget({ ...PluginSdkLimits.limits,
+    directories: directories.size + 1,
+    entries: Object.keys(sources).length + directories.size,
+    bytes: Object.values(sources).reduce((sum, source) => sum + Buffer.byteLength(source) + 1, 0),
+  })
+  const found = new Set<string>()
+  const walk = async (dir: string, prefix: string): Promise<boolean> => {
+    for await (const entry of PluginSdkLimits.entries(dir, quota)) {
       const file = prefix + entry.name
-      if (entry.isDirectory()) return walk(path.join(dir, entry.name), file + "/")
-      if (!entry.isFile() || !Object.hasOwn(sources, file)) return ["invalid:" + file]
-      return (await readFile(path.join(dir, entry.name))).equals(Buffer.from(sources[file])) ? [file] : ["invalid:" + file]
-    }))).flat()
-  return JSON.stringify((await walk(directory, "")).sort()) === JSON.stringify(Object.keys(sources).sort())
+      if (entry.isDirectory()) {
+        if (!directories.has(file) || !(await walk(path.join(dir, entry.name), file + "/"))) return false
+        continue
+      }
+      if (!entry.isFile() || !Object.hasOwn(sources, file)) return false
+      if (!(await PluginSdkLimits.read(path.join(dir, entry.name), quota, Buffer.byteLength(sources[file]))).equals(Buffer.from(sources[file]))) return false
+      found.add(file)
+    }
+    return true
+  }
+  return (await walk(directory, "")) && found.size === Object.keys(sources).length
 }
 
 export async function write(directory: string, replace = false) {
+  if ((await exists(directory))?.isSymbolicLink())
+    throw new SetupError({ path: directory, reason: "SDK symlink requires a fresh owned installation; left intact" })
   if (await valid(directory)) return
   if ((await exists(directory)) && !replace)
     throw new SetupError({ path: directory, reason: "Foreign or altered SDK tree; left intact" })
   await mkdir(path.dirname(directory), { recursive: true })
   if (replace) await rm(directory, { recursive: true, force: true })
   await mkdir(directory)
-  await Promise.all(Object.entries(sources).map(async ([file, source]) => {
+  const results = await Promise.allSettled(Object.entries(sources).map(async ([file, source]) => {
     await mkdir(path.dirname(path.join(directory, file)), { recursive: true })
     await writeFile(path.join(directory, file), source, { flag: "wx" })
   }))
+  const failure = results.find((result) => result.status === "rejected")
+  if (failure?.status === "rejected") throw failure.reason
 }
 
 export async function owned(file: string, cache: string) {
@@ -89,6 +102,12 @@ export function request(name: string, rawSpec: string) {
   if ((target.type === "tag" && target.fetchSpec === "latest") ||
       ((target.type === "range" || target.type === "version") && target.fetchSpec && semver.satisfies(sdk.version, target.fetchSpec))) return target
   throw new VersionError({ requested: parsed.toString(), bundled: sdk.version })
+}
+
+export function requestSpec(specifier: string) {
+  const parsed = npa(specifier)
+  if (parsed.name) return request(parsed.name, parsed.rawSpec)
+  if (parsed.type === "alias") return request(sdk.name, parsed.rawSpec)
 }
 
 export function versionFailure(cause: unknown) {

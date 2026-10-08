@@ -2,11 +2,12 @@ export * as PluginSdkAdmission from "./sdk-admission"
 
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { readdir, readFile, realpath, stat } from "node:fs/promises"
+import { realpath, stat } from "node:fs/promises"
 import { Schema } from "effect"
 import { Global } from "../global"
 import { Flock } from "../util/flock"
 import { PluginSdkPackage } from "./sdk-package"
+import { PluginSdkLimits } from "./sdk-limits"
 
 const decodePackage = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown)))
 
@@ -52,15 +53,15 @@ async function admit(specifier: string) {
     const manifests = new Set<string>()
     const sdk = new Set<string>()
     const create = new Set<string>()
+    const quota = PluginSdkLimits.budget()
     while (pending.size) {
       const directory = pending.values().next().value
       if (!directory) break
       pending.delete(directory)
       const canonical = await realpath(directory)
-      if (visited.has(canonical)) continue
-      if (visited.size >= 4096) throw new Error("Module footprint exceeds admission bound")
-      visited.add(canonical)
-      for (const parent of ancestry(directory)) {
+      // A linked module executes with realpath ancestry. Lexical ancestry alone
+      // misses SDK trees above its external target, including computed imports.
+      for (const parent of new Set([...ancestry(directory), ...ancestry(canonical)])) {
         const namespace = path.join(parent, "node_modules")
         if (namespaces.has(namespace)) continue
         namespaces.add(namespace)
@@ -71,15 +72,17 @@ async function admit(specifier: string) {
           else create.add(slot)
         }
       }
+      if (visited.has(canonical)) continue
+      if (visited.size >= PluginSdkLimits.limits.directories) throw new Error("Module footprint exceeds admission bound")
+      visited.add(canonical)
       const pkg = path.join(canonical, "package.json")
       if (await PluginSdkPackage.exists(pkg)) {
-        const metadata = decodePackage(await readFile(pkg, "utf8"))
+        const metadata = decodePackage((await PluginSdkLimits.read(pkg, quota)).toString("utf8"))
         if (metadata.name === PluginSdkPackage.manifest.name) sdk.add(directory)
         else manifests.add(canonical)
       }
       if (sdk.has(directory) || sdk.has(canonical)) continue
-      const entries = await readdir(canonical, { withFileTypes: true })
-      for (const entry of entries) {
+      for await (const entry of PluginSdkLimits.entries(canonical, quota)) {
         const target = path.join(canonical, entry.name)
         if (entry.isDirectory()) pending.add(target)
         if (entry.isSymbolicLink()) {
@@ -107,6 +110,8 @@ async function admit(specifier: string) {
       }
     }
     for (const directory of sdk) {
+      if ((await PluginSdkPackage.exists(directory))?.isSymbolicLink())
+        throw new PluginSdkPackage.SetupError({ path: directory, reason: "SDK symlink cannot be admitted; left intact" })
       if (await PluginSdkPackage.valid(directory)) continue
       if (!(await PluginSdkPackage.owned(directory, Global.Path.cache)))
         throw new PluginSdkPackage.SetupError({ path: directory, reason: "Foreign or altered SDK tree; left intact" })

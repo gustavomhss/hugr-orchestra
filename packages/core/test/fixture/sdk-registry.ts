@@ -9,12 +9,18 @@ export const planted = 'throw new Error("planted SDK copy ran"); export const to
 export async function registry(root: string) {
   const packages = new Map<string, { manifest: Record<string, unknown>; bytes: Buffer }>()
   const hits: string[] = []
+  const held = new Map<string, { entered: () => void; wait: Promise<void> }>()
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
-    fetch(request) {
+    async fetch(request) {
       const name = decodeURIComponent(new URL(request.url).pathname.slice(1))
       hits.push(name)
+      const gate = held.get(name)
+      if (gate) {
+        gate.entered()
+        await gate.wait
+      }
       const archive = name.startsWith("tarballs/")
       const item = packages.get(archive ? name.slice("tarballs/".length, -4) : name)
       if (!item) return new Response("fixture package missing", { status: 404 })
@@ -30,6 +36,12 @@ export async function registry(root: string) {
   return {
     url,
     hits,
+    hold(name: string) {
+      const entered = Promise.withResolvers<void>()
+      const released = Promise.withResolvers<void>()
+      held.set(name, { entered: () => entered.resolve(), wait: released.promise })
+      return { entered: entered.promise, release: () => { held.delete(name); released.resolve() } }
+    },
     async publish(name: string, manifest: Record<string, unknown> = {}, files: Record<string, string> = {}) {
       const directory = path.join(root, "archives", name)
       await mkdir(path.join(directory, "package"), { recursive: true })

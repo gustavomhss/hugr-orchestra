@@ -7,6 +7,7 @@ import { NodeFileSystem } from "@effect/platform-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { EffectFlock } from "./util/effect-flock"
+import { Flock } from "./util/flock"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem } from "./effect/app-node-platform"
 import { LayerNode } from "./effect/layer-node"
@@ -76,61 +77,78 @@ const layer = Layer.effect(
     const afs = yield* FSUtil.Service
     const global = yield* Global.Service
     const fs = yield* FileSystem.FileSystem
-    const flock = yield* EffectFlock.Service
     const directory = (pkg: string) => path.join(global.cache, "packages", sanitize(pkg))
+    const validate = (dir: string, add: string[]) => Effect.try({
+      try: () => add.forEach((specifier) => PluginSdkPackage.requestSpec(specifier)),
+      catch: (cause) => PluginSdkPackage.versionFailure(cause) ?? new InstallFailedError({ cause, add, dir }),
+    })
     const reify = (input: { dir: string; add?: string[]; inspect?: boolean }) =>
       Effect.gen(function* () {
-        yield* flock.acquire(`npm-install:${input.dir}`)
-        const { Arborist } = yield* Effect.promise(() => import("@npmcli/arborist"))
-        const { PluginSdkRegistry } = yield* Effect.promise(() => import("./plugin/sdk-registry"))
-        const { PluginSdkReconcile } = yield* Effect.promise(() => import("./plugin/sdk-reconcile"))
-        const sdk = yield* Effect.acquireRelease(Effect.promise(() => PluginSdkRegistry.open()), (sdk) => Effect.promise(() => sdk.close()))
         const add = input.add ?? []
-        const npmOptions = yield* NpmConfig.load(input.dir)
-        yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
-          Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
+        yield* validate(input.dir, add)
+        yield* Effect.acquireRelease(
+          Effect.tryPromise({
+            try: async (signal) => {
+              const lease = await Flock.acquire(`npm-install:${input.dir}`, { dir: path.join(global.state, "locks"), signal })
+              // An abort racing the final mkdir must not orphan a late lease.
+              if (!signal.aborted) return lease
+              await lease.release()
+              throw signal.reason
+            },
+            catch: (cause) => new InstallFailedError({ cause, add, dir: input.dir }),
+          }).pipe(Effect.interruptible),
+          (lease) => Effect.promise(() => lease.release()),
         )
-        const arborist = new Arborist({
-          ...npmOptions,
-          path: input.dir,
-          binLinks: true,
-          progress: false,
-          savePrefix: "",
-          ignoreScripts: true,
-          packumentCache: sdk.packumentCache,
-        })
-        return yield* Effect.tryPromise({
-          try: async () => {
-            add.forEach((pkg) => {
-              const parsed = npa(pkg)
-              if (parsed.name) PluginSdkPackage.request(parsed.name, parsed.rawSpec)
-            })
-            const actual = await arborist.loadActual()
-            const virtual = await arborist.loadVirtual().catch((error: unknown) => {
-              if (error && typeof error === "object" && "code" in error && error.code === "ENOLOCK") return
-              throw error
-            })
-            if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, global.cache)
-            await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, global.cache)
-            if (input.inspect) return actual
-            const tree = await arborist.reify({
-              ...npmOptions,
-              add,
-              save: true,
-              saveType: "prod",
-              packumentCache: sdk.packumentCache,
-            })
-            await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, global.cache)
-            return tree
-          },
-          catch: (cause) =>
-            PluginSdkPackage.versionFailure(cause) ??
-            new InstallFailedError({
-              cause,
-              add,
-              dir: input.dir,
-            }),
-        }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
+        // Arborist/bridge filesystem promises do not cancel on Effect interruption.
+        // Keep their lock and listener alive until they settle; only this acquired
+        // critical section is masked, not the caller's outer installation effect.
+        return yield* Effect.gen(function* () {
+          const { Arborist } = yield* Effect.promise(() => import("@npmcli/arborist"))
+          const { PluginSdkRegistry } = yield* Effect.promise(() => import("./plugin/sdk-registry"))
+          const { PluginSdkReconcile } = yield* Effect.promise(() => import("./plugin/sdk-reconcile"))
+          const sdk = yield* Effect.acquireRelease(Effect.promise(() => PluginSdkRegistry.open()), (sdk) => Effect.promise(() => sdk.close()))
+          const npmOptions = yield* NpmConfig.load(input.dir)
+          yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
+            Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
+          )
+          const arborist = new Arborist({
+            ...npmOptions,
+            path: input.dir,
+            binLinks: true,
+            progress: false,
+            savePrefix: "",
+            ignoreScripts: true,
+            packumentCache: sdk.packumentCache,
+          })
+          return yield* Effect.tryPromise({
+            try: async () => {
+              const actual = await arborist.loadActual()
+              const virtual = await arborist.loadVirtual().catch((error: unknown) => {
+                if (error && typeof error === "object" && "code" in error && error.code === "ENOLOCK") return
+                throw error
+              })
+              if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, global.cache)
+              await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, global.cache)
+              if (input.inspect) return actual
+              const tree = await arborist.reify({
+                ...npmOptions,
+                add,
+                save: true,
+                saveType: "prod",
+                packumentCache: sdk.packumentCache,
+              })
+              await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, global.cache)
+              return tree
+            },
+            catch: (cause) =>
+              PluginSdkPackage.versionFailure(cause) ??
+              new InstallFailedError({
+                cause,
+                add,
+                dir: input.dir,
+              }),
+          }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
+        }).pipe(Effect.uninterruptible)
       }).pipe(
         Effect.scoped,
         Effect.withSpan("Npm.reify", {
@@ -149,7 +167,7 @@ const layer = Layer.effect(
       })()
 
       if (yield* afs.existsSafe(path.join(dir, "node_modules", name))) {
-        yield* reify({ dir, inspect: true })
+        yield* reify({ dir, add: [pkg], inspect: true })
         return resolveEntryPoint(name, path.join(dir, "node_modules", name))
       }
 
@@ -164,14 +182,15 @@ const layer = Layer.effect(
     }, Effect.scoped)
 
     const install: Interface["install"] = Effect.fn("Npm.install")(function* (dir, input) {
+      const add = input?.add.map((pkg) => [pkg.name, pkg.version].filter(Boolean).join("@")) ?? []
+      yield* validate(dir, add)
       const canWrite = yield* afs.access(dir, { writable: true }).pipe(
         Effect.as(true),
         Effect.orElseSucceed(() => false),
       )
       if (!canWrite) return
 
-      const add = input?.add.map((pkg) => [pkg.name, pkg.version].filter(Boolean).join("@")) ?? []
-      if (yield* afs.existsSafe(path.join(dir, "node_modules"))) yield* reify({ dir, inspect: true })
+      if (yield* afs.existsSafe(path.join(dir, "node_modules"))) yield* reify({ dir, add, inspect: true })
       if (
         yield* Effect.gen(function* () {
           const nodeModulesExists = yield* afs.existsSafe(path.join(dir, "node_modules"))
@@ -205,6 +224,15 @@ const layer = Layer.effect(
           ...Object.keys(root?.peerDependencies || {}),
           ...Object.keys(root?.optionalDependencies || {}),
         ])
+
+        if (add.some((specifier) => {
+          if (!PluginSdkPackage.requestSpec(specifier)) return false
+          const parsed = npa(specifier)
+          return root?.dependencies?.[parsed.name ?? PluginSdkPackage.manifest.name] !== parsed.rawSpec
+        })) {
+          yield* reify({ dir, add })
+          return
+        }
 
         for (const name of declared) {
           if (!locked.has(name)) {
