@@ -67,7 +67,7 @@ export interface Interface {
   readonly all: () => Effect.Effect<Record<string, Info>, AuthError>
   readonly set: (key: string, info: Info) => Effect.Effect<void, AuthError>
   readonly remove: (key: string) => Effect.Effect<void, AuthError>
-  readonly replaceIf: (providerID: string, expected: Info, next: Info) => Effect.Effect<boolean, AuthError>
+  readonly replaceIf: (providerID: string, expected: Info | undefined, next: Info) => Effect.Effect<boolean, AuthError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Auth") {}
@@ -115,12 +115,13 @@ const layer = Layer.effect(
       yield* write(data)
     }))
 
-    const replaceIf = (key: string, expected: Info, next: Info) => locked(`auth-store:${file}`, Effect.gen(function* () {
+    const replaceIf = (key: string, expected: Info | undefined, next: Info) => locked(`auth-store:${file}`, Effect.gen(function* () {
       if (process.env.ORCHESTRA_AUTH_CONTENT) return false
       const norm = key.replace(/\/+$/, "")
       const data = yield* all()
       const current = data[norm]
-      if (!current || !isDeepStrictEqual(Schema.encodeSync(Info)(current), Schema.encodeSync(Info)(expected))) return false
+      if (!isDeepStrictEqual(current === undefined ? undefined : Schema.encodeSync(Info)(current),
+        expected === undefined ? undefined : Schema.encodeSync(Info)(expected))) return false
       yield* write({ ...data, [norm]: next })
       return true
     }))

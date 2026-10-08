@@ -143,7 +143,13 @@ export async function CodexAuthPlugin(_input: PluginInput, options: CodexAuthPlu
       async models(provider, ctx) {
         if (ctx.auth?.type !== "oauth") return provider.models
         const value = Schema.decodeUnknownSync(Auth.Oauth)(ctx.auth)
-        const available = await SiwcInference.models(LegacySiwc.credential(value), send)
+        Siwc.requirePlanUsage(value)
+        const readonly = await inherited()
+        const resolved = await LegacySiwc.resolve({
+          getAuth: readonly ? async () => value : () => Auth.runPromise((store) => store.get("openai")),
+          selected: Siwc.registration(value.metadata), inherited, transport: options.transport, jwksURL: options.jwksURL,
+        })
+        const available = await SiwcInference.models(resolved, send)
         return Object.fromEntries(Object.entries(provider.models).flatMap(([id, model]) => {
           const listed = available.find((item) => item.slug === model.api.id)
           return listed ? [[id, { ...model, name: listed.display_name, api: { ...model.api, url: Siwc.resource } }]] : []
