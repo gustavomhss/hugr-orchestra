@@ -3,19 +3,25 @@ export * as SiwcHost from "./siwc-host"
 import { randomUUID } from "node:crypto"
 import { link, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
+import { PrivateFile } from "../util/private-file"
 
 /** Own app-defined host-ID file; never an installed app's credential file. */
-export async function load(filename: string) {
+// Optional native boundaries are trusted code, never config or public JSON.
+export async function load(filename: string, input: {
+  readonly protect?: typeof PrivateFile.protect
+  readonly publish?: (source: string, destination: string) => Promise<void>
+} = {}) {
   await mkdir(dirname(filename), { recursive: true, mode: 0o700 })
   const scratch = await mkdtemp(join(dirname(filename), ".siwc-host-"))
   // Publish a complete owner-only file without overwriting another process's ID.
   // Exclusive open + write would expose an empty file to a concurrent reader.
   return writeFile(join(scratch, "host"), `urn:uuid:${randomUUID()}\n`, { mode: 0o600 })
-    .then(() => link(join(scratch, "host"), filename))
-    .catch((cause: unknown) => {
+    .then(() => (input.protect ?? PrivateFile.protect)(join(scratch, "host")))
+    .then(() => (input.publish ?? link)(join(scratch, "host"), filename).catch((cause: unknown) => {
       if (cause instanceof Error && "code" in cause && cause.code === "EEXIST") return
       throw cause
-    })
+    }))
+    .then(() => (input.protect ?? PrivateFile.protect)(filename))
     .then(() => readFile(filename, "utf8"))
     .then((value) => {
       const id = value.trim()
