@@ -26,9 +26,9 @@ function requirePublic(specifier: string, loaded: Record<string, Record<string, 
   return false
 }
 
-export async function prepareExternalImport(specifier: string) {
+export async function prepareExternalImport(specifier: string, sourceRoot?: string) {
   const { PluginSdkAdmission } = await import("./sdk-admission")
-  await PluginSdkAdmission.prepare(specifier)
+  await PluginSdkAdmission.prepare(specifier, sourceRoot)
 }
 
 // Registration is process-wide and happens once; admission is separate and per import.

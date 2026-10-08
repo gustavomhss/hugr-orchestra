@@ -35,13 +35,15 @@ test("configured local SDK plugin loads inside the real app project namespace", 
   expect(prepared).toMatchObject({ ok: true, bundled: true })
   await Bun.write(path.join(directory, "package.json"), JSON.stringify({ name: "sdk-production", dependencies: {
     "sdk-alias": `npm:${name}@${PluginSdkPackage.manifest.version}`,
+    semver: "*",
   } }))
   await PluginSdkPackage.write(alias)
   await Bun.write(entry, [
     `import { tool } from ${JSON.stringify(name)}`,
-    'import { tool as aliasTool } from "sdk-alias/tool"',
+    'const aliasModule = await import("sdk-alias/tool")',
+    'import semver from "semver"; if (semver.valid("1.2.3") !== "1.2.3") throw new Error("ordinary app dependency did not execute")',
     "export const sdkTool = tool",
-    "export { aliasTool }",
+    "export const aliasTool = aliasModule.tool",
     `export const publicSDK = await Promise.all(${JSON.stringify(Object.keys(PluginSdkPackage.manifest.exports).map((key) => name + (key === "." ? "" : key.slice(1))))}.map((key) => import(key)))`,
     `export const aliasSDK = await Promise.all(${JSON.stringify(Object.keys(PluginSdkPackage.manifest.exports).map((key) => "sdk-alias" + (key === "." ? "" : key.slice(1))))}.map((key) => import(key)))`,
     `export const unknown = await Promise.all(${JSON.stringify([name + "/unlisted", name + "/src/tool.ts", "sdk-alias/deep"])}.map((key) => import(key).then(() => "unexpected success", () => "rejected")))`,
@@ -51,17 +53,23 @@ test("configured local SDK plugin loads inside the real app project namespace", 
 
   // Same real app namespace, actual configured loader, and a foreign SDK leaf
   // link. The unprepared control proves Bun can execute this planted payload.
-  const foreign = path.join(directory, "foreign")
-  const marker = path.join(directory, "evaluated")
+  const external = path.join(root, ".orchestra", "sdk-external-" + randomUUID())
+  await using externalCleanup = { async [Symbol.asyncDispose]() { await rm(external, { recursive: true, force: true }) } }
+  const helper = path.join(external, "nested", "helper")
+  const foreign = path.join(external, "foreign")
+  const marker = path.join(external, "evaluated")
   const manifest = JSON.stringify({ name, type: "module", exports: { "./*": "./payload.js" } })
   const bytes = `await Bun.write(${JSON.stringify(marker)}, "ran"); throw new Error("planted production SDK ran")`
   await Bun.write(path.join(foreign, "package.json"), manifest)
   await Bun.write(path.join(foreign, "payload.js"), bytes)
-  const link = path.join(directory, "node_modules", name)
-  await rm(link, { recursive: true, force: true })
+  const link = path.join(external, "node_modules", name)
   await mkdir(path.dirname(link), { recursive: true })
   await symlink(foreign, link, "dir")
-  await Bun.write(entry, `const sdk = ["@orchestra", "plugin"].join("/"); await import(sdk + "/unlisted")`)
+  await Bun.write(path.join(helper, "package.json"), JSON.stringify({ name: "helper", version: "1.0.0", type: "module", main: "index.js" }))
+  await Bun.write(path.join(helper, "index.js"), `const sdk = ["@orchestra", "plugin"].join("/"); await import(sdk + "/unlisted")`)
+  await symlink(helper, path.join(directory, "node_modules", "helper"), "dir")
+  await Bun.write(path.join(directory, "package.json"), JSON.stringify({ name: "sdk-production", dependencies: { helper: "1.0.0" } }))
+  await Bun.write(entry, 'import "helper"')
   const rejected = await run("configured")
   expect(rejected.ok).toBe(false)
   expect(rejected.error).toContain("PluginSdkSetupError")

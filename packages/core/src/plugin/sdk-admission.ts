@@ -39,21 +39,26 @@ async function dependency(directory: string, name: string) {
 // Admit source envelopes and dependency roots, not the containing application.
 // Inventory installed namespaces once without recursively walking their sources.
 // Deliberate escapes and later filesystem mutation are not sandboxed here.
-export async function prepare(specifier: string) {
-  return admit(specifier).catch((cause: unknown) => {
+export async function prepare(specifier: string, sourceRoot?: string) {
+  return admit(specifier, sourceRoot).catch((cause: unknown) => {
     if (cause instanceof PluginSdkPackage.SetupError) throw cause
     throw new PluginSdkPackage.SetupError({ path: specifier, reason: `Cannot prove external module footprint: ${String(cause)}` })
   })
 }
 
-async function admit(specifier: string) {
+async function admit(specifier: string, sourceRoot?: string) {
   const file = specifier.startsWith("file:") ? fileURLToPath(specifier) : specifier
   if (!path.isAbsolute(file)) throw new PluginSdkPackage.SetupError({ path: specifier, reason: "External import needs a concrete filesystem entrypoint" })
-  return Flock.withLock(`sdk-admission:${await scope(file)}`, async () => {
+  const root = sourceRoot ?? await scope(file)
+  if (!path.isAbsolute(root) || !PluginSdkPackage.contains(root, file))
+    throw new PluginSdkPackage.SetupError({ path: root, reason: "External entrypoint is outside its source envelope" })
+  return Flock.withLock(`sdk-admission:${root}`, async () => {
     const actual = await realpath(file)
     if (!(await stat(actual)).isFile()) throw new Error("External entrypoint is not a regular file")
     const { Arborist } = await import("@npmcli/arborist")
-    const pending = new Set([await scope(file), await scope(actual)])
+    const canonicalRoot = await realpath(root)
+    const roots = new Set([root, PluginSdkPackage.contains(canonicalRoot, actual) ? canonicalRoot : await scope(actual)])
+    const pending = new Set(roots)
     const visited = new Set<string>()
     const namespaces = new Map<string, Promise<Arborist.Node>>()
     const indexed = new Set<string>()
@@ -62,16 +67,19 @@ async function admit(specifier: string) {
     const sdk = new Set<string>()
     const create = new Set<string>()
     const quota = PluginSdkLimits.budget()
-    const inventoryQuota = PluginSdkLimits.budget()
-    const bundled = await realpath(path.resolve(import.meta.dir, "../../../plugin"))
+    const bundledPath = path.resolve(import.meta.dir, "../../../plugin")
+    const bundled = await PluginSdkPackage.exists(bundledPath) ? await realpath(bundledPath) : undefined
     // This exact host package is already the authority backing runtime modules.
     // A different tree bearing its name (including any foreign link) is untrusted.
-    const host = async (directory: string) => await realpath(directory) === bundled
-    const read = async (directory: string, budget = quota) => {
+    const host = async (directory: string) => bundled !== undefined &&
+      (directory === bundled || PluginSdkPackage.contains(path.dirname(bundled), directory) ||
+        directory === path.join(path.dirname(path.dirname(bundled)), "node_modules", PluginSdkPackage.manifest.name)) &&
+      await realpath(directory) === bundled
+    const read = async (directory: string) => {
       const canonical = await realpath(directory)
       if (metadata.has(canonical)) return metadata.get(canonical)!
       const pkg = path.join(canonical, "package.json")
-      const value = await PluginSdkPackage.exists(pkg) ? decodePackage((await PluginSdkLimits.read(pkg, budget)).toString("utf8")) : {}
+      const value = await PluginSdkPackage.exists(pkg) ? decodePackage((await PluginSdkLimits.read(pkg, quota)).toString("utf8")) : {}
       metadata.set(canonical, value)
       return value
     }
@@ -81,7 +89,7 @@ async function admit(specifier: string) {
       const canonical = await realpath(namespace)
       if (indexed.has(canonical)) return
       indexed.add(canonical)
-      for await (const entry of PluginSdkLimits.entries(canonical, inventoryQuota)) {
+      for await (const entry of PluginSdkLimits.entries(canonical, quota)) {
         if (entry.name.startsWith(".")) continue
         const directory = path.join(canonical, entry.name)
         if (!entry.isDirectory() && !entry.isSymbolicLink()) continue
@@ -89,7 +97,7 @@ async function admit(specifier: string) {
           await index(directory)
           continue
         }
-        await read(directory, inventoryQuota)
+        await read(directory)
         const nested = path.join(await realpath(directory), "node_modules")
         if (await PluginSdkPackage.exists(nested)) await index(nested)
       }
@@ -155,6 +163,8 @@ async function admit(specifier: string) {
       if (sdk.has(directory) || sdk.has(canonical)) continue
       const node = nodes.get(canonical)
       for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "devDependencies"]) {
+        // Installed packages' development graphs are not runtime dependencies.
+        if (field === "devDependencies" && node && !roots.has(directory)) continue
         if (pkg[field] === undefined) continue
         const requests = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.String))(pkg[field])
         for (const [name, spec] of Object.entries(requests)) {
@@ -170,7 +180,7 @@ async function admit(specifier: string) {
             // Installed application workspaces supply normal dependencies. Their
             // namespace metadata is indexed; their whole source repo is not ours.
             const resolved = node?.edgesOut.get(name)?.to
-            if (!resolved?.isWorkspace && !(resolved?.isLink && PluginSdkPackage.contains(path.dirname(bundled), resolved.realpath))) pending.add(slot)
+            if (!resolved?.isWorkspace && !(resolved?.isLink && bundled && PluginSdkPackage.contains(path.dirname(bundled), resolved.realpath))) pending.add(slot)
             continue
           }
           const peers = pkg.peerDependenciesMeta === undefined ? {} : Schema.decodeUnknownSync(
@@ -200,7 +210,7 @@ async function admit(specifier: string) {
         throw new PluginSdkPackage.SetupError({ path: directory, reason: "Foreign or altered SDK tree; left intact" })
       await PluginSdkPackage.write(directory, true)
     }
-    for (const root of [await scope(file), await scope(actual)]) create.add(path.join(root, "node_modules", PluginSdkPackage.manifest.name))
+    for (const root of roots) create.add(path.join(root, "node_modules", PluginSdkPackage.manifest.name))
     // Only create absent bridges after the whole footprint has been admitted.
     // Existing directories must prove their bytes; no user SDK is overwritten.
     for (const directory of create) {

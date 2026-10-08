@@ -670,7 +670,7 @@ export const node = LayerNode.make({
 // Shared by custom-tool discovery and its loader conformance checks.
 export async function loadExternalTool(file: string) {
   const specifier = pathToFileURL(file).href
-  await PluginSdkRuntime.prepareExternalImport(specifier)
+  await PluginSdkRuntime.prepareExternalImport(specifier, path.dirname(file))
   await PluginSdkRuntime.install()
   return import(specifier)
 }

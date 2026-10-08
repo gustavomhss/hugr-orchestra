@@ -31,8 +31,8 @@ const PluginModule = Schema.Struct({
 })
 
 // The same admission/import boundary is used by directory and npm config plugins.
-export async function loadExternalPlugin(entrypoint: string) {
-  await PluginSdkRuntime.prepareExternalImport(entrypoint)
+export async function loadExternalPlugin(entrypoint: string, sourceRoot?: string) {
+  await PluginSdkRuntime.prepareExternalImport(entrypoint, sourceRoot)
   await PluginSdkRuntime.install()
   return Schema.decodeUnknownSync(PluginModule)(await import(entrypoint)).default
 }
@@ -85,7 +85,7 @@ export const Plugin = define({
             : (yield* npm.add(ref.package)).entrypoint
           if (!entrypoint) return
 
-          const value = yield* Effect.promise(() => loadExternalPlugin(entrypoint))
+          const value = yield* Effect.promise(() => loadExternalPlugin(entrypoint, path.isAbsolute(ref.package) ? path.dirname(ref.package) : undefined))
           const plugin = "effect" in value ? value : PluginPromise.fromPromise(value)
           yield* ctx.plugin.add({
             id: plugin.id,
