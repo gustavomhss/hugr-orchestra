@@ -12,6 +12,7 @@ import { Database } from "../../database/database"
 import { Location } from "../../location"
 import { SessionStore } from "../../session/store"
 import type { Tool } from "../../tool/tool"
+import { CapabilityInvocation } from "../invocation"
 import { CapabilityPolicy } from "../policy"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 
@@ -158,10 +159,10 @@ export const make = Effect.gen(function* () {
   const disconnect = Effect.fn("CapabilityConnections.disconnect")(function* (ref: Capability.ConnectionRef) {
     yield* transaction(Effect.gen(function* () {
       const row = yield* connection(ref)
-      const targets = yield* query(db.select({ id: CapabilityTargetTable.id }).from(CapabilityTargetTable)
-        .where(eq(CapabilityTargetTable.connection_id, ref.id)).all())
-      if (targets.length) yield* query(db.delete(CapabilityBindingTable)
-        .where(inArray(CapabilityBindingTable.target_id, targets.map((item) => item.id))).run())
+      yield* query(db.delete(CapabilityBindingTable).where(inArray(CapabilityBindingTable.target_id,
+        db.select({ id: CapabilityTargetTable.id }).from(CapabilityTargetTable)
+          .where(eq(CapabilityTargetTable.connection_id, ref.id)),
+      )).run())
       yield* query(db.update(CapabilityConnectionTable).set({
         state: "disconnected", generation: row.generation + 1, time_updated: Date.now(),
       }).where(eq(CapabilityConnectionTable.id, ref.id)).run())
@@ -193,13 +194,18 @@ export const make = Effect.gen(function* () {
   })
 
   const resolve = Effect.fn("CapabilityConnections.resolve")(function* (context: Tool.Context, input: ResolveInput) {
+    yield* CapabilityInvocation.require(context, {
+      projectID: location.project.id,
+      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+    })
+    if (Option.isNone(Schema.decodeUnknownOption(Schema.toType(Resolve))(input))) return yield* failure("target_denied")
     // Provider is the pre-discovery policy resource; opaque connection and target IDs add restrictions below.
     yield* policy.assert(context, { action: input.action, resources: [input.provider] })
-    if (Option.isNone(Schema.decodeUnknownOption(Schema.toType(Resolve))(input))) return yield* failure("target_denied")
     if (input.connectionID) {
       const row = yield* query(db.select().from(CapabilityConnectionTable).where(eq(CapabilityConnectionTable.id, input.connectionID)).get())
       if (!row) return yield* failure("connection_unavailable")
       if (!owned(row) || row.provider !== input.provider) return yield* failure("target_denied")
+      if (row.state !== "active") return yield* failure("connection_unavailable")
     }
     if (input.targetID) {
       const row = yield* query(db.select().from(CapabilityTargetTable).innerJoin(CapabilityConnectionTable,
@@ -208,6 +214,7 @@ export const make = Effect.gen(function* () {
       if (!row) return yield* failure("connection_unavailable")
       if (!owned(row.capability_connection) || row.capability_connection.provider !== input.provider ||
         (input.connectionID && row.capability_connection.id !== input.connectionID)) return yield* failure("target_denied")
+      if (row.capability_connection.state !== "active") return yield* failure("connection_unavailable")
     }
     const rows = yield* query(db.select().from(CapabilityBindingTable)
       .innerJoin(CapabilityTargetTable, eq(CapabilityBindingTable.target_id, CapabilityTargetTable.id))
@@ -231,35 +238,44 @@ export const make = Effect.gen(function* () {
     if (permitted.length > 1) return yield* new Capability.Failure({
       code: "ambiguous_target", message: "Capability target selection is ambiguous",
       detail: { choices: permitted.slice(0, 8).map((row) => ({
-        connection: connectionRef(row.capability_connection), target: targetRef(row.capability_target),
+        connectionID: row.capability_connection.id, targetID: row.capability_target.id,
       })) },
     })
     const selected = permitted[0]
-    const saved = yield* exactCredential(selected.capability_connection.credential_id, selected.capability_connection.integration_id)
-    return {
+    if (!selected.capability_connection.credential_id) return yield* failure("authentication_required")
+    const resolution = {
       connection: connectionRef(selected.capability_connection), target: targetRef(selected.capability_target),
-      resource: selected.capability_target.resource, endpoint: selected.capability_connection.endpoint, credentialID: saved.id,
+      resource: selected.capability_target.resource, endpoint: selected.capability_connection.endpoint,
+      credentialID: selected.capability_connection.credential_id,
     } satisfies Resolution
+    // Approval may suspend: never return a snapshot whose binding or generations drifted while waiting.
+    yield* transaction(checkBound(context, resolution, input.action))
+    return resolution
+  })
+
+  const checkBound = Effect.fn("CapabilityConnections.checkBound")(function* (
+    context: Tool.Context, resolution: Resolution, action: string,
+  ) {
+    const parent = yield* connection(resolution.connection)
+    const current = yield* target(resolution.target)
+    if (!parent.credential_id) return yield* failure("authentication_required")
+    if (current.parent.id !== parent.id || parent.credential_id !== resolution.credentialID ||
+      parent.endpoint !== resolution.endpoint || JSON.stringify(current.row.resource) !== JSON.stringify(resolution.resource))
+      return yield* failure("target_denied")
+    const binding = yield* query(db.select().from(CapabilityBindingTable).where(and(
+      eq(CapabilityBindingTable.target_id, resolution.target.id), eq(CapabilityBindingTable.session_id, context.sessionID),
+      eq(CapabilityBindingTable.agent_id, context.agent),
+    )).get())
+    if (!binding || (!binding.actions.includes(action) && !binding.actions.includes("*"))) return yield* failure("target_denied")
+    const saved = yield* exactCredential(parent.credential_id, parent.integration_id)
+    return saved.value
   })
 
   const loadCredential = Effect.fn("CapabilityConnections.loadCredential")(function* (
     context: Tool.Context, resolution: Resolution, action: string,
   ) {
     yield* policy.assert(context, { action, resources: [resolution.connection.provider, resolution.connection.id, resolution.target.id] })
-    return yield* transaction(Effect.gen(function* () {
-      const parent = yield* connection(resolution.connection)
-      const current = yield* target(resolution.target)
-      if (current.parent.id !== parent.id || parent.credential_id !== resolution.credentialID ||
-        parent.endpoint !== resolution.endpoint || JSON.stringify(current.row.resource) !== JSON.stringify(resolution.resource))
-        return yield* failure("target_denied")
-      const binding = yield* query(db.select().from(CapabilityBindingTable).where(and(
-        eq(CapabilityBindingTable.target_id, resolution.target.id), eq(CapabilityBindingTable.session_id, context.sessionID),
-        eq(CapabilityBindingTable.agent_id, context.agent),
-      )).get())
-      if (!binding || (!binding.actions.includes(action) && !binding.actions.includes("*"))) return yield* failure("target_denied")
-      const saved = yield* exactCredential(parent.credential_id, parent.integration_id)
-      return saved.value
-    }))
+    return yield* transaction(checkBound(context, resolution, action))
   })
 
   return { create, createTarget, bind, disconnect, retargetTarget, removeTarget, resolve, loadCredential }
