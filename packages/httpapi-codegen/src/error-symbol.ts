@@ -1,4 +1,5 @@
 import { Schema, type SchemaAST } from "effect"
+import { parsers } from "prettier/plugins/typescript"
 
 export class GenerationError extends Schema.TaggedErrorClass<GenerationError>()("GenerationError", {
   reason: Schema.String,
@@ -26,6 +27,52 @@ export function errorSymbols<
     symbols.set(identifier, error)
   }
   return symbols
+}
+
+export function assertErrorSymbols(symbols: Iterable<string>, declarations: string, errors: string) {
+  const identifiers = Array.from(symbols)
+  if (identifiers.length === 0) return
+  // These bindings are always re-exported by the Promise barrel, across all groups.
+  const reserved = new Set(["ClientError", "ClientErrorReason", "Orchestra"])
+  const visit = (node: unknown, bindings: boolean) => {
+    if (Array.isArray(node)) return node.forEach((value) => visit(value, bindings))
+    if (!isNode(node)) return
+    const binding =
+      ["TSTypeAliasDeclaration", "TSImportEqualsDeclaration"].includes(String(node.type))
+        ? node.id
+        : ["ImportSpecifier", "ImportDefaultSpecifier", "ImportNamespaceSpecifier"].includes(String(node.type))
+          ? node.local
+          : undefined
+    if (bindings && isNode(binding) && typeof binding.name === "string") reserved.add(binding.name)
+    if (node.type === "TSTypeReference" && isNode(node.typeArguments)) {
+      const reference = node.typeName
+      if (isNode(reference) && reference.type === "Identifier" && typeof reference.name === "string") {
+        reserved.add(reference.name)
+      }
+    }
+    Object.values(node).forEach((value) => visit(value, bindings))
+  }
+  for (const [source, bindings] of [
+    [declarations, true],
+    [errors, false],
+  ] as const) {
+    // Prettier's built-in TypeScript parser is synchronous; parse binding/reference syntax,
+    // rather than guessing import spellings or treating literals as generic references.
+    const ast: unknown = Reflect.apply(parsers.typescript.parse, undefined, [source, {}])
+    if (!isNode(ast) || ast.type !== "Program") {
+      throw new GenerationError({ reason: "Invalid Promise symbol document" })
+    }
+    visit(ast, bindings)
+  }
+  for (const identifier of identifiers) {
+    if (reserved.has(identifier)) {
+      throw new GenerationError({ reason: `Promise error symbol collision: ${identifier}` })
+    }
+  }
+}
+
+function isNode(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
 function declaredErrorIdentifier(value: string) {

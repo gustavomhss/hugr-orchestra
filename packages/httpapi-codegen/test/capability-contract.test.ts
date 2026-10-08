@@ -281,4 +281,130 @@ describe("capability contract portability", () => {
       )
     },
   )
+
+  test.each([
+    ["Session.GetInput", "SessionGetInput"],
+    ["Session.GetOutput", "SessionGetOutput"],
+    ["Json.Value", "JsonValue"],
+    ["Readonly.Array", "ReadonlyArray"],
+    ["Wire.Result", "WireResult"],
+    ["Client.Error", "ClientError"],
+    ["Client.ErrorReason", "ClientErrorReason"],
+    ["Orchestra", "Orchestra"],
+  ])("rejects occupied public error symbol %s with a real TypeScript consumer", async (identifier, symbol) => {
+    class Failure extends Schema.TaggedErrorClass<Failure>("Namespace.Failure")("wire.failure", {
+      message: Schema.String,
+      detail: Schema.Json,
+      values: Schema.Array(Schema.String),
+    }) {}
+    const source = (error: Schema.Top) =>
+      HttpApi.make("symbols").add(
+        HttpApiGroup.make("session").add(
+          HttpApiEndpoint.get("get", "/get/:id", {
+            params: { id: Schema.String },
+            success: Schema.Json,
+            error,
+          }),
+        ),
+      )
+    const options =
+      identifier === "Wire.Result"
+        ? { outputTypes: { "session.get": { name: "WireResult", import: 'import type { WireResult } from "./wire"' } } }
+        : undefined
+    const output = emitPromise(compile(source(Failure)), options)
+    expect((await checkConsumer(output, "NamespaceFailure")).code).toBe(0)
+    // Seed the reported binding fault into real emitted files; the TS compiler is the negative oracle.
+    const invalid = await checkConsumer(
+      {
+        ...output,
+        files: output.files.map((file) => ({
+          ...file,
+          content: file.content.replaceAll("NamespaceFailure", symbol),
+        })),
+      },
+      symbol,
+    )
+    expect(invalid.code).not.toBe(0)
+    expect(invalid.diagnostics).toContain("error TS")
+    expect(() => emitPromise(compile(source(Failure.annotate({ identifier }))), options)).toThrow(
+      `Promise error symbol collision: ${symbol}`,
+    )
+  })
+
+  test.each([
+    ["Namespace.Failure", "NamespaceFailure"],
+    ["Session.GetInput", "SessionGetInput"],
+    ["Json.Value", "JsonValue"],
+    ["Readonly.Array", "ReadonlyArray"],
+    ["Wire.Result", "WireResult"],
+  ])("allows namespace error %s when its symbol is unoccupied", async (identifier, symbol) => {
+    class Failure extends Schema.TaggedErrorClass<Failure>(identifier)("wire.failure", { message: Schema.String }) {}
+    const output = emitPromise(
+      compile(
+        HttpApi.make("symbols").add(
+          HttpApiGroup.make("session").add(
+            HttpApiEndpoint.get("get", "/get", { success: Schema.String, error: Failure }),
+          ),
+        ),
+      ),
+    )
+    expect((await checkConsumer(output, symbol)).code).toBe(0)
+  })
+
+  test("rejects normalized error barrel collisions across groups", () => {
+    class First extends Schema.TaggedErrorClass<First>()("Namespace.Failure", {}) {}
+    class Second extends Schema.TaggedErrorClass<Second>()("NamespaceFailure", {}) {}
+    const contract = compile(
+      HttpApi.make("symbols")
+        .add(
+          HttpApiGroup.make("first").add(
+            HttpApiEndpoint.get("get", "/first", { success: Schema.String, error: First }),
+          ),
+        )
+        .add(
+          HttpApiGroup.make("second").add(
+            HttpApiEndpoint.get("get", "/second", { success: Schema.String, error: Second }),
+          ),
+        ),
+    )
+    expect(() => emitPromise(contract)).toThrow(GenerationError)
+    expect(() => emitPromise(contract)).toThrow("normalize to NamespaceFailure")
+  })
 })
+
+async function checkConsumer(
+  output: ReturnType<typeof emitPromise>,
+  symbol: string,
+  value: unknown = { _tag: "wire.failure", message: "lost", detail: null, values: [] },
+) {
+  const directory = await mkdtemp(join(fileURLToPath(new URL(".", import.meta.url)), ".symbols-consumer-"))
+  return Promise.all(
+    [
+      ...output.files,
+      {
+        path: "probe.ts",
+        content: `import { is${symbol}, type ${symbol} } from "./index"\nconst value: unknown = ${JSON.stringify(value)}\nif (!is${symbol}(value)) throw new Error("Wire guard mismatch")\nexport const failure: ${symbol} = value`,
+      },
+      { path: "wire.ts", content: "export type WireResult = ReadonlyArray<string>" },
+      {
+        path: "tsconfig.json",
+        content: JSON.stringify({ extends: "../../tsconfig.json", include: ["*.ts"] }),
+      },
+    ].map((file) => Bun.write(join(directory, file.path), file.content)),
+  )
+    .then(async () => {
+      const check = Bun.spawn(["bun", "typecheck", "--project", join(directory, "tsconfig.json")], {
+        cwd: fileURLToPath(new URL("..", import.meta.url)),
+        stdout: "pipe",
+        stderr: "pipe",
+      })
+      const [code, stdout, stderr] = await Promise.all([
+        check.exited,
+        new Response(check.stdout).text(),
+        new Response(check.stderr).text(),
+      ])
+      if (code === 0) expect((await import(join(directory, "probe.ts"))).failure).toEqual(value)
+      return { code, diagnostics: stdout + stderr }
+    })
+    .finally(() => rm(directory, { recursive: true, force: true }))
+}

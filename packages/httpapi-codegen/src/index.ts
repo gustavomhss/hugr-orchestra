@@ -3,7 +3,7 @@ import { Effect, FileSystem, PlatformError, Schema, SchemaAST, SchemaRepresentat
 import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
-import { errorSymbols, GenerationError, identifierPart } from "./error-symbol"
+import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
 
 export type InputField = {
   readonly name: string
@@ -477,10 +477,15 @@ function renderPromiseTypes(
       }),
     )
     .join("\n\n")
-  const json = [operations, ...errorTypes].some((type) => type.includes("JsonValue"))
+  const json = Array.from(types.values()).some((type) => type.includes("JsonValue"))
     ? "export type JsonValue = null | boolean | number | string | ReadonlyArray<JsonValue> | { readonly [key: string]: JsonValue }"
     : ""
   const imports = [...new Set(Object.values(outputTypes ?? {}).map((override) => override.import))]
+  assertErrorSymbols(
+    errors.keys(),
+    [...imports, json, operations].filter(Boolean).join("\n\n"),
+    errorTypes.join("\n\n"),
+  )
   return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
 }
 
