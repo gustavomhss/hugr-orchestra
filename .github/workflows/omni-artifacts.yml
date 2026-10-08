@@ -4,10 +4,8 @@ name: omni-artifacts
 # script the mirror's release.yml also calls) on that platform's own OS and CPU and uploads `omni-<id>`, a directory
 # with hugr_omni.node and hugr-omni-supervisor[.exe]. With `pack`, it also packs the npm packages and proves a clean
 # install (bindings/node/npm/{pack,verify}.mjs), as release.yml does, and uploads `npm-<id>`. Called by other
-# workflows, started by hand, or explicitly requested by the omni-artifacts PR label.
+# workflows, or started by hand. omni-artifacts-proof.yml owns the PR label trigger.
 on:
-  pull_request:
-    types: [labeled]
   workflow_call:
     inputs:
       pack:
@@ -34,7 +32,6 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request' || github.event.label.name == 'omni-artifacts'
     name: omni ${{ matrix.id }}
     strategy:
       fail-fast: false
@@ -56,9 +53,7 @@ jobs:
       CARGO_TERM_COLOR: always
       HUGR_BUN: npx -y bun@1
       HUGR_DENO: npx -y deno@2
-      PACK: ${{ github.event_name == 'pull_request' || inputs.pack }}
       HUGR_PROOF_ID: ${{ matrix.id }}
-      HUGR_PROOF_HEAD: ${{ github.event.pull_request.head.sha }}
     defaults:
       run:
         shell: bash
@@ -67,7 +62,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          ref: ${{ github.event.pull_request.head.sha || inputs.ref || '' }}
+          ref: ${{ inputs.ref || '' }}
           persist-credentials: false
 
       - name: Setup Node
@@ -123,16 +118,16 @@ jobs:
 
       # pack.mjs replaces its output directory: dist/npm, so dist/omni stays.
       - name: Pack
-        if: env.PACK == 'true'
+        if: inputs.pack
         run: node bindings/node/npm/pack.mjs dist/npm ${{ matrix.id }}
 
       - name: Clean install and run (${{ matrix.runtimes }})
-        if: env.PACK == 'true' && matrix.build != 'alpine'
+        if: inputs.pack && matrix.build != 'alpine'
         run: for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/npm/tarballs $rt; done
 
       # musl: the proof runs under Alpine (node:22-alpine), with npm and Bun's musl build; Deno has no musl build.
       - name: Clean install and run on Alpine (${{ matrix.runtimes }})
-        if: env.PACK == 'true' && matrix.build == 'alpine'
+        if: inputs.pack && matrix.build == 'alpine'
         run: |
           echo 'Deno: N/A on musl; no supported musl runtime build (GUARANTEES.md platform tiers).'
           docker run --rm -v "$PWD":/w -w /w -e HUGR_BUN -e HUGR_PROOF_ID node:22-alpine sh -euc '
@@ -140,7 +135,7 @@ jobs:
             for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/npm/tarballs $rt; done'
 
       - name: Upload npm-${{ matrix.id }}
-        if: env.PACK == 'true'
+        if: inputs.pack
         uses: actions/upload-artifact@v4
         with:
           name: npm-${{ matrix.id }}
