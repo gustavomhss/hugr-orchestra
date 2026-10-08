@@ -220,13 +220,6 @@ export function TemplateCard(props: {
   )
 }
 
-/** Why a workflow cannot start a run, as a copy key, or undefined when it can. */
-export function runBlocker(document: RelayDocument, runs: "loading" | "ready" | "unsupported" | "error") {
-  if (!document.runnable) return "orchestra.workflows.row.toolsMissing" as const
-  if (runs === "unsupported") return "orchestra.workflows.runs.unsupported" as const
-  if (!document.activeVersionId) return "orchestra.workflows.row.publishFirst" as const
-}
-
 export function issueText(copy: ReturnType<typeof useRelayCopy>, flow: Flow, issue: Issue) {
   if (issue.code === "server") return issue.text
   const name = "node" in issue ? (nodeOf(flow, issue.node)?.name ?? "") : ""
