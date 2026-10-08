@@ -8,6 +8,8 @@ Ship owned Orchestra CLI artifacts in the desktop and WSL; remove unowned SDK/re
 
 Owner clarification: **“nao, tem que aparecer orchestra”**. Own OAuth registrations and provider approval are completion requirements. Configurable IDs or mocked consent screens alone do not satisfy that item. Missing operational access is a named blocker, not a silently deferred requirement.
 
+Cadence correction from the owner: **“vamos rapido, sem suites de teste pesadas rodando a cada wp, cada agent testa so o que mexeu, PR so no final do milestone ok?”** Each WP runs only its changed-file/changed-behavior checks. Cross-target builds, complete package suites, full matrices and the single milestone PR wait for integration/closure. Batch controls where they answer the same changed behavior; do not repeat full work for every edit.
+
 ## Recovered implementation facts
 
 - Desktop still installs upstream CLI packages and expects a Rust service-password command its owned V2 CLI does not implement.
