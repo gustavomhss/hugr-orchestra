@@ -8,6 +8,7 @@ export const normalLayer = Layer.succeed(
   PermissionV2.Service,
   PermissionV2.Service.of({
     evaluate: () => Effect.die("unused permission evaluation"),
+    authorize: () => Effect.die("unused permission authorization"),
     askExplicit: () => Effect.die("Native askExplicit is unavailable in this normal-path fixture"),
     assert: () => Effect.die("unused"),
     ask: () => Effect.die("unused"),

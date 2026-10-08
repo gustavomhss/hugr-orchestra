@@ -70,7 +70,7 @@ export const make = Effect.gen(function* () {
       source: { type: "tool" as const, messageID: context.assistantMessageID, callID: context.toolCallID },
     }
     yield* Effect.gen(function* () {
-      yield* effects.includes("ask") ? permissions.askExplicit(request) : permissions.assert(request)
+      yield* effects.includes("ask") ? permissions.askExplicit(request) : permissions.authorize(request)
       yield* validate(binding)
       // Approval covers ask/allow on either path; a current configured deny still revokes it.
       if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
