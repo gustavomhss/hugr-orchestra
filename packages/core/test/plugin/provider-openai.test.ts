@@ -1,11 +1,14 @@
 import { AISDK } from "@orchestra/core/aisdk"
-import { describe, expect, spyOn } from "bun:test"
+import { describe, expect } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
-import { Effect, Schema } from "effect"
+import { Effect } from "effect"
 import { Global } from "@orchestra/core/global"
+import { Credential } from "@orchestra/core/credential"
+import { Siwc } from "@orchestra/core/auth/siwc"
+import { SiwcHost } from "@orchestra/core/auth/siwc-host"
 import { Catalog } from "@orchestra/core/catalog"
 import { Integration } from "@orchestra/core/integration"
 import { ModelV2 } from "@orchestra/core/model"
@@ -53,53 +56,43 @@ function fakeSelectorSdk(calls: string[]) {
 }
 
 describe("OpenAIPlugin", () => {
-  it.live("uses configured client ID for device exchange and refresh over HTTP", () =>
+  it.live("uses dynamic Orchestra registration by default and saved identity for returning sign-in", () =>
     Effect.acquireUseRelease(
       Effect.sync(() => {
         const previous = process.env.ORCHESTRA_OPENAI_CLIENT_ID
         process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-owned-openai"
-        const bodies: Array<Record<string, string>> = []
-        const server = Bun.serve({ port: 0, async fetch(request) {
-          const url = new URL(request.url)
-          bodies.push(Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.String))(url.pathname.endsWith("usercode") ? await request.json() : Object.fromEntries(new URLSearchParams(await request.text()))))
-          if (url.pathname.endsWith("usercode")) return Response.json({ device_auth_id: "device", user_code: "user", interval: "1" })
-          if (url.pathname.endsWith("deviceauth/token")) return Response.json({ authorization_code: "code", code_verifier: "verifier" })
-          return Response.json({ id_token: "fixture", access_token: "fixture-access", refresh_token: "fixture-refresh", expires_in: -1 })
-        } })
-        const original = fetch
-        // Fixed issuer has no injection seam; redirect transport only, keep real local HTTP.
-        const transport = spyOn(globalThis, "fetch").mockImplementation(Object.assign((input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
-          const url = new URL(input instanceof Request ? input.url : input.toString())
-          if (url.origin !== "https://auth.openai.com") throw new Error("Unexpected fixture origin")
-          return original(new URL(url.pathname, server.url), init)
-        }, { preconnect: original.preconnect }))
-        return { previous, bodies, server, transport, original }
+        return { previous }
       }),
       (fixture) => Effect.gen(function* () {
-        yield* addPlugin()
+        const directory = yield* addPlugin()
         const integrations = yield* Integration.Service
-        const attempt = yield* integrations.connection.oauth({ integrationID: Integration.ID.make("openai"), methodID: Integration.MethodID.make("chatgpt-headless"), inputs: {} })
-        while ((yield* integrations.attempt.status(attempt.attemptID)).status === "pending") yield* Effect.promise(() => Bun.sleep(1))
-        expect((yield* integrations.attempt.status(attempt.attemptID)).status).toBe("complete")
-        yield* integrations.connection.resolve(required(yield* integrations.connection.active(Integration.ID.make("openai"))))
         const browser = yield* integrations.connection.oauth({ integrationID: Integration.ID.make("openai"), methodID: Integration.MethodID.make("chatgpt-browser"), inputs: {} })
         const url = new URL(browser.url)
-        expect(url.searchParams.get("client_id")).toBe("fixture-owned-openai")
-        process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-next-registration"
+        expect(url.searchParams.get("client_id")).toBe("dynamic_agent_client")
+        expect(url.searchParams.get("agent_name_hint")).toBe("Orchestra")
         const callback = new URL(required(url.searchParams.get("redirect_uri") ?? undefined))
+        expect(callback.hostname).toBe("127.0.0.1")
+        callback.searchParams.set("state", "wrong")
+        expect((yield* Effect.promise(() => fetch(callback))).status).toBe(400)
+        expect((yield* integrations.attempt.status(browser.attemptID)).status).toBe("pending")
         callback.searchParams.set("state", required(url.searchParams.get("state") ?? undefined))
-        callback.searchParams.set("code", "fixture-code")
-        yield* Effect.promise(() => fixture.original(callback))
+        callback.searchParams.set("error", "access_denied")
+        yield* Effect.promise(() => fetch(callback))
         while ((yield* integrations.attempt.status(browser.attemptID)).status === "pending") yield* Effect.promise(() => Bun.sleep(1))
-        expect((yield* integrations.attempt.status(browser.attemptID)).status).toBe("complete")
-        expect(fixture.bodies.filter((body) => body.client_id).map((body) => body.client_id)).toEqual(Array(4).fill("fixture-owned-openai"))
-        delete process.env.ORCHESTRA_OPENAI_CLIENT_ID
-        const error = yield* integrations.connection.oauth({ integrationID: Integration.ID.make("openai"), methodID: Integration.MethodID.make("chatgpt-headless"), inputs: {} }).pipe(Effect.flip)
-        expect(String(error.cause)).toContain("openai: ORCHESTRA_OPENAI_CLIENT_ID")
+        expect((yield* integrations.attempt.status(browser.attemptID)).status).toBe("failed")
+        const credentials = yield* Credential.Service
+        yield* credentials.create({ integrationID: Integration.ID.make("openai"), value: Credential.OAuth.make({
+          type: "oauth", methodID: Integration.MethodID.make("chatgpt-browser"), access: "fixture", refresh: "fixture",
+          expires: Date.now() + 3600000, metadata: { clientId: "fixture-saved-client", issuer: Siwc.issuer,
+            subject: "fixture-subject", idToken: "fixture-hint", scopes: Siwc.scopes.split(" "),
+            hostId: yield* Effect.promise(() => SiwcHost.load(join(directory, "siwc", "host-id"))) },
+        }) })
+        process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-next-registration"
+        const returning = yield* integrations.connection.oauth({ integrationID: Integration.ID.make("openai"), methodID: Integration.MethodID.make("chatgpt-browser"), inputs: { account: "saved" } })
+        expect(new URL(returning.url).searchParams.get("client_id")).toBe("fixture-saved-client")
+        expect(new URL(returning.url).searchParams.get("id_token_hint")).toBe("fixture-hint")
       }),
       (fixture) => Effect.sync(() => {
-        fixture.transport.mockRestore()
-        fixture.server.stop(true)
         if (fixture.previous === undefined) delete process.env.ORCHESTRA_OPENAI_CLIENT_ID
         else process.env.ORCHESTRA_OPENAI_CLIENT_ID = fixture.previous
       }),
@@ -109,17 +102,10 @@ describe("OpenAIPlugin", () => {
   it.effect("registers browser and headless ChatGPT OAuth methods", () =>
     Effect.gen(function* () {
       yield* addPlugin()
-      expect((yield* (yield* Integration.Service).get(Integration.ID.make("openai")))?.methods).toEqual([
-        {
-          id: Integration.MethodID.make("chatgpt-browser"),
-          type: "oauth",
-          label: "ChatGPT Pro/Plus (browser)",
-        },
-        {
-          id: Integration.MethodID.make("chatgpt-headless"),
-          type: "oauth",
-          label: "ChatGPT Pro/Plus (headless)",
-        },
+      const integrations = yield* Integration.Service
+      expect((yield* integrations.get(Integration.ID.make("openai")))?.methods).toMatchObject([
+        { id: Integration.MethodID.make("chatgpt-browser"), type: "oauth", label: "Continue with ChatGPT (Orchestra)" },
+        { id: Integration.MethodID.make("chatgpt-headless"), type: "oauth", label: "Continue with ChatGPT (manual browser)" },
       ])
     }),
   )
