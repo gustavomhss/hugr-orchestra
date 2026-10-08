@@ -14,13 +14,12 @@ export type Runtime<Id extends string = string> = {
   readonly version: string
   readonly license: string
   readonly upstream: string
-  readonly targets: Readonly<Partial<Record<TargetId, {
-    readonly artifact: PinnedArtifact.Artifact
-    readonly executable: string
-  }>>>
+  readonly targets: Readonly<
+    Partial<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
+  >
 }
 
-// Bound distinct runtime downloads; hosted engine work never holds these permits.
+// Bound distinct runtime installs, including those whose callers stop waiting; hosted engines never hold these permits.
 const installs = Semaphore.makeUnsafe(4)
 const RECEIPT = ".runtime-pin"
 
@@ -34,18 +33,31 @@ export const ensure = Effect.fn("ToolkitRuntime.ensure")(function* (input: {
   const pin = runtime.targets[input.target]
   if (!TARGETS.includes(input.target) || !pin)
     return yield* new PinnedArtifact.Failed({ cause: `unsupported-target:${input.target}` })
-  if (![runtime.id, runtime.version].every((part) => part !== "." && part !== ".." && /^[^/\\]+$/.test(part)) ||
-      !pin.executable || path.isAbsolute(pin.executable) || pin.executable.split(/[\\/]/).some((part) => part === "..") ||
-      path.normalize(pin.executable) === ".")
+  if (
+    ![runtime.id, runtime.version].every((part) => part !== "." && part !== ".." && /^[^/\\]+$/.test(part)) ||
+    !pin.executable || path.isAbsolute(pin.executable) || pin.executable.split(/[\\/]/).some((part) => part === "..") ||
+    path.normalize(pin.executable) === "."
+  )
     return yield* new PinnedArtifact.Failed({ cause: "layout" })
   const directory = path.join(input.root, "runtimes", runtime.id, `${runtime.version}-${input.target}`)
-  const receipt = JSON.stringify(pin)
+  // Structural callers may construct equivalent pins in a different property order.
+  const receipt = JSON.stringify({
+    executable: pin.executable,
+    artifact: {
+      url: pin.artifact.url,
+      integrity: pin.artifact.integrity,
+      format: pin.artifact.format,
+      entries: pin.artifact.entries.map((entry) => ({ from: entry.from, to: entry.to, executable: entry.executable === true })),
+    },
+  })
   const work = PinnedArtifact.install(directory, [pin.artifact], (staging) =>
     validate(staging, pin.executable, input.target).pipe(
-      Effect.andThen(Effect.tryPromise({
-        try: () => writeFile(path.join(staging, RECEIPT), receipt),
-        catch: () => new PinnedArtifact.Failed({ cause: "filesystem" }),
-      })),
+      Effect.andThen(
+        Effect.tryPromise({
+          try: () => writeFile(path.join(staging, RECEIPT), receipt),
+          catch: () => new PinnedArtifact.Failed({ cause: "filesystem" }),
+        }),
+      ),
     ),
   ).pipe(installs.withPermit)
   const cause = yield* ToolkitInstall.once(directory, work)

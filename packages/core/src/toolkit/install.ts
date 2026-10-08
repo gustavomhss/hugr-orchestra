@@ -1,5 +1,6 @@
 export * as ToolkitInstall from "./install"
 
+import path from "path"
 import { Effect, Fiber } from "effect"
 import { PinnedArtifact } from "../pinned-artifact"
 
@@ -10,30 +11,29 @@ type Attempt = {
   running?: Fiber.Fiber<string | undefined>
   readonly failed?: string
   readonly at: number
-  users: number
-  closing?: boolean
 }
 
 const attempts = new Map<string, Attempt>()
 
-export const attempt = (directory: string) => attempts.get(directory)
+export const attempt = (directory: string) => attempts.get(path.resolve(directory))
 
-/** One installation per directory. Interrupted waiters leave other users' work alive. */
+/**
+ * One installation per directory. Interruption cancels a caller's wait, not the shared install, matching
+ * BackendToolkit's original once semantics. PinnedArtifact's transport/extractor promises are not abortable:
+ * keep the install (and its concurrency permit) alive until atomic completion instead of orphaning its work.
+ */
 export const once = Effect.fn("ToolkitInstall.once")(function* (
-  directory: string,
+  installDirectory: string,
   work: Effect.Effect<unknown, PinnedArtifact.Failed>,
-): Effect.fn.Return<string | undefined> {
+) {
+  const directory = path.resolve(installDirectory)
   return yield* Effect.uninterruptibleMask((restore) =>
     Effect.gen(function* () {
       const previous = attempts.get(directory)
-      if (previous?.closing && previous.running) {
-        yield* restore(Fiber.await(previous.running))
-        return yield* restore(once(directory, work))
-      }
       if (previous?.failed && Date.now() - previous.at < RETRY_MS && !(yield* restore(PinnedArtifact.installed(directory))))
         return previous.failed
       const current = attempts.get(directory)
-      const entry: Attempt = current?.running ? current : { at: Date.now(), users: 0 }
+      const entry: Attempt = current?.running ? current : { at: Date.now() }
       if (!entry.running) {
         // Publish before starting: synchronous completion must not leave a phantom running entry.
         attempts.set(directory, entry)
@@ -42,27 +42,19 @@ export const once = Effect.fn("ToolkitInstall.once")(function* (
             Effect.match({
               onSuccess: () => undefined,
               onFailure: (error) => {
-                attempts.set(directory, { failed: error.cause, at: Date.now(), users: 0 })
+                attempts.set(directory, { failed: error.cause, at: Date.now() })
                 return error.cause
               },
             }),
-            Effect.ensuring(Effect.sync(() => {
-              if (attempts.get(directory) === entry) attempts.delete(directory)
-            })),
+            Effect.ensuring(
+              Effect.sync(() => {
+                if (attempts.get(directory) === entry) attempts.delete(directory)
+              }),
+            ),
           ),
         )
       }
-      const running = entry.running
-      entry.users++
-      return yield* restore(Fiber.join(running)).pipe(
-        Effect.ensuring(Effect.suspend(() => {
-          entry.users--
-          if (entry.users !== 0 || attempts.get(directory) !== entry) return Effect.void
-          // Keep the entry until staging cleanup finishes; new users wait before retrying.
-          entry.closing = true
-          return Fiber.interrupt(running)
-        })),
-      )
+      return yield* restore(Fiber.join(entry.running))
     }),
   )
 })
