@@ -90,6 +90,17 @@ it.live("one flipped byte is refused before anything is extracted", () =>
   }), 30_000,
 )
 
+it.live("a digest-valid malformed archive fails extraction and leaves no completed install", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const target = path.join(f.installs, "broken")
+    f.files["/broken.tgz"] = new TextEncoder().encode("not a gzip archive")
+    expect(yield* refused(target, [{ ...f.tgz("broken.tgz"), integrity: f.sri(f.files["/broken.tgz"]) }])).toBe("extract")
+    expect(yield* PinnedArtifact.installed(target)).toBe(false)
+    expect(yield* f.leftovers()).toEqual([])
+  }), 30_000,
+)
+
 it.live("a raw download is the executable itself", () =>
   Effect.gen(function* () {
     const f = yield* fixture
