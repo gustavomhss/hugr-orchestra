@@ -5,7 +5,9 @@ import { OauthCallbackPage } from "@orchestra/core/oauth/page"
 import { createServer } from "http"
 import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 import { Auth, OAUTH_DUMMY_KEY } from "../auth"
-import { Option, Schema } from "effect"
+import { Effect, Option, Schema } from "effect"
+
+type Send = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
 
 const DO_AUTHORIZE_URL = "https://cloud.digitalocean.com/v1/oauth/authorize"
 const DO_TOKEN_URL = "https://cloud.digitalocean.com/v1/oauth/token"
@@ -25,6 +27,7 @@ const TokenResponse = Schema.Struct({
 })
 
 interface PendingOAuth {
+  owner: symbol
   state: string
   resolve: (code: string) => void
   reject: (error: Error) => void
@@ -38,6 +41,7 @@ interface RouterEntry {
 
 let oauthServer: ReturnType<typeof createServer> | undefined
 let pendingOAuth: PendingOAuth | undefined
+let serverOwner: symbol | undefined
 
 function generateState(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32))
@@ -63,8 +67,9 @@ function buildAuthorizeUrl(state: string, clientID: string, challenge: string): 
   return `${DO_AUTHORIZE_URL}?${params.toString()}`
 }
 
-async function startOAuthServer(): Promise<void> {
-  if (oauthServer) return
+async function startOAuthServer(owner: symbol): Promise<void> {
+  if (oauthServer) throw new Error("DigitalOcean OAuth authorization already pending")
+  serverOwner = owner
   oauthServer = createServer((req, res) => {
     const url = new URL(req.url || "/", `http://localhost:${OAUTH_PORT}`)
 
@@ -98,28 +103,31 @@ async function startOAuthServer(): Promise<void> {
     oauthServer!.listen(OAUTH_PORT, "127.0.0.1", () => {
       resolve()
     })
-    oauthServer!.once("error", (error) => { oauthServer = undefined; reject(error) })
+    oauthServer!.once("error", (error) => { if (serverOwner === owner) { oauthServer = undefined; serverOwner = undefined }; reject(error) })
   })
 }
 
-function stopOAuthServer() {
-  if (!oauthServer) return
+function stopOAuthServer(owner: symbol) {
+  if (!oauthServer || serverOwner !== owner) return
   oauthServer.close()
   oauthServer = undefined
+  serverOwner = undefined
 }
 
-function waitForOAuthCallback(state: string): Promise<string> {
+function waitForOAuthCallback(state: string, owner: symbol): Promise<string> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => {
-        if (pendingOAuth) {
+        if (pendingOAuth?.owner === owner) {
           pendingOAuth = undefined
           reject(new Error("OAuth callback timeout - authorization took too long"))
+          stopOAuthServer(owner)
         }
       },
       5 * 60 * 1000,
     )
     pendingOAuth = {
+      owner,
       state,
       resolve: (tokens) => {
         clearTimeout(timeout)
@@ -133,8 +141,8 @@ function waitForOAuthCallback(state: string): Promise<string> {
   })
 }
 
-async function requestTokens(body: Record<string, string>) {
-  const response = await fetch(DO_TOKEN_URL, {
+async function requestTokens(body: Record<string, string>, send: Send) {
+  const response = await send(DO_TOKEN_URL, {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
     body: new URLSearchParams(body), signal: AbortSignal.timeout(10_000),
   })
@@ -146,8 +154,9 @@ async function requestTokens(body: Record<string, string>) {
 
 async function listRouters(
   bearer: string,
+  send: Send,
 ): Promise<{ ok: true; routers: RouterEntry[] } | { ok: false; status: number }> {
-  const res = await fetch(`${DO_GENAI_API}/models/routers`, {
+  const res = await send(`${DO_GENAI_API}/models/routers`, {
     headers: {
       Authorization: `Bearer ${bearer}`,
       Accept: "application/json",
@@ -202,8 +211,20 @@ function parseRoutersJSON(raw: string | undefined): RouterEntry[] {
 }
 
 export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks> {
+  return createDigitalOceanAuthHooks(input, await Auth.runPromise((auth) => Effect.succeed(auth)), fetch)
+}
+
+export function createDigitalOceanAuthHooks(input: PluginInput, store: Auth.Interface, send: Send): Hooks {
+  let owner: symbol | undefined
+  let disposed = false
   return {
-    async dispose() { pendingOAuth?.reject(new Error("DigitalOcean OAuth cancelled")); pendingOAuth = undefined; stopOAuthServer() },
+    async dispose() {
+      disposed = true
+      if (!owner) return
+      if (pendingOAuth?.owner === owner) { pendingOAuth.reject(new Error("DigitalOcean OAuth cancelled")); pendingOAuth = undefined }
+      stopOAuthServer(owner)
+      owner = undefined
+    },
     provider: {
       id: "digitalocean",
       async models(provider, ctx) {
@@ -221,7 +242,7 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
         const bearerValid = typeof oauthAccess === "string" && oauthAccess && oauthExpires > Date.now()
 
         if (bearerValid && stale) {
-          const result = await listRouters(oauthAccess)
+          const result = await listRouters(oauthAccess, send)
           if (result.ok) {
             routers = result.routers
             if (ctx.auth.type === "api") await input.client.auth
@@ -252,19 +273,16 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
       provider: "digitalocean",
       async loader(getAuth) {
         if ((await getAuth()).type !== "oauth") return {}
-        let refreshing: Promise<Auth.Oauth> | undefined
         return {
           apiKey: OAUTH_DUMMY_KEY,
           async fetch(request: RequestInfo | URL, init?: RequestInit) {
-            const current = await getAuth()
-            if (current.type !== "oauth") return fetch(request, init)
-            const auth = Schema.decodeUnknownSync(Auth.Oauth)(current)
-            const refresh = !auth.access || auth.expires - Date.now() <= 60_000
-            if (refresh && process.env.ORCHESTRA_AUTH_CONTENT) throw new Error("Inherited DigitalOcean OAuth credentials cannot be refreshed")
-            const value = refresh ? await (refreshing ??= (async () => {
+            const value = await Effect.runPromise(Auth.withRefreshLease("digitalocean", Effect.gen(function* () {
+              const auth = yield* store.get("digitalocean")
+              if (!auth || auth.type !== "oauth" || auth.expires - Date.now() > 60_000) return auth
+              if (process.env.ORCHESTRA_AUTH_CONTENT) throw new Error("Inherited DigitalOcean OAuth credentials cannot be refreshed")
               const clientID = auth.metadata?.clientID
               if (typeof clientID !== "string" || !clientID.trim()) throw new Error("DigitalOcean OAuth credential has no bound clientID; reconnect")
-              const tokens = await requestTokens({ grant_type: "refresh_token", refresh_token: auth.refresh, client_id: clientID })
+              const tokens = yield* Effect.tryPromise({ try: () => requestTokens({ grant_type: "refresh_token", refresh_token: auth.refresh, client_id: clientID }, send), catch: (cause) => cause })
               const next = new Auth.Oauth({
                 ...auth,
                 access: tokens.access_token,
@@ -272,13 +290,14 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
                 expires: Date.now() + (tokens.expires_in ?? 3600) * 1000,
                 metadata: { ...auth.metadata, clientID, scopes: tokens.scope ?? auth.metadata?.scopes },
               })
-              await input.client.auth.set({ path: { id: "digitalocean" }, body: next, throwOnError: true })
-              return next
-            })().finally(() => { refreshing = undefined })) : auth
+              return (yield* store.replaceIf("digitalocean", auth, next)) ? next : yield* store.get("digitalocean")
+            })))
+            if (!value || value.type === "wellknown") throw new Error("DigitalOcean credential removed or changed")
+            if (value.type === "oauth" && value.expires <= Date.now()) throw new Error("DigitalOcean OAuth credential changed; reconnect")
             const headers = new Headers(request instanceof Request ? request.headers : undefined)
             new Headers(init?.headers).forEach((value, key) => headers.set(key, value))
-            headers.set("authorization", `Bearer ${value.access}`)
-            return fetch(request, { ...init, headers })
+            headers.set("authorization", `Bearer ${value.type === "oauth" ? value.access : value.key}`)
+            return send(request, { ...init, headers })
           },
         }
       },
@@ -290,10 +309,13 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
             const clientID = OwnOAuthApp.requireClientID("digitalocean")
             const verifier = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url")
             const challenge = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))).toString("base64url")
-            await startOAuthServer()
-            if (pendingOAuth) throw new Error("DigitalOcean OAuth authorization already pending")
+            if (disposed) throw new Error("DigitalOcean OAuth plugin disposed")
+            const attemptOwner = Symbol("digitalocean-oauth")
+            await startOAuthServer(attemptOwner)
+            owner = attemptOwner
+            if (disposed) { stopOAuthServer(attemptOwner); throw new Error("DigitalOcean OAuth cancelled") }
             const state = generateState()
-            const callbackPromise = waitForOAuthCallback(state)
+            const callbackPromise = waitForOAuthCallback(state, attemptOwner)
             void callbackPromise.catch(() => undefined)
             const url = buildAuthorizeUrl(state, clientID, challenge)
             return {
@@ -303,8 +325,9 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
               method: "auto" as const,
               async callback() {
                 try {
-                  const tokens = await requestTokens({ grant_type: "authorization_code", code: await callbackPromise, client_id: clientID, redirect_uri: redirectUri(), code_verifier: verifier })
-                  const routerResult = await listRouters(tokens.access_token)
+                  const tokens = await requestTokens({ grant_type: "authorization_code", code: await callbackPromise, client_id: clientID, redirect_uri: redirectUri(), code_verifier: verifier }, send)
+                  if (disposed) return { type: "failed" as const }
+                  const routerResult = await listRouters(tokens.access_token, send)
                   const routers = routerResult.ok ? routerResult.routers : []
                   if (!routerResult.ok) {
                   }
@@ -326,7 +349,8 @@ export async function DigitalOceanAuthPlugin(input: PluginInput): Promise<Hooks>
                 } catch (err) {
                   return { type: "failed" as const }
                 } finally {
-                  stopOAuthServer()
+                  stopOAuthServer(attemptOwner)
+                  if (owner === attemptOwner) owner = undefined
                 }
               },
             }
