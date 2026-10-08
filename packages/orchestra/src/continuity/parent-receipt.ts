@@ -11,7 +11,7 @@ import { createHash } from "node:crypto"
 import { LLMPrepared } from "@/session/llm/prepared"
 
 // Process-local host receipts are not a provider/user flag and cannot be forged by a JSON request.
-const receipts = new WeakMap<ParentRequest, { response: MessageID; provider: string; model: string; prefix: string; sources: { id: MessageID; digest: string }[]; input?: number }>()
+const receipts = new WeakMap<ParentRequest, { response: MessageID; provider: string; model: string; prefix: string; plan?: LLMPrepared.Plan; sources: { id: MessageID; digest: string }[]; input?: number }>()
 
 export function capture(parent: ParentRequest, response: MessageID, sources: SessionV1.WithParts[]) {
   if (sources.length !== parent.messageIDs.length || sources.some((source, index) => source.info.id !== parent.messageIDs[index])) return parent
@@ -24,7 +24,7 @@ export function capture(parent: ParentRequest, response: MessageID, sources: Ses
   if (entries.some((entry) => !entry)) return parent
   input.tools = Object.fromEntries(entries.filter((entry) => entry !== undefined))
   const captured = { input, messageIDs: [...parent.messageIDs] }
-  receipts.set(captured, { response, provider: input.model.providerID, model: input.model.id, prefix: signature(captured),
+  receipts.set(captured, { response, provider: input.model.providerID, model: input.model.id, prefix: signature(captured), plan: input.prepared,
     sources: sources.map((source) => ({ id: source.info.id, digest: fingerprint(source) })) })
   return captured
 }
@@ -45,11 +45,12 @@ export function matches(parent: ParentRequest, snapshot: MemorySnapshot, model: 
   const receipt = receipts.get(parent)
   const history = snapshot.covered ?? [...snapshot.head, ...snapshot.tail]
   const last = history.findLast((message) => message.info.role === "assistant")?.info
-  if (!receipt || signature(parent) !== receipt.prefix || !receipt.input || !last || last.role !== "assistant" || receipt.response !== last.id || receipt.response !== snapshot.boundary ||
+  if (!receipt || parent.input.prepared !== receipt.plan || parent.input.sessionID !== snapshot.sessionID || signature(parent) !== receipt.prefix || !receipt.input || !last || last.role !== "assistant" || receipt.response !== last.id || receipt.response !== snapshot.boundary ||
     receipt.provider !== model.providerID || receipt.model !== model.id || last.providerID !== model.providerID || last.modelID !== model.id) return false
   const positions = parent.messageIDs.map((id) => history.findIndex((message) => message.info.id === id))
   return positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1])) &&
-    receipt.sources.every((source, index) => source.id === parent.messageIDs[index])
+    receipt.sources.every((source, index) => source.id === parent.messageIDs[index] &&
+      history[positions[index]].info.sessionID === snapshot.sessionID && source.digest === fingerprint(history[positions[index]]))
 }
 
 function signature(parent: ParentRequest) {

@@ -392,6 +392,14 @@ for (const native of [false, true]) it.instance(`one-shot preflight captures eff
     value.model.options.reasoningEffort = "low"
     value.tools.bash.description = "CALLER_MUTATION"
     yield* llm.stream({ ...value, prepared: plan }).pipe(Stream.runDrain)
+    const replay = llm.receipt(plan)
+    if (!replay) throw new Error("Missing replay receipt")
+    const denied = { ...replay, messages: [...replay.messages, { role: "user" as const, content: "MAINTENANCE_APPEND" }],
+      tools: { bash: { ...replay.tools.bash, execute: async () => { throw new Error("Maintenance tool denied") } } } }
+    yield* llm.stream(denied).pipe(Stream.runDrain)
+    const missing = yield* llm.stream({ ...denied, tools: {} }).pipe(Stream.runDrain, Effect.result)
+    expect(missing._tag).toBe("Failure")
+    if (missing._tag === "Failure") expect(String(missing.failure)).toContain("LLM prepared replay tool executor missing")
   })).pipe(Effect.provide(layer))
   expect(calls).toEqual(["experimental.chat.system.transform", "chat.params", "chat.headers"])
   expect(languageCalls).toHaveLength(1)
@@ -400,12 +408,12 @@ for (const native of [false, true]) it.instance(`one-shot preflight captures eff
   expect(sent).toContain("CAPTURED_TOOL")
   expect(sent).not.toContain("MUTATION")
   if (native) {
-    expect(requests).toHaveLength(1)
+    expect(requests).toHaveLength(2)
     expect(requests[0].generation).toMatchObject({ maxTokens: 1234 })
     expect(requests[0].providerOptions).toMatchObject({ openai: { reasoningEffort: "high" } })
   }
   if (!native) {
-    expect(wire).toHaveLength(1)
+    expect(wire).toHaveLength(2)
     expect(wire[0]).toMatchObject({ max_output_tokens: 1234, reasoning: { effort: "high" } })
   }
 }))
