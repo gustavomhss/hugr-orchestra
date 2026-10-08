@@ -108,10 +108,12 @@ export const make = Effect.gen(function* () {
   })
 
   const commit = <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
-    Effect.suspend(() => {
-      if (!permit || permit[approved] !== true || !permits.has(permit)) return Effect.fail(mismatch())
+    Effect.gen(function* () {
+      if (!permit || permit[approved] !== true || !permits.has(permit)) return yield* mismatch()
+      if (!database.inTransaction) return yield* Effect.die("Capability commit requires SQL transaction identity")
+      if (yield* database.inTransaction) return yield* mismatch()
       // Lock ordering is actor state -> SQLite writer. Approval never happens under either lock.
-      return agents.withPermissions(permit.context.agent, () => database.db.transaction((tx) => Effect.gen(function* () {
+      return yield* agents.withPermissions(permit.context.agent, () => database.db.transaction((tx) => Effect.gen(function* () {
         const current = yield* CapabilityInvocation.require(permit.context, {
           projectID: location.project.id,
           location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
@@ -120,9 +122,11 @@ export const make = Effect.gen(function* () {
         yield* validate(current)
         const request = { sessionID: permit.context.sessionID, agent: permit.context.agent,
           action: permit.action, resources: [...permit.resources] }
-        if ((yield* permissions.evaluate(request)) === "deny") return yield* denied()
+        if ((yield* permissions.evaluate(request).pipe(
+          Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())),
+        )) === "deny") return yield* denied()
         return yield* write(tx)
-      }), { behavior: "immediate" })).pipe(Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())))
+      }), { behavior: "immediate" }))
     })
 
   return { authorize, commit, assert: (context: Tool.Context, input: { action: string; resources: readonly string[] }) =>

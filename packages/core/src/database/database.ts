@@ -2,7 +2,8 @@ export * as Database from "./database"
 
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { layer as sqliteLayer } from "#sqlite"
-import { Context, Effect, Layer } from "effect"
+import { Context, Effect, Layer, Option } from "effect"
+import { SqlClient } from "effect/unstable/sql/SqlClient"
 import { createHash, randomUUID } from "crypto"
 import { Global } from "../global"
 import { Flag } from "../flag/flag"
@@ -18,6 +19,8 @@ export interface Interface {
   db: DatabaseShape
   /** Stable store namespace; in-memory databases intentionally receive independent identities. */
   storageID?: string
+  /** Captures this database's actual SQL client's ambient transaction key. */
+  inTransaction?: Effect.Effect<boolean>
 }
 
 const Filename = Context.Reference<string>("@orchestra/Database/Filename", { defaultValue: () => path() })
@@ -28,6 +31,7 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const db = yield* makeDatabase
+    const client = yield* SqlClient
 
     yield* db.run("PRAGMA journal_mode = WAL")
     yield* db.run("PRAGMA synchronous = NORMAL")
@@ -38,7 +42,8 @@ const layer = Layer.effect(
     yield* DatabaseMigration.apply(db)
 
     const filename = yield* Filename
-    return { db, storageID: filename === ":memory:" ? randomUUID()
+    return { db, inTransaction: Effect.serviceOption(client.transactionService).pipe(Effect.map(Option.isSome)),
+      storageID: filename === ":memory:" ? randomUUID()
       : createHash("sha256").update(resolve(filename)).digest("hex") }
   }).pipe(Effect.orDie),
 )

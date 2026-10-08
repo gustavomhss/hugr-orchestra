@@ -54,10 +54,27 @@ it.effect("permits cannot cross root scope or be minted from public claims", () 
   const absent = yield* f.policy.commit(permit, () => f.target).pipe(Effect.flip)
   expect(absent).toBeInstanceOf(Capability.Failure)
   if (absent instanceof Capability.Failure) yield* CapabilityPolicyFixture.expectFailure(absent, "invocation_binding_missing")
-  const fake = { ...permit }
-  Object.getOwnPropertySymbols(fake).forEach((key) => Reflect.deleteProperty(fake, key))
-  const forged = yield* CapabilityInvocation.withContext(f.binding, f.policy.commit(fake, () => f.target)).pipe(Effect.flip)
-  expect(forged).toBeInstanceOf(Capability.Failure)
-  if (forged instanceof Capability.Failure) yield* CapabilityPolicyFixture.expectFailure(forged, "invocation_binding_mismatch")
+  yield* CapabilityInvocation.withContext(f.binding, Effect.gen(function* () {
+    const issued = yield* f.policy.authorize(f.context, CapabilityPolicyFixture.input)
+    const fake = { ...issued }
+    const cloned = yield* f.policy.commit(fake, () => f.target).pipe(Effect.flip)
+    expect(cloned).toBeInstanceOf(Capability.Failure)
+    if (cloned instanceof Capability.Failure) yield* CapabilityPolicyFixture.expectFailure(cloned, "invocation_binding_mismatch")
+    Object.getOwnPropertySymbols(fake).forEach((key) => Reflect.deleteProperty(fake, key))
+    const forged = yield* f.policy.commit(fake, () => f.target).pipe(Effect.flip)
+    expect(forged).toBeInstanceOf(Capability.Failure)
+    if (forged instanceof Capability.Failure) yield* CapabilityPolicyFixture.expectFailure(forged, "invocation_binding_mismatch")
+  }))
   expect(yield* Ref.get(f.effects)).toBe(0)
+}))
+
+it.effect("capability commits reject ambient SQLite transactions before acquiring actor state", () => Effect.gen(function* () {
+  const f = yield* CapabilityPolicyFixture.fixture()
+  yield* CapabilityInvocation.withContext(f.binding, Effect.gen(function* () {
+    const permit = yield* f.policy.authorize(f.context, CapabilityPolicyFixture.input)
+    const error = yield* f.database.db.transaction(() => f.policy.commit(permit, () => f.target)).pipe(Effect.flip)
+    expect(error).toBeInstanceOf(Capability.Failure)
+    if (error instanceof Capability.Failure) yield* CapabilityPolicyFixture.expectFailure(error, "invocation_binding_mismatch")
+    expect(yield* Ref.get(f.effects)).toBe(0)
+  }))
 }))
