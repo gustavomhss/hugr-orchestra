@@ -10,6 +10,8 @@ Owner clarification: **“nao, tem que aparecer orchestra”**. Own OAuth regist
 
 Cadence correction from the owner: **“vamos rapido, sem suites de teste pesadas rodando a cada wp, cada agent testa so o que mexeu, PR so no final do milestone ok?”** Each WP runs only its changed-file/changed-behavior checks. Cross-target builds, complete package suites, full matrices and the single milestone PR wait for integration/closure. Batch controls where they answer the same changed behavior; do not repeat full work for every edit.
 
+Product architecture steering: the owner decided to transfer decomposition, planning, tasks and WPs from Maestro to a new team member, **Archie**, which another front is building. The owner renamed the proposed planner from Wallie to Archie; older snapshots use the former name. Maestro owns orchestration, organization and decisions, with further decision/orchestration capabilities planned later. Existing runtime snapshots must distinguish the current installed contract from this owner-directed transition. This implementation wave's own engineering plan is not the product's future Maestro capability charter; roster/prompt migrations require coordination with the Archie owner and current executable gates. Stable member IDs and charters must come from that front's frozen interface, not be guessed from display names.
+
 ## Recovered implementation facts
 
 - Desktop still installs upstream CLI packages and expects a Rust service-password command its owned V2 CLI does not implement.

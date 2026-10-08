@@ -71,7 +71,7 @@ test("latest defaults to owned source patch without registry access", async () =
   expect((await version({ channel: "latest" })).version).toBe(semver.inc(pkg.version, "patch")!)
 })
 
-for (const [bump, expected] of [["major", "2.0.0"], ["minor", "1.19.0"], ["patch", "1.18.28"], ["PATCH", "1.18.28"]]) {
+for (const [bump, expected] of [["major", "2.0.0"], ["minor", "1.19.0"], ["patch", "1.18.28"], ["PATCH", "1.18.28"]] as const) {
   test(`owned source ${bump} golden without registry access`, async () => {
     expect(await version({ channel: "", bump })).toEqual({ version: expected, channel: "latest", preview: false })
   })
@@ -121,7 +121,7 @@ for (const [source, bump, expected] of [
   ["1.2.3-rc.4+build.5", "patch", "1.2.3"],
   ["2.0.0-rc.1", "major", "2.0.0"],
   ["1.3.0-rc.1", "minor", "1.3.0"],
-]) {
+] as const) {
   test(`owned source boundary ${source} ${bump} produces ${expected}`, async () => {
     expect((await version({ source, channel: "latest", bump })).version).toBe(expected)
   })
