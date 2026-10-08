@@ -81,7 +81,11 @@ export const effectCmd = <Args, A>(opts: EffectCmdOpts<Args, A>) =>
       // interrupted. The timeout keeps a stuck finalizer from blocking the exit.
       let signalled = false
       let shutdown: Promise<void> | undefined
-      for (const signal of ["SIGTERM", "SIGHUP"] as const)
+      // Console Ctrl+C/Break must dispose the Windows runtime instead of the OS terminating it first.
+      const signals: NodeJS.Signals[] = process.platform === "win32"
+        ? ["SIGTERM", "SIGHUP", "SIGINT", "SIGBREAK"]
+        : ["SIGTERM", "SIGHUP"]
+      for (const signal of signals)
         process.once(signal, () => {
           if (signalled) return
           signalled = true
