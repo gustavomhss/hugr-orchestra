@@ -1,19 +1,23 @@
 // V3: pinned supervisor SIGKILL, exact per-OS tier snapshots inside 8 s, then protected next-spawn recovery.
 import { cleanup, cli, client, control, deadlineSnapshots, fakeLLM, fileTree, identity, isolated, kill9, matches, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
+import { deliveryEnv } from "./delivery-fixtures.ts"
+import type { ChildProcess } from "node:child_process"
 
 export async function run(options: { mutation?: "wrong-owner" } = {}) {
   const scratch = isolated("v3", {})
   const trees = { bash: fileTree(scratch.home, 2), pty: fileTree(scratch.home, 2), after: fileTree(scratch.home, 1) }
-  const llm = await fakeLLM([{ name: "bash", args: { command: trees.bash.line, timeout: 600_000, description: "Run campaign tree" } }])
+  const llm = await fakeLLM([{ name: "bash", args: { command: win ? `& ${trees.bash.line}` : trees.bash.line, timeout: 600_000, description: "Run campaign tree" } }])
   const config = {
-    formatter: false, lsp: false, share: "disabled", permission: { "*": "allow" }, model: "test/test-model", provider: provider(llm.url),
+    formatter: false, lsp: false, shell: win ? "powershell.exe" : "/bin/bash", share: "disabled", permission: { "*": "allow" }, model: "test/test-model", provider: provider(llm.url),
     agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
   }
   const nonces = Object.values(trees).map((tree) => tree.nonce)
   const steps: string[] = []
+  const hosts: ChildProcess[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v3] ${line}`) }
   try {
-    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
+    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }), scratch.project)
+    hosts.push(host.proc)
     const pinnedHost = host.identity ?? identity(host.pid)
     const api = client(host.url, scratch.project)
     const session = await api.post("/session", {})
@@ -68,6 +72,9 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
     return verdict("v3-supervisor", { pass: false, error: String(error), home: scratch.home, nonces, steps })
   } finally {
     llm.stop()
+    // Close retained host handles before inventory teardown; killing an already-exiting numeric PID is not cleanup proof.
+    for (const proc of hosts) if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
+    await until(10_000, "V3 retained hosts exited", () => hosts.every((proc) => proc.exitCode !== null || proc.signalCode !== null) ? true : undefined)
     await cleanup(scratch.home, nonces)
   }
 }

@@ -256,6 +256,29 @@ readline.createInterface({input: process.stdin}).on('line', line => {
     }
     if (!win) try {
       const files = byteFixture(scratch, nonce, "raw", "v6-raw")
+      // Node/libuv can initialize TTY mode after the Python exec shim. Set/observe the actual slave after stdin
+      // has received `go`, immediately before payload writes; the pre-exec snapshot alone cannot certify raw output.
+      const configureRaw = `const configureRaw = () => {
+        const configured = require('node:child_process').spawnSync('python3', ['-c', ${JSON.stringify(`
+import termios, tty, fcntl, struct, json, os
+def snapshot():
+    a = termios.tcgetattr(1)
+    return {'OPOST': bool(a[1] & termios.OPOST), 'ONLCR': bool(a[1] & termios.ONLCR),
+      'ECHO': bool(a[3] & termios.ECHO), 'ICANON': bool(a[3] & termios.ICANON),
+      'size': list(struct.unpack('HHHH', fcntl.ioctl(1, termios.TIOCGWINSZ, bytes(8))))[:2]}
+before = snapshot()
+tty.setraw(0, termios.TCSANOW)
+record = {'before': before, 'after': snapshot(), 'phase': 'after-Node-stdio-initialization-before-payload'}
+json.dump(record, open(${JSON.stringify(files.termios)}, 'w'))
+if not os.path.exists(${JSON.stringify(`${files.termios}.initial`)}): json.dump(record, open(${JSON.stringify(`${files.termios}.initial`)}, 'w'))
+`)}], {stdio: ['inherit', 'inherit', 'pipe']});
+        if (configured.status !== 0) throw Error('actual slave raw configuration failed: ' + configured.stderr);
+      };\n`
+      const rawProducer = readFileSync(`${files.base}.cjs`, "utf8")
+        .replace(/out\('READY-' \+ nonce \+ '\\n'\);\nfs\.writeFileSync\([^\n]+\);/, (ready) => `setImmediate(() => { configureRaw(); ${ready} });`)
+        .replace("if (line === 'go') {", "if (line === 'go') { configureRaw();")
+      if (!rawProducer.includes("setImmediate(() => { configureRaw();")) throw new Error("raw fixture readiness composition boundary changed")
+      writeFileSync(`${files.base}.cjs`, configureRaw + rawProducer)
       const raw = await call<Terminal>("POST", "/pty", { command: "python3", args: files.args, cols: 120, rows: 40 })
       ids.push(raw.id)
       const stream = await attach(raw.id, 0)
@@ -265,8 +288,22 @@ readline.createInterface({input: process.stdin}).on('line', line => {
         throw new Error("raw/no-translation terminal mode not observed on actual slave")
       stream.ws.send("go\n")
       await until(120_000, "raw 50 MiB producer completion", () => existsSync(files.receipt) ? true : undefined)
+      const actualMode = JSON.parse(readFileSync(files.termios, "utf8")) as typeof mode & { phase: string }
+      metrics.rawSlaveMode = actualMode
+      metrics.rawStartupMode = JSON.parse(readFileSync(`${files.termios}.initial`, "utf8"))
+      if (actualMode.phase !== "after-Node-stdio-initialization-before-payload" || actualMode.after.OPOST ||
+        actualMode.after.ECHO || actualMode.after.ICANON || actualMode.after.size.join(" ") !== "40 120")
+        throw new Error("raw flags missing on actual slave at payload boundary")
       stream.ws.send("done\n")
-      await until(20_000, "raw terminal responds after completion", () => stream.state.text.includes(`PRODUCER-DONE-${nonce}\n`) ? true : undefined)
+      await until(20_000, "raw terminal responds after completion", () => stream.state.text.includes(`PRODUCER-DONE-${nonce}`) ? true : undefined)
+        .catch((cause) => {
+          writeFileSync(files.output, stream.state.text)
+          metrics.rawFailure = { files, mode: actualMode, receipt: JSON.parse(readFileSync(files.receipt, "utf8")),
+            source: byteStats(readFileSync(files.source)), observed: byteStats(Buffer.from(stream.state.text)),
+            sourceTail: readFileSync(files.source).subarray(-256).toString(), observedTail: stream.state.text.slice(-256),
+            frames: stream.state.frames, socketError: stream.state.error }
+          throw cause
+        })
       stream.ws.send("quit\n")
       await until(20_000, "raw output drained and producer exited", () => stream.ws.readyState === WebSocket.CLOSED ? true : undefined)
       const source = readFileSync(files.source)
@@ -276,7 +313,7 @@ readline.createInterface({input: process.stdin}).on('line', line => {
       writeFileSync(files.output, observed)
       const lost = [...observed.toString("utf8").matchAll(gap)].map((match) => Number(match[1]))
       const receipt = JSON.parse(readFileSync(files.receipt, "utf8")) as { written: number; sourceBytes: number; sourceSHA256: string }
-      metrics.rawAccounting = { files, mode, receipt, actualWire: byteStats(actual), observed: byteStats(observed), source: byteStats(source), lostBefore: lost }
+      metrics.rawAccounting = { files, mode: actualMode, preExecMode: mode, receipt, actualWire: byteStats(actual), observed: byteStats(observed), source: byteStats(source), lostBefore: lost }
       if (receipt.written !== 50 * 1024 * 1024 || byteStats(source.subarray(0, receipt.sourceBytes)).sha256 !== receipt.sourceSHA256 ||
         !exactRaw(observed, source, lost)) throw new Error("raw PTY output differs from actual producer stdout or contains a gap")
       checks.rawAccounting = "passed"
