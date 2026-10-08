@@ -44,5 +44,6 @@ export const migrations = (
     import("./migration/20261006153404_scheduled_task"),
     import("./migration/20261008180046_capability_storage"),
     import("./migration/20261008192938_capability_lifecycle"),
+    import("./migration/20261008233008_capability_request_identity"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

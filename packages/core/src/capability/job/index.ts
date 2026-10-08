@@ -20,6 +20,7 @@ import {
 
 const Create = Schema.Struct({
   kind: Capability.JobKind,
+  requestHash: Schema.optional(Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}(?![\s\S])/))),
   operation: Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9._:-]{0,127}(?![\s\S])/)),
   // Scoped to producer invocation + operation; another key deliberately creates another subjob.
   creationKey: Schema.optional(Schema.String.check(Schema.isPattern(/^[a-z][a-z0-9-]{0,63}(?![\s\S])/))),
@@ -221,7 +222,8 @@ export const make = Effect.gen(function* () {
           const stored = yield* Schema.decodeUnknownEffect(Stored)(existing.observation).pipe(Effect.orDie)
           if (!sameOwner(existing.owner, binding.owner) || !sameInvocation(existing.invocation, binding.invocation) ||
             existing.kind !== fixed.kind || existing.operation !== fixed.operation || !sameRefs(existing, fixed) ||
-            stored.rootToolName !== binding.rootToolName) return yield* failure("outcome_unknown")
+            stored.rootToolName !== binding.rootToolName || existing.request_hash !== (fixed.requestHash ?? null))
+            return yield* failure("outcome_unknown")
           if (existing.creation_key === null) yield* tx.update(CapabilityJobTable).set({ creation_key: creationKey })
             .where(eq(CapabilityJobTable.id, existing.id)).run().pipe(Effect.orDie)
           return { id: existing.id }
@@ -230,7 +232,7 @@ export const make = Effect.gen(function* () {
         const ref = { id: Capability.JobID.create() }
         yield* tx.insert(CapabilityJobTable).values({ id: ref.id, owner: binding.owner, invocation: binding.invocation,
           kind: fixed.kind, operation: fixed.operation, connection: fixed.connection, target: fixed.target,
-          creation_key: creationKey, state: "intent", observation,
+          creation_key: creationKey, request_hash: fixed.requestHash, state: "intent", observation,
         }).run().pipe(Effect.orDie)
         return ref
       })).pipe(Effect.catchTag("SqlError", Effect.die))
