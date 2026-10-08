@@ -200,7 +200,7 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
       steps,
     }
   } catch (error) {
-    return { target, pass: false, error: String(error).slice(0, 4000), home, teardown, controls: probes.controls, output: terminalHost.host?.out().slice(-4000), steps }
+    return { target, pass: false, error: String(error).slice(0, 4000), home, teardown, ...probes, output: terminalHost.host?.out().slice(-4000), steps }
   } }, async () => {
     llm.stop()
     try {

@@ -12,7 +12,7 @@ import type { ChildProcess } from "node:child_process"
 
 type Message = {
   info: { role: string; finish?: string; error?: unknown }
-  parts: { type: string; tool?: string; state?: { status: string; error?: string; input?: { command?: string }; metadata?: { interrupted?: boolean }; time?: { start: number; end?: number } } }[]
+  parts: { type: string; tool?: string; state?: { status: string; error?: string; output?: string; input?: { command?: string }; metadata?: { interrupted?: boolean; aborted?: boolean; timeout?: boolean; exit?: number | null }; time?: { start: number; end?: number } } }[]
 }
 type Listed = { id: string; pid: number; title: string; output: string; written: number; processes: { pid: number }[] }
 
@@ -38,8 +38,8 @@ export async function run() {
   const terminalHost = { host: undefined as Awaited<ReturnType<typeof consoleHost>> | undefined }
   const recorder = { inventory: undefined as Awaited<ReturnType<typeof windowsInventory>> | undefined }
   const processHost = { proc: undefined as ChildProcess | undefined }
-  const frontend = { proxy: undefined as ReturnType<typeof observeFrontend> | undefined }
-  const esc = { sent: 0, displayedSession: undefined as string | undefined, firstAcknowledged: false, before: undefined as ReturnType<typeof control> | undefined, abortRequests: [] as ReturnType<typeof observeFrontend>["requests"] }
+  const frontend = { proxy: undefined as Awaited<ReturnType<typeof observeFrontend>> | undefined }
+  const esc = { sent: 0, displayedSession: undefined as string | undefined, firstAcknowledged: false, before: undefined as ReturnType<typeof control> | undefined, probe: undefined as { protected: boolean; toolStatus?: string; status?: string; title: boolean; interrupt: boolean; sessionGet: boolean } | undefined, abortRequests: [] as Awaited<ReturnType<typeof observeFrontend>>["requests"] }
   const teardown = { recorder: undefined as ReturnType<Awaited<ReturnType<typeof windowsInventory>>["snapshot"]> | undefined, cleanupComplete: false }
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v1] ${line}`) }
@@ -95,18 +95,20 @@ export async function run() {
     })
     const afterTurn = await remaining(tree.nonce)
     const afterEsc = win ? await (async () => {
-      frontend.proxy = observeFrontend(host.url)
+      frontend.proxy = await observeFrontend(host.url)
       terminalHost.host = await consoleHost(env, scratch.project, { attach: frontend.proxy.url, sessionID: session.id }, [], recorder.inventory)
       const ui = terminalHost.host
       await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: foregroundPrompt }] })
       esc.before = await until(90_000, "foreground tool live, busy, displayed on attached same-session UI", async () => {
+        if (ui.state.exit) throw new Error(`attached UI exited before foreground control: ${JSON.stringify(ui.state.exit)}`)
         const rows = await recorder.inventory!.query()
         const found = control(foreground.nonce, foreground.size, [pinnedHost], rows)
         const messages = await api.get(`/session/${session.id}/message`) as Message[]
         const tool = messages.flatMap((message) => message.parts).find((part) => part.tool === "bash" && part.state?.input?.command?.includes(foreground.nonce))
         const status = await api.get("/session/status") as Record<string, { type: string }>
         const output = stripVTControlCharacters(ui.out()).replaceAll("\r", "")
-        return found.pass && tool?.state?.status === "running" && status[session.id]?.type === "busy" && output.includes(title) && output.includes("interrupt") && frontend.proxy!.requests.some((request) => request.method === "GET" && request.path === `/session/${session.id}` && request.status === 200) ? found : undefined
+        esc.probe = { protected: found.pass, toolStatus: tool?.state?.status, status: status[session.id]?.type, title: output.includes(title), interrupt: output.includes("interrupt"), sessionGet: frontend.proxy!.requests.some((request) => request.method === "GET" && request.path === `/session/${session.id}` && request.status === 200) }
+        return esc.probe.protected && esc.probe.toolStatus === "running" && esc.probe.status === "busy" && esc.probe.title && esc.probe.interrupt && esc.probe.sessionGet ? found : undefined
       })
       esc.displayedSession = session.id
       const abortPath = `/session/${session.id}/abort`
@@ -127,7 +129,11 @@ export async function run() {
         const tool = messages.flatMap((message) => message.parts).find((part) => part.tool === "bash" && part.state?.input?.command?.includes(foreground.nonce))
         const found = members(foreground.nonce, await recorder.inventory!.query())
         if (ui.state.exit) throw new Error("attached UI exited instead of canceling foreground")
-        return esc.abortRequests.length === 1 && esc.abortRequests[0]!.status === 200 && tool?.state?.status === "error" && tool.state.error === "Tool execution aborted" && tool.state.metadata?.interrupted === true && found.members.length === 0 && found.wrappers.length === 0 ? { tool: tool.state, foregroundRemaining: 0, cancelMs: Date.now() - injected } : undefined
+        // Processor interruption and Shell's completed-but-aborted result are both durable cancellation
+        // projections (session/processor.ts and tool/shell.ts). Normal completion is never cancellation.
+        const cancellation = tool?.state?.status === "error" && tool.state.error === "Tool execution aborted" && tool.state.metadata?.interrupted === true ? "processor-interrupted"
+          : tool?.state?.status === "completed" && tool.state.metadata?.aborted === true && tool.state.metadata.timeout === false && tool.state.metadata.exit === null && tool.state.output?.includes("User aborted the command") ? "shell-aborted" : undefined
+        return esc.abortRequests.length === 1 && esc.abortRequests[0]!.status === 200 && cancellation !== undefined && found.members.length === 0 && found.wrappers.length === 0 ? { cancellation, tool: tool!.state!, foregroundRemaining: 0, cancelMs: Date.now() - injected } : undefined
       })
       const next = `post-escape-${randomUUID()}`
       writeFileSync(channel, next)
@@ -155,18 +161,29 @@ export async function run() {
     return { pass: false, error: String(error), home: scratch.home, nonce: tree.nonce, foregroundNonce: foreground.nonce, esc, teardown, llm: llm.seen, offered: llm.offered, output: terminalHost.host?.out().slice(-4000), steps }
   } }, async () => {
     try {
-      await terminalHost.host?.terminal.stop()
-      await frontend.proxy?.stop()
-      await llm.stop()
-      if (processHost.proc?.exitCode === null && processHost.proc.signalCode === null) processHost.proc.kill("SIGKILL")
-      await until(10_000, "post-observation V1 fixtures and serve teardown", async () => {
-        const rows = recorder.inventory ? await recorder.inventory.query() : undefined
-        return [tree.nonce, foreground.nonce].every((nonce) => { const found = members(nonce, rows); return found.members.length === 0 && found.wrappers.length === 0 }) && processHost.proc?.exitCode !== null ? true : undefined
-      })
+      step("teardown attached terminal")
+      try { if (terminalHost.host) await until(6000, "attached ConPTY teardown", () => terminalHost.host!.terminal.stop().then(() => true)) }
+      finally {
+        step("teardown frontend proxy")
+        try { await frontend.proxy?.stop() }
+        finally {
+          step("teardown two-stage LLM")
+          try { await llm.stop() }
+          finally {
+            step("teardown owned serve host")
+            if (processHost.proc?.exitCode === null && processHost.proc.signalCode === null) processHost.proc.kill("SIGKILL")
+            await until(10_000, "post-observation V1 fixtures and serve teardown", async () => {
+              const rows = recorder.inventory ? await recorder.inventory.query() : undefined
+              return [tree.nonce, foreground.nonce].every((nonce) => { const found = members(nonce, rows); return found.members.length === 0 && found.wrappers.length === 0 }) && (processHost.proc?.exitCode !== null || processHost.proc.signalCode !== null) ? true : undefined
+            })
+          }
+        }
+      }
     }
     finally {
       try { await recorder.inventory?.stop() }
       finally {
+        step("teardown shared cleanup")
         teardown.recorder = recorder.inventory?.snapshot()
         await cleanup(scratch.home, [tree.nonce, foreground.nonce])
         teardown.cleanupComplete = true

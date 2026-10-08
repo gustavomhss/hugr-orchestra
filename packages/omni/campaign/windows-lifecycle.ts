@@ -1,6 +1,6 @@
 // Windows lifecycle harness: real compiled CLI, real ConPTY via the product adapter.
 // Outer terminal ownership is never evidence that the CLI supervised its own children.
-import { createServer } from "node:net"
+import { createServer, type Socket } from "node:net"
 import { spawn } from "node:child_process"
 import http from "node:http"
 import { PtyOmni } from "../../core/src/pty/omni.ts"
@@ -30,8 +30,9 @@ export async function consoleHost(env: Record<string, string>, project: string, 
   })
   const preparationMs = performance.now() - preparation
   const terminal = isolatedEnvironment(deliveryEnv(env), () => backend.spawn(cli(), ["--print-logs", "--log-level", "DEBUG", ...(typeof target === "object" ? ["attach", target.attach, "--dir", project, "--session", target.sessionID] : [...(target === "serve" ? ["serve"] : []), "--port", String(port), "--hostname", "127.0.0.1"]), ...args], {
-    name: "xterm-256color", cols: 120, rows: 40, cwd: project,
-    env: { ...deliveryEnv(env), TERM: "xterm-256color", COLUMNS: "120", LINES: "40" },
+    // The real session sidebar auto-renders only above 120 columns; attachment proves its session title.
+    name: "xterm-256color", cols: typeof target === "object" ? 160 : 120, rows: 40, cwd: project,
+    env: { ...deliveryEnv(env), TERM: "xterm-256color", COLUMNS: typeof target === "object" ? "160" : "120", LINES: "40" },
   }))
   const state = { output: "", exit: undefined as { exitCode: number; signal?: number | string } | undefined }
   terminal.onData((data) => { state.output += data })
@@ -75,7 +76,13 @@ export async function twoStageLLM(calls: [ToolCall, ToolCall], foregroundPrompt:
       const result = await fetch(`${stages[stage]!.url}/chat/completions`, { method: "POST", headers: { "content-type": "application/json" }, body })
       response.writeHead(result.status, { "content-type": result.headers.get("content-type") ?? "text/event-stream" })
       if (!result.body) throw new Error("two-stage LLM response has no body")
-      for await (const chunk of result.body) response.write(chunk)
+      const reader = result.body.getReader()
+      for (;;) {
+        const chunk = await reader.read()
+        if (chunk.done) break
+        response.write(chunk.value)
+      }
+      reader.releaseLock()
       response.end()
     })().catch((error) => { errors.push(String(error)); response.writeHead(500); response.end(String(error)) })
   })
@@ -94,26 +101,61 @@ export async function twoStageLLM(calls: [ToolCall, ToolCall], foregroundPrompt:
 
 /** Only the attached frontend connects here. Parent prompts use the upstream URL directly;
  * captured abort requests therefore witness the real UI handler, never a harness fallback. */
-export function observeFrontend(upstream: string) {
+export async function observeFrontend(upstream: string) {
   const requests: { method: string; path: string; at: number; status?: number; error?: string }[] = []
-  const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
-    const url = new URL(request.url)
-    const observed = { method: request.method, path: url.pathname, at: Date.now(), status: undefined as number | undefined, error: undefined as string | undefined }
+  const controllers = new Set<AbortController>()
+  const sockets = new Set<Socket>()
+  const server = http.createServer((request, response) => {
+    const controller = new AbortController()
+    controllers.add(controller)
+    response.once("close", () => { controller.abort(); controllers.delete(controller) })
+    const observed = { method: request.method ?? "", path: new URL(request.url!, upstream).pathname, at: Date.now(), status: undefined as number | undefined, error: undefined as string | undefined }
     requests.push(observed)
-    return fetch(new Request(new URL(url.pathname + url.search, upstream), request)).then((response) => {
-      observed.status = response.status
-      return response
-    }, (error) => { observed.error = String(error); throw error })
-  } })
-  return { url: server.url.toString(), requests, stop: () => server.stop(true) }
+    void (async () => {
+      const chunks: Buffer[] = []
+      for await (const chunk of request) chunks.push(Buffer.from(chunk))
+      const result = await fetch(new URL(request.url!, upstream), {
+        method: request.method,
+        headers: Object.fromEntries(Object.entries(request.headers).flatMap(([key, value]) => value === undefined ? [] : [[key, Array.isArray(value) ? value.join(", ") : value]])),
+        body: chunks.length ? Buffer.concat(chunks) : undefined,
+        signal: controller.signal,
+      })
+      observed.status = result.status
+      // Bun fetch decoded upstream gzip. Strip its byte headers instead of decompressing twice.
+      response.writeHead(result.status, Object.fromEntries([...result.headers].filter(([key]) => !["content-encoding", "content-length", "transfer-encoding"].includes(key))))
+      if (!result.body) throw new Error("frontend proxy response has no body")
+      const reader = result.body.getReader()
+      try {
+        for (;;) {
+          const chunk = await reader.read()
+          if (chunk.done) break
+          response.write(chunk.value)
+        }
+        response.end()
+      } finally { reader.releaseLock() }
+    })().catch((error) => {
+      observed.error = String(error)
+      if (response.destroyed) return
+      response.destroy(error instanceof Error ? error : new Error(String(error)))
+    })
+  })
+  server.on("connection", (socket) => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)) })
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+  return { url: `http://127.0.0.1:${(server.address() as { port: number }).port}`, requests, async stop() {
+    const closed = new Promise<true>((resolve, reject) => server.close((error) => error ? reject(error) : resolve(true)))
+    controllers.forEach((controller) => controller.abort())
+    controllers.clear()
+    sockets.forEach((socket) => socket.destroy())
+    await until(2000, "frontend observation proxy OS/socket close", () => closed)
+  } }
 }
 
 /** Never enqueue a green before teardown: recorder, frontend and shared cleanup errors all reach
  * the one published verdict. The teardown callback's nested finally always runs shared cleanup. */
-export async function finishCampaign<T extends Record<string, unknown> & { pass: boolean }>(scenario: string, execute: () => Promise<T>, teardown: () => Promise<void>) {
-  const result = await execute().catch((error) => ({ pass: false, error: String(error) }))
+export async function finishCampaign<T extends Record<string, unknown> & { pass: boolean }>(scenario: string, execute: () => Promise<T>, teardown: () => Promise<void>): Promise<T | { pass: false; error: string } | ((T | { pass: false; error: string }) & { pass: false; measurementPass: boolean; teardownError: string })> {
+  const result = await execute().catch((error) => ({ pass: false as const, error: String(error) }))
   const error = await teardown().then(() => undefined, (error) => String(error))
-  return verdict(scenario, error === undefined ? result : { ...result, measurementPass: result.pass, pass: false, teardownError: error })
+  return verdict(scenario, error === undefined ? result : { ...result, measurementPass: result.pass, pass: false as const, teardownError: error })
 }
 
 export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnType<typeof consoleHost>>, input: string) {

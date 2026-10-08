@@ -4,6 +4,7 @@ import path from "node:path"
 import { LOGS, ORCHESTRA, cli } from "../../omni/campaign/lib.ts"
 import { appRuntime, effectModules } from "../../omni/campaign/delivery-fixtures.ts"
 import { Omni } from "@orchestra/core/omni"
+import { Schema } from "effect"
 import { run } from "../../omni/campaign/v1-background.ts"
 
 test("Windows compiled CLI V1 adoption, V2 serve/TUI crash, V10 console quit and oracle mutations", async () => {
@@ -40,14 +41,18 @@ test("Windows compiled CLI V1 adoption, V2 serve/TUI crash, V10 console quit and
   const v2 = await import("../../omni/campaign/v2-kill.ts")
   const failure = (error: unknown) => ({ pass: false, error: String(error), phase: "unhandled campaign/cleanup failure" })
   const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v2Tui: await v2.run("tui").catch(failure), v10Tui: await v2.run("tui", "quit").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
-  console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(results))
+  console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(Object.fromEntries(Object.entries(results).map(([cell, result]) => [cell, {
+    pass: result.pass, error: "error" in result ? result.error : undefined,
+    esc: "esc" in result ? result.esc : undefined, afterEsc: "afterEsc" in result ? result.afterEsc : undefined,
+    teardown: "teardown" in result ? result.teardown : undefined, shutdown: "shutdown" in result ? result.shutdown : undefined,
+  }]))))
   expect("esc" in results.v1 && results.v1.esc.sent).toBe(2)
   expect("esc" in results.v1 && results.v1.esc.firstAcknowledged).toBe(true)
   expect("esc" in results.v1 && "sessionID" in results.v1 && results.v1.esc.displayedSession === results.v1.sessionID).toBe(true)
   expect("esc" in results.v1 && results.v1.esc.before?.pass).toBe(true)
   expect("esc" in results.v1 && results.v1.esc.abortRequests).toHaveLength(1)
   expect("afterEsc" in results.v1 && results.v1.afterEsc?.foregroundRemaining).toBe(0)
-  expect("afterEsc" in results.v1 && results.v1.afterEsc?.tool.error).toBe("Tool execution aborted")
+  expect("afterEsc" in results.v1 && results.v1.afterEsc?.cancellation).toMatch(/^(processor-interrupted|shell-aborted)$/)
   const mutants = []
   for (const mutation of ["omit-adoption", "skip-inner-owner", "forced-kill-graceful", "disable-esc"]) {
     process.env.OMNI_CAMPAIGN_MUTATION = mutation
@@ -59,9 +64,13 @@ test("Windows compiled CLI V1 adoption, V2 serve/TUI crash, V10 console quit and
         expect("error" in result && result.error).toContain("exact tree adopted after tool completion")
       }
       if (mutation === "skip-inner-owner") {
-        expect("controls" in result && result.controls?.pty2.fixtureIds).toHaveLength(3)
-        expect("controls" in result && result.controls?.pty2.pass).toBe(false)
-        expect("controls" in result && result.controls?.pty2.protectedMembers.every((member) => member.supervisors.length === 0)).toBe(true)
+        const controls = Schema.decodeUnknownSync(Schema.Struct({ pty2: Schema.Struct({
+          fixtureIds: Schema.Array(Schema.Unknown), pass: Schema.Boolean,
+          protectedMembers: Schema.Array(Schema.Struct({ supervisors: Schema.Array(Schema.Unknown) })),
+        }) }))("controls" in result ? result.controls : undefined)
+        expect(controls.pty2.fixtureIds).toHaveLength(3)
+        expect(controls.pty2.pass).toBe(false)
+        expect(controls.pty2.protectedMembers.every((member) => member.supervisors.length === 0)).toBe(true)
       }
       if (mutation === "forced-kill-graceful") {
         expect("input" in result && result.input).toBe("TerminateProcess")
