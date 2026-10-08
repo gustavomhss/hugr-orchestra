@@ -8,6 +8,8 @@ import { promisify } from "util"
 import { Context, Effect, Schema } from "effect"
 import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
+import { ToolkitInstall } from "../toolkit/install"
+import { ToolkitRuntime } from "../toolkit/runtime"
 import { ENGINES, RUNTIMES, type Engine, type EngineId, type HostedEngine, type Runtime, type RuntimeId } from "./manifest"
 import { detect, type TargetId } from "./target"
 
@@ -61,13 +63,8 @@ export const Target = Context.Reference<ReturnType<typeof detect>>("@orchestra/B
   defaultValue: () => detect(),
 })
 
-// A failed fetch is retried by a later need after this window, not by every command.
-const RETRY_MS = 5 * 60_000
 // A cold cargo build of a CLI with its whole dependency graph takes minutes.
 const INSTALL_MS = 30 * 60_000
-
-// Keyed by install directory. Concurrent needs share the running fetch, which resolves to its failure cause.
-const attempts = new Map<string, { readonly running?: Promise<string | undefined>; readonly failed?: string; readonly at: number }>()
 
 export const status = Effect.fn("BackendToolkit.status")(function* (engine?: EngineId) {
   const manifest = yield* Manifest
@@ -138,36 +135,9 @@ const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, hos
               : Effect.void,
           ),
         )
-  const cause = yield* once(directory, work)
+  const cause = yield* ToolkitInstall.once(directory, work)
   if (cause !== undefined) return yield* new NotReady({ reason: `toolkit-not-ready:failed:${id}:${cause}` })
   return { executable: executable(engine, directory, target) }
-})
-
-/** Run `work` for `directory` at most once at a time and remember its failure; resolves to the failure cause. */
-const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect<unknown, PinnedArtifact.Failed>) {
-  const attempt = attempts.get(directory)
-  if (attempt?.failed && Date.now() - attempt.at < RETRY_MS && !(yield* PinnedArtifact.installed(directory)))
-    return attempt.failed
-  if (attempt?.running) return yield* Effect.promise(() => attempt.running!)
-  // Registered before the work starts: work that fails synchronously settles before runPromise returns, and its
-  // failure must not be overwritten by a running entry that never resolves.
-  const running = Promise.withResolvers<string | undefined>()
-  attempts.set(directory, { running: running.promise, at: Date.now() })
-  void Effect.runPromise(
-    work.pipe(
-      Effect.match({
-        onSuccess: () => {
-          attempts.delete(directory)
-          return undefined
-        },
-        onFailure: (error) => {
-          attempts.set(directory, { failed: error.cause, at: Date.now() })
-          return error.cause
-        },
-      }),
-    ),
-  ).then(running.resolve)
-  return yield* Effect.promise(() => running.promise)
 })
 
 /**
@@ -175,22 +145,22 @@ const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect
  * source builds run the target's own interpreter or toolchain, so they install only for the host target.
  */
 function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
-  const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
-  const pin = runtime.targets[target]
-  const interpreter = path.join(home, pin.executable)
   const windows = target === "win32-x64"
-  const expand = (text: string) => text.replaceAll("{install}", directory).replaceAll("{runtime}", home)
   const install = engine.install
-  const env = Object.entries({ ...(install.kind === "pip" ? { PYTHONPATH: "{install}" } : {}), ...engine.env })
-  const text = launcher(
-    windows,
-    install.kind === "source" ? [executable(engine, directory, target)] : [interpreter, ...engine.launch.map(expand)],
-    Object.fromEntries(env.map(([key, value]) => [key, expand(value)])),
-  )
   return Effect.gen(function* () {
     if (install.kind !== "jar" && !host) return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
-    const cause = yield* once(home, PinnedArtifact.install(home, [pin.artifact]))
-    if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
+    const ready = yield* ToolkitRuntime.ensure({ root, runtime, target }).pipe(
+      Effect.mapError((error) => new PinnedArtifact.Failed({ cause: `runtime-${error.cause}` })),
+    )
+    const home = ready.directory
+    const interpreter = ready.executable
+    const expand = (text: string) => text.replaceAll("{install}", directory).replaceAll("{runtime}", home)
+    const env = Object.entries({ ...(install.kind === "pip" ? { PYTHONPATH: "{install}" } : {}), ...engine.env })
+    const text = launcher(
+      windows,
+      install.kind === "source" ? [executable(engine, directory, target)] : [interpreter, ...engine.launch.map(expand)],
+      Object.fromEntries(env.map(([key, value]) => [key, expand(value)])),
+    )
     yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source" ? [install.artifact] : [], (staging) =>
       Effect.tryPromise({
         try: async () => {
@@ -287,7 +257,7 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State
       if (yield* PinnedArtifact.installed(directory))
         return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State
-      const attempt = attempts.get(directory)
+      const attempt = ToolkitInstall.attempt(directory)
       if (attempt?.running) return { ...base, status: "fetching" } satisfies State
       if (attempt?.failed) return { ...base, status: "failed", cause: attempt.failed, at: attempt.at } satisfies State
       return { ...base, status: "absent" } satisfies State

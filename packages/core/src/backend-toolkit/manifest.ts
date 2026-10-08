@@ -1,6 +1,7 @@
 export * as BackendToolkitManifest from "./manifest"
 
 import type { PinnedArtifact } from "../pinned-artifact"
+import type { ToolkitRuntime } from "../toolkit/runtime"
 import type { TargetId } from "./target"
 import { ENGINES } from "./packs"
 import go from "./runtimes/go"
@@ -35,15 +36,8 @@ export type Pack = Engine<string> & {
 }
 
 /** A private interpreter shared by every hosted engine that names it (ruling M4-1). */
-export type Runtime = {
-  readonly id: RuntimeId
-  readonly version: string
-  readonly license: string
-  readonly upstream: string
-  /** Per target: the pinned archive and the install-relative interpreter, e.g. `bin/node` or `python.exe`. */
-  readonly targets: Readonly<
-    Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>
-  >
+export type Runtime = ToolkitRuntime.Runtime<RuntimeId> & {
+  readonly targets: Readonly<Record<TargetId, { readonly artifact: PinnedArtifact.Artifact; readonly executable: string }>>
 }
 
 /** An engine that runs on a private runtime; every byte of its own install is pinned. */
