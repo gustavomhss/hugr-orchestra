@@ -5,7 +5,7 @@ import { Agent } from "./agent"
 import { ascending } from "./identifier"
 import { Location } from "./location"
 import { Project } from "./project"
-import { NonNegativeInt, statics } from "./schema"
+import { NonNegativeInt, optional, statics } from "./schema"
 import { SessionID } from "./session-id"
 import { SessionMessage } from "./session-message"
 
@@ -89,3 +89,86 @@ export const Owner = Schema.Struct({
   sessionID: SessionID,
   agentID: Agent.ID,
 }).annotate({ identifier: "Capability.Owner", parseOptions: { onExcessProperty: "error" } })
+
+export const Readiness = Schema.Literals([
+  "disabled",
+  "absent",
+  "acquiring",
+  "installed",
+  "authentication-required",
+  "ready",
+  "failed",
+  "unsupported",
+]).annotate({ identifier: "Capability.Readiness" })
+export type Readiness = typeof Readiness.Type
+
+export const Verification = Schema.Literals(["acknowledged", "observed", "verified"]).annotate({
+  identifier: "Capability.Verification",
+})
+export type Verification = typeof Verification.Type
+
+// Receipt is a stable opaque reference, not a complete execution receipt.
+const Outcome = { receipt: Schema.NonEmptyString, summary: Schema.String }
+
+export interface Completed extends Schema.Schema.Type<typeof Completed> {}
+export const Completed = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("completed"),
+  artifactRefs: Schema.Array(ArtifactRef),
+  verification: Verification,
+}).annotate({ identifier: "Capability.Result.Completed", parseOptions: { onExcessProperty: "error" } })
+
+export interface Submitted extends Schema.Schema.Type<typeof Submitted> {}
+export const Submitted = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("submitted"),
+  jobRef: JobRef,
+}).annotate({ identifier: "Capability.Result.Submitted", parseOptions: { onExcessProperty: "error" } })
+
+export interface Pending extends Schema.Schema.Type<typeof Pending> {}
+export const Pending = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("pending"),
+  userActionRef: Schema.NonEmptyString,
+}).annotate({ identifier: "Capability.Result.Pending", parseOptions: { onExcessProperty: "error" } })
+
+export interface Partial extends Schema.Schema.Type<typeof Partial> {}
+export const Partial = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("partial"),
+  completedEffects: Schema.Array(Schema.String),
+  unresolvedEffects: Schema.Array(Schema.String),
+  artifactRefs: Schema.Array(ArtifactRef),
+}).annotate({ identifier: "Capability.Result.Partial", parseOptions: { onExcessProperty: "error" } })
+
+export interface Unknown extends Schema.Schema.Type<typeof Unknown> {}
+export const Unknown = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("unknown"),
+  reconciliationRef: optional(Schema.NonEmptyString),
+}).annotate({ identifier: "Capability.Result.Unknown", parseOptions: { onExcessProperty: "error" } })
+
+export const Result = Schema.Union([Completed, Submitted, Pending, Partial, Unknown]).annotate({
+  identifier: "Capability.Result",
+  parseOptions: { onExcessProperty: "error" },
+})
+export type Result = typeof Result.Type
+
+export const JobKind = Schema.Literals(["provider", "local-process", "worker", "script"]).annotate({
+  identifier: "Capability.JobKind",
+})
+export type JobKind = typeof JobKind.Type
+
+export const JobState = Schema.Literals([
+  "intent",
+  "submitting",
+  "submitted",
+  "running",
+  "completed",
+  "failed",
+  "cancel-requested",
+  "cancelled",
+  "unknown",
+  "lost",
+]).annotate({ identifier: "Capability.JobState" })
+export type JobState = typeof JobState.Type
