@@ -64,6 +64,19 @@ jobs:
           # --single takes the exact checkout binaries restored or built by omni-binaries.
           unset OMNI_ARTIFACTS
           bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../omni/campaign/logs/build.log
+      - name: Wait for the build's load to settle
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
+        run: |
+          node --input-type=module -e '
+            import os from "node:os";
+            const deadline = Date.now() + 300000;
+            const limit = os.availableParallelism() * 0.5;
+            while (os.loadavg()[0] > limit) {
+              console.log(JSON.stringify({ load1: os.loadavg()[0], limit }));
+              if (Date.now() >= deadline) throw new Error("No quiet host within five minutes; timing acceptance is unrun");
+              await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+          '
       - name: V9 shipped artifacts reject loudly within two seconds
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         env:

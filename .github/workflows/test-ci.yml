@@ -103,7 +103,7 @@ jobs:
         if: env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER != ''
         uses: ./.github/actions/omni-binaries
 
-      - name: Run requested tests
+      - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
           PACKAGE: ${{ steps.request.outputs.package }}
