@@ -55,7 +55,10 @@ function fixture(maxEntries = 8, ttlMillis = 50) {
 }
 
 function denied(effect: Effect.Effect<unknown, Capability.Failure>, code: Capability.ErrorCode) {
-  const error = Effect.runSync(Effect.flip(effect))
+  const result = Effect.runSync(Effect.result(effect))
+  expect(result._tag).toBe("Failure")
+  if (result._tag !== "Failure") return
+  const error = result.failure
   expect(error).toBeInstanceOf(Capability.Failure)
   expect(error.code).toBe(code)
   expect(error.message).toBe("Descriptor unavailable")
@@ -139,14 +142,18 @@ describe("capability descriptor metadata", () => {
       f.clock.value = value
       denied(f.store.issue(f.input), "stale_descriptor")
       f.clock.value = 1000
-      expect(Effect.runSync(f.store.read(old.ref, f.scope))).toBe(old)
+      const current = Effect.runSync(Effect.result(f.store.read(old.ref, f.scope)))
+      expect(current._tag).toBe("Success")
+      if (current._tag === "Success") expect(current.success).toBe(old)
     })
     const overflow = fixture(1, Number.MAX_VALUE)
     const live = Effect.runSync(overflow.store.issue(overflow.input))
     overflow.clock.value = Number.MAX_VALUE
     denied(overflow.store.issue(overflow.input), "stale_descriptor")
     overflow.clock.value = 1000
-    expect(Effect.runSync(overflow.store.read(live.ref, overflow.scope))).toBe(live)
+    const current = Effect.runSync(Effect.result(overflow.store.read(live.ref, overflow.scope)))
+    expect(current._tag).toBe("Success")
+    if (current._tag === "Success") expect(current.success).toBe(live)
   })
 
   test("issues valid refs lazily, permits current cross-turn scope, never serializes identity", () => {
