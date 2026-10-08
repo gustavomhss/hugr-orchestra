@@ -44,6 +44,8 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Effect } from "effect"
 import { createPluginRuntime, type PluginRuntime, type TuiPluginHost } from "@orchestra/tui/plugin/runtime"
 
+// Registers hooks only. PluginLoader.load admits each external footprint before
+// import can trigger OpenTUI's source prescan or bare-to-disk rewrite.
 ensureRuntimePluginSupport({ additional: tuiRuntimeModules })
 
 type PluginLoad = {

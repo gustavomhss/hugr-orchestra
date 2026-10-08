@@ -12,6 +12,8 @@ import { ConfigPlugin } from "@/config/plugin"
 import { ConfigPluginV1 } from "@orchestra/core/v1/config/plugin"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 export namespace PluginLoader {
   // A normalized plugin declaration derived from config before any filesystem or npm work happens.
@@ -137,6 +139,7 @@ export namespace PluginLoader {
   export async function load(row: Resolved): Promise<{ ok: true; value: Loaded } | { ok: false; error: unknown }> {
     let mod
     try {
+      await PluginSdkRuntime.prepareExternalImport(row.entry, row.pkg?.dir ?? path.dirname(row.entry.startsWith("file:") ? fileURLToPath(row.entry) : row.entry))
       await PluginSdkRuntime.install()
       mod = await import(row.entry)
     } catch (error) {

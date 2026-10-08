@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test"
 import path from "path"
 import fs from "fs/promises"
 import { pathToFileURL } from "url"
-import { Effect, Layer, Result, Schema } from "effect"
+import { Cause, Effect, Layer, Result, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { ToolRegistry, allowedTaskModels } from "@/tool/registry"
@@ -409,7 +409,7 @@ describe("tool.registry", () => {
   )
 
   it.instance(
-    "loads custom tools against the bundled plugin SDK, never a copy in the config directory",
+    "blocks custom tools beside a foreign SDK without changing its bytes",
     () =>
       Effect.gen(function* () {
         const test = yield* TestInstance
@@ -450,15 +450,9 @@ describe("tool.registry", () => {
         )
 
         const registry = yield* ToolRegistry.Service
-        const loaded = (yield* registry.all()).find((tool) => tool.id === "addition")
-        if (!loaded) throw new Error("custom addition tool was not loaded")
-
-        expect(ToolJsonSchema.fromTool(loaded)).toMatchObject({
-          properties: {
-            left: { type: "number", description: "The first number to add" },
-            right: { type: "number", description: "The second number to add" },
-          },
-        })
+        const result = yield* registry.all().pipe(Effect.as("unexpected success"), Effect.catchCause((cause) => Effect.succeed(Cause.pretty(cause))))
+        expect(result).toContain("PluginSdkSetupError")
+        expect(yield* Effect.promise(() => Bun.file(path.join(plugin, "dist", "index.js")).text())).toContain("registry copy ran")
       }),
     20_000,
   )
