@@ -77,7 +77,7 @@ async function admit(specifier: string, sourceRoot?: string) {
     // A different tree bearing its name (including any foreign link) is untrusted.
     const host = async (directory: string) => bundled !== undefined &&
       (directory === bundled || PluginSdkPackage.contains(path.dirname(bundled), directory) ||
-        directory === path.join(path.dirname(path.dirname(bundled)), "node_modules", PluginSdkPackage.manifest.name)) &&
+        PluginSdkPackage.contains(path.join(path.dirname(path.dirname(bundled)), "node_modules"), directory)) &&
       await realpath(directory) === bundled
     const read = async (directory: string) => {
       const canonical = await realpath(directory)
