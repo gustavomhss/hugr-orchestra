@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { Effect, Predicate, Schema, SchemaAST } from "effect"
-import { HttpClient, HttpClientResponse } from "effect/unstable/http"
+import { Cause, Effect, Exit, Predicate, Schema, SchemaAST } from "effect"
+import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { Capability } from "../../schema/src/capability"
 import { compile, emitEffect, emitEffectImported, emitPromise } from "../src"
@@ -62,14 +62,27 @@ export async function verify(
             return
           }
           yield* Effect.forEach(
-            [client.capability.read().pipe(Effect.asVoid), client.capability.failed().pipe(Effect.asVoid)],
+            [
+              { effect: client.capability.read().pipe(Effect.asVoid), kind: "success" },
+              { effect: client.capability.failed().pipe(Effect.asVoid), kind: "error" },
+            ],
             (operation) =>
               Effect.gen(function* () {
-                const error = yield* operation.pipe(Effect.flip)
-                expect(error).toMatchObject({ _tag: "ClientError" })
-                if (!Predicate.hasProperty(error, "cause")) throw new Error("Expected generated client error cause")
-                expect(Schema.isSchemaError(error.cause)).toBe(true)
-                expect(String(error.cause)).toContain("Failure detail must not exceed 4096 UTF-8 JSON bytes")
+                const exit = yield* operation.effect.pipe(Effect.exit)
+                expect(Exit.isFailure(exit)).toBe(true)
+                if (!Exit.isFailure(exit)) throw new Error("Expected oversized response rejection")
+                const errors = exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error)
+                expect(errors.length).toBeGreaterThan(0)
+                errors.forEach((error) => expect(error).toMatchObject({ _tag: "ClientError" }))
+                const causes = errors.flatMap((error) => (Predicate.hasProperty(error, "cause") ? [error.cause] : []))
+                // The installed HttpApiClient maps failed declared-error decoding to an HTTP status error.
+                if (operation.kind === "error") {
+                  expect(causes.some(HttpClientError.isHttpClientError)).toBe(true)
+                  return
+                }
+                const schemaErrors = causes.filter(Schema.isSchemaError)
+                expect(schemaErrors).toHaveLength(1)
+                expect(String(schemaErrors[0])).toContain("Failure detail must not exceed 4096 UTF-8 JSON bytes")
               }),
           )
         }),
@@ -90,9 +103,11 @@ describe("capability contract portability", () => {
     )
     expect(SchemaAST.resolveIdentifier(authoritativeSchema.ast)).toBe("Capability.Failure")
     expect(SchemaAST.resolveIdentifier(Capability.FailureDetail.ast)).toBe("Capability.FailureDetail")
-    const promise = emitPromise(contract)
+    // Promise declared errors require a Schema error class; Failure remains a plain wire record.
+    expect(() => emitPromise(contract)).toThrow("Promise error must have a literal discriminator: capability.failed")
+    const promise = emitPromise(compile(Api, { omitEndpoints: new Set(["failed"]) }))
     const types = promise.files.find((file) => file.path === "types.ts")?.content
-    expect(types).toMatch(/readonly "detail"\?: \(?JsonValue\)? \| undefined/)
+    expect(types).toContain('readonly "detail"?: JsonValue')
     expect(types).toContain("export type JsonValue = null | boolean | number | string")
     expect(types).toContain('readonly "_tag": "Failure"')
     expect(() => emitEffect(contract)).toThrow("Effect schema requires authoritative import: capability.read")
