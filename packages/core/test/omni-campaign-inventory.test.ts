@@ -23,6 +23,33 @@ test("CIM preserves unknown kernel identity; owner scope never calls it nonce-ne
   expect(() => decodeWindowsTable([host, { ...kernel, CommandLine: 4 }], 700099)).toThrow("cannot establish process identity")
 })
 
+test("PID reuse rejects older PPID rows; equal/new births and named reparented identities stay visible", async () => {
+  const clocks = [
+    ["100", "200", "300"],
+    ["134358940677579360", "134358940677579361", "134358940677579362"],
+    ["Thu Oct  8 10:00:00 2026", "Thu Oct  8 10:00:01 2026", "Thu Oct  8 10:00:02 2026"],
+  ]
+  const scratch = isolated("birth-order-mutant", {})
+  await instrumentCopy(scratch.home, (source) => replace(source, "return ordered", "return true"))
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../omni/campaign/lib.ts")
+  for (const clock of clocks) {
+    const rows = [
+      { pid: process.pid, parent: 1, args: "host", state: "live", startTime: clock[1]! },
+      { pid: 700001, parent: process.pid, args: null, state: "live", startTime: clock[0]! },
+      { pid: 700002, parent: process.pid, args: "equal child", state: "live", startTime: clock[1]! },
+      { pid: 700003, parent: 700002, args: "new child", state: "live", startTime: clock[2]! },
+    ]
+    expect(inventoryScope(rows).map((row) => row.pid)).toEqual([process.pid, 700002, 700003])
+    expect(mutant.inventoryScope(rows).some((row) => row.pid === 700001)).toBe(true)
+    expect(inventoryScope(rows, [rows[1]!]).map((row) => row.pid)).toEqual([process.pid, 700001])
+    expect(() => inventoryScope(rows.map((row) => row.pid === 700001 ? { ...row, startTime: "bad-birth" } : row))).toThrow("birth time unavailable/unparseable")
+    expect(() => inventoryScope(rows.map((row) => row.pid === process.pid ? { ...row, startTime: "bad-birth" } : row))).toThrow("birth time unavailable/unparseable")
+    console.log("BIRTH_ORDER_MUTATION_PROOF " + JSON.stringify({ clock, olderRejected: true, mutantAdmitsOlder: true, namedRetained: true }))
+  }
+  const badDates = ["Thu Feb 30 10:00:00 2026", "Fri Oct  8 10:00:00 2026", "Thu Oct  8 25:00:00 2026", "2026-10-08"]
+  badDates.forEach((startTime) => expect(() => inventoryScope([{ pid: process.pid, parent: 1, args: "host", state: "live", startTime }])).toThrow("birth time unavailable/unparseable"))
+}, 30_000)
+
 test("recorded members retain their own nonce; unknown and stale owned argv stay red", () => {
   const fixture = tree(0)
   writeFileSync(path.join(os.tmpdir(), fixture.nonce, "700001.json"), JSON.stringify({ pid: 700001, nonce: fixture.nonce, startTime: "300" }))
@@ -43,6 +70,7 @@ test("real OS sees launched host; stale identity cannot kill; captured numeric i
   const server = await startServer(BUN, ["-e", 'console.log("listening on http://127.0.0.1:1"); setInterval(() => {}, 1000)'], scratch.env, ROOT)
   try {
     expect(table().some((row) => matches(row, server.identity))).toBe(true)
+    expect(inventoryScope(table()).some((row) => matches(row, server.identity))).toBe(true)
     expect(kill9({ pid: server.pid, startTime: `${server.identity.startTime}-stale` })).toBe(false)
     expect(table().some((row) => matches(row, server.identity))).toBe(true)
     expect(kill9(server.pid)).toBe(true)
