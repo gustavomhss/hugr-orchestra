@@ -1,5 +1,36 @@
 # HANDOFF — estado do hugr-omni (2026-10-02, tarde)
 
+## Retomada no Orchestra — 2026-10-08
+
+Esta seção substitui os pontos de retomada históricos abaixo. A fonte da integração é `packages/omni` no
+`gustavomhss/hugr-orchestra`; o repositório separado é o espelho. Worktree ativa:
+`~/Documents/HuGR/_worktrees/omni-native`, PR #73 (draft).
+
+- O rename da `dev` foi reconciliado: pacote `packages/orchestra`, imports `@orchestra/*`, flag
+  `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`. Publicação npm continua adiada. Default continua desligado.
+- Código revisado e integrado: instalações via AppProcess, settlement de falhas de startup, cancelamento e staging;
+  reinício LSP com fence de descarte; join de shutdown; preflight de arquivos nativos antes da árvore da CLI;
+  inventário Windows por identidade/owner e deadline completo de ConPTY.
+- Otimização Linux: `getsid` rejeita processos alheios antes da leitura de stat; stat continua a autoridade para os
+  membros. ABI, unidade de sessão e garantias permanecem iguais. V7 de 1000 pares passou; baseline restaurado como
+  mutação deixou o KPI vermelho.
+- Campanha reproduzível em `campaign/`, instruções em `campaign/README.md`, relatório parcial em
+  `docs/ux/WP10-orchestra-integration.md`. Typecheck completo: de `packages/core`,
+  `bun typecheck --project ../omni/campaign/tsconfig.json`.
+- Evidência do HEAD de produto `205d67c3cd`: gate Omni e smoke CLI verdes nos três SOs; desktop empacotado verde no
+  Linux. Delivery `37743712802`: V9 verde nos três SOs, V8 verde no Server 2022, V7 verde no Linux.
+- **Bloqueio atual de delivery:** V7 macOS foi interrompido por carga no par 495; `timingKpiRun:false`, não é verde.
+  Precisa de uma janela quieta sem afrouxar o critério. Run `37743712802` guarda a evidência.
+- WP10 completo ainda precisa da matriz inteira de hosts/SOs, TUI/background/quit no Windows, liberação natural de
+  event loop, artefatos dos oito alvos e assinatura/notarização. Não fazer WP9a enquanto o relatório não estiver
+  completo e assinado. WP9b continua depois de uma release limpa.
+- Provas brutas locais anteriores foram preservadas nas worktrees `omni-campaign`, `omni-protocol-qa` e
+  `omni-delivery-qa` (`campaign/logs`, ignorado). Não apagar esses logs antes de arquivar as evidências.
+- O binário desktop de nome legado ficou sem ignore após o rename; foi preservado fora do snapshot como
+  `omni-legacy-desktop-cli-c8a77c4c93`, no diretório temporário autorizado pelo harness. Não subir esse binário de
+  159 MB pelo test:ci.
+
+
 Arquivo para retomar o trabalho depois de uma compactação de contexto ou de uma sessão que caiu. A fonte da verdade é
 o `PLAN.md` (status na seção 8, decisões no Apêndice E). Aqui está só o "onde parei".
 
