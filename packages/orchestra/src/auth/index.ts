@@ -18,6 +18,7 @@ export class Oauth extends Schema.Class<Oauth>("OAuth")({
   expires: NonNegativeInt,
   accountId: Schema.optional(Schema.String),
   enterpriseUrl: Schema.optional(Schema.String),
+  metadata: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 }) {}
 
 export class Api extends Schema.Class<Api>("ApiAuth")({
@@ -75,8 +76,11 @@ const layer = Layer.effect(
       const data = yield* all()
       if (norm !== key) delete data[key]
       delete data[norm + "/"]
-      yield* fsys
-        .writeJson(file, { ...data, [norm]: info }, 0o600)
+      yield* Effect.acquireUseRelease(
+        fsys.makeTempFile({ directory: path.dirname(file), prefix: ".auth-" }),
+        (temporary) => fsys.writeJson(temporary, { ...data, [norm]: info }, 0o600).pipe(Effect.andThen(fsys.rename(temporary, file))),
+        (temporary) => fsys.remove(path.dirname(temporary), { recursive: true }).pipe(Effect.ignore),
+      )
         .pipe(Effect.mapError(fail("Failed to write auth data")))
     })
 

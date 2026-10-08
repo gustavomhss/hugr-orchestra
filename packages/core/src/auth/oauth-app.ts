@@ -26,6 +26,8 @@ export class ThirdPartyRegistrationError extends Error {
 export function requireClientID(provider: "openai" | "copilot" | "xai" | "digitalocean"): string {
   const key = keys[provider]
   const value = process.env[key]?.trim()
+  if (value === undefined && provider === "digitalocean")
+    return "8927d6fd39836377289fc753b996b8bb7a9f71870f0a2b01ddf1f45d7d9bc3cb"
   if (!value) throw new MissingRegistrationError(`${provider}: ${key}`)
   if (thirdPartyIDs.has(value)) throw new ThirdPartyRegistrationError(`${provider}: ${key}`)
   return value

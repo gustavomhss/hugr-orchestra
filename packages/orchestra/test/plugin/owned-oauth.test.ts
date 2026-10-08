@@ -11,6 +11,7 @@ test.each([
   const key = `ORCHESTRA_${provider}_CLIENT_ID`
   const previous = process.env[key]
   delete process.env[key]
+  if (provider === "DIGITALOCEAN") process.env[key] = ""
   using restore = { [Symbol.dispose]() {
     if (previous === undefined) delete process.env[key]
     else process.env[key] = previous

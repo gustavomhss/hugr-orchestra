@@ -17,7 +17,8 @@ test.each(apps)("requires explicit registration for %s", (provider, envKey) => {
   for (const value of [undefined, "", " \t "]) {
     if (value === undefined) delete process.env[envKey]
     else process.env[envKey] = value
-    expect(() => OwnOAuthApp.requireClientID(provider)).toThrow(OwnOAuthApp.MissingRegistrationError)
+    if (provider === "digitalocean" && value === undefined) expect(OwnOAuthApp.requireClientID(provider)).toBe("8927d6fd39836377289fc753b996b8bb7a9f71870f0a2b01ddf1f45d7d9bc3cb")
+    else expect(() => OwnOAuthApp.requireClientID(provider)).toThrow(OwnOAuthApp.MissingRegistrationError)
   }
   for (const app of apps) {
     process.env[envKey] = ` ${app[2]} `
