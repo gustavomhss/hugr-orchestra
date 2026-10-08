@@ -5,10 +5,14 @@ import { ParentReceipt } from "@/continuity/parent-receipt"
 import { completeSnapshot } from "@/continuity/fork"
 import { LLMPrepared } from "@/session/llm/prepared"
 import { MessageV2 } from "@/session/message-v2"
+import { PromptContinuity } from "@/session/prompt-continuity"
+import { Session } from "@/session/session"
+import { create } from "@/continuity/context"
+import { decode } from "@/continuity/memory"
 import { PartID, SessionID } from "@/session/schema"
 import { ProviderTest } from "../fake/provider"
 import { testEffect } from "../lib/effect"
-import { messages, model } from "./memory-fixture"
+import { messages, model, host, producerID } from "./memory-fixture"
 
 const it = testEffect(Layer.empty)
 
@@ -64,3 +68,32 @@ test("parent receipts reject opaque plan replacement, edited canonical source an
   expect(ParentReceipt.matches(parent, edited, model)).toBe(false)
   expect(ParentReceipt.matches(parent, { ...snapshot, sessionID: SessionID.make("ses_foreign") }, model)).toBe(false)
 })
+
+it.live("active v5 projection detaches current request from canonical receipt sources before mutable message hooks", () => Effect.gen(function* () {
+  const history = messages(["user", "assistant"])
+  const response = history[1].info
+  if (response.role !== "assistant") throw new Error("Expected response")
+  response.tokens.input = 1000
+  const snapshot = completeSnapshot(history[0].info.sessionID, history)
+  if (!snapshot) throw new Error("No snapshot")
+  const memory = decode({ text: JSON.stringify({ now: { doing: "Complete", next: "Verify", src: ["a1"] }, ops: [] }),
+    snapshot, producerID, host: host(history), budget: model.limit.context })
+  if (!("artifact" in memory)) throw new Error(JSON.stringify(memory))
+  const contexts = create()
+  contexts.set({ sessionID: snapshot.sessionID, boundary: snapshot.boundary, text: memory.artifact.text, artifact: memory.artifact })
+  const selected = yield* Session.Service.use((sessions) => PromptContinuity.select(history, sessions, snapshot.sessionID)).pipe(
+    Effect.provide(Layer.mock(Session.Service, { messages: () => Effect.succeed(history) })))
+  if (!selected.user || !selected.originalRequest) throw new Error("No actual user")
+  const view = contexts.prepare(snapshot.sessionID, history, selected.originalRequest)
+  const part = view.messages[0].parts[0]
+  if (part.type !== "text") throw new Error("Expected projected text")
+  part.text = "IN_PLACE_PLUGIN_TRANSFORM"
+  expect(selected.sourceHistory[0].parts).toEqual(history[0].parts)
+  expect(JSON.stringify(selected.sourceHistory)).not.toContain("IN_PLACE_PLUGIN_TRANSFORM")
+  const parent = ParentReceipt.capture({ input: { user: selected.user, model, sessionID: snapshot.sessionID,
+    agent: { name: "build", mode: "primary", permission: [], options: {} }, system: view.system,
+    messages: [{ role: "user", content: part.text }], tools: {} }, messageIDs: view.messages.map((message) => message.info.id) }, response.id,
+    view.messages.flatMap((message) => selected.sourceHistory.find((source) => source.info.id === message.info.id) ?? []))
+  ParentReceipt.complete(parent, response)
+  expect(ParentReceipt.matches(parent, snapshot, model)).toBe(true)
+}))

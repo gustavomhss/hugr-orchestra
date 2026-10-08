@@ -21,7 +21,7 @@ export function assistant(user: SessionV1.User, agent: Agent.Info, model: Provid
 export const select = Effect.fn("PromptContinuity.select")(function* (messages: SessionV1.WithParts[], sessions: Session.Interface, sessionID: SessionID) {
   const logical = MessageV2.latest(messages)
   const sourceHistory = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
-  const originalRequest = RequestSource.latest(sourceHistory)
+  const originalRequest = structuredClone(RequestSource.latest(sourceHistory))
   const user = originalRequest?.info
   return { ...logical, user: user?.role === "user" ? user : undefined, originalRequest, sourceHistory, logicalUser: logical.user }
 })
