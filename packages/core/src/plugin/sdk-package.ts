@@ -3,12 +3,21 @@ export * as PluginSdkPackage from "./sdk-package"
 import npa from "npm-package-arg"
 import semver from "semver"
 import { Schema } from "effect"
+import path from "node:path"
+import { lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises"
 import sdk from "../../../plugin/package.json"
 
 export class VersionError extends Schema.TaggedErrorClass<VersionError>()("PluginSdkVersionError", {
   requested: Schema.String,
   bundled: Schema.String,
 }) {}
+
+export class SetupError extends Schema.TaggedErrorClass<SetupError>()("PluginSdkSetupError", {
+  path: Schema.String,
+  reason: Schema.String,
+}) {
+  override get message() { return `${this._tag}: ${this.reason} (${this.path})` }
+}
 
 export const manifest = {
   name: sdk.name,
@@ -27,6 +36,51 @@ export const sources = Object.fromEntries([
   ]),
 ])
 
+export async function exists(file: string) {
+  return lstat(file).catch((cause: unknown) => {
+    if (cause && typeof cause === "object" && "code" in cause && cause.code === "ENOENT") return
+    throw cause
+  })
+}
+
+export function contains(root: string, file: string) {
+  const relative = path.relative(root, file)
+  return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
+}
+
+// Check the complete generated tree, including bytes, closed exports and absence of extra code.
+export async function valid(directory: string): Promise<boolean> {
+  if (!(await exists(directory))) return false
+  const walk = async (dir: string, prefix: string): Promise<string[]> =>
+    (await Promise.all((await readdir(dir, { withFileTypes: true })).map(async (entry) => {
+      const file = prefix + entry.name
+      if (entry.isDirectory()) return walk(path.join(dir, entry.name), file + "/")
+      if (!entry.isFile() || !Object.hasOwn(sources, file)) return ["invalid:" + file]
+      return (await readFile(path.join(dir, entry.name))).equals(Buffer.from(sources[file])) ? [file] : ["invalid:" + file]
+    }))).flat()
+  return JSON.stringify((await walk(directory, "")).sort()) === JSON.stringify(Object.keys(sources).sort())
+}
+
+export async function write(directory: string, replace = false) {
+  if (await valid(directory)) return
+  if ((await exists(directory)) && !replace)
+    throw new SetupError({ path: directory, reason: "Foreign or altered SDK tree; left intact" })
+  await mkdir(path.dirname(directory), { recursive: true })
+  if (replace) await rm(directory, { recursive: true, force: true })
+  await mkdir(directory)
+  await Promise.all(Object.entries(sources).map(async ([file, source]) => {
+    await mkdir(path.dirname(path.join(directory, file)), { recursive: true })
+    await writeFile(path.join(directory, file), source, { flag: "wx" })
+  }))
+}
+
+export async function owned(file: string, cache: string) {
+  const root = path.join(cache, "packages")
+  if (!contains(root, file) || !(await exists(root))) return false
+  const parents = async (parent: string): Promise<string> => (await exists(parent)) ? realpath(parent) : parents(path.dirname(parent))
+  return contains(await realpath(root), await parents(path.dirname(file)))
+}
+
 // npm aliases carry their real package identity in subSpec, not the dependency key.
 export function request(name: string, rawSpec: string) {
   const parsed = npa.resolve(name, rawSpec)
@@ -39,6 +93,7 @@ export function request(name: string, rawSpec: string) {
 
 export function versionFailure(cause: unknown) {
   if (cause instanceof VersionError) return cause
+  if (cause instanceof SetupError) return cause
   if (cause && typeof cause === "object" && "code" in cause && cause.code === "ETARGET" &&
       "name" in cause && cause.name === sdk.name && "wanted" in cause && typeof cause.wanted === "string")
     return new VersionError({ requested: `${sdk.name}@${cause.wanted}`, bundled: sdk.version })

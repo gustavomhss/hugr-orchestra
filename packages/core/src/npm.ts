@@ -26,7 +26,7 @@ export interface EntryPoint {
 }
 
 export interface Interface {
-  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | EffectFlock.LockError>
+  readonly add: (pkg: string) => Effect.Effect<EntryPoint, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError | EffectFlock.LockError>
   readonly install: (
     dir: string,
     input?: {
@@ -35,7 +35,7 @@ export interface Interface {
         version?: string
       }[]
     },
-  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError>
+  ) => Effect.Effect<void, EffectFlock.LockError | InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
   readonly which: (pkg: string, bin?: string) => Effect.Effect<string | undefined>
 }
 
@@ -110,8 +110,8 @@ const layer = Layer.effect(
               if (error && typeof error === "object" && "code" in error && error.code === "ENOLOCK") return
               throw error
             })
-            if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, true)
-            await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, true)
+            if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, global.cache)
+            await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, global.cache)
             if (input.inspect) return actual
             const tree = await arborist.reify({
               ...npmOptions,
@@ -120,7 +120,7 @@ const layer = Layer.effect(
               saveType: "prod",
               packumentCache: sdk.packumentCache,
             })
-            await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, true)
+            await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, global.cache)
             return tree
           },
           catch: (cause) =>
@@ -130,7 +130,7 @@ const layer = Layer.effect(
               add,
               dir: input.dir,
             }),
-        }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError>
+        }) as Effect.Effect<ArboristTree, InstallFailedError | PluginSdkPackage.VersionError | PluginSdkPackage.SetupError>
       }).pipe(
         Effect.scoped,
         Effect.withSpan("Npm.reify", {

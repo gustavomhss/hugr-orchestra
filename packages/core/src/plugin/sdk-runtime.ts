@@ -2,8 +2,9 @@ export * as PluginSdkRuntime from "./sdk-runtime"
 
 import { lazy } from "../util/lazy"
 
-// Public SDK imports resolve to bundled objects. Npm uses dependency-free install bridges;
-// aliases reach these objects through the private SDK URLs emitted by those bridges.
+// Known public imports resolve to bundled objects. Prepared external imports also
+// receive closed, byte-checked filesystem bridges for aliases and unknown subpaths.
+// Bun registration alone is not a process-wide unknown-import guard.
 export const modules = {
   // The package root re-exports tool.ts and adds only types, whose declarations core cannot compile.
   "@orchestra/plugin": () => import("@orchestra/plugin/tool"),
@@ -25,7 +26,12 @@ function requirePublic(specifier: string, loaded: Record<string, Record<string, 
   return false
 }
 
-// Call before importing any external plugin or tool. Registration is process-wide and happens once.
+export async function prepareExternalImport(specifier: string) {
+  const { PluginSdkAdmission } = await import("./sdk-admission")
+  await PluginSdkAdmission.prepare(specifier)
+}
+
+// Registration is process-wide and happens once; admission is separate and per import.
 export const install = lazy(async () => {
   const loaded: Record<string, Record<string, unknown>> = Object.fromEntries(
     await Promise.all(Object.entries(modules).map(async ([specifier, load]) => [specifier, await load()] as const)),
@@ -38,10 +44,6 @@ export const install = lazy(async () => {
           build.module(specifier, () => ({ exports, loader: "object" }))
           build.module(URL_PREFIX + specifier, () => ({ exports, loader: "object" }))
         }
-        build.onResolve({ filter: /^@orchestra\/plugin(?:\/|$)/ }, (args) => {
-          requirePublic(args.path, loaded)
-          return undefined
-        })
       },
     })
     return

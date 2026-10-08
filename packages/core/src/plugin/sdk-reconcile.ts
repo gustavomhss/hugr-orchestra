@@ -1,30 +1,25 @@
 export * as PluginSdkReconcile from "./sdk-reconcile"
 
 import path from "node:path"
-import { mkdir, realpath, rm, writeFile } from "node:fs/promises"
+import { realpath } from "node:fs/promises"
 import type Arborist from "@npmcli/arborist"
 import { PluginSdkPackage } from "./sdk-package"
 
-export async function reconcile(tree: Arborist.Node, directory: string, dist: { tarball: string; integrity: string }, materialize: boolean) {
+export async function reconcile(tree: Arborist.Node, directory: string, dist: { tarball: string; integrity: string }, cache: string) {
   const nodes = Array.from(tree.inventory.values())
-  const targets = new Set(nodes.filter((node) => !node.isRoot && (node.package.name === PluginSdkPackage.manifest.name || node.name === PluginSdkPackage.manifest.name)))
+  const targets = new Set(nodes.filter((node) => !node.isRoot && !node.linksIn.size && (node.package.name === PluginSdkPackage.manifest.name || node.name === PluginSdkPackage.manifest.name)))
   nodes.forEach((node) => node.edgesOut.forEach((edge) => {
     if (PluginSdkPackage.request(edge.name, edge.spec) && edge.to) targets.add(edge.to)
   }))
   const root = await realpath(directory)
   for (const node of targets) {
-    if (materialize) {
-      // Resolve parents, never the SDK leaf: an existing SDK symlink is replaced, not followed.
-      await mkdir(path.dirname(node.path), { recursive: true })
-      const relative = path.relative(root, await realpath(path.dirname(node.path)))
-      if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
-        throw new Error(`SDK bridge target outside install directory: ${node.path}`)
-      await rm(node.path, { recursive: true, force: true })
-      await mkdir(node.path, { recursive: true })
-      await Promise.all(Object.entries(PluginSdkPackage.sources).map(async ([file, source]) => {
-        await mkdir(path.dirname(path.join(node.path, file)), { recursive: true })
-        await writeFile(path.join(node.path, file), source)
-      }))
+    if (!(await PluginSdkPackage.valid(node.path))) {
+      // Only replace regular cache-owned SDK trees; foreign links need a fresh install.
+      if (!PluginSdkPackage.contains(root, node.path) || !(await PluginSdkPackage.owned(node.path, cache)))
+        throw new PluginSdkPackage.SetupError({ path: node.path, reason: "Foreign SDK outside owned npm cache; left intact" })
+      if (node.isLink)
+        throw new PluginSdkPackage.SetupError({ path: node.path, reason: "Foreign SDK link requires a fresh owned installation; left intact" })
+      await PluginSdkPackage.write(node.path, true)
     }
     node.package = PluginSdkPackage.manifest
     node.resolved = dist.tarball
