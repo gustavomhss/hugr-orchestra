@@ -1,10 +1,13 @@
-import { expect } from "bun:test"
+import { expect, spyOn } from "bun:test"
 import path from "node:path"
-import { readFileSync } from "node:fs"
-import { Effect } from "effect"
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { Effect, Fiber } from "effect"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { Flag } from "@opencode-ai/core/flag/flag"
 import { LSP } from "@/lsp/lsp"
+import { LSPClient } from "@/lsp/client"
+import { InstanceStore } from "@/project/instance-store"
+import { InstanceState } from "@/effect/instance-state"
 import { TestInstance } from "../fixture/fixture"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 import { alive, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
@@ -100,3 +103,119 @@ process.stdin.on('end', () => server.stdin.end());
   },
   600_000,
 )
+
+for (const boundary of ["old-shutdown", "replacement-initialize"] as const) {
+  it.instance(
+    `disposal closes admission during ${boundary} and joins the admitted request`,
+    () => Effect.gen(function* () {
+      const lsp = yield* LSP.Service
+      const store = yield* InstanceStore.Service
+      const ctx = yield* InstanceState.context
+      const directory = (yield* TestInstance).directory
+      const fixtures = JSON.parse(readFileSync(path.join(directory, "barriers.json"), "utf8")) as { target: string; sentinel: string }
+      const targetFile = path.join(directory, "file.target")
+      const marker = (name: string) => path.join(directory, name)
+      const launches = () => readFileSync(marker("launches.jsonl"), "utf8").trim().split("\n")
+        .map((line) => JSON.parse(line) as { role: string; pid: number })
+      const gate = Promise.withResolvers<void>()
+      const original = LSPClient.create
+      const created = { target: 0 }
+      // Transparent completion barrier: real RPC create/real tree stop still execute; only their Promise is held.
+      const hook = spyOn(LSPClient, "create").mockImplementation(async (input) => {
+        const client = await original(input)
+        const stop = client.shutdown
+        if (input.serverID === "sentinel") client.shutdown = () => {
+          writeFileSync(marker("finalizer-entered"), "")
+          return stop()
+        }
+        if (input.serverID === "target" && ++created.target === 1 && boundary === "old-shutdown") {
+          const held = { stop: undefined as Promise<void> | undefined }
+          client.shutdown = () => {
+            held.stop ??= stop().then(async () => {
+              writeFileSync(marker("old-shutdown-entered"), "")
+              await gate.promise
+            })
+            return held.stop
+          }
+        }
+        return client
+      })
+      const waiting = (name: string) => pollWithTimeout(Effect.sync(() => existsSync(marker(name)) ? true : undefined),
+        `fixture barrier ${name}`, "20 seconds")
+      try {
+        yield* Effect.promise(() => Promise.all([Bun.write(targetFile, "x\n"), Bun.write(path.join(directory, "file.sentinel"), "x\n")]))
+        yield* lsp.touchFile(targetFile)
+        yield* lsp.touchFile(path.join(directory, "file.sentinel"))
+        yield* pollWithTimeout(Effect.promise(async () => {
+          const count = (await sweep(fixtures.target)).length
+          return count === (omni ? 4 : 2) && (!omni || await alive(fixtures.target) === 2) ? true : undefined
+        }), "barrier fixture tree ready", "20 seconds")
+        const root = launches().find((entry) => entry.role === "target")
+        if (!root || !(yield* Effect.promise(() => sweep(fixtures.target))).includes(root.pid)) throw new Error("target nonce identity missing")
+        yield* Effect.sync(() => process.kill(root.pid, "SIGKILL"))
+        yield* pollWithTimeout(lsp.status().pipe(Effect.map((status) => status.find((entry) => entry.id === "target")?.status === "error" ? true : undefined)),
+          "target close observed", "10 seconds")
+        if (boundary === "replacement-initialize") writeFileSync(marker("hold-initialize"), "")
+        const demand = yield* lsp.touchFile(targetFile).pipe(Effect.forkChild({ startImmediately: true }))
+        yield* waiting(boundary === "old-shutdown" ? "old-shutdown-entered" : "initialize-entered")
+        const disposal = yield* store.dispose(ctx).pipe(Effect.forkChild({ startImmediately: true }))
+        yield* waiting("finalizer-entered")
+        expect(disposal.pollUnsafe()).toBeUndefined()
+        gate.resolve()
+        writeFileSync(marker("release-initialize"), "")
+        yield* Fiber.join(demand)
+        yield* Fiber.join(disposal)
+        expect(launches().filter((entry) => entry.role === "target").length).toBe(boundary === "old-shutdown" ? 1 : 2)
+        for (const nonce of Object.values(fixtures)) {
+          yield* pollWithTimeout(Effect.promise(async () => (await sweep(nonce)).length === 0 ? true : undefined),
+            "all barrier fixture descendants gone after disposal", "20 seconds")
+        }
+      } finally {
+        gate.resolve()
+        writeFileSync(marker("release-initialize"), "")
+        hook.mockRestore()
+        // Cleanup is not the oracle: assertions above ran before this last-resort nonce sweep.
+        for (const nonce of Object.values(fixtures)) {
+          for (const pid of yield* Effect.promise(() => sweep(nonce))) yield* Effect.sync(() => {
+            try { process.kill(pid, "SIGKILL") } catch {}
+          })
+          yield* Effect.promise(() => reap(nonce))
+        }
+      }
+    }),
+    { init: barrierFixture },
+    120_000,
+  )
+}
+
+function barrierFixture(directory: string) {
+  return Effect.gen(function* () {
+    const fixtures = { target: tree(1), sentinel: tree(0) }
+    const wrapper = path.join(directory, "barrier-wrapper.cjs")
+    yield* Effect.promise(() => Bun.write(path.join(directory, "barriers.json"), JSON.stringify({ target: fixtures.target.nonce, sentinel: fixtures.sentinel.nonce })))
+    yield* Effect.promise(() => Bun.write(wrapper, `
+const fs = require('node:fs'); const cp = require('node:child_process'); const path = require('node:path');
+const role = process.argv[2]; const directory = ${JSON.stringify(directory)};
+const marker = name => path.join(directory, name);
+const server = cp.spawn(process.execPath, [${JSON.stringify(path.join(import.meta.dirname, "../fixture/lsp/fake-lsp-server.js"))}, process.argv[3]], {stdio: ['pipe', 'pipe', 'inherit']});
+${omni ? `cp.spawn(process.execPath, role === 'target' ? ${JSON.stringify(fixtures.target.args)} : ${JSON.stringify(fixtures.sentinel.args)}, {stdio: 'ignore'});` : ""}
+fs.appendFileSync(marker('launches.jsonl'), JSON.stringify({role, pid: process.pid}) + '\\n');
+const pending = [];
+const watcher = fs.watch(directory, () => {
+  if (fs.existsSync(marker('release-initialize'))) { pending.splice(0).forEach(chunk => server.stdin.write(chunk)); }
+});
+process.stdin.on('data', chunk => {
+  if (role === 'target' && fs.existsSync(marker('hold-initialize')) && !fs.existsSync(marker('release-initialize'))) {
+    fs.writeFileSync(marker('initialize-entered'), ''); pending.push(chunk); return;
+  }
+  server.stdin.write(chunk);
+});
+server.stdout.pipe(process.stdout);
+process.stdin.on('end', () => { watcher.close(); server.stdin.end(); });
+`))
+    yield* Effect.promise(() => Bun.write(path.join(directory, "opencode.json"), JSON.stringify({ lsp: {
+      target: { command: [process.execPath, wrapper, "target", fixtures.target.nonce], extensions: [".target"] },
+      sentinel: { command: [process.execPath, wrapper, "sentinel", fixtures.sentinel.nonce], extensions: [".sentinel"] },
+    } })))
+  })
+}

@@ -110,6 +110,7 @@ const filterExperimentalServers = (servers: Record<string, LSPServer.Info>, flag
 type LocInput = { file: string; line: number; character: number }
 
 interface State {
+  closing: boolean
   clients: LSPClient.Info[]
   servers: Record<string, LSPServer.Info>
   broken: Set<string>
@@ -189,6 +190,7 @@ const layer = Layer.effect(
         }
 
         const s: State = {
+          closing: false,
           clients: [],
           servers,
           broken: new Set(),
@@ -197,7 +199,8 @@ const layer = Layer.effect(
 
         yield* Effect.addFinalizer(() =>
           Effect.promise(async () => {
-            await Promise.all(s.clients.map((client) => client.shutdown()))
+            s.closing = true
+            await Promise.all([...s.spawning.values(), ...s.clients.map((client) => client.shutdown())])
           }),
         )
 
@@ -223,6 +226,7 @@ const layer = Layer.effect(
 
         async function schedule(server: LSPServer.Info, root: string, key: string) {
           await prune()
+          if (s.closing) return undefined
           const handle = await server
             .spawn(root, ctx, flags)
             .then((value) => {
@@ -235,6 +239,10 @@ const layer = Layer.effect(
             })
 
           if (!handle) return undefined
+          if (s.closing) {
+            await Process.stop(handle.process)
+            return undefined
+          }
           const client = await LSPClient.create({
             serverID: server.id,
             server: handle,
@@ -248,6 +256,10 @@ const layer = Layer.effect(
           })
 
           if (!client) return undefined
+          if (s.closing) {
+            await client.shutdown()
+            return undefined
+          }
 
           const existing = s.clients.find((x) => x.root === root && x.serverID === server.id && x.connected)
           if (existing) {
@@ -260,10 +272,12 @@ const layer = Layer.effect(
         }
 
         await prune()
+        if (s.closing) return { result, updated }
         for (const server of Object.values(s.servers)) {
           if (server.extensions.length && !server.extensions.includes(extension)) continue
 
           const root = await server.root(file, ctx)
+          if (s.closing) break
           if (!root) continue
           if (s.broken.has(root + server.id)) continue
 
