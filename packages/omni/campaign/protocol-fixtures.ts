@@ -39,10 +39,12 @@ export function evidence(scratch: Fixture) {
   }
   const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
   if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||
+    digest(path.join(path.dirname(bin), "hugr_omni.node")) !== built.addonSha256 ||
+    digest(path.join(path.dirname(bin), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor")) !== built.supervisorSha256 ||
     ["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
-    baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
+    baseline: "3d1fc21428",
     cli: bin, ...Object.fromEntries(Object.entries(built).map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
     harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "pty-byte-probe.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
@@ -140,7 +142,7 @@ export function main(url: string) {
 export const plain = (text: string) => text.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[()][0-9A-Za-z]|\x1b[=>78]/g, "")
 
 /** A real stdio MCP peer; synchronous stderr writes precede every initialize response. */
-export function mcpFixture(scratch: Fixture, nonce: string, fail = false) {
+export function mcpFixture(scratch: Fixture, nonce: string, fail = false, omitMarker = false) {
   return script(scratch, nonce, `
 const fs = require('node:fs');
 const readline = require('node:readline');
@@ -158,7 +160,7 @@ const block = Buffer.from('x'.repeat(1023) + '\\n');
 let bytes = 0;
 for (let i = 0; i < 1024; i++) bytes += write(block);
 const marker = 'LAST-STDERR-' + nonce;
-const markerBytes = write(Buffer.from(marker + '\\n'));
+const markerBytes = ${omitMarker ? "0" : "write(Buffer.from(marker + '\\n'))"};
 fs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.written.json`))}, JSON.stringify({bytes, markerBytes, marker, pid: process.pid}));
 ${fail ? "process.exit(17);" : ""}
 readline.createInterface({input: process.stdin}).on('line', line => {

@@ -1,7 +1,7 @@
 // V3: pinned supervisor SIGKILL, exact per-OS tier snapshots inside 8 s, then protected next-spawn recovery.
 import { cleanup, cli, client, control, deadlineSnapshots, fakeLLM, fileTree, identity, isolated, kill9, matches, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
 
-export async function run() {
+export async function run(options: { mutation?: "wrong-owner" } = {}) {
   const scratch = isolated("v3", {})
   const trees = { bash: fileTree(scratch.home, 2), pty: fileTree(scratch.home, 2), after: fileTree(scratch.home, 1) }
   const llm = await fakeLLM([{ name: "bash", args: { command: trees.bash.line, timeout: 600_000, description: "Run campaign tree" } }])
@@ -26,6 +26,11 @@ export async function run() {
       return found.bash.pass && found.pty.pass ? found : undefined
     })
     const supervisors = [...new Map(Object.values(before).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
+    if (options.mutation === "wrong-owner") {
+      const wrong = control(trees.pty.nonce, trees.pty.size, [{ pid: pinnedHost.pid, startTime: `${pinnedHost.startTime}-wrong` }])
+      if (wrong.pass) throw new Error("wrong-owner oracle accepted stale host")
+      throw new Error("wrong-owner positive control rejected")
+    }
     if (supervisors.length === 0) throw new Error("no pinned supervisors in positive control")
     step(`full controls ${JSON.stringify(before)}; supervisor identities ${JSON.stringify(supervisors)}`)
     for (const supervisor of supervisors) if (!kill9(supervisor)) throw new Error(`could not kill pinned supervisor ${JSON.stringify(supervisor)}`)

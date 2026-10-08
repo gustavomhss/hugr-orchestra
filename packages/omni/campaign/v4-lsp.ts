@@ -14,6 +14,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
   const cycles: { cycle: number; live: number; tsservers: number; recorded: number; supervised: boolean;
     restartMs: number; oldLeft: number; after: number; freshPID: number; supervisorPID: number }[] = []
   const findings: string[] = []
+  const handshakes: { pid: number; tsservers: number; methods: string[] }[] = []
   let error: string | undefined
   let automaticRestart: boolean | undefined
   let autoRecoveryStatus: unknown
@@ -127,6 +128,8 @@ setInterval(() => {}, 1e9);
           ? { current, wrapperRow, tsservers, recorded } : undefined
       })
     await trigger()
+    const initial = await live()
+    handshakes.push({ pid: initial.wrapperRow.pid, tsservers: initial.tsservers.length, methods: rpc().filter((event) => event.pid === initial.wrapperRow.pid).map((event) => event.method) })
     const supervisor = supervisorsOf([host.pid])
     const initialOwner = supervisor[0]
     if (supervisor.length !== 1 || !initialOwner) throw new Error(`expected one process-owned supervisor, found ${supervisor.length}`)
@@ -148,6 +151,7 @@ setInterval(() => {}, 1e9);
         throw new Error("LSP eagerly respawned without demand")
       await trigger()
       const after = await live()
+      handshakes.push({ pid: after.wrapperRow.pid, tsservers: after.tsservers.length, methods: rpc().filter((event) => event.pid === after.wrapperRow.pid).map((event) => event.method) })
       automaticRestart = after.wrapperRow.pid !== before.wrapperRow.pid
       const oldLeft = after.current.filter((row) => before.current.some((old) => old.pid === row.pid)).length
       const owner = supervisorsOf([host.pid])
@@ -161,8 +165,15 @@ setInterval(() => {}, 1e9);
     const counts = cycles.map((cycle) => cycle.live)
     await call("POST", "/instance/dispose", {}, 30_000)
     await until(8_000, "final LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
+    // Twenty replacements plus initial client and fresh post-disposal admission = 22 real Node/TLS handshakes.
+    await trigger()
+    const fresh = await live()
+    handshakes.push({ pid: fresh.wrapperRow.pid, tsservers: fresh.tsservers.length, methods: rpc().filter((event) => event.pid === fresh.wrapperRow.pid).map((event) => event.method) })
+    await call("POST", "/instance/dispose", {}, 30_000)
+    await until(8_000, "post-disposal fresh LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
     pass = automaticRestart === true && cycles.length === 20 && new Set(counts).size === 1 &&
-      cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live)
+      cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live) && handshakes.length === 22 &&
+      new Set(handshakes.map((entry) => entry.pid)).size === 22
     if (!pass) error = "LSP cycle count/leftovers/process-count KPI failed"
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) { error = String(cause) }
@@ -177,7 +188,7 @@ setInterval(() => {}, 1e9);
     finally { await finish(scratch, [tree.nonce]).catch((cause) => { pass = false; error = `${error ?? ""} teardown: ${String(cause)}` }) }
   }
   const result = verdict("v4-lsp", { ...evidence(scratch), pass, status: pass ? "passed-local-automatic-restart" : "failed-local",
-    mutation: options.mutation ?? null, cyclesCompleted: cycles.length, cycles, beforeCleanup: cleanupObservation.before,
+    mutation: options.mutation ?? null, cyclesCompleted: cycles.length, cycles, handshakes, beforeCleanup: cleanupObservation.before,
     automaticRecovery: { pass: automaticRestart ?? null, statusBeforeDemand: autoRecoveryStatus }, findings, error,
     localScenarioComplete: pass && automaticRestart === true, wp10Complete: false,
     protocolLog: rpcLog, wrapperLog, capability: { wrapper: "node (npx-equivalent)", lsp: "typescript-language-server 4.3.4 + TypeScript 5.8.2", oracle: "shared records + independent nonce process-table sweep", skipped: [] },
