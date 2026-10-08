@@ -24,7 +24,15 @@ export async function reconcile(tree: Arborist.Node, directory: string, dist: { 
     node.package = PluginSdkPackage.manifest
     node.resolved = dist.tarball
     node.integrity = dist.integrity
-    tree.meta?.add(node)
+    if (tree.meta) addMetadata(tree.meta, node)
   }
   if (targets.size) await tree.meta?.save()
+}
+
+// Shrinkwrap.add is present in the installed Arborist 9 SPI, but omitted from
+// its public declarations. Fail if that capability disappears; never skip it.
+function addMetadata(meta: Arborist.Shrinkwrap, node: Arborist.Node) {
+  if (!("add" in meta) || typeof meta.add !== "function")
+    throw new PluginSdkPackage.SetupError({ path: meta.path, reason: "Required Shrinkwrap.add SPI is unavailable" })
+  meta.add(node)
 }

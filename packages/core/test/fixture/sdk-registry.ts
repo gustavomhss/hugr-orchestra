@@ -24,7 +24,7 @@ export async function registry(root: string) {
       const archive = name.startsWith("tarballs/")
       const item = packages.get(archive ? name.slice("tarballs/".length, -4) : name)
       if (!item) return new Response("fixture package missing", { status: 404 })
-      if (archive) return new Response(item.bytes)
+      if (archive) return new Response(Uint8Array.from(item.bytes))
       return Response.json({
         name,
         "dist-tags": { latest: item.manifest.version },

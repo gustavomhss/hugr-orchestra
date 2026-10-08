@@ -111,15 +111,18 @@ const layer = Layer.effect(
           yield* fs.makeDirectory(input.dir, { recursive: true }).pipe(
             Effect.mapError((cause) => new InstallFailedError({ cause, add, dir: input.dir })),
           )
-          const arborist = new Arborist({
+          const options = {
             ...npmOptions,
             path: input.dir,
             binLinks: true,
             progress: false,
             savePrefix: "",
             ignoreScripts: true,
-            packumentCache: sdk.packumentCache,
-          })
+          }
+          // The installed runtime accepts its checked LRU SPI; published pacote
+          // declarations incorrectly restrict this constructor option to Map.
+          Object.assign(options, { packumentCache: sdk.packumentCache })
+          const arborist = new Arborist(options)
           return yield* Effect.tryPromise({
             try: async () => {
               const actual = await arborist.loadActual()
@@ -130,13 +133,14 @@ const layer = Layer.effect(
               if (virtual) await PluginSdkReconcile.reconcile(virtual, input.dir, sdk.dist, global.cache)
               await PluginSdkReconcile.reconcile(actual, input.dir, sdk.dist, global.cache)
               if (input.inspect) return actual
-              const tree = await arborist.reify({
+              const options = {
                 ...npmOptions,
                 add,
                 save: true,
-                saveType: "prod",
+                saveType: "prod" as const,
                 packumentCache: sdk.packumentCache,
-              })
+              }
+              const tree = await arborist.reify(options)
               await PluginSdkReconcile.reconcile(tree, input.dir, sdk.dist, global.cache)
               return tree
             },

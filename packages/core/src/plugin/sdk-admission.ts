@@ -64,6 +64,10 @@ async function admit(specifier: string, sourceRoot?: string) {
     const indexed = new Set<string>()
     const metadata = new Map<string, Record<string, unknown>>()
     const nodes = new Map<string, Arborist.Node>()
+    const namespaceQueue = new Set<string>()
+    const checkedAncestry = new Set<string>()
+    const absentSlots = new Map<string, string>()
+    const checkedIdentity = new Set<string>()
     const sdk = new Set<string>()
     const create = new Set<string>()
     const quota = PluginSdkLimits.budget()
@@ -82,6 +86,39 @@ async function admit(specifier: string, sourceRoot?: string) {
       const value = await PluginSdkPackage.exists(pkg) ? decodePackage((await PluginSdkLimits.read(pkg, quota)).toString("utf8")) : {}
       metadata.set(canonical, value)
       return value
+    }
+    const inspect = async (directory: string, canonical: string, bridges = true) => {
+      for (const location of new Set([directory, canonical])) {
+        if (!checkedIdentity.has(location)) {
+          checkedIdentity.add(location)
+          // Self-reference uses the nearest enclosing package before node_modules.
+          // Read its identity/exports even when its sources are outside our envelope.
+          for (const parent of ancestry(location)) {
+            if (!(await PluginSdkPackage.exists(path.join(parent, "package.json")))) continue
+            const pkg = await read(parent)
+            if (pkg.name === PluginSdkPackage.manifest.name && !(await host(parent))) sdk.add(parent)
+            break
+          }
+        }
+        for (const parent of ancestry(location)) {
+          if (checkedAncestry.has(parent)) {
+            const slot = absentSlots.get(parent)
+            if (bridges && slot) create.add(slot)
+            continue
+          }
+          checkedAncestry.add(parent)
+          const namespace = path.join(parent, "node_modules")
+          if (!(await PluginSdkPackage.exists(namespace))) continue
+          const slot = path.join(namespace, PluginSdkPackage.manifest.name)
+          namespaceQueue.add(await realpath(namespace))
+          if (await PluginSdkPackage.exists(slot)) {
+            if (!(await host(slot))) sdk.add(slot)
+            continue
+          }
+          absentSlots.set(parent, slot)
+          if (bridges) create.add(slot)
+        }
+      }
     }
     // Bound the installed metadata before Arborist allocates its inventory. Only
     // namespace/package metadata is visited; .git, builds and assets never enter.
@@ -114,6 +151,9 @@ async function admit(specifier: string, sourceRoot?: string) {
         const tree = await new Arborist(options).loadActual()
         for (const node of tree.inventory.values()) {
           if (node.isRoot) continue
+          // An installed package is reachable by computed imports without a
+          // declared caller edge. Check both ancestries, but do not walk its sources.
+          await inspect(node.path, node.realpath, false)
           nodes.set(node.path, node)
           nodes.set(node.realpath, node.isLink ? node.target : node)
           const nested = path.join(node.realpath, "node_modules")
@@ -137,23 +177,23 @@ async function admit(specifier: string, sourceRoot?: string) {
       namespaces.set(canonical, loading)
       return loading
     }
-    while (pending.size) {
+    while (pending.size || namespaceQueue.size) {
+      if (namespaceQueue.size) {
+        const namespace = namespaceQueue.values().next().value
+        if (!namespace) break
+        namespaceQueue.delete(namespace)
+        await inventory(namespace)
+        continue
+      }
       const directory = pending.values().next().value
       if (!directory) break
       pending.delete(directory)
       const canonical = await realpath(directory)
-      // A linked module executes with realpath ancestry. Lexical ancestry alone
-      // misses SDK trees above its external target, including computed imports.
-      for (const parent of new Set([...ancestry(directory), ...ancestry(canonical)])) {
-        const namespace = path.join(parent, "node_modules")
-        if (await PluginSdkPackage.exists(namespace)) {
-          const slot = path.join(namespace, PluginSdkPackage.manifest.name)
-          if (await PluginSdkPackage.exists(slot)) {
-            if (!(await host(slot))) sdk.add(slot)
-          }
-          else create.add(slot)
-          await inventory(namespace)
-        }
+      await inspect(directory, canonical)
+      // Finish namespace metadata before following this package's parsed edges.
+      if (namespaceQueue.size) {
+        pending.add(directory)
+        continue
       }
       if (visited.has(canonical)) continue
       if (visited.size >= PluginSdkLimits.limits.directories) throw new Error("Module footprint exceeds admission bound")

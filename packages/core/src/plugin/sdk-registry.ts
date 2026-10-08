@@ -38,6 +38,9 @@ function sdkKey(key: string) {
 }
 
 export async function open() {
+  const Cache: unknown = PackumentCache
+  if (!isPackumentCache(Cache))
+    throw new PluginSdkPackage.SetupError({ path: "@npmcli/arborist/lib/packument-cache.js", reason: "Required packument-cache SPI is unavailable" })
   const bytes = archive()
   const endpoint = "/" + randomUUID() + ".tgz"
   const server = createServer((request, response) => {
@@ -66,13 +69,28 @@ export async function open() {
     versions: { [PluginSdkPackage.manifest.version]: { ...PluginSdkPackage.manifest, dist } },
   }
   // Preserve Arborist's normal LRU behavior for every non-SDK key.
-  const packumentCache = new class extends PackumentCache {
-    has(key: string) { return sdkKey(key) || super.has(key) }
-    get(key: string) { return sdkKey(key) ? packument : super.get(key) }
+  const packumentCache = new class extends Cache {
+    override has(key: string) { return sdkKey(key) || super.has(key) }
+    override get(key: string) { return sdkKey(key) ? packument : super.get(key) }
   }()
   return {
     dist,
     packumentCache,
     close: () => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())),
   }
+}
+
+// Arborist 9's private cache is an LRU, not the Map claimed by pacote's types.
+// Keep its implementation and require the frozen SPI we actually consume.
+function isPackumentCache(value: unknown): value is new () => {
+  has(key: string): boolean
+  get(key: string): unknown
+  set(key: string, value: unknown): unknown
+} {
+  if (typeof value !== "function") return false
+  const prototype: unknown = value.prototype
+  return typeof prototype === "object" && prototype !== null &&
+    "has" in prototype && typeof prototype.has === "function" &&
+    "get" in prototype && typeof prototype.get === "function" &&
+    "set" in prototype && typeof prototype.set === "function"
 }
