@@ -2,6 +2,8 @@ export * as CapabilityAssetCatalog from "./catalog"
 
 import { CapabilityAssetSources } from "./sources"
 
+export { providers } from "./providers"
+
 // Destination references reserve paths for later source imports; they are not executable registrations.
 export const all = [
   { id: "A01", kind: "skill", originalName: "har-derived-api-client", skillName: "api-discovery", bodyName: "api-discovery",

@@ -5,6 +5,7 @@
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "strict": true,
+    "skipLibCheck": true,
     "noEmit": true,
     "types": ["bun"]
   },
