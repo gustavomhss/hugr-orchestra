@@ -57,8 +57,6 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const env = environment(command.options.extendEnv === false
     ? command.options.env ?? {}
     : { ...process.env, ...command.options.env })
-  if (profile?.sandbox?.scratch && readonlyGoCache(env.GOFLAGS ?? ""))
-    return yield* new ToolSafety.Denied({ reason: "sandbox-go-readonly-cache-unsupported" })
   const ordinary = ChildProcess.make(command.command, command.args, { ...command.options, env, extendEnv: false })
   const requestedSockets = profile?.sandbox?.allowedUnixSockets
   if (requestedSockets !== undefined && !Array.isArray(requestedSockets))
@@ -154,6 +152,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const seatbelt = sandbox.kind === "seatbelt"
   if (seatbelt && profile?.sandbox?.allowedDomains?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-seatbelt-domain-policy-unenforceable" })
+  if (profile?.sandbox?.scratch && readonlyGoCache(env.GOFLAGS ?? ""))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-go-readonly-cache-unsupported" })
   const cwd = yield* fs.realPath(command.options.cwd ?? process.cwd()).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-cwd-acquisition" })),
   )
@@ -256,8 +256,9 @@ const pick = Effect.fnUntraced(function* (start: boolean) {
 })
 
 // Go cmd/internal/quoted.Split: ASCII whitespace, quotes only at field start, no unescaping or concatenation.
-// A malformed quoted list is left to Go. Recognize only the closed strconv.ParseBool false spellings.
-function readonlyGoCache(input: string) {
+// Malformed quotes/boolean values stay Go errors. SetFromGOFLAGS applies matching flags in order, last wins.
+// An absent setting is not an explicit read-only request; confined scratch may supply its writable default.
+export function readonlyGoCache(input: string) {
   const tokens: string[] = []
   let rest = input
   while (rest.length) {
@@ -269,7 +270,9 @@ function readonlyGoCache(input: string) {
     tokens.push(quote ? rest.slice(1, end) : end === -1 ? rest : rest.slice(0, end))
     rest = end === -1 ? "" : rest.slice(end + (quote ? 1 : 0))
   }
-  return tokens.some((token) => /^--?modcacherw=(?:0|f|F|false|FALSE|False)$/.test(token))
+  const settings = tokens.filter((token) => /^--?modcacherw(?:=|$)/.test(token))
+  if (settings.some((token) => !/^--?modcacherw(?:=(?:1|t|T|true|TRUE|True|0|f|F|false|FALSE|False))?$/.test(token))) return false
+  return /^--?modcacherw=(?:0|f|F|false|FALSE|False)$/.test(settings.at(-1) ?? "")
 }
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
