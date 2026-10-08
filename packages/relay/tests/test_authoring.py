@@ -1,7 +1,9 @@
 """Authoring service: graph compilation, persistence, real gate evaluation and the versioned host API."""
 import copy
+import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 import threading
 import time
@@ -23,10 +25,10 @@ from relay_authoring.store import Store
 
 @pytest.fixture
 def config(tmp_path, monkeypatch):
-    workspace = tmp_path / "project"; workspace.mkdir()
+    workspace = tmp_path / "project with spaces & 'quotes'"; workspace.mkdir()
     home = tmp_path / "home"; home.mkdir()
     monkeypatch.setattr(Path, "home", lambda: home)
-    return AuthoringConfig(workspace=workspace, data_dir=tmp_path / "state", base_path="/module/relay/")
+    return AuthoringConfig(workspace=workspace, data_dir=tmp_path / "state with spaces", base_path="/module/relay/")
 
 
 @pytest.fixture
@@ -251,6 +253,10 @@ def test_real_gate_retry_retains_state_and_freezes_definition(config):
         controls = [entry for entry in ledger if entry["event"] == "checklist-item"]
         assert [entry["item"] for entry in controls] == ["file", "file"]
         assert [entry["verdict"] for entry in controls] == ["fail", "pass"]
+        assert {entry["oracle"] for entry in controls} == {hashlib.sha256(b"test -s result.txt").hexdigest()}
+        verified = subprocess.run([sys.executable, str(ROOT / "benchmark/verify_ledger.py"), str(state / "ledger.jsonl")],
+                                  capture_output=True, text=True)
+        assert verified.returncode == 0, (verified.stdout, verified.stderr)
     finally:
         runner.events.unsubscribe("host", events)
         runner.close(); store.close()
@@ -273,9 +279,9 @@ def test_real_prefix_retry_keeps_destination_and_escalation_cannot_reset_budget(
         assert passed["executedNode"] == "First" and list(passed["data"]["resultData"]["runData"]) == ["First"]
         assert not (config.workspace / "later.txt").exists()
         failed = finished(app.store, app.start(document["id"]))
-        assert failed["relay"]["outcome"] == "gate-fail" and (config.workspace / "later.txt").exists()
+        assert failed["relay"]["outcome"] == "gate-fail" and (config.workspace / "later.txt").exists(), json.dumps(failed, ensure_ascii=False)
         escalated = finished(app.store, app.retry(failed["id"]))
-        assert escalated["status"] == "error" and escalated["relay"]["outcome"] == "escalate"
+        assert escalated["status"] == "error" and escalated["relay"]["outcome"] == "escalate", json.dumps(escalated, ensure_ascii=False)
         with pytest.raises(AuthoringError, match="escalated"):
             app.retry(escalated["id"])
         # An ancestor receipt must not bypass the same run's later escalation.
