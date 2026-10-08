@@ -18,7 +18,7 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { verifyCliArtifact } from "../../desktop/src/main/cli-artifacts"
 import { namedTargets } from "../script/targets"
-import { publishDirectory } from "../script/export-artifacts"
+import { artifactNative } from "../script/artifact-fs"
 
 const version = "1.18.27-export-test"
 const script = resolve(import.meta.dirname, "../script/export-artifacts.ts")
@@ -200,17 +200,28 @@ test("exclusive OS publisher never replaces even an empty concurrent destination
     const source = await snapshot(staging)
     const empty = join(input.root, "empty")
     await mkdir(empty)
-    for (const output of [input.out, empty]) {
-      const bytes = await snapshot(output)
-      const before = await identities(output)
-      await expect(publishDirectory(staging, output)).rejects.toThrow()
-      expect(await identities(output)).toEqual(before)
-      expect(await snapshot(output)).toEqual(bytes)
-      expect(await snapshot(staging)).toEqual(source)
+    const native = await artifactNative()
+    // Fixture root has already been resolved. Root acquisition walks components
+    // in the production admission tests; this primitive test pins its known parent.
+    const parent = native.root(input.root)
+    const directory = native.directory(parent, "staging", { removable: true })
+    try {
+      for (const output of [input.out, empty]) {
+        const bytes = await snapshot(output)
+        const before = await identities(output)
+        expect(() => native.publish(parent, "staging", directory, output === empty ? "empty" : "artifacts")).toThrow()
+        expect(await identities(output)).toEqual(before)
+        expect(await snapshot(output)).toEqual(bytes)
+        expect(await snapshot(staging)).toEqual(source)
+      }
+      const fresh = join(input.root, "fresh")
+      native.publish(parent, "staging", directory, "fresh")
+      expect(await snapshot(fresh)).toEqual(source)
+    } finally {
+      native.closeDirectory(directory)
+      native.closeDirectory(parent)
+      native.close()
     }
-    const fresh = join(input.root, "fresh")
-    await publishDirectory(staging, fresh)
-    expect(await snapshot(fresh)).toEqual(source)
   }))
 
 async function observePublication(input: { dist: string; out: string }, requests: string[][]) {
