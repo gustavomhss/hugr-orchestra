@@ -10,34 +10,59 @@
 
 import { spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { mkdirSync, readdirSync, readFileSync } from "node:fs"
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 
 // One source for the start time, run inside the fixture processes and by the oracle: Linux reads /proc/<pid>/stat
 // field 22, macOS asks `ps -o lstart=` in UTC/C once for all pids and prefixes UTC:, Windows makes one CIM query.
+// A native Node watchdog owns Windows query startup/exit. Bun's direct synchronous PowerShell path can stall.
 const START_TIMES = `
-function startTimes(pids) {
+function startTimes(pids, helper) {
   const cp = process.getBuiltinModule("node:child_process")
+  const fs = process.getBuiltinModule("node:fs")
   const result = {}
+  if (!pids.length) return result
+  if (process.platform === "win32") {
+    try {
+      const settings = JSON.parse(fs.readFileSync(helper + '.config', 'utf8'))
+      const out = cp.spawnSync(settings.node, ['--experimental-strip-types', helper, JSON.stringify(pids)],
+        {encoding: 'utf8', windowsHide: true, timeout: 15000, killSignal: 'SIGKILL'})
+      if (out.error || out.status !== 0 || !out.stdout?.trim()) throw Error(String(out.error ?? out.stderr ?? 'empty identity reply'))
+      const births = JSON.parse(out.stdout)
+      if (!births || typeof births !== 'object' || Array.isArray(births)) throw Error('malformed identity reply')
+      for (const pid of pids) {
+        if (births[pid] === undefined) continue // A successful complete inventory can prove the process exited.
+        if (typeof births[pid] !== 'string' || !/^\\d+$/.test(births[pid])) throw Error('invalid creation time for PID ' + pid)
+        result[pid] = births[pid]
+      }
+      return result
+    } catch (error) { throw Error('fixture birth query failed: ' + String(error)) }
+  }
   if (process.platform === "linux") {
     for (const pid of pids) {
       try {
-        const stat = process.getBuiltinModule("node:fs").readFileSync("/proc/" + pid + "/stat", "utf8")
-        result[pid] = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
-      } catch {}
+        const stat = fs.readFileSync("/proc/" + pid + "/stat", "utf8")
+        const birth = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
+        if (!/^\\d+$/.test(birth ?? '')) throw Error('invalid procfs creation time for PID ' + pid)
+        result[pid] = birth
+      } catch (error) {
+        if (error.code === 'ENOENT') continue
+        throw Error('fixture birth query failed: ' + String(error))
+      }
     }
     return result
   }
-  const out = process.platform === "win32"
-    ? cp.spawnSync("powershell", ["-NoProfile", "-NonInteractive", "-Command",
-        "Get-CimInstance Win32_Process -Filter '" + pids.map((pid) => "ProcessId=" + pid).join(" OR ") + "' | " +
-        "ForEach-Object { [string]$_.ProcessId + ' ' + $_.CreationDate.ToFileTimeUtc() }"],
-        { encoding: "utf8", windowsHide: true })
-    : cp.spawnSync("ps", ["-o", "pid=,lstart=", "-p", pids.join(",")], { encoding: "utf8", env: { ...process.env, TZ: "UTC", LC_ALL: "C" } })
+  const out = cp.spawnSync("ps", ["-o", "pid=,lstart=", "-p", pids.join(",")],
+    { encoding: "utf8", timeout: 10000, killSignal: 'SIGKILL', env: { ...process.env, TZ: "UTC", LC_ALL: "C" } })
+  // ps exits 1 without diagnostics when all requested PIDs have exited; every other failure is named.
+  if (out.error || out.status !== 0 && !(out.status === 1 && !out.stderr?.trim()))
+    throw Error('fixture birth query failed: ' + String(out.error ?? out.stderr))
   for (const line of (out.stdout || "").split("\\n")) {
+    if (!line.trim()) continue
     const match = line.trim().match(/^(\\d+)\\s+(.+)$/)
-    if (match) result[match[1]] = (process.platform === "darwin" ? "UTC:" : "") + match[2].trim()
+    if (!match) throw Error('fixture birth query failed: malformed ps creation-time row ' + line)
+    result[match[1]] = "UTC:" + match[2].trim()
   }
   return result
 }
@@ -48,7 +73,9 @@ const fs = process.getBuiltinModule("node:fs")
 const path = process.getBuiltinModule("node:path")
 const [nonce, depth, dir] = process.argv.slice(-3)
 const file = path.join(dir, process.pid + ".json")
-fs.writeFileSync(file + ".tmp", JSON.stringify({ pid: process.pid, nonce, startTime: startTimes([process.pid])[process.pid] }))
+const startTime = startTimes([process.pid], path.join(dir, 'identity.mjs'))[process.pid]
+if (typeof startTime !== 'string' || !startTime) throw Error('fixture birth identity missing creation time for PID ' + process.pid)
+fs.writeFileSync(file + ".tmp", JSON.stringify({ pid: process.pid, nonce, startTime }))
 fs.renameSync(file + ".tmp", file)
 setInterval(() => {}, 1 << 30)
 if (Number(depth) === 0) console.log("ready " + nonce)
@@ -62,11 +89,38 @@ else {
 }
 `
 
-const startTimes = new Function("pids", `${START_TIMES}\nreturn startTimes(pids)`) as (
+const startTimes = new Function("pids", "helper", `${START_TIMES}\nreturn startTimes(pids, helper)`) as (
   pids: number[],
+  helper: string,
 ) => Record<string, string>
 
-type Entry = { pid: number; nonce: string; startTime?: string }
+type Entry = { pid: number; nonce: string; startTime: string }
+
+// The standalone tree body uses only node builtins. This native Node bootstrap delegates PID/CIM decoding
+// to the existing OS instrument, preserving exact FileTime strings rather than introducing another decoder.
+const WINDOWS_READER = `
+import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+const settings = JSON.parse(readFileSync(import.meta.filename + '.config', 'utf8'));
+const { WindowsInventory } = await import(settings.decoder);
+const requested = JSON.parse(process.argv[2]);
+const output = {stdout: '', stderr: '', error: '', timedOut: false};
+const child = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand',
+  Buffer.from('[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ' + WindowsInventory.CIM, 'utf16le').toString('base64')],
+  {windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
+const closed = new Promise(resolve => child.once('close', resolve));
+child.on('error', error => {output.error = String(error)});
+child.stdout.on('data', chunk => {output.stdout += chunk; if (output.stdout.length > 67108864) {output.error = 'identity reply exceeded 64 MiB'; child.kill('SIGKILL')}});
+child.stderr.on('data', chunk => {output.stderr += chunk});
+const timer = setTimeout(() => {output.timedOut = true; child.kill('SIGKILL')}, 10000);
+try {
+  await Promise.race([closed, new Promise((_, reject) => setTimeout(() => reject(Error('query OS/stdio close unconfirmed')), 12000).unref())]);
+  if (output.timedOut || output.error || child.exitCode !== 0) throw Error('fixture birth query failed: ' + (output.error || output.stderr || 'query deadline expired'));
+  const rows = WindowsInventory.decode(JSON.parse(output.stdout), child.pid);
+  process.stdout.write(JSON.stringify(Object.fromEntries(rows.filter(row => requested.includes(row.pid)).map(row => [row.pid, row.startTime]))));
+} catch (error) {console.error('fixture birth query failed: ' + String(error)); process.exitCode = 1}
+finally {clearTimeout(timer); if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')}
+`
 
 /**
  * A tree of `depth + 1` processes (the root plus `depth` descendants in a chain). Spawn `command` with `args` through
@@ -76,6 +130,15 @@ export function tree(depth = 2) {
   const nonce = `omni-tree-${randomUUID()}`
   const dir = path.join(os.tmpdir(), nonce)
   mkdirSync(dir)
+  if (process.platform === "win32") {
+    const node = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p", "process.execPath"], {
+      encoding: "utf8", windowsHide: true, timeout: 10_000, killSignal: "SIGKILL",
+    })
+    if (node.error || node.status !== 0 || !node.stdout.trim()) throw new Error(`fixture birth query failed: native Node bootstrap unavailable: ${node.error ?? node.stderr}`)
+    writeFileSync(path.join(dir, "identity.mjs"), WINDOWS_READER)
+    writeFileSync(path.join(dir, "identity.mjs.config"), JSON.stringify({ node: node.stdout.trim(),
+      decoder: new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href }))
+  }
   return {
     nonce,
     size: depth + 1,
@@ -89,7 +152,13 @@ function records(nonce: string): Entry[] {
   const dir = path.join(os.tmpdir(), nonce)
   return readdirSync(dir)
     .filter((file) => file.endsWith(".json"))
-    .map((file) => JSON.parse(readFileSync(path.join(dir, file), "utf8")) as Entry)
+    .map((file) => {
+      const record = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as Entry
+      if (record.nonce !== nonce || !Number.isSafeInteger(record.pid) || record.pid <= 0 ||
+        typeof record.startTime !== "string" || !record.startTime)
+        throw new Error(`fixture birth identity missing creation time or invalid record: ${path.join(dir, file)}`)
+      return record
+    })
 }
 
 function signalable(pid: number) {
@@ -101,12 +170,13 @@ function signalable(pid: number) {
   }
 }
 
-/** How many of the tree's processes are alive: the pid answers signal 0 and still has its recorded start time. */
+/** How many processes retain their recorded identity: Windows uses complete CIM, Unix signal 0 plus birth query. */
 export async function alive(nonce: string) {
-  const running = records(nonce).filter((record) => signalable(record.pid))
+  // Bun's Windows signal-0 result can miss a live child; the authoritative CIM snapshot decides there.
+  const running = process.platform === "win32" ? records(nonce) : records(nonce).filter((record) => signalable(record.pid))
   if (running.length === 0) return 0
-  const now = startTimes(running.map((record) => record.pid))
-  return running.filter((record) => record.startTime !== undefined && now[record.pid] === record.startTime).length
+  const now = startTimes(running.map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
+  return running.filter((record) => now[record.pid] === record.startTime).length
 }
 
 /** Polls alive() until it reaches 0 or the deadline passes; returns the last count. Bounds a death, never a latency. */
@@ -124,9 +194,9 @@ export async function gone(nonce: string, timeoutMs = 20_000) {
 
 /** Kills whatever is left of the tree (test cleanup; never an assertion). */
 export async function reap(nonce: string) {
-  const now = startTimes(records(nonce).map((record) => record.pid))
+  const now = startTimes(records(nonce).map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
   for (const record of records(nonce)) {
-    if (record.startTime === undefined || now[record.pid] !== record.startTime) continue
+    if (now[record.pid] !== record.startTime) continue
     try {
       process.kill(record.pid, "SIGKILL")
     } catch {}

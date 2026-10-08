@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { Omni } from "../src/omni"
+import { alive } from "./fixture/process-tree"
 import { appRuntime, effectModules } from "../../omni/campaign/delivery-fixtures.ts"
 import { fileTree, LOGS, matches, table, until, win } from "../../omni/campaign/lib.ts"
 import { fixture } from "../../omni/campaign/protocol-fixtures.ts"
@@ -43,6 +44,7 @@ test("real Bun and Node fixtures publish both exact births before READY under is
       expect(recorded).toHaveLength(2)
       expect(recorded.every((record) => typeof record.startTime === "string" && record.startTime.length > 0)).toBe(true)
       expect(recorded.every((record) => rows.some((row) => matches(row, record)))).toBe(true)
+      expect(await alive(launched.sample.nonce)).toBe(2)
     } finally { await close(launched) }
   }
 }, 120_000)
