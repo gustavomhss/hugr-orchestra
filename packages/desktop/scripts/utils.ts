@@ -1,97 +1,64 @@
 import { $ } from "bun"
-import { chmod, copyFile, mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
-
-const CLI_VERSION = "0.0.0-next-16350"
+import { join, resolve } from "node:path"
+import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
+import { nativeCliTarget } from "../src/main/cli-artifacts"
 
 export type Channel = "dev" | "beta" | "prod"
+export const RUST_TARGET = Bun.env.RUST_TARGET
 
 export function resolveChannel(): Channel {
   const raw = Bun.env.ORCHESTRA_CHANNEL
-  if (raw === "dev" || raw === "beta" || raw === "prod") return raw
-  return "dev"
+  return raw === "beta" || raw === "prod" ? raw : "dev"
 }
 
-export const CLI_BINARIES: Array<{ rustTarget: string; package: string; os: string; cpu: string }> = [
-  {
-    rustTarget: "aarch64-apple-darwin",
-    package: "@opencode-ai/cli-darwin-arm64",
-    os: "darwin",
-    cpu: "arm64",
-  },
-  {
-    rustTarget: "x86_64-apple-darwin",
-    package: "@opencode-ai/cli-darwin-x64-baseline",
-    os: "darwin",
-    cpu: "x64",
-  },
-  {
-    rustTarget: "aarch64-pc-windows-msvc",
-    package: "@opencode-ai/cli-windows-arm64",
-    os: "win32",
-    cpu: "arm64",
-  },
-  {
-    rustTarget: "x86_64-pc-windows-msvc",
-    package: "@opencode-ai/cli-windows-x64-baseline",
-    os: "win32",
-    cpu: "x64",
-  },
-  {
-    rustTarget: "x86_64-unknown-linux-gnu",
-    package: "@opencode-ai/cli-linux-x64-baseline",
-    os: "linux",
-    cpu: "x64",
-  },
-  {
-    rustTarget: "aarch64-unknown-linux-gnu",
-    package: "@opencode-ai/cli-linux-arm64",
-    os: "linux",
-    cpu: "arm64",
-  },
-]
-
-export const RUST_TARGET = Bun.env.RUST_TARGET
-
-function nativeTarget() {
-  const { platform, arch } = process
-  if (platform === "darwin") return arch === "arm64" ? "aarch64-apple-darwin" : "x86_64-apple-darwin"
-  if (platform === "win32") return arch === "arm64" ? "aarch64-pc-windows-msvc" : "x86_64-pc-windows-msvc"
-  if (platform === "linux") return arch === "arm64" ? "aarch64-unknown-linux-gnu" : "x86_64-unknown-linux-gnu"
-  throw new Error(`Unsupported platform: ${platform}/${arch}`)
+export async function buildCliToResources(input: { targets?: readonly string[] } = {}) {
+  const desktop = resolve(import.meta.dir, "..")
+  const cli = resolve(desktop, "../cli")
+  const version =
+    process.env.ORCHESTRA_VERSION ?? (await Bun.file(join(desktop, "../orchestra/package.json")).json()).version
+  const targets =
+    input.targets ?? (RUST_TARGET ? targetsForRust(RUST_TARGET) : desktopCliTargets(process.platform, process.arch))
+  await targets.reduce(async (previous, target) => {
+    await previous
+    // Workspace setup owns dependency provisioning; reinstalling here can replace the runner's hoisted layout.
+    await $`bun script/build.ts --target ${target} --skip-install`
+      .cwd(cli)
+      .env({ ...process.env, ORCHESTRA_VERSION: version })
+  }, Promise.resolve())
+  return stageCliArtifacts({
+    dist: join(cli, "dist"),
+    directory: join(desktop, "resources/cli"),
+    version,
+    targets,
+    sign: async (path, target) => {
+      if (target.startsWith("windows-") && process.platform === "win32" && process.env.GITHUB_ACTIONS === "true")
+        await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ${join(desktop, "../../script/sign-windows.ps1")} ${path}`
+      if (target.startsWith("darwin-") && process.platform === "darwin") {
+        const identity = process.env.CSC_NAME ?? "-"
+        const options =
+          identity === "-"
+            ? []
+            : ["--options", "runtime", "--timestamp", "--entitlements", join(desktop, "resources/entitlements.plist")]
+        await $`codesign --force --sign ${identity} ${options} ${path}`
+      }
+      if (target === nativeCliTarget(process.platform, process.arch)) {
+        const reported = (await $`${path} --version`.text()).trim()
+        if (![version, `orchestra v${version}`].includes(reported))
+          throw new Error(`Owned CLI compiled version mismatch: ${target}`)
+      }
+    },
+  })
 }
 
-export function getCurrentCli(target = RUST_TARGET ?? nativeTarget()) {
-  const binaryConfig = CLI_BINARIES.find((item) => item.rustTarget === target)
-  if (!binaryConfig) throw new Error(`CLI configuration not available for target '${target}'`)
-
-  return binaryConfig
-}
-
-export async function downloadCliToResources() {
-  const cli = getCurrentCli()
-  const directory = await mkdtemp(join(tmpdir(), "orchestra-cli-"))
-  const dest = windowsify("resources/orchestra-cli")
-  try {
-    await $`bun install --no-save --cwd ${directory} ${`${cli.package}@${CLI_VERSION}`} ${`--os=${cli.os}`} ${`--cpu=${cli.cpu}`}`
-    await copyFile(
-      join(directory, "node_modules", cli.package, "bin", cli.os === "win32" ? "opencode2.exe" : "opencode2"),
-      dest,
-    )
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
-  if (process.platform !== "win32") await chmod(dest, 0o755)
-  if (process.platform === "win32" && process.env.GITHUB_ACTIONS === "true") {
-    await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ../../script/sign-windows.ps1 ${dest}`
-  }
-  if (process.platform === "darwin") await $`codesign --force --sign - ${dest}`
-
-  console.log(`Copied ${cli.package} to ${dest}`)
-}
-
-export function windowsify(path: string) {
-  if (path.endsWith(".exe")) return path
-  return `${path}${process.platform === "win32" ? ".exe" : ""}`
+function targetsForRust(target: string) {
+  const placement = {
+    "aarch64-apple-darwin": ["darwin", "arm64"],
+    "x86_64-apple-darwin": ["darwin", "x64"],
+    "aarch64-pc-windows-msvc": ["win32", "arm64"],
+    "x86_64-pc-windows-msvc": ["win32", "x64"],
+    "aarch64-unknown-linux-gnu": ["linux", "arm64"],
+    "x86_64-unknown-linux-gnu": ["linux", "x64"],
+  }[target]
+  if (!placement) throw new Error(`Unsupported desktop CLI build target: ${target}`)
+  return desktopCliTargets(placement[0]!, placement[1]!)
 }

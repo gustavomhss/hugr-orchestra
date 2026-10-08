@@ -57,9 +57,9 @@ for (const channel of channels) {
 
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
     expect(config.extraResources).toContainEqual({ from: "../orchestra/playbooks", to: "playbooks" })
-    expect(await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists()).toBe(
-      true,
-    )
+    expect(
+      await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists(),
+    ).toBe(true)
   })
 }
 
@@ -67,7 +67,7 @@ test("keeps a hidden prod launcher for old Linux pins", async () => {
   const previous = process.env.ORCHESTRA_CHANNEL
   process.env.ORCHESTRA_CHANNEL = "prod"
 
-  const module = await import("./electron-builder.config.ts?compat=prod")
+  const module = await import(`./electron-builder.config.ts?compat=${"prod"}`)
   const config = module.default as Configuration
 
   if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
@@ -91,35 +91,25 @@ test("keeps a hidden prod launcher for old Linux pins", async () => {
   expect(desktop).toContain("NoDisplay=true")
 })
 
-test("bundles the CLI outside the dev app archive", async () => {
-  const previous = process.env.ORCHESTRA_CHANNEL
-  process.env.ORCHESTRA_CHANNEL = "dev"
-  const module = await import("./electron-builder.config.ts?cli-resource")
-  const config = module.default as Configuration
-  if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
-  else process.env.ORCHESTRA_CHANNEL = previous
-
-  expect(config.files).toContain("!resources/orchestra-cli*")
-  expect(config.extraResources).toContainEqual({
-    from: "resources/",
-    to: "",
-    filter: ["orchestra-cli*"],
-  })
-})
-
-for (const channel of ["beta", "prod"] as const) {
-  test(`does not bundle the CLI in ${channel} builds`, async () => {
+for (const channel of ["dev", "beta", "prod"] as const) {
+  test(`bundles owned CLI outside ${channel} app archive`, async () => {
     const previous = process.env.ORCHESTRA_CHANNEL
     process.env.ORCHESTRA_CHANNEL = channel
-    const module = await import(`./electron-builder.config.ts?no-cli-resource=${channel}`)
+    const module = await import(`./electron-builder.config.ts?cli-resource=${channel}`)
     const config = module.default as Configuration
     if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
     else process.env.ORCHESTRA_CHANNEL = previous
 
-    expect(config.extraResources).not.toContainEqual({
-      from: "resources/",
-      to: "",
-      filter: ["orchestra-cli*"],
+    expect(config.files).toContain("!resources/orchestra-cli*")
+    expect(config.files).toContain("!resources/cli{,/**/*}")
+    expect(config.extraResources).toContainEqual({
+      from: "resources/cli",
+      to: "cli",
     })
+    expect(typeof config.beforePack).toBe("function")
+    expect(typeof config.afterPack).toBe("function")
+    expect(typeof config.afterSign).toBe("function")
+    expect(config.mac?.signIgnore).toContain("/Resources/cli/")
+    expect(config.extraMetadata?.version).toBe(process.env.ORCHESTRA_VERSION ?? "1.18.27")
   })
 }
