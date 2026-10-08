@@ -134,14 +134,19 @@ export function snapshot(
 
 /** Complete uncapped declared prefix, ending at an actual safe completed assistant boundary. */
 export function completeSnapshot(sessionID: SessionID, messages: SessionV1.WithParts[], previous?: MemoryArtifact, canRecall = false,
-  boundary?: MessageID, delivered: readonly MessageID[] = []): MemorySnapshot | undefined {
+  boundary?: MessageID, delivered?: readonly MessageID[]): MemorySnapshot | undefined {
   if (!ownedHistory(sessionID, messages)) return undefined
   const safe = boundary ? messages.findIndex((message) => message.info.id === boundary) : messages.findLastIndex((message) =>
     message.info.role === "assistant" && isSafe(message.info) && !message.parts.some((part) => part.type === "tool" && ["pending", "running"].includes(part.state.status)))
   if (safe < 0) return undefined
   // A queued user can precede a late assistant for the earlier turn. It is not completed source coverage.
   const admitted = RequestSource.answered(messages.slice(0, safe + 1), delivered)
-  const queued = messages.findIndex((message, index) => index <= safe && index > admitted && RequestSource.actual(message))
+  // Explicit membership cannot acknowledge an earlier queue merely because a later steer was answered.
+  const confirmed = delivered && new Set([...delivered, ...(previous?.version === 5 ? previous.covered.map((source) => source.id) : []),
+    ...messages.slice(0, safe + 1).flatMap((message) => message.info.role === "assistant" && message.info.time.completed !== undefined && !message.info.error
+      ? [message.info.parentID] : [])])
+  const queued = messages.findIndex((message, index) => index <= safe && RequestSource.actual(message) &&
+    (confirmed ? !confirmed.has(message.info.id) : index > admitted))
   const end = queued < 0 ? safe : messages.findLastIndex((message, index) => index < queued && message.info.role === "assistant" && isSafe(message.info))
   if (end < 0 || boundary && messages[end].info.id !== boundary) return undefined
   const covered = messages.slice(0, end + 1)
@@ -312,6 +317,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     return accepted(outcome, true)
   }
   return accepted(outcome, false)
+// Abort deadline includes lookup and retries. Uninterruptible transport cleanup is joined before returning.
 }, Effect.timeout("600 seconds"), Effect.catchCause((cause) => {
   if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt
   const error = Cause.squash(cause)

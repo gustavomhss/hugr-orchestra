@@ -150,3 +150,13 @@ for (const kind of ["empty", "reasoning"] as const) test(`${kind} completed boun
   expect(extended.find((item) => item.message.info.id === boundary.info.id)?.alias).toBe(source.alias)
   expect(extended.find((item) => item.message.info.id === extension.info.id)?.alias).toBe("a1")
 })
+
+test("explicit delivered steer cannot absorb earlier unacknowledged queue into complete coverage", () => {
+  const history = messages(["user", "assistant", "user", "user", "assistant"])
+  const final = history[4].info
+  if (final.role !== "assistant") throw new Error("Expected assistant")
+  final.parentID = history[3].info.id
+  const snapshot = completeSnapshot(history[0].info.sessionID, history, undefined, false, undefined,
+    [history[0].info.id, history[3].info.id])
+  expect(snapshot?.covered?.map((message) => message.info.id)).toEqual(history.slice(0, 2).map((message) => message.info.id))
+})

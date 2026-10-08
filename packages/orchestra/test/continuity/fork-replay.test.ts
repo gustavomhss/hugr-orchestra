@@ -75,7 +75,7 @@ it.live("maintenance replays the parent request prefix and appends one instructi
   expect(sent.messages.slice(0, -1)).toEqual(source.input.messages)
   const appended = sent.messages.at(-1)!
   expect(appended.role).toBe("user")
-  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v5 complete prefix")
+  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(String(appended.content)).toContain("The current working memory, if any, is the system\nblock that begins `# Working memory`.")
   expect(String(appended.content)).toContain("## Index of the new span\nu1 ")
   expect(Object.keys(sent.tools)).toEqual(Object.keys(source.input.tools))
