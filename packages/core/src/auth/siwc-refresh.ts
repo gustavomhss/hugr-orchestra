@@ -9,16 +9,11 @@ import { Siwc } from "./siwc"
 
 const Tokens = Schema.Struct({
   access_token: Schema.NonEmptyString,
-  refresh_token: Schema.NonEmptyString,
+  refresh_token: Schema.optional(Schema.NonEmptyString),
   expires_in: Schema.Int.check(Schema.isGreaterThan(0)),
   token_type: Schema.Literal("Bearer"),
-  scope: Schema.String,
+  scope: Schema.optional(Schema.String),
   id_token: Schema.optional(Schema.NonEmptyString),
-})
-const RetainedIdentity = Schema.Struct({
-  iss: Schema.Literal(Siwc.issuer), sub: Schema.NonEmptyString,
-  aud: Schema.Union([Schema.NonEmptyString, Schema.Array(Schema.NonEmptyString)]),
-  nonce: Schema.optional(Schema.String), auth_time: Schema.optional(Schema.Int), azp: Schema.optional(Schema.String),
 })
 
 /** Only invoke inside resolve's credential lease, including native promise completion. */
@@ -28,6 +23,8 @@ export async function exchange(
   jwksURL = new URL(`${Siwc.issuer}/.well-known/jwks.json`),
 ) {
   const saved = Siwc.registration(value.metadata)
+  // Missing pre-upgrade continuity data must fail before a server can rotate.
+  const original = Siwc.continuity(value.metadata)
   const response = await transport(`${Siwc.issuer}/api/accounts/oauth/token`, { method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: Siwc.refreshBody(value),
     signal: AbortSignal.timeout(30000) })
@@ -35,30 +32,22 @@ export async function exchange(
   const tokens = Schema.decodeUnknownOption(Schema.fromJsonString(Tokens))(await response.text())
   if (Option.isNone(tokens)) throw new Error("Invalid ChatGPT refresh response")
   if (tokens.value.id_token) {
-    const { compactVerify, createRemoteJWKSet, jwtVerify } = await import("jose")
+    const { createRemoteJWKSet, jwtVerify } = await import("jose")
     const keys = createRemoteJWKSet(jwksURL)
-    // The retained token may be expired. Verify its signature before reading
-    // original nonce/audience/auth_time; it is not a new authenticated session.
-    const originalIdToken = typeof value.metadata?.originalIdToken === "string" ? value.metadata.originalIdToken : saved.idToken
-    const retained = await compactVerify(originalIdToken, keys, { algorithms: ["RS256", "ES256"] })
-    const original = Schema.decodeUnknownOption(Schema.fromJsonString(RetainedIdentity))(new TextDecoder().decode(retained.payload))
-    if (Option.isNone(original) || original.value.sub !== saved.subject || ![original.value.aud].flat().includes(saved.clientId))
-      throw new Error("Invalid retained ChatGPT identity")
     const identity = await jwtVerify(tokens.value.id_token, keys, { issuer: saved.issuer, audience: saved.clientId,
       subject: saved.subject, algorithms: ["RS256", "ES256"], requiredClaims: ["sub", "exp", "iat"] })
     // OIDC Core 12.2: no fresh nonce on refresh. If present, it must be the
     // original nonce; audience and auth_time also retain their original meaning.
-    if ((identity.payload.nonce !== undefined && identity.payload.nonce !== original.value.nonce) ||
-      (identity.payload.auth_time !== undefined && identity.payload.auth_time !== original.value.auth_time) ||
-      identity.payload.azp !== original.value.azp ||
-      JSON.stringify([identity.payload.aud].flat().sort()) !== JSON.stringify([original.value.aud].flat().sort()))
+    if ((identity.payload.nonce !== undefined && identity.payload.nonce !== original.nonce) ||
+      (identity.payload.auth_time !== undefined && identity.payload.auth_time !== original.authTime) ||
+      identity.payload.azp !== original.authorizedParty ||
+      JSON.stringify([identity.payload.aud].flat().sort()) !== JSON.stringify([...original.audiences].sort()))
       throw new Error("ChatGPT refresh identity changed")
   }
-  return Credential.OAuth.make({ ...value, access: tokens.value.access_token, refresh: tokens.value.refresh_token,
+  return Credential.OAuth.make({ ...value, access: tokens.value.access_token, refresh: tokens.value.refresh_token ?? value.refresh,
     expires: Date.now() + tokens.value.expires_in * 1000,
     metadata: { ...value.metadata, ...saved, idToken: tokens.value.id_token ?? saved.idToken,
-      originalIdToken: value.metadata?.originalIdToken ?? saved.idToken,
-      scopes: tokens.value.scope.split(/\s+/).filter(Boolean) } })
+      scopes: tokens.value.scope === undefined ? saved.scopes : tokens.value.scope.split(/\s+/).filter(Boolean) } })
 }
 
 /** Process-global and cross-process; never key locks by token material or Location. */

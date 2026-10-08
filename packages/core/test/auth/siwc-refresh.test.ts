@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { Context, Effect, Fiber, Layer } from "effect"
+import { Context, Effect, Fiber, Layer, Schema } from "effect"
 import { exportJWK, generateKeyPair, SignJWT } from "jose"
 import { Credential } from "../../src/credential"
 import { Database } from "../../src/database/database"
@@ -18,34 +18,49 @@ const fixture = Effect.fn(function* () {
   yield* Effect.addFinalizer(() => Effect.promise(() => rm(directory, { recursive: true, force: true })))
   const filename = join(directory, "store.db")
   const key = yield* Effect.promise(() => generateKeyPair("RS256", { extractable: true }))
+  const refreshKey = yield* Effect.promise(() => generateKeyPair("RS256", { extractable: true }))
   const alien = yield* Effect.promise(() => generateKeyPair("RS256"))
   const jwk = yield* Effect.promise(() => exportJWK(key.publicKey))
+  const refreshJwk = yield* Effect.promise(() => exportJWK(refreshKey.publicKey))
   const clientId = "fixture-issued-client"
   const subject = "fixture-subject"
   const authTime = Math.floor(Date.now() / 1000) - 300
-  const sign = (claims: Record<string, unknown>, badKey = false) => new SignJWT({ iss: Siwc.issuer, aud: clientId,
+  const sign = (claims: Record<string, unknown>, badKey = false, signingIn = false) => new SignJWT({ iss: Siwc.issuer, aud: clientId,
     sub: subject, iat: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600, ...claims })
-    .setProtectedHeader({ alg: "RS256", kid: "fixture-key" }).sign(badKey ? alien.privateKey : key.privateKey)
-  const original = yield* Effect.promise(() => sign({ nonce: "original-nonce", auth_time: authTime,
-    iat: Math.floor(Date.now() / 1000) - 100, exp: Math.floor(Date.now() / 1000) - 1 }))
-  const initial = Credential.OAuth.make({ type: "oauth", methodID: Integration.MethodID.make("chatgpt-browser"),
-    access: "fixture-expired", refresh: "fixture-refresh", expires: 1,
-    metadata: { clientId, issuer: Siwc.issuer, subject, idToken: original, scopes: Siwc.scopes.split(" "), hostId: "fixture-host" } })
-  const control: { mode: string; forms: Array<Record<string, string>>; block?: { entered: ReturnType<typeof Promise.withResolvers<void>>; release: ReturnType<typeof Promise.withResolvers<void>> } } = { mode: "normal", forms: [] }
+    .setProtectedHeader({ alg: "RS256", kid: signingIn ? "signin-key" : "refresh-key" })
+    .sign(badKey ? alien.privateKey : signingIn ? key.privateKey : refreshKey.privateKey)
+  const attempt = Siwc.begin({ hostId: "fixture-host", redirect: "http://127.0.0.1:54321/auth/callback" })
+  const original = yield* Effect.promise(() => sign({ nonce: attempt.nonce, auth_time: authTime }, false, true))
+  const control: { mode: string; retired: boolean; signInToken: string; forms: Array<Record<string, string>>; block?: { entered: ReturnType<typeof Promise.withResolvers<void>>; release: ReturnType<typeof Promise.withResolvers<void>> } } = { mode: "normal", retired: false, signInToken: original, forms: [] }
   const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
-    if (new URL(request.url).pathname === "/jwks") return Response.json({ keys: [{ ...jwk, kid: "fixture-key", alg: "RS256", use: "sig" }] })
-    control.forms.push(Object.fromEntries(new URLSearchParams(await request.text())))
+    if (new URL(request.url).pathname === "/jwks") return Response.json({ keys: [
+      ...control.retired ? [] : [{ ...jwk, kid: "signin-key", alg: "RS256", use: "sig" }],
+      { ...refreshJwk, kid: "refresh-key", alg: "RS256", use: "sig" },
+    ] })
+    const form = Object.fromEntries(new URLSearchParams(await request.text()))
+    control.forms.push(form)
+    if (form.grant_type === "authorization_code") return Response.json({ access_token: "fixture-expired",
+      refresh_token: "fixture-refresh", token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes, id_token: control.signInToken })
     const block = control.block
     block?.entered.resolve()
     if (block) await block.release.promise
-    const claims = control.mode === "nonce" ? { nonce: "original-nonce" } : control.mode === "bad-nonce" ? { nonce: "wrong" }
+    const claims = control.mode === "nonce" ? { nonce: attempt.nonce } : control.mode === "bad-nonce" ? { nonce: "wrong" }
       : control.mode === "subject" ? { sub: "wrong" } : control.mode === "issuer" ? { iss: "https://wrong.example" }
       : control.mode === "audience" ? { aud: "wrong" } : control.mode === "expired" ? { exp: 1 }
       : control.mode === "auth-time" ? { auth_time: authTime + 1 } : {}
-    return Response.json({ access_token: "fixture-access", refresh_token: "fixture-rotated", token_type: "Bearer", expires_in: 3600,
-      scope: control.mode === "revoked" ? "openid email" : Siwc.scopes,
+    return Response.json({ access_token: "fixture-access", token_type: "Bearer", expires_in: 3600,
+      ...(control.mode === "omit-refresh" || control.mode === "omit-both" ? {} : { refresh_token: "fixture-rotated" }),
+      ...(control.mode === "omit-scope" || control.mode === "omit-both" ? {} : { scope: control.mode === "revoked" ? "openid email" : Siwc.scopes }),
       ...(control.mode === "no-id" || control.mode === "revoked" ? {} : { id_token: await sign(claims, control.mode === "signature") }) })
   } })), (server) => Effect.sync(() => server.stop(true)))
+  const callback = new URL(attempt.redirect)
+  callback.search = new URLSearchParams({ state: attempt.state, code: "fixture-code", client_id: clientId }).toString()
+  const authorized = yield* Effect.promise(() => Siwc.exchange(attempt, callback, Integration.MethodID.make("chatgpt-browser"),
+    (_url, init) => fetch(new URL("/token", server.url), init), new URL("/jwks", server.url)))
+  const expiredHint = yield* Effect.promise(() => sign({ nonce: attempt.nonce, auth_time: authTime,
+    iat: Math.floor(Date.now() / 1000) - 100, exp: Math.floor(Date.now() / 1000) - 1 }, false, true))
+  const initial = Credential.OAuth.make({ ...authorized, expires: 1, metadata: { ...authorized.metadata, idToken: expiredHint } })
+  control.forms.splice(0)
   const layer = Credential.layerFrom(undefined).pipe(Layer.provide(Database.layerFromPath(filename)))
   const credentials = Context.get(yield* Layer.build(Layer.fresh(layer)), Credential.Service)
   const created = yield* credentials.create({ integrationID: Integration.ID.make("openai"), label: "original", value: initial })
@@ -65,7 +80,7 @@ const fixture = Effect.fn(function* () {
     return integration
   })
   const connection = { type: "credential" as const, id: created.id, label: created.label }
-  return { directory, filename, credentials, created, initial, control, resolve, refresh, location, connection, server }
+  return { directory, filename, credentials, created, initial, control, resolve, refresh, location, connection, server, sign, authTime }
 })
 
 it.live("SQLite value CAS preserves labels, rejects stale/key replacements and never resurrects deleted credentials", () => Effect.gen(function* () {
@@ -185,6 +200,59 @@ it.live("refresh checks real signatures and original identity/nonce; atomically 
     if (mode === "no-id" || mode === "revoked") expect(value.metadata?.idToken).toBe(f.initial.metadata?.idToken)
     if (mode === "revoked") expect(() => Siwc.requirePlanUsage(value)).toThrow("plan use is not authorized")
   }
+}))
+
+it.live("retired original key is unnecessary; optional refresh fields retain the captured rotated grant", () => Effect.gen(function* () {
+  const f = yield* fixture()
+  const original = Siwc.continuity(f.initial.metadata)
+  expect(original).toMatchObject({ issuer: Siwc.issuer, clientId: "fixture-issued-client", subject: "fixture-subject",
+    audiences: ["fixture-issued-client"], authTime: f.authTime })
+  f.control.retired = true
+  const jwks = yield* Effect.promise(async () => Schema.decodeUnknownSync(Schema.fromJsonString(
+    Schema.Struct({ keys: Schema.Array(Schema.Struct({ kid: Schema.String })) }),
+  ))(await (await fetch(new URL("/jwks", f.server.url))).text()))
+  expect(jwks.keys.map((key) => key.kid)).toEqual(["refresh-key"])
+  // First refresh rotates with new-key-only JWKS, then omission must retain
+  // that replacement rather than the pre-rotation refresh token or grant.
+  const rotated = yield* f.resolve()
+  if (rotated?.type !== "oauth") throw new Error("Expected rotated fixture")
+  expect(rotated.refresh).toBe("fixture-rotated")
+  expect(rotated.metadata?.idToken).not.toBe(f.initial.metadata?.idToken)
+  for (const mode of ["omit-refresh", "omit-scope", "omit-both", "revoked", "omit-both"]) {
+    const captured = (yield* f.credentials.get(f.created.id))?.value
+    if (captured?.type !== "oauth") throw new Error("Expected captured fixture")
+    yield* f.credentials.update(f.created.id, { value: Credential.OAuth.make({ ...captured, expires: 1 }) })
+    f.control.mode = mode
+    const next = yield* f.resolve()
+    if (next?.type !== "oauth") throw new Error("Expected refreshed fixture")
+    expect(next.refresh).toBe("fixture-rotated")
+    expect(f.control.forms.at(-1)?.refresh_token).toBe(captured.refresh)
+    expect(next.metadata?.validatedIdentity).toEqual(f.initial.metadata?.validatedIdentity)
+    expect((yield* f.credentials.get(f.created.id))?.value).toEqual(next)
+    if (mode !== "revoked") expect(next.metadata?.scopes).toEqual(captured.metadata?.scopes)
+    if (mode === "revoked") expect(next.metadata?.scopes).toEqual(["openid", "email"])
+  }
+  const limited = (yield* f.credentials.get(f.created.id))?.value
+  if (limited?.type !== "oauth") throw new Error("Expected limited fixture")
+  expect(() => Siwc.requirePlanUsage(limited)).toThrow("plan use is not authorized")
+}))
+
+it.live("unverified sign-in cannot produce continuity; missing or conflicting stored facts fail before HTTP", () => Effect.gen(function* () {
+  const f = yield* fixture()
+  const attempt = Siwc.begin({ hostId: "fixture-host", redirect: "http://127.0.0.1:54321/auth/callback" })
+  f.control.signInToken = yield* Effect.promise(() => f.sign({ nonce: attempt.nonce }, true, true))
+  const callback = new URL(attempt.redirect)
+  callback.search = new URLSearchParams({ state: attempt.state, code: "fixture-code", client_id: "fixture-issued-client" }).toString()
+  const failed = yield* Effect.tryPromise(() => Siwc.exchange(attempt, callback, f.initial.methodID,
+    (_url, init) => fetch(new URL("/token", f.server.url), init), new URL("/jwks", f.server.url))).pipe(Effect.exit)
+  expect(failed._tag).toBe("Failure")
+  const before = f.control.forms.length
+  for (const identity of [undefined, { ...Siwc.continuity(f.initial.metadata), subject: "wrong" }]) {
+    yield* f.credentials.update(f.created.id, { value: Credential.OAuth.make({ ...f.initial,
+      metadata: { ...f.initial.metadata, validatedIdentity: identity } }) })
+    expect((yield* f.resolve().pipe(Effect.exit))._tag).toBe("Failure")
+  }
+  expect(f.control.forms.length).toBe(before)
 }))
 
 it.live("inherited credentials reject CAS and refresh before HTTP", () => Effect.gen(function* () {

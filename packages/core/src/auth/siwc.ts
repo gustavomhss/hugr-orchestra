@@ -17,6 +17,11 @@ const Registration = Schema.Struct({
   scopes: Schema.Array(Schema.NonEmptyString),
 })
 export type Registration = typeof Registration.Type
+const ValidatedIdentity = Schema.Struct({
+  issuer: Schema.Literal(issuer), clientId: Schema.NonEmptyString, subject: Schema.NonEmptyString,
+  audiences: Schema.Array(Schema.NonEmptyString), nonce: Schema.NonEmptyString,
+  authTime: Schema.optional(Schema.Finite), authorizedParty: Schema.optional(Schema.NonEmptyString),
+})
 const Tokens = Schema.Struct({
   access_token: Schema.NonEmptyString,
   refresh_token: Schema.NonEmptyString,
@@ -125,12 +130,19 @@ export async function exchange(
   // An issued client is workspace-bound. Subject + issued client, never email,
   // identifies a returning registration; OpenAI access-token metadata is opaque.
   if (attempt.saved && identity.payload.sub !== attempt.saved.subject) throw new Error("ChatGPT account changed")
+  // Persist continuity facts only here, after signature and OIDC validation.
+  // Refresh must not need the old signing key after JWKS key retirement.
+  const validatedIdentity = Schema.decodeUnknownOption(ValidatedIdentity)({ issuer, clientId: grant.clientId,
+    subject: identity.payload.sub, audiences: [identity.payload.aud].flat(), nonce: identity.payload.nonce,
+    ...(identity.payload.auth_time === undefined ? {} : { authTime: identity.payload.auth_time }),
+    ...(identity.payload.azp === undefined ? {} : { authorizedParty: identity.payload.azp }) })
+  if (Option.isNone(validatedIdentity)) throw new Error("Invalid ChatGPT continuity claims")
   const granted = tokens.value.scope.split(/\s+/).filter(Boolean)
   return Credential.OAuth.make({
     type: "oauth", methodID, access: tokens.value.access_token, refresh: tokens.value.refresh_token,
     expires: Date.now() + tokens.value.expires_in * 1000,
     metadata: { clientId: grant.clientId, hostId: attempt.hostId, issuer, subject: identity.payload.sub,
-      idToken: tokens.value.id_token, scopes: granted },
+      idToken: tokens.value.id_token, scopes: granted, validatedIdentity: validatedIdentity.value },
   })
 }
 
@@ -139,6 +151,17 @@ export function registration(metadata: unknown): Registration {
   if (Option.isNone(value)) throw new Error("Missing validated ChatGPT registration; sign in again")
   issuedClientID(value.value.clientId)
   return value.value
+}
+
+/** Protected-store facts produced by exchange, not claims decoded from a hint. */
+export function continuity(metadata: unknown) {
+  const saved = registration(metadata)
+  const value = Schema.decodeUnknownOption(Schema.Struct({ validatedIdentity: ValidatedIdentity }))(metadata)
+  if (Option.isNone(value)) throw new Error("Missing validated ChatGPT continuity claims; sign in again")
+  const identity = value.value.validatedIdentity
+  if (identity.issuer !== saved.issuer || identity.clientId !== saved.clientId || identity.subject !== saved.subject ||
+    !identity.audiences.includes(saved.clientId)) throw new Error("ChatGPT continuity registration changed")
+  return identity
 }
 
 /** Caller must reject inherited credentials and serialize/store refresh atomically. */
