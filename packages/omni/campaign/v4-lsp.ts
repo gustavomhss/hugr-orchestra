@@ -47,7 +47,9 @@ const cp = require('node:child_process');
 const server = cp.spawn(process.execPath, [${JSON.stringify(languageServer)}, '--stdio'], {stdio: ['pipe', 'pipe', 'pipe']});
 server.stderr.on('data', chunk => { fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "language-server.stderr.log"))}, chunk); process.stderr.write(chunk); });
 server.on('exit', (code, signal) => fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({serverExit: server.pid, code, signal}) + '\\n'));
-cp.spawn(${JSON.stringify(tree.command)}, ${JSON.stringify(tree.args)}, {stdio: 'ignore'});
+const auxiliary = cp.spawn(${JSON.stringify(tree.command)}, ${JSON.stringify(tree.args)}, {stdio: ['ignore', 'ignore', 'pipe']});
+auxiliary.stderr.on('data', chunk => fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "fixture-birth.stderr.log"))}, chunk));
+auxiliary.on('error', error => fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "fixture-birth.stderr.log"))}, String(error)));
 fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({pid: process.pid, server: server.pid, at: Date.now()}) + '\\n');
 let input = Buffer.alloc(0);
 process.stdin.on('data', chunk => {
@@ -201,6 +203,7 @@ setInterval(() => {}, 1e9);
       rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
       wrapper: existsSync(wrapperLog) ? readFileSync(wrapperLog, "utf8").slice(-2000) : null,
       stderr: existsSync(path.join(scratch.home, "language-server.stderr.log")) ? readFileSync(path.join(scratch.home, "language-server.stderr.log"), "utf8").slice(-4000) : null,
+      fixtureStderr: existsSync(path.join(scratch.home, "fixture-birth.stderr.log")) ? readFileSync(path.join(scratch.home, "fixture-birth.stderr.log"), "utf8").slice(-8000) : null,
       prompt: existsSync(path.join(scratch.home, "prompt.responses.jsonl")) ? readFileSync(path.join(scratch.home, "prompt.responses.jsonl"), "utf8").slice(-4000) : null }))
   }
   finally {
