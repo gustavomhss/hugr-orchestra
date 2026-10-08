@@ -1,5 +1,9 @@
 # Session snapshot + handoff — the backend specialist
 
+**Current execution snapshot:** read [session-state-2026-10-08.md](session-state-2026-10-08.md) first.
+It records the merged seat framework, active failure-repair branches, cancelled-agent worktrees,
+verified follow-ups, partial rerun and the exact resume order. The phase status below is historical.
+
 Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude Code) reads this file first, then the listed sources, and continues from §7 without rediscovering prior decisions.
 
 ## 0. Where this lives
