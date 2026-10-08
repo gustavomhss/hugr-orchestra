@@ -1,0 +1,48 @@
+export * as NativeDocuments from "./native"
+
+import { randomUUID } from "node:crypto"
+import { Capability } from "@orchestra/schema/capability"
+import { Effect } from "effect"
+import { Location } from "../../location"
+import { Tool } from "../../tool/tool"
+import { CapabilityArtifacts } from "../artifact"
+import { CapabilityInvocation } from "../invocation"
+import { CapabilityPolicy } from "../policy"
+import { DocumentWork } from "./work"
+
+export const make = (options: CapabilityArtifacts.Options = {}) => Effect.gen(function* () {
+  const artifacts = yield* CapabilityArtifacts.make(options)
+  const policy = yield* CapabilityPolicy.make
+  const location = yield* Location.Service
+  const authorize = (context: Tool.Context, name: string, resources: readonly string[]) => Effect.gen(function* () {
+    const binding = yield* CapabilityInvocation.require(context, { projectID: location.project.id,
+      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) })
+    if (binding.rootToolName !== name) return yield* new Capability.Failure({ code: "invocation_binding_mismatch",
+      message: "Native document root tool does not match" })
+    const permit = yield* policy.authorize(context, { action: name, resources })
+    yield* policy.commit(permit, () => Effect.void)
+  })
+  const execute = (name: string, kind: "pdf" | "sheet", input: unknown, context: Tool.Context,
+    refs: readonly Capability.ArtifactRef[], mimes: readonly string[], update?: Capability.ArtifactRef) => Effect.gen(function* () {
+    const resources = refs.length ? refs.map((ref) => `artifact:${ref.id}:${ref.revision}`) : [`capability:native:${kind}`]
+    yield* authorize(context, name, resources)
+    const data = yield* Effect.forEach(refs, (ref) => artifacts.read(context, ref).pipe(Effect.flatMap((found) =>
+      mimes.includes(found.metadata.mime) ? Effect.succeed(found.data) : Effect.fail(DocumentWork.failure("unsupported_schema")))))
+    const output = yield* DocumentWork.run(kind, input, data)
+    // Work is staged in the worker. Revoked native permission prevents publication after work completes.
+    yield* authorize(context, name, resources)
+    const artifactRefs = yield* Effect.forEach(output.files, (file) => Effect.gen(function* () {
+      yield* authorize(context, name, resources)
+      const value: CapabilityArtifacts.Input = { ...file, kind: kind === "pdf" ? "document" : "sheet", verification: "verified" }
+      return yield* update ? artifacts.update(context, update, value) : artifacts.publish(context, value)
+    }))
+    const receipt = `native:${randomUUID()}`
+    const result: Capability.Result = output.incomplete.length ? { status: "partial", receipt,
+      summary: "Native operation completed with explicit limits", completedEffects: [name],
+      unresolvedEffects: output.incomplete, artifactRefs } : { status: "completed", receipt,
+      summary: "Native operation read back and verified", verification: "verified", artifactRefs }
+    return { result, metadata: output.metadata }
+  }).pipe(Effect.mapError((error) => new Tool.Failure({ message: error instanceof Capability.Failure
+    ? `${error.code}: ${error.message}` : "Native artifact operation failed" })))
+  return { execute }
+})
