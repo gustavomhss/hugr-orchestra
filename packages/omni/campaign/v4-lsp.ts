@@ -6,7 +6,7 @@ import { createServer } from "node:http"
 import { cpSync, existsSync, readFileSync, appendFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { fileTree, kill9, LOGS, markerArgument, members, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
+import { fileTree, kill9, LOGS, markerArgument, matches, members, provider, supervised, supervisorsOf, sweep, until, verdict, type Identity } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
 
 export async function run(options: { mutation?: "legacy" } = {}) {
@@ -16,7 +16,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     restartMs: number; oldLeft: number; after: number; freshPID: number; supervisorPID: number }[] = []
   const findings: string[] = []
   const readiness: Record<string, unknown> = {}
-  const handshakes: { pid: number; tsservers: number; methods: string[] }[] = []
+  const handshakes: { pid: number; startTime: string; generation: string; nativeNode: string; tsservers: number; methods: string[] }[] = []
   let error: string | undefined
   let automaticRestart: boolean | undefined
   let autoRecoveryStatus: unknown
@@ -44,13 +44,14 @@ export async function run(options: { mutation?: "legacy" } = {}) {
     const wrapper = script(scratch, `${tree.nonce}-wrapper`, `
 const fs = require('node:fs');
 const cp = require('node:child_process');
+const generation = require('node:crypto').randomUUID();
 const server = cp.spawn(process.execPath, [${JSON.stringify(languageServer)}, '--stdio'], {stdio: ['pipe', 'pipe', 'pipe']});
 server.stderr.on('data', chunk => { fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "language-server.stderr.log"))}, chunk); process.stderr.write(chunk); });
 server.on('exit', (code, signal) => fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({serverExit: server.pid, code, signal}) + '\\n'));
 const auxiliary = cp.spawn(${JSON.stringify(tree.command)}, ${JSON.stringify(tree.args)}, {stdio: ['ignore', 'ignore', 'pipe']});
 auxiliary.stderr.on('data', chunk => fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "fixture-birth.stderr.log"))}, chunk));
 auxiliary.on('error', error => fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "fixture-birth.stderr.log"))}, String(error)));
-fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({pid: process.pid, server: server.pid, at: Date.now()}) + '\\n');
+fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({pid: process.pid, server: server.pid, generation, nativeNode: process.execPath, bun: !!process.versions.bun, at: Date.now()}) + '\\n');
 let input = Buffer.alloc(0);
 process.stdin.on('data', chunk => {
   input = Buffer.concat([input, chunk]);
@@ -60,7 +61,7 @@ process.stdin.on('data', chunk => {
     if (!Number.isFinite(length)) throw Error('invalid LSP framing');
     if (input.length < end + 4 + length) break;
     const message = JSON.parse(input.subarray(end + 4, end + 4 + length));
-    fs.appendFileSync(${JSON.stringify(rpcLog)}, JSON.stringify({pid: process.pid, method: message.method, at: Date.now()}) + '\\n');
+    fs.appendFileSync(${JSON.stringify(rpcLog)}, JSON.stringify({pid: process.pid, generation, method: message.method, at: Date.now()}) + '\\n');
     input = input.subarray(end + 4 + length);
   }
   server.stdin.write(chunk);
@@ -121,7 +122,16 @@ setInterval(() => {}, 1e9);
       const found = members(tree.nonce, processTable())
       return [...found.members, ...found.wrappers]
     }
-    const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; method: string }) : []
+    const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; generation: string; method: string }) : []
+    const handshake = (row: Identity) => {
+      const wrapper = readFileSync(wrapperLog, "utf8").trim().split("\n")
+        .map((line) => JSON.parse(line) as { pid?: number; generation?: string; nativeNode?: string; bun?: boolean })
+        .findLast((entry) => entry.pid === row.pid)
+      if (!wrapper?.generation || wrapper.bun !== false || typeof wrapper.nativeNode !== "string" || wrapper.nativeNode.toLowerCase() !== scratch.node.toLowerCase())
+        throw new Error("LSP native Node/generation positive control failed")
+      return { pid: row.pid, startTime: row.startTime, generation: wrapper.generation, nativeNode: wrapper.nativeNode,
+        methods: rpc().filter((event) => event.pid === row.pid && event.generation === wrapper.generation).map((event) => event.method) }
+    }
     const records = () => readdirSync(path.join(os.tmpdir(), tree.nonce)).filter((file) => file.endsWith(".json"))
       .map((file) => ({ file, raw: readFileSync(path.join(os.tmpdir(), tree.nonce, file), "utf8") }))
     const live = () => until(45_000, "wrapper, real tsservers and fresh protocol handshake", async () => {
@@ -143,12 +153,12 @@ setInterval(() => {}, 1e9);
         writeFileSync(path.join(LOGS, `${scratch.tag}.birth-control.json`), JSON.stringify(readiness))
         // Pinned TLS starts syntax and semantic tsservers; wait for both before counting processes.
         return wrapperRow && tsservers.length === 2 && recorded === tree.size &&
-          ["initialize", "initialized", "textDocument/didOpen"].every((method) => rpc().some((event) => event.pid === wrapperRow.pid && event.method === method))
+          ["initialize", "initialized", "textDocument/didOpen"].every((method) => handshake(wrapperRow).methods.includes(method))
           ? { current, wrapperRow, tsservers, recorded } : undefined
       })
     await trigger()
     const initial = await live()
-    handshakes.push({ pid: initial.wrapperRow.pid, tsservers: initial.tsservers.length, methods: rpc().filter((event) => event.pid === initial.wrapperRow.pid).map((event) => event.method) })
+    handshakes.push({ ...handshake(initial.wrapperRow), tsservers: initial.tsservers.length })
     const supervisor = supervisorsOf([host.pid])
     const initialOwner = supervisor[0]
     if (supervisor.length !== 1 || !initialOwner) throw new Error(`expected one process-owned supervisor, found ${supervisor.length}`)
@@ -161,21 +171,21 @@ setInterval(() => {}, 1e9);
       if (!server) throw new Error("node wrapper did not launch real language server")
       const crashed = Date.now()
       // Crash Orchestra's actual LSP handle (the node/npx-equivalent wrapper), leaving its descendants to shutdown.
-      if (!kill9(before.wrapperRow.pid)) throw new Error("LSP crash injection failed")
+      if (!kill9(before.wrapperRow)) throw new Error("LSP crash injection failed")
       autoRecoveryStatus = await until(10_000, "dead cached LSP error status", async () => {
         const status = await call<{ id: string; status: string }[]>("GET", "/lsp")
         return status.some((entry) => entry.id === "campaign" && entry.status === "error") ? status : undefined
       })
-      if (rows().some((row) => row.args?.includes(wrapper) && row.pid !== before.wrapperRow.pid))
+      if (rows().some((row) => row.args?.includes(wrapper) && !matches(row, before.wrapperRow)))
         throw new Error("LSP eagerly respawned without demand")
       await trigger()
       const after = await live()
-      handshakes.push({ pid: after.wrapperRow.pid, tsservers: after.tsservers.length, methods: rpc().filter((event) => event.pid === after.wrapperRow.pid).map((event) => event.method) })
-      automaticRestart = after.wrapperRow.pid !== before.wrapperRow.pid
-      const oldLeft = after.current.filter((row) => before.current.some((old) => old.pid === row.pid)).length
+      handshakes.push({ ...handshake(after.wrapperRow), tsservers: after.tsservers.length })
+      automaticRestart = !matches(after.wrapperRow, before.wrapperRow)
+      const oldLeft = after.current.filter((row) => before.current.some((old) => matches(old, row))).length
       const owner = supervisorsOf([host.pid])
       const owned = owner[0]
-      if (!automaticRestart || oldLeft !== 0 || owner.length !== 1 || !owned || owned.pid !== initialOwner.pid)
+      if (!automaticRestart || oldLeft !== 0 || owner.length !== 1 || !owned || !matches(owned, initialOwner))
         throw new Error("same-instance restart did not stop old tree, create fresh client, or preserve single supervisor")
       cycles.push({ cycle: cycle + 1, live: before.current.length, tsservers: after.tsservers.length, recorded: after.recorded,
         supervised: control, restartMs: Date.now() - crashed, oldLeft, after: after.current.length,
@@ -187,12 +197,13 @@ setInterval(() => {}, 1e9);
     // Twenty replacements plus initial client and fresh post-disposal admission = 22 real Node/TLS handshakes.
     await trigger()
     const fresh = await live()
-    handshakes.push({ pid: fresh.wrapperRow.pid, tsservers: fresh.tsservers.length, methods: rpc().filter((event) => event.pid === fresh.wrapperRow.pid).map((event) => event.method) })
+    handshakes.push({ ...handshake(fresh.wrapperRow), tsservers: fresh.tsservers.length })
     await call("POST", "/instance/dispose", {}, 30_000)
     await until(8_000, "post-disposal fresh LSP tree gone", async () => (await sweep(tree.nonce)).length === 0 ? true : undefined)
     pass = automaticRestart === true && cycles.length === 20 && new Set(counts).size === 1 &&
       cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live) && handshakes.length === 22 &&
-      new Set(handshakes.map((entry) => entry.pid)).size === 22
+      new Set(handshakes.map((entry) => `${entry.pid}:${entry.startTime}`)).size === 22 &&
+      new Set(handshakes.map((entry) => entry.generation)).size === 22
     if (!pass) error = "LSP cycle count/leftovers/process-count KPI failed"
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) {
