@@ -122,10 +122,11 @@ if (import.meta.main) {
   if (process.argv.includes("--host")) await host()
   else {
     const idle = process.argv.filter((arg) => arg === "--idle-ms" || arg.startsWith("--idle-ms="))
-    if (idle.length > 1 || idle.length === 1 && !/^--idle-ms=\d+$/.test(idle[0]))
+    const idleValue = idle[0]?.startsWith("--idle-ms=") ? idle[0].slice("--idle-ms=".length) : undefined
+    if (idle.length > 1 || idle.length === 1 && (!idleValue || /\D/.test(idleValue)))
       throw new Error("V7 requires one --idle-ms=<integer> value; omit it for zero idle")
     const result = await run({ controlOnly: process.argv.includes("--control"), quiet: process.argv.includes("--quiet"),
-      interPairIdleMs: Number(idle[0]?.slice("--idle-ms=".length) ?? 0),
+      interPairIdleMs: Number(idleValue ?? 0),
       mutation: process.argv.includes("--mutation-slow-omni") ? "slow-omni" : undefined })
     process.exit(result.pass || "ready" in result && result.ready ? 0 : 1)
   }
