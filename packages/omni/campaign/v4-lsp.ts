@@ -14,6 +14,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
   const cycles: { cycle: number; live: number; tsservers: number; recorded: number; supervised: boolean;
     restartMs: number; oldLeft: number; after: number; freshPID: number; supervisorPID: number }[] = []
   const findings: string[] = []
+  const readiness: Record<string, unknown> = {}
   const handshakes: { pid: number; tsservers: number; methods: string[] }[] = []
   let error: string | undefined
   let automaticRestart: boolean | undefined
@@ -45,7 +46,7 @@ const cp = require('node:child_process');
 const server = cp.spawn(process.execPath, [${JSON.stringify(languageServer)}, '--stdio'], {stdio: ['pipe', 'pipe', 'pipe']});
 server.stderr.on('data', chunk => { fs.appendFileSync(${JSON.stringify(path.join(scratch.home, "language-server.stderr.log"))}, chunk); process.stderr.write(chunk); });
 server.on('exit', (code, signal) => fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({serverExit: server.pid, code, signal}) + '\\n'));
-cp.spawn(process.execPath, ${JSON.stringify(tree.args)}, {stdio: 'ignore'});
+cp.spawn(${JSON.stringify(tree.command)}, ${JSON.stringify(tree.args)}, {stdio: 'ignore'});
 fs.appendFileSync(${JSON.stringify(wrapperLog)}, JSON.stringify({pid: process.pid, server: server.pid, at: Date.now()}) + '\\n');
 let input = Buffer.alloc(0);
 process.stdin.on('data', chunk => {
@@ -125,6 +126,9 @@ setInterval(() => {}, 1e9);
         const tsservers = current.filter((row) => row.args?.includes("tsserver.js"))
         // Core's signal-0 probe can miss live Bun/Windows children. Use its exact records joined to validated CIM.
         const recorded = found.members.length
+        Object.assign(readiness, { recorded, expected: tree.size, wrapperPID: wrapperRow?.pid,
+          tsserverPIDs: tsservers.map((row) => row.pid), fixtureIds: found.members.map((row) => ({ pid: row.pid, startTime: row.startTime })),
+          methods: rpc().filter((event) => event.pid === wrapperRow?.pid).map((event) => event.method) })
         // Pinned TLS starts syntax and semantic tsservers; wait for both before counting processes.
         return wrapperRow && tsservers.length === 2 && recorded === tree.size &&
           ["initialize", "initialized", "textDocument/didOpen"].every((method) => rpc().some((event) => event.pid === wrapperRow.pid && event.method === method))
@@ -181,7 +185,7 @@ setInterval(() => {}, 1e9);
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) {
     error = String(cause)
-    findings.push(JSON.stringify({ inventory: processTable().filter((row) => row.args?.includes(tree.nonce))
+    findings.push(JSON.stringify({ readiness, inventory: processTable().filter((row) => row.args?.includes(tree.nonce))
       .map((row) => ({ ...row, args: row.args?.slice(-1500) })),
       rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
       wrapper: existsSync(wrapperLog) ? readFileSync(wrapperLog, "utf8").slice(-2000) : null,
