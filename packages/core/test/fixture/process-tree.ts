@@ -15,7 +15,7 @@ import os from "node:os"
 import path from "node:path"
 
 // One source for the start time, run inside the fixture processes and by the oracle: Linux reads /proc/<pid>/stat
-// field 22, macOS asks `ps -o lstart=` once for all pids, Windows makes one CIM query for all pids.
+// field 22, macOS asks `ps -o lstart=` in UTC/C once for all pids and prefixes UTC:, Windows makes one CIM query.
 const START_TIMES = `
 function startTimes(pids) {
   const cp = process.getBuiltinModule("node:child_process")
@@ -34,10 +34,10 @@ function startTimes(pids) {
         "Get-CimInstance Win32_Process -Filter '" + pids.map((pid) => "ProcessId=" + pid).join(" OR ") + "' | " +
         "ForEach-Object { [string]$_.ProcessId + ' ' + $_.CreationDate.ToFileTimeUtc() }"],
         { encoding: "utf8", windowsHide: true })
-    : cp.spawnSync("ps", ["-o", "pid=,lstart=", "-p", pids.join(",")], { encoding: "utf8" })
+    : cp.spawnSync("ps", ["-o", "pid=,lstart=", "-p", pids.join(",")], { encoding: "utf8", env: { ...process.env, TZ: "UTC", LC_ALL: "C" } })
   for (const line of (out.stdout || "").split("\\n")) {
     const match = line.trim().match(/^(\\d+)\\s+(.+)$/)
-    if (match) result[match[1]] = match[2].trim()
+    if (match) result[match[1]] = (process.platform === "darwin" ? "UTC:" : "") + match[2].trim()
   }
   return result
 }

@@ -13,13 +13,10 @@ const broker = { proc: undefined as ChildProcess | undefined, close: undefined a
 // A CIM row can outlive its process. Access denial preserves unknown; only OS missing/exited removes it.
 export const CIM = "$ErrorActionPreference='Stop'; ConvertTo-Json -Compress -InputObject @(Get-CimInstance Win32_Process | Where-Object {if ($null -ne $_.CommandLine) {return $true}; $p=$null; try {$p=[Diagnostics.Process]::GetProcessById([int]$_.ProcessId); return !$p.HasExited} catch [ArgumentException] {return $false} catch {return $true} finally {if ($p) {$p.Dispose()}}} | Select-Object ProcessId,ParentProcessId,CommandLine,SessionId,@{Name='StartTime';Expression={if ($_.CreationDate) {$_.CreationDate.ToFileTimeUtc().ToString()}}})"
 
-function ensureBroker(deadline: number) {
-  if (broker.identity && !broker.closed) return
-  if (broker.proc) throw new Error("Windows watchdog is not ready; ownership retained for teardown")
-  broker.dir = mkdtempSync(path.join(os.tmpdir(), "omni-inventory-watchdog-"))
-  broker.stderr = openSync(path.join(broker.dir, "stderr"), "w+")
-  const script = `
-$ErrorActionPreference='Stop'; $dir='${broker.dir.replaceAll("'", "''")}';
+/** Exact OS watchdog source, shared with real file-sharing fault controls. */
+export function brokerScript(dir: string) {
+  return `
+$ErrorActionPreference='Stop'; $dir='${dir.replaceAll("'", "''")}';
 $utf8=[Text.UTF8Encoding]::new($false);
 function Put($name,$value) {$file=Join-Path $dir $name; [IO.File]::WriteAllText(($file+'.tmp'),(ConvertTo-Json -Compress -Depth 8 -InputObject $value),$utf8); [IO.File]::Move(($file+'.tmp'),$file,$true)}
 $self=Get-CimInstance Win32_Process -Filter ('ProcessId='+$PID);
@@ -28,9 +25,26 @@ while (!(Test-Path (Join-Path $dir 'stop'))) {
   foreach ($file in [IO.Directory]::GetFiles($dir,'request-*.json')) {
     $key=[IO.Path]::GetFileName($file).Substring(8); $replyFile=Join-Path $dir ('reply-'+$key);
     if (Test-Path $replyFile) {if (Test-Path ($file+'.ack')) {[IO.File]::Delete($file); [IO.File]::Delete($replyFile); [IO.File]::Delete(($file+'.ack'))}; continue}
-    $request=ConvertFrom-Json ([IO.File]::ReadAllText($file)); $p=$null; $closed=$true;
+    $p=$null; $closed=$true;
     $reply=@{pid=0;status=$null;stdout='';stderr='';closed=$true;timedOut=$false};
     try {
+      # Published files are immutable. Share deletion too: antivirus/indexers can retain handles.
+      # Retry transient sharing and incomplete JSON without consuming the request or launching work.
+      $readUntil=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()+1000;
+      while ($true) {
+        $stream=$null; $reader=$null;
+        try {
+          $stream=[IO.File]::Open($file,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete));
+          $reader=[IO.StreamReader]::new($stream,$utf8); $text=$reader.ReadToEnd();
+          $request=ConvertFrom-Json -ErrorAction Stop $text;
+          if ($request.command -isnot [string] -or !$request.command -or $request.args -isnot [array] -or @($request.args | Where-Object {$_ -isnot [string]}).Count -ne 0 -or $request.deadline -isnot [ValueType] -or [double]::IsNaN([double]$request.deadline) -or [double]::IsInfinity([double]$request.deadline)) {throw 'Malformed Windows helper request'}
+          break;
+        } catch {
+          $cause=$_.Exception; while ($cause.InnerException) {$cause=$cause.InnerException};
+          if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $readUntil -or (($cause.HResult -band 65535) -notin @(32,33) -and $_.FullyQualifiedErrorId -notlike '*ConvertFromJson*' -and $cause.Message -ne 'Malformed Windows helper request')) {throw}
+          [Threading.Thread]::Sleep(5);
+        } finally {if ($reader) {$reader.Dispose()} elseif ($stream) {$stream.Dispose()}}
+      }
       $info=[Diagnostics.ProcessStartInfo]::new(); $info.FileName=[string]$request.command;
       $info.UseShellExecute=$false; $info.CreateNoWindow=$true; $info.RedirectStandardOutput=$true; $info.RedirectStandardError=$true;
       $info.StandardOutputEncoding=$utf8; $info.StandardErrorEncoding=$utf8;
@@ -57,10 +71,17 @@ while (!(Test-Path (Join-Path $dir 'stop'))) {
   }
   [Threading.Thread]::Sleep(5)
 }`
+}
+
+function ensureBroker(deadline: number) {
+  if (broker.identity && !broker.closed) return
+  if (broker.proc) throw new Error("Windows watchdog is not ready; ownership retained for teardown")
+  broker.dir = mkdtempSync(path.join(os.tmpdir(), "omni-inventory-watchdog-"))
+  broker.stderr = openSync(path.join(broker.dir, "stderr"), "w+")
   const close = Promise.withResolvers<void>()
   broker.close = close.promise
   broker.closed = false
-  const proc = spawn("pwsh", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(script, "utf16le").toString("base64")], { windowsHide: true, stdio: ["ignore", "ignore", broker.stderr] })
+  const proc = spawn("pwsh", ["-NoProfile", "-NonInteractive", "-EncodedCommand", Buffer.from(brokerScript(broker.dir), "utf16le").toString("base64")], { windowsHide: true, stdio: ["ignore", "ignore", broker.stderr] })
   broker.proc = proc
   proc.on("error", () => { broker.closed = true }) // Close still must confirm process/stdio teardown.
   proc.on("close", () => { broker.closed = true; close.resolve() })
@@ -128,8 +149,7 @@ export function run(command: string, args: string[], timeoutMs = TIMEOUT_MS) {
   ensureBroker(deadline)
   const key = `${randomUUID()}.json`
   const file = path.join(broker.dir!, `request-${key}`)
-  writeFileSync(file + ".tmp", JSON.stringify({ command, args, deadline: Date.now() + Math.max(0, deadline - performance.now()) }))
-  renameSync(file + ".tmp", file)
+  publishRequest(file, JSON.stringify({ command, args, deadline: Date.now() + Math.max(0, deadline - performance.now()) }))
   const replyFile = path.join(broker.dir!, `reply-${key}`)
   // Two seconds belong to failed-operation teardown only; no late result can pass the caller's KPI.
   while (!existsSync(replyFile) && performance.now() < deadline + 2000) Bun.sleepSync(5)
@@ -144,6 +164,13 @@ export function run(command: string, args: string[], timeoutMs = TIMEOUT_MS) {
   if (reply.error) throw new Error(`Windows helper failed: ${reply.error}`)
   if (!Number.isSafeInteger(reply.pid) || reply.pid <= 0 || !Number.isInteger(reply.status) || typeof reply.stdout !== "string" || typeof reply.stderr !== "string") throw new Error("malformed Windows helper result")
   return { ...reply, instrument: broker.identity! }
+}
+
+/** Publish only closed snapshots. The fault-control hook runs at the exact pre-rename boundary. */
+export function publishRequest(file: string, text: string, written?: () => void) {
+  writeFileSync(file + ".tmp", text)
+  written?.()
+  renameSync(file + ".tmp", file)
 }
 
 export function query(command: string, timeoutMs = TIMEOUT_MS) {

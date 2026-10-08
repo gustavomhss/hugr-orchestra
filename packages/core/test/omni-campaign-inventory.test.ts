@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
-import { writeFileSync } from "node:fs"
+import { readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT, adoptTree, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until, win } from "../../omni/campaign/lib.ts"
+import { BUN, ROOT, adoptTree, alive, cleanup, control, decodeWindowsTable, hasMarker, hasNonce, identity, inventoryScope, isolated, kill9, markerArgument, matches, members, own, table, tree, until, win } from "../../omni/campaign/lib.ts"
 import { execute, startServer } from "../../omni/campaign/delivery-fixtures.ts"
 import { WindowsInventory } from "../../omni/campaign/windows-inventory.ts"
 import { closeWithinDeadline } from "../../omni/campaign/v8-windows.ts"
@@ -22,6 +22,96 @@ test("CIM preserves unknown kernel identity; owner scope never calls it nonce-ne
   expect(() => decodeWindowsTable([host, { ...kernel, StartTime: null }], 700099)).toThrow("cannot establish process identity")
   expect(() => decodeWindowsTable([host, { ...kernel, CommandLine: 4 }], 700099)).toThrow("cannot establish process identity")
 })
+
+test("PID reuse rejects older PPID rows; equal/new births and named reparented identities stay visible", async () => {
+  const clocks = [
+    ["100", "200", "300"],
+    ["134358940677579360", "134358940677579361", "134358940677579362"],
+    ["UTC:Thu Oct  8 10:00:00 2026", "UTC:Thu Oct  8 10:00:01 2026", "UTC:Thu Oct  8 10:00:02 2026"],
+  ]
+  const scratch = isolated("birth-order-mutant", {})
+  await instrumentCopy(scratch.home, (source) => replace(source, "return ordered", "return true"))
+  const mutant = await import(path.join(scratch.home, "lib.ts")) as typeof import("../../omni/campaign/lib.ts")
+  for (const clock of clocks) {
+    const rows = [
+      { pid: process.pid, parent: 1, args: "host", state: "live", startTime: clock[1]! },
+      { pid: 700001, parent: process.pid, args: null, state: "live", startTime: clock[0]! },
+      { pid: 700002, parent: process.pid, args: "equal child", state: "live", startTime: clock[1]! },
+      { pid: 700003, parent: 700002, args: "new child", state: "live", startTime: clock[2]! },
+    ]
+    expect(inventoryScope(rows).map((row) => row.pid)).toEqual([process.pid, 700002, 700003])
+    expect(mutant.inventoryScope(rows).some((row) => row.pid === 700001)).toBe(true)
+    expect(inventoryScope(rows, [rows[1]!]).map((row) => row.pid)).toEqual([process.pid, 700001])
+    expect(() => inventoryScope(rows.map((row) => row.pid === 700001 ? { ...row, startTime: "bad-birth" } : row))).toThrow("birth time unavailable/unparseable")
+    expect(() => inventoryScope(rows.map((row) => row.pid === process.pid ? { ...row, startTime: "bad-birth" } : row))).toThrow("birth time unavailable/unparseable")
+    console.log("BIRTH_ORDER_MUTATION_PROOF " + JSON.stringify({ clock, olderRejected: true, mutantAdmitsOlder: true, namedRetained: true }))
+  }
+  const badDates = ["UTC:Thu Feb 30 10:00:00 2026", "UTC:Fri Oct  8 10:00:00 2026", "UTC:Thu Oct  8 25:00:00 2026", "Thu Oct  8 10:00:00 2026", "2026-10-08"]
+  badDates.forEach((startTime) => expect(() => inventoryScope([{ pid: process.pid, parent: 1, args: "host", state: "live", startTime }])).toThrow("birth time unavailable/unparseable"))
+}, 30_000)
+
+test("DST fold epoch facts preserve actual child birth order; timezone-unspecified rows fail by name", async () => {
+  const scratch = isolated("dst-fold-control", {})
+  const script = `const { inventoryScope } = await import(${JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts"))});
+const parentEpoch=Date.UTC(2026,10,1,5,55), childEpoch=Date.UTC(2026,10,1,6,5);
+const parent=new Date(parentEpoch), child=new Date(childEpoch);
+const oldParent=Date.parse('Sun Nov 1 01:55:00 2026'), oldChild=Date.parse('Sun Nov 1 01:05:00 2026');
+const rows=[{pid:process.pid,parent:1,args:'host',state:'live',startTime:'UTC:Sun Nov 1 05:55:00 2026'},
+{pid:700001,parent:process.pid,args:'child',state:'live',startTime:'UTC:Sun Nov 1 06:05:00 2026'},
+{pid:700002,parent:process.pid,args:null,state:'live',startTime:'UTC:Sun Nov 1 05:54:00 2026'}];
+const visible=inventoryScope(rows).map(row=>row.pid);
+const ambiguous=rows.map(row=>({...row,startTime:row.startTime.replace('UTC:','')}));
+let failure=''; try {inventoryScope(ambiguous)} catch(error) {failure=String(error)}
+console.log('DST_FOLD_PROOF '+JSON.stringify({parentEpoch,childEpoch,parentOffset:parent.getTimezoneOffset(),childOffset:child.getTimezoneOffset(),parentHour:parent.getHours(),childHour:child.getHours(),oldLocalExcludesChild:oldChild<oldParent,childVisible:visible.includes(700001),olderRejected:!visible.includes(700002),failure}));`
+  const result = await controller(script, { ...scratch.env, TZ: "America/New_York" })
+  expect(result.code).toBe(0)
+  const line = result.stdout.split("\n").find((line) => line.startsWith("DST_FOLD_PROOF "))
+  expect(line).toBeDefined()
+  const proof = JSON.parse(line!.slice("DST_FOLD_PROOF ".length))
+  expect(proof.childEpoch - proof.parentEpoch).toBe(600_000)
+  expect(proof).toMatchObject({ parentOffset: 240, childOffset: 300, parentHour: 1, childHour: 1, oldLocalExcludesChild: true, childVisible: true, olderRejected: true })
+  expect(proof.failure).toContain("campaign birth time unavailable/unparseable")
+  console.log(line)
+}, 30_000)
+
+if (process.platform === "darwin") test("real macOS Bun and Node nonce records share UTC birth identities across caller timezones", async () => {
+  const node = Bun.which("node")
+  if (!node) throw new Error("UTC fixture control requires Node executable")
+  for (const runtime of [BUN, node]) {
+    const scratch = isolated("utc-fixture-control", {})
+    const fixture = tree(1)
+    adoptTree(scratch.home, fixture.nonce)
+    const proc = spawn(runtime, fixture.args, { env: { ...scratch.env, TZ: "America/New_York", LC_ALL: "fr_FR.UTF-8" }, stdio: ["ignore", "pipe", "pipe"] })
+    own(scratch.home, proc)
+    const output = { text: "", stderr: "" }
+    proc.stdout.on("data", (chunk) => (output.text += chunk))
+    proc.stderr.on("data", (chunk) => (output.stderr += chunk))
+    try {
+      await until(20_000, "timezone-controlled nonce tree ready", () => {
+        if (proc.exitCode !== null || proc.signalCode !== null) throw new Error(`UTC fixture exited before ready: ${output.stderr}`)
+        return output.text.includes(fixture.ready) ? true : undefined
+      })
+      const records = readdirSync(path.join(os.tmpdir(), fixture.nonce)).filter((file) => file.endsWith(".json")).map((file) => JSON.parse(readFileSync(path.join(os.tmpdir(), fixture.nonce, file), "utf8")) as { pid: number; startTime: string })
+      expect(records).toHaveLength(fixture.size)
+      expect(records.every((record) => record.startTime.startsWith("UTC:"))).toBe(true)
+      expect(await alive(fixture.nonce)).toBe(fixture.size)
+      const rows = table()
+      expect(records.every((record) => rows.some((row) => matches(row, record)))).toBe(true)
+      expect(members(fixture.nonce, rows).members).toHaveLength(fixture.size)
+      expect(inventoryScope(rows).filter((row) => records.some((record) => matches(row, record)))).toHaveLength(fixture.size)
+      await instrumentCopy(scratch.home, (source) => replace(source, 'TZ: "UTC"', "TZ: process.env.TZ"))
+      const result = await controller(`const actual=await import(${JSON.stringify(path.join(ROOT, "packages/omni/campaign/lib.ts"))}); const mutant=await import(${JSON.stringify(path.join(scratch.home, "lib.ts"))}); const records=${JSON.stringify(records)}; console.log('UTC_QUERY_MUTATION_PROOF '+JSON.stringify({actual:records.filter(record=>actual.table().some(row=>actual.matches(row,record))).length,mutant:records.filter(record=>mutant.table().some(row=>actual.matches(row,record))).length}));`, { ...scratch.env, TZ: "America/New_York" })
+      expect(result.code).toBe(0)
+      const line = result.stdout.split("\n").find((line) => line.startsWith("UTC_QUERY_MUTATION_PROOF "))
+      expect(line).toBeDefined()
+      expect(JSON.parse(line!.slice("UTC_QUERY_MUTATION_PROOF ".length))).toEqual({ actual: fixture.size, mutant: 0 })
+      console.log(line)
+      console.log("MAC_UTC_FIXTURE_PROOF " + JSON.stringify({ runtime, recordCount: records.length, matchingTableCount: fixture.size, utc: true }))
+    } finally {
+      await cleanup(scratch.home, [fixture.nonce])
+    }
+  }
+}, 60_000)
 
 test("recorded members retain their own nonce; unknown and stale owned argv stay red", () => {
   const fixture = tree(0)
@@ -43,6 +133,7 @@ test("real OS sees launched host; stale identity cannot kill; captured numeric i
   const server = await startServer(BUN, ["-e", 'console.log("listening on http://127.0.0.1:1"); setInterval(() => {}, 1000)'], scratch.env, ROOT)
   try {
     expect(table().some((row) => matches(row, server.identity))).toBe(true)
+    expect(inventoryScope(table()).some((row) => matches(row, server.identity))).toBe(true)
     expect(kill9({ pid: server.pid, startTime: `${server.identity.startTime}-stale` })).toBe(false)
     expect(table().some((row) => matches(row, server.identity))).toBe(true)
     expect(kill9(server.pid)).toBe(true)
