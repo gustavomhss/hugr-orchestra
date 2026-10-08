@@ -1,4 +1,5 @@
 import { constants } from "node:os"
+import { writeSync } from "node:fs"
 import type { Argv } from "yargs"
 import { Effect, Schema } from "effect"
 import type { AppServices } from "@/effect/app-runtime"
@@ -79,11 +80,23 @@ export const effectCmd = <Args, A>(opts: EffectCmdOpts<Args, A>) =>
       // running. Dispose the runtime first: instance disposal cancels Session runs and their cleanup marks the calls
       // interrupted. The timeout keeps a stuck finalizer from blocking the exit.
       let signalled = false
+      let shutdown: Promise<void> | undefined
       for (const signal of ["SIGTERM", "SIGHUP"] as const)
         process.once(signal, () => {
+          if (signalled) return
           signalled = true
           process.exitCode = 128 + constants.signals[signal]
-          void Promise.race([AppRuntime.dispose(), Bun.sleep(5_000)]).finally(() => process.exit())
+          const started = Date.now()
+          // Runtime logging is disposed along with the runtime. Keep shutdown evidence independent of its layers.
+          const debug = (status: "started" | "disposed" | "timed-out" | "failed", error?: unknown) => {
+            if (process.env.OPENCODE_LOG_LEVEL !== "DEBUG") return
+            writeSync(2, `CLI_SHUTDOWN ${JSON.stringify({ event: "cli.shutdown", level: "DEBUG", pid: process.pid, signal, status, elapsedMs: Date.now() - started, ...(error === undefined ? {} : { error: String(error) }) })}\n`)
+          }
+          debug("started")
+          shutdown = Promise.race([
+            AppRuntime.dispose().then(() => "disposed" as const),
+            Bun.sleep(5_000).then(() => "timed-out" as const),
+          ]).then((status) => debug(status), (error) => debug("failed", error)).finally(() => process.exit())
         })
       // yargs typing wraps Args in ArgumentsCamelCase<WithDoubleDash<...>>; cast at the boundary.
       const args = rawArgs as unknown as WithDoubleDash<Args>
@@ -109,5 +122,7 @@ export const effectCmd = <Args, A>(opts: EffectCmdOpts<Args, A>) =>
       await run().catch((error) => {
         if (!signalled) throw error
       })
+      // Interruption can finish the command before layer finalizers finish. Do not reach index.ts's exit yet.
+      if (shutdown) await shutdown
     },
   })
