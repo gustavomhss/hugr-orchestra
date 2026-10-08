@@ -61,7 +61,9 @@ export async function run(trace = false) {
       if (!start) throw new Error("strace did not observe the real native supervisor")
       const pid = start.trim().split(/\s+/)[0]
       const native = lines.filter((line) => line.trim().split(/\s+/)[0] === pid)
-      console.log("V7_NATIVE_TRACE " + JSON.stringify({ pid, lines: native, evidence: evidence("v7-native-trace", native) }))
+      console.log("V7_NATIVE_TRACE " + JSON.stringify({ pid,
+        boundaries: native.filter((line) => /poll\(|waitid|wait4|recvmsg|sendmsg|getdents64|openat.*"\/proc"/.test(line)),
+        evidence: evidence("v7-native-trace", native) }))
     }
     console.log("V7_ATTRIBUTION " + JSON.stringify({ trace, summary, evidence: evidence("v7-attribution", rows) }))
     return summary

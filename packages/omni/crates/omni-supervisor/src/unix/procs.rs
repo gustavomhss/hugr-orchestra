@@ -149,6 +149,19 @@ fn stat(pid: i32) -> io::Result<Option<Stat>> {
 
 #[cfg(target_os = "linux")]
 fn inspect(pid: i32, sids: &HashSet<i32>, names: bool) -> io::Result<Seen> {
+    // Avoid reading and parsing stat for unrelated processes. Membership and all returned facts still come
+    // from the same stat below: a recycled PID or a session change between getsid and stat cannot mix identities.
+    // SAFETY: getsid takes a plain integer; ESRCH means the enumerated process has gone.
+    let sid = unsafe { libc::getsid(pid) };
+    if sid == -1 {
+        return match super::sys::errno() {
+            libc::ESRCH => Ok(Seen::Other),
+            _ => Err(io::Error::last_os_error()),
+        };
+    }
+    if !sids.contains(&sid) {
+        return Ok(Seen::Other);
+    }
     let Some(st) = stat(pid)? else { return Ok(Seen::Other) };
     if !sids.contains(&st.sid) {
         return Ok(Seen::Other);
