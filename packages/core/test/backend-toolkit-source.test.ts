@@ -193,7 +193,7 @@ posix("a go source engine is extracted, built with the pinned go env, and its bu
     expect(log[0].cwd).toBe(path.join(staging, "src"))
     expect(path.dirname(staging)).toBe(path.join(f.root, "engines", "ogen"))
     expect(path.basename(staging)).toStartWith(".staging-")
-    // The other toolchain's variables pass through from the caller's environment; only the build's own are pinned.
+    // The installer receives its declared build variables and needed search paths, not ambient toolchain configuration.
     expect(log[0]).toMatchObject({
       cwd: path.join(staging, "src"),
       argv: `build -trimpath -o ${path.join(staging, "ogen")} ./cmd/ogen`,
