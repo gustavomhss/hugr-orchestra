@@ -184,7 +184,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const inject = endpoints.length ? proxyInvocation(invocation, !!command.options.shell) : undefined
   if (inject instanceof ToolSafety.Denied) return yield* inject
   // Acquiring exact network capabilities is last: no malformed policy or unsupported shell starts a broker/build.
-  const proxy = endpoints.length ? yield* TcpProxy.open(endpoints) : undefined
+  const proxy = endpoints.length ? yield* TcpProxy.open(endpoints, deny) : undefined
   if (proxy && [proxy.library, ...proxy.sockets].some((target) => deny.some((entry) => FSUtil.contains(entry, target))))
     return yield* new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-denied-path" })
   const scratch = profile?.sandbox?.scratch
