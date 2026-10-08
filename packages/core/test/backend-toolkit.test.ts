@@ -53,6 +53,7 @@ const fixture = Effect.gen(function* () {
       }
       return {
         ...BackendToolkitManifest.ENGINES[id],
+        dependencies: [],
         env: { FIXTURE_GREETING: "hello" },
         targets: { "darwin-arm64": pin, "darwin-x64": pin, "linux-arm64": pin, "linux-x64": pin, "win32-x64": pin },
       }
@@ -180,6 +181,74 @@ it.live("a musl host is blocked as an unsupported target without fetching", () =
     expect(states.every((state) => state.status === "unsupported" && state.reason === "libc-musl")).toBe(true)
     expect(f.total()).toBe(0)
   }), 30_000,
+)
+
+it.live("owned dependencies are provisioned recursively without fetching unrelated engines", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const manifest = f.manifest()
+    const scoped = within(f.root, {
+      ...manifest,
+      buf: { ...manifest.buf, dependencies: ["sqlc"] },
+      sqlc: { ...manifest.sqlc, dependencies: ["kiota"] },
+    })
+    const prepared = yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/buf" generate', { PATH: "caller-path" }).pipe(scoped)
+    expect(prepared).toEqual({ env: { BACKEND_TOOLKIT_BIN: path.join(f.root, "bin"), PATH: `${path.join(f.root, "bin")}${path.delimiter}caller-path` } })
+    expect(f.hits).toEqual({ ["/" + file("kiota")]: 1, ["/" + file("sqlc")]: 1, ["/" + file("buf")]: 1 })
+    expect(BackendToolkit.dependencyOrder({ ...manifest, buf: { ...manifest.buf, dependencies: ["sqlc", "kiota"] }, sqlc: { ...manifest.sqlc, dependencies: ["kiota"] } }, "buf")).toEqual(["kiota", "sqlc"])
+  }), 30_000,
+)
+
+it.live("every shipped engine has a valid owned dependency graph", () =>
+  Effect.sync(() => {
+    const engines = Object.values(BackendToolkitManifest.ENGINES)
+    expect(engines.length).toBeGreaterThan(0)
+    for (const engine of engines) {
+      const order = BackendToolkit.dependencyOrder(BackendToolkitManifest.ENGINES, engine.id)
+      expect(order, `${engine.id}: ${JSON.stringify(order)}`).toBeArray()
+    }
+  }),
+)
+
+it.live("missing and cyclic owned dependencies fail by name before any download", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const manifest = f.manifest()
+    for (const [dependencies, reason] of [
+      [["missing-engine"], "toolkit-dependency-missing:missing-engine"],
+      [["buf"], "toolkit-dependency-cycle:buf->buf"],
+      [["sqlc"], "toolkit-dependency-cycle:buf->sqlc->buf"],
+    ] as const) {
+      const scoped = within(f.root, { ...manifest, buf: { ...manifest.buf, dependencies }, sqlc: { ...manifest.sqlc, dependencies: ["buf"] } })
+      expect(yield* BackendToolkit.ensure("buf").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))).toBe(reason)
+      expect((yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/buf" generate').pipe(scoped)).blocked).toBe(reason)
+      expect(yield* BackendToolkit.prefetch(["buf"]).pipe(scoped)).toMatchObject([{ engine: "buf", status: "failed", cause: reason }])
+    }
+    expect(f.total()).toBe(0)
+  }), 30_000,
+)
+
+it.live("a cold acquisition returns fetching after the shell wait budget, then finishes for a later call", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const released = Promise.withResolvers<void>()
+    yield* Effect.addFinalizer(() => Effect.sync(() => released.resolve()))
+    const server = yield* Effect.acquireRelease(
+      Effect.sync(() => Bun.serve({ port: 0, idleTimeout: 0, fetch: async () => { await released.promise; return new Response(script("sqlc")) } })),
+      (server) => Effect.promise(() => server.stop(true)),
+    )
+    const manifest = f.manifest()
+    const sqlc = manifest.sqlc
+    if (!("targets" in sqlc)) throw new Error("fixture sqlc must be native")
+    const target = host()
+    const scoped = within(f.root, { ...manifest, sqlc: { ...sqlc, targets: { ...sqlc.targets, [target]: { ...sqlc.targets[target], artifact: { ...sqlc.targets[target].artifact, url: `http://127.0.0.1:${server.port}/${file("sqlc")}` } } } } })
+    const prepared = yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/sqlc" generate').pipe(scoped)
+    expect(prepared.blocked).toBe("toolkit-not-ready:fetching:sqlc")
+    expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "fetching", at: expect.any(Number), budgetMs: 30 * 60_000 }])
+    released.resolve()
+    yield* BackendToolkit.ensure("sqlc").pipe(scoped)
+    expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "ready" }])
+  }), 90_000,
 )
 
 it.live("prefetch for another target installs it without writing a host shim", () =>

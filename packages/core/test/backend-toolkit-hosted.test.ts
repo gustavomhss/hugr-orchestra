@@ -20,7 +20,8 @@ const JAR = "fake jar bytes"
 const INTERPRETER = [
   "#!/bin/sh",
   `printf '%s|%s|%s|%s\\n' "$PWD" "$npm_config_cache" "$PIP_CACHE_DIR" "$*" >> "$(dirname "$0")/../calls.log"`,
-  `grep -qs fixture-fail package.json && exit 3`,
+  `if grep -qs fixture-fail package.json; then echo 'fixture installer failure' >&2; exit 3; fi`,
+  `if grep -qs fixture-secret package.json; then printf '%s' '${"ghp_" + "x".repeat(36)}' >&2; printf '%05000d' 0 >&2; exit 4; fi`,
   `echo "greeting=$FIXTURE_GREETING pythonpath=$PYTHONPATH argv=$*"`,
   "",
 ].join("\n")
@@ -256,9 +257,19 @@ posix("an npm engine installs its pinned lockfile with the runtime's bundled npm
       `greeting=hello ${home} pythonpath= argv=${install}/node_modules/orval/dist/bin/orval.js --config orval.config.ts`,
     )
     const reason = yield* BackendToolkit.ensure("protoc-gen-es").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
-    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm")
+    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm:exit:3:fixture installer failure")
     expect(yield* exists(path.join(f.root, "engines", "protoc-gen-es", `${VERSION}-${target}`))).toBe(false)
     expect(f.hits).toEqual({ "/node.tar.gz": 1 })
+  }), 30_000,
+)
+
+posix("installer diagnostics inspect all output before retaining a bounded tail", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const scoped = within(f.root, f.manifest([f.engine("orval", "node", { kind: "npm", packageJson: '{ "name": "fixture-secret" }', lock: "{}" }, ["{install}/x.js"])]), f.runtimes())
+    const reason = yield* BackendToolkit.ensure("orval").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
+    expect(reason).toBe("toolkit-not-ready:failed:orval:install:npm:details-redacted")
+    expect(reason).not.toContain("ghp_")
   }), 30_000,
 )
 
@@ -284,6 +295,11 @@ posix("a pip engine installs its hash-pinned requirements into its own directory
     expect(yield* Effect.promise(() => readFile(path.join(install, "requirements.txt"), "utf8"))).toBe(requirements)
     const run = Bun.spawnSync([path.join(f.root, "bin", "datamodel-codegen"), "--version"])
     expect(run.stdout.toString().trim()).toBe(`greeting=hello ${home} pythonpath=${install} argv=-m datamodel_code_generator --version`)
+    yield* Effect.promise(() => rm(path.join(install, ".launchers"), { recursive: true }))
+    const cached = yield* BackendToolkit.ensure("datamodel-codegen").pipe(scoped)
+    expect(cached.executable).toBe(path.join(install, ".launchers", "datamodel-codegen"))
+    expect(yield* exists(cached.executable)).toBe(true)
+    expect((yield* calls(f.root, "python")).filter((call) => call.argv?.startsWith("-m pip install "))).toHaveLength(1)
   }), 30_000,
 )
 

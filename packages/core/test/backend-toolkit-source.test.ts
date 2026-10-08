@@ -14,7 +14,7 @@ import { it } from "./lib/effect"
 const posix = process.platform === "win32" ? it.live.skip : it.live
 
 const VERSION = "1.0.0-fixture"
-const RECORDED = ["GOFLAGS", "GOTOOLCHAIN", "GOPATH", "GOCACHE", "GOPROXY", "GOSUMDB", "CGO_ENABLED", "CARGO_HOME", "CARGO_TARGET_DIR", "RUSTC"]
+const RECORDED = ["GOFLAGS", "GOTOOLCHAIN", "GOPATH", "GOCACHE", "GOPROXY", "GOSUMDB", "CGO_ENABLED", "CARGO_HOME", "CARGO_TARGET_DIR", "RUSTC", "CARGO_PROFILE_RELEASE_OPT_LEVEL"]
 // Each fake toolchain records how it was called next to itself, then writes a binary that echoes its argv and the launcher's environment.
 const TOOLCHAIN = [
   "#!/bin/sh",
@@ -131,6 +131,7 @@ const fixture = Effect.gen(function* () {
     path: ".",
     binary: "sqlx",
     features: ["postgres", "rustls"],
+    optLevel: 0,
   })
   const manifest = (engines: ReadonlyArray<BackendToolkitManifest.HostedEngine>) => ({
     ...BackendToolkitManifest.ENGINES,
@@ -238,6 +239,7 @@ posix("a cargo source engine is installed --locked into the staging root with th
       CARGO_HOME: path.join(f.root, "cache", "cargo"),
       CARGO_TARGET_DIR: path.join(f.root, "cache", "cargo-target"),
       RUSTC: path.join(home, "bin", "rustc"),
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: "0",
     })
     const run = Bun.spawnSync([path.join(f.root, "bin", "sqlx"), "migrate", "run"])
     expect(run.exitCode).toBe(0)
