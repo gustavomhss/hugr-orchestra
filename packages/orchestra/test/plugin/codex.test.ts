@@ -327,6 +327,12 @@ describe("plugin.codex", () => {
   })
 
   test("deduplicates concurrent Codex token refreshes", async () => {
+    const previousClientID = process.env.ORCHESTRA_OPENAI_CLIENT_ID
+    process.env.ORCHESTRA_OPENAI_CLIENT_ID = "fixture-owned-openai"
+    using restore = { [Symbol.dispose]() {
+      if (previousClientID === undefined) delete process.env.ORCHESTRA_OPENAI_CLIENT_ID
+      else process.env.ORCHESTRA_OPENAI_CLIENT_ID = previousClientID
+    } }
     const refreshedAccess = createTestJwt({
       "https://api.openai.com/auth": { chatgpt_compute_residency: "eu" },
     })
@@ -344,6 +350,7 @@ describe("plugin.codex", () => {
       resolveRefresh = resolve
     })
     let refreshRequests = 0
+    const refreshClientIDs: Array<string | null> = []
     const apiRequests: { authorization: string | null; accountId: string | null; residency: string | null }[] = []
 
     using server = Bun.serve({
@@ -351,7 +358,9 @@ describe("plugin.codex", () => {
       async fetch(request) {
         const url = new URL(request.url)
         if (url.pathname === "/oauth/token") {
-          expect(await request.text()).toContain("refresh_token=refresh-old")
+          const body = new URLSearchParams(await request.text())
+          expect(body.get("refresh_token")).toBe("refresh-old")
+          refreshClientIDs.push(body.get("client_id"))
           refreshRequests += 1
           await refreshReady
           return Response.json({
@@ -417,6 +426,7 @@ describe("plugin.codex", () => {
     await Promise.all([first, second])
 
     expect(refreshRequests).toBe(1)
+    expect(refreshClientIDs).toEqual(["fixture-owned-openai"])
     expect(authUpdates).toHaveLength(1)
     expect(authUpdates[0]?.body.refresh).toBe("refresh-new")
     expect(authUpdates[0]?.body.access).toBe(refreshedAccess)

@@ -6,8 +6,8 @@ import { setTimeout as sleep } from "node:timers/promises"
 import { createServer } from "http"
 import { OpenAIWebSocketPool } from "./ws-pool"
 import { OauthCallbackPage } from "@orchestra/core/oauth/page"
+import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 
-const CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
 const ISSUER = "https://auth.openai.com"
 const CODEX_API_ENDPOINT = "https://chatgpt.com/backend-api/codex/responses"
 const OAUTH_PORT = 1455
@@ -85,10 +85,10 @@ export function extractResidency(token: string): string | undefined {
   return residency
 }
 
-function buildAuthorizeUrl(redirectUri: string, pkce: PkceCodes, state: string): string {
+function buildAuthorizeUrl(redirectUri: string, pkce: PkceCodes, state: string, clientID: string): string {
   const params = new URLSearchParams({
     response_type: "code",
-    client_id: CLIENT_ID,
+    client_id: clientID,
     redirect_uri: redirectUri,
     scope: "openid profile email offline_access",
     code_challenge: pkce.challenge,
@@ -114,7 +114,12 @@ interface CodexAuthPluginOptions {
   experimentalWebSockets?: boolean
 }
 
-async function exchangeCodeForTokens(code: string, redirectUri: string, pkce: PkceCodes): Promise<TokenResponse> {
+async function exchangeCodeForTokens(
+  code: string,
+  redirectUri: string,
+  pkce: PkceCodes,
+  clientID: string,
+): Promise<TokenResponse> {
   const response = await fetch(`${ISSUER}/oauth/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -122,7 +127,7 @@ async function exchangeCodeForTokens(code: string, redirectUri: string, pkce: Pk
       grant_type: "authorization_code",
       code,
       redirect_uri: redirectUri,
-      client_id: CLIENT_ID,
+      client_id: clientID,
       code_verifier: pkce.verifier,
     }).toString(),
   })
@@ -139,7 +144,7 @@ async function refreshAccessToken(refreshToken: string, issuer = ISSUER): Promis
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: refreshToken,
-      client_id: CLIENT_ID,
+      client_id: OwnOAuthApp.requireClientID("openai"),
     }).toString(),
   })
   if (!response.ok) {
@@ -152,6 +157,7 @@ async function refreshAccessToken(refreshToken: string, issuer = ISSUER): Promis
 export const renderOAuthError = (error: string) => OauthCallbackPage.error(error, { provider: "ChatGPT" })
 
 interface PendingOAuth {
+  clientID: string
   pkce: PkceCodes
   state: string
   resolve: (tokens: TokenResponse) => void
@@ -205,7 +211,7 @@ async function startOAuthServer(): Promise<{ port: number; redirectUri: string }
       const current = pendingOAuth
       pendingOAuth = undefined
 
-      exchangeCodeForTokens(code, `http://localhost:${OAUTH_PORT}/auth/callback`, current.pkce)
+      exchangeCodeForTokens(code, `http://localhost:${OAUTH_PORT}/auth/callback`, current.pkce, current.clientID)
         .then((tokens) => current.resolve(tokens))
         .catch((err) => current.reject(err))
 
@@ -243,7 +249,7 @@ function stopOAuthServer() {
   }
 }
 
-function waitForOAuthCallback(pkce: PkceCodes, state: string): Promise<TokenResponse> {
+function waitForOAuthCallback(pkce: PkceCodes, state: string, clientID: string): Promise<TokenResponse> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
       () => {
@@ -256,6 +262,7 @@ function waitForOAuthCallback(pkce: PkceCodes, state: string): Promise<TokenResp
     ) // 5 minute timeout
 
     pendingOAuth = {
+      clientID,
       pkce,
       state,
       resolve: (tokens) => {
@@ -438,12 +445,13 @@ export async function CodexAuthPlugin(input: PluginInput, options: CodexAuthPlug
           label: "ChatGPT Pro/Plus (browser)",
           type: "oauth",
           authorize: async () => {
+            const clientID = OwnOAuthApp.requireClientID("openai")
             const { redirectUri } = await startOAuthServer()
             const pkce = await generatePKCE()
             const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)).buffer)
-            const authUrl = buildAuthorizeUrl(redirectUri, pkce, state)
+            const authUrl = buildAuthorizeUrl(redirectUri, pkce, state, clientID)
 
-            const callbackPromise = waitForOAuthCallback(pkce, state)
+            const callbackPromise = waitForOAuthCallback(pkce, state, clientID)
 
             return {
               url: authUrl,
@@ -468,13 +476,14 @@ export async function CodexAuthPlugin(input: PluginInput, options: CodexAuthPlug
           label: "ChatGPT Pro/Plus (headless)",
           type: "oauth",
           authorize: async () => {
+            const clientID = OwnOAuthApp.requireClientID("openai")
             const deviceResponse = await fetch(`${ISSUER}/api/accounts/deviceauth/usercode`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "User-Agent": `opencode/${InstallationVersion}`,
               },
-              body: JSON.stringify({ client_id: CLIENT_ID }),
+              body: JSON.stringify({ client_id: clientID }),
             })
 
             if (!deviceResponse.ok) throw new Error("Failed to initiate device authorization")
@@ -517,7 +526,7 @@ export async function CodexAuthPlugin(input: PluginInput, options: CodexAuthPlug
                         grant_type: "authorization_code",
                         code: data.authorization_code,
                         redirect_uri: `${ISSUER}/deviceauth/callback`,
-                        client_id: CLIENT_ID,
+                        client_id: clientID,
                         code_verifier: data.code_verifier,
                       }).toString(),
                     })

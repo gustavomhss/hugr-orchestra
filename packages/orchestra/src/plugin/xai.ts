@@ -1,9 +1,8 @@
 import type { Hooks, PluginInput } from "@orchestra/plugin"
 import { OAUTH_DUMMY_KEY } from "../auth"
 import { InstallationVersion } from "@orchestra/core/installation/version"
+import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 
-// Public Grok-CLI OAuth client.
-const CLIENT_ID = "b1a00492-073a-47ea-816f-4c329264a828"
 const TOKEN_URL = "https://auth.x.ai/oauth2/token"
 // RFC 8628 device authorization grant. Confirmed exposed by xAI's
 // /.well-known/openid-configuration as `device_authorization_endpoint`
@@ -81,7 +80,7 @@ async function refreshAccessToken(refreshToken: string, options: XaiAuthPluginOp
     body: new URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: refreshToken,
-      client_id: CLIENT_ID,
+      client_id: OwnOAuthApp.requireClientID("xai"),
     }).toString(),
   })
   if (!response.ok) {
@@ -105,12 +104,15 @@ interface DeviceTokenErrorBody {
   error_description?: string
 }
 
-export async function requestDeviceCode(options: XaiAuthPluginOptions = {}): Promise<DeviceCodeResponse> {
+export async function requestDeviceCode(
+  options: XaiAuthPluginOptions = {},
+  clientID = OwnOAuthApp.requireClientID("xai"),
+): Promise<DeviceCodeResponse> {
   const response = await fetch(options.deviceAuthorizationUrl ?? DEVICE_AUTHORIZATION_URL, {
     method: "POST",
     headers: authHeaders(),
     body: new URLSearchParams({
-      client_id: CLIENT_ID,
+      client_id: clientID,
       scope: SCOPE,
       referrer: "opencode",
     }).toString(),
@@ -148,6 +150,7 @@ function positiveSecondsToMs(value: unknown, defaultMs: number): number {
 export async function pollDeviceCodeToken(
   device: DeviceCodeResponse,
   options: XaiAuthPluginOptions & { sleep?: (ms: number) => Promise<void>; now?: () => number } = {},
+  clientID = OwnOAuthApp.requireClientID("xai"),
 ): Promise<TokenResponse> {
   const sleep = options.sleep ?? defaultSleep
   const now = options.now ?? (() => Date.now())
@@ -164,7 +167,7 @@ export async function pollDeviceCodeToken(
       headers: authHeaders(),
       body: new URLSearchParams({
         grant_type: DEVICE_CODE_GRANT_TYPE,
-        client_id: CLIENT_ID,
+        client_id: clientID,
         device_code: device.device_code,
       }).toString(),
     })
@@ -307,7 +310,8 @@ export async function XaiAuthPlugin(input: PluginInput, options: XaiAuthPluginOp
           label: "SuperGrok Subscription",
           type: "oauth",
           authorize: async () => {
-            const device = await requestDeviceCode(options)
+            const clientID = OwnOAuthApp.requireClientID("xai")
+            const device = await requestDeviceCode(options, clientID)
             const browserUrl = device.verification_uri_complete ?? device.verification_uri
             return {
               url: browserUrl,
@@ -315,7 +319,7 @@ export async function XaiAuthPlugin(input: PluginInput, options: XaiAuthPluginOp
               method: "auto" as const,
               callback: async () => {
                 try {
-                  const tokens = await pollDeviceCodeToken(device, options)
+                  const tokens = await pollDeviceCodeToken(device, options, clientID)
                   return {
                     type: "success" as const,
                     refresh: tokens.refresh_token,

@@ -3,6 +3,7 @@ import type { IntegrationOAuthMethodRegistration } from "@orchestra/plugin/v2/ef
 import { define } from "@orchestra/plugin/v2/effect/plugin"
 import { Deferred, Effect } from "effect"
 import type { Scope } from "effect"
+import { OwnOAuthApp } from "../../auth/oauth-app"
 import { Credential } from "../../credential"
 import { InstallationVersion } from "../../installation/version"
 import { Integration } from "../../integration"
@@ -11,7 +12,6 @@ import { OauthCallbackPage } from "../../oauth/page"
 import { ProviderV2 } from "../../provider"
 import type { PluginInternal } from "../internal"
 
-const clientID = "app_EMoamEEZ73f0CkXaXp7hrann"
 const issuer = "https://auth.openai.com"
 const callbackPort = 1455
 const pollingSafetyMargin = 3000
@@ -45,6 +45,7 @@ const browser = {
   },
   authorize: () =>
     Effect.gen(function* () {
+      const clientID = yield* Effect.try({ try: () => OwnOAuthApp.requireClientID("openai"), catch: (cause) => cause })
       const pkce = yield* Effect.promise(generatePKCE)
       const state = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)).buffer)
       const code = yield* Deferred.make<string, Error>()
@@ -82,10 +83,10 @@ const browser = {
       yield* Effect.addFinalizer(() => Effect.sync(() => server.close()))
       return {
         mode: "auto" as const,
-        url: authorizeURL(redirect, pkce, state),
+        url: authorizeURL(redirect, pkce, state, clientID),
         instructions: "Complete authorization in your browser. This window will close automatically.",
         callback: Deferred.await(code).pipe(
-          Effect.flatMap((value) => exchange(value, redirect, pkce)),
+          Effect.flatMap((value) => exchange(value, redirect, pkce, clientID)),
           Effect.map((tokens) => credential(browserMethodID, tokens)),
         ),
       }
@@ -102,6 +103,7 @@ const headless = {
   },
   authorize: () =>
     Effect.gen(function* () {
+      const clientID = yield* Effect.try({ try: () => OwnOAuthApp.requireClientID("openai"), catch: (cause) => cause })
       const device = yield* request<{ device_auth_id: string; user_code: string; interval: string }>(
         `${issuer}/api/accounts/deviceauth/usercode`,
         {
@@ -134,10 +136,12 @@ const headless = {
               }
               return credential(
                 headlessMethodID,
-                yield* exchange(data.authorization_code, `${issuer}/deviceauth/callback`, {
-                  verifier: data.code_verifier,
-                  challenge: "",
-                }),
+                yield* exchange(
+                  data.authorization_code,
+                  `${issuer}/deviceauth/callback`,
+                  { verifier: data.code_verifier, challenge: "" },
+                  clientID,
+                ),
               )
             }
             if (response.status !== 403 && response.status !== 404) {
@@ -192,7 +196,7 @@ function headers(contentType: string) {
   return { "Content-Type": contentType, "User-Agent": `opencode/${InstallationVersion}` }
 }
 
-function exchange(code: string, redirect: string, pkce: Pkce) {
+function exchange(code: string, redirect: string, pkce: Pkce, clientID: string) {
   return request<TokenResponse>(`${issuer}/oauth/token`, {
     method: "POST",
     headers: headers("application/x-www-form-urlencoded"),
@@ -207,15 +211,18 @@ function exchange(code: string, redirect: string, pkce: Pkce) {
 }
 
 function refresh(methodID: Integration.MethodID, value: Pick<Credential.OAuth, "refresh" | "metadata">) {
-  return request<TokenResponse>(`${issuer}/oauth/token`, {
-    method: "POST",
-    headers: headers("application/x-www-form-urlencoded"),
-    body: new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: value.refresh,
-      client_id: clientID,
-    }).toString(),
-  }).pipe(
+  return Effect.try({ try: () => OwnOAuthApp.requireClientID("openai"), catch: (cause) => cause }).pipe(
+    Effect.flatMap((clientID) =>
+      request<TokenResponse>(`${issuer}/oauth/token`, {
+        method: "POST",
+        headers: headers("application/x-www-form-urlencoded"),
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: value.refresh,
+          client_id: clientID,
+        }).toString(),
+      }),
+    ),
     Effect.map((tokens) => {
       const next = credential(methodID, tokens)
       return Credential.OAuth.make({ ...next, metadata: next.metadata ?? value.metadata })
@@ -257,7 +264,7 @@ function base64UrlEncode(buffer: ArrayBuffer) {
   return Buffer.from(buffer).toString("base64url")
 }
 
-function authorizeURL(redirect: string, pkce: Pkce, state: string) {
+function authorizeURL(redirect: string, pkce: Pkce, state: string, clientID: string) {
   return `${issuer}/oauth/authorize?${new URLSearchParams({
     response_type: "code",
     client_id: clientID,
