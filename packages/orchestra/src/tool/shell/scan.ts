@@ -14,7 +14,7 @@ import { containsPath, type InstanceContext } from "../../project/instance-conte
 import { InstanceState } from "@/effect/instance-state"
 import { lazy } from "@/util/lazy"
 import { BashArity } from "@/permission/arity"
-import type * as Tool from "../tool"
+import type { Tool } from "../tool"
 import { ShellID } from "./id"
 
 const CWD = new Set(["cd", "chdir", "popd", "pushd", "push-location", "set-location"])
@@ -60,6 +60,7 @@ const SWITCHES = new Set(["-confirm", "-debug", "-force", "-nonewline", "-recurs
 type Part = {
   type: string
   text: string
+  node: Node
 }
 
 type Scan = {
@@ -84,7 +85,7 @@ function parts(node: Node) {
       for (let j = 0; j < child.childCount; j++) {
         const item = child.child(j)
         if (!item || item.type === "command_argument_sep" || item.type === "redirection") continue
-        out.push({ type: item.type, text: item.text })
+        out.push({ type: item.type, text: item.text, node: item })
       }
       continue
     }
@@ -98,7 +99,7 @@ function parts(node: Node) {
     ) {
       continue
     }
-    out.push({ type: child.type, text: child.text })
+    out.push({ type: child.type, text: child.text, node: child })
   }
   return out
 }
@@ -352,3 +353,108 @@ export const approve = Effect.fn("ShellScan.approve")(function* (
     }),
   )
 })
+
+/** Literal argv for a single owned OpenAPI shim call. Shell composition/wrappers are deliberately unsupported. */
+export const ownedToolArgv = Effect.fn("ShellScan.ownedToolArgv")(function* (input: {
+  command: string
+  shell: string
+  toolkitBin: string
+}) {
+  const ps = Shell.ps(input.shell)
+  return yield* Effect.scoped(Effect.gen(function* () {
+    const original = yield* Effect.acquireRelease(parse(input.command, ps), (tree) => Effect.sync(() => tree.delete()))
+    // The shipped PowerShell grammar stops at an unquoted native --flag=value. Replace only '=' immediately
+    // following its parsed command_parameter, then require a clean parse and an adjacent literal value below.
+    const equals = new Set(ps ? original.rootNode.descendantsOfType("command_parameter")
+      .filter((node): node is Node => node !== null && input.command[node.endIndex] === "=")
+      .map((node) => node.endIndex) : [])
+    const tree = equals.size ? yield* Effect.acquireRelease(parse([...equals].reduce((text, index) =>
+      text.slice(0, index) + " " + text.slice(index + 1), input.command), ps), (tree) => Effect.sync(() => tree.delete())) : original
+    const list = commands(tree.rootNode)
+    const owned = list.filter((node) => {
+      const name = parts(node)[0]?.node
+      const value = name && literalArg(name, ps, true)
+      return value === "\0toolkit/openapi-generator" || (ps && value === "\0toolkit\\openapi-generator.cmd") ||
+        (ps && value === "\0toolkit/openapi-generator.cmd") ||
+        (value !== undefined && path.normalize(value).toLowerCase() ===
+          path.join(input.toolkitBin, process.platform === "win32" ? "openapi-generator.cmd" : "openapi-generator").toLowerCase())
+    })
+    // Variable nodes, not CLI prose, identify unbound owned executable expressions.
+    const mentions = list.some((node) => parts(node).some((part, index) => {
+      const value = literalArg(part.node, ps, true)
+      return value?.startsWith("\0toolkit") && value.toLowerCase().includes("openapi-generator") ||
+        (index === 0 && value === undefined && part.node.descendantsOfType(["simple_expansion", "expansion", "variable", "braced_variable"])
+          .some((child) => child?.text.toUpperCase().includes("BACKEND_TOOLKIT_BIN")))
+    }))
+    if (!owned.length) return mentions ? { blocked: "engine-project-version:unsupported-owned-call" } : { calls: [] }
+    if (list.some((node) => CWD.has(unquote(parts(node)[0]?.text ?? "").toLowerCase())))
+      return { blocked: "engine-project-version:unbound-cwd" }
+    if (tree.rootNode.hasError || owned.length !== 1)
+      return { blocked: "engine-project-version:unsupported-owned-call" }
+    const node = owned[0]
+    const wrappers = new Set(["program", "pipeline", "pipeline_chain", "statement_list", "script_block", "script_block_body"])
+    for (let parent = node.parent; parent; parent = parent.parent) {
+      if (!wrappers.has(parent.type) || parent.namedChildren.filter((child) => child?.type !== "comment").length !== 1)
+        return { blocked: "engine-project-version:unsupported-owned-call" }
+    }
+    if (node.descendantsOfType(["variable_assignment", "redirection", "file_redirect", "herestring_redirect", "stop_parsing"] ).length ||
+      (ps && node.children.some((child) => child?.type === "command_invokation_operator" && child.text !== "&")))
+      return { blocked: "engine-project-version:unsupported-owned-call" }
+    const args = (ps ? parts(node).slice(1).map((part) => part.node) : node.childrenForFieldName("argument"))
+      .filter((child): child is Node => child !== null)
+    const argv: string[] = []
+    const bound = new Set<number>()
+    for (let i = 0; i < args.length; i++) {
+      const value = literalArg(args[i], ps)
+      if (value === undefined) return { blocked: "engine-project-version:unbound-args" }
+      if (ps && i > 0 && equals.has(args[i - 1].endIndex) && args[i - 1].endIndex + 1 === args[i].startIndex) {
+        argv[argv.length - 1] += `=${value}`
+        bound.add(args[i - 1].endIndex)
+        continue
+      }
+      if (ps && i > 0 && args[i - 1].endIndex === args[i].startIndex) {
+        argv[argv.length - 1] += value
+        continue
+      }
+      argv.push(value)
+    }
+    if (bound.size !== equals.size) return { blocked: "engine-project-version:unbound-args" }
+    if (list.length !== 1) return { blocked: "engine-project-version:unsupported-owned-call" }
+    return { calls: [{ engine: "openapi-generator" as const, argv }] }
+  }))
+})
+
+function literalArg(node: Node, ps: boolean, executable = false): string | undefined {
+  if (executable && ["$BACKEND_TOOLKIT_BIN", "${BACKEND_TOOLKIT_BIN}", "$env:BACKEND_TOOLKIT_BIN", "${env:BACKEND_TOOLKIT_BIN}"].includes(node.text))
+    return "\0toolkit"
+  if (["raw_string", "verbatim_string_characters"].includes(node.type))
+    return ps ? unquote(node.text).replaceAll("''", "'") : unquote(node.text)
+  if (["word", "string_content", "generic_token", "command_parameter", "path_command_name_token", "command_name"].includes(node.type) && node.namedChildCount === 0) {
+    if (["$", "`", "*", "?", "[", "]", "{", "}", "~", '"', "'"].some((char) => node.text.includes(char)) ||
+      (!ps && node.text.includes("\\"))) return undefined
+    return node.text
+  }
+  if (["string", "expandable_string_literal", "concatenation", "path_command_name"].includes(node.type)) {
+    if ((node.type === "string" || node.type === "expandable_string_literal") &&
+      !node.namedChildren.length) {
+      const text = unquote(node.text)
+      return (["$", "`", '"'].some((char) => text.includes(char)) || (!ps && text.includes("\\"))) ? undefined : text
+    }
+    const values = node.namedChildren.map((child) => child ? literalArg(child, ps, executable) : undefined)
+    if (values.some((value) => value === undefined)) return undefined
+    if (ps && node.type === "expandable_string_literal") {
+      // PowerShell's unlabelled string segments must be literal too; only the toolkit expansion is bound.
+      const text = unquote(node.text)
+      const expansion = node.namedChildren[0]
+      if (!executable || values.length !== 1 || values[0] !== "\0toolkit" || !expansion || !text.startsWith(expansion.text)) return undefined
+      const suffix = text.slice(expansion.text.length)
+      return ["/openapi-generator", "\\openapi-generator.cmd", "/openapi-generator.cmd"].includes(suffix) ? `\0toolkit${suffix}` : undefined
+    }
+    return values.join("")
+  }
+  const child = node.namedChildren[0]
+  if (node.namedChildCount === 1 && child?.text === node.text) return literalArg(child, ps, executable)
+  return undefined
+}
+
+export * as ShellScan from "./scan"

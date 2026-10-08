@@ -1,6 +1,7 @@
 import { describe, expect } from "bun:test"
 import path from "path"
-import { readFile } from "fs/promises"
+import { readFile, readdir, writeFile } from "fs/promises"
+import { createHash } from "crypto"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Effect, Layer } from "effect"
 import { Shell } from "@orchestra/core/shell"
@@ -17,6 +18,8 @@ import { Plugin } from "../../src/plugin"
 import { SessionID, MessageID } from "../../src/session/schema"
 import { provideInstance, testInstanceStoreLayer, tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
+import { ShellScan } from "../../src/tool/shell/scan"
+import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 
 const it = testEffect(
   Layer.mergeAll(
@@ -133,4 +136,208 @@ describe("tool.shell backend toolkit preparation", () => {
       expect(yield* f.sentinel).toBe(String(process.env.BACKEND_TOOLKIT_BIN))
     }), 60_000,
   )
+})
+
+describe("owned OpenAPI argv extraction", () => {
+  const extract = (command: string, shell = "bash") => ShellScan.ownedToolArgv({ command, shell, toolkitBin: path.resolve("owned-toolkit/bin") })
+  const forms = [
+    '"$BACKEND_TOOLKIT_BIN/openapi-generator"',
+    '${BACKEND_TOOLKIT_BIN}/openapi-generator',
+    '"$BACKEND_TOOLKIT_BIN"/openapi-generator',
+  ]
+  for (const executable of forms) {
+    it.live(`extracts bench13 literal config argv: ${executable}`, () => Effect.gen(function* () {
+      expect(yield* extract(`${executable} generate -c openapi-generator.yaml`)).toEqual({
+        calls: [{ engine: "openapi-generator", argv: ["generate", "-c", "openapi-generator.yaml"] }],
+      })
+    }))
+  }
+  it.live("extracts quoted args and equals flags without reparsing CLI prose", () => Effect.gen(function* () {
+    expect(yield* extract(`${forms[0]} generate --config='config file.yaml' -o="out dir" --dry-run`)).toEqual({
+      calls: [{ engine: "openapi-generator", argv: ["generate", "--config=config file.yaml", "-o=out dir", "--dry-run"] }],
+    })
+    expect(yield* extract('echo "openapi-generator generate -o elsewhere"')).toEqual({ calls: [] })
+    expect(yield* extract('"$BACKEND_TOOLKIT_BIN/sqlc" generate')).toEqual({ calls: [] })
+  }))
+  for (const executable of ['& "$env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd"', '& $env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd']) {
+    it.live(`extracts PowerShell literal config argv: ${executable}`, () => Effect.gen(function* () {
+      expect(yield* extract(`${executable} generate -c 'config file.yaml' --output=generated`, "pwsh")).toEqual({
+        calls: [{ engine: "openapi-generator", argv: ["generate", "-c", "config file.yaml", "--output=generated"] }],
+      })
+    }))
+  }
+  it.live("PowerShell equals projection keeps quoted values bound and refuses empty/dynamic values", () => Effect.gen(function* () {
+    const executable = '& "$env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd"'
+    expect(yield* extract(`${executable} generate --output="out dir"`, "pwsh")).toEqual({
+      calls: [{ engine: "openapi-generator", argv: ["generate", "--output=out dir"] }],
+    })
+    expect(yield* extract(`${executable} generate --output=`, "pwsh")).toEqual({ blocked: "engine-project-version:unbound-args" })
+    expect(yield* extract(`${executable} generate --output=$out`, "pwsh")).toEqual({ blocked: "engine-project-version:unbound-args" })
+    expect(yield* extract(`${executable} generate --output= generated`, "pwsh")).toEqual({ blocked: "engine-project-version:unbound-args" })
+  }))
+  for (const command of [
+    `${forms[0]} generate -o "$OUT"`, `${forms[0]} generate $ARGS`,
+    `${forms[0]} generate -c $(printf config.yaml)`, `${forms[0]} generate -o generated/*`,
+  ]) {
+    it.live(`dynamic args block: ${command}`, () => Effect.gen(function* () {
+      expect(yield* extract(command)).toEqual({ blocked: "engine-project-version:unbound-args" })
+    }))
+  }
+  it.live("cd, shell wrappers, redirected and unsupported owned expressions block by name", () => Effect.gen(function* () {
+    expect(yield* extract(`cd sub && ${forms[0]} generate -o out`)).toEqual({ blocked: "engine-project-version:unbound-cwd" })
+    for (const command of [`env ${forms[0]} generate -o out`, `${forms[0]} generate -o out > transcript`, `BACKEND_TOOLKIT_BIN=/elsewhere ${forms[0]} generate -o out`, '"$BACKEND_TOOLKIT_BIN/$ENGINE" generate -o out'])
+      expect(yield* extract(command)).toEqual({ blocked: "engine-project-version:unsupported-owned-call" })
+    expect(yield* extract('& "$env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd" generate -o $out', "pwsh")).toEqual({ blocked: "engine-project-version:unbound-args" })
+    expect(yield* extract('& "$env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd" generate --% -o out', "pwsh")).toEqual({ blocked: "engine-project-version:unsupported-owned-call" })
+  }))
+})
+
+// Complete project byte snapshot, including hidden metadata and directory entries (new files must also fail).
+async function projectBytes(directory: string): Promise<ReadonlyArray<readonly [string, string]>> {
+  const entries = await readdir(directory, { withFileTypes: true })
+  return (await Promise.all(entries.sort((a, b) => a.name.localeCompare(b.name)).map(async (entry) => {
+    if (entry.isDirectory()) return [[`${entry.name}/`, ""], ...(await projectBytes(path.join(directory, entry.name))).map(([file, bytes]) => [`${entry.name}/${file}`, bytes] as const)] as const
+    return [[entry.name, (await readFile(path.join(directory, entry.name))).toString("base64")]] as const
+  }))).flat()
+}
+
+const generationFixture = Effect.gen(function* () {
+  const project = yield* tmpdirScoped()
+  const tools = yield* tmpdirScoped()
+  const fs = yield* FSUtil.Service
+  const root = path.join(tools, "cache")
+  yield* fs.writeWithDirs(path.join(project, "openapi-generator.yaml"), "generatorName: python\ninputSpec: contract.yaml\noutputDir: generated\n")
+  yield* fs.writeWithDirs(path.join(project, "contract.yaml"), "openapi: 3.0.3\ninfo: {title: bench13, version: '1.0.0'}\npaths: {}\n")
+  yield* fs.writeWithDirs(path.join(project, "source.py"), "owned source bytes\n")
+  yield* fs.writeWithDirs(path.join(project, "generated/client.py"), "generated source bytes\n")
+  yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator/VERSION"), "7.12.0\n")
+  yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator/FILES"), "client.py\n")
+  yield* fs.writeWithDirs(path.join(project, "generated/.openapi-generator-ignore"), "handwritten.py\n")
+  const launched = path.join(tools, "launches")
+  const script = path.join(tools, "fixture.ts")
+  yield* fs.writeFileString(script, `
+    await Bun.write(${JSON.stringify(launched)}, "STUB_SPAWN_REACHED");
+    console.log("STUB_SPAWN_REACHED", JSON.stringify(Bun.argv.slice(2)));
+    await Bun.write("source.py", "MUTATED SOURCE");
+    await Bun.write("generated/client.py", "MUTATED OUTPUT");
+  `)
+  const executable = process.platform === "win32" ? "openapi-generator.cmd" : "openapi-generator"
+  const contents = process.platform === "win32"
+    ? `@echo off\r\n"${process.execPath}" "${script}" %*\r\n`
+    : `#!/bin/sh\nexec '${process.execPath}' '${script}' "$@"\n`
+  const hits: string[] = []
+  const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ port: 0, fetch: (request) => {
+    hits.push(new URL(request.url).pathname)
+    return new Response(contents)
+  } })), (server) => Effect.promise(() => server.stop(true)))
+  const pin = {
+    artifact: { url: `http://127.0.0.1:${server.port}/${executable}`, integrity: `sha256-${createHash("sha256").update(contents).digest("base64")}` as const,
+      format: "raw" as const, entries: [{ from: executable, to: executable, executable: true }] },
+    executable,
+  }
+  const pack = BackendToolkitManifest.ENGINES["openapi-generator"]
+  const manifest = { ...BackendToolkitManifest.ENGINES, "openapi-generator": {
+    id: pack.id, version: pack.version, license: pack.license, upstream: pack.upstream, fit: pack.fit,
+    targets: { "darwin-arm64": pin, "darwin-x64": pin, "linux-arm64": pin, "linux-x64": pin, "win32-x64": pin },
+  } }
+  const within = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(
+    Effect.provideService(BackendToolkit.Root, root), Effect.provideService(BackendToolkit.Manifest, manifest),
+  )
+  const command = Shell.ps(Shell.acceptable())
+    ? '& "$env:BACKEND_TOOLKIT_BIN\\openapi-generator.cmd" generate -c openapi-generator.yaml'
+    : '"$BACKEND_TOOLKIT_BIN/openapi-generator" generate -c openapi-generator.yaml'
+  const execute = (ask = () => Effect.void) => Effect.gen(function* () {
+    const info = yield* ShellTool
+    const tool = yield* info.init()
+    return yield* tool.execute({ command }, { ...context("backend"), ask })
+  }).pipe(provideInstance(project), within)
+  return { project, tools, root, hits, launched, command, within, execute }
+})
+
+describe("scenario13 project pin enforcement at native shell boundary", () => {
+  for (const warm of [false, true]) {
+    it.live(`scenario13 mismatch preserves all project bytes before acquisition/launch (${warm ? "warm" : "cold"})`, () => Effect.gen(function* () {
+      const f = yield* generationFixture
+      const spawner = yield* ChildProcessSpawner
+      let spawns = 0
+      if (warm) {
+        expect((yield* BackendToolkit.prepare(f.command).pipe(f.within)).blocked).toBeUndefined()
+        expect(f.hits).toEqual([process.platform === "win32" ? "/openapi-generator.cmd" : "/openapi-generator"])
+      }
+      const before = yield* Effect.promise(() => projectBytes(f.project))
+      const acquired = f.hits.length
+      let approved = 0
+      const result = yield* f.execute(() => Effect.sync(() => { approved++ })).pipe(
+        Effect.provideService(ChildProcessSpawner, { ...spawner, spawn: (...args) => {
+          spawns++
+          return spawner.spawn(...args)
+        } }),
+      )
+      if (process.env.ORCHESTRA_PROJECT_GATE_MUTANT === "1") console.log("mutation evidence:", { spawns, downloads: f.hits.length - acquired }, result.output,
+        yield* Effect.promise(() => readFile(path.join(f.project, "generated/client.py"), "utf8")))
+      expect(yield* Effect.promise(() => projectBytes(f.project))).toEqual(before)
+      expect(result.output).toBe("engine-version-mismatch(project=7.12.0, bundled=7.25.0)")
+      expect(approved).toBeGreaterThan(0)
+      expect(spawns).toBe(0)
+      expect(f.hits.length).toBe(acquired)
+      expect(yield* Effect.promise(() => Bun.file(f.launched).exists())).toBe(false)
+      if (!warm) expect(yield* Effect.promise(() => Bun.file(path.join(f.root, "bin", process.platform === "win32" ? "openapi-generator.cmd" : "openapi-generator")).exists())).toBe(false)
+    }), 60_000)
+  }
+
+  it.live("matching project pin reaches acquisition and real fixture launch with exact bench13 argv", () => Effect.gen(function* () {
+    const f = yield* generationFixture
+    yield* Effect.promise(() => writeFile(path.join(f.project, "generated/.openapi-generator/VERSION"), "7.25.0\n"))
+    const result = yield* f.execute()
+    expect(result.metadata.exit).toBe(0)
+    expect(result.output).toContain('STUB_SPAWN_REACHED ["generate","-c","openapi-generator.yaml"]')
+    expect(f.hits).toEqual([process.platform === "win32" ? "/openapi-generator.cmd" : "/openapi-generator"])
+    expect(yield* Effect.promise(() => readFile(f.launched, "utf8"))).toBe("STUB_SPAWN_REACHED")
+    expect(yield* Effect.promise(() => readFile(path.join(f.project, "generated/client.py"), "utf8"))).toBe("MUTATED OUTPUT")
+  }), 60_000)
+
+  it.live("permission refusal precedes project-pin checking and acquisition", () => Effect.gen(function* () {
+    const f = yield* generationFixture
+    const before = yield* Effect.promise(() => projectBytes(f.project))
+    const exit = yield* f.execute(() => Effect.die(new Error("approval refused"))).pipe(Effect.exit)
+    expect(exit._tag).toBe("Failure")
+    expect(f.hits).toEqual([])
+    expect(yield* Effect.promise(() => projectBytes(f.project))).toEqual(before)
+  }))
+
+  it.live("gate-omission mutation reaches stub/spawn and fails unchanged-output assertion", () => Effect.gen(function* () {
+    const directory = yield* tmpdirScoped()
+    const preload = path.join(directory, "omit-project-gate.ts")
+    yield* Effect.promise(() => writeFile(preload, `
+      import { plugin } from "bun";
+      plugin({ name: "omit-project-pin-gate", setup(build) {
+        build.onLoad({ filter: /[\\\\/]src[\\\\/]tool[\\\\/]shell\\.ts$/ }, async (args) => {
+          const text = await Bun.file(args.path).text();
+          const hook = "BackendToolkitProject.checkProjectVersion({";
+          if (text.split(hook).length !== 2) throw new Error("mutation hook missing or ambiguous");
+          return { contents: text.replace(hook, process.env.ORCHESTRA_PROJECT_GATE_MUTANT === "1"
+            ? "((_: unknown) => Effect.void)({" : "BackendToolkitProject.checkProjectVersion({ /* no-op control */"), loader: "ts" };
+        });
+      }});
+    `))
+    for (const omit of [false, true]) {
+      const child = Bun.spawn([process.execPath, "test", "--preload", preload, "./test/tool/shell-toolkit.test.ts", "-t", "scenario13 mismatch preserves all project bytes", "--timeout", "60000"], {
+        cwd: path.resolve(import.meta.dir, "../.."), env: { ...process.env, ORCHESTRA_PROJECT_GATE_MUTANT: omit ? "1" : "0" }, stdout: "pipe", stderr: "pipe",
+      })
+      yield* Effect.addFinalizer(() => Effect.sync(() => child.kill()))
+      const output = yield* Effect.promise(async () => (await new Response(child.stdout).text()) + (await new Response(child.stderr).text()))
+      const code = yield* Effect.promise(() => child.exited)
+      if (!omit) {
+        expect(code).toBe(0)
+        expect(output).toContain("2 pass")
+        continue
+      }
+      expect(code).not.toBe(0)
+      expect(output).toContain("STUB_SPAWN_REACHED")
+      expect(output).toContain("MUTATED OUTPUT")
+      expect(output).toMatch(/spawns: [1-9]/)
+      expect(output).toContain("toEqual(before)")
+      expect(output).toContain("2 fail")
+    }
+  }), 180_000)
 })
