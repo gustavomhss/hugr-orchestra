@@ -43,6 +43,38 @@ allowing a conflicting prompt overwrite would create silent debt and is rejected
   Denial precedes message/part admission and prompt-side effects. Only newly admitted winner performs
   admission-related mutations; retries may request execution through existing noReply semantics.
 
+### Cold-review refinement: atomic critical transition
+
+Source review demonstrated that committing a receipt before asynchronous revert cleanup lets an exact
+retry execute with stale reverted history. An admission-fiber interruption can leave that state behind.
+Keeping only a process-local wait barrier would not close the durable visibility gap.
+
+- Capture one detached schema-encoded original request before asynchronous hooks. Identity, hook input
+  and draft all derive from that snapshot; plugins receive a separate copy.
+- Extend the admission event with an optional typed host transition: captured expected revert,
+  captured message/part removal IDs, optional final permission rules, and update timestamp.
+  Selected agent/model come from the winning User. This is admission projection data, not a scheduler.
+- The same EventV2 transaction validates captured revert and removal ownership, applies the selected
+  Session fields and captured deletions, then commits receipt/User/parts/event together. A matching
+  retry or race loser applies no transition. Replay reconstructs the same durable transition.
+- Live-only continuity cache invalidation/advance uses the existing operational publish commit hook
+  for the accepted winner. It completes before commit becomes visible; it must not publish nested
+  events or perform provider work. Core EventV2 already owns the uninterruptible transaction.
+- Legacy notifications read the committed Session row for a transition-bearing admission; they do
+  not announce an invented or stale Session snapshot. Route project/directory/workspace coherently
+  from the explicit event location, without inheriting unrelated ambient workspace identity.
+- Required counterexamples: paused cache invalidation plus exact retry, admission-fiber interruption,
+  newer revert set before releasing the race loser, caller metadata mutation during hook approval,
+  duplicate-User retry, effective permission precedence, and explicit two-project routing.
+
+### Replication trust boundary
+
+Existing authenticated `/sync/replay` is administrative event-history import with strict owner and
+sequence checks. It continues to import typed historical sidecars and never runs prompt hooks or
+provider work. It is not the public prompt-admission input and does not mint NativeCaller authority.
+Its imported-event integrity does not attest an external host's original evaluation cryptographically.
+Ordinary prompt requests and mutable plugins cannot provide the privileged live-admission sidecar.
+
 ## Verification and landing
 
 Each author pushes a first compiling checkpoint, uses explicit staging, and splits source/test
