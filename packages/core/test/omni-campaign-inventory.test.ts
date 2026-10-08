@@ -72,7 +72,7 @@ test("real query failure remains red; finally kills retained host; no premature 
   const missing = JSON.stringify(path.join(scratch.home, "absent-oracle-executable"))
   await Bun.write(path.join(scratch.home, "lib.ts"), source
     .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))
-    .replace('Bun.spawnSync(["powershell",', `Bun.spawnSync([process.env.CONTROL_BROKEN ? ${missing} : "powershell",`)
+    .replace('spawnSync("node",', `spawnSync(process.env.CONTROL_BROKEN ? ${missing} : "node",`)
     .replace('spawnSync("ps",', `spawnSync(process.env.CONTROL_BROKEN ? ${missing} : "ps",`))
   await Bun.write(path.join(scratch.home, "delivery-fixtures.ts"), await Bun.file(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts")).text())
   const lib = JSON.stringify(path.join(scratch.home, "lib.ts"))

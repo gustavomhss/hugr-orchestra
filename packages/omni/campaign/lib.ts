@@ -257,16 +257,34 @@ export function table(timeoutMs = QUERY_MS): Row[] {
   if (timeoutMs <= 0) throw new Error("process table query has no deadline budget")
   const options = { encoding: "utf8" as const, windowsHide: true, maxBuffer: 64 * 1024 * 1024, timeout: timeoutMs, killSignal: "SIGKILL" as const }
   if (win) {
-    const started = Date.now()
-    const out = Bun.spawnSync(["powershell", "-NoProfile", "-NonInteractive", "-Command", CIM], { timeout: timeoutMs, windowsHide: true, stdout: "pipe", stderr: "pipe" })
-    if (!out.success) throw new Error(`Get-CimInstance failed after ${Date.now() - started} ms (budget ${timeoutMs}): ${out.stderr.toString()} signal=${out.signalCode} exit=${out.exitCode}`)
-    const parsed = decodeWindowsTable(JSON.parse(out.stdout.toString()), out.pid)
+    const out = windowsQuery(CIM, timeoutMs)
+    if (out.status !== 0 || out.error) throw new Error(`Get-CimInstance failed: ${out.error ?? out.stderr}`)
+    const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid)
     return parsed
   }
   const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
   const rows = decodeUnixTable(out.stdout, out.pid)
   return rows
+}
+
+/** Bun 1.3.14 Windows sync timeout fired after 4 ms in a 15 s-old caller with a 10 s budget.
+ * Node's real child-process timeout owns the same absolute wall deadline, including helper startup.
+ * The caller never trusts a late/incomplete query. No retry or larger KPI budget.
+ */
+function windowsQuery(command: string, timeoutMs = QUERY_MS) {
+  const deadline = Date.now() + timeoutMs
+  const out = spawnSync("node", ["-e", `
+const { spawnSync } = require("node:child_process");
+const left = Number(process.argv[1]) - Date.now();
+if (left <= 0) throw new Error("Windows query helper missed deadline before query");
+const out = spawnSync("powershell", ["-NoProfile", "-NonInteractive", "-Command", ${JSON.stringify(command)}], {
+  encoding: "utf8", windowsHide: true, timeout: left, killSignal: "SIGKILL", maxBuffer: 64 * 1024 * 1024,
+});
+process.stdout.write(JSON.stringify({ pid: out.pid, status: out.status, stdout: out.stdout, stderr: out.stderr, error: out.error?.message }));
+`, String(deadline)], { encoding: "utf8", windowsHide: true, maxBuffer: 64 * 1024 * 1024 })
+  if (out.status !== 0 || out.error || Date.now() >= deadline) throw new Error(`Windows query helper failed within ${timeoutMs} ms budget: ${out.error ?? out.stderr}`)
+  return JSON.parse(out.stdout) as { pid: number; status: number | null; stdout: string; stderr: string; error?: string }
 }
 
 /** Start capture at spawn without blocking stdio/watchdogs or adding query time to the measured close. */
@@ -449,9 +467,7 @@ export function kill9(target: Identity | number) {
     throw new Error("kill9 requires a valid captured process identity")
   if (win) {
     // Open and retain the OS process handle BEFORE checking CIM creation time; Kill uses that same handle.
-    const out = spawnSync("powershell", ["-NoProfile", "-NonInteractive", "-Command",
-      `$ErrorActionPreference='Stop'; try {$p=[Diagnostics.Process]::GetProcessById(${pinned.pid}); $h=$p.Handle} catch [ArgumentException] {exit 3}; try {$r=Get-CimInstance Win32_Process -Filter 'ProcessId=${pinned.pid}'; if (!$r -or !$r.CreationDate -or $r.CreationDate.ToFileTimeUtc().ToString() -ne '${pinned.startTime.replaceAll("'", "''")}') {exit 3}; $p.Kill()} finally {$p.Dispose()}`],
-      { encoding: "utf8", windowsHide: true, timeout: QUERY_MS, killSignal: "SIGKILL" })
+    const out = windowsQuery(`$ErrorActionPreference='Stop'; try {$p=[Diagnostics.Process]::GetProcessById(${pinned.pid}); $h=$p.Handle} catch [ArgumentException] {exit 3}; try {$r=Get-CimInstance Win32_Process -Filter 'ProcessId=${pinned.pid}'; if (!$r -or !$r.CreationDate -or $r.CreationDate.ToFileTimeUtc().ToString() -ne '${pinned.startTime.replaceAll("'", "''")}') {exit 3}; $p.Kill()} finally {$p.Dispose()}`)
     if (out.status === 3 && !out.error) return false
     if (out.status !== 0 || out.error) throw new Error(`captured Windows process kill failed: ${out.error ?? out.stderr}`)
     return true

@@ -138,7 +138,7 @@ export async function appRuntime() {
 
 /** campaign has no manifest: resolve the caller's Effect, preserving its runtime and type identity. */
 export async function effectModules() {
-  const parent = new URL("../../core/package.json", import.meta.url).href
+  const parent = path.resolve(import.meta.dirname, "../../core/package.json")
   const { Effect, ManagedRuntime } = await import(import.meta.resolve("effect", parent)) as typeof import("effect")
   const { ChildProcess } = await import(import.meta.resolve("effect/unstable/process", parent)) as typeof import("effect/unstable/process")
   return { Effect, ManagedRuntime, ChildProcess }
