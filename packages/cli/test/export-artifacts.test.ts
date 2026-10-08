@@ -1,0 +1,250 @@
+import { expect, test } from "bun:test"
+import { createHash } from "node:crypto"
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  realpath,
+  rename,
+  rm,
+  rmdir,
+  symlink,
+  unlink,
+  writeFile,
+} from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join, resolve } from "node:path"
+import { verifyCliArtifact } from "../../desktop/src/main/cli-artifacts"
+import { namedTargets } from "../script/targets"
+
+const version = "1.18.27-export-test"
+const script = resolve(import.meta.dirname, "../script/export-artifacts.ts")
+
+async function fixture(run: (input: { root: string; dist: string; out: string }) => Promise<void>) {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "cli-export-test-")))
+  const input = { root, dist: join(root, "dist"), out: join(root, "artifacts") }
+  await mkdir(input.out)
+  await writeFile(join(input.out, "sentinel"), "previous output")
+  await Promise.all(
+    namedTargets.map(async (item) => {
+      const source = join(input.dist, `cli-${item.target}`)
+      await mkdir(join(source, "bin"), { recursive: true })
+      await writeFile(
+        join(source, "package.json"),
+        JSON.stringify({
+          name: `@orchestra/cli-${item.target}`,
+          version,
+          os: [item.os],
+          cpu: [item.arch],
+        }),
+      )
+      // Deliberately non-executable fixture bytes: producer never executes artifacts.
+      await writeFile(
+        join(source, "bin", `orchestra${item.os === "win32" ? ".exe" : ""}`),
+        Buffer.concat([Buffer.from([0, 255, 128, 10]), Buffer.from(item.target)]),
+      )
+    }),
+  )
+  return run(input).finally(() => rm(root, { recursive: true, force: true }))
+}
+
+async function run(input: { dist: string; out: string }, targets: string[], extra: string[] = []) {
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      "--bun",
+      script,
+      "--dist",
+      input.dist,
+      "--out",
+      input.out,
+      "--version",
+      version,
+      ...targets.flatMap((target) => ["--target", target]),
+      ...extra,
+    ],
+    { stdout: "pipe", stderr: "pipe", timeout: 30_000 },
+  )
+  const [code, stdout, stderr] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+  ])
+  return { code, stdout, stderr }
+}
+
+async function snapshot(directory: string): Promise<Record<string, string>> {
+  const entries = await readdir(directory, { withFileTypes: true })
+  return Object.assign(
+    {},
+    ...(await Promise.all(
+      entries.map(async (entry) => {
+        if (entry.isDirectory())
+          return Object.fromEntries(
+            Object.entries(await snapshot(join(directory, entry.name))).map(([file, value]) => [
+              join(entry.name, file),
+              value,
+            ]),
+          )
+        return { [entry.name]: (await readFile(join(directory, entry.name))).toString("hex") }
+      }),
+    )),
+  )
+}
+
+test("exports all builder targets as raw bytes accepted by Desktop schema1 verifier", () =>
+  fixture(async (input) => {
+    const before = await snapshot(input.dist)
+    const result = await run(
+      input,
+      namedTargets.map((item) => item.target),
+    )
+    expect(result.stderr).toBe("")
+    expect(result.code).toBe(0)
+    const manifest = await Bun.file(join(input.out, "manifest.json")).json()
+    expect(manifest.schema).toBe(1)
+    expect(manifest.version).toBe(version)
+    expect(manifest.artifacts).toHaveLength(namedTargets.length)
+    expect((await readdir(input.out)).sort()).toEqual(
+      [
+        "manifest.json",
+        ...namedTargets.map((item) => `orchestra-${item.target}${item.os === "win32" ? ".exe" : ""}`),
+      ].sort(),
+    )
+    await Promise.all(
+      namedTargets.map(async (item, index) => {
+        const file = `orchestra-${item.target}${item.os === "win32" ? ".exe" : ""}`
+        const bytes = await readFile(
+          join(input.dist, `cli-${item.target}`, "bin", `orchestra${item.os === "win32" ? ".exe" : ""}`),
+        )
+        expect(await readFile(join(input.out, file))).toEqual(bytes)
+        expect((await lstat(join(input.out, file))).isFile()).toBe(true)
+        if (process.platform !== "win32" && item.os !== "win32")
+          expect((await lstat(join(input.out, file))).mode & 0o777).toBe(0o755)
+        expect(manifest.artifacts[index]).toEqual({
+          target: item.target,
+          file,
+          sha256: createHash("sha256").update(bytes).digest("hex"),
+        })
+        expect(await verifyCliArtifact(input.out, item.target)).toEqual({ path: join(input.out, file), version })
+      }),
+    )
+    expect(await snapshot(input.dist)).toEqual(before)
+    // Replacement removes old members rather than merging stale artifacts.
+    expect((await run(input, ["linux-arm64"])).code).toBe(0)
+    expect((await readdir(input.out)).sort()).toEqual(["manifest.json", "orchestra-linux-arm64"].sort())
+  }))
+
+test("rejects wrong source version before replacing previous output", () =>
+  fixture(async (input) => {
+    const metadata = join(input.dist, "cli-linux-arm64/package.json")
+    await writeFile(
+      metadata,
+      JSON.stringify({ name: "@orchestra/cli-linux-arm64", version: "wrong", os: ["linux"], cpu: ["arm64"] }),
+    )
+    const before = await snapshot(input.dist)
+    const result = await run(input, ["windows-x64-baseline", "linux-arm64"])
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toContain("Artifact version mismatch")
+    expect(await snapshot(input.out)).toEqual({ sentinel: Buffer.from("previous output").toString("hex") })
+    expect(await snapshot(input.dist)).toEqual(before)
+  }))
+
+test("rejects malformed args, traversal and duplicate/unknown targets without writes", () =>
+  fixture(async (input) => {
+    const before = await snapshot(input.dist)
+    for (const [targets, extra] of [
+      [[], []],
+      [["linux-arm"], []],
+      [["../foreign"], []],
+      [["linux-arm64", "linux-arm64"], []],
+      [["linux-arm64"], ["--target"]],
+      [["linux-arm64"], ["--unknown"]],
+      [["linux-arm64"], ["--version", " "]],
+      [["linux-arm64"], ["--version", "v\n1"]],
+    ] as [string[], string[]][])
+      expect((await run(input, targets, extra)).code).not.toBe(0)
+    expect((await run({ ...input, dist: `${input.dist}/../dist` }, ["linux-arm64"])).code).not.toBe(0)
+    expect((await run({ ...input, out: `${input.out}/../artifacts` }, ["linux-arm64"])).code).not.toBe(0)
+    expect(await snapshot(input.dist)).toEqual(before)
+    expect(await readdir(input.out)).toEqual(["sentinel"])
+  }))
+
+test("rejects bad package tuple, malformed metadata and missing/nonregular sources before writes", () =>
+  fixture(async (input) => {
+    const metadata = join(input.dist, "cli-linux-arm64/package.json")
+    const valid = await readFile(metadata)
+    for (const value of [
+      "{",
+      "null",
+      "[]",
+      ...[{ name: "foreign" }, { os: ["darwin"] }, { cpu: ["x64"] }, { os: ["linux", "darwin"] }, { cpu: "arm64" }].map(
+        (change) =>
+          JSON.stringify({ name: "@orchestra/cli-linux-arm64", version, os: ["linux"], cpu: ["arm64"], ...change }),
+      ),
+    ]) {
+      await writeFile(metadata, value)
+      expect((await run(input, ["linux-arm64"])).code).not.toBe(0)
+      expect(await readdir(input.out)).toEqual(["sentinel"])
+    }
+    await writeFile(metadata, valid)
+    const binary = join(input.dist, "cli-linux-arm64/bin/orchestra")
+    await rename(binary, `${binary}-saved`)
+    expect((await run(input, ["linux-arm64"])).code).not.toBe(0)
+    await mkdir(binary)
+    expect((await run(input, ["linux-arm64"])).code).not.toBe(0)
+    expect((await run({ ...input, dist: join(input.root, "missing") }, ["linux-arm64"])).code).not.toBe(0)
+    expect(await readdir(input.out)).toEqual(["sentinel"])
+  }))
+
+test("rejects source/output overlap including nonexistent descendants", () =>
+  fixture(async (input) => {
+    const before = await snapshot(input.dist)
+    for (const paths of [
+      { dist: input.dist, out: input.dist },
+      { dist: input.dist, out: join(input.dist, "new/output") },
+      { dist: input.dist, out: input.root },
+    ]) {
+      const result = await run(paths, ["linux-arm64"])
+      expect(result.code).not.toBe(0)
+      expect(result.stderr).toContain("Artifact source/output overlap")
+    }
+    expect(await snapshot(input.dist)).toEqual(before)
+    expect(await readdir(input.out)).toEqual(["sentinel"])
+  }))
+
+test("rejects symlink roots, ancestors, package metadata and binaries", () =>
+  fixture(async (input) => {
+    const before = await snapshot(input.dist)
+    const alias = join(input.root, "alias")
+    await symlink(input.dist, alias, process.platform === "win32" ? "junction" : "dir")
+    for (const paths of [
+      { dist: alias, out: input.out },
+      { dist: input.dist, out: alias },
+      { dist: input.dist, out: join(alias, "new/output") },
+    ])
+      expect((await run(paths, ["linux-arm64"])).code).not.toBe(0)
+    for (const part of [
+      "cli-linux-arm64",
+      "cli-linux-arm64/bin",
+      "cli-linux-arm64/package.json",
+      "cli-linux-arm64/bin/orchestra",
+    ]) {
+      const file = join(input.dist, part)
+      const stat = await lstat(file)
+      await rename(file, `${file}-saved`)
+      await symlink(
+        `${file}-saved`,
+        file,
+        stat.isDirectory() ? (process.platform === "win32" ? "junction" : "dir") : "file",
+      )
+      expect((await run(input, ["linux-arm64"])).code).not.toBe(0)
+      if (stat.isDirectory() && process.platform === "win32") await rmdir(file)
+      if (!stat.isDirectory() || process.platform !== "win32") await unlink(file)
+      await rename(`${file}-saved`, file)
+    }
+    expect(await snapshot(input.dist)).toEqual(before)
+    expect(await readdir(input.out)).toEqual(["sentinel"])
+  }))
