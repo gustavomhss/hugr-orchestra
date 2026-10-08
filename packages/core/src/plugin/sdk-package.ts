@@ -23,7 +23,7 @@ export const manifest = {
   exports: Object.fromEntries(Object.entries(sdk.exports).map(([key, value]) => [key, value.replace("./src/", "./").replace(/\.ts$/, ".js")])),
 }
 
-export const sources = Object.fromEntries([
+export const sources: Record<string, string> = Object.fromEntries([
   ["package.json", JSON.stringify(manifest)],
   ...Object.entries(manifest.exports).map(([key, file]) => [
     file.slice(2),

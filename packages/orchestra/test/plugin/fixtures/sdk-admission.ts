@@ -25,6 +25,17 @@ const load = async () => {
     const { loadExternalTool } = await import("../../../src/tool/registry")
     return loadExternalTool(entry)
   }
+  if (mode === "configured") {
+    const failures: unknown[] = []
+    const loaded = await PluginLoader.loadExternal({
+      items: [{ spec: pathToFileURL(entry).href, source: entry, scope: "local" }],
+      kind: "server",
+      report: { error: (_candidate, _retry, _stage, error) => failures.push(error) },
+    })
+    if (failures.length) throw failures[0]
+    if (loaded.length !== 1) throw new Error("configured plugin was not loaded")
+    return loaded[0].mod
+  }
   const result = await PluginLoader.load({ spec: entry, entry: pathToFileURL(entry).href, target: entry, source: "file", deprecated: false, options: undefined })
   if (!result.ok) throw result.error
   return result.value.mod
@@ -34,7 +45,7 @@ await load().then(
     const identities = async (values: Record<string, unknown>[] | undefined) => {
       if (!values) return
       return Promise.all(Object.values(PluginSdkRuntime.modules).map(async (load, index) => {
-        const expected = await load()
+        const expected: Record<string, unknown> = await load()
         return JSON.stringify(Object.keys(values[index]).sort()) === JSON.stringify(Object.keys(expected).sort()) &&
           Object.keys(expected).every((key) => values[index][key] === expected[key])
       }))
