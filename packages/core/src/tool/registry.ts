@@ -31,8 +31,8 @@ export interface Interface {
   readonly register: (tools: Readonly<Record<string, AnyTool>>) => Effect.Effect<void, RegistrationError, Scope.Scope>
   /** Installed hooks on a Session event of this Location, over the profile its tool calls load. */
   readonly session: (
-    input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
-  ) => Effect.Effect<void, ToolSafety.Denied>
+    input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text" | "messageID">,
+  ) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
 }
 
 export interface Materialization {
@@ -146,15 +146,15 @@ const registryLayer = Layer.effect(
 
     // The placement and profile a tool call of this Location gets, for a Session event.
     const session = Effect.fn("ToolRegistry.session")(function* (
-      input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
+      input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text" | "messageID">,
     ) {
       const location = native?.location ?? Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
       const events = native?.events ?? Option.getOrUndefined(yield* Effect.serviceOption(EventV2.Service))
       const effectiveProfile = capturedProfile ?? (yield* ToolSafety.RuntimeProfile)
       const effectiveLoader = profileLoader ?? (yield* ToolSafety.RuntimeProfileLoader)
-      if (!effectiveProfile && !effectiveLoader) return
+      if (!effectiveProfile && !effectiveLoader) return []
       if (!location || !events) return yield* new ToolSafety.Denied({ reason: "native-placement-or-events-missing" })
-      yield* safety
+      return yield* safety
         .session({
           ...input,
           directory: location.directory,
