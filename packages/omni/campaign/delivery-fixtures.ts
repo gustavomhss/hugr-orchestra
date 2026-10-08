@@ -37,6 +37,8 @@ export function evidence(name: string, value: unknown) {
 export async function execute(bin: string, args: string[], env: Record<string, string>, cwd: string, deadlineMs: number, nonces: string[] = []) {
   const started = performance.now()
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
+  proc.stdout.setEncoding("utf8")
+  proc.stderr.setEncoding("utf8")
   const state = { stdout: "", stderr: "", timedOut: false, error: "", firstOutputMs: undefined as number | undefined }
   proc.stdout.on("data", (chunk) => {
     state.firstOutputMs ??= performance.now() - started
@@ -99,6 +101,8 @@ async function cleanupOwned(nonces: string[], env: Record<string, string>, cwd: 
 /** Unlike a returned-handle-only starter, kills a host that never reports readiness. */
 export async function startServer(bin: string, args: string[], env: Record<string, string>, cwd: string) {
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
+  proc.stdout.setEncoding("utf8")
+  proc.stderr.setEncoding("utf8")
   const state = { text: "", error: "" }
   proc.stdout.on("data", (chunk) => (state.text += chunk))
   proc.stderr.on("data", (chunk) => (state.text += chunk))
