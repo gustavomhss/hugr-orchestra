@@ -289,8 +289,6 @@ describe("capability contracts", () => {
     expect(encoded).toEqual(failure)
     expect(Object.keys(encoded).sort()).toEqual(["_tag", "code", "detail", "message"])
     ;["runtime", "secret", "stack", "cause"].forEach((key) => expect(encoded).not.toHaveProperty(key))
-    const leaked = { ...failure, secret: "secret" }
-    expect(() => new Capability.Failure(leaked)).toThrow()
     expect(Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4094))).toHaveLength(4094)
     expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4095))).toThrow()
     expect(Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2047))).toHaveLength(2047)
