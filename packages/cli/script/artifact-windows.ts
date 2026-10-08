@@ -1,4 +1,5 @@
 import { artifactNativeError, requireArtifactLeaf } from "./artifact-native"
+import { parse } from "node:path"
 import type { ArtifactDirectory, ArtifactNative } from "./artifact-native"
 
 export async function artifactWindows(): Promise<ArtifactNative> {
@@ -111,6 +112,7 @@ export async function artifactWindows(): Promise<ArtifactNative> {
   }
   return {
     root: (path) => {
+      if (parse(path).root !== path) throw new Error("Artifact Windows root acquisition requires volume root")
       const native = path.startsWith("\\\\") ? `\\??\\UNC\\${path.slice(2)}` : `\\??\\${path}`
       const handle = open(0n, native, true)
       return { handle, identity: identity(handle) }

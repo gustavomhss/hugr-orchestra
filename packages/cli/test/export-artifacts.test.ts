@@ -15,7 +15,7 @@ import {
   writeFile,
 } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { join, parse, resolve, sep } from "node:path"
 import { verifyCliArtifact } from "../../desktop/src/main/cli-artifacts"
 import { namedTargets } from "../script/targets"
 import { artifactNative } from "../script/artifact-fs"
@@ -57,6 +57,7 @@ async function run(input: { dist: string; out: string }, targets: string[], extr
   const child = Bun.spawn(
     [
       process.execPath,
+      ...(process.env.ORCHESTRA_ARTIFACT_BUNFIG ? ["--config", process.env.ORCHESTRA_ARTIFACT_BUNFIG] : []),
       "--bun",
       script,
       "--dist",
@@ -201,9 +202,14 @@ test("exclusive OS publisher never replaces even an empty concurrent destination
     const empty = join(input.root, "empty")
     await mkdir(empty)
     const native = await artifactNative()
-    // Fixture root has already been resolved. Root acquisition walks components
-    // in the production admission tests; this primitive test pins its known parent.
-    const parent = native.root(input.root)
+    const root = parse(input.root).root
+    const pins = [native.root(root)]
+    input.root
+      .slice(root.length)
+      .split(sep)
+      .filter(Boolean)
+      .forEach((name) => pins.push(native.directory(pins[pins.length - 1], name)))
+    const parent = pins[pins.length - 1]
     const directory = native.directory(parent, "staging", { removable: true })
     try {
       for (const output of [input.out, empty]) {
@@ -219,7 +225,7 @@ test("exclusive OS publisher never replaces even an empty concurrent destination
       expect(await snapshot(fresh)).toEqual(source)
     } finally {
       native.closeDirectory(directory)
-      native.closeDirectory(parent)
+      pins.reverse().forEach((pin) => native.closeDirectory(pin))
       native.close()
     }
   }))

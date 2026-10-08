@@ -233,13 +233,13 @@ export async function admitArtifacts(input: { dist: string; out: string; targets
           try {
             manifest.artifacts.forEach((entry) => {
               validate()
-              native.write(stage, entry.file, captured.get(entry.target)!.bytes, !entry.target.startsWith("windows-"))
               written.push(entry.file)
+              native.write(stage, entry.file, captured.get(entry.target)!.bytes, !entry.target.startsWith("windows-"))
               if (hash(native.read(stage, entry.file).bytes) !== entry.sha256)
                 throw new Error("Copied artifact digest mismatch")
             })
-            native.write(stage, "manifest.json", Buffer.from(JSON.stringify(manifest, null, 2) + "\n"), false)
             written.push("manifest.json")
+            native.write(stage, "manifest.json", Buffer.from(JSON.stringify(manifest, null, 2) + "\n"), false)
             validate()
             try {
               native.publish(parent, name, stage, output)

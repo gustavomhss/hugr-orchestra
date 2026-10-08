@@ -1,8 +1,12 @@
 import { constants } from "node:fs"
 import { artifactPosix } from "./artifact-posix"
+import type { Pointer } from "bun:ffi"
 
 export async function artifactDarwin() {
   const { CString, dlopen, ptr, read, toArrayBuffer } = await import("bun:ffi")
+  // Darwin sys/cdefs.h: Intel keeps legacy inode32 symbols; ARM64 has only
+  // inode64. Match the SDK's __DARWIN_ALIAS_I/__DARWIN_INODE64 selection.
+  const suffix = process.arch === "x64" ? "$INODE64" : ""
   const library = dlopen("/usr/lib/libSystem.B.dylib", {
     openat: { args: ["i32", "ptr", "i32", "u32"], returns: "i32" },
     mkdirat: { args: ["i32", "ptr", "u32"], returns: "i32" },
@@ -10,9 +14,9 @@ export async function artifactDarwin() {
     renameatx_np: { args: ["i32", "ptr", "i32", "ptr", "u32"], returns: "i32" },
     __error: { args: [], returns: "ptr" },
     dup: { args: ["i32"], returns: "i32" },
-    fdopendir: { args: ["i32"], returns: "ptr" },
-    rewinddir: { args: ["ptr"], returns: "void" },
-    readdir: { args: ["ptr"], returns: "ptr" },
+    [`fdopendir${suffix}`]: { args: ["i32"], returns: "ptr" },
+    [`rewinddir${suffix}`]: { args: ["ptr"], returns: "void" },
+    [`readdir${suffix}`]: { args: ["ptr"], returns: "ptr" },
     closedir: { args: ["ptr"], returns: "i32" },
     close: { args: ["i32"], returns: "i32" },
   })
@@ -28,17 +32,17 @@ export async function artifactDarwin() {
     list: (fd) => {
       const duplicate = library.symbols.dup(fd)
       if (duplicate < 0) throw new Error(`Artifact dup failed: ${errno()}`)
-      const directory = library.symbols.fdopendir(duplicate)
+      const directory = library.symbols[`fdopendir${suffix}`](duplicate) as Pointer | null
       if (!directory) {
         library.symbols.close(duplicate)
         throw new Error(`Artifact fdopendir failed: ${errno()}`)
       }
       try {
-        library.symbols.rewinddir(directory)
+        library.symbols[`rewinddir${suffix}`](directory)
         const names: string[] = []
         for (;;) {
           new DataView(toArrayBuffer(library.symbols.__error()!, 0, 4)).setInt32(0, 0, true)
-          const entry = library.symbols.readdir(directory)
+          const entry = library.symbols[`readdir${suffix}`](directory) as Pointer | null
           if (!entry) {
             if (errno()) throw new Error(`Artifact readdir failed: ${errno()}`)
             return names

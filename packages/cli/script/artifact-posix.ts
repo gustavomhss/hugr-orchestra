@@ -40,7 +40,10 @@ export function artifactPosix(input: {
     throw new Error("Artifact must be a confined regular file")
   }
   return {
-    root: (path) => directory(check(input.open(-1, path, input.flags.root, 0), "open root")),
+    root: (path) => {
+      if (path !== "/") throw new Error("Artifact POSIX root acquisition requires filesystem root")
+      return directory(check(input.open(-1, path, input.flags.root, 0), "open root"))
+    },
     directory: (parent, name, options = {}) => {
       requireArtifactLeaf(name)
       if (options.create) {
