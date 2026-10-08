@@ -1,5 +1,10 @@
 import { Config, ConfigProvider, Context, Effect, Layer, Option } from "effect"
 import { ConfigService } from "@/effect/config-service"
+import { Seats } from "@/maestro/seats"
+
+const seatLabels = Config.all(Object.fromEntries(Object.values(Seats.all).flatMap((seat) =>
+  seat.labelEnv ? [[seat.id, Config.string(seat.labelEnv).pipe(Config.option, Config.map(Option.getOrUndefined))]] : [],
+)))
 
 const bool = (name: string) => Config.boolean(name).pipe(Config.withDefault(false))
 const positiveInteger = (name: string) =>
@@ -52,8 +57,9 @@ export class Service extends ConfigService.Service<Service>()("@orchestra/Runtim
   experimentalNativeLlm: bool("ORCHESTRA_EXPERIMENTAL_NATIVE_LLM"),
   experimentalWebSockets: bool("ORCHESTRA_EXPERIMENTAL_WEBSOCKETS"),
   client: Config.string("ORCHESTRA_CLIENT").pipe(Config.withDefault("cli")),
-  // Display label override for the backend native seat (F1-D2); the config key `agent.backend.name` is the source.
-  backendName: Config.string("HUGR_BACKEND_NAME").pipe(Config.option, Config.map(Option.getOrUndefined)),
+  seatLabels,
+  // Compatibility for callers that provide RuntimeFlags.layer({ backendName }); runtime consumers use seatLabels.
+  backendName: seatLabels.pipe(Config.map((labels) => labels.backend)),
 }) {}
 
 export type Info = Context.Service.Shape<typeof Service>
@@ -68,7 +74,11 @@ export const layer = (overrides: Partial<Info> = {}) =>
     Service,
     Effect.gen(function* () {
       const flags = yield* Service
-      return Service.of({ ...flags, ...overrides })
+      return Service.of({ ...flags, ...overrides, seatLabels: {
+        ...flags.seatLabels,
+        ...overrides.seatLabels,
+        ...(overrides.backendName === undefined ? {} : { backend: overrides.backendName }),
+      } })
     }),
   ).pipe(Layer.provide(emptyConfigLayer))
 
