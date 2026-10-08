@@ -2,7 +2,7 @@
 import os from "node:os"
 import path from "node:path"
 import { inspect } from "node:util"
-import { BUN, ROOT, cleanup, isolated, kill9, load, until } from "./lib.ts"
+import { BUN, ROOT, cleanup, identity, isolated, kill9, load, until } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, startServer } from "./delivery-fixtures.ts"
 
 type Sample = { ms: number; stdout: string; spawns: number; delegations: number; pid: number; stages?: Record<string, number> }
@@ -18,6 +18,7 @@ export async function run(trace = false) {
   const scratch = isolated("v7-attribution", {})
   const rows: { pair: number; arm: string; sample: Sample; load: string }[] = []
   const traceFile = path.join(scratch.home, "native.strace")
+  const traced: { identity?: ReturnType<typeof identity> } = {}
   const host = await startServer(trace ? "strace" : BUN,
     trace ? ["-f", "-ttt", "-T", "-o", traceFile, BUN, import.meta.filename, "--host"] : [import.meta.filename, "--host"],
     { ...deliveryEnv(scratch.env), ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1",
@@ -28,6 +29,7 @@ export async function run(trace = false) {
       const response = await fetch(new URL(`/${arm}`, host.url), { signal: AbortSignal.timeout(20_000) })
       if (!response.ok) throw new Error(await response.text())
       const result = await response.json() as Sample
+      if (trace) traced.identity ??= identity(result.pid)
       if (!Number.isFinite(result.ms) || result.ms <= 0 || !/^[0-9a-f]{40}\n$/.test(result.stdout))
         throw new Error(`Invalid attribution sample: ${JSON.stringify(result)}`)
       if (result.spawns !== (arm === "app" ? 1 : 0) || result.delegations !== 0)
@@ -55,7 +57,7 @@ export async function run(trace = false) {
     }))
     if (trace) {
       const lines = (await Bun.file(traceFile).text()).split("\n")
-      const start = lines.find((line) => line.includes('execve("') && line.includes("hugr-omni-supervisor"))
+      const start = lines.find((line) => line.includes("execve") && line.includes("hugr-omni-supervisor"))
       if (!start) throw new Error("strace did not observe the real native supervisor")
       const pid = start.trim().split(/\s+/)[0]
       const native = lines.filter((line) => line.trim().split(/\s+/)[0] === pid)
@@ -64,9 +66,11 @@ export async function run(trace = false) {
     console.log("V7_ATTRIBUTION " + JSON.stringify({ trace, summary, evidence: evidence("v7-attribution", rows) }))
     return summary
   } finally {
-    if (trace && rows[0]) kill9(rows[0].sample.pid)
-    kill9(host.pid)
-    await cleanup(scratch.home, [])
+    try {
+      if (traced.identity) kill9(traced.identity)
+    } finally {
+      await cleanup(scratch.home, [])
+    }
   }
 }
 
