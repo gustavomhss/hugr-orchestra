@@ -214,6 +214,7 @@
         "@orchestra/llm": "workspace:*",
         "@orchestra/maestro-arsenal": "workspace:*",
         "@orchestra/plugin": "workspace:*",
+        "@orchestra/relay": "workspace:*",
         "@orchestra/schema": "workspace:*",
         "@parcel/watcher": "2.5.1",
         "@silvia-odwyer/photon-node": "0.3.4",
@@ -587,6 +588,19 @@
         "@typescript/native-preview": "catalog:",
       },
     },
+    "packages/relay": {
+      "name": "@orchestra/relay",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/schema": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "packages/schema": {
       "name": "@orchestra/schema",
       "dependencies": {
@@ -643,6 +657,8 @@
       "dependencies": {
         "@orchestra/core": "workspace:*",
         "@orchestra/protocol": "workspace:*",
+        "@orchestra/relay": "workspace:*",
+        "@orchestra/schema": "workspace:*",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -1523,6 +1539,8 @@
     "@orchestra/plugin": ["@orchestra/plugin@workspace:packages/plugin"],
 
     "@orchestra/protocol": ["@orchestra/protocol@workspace:packages/protocol"],
+
+    "@orchestra/relay": ["@orchestra/relay@workspace:packages/relay"],
 
     "@orchestra/schema": ["@orchestra/schema@workspace:packages/schema"],
 

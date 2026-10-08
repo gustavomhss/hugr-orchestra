@@ -20,10 +20,21 @@ describe("breadcrumbLabel", () => {
 
   test("names capability pages by their reference page title", () => {
     expect(
-      ["mcp", "skills", "plugins", "hooks", "cicd", "schedule", "env", "providers", "shortcuts"].map((chapter) =>
-        crumb({ type: "chapter", chapter }),
+      ["mcp", "skills", "plugins", "workflows", "hooks", "cicd", "schedule", "env", "providers", "shortcuts"].map(
+        (chapter) => crumb({ type: "chapter", chapter }),
       ),
-    ).toEqual(["MCP", "Skills", "LLM Plugins", "Hooks", "CI/CD", "Agendar", ".env", "Providers", "Shortcuts"])
+    ).toEqual([
+      "MCP",
+      "Skills",
+      "LLM Plugins",
+      "Workflows",
+      "Hooks",
+      "CI/CD",
+      "Agendar",
+      ".env",
+      "Providers",
+      "Shortcuts",
+    ])
   })
 
   test("falls back to home for an unknown chapter and resolves every navigation chapter", () => {
@@ -37,7 +48,6 @@ test("marks exactly the owner's revisit-before-production screens as WIP", () =>
   expect(navigation.filter((item) => isWip(item.id)).map((item) => item.id)).toEqual([
     "agents",
     "mcp",
-    "hooks",
     "cicd",
     "workspaces",
   ])

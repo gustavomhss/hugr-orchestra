@@ -1,0 +1,25 @@
+{
+  "sprint": {
+    "brief": "Chain",
+    "gen": 0,
+    "retry_budget": 3,
+    "macros": [],
+    "work_packages": [
+      {
+        "id": "a",
+        "title": "a",
+        "kind": "execute",
+        "instructions": "",
+        "checklist": []
+      },
+      {
+        "id": "b",
+        "title": "b",
+        "kind": "execute",
+        "instructions": "",
+        "checklist": []
+      }
+    ]
+  },
+  "bindings": []
+}

@@ -1,0 +1,62 @@
+{
+  "ledger": "test/golden/audit/control-fail-diverged/input/ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 3 chained entries [PLAIN (SHA-256)], chain head 90451d682db4…\n  (1 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "C1",
+      "assert": "real control",
+      "verdict": "fail",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 1,
+  "deterministic_passed": 0,
+  "advisory": 0,
+  "last_event": "escalate",
+  "truncated": false,
+  "laundered_controls": [
+    {
+      "id": "C1",
+      "verdicts": [
+        "fail",
+        "pass"
+      ],
+      "oracles": [
+        "fcbcf165908d",
+        "b5bea41b6c62"
+      ],
+      "laundered": true
+    }
+  ],
+  "oracle_drift": [
+    {
+      "id": "C1",
+      "verdicts": [
+        "fail",
+        "pass"
+      ],
+      "oracles": [
+        "fcbcf165908d",
+        "b5bea41b6c62"
+      ],
+      "laundered": true
+    }
+  ],
+  "oracle_recheck": {
+    "status": "diverged",
+    "items": [
+      {
+        "id": "C1",
+        "kind": "changed",
+        "recorded": "b5bea41b6c62",
+        "current": "fcbcf165908d"
+      }
+    ]
+  },
+  "no_controls": false,
+  "escalated": true,
+  "result": "SPRINT-DIVERGED",
+  "exit": 2
+}

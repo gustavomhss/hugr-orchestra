@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"target","instructions":"do target","checklist":[{"id":"actual","cmd":"false"}],"macro":"scope"},{"id":"sibling","instructions":"do sibling","checklist":[{"id":"sibling-ok","cmd":"true"}]}]}

@@ -29,6 +29,10 @@ export interface Interface {
   readonly materialize: (permissions?: PermissionV2.Ruleset) => Effect.Effect<Materialization>
   /** Internal registration capability exposed publicly only through Tools.Service. */
   readonly register: (tools: Readonly<Record<string, AnyTool>>) => Effect.Effect<void, RegistrationError, Scope.Scope>
+  /** Installed hooks on a Session event of this Location, over the profile its tool calls load. */
+  readonly session: (
+    input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
+  ) => Effect.Effect<void, ToolSafety.Denied>
 }
 
 export interface Materialization {
@@ -140,7 +144,31 @@ const registryLayer = Layer.effect(
       )
     })
 
+    // The placement and profile a tool call of this Location gets, for a Session event.
+    const session = Effect.fn("ToolRegistry.session")(function* (
+      input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
+    ) {
+      const location = native?.location ?? Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
+      const events = native?.events ?? Option.getOrUndefined(yield* Effect.serviceOption(EventV2.Service))
+      const effectiveProfile = capturedProfile ?? (yield* ToolSafety.RuntimeProfile)
+      const effectiveLoader = profileLoader ?? (yield* ToolSafety.RuntimeProfileLoader)
+      if (!effectiveProfile && !effectiveLoader) return
+      if (!location || !events) return yield* new ToolSafety.Denied({ reason: "native-placement-or-events-missing" })
+      yield* safety
+        .session({
+          ...input,
+          directory: location.directory,
+          projectID: location.project.id,
+          projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+        })
+        .pipe(
+          Effect.provideService(ToolSafety.RuntimeProfileLoader, effectiveLoader),
+          Effect.provideService(ToolSafety.RuntimeProfile, effectiveProfile),
+        )
+    })
+
     return Service.of({
+      session,
       register: Effect.fn("ToolRegistry.register")(function* (tools) {
         const entries = Object.entries(tools)
         if (entries.length === 0) return

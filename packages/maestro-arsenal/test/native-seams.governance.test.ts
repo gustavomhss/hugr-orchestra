@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
-import { createHash, randomUUID } from "node:crypto"
+import { createHash } from "node:crypto"
 import { readdir } from "node:fs/promises"
 import { join } from "node:path"
 import type { ArsenalContext } from "../src/contract.ts"
 import { validateArgs } from "../src/validate.ts"
 import { type Observations, provenanceSchema, observationsSchema } from "../src/governance/contracts.ts"
 import { governanceToolDescriptor, governanceToolDescriptors, GOVERNANCE_DEFINITIONS } from "../src/governance/descriptors.ts"
-import { runCompletion, readPreferencesSnapshot, type HostCheck } from "../src/index"
+import { readPreferencesSnapshot } from "../src/index"
 import { verifyRulesetReceipt } from "../src/governance/operators.ts"
 import { rulesetProposal } from "../src/governance/repository.ts"
 import { validateHostSnapshot, telemetry } from "../src/governance/telemetry.ts"
@@ -72,47 +72,31 @@ test("native snapshots accept actual event identity, absent source revision diag
   expect(() => validateHostSnapshot(f.context, "other-session", facts)).toThrow("HOST_SNAPSHOT_SESSION_MISMATCH")
   expect((await operation<{ diagnostics: string[] }>({ operation: "status", observations: snapshot }, f.context)).diagnostics).toContain("SOURCE_REVISION_UNAVAILABLE: session/session-event:42")
 })
-function actualCheck(exit: number, sha: string): HostCheck {
-  return async (input) => {
-    const argv = [process.execPath, "-e", `process.exit(${exit})`]
-    await input.context.authorize({ effect: "process", paths: [input.context.directory], commands: [argv.join(" ")] })
-    const child = Bun.spawn(argv, { cwd: input.context.directory, stdout: "ignore", stderr: "ignore" })
-    const exitCode = await child.exited
-    return { name: input.check.id, status: exitCode === 0 ? "pass" : "fail", exitCode,
-      provenance: { source: "host-check", projectID: input.context.projectID, sessionID: input.sessionID, eventID: randomUUID(), revision: sha } }
-  }
-}
-test("persisted completion contracts bind actual compiled host checks in ordered gates; prose green remains advisory", async () => {
+test("armed completion contracts are data for the native Relay arm; this package exports no evaluator", async () => {
   const f = await fixture()
-  const head = await f.init()
   const contract = { sessionID: "session", label: "native-checks", chain: [
     { id: "first", checks: [{ id: "one", hostCheck: "check-one" }] }, { id: "second", checks: [{ id: "two", hostCheck: "check-two" }] },
   ] }
-  const token = result<{ token: string }>(await relay.handler({ action: "arm", contract }, f.context)).token
-  expect((await runCompletion(f.context, token, "session")).failures).toEqual(["HOST_CHECK_UNBOUND: check-one"])
-  const red = await runCompletion(f.context, token, "session", { "check-one": actualCheck(7, head), "check-two": actualCheck(0, head) }, head)
-  expect(red.status).toBe("FAIL")
-  expect(red.checksExecuted).toBe(1)
-  expect(red.failures).toEqual(["COMPLETION_FAIL: one"])
-  const green = await runCompletion(f.context, token, "session", { "check-one": actualCheck(0, head), "check-two": actualCheck(0, head) }, head)
-  expect(green.status).toBe("PASS")
-  expect(green.authoritative).toBe(true)
-  expect(green.checksExecuted).toBe(2)
-  expect(await rethrow(runCompletion(f.context, token, "other-session", { "check-one": actualCheck(0, head) }))).toThrow("COMPLETION_SESSION_BINDING_MISMATCH")
-  const supplied = await operation<{ authoritative: boolean; checksExecuted: boolean }>({ operation: "completion-check", contract, checks: capture(check("one"), check("two")), bindings: ["check-one", "check-two"] }, f.context)
-  expect(supplied.authoritative).toBe(false)
-  expect(supplied.checksExecuted).toBe(false)
+  const armed = result<{ token: string; enforced: boolean; permissionOwner: string; bindingRequired: string[] }>(await relay.handler({ action: "arm", contract }, f.context))
+  expect(armed).toMatchObject({ enforced: false, permissionOwner: "native-host", bindingRequired: ["check-one", "check-two"] })
+  const exported = Object.keys(await import("../src/index"))
+  expect(exported).toContain("validateHostSnapshot")
+  expect(exported.filter((name) => /completion/i.test(name))).toEqual([])
+  expect(validateArgs(governanceToolDescriptor.inputSchema, { operation: "completion-check", contract, checks: capture(check("one")), bindings: ["check-one"] }).ok).toBe(false)
+  expect(GOVERNANCE_DEFINITIONS).not.toHaveProperty("completion-check")
 })
-test("host check acquisition failures and inherited names cannot fake completion", async () => {
+test("a release is only a request for the owner's native approval; the package changes no state", async () => {
   const f = await fixture()
-  const contract = { sessionID: "session", label: "actual", chain: [{ id: "first", checks: [{ id: "one", hostCheck: "toString" }] }] }
+  const contract = { sessionID: "session", label: "actual", chain: [{ id: "first", checks: [{ id: "one", hostCheck: "check-one" }] }] }
   const token = result<{ token: string }>(await relay.handler({ action: "arm", contract }, f.context)).token
-  expect((await runCompletion(f.context, token, "session", {})).failures).toEqual(["HOST_CHECK_UNBOUND: toString"])
-  const broken: HostCheck = async () => { await Bun.file(join(f.root, "missing-check-evidence")).text(); throw new Error("unreachable") }
-  const failed = await runCompletion(f.context, token, "session", { toString: broken })
-  expect(failed.failures).toEqual(["HOST_CHECK_ACQUISITION_FAILED: one"])
-  expect(failed.checksExecuted).toBe(1)
-  expect(failed.observations.results).toEqual([])
+  const before = await Bun.file(join(f.state, "project", "completion", `${token}.json`)).text()
+  expect(result<Record<string, unknown>>(await relay.handler({ action: "release", token, reason: "the fixture is repaired" }, f.context))).toEqual({
+    token, release: "owner-approval-required", reason: "the fixture is repaired", enforced: false, permissionOwner: "native-host",
+  })
+  expect(await Bun.file(join(f.state, "project", "completion", `${token}.json`)).text()).toBe(before)
+  expect(await rethrow(relay.handler({ action: "release", token }, f.context))).toThrow("COMPLETION_RELEASE_INPUT_REQUIRED")
+  expect(validateArgs(relay.inputSchema, { action: "release", token: "../escape", reason: "x" }).ok).toBe(false)
+  expect(validateArgs(relay.inputSchema, { action: "release", token, reason: "" }).ok).toBe(false)
 })
 async function releaseFixture() {
   const f = await fixture()

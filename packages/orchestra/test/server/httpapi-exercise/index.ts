@@ -32,7 +32,9 @@ import {
 } from "./environment"
 import { color, printHeader, printResults } from "./report"
 import { coverageResult, parseOptions, routeKey, routeKeys, selectedScenarios } from "./routing"
+import { integrationScenarios } from "./integration"
 import { mcpScenarios } from "./mcp"
+import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { scheduleScenarios } from "./schedule"
@@ -115,6 +117,7 @@ const scenarios: Scenario[] = [
   http.protected.get("/command", "command.list").json(200, array, "status"),
   http.protected.get("/agent", "app.agents").json(200, array, "status"),
   ...skillScenarios,
+  ...relayScenarios,
   ...catalogScenarios,
   ...scheduleScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
@@ -594,52 +597,7 @@ const scenarios: Scenario[] = [
     .status(400, undefined, "status"),
   http.protected.get("/api/model", "v2.model.list").json(200, locationData(array)),
   http.protected.get("/api/provider", "v2.provider.list").json(200, locationData(array)),
-  http.protected.get("/api/integration", "v2.integration.list").json(200, locationData(array)),
-  http.protected
-    .get("/api/integration/{integrationID}", "v2.integration.get")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}", { integrationID: "missing" }),
-      headers: ctx.headers(),
-    }))
-    .json(200, object),
-  http.protected
-    .post("/api/integration/{integrationID}/connect/key", "v2.integration.connect.key")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}/connect/key", { integrationID: "missing" }),
-      headers: ctx.headers(),
-      body: { key: "test" },
-    }))
-    .status(204, undefined, "status"),
-  http.protected
-    .post("/api/integration/{integrationID}/connect/oauth", "v2.integration.connect.oauth")
-    .at((ctx) => ({
-      path: route("/api/integration/{integrationID}/connect/oauth", { integrationID: "missing" }),
-      headers: ctx.headers(),
-      body: { methodID: "missing", inputs: {} },
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .get("/api/integration/attempt/{attemptID}", "v2.integration.attempt.status")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .post("/api/integration/attempt/{attemptID}/complete", "v2.integration.attempt.complete")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}/complete", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-      body: {},
-    }))
-    .status(500, undefined, "status"),
-  http.protected
-    .delete("/api/integration/attempt/{attemptID}", "v2.integration.attempt.cancel")
-    .at((ctx) => ({
-      path: route("/api/integration/attempt/{attemptID}", { attemptID: "con_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(204, undefined, "status"),
+  ...integrationScenarios,
   ...credentialScenarios,
   http.protected
     .get("/api/event", "v2.event.subscribe")

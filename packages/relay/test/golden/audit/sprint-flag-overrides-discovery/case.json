@@ -1,0 +1,9 @@
+{
+  "target": "test/golden/audit/sprint-flag-overrides-discovery/input/run",
+  "verify": [
+    "--sprint",
+    "test/golden/audit/sprint-flag-overrides-discovery/input/other.json"
+  ],
+  "key": null,
+  "chmod": {}
+}

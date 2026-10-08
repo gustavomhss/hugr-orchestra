@@ -1,0 +1,33 @@
+{
+  "ledger": "test/fixtures/mutants/keyed.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "implement.inject_context",
+      "macro": "implement",
+      "elapsed_s": null
+    },
+    {
+      "wp": "implement.write",
+      "macro": "implement",
+      "elapsed_s": null
+    },
+    {
+      "wp": "implement.checklist",
+      "macro": "implement",
+      "elapsed_s": null
+    },
+    {
+      "wp": "review.self_review",
+      "macro": "review",
+      "elapsed_s": null
+    },
+    {
+      "wp": "review.checklist",
+      "macro": "review",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

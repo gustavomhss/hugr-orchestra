@@ -1,0 +1,2 @@
+TAMPERED line 1: MAC mismatch under KEYED (HMAC-SHA256)
+   (wrong key, or the line was altered — both fail identically by design)

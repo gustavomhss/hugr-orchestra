@@ -1,0 +1,30 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "do A",
+        "checklist": [
+          {
+            "id": "sees-token",
+            "cmd": "test \"$token\" = tok"
+          },
+          {
+            "id": "sees-arm-dir",
+            "cmd": "test -f \"$ARM/sprint.json\""
+          },
+          {
+            "id": "sees-index",
+            "cmd": "test \"$i\" = 0"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {}
+  ]
+}

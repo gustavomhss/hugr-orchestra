@@ -66,6 +66,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@orchestra/core/session/sql"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@orchestra/llm"
 
@@ -1416,11 +1417,7 @@ const layer = Layer.effect(
       const templateCommand = yield* Effect.promise(async () => cmd.template)
 
       const placeholders = templateCommand.match(placeholderRegex) ?? []
-      let last = 0
-      for (const item of placeholders) {
-        const value = Number(item.slice(1))
-        if (value > last) last = value
-      }
+      const last = placeholders.reduce((last, item) => Math.max(last, Number(item.slice(1))), 0)
 
       const withArgs = templateCommand.replaceAll(placeholderRegex, (_, index) => {
         const position = Number(index)
@@ -1650,6 +1647,8 @@ export const node = LayerNode.make({
     InstanceStore.node,
     ArsenalObservations.node,
     Git.node,
+    // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
+    LocationServiceMap.node,
   ],
 })
 
