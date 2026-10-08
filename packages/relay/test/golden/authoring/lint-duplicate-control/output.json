@@ -1,0 +1,11 @@
+{
+  "findings": [
+    {
+      "category": "duplicate-control-id",
+      "severity": "error",
+      "wp": "b",
+      "detail": "control id 'c1' is also used in 'a'; retry state, keep-best and drift detection all key on it, so one silently stands in for the other"
+    }
+  ],
+  "exit": 1
+}

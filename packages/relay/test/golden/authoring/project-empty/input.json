@@ -1,0 +1,7 @@
+{
+  "op": "project",
+  "name": "Empty",
+  "sprint": {
+    "work_packages": []
+  }
+}

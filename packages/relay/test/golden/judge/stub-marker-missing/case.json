@@ -1,0 +1,18 @@
+{
+  "criterion": "is it reviewed?",
+  "files": [
+    {
+      "name": "review.md",
+      "text": "a review RELAY_JUDGE_OK\n"
+    },
+    {
+      "name": "diff.patch",
+      "text": "no marker\n"
+    }
+  ],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "stub"
+  },
+  "status": 200,
+  "replies": []
+}

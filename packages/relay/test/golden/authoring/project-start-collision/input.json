@@ -1,0 +1,16 @@
+{
+  "op": "project",
+  "name": "Start",
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "relay-start",
+        "title": "Workflow start"
+      },
+      {
+        "id": "relay-start-start",
+        "title": "Workflow start · start"
+      }
+    ]
+  }
+}

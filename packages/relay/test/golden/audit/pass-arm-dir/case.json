@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/pass-arm-dir/input/arm",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

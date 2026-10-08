@@ -24,6 +24,9 @@ test("exposes every standard HTTP API group", () => {
     "questions",
     "references",
     "projectCopies",
+    "relayDocuments",
+    "relayPublish",
+    "relayHooks",
     "pullRequests",
     "schedules",
   ])

@@ -1,0 +1,10 @@
+{
+  "ledger": "test/golden/audit/problems-awaiting-human/input/ledger.jsonl",
+  "problems": [
+    {
+      "category": "awaiting-human",
+      "wp": "wp1",
+      "cause": "retry budget spent at wp1; still failing: C2"
+    }
+  ]
+}

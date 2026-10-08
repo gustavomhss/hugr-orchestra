@@ -1,0 +1,19 @@
+{
+  "sprint": {
+    "work_packages": []
+  },
+  "key": null,
+  "bodies": [
+    "{\"h\":\"top-level h is reserved\"}",
+    "{\"\\u0068\":\"escaped top-level h\"}",
+    "[]",
+    "\"string\"",
+    "3",
+    "null",
+    "{\"a\":1} {\"b\":2}",
+    "{broken",
+    "",
+    "{\"lone\":\"\\ud800\"}",
+    "{\"event\":\"accepted\",\"data\":{\"h\":\"nested h is data\"}}"
+  ]
+}

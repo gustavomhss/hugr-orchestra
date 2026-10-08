@@ -1,0 +1,2013 @@
+#!/usr/bin/env python3
+"""
+plan-check — mechanical verifier for the EDD planning protocol's four gates
+(framed, carved, sequenced, frozen).
+
+Authority: docs/edd/planning-protocol.md (sole authority for what "correct" means).
+This script implements ONLY the mechanical side of each gate's Verify: clause —
+see docs/edd/tools/README.md for the full inventory and for what is deliberately
+NOT checked (judgment calls the protocol itself reserves for a human/cold-review).
+
+stdlib only. No pip installs, no network access.
+
+Usage:
+    plan-check --phase frame|carve|sequence|dispatch [--plan-dir DIR] [--repo-root DIR] [--json]
+
+Exit codes: 0 clean (no FAIL) · 1 one or more FAIL · 2 usage/IO error.
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+# --------------------------------------------------------------------------
+# Result plumbing
+# --------------------------------------------------------------------------
+
+PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
+
+E_ORDER = {"E1": 1, "E2": 2, "E3": 3, "E4": 4, "E5": 5}
+# T4 is empirical (it saw behavior) so it is treated as at least as strong as
+# T1 for "weakest tier" purposes; T3 is always the floor. See planning-protocol.md
+# "Scope tiers" table, lines ~76-96.
+TIER_STRENGTH = {"T4": 0, "T1": 1, "T2": 2, "T3": 3}
+SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+class Result:
+    __slots__ = ("criterion", "status", "evidence")
+
+    def __init__(self, criterion, status, evidence):
+        self.criterion = criterion
+        self.status = status
+        self.evidence = evidence
+
+    def line(self):
+        return f"{self.status} {self.criterion} — {self.evidence}"
+
+    def to_json(self):
+        return {"criterion": self.criterion, "status": self.status, "evidence": self.evidence}
+
+
+def truncate_list(items, n=6):
+    items = list(items)
+    if len(items) <= n:
+        return ", ".join(str(i) for i in items)
+    return ", ".join(str(i) for i in items[:n]) + f", ...and {len(items) - n} more"
+
+
+# --------------------------------------------------------------------------
+# Generic helpers
+# --------------------------------------------------------------------------
+
+def load_json(path):
+    """Returns (data, error_string). Never raises."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f), None
+    except FileNotFoundError:
+        return None, f"file not found: {path}"
+    except json.JSONDecodeError as e:
+        return None, f"invalid JSON in {path}: {e}"
+    except OSError as e:
+        return None, f"cannot read {path}: {e}"
+
+
+def sha256_file(path):
+    try:
+        h = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+        return "sha256:" + h.hexdigest()
+    except OSError:
+        return None
+
+
+def is_real_sha256(s):
+    return isinstance(s, str) and bool(SHA256_RE.match(s))
+
+
+def g(d, *path, default=None):
+    """Safe nested getter: g(d, 'a', 'b', default=[]) ~= d.get('a',{}).get('b',[])."""
+    cur = d
+    for p in path:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(p, None)
+        if cur is None:
+            return default
+    return cur if cur is not None else default
+
+
+def nonempty_str(v):
+    return isinstance(v, str) and v.strip() != ""
+
+
+AT_SHA256_RE = re.compile(r"^(?P<path>.+?)\s@\ssha256:(?P<digest>[0-9a-f]{64})$")
+
+
+def parse_at_sha256_ref(s):
+    """Parses the standalone-run `<path> @ sha256:<digest>` ref format (doc
+    sha 4a61f9c33733, "Run without an enforcer": 'A standalone verdict_ref
+    renders as `<path> @ sha256:<digest>` — both legs checkable'). Returns
+    (path, "sha256:<digest>") or (None, None) if `s` isn't in this shape.
+    Applies to any *_ref field that may use the format, not only verdict_ref."""
+    if not isinstance(s, str):
+        return None, None
+    m = AT_SHA256_RE.match(s.strip())
+    if not m:
+        return None, None
+    return m.group("path"), "sha256:" + m.group("digest")
+
+
+def resolve_ref_digest(ref_value):
+    """A manifest *_ref field may be:
+    - {"path": "...", "digest": "sha256:..."}  (execD / template shape)
+    - "<path> @ sha256:<digest>"  (standalone-run shape, doc sha 4a61f9c33733)
+    - a bare "sha256:..." string (older-form shape)
+    - a bare non-digest string (URI, prose placeholder) -> unresolved
+    Returns (path_or_None, digest_or_None).
+    """
+    if isinstance(ref_value, dict):
+        return ref_value.get("path"), ref_value.get("digest")
+    if isinstance(ref_value, str):
+        path, digest = parse_at_sha256_ref(ref_value)
+        if digest is not None:
+            return path, digest
+        if is_real_sha256(ref_value):
+            return None, ref_value
+        return None, None
+    return None, None
+
+
+HOLDOUT_LEDGER_DIRNAME = "holdout_ledger"  # doc sha 4a61f9c33733: the declared,
+# by-convention standalone ledger location "beside the plan artifacts" — the
+# leak scan must exclude it (the held-out content legitimately lives there).
+
+
+def find_all_files(root, exclude_dirnames=()):
+    out = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in exclude_dirnames]
+        for fn in filenames:
+            out.append(Path(dirpath) / fn)
+    return out
+
+
+def read_text(path):
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
+# --------------------------------------------------------------------------
+# Context: everything a check needs, loaded once, defensively
+# --------------------------------------------------------------------------
+
+class Ctx:
+    def __init__(self, plan_dir, repo_root):
+        self.plan_dir = Path(plan_dir)
+        self.repo_root = Path(repo_root)
+
+        self._repo_basenames = None  # lazy index, built by repo_anchor_resolves()
+
+        self.frame, self.frame_err = load_json(self.plan_dir / "frame.json")
+        self.packages, self.packages_err = load_json(self.plan_dir / "packages.json")
+        self.sequence, self.sequence_err = load_json(self.plan_dir / "sequence.json")
+        self.manifest, self.manifest_err = load_json(self.plan_dir / "manifest.json")
+
+        packets_dir = self.plan_dir / "packets"
+        self.packet_files = {}   # package_id-ish filename stem -> text
+        self.packet_paths = {}   # filename -> Path
+        if packets_dir.is_dir():
+            for p in sorted(packets_dir.glob("*.md")):
+                txt = read_text(p)
+                if txt is not None:
+                    self.packet_files[p.name] = txt
+                    self.packet_paths[p.name] = p
+
+    def repo_path_exists(self, relpath):
+        if not isinstance(relpath, str) or not relpath.strip():
+            return False
+        # strip a trailing :line or :line-line anchor if present
+        clean = re.sub(r":\d+(-\d+)?$", "", relpath.strip())
+        try:
+            return (self.repo_root / clean).exists()
+        except OSError:
+            return False
+
+    def repo_anchor_resolves(self, relpath):
+        """Like repo_path_exists, but falls back to a basename search across the
+        repo tree for a bare/partial filename (e.g. a packet prose mention of
+        `paths.rs` when the same file is elsewhere cited by its full path) —
+        used only by the anchors_present heuristic, never by scope/allow-list
+        checks, where a bare-filename false-negative would hide a real gap."""
+        if self.repo_path_exists(relpath):
+            return True
+        clean = re.sub(r":\d+(-\d+)?$", "", relpath.strip())
+        basename = Path(clean).name
+        if not basename:
+            return False
+        if self._repo_basenames is None:
+            self._repo_basenames = set()
+            for dirpath, dirnames, filenames in os.walk(self.repo_root):
+                dirnames[:] = [d for d in dirnames if d != ".git"]
+                for fn in filenames:
+                    self._repo_basenames.add(fn)
+        return basename in self._repo_basenames
+
+    def plan_path_resolve(self, relpath):
+        """Resolve a path that may be relative to plan_dir (including '../' escapes,
+        used by standalone holdout stores). Returns Path or None."""
+        if not isinstance(relpath, str) or not relpath.strip():
+            return None
+        if "://" in relpath:
+            return None
+        try:
+            candidate = (self.plan_dir / relpath).resolve()
+            return candidate if candidate.exists() else None
+        except OSError:
+            return None
+
+    def all_packet_text(self):
+        return "\n".join(self.packet_files.values())
+
+
+def require(ctx, *names):
+    """Returns None if all named artifacts loaded cleanly, else an evidence string."""
+    missing = []
+    for n in names:
+        data = getattr(ctx, n)
+        err = getattr(ctx, f"{n}_err")
+        if data is None:
+            missing.append(err or f"{n}.json missing")
+    if missing:
+        return "; ".join(missing)
+    return None
+
+
+# ==========================================================================
+# FRAME phase — planning-protocol.md § FRAME `framed` gate (lines ~278-291)
+# ==========================================================================
+
+def chk_upstream_bound(ctx):
+    """"the upstream binding present in one of its two forms" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    ub = g(ctx.frame, "upstream_binding", default=None)
+    if not isinstance(ub, dict):
+        return FAIL, "frame.upstream_binding missing or not an object"
+    kind = ub.get("kind")
+    if kind == "inherited":
+        if not nonempty_str(ub.get("digest")):
+            return FAIL, "upstream_binding.kind=inherited but digest is empty/missing"
+        return PASS, f"kind=inherited, digest={ub.get('digest')}"
+    if kind == "reconstructed":
+        missing = [k for k in ("source", "digest") if not nonempty_str(ub.get(k))]
+        if missing:
+            return FAIL, f"upstream_binding.kind=reconstructed missing field(s): {', '.join(missing)}"
+        return PASS, f"kind=reconstructed, source set, digest={ub.get('digest')}"
+    return FAIL, f"upstream_binding.kind is {ub.get('kind')!r}, must be inherited|reconstructed"
+
+
+def chk_inputs_classified(ctx):
+    """"every input carrying a provenance class" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    inputs = g(ctx.frame, "inputs", default=None)
+    if not isinstance(inputs, list) or not inputs:
+        return FAIL, "frame.inputs missing or empty"
+    bad = []
+    for i, item in enumerate(inputs):
+        if not isinstance(item, dict):
+            bad.append(f"inputs[{i}] not an object")
+            continue
+        cls = item.get("class")
+        if cls not in ("inherited", "reconstructed", "asserted"):
+            bad.append(f"inputs[{i}].class={cls!r}")
+            continue
+        missing = [k for k in ("input", "wrong_if", "could_confirm") if not nonempty_str(item.get(k))]
+        if missing:
+            bad.append(f"inputs[{i}] missing {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(inputs)} inputs, all carry a valid class + wrong_if + could_confirm"
+
+
+def chk_authority_declared(ctx):
+    """"the authority declaration present with who holds what is missing" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    auth = g(ctx.frame, "authority", default=None)
+    if not isinstance(auth, dict):
+        return FAIL, "frame.authority missing or not an object"
+    level = auth.get("level")
+    if level not in ("full", "partial", "none"):
+        return FAIL, f"authority.level={level!r}, must be full|partial|none"
+    if level in ("partial", "none"):
+        mhb = auth.get("missing_held_by")
+        empty = mhb is None or (isinstance(mhb, str) and not mhb.strip()) or (isinstance(mhb, (dict, list)) and not mhb)
+        if empty:
+            return FAIL, f"authority.level={level} but missing_held_by is empty"
+    return PASS, f"level={level}, missing_held_by present where required"
+
+
+def chk_decision_rights_named(ctx):
+    """"both decision rights named" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    dr = g(ctx.frame, "decision_rights", default=None)
+    if not isinstance(dr, dict):
+        return FAIL, "frame.decision_rights missing or not an object"
+    missing = [k for k in ("scope_change", "merge") if not nonempty_str(dr.get(k))]
+    if missing:
+        return FAIL, f"decision_rights missing: {', '.join(missing)}"
+    return PASS, f"scope_change={dr['scope_change']!r}, merge={dr['merge']!r}"
+
+
+def chk_campaign_call_made(ctx):
+    """"the campaign call recorded either way" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    camp = g(ctx.frame, "campaign", default=None)
+    if not isinstance(camp, dict):
+        return FAIL, "frame.campaign missing or not an object"
+    if not isinstance(camp.get("opened"), bool):
+        return FAIL, f"campaign.opened={camp.get('opened')!r}, must be boolean"
+    if camp["opened"] and not nonempty_str(camp.get("kind")):
+        return FAIL, "campaign.opened=true but kind is empty"
+    if not nonempty_str(camp.get("named_reason")):
+        return FAIL, "campaign.named_reason is empty"
+    return PASS, f"opened={camp['opened']}, named_reason present"
+
+
+def chk_baseline_captured(ctx):
+    """"the baseline present with suite state and promise level, and the repo's
+    enforced gates recorded (an empty list is a statement)" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    b = g(ctx.frame, "baseline", default=None)
+    if not isinstance(b, dict):
+        return FAIL, "frame.baseline missing or not an object"
+    suite = b.get("suite")
+    if suite not in ("green", "red", "absent", "unmeasured"):
+        return FAIL, f"baseline.suite={suite!r}, must be green|red|absent|unmeasured"
+    promise = b.get("promise")
+    if promise not in ("full", "seam_only"):
+        return FAIL, f"baseline.promise={promise!r}, must be full|seam_only"
+    if "repo_gates" not in ctx.frame or not isinstance(ctx.frame.get("repo_gates"), list):
+        return FAIL, "frame.repo_gates missing or not a list (an empty list is a statement, absence is not)"
+    return PASS, f"suite={suite}, promise={promise}, repo_gates: {len(ctx.frame['repo_gates'])} entries"
+
+
+def chk_impact_depth_declared(ctx):
+    """"every impact entry carries a tier and the set carries a depth" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    impact = g(ctx.frame, "impact", default=None)
+    if not isinstance(impact, dict):
+        return FAIL, "frame.impact missing or not an object"
+    depth = impact.get("depth")
+    if not (depth == "direct" or depth == "full" or (isinstance(depth, str) and re.match(r"^transitive_\d+$", depth))):
+        return FAIL, f"impact.depth={depth!r}, must be direct|transitive_N|full"
+    entries = impact.get("entries")
+    if not isinstance(entries, list) or not entries:
+        return FAIL, "impact.entries missing or empty"
+    bad = []
+    for i, e in enumerate(entries):
+        if not isinstance(e, dict) or not nonempty_str(e.get("path")) or e.get("tier") not in ("T1", "T2", "T3", "T4"):
+            bad.append(f"entries[{i}]={e!r}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"depth={depth}, {len(entries)} entries all carry a valid tier"
+
+
+def chk_repro_state_recorded(ctx):
+    """"defect work either reproduced or its first package is the reproduction"
+    (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    repro = g(ctx.frame, "repro", default=None)
+    if not isinstance(repro, dict):
+        return FAIL, "frame.repro missing or not an object"
+    state = repro.get("state")
+    if state not in ("reproduced", "is_first_package", "no_defect"):
+        return FAIL, f"repro.state={state!r}, must be reproduced|is_first_package|no_defect"
+    return PASS, f"state={state}"
+
+
+def chk_pinning_decided(ctx):
+    """"every pinning decision carrying its seam, the behavior, and either an
+    existing pin or the characterization command that will create one" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    pinning = g(ctx.frame, "pinning", default=None)
+    if not isinstance(pinning, list):
+        return FAIL, "frame.pinning missing (must be a list, empty allowed if nothing needs pinning)"
+    bad = []
+    for i, p in enumerate(pinning):
+        if not isinstance(p, dict):
+            bad.append(f"pinning[{i}] not an object")
+            continue
+        missing = [k for k in ("seam", "behavior", "characterization_command") if not nonempty_str(p.get(k))]
+        if not isinstance(p.get("exists"), bool):
+            missing.append("exists(bool)")
+        if missing:
+            bad.append(f"pinning[{i}] missing {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pinning)} pinning entries, all carry seam+behavior+characterization_command"
+
+
+def chk_requirements_quote_span(ctx):
+    """"every requirement quotes a span" (framed Verify — no checklist key of its
+    own; coined here as requirements_quote_span). Also validates the requirement's
+    scope field (local|global), required by the schema (state contracts / FRAME)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    reqs = g(ctx.frame, "requirements", default=None)
+    if not isinstance(reqs, list) or not reqs:
+        return FAIL, "frame.requirements missing or empty"
+    bad = []
+    for r in reqs:
+        if not isinstance(r, dict):
+            bad.append("non-object requirement")
+            continue
+        rid = r.get("id", "<no id>")
+        if not nonempty_str(r.get("text")):
+            bad.append(f"{rid}: empty text")
+        if r.get("scope") not in ("local", "global"):
+            bad.append(f"{rid}: scope={r.get('scope')!r} (must be local|global)")
+        q = r.get("quotes")
+        if not isinstance(q, dict) or not nonempty_str(q.get("source")) or not nonempty_str(q.get("span")):
+            bad.append(f"{rid}: quotes.source/quotes.span missing")
+        if not nonempty_str(r.get("acceptance_source")):
+            bad.append(f"{rid}: acceptance_source missing")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(reqs)} requirements, all quote a source span and carry scope"
+
+
+def chk_acceptance_resolves_to_commands(ctx):
+    """"every acceptance criterion parses as a runnable command" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    reqs = g(ctx.frame, "requirements", default=[])
+    bad = []
+    total = 0
+    for r in reqs if isinstance(reqs, list) else []:
+        rid = r.get("id", "<no id>") if isinstance(r, dict) else "<bad req>"
+        acc = r.get("acceptance") if isinstance(r, dict) else None
+        if not isinstance(acc, list) or not acc:
+            bad.append(f"{rid}: acceptance missing/empty")
+            continue
+        for j, a in enumerate(acc):
+            total += 1
+            if not isinstance(a, dict) or not nonempty_str(a.get("criterion")) or not nonempty_str(a.get("command")):
+                bad.append(f"{rid}.acceptance[{j}]: criterion/command missing")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{total} acceptance criteria, all carry a non-empty command"
+
+
+def chk_stories_full_with_enactment(ctx):
+    """"every story carrying Given/When/Then, a rung, and an enactment with
+    evidence keys" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    stories = g(ctx.frame, "stories", default=None)
+    if not isinstance(stories, list) or not stories:
+        return FAIL, "frame.stories missing or empty"
+    bad = []
+    for s in stories:
+        if not isinstance(s, dict):
+            bad.append("non-object story")
+            continue
+        sid = s.get("id", "<no id>")
+        missing = [k for k in ("given", "when", "then") if not nonempty_str(s.get(k))]
+        if s.get("rung") not in E_ORDER:
+            missing.append(f"rung(got {s.get('rung')!r})")
+        en = s.get("enactment")
+        if not isinstance(en, dict) or not nonempty_str(en.get("command")) or not nonempty_str(en.get("setting")) \
+                or not isinstance(en.get("evidence_keys"), list) or not en.get("evidence_keys"):
+            missing.append("enactment{command,setting,evidence_keys[]}")
+        if s.get("red_state") not in ("seen_failing", "pending_red"):
+            missing.append(f"red_state(got {s.get('red_state')!r})")
+        if missing:
+            bad.append(f"{sid}: {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(stories)} stories, all carry given/when/then + rung + enactment + red_state"
+
+
+def chk_rung_requests_separated(ctx):
+    """"no rung above authority without a request" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    stories = g(ctx.frame, "stories", default=[])
+    bad = []
+    checked = 0
+    for s in stories if isinstance(stories, list) else []:
+        if not isinstance(s, dict):
+            continue
+        rr = s.get("rung_requested")
+        if rr is None:
+            continue
+        checked += 1
+        sid = s.get("id", "<no id>")
+        missing = [k for k in ("requested_from", "decide_by") if not nonempty_str(s.get(k))]
+        if rr not in E_ORDER:
+            missing.append(f"rung_requested(got {rr!r})")
+        elif s.get("rung") in E_ORDER and E_ORDER[rr] <= E_ORDER[s["rung"]]:
+            missing.append(f"rung_requested({rr}) must exceed rung({s.get('rung')})")
+        if missing:
+            bad.append(f"{sid}: {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{checked} stories carry a rung_requested; all have requested_from+decide_by and rung_requested>rung"
+
+
+def chk_questions_dated(ctx):
+    """"every open question carrying an owner and an answer-by date" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    qs = g(ctx.frame, "questions", default=None)
+    if not isinstance(qs, list):
+        return FAIL, "frame.questions missing (must be a list, empty allowed)"
+    bad = []
+    for i, q in enumerate(qs):
+        if not isinstance(q, dict):
+            bad.append(f"questions[{i}] not an object")
+            continue
+        missing = [k for k in ("q", "owner", "answer_by") if not nonempty_str(q.get(k))]
+        if not isinstance(q.get("blocking"), bool):
+            missing.append("blocking(bool)")
+        if not nonempty_str(q.get("assumption_if_unanswered")):
+            missing.append("assumption_if_unanswered")
+        if missing:
+            bad.append(f"questions[{i}]({q.get('q','')[:30]!r}): {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(qs)} questions, all carry owner+answer_by+blocking+assumption_if_unanswered"
+
+
+def chk_readback_emitted(ctx):
+    """"unconfirmed read-back passes, absent does not" (framed Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    rb = g(ctx.frame, "readback", default=None)
+    if not isinstance(rb, dict):
+        return FAIL, "frame.readback missing or not an object"
+    if not nonempty_str(rb.get("ref")):
+        return FAIL, "readback.ref is empty"
+    state = rb.get("state")
+    if state not in ("unconfirmed", "confirmed", "unconfirmable"):
+        return FAIL, f"readback.state={state!r}, must be unconfirmed|confirmed|unconfirmable"
+    if state == "confirmed" and not nonempty_str(rb.get("confirmed_by")):
+        return FAIL, "readback.state=confirmed but confirmed_by is empty"
+    return PASS, f"state={state}, ref present"
+
+
+FRAME_CHECKS = [
+    ("upstream_bound", chk_upstream_bound),
+    ("inputs_classified", chk_inputs_classified),
+    ("authority_declared", chk_authority_declared),
+    ("decision_rights_named", chk_decision_rights_named),
+    ("campaign_call_made", chk_campaign_call_made),
+    ("baseline_captured", chk_baseline_captured),
+    ("impact_depth_declared", chk_impact_depth_declared),
+    ("repro_state_recorded", chk_repro_state_recorded),
+    ("pinning_decided", chk_pinning_decided),
+    ("requirements_quote_span", chk_requirements_quote_span),
+    ("acceptance_resolves_to_commands", chk_acceptance_resolves_to_commands),
+    ("stories_full_with_enactment", chk_stories_full_with_enactment),
+    ("rung_requests_separated", chk_rung_requests_separated),
+    ("questions_dated", chk_questions_dated),
+    ("readback_emitted", chk_readback_emitted),
+]
+
+
+# ==========================================================================
+# CARVE phase — planning-protocol.md § CARVE `carved` gate (lines ~297-303)
+# ==========================================================================
+
+def chk_requirements_partition_over_closers(ctx):
+    """"requirements partition exactly over closers (no orphans, no double
+    closers — a global requirement still has one closer)" (carved Verify — no
+    checklist key of its own; coined here)."""
+    err = require(ctx, "frame", "packages")
+    if err:
+        return FAIL, err
+    req_ids = [r.get("id") for r in g(ctx.frame, "requirements", default=[]) if isinstance(r, dict) and r.get("id")]
+    if not req_ids:
+        return FAIL, "no requirements found in frame.json to partition"
+    pkgs = g(ctx.packages, "packages", default=[])
+    counts = {rid: 0 for rid in req_ids}
+    unknown = []
+    for p in pkgs if isinstance(pkgs, list) else []:
+        for rid in (p.get("closes_reqs") or []) if isinstance(p, dict) else []:
+            if rid in counts:
+                counts[rid] += 1
+            else:
+                unknown.append(f"{p.get('id','?')} closes unknown req {rid!r}")
+    orphans = [rid for rid, c in counts.items() if c == 0]
+    doubles = [f"{rid}(x{c})" for rid, c in counts.items() if c > 1]
+    bad = []
+    if orphans:
+        bad.append(f"orphaned (closed by none): {truncate_list(orphans)}")
+    if doubles:
+        bad.append(f"double-closed: {truncate_list(doubles)}")
+    if unknown:
+        bad.append(truncate_list(unknown))
+    if bad:
+        return FAIL, "; ".join(bad)
+    return PASS, f"{len(req_ids)} requirements each closed by exactly one package"
+
+
+def chk_packages_cut(ctx):
+    """"Cut the work into packages, each the smallest independently mergeable
+    unit" (CARVE.carve procedure; packages_cut checklist key)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=None)
+    if not isinstance(pkgs, list) or not pkgs:
+        return FAIL, "packages.json packages[] missing or empty"
+    bad = []
+    for p in pkgs:
+        if not isinstance(p, dict):
+            bad.append("non-object package")
+            continue
+        pid = p.get("id", "<no id>")
+        missing = [k for k in ("id", "intent") if not nonempty_str(p.get(k))]
+        if p.get("kind") not in ("work", "discovery"):
+            missing.append(f"kind(got {p.get('kind')!r})")
+        for lk in ("closes_reqs", "enacts_stories", "allow_list", "out_of_scope", "deps"):
+            if not isinstance(p.get(lk), list):
+                missing.append(f"{lk}(list)")
+        if missing:
+            bad.append(f"{pid}: {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pkgs)} packages, all carry required shape"
+
+
+def chk_splits_cited(ctx):
+    """"every split carrying its cited pattern" (carved Verify)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    bad = [p.get("id", "?") for p in pkgs if isinstance(p, dict) and not nonempty_str(p.get("split_cited"))]
+    if bad:
+        return FAIL, f"missing split_cited: {truncate_list(bad)}"
+    return PASS, f"{len(pkgs)} packages all carry split_cited"
+
+
+def chk_scopes_are_allow_lists(ctx):
+    """"every scope entry resolves in the repository or is marked `new: true`
+    (entering at T3 by convention)" (carved Verify, schema doc fb2c41e78c72)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    bad = []
+    total = 0
+    for p in pkgs if isinstance(pkgs, list) else []:
+        pid = p.get("id", "?") if isinstance(p, dict) else "?"
+        for entry in (p.get("allow_list") or []) if isinstance(p, dict) else []:
+            total += 1
+            if not isinstance(entry, dict) or not nonempty_str(entry.get("path")):
+                bad.append(f"{pid}: malformed allow_list entry")
+                continue
+            is_new = entry.get("new") is True
+            if is_new:
+                if entry.get("tier") != "T3":
+                    bad.append(f"{pid}: {entry['path']} marked new:true but tier={entry.get('tier')!r} (new-file convention requires T3)")
+                continue
+            if not ctx.repo_path_exists(entry["path"]):
+                bad.append(f"{pid}: {entry['path']} does not exist under repo-root and is not marked new:true")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{total} allow-list entries across {len(pkgs)} packages, each resolves under {ctx.repo_root} or is marked new:true at T3"
+
+
+def chk_tiers_carried(ctx):
+    """"every scope entry carries a tier and every package its weakest-tier
+    mark" (carved Verify)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    bad = []
+    for p in pkgs if isinstance(pkgs, list) else []:
+        pid = p.get("id", "?") if isinstance(p, dict) else "?"
+        entries = p.get("allow_list") or []
+        tiers = []
+        for entry in entries:
+            t = entry.get("tier") if isinstance(entry, dict) else None
+            if t not in TIER_STRENGTH:
+                bad.append(f"{pid}: allow_list entry tier={t!r} invalid")
+                continue
+            tiers.append(t)
+        if not tiers:
+            bad.append(f"{pid}: no valid-tier allow_list entries")
+            continue
+        weakest = max(tiers, key=lambda t: TIER_STRENGTH[t])
+        declared = p.get("scope_tier")
+        if declared not in TIER_STRENGTH:
+            bad.append(f"{pid}: scope_tier={declared!r} invalid")
+        elif TIER_STRENGTH[declared] != TIER_STRENGTH[weakest]:
+            bad.append(f"{pid}: scope_tier={declared} but weakest allow_list tier is {weakest}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pkgs)} packages: scope_tier matches weakest allow_list tier"
+
+
+def chk_discovery_bounded(ctx):
+    """"a discovery package: time-boxed to the constant, obliged to return a
+    decision" (carved Verify: discovery packages carry a time-box and a
+    decision-required)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    disc = [p for p in pkgs if isinstance(p, dict) and p.get("kind") == "discovery"]
+    if not disc:
+        return PASS, "0 discovery packages present (vacuously satisfied)"
+    bad = []
+    for p in disc:
+        pid = p.get("id", "?")
+        d = p.get("discovery")
+        if not isinstance(d, dict) or not nonempty_str(d.get("time_box")) or not nonempty_str(d.get("decision_required")):
+            bad.append(f"{pid}: discovery{{time_box,decision_required}} missing")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(disc)} discovery packages, all carry time_box + decision_required"
+
+
+UNDO_MECHANISMS = ("flag", "revert", "reverse_migration", "declared_irreversible")
+
+
+def chk_undo_named_where_needed(ctx):
+    """"its undo mechanism is named here" (CARVE.carve procedure; law 10;
+    undo_named_where_needed checklist key). `undo` is an ORDERED ARRAY of layers
+    (schema doc fb2c41e78c72): [{mechanism: flag|revert|reverse_migration|
+    declared_irreversible, command}] — declared_irreversible's `command` carries
+    the declaration text in place of a runnable command. Applied to every
+    kind=work package, since a merged work package is by definition a change
+    to the running system. The old single-object shape is a FAIL, not aliased."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    work = [p for p in pkgs if isinstance(p, dict) and p.get("kind") == "work"]
+    bad = []
+    for p in work:
+        pid = p.get("id", "?")
+        u = p.get("undo")
+        if isinstance(u, dict):
+            bad.append(f"{pid}: undo is a single object (old shape) — schema now requires an array of layers")
+            continue
+        if not isinstance(u, list) or not u:
+            bad.append(f"{pid}: undo missing or not a non-empty array of layers")
+            continue
+        for i, layer in enumerate(u):
+            if not isinstance(layer, dict) or layer.get("mechanism") not in UNDO_MECHANISMS \
+                    or not nonempty_str(layer.get("command")):
+                bad.append(f"{pid}.undo[{i}]: mechanism/command missing or mechanism not in {UNDO_MECHANISMS}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(work)} work packages, all name an undo mechanism"
+
+
+def chk_merge_rungs_set(ctx):
+    """"every package carrying its merge rung, equal to the highest rung its
+    merge-required stories demand" (carved Verify)."""
+    err = require(ctx, "frame", "packages")
+    if err:
+        return FAIL, err
+    story_rung = {s.get("id"): s.get("rung") for s in g(ctx.frame, "stories", default=[]) if isinstance(s, dict)}
+    pkgs = g(ctx.packages, "packages", default=[])
+    bad = []
+    for p in pkgs if isinstance(pkgs, list) else []:
+        pid = p.get("id", "?") if isinstance(p, dict) else "?"
+        mr = p.get("merge_rung")
+        if mr not in E_ORDER:
+            bad.append(f"{pid}: merge_rung={mr!r} invalid")
+            continue
+        story_ids = p.get("enacts_stories") or []
+        rungs = []
+        for sid in story_ids:
+            r = story_rung.get(sid)
+            if r not in E_ORDER:
+                bad.append(f"{pid}: enacted story {sid} not found in frame.stories (or has no valid rung)")
+                continue
+            rungs.append(r)
+        if not rungs:
+            continue
+        expected = max(rungs, key=lambda r: E_ORDER[r])
+        if E_ORDER[mr] != E_ORDER[expected]:
+            bad.append(f"{pid}: merge_rung={mr} but highest enacted-story rung is {expected}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pkgs)} packages: merge_rung equals the highest rung among enacted stories"
+
+
+def chk_conflict_pairs_computed(ctx):
+    """"conflict pairs computed from intersections, not asserted" (carved
+    Verify) — recomputed from allow-list intersections and compared to the
+    declared conflict_pairs, not trusted. Also carries the Hotspot
+    definition's scope rule (doc sha cc458f984138): "the decile computed
+    repo-wide, but recorded only where it intersects an allow-list — a
+    hotspot no package touches serializes nothing and is noise in the
+    record." Any declared `hotspots[]` entry that isn't in ANY package's
+    allow-list fails here, naming the out-of-scope path."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    if not isinstance(pkgs, list):
+        return FAIL, "packages.json packages[] missing"
+    allow = {}
+    for p in pkgs:
+        if not isinstance(p, dict):
+            continue
+        pid = p.get("id", "?")
+        allow[pid] = {e.get("path") for e in (p.get("allow_list") or []) if isinstance(e, dict) and e.get("path")}
+    all_allow_listed = set().union(*allow.values()) if allow else set()
+    ids = sorted(allow)
+    computed = {}
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            a, b = ids[i], ids[j]
+            shared = allow[a] & allow[b]
+            if shared:
+                computed[frozenset((a, b))] = shared
+
+    declared = g(ctx.packages, "conflict_pairs", default=None)
+    if not isinstance(declared, list):
+        return FAIL, "packages.json conflict_pairs missing (must be a list, empty allowed)"
+    declared_map = {}
+    bad = []
+    for entry in declared:
+        if not isinstance(entry, dict) or not nonempty_str(entry.get("a")) or not nonempty_str(entry.get("b")):
+            bad.append(f"malformed conflict_pairs entry {entry!r}")
+            continue
+        key = frozenset((entry["a"], entry["b"]))
+        declared_map[key] = set(entry.get("shared") or [])
+
+    missing_pairs = [tuple(sorted(k)) for k in computed if k not in declared_map]
+    extra_pairs = [tuple(sorted(k)) for k in declared_map if k not in computed]
+    mismatched = [tuple(sorted(k)) for k in (computed.keys() & declared_map.keys())
+                  if computed[k] != declared_map[k]]
+    if missing_pairs:
+        bad.append(f"undeclared but real (shared files): {truncate_list(missing_pairs)}")
+    if extra_pairs:
+        bad.append(f"declared but no actual shared file: {truncate_list(extra_pairs)}")
+    if mismatched:
+        bad.append(f"shared[] list wrong for: {truncate_list(mismatched)}")
+
+    hotspots = g(ctx.packages, "hotspots", default=[])
+    if not isinstance(hotspots, list):
+        bad.append("packages.json hotspots missing (must be a list, empty allowed)")
+    else:
+        out_of_scope = [h for h in hotspots if h not in all_allow_listed]
+        if out_of_scope:
+            bad.append(f"hotspot(s) not in any package's allow-list (noise in the record per the "
+                       f"Hotspot definition's recording rule): {truncate_list(out_of_scope)}")
+
+    if bad:
+        return FAIL, "; ".join(bad)
+    return PASS, (f"{len(computed)} conflicting pair(s) recomputed from allow-list intersections match "
+                  f"declared conflict_pairs; {len(hotspots)} hotspot(s) all intersect some allow-list")
+
+
+def chk_sizing_claims_recorded(ctx):
+    """"the sizing claim is recorded and will be graded by tripwire" (CARVE.size
+    procedure; sizing_claims_recorded checklist key)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = g(ctx.packages, "packages", default=[])
+    bad = []
+    for p in pkgs if isinstance(pkgs, list) else []:
+        pid = p.get("id", "?") if isinstance(p, dict) else "?"
+        s = p.get("sizing")
+        if not isinstance(s, dict) or s.get("mode") not in ("session", "checkpointed"):
+            bad.append(f"{pid}: sizing.mode invalid/missing")
+            continue
+        basis = s.get("claim_basis")
+        if not isinstance(basis, str) or not (basis.startswith("measured") or basis.startswith("default_unmeasured")):
+            bad.append(f"{pid}: sizing.claim_basis={basis!r} (must start with measured|default_unmeasured)")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pkgs)} packages, all carry sizing.mode + claim_basis"
+
+
+def chk_upstream_binding_carried(ctx):
+    """"the frame's upstream binding carried forward unchanged" (carved
+    Verify — no checklist key of its own; coined here as
+    upstream_binding_carried per protocol doc a944e7c19eae).
+    packages.json now carries a top-level `upstream_binding` echoed verbatim
+    from frame.json; this check compares them for equality."""
+    err = require(ctx, "frame", "packages")
+    if err:
+        return FAIL, err
+    frame_ub = g(ctx.frame, "upstream_binding", default=None)
+    pkg_ub = ctx.packages.get("upstream_binding") if isinstance(ctx.packages, dict) else None
+    if not ctx.packages or "upstream_binding" not in ctx.packages:
+        return FAIL, "packages.json upstream_binding field missing"
+    if pkg_ub != frame_ub:
+        return FAIL, f"packages.json upstream_binding differs from frame.json's (packages={pkg_ub!r} vs frame={frame_ub!r})"
+    return PASS, "packages.json upstream_binding matches frame.json's verbatim"
+
+
+CARVE_CHECKS = [
+    ("requirements_partition_over_closers", chk_requirements_partition_over_closers),
+    ("packages_cut", chk_packages_cut),
+    ("splits_cited", chk_splits_cited),
+    ("scopes_are_allow_lists", chk_scopes_are_allow_lists),
+    ("tiers_carried", chk_tiers_carried),
+    ("discovery_bounded", chk_discovery_bounded),
+    ("undo_named_where_needed", chk_undo_named_where_needed),
+    ("merge_rungs_set", chk_merge_rungs_set),
+    ("conflict_pairs_computed", chk_conflict_pairs_computed),
+    ("sizing_claims_recorded", chk_sizing_claims_recorded),
+    ("upstream_binding_carried", chk_upstream_binding_carried),
+]
+
+
+# ==========================================================================
+# SEQUENCE phase — planning-protocol.md § SEQUENCE `sequenced` gate (lines ~309-312)
+# ==========================================================================
+
+def num_packages(ctx):
+    pkgs = g(ctx.packages, "packages", default=[])
+    return len(pkgs) if isinstance(pkgs, list) else 0
+
+
+def chk_waits_owned_and_escalatable(ctx):
+    """"Every wait the work will meet ... each with owner, assumed-or-measured
+    duration, and escalation trigger" (SEQUENCE.waits procedure;
+    waits_owned_and_escalatable checklist key)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    waits = g(ctx.sequence, "waits", default=None)
+    if not isinstance(waits, list) or not waits:
+        return FAIL, "sequence.waits missing or empty (the review/merge wait always exists)"
+    bad = []
+    for w in waits:
+        if not isinstance(w, dict):
+            bad.append("non-object wait")
+            continue
+        wid = w.get("id", "?")
+        missing = [k for k in ("waits_on", "owner", "basis", "escalate_after") if not nonempty_str(str(w.get(k, "")))]
+        if not isinstance(w.get("expected_days"), (int, float)):
+            missing.append("expected_days(number)")
+        if w.get("basis") not in (None, "assumption", "measured"):
+            pass  # already checked non-empty above; enum-checked below
+        if w.get("basis") not in ("assumption", "measured"):
+            missing.append(f"basis(got {w.get('basis')!r})")
+        if not isinstance(w.get("serves"), list) or not w.get("serves"):
+            missing.append("serves[]")
+        if missing:
+            bad.append(f"{wid}: {','.join(sorted(set(missing)))}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(waits)} waits, all carry waits_on+owner+expected_days+basis+escalate_after+serves"
+
+
+def chk_windows_batched_or_justified(ctx):
+    """"every window serving more than one story batched, or the separation
+    justified — `unbatched_because` owed only where another wait shares the
+    same `waits_on`, a lone window has nothing to batch with" (law 1;
+    sequenced Verify; windows_batched_or_justified checklist key; doc sha
+    a944e7c19eae)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    waits = [w for w in g(ctx.sequence, "waits", default=[]) if isinstance(w, dict)]
+    waits_on_counts = {}
+    for w in waits:
+        waits_on_counts[w.get("waits_on")] = waits_on_counts.get(w.get("waits_on"), 0) + 1
+
+    bad = []
+    windowed = 0
+    lone = 0
+    for w in waits:
+        if not nonempty_str(w.get("starts_after")):
+            continue
+        windowed += 1
+        serves = w.get("serves") or []
+        if len(serves) > 1:
+            continue  # inherently batched
+        shares_waits_on = waits_on_counts.get(w.get("waits_on"), 0) > 1
+        if not shares_waits_on:
+            lone += 1  # lone window — nothing to batch with, nothing owed
+            continue
+        if not nonempty_str(w.get("unbatched_because")):
+            bad.append(f"{w.get('id','?')}: shares waits_on={w.get('waits_on')!r} with another wait, "
+                        f"serves<=1, no unbatched_because")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, (f"{windowed} window-shaped wait(s): {lone} lone window (nothing to batch with), "
+                  f"rest batch >1 story or state unbatched_because where another wait shared the same waits_on")
+
+
+def chk_rungs_enabled_or_downgraded(ctx):
+    """"every rung above E2 resolving to an enabler, a wait, or a recorded
+    downgrade" (sequenced Verify)."""
+    err = require(ctx, "frame", "sequence")
+    if err:
+        return FAIL, err
+    stories = [s for s in g(ctx.frame, "stories", default=[]) if isinstance(s, dict)]
+    above_e2 = [s for s in stories if s.get("rung") in E_ORDER and E_ORDER[s["rung"]] > E_ORDER["E2"]]
+    if not above_e2:
+        return PASS, "no story above E2"
+    enablers = g(ctx.sequence, "enablers", default=[])
+    enabler_rungs = {e.get("enables_rung") for e in enablers if isinstance(e, dict)}
+    waits = g(ctx.sequence, "waits", default=[])
+    served_ids = set()
+    for w in waits if isinstance(waits, list) else []:
+        if isinstance(w, dict):
+            served_ids.update(w.get("serves") or [])
+    downgraded_ids = {d.get("story") for d in g(ctx.sequence, "downgrades", default=[]) if isinstance(d, dict)}
+
+    bad = []
+    for s in above_e2:
+        sid = s.get("id", "?")
+        rung = s["rung"]
+        ok = (rung in enabler_rungs) or (sid in served_ids) or (sid in downgraded_ids)
+        if not ok:
+            bad.append(f"{sid}(rung {rung})")
+    if bad:
+        return FAIL, f"no enabler/wait/downgrade accounts for: {truncate_list(bad)}"
+    return PASS, f"{len(above_e2)} stories above E2, each resolves to an enabler, a wait, or a downgrade"
+
+
+def chk_obligations_owned_dated_and_gating(ctx):
+    """"Obligations that outlive merge ... each with owner, due date, and the
+    action it gates" (SEQUENCE.waits procedure; obligations_owned_dated_and_gating
+    checklist key)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    obs = g(ctx.sequence, "obligations", default=None)
+    if not isinstance(obs, list):
+        return FAIL, "sequence.obligations missing (must be a list, empty allowed)"
+    bad = []
+    for i, o in enumerate(obs):
+        if not isinstance(o, dict):
+            bad.append(f"obligations[{i}] not an object")
+            continue
+        missing = [k for k in ("gates_action", "owner", "due") if not nonempty_str(o.get(k))]
+        if o.get("kind") not in ("proof", "record"):
+            missing.append(f"kind(got {o.get('kind')!r})")
+        elif o["kind"] == "proof" and not nonempty_str(o.get("rung")):
+            missing.append("rung(required for kind=proof)")
+        if missing:
+            bad.append(f"obligations[{i}]: {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(obs)} obligations, all carry kind+owner+due+gates_action"
+
+
+def chk_downgrades_authorized_or_blocking(ctx):
+    """"Downgrades carry authorized_by, or decision_needed_from when nobody
+    present holds the authority" (SEQUENCE.waits procedure;
+    downgrades_authorized_or_blocking checklist key)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    dg = g(ctx.sequence, "downgrades", default=None)
+    if not isinstance(dg, list):
+        return FAIL, "sequence.downgrades missing (must be a list, empty allowed)"
+    bad = []
+    for i, d in enumerate(dg):
+        if not isinstance(d, dict):
+            bad.append(f"downgrades[{i}] not an object")
+            continue
+        missing = [k for k in ("story", "from", "to", "justification") if not nonempty_str(d.get(k))]
+        has_auth = nonempty_str(d.get("authorized_by"))
+        has_need = nonempty_str(d.get("decision_needed_from"))
+        if not (has_auth or has_need):
+            missing.append("authorized_by-or-decision_needed_from")
+        if missing:
+            bad.append(f"downgrades[{i}]: {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(dg)} downgrades, each carries authorized_by or decision_needed_from"
+
+
+def chk_contracts_frozen_before_dependents(ctx):
+    """"No package that consumes an interface is dispatched before that
+    interface is frozen" (law 7; sequenced Verify; contracts_frozen_before_dependents
+    checklist key)."""
+    err = require(ctx, "packages", "sequence")
+    if err:
+        return FAIL, err
+    cf = g(ctx.sequence, "contract_freezes", default=None)
+    if not isinstance(cf, list):
+        return FAIL, "sequence.contract_freezes missing (must be a list, empty allowed)"
+    if not cf:
+        return PASS, "no contract_freezes declared"
+    pkgs = {p.get("id"): p for p in g(ctx.packages, "packages", default=[]) if isinstance(p, dict)}
+    positions = {o.get("package"): o.get("position") for o in g(ctx.sequence, "order", default=[]) if isinstance(o, dict)}
+    bad = []
+    for i, entry in enumerate(cf):
+        if not isinstance(entry, dict) or not isinstance(entry.get("frozen_before"), list) or not entry.get("frozen_before"):
+            bad.append(f"contract_freezes[{i}]: malformed / empty frozen_before")
+            continue
+        for dep_pkg in entry["frozen_before"]:
+            p = pkgs.get(dep_pkg)
+            if p is None:
+                bad.append(f"contract_freezes[{i}]: frozen_before references unknown package {dep_pkg!r}")
+                continue
+            deps = p.get("deps") or []
+            dep_pos = positions.get(dep_pkg)
+            producer_ok = any(
+                positions.get(d) is not None and dep_pos is not None and positions[d] < dep_pos
+                for d in deps
+            )
+            if not deps or not producer_ok:
+                bad.append(f"{dep_pkg}: no preceding deps[] package to justify the contract freeze")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(cf)} contract_freezes, each frozen_before package has a preceding deps[] producer"
+
+
+def chk_order_acyclic_and_justified(ctx):
+    """"Dependency edges (cycles are carving defects, never scheduling inputs)"
+    and "Sequence ... skeleton or reproduction first ..." (SEQUENCE.order
+    procedure; order_acyclic_and_justified checklist key). Also checks that a
+    conflicting pair's later package is marked forced_serial, not an unrelated
+    rationale."""
+    err = require(ctx, "packages", "sequence")
+    if err:
+        return FAIL, err
+    n = num_packages(ctx)
+    order = g(ctx.sequence, "order", default=[])
+    if n < 2:
+        if not order:
+            return SKIP, "single-package plan — proportionality row 1 disables SEQUENCE.order"
+        # falls through to validate if a single-package plan chose to render one anyway
+    if not isinstance(order, list) or (n >= 2 and not order):
+        return FAIL, f"{n} packages but sequence.order is empty/missing"
+
+    valid_rationales = {"skeleton", "repro", "risk", "cost_of_delay", "opens_window", "forced_serial", "dependency"}
+    bad = []
+    pos_of = {}
+    for i, o in enumerate(order):
+        if not isinstance(o, dict) or not nonempty_str(o.get("package")) or not isinstance(o.get("position"), int):
+            bad.append(f"order[{i}] malformed")
+            continue
+        if o.get("rationale") not in valid_rationales:
+            bad.append(f"{o['package']}: rationale={o.get('rationale')!r} invalid")
+        pos_of[o["package"]] = o["position"]
+
+    positions = sorted(pos_of.values())
+    if positions != list(range(1, len(pos_of) + 1)):
+        bad.append(f"positions not a dense 1..N sequence: {positions}")
+
+    pkgs = {p.get("id"): p for p in g(ctx.packages, "packages", default=[]) if isinstance(p, dict)}
+    for pid, pos in pos_of.items():
+        p = pkgs.get(pid)
+        if p is None:
+            bad.append(f"order references unknown package {pid!r}")
+            continue
+        for dep in p.get("deps") or []:
+            dep_pos = pos_of.get(dep)
+            if dep_pos is None:
+                bad.append(f"{pid}: deps on {dep!r} which has no order position")
+            elif dep_pos >= pos:
+                bad.append(f"{pid}: deps on {dep} but {dep}'s position ({dep_pos}) is not before its own ({pos}) — cycle/misorder")
+
+    conflicts = g(ctx.packages, "conflict_pairs", default=[])
+    for c in conflicts if isinstance(conflicts, list) else []:
+        if not isinstance(c, dict):
+            continue
+        a, b = c.get("a"), c.get("b")
+        if a in pos_of and b in pos_of:
+            later = a if pos_of[a] > pos_of[b] else b
+            rationale = next((o.get("rationale") for o in order if isinstance(o, dict) and o.get("package") == later), None)
+            if rationale not in ("forced_serial", "dependency"):
+                bad.append(f"{later}: conflicts with {b if later == a else a} (shared allow-list files) "
+                            f"but order.rationale={rationale!r}, expected forced_serial or dependency")
+
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(order)} order entries: acyclic against deps[], valid rationale, conflicts serialized"
+
+
+def chk_parallel_sets_disjoint(ctx):
+    """"parallel sets from pairwise-disjoint allow-lists, hotspots and T3-only
+    scopes serialized ... and every package appearing in exactly one set —
+    serial work renders as singleton sets, an empty list is not a statement"
+    (SEQUENCE.order procedure + sequenced Verify, doc sha cc458f984138;
+    parallel_sets_disjoint checklist key)."""
+    err = require(ctx, "packages", "sequence")
+    if err:
+        return FAIL, err
+    n = num_packages(ctx)
+    psets = g(ctx.sequence, "parallel_sets", default=[])
+    if n < 2 and not psets:
+        return SKIP, "single-package plan — proportionality row 1 disables SEQUENCE.order/parallel_sets"
+    if not isinstance(psets, list):
+        return FAIL, "sequence.parallel_sets missing (must be a list)"
+    pkgs = {p.get("id"): p for p in g(ctx.packages, "packages", default=[]) if isinstance(p, dict)}
+    allow = {pid: {e.get("path") for e in (p.get("allow_list") or []) if isinstance(e, dict)}
+             for pid, p in pkgs.items()}
+    bad = []
+    for si, pset in enumerate(psets):
+        if not isinstance(pset, list):
+            bad.append(f"parallel_sets[{si}] not a list")
+            continue
+        for i in range(len(pset)):
+            for j in range(i + 1, len(pset)):
+                a, b = pset[i], pset[j]
+                shared = allow.get(a, set()) & allow.get(b, set())
+                if shared:
+                    bad.append(f"{a}+{b} declared parallel but share {truncate_list(shared, 3)}")
+        if len(pset) > 1:
+            t3 = [pid for pid in pset if pkgs.get(pid, {}).get("scope_tier") == "T3"]
+            if t3:
+                bad.append(f"T3-only package(s) {truncate_list(t3)} grouped in a parallel set of size {len(pset)} (must serialize)")
+
+    # Every package appears in exactly one set — serial work renders as
+    # singleton sets; an empty parallel_sets with real packages is a FAIL,
+    # never a silent statement.
+    all_ids = set(pkgs.keys())
+    flat = [pid for pset in psets if isinstance(pset, list) for pid in pset]
+    counts = Counter(flat)
+    unknown = sorted(set(flat) - all_ids)
+    duplicated = sorted(pid for pid, c in counts.items() if c > 1)
+    missing = sorted(all_ids - set(flat))
+    if unknown:
+        bad.append(f"parallel_sets reference unknown package(s): {truncate_list(unknown)}")
+    if duplicated:
+        bad.append(f"package(s) appear in more than one parallel set: {truncate_list(duplicated)}")
+    if missing:
+        bad.append(f"package(s) missing from parallel_sets entirely (an empty list is not a "
+                   f"statement — every package needs a set, serial work as a singleton): {truncate_list(missing)}")
+
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, (f"{len(psets)} parallel set(s), pairwise disjoint on allow-lists, no T3-only "
+                  f"package grouped, all {len(all_ids)} package(s) partitioned exactly once")
+
+
+def chk_risk_phase_capped(ctx):
+    """"risk retirement capped at the constant and labelled as such" (SEQUENCE.order
+    procedure; risk_phase_capped checklist key; constant: 25% of packages at 4+
+    packages, vacuous below that)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    n = num_packages(ctx)
+    rp = g(ctx.sequence, "risk_phase", default=None)
+    if not isinstance(rp, dict):
+        return FAIL, "sequence.risk_phase missing or not an object"
+    if not isinstance(rp.get("packages"), list):
+        return FAIL, "risk_phase.packages missing (must be a list)"
+    if rp.get("labelled") is not True:
+        return FAIL, "risk_phase.labelled is not true"
+    if n < 4:
+        return PASS, f"{n} packages (<4) — cap vacuously met per constants table"
+    cap_fraction = rp.get("cap_fraction", 0.25)
+    if not isinstance(cap_fraction, (int, float)):
+        return FAIL, f"risk_phase.cap_fraction={cap_fraction!r} not numeric"
+    cap = int(cap_fraction * n + 1e-9)
+    if len(rp["packages"]) > cap:
+        return FAIL, f"{len(rp['packages'])} risk-first packages exceeds cap {cap} ({cap_fraction}*{n})"
+    return PASS, f"{len(rp['packages'])} risk-first packages within cap {cap} ({cap_fraction}*{n})"
+
+
+def chk_forecast_has_basis_and_wait_share(ctx):
+    """"every forecast duration carries a basis and the wait share is present"
+    (sequenced Verify)."""
+    err = require(ctx, "sequence")
+    if err:
+        return FAIL, err
+    f = g(ctx.sequence, "forecast", default=None)
+    if not isinstance(f, dict):
+        return FAIL, "sequence.forecast missing or not an object"
+    missing = []
+    if f.get("most_likely") in (None, ""):
+        missing.append("most_likely")
+    rng = f.get("range")
+    if not isinstance(rng, list) or len(rng) != 2:
+        missing.append("range[opt,pess]")
+    if not nonempty_str(f.get("basis")):
+        missing.append("basis")
+    ws = f.get("wait_share")
+    if not isinstance(ws, (int, float)) or not (0 <= ws <= 1):
+        missing.append(f"wait_share(got {ws!r}, must be 0..1)")
+    if not isinstance(f.get("assumptions"), list):
+        missing.append("assumptions[]")
+    if not nonempty_str(f.get("revisit_trigger")):
+        missing.append("revisit_trigger")
+    if missing:
+        return FAIL, f"forecast missing: {', '.join(missing)}"
+    return PASS, f"most_likely={f['most_likely']}, wait_share={ws}, basis set, revisit_trigger set"
+
+
+def chk_commitment_within_authority(ctx):
+    """"only what fits inside declared authority may be marked committed"
+    (law 9; sequenced Verify; commitment_within_authority checklist key)."""
+    err = require(ctx, "frame", "sequence")
+    if err:
+        return FAIL, err
+    f = g(ctx.sequence, "forecast", default={})
+    ct = f.get("commitment_type")
+    if ct not in ("forecast_only", "committed"):
+        return FAIL, f"forecast.commitment_type={ct!r}, must be forecast_only|committed"
+    if ct == "forecast_only":
+        return PASS, "commitment_type=forecast_only"
+    level = g(ctx.frame, "authority", "level", default=None)
+    if level != "full":
+        return FAIL, f"forecast.commitment_type=committed but frame.authority.level={level!r} (only 'full' may commit)"
+    return PASS, "commitment_type=committed, authority.level=full"
+
+
+SEQUENCE_CHECKS = [
+    ("waits_owned_and_escalatable", chk_waits_owned_and_escalatable),
+    ("windows_batched_or_justified", chk_windows_batched_or_justified),
+    ("rungs_enabled_or_downgraded", chk_rungs_enabled_or_downgraded),
+    ("obligations_owned_dated_and_gating", chk_obligations_owned_dated_and_gating),
+    ("downgrades_authorized_or_blocking", chk_downgrades_authorized_or_blocking),
+    ("contracts_frozen_before_dependents", chk_contracts_frozen_before_dependents),
+    ("order_acyclic_and_justified", chk_order_acyclic_and_justified),
+    ("parallel_sets_disjoint", chk_parallel_sets_disjoint),
+    ("risk_phase_capped", chk_risk_phase_capped),
+    ("forecast_has_basis_and_wait_share", chk_forecast_has_basis_and_wait_share),
+    ("commitment_within_authority", chk_commitment_within_authority),
+]
+
+
+# ==========================================================================
+# DISPATCH phase — planning-protocol.md § DISPATCH `frozen` gate (lines ~325-328)
+# ==========================================================================
+
+ARTIFACT_FILENAMES = ("manifest.json", "plan.md", "friction.md", "frame.json", "packages.json", "sequence.json")
+
+
+def packet_text_for(ctx, package_id):
+    """Best-effort: find the packet .md whose filename stem matches package_id."""
+    for name, txt in ctx.packet_files.items():
+        stem = name[:-3] if name.endswith(".md") else name
+        if stem == package_id or package_id in name:
+            return name, txt
+    return None, None
+
+
+def chk_packets_self_contained(ctx):
+    """""no packet references content outside itself"" (frozen Verify)."""
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    bad = []
+    for name, txt in ctx.packet_files.items():
+        low = txt.lower()
+        refs = []
+        for fn in ARTIFACT_FILENAMES:
+            if fn in low:
+                refs.append(fn)
+        for other_name in ctx.packet_files:
+            if other_name != name and other_name.lower() in low:
+                refs.append(other_name)
+        if refs:
+            bad.append(f"{name}: references {truncate_list(sorted(set(refs)))}")
+    if bad:
+        return FAIL, truncate_list(bad, 8)
+    return PASS, f"{len(ctx.packet_files)} packets, none reference sibling plan artifacts by name"
+
+
+def _normalize_ws(s):
+    """Collapse every run of whitespace (including a markdown line-wrap's
+    newline) to a single space, and strip the ends. Packets are hand-wrapped
+    prose/markdown, so a long enactment.command can legitimately wrap across
+    lines without being a different string — this is what "verbatim" must
+    mean once wrapping is in play (doc-clarified; see README)."""
+    return re.sub(r"\s+", " ", s).strip() if isinstance(s, str) else s
+
+
+def chk_stories_inlined_with_enactments(ctx):
+    """"every story a packet's package enacts appears in that packet verbatim
+    with rung and enactment" (frozen Verify) — compared whitespace-normalized
+    (runs of whitespace collapsed to one space on both sides) so a packet's
+    line-wrapping of a long command doesn't read as a mismatch."""
+    err = require(ctx, "frame", "packages")
+    if err:
+        return FAIL, err
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    stories = {s.get("id"): s for s in g(ctx.frame, "stories", default=[]) if isinstance(s, dict)}
+    bad = []
+    checked = 0
+    for p in g(ctx.packages, "packages", default=[]):
+        if not isinstance(p, dict):
+            continue
+        pid = p.get("id", "?")
+        name, txt = packet_text_for(ctx, pid)
+        if txt is None:
+            bad.append(f"{pid}: no matching packet file")
+            continue
+        norm_txt = _normalize_ws(txt)
+        for sid in p.get("enacts_stories") or []:
+            checked += 1
+            s = stories.get(sid)
+            if s is None:
+                bad.append(f"{pid}: enacts unknown story {sid!r}")
+                continue
+            cmd = g(s, "enactment", "command", default="")
+            rung = s.get("rung", "")
+            missing = []
+            norm_cmd = _normalize_ws(cmd)
+            if not (nonempty_str(cmd) and (cmd in txt or (norm_cmd and norm_cmd in norm_txt))):
+                missing.append("enactment.command not found verbatim (whitespace-normalized) in packet")
+            if not (nonempty_str(rung) and rung in txt):
+                missing.append(f"rung {rung!r} not found in packet")
+            if missing:
+                bad.append(f"{pid}/{sid}: {'; '.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad, 8)
+    return PASS, f"{checked} enacted stories, each inlined (command + rung) verbatim in its packet"
+
+
+def chk_red_first_instructed(ctx):
+    """"the standing instruction to enact the red first: run the enactment
+    against the unchanged system and capture it failing" (DISPATCH.packets
+    procedure; red_first_instructed checklist key)."""
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    pattern = re.compile(
+        r"(red[\s-]*first|enact the red|capture it fail|run.{0,40}(unchanged|before).{0,40}fail"
+        r"|capture.{0,20}fail|before writing any (fix|code))",
+        re.IGNORECASE | re.DOTALL,
+    )
+    bad = [name for name, txt in ctx.packet_files.items() if not pattern.search(txt)]
+    if bad:
+        return FAIL, f"no red-first instruction found in: {truncate_list(bad)}"
+    return PASS, f"{len(ctx.packet_files)} packets all instruct red-first enactment"
+
+
+def chk_acceptance_builder_runnable(ctx):
+    """"builder-runnable acceptance — the criteria the builder may see and run"
+    (DISPATCH.packets procedure; acceptance_builder_runnable checklist key)."""
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    heading = re.compile(r"##\s*acceptance", re.IGNORECASE)
+    runner = re.compile(r"`[^`\n]*\b(cargo|pytest|npm|make|sh |\./|python3?)\b[^`\n]*`")
+    bad = []
+    for name, txt in ctx.packet_files.items():
+        m = heading.search(txt)
+        if not m:
+            bad.append(f"{name}: no '## Acceptance' section")
+            continue
+        section = txt[m.end():]
+        nxt = re.search(r"\n##\s", section)
+        if nxt:
+            section = section[:nxt.start()]
+        if not runner.search(section):
+            bad.append(f"{name}: Acceptance section has no runnable-looking command")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(ctx.packet_files)} packets carry an Acceptance section with runnable commands"
+
+
+def chk_ambiguity_defaults_inlined(ctx):
+    """"the ambiguity defaults packets will inline" (DISPATCH.policy procedure;
+    ambiguity_defaults_inlined checklist key)."""
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    heading = re.compile(r"##.{0,40}ambiguous", re.IGNORECASE)
+    bad = []
+    for name, txt in ctx.packet_files.items():
+        m = heading.search(txt)
+        if not m:
+            bad.append(f"{name}: no 'if something is ambiguous' section")
+            continue
+        section = txt[m.end():]
+        nxt = re.search(r"\n##\s", section)
+        if nxt:
+            section = section[:nxt.start()]
+        if len(section.strip()) < 20:
+            bad.append(f"{name}: ambiguity section present but empty")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(ctx.packet_files)} packets carry a non-empty ambiguity-defaults section"
+
+
+def chk_characterization_pinned_where_behavior_exists(ctx):
+    """"every package touching existing behavior carries its characterization
+    command" (frozen Verify)."""
+    err = require(ctx, "frame")
+    if err:
+        return FAIL, err
+    pinning = g(ctx.frame, "pinning", default=[])
+    if not isinstance(pinning, list) or not pinning:
+        return PASS, "0 pinning entries in frame.json (nothing to carry into packets)"
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    all_text = ctx.all_packet_text()
+    bad = []
+    for p in pinning:
+        if not isinstance(p, dict):
+            continue
+        cmd = p.get("characterization_command")
+        if not nonempty_str(cmd):
+            bad.append(f"{p.get('seam','?')}: characterization_command empty in frame.json")
+            continue
+        # characterization_command often carries trailing explanatory prose after
+        # the runnable part (e.g. "cargo test -p foo (existing suite: ...)"); match
+        # on the leading command token, not the full annotated string.
+        core = re.split(r"\s\(|\n", cmd, maxsplit=1)[0].strip()
+        if cmd not in all_text and (not core or core not in all_text):
+            bad.append(f"{p.get('seam','?')}: characterization_command not found in any packet")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(pinning)} pinning entries, each characterization_command carried into a packet"
+
+
+def chk_undo_present_where_system_changes(ctx):
+    """"every change to a running system knows how it is taken back" (law 10;
+    frozen Verify; undo_present_where_system_changes checklist key) — checked
+    at packet level (the CARVE-level artifact check is undo_named_where_needed)."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    heading = re.compile(r"##.{0,10}(how this is taken back|rollback|undo)", re.IGNORECASE)
+    bad = []
+    for p in g(ctx.packages, "packages", default=[]):
+        if not isinstance(p, dict) or p.get("kind") != "work":
+            continue
+        pid = p.get("id", "?")
+        name, txt = packet_text_for(ctx, pid)
+        if txt is None:
+            bad.append(f"{pid}: no matching packet file")
+            continue
+        if not heading.search(txt):
+            bad.append(f"{pid}: no 'how this is taken back' section in packet")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, "all work packages' packets carry a 'how this is taken back' section"
+
+
+def _transitive_deps(pkgs_by_id, pid, seen=None):
+    seen = seen if seen is not None else set()
+    if pid in seen:
+        return seen
+    seen.add(pid)
+    p = pkgs_by_id.get(pid)
+    for d in (p.get("deps") or []) if isinstance(p, dict) else []:
+        _transitive_deps(pkgs_by_id, d, seen)
+    return seen
+
+
+def _new_file_paths(pkgs_by_id, pid):
+    p = pkgs_by_id.get(pid)
+    if not isinstance(p, dict):
+        return set()
+    return {e.get("path") for e in (p.get("allow_list") or [])
+            if isinstance(e, dict) and e.get("new") is True and nonempty_str(e.get("path"))}
+
+
+def chk_anchors_present(ctx):
+    """"every referenced file, symbol, contract, mock exists — or resolves to
+    a `new: true` allow-list entry of a package this one depends on, the
+    anchor marked as future work rather than presented as existing code"
+    (frozen Verify, doc sha a944e7c19eae) — checked against the 'Your
+    anchors' section, the packet's curated pointer into real code (existing,
+    or a depended-on sibling's not-yet-built file)."""
+    if not ctx.packet_files:
+        return FAIL, "no packets/*.md found"
+    heading = re.compile(r"##\s*your anchors", re.IGNORECASE)
+    path_re = re.compile(r"`([A-Za-z0-9_./-]+\.[A-Za-z][A-Za-z0-9]{0,5})(:[0-9,\-]+)?`")
+
+    pkgs_by_id = {p.get("id"): p for p in g(ctx.packages, "packages", default=[]) if isinstance(p, dict)}
+
+    bad = []
+    future = []
+    total = 0
+    for name, txt in ctx.packet_files.items():
+        m = heading.search(txt)
+        if not m:
+            continue  # anchors section is conventional, not schema-mandated; nothing to check
+        section = txt[m.end():]
+        nxt = re.search(r"\n##\s", section)
+        if nxt:
+            section = section[:nxt.start()]
+
+        # which package owns this packet? (same stem/substring heuristic as packet_text_for)
+        owner_pid = None
+        stem = name[:-3] if name.endswith(".md") else name
+        for pid in pkgs_by_id:
+            if pid == stem or (pid and pid in name):
+                owner_pid = pid
+                break
+        dep_ids = (_transitive_deps(pkgs_by_id, owner_pid) - {owner_pid}) if owner_pid else set()
+
+        for match in path_re.finditer(section):
+            path = match.group(1)
+            total += 1
+            if ctx.repo_anchor_resolves(path):
+                continue
+            clean = re.sub(r":\d+(-\d+)?$", "", path.strip())
+            hit_pkg = None
+            for dep_pid in dep_ids:
+                new_paths = _new_file_paths(pkgs_by_id, dep_pid)
+                if clean in new_paths or Path(clean).name in {Path(x).name for x in new_paths}:
+                    hit_pkg = dep_pid
+                    break
+            if hit_pkg:
+                future.append(f"{name}: {path} (future anchor into {hit_pkg}'s new file)")
+                continue
+            bad.append(f"{name}: {path}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    if total == 0:
+        return PASS, "no file-path anchors found to check (no packet has a parseable 'Your anchors' path)"
+    if future:
+        return PASS, (f"{total} anchor path(s): {len(future)} future anchor(s) into a depended-on "
+                       f"package's new file ({truncate_list(future, 3)}), rest resolve under {ctx.repo_root}")
+    return PASS, f"{total} anchor path(s) across packets, all resolve under {ctx.repo_root}"
+
+
+def chk_holdout_separated(ctx):
+    """"every holdout entry resolving to a ledger artifact whose content
+    appears nowhere under plan/ or in any packet (digest scan, not trust)"
+    (frozen Verify). The leak scan excludes `holdout_ledger/` — the declared,
+    by-convention standalone ledger location "beside the plan artifacts"
+    (doc sha 4a61f9c33733) — since the held-out content legitimately lives
+    there; a digest match anywhere else still fails as a leak."""
+    err = require(ctx, "manifest")
+    if err:
+        return FAIL, err
+    holdout = g(ctx.manifest, "holdout", default=None)
+    if not isinstance(holdout, list):
+        return FAIL, "manifest.holdout missing (must be a list)"
+    if not holdout:
+        return FAIL, "manifest.holdout is empty"
+
+    plan_files = find_all_files(ctx.plan_dir, exclude_dirnames={HOLDOUT_LEDGER_DIRNAME})
+    plan_digests = {}
+    for f in plan_files:
+        d = sha256_file(f)
+        if d:
+            plan_digests.setdefault(d, []).append(str(f.relative_to(ctx.plan_dir)))
+
+    bad = []
+    in_ledger_dir = 0
+    for h in holdout:
+        if not isinstance(h, dict):
+            bad.append("malformed holdout entry")
+            continue
+        sid = h.get("story", "?")
+        digest = h.get("digest")
+        ledger_ref = h.get("ledger_ref")
+        # ledger_ref may itself carry "<path> @ sha256:<digest>" (doc sha
+        # 4a61f9c33733); if so, cross-check it against the declared digest field.
+        embedded_path, embedded_digest = parse_at_sha256_ref(ledger_ref)
+        if embedded_digest is not None:
+            if is_real_sha256(digest) and embedded_digest != digest:
+                bad.append(f"{sid}: ledger_ref's embedded digest ({embedded_digest}) "
+                            f"disagrees with the declared digest field ({digest})")
+            ledger_ref = embedded_path
+            if not is_real_sha256(digest):
+                digest = embedded_digest
+        if not is_real_sha256(digest):
+            bad.append(f"{sid}: digest={digest!r} not a real sha256 (placeholder)")
+            continue
+        if digest in plan_digests:
+            bad.append(f"{sid}: LEAKED — digest matches file(s) under plan-dir: {truncate_list(plan_digests[digest], 3)}")
+            continue
+        resolved = ctx.plan_path_resolve(ledger_ref) if nonempty_str(ledger_ref) else None
+        if resolved is not None:
+            actual = sha256_file(resolved)
+            if actual != digest:
+                bad.append(f"{sid}: declared digest does not match {ledger_ref} content ({actual})")
+            elif HOLDOUT_LEDGER_DIRNAME in resolved.parts:
+                in_ledger_dir += 1
+        elif not nonempty_str(ledger_ref):
+            bad.append(f"{sid}: ledger_ref empty")
+    if bad:
+        return FAIL, truncate_list(bad, 8)
+    if in_ledger_dir:
+        return PASS, (f"{len(holdout)} holdout entries: real digests, none leaked outside plan-dir "
+                       f"({in_ledger_dir} of them content only in declared ledger dir "
+                       f"'{HOLDOUT_LEDGER_DIRNAME}/')")
+    return PASS, f"{len(holdout)} holdout entries: real digests, none leaked under plan-dir"
+
+
+def chk_holdout_covers_merge_gating_stories(ctx):
+    """"every merge-gating story holding a holdout entry — partial coverage is
+    the self-grading gap wearing a mechanism's name" (frozen Verify — no
+    checklist key of its own; coined here as holdout_covers_merge_gating_stories)."""
+    err = require(ctx, "packages", "manifest")
+    if err:
+        return FAIL, err
+    gating = set()
+    for p in g(ctx.packages, "packages", default=[]):
+        if isinstance(p, dict):
+            gating.update(p.get("enacts_stories") or [])
+    if not gating:
+        return FAIL, "no enacted stories found across packages.json"
+    covered = {h.get("story") for h in g(ctx.manifest, "holdout", default=[]) if isinstance(h, dict)}
+    exceptions = {e.get("story") for e in g(ctx.manifest, "holdout_exceptions", default=[]) if isinstance(e, dict) and nonempty_str(e.get("reason"))}
+    missing = sorted(gating - covered - exceptions)
+    if missing:
+        return FAIL, f"merge-gating stories with no holdout entry and no holdout_exceptions reason: {truncate_list(missing)}"
+    return PASS, f"{len(gating)} merge-gating stories, all covered by holdout[] or a reasoned holdout_exceptions entry"
+
+
+def chk_policy_complete(ctx):
+    """"every policy field present" (frozen Verify)."""
+    err = require(ctx, "manifest")
+    if err:
+        return FAIL, err
+    policy = g(ctx.manifest, "policy", default=None)
+    if not isinstance(policy, dict):
+        return FAIL, "manifest.policy missing or not an object"
+    missing = []
+    if not isinstance(policy.get("repair_attempts"), int) or policy.get("repair_attempts", 0) <= 0:
+        missing.append("repair_attempts(int>0)")
+    for k in ("no_progress_rule", "escalation_trigger", "branch_age_ceiling", "merge_cadence", "queue_full_rule"):
+        if not nonempty_str(policy.get(k)):
+            missing.append(k)
+    if policy.get("restart_from_original") is not True:
+        missing.append("restart_from_original(true)")
+    if not isinstance(policy.get("check_tiers"), list) or not policy.get("check_tiers"):
+        missing.append("check_tiers[]")
+    if not isinstance(policy.get("ambiguity_defaults"), list) or not policy.get("ambiguity_defaults"):
+        missing.append("ambiguity_defaults[]")
+    cs = policy.get("constants_source")
+    if not isinstance(cs, str) or not (cs.startswith("measured") or cs.startswith("default_unmeasured")):
+        missing.append(f"constants_source(got {cs!r})")
+    if missing:
+        return FAIL, f"policy missing/invalid: {', '.join(missing)}"
+    return PASS, "manifest.policy carries all required fields"
+
+
+def _resolve_path_maybe_absolute(ctx, path_str):
+    """plan_path_resolve, but also accepts an absolute path outside plan-dir
+    (the standalone `<path> @ sha256:<digest>` form names an absolute path,
+    doc sha 4a61f9c33733) — Path('/a') / '/b' already collapses to '/b' in
+    pathlib, so plan_path_resolve's own join handles this; this wrapper just
+    documents that and keeps the call site readable."""
+    return ctx.plan_path_resolve(path_str)
+
+
+def _resolve_verdict(ctx):
+    """Returns (verdict_dict_or_None, evidence_str_describing_source_or_failure).
+    Handles: an inline verdict object, a bare JSON path, and the standalone-run
+    `<path> @ sha256:<digest>` form (doc sha 4a61f9c33733) — for the latter,
+    both legs are checked: the path must resolve to real JSON with a `verdict`
+    field, AND the file's own sha256 must match the declared digest leg."""
+    vr = g(ctx.manifest, "verdict_ref", default=None)
+    if isinstance(vr, dict) and nonempty_str(vr.get("verdict")):
+        return vr, "verdict inline in manifest.verdict_ref"
+
+    at_path, at_digest = parse_at_sha256_ref(vr)
+    if at_digest is not None:
+        resolved = _resolve_path_maybe_absolute(ctx, at_path)
+        if resolved is None:
+            return None, f"verdict_ref names {at_path!r} (standalone '<path> @ sha256:' form) but it does not resolve"
+        actual = sha256_file(resolved)
+        if actual != at_digest:
+            return None, f"{at_path} exists but its sha256 ({actual}) does not match the declared digest leg ({at_digest})"
+        data, err = load_json(resolved)
+        if data is not None and nonempty_str(data.get("verdict")):
+            return data, f"verdict loaded from {at_path} (digest leg verified: {at_digest})"
+        return None, f"{at_path} exists and digest matches, but has no usable 'verdict' field ({err or 'parsed but missing verdict'})"
+
+    path = None
+    if isinstance(vr, dict):
+        path = vr.get("path")
+    elif isinstance(vr, str) and not is_real_sha256(vr) and "://" not in vr and vr.strip().endswith(".json"):
+        path = vr.strip()
+    if path:
+        resolved = ctx.plan_path_resolve(path)
+        if resolved is not None:
+            data, err = load_json(resolved)
+            if data is not None and nonempty_str(data.get("verdict")):
+                return data, f"verdict loaded from {path}"
+            return None, f"{path} exists but has no usable 'verdict' field ({err or 'parsed but missing verdict'})"
+        return None, f"verdict_ref names {path!r} but it does not resolve under plan-dir"
+    return None, f"verdict_ref={vr!r} does not resolve to an actual verdict object (URI/placeholder, no local file)"
+
+
+def chk_hostile_read_approved(ctx):
+    """"the hostile-read verdict present and APPROVE — a FIXES-NEEDED verdict
+    loops the macro, it does not pass" (frozen Verify)."""
+    err = require(ctx, "manifest")
+    if err:
+        return FAIL, err
+    verdict, evidence = _resolve_verdict(ctx)
+    if verdict is None:
+        return FAIL, evidence
+    v = verdict.get("verdict")
+    if v == "APPROVE":
+        return PASS, f"{evidence}: APPROVE"
+    if v == "FIXES-NEEDED":
+        return FAIL, f"{evidence}: verdict is FIXES-NEEDED — loops the macro, does not pass"
+    return FAIL, f"{evidence}: verdict={v!r}, must be APPROVE|FIXES-NEEDED"
+
+
+def chk_downpath_or_irreversible(ctx):
+    """"a runnable down-path including retention and cleanup, or the change is
+    declared irreversible on the record ... with the hostile read required to
+    acknowledge it explicitly" (law 10; frozen Verify;
+    downpath_or_irreversible_for_schema_and_data checklist key). `undo` is now
+    an array of layers (schema doc fb2c41e78c72); a `declared_irreversible`
+    layer is the structural marker. Old single-object fixtures (undo.command
+    containing the word "irreversible") are still detected best-effort so this
+    downstream semantic check stays informative even when
+    undo_named_where_needed has already failed that package's shape."""
+    err = require(ctx, "packages")
+    if err:
+        return FAIL, err
+    pkgs = [p for p in g(ctx.packages, "packages", default=[]) if isinstance(p, dict)]
+    irreversible = []
+    for p in pkgs:
+        u = p.get("undo")
+        found = False
+        if isinstance(u, list):
+            found = any(isinstance(layer, dict) and layer.get("mechanism") == "declared_irreversible" for layer in u)
+        elif isinstance(u, dict):
+            cmd = u.get("command") or ""
+            found = isinstance(cmd, str) and "irreversible" in cmd.lower()
+        if found:
+            irreversible.append(p.get("id", "?"))
+    if not irreversible:
+        return PASS, "no package's undo declares itself irreversible (nothing requiring a hostile-read acknowledgment)"
+    verdict, evidence = _resolve_verdict(ctx)
+    if verdict is None:
+        return FAIL, f"{truncate_list(irreversible)} declared irreversible, but hostile-read verdict unresolvable ({evidence})"
+    verdict_text = json.dumps(verdict).lower()
+    missing = [pid for pid in irreversible if "irreversible" not in verdict_text]
+    if missing:
+        return FAIL, f"declared irreversible but not acknowledged anywhere in the hostile-read verdict: {truncate_list(missing)}"
+    return PASS, f"{truncate_list(irreversible)} declared irreversible and acknowledged in the hostile-read verdict"
+
+
+def chk_tripwires_armed(ctx):
+    """"every plan claim resolves to an armed tripwire" (frozen Verify) —
+    structural completeness of the armed set is checked mechanically; whether
+    literally every claim has a tripwire is a coverage judgment this script
+    does not attempt (see README)."""
+    err = require(ctx, "manifest")
+    if err:
+        return FAIL, err
+    tw = g(ctx.manifest, "tripwires", default=None)
+    if not isinstance(tw, list) or not tw:
+        return FAIL, "manifest.tripwires missing or empty"
+    bad = []
+    for i, t in enumerate(tw):
+        if not isinstance(t, dict):
+            bad.append(f"tripwires[{i}] not an object")
+            continue
+        missing = [k for k in ("id", "guards_claim", "observable", "threshold", "on_fire") if not nonempty_str(t.get(k))]
+        if missing:
+            bad.append(f"{t.get('id', i)}: missing {','.join(missing)}")
+    if bad:
+        return FAIL, truncate_list(bad)
+    return PASS, f"{len(tw)} tripwires, all carry id+guards_claim+observable+threshold+on_fire"
+
+
+def chk_residual_doubts_listed(ctx):
+    """"the verdict's residual doubts carried into the manifest — an empty
+    list is a statement, never an omission" (frozen Verify)."""
+    err = require(ctx, "manifest")
+    if err:
+        return FAIL, err
+    rd = g(ctx.manifest, "residual_doubts", default=None)
+    if not isinstance(rd, list):
+        return FAIL, "manifest.residual_doubts missing (must be a list; empty is a valid statement)"
+    verdict, _evidence = _resolve_verdict(ctx)
+    if verdict is not None:
+        v_doubts = verdict.get("residual_doubts")
+        if isinstance(v_doubts, list) and v_doubts and not rd:
+            return FAIL, f"hostile-read verdict carries {len(v_doubts)} residual doubt(s) but manifest.residual_doubts is empty"
+    return PASS, f"manifest.residual_doubts present, {len(rd)} entries"
+
+
+DISPATCH_CHECKS = [
+    ("packets_self_contained", chk_packets_self_contained),
+    ("stories_inlined_with_enactments", chk_stories_inlined_with_enactments),
+    ("red_first_instructed", chk_red_first_instructed),
+    ("acceptance_builder_runnable", chk_acceptance_builder_runnable),
+    ("ambiguity_defaults_inlined", chk_ambiguity_defaults_inlined),
+    ("characterization_pinned_where_behavior_exists", chk_characterization_pinned_where_behavior_exists),
+    ("undo_present_where_system_changes", chk_undo_present_where_system_changes),
+    ("anchors_present", chk_anchors_present),
+    ("holdout_separated", chk_holdout_separated),
+    ("holdout_covers_merge_gating_stories", chk_holdout_covers_merge_gating_stories),
+    ("policy_complete", chk_policy_complete),
+    ("hostile_read_approved", chk_hostile_read_approved),
+    ("downpath_or_irreversible_for_schema_and_data", chk_downpath_or_irreversible),
+    ("tripwires_armed", chk_tripwires_armed),
+    ("residual_doubts_listed", chk_residual_doubts_listed),
+]
+
+
+PHASES = {
+    "frame": FRAME_CHECKS,
+    "carve": CARVE_CHECKS,
+    "sequence": SEQUENCE_CHECKS,
+    "dispatch": DISPATCH_CHECKS,
+}
+
+
+# --------------------------------------------------------------------------
+# Runner
+# --------------------------------------------------------------------------
+
+def git_toplevel(start="."):
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if out.returncode == 0:
+            return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+def run_phase(phase, plan_dir, repo_root):
+    ctx = Ctx(plan_dir, repo_root)
+    results = []
+    for criterion, fn in PHASES[phase]:
+        try:
+            status, evidence = fn(ctx)
+        except Exception as e:  # noqa: BLE001 — a check must never crash the run
+            status, evidence = FAIL, f"internal check error ({type(e).__name__}): {e}"
+        results.append(Result(criterion, status, evidence))
+    return results
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="plan-check",
+        description="Mechanical verifier for the EDD planning protocol's gates.",
+    )
+    parser.add_argument("--phase", required=True, choices=sorted(PHASES.keys()))
+    parser.add_argument("--plan-dir", default=".")
+    parser.add_argument("--repo-root", default=None)
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args(argv)
+
+    plan_dir = Path(args.plan_dir)
+    if not plan_dir.is_dir():
+        print(f"plan-check: error: --plan-dir {plan_dir} is not a directory", file=sys.stderr)
+        return 2
+
+    if args.repo_root:
+        repo_root = Path(args.repo_root)
+        if not repo_root.is_dir():
+            print(f"plan-check: error: --repo-root {repo_root} is not a directory", file=sys.stderr)
+            return 2
+    else:
+        top = git_toplevel(".")
+        repo_root = Path(top) if top else Path(".").resolve()
+
+    results = run_phase(args.phase, plan_dir, repo_root)
+
+    if args.json:
+        print(json.dumps([r.to_json() for r in results], indent=2))
+    else:
+        for r in results:
+            print(r.line())
+
+    return 1 if any(r.status == FAIL for r in results) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

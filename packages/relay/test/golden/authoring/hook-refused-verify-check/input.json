@@ -1,0 +1,46 @@
+{
+  "op": "hook",
+  "document": {
+    "name": "Actions",
+    "nodes": [
+      {
+        "id": "event",
+        "name": "Before edit",
+        "type": "relay.hookEventTrigger",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "operation": "command",
+          "timing": "before"
+        }
+      },
+      {
+        "id": "verify",
+        "name": "Verify",
+        "type": "relay.hookVerify",
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "message": "Checks pass."
+        }
+      }
+    ],
+    "connections": {
+      "Before edit": {
+        "main": [
+          [
+            {
+              "node": "Verify",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    }
+  }
+}

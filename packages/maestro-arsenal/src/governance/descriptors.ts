@@ -9,8 +9,10 @@ export const profileToolDescriptor: Descriptor = {
   inputSchema: objectSchema({ sourceRoot: stringSchema, action: { enum: ["get", "set"] }, patch: objectSchema(profileProperties, []) }, []),
 }
 export const relayArmToolDescriptor: Descriptor = {
-  name: "relay-arm", description: "Persist named completion contracts. Native host executes compiled checks through runCompletion; no hook installation.", effects: ["read", "write"],
-  inputSchema: objectSchema({ sourceRoot: stringSchema, action: { enum: ["arm", "read"] }, token: idSchema, contract: completionSchema }, ["action"]),
+  name: "relay-arm",
+  description: "Arm a completion contract for the next native Task, read one, or ask the owner to release a parked arm. The native host evaluates it on its Relay arm; release succeeds only when the owner approves.",
+  effects: ["read", "write"],
+  inputSchema: objectSchema({ sourceRoot: stringSchema, action: { enum: ["arm", "read", "release"] }, token: idSchema, contract: completionSchema, reason: stringSchema }, ["action"]),
 }
 export const waveLedgerToolDescriptor: Descriptor = {
   name: "wave-ledger", description: "Bounded project wave outcome evidence, predicted/actual totals, barrier tax and explicit compaction receipts.", effects: ["read", "write"],
@@ -39,7 +41,6 @@ export const GOVERNANCE_DEFINITIONS = {
   status: optional({ observations: observationsSchema, prices }, ["observations"]),
   "cost-estimate": optional({ estimates: { type: "array", minItems: 1, maxItems: 2048, items: estimateRecord }, prices, budgetUSD: { type: "number", minimum: 0 } }, ["estimates", "prices"]),
   acceptance: optional({ baseline: captureSchema, final: captureSchema, acceptance: { type: "array", minItems: 1, maxItems: 512, items: objectSchema({ name: stringSchema, mode: { enum: ["red-green", "preserve-source-green"] } }) } }, ["baseline", "final", "acceptance"]),
-  "completion-check": optional({ contract: completionSchema, checks: captureSchema, bindings: namesSchema }, ["contract", "checks", "bindings"]),
   "change-budget": optional({ base: stringSchema, soft: { type: "integer", minimum: 1 }, hard: { type: "integer", minimum: 1 }, reviewerCap: { type: "integer", minimum: 1 }, excludedPaths: namesSchema }),
   "ci-select": optional({ base: stringSchema, groups: { type: "array", minItems: 1, maxItems: 128, items: objectSchema({ prefix: stringSchema, group: idSchema }) }, universal: namesSchema }, ["groups", "universal"]),
   "metrics-snapshot": optional({ paths: namesSchema, threshold: { type: "integer", minimum: 1 } }, ["paths"]),

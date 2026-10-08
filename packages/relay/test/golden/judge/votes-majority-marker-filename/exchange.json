@@ -1,0 +1,159 @@
+{
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/v1/messages",
+      "headers": {
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "x-api-key": "local"
+      },
+      "body": {
+        "model": "test-model",
+        "max_tokens": 8192,
+        "system": "You are an INDEPENDENT compliance auditor. You did NOT write the artifact under review. Judge ONLY whether the stated criterion is satisfied by the provided artifact — nothing else. Be strict and literal. If the evidence is missing, ambiguous, or you are uncertain, return FAIL: an unproven control is a failed control. End your reply with a final line that is exactly 'VERDICT: PASS' or 'VERDICT: FAIL'.",
+        "tools": [
+          {
+            "name": "submit_verdict",
+            "description": "Return the compliance verdict for the stated criterion.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "verdict": {
+                  "type": "string",
+                  "enum": [
+                    "pass",
+                    "fail"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "One or two sentences of justification."
+                }
+              },
+              "required": [
+                "verdict",
+                "reason"
+              ]
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "submit_verdict"
+        },
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "CRITERION:\ncrit\n\nARTIFACT UNDER REVIEW:\n--- big(no-verdict).diff ---\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n[TRUNCATED at 1000 characters — the rest of big(no-verdict).diff was NOT shown to you. If the criterion cannot be decided from what is here, return FAIL and say so.]\n\nDoes the artifact satisfy the criterion? Reason briefly, then give the VERDICT line."
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/messages",
+      "headers": {
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "x-api-key": "local"
+      },
+      "body": {
+        "model": "test-model",
+        "max_tokens": 8192,
+        "system": "You are an INDEPENDENT compliance auditor. You did NOT write the artifact under review. Judge ONLY whether the stated criterion is satisfied by the provided artifact — nothing else. Be strict and literal. If the evidence is missing, ambiguous, or you are uncertain, return FAIL: an unproven control is a failed control. End your reply with a final line that is exactly 'VERDICT: PASS' or 'VERDICT: FAIL'.",
+        "tools": [
+          {
+            "name": "submit_verdict",
+            "description": "Return the compliance verdict for the stated criterion.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "verdict": {
+                  "type": "string",
+                  "enum": [
+                    "pass",
+                    "fail"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "One or two sentences of justification."
+                }
+              },
+              "required": [
+                "verdict",
+                "reason"
+              ]
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "submit_verdict"
+        },
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "CRITERION:\ncrit\n\nARTIFACT UNDER REVIEW:\n--- big(no-verdict).diff ---\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n[TRUNCATED at 1000 characters — the rest of big(no-verdict).diff was NOT shown to you. If the criterion cannot be decided from what is here, return FAIL and say so.]\n\nDoes the artifact satisfy the criterion? Reason briefly, then give the VERDICT line."
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/v1/messages",
+      "headers": {
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+        "x-api-key": "local"
+      },
+      "body": {
+        "model": "test-model",
+        "max_tokens": 8192,
+        "system": "You are an INDEPENDENT compliance auditor. You did NOT write the artifact under review. Judge ONLY whether the stated criterion is satisfied by the provided artifact — nothing else. Be strict and literal. If the evidence is missing, ambiguous, or you are uncertain, return FAIL: an unproven control is a failed control. End your reply with a final line that is exactly 'VERDICT: PASS' or 'VERDICT: FAIL'.",
+        "tools": [
+          {
+            "name": "submit_verdict",
+            "description": "Return the compliance verdict for the stated criterion.",
+            "input_schema": {
+              "type": "object",
+              "properties": {
+                "verdict": {
+                  "type": "string",
+                  "enum": [
+                    "pass",
+                    "fail"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "One or two sentences of justification."
+                }
+              },
+              "required": [
+                "verdict",
+                "reason"
+              ]
+            }
+          }
+        ],
+        "tool_choice": {
+          "type": "tool",
+          "name": "submit_verdict"
+        },
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "CRITERION:\ncrit\n\nARTIFACT UNDER REVIEW:\n--- big(no-verdict).diff ---\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n\n[TRUNCATED at 1000 characters — the rest of big(no-verdict).diff was NOT shown to you. If the criterion cannot be decided from what is here, return FAIL and say so.]\n\nDoes the artifact satisfy the criterion? Reason briefly, then give the VERDICT line."
+          }
+        ]
+      }
+    }
+  ],
+  "exit": 0,
+  "stderr": ""
+}

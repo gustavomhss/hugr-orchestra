@@ -59,6 +59,10 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@orchestra/relay#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/client#test": {
       "dependsOn": ["transit"],
       "outputs": []

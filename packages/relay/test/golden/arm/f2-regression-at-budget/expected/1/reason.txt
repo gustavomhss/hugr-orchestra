@@ -1,0 +1,1 @@
+Relay: an earlier gate regressed — restore these before finishing: kept. (Current gate 'B' is satisfied; this is a backslide in prior work.)

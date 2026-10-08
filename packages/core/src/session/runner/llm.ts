@@ -410,6 +410,8 @@ const layer = Layer.effect(
         shouldRun = yield* SessionInput.hasPending(db, input.sessionID, "queue")
         promotion = shouldRun ? "queue" : undefined
       }
+      // `session-idle` hooks run once the drain settles; they only record, so the drain ends as it would have.
+      yield* tools.session({ operation: "session-idle", sessionID: input.sessionID }).pipe(Effect.exit)
     })
 
     return Service.of({

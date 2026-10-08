@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"current","instructions":"do current","checklist":[{"id":"REPORT","cmd":"touch ran","assert":true}]}]}

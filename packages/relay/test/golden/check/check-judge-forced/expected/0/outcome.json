@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "forced",
+    "failing": []
+  },
+  "stderr": ""
+}

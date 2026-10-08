@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"A","instructions":"do A","checklist":[{"id":"explicit","cmd":"true","origin":"injected:lead"},{"id":"policy","cmd":"true","policy":"base-policy"},{"id":"plain","cmd":"false","assert":"plain fails"}]}]}

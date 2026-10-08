@@ -98,6 +98,7 @@
     "@orchestra/maestro-arsenal": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "@orchestra/plugin": "workspace:*",
+    "@orchestra/relay": "workspace:*",
     "@opentelemetry/api": "1.9.0",
     "@opentelemetry/context-async-hooks": "2.6.1",
     "@opentelemetry/exporter-trace-otlp-http": "0.214.0",
