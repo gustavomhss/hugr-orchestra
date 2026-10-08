@@ -71,7 +71,7 @@ export function assertErrorSymbols(symbols: Iterable<string>, declarations: stri
     }
     visit(ast, bindings)
   }
-  for (const identifier of identifiers) {
+  for (const identifier of identifiers.flatMap((name) => [name, `is${name}`])) {
     if (reserved.has(identifier)) {
       throw new GenerationError({ reason: `Promise error symbol collision: ${identifier}` })
     }

@@ -288,11 +288,12 @@ describe("capability contract portability", () => {
     ["Json.Value", "JsonValue"],
     ["Readonly.Array", "ReadonlyArray"],
     ["Wire.Result", "WireResult"],
+    ["Namespace.Failure", "NamespaceFailure"],
     ["Client.Error", "ClientError"],
     ["Client.ErrorReason", "ClientErrorReason"],
     ["Orchestra", "Orchestra"],
   ])("rejects occupied public error symbol %s with a real TypeScript consumer", async (identifier, symbol) => {
-    class Failure extends Schema.TaggedErrorClass<Failure>("Namespace.Failure")("wire.failure", {
+    class Failure extends Schema.TaggedErrorClass<Failure>("Valid.Failure")("wire.failure", {
       message: Schema.String,
       detail: Schema.Json,
       values: Schema.Array(Schema.String),
@@ -310,24 +311,34 @@ describe("capability contract portability", () => {
     const options =
       identifier === "Wire.Result"
         ? { outputTypes: { "session.get": { name: "WireResult", import: 'import type { WireResult } from "./wire"' } } }
-        : undefined
+        : identifier === "Namespace.Failure"
+          ? {
+              outputTypes: {
+                "session.get": {
+                  name: "isNamespaceFailure",
+                  import: 'import { isNamespaceFailure } from "./wire"',
+                },
+              },
+            }
+          : undefined
     const output = emitPromise(compile(source(Failure)), options)
-    expect((await checkConsumer(output, "NamespaceFailure")).code).toBe(0)
+    expect((await checkConsumer(output, "ValidFailure")).code).toBe(0)
     // Seed the reported binding fault into real emitted files; the TS compiler is the negative oracle.
     const invalid = await checkConsumer(
       {
         ...output,
         files: output.files.map((file) => ({
           ...file,
-          content: file.content.replaceAll("NamespaceFailure", symbol),
+          content: file.content.replaceAll("ValidFailure", symbol),
         })),
       },
       symbol,
     )
     expect(invalid.code).not.toBe(0)
     expect(invalid.diagnostics).toContain("error TS")
+    expect(() => emitPromise(compile(source(Failure.annotate({ identifier }))), options)).toThrow(GenerationError)
     expect(() => emitPromise(compile(source(Failure.annotate({ identifier }))), options)).toThrow(
-      `Promise error symbol collision: ${symbol}`,
+      `Promise error symbol collision: ${identifier === "Namespace.Failure" ? "isNamespaceFailure" : symbol}`,
     )
   })
 
@@ -440,7 +451,10 @@ async function checkConsumer(
         path: "probe.ts",
         content: `import { is${symbol}, type ${symbol} } from "./index"\nconst value: unknown = ${JSON.stringify(value)}\nif (!is${symbol}(value)) throw new Error("Wire guard mismatch")\nexport const failure: ${symbol} = value`,
       },
-      { path: "wire.ts", content: "export type WireResult = ReadonlyArray<string>" },
+      {
+        path: "wire.ts",
+        content: "export type WireResult = ReadonlyArray<string>\nexport class isNamespaceFailure {}",
+      },
       {
         path: "tsconfig.json",
         content: JSON.stringify({ extends: "../../tsconfig.json", include: ["*.ts"] }),
