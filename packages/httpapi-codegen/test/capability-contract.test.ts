@@ -148,10 +148,14 @@ describe("capability contract portability", () => {
       .finally(() => rm(directory, { recursive: true, force: true }))
   })
 
-  test("typechecks and executes full Promise files with qualified error guards and JSON detail", async () => {
+  test.each(["failure", "string"])("typechecks and executes full Promise files with %s success", async (success) => {
     const source = HttpApi.make("promise-capability").add(
       HttpApiGroup.make("capability")
-        .add(HttpApiEndpoint.get("read", "/read", { success: Schema.String }))
+        .add(
+          HttpApiEndpoint.get("read", "/read", {
+            success: success === "failure" ? authoritativeSchema : Schema.String,
+          }),
+        )
         .add(
           HttpApiEndpoint.get("failed", "/failed", {
             success: Schema.String,
@@ -176,27 +180,31 @@ describe("capability contract portability", () => {
             'import { Orchestra, isCapabilityFailure, type CapabilityFailure, type JsonValue } from "./index"',
             'const detail: JsonValue = { nested: [null, true, 2, "é"] }',
             'const failure: CapabilityFailure = { _tag: "Capability.Failure", code: "outcome_unknown", message: "Uncertain", detail }',
-            'const client = Orchestra.make({ baseUrl: "https://capability.test", fetch: async (input) => {',
-            '  const url = String(input)',
-            '  if (url.endsWith("/read")) return Response.json("ready")',
+            'const client = Orchestra.make({ baseUrl: "https://capability.test", fetch: Object.assign(async (input: RequestInfo | URL) => {',
+            "  const url = String(input)",
+            `  if (url.endsWith("/read")) return Response.json(${success === "failure" ? "failure" : '"ready"'})`,
             '  return Response.json(failure, { status: url.endsWith("/again") ? 410 : 409 })',
-            '} })',
-            'expect(await client.capability.read()).toBe("ready")',
-            'for (const request of [client.capability.failed, client.capability.again]) {',
-            '  const error: unknown = await request().catch((cause: unknown) => cause)',
-            '  expect(error).toEqual(failure)',
-            '  expect(isCapabilityFailure(error)).toBe(true)',
+            "}, { preconnect: fetch.preconnect }) })",
+            `const result: ${success === "failure" ? "CapabilityFailure" : "string"} = await client.capability.read()`,
+            `expect(result).toEqual(${success === "failure" ? "failure" : '"ready"'})`,
+            "for (const request of [client.capability.failed, client.capability.again]) {",
+            "  const error: unknown = await request().catch((cause: unknown) => cause)",
+            "  expect(error).toEqual(failure)",
+            "  expect(isCapabilityFailure(error)).toBe(true)",
             '  if (!isCapabilityFailure(error)) throw new Error("Expected qualified wire guard")',
-            '  const declared: CapabilityFailure = error',
-            '  expect(declared.detail).toEqual(detail)',
-            '}',
+            "  const declared: CapabilityFailure = error",
+            "  expect(declared.detail).toEqual(detail)",
+            "}",
             'expect(isCapabilityFailure({ ...failure, _tag: "CapabilityFailure" })).toBe(false)',
-            'expect(isCapabilityFailure(null)).toBe(false)',
+            "expect(isCapabilityFailure(null)).toBe(false)",
           ].join("\n"),
         ),
       )
       .then(() =>
-        Bun.write(join(directory, "tsconfig.json"), JSON.stringify({ extends: "../../tsconfig.json", include: ["*.ts"] })),
+        Bun.write(
+          join(directory, "tsconfig.json"),
+          JSON.stringify({ extends: "../../tsconfig.json", include: ["*.ts"] }),
+        ),
       )
       .then(async () => {
         const check = Bun.spawn(["bun", "typecheck", "--project", join(directory, "tsconfig.json")], {
@@ -226,6 +234,8 @@ describe("capability contract portability", () => {
     ["domain\\failure", "DomainFailure"],
     ["snake_case", "SnakeCase"],
     ["cash$Failure", "CashFailure"],
+    ["", "Error"],
+    ["../..", "Error"],
   ])("emits usable declared error symbols for %s", async (identifier, symbol) => {
     class NamingError extends Schema.TaggedErrorClass<NamingError>(identifier)(`wire.${identifier}`, {
       message: Schema.String,
