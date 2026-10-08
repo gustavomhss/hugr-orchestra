@@ -101,6 +101,53 @@ it.live("default wrap does not prepare output parents, including with a model-st
   }),
 )
 
+it.live("explicit Go read-only cache flags HOLD before filesystem acquisition, scratch or parents", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const acquisitions: string[] = []
+    const fs = {
+      ...f.fs,
+      realPath: (target: string) => f.fs.realPath(target).pipe(Effect.tap(() => Effect.sync(() => acquisitions.push(target)))),
+      makeTempDirectoryScoped: f.fs.makeTempDirectoryScoped,
+    }
+    yield* Effect.forEach(["0", "f", "F", "false", "FALSE", "False"].flatMap((value) =>
+      ["-", "--"].flatMap((prefix) => ["", "'", '"'].map((quote) => `-trimpath\t${quote}${prefix}modcacherw=${value}${quote}\r\n-buildvcs=false`))), (GOFLAGS) => Effect.gen(function* () {
+      const env = { GOFLAGS }
+      const result = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", "require('fs').writeFileSync('spawned','bad')"], {
+        cwd: f.directory, env, extendEnv: false,
+      }), { prepareParents: true }).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["pending/deep/out"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true } }),
+        Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+        Effect.result,
+      )
+      expect(result._tag).toBe("Failure")
+      if (result._tag !== "Failure") throw new Error("Read-only Go cache request was overridden")
+      expect(result.failure).toBeInstanceOf(ToolSafety.Denied)
+      expect(result.failure.reason).toBe("sandbox-go-readonly-cache-unsupported")
+      expect(env.GOFLAGS).toBe(GOFLAGS)
+      expect(acquisitions).toEqual([])
+      expect(yield* f.fs.exists(path.join(f.directory, "pending"))).toBe(false)
+      expect(yield* f.fs.exists(path.join(f.directory, "spawned"))).toBe(false)
+    }), { discard: true })
+  }),
+)
+
+it.live("Go quoted fields do not interpret inner quotes or unrelated flag values as read-only cache requests", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    yield* Effect.forEach(["-modcacherw", "--modcacherw=true", '-ldflags="-modcacherw=false"', "-modcacherw='false'", '"-modcacherw=false', "-modcacherw=FALSELY"], (GOFLAGS) => Effect.gen(function* () {
+      // These flags are unconflicted or Go-owned syntax errors. An unsandboxed child receives them unchanged.
+      const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", ""], { cwd: f.directory, env: { GOFLAGS }, extendEnv: false })).pipe(
+        Effect.provideService(ToolSafety.RuntimeProfile, { sandbox: { enabled: false, scratch: true } }),
+      )
+      expect(command._tag).toBe("StandardCommand")
+      if (command._tag !== "StandardCommand") throw new Error("Unexpected pipeline")
+      expect(command.options.env?.GOFLAGS).toBe(GOFLAGS)
+    }), { discard: true })
+  }),
+)
+
 it.live("later multi-root mkdir failure rolls back only owned empty directories and preserves foreign bytes", () =>
   Effect.gen(function* () {
     const f = yield* fixture

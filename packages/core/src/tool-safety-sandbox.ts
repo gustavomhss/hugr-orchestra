@@ -57,6 +57,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const env = environment(command.options.extendEnv === false
     ? command.options.env ?? {}
     : { ...process.env, ...command.options.env })
+  if (profile?.sandbox?.scratch && readonlyGoCache(env.GOFLAGS ?? ""))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-go-readonly-cache-unsupported" })
   const ordinary = ChildProcess.make(command.command, command.args, { ...command.options, env, extendEnv: false })
   const requestedSockets = profile?.sandbox?.allowedUnixSockets
   if (requestedSockets !== undefined && !Array.isArray(requestedSockets))
@@ -252,6 +254,23 @@ const pick = Effect.fnUntraced(function* (start: boolean) {
     ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
   }
 })
+
+// Go cmd/internal/quoted.Split: ASCII whitespace, quotes only at field start, no unescaping or concatenation.
+// A malformed quoted list is left to Go. Recognize only the closed strconv.ParseBool false spellings.
+function readonlyGoCache(input: string) {
+  const tokens: string[] = []
+  let rest = input
+  while (rest.length) {
+    rest = rest.replace(/^[ \t\n\r]+/, "")
+    if (!rest.length) break
+    const quote = rest[0] === "'" || rest[0] === '"'
+    const end = quote ? rest.indexOf(rest[0], 1) : rest.search(/[ \t\n\r]/)
+    if (quote && end === -1) return false
+    tokens.push(quote ? rest.slice(1, end) : end === -1 ? rest : rest.slice(0, end))
+    rest = end === -1 ? "" : rest.slice(end + (quote ? 1 : 0))
+  }
+  return tokens.some((token) => /^--?modcacherw=(?:0|f|F|false|FALSE|False)$/.test(token))
+}
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
 const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, ToolSafety.Denied> {
