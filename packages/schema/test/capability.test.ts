@@ -210,13 +210,13 @@ describe("capability contracts", () => {
     })
     expect(
       Schema.encodeSync(Capability.Failure)(
-        Capability.Failure.make({
+        new Capability.Failure({
           code: "outcome_unknown",
           message: "Uncertain",
           detail: undefined,
         }),
       ),
-    ).toEqual({ _tag: "Failure", code: "outcome_unknown", message: "Uncertain" })
+    ).toEqual({ _tag: "Capability.Failure", code: "outcome_unknown", message: "Uncertain" })
     expect(
       Schema.encodeSync(Capability.Owner)(
         Capability.Owner.make({
@@ -255,18 +255,30 @@ describe("capability contracts", () => {
 
   test("failure uses closed codes and bounded JSON detail", () => {
     const failure = {
-      _tag: "Failure",
+      _tag: "Capability.Failure",
       code: "authentication_revoked",
       message: "Access revoked",
       detail: { source: "example", status: 401, requestID: "request-1", observations: [true, null] },
-    } satisfies Capability.Failure
-    expect(Schema.decodeUnknownSync(Capability.Failure)(failure)).toEqual(failure)
-    expect(Schema.encodeSync(Capability.Failure)(Schema.decodeUnknownSync(Capability.Failure)(failure))).toEqual(
-      failure,
-    )
+    } satisfies typeof Capability.Failure.Encoded
+    const decoded = Schema.decodeUnknownSync(Capability.Failure)(failure)
+    expect(decoded).toBeInstanceOf(Capability.Failure)
+    expect(Schema.encodeSync(Capability.Failure)(decoded)).toEqual(failure)
+    expect(
+      Schema.encodeSync(Capability.Failure)(
+        new Capability.Failure({
+          code: failure.code,
+          message: failure.message,
+          detail: failure.detail,
+        }),
+      ),
+    ).toEqual(failure)
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, code: "provider_error" })).toThrow()
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Error" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Failure" })).toThrow()
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, secret: "secret" })).toThrow()
+    expect(() => Schema.encodeSync(Capability.Failure)(Object.assign(decoded, { secret: "secret" }))).toThrow()
+    const leaked = { ...failure, secret: "secret" }
+    expect(() => new Capability.Failure(leaked)).toThrow()
     expect(Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4094))).toHaveLength(4094)
     expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4095))).toThrow()
     expect(Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2047))).toHaveLength(2047)
@@ -352,18 +364,34 @@ describe("capability contracts", () => {
     expect(() => Schema.encodeSync(Capability.FailureDetail)(oversize)).toThrow(
       "Failure detail must not exceed 4096 UTF-8 JSON bytes",
     )
-    const failure = { _tag: "Failure", code: "outcome_unknown", message: "Uncertain" } satisfies Capability.Failure
-    expect(Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: value })).toEqual({
+    const failure = {
+      _tag: "Capability.Failure",
+      code: "outcome_unknown",
+      message: "Uncertain",
+    } satisfies typeof Capability.Failure.Encoded
+    const decoded = Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: value })
+    expect(decoded).toBeInstanceOf(Capability.Failure)
+    expect(Schema.encodeSync(Capability.Failure)(decoded)).toEqual({
       ...failure,
       detail: value,
     })
     expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: oversize })).toThrow()
-    expect(() => Schema.encodeSync(Capability.Failure)({ ...failure, detail: oversize })).toThrow()
+    expect(() =>
+      Schema.encodeSync(Capability.Failure)(
+        new Capability.Failure({
+          code: failure.code,
+          message: failure.message,
+          detail: oversize,
+        }),
+      ),
+    ).toThrow()
   })
 
   test("public identifiers remain stable and unique", () => {
     expect(SchemaAST.resolveIdentifier(Capability.FailureDetail.ast)).toBe("Capability.FailureDetail")
     expect(SchemaAST.resolveIdentifier(Capability.Failure.ast)).toBe("Capability.Failure")
+    expect(Capability.Failure.identifier).toBe("Capability.Failure")
+    expect(new Capability.Failure({ code: "outcome_unknown", message: "Uncertain" })._tag).toBe("Capability.Failure")
     ids.forEach(({ schema, name }) => {
       expect(SchemaAST.resolveIdentifier(schema.ast)).toBe(`Capability.${name}`)
       expect(SchemaAST.resolve(schema.ast)?.brands).toEqual([`Capability.${name}`])

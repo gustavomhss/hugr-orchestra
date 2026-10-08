@@ -38,11 +38,11 @@ export async function verify(
       yield* Effect.forEach(["é".repeat(2047), "é".repeat(2048)], (detail) =>
         Effect.gen(function* () {
           const failure = {
-            _tag: "Failure",
+            _tag: "Capability.Failure",
             code: "outcome_unknown",
             message: "Uncertain",
             detail,
-          } satisfies Capability.Failure
+          } satisfies typeof Capability.Failure.Encoded
           const client = yield* make({ baseUrl: "https://capability.test" }).pipe(
             Effect.provideService(
               HttpClient.HttpClient,
@@ -57,8 +57,13 @@ export async function verify(
             ),
           )
           if (detail.length === 2047) {
-            expect(yield* client.capability.read()).toEqual(failure)
-            expect(yield* client.capability.failed().pipe(Effect.flip)).toEqual(failure)
+            const result = yield* client.capability.read()
+            expect(result).toBeInstanceOf(Capability.Failure)
+            expect(Schema.encodeSync(Capability.Failure)(result)).toEqual(failure)
+            const error = yield* client.capability.failed().pipe(Effect.flip)
+            expect(error).toBeInstanceOf(Capability.Failure)
+            if (!(error instanceof Capability.Failure)) throw new Error("Expected authoritative failure class")
+            expect(Schema.encodeSync(Capability.Failure)(error)).toEqual(failure)
             return
           }
           yield* Effect.forEach(
@@ -103,13 +108,15 @@ describe("capability contract portability", () => {
     )
     expect(SchemaAST.resolveIdentifier(authoritativeSchema.ast)).toBe("Capability.Failure")
     expect(SchemaAST.resolveIdentifier(Capability.FailureDetail.ast)).toBe("Capability.FailureDetail")
-    // Promise declared errors require a Schema error class; Failure remains a plain wire record.
-    expect(() => emitPromise(contract)).toThrow("Promise error must have a literal discriminator: capability.failed")
-    const promise = emitPromise(compile(Api, { omitEndpoints: new Set(["failed"]) }))
+    const promise = emitPromise(contract)
     const types = promise.files.find((file) => file.path === "types.ts")?.content
     expect(types).toContain('readonly "detail"?: JsonValue')
     expect(types).toContain("export type JsonValue = null | boolean | number | string")
-    expect(types).toContain('readonly "_tag": "Failure"')
+    expect(types).toContain('readonly "_tag": "Capability.Failure"')
+    expect(types).toContain('"_tag" in value && value["_tag"] === "Capability.Failure"')
+    expect(promise.operations.map((operation) => operation.name)).toEqual(["read", "failed"])
+    expect(promise.operations[1].errors).toContain("Capability.Failure")
+    expect(promise.files.find((file) => file.path === "client.ts")?.content).toContain("declaredStatuses: [409]")
     expect(() => emitEffect(contract)).toThrow("Effect schema requires authoritative import: capability.read")
     const imported = emitEffectImported(contract, { module: "../capability-contract.test", api: "Api" })
     expect(imported.files.map((file) => file.path)).toEqual(["client-error.ts", "client.ts", "index.ts"])

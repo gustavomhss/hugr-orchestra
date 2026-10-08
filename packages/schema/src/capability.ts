@@ -186,12 +186,15 @@ export const FailureDetail = Schema.Json.pipe(
 ).annotate({ identifier: "Capability.FailureDetail" })
 export type FailureDetail = typeof FailureDetail.Type
 
-export interface Failure extends Schema.Schema.Type<typeof Failure> {}
-export const Failure = Schema.TaggedStruct("Failure", {
-  code: ErrorCode,
-  message: Schema.String,
-  detail: optional(FailureDetail),
-}).annotate({ identifier: "Capability.Failure", parseOptions: { onExcessProperty: "error" } })
+export class Failure extends Schema.TaggedErrorClass<Failure>()(
+  "Capability.Failure",
+  Schema.Struct({
+    code: ErrorCode,
+    message: Schema.String,
+    detail: optional(FailureDetail),
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  { identifier: "Capability.Failure", parseOptions: { onExcessProperty: "error" } },
+) {}
 
 export const JobKind = Schema.Literals(["provider", "local-process", "worker", "script"]).annotate({
   identifier: "Capability.JobKind",
