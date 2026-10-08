@@ -189,6 +189,7 @@ try {
   const supervisor = join(dirname(addon), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor");
   assert(existsSync(supervisor), "the supervisor is not next to the addon");
   const binaries = validateBinaries(id, addon, supervisor);
+  const crtImports = {};
   if (process.platform === "win32") {
     // H5 (x64 and arm64): built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the
     // positive control: an import table read as empty would otherwise pass.
@@ -197,6 +198,7 @@ try {
       assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
       const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));
       assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(", ")}): build it with +crt-static (.cargo/config.toml)`);
+      crtImports[file === addon ? "addon" : "supervisor"] = dlls;
     }
   }
   for (const dir of [dirname(main), dirname(addon)]) assert.equal(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts, undefined, `${dir} has scripts`);
@@ -223,7 +225,8 @@ try {
   const proofs = resolve(tarballs, "..", "proofs");
   mkdirSync(proofs, { recursive: true });
   writeFileSync(join(proofs, `${id}-${runtime}.json`), JSON.stringify({
-    id, identity, runtimeBinary, binaries,
+    id, identity, runtimeBinary, binaries, crtImports,
+    sha256: Object.fromEntries([["hugr_omni.node", addon], [process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor", supervisor]].map(([name, file]) => [name, createHash("sha256").update(readFileSync(file)).digest("hex")])),
     tarballs: entries.filter((e) => names.includes(e.json.name)).map((e) => ({ name: e.json.name, sha256: createHash("sha256").update(readFileSync(e.file)).digest("hex") })),
     installSeconds: installed.seconds, quickstartSeconds: hello.seconds, quickstart: hello.out,
   }, null, 2));

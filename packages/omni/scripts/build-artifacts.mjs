@@ -56,13 +56,15 @@ function run(cmd, cmdArgs, env = {}) {
 }
 /** The output of `cmd` run in this repository. */
 const read = (cmd, cmdArgs) => execFileSync(cmd, cmdArgs, { cwd: root, encoding: "utf8" });
+const prefix = read("git", ["rev-parse", "--show-prefix"]).trim().replace(/\/$/, "");
 const source = {
   headSHA: read("git", ["rev-parse", "HEAD"]).trim(),
   treeHash: read("git", ["rev-parse", "HEAD^{tree}"]).trim(),
-  omniTreeHash: read("git", ["rev-parse", "HEAD:packages/omni"]).trim(),
+  omniTreeHash: read("git", ["rev-parse", prefix ? `HEAD:${prefix}` : "HEAD^{tree}"]).trim(),
 };
 if (process.env.HUGR_PROOF_HEAD) assert.equal(source.headSHA, process.env.HUGR_PROOF_HEAD, "checkout is not the current PR head");
 console.log(`source proof ${JSON.stringify(source)}`);
+const checks = {};
 
 const windows = id.startsWith("win32-");
 const lib = windows ? "hugr_omni_node.dll" : id.startsWith("darwin-") ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so";
@@ -87,6 +89,8 @@ if (p.build === "zig") {
     return 0;
   }).at(-1)?.[0];
   assert.equal(floor, "GLIBC_2.17", `the addon needs ${floor ?? "no GLIBC_ version (objdump read nothing)"}, not the 2.17 floor`);
+  checks.glibcFloor = floor;
+  console.log(`glibc floor proof ${id}: ${floor}`);
 } else if (p.build === "alpine") {
   // musl Linux, natively on Alpine (as napi-rs builds it): the supervisor static (the target's default), the addon a
   // cdylib that links musl dynamically (-crt-static, set here and not in .cargo/config.toml: it must not reach the
@@ -105,12 +109,14 @@ if (p.build === "zig") {
   if (windows) {
     // H5: a static C runtime, so no Visual C++ Redistributable is needed (verify.mjs checks the installed files the
     // same way). KERNEL32 is the positive control: an import table read as empty would otherwise pass.
+    checks.crtImports = {};
     for (const file of [addon, supervisor]) {
       const dlls = peImports(readFileSync(file));
       console.log(`CRT proof ${file}: ${JSON.stringify(dlls)}`);
       assert(dlls.some((d) => /^kernel32\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);
       const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));
       assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(", ")}): build it with +crt-static (.cargo/config.toml)`);
+      checks.crtImports[file === addon ? "addon" : "supervisor"] = dlls;
     }
   }
 }
@@ -124,7 +130,7 @@ copyFileSync(addon, join(dir, "hugr_omni.node"));
 copyFileSync(supervisor, join(dir, exe));
 if (!windows) chmodSync(join(dir, exe), 0o755);
 writeFileSync(join(dir, "proof.json"), JSON.stringify({
-  id, source, host: { os: process.platform, cpu: process.arch }, binaries,
+  id, source, host: { os: process.platform, cpu: process.arch }, binaries, checks,
   sha256: Object.fromEntries(["hugr_omni.node", exe].map((name) => [name, createHash("sha256").update(readFileSync(join(dir, name))).digest("hex")])),
   deno: p.build === "alpine" ? "N/A: Deno has no musl build" : "required clean-install proof",
 }, null, 2));
