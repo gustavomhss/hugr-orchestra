@@ -2,6 +2,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Slug } from "@orchestra/core/util/slug"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import path from "path"
 import { BackgroundJob } from "@/background/job"
@@ -433,6 +434,14 @@ export interface Interface {
   readonly children: (parentID: SessionID) => Effect.Effect<Info[]>
   readonly remove: (sessionID: SessionID) => Effect.Effect<void, NotFound>
   readonly updateMessage: <T extends SessionV1.Info>(msg: T) => Effect.Effect<T>
+  readonly reconcilePrompt: (input: {
+    sessionID: SessionID
+    messageID: MessageID
+    identity: string
+  }) => Effect.Effect<SessionV1.WithParts | undefined, PromptAdmission.Conflict>
+  readonly admitPrompt: (payload: PromptAdmission.Payload) => Effect.Effect<
+    { created: boolean; message: SessionV1.WithParts }, PromptAdmission.Conflict
+  >
   readonly removeMessage: (input: { sessionID: SessionID; messageID: MessageID }) => Effect.Effect<MessageID>
   readonly removePart: (input: { sessionID: SessionID; messageID: MessageID; partID: PartID }) => Effect.Effect<PartID>
   readonly getPart: (input: {
@@ -648,6 +657,21 @@ const layer: Layer.Layer<
     // tables are the sole reader (UI/SSE/LLM); the event rows are dead weight
     // that grew the log superlinearly for long streaming turns. Workspaces ON
     // keeps them, preserving byte-identical sync behavior.
+    const reconcilePrompt: Interface["reconcilePrompt"] = (input) => PromptAdmission.reconcile(db, input)
+    const admitPrompt: Interface["admitPrompt"] = Effect.fn("Session.admitPrompt")(function* (payload) {
+      const created = yield* events.publish(SessionV1.Event.PromptAdmitted, payload).pipe(
+        Effect.as(true),
+        Effect.catchDefect((defect) => {
+          if (defect instanceof PromptAdmission.AlreadyAdmitted) return Effect.succeed(false)
+          if (defect instanceof PromptAdmission.Conflict) return Effect.fail(defect)
+          return Effect.die(defect)
+        }),
+      )
+      const message = yield* reconcilePrompt(payload)
+      if (!message) return yield* Effect.die(new Error("Committed V1 prompt admission receipt is missing"))
+      return { created, message }
+    })
+
     const updateMessage = <T extends SessionV1.Info>(msg: T): Effect.Effect<T> =>
       Effect.gen(function* () {
         yield* events.publish(
@@ -951,6 +975,8 @@ const layer: Layer.Layer<
       children,
       remove,
       updateMessage,
+      reconcilePrompt,
+      admitPrompt,
       removeMessage,
       removePart,
       updatePart,

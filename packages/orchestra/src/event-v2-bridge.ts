@@ -7,7 +7,8 @@ import { EventV2 } from "@orchestra/core/event"
 import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { Context, Effect, Layer } from "effect"
+import { SessionV1 } from "@orchestra/core/v1/session"
+import { Context, Effect, Layer, Schema } from "effect"
 
 export class Service extends Context.Service<Service, EventV2.Interface>()("@orchestra/EventV2Bridge") {}
 
@@ -36,17 +37,38 @@ const layer = Layer.effect(
       Effect.gen(function* () {
         const ctx = yield* InstanceRef
         const workspaceID = (yield* WorkspaceRef) ?? event.location?.workspaceID
-        GlobalBus.emit("event", {
+        const route = {
           directory: event.location?.directory ?? ctx?.directory,
           project: ctx?.project.id,
           workspace: workspaceID,
-          payload: { id: event.id, type: event.type, properties: event.data },
-        })
+        }
+        const admitted = event.type === SessionV1.Event.PromptAdmitted.type && event.durable !== undefined
+          ? Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data)
+          : undefined
+        if (admitted) {
+          GlobalBus.emit("event", {
+            ...route,
+            payload: {
+              id: EventV2.ID.create(),
+              type: SessionV1.Event.MessageUpdated.type,
+              properties: { sessionID: admitted.sessionID, info: admitted.info },
+            },
+          })
+          admitted.parts.forEach((part) =>
+            GlobalBus.emit("event", {
+              ...route,
+              payload: {
+                id: EventV2.ID.create(),
+                type: SessionV1.Event.PartUpdated.type,
+                properties: { sessionID: admitted.sessionID, part, time: admitted.info.time.created },
+              },
+            }),
+          )
+        }
+        if (!admitted) GlobalBus.emit("event", { ...route, payload: { id: event.id, type: event.type, properties: event.data } })
         if (event.durable === undefined) return
         GlobalBus.emit("event", {
-          directory: event.location?.directory ?? ctx?.directory,
-          project: ctx?.project.id,
-          workspace: workspaceID,
+          ...route,
           payload: {
             type: "sync",
             syncEvent: {
