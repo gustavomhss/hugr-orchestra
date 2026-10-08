@@ -25,6 +25,7 @@ import {
   kill9,
   mentioning,
   own,
+  prepareCapture,
   provider,
   serve,
   table,
@@ -32,13 +33,17 @@ import {
   verdict,
   win,
 } from "./lib.ts"
+import { record, deliveryEnv } from "./delivery-fixtures.ts"
+import { consoleHost, consoleInput, gracefulEvidence, isolatedEnvironment } from "./windows-lifecycle.ts"
+import { PtyOmni } from "../../core/src/pty/omni.ts"
 
 const KPI_MS = 8_000
 
-export async function run(target: "serve" | "tui" | "hold" = "serve") {
+export async function run(target: "serve" | "tui" | "hold" = "serve", action: "kill" | "quit" = "kill") {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   if (target === "hold") return hold()
-  return host(target)
+  await prepareCapture()
+  return host(target, action)
 }
 
 async function hold() {
@@ -72,8 +77,9 @@ async function hold() {
   }
 }
 
-async function host(target: "serve" | "tui") {
-  if (target === "tui" && win) return verdict("v2-tui", { target, pass: false, error: "Windows TUI requires a real console harness; python pty is Unix-only" })
+async function host(target: "serve" | "tui", action: "kill" | "quit") {
+  if (action === "quit" && !win) throw new Error("Windows console quit cell requires Windows")
+  const scenario = `${action === "quit" ? "v10" : "v2"}-${target}`
   const bin = cli()
   const scratch = isolated(`v2-${target}`, {})
   const trees = {
@@ -85,11 +91,12 @@ async function host(target: "serve" | "tui") {
   const lspNonce = `omni-lsp-${trees.bash.nonce.slice(10)}`
   const mcpNonce = `omni-mcp-${trees.bash.nonce.slice(10)}`
   const llm = await fakeLLM([
-    { name: "bash", args: { command: trees.bash.line, timeout: 600_000, description: "Run the campaign tree" } },
+    { name: "bash", args: { command: win ? `& ${trees.bash.line}` : trees.bash.line, timeout: 600_000, description: "Run the campaign tree" } },
     { name: "write", args: { filePath: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } },
   ])
   const config = {
     formatter: false,
+    shell: win ? "powershell.exe" : "/bin/bash",
     share: "disabled",
     permission: { "*": "allow", bash: "allow", edit: "allow", external_directory: "allow" },
     model: "test/test-model",
@@ -112,7 +119,10 @@ async function host(target: "serve" | "tui") {
       },
     },
   }
-  const { env, home, project } = { ...scratch, env: { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) } }
+  const { env, home, project } = { ...scratch, env: deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }) }
+  const terminalHost = { host: undefined as Awaited<ReturnType<typeof consoleHost>> | undefined }
+  const outside = { terminal: undefined as PtyOmni.OmniProc | undefined }
+  const probes = { controls: undefined as Record<string, ReturnType<typeof control>> | undefined }
   const nonces = Object.values(trees).map((t) => t.nonce)
   const steps: string[] = []
   const step = (line: string) => {
@@ -120,7 +130,8 @@ async function host(target: "serve" | "tui") {
     console.error(`[v2-${target}] ${line}`)
   }
   try {
-    const started = target === "serve" ? await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, project) : await tui(bin, env, project)
+    const started = win && (target === "tui" || action === "quit") ? await consoleHost(env, project, target) : target === "serve" ? await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, project) : await tui(bin, env, project)
+    if ("terminal" in started) terminalHost.host = started
     step(`host ${started.pid} listening on ${started.url}`)
     const api = client(started.url, project)
     const session = await api.post("/session", {})
@@ -132,27 +143,36 @@ async function host(target: "serve" | "tui") {
     })
     const shell = win ? undefined : "/bin/bash"
     await api.post("/pty", shell ? { command: shell, args: ["-c", trees.pty1.line] } : { command: trees.pty1.command, args: trees.pty1.args })
-    await api.post("/pty", { command: trees.pty2.command, args: trees.pty2.args, cols: 100, rows: 30 })
+    if (process.env.OMNI_CAMPAIGN_MUTATION === "skip-inner-owner") {
+      const backend = await PtyOmni.load()
+      outside.terminal = isolatedEnvironment(env, () => backend.spawn(trees.pty2.command, trees.pty2.args, { name: "xterm-256color", cols: 100, rows: 30, cwd: project, env }))
+      outside.terminal.onData(() => {})
+    }
+    if (!outside.terminal) await api.post("/pty", { command: trees.pty2.command, args: trees.pty2.args, cols: 100, rows: 30 })
     step("prompt sent, 2 terminals created")
 
     const hostIdentity = started.identity ?? identity(started.pid)
     const specs = [...Object.entries(trees).map(([name, tree]) => ({ name, nonce: tree.nonce, size: tree.size })), { name: "lsp", nonce: lspNonce, size: 1 }, { name: "mcpServer", nonce: mcpNonce, size: 1 }]
-    const live = await until(90_000, "every exact fixture member protected under the pinned host", () => {
+    const live = await until(outside.terminal ? 15_000 : 90_000, "every exact fixture member protected under the pinned host", () => {
       const rows = table()
       const found = Object.fromEntries(specs.map((spec) => [spec.name, control(spec.nonce, spec.size, [hostIdentity], rows)]))
+      probes.controls = found
       return Object.values(found).every((found) => found.pass) ? found : undefined
     }).catch((error) => { throw new Error(`${error}; llm ${JSON.stringify(llm.seen)}; offered ${JSON.stringify(llm.offered)}; host ${started.out()}`) })
     const supervisors = [...new Map(Object.values(live).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
     step(`exact tree controls: ${JSON.stringify(live)}; supervisors ${JSON.stringify(supervisors)}`)
     if (supervisors.length === 0) throw new Error("positive control found no pinned supervisors")
-    if (!kill9(hostIdentity)) throw new Error(`could not kill pinned host ${started.pid}`)
+    const input = action === "quit" && process.env.OMNI_CAMPAIGN_MUTATION !== "forced-kill-graceful" ? "Ctrl+C" : "TerminateProcess"
     const killed = Date.now()
-    step(`kill -9 ${started.pid}`)
+    if (input === "Ctrl+C") consoleInput(terminalHost.host!, "Ctrl+C")
+    if (input === "TerminateProcess" && !kill9(hostIdentity)) throw new Error(`could not kill pinned host ${started.pid}`)
+    step(`${input} ${started.pid}`)
     const all = [...nonces, lspNonce, mcpNonce]
-    const observed = await deadlineSnapshots(killed, KPI_MS, all, [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])])
+    const observed = await deadlineSnapshots(killed, action === "quit" ? 20_000 : KPI_MS, all, [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])])
+    const shutdown = action === "quit" ? gracefulEvidence(target, terminalHost.host!, input) : undefined
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args?.slice(0, 160) ?? "<argv unavailable>"}`)
     step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
-    return verdict(`v2-${target}`, {
+    return record(scenario, {
       target,
       home,
       nonces: all,
@@ -160,18 +180,21 @@ async function host(target: "serve" | "tui") {
       supervisors,
       observationEndedMs: Date.now() - killed,
       observed,
-      kpi: "0 omni-tree processes 8 s after kill -9 of the host",
+      input, shutdown, preparationMs: terminalHost.host?.preparationMs,
+      kpi: action === "quit" ? "real console Ctrl+C exits and cleans every owned fixture within 20 s" : "0 omni-tree processes 8 s after kill -9 of the host",
       live,
       leftovers,
       llm: llm.seen,
       offered: llm.offered,
-      pass: observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) && observed.last.retained.length === 0 && leftovers.length === 0,
+      pass: (shutdown === undefined || shutdown.pass) && observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) && observed.last.retained.length === 0 && leftovers.length === 0,
       steps,
     })
   } catch (error) {
-    return verdict(`v2-${target}`, { target, pass: false, error: String(error).slice(0, 4000), steps })
+    return record(scenario, { target, pass: false, error: String(error).slice(0, 4000), controls: probes.controls, output: terminalHost.host?.out().slice(-4000), steps })
   } finally {
     llm.stop()
+    await outside.terminal?.stop()
+    await terminalHost.host?.terminal.stop()
     await cleanup(home, nonces)
   }
 }
