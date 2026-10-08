@@ -40,7 +40,7 @@ const fixture = Effect.fn(function* () {
     const form = Object.fromEntries(new URLSearchParams(await request.text()))
     control.forms.push(form)
     if (form.grant_type === "authorization_code") return Response.json({ access_token: "fixture-expired",
-      refresh_token: "fixture-refresh", expires_in: 3600, scope: Siwc.scopes, id_token: control.signInToken })
+      refresh_token: "fixture-refresh", token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes, id_token: control.signInToken })
     const block = control.block
     block?.entered.resolve()
     if (block) await block.release.promise
