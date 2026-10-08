@@ -1,0 +1,72 @@
+{
+  "audience": "agents",
+  "status": "review-record",
+  "baseline": "684456d571e8deb5f435d39e789e1b1258453d85",
+  "scope": "One real Codex terminal smoke against the frozen Relay portable gate CLI, using a disposable two-file subject.",
+  "runner": {
+    "executable": "codex",
+    "version": "0.160.0",
+    "invocations": 4,
+    "session_id": "01a0fa08-a874-70d1-9721-fcc7a95c2996",
+    "sequence": ["exec", "exec resume", "exec resume", "exec resume"],
+    "sandbox": "workspace-write",
+    "approval_policy": "never",
+    "user_config": "ignored for these invocations"
+  },
+  "gate_sequence": [
+    {"exit":1,"outcome":"gate-fail","counter":0,"failing":["SUB-NEGATIVE"],"scenario":"Codex writes the deliberately incomplete draft."},
+    {"exit":0,"outcome":"advance","counter":1,"failing":[],"scenario":"Codex repairs the draft after gate feedback."},
+    {"exit":1,"outcome":"gate-fail","counter":1,"failing":["SUB-NEGATIVE"],"scenario":"Current receipt controls pass; the deliberately reintroduced earlier subtotal defect fails regression."},
+    {"exit":0,"outcome":"complete","counter":2,"failing":[],"scenario":"Codex restores the accepted contract while preserving the receipt implementation."}
+  ],
+  "verification": {
+    "offline_verifier_exit": 0,
+    "audit_exit": 0,
+    "audit_result": "PASS",
+    "chain_intact": true,
+    "ledger_entries": 20,
+    "last_event": "sprint-complete",
+    "oracle_recheck": "ok",
+    "deterministic_passed": 5,
+    "deterministic_total": 5,
+    "fresh_artifact_controls_passed": 5,
+    "snapshot_control_exit_vectors": ["00111", "00011", "00100", "00000"],
+    "control_vector_order": ["subtotal-sum", "subtotal-empty", "subtotal-negative", "receipt-normal", "receipt-empty"],
+    "relay_repository_byte_inventory": "Report before and after inventories matched; the independent live review matched all 195 tracked and 38 nonignored untracked files then present. Git metadata and ignored runtime files were outside that inventory."
+  },
+  "evidence": {
+    "directory": "/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/relay-codex-live.Q9B1gj",
+    "report": "evidence/report.json",
+    "report_sha256": "1592031aa0b8a2a38c0d89bd439a0073eb33d9265b09e001a149988c0a5fa72c",
+    "ledger": "state/ledger.jsonl",
+    "ledger_sha256": "e3b2f965410b80e1e32c833a3b40516251280d1088065882f6e30516c3c4a38e",
+    "harness_sha256": "5d92debdbeff106fc26fef70b84a2ea4433acb63a079bc497c17da3748ad2ee4",
+    "checker_sha256": "e119d5f1b4660dff9143594f4331b23b75b2347b6f5bbeb104d3cfd65895f8ef",
+    "sprint_sha256": "8c648d2388d4d36e98270372b8e6c693b6e6714170799d709824aeb46be6069d",
+    "subject_instructions_sha256": "158049bda57cbf23fdd3468dfd643d0520fabe6222bc7a82fff95dc32dfd56a2",
+    "final_subtotal_sha256": "6ddb4b0f50d572ebbbbb3b89cb1f12699453f554ee30c9f5547d979a0bab70f4",
+    "final_receipt_sha256": "d036a13e9598c8e838b0121e7e2fe2c1f1b7eb1a7bbbfa348757da2b0e7ede21"
+  },
+  "independent_live_review": {
+    "task": "ses_f05f0fb78ffebjxok8cmkFmsGv",
+    "reviewer": "OpenCode / openai/gpt-6.1-sol, fresh context distinct from experiment author and pre-reviewer",
+    "verdict": "APPROVE",
+    "record": "REVIEW.md",
+    "record_sha256": "27d3bc4397747c9eaa50dc2393a989d1a96ea2e9b7961a5b133c7eef7cf4242f",
+    "controls": [
+      "Independent offline verification, explicit-sprint audit, and five fresh artifact checks.",
+      "All four artifact snapshots replayed against the unchanged checker.",
+      "Copied negative-validation removal and copied receipt stub rejected.",
+      "Unrehashed ledger alteration rejected; changed sprint command produced SPRINT-DIVERGED."
+    ]
+  },
+  "limits": [
+    "Portable controller loop; native Codex stop-hook binding was not exercised.",
+    "Incomplete draft and regression were explicitly requested negative controls, not measured natural model failures or comparative efficacy.",
+    "Same-user filesystem and plain SHA-256 evidence provide no adversarial isolation, authenticated authorship, or externally anchored completeness.",
+    "Recorded-evidence audit and fresh artifact execution are separate checks.",
+    "Raw resume usage counters were retained without assuming per-call token accounting or estimating cost.",
+    "Raw evidence resides in a machine-local temporary directory; this record preserves its bounded result and hashes, not the full transcript.",
+    "This descriptive JSON record is outside the Markdown hash index and is not a cryptographic signature or runtime review enforcement."
+  ]
+}

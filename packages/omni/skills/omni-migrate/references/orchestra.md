@@ -6,7 +6,7 @@ port listed below. This page is the index; the plan holds the detail and wins ov
 
 ## Switch and loader
 
-- `OPENCODE_EXPERIMENTAL_OMNI_SPAWNER` has three states. Unset or `0` means legacy. `1` means omni, delegating
+- `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states. Unset or `0` means legacy. `1` means omni, delegating
   unsupported options to legacy. `strict` means no delegation: unsupported options fail with `BadArgument` (D-L1).
 - `packages/core/src/omni.ts` is the only module that imports `hugr-omni`, and only dynamically. It counts omni
   spawns and delegations. A test run with the flag on and zero omni spawns fails (D-L2).
@@ -20,8 +20,8 @@ port listed below. This page is the index; the plan holds the detail and wins ov
 | Effect spawner, `packages/core/src/cross-spawn-spawner.ts` (`CrossSpawnSpawner.node`) | cross-spawn | `omni-spawner.ts` behind the flag | WP1 |
 | `Shell.invocation` in `packages/core/src/shell.ts` | `shell: true` | an explicit shell, a flag and the joined string | WP0 (signature), WP1 |
 | PTY, `packages/core/src/pty/pty.bun.ts` and `pty.node.ts` | bun-pty / node-pty | `pty/omni.ts` implementing `Proc` | WP2 |
-| Legacy `Process`, `packages/opencode/src/util/process.ts` (16 importers) | `child_process` | omni, with an explicit mapping table written first | WP3 |
-| MCP stdio, `packages/opencode/src/mcp/` (`StdioClientTransport`) | the SDK's transport plus a `pgrep` walk | `OmniStdioTransport` in `mcp/stdio.ts` | WP3 |
+| Legacy `Process`, `packages/orchestra/src/util/process.ts` (16 importers) | `child_process` | omni, with an explicit mapping table written first | WP3 |
+| MCP stdio, `packages/orchestra/src/mcp/` (`StdioClientTransport`) | the SDK's transport plus a `pgrep` walk | `OmniStdioTransport` in `mcp/stdio.ts` | WP3 |
 | maestro-arsenal, `engine/process.ts` and `governance/process.ts` | `Bun.spawn` | omni `run` through the core loader | WP3 |
 | Desktop main process and its utility process | `child_process` | omni, each with its own configured paths | WP4 |
 

@@ -22,7 +22,7 @@ export async function run(options: { controlOnly?: boolean; quiet?: boolean } = 
     for (const flag of ["0", "1"])
       hosts.push(await startServer(BUN, [import.meta.filename, "--host", scratch.home], {
         ...deliveryEnv(scratch.env),
-        OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: flag,
+        ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: flag,
         ...(flag === "1" && process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
         ...(flag === "1" && process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
       }, ROOT))
@@ -104,7 +104,7 @@ async function host() {
     const after = Omni.snapshot()
     if (result.exitCode !== 0 || result.stderr.length || result.stdoutTruncated)
       return new Response(JSON.stringify(result), { status: 500 })
-    return Response.json({ ms, stdout: result.stdout.toString(), mode: Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER,
+    return Response.json({ ms, stdout: result.stdout.toString(), mode: Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER,
       spawns: after.spawns - before.spawns, delegations: after.delegations - before.delegations, pid: process.pid })
   } })
   console.log(`listening on http://127.0.0.1:${server.port}`)

@@ -1,8 +1,8 @@
 import { createComponent, createEffect, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
-import { DialogProvider, useDialog } from "@opencode-ai/ui/context/dialog"
-import { Dialog, DialogTitle } from "@opencode-ai/ui/v2/dialog-v2"
+import { DialogProvider, useDialog } from "@orchestra/ui/context/dialog"
+import { Dialog, DialogTitle } from "@orchestra/ui/v2/dialog-v2"
 
 // Real shared dialog roots and keyed owners; only the route/data surroundings are reduced.
 function Harness() {

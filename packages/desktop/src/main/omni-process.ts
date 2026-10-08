@@ -1,7 +1,7 @@
 export * as DesktopOmni from "./omni-process"
 
 // The desktop main process's spawn sites, through omni (integration plan §4 WP4), behind
-// OPENCODE_EXPERIMENTAL_OMNI_SPAWNER. Each site keeps its legacy code as the default and swaps in one of the three
+// ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER. Each site keeps its legacy code as the default and swaps in one of the three
 // adapters below, shaped like what it used before: execFile, a ChildProcess with piped stdio, a node-pty terminal.
 // The binding comes from core's loader (the only importer of hugr-omni, D-L2); every spawn here is counted there.
 // No electron import: these modules also run under bun test and in the Linux access proof (Electron as Node).
@@ -10,7 +10,7 @@ import { EventEmitter, once } from "node:events"
 import { constants } from "node:os"
 import { PassThrough, type Readable, Writable } from "node:stream"
 import { omniSpawner } from "../../../core/src/flag/flag"
-import { Omni } from "@opencode-ai/core/omni"
+import { Omni } from "@orchestra/core/omni"
 
 // The binding's pipe child, through core's loader (no import of hugr-omni here, D-L2).
 type PipeChild = Extract<ReturnType<Awaited<ReturnType<typeof Omni.load>>["spawn"]>, { closeStdin: unknown }>
@@ -20,7 +20,7 @@ const DRAIN_GRACE = 2000
 
 /** On (`1` or `strict`): the migrated sites spawn through omni. The desktop sites never need a legacy delegation. */
 export function enabled() {
-  return omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) !== "off"
+  return omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) !== "off"
 }
 
 type Env = Record<string, string | undefined>

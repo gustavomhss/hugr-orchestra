@@ -1,5 +1,5 @@
-import { Location } from "@opencode-ai/schema/location"
-import { ScheduledTask } from "@opencode-ai/schema/scheduled-task"
+import { Location } from "@orchestra/schema/location"
+import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError, InvalidRequestError } from "../errors"

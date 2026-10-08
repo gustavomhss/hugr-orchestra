@@ -1,23 +1,23 @@
 // The omni terminal backend (integration plan WP2, D-L7), through the Pty service as the server uses it and through the
 // adapter where the service cannot observe the property (output queued before any listener). Runs only with
-// OPENCODE_EXPERIMENTAL_OMNI_SPAWNER on; processes are identified by the nonce tree's oracle, never by a bare pid.
+// ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER on; processes are identified by the nonce tree's oracle, never by a bare pid.
 import { describe, expect } from "bun:test"
 import { existsSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { Effect, Exit, Layer, Queue, Scope } from "effect"
-import { Config } from "@opencode-ai/core/config"
-import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { EventV2 } from "@opencode-ai/core/event"
-import { Flag } from "@opencode-ai/core/flag/flag"
-import { Location } from "@opencode-ai/core/location"
-import { OmniAdoption } from "@opencode-ai/core/omni-adoption"
-import { Pty } from "@opencode-ai/core/pty"
-import { PtyOmni } from "@opencode-ai/core/pty/omni"
-import { PtyProtocol } from "@opencode-ai/core/pty/protocol"
-import type { PtyID } from "@opencode-ai/core/pty/schema"
-import { AbsolutePath } from "@opencode-ai/core/schema"
+import { Config } from "@orchestra/core/config"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
+import { Flag } from "@orchestra/core/flag/flag"
+import { Location } from "@orchestra/core/location"
+import { OmniAdoption } from "@orchestra/core/omni-adoption"
+import { Pty } from "@orchestra/core/pty"
+import { PtyOmni } from "@orchestra/core/pty/omni"
+import { PtyProtocol } from "@orchestra/core/pty/protocol"
+import type { PtyID } from "@orchestra/core/pty/schema"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { location } from "../fixture/location"
 import { alive, gone, reap, sweep, tree } from "../fixture/process-tree"
 import { testEffect } from "../lib/effect"
@@ -35,7 +35,7 @@ const ptyLayer = () =>
     ],
   ])
 const it = testEffect(ptyLayer())
-const omniTest = Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER === "off" ? it.live.skip : it.live
+const omniTest = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? it.live.skip : it.live
 
 // Terminal output carries escape sequences (ConPTY rewrites runs of spaces as cursor moves); oracles read plain text.
 const plain = (text: string) =>

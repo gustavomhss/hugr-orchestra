@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "packages/opencode/script/**"
+      - "packages/orchestra/script/**"
       - "packages/omni/**"
       - ".github/workflows/omni-cli-smoke.yml"
 
@@ -65,20 +65,20 @@ jobs:
           echo "OMNI_ARTIFACTS=$dir" >> "$GITHUB_ENV"
 
       - name: Build the CLI (--single)
-        working-directory: packages/opencode
+        working-directory: packages/orchestra
         run: |
           bun script/build.ts --single --skip-install --skip-embed-web-ui
           ls -l dist/*/bin
 
       - name: Crash smoke
-        working-directory: packages/opencode
+        working-directory: packages/orchestra
         run: |
           mkdir -p .omni-cli-smoke
           # Run by the shipped binary as Bun: load omni through the core loader, start a 3-process nonce tree, hold it.
           cat > .omni-cli-smoke/hold.ts <<'EOF'
           import { realpathSync } from "node:fs"
           import path from "node:path"
-          import { Omni } from "@opencode-ai/core/omni"
+          import { Omni } from "@orchestra/core/omni"
           import { tree } from "../../core/test/fixture/process-tree.ts"
 
           const shipped = path.dirname(realpathSync(process.execPath))
@@ -105,13 +105,13 @@ jobs:
             console.error(`::error::${message}`)
             process.exit(1)
           }
-          const targets = readdirSync("dist").filter((name) => name.startsWith("opencode-"))
+          const targets = readdirSync("dist").filter((name) => name.startsWith("orchestra-"))
           if (targets.length !== 1) fail(`expected one built target in dist, found ${targets.join(", ")}`)
-          const real = path.resolve("dist", targets[0], "bin", process.platform === "win32" ? "opencode.exe" : "opencode")
-          const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "opencode")
+          const real = path.resolve("dist", targets[0], "bin", process.platform === "win32" ? "orchestra.exe" : "orchestra")
+          const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "orchestra")
           if (process.platform !== "win32") symlinkSync(real, link)
           const bin = process.platform === "win32" ? real : link
-          const env: Record<string, string | undefined> = { ...process.env, BUN_BE_BUN: "1", OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1" }
+          const env: Record<string, string | undefined> = { ...process.env, BUN_BE_BUN: "1", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1" }
           for (const key of Object.keys(env)) if (key.toUpperCase().startsWith("HUGR_OMNI_")) delete env[key]
           console.log(`starting ${bin}`)
           const cli = spawn(bin, [path.resolve(".omni-cli-smoke/hold.ts")], { env, stdio: ["ignore", "pipe", "inherit"] })
@@ -149,10 +149,10 @@ jobs:
 
       # The shipped binary finds the addon and the supervisor next to itself, with no HUGR_OMNI_* to help it.
       - name: debug omni (in-bundle import)
-        working-directory: packages/opencode
+        working-directory: packages/orchestra
         run: |
-          bin=$(find dist -path '*/bin/opencode' -o -path '*/bin/opencode.exe' | head -1)
-          [ -n "$bin" ] || { echo "::error::no built opencode binary under dist"; exit 1; }
-          out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=1 "$bin" debug omni)
+          bin=$(find dist -path '*/bin/orchestra' -o -path '*/bin/orchestra.exe' | head -1)
+          [ -n "$bin" ] || { echo "::error::no built orchestra binary under dist"; exit 1; }
+          out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1 "$bin" debug omni)
           echo "$out"
           grep -q "nonce tree: ok" <<<"$out"

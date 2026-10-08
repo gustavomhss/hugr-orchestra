@@ -3,7 +3,7 @@
 //
 //   bun packages/omni/campaign/v2-kill.ts [serve|tui|hold]
 //
-//   serve  the compiled CLI's `opencode serve`; a fake LLM drives a real agent turn (bash + write tools)
+//   serve  the compiled CLI's `orchestra serve`; a fake LLM drives a real agent turn (bash + write tools)
 //   tui    the compiled CLI's TUI (its server runs in a Bun Worker) on a fixed port, inside a python pty (Unix only)
 //   hold   the compiled CLI's `debug omni --hold` (the WP5 crash smoke, as a baseline)
 
@@ -12,7 +12,7 @@ import { createServer } from "node:net"
 import path from "node:path"
 import {
   BUN,
-  OPENCODE,
+  ORCHESTRA,
   cleanup,
   cli,
   client,
@@ -101,18 +101,18 @@ async function host(target: "serve" | "tui") {
       eslint: { disabled: true },
       oxlint: { disabled: true },
       biome: { disabled: true },
-      campaign: { command: [BUN, path.join(OPENCODE, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
+      campaign: { command: [BUN, path.join(ORCHESTRA, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
     },
     mcp: {
       campaign: {
         type: "local",
-        command: [BUN, path.join(OPENCODE, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
+        command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
         environment: { MCP_OMNI_TREE: JSON.stringify({ command: trees.mcp.command, args: trees.mcp.args }) },
         timeout: 30_000,
       },
     },
   }
-  const { env, home, project } = { ...scratch, env: { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) } }
+  const { env, home, project } = { ...scratch, env: { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) } }
   const nonces = Object.values(trees).map((t) => t.nonce)
   const steps: string[] = []
   const step = (line: string) => {
@@ -176,7 +176,7 @@ async function host(target: "serve" | "tui") {
   }
 }
 
-/** The TUI on a fixed port inside a python pty; its pid is the opencode process under python. */
+/** The TUI on a fixed port inside a python pty; its pid is the orchestra process under python. */
 async function tui(bin: string, env: Record<string, string>, project: string) {
   const port = await freePort()
   const command = [bin, "--port", String(port), "--hostname", "127.0.0.1"]
@@ -186,7 +186,7 @@ async function tui(bin: string, env: Record<string, string>, project: string) {
     cwd: project,
     stdio: ["pipe", "pipe", "pipe"],
   })
-  own(env.OPENCODE_TEST_HOME!, host)
+  own(env.ORCHESTRA_TEST_HOME!, host)
   let out = ""
   host.stdout!.on("data", (chunk) => (out += chunk))
   host.stderr!.on("data", (chunk) => (out += chunk))

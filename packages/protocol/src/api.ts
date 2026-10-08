@@ -11,7 +11,7 @@ import { CommandGroup } from "./groups/command"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
-import type { Definition } from "@opencode-ai/schema/event"
+import type { Definition } from "@orchestra/schema/event"
 import { AgentGroup } from "./groups/agent"
 import { HealthGroup } from "./groups/health"
 import { PtyGroup } from "./groups/pty"
@@ -22,6 +22,8 @@ import { LocationGroup } from "./groups/location"
 import { IntegrationGroup } from "./groups/integration"
 import { CredentialGroup } from "./groups/credential"
 import { ProjectCopyGroup } from "./groups/project-copy"
+import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
+import { RelayHookGroup } from "./groups/relay-hook"
 import { PullRequestGroup } from "./groups/pull-request"
 import { ScheduleGroup } from "./groups/schedule"
 
@@ -57,11 +59,14 @@ const makeApiFromGroup = <
     .add(makeQuestionGroup(locationMiddleware, sessionLocationMiddleware))
     .add(ReferenceGroup.middleware(locationMiddleware))
     .add(ProjectCopyGroup.middleware(locationMiddleware))
+    .add(RelayDocumentGroup.middleware(locationMiddleware))
+    .add(RelayPublishGroup.middleware(locationMiddleware))
+    .add(RelayHookGroup.middleware(locationMiddleware))
     .add(PullRequestGroup.middleware(locationMiddleware))
     .add(ScheduleGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
-        title: "opencode HttpApi",
+        title: "orchestra HttpApi",
         version: "0.0.1",
         description: "Experimental HttpApi surface for selected instance routes.",
       }),

@@ -18,7 +18,7 @@ export function deliveryEnv(env: Record<string, string>) {
     ...Object.fromEntries(Object.entries(env).filter(([key]) =>
       !/API_?KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|SSH_AUTH_SOCK/i.test(key) &&
       !/^(BUN_BE_BUN|BUN_OPTIONS|NODE_OPTIONS|NODE_PATH)$/.test(key))),
-    OPENCODE_INHERIT_CREDENTIALS: "0",
+    ORCHESTRA_INHERIT_CREDENTIALS: "0",
     APPDATA: path.join(env.HOME, "AppData/Roaming"),
     LOCALAPPDATA: path.join(env.HOME, "AppData/Local"),
     NPM_CONFIG_USERCONFIG: path.join(env.HOME, ".npmrc"),

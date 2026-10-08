@@ -4,7 +4,7 @@ import path from "path"
 import { createHash, randomUUID } from "crypto"
 import matter from "gray-matter"
 import { Effect, Schema } from "effect"
-import type { AgentFile } from "@opencode-ai/schema/agent-file"
+import type { AgentFile } from "@orchestra/schema/agent-file"
 import { AgentV2 } from "../agent"
 import { FSUtil } from "../fs-util"
 import { ConfigMarkdown } from "./markdown"
@@ -34,7 +34,7 @@ export function validName(name: string) {
   return NAME.test(name) && !RESERVED.test(name)
 }
 
-/** Reads the project-scoped markdown definition of an agent in `<directory>/.opencode`. */
+/** Reads the project-scoped markdown definition of an agent in `<directory>/.orchestra`. */
 export const read = Effect.fn("ConfigAgentFile.read")(function* (directory: string, name: string) {
   const fs = yield* FSUtil.Service
   const filepath = yield* locate(fs, directory, name)
@@ -142,7 +142,7 @@ function content(fs: FSUtil.Interface, filepath: string) {
 }
 
 const locate = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, name: string) {
-  const folders = ["agent", "agents"].map((folder) => path.join(directory, ".opencode", folder))
+  const folders = ["agent", "agents"].map((folder) => path.join(directory, ".orchestra", folder))
   const file = `${name}.md`
   const listed = yield* Effect.forEach(folders, (folder) =>
     fs.readDirectoryEntries(folder).pipe(Effect.orElseSucceed((): FSUtil.DirEntry[] => [])),
@@ -162,10 +162,10 @@ const locate = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: str
   return filepath
 })
 
-// Refuse a `.opencode`, folder or file that resolves outside the profile through a symlink.
+// Refuse a `.orchestra`, folder or file that resolves outside the profile through a symlink.
 const confine = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, filepath: string) {
   const root = yield* fs.realPath(directory)
-  const resolved = yield* Effect.forEach([path.join(directory, ".opencode"), path.dirname(filepath), filepath], (item) =>
+  const resolved = yield* Effect.forEach([path.join(directory, ".orchestra"), path.dirname(filepath), filepath], (item) =>
     fs.realPath(item).pipe(Effect.orElseSucceed(() => undefined)),
   )
   if (resolved.every((item) => item === undefined || item === root || item.startsWith(root + path.sep))) return

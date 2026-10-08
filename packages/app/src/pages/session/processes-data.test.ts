@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionProcess } from "@opencode-ai/sdk/v2/client"
+import type { SessionProcess } from "@orchestra/sdk/v2/client"
 import { createProcessStops, descendants, sortProcesses, tailLines } from "./processes-data"
 
 function item(id: string, started: number, pids = [100, 101]): SessionProcess {

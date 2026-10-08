@@ -1,6 +1,6 @@
 export * as AppDockRuntimeBackend from "./app-dock-runtime-backend"
 
-import type { LinuxError } from "@opencode-ai/app/app-dock-linux"
+import type { LinuxError } from "@orchestra/app/app-dock-linux"
 import { readFile } from "node:fs/promises"
 import { request } from "node:https"
 import { join } from "node:path"

@@ -1,4 +1,4 @@
-import { iconNames } from "@opencode-ai/ui/icons/provider"
+import { iconNames } from "@orchestra/ui/icons/provider"
 
 export type ModelReference = {
   id: string

@@ -52,7 +52,7 @@ export function create(options: { context: string }): Backend {
     ),
   )
   const current = { engine: undefined as { endpoint: string; client: ReturnType<typeof DockerEngine.create> } | undefined }
-  // Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER the docker CLI runs through omni, with execFile's result and errors.
+  // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the docker CLI runs through omni, with execFile's result and errors.
   const command = (args: string[], timeout = 20_000, extraEnv = {}) =>
     (DesktopOmni.enabled() ? DesktopOmni.execFile : exec)("docker", args, {
       env: { ...env, ...extraEnv },

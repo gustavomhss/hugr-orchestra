@@ -1,6 +1,6 @@
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { SessionMessage } from "@opencode-ai/core/session/message"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
+import { AgentV2 } from "@orchestra/core/agent"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Effect } from "effect"
 
 // A caller that is not Maestro: the Maestro Arsenal tests rely on this identity being refused.

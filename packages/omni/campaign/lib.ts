@@ -17,17 +17,17 @@ import { tree } from "../../core/test/fixture/process-tree.ts"
 export { alive, gone, reap, sweep, tree } from "../../core/test/fixture/process-tree.ts"
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
-export const OPENCODE = path.join(ROOT, "packages/opencode")
+export const ORCHESTRA = path.join(ROOT, "packages/orchestra")
 export const LOGS = path.join(import.meta.dirname, "logs")
 export const win = process.platform === "win32"
 
-/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under packages/opencode/dist. */
+/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under packages/orchestra/dist. */
 export function cli() {
   if (process.env.OMNI_CAMPAIGN_CLI) return process.env.OMNI_CAMPAIGN_CLI
-  const dist = path.join(OPENCODE, "dist")
-  const targets = existsSync(dist) ? readdirSync(dist).filter((name) => name.startsWith("opencode-")) : []
+  const dist = path.join(ORCHESTRA, "dist")
+  const targets = existsSync(dist) ? readdirSync(dist).filter((name) => name.startsWith("orchestra-")) : []
   if (targets.length !== 1) throw new Error(`expected one built CLI target in ${dist}, found [${targets.join(", ")}]`)
-  return path.join(dist, targets[0]!, "bin", win ? "opencode.exe" : "opencode")
+  return path.join(dist, targets[0]!, "bin", win ? "orchestra.exe" : "orchestra")
 }
 
 /** Load average as text, recorded with every measurement (this Mac is often heavily loaded). */
@@ -54,8 +54,8 @@ export async function until<T>(timeoutMs: number, what: string, probe: () => T |
 }
 
 /**
- * An isolated user: HOME and every XDG directory in a temp dir (never the real ~/.local/share/opencode), plus a
- * throwaway git project. The config goes inline through OPENCODE_CONFIG_CONTENT, as the repo's CLI harness does.
+ * An isolated user: HOME and every XDG directory in a temp dir (never the real ~/.local/share/orchestra), plus a
+ * throwaway git project. The config goes inline through ORCHESTRA_CONFIG_CONTENT, as the repo's CLI harness does.
  */
 export function isolated(name: string, config: Record<string, unknown>) {
   const home = realpathSync(mkdtempSync(path.join(os.tmpdir(), `omni-campaign-${name}-`)))
@@ -64,9 +64,9 @@ export function isolated(name: string, config: Record<string, unknown>) {
   writeFileSync(path.join(project, "a.ts"), "export const a = 1\n")
   const env: Record<string, string> = {}
   for (const [key, value] of Object.entries(process.env))
-    if (value !== undefined && !/^(HUGR_|OPENCODE_|ORCHESTRA_|ANTHROPIC_|OPENAI_|AWS_|AZURE_|GOOGLE_|GEMINI_|GITHUB_|GH_|BUN_OPTIONS|NODE_OPTIONS|SSH_AUTH_SOCK)/i.test(key) && !/(TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)/i.test(key)) env[key] = value
+    if (value !== undefined && !/^(HUGR_|ORCHESTRA_|ORCHESTRA_|ANTHROPIC_|OPENAI_|AWS_|AZURE_|GOOGLE_|GEMINI_|GITHUB_|GH_|BUN_OPTIONS|NODE_OPTIONS|SSH_AUTH_SOCK)/i.test(key) && !/(TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)/i.test(key)) env[key] = value
   Object.assign(env, {
-    OPENCODE_TEST_HOME: home,
+    ORCHESTRA_TEST_HOME: home,
     HOME: home,
     USERPROFILE: home,
     APPDATA: path.join(home, "AppData/Roaming"),
@@ -78,26 +78,26 @@ export function isolated(name: string, config: Record<string, unknown>) {
     XDG_DATA_HOME: path.join(home, ".local/share"),
     XDG_STATE_HOME: path.join(home, ".local/state"),
     XDG_CACHE_HOME: path.join(home, ".cache"),
-    OPENCODE_CONFIG_CONTENT: JSON.stringify(config.provider ? {
+    ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config.provider ? {
       ...config,
       agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } }, ...(config.agent as Record<string, unknown>) },
     } : config),
-    OPENCODE_DISABLE_PROJECT_CONFIG: "1",
-    OPENCODE_PURE: "1",
-    OPENCODE_DISABLE_AUTOUPDATE: "1",
-    OPENCODE_DISABLE_AUTOCOMPACT: "1",
-    OPENCODE_DISABLE_MODELS_FETCH: "1",
-    OPENCODE_AUTH_CONTENT: "{}",
-    OPENCODE_DISABLE_CLAUDE_CODE: "1",
-    OPENCODE_DISABLE_EXTERNAL_SKILLS: "1",
-    OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
+    ORCHESTRA_DISABLE_PROJECT_CONFIG: "1",
+    ORCHESTRA_PURE: "1",
+    ORCHESTRA_DISABLE_AUTOUPDATE: "1",
+    ORCHESTRA_DISABLE_AUTOCOMPACT: "1",
+    ORCHESTRA_DISABLE_MODELS_FETCH: "1",
+    ORCHESTRA_AUTH_CONTENT: "{}",
+    ORCHESTRA_DISABLE_CLAUDE_CODE: "1",
+    ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "1",
+    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER ?? "1",
   })
   const git = spawnSync("git", ["init", "-q"], { cwd: project, env })
   if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)
   return { home, project, env }
 }
 
-/** The provider block for the fake LLM (the shape of packages/opencode/test/lib/test-provider.ts). */
+/** The provider block for the fake LLM (the shape of packages/orchestra/test/lib/test-provider.ts). */
 export function provider(url: string) {
   return {
     test: {
@@ -199,11 +199,11 @@ export function own(home: string, proc: ChildProcess) {
   return captured
 }
 
-/** Starts `opencode serve` (or another subcommand that prints `listening on http://...`) and waits for its URL. */
+/** Starts `orchestra serve` (or another subcommand that prints `listening on http://...`) and waits for its URL. */
 export async function serve(bin: string, args: string[], env: Record<string, string>, cwd: string): Promise<Started> {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
-  const captured = own(env.OPENCODE_TEST_HOME!, proc)
+  const captured = own(env.ORCHESTRA_TEST_HOME!, proc)
   let out = ""
   proc.stdout!.on("data", (chunk) => (out += chunk))
   proc.stderr!.on("data", (chunk) => (out += chunk))
@@ -220,7 +220,7 @@ export function client(url: string, directory: string) {
     const response = await fetch(new URL(route, url), {
       method,
       signal: AbortSignal.timeout(120_000),
-      headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(directory) },
+      headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(directory) },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     const text = await response.text()

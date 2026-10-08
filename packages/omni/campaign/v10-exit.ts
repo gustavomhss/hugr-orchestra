@@ -3,7 +3,7 @@
 // Desktop V10 belongs to the lead's Electron harness.
 // Run: ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v10-exit.ts
 import path from "node:path"
-import { BUN, OPENCODE, cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, mentioning, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
+import { BUN, ORCHESTRA, cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, mentioning, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
 
 export async function run() {
   if (win) return verdict("v10-exit", { target: "serve", pass: false, error: "Windows V10 needs a real console graceful-quit harness; SIGTERM there terminates instead of running Unix shutdown handlers" })
@@ -17,14 +17,14 @@ export async function run() {
     agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
     lsp: {
       typescript: { disabled: true }, deno: { disabled: true }, eslint: { disabled: true }, oxlint: { disabled: true }, biome: { disabled: true },
-      campaign: { command: [BUN, path.join(OPENCODE, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
+      campaign: { command: [BUN, path.join(ORCHESTRA, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] },
     },
-    mcp: { campaign: { type: "local", command: [BUN, path.join(OPENCODE, "test/fixture/mcp-omni-stdio.ts"), mcpNonce], environment: { MCP_OMNI_TREE: JSON.stringify({ command: tree.command, args: tree.args }) }, timeout: 30_000 } },
+    mcp: { campaign: { type: "local", command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce], environment: { MCP_OMNI_TREE: JSON.stringify({ command: tree.command, args: tree.args }) }, timeout: 30_000 } },
   }
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v10] ${line}`) }
   try {
-    const host = await serve(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
+    const host = await serve(cli(), ["--print-logs", "--log-level", "DEBUG", "serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
     const pinnedHost = host.identity ?? identity(host.pid)
     const api = client(host.url, scratch.project)
     const session = await api.post("/session", {})

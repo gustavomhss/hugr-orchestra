@@ -1,0 +1,1 @@
+{"retry_budget":5,"work_packages":[{"id":"wp1","instructions":"do wp1","checklist":[{"id":"wp1-file","cmd":"test -f f1"}]},{"id":"wp2","instructions":"do wp2","checklist":[{"id":"wp2-ok","cmd":"true"}]}]}

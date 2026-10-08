@@ -3,12 +3,12 @@ import { spawn } from "node:child_process"
 import { mkdir, mkdtemp, realpath, rm, unlink, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import { Flag, omniSpawner } from "@opencode-ai/core/flag/flag"
-import { Omni } from "@opencode-ai/core/omni"
-import { Shell } from "@opencode-ai/core/shell"
+import { Flag, omniSpawner } from "@orchestra/core/flag/flag"
+import { Omni } from "@orchestra/core/omni"
+import { Shell } from "@orchestra/core/shell"
 import { alive, gone, reap, sweep, tree } from "./fixture/process-tree"
 
-describe("OPENCODE_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
+describe("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
   test("unset, empty and 0 are off; 1 is on; strict is strict", () => {
     expect(omniSpawner(undefined)).toBe("off")
     expect(omniSpawner("")).toBe("off")
@@ -21,17 +21,17 @@ describe("OPENCODE_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
     for (const value of ["true", "TRUE", "yes", "on", "Strict", "2", " 1"]) expect(omniSpawner(value)).toBe("off")
   })
 
-  test("the flag reads the variable at access time and ignores OPENCODE_EXPERIMENTAL", () => {
-    const saved = { omni: process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER, all: process.env.OPENCODE_EXPERIMENTAL }
+  test("the flag reads the variable at access time and ignores ORCHESTRA_EXPERIMENTAL", () => {
+    const saved = { omni: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER, all: process.env.ORCHESTRA_EXPERIMENTAL }
     try {
-      delete process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER
-      process.env.OPENCODE_EXPERIMENTAL = "true"
-      expect(Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER).toBe("off")
-      process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER = "strict"
-      expect(Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
+      delete process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+      process.env.ORCHESTRA_EXPERIMENTAL = "true"
+      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("off")
+      process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "strict"
+      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
     } finally {
-      restore("OPENCODE_EXPERIMENTAL_OMNI_SPAWNER", saved.omni)
-      restore("OPENCODE_EXPERIMENTAL", saved.all)
+      restore("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", saved.omni)
+      restore("ORCHESTRA_EXPERIMENTAL", saved.all)
     }
   })
 })
@@ -161,7 +161,7 @@ async function locateFixture() {
   const dir = await realpath(await mkdtemp(path.join(os.tmpdir(), "omni-locate-candidate-")))
   const name = `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`
   const shipped = { addon: path.join(dir, "hugr_omni.node"), supervisor: path.join(dir, name) }
-  const executable = path.join(dir, "opencode")
+  const executable = path.join(dir, "orchestra")
   await Promise.all([executable, ...Object.values(shipped)].map((file) => writeFile(file, "")))
   const saved = {
     executable: process.execPath,

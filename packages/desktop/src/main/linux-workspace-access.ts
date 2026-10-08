@@ -32,7 +32,7 @@ type Terminal = {
 const helper = "/opt/orchestra/workspace-access.py"
 const limit = 1024 * 1024
 const legacyExec = promisify(execFile)
-// Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER every host process below runs through omni; legacy stays the default.
+// Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER every host process below runs through omni; legacy stays the default.
 // shell() keeps child_process: it needs the real terminal (stdio inherit, plan section 3).
 const exec = (
   file: string,

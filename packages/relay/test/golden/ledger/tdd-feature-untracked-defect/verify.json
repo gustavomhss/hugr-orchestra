@@ -1,0 +1,48 @@
+{
+  "ledger": "test/fixtures/tdd-feature-untracked-defect.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 8 chained entries [PLAIN (SHA-256)], chain head 8821592bcac1…\n  (4 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.\n  NOTE: trace ends on 'gate-fail', not a terminal event — possible tail-truncation; only an out-of-band anchor of the head can rule it out.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "write-produced-a-change",
+      "assert": "this state changed something under the declared source or test paths",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "tests_written",
+      "assert": "tests_written",
+      "verdict": "fail",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "implementation_done",
+      "assert": "implementation_done",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "suite_green",
+      "assert": "suite_green",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 4,
+  "deterministic_passed": 3,
+  "advisory": 0,
+  "last_event": "gate-fail",
+  "truncated": true,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "CONTROL-FAIL",
+  "exit": 2
+}

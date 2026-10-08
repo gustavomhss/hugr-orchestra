@@ -1,5 +1,5 @@
 // Packaged-app crash smoke (integration plan WP4; .github/workflows/omni-desktop-smoke.yml). Launches a packaged
-// desktop app with OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=1, starts three nonce trees (process-tree.ts) and kill -9s the
+// desktop app with ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1, starts three nonce trees (process-tree.ts) and kill -9s the
 // Electron main process; then no process of any tree may be left 8 s later.
 //   main      the main process's own omni (ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV, read as bytes: text:false in Electron)
 //   shell     the server's session shell (POST /session/:id/shell), the bash tool's spawner, in the utilityProcess
@@ -29,9 +29,9 @@ const launcher = process.platform === "linux" ? ["xvfb-run", "-a", executable] :
 const app = spawn(launcher[0], [...launcher.slice(1), "--no-sandbox"], {
   env: {
     ...process.env,
-    OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
+    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1",
     // The app's own isolation switch: a temporary userData, XDG directories and an in-memory database.
-    OPENCODE_TEST_ONBOARDING: "1",
+    ORCHESTRA_TEST_ONBOARDING: "1",
     ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
     ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV: JSON.stringify([trees.main.command, ...trees.main.args]),
     XDG_CONFIG_HOME: path.join(home, "config"),

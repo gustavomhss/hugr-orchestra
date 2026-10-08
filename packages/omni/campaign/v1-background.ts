@@ -26,7 +26,7 @@ export async function run() {
     formatter: false, lsp: false, shell: "/bin/bash", share: "disabled", model: "test/test-model", provider: provider(llm.url),
     permission: { "*": "allow" }, agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },
   }
-  const env = { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) }
+  const env = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v1] ${line}`) }
   try {

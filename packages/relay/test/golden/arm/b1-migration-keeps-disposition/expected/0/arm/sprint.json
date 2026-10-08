@@ -1,0 +1,1 @@
+{"work_packages":[{"id":"literal\n","instructions":"do literal\n","checklist":[{"id":"actual","cmd":"printf actual >> executed; false"}],"macro":"macro\n"}]}

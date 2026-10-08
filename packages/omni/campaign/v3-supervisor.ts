@@ -13,7 +13,7 @@ export async function run() {
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v3] ${line}`) }
   try {
-    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
+    const host = await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }, scratch.project)
     const pinnedHost = host.identity ?? identity(host.pid)
     const api = client(host.url, scratch.project)
     const session = await api.post("/session", {})

@@ -24,7 +24,7 @@ verified: `415038b`).
   - No Effect caller uses `inherit`, `additionalFds`, `killSignal` or `unref`.
   - The only PipedCommand producer is a pass-through at `tool-safety-sandbox.ts:51`.
 - **The non-Effect paths.**
-  - The legacy `Process` (`packages/opencode/src/util/process.ts`, 16 importers).
+  - The legacy `Process` (`packages/orchestra/src/util/process.ts`, 16 importers).
   - MCP's `StdioClientTransport`.
   - `maestro-arsenal` (`Bun.spawn`; no dependency on core).
   - The desktop main process.
@@ -38,9 +38,9 @@ verified: `415038b`).
 - **PTY.**
   - `#pty` picks bun-pty under Bun and node-pty under Node.
   - 2 MB ring buffer; the cursor counts UTF-16 units (`packages/app/src/components/terminal.tsx:608`).
-  - The win32 PTY tests are skipped (`core/test/pty/pty-session.test.ts:27`, `opencode/test/server/httpapi-pty.test.ts:15`).
+  - The win32 PTY tests are skipped (`core/test/pty/pty-session.test.ts:27`, `orchestra/test/server/httpapi-pty.test.ts:15`).
 - **Runtimes.**
-  - The CLI is a `bun build --compile` binary, and the published file is `bin/opencode.exe` on every OS
+  - The CLI is a `bun build --compile` binary, and the published file is `bin/orchestra.exe` on every OS
     (`script/publish.ts:38,59`).
   - Global npm and Homebrew installs reach it through a symlink.
   - The TUI runs the server in a Bun `Worker` (`cli/cmd/tui.ts:210`, `terminate()` at `:227`).
@@ -62,7 +62,7 @@ verified: `415038b`).
   - **H3 Symlinks.** `current_exe()` is not canonicalized, so a symlinked install (npm global, Homebrew) misses the
     supervisor.
   - **H4 Env under Bun.** Under Bun, `process.env` writes reach neither Rust's `getenv` nor the environment that
-    children inherit. Orchestra sets `AGENT`, `OPENCODE_PID` and the provider keys that way (`index.ts:52-62`,
+    children inherit. Orchestra sets `AGENT`, `ORCHESTRA_PID` and the provider keys that way (`index.ts:52-62`,
     `provider.ts:326,585`).
   - **H5 Windows C runtime.** The Windows binaries are built without a static CRT and likely need `VCRUNTIME140.dll`.
   - **H6 Stale guarantees.** `GUARANTEES.md` marks C-PTY and C-TS-02 (Bun) as "planned".
@@ -70,7 +70,7 @@ verified: `415038b`).
 ## 2. Design decisions (lead)
 
 - **D-L1 Switch.**
-  - The flag `OPENCODE_EXPERIMENTAL_OMNI_SPAWNER` has three states, read by a dedicated parser with a unit test, not
+  - The flag `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states, read by a dedicated parser with a unit test, not
     `truthy()`:
     - unset or `0`: legacy;
     - `1`: omni, delegating unsupported options to legacy;
@@ -82,7 +82,7 @@ verified: `415038b`).
   - `packages/core/src/omni.ts` is the only module that imports `hugr-omni`, and only dynamically.
   - When the flag is on and the addon or supervisor is missing, it fails loudly.
   - It exports a tiny `omni-env` helper used everywhere.
-  - maestro-arsenal gets `@opencode-ai/core` as a dependency so it can use the same loader. This is allowed by the
+  - maestro-arsenal gets `@orchestra/core` as a dependency so it can use the same loader. This is allowed by the
     layering in `AGENTS.md:3`, which only governs schema/core/protocol/server/client.
 - **D-L3 Environment.**
   - Every omni spawn passes `inheritEnv:false, env:{...process.env, ...opts.env}`, built after the merge, with
@@ -115,7 +115,7 @@ verified: `415038b`).
   - The exit code is `exitCode ?? 128+signo`.
   - Size is clamped to 1..32767 on create **and** on update.
 - **D-L8 Delivery: files on disk, never embedded.** The addon and the supervisor are always real files side by side:
-  - **CLI:** `bin/opencode[.exe]`, `bin/hugr_omni.node`, `bin/hugr-omni-supervisor[.exe]`.
+  - **CLI:** `bin/orchestra[.exe]`, `bin/hugr_omni.node`, `bin/hugr-omni-supervisor[.exe]`.
   - **Desktop:** `Resources/omni/`.
   - **Dev:** `packages/omni/target/*`.
   - The path is handed to the binding by JS, through `hugr-omni`'s new `configure({addon, supervisor})` (WP-H). It
@@ -124,10 +124,10 @@ verified: `415038b`).
   - The checkout fallback (`checkoutBuild`) is disabled when an explicit path is configured.
 - **D-L9 Targets.**
   - 8 of the 12 Orchestra targets map onto omni's 5 builds.
-  - musl ×3 and win32-arm64 build with `OMNI_ENABLED=false` until WP8a. `opencode debug omni` reports which path is
+  - musl ×3 and win32-arm64 build with `OMNI_ENABLED=false` until WP8a. `orchestra debug omni` reports which path is
     active.
   - WP9 removes legacy only after WP8a.
-- **D-L10 Unchanged layering.** `@opencode-ai/sdk`, published and client-light, stays on cross-spawn with its own
+- **D-L10 Unchanged layering.** `@orchestra/sdk`, published and client-light, stays on cross-spawn with its own
   `process.ts`.
 - **D-L11 Skills.**
   - One source: `packages/omni/skills/<name>/SKILL.md`.
@@ -143,16 +143,16 @@ verified: `415038b`).
 |---|---|
 | CLI daemon `cli/src/services/daemon.ts:122`; desktop `background-cli.ts:90` (its CLI may start the daemon); `ipc.ts:229` open-path; `wsl/runtime.ts:329` detached terminal | Must outlive the host; omni's Job and session containment would kill them. |
 | `utilityProcess.fork` (desktop `server.ts:84`) | Electron IPC, not a child process. |
-| CLI pager `cli/cmd/session.ts:97`, `cli/cmd/pr.ts:104` (TUI), `cli/cmd/db.ts:39` (sqlite3), `cli/bin/lildax.cjs:11` launcher, `tui/src/editor.ts` (`$EDITOR`), desktop `linux-workspace-access.ts:252` `shell()` | Need the real terminal (stdio inherit). They move to `Process.interactive` (a small cross-spawn wrapper) where they are in opencode; the others stay as they are. |
+| CLI pager `cli/cmd/session.ts:97`, `cli/cmd/pr.ts:104` (TUI), `cli/cmd/db.ts:39` (sqlite3), `cli/bin/lildax.cjs:11` launcher, `tui/src/editor.ts` (`$EDITOR`), desktop `linux-workspace-access.ts:252` `shell()` | Need the real terminal (stdio inherit). They move to `Process.interactive` (a small cross-spawn wrapper) where they are in orchestra; the others stay as they are. |
 | `cli/cmd/providers.ts:335` | Inherits stderr for auth prompts. Moves to `Process.interactive`. |
 | `tui/src/clipboard.ts:11` (`xclip` / `wl-copy`) | They daemonize to own the selection; omni would kill them. |
 | `cli/cmd/github.handler.ts:298` | Opens the browser (the launched app must outlive the host). Moves from `exec` with a shell string to `execFile`, or to the `open` package. |
 | `shell-env.ts:37` (`spawnSync`) | omni has no synchronous API; this is a bounded probe. |
 | `core/src/backend-toolkit/target.ts` (`spawnSync`) | Synchronous host detection (`sysctl`, `ldd`); omni has no synchronous API. |
 | `atlas-boundary/src/generated/native-memory.js` (`execFileSync`) | Canonically generated Atlas secret scanner with a synchronous, fail-closed write contract and a 5 s timeout. Changing the scanner's execution contract belongs to Atlas. |
-| `opencode/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
+| `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `Bun.$` and `Bun.spawn` in plugins | Plugin API surface. |
-| `@opencode-ai/sdk` server spawn | D-L10. |
+| `@orchestra/sdk` server spawn | D-L10. |
 
 `apps.ts:34,42` (`which`/`where`), `tool-safety-sandbox-runtime.ts:142` (`execFile tar`) and
 `linux-workspace-access.ts:49` are owned by WP4/WP1 below.
@@ -176,8 +176,8 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Tooling ignores.** `.oxlintrc.json` and `.prettierignore` ignore `packages/omni/**`.
 - **Workspaces.**
   - The root `workspaces` gets `packages/omni/bindings/node`.
-  - `"hugr-omni": "workspace:*"` goes into core, opencode, desktop and maestro-arsenal, all at once.
-  - maestro-arsenal also gets `@opencode-ai/core`.
+  - `"hugr-omni": "workspace:*"` goes into core, orchestra, desktop and maestro-arsenal, all at once.
+  - maestro-arsenal also gets `@orchestra/core`.
   - Add a root `omni:build` script and regenerate `bun.lock`.
 - **omni gate from either root.** `packages/omni/scripts/file-size-guard.py` scans its own subtree.
 - **Core surface.** Frozen signatures, with implementations stubbed where another WP owns them:
@@ -245,7 +245,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Where the lead wires it in** (shared files):
   - `ci.mjs`: the lint step;
   - the mirror `ci.yml`: a `paths` allow-list;
-  - Orchestra's `.opencode` `skills.paths` and the loader fix.
+  - Orchestra's `.orchestra` `skills.paths` and the loader fix.
 - **Validation.**
   - skill-check is green, and red on broken fixtures.
   - An Orchestra session lists the omni skills.
@@ -296,7 +296,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Regression** (lean, see §8):
   - core: `cross-spawn-spawner`, `process`, `tool-bash`, `tool-safety-sandbox*`, `git`, `ripgrep`, `shell`,
     `filesystem/search`;
-  - opencode: `tool/shell*`, `tool-safety-shell`, `session/prompt`, `git`, `snapshot`, `format`, `project/*`,
+  - orchestra: `tool/shell*`, `tool-safety-shell`, `session/prompt`, `git`, `snapshot`, `format`, `project/*`,
     `maestro/arsenal-*`.
 
 **WP2 PTY** (`packages/core/src/pty*`, `packages/schema/src/pty.ts`, `packages/client` and SDK regeneration)
@@ -317,10 +317,10 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   - replay after reconnect is exact, with the right cursor;
   - a gap marker appears, and the cursor stays consistent;
   - a Node-host smoke run (`runner: node`).
-- **Regression:** `core/test/pty/*` and `opencode/test/server/httpapi{,-v2}-pty.test.ts` (Linux and macOS; they skip
+- **Regression:** `core/test/pty/*` and `orchestra/test/server/httpapi{,-v2}-pty.test.ts` (Linux and macOS; they skip
   Windows).
 
-**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`packages/opencode/src/{util,lsp,mcp,session/prompt.ts,cli}`,
+**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`packages/orchestra/src/{util,lsp,mcp,session/prompt.ts,cli}`,
 `packages/maestro-arsenal`)
 
 - **`util/process.ts`.** Uses an explicit mapping table that must be written before any code, covering:
@@ -334,7 +334,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   - `maxOutputBytes` is effectively uncapped;
   - a new `deadline` option.
 
-  `Process.interactive` takes the §3 callers inside opencode.
+  `Process.interactive` takes the §3 callers inside orchestra.
 - **`!` template command** (`prompt.ts:1447`): it gets the Effect abort signal and a 120 s deadline (O3).
 - **MCP.**
   - `mcp/stdio.ts` (`OmniStdioTransport`) surfaces stderr as debug logs, and the last 20 lines go into a connect
@@ -343,7 +343,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   - The `pgrep` walk is deleted.
   - Docker-based MCP servers get `--rm` plus an `orchestra.session` label, swept at boot.
 - **maestro-arsenal:** `engine/process.ts` and `governance/process.ts` move to omni `run` through the core loader.
-- **`opencode debug omni`** (in `cli/`): prints the active path (omni or legacy), the addon and supervisor paths,
+- **`orchestra debug omni`** (in `cli/`): prints the active path (omni or legacy), the addon and supervisor paths,
   and runs a nonce tree.
 - **New tests:**
   - LSP: the tree is killed when wrapped by node, and on Windows by a `.cmd`.
@@ -389,7 +389,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 
 ### Wave 3 (after Wave 2)
 
-**WP4 Desktop** (`packages/desktop/**`, plus `packages/opencode/script/build-node.ts`, owned here)
+**WP4 Desktop** (`packages/desktop/**`, plus `packages/orchestra/script/build-node.ts`, owned here)
 
 - **Packaging.**
   - `prebuild.ts` stages `resources/omni/`.
@@ -416,13 +416,13 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
     with a grandchild, then `kill -9` the Electron main process. The nonce oracle must find 0.
   - macOS `codesign --verify --deep --strict` plus stapler (O5, owner run).
 
-**WP5 CLI distribution** (`packages/opencode/script/{build,postinstall,publish}.*`)
+**WP5 CLI distribution** (`packages/orchestra/script/{build,postinstall,publish}.*`)
 - **Build.**
   - `build.ts` defines `OMNI_ENABLED` per target (D-L9).
   - It copies `hugr_omni.node` and the supervisor into `dist/<t>/bin/` from `OMNI_ARTIFACTS`. A missing artifact
     fails a release build.
   - The entry point calls `configure()` with paths next to `realpath(process.execPath)`.
-- **Install.** `postinstall.mjs` `installPackage()` copies all three files and runs `opencode debug omni` once, to
+- **Install.** `postinstall.mjs` `installPackage()` copies all three files and runs `orchestra debug omni` once, to
   warm the first Gatekeeper/Defender scan.
 - **Packaging (O6).** The AUR and Homebrew formulas install all three.
 - **Validation.**
@@ -557,11 +557,11 @@ Probes were run by reviewer 3 on macOS x64 with Bun 1.3.14 and Node 22.17.1. P6 
 |---|---|
 | Per `test:ci` push inside a WP | Only the WP's new test file plus the files it touched; `strict` on Linux and `=1` on Windows; binary cache; positive control on. |
 | Per WP merge into `omni-native` | Regression set once per OS: Linux and macOS `strict`, Windows `=1` (cmd.exe the only delegation). Node-runner smoke once on Linux. `omni.yml` only if `packages/omni` changed. About 4 jobs. The "unset" cell comes from the epic suite. |
-| Epic label before the flip | `test.yml` unchanged, plus one Linux `strict` opencode shard set fed by the binary cache. |
+| Epic label before the flip | `test.yml` unchanged, plus one Linux `strict` orchestra shard set fed by the binary cache. |
 | Flip (WP9) | `test.yml` with omni artifacts and default-on; Windows `=0` cell until WP8b; compiled-CLI and packaged-desktop crash smokes; V2 and V7 on the owner's Mac. |
 | Release | omni `--release` (Bun, Deno, K9) and the artifacts workflow. |
 
-Estimated CI time with a warm binary cache: 3-5 min per Linux job, 8-25 min per Windows opencode job. A cold cache
+Estimated CI time with a warm binary cache: 3-5 min per Linux job, 8-25 min per Windows orchestra job. A cold cache
 adds 3-8 min of cargo.
 
 ## 9. Review round 1: findings and where they landed
@@ -602,7 +602,7 @@ adds 3-8 min of cargo.
 - **Packaging and OS.**
   - BLOCKER Worker abort → H1 and probe (d).
   - BLOCKER `$TMPDIR` hijack → H2 and D-L8.
-  - BLOCKER symlinks / `opencode.exe` layout → H3 and WP5.
+  - BLOCKER symlinks / `orchestra.exe` layout → H3 and WP5.
   - Env under Bun → H4 and D-L3.
   - Docker and unlisted sites → End state, §3 and WP3.
   - Static CRT → H5.
@@ -678,7 +678,7 @@ adds 3-8 min of cargo.
   bypass omni. There is no upstream-merge guide.
 - **R2-17 Telemetry.**
   - Structured log events for spawn, delegation, gap, adoption, supervisor restart and fallback.
-  - The counters appear in `opencode debug omni`.
+  - The counters appear in `orchestra debug omni`.
   - Owner: WP1, with the WP0 counters.
 - **R2-18 Changelog.** WP9a writes the user-facing entries: adopted background processes and their panel, the
   120 s `!` deadline, Windows GUI launches closing with the session, and musl/arm64 Windows on legacy until WP8a.

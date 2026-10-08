@@ -1,8 +1,8 @@
 export * as ToolRegistry from "./registry"
 
-import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@opencode-ai/llm"
+import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
 import { Context, DateTime, Effect, Layer, Option, Scope } from "effect"
-import { SessionEvent } from "@opencode-ai/schema/session-event"
+import { SessionEvent } from "@orchestra/schema/session-event"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
 import { SessionMessage } from "../session/message"
@@ -29,6 +29,10 @@ export interface Interface {
   readonly materialize: (permissions?: PermissionV2.Ruleset) => Effect.Effect<Materialization>
   /** Internal registration capability exposed publicly only through Tools.Service. */
   readonly register: (tools: Readonly<Record<string, AnyTool>>) => Effect.Effect<void, RegistrationError, Scope.Scope>
+  /** Installed hooks on a Session event of this Location, over the profile its tool calls load. */
+  readonly session: (
+    input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
+  ) => Effect.Effect<void, ToolSafety.Denied>
 }
 
 export interface Materialization {
@@ -42,12 +46,12 @@ export interface Settlement {
   readonly outputPaths?: ReadonlyArray<string>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/ToolRegistry") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/ToolRegistry") {}
 
 const NativeBinding = Context.Reference<{
   location: Location.Interface
   events: EventV2.Interface
-} | undefined>("@opencode/ToolRegistry/NativeSafetyBinding", { defaultValue: () => undefined })
+} | undefined>("@orchestra/ToolRegistry/NativeSafetyBinding", { defaultValue: () => undefined })
 
 const registryLayer = Layer.effect(
   Service,
@@ -140,7 +144,31 @@ const registryLayer = Layer.effect(
       )
     })
 
+    // The placement and profile a tool call of this Location gets, for a Session event.
+    const session = Effect.fn("ToolRegistry.session")(function* (
+      input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text">,
+    ) {
+      const location = native?.location ?? Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
+      const events = native?.events ?? Option.getOrUndefined(yield* Effect.serviceOption(EventV2.Service))
+      const effectiveProfile = capturedProfile ?? (yield* ToolSafety.RuntimeProfile)
+      const effectiveLoader = profileLoader ?? (yield* ToolSafety.RuntimeProfileLoader)
+      if (!effectiveProfile && !effectiveLoader) return
+      if (!location || !events) return yield* new ToolSafety.Denied({ reason: "native-placement-or-events-missing" })
+      yield* safety
+        .session({
+          ...input,
+          directory: location.directory,
+          projectID: location.project.id,
+          projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+        })
+        .pipe(
+          Effect.provideService(ToolSafety.RuntimeProfileLoader, effectiveLoader),
+          Effect.provideService(ToolSafety.RuntimeProfile, effectiveProfile),
+        )
+    })
+
     return Service.of({
+      session,
       register: Effect.fn("ToolRegistry.register")(function* (tools) {
         const entries = Object.entries(tools)
         if (entries.length === 0) return

@@ -4,7 +4,7 @@ Baseline: `b1db4570c68207789b1b8bef30fa97ffdb2d2946`.
 
 ## Runtime boundary
 
-`@opencode-ai/atlas-boundary` installs a generated, self-contained projection of Atlas-owned catalog and static Own verification code. Its JavaScript and declarations are generated from canonical Atlas source; host runtime code never imports `foundation/atlas` or duplicates Atlas parsers or Territory definitions.
+`@orchestra/atlas-boundary` installs a generated, self-contained projection of Atlas-owned catalog and static Own verification code. Its JavaScript and declarations are generated from canonical Atlas source; host runtime code never imports `foundation/atlas` or duplicates Atlas parsers or Territory definitions.
 
 The build-time adapter resolves Atlas package imports to the vendored source. Generated runtime exports have no vendor-relative imports, retrieval runtime, model, shell, network, writer, or store dependency.
 
@@ -48,9 +48,9 @@ New grounded PlanRevision and ContextRecord event versions preserve historical s
 
 ## Installation and operation
 
-The host workspace installs `@opencode-ai/atlas-boundary` through its declared workspace dependency. Run `bun run generate` from `packages/atlas-boundary` after changing canonical Atlas producer source; `bun run check:generated` checks all expected outputs without rewriting them and fails on missing or stale bytes.
+The host workspace installs `@orchestra/atlas-boundary` through its declared workspace dependency. Run `bun run generate` from `packages/atlas-boundary` after changing canonical Atlas producer source; `bun run check:generated` checks all expected outputs without rewriting them and fails on missing or stale bytes.
 
-Configure an explicit provider in the project's OpenCode config:
+Configure an explicit provider in the project's Orchestra config:
 
 ```json
 {
@@ -64,7 +64,7 @@ Configure an explicit provider in the project's OpenCode config:
 }
 ```
 
-Provider metadata consists of `TERRITORY-CATALOG.json`, `OWN-SNAPSHOT.json`, and the canonical `.opencode/skills/own/` projection. Atlas's offline producer exports `publishTerritoryCatalog(projectId, territories)`; the separate `@opencode-ai/atlas-boundary/materialize` entry exports canonical post-Genesis projection tools. These are maintenance operations, never task-time retrieval or synthesis.
+Provider metadata consists of `TERRITORY-CATALOG.json`, `OWN-SNAPSHOT.json`, and the canonical `.orchestra/skills/own/` projection. Atlas's offline producer exports `publishTerritoryCatalog(projectId, territories)`; the separate `@orchestra/atlas-boundary/materialize` entry exports canonical post-Genesis projection tools. These are maintenance operations, never task-time retrieval or synthesis.
 
 The catalogue's project ID must match the durable Session. Catalogue names and ownership-unit IDs are separate namespaces. `maestro_catalog_context` returns verified availability; `maestro_record_plan_revision` accepts exact territory names in `scope` and canonical IDs in `units`. `maestro_record_context` then performs actual ordered skill loads and emits GROUNDED context. Missing configuration/data, stale source or snapshot, incomplete coverage, and mismatched cached content return HOLD.
 

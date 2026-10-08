@@ -11,10 +11,10 @@ const packageDir = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(packageDir, "../..")
 const signScript = path.join(rootDir, "script", "sign-windows.ps1")
 // The Electron 42 packaging update briefly installed Linux launchers/icons under
-// "opencode-desktop". Keep that hidden desktop entry around so existing GNOME/KDE
-// pins still resolve after the canonical app id changes back to ai.opencode.desktop.
-const legacyDesktopEntry = path.join(packageDir, "resources", "linux", "opencode-desktop.desktop")
-const legacyDesktopEntryFpm = `${legacyDesktopEntry}=/usr/share/applications/opencode-desktop.desktop`
+// "orchestra-desktop". Keep that hidden desktop entry around so existing GNOME/KDE
+// pins still resolve after the canonical app id changes back to ai.hugr.orchestra.
+const legacyDesktopEntry = path.join(packageDir, "resources", "linux", "orchestra-desktop.desktop")
+const legacyDesktopEntryFpm = `${legacyDesktopEntry}=/usr/share/applications/orchestra-desktop.desktop`
 
 // hugr-omni (D-L8): the addon and the supervisor ship as real files in Resources/omni, staged by scripts/stage-omni.ts.
 const omniEntitlements = path.join(packageDir, "resources", "entitlements.omni.plist")
@@ -54,26 +54,26 @@ async function signWindows(configuration: { path: string }) {
 }
 
 const channel = (() => {
-  const raw = process.env.OPENCODE_CHANNEL
+  const raw = process.env.ORCHESTRA_CHANNEL
   if (raw === "dev" || raw === "beta" || raw === "prod") return raw
   return "dev"
 })()
 
 const APP_IDS = {
-  dev: "ai.opencode.desktop.dev",
-  beta: "ai.opencode.desktop.beta",
-  prod: "ai.opencode.desktop",
+  dev: "ai.hugr.orchestra.dev",
+  beta: "ai.hugr.orchestra.beta",
+  prod: "ai.hugr.orchestra",
 } as const
 
 const getBase = (appId: string): Configuration => ({
-  artifactName: "opencode-desktop-${os}-${arch}.${ext}",
+  artifactName: "orchestra-desktop-${os}-${arch}.${ext}",
   directories: {
     output: "dist",
     buildResources: "resources",
   },
   // Linux launchers are .desktop files, so this is the desktop file name,
-  // not just the app id. For prod, app id "ai.opencode.desktop" becomes
-  // "ai.opencode.desktop.desktop".
+  // not just the app id. For prod, app id "ai.hugr.orchestra" becomes
+  // "ai.hugr.orchestra.desktop".
   // https://developer.gnome.org/documentation/guidelines/maintainer/integrating.html
   // https://www.electron.build/docs/linux/
   extraMetadata: {
@@ -83,8 +83,13 @@ const getBase = (appId: string): Configuration => ({
   // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
   // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
   publish: null,
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*", "!resources/omni/**"],
+  files: ["out/**/*", "resources/**/*", "!resources/orchestra-cli*", "!resources/icons/**/*", "!resources/omni/**"],
   extraResources: [
+    // Native windows and the macOS Dock read process.resourcesPath/icons outside app.asar.
+    {
+      from: "resources/icons",
+      to: "icons",
+    },
     {
       from: "resources/linux/app-dock-accessibility",
       to: "app-dock-accessibility",
@@ -96,7 +101,7 @@ const getBase = (appId: string): Configuration => ({
     },
     // Maestro's playbooks stay outside the app archive so ripgrep and the agent's file tools can read them.
     {
-      from: "../opencode/playbooks",
+      from: "../orchestra/playbooks",
       to: "playbooks",
     },
     ...(channel === "dev"
@@ -104,7 +109,7 @@ const getBase = (appId: string): Configuration => ({
           {
             from: "resources/",
             to: "",
-            filter: ["opencode-cli*"],
+            filter: ["orchestra-cli*"],
           },
         ]
       : []),
@@ -129,8 +134,8 @@ const getBase = (appId: string): Configuration => ({
     sign: true,
   },
   protocols: {
-    name: "OpenCode",
-    schemes: ["opencode"],
+    name: "HuGR Orchestra",
+    schemes: ["orchestra"],
   },
   win: {
     icon: `resources/icons/icon.ico`,
@@ -172,29 +177,29 @@ function getConfig() {
       return {
         ...base,
         appId,
-        productName: "OpenCode Dev",
+        productName: "HuGR Orchestra Dev",
         deb: { fpm: [metainfoFpm(appId)] },
-        rpm: { packageName: "opencode-dev", fpm: [metainfoFpm(appId)] },
+        rpm: { packageName: "orchestra-dev", fpm: [metainfoFpm(appId)] },
       }
     }
     case "beta": {
       return {
         ...base,
         appId,
-        productName: "OpenCode Beta",
-        protocols: { name: "OpenCode Beta", schemes: ["opencode"] },
+        productName: "HuGR Orchestra Beta",
+        protocols: { name: "HuGR Orchestra Beta", schemes: ["orchestra"] },
         deb: { fpm: [metainfoFpm(appId)] },
-        rpm: { packageName: "opencode-beta", fpm: [metainfoFpm(appId)] },
+        rpm: { packageName: "orchestra-beta", fpm: [metainfoFpm(appId)] },
       }
     }
     case "prod": {
       return {
         ...base,
         appId,
-        productName: "OpenCode",
-        protocols: { name: "OpenCode", schemes: ["opencode"] },
+        productName: "HuGR Orchestra",
+        protocols: { name: "HuGR Orchestra", schemes: ["orchestra"] },
         deb: { fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
-        rpm: { packageName: "opencode", fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
+        rpm: { packageName: "orchestra", fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
       }
     }
   }

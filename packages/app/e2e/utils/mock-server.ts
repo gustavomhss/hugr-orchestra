@@ -43,7 +43,7 @@ export interface MockServerConfig {
 
 export type PullRequestReply = { status: number; body: unknown }
 
-export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
+export async function mockOrchestraServer(page: Page, config: MockServerConfig) {
   if (!config.freshRail) await page.addInitScript(railDefaulted)
   const cursors = new Map<string, string>()
   let nextCursor = 0
@@ -53,7 +53,7 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
       config: config.directory,
       worktree: config.directory,
       directory: config.directory,
-      home: "C:/OpenCode",
+      home: "C:/Orchestra",
     },
     "/project": [config.project],
     "/project/current": config.project,
@@ -174,7 +174,7 @@ export async function mockOpenCodeServer(page: Page, config: MockServerConfig) {
         config: config.directory,
         worktree: config.directory,
         directory: config.directory,
-        home: "C:/OpenCode",
+        home: "C:/Orchestra",
       })
     if (path === "/api/permission/request")
       return json(route, {

@@ -6,7 +6,7 @@ import { gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree
 import { DesktopOmni } from "./omni-process"
 
 // The desktop's omni adapters against real processes. They need the omni addon and supervisor, so they run with
-// OPENCODE_EXPERIMENTAL_OMNI_SPAWNER on (test:ci --env); the preload's positive control then also requires them to
+// ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER on (test:ci --env); the preload's positive control then also requires them to
 // have spawned through omni. Trees are identified by a nonce in argv (process-tree.ts), never by a bare pid.
 const on = DesktopOmni.enabled()
 const legacy = promisify(execFile)

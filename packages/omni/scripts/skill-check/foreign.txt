@@ -27,7 +27,7 @@ PATH                       # environment variable
 PS1                        # bash prompt variable
 TEST_FILTER                # scripts/ci.mjs input
 RELEASE                    # scripts/ci.mjs input
-OPENCODE_EXPERIMENTAL_OMNI_SPAWNER  # Orchestra's switch (integration plan D-L1)
+ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER  # Orchestra's switch (integration plan D-L1)
 OMNI_MIRROR_DEPLOY_KEY     # Orchestra CI secret (WP6)
 PRE_RELEASE_INSTALL        # scripts/readme-check/blocks.mjs constant
 VERSION                    # omni-proto protocol version constant

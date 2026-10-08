@@ -19,7 +19,7 @@ const ATTR_DB_SYSTEM_NAME = "db.system.name"
 // Distinct SQL texts kept compiled per connection. Generated `IN (...)` lists make one text per list length.
 const STATEMENT_LIMIT = 500
 
-const TypeId = "~@opencode-ai/core/database/SqliteBun" as const
+const TypeId = "~@orchestra/core/database/SqliteBun" as const
 type TypeId = typeof TypeId
 
 interface SqliteClient extends Client.SqlClient {

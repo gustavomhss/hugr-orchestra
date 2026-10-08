@@ -1,6 +1,6 @@
 export * as PtyOmni from "./omni.ts"
 
-// The omni terminal backend (D-L7): a Proc over a hugr-omni PtyChild, used when OPENCODE_EXPERIMENTAL_OMNI_SPAWNER is
+// The omni terminal backend (D-L7): a Proc over a hugr-omni PtyChild, used when ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER is
 // on. omni's output has a single consumer, so this module claims it synchronously at spawn and pumps it eagerly; data
 // and the exit wait in a queue until the first listener arrives, so a program that prints and exits at once loses
 // nothing. It must also load under Node with --experimental-strip-types (the node smoke), so it imports only node:

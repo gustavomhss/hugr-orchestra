@@ -13,7 +13,7 @@ Build the host target from the same source revision being evaluated:
 
 ```sh
 bun run omni:build
-bun run packages/opencode/script/build.ts --single --skip-install --skip-embed-web-ui
+bun run packages/orchestra/script/build.ts --single --skip-install --skip-embed-web-ui
 ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v2-kill.ts serve
 ```
 

@@ -1,7 +1,7 @@
 name: omni-desktop-smoke
 
 # Packaged-app crash smoke for the desktop (integration plan WP4). Builds the omni binaries and an unpacked Linux app
-# (electron-builder --dir), launches it under Xvfb with OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=1, starts nonce trees through
+# (electron-builder --dir), launches it under Xvfb with ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1, starts nonce trees through
 # the main process and through the server API (a session shell and a terminal), kill -9s the Electron main process
 # and requires 0 nonce processes 8 s later (packages/desktop/test/omni-smoke/packaged.ts). It runs by hand and on pull
 # requests that touch the desktop.
@@ -49,15 +49,16 @@ jobs:
       - name: Build the unpacked app
         working-directory: packages/desktop
         env:
-          OPENCODE_CHANNEL: beta
-          OPENCODE_FAST_BUILD: "1"
+          ORCHESTRA_CHANNEL: beta
+          ORCHESTRA_FAST_BUILD: "1"
         run: |
-          export OMNI_ARTIFACTS="$(dirname "$HUGR_OMNI_ADDON")"
+          OMNI_ARTIFACTS="$(dirname "$HUGR_OMNI_ADDON")"
+          export OMNI_ARTIFACTS
           bun ./scripts/prebuild.ts
           bunx electron-vite build
           bunx electron-builder --dir --linux --config electron-builder.config.ts
           app=dist/linux-unpacked
-          test -x "$app/ai.opencode.desktop.beta"
+          test -x "$app/ai.hugr.orchestra.beta"
           test -f "$app/resources/omni/hugr_omni.node"
           test -x "$app/resources/omni/hugr-omni-supervisor"
 
@@ -68,8 +69,8 @@ jobs:
           REQUIRE: ${{ inputs.require || 'main,shell,terminal' }}
         run: |
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
-          bun test/omni-smoke/packaged.ts dist/linux-unpacked/ai.opencode.desktop.beta --require "$REQUIRE"
+          bun test/omni-smoke/packaged.ts dist/linux-unpacked/ai.hugr.orchestra.beta --require "$REQUIRE"
 
       - name: App logs
         if: failure()
-        run: find "${RUNNER_TEMP:-/tmp}" /tmp -path '*opencode-onboarding-*/desktop/logs/*' -name '*.log' -exec sh -c 'echo "== $1"; tail -n 80 "$1"' _ {} \; 2>/dev/null || true
+        run: find "${RUNNER_TEMP:-/tmp}" /tmp -path '*orchestra-onboarding-*/desktop/logs/*' -name '*.log' -exec sh -c 'echo "== $1"; tail -n 80 "$1"' _ {} \; 2>/dev/null || true

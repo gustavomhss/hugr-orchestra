@@ -1,0 +1,12 @@
+{
+  "exit": 1,
+  "stdout": {
+    "outcome": "check",
+    "i": 0,
+    "wp": "params",
+    "failing": [
+      "CONTEXT-UNSET"
+    ]
+  },
+  "stderr": ""
+}

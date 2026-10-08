@@ -1,0 +1,170 @@
+{
+  "op": "lint",
+  "sprint": {
+    "brief": "planning",
+    "retry_budget": 3,
+    "macros": [
+      {
+        "id": "frame",
+        "instructions": "load"
+      },
+      {
+        "id": "carve",
+        "instructions": "load"
+      },
+      {
+        "id": "sequence",
+        "instructions": "load"
+      },
+      {
+        "id": "dispatch",
+        "instructions": "load"
+      }
+    ],
+    "work_packages": [
+      {
+        "id": "intake",
+        "instructions": "do intake",
+        "checklist": [],
+        "macro": "frame",
+        "kind": "execute"
+      },
+      {
+        "id": "bearings",
+        "instructions": "do bearings",
+        "checklist": [],
+        "macro": "frame",
+        "kind": "execute"
+      },
+      {
+        "id": "terms",
+        "instructions": "do terms",
+        "checklist": [],
+        "macro": "frame",
+        "kind": "execute"
+      },
+      {
+        "id": "framed",
+        "instructions": "do framed",
+        "checklist": [
+          {
+            "id": "framed-ok",
+            "assert": "the suite is green",
+            "cmd": "plan-check --phase frame"
+          }
+        ],
+        "macro": "frame",
+        "kind": "gate"
+      },
+      {
+        "id": "carve",
+        "instructions": "do carve",
+        "checklist": [],
+        "macro": "carve",
+        "kind": "execute"
+      },
+      {
+        "id": "size",
+        "instructions": "do size",
+        "checklist": [],
+        "macro": "carve",
+        "kind": "execute"
+      },
+      {
+        "id": "carved",
+        "instructions": "do carved",
+        "checklist": [
+          {
+            "id": "carved-ok",
+            "assert": "the suite is green",
+            "cmd": "plan-check --phase carve"
+          }
+        ],
+        "macro": "carve",
+        "kind": "gate"
+      },
+      {
+        "id": "waits",
+        "instructions": "do waits",
+        "checklist": [],
+        "macro": "sequence",
+        "kind": "execute"
+      },
+      {
+        "id": "order",
+        "instructions": "do order",
+        "checklist": [],
+        "macro": "sequence",
+        "kind": "execute"
+      },
+      {
+        "id": "forecast",
+        "instructions": "do forecast",
+        "checklist": [],
+        "macro": "sequence",
+        "kind": "execute"
+      },
+      {
+        "id": "sequenced",
+        "instructions": "do sequenced",
+        "checklist": [
+          {
+            "id": "sequenced-ok",
+            "assert": "the suite is green",
+            "cmd": "plan-check --phase sequence"
+          }
+        ],
+        "macro": "sequence",
+        "kind": "gate"
+      },
+      {
+        "id": "policy",
+        "instructions": "do policy",
+        "checklist": [],
+        "macro": "dispatch",
+        "kind": "execute"
+      },
+      {
+        "id": "packets",
+        "instructions": "do packets",
+        "checklist": [],
+        "macro": "dispatch",
+        "kind": "execute"
+      },
+      {
+        "id": "tripwires",
+        "instructions": "do tripwires",
+        "checklist": [],
+        "macro": "dispatch",
+        "kind": "execute"
+      },
+      {
+        "id": "hostile_read",
+        "instructions": "do hostile_read",
+        "checklist": [
+          {
+            "id": "hostile-read-approved",
+            "assert": "the suite is green",
+            "cmd": "test \"$(jq -r .verdict plan/verdict.json)\" = APPROVE"
+          }
+        ],
+        "macro": "dispatch",
+        "kind": "review"
+      },
+      {
+        "id": "frozen",
+        "instructions": "do frozen",
+        "checklist": [
+          {
+            "id": "frozen-ok",
+            "assert": "the suite is green",
+            "cmd": "plan-check --phase dispatch"
+          }
+        ],
+        "macro": "dispatch",
+        "kind": "gate"
+      }
+    ]
+  },
+  "allowUngated": false
+}

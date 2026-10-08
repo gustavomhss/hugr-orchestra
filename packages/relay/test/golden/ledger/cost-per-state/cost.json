@@ -1,0 +1,199 @@
+{
+  "ledger": "test/fixtures/cost-per-state.ledger.jsonl",
+  "total": {
+    "in": 219,
+    "out": 56715,
+    "cache_read": 5968669,
+    "cache_write": 82006,
+    "turns": 114,
+    "elapsed_s": 621
+  },
+  "states": [
+    {
+      "wp": "bind.bind_scope",
+      "macro": "bind",
+      "elapsed_s": 0,
+      "in": 38,
+      "out": 7072,
+      "cache_read": 716358,
+      "cache_write": 21532,
+      "turns": 20
+    },
+    {
+      "wp": "bind.gate",
+      "macro": "bind",
+      "elapsed_s": 9,
+      "in": 4,
+      "out": 1238,
+      "cache_read": 80510,
+      "cache_write": 1414,
+      "turns": 2
+    },
+    {
+      "wp": "red.write_failing_tests",
+      "macro": "red",
+      "elapsed_s": 35,
+      "in": 11,
+      "out": 3106,
+      "cache_read": 252886,
+      "cache_write": 5527,
+      "turns": 6
+    },
+    {
+      "wp": "red.gate",
+      "macro": "red",
+      "elapsed_s": 75,
+      "in": 17,
+      "out": 4544,
+      "cache_read": 455932,
+      "cache_write": 4940,
+      "turns": 9
+    },
+    {
+      "wp": "green.implement",
+      "macro": "green",
+      "elapsed_s": 10,
+      "in": 2,
+      "out": 458,
+      "cache_read": 52887,
+      "cache_write": 597,
+      "turns": 1
+    },
+    {
+      "wp": "green.gate",
+      "macro": "green",
+      "elapsed_s": 15,
+      "in": 8,
+      "out": 635,
+      "cache_read": 215670,
+      "cache_write": 1103,
+      "turns": 4
+    },
+    {
+      "wp": "refactor.refactor_or_skip",
+      "macro": "refactor",
+      "elapsed_s": 27,
+      "in": 9,
+      "out": 1758,
+      "cache_read": 275188,
+      "cache_write": 2403,
+      "turns": 5
+    },
+    {
+      "wp": "refactor.gate",
+      "macro": "refactor",
+      "elapsed_s": 14,
+      "in": 4,
+      "out": 492,
+      "cache_read": 112962,
+      "cache_write": 857,
+      "turns": 2
+    },
+    {
+      "wp": "gate.verify_all",
+      "macro": "gate",
+      "elapsed_s": 48,
+      "in": 14,
+      "out": 3009,
+      "cache_read": 408488,
+      "cache_write": 3421,
+      "turns": 7
+    },
+    {
+      "wp": "gate.cold_review",
+      "macro": "gate",
+      "elapsed_s": 311,
+      "in": 13,
+      "out": 7347,
+      "cache_read": 431258,
+      "cache_write": 6293,
+      "turns": 7
+    },
+    {
+      "wp": "gate.gate",
+      "macro": "gate",
+      "elapsed_s": 17,
+      "in": 4,
+      "out": 737,
+      "cache_read": 129471,
+      "cache_write": 1135,
+      "turns": 2
+    },
+    {
+      "wp": "seal.assemble_seal",
+      "macro": "seal",
+      "elapsed_s": 39,
+      "in": 10,
+      "out": 2801,
+      "cache_read": 332400,
+      "cache_write": 3990,
+      "turns": 5
+    },
+    {
+      "wp": "seal.gate",
+      "macro": "seal",
+      "elapsed_s": 21,
+      "in": 3,
+      "out": 986,
+      "cache_read": 137996,
+      "cache_write": 1328,
+      "turns": 2
+    }
+  ],
+  "macros": [
+    {
+      "macro": "bind",
+      "elapsed_s": 9,
+      "in": 42,
+      "out": 8310,
+      "cache_read": 796868,
+      "cache_write": 22946,
+      "turns": 22
+    },
+    {
+      "macro": "red",
+      "elapsed_s": 110,
+      "in": 28,
+      "out": 7650,
+      "cache_read": 708818,
+      "cache_write": 10467,
+      "turns": 15
+    },
+    {
+      "macro": "green",
+      "elapsed_s": 25,
+      "in": 10,
+      "out": 1093,
+      "cache_read": 268557,
+      "cache_write": 1700,
+      "turns": 5
+    },
+    {
+      "macro": "refactor",
+      "elapsed_s": 41,
+      "in": 13,
+      "out": 2250,
+      "cache_read": 388150,
+      "cache_write": 3260,
+      "turns": 7
+    },
+    {
+      "macro": "gate",
+      "elapsed_s": 376,
+      "in": 31,
+      "out": 11093,
+      "cache_read": 969217,
+      "cache_write": 10849,
+      "turns": 16
+    },
+    {
+      "macro": "seal",
+      "elapsed_s": 60,
+      "in": 13,
+      "out": 3787,
+      "cache_read": 470396,
+      "cache_write": 5318,
+      "turns": 7
+    }
+  ]
+}

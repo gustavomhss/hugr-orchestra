@@ -14,18 +14,21 @@
 //
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms]
 //        [--env KEY=VALUE] [--runner bun|node]
+// A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
+// --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
+// only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"
+import { existsSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { statSync } from "node:fs"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
 
 const USAGE =
   "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|macos|both|all] [--timeout ms] [--env KEY=VALUE] [--runner bun|node]"
 // Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
-const ENV_KEYS = ["OPENCODE_EXPERIMENTAL_OMNI_SPAWNER"]
+const ENV_KEYS = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
 const ENV_VALUE = /^[A-Za-z0-9_]+$/
 // Each value is also a ci-run-<os>-* branch prefix that test-ci.yml maps to its runners.
 const OSES = ["linux", "windows", "macos", "both", "all"]
@@ -109,6 +112,16 @@ function parse(argv: string[]) {
   if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
   if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
     fail(`-t needs a pattern\n${USAGE}`, 2)
+  // Test paths may be given from the repository root or from the package directory.
+  const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
+  if (options.runner !== "node" && pytest(name, named))
+    return {
+      package: name,
+      os: options.os,
+      runner: "pytest",
+      env,
+      args: [...named, ...(options.pattern ? ["-k", options.pattern] : [])],
+    }
   const files = testPaths(
     name,
     positional.slice(1),
@@ -131,8 +144,19 @@ function parse(argv: string[]) {
   }
 }
 
+// The runner travels in .ci-run.json; test-ci.yml falls back to the same file rule when a request carries none.
+function pytest(name: string, files: string[]) {
+  const dir = path.join(root, "packages", name)
+  if (!existsSync(path.join(dir, "requirements-dev.txt"))) return false
+  if (!existsSync(path.join(dir, "package.json"))) return true
+  return files.length > 0 && files.every((file) => file.endsWith(".py"))
+}
+
 async function findRemote() {
-  if (!(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()))
+  if (
+    !(await Bun.file(path.join(root, "packages", request.package, "package.json")).exists()) &&
+    !(await Bun.file(path.join(root, "packages", request.package, "requirements-dev.txt")).exists())
+  )
     fail(`packages/${request.package} is not a package in this checkout`, 2)
   const pattern = new RegExp(`github\\.com[:/]${repo.replace(".", "\\.")}(\\.git)?$`)
   const line = (await $`git remote -v`.cwd(root).text())

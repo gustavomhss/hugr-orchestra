@@ -1,0 +1,30 @@
+{
+  "generator": "test/golden/generate/ledger.py",
+  "oracle": {
+    "benchmark/verify_ledger.py": "ce7fe19291da6b468679883db9372882062833cae3be4edd1e037c58fff9c45c",
+    "bin/relay": "81b1cca267d535c47dcd04399ff877c1625a316d94427904a76857dbfa3cfbff",
+    "bin/relay-note": "5c8dc07c16a5229303d5a7db97d429c7fe983a90e1f156d47453dc18421abb33",
+    "lib/relay-gate.sh": "06b731c1378130e55acb324c3e8e10c8818cd446530ba017cbc64cbe56494247"
+  },
+  "tools": {
+    "jq": "jq-1.8.1",
+    "python3": "3.14.5",
+    "bash": "5.3.3(1)-release",
+    "git": "git version 2.51.0",
+    "openssl": "LibreSSL 3.3.6",
+    "sqlite": "3.53.1"
+  },
+  "cwd": "packages/relay",
+  "env": {
+    "PATH": "<tmp>/bin (fake date, links to the tools above), /usr/bin, /bin",
+    "HOME": "<tmp>/home",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUTF8": "1"
+  },
+  "epoch": 1700000000,
+  "keys": {
+    "keyed": "relay-golden-ledger-key",
+    "wrong-key": "relay-golden-wrong-key"
+  }
+}

@@ -82,6 +82,7 @@ export type Event =
   | EventQuestionV2Asked
   | EventQuestionV2Replied
   | EventQuestionV2Rejected
+  | EventRelayHookDecided
   | EventTodoUpdated
   | EventLspUpdated
   | EventPermissionAsked
@@ -205,9 +206,6 @@ export type Session = {
       read: number
       write: number
     }
-  }
-  share?: {
-    url: string
   }
   title: string
   agent?: string
@@ -1719,6 +1717,39 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "relay.hook.decided"
+        properties: {
+          decisionID: string
+          installID: string
+          version: string
+          sha256: string
+          nodeID: string
+          action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+          trigger: string
+          tool?: string
+          sessionID: string
+          callID?: string
+          assistantMessageID?: string
+          agent?: string
+          subject: string
+          outcome:
+            | "blocked"
+            | "approved"
+            | "rejected"
+            | "cancelled"
+            | "passed"
+            | "failed"
+            | "unavailable"
+            | "repair-required"
+            | "reminded"
+            | "recorded"
+            | "allowed"
+          replier?: string
+          durationMs: number
+        }
+      }
+    | {
+        id: string
         type: "todo.updated"
         properties: {
           sessionID: string
@@ -1773,7 +1804,6 @@ export type GlobalEvent = {
           command:
             | "session.list"
             | "session.new"
-            | "session.share"
             | "session.interrupt"
             | "session.compact"
             | "session.page.up"
@@ -2010,6 +2040,7 @@ export type GlobalEvent = {
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
     | SyncEventMaestroTaskBound
+    | SyncEventRelayHookDecided
 }
 
 /**
@@ -2018,7 +2049,7 @@ export type GlobalEvent = {
 export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR"
 
 /**
- * Server configuration for opencode serve and web commands
+ * Server configuration for orchestra serve and web commands
  */
 export type ServerConfig = {
   port?: number
@@ -2080,6 +2111,7 @@ export type AgentConfig = {
   steps?: number
   maxSteps?: number
   permission?: PermissionConfig
+  engine?: "orchestra" | "claude-code"
   [key: string]:
     | unknown
     | string
@@ -2104,6 +2136,8 @@ export type AgentConfig = {
     | "info"
     | number
     | PermissionConfig
+    | "orchestra"
+    | "claude-code"
     | undefined
 }
 
@@ -2299,8 +2333,6 @@ export type Config = {
         },
       ]
   >
-  share?: "manual" | "auto" | "disabled"
-  autoshare?: boolean
   /**
    * Automatically update to the latest version. Set to true to auto-update, false to disable, or 'notify' to show update notifications
    */
@@ -2379,9 +2411,6 @@ export type Config = {
     [key: string]: boolean
   }
   attachment?: AttachmentConfig
-  enterprise?: {
-    url?: string
-  }
   tool_output?: {
     max_lines?: number
     max_bytes?: number
@@ -2397,6 +2426,7 @@ export type Config = {
     enabled?: boolean
     trigger?: number
   }
+  relay?: ConfigV2Relay
   experimental?: {
     disable_paste_summary?: boolean
     batch_tool?: boolean
@@ -2594,9 +2624,6 @@ export type GlobalSession = {
       read: number
       write: number
     }
-  }
-  share?: {
-    url: string
   }
   title: string
   agent?: string
@@ -2800,6 +2827,7 @@ export type Agent = {
     [key: string]: unknown
   }
   steps?: number
+  engine?: "orchestra" | "claude-code"
 }
 
 export type SkillSaveInput = {
@@ -3138,7 +3166,6 @@ export type EventTuiCommandExecute = {
     command:
       | "session.list"
       | "session.new"
-      | "session.share"
       | "session.interrupt"
       | "session.compact"
       | "session.page.up"
@@ -3454,6 +3481,7 @@ export type V2Event =
   | QuestionV2Asked
   | QuestionV2Replied
   | QuestionV2Rejected
+  | RelayHookDecided
   | TodoUpdated
   | LspUpdated
   | PermissionAsked
@@ -3494,6 +3522,191 @@ export type ProjectCopyError = {
     message: string
     forceRequired?: boolean
   }
+}
+
+export type RelayDocumentView = {
+  id: string
+  name: string
+  description?: string
+  nodes: Array<RelayAuthoringNode>
+  connections: RelayAuthoringConnections
+  nodeGroups?: Array<RelayAuthoringNodeGroup>
+  tags: Array<RelayAuthoringScope>
+  isArchived: boolean
+  active: boolean
+  activeVersionId: string
+  meta: RelayAuthoringMeta
+  createdAt: string
+  updatedAt: string
+  versionId: string
+  versionCounter: number
+  checksum: string
+  activeVersion: RelayAuthoringVersion
+  runnable: boolean
+  publishedBy?: string
+  unpublishedBy?: string
+}
+
+export type RelayInvalidError = {
+  _tag: "RelayInvalidError"
+  code: string
+  message: string
+}
+
+export type RelayNotFoundError = {
+  _tag: "RelayNotFoundError"
+  code: string
+  message: string
+}
+
+export type RelayConflictError = {
+  _tag: "RelayConflictError"
+  code: string
+  message: string
+}
+
+export type RelayUnavailableError = {
+  _tag: "RelayUnavailableError"
+  code: string
+  message: string
+}
+
+export type RelayDocumentCreate = {
+  name?: string
+  description?: string
+  nodes?: Array<RelayAuthoringNode>
+  connections?: RelayAuthoringConnections
+  nodeGroups?: Array<RelayAuthoringNodeGroup>
+  tags?: Array<
+    | string
+    | {
+        id: string
+      }
+  >
+  meta?: RelayAuthoringMeta
+  isArchived?: boolean
+}
+
+export type RelayDocumentUpdate = {
+  name?: string
+  description?: string
+  nodes?: Array<RelayAuthoringNode>
+  connections?: RelayAuthoringConnections
+  nodeGroups?: Array<RelayAuthoringNodeGroup>
+  tags?: Array<
+    | string
+    | {
+        id: string
+      }
+  >
+  meta?: RelayAuthoringMeta
+  isArchived?: boolean
+  versionId?: string
+  expectedChecksum?: string
+  force?: boolean
+}
+
+export type RelaySprintView = {
+  sprint: RelaySprintSprint
+  skillBindings: Array<{
+    wp: string
+    skill: string
+    sha256: string
+    mode: "combine" | "replace"
+  }>
+}
+
+export type RelayExport =
+  | {
+      kind: "hook"
+      definition: RelayHookV1
+    }
+  | {
+      kind: "workflow"
+      definition: RelaySprintSprint
+    }
+
+export type RelayCheckInput = {
+  position?: string
+  counter?: number
+  baseRef?: string
+  params?: {
+    [key: string]: string
+  }
+}
+
+export type RelayNodeTypes = {
+  workflow: Array<RelayAuthoringNodeTypeDescriptor>
+  hook: Array<RelayAuthoringNodeTypeDescriptor>
+}
+
+export type RelayScopeInput = {
+  name: string
+  description?: string
+}
+
+export type RelayPublishInput = {
+  versionId: string
+  expectedChecksum?: string
+}
+
+export type RelayUnpublishInput = {
+  expectedChecksum?: string
+}
+
+export type RelayHookInstalls = {
+  installs: Array<RelayHookInstall>
+}
+
+export type RelayHookInstallInput = {
+  document: string
+  version?: string
+}
+
+export type RelayHookUpdateInput = {
+  version?: string
+}
+
+export type RelayHookOrderInput = {
+  installIDs: Array<string>
+}
+
+export type RelayHookDecision = {
+  ts: number
+  event: "hook-decision"
+  decision: string
+  install: string
+  version: string
+  node: string
+  action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+  trigger: string
+  tool: string
+  session: string
+  call: string
+  subject: string
+  outcome:
+    | "blocked"
+    | "approved"
+    | "rejected"
+    | "cancelled"
+    | "passed"
+    | "failed"
+    | "unavailable"
+    | "repair-required"
+    | "reminded"
+    | "recorded"
+    | "allowed"
+  deferred?: true
+  seq: number
+}
+
+export type RelayHookRepairInput = {
+  confirm: true
+}
+
+export type RelayHookRepaired = {
+  backup: string
+  installs: Array<RelayHookInstall>
 }
 
 export type PullRequestError = {
@@ -3537,7 +3750,6 @@ export type EventTuiCommandExecute2 = {
     command:
       | "session.list"
       | "session.new"
-      | "session.share"
       | "session.interrupt"
       | "session.compact"
       | "session.page.up"
@@ -4878,6 +5090,46 @@ export type SyncEventMaestroTaskBound = {
   }
 }
 
+export type SyncEventRelayHookDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "relay.hook.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      decisionID: string
+      installID: string
+      version: string
+      sha256: string
+      nodeID: string
+      action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+      trigger: string
+      tool?: string
+      sessionID: string
+      callID?: string
+      assistantMessageID?: string
+      agent?: string
+      subject: string
+      outcome:
+        | "blocked"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "passed"
+        | "failed"
+        | "unavailable"
+        | "repair-required"
+        | "reminded"
+        | "recorded"
+        | "allowed"
+      replier?: string
+      durationMs: number
+    }
+  }
+}
+
 export type ConfigMaestro = {
   atlas?: {
     projectID: string
@@ -4897,6 +5149,20 @@ export type ConfigV2ReferenceLocal = {
   path: string
   description?: string
   hidden?: boolean
+}
+
+export type ConfigV2RelayJudge = {
+  backend?: "stub" | "api"
+  model?: string
+  baseURL?: string
+  apiKey?: string
+  votes?: number
+  maxContext?: number
+  maxTokens?: number
+}
+
+export type ConfigV2Relay = {
+  judge?: ConfigV2RelayJudge
 }
 
 export type PolicyEffect = "allow" | "deny"
@@ -7264,6 +7530,49 @@ export type QuestionV2Rejected = {
   }
 }
 
+export type RelayHookDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "relay.hook.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    decisionID: string
+    installID: string
+    version: string
+    sha256: string
+    nodeID: string
+    action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+    trigger: string
+    tool?: string
+    sessionID: string
+    callID?: string
+    assistantMessageID?: string
+    agent?: string
+    subject: string
+    outcome:
+      | "blocked"
+      | "approved"
+      | "rejected"
+      | "cancelled"
+      | "passed"
+      | "failed"
+      | "unavailable"
+      | "repair-required"
+      | "reminded"
+      | "recorded"
+      | "allowed"
+    replier?: string
+    durationMs: number
+  }
+}
+
 export type TodoUpdated = {
   id: string
   metadata?: {
@@ -7379,7 +7688,6 @@ export type TuiCommandExecute = {
     command:
       | "session.list"
       | "session.new"
-      | "session.share"
       | "session.interrupt"
       | "session.compact"
       | "session.page.up"
@@ -7755,6 +8063,307 @@ export type ReferenceInfo = {
 
 export type ProjectCopyCopy = {
   directory: string
+}
+
+export type RelayAuthoringNode = {
+  id: string
+  name: string
+  type: string
+  position: [number, number]
+  parameters: {
+    [key: string]: unknown
+  }
+  typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type RelayAuthoringEdge = {
+  node: string
+  type: "main"
+  index: 0
+}
+
+export type RelayAuthoringConnections = {
+  [key: string]: {
+    main: Array<Array<RelayAuthoringEdge>>
+  }
+}
+
+export type RelayAuthoringNodeGroup = {
+  id: string
+  name: string
+  description?: string
+  nodeIds: Array<string>
+}
+
+export type RelayAuthoringScope = {
+  id: string
+  name: string
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type RelaySprintMacro = {
+  id: string
+  title?: string
+  instructions?: string
+}
+
+export type RelaySprintControl = {
+  id: string
+  assert?: string
+  cmd?: string
+  judge?: string
+  blocking?: boolean
+  diff?: boolean
+  context?: string | Array<string>
+  paths?: Array<string>
+  origin?: string
+  policy?: string
+  host_check?: string
+}
+
+export type RelaySprintDod = {
+  id?: string
+  cmd: string
+}
+
+export type RelaySprintWorkPackage = {
+  id: string
+  title?: string
+  macro?: string
+  kind?: "execute" | "gate" | "review" | "inject" | "human"
+  instructions?: string
+  self_check?: Array<string>
+  checklist?: Array<RelaySprintControl>
+  dod?: Array<RelaySprintDod>
+  file?: string
+  text?: string
+}
+
+export type RelaySprintSprint = {
+  brief?: string
+  gen?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  retry_budget?: number
+  macros?: Array<RelaySprintMacro>
+  work_packages: Array<RelaySprintWorkPackage>
+}
+
+export type RelayAuthoringRelayMeta = {
+  schema?: 1
+  kind?: "workflow" | "hook"
+  sprint?: RelaySprintSprint
+  names?: {
+    [key: string]: string
+  }
+  diagnostics?: Array<string>
+  profile?: string
+}
+
+export type RelayAuthoringMeta = {
+  relay?: RelayAuthoringRelayMeta
+}
+
+export type RelayAuthoringVersion = {
+  id: string
+  name: string
+  description?: string
+  nodes: Array<RelayAuthoringNode>
+  connections: RelayAuthoringConnections
+  nodeGroups?: Array<RelayAuthoringNodeGroup>
+  tags: Array<
+    | string
+    | {
+        id: string
+      }
+  >
+  isArchived: boolean
+  active: boolean
+  activeVersionId: string
+  meta: RelayAuthoringMeta
+  createdAt: string
+  updatedAt: string
+  versionId: string
+  versionCounter: number
+  workflowId: string
+}
+
+export type RelayHookTriggerParameters =
+  | {
+      operation: "read" | "edit" | "write" | "command" | "tool"
+      timing: "before" | "after"
+    }
+  | {
+      operation: "session-start"
+      timing: "after"
+    }
+  | {
+      operation: "prompt"
+      timing: "before"
+    }
+  | {
+      operation: "session-idle"
+      timing: "after"
+    }
+
+export type RelayHookConditionParameters = {
+  field: "path" | "tool" | "command" | "event"
+  pattern: string
+}
+
+export type RelayHookMessageParameters = {
+  message: string
+}
+
+export type RelayHookVerifyParameters = {
+  message: string
+  check: string
+}
+
+export type RelayHookAllowParameters = {
+  message: string
+}
+
+export type RelayHookNode =
+  | {
+      id: string
+      name: string
+      type: "relay.hookEventTrigger"
+      position: [number, number]
+      parameters: RelayHookTriggerParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookCondition"
+      position: [number, number]
+      parameters: RelayHookConditionParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookRemind"
+      position: [number, number]
+      parameters: RelayHookMessageParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookBlock"
+      position: [number, number]
+      parameters: RelayHookMessageParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookApprove"
+      position: [number, number]
+      parameters: RelayHookMessageParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookVerify"
+      position: [number, number]
+      parameters: RelayHookVerifyParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookRepair"
+      position: [number, number]
+      parameters: RelayHookMessageParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookRecord"
+      position: [number, number]
+      parameters: RelayHookMessageParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+  | {
+      id: string
+      name: string
+      type: "relay.hookAllow"
+      position: [number, number]
+      parameters: RelayHookAllowParameters
+      typeVersion?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }
+
+export type RelayHookConnection = {
+  from: string
+  port: number
+  to: string
+}
+
+export type RelayHookV1 = {
+  schema: "relay.hook.v1"
+  name: string
+  nodes: Array<RelayHookNode>
+  connections: Array<RelayHookConnection>
+  binding: "host-required"
+  installed: false
+}
+
+export type RelayArmCheckOutcome =
+  | {
+      outcome: "check"
+      i: number
+      wp: string
+      failing: Array<string>
+      macro?: string
+    }
+  | {
+      outcome: "complete"
+      i: number
+    }
+  | {
+      outcome: "error"
+      error: "unknown-position"
+      position: string
+    }
+
+export type RelayAuthoringParameterDescriptor = {
+  name: string
+  label: string
+  type: string
+  default: unknown
+  options?: Array<{
+    value: string
+    label: string
+  }>
+  minimum?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  maximum?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  placeholder?: string
+}
+
+export type RelayAuthoringNodeTypeDescriptor = {
+  type: string
+  label: string
+  inputs: number
+  outputs: Array<string>
+  maximum?: number
+  parameters: Array<RelayAuthoringParameterDescriptor>
+}
+
+export type RelayHookInstall = {
+  installID: string
+  document: string
+  version: string
+  sha256: string
+  order: number
+  enabled: boolean
+  installedBy: string
+  installedAt: number
+  snapshot: RelayHookV1
 }
 
 export type PullRequestHost = "github" | "gitlab"
@@ -8896,6 +9505,40 @@ export type EventQuestionV2Rejected = {
   properties: {
     sessionID: string
     requestID: string
+  }
+}
+
+export type EventRelayHookDecided = {
+  id: string
+  type: "relay.hook.decided"
+  properties: {
+    decisionID: string
+    installID: string
+    version: string
+    sha256: string
+    nodeID: string
+    action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+    trigger: string
+    tool?: string
+    sessionID: string
+    callID?: string
+    assistantMessageID?: string
+    agent?: string
+    subject: string
+    outcome:
+      | "blocked"
+      | "approved"
+      | "rejected"
+      | "cancelled"
+      | "passed"
+      | "failed"
+      | "unavailable"
+      | "repair-required"
+      | "reminded"
+      | "recorded"
+      | "allowed"
+    replier?: string
+    durationMs: number
   }
 }
 
@@ -12346,82 +12989,6 @@ export type SessionInitResponses = {
 }
 
 export type SessionInitResponse = SessionInitResponses[keyof SessionInitResponses]
-
-export type SessionUnshareData = {
-  body?: never
-  path: {
-    sessionID: string
-  }
-  query?: {
-    directory?: string
-    workspace?: string
-  }
-  url: "/session/{sessionID}/share"
-}
-
-export type SessionUnshareErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-  /**
-   * NotFoundError
-   */
-  404: NotFoundError
-  /**
-   * InternalServerError
-   */
-  500: EffectHttpApiErrorInternalServerError
-}
-
-export type SessionUnshareError = SessionUnshareErrors[keyof SessionUnshareErrors]
-
-export type SessionUnshareResponses = {
-  /**
-   * Successfully unshared session
-   */
-  200: Session
-}
-
-export type SessionUnshareResponse = SessionUnshareResponses[keyof SessionUnshareResponses]
-
-export type SessionShareData = {
-  body?: never
-  path: {
-    sessionID: string
-  }
-  query?: {
-    directory?: string
-    workspace?: string
-  }
-  url: "/session/{sessionID}/share"
-}
-
-export type SessionShareErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-  /**
-   * NotFoundError
-   */
-  404: NotFoundError
-  /**
-   * InternalServerError
-   */
-  500: EffectHttpApiErrorInternalServerError
-}
-
-export type SessionShareError = SessionShareErrors[keyof SessionShareErrors]
-
-export type SessionShareResponses = {
-  /**
-   * Successfully shared session
-   */
-  200: Session
-}
-
-export type SessionShareResponse = SessionShareResponses[keyof SessionShareResponses]
 
 export type SessionSummarizeData = {
   body?: {
@@ -16189,6 +16756,1295 @@ export type V2ProjectCopyRefreshResponses = {
 }
 
 export type V2ProjectCopyRefreshResponse = V2ProjectCopyRefreshResponses[keyof V2ProjectCopyRefreshResponses]
+
+export type V2RelayDocumentListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document"
+}
+
+export type V2RelayDocumentListErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentListError = V2RelayDocumentListErrors[keyof V2RelayDocumentListErrors]
+
+export type V2RelayDocumentListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<RelayDocumentView>
+  }
+}
+
+export type V2RelayDocumentListResponse = V2RelayDocumentListResponses[keyof V2RelayDocumentListResponses]
+
+export type V2RelayDocumentCreateData = {
+  body: RelayDocumentCreate
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document"
+}
+
+export type V2RelayDocumentCreateErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentCreateError = V2RelayDocumentCreateErrors[keyof V2RelayDocumentCreateErrors]
+
+export type V2RelayDocumentCreateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayDocumentView
+  }
+}
+
+export type V2RelayDocumentCreateResponse = V2RelayDocumentCreateResponses[keyof V2RelayDocumentCreateResponses]
+
+export type V2RelayDocumentRemoveData = {
+  body?: never
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}"
+}
+
+export type V2RelayDocumentRemoveErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentRemoveError = V2RelayDocumentRemoveErrors[keyof V2RelayDocumentRemoveErrors]
+
+export type V2RelayDocumentRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2RelayDocumentRemoveResponse = V2RelayDocumentRemoveResponses[keyof V2RelayDocumentRemoveResponses]
+
+export type V2RelayDocumentGetData = {
+  body?: never
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}"
+}
+
+export type V2RelayDocumentGetErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentGetError = V2RelayDocumentGetErrors[keyof V2RelayDocumentGetErrors]
+
+export type V2RelayDocumentGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayDocumentView
+  }
+}
+
+export type V2RelayDocumentGetResponse = V2RelayDocumentGetResponses[keyof V2RelayDocumentGetResponses]
+
+export type V2RelayDocumentUpdateData = {
+  body: RelayDocumentUpdate
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}"
+}
+
+export type V2RelayDocumentUpdateErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentUpdateError = V2RelayDocumentUpdateErrors[keyof V2RelayDocumentUpdateErrors]
+
+export type V2RelayDocumentUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayDocumentView
+  }
+}
+
+export type V2RelayDocumentUpdateResponse = V2RelayDocumentUpdateResponses[keyof V2RelayDocumentUpdateResponses]
+
+export type V2RelayDocumentVersionsData = {
+  body?: never
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/version"
+}
+
+export type V2RelayDocumentVersionsErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentVersionsError = V2RelayDocumentVersionsErrors[keyof V2RelayDocumentVersionsErrors]
+
+export type V2RelayDocumentVersionsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<RelayAuthoringVersion>
+  }
+}
+
+export type V2RelayDocumentVersionsResponse = V2RelayDocumentVersionsResponses[keyof V2RelayDocumentVersionsResponses]
+
+export type V2RelayDocumentVersionData = {
+  body?: never
+  path: {
+    documentID: string
+    versionID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/version/{versionID}"
+}
+
+export type V2RelayDocumentVersionErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentVersionError = V2RelayDocumentVersionErrors[keyof V2RelayDocumentVersionErrors]
+
+export type V2RelayDocumentVersionResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayAuthoringVersion
+  }
+}
+
+export type V2RelayDocumentVersionResponse = V2RelayDocumentVersionResponses[keyof V2RelayDocumentVersionResponses]
+
+export type V2RelayDocumentSprintData = {
+  body?: never
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/sprint"
+}
+
+export type V2RelayDocumentSprintErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentSprintError = V2RelayDocumentSprintErrors[keyof V2RelayDocumentSprintErrors]
+
+export type V2RelayDocumentSprintResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelaySprintView
+  }
+}
+
+export type V2RelayDocumentSprintResponse = V2RelayDocumentSprintResponses[keyof V2RelayDocumentSprintResponses]
+
+export type V2RelayDocumentExportData = {
+  body?: never
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/export"
+}
+
+export type V2RelayDocumentExportErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentExportError = V2RelayDocumentExportErrors[keyof V2RelayDocumentExportErrors]
+
+export type V2RelayDocumentExportResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayExport
+  }
+}
+
+export type V2RelayDocumentExportResponse = V2RelayDocumentExportResponses[keyof V2RelayDocumentExportResponses]
+
+export type V2RelayDocumentCheckData = {
+  body: RelayCheckInput
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/check"
+}
+
+export type V2RelayDocumentCheckErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayDocumentCheckError = V2RelayDocumentCheckErrors[keyof V2RelayDocumentCheckErrors]
+
+export type V2RelayDocumentCheckResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayArmCheckOutcome
+  }
+}
+
+export type V2RelayDocumentCheckResponse = V2RelayDocumentCheckResponses[keyof V2RelayDocumentCheckResponses]
+
+export type V2RelayDocumentNodeTypesData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/node-types"
+}
+
+export type V2RelayDocumentNodeTypesErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2RelayDocumentNodeTypesError = V2RelayDocumentNodeTypesErrors[keyof V2RelayDocumentNodeTypesErrors]
+
+export type V2RelayDocumentNodeTypesResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayNodeTypes
+  }
+}
+
+export type V2RelayDocumentNodeTypesResponse =
+  V2RelayDocumentNodeTypesResponses[keyof V2RelayDocumentNodeTypesResponses]
+
+export type V2RelayScopeListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/scope"
+}
+
+export type V2RelayScopeListErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayScopeListError = V2RelayScopeListErrors[keyof V2RelayScopeListErrors]
+
+export type V2RelayScopeListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<RelayAuthoringScope>
+  }
+}
+
+export type V2RelayScopeListResponse = V2RelayScopeListResponses[keyof V2RelayScopeListResponses]
+
+export type V2RelayScopeCreateData = {
+  body: RelayScopeInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/scope"
+}
+
+export type V2RelayScopeCreateErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayScopeCreateError = V2RelayScopeCreateErrors[keyof V2RelayScopeCreateErrors]
+
+export type V2RelayScopeCreateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayAuthoringScope
+  }
+}
+
+export type V2RelayScopeCreateResponse = V2RelayScopeCreateResponses[keyof V2RelayScopeCreateResponses]
+
+export type V2RelayScopeRemoveData = {
+  body?: never
+  path: {
+    scopeID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/scope/{scopeID}"
+}
+
+export type V2RelayScopeRemoveErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayScopeRemoveError = V2RelayScopeRemoveErrors[keyof V2RelayScopeRemoveErrors]
+
+export type V2RelayScopeRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2RelayScopeRemoveResponse = V2RelayScopeRemoveResponses[keyof V2RelayScopeRemoveResponses]
+
+export type V2RelayScopeUpdateData = {
+  body: RelayScopeInput
+  path: {
+    scopeID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/scope/{scopeID}"
+}
+
+export type V2RelayScopeUpdateErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayScopeUpdateError = V2RelayScopeUpdateErrors[keyof V2RelayScopeUpdateErrors]
+
+export type V2RelayScopeUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayAuthoringScope
+  }
+}
+
+export type V2RelayScopeUpdateResponse = V2RelayScopeUpdateResponses[keyof V2RelayScopeUpdateResponses]
+
+export type V2RelayPublishPublishData = {
+  body: RelayPublishInput
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/publish"
+}
+
+export type V2RelayPublishPublishErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayPublishPublishError = V2RelayPublishPublishErrors[keyof V2RelayPublishPublishErrors]
+
+export type V2RelayPublishPublishResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayDocumentView
+  }
+}
+
+export type V2RelayPublishPublishResponse = V2RelayPublishPublishResponses[keyof V2RelayPublishPublishResponses]
+
+export type V2RelayPublishUnpublishData = {
+  body: RelayUnpublishInput
+  path: {
+    documentID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/document/{documentID}/unpublish"
+}
+
+export type V2RelayPublishUnpublishErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayPublishUnpublishError = V2RelayPublishUnpublishErrors[keyof V2RelayPublishUnpublishErrors]
+
+export type V2RelayPublishUnpublishResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayDocumentView
+  }
+}
+
+export type V2RelayPublishUnpublishResponse = V2RelayPublishUnpublishResponses[keyof V2RelayPublishUnpublishResponses]
+
+export type V2RelayHookListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook"
+}
+
+export type V2RelayHookListErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookListError = V2RelayHookListErrors[keyof V2RelayHookListErrors]
+
+export type V2RelayHookListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstalls
+  }
+}
+
+export type V2RelayHookListResponse = V2RelayHookListResponses[keyof V2RelayHookListResponses]
+
+export type V2RelayHookInstallData = {
+  body: RelayHookInstallInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook"
+}
+
+export type V2RelayHookInstallErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookInstallError = V2RelayHookInstallErrors[keyof V2RelayHookInstallErrors]
+
+export type V2RelayHookInstallResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstall
+  }
+}
+
+export type V2RelayHookInstallResponse = V2RelayHookInstallResponses[keyof V2RelayHookInstallResponses]
+
+export type V2RelayHookUpdateData = {
+  body: RelayHookUpdateInput
+  path: {
+    installID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/{installID}/update"
+}
+
+export type V2RelayHookUpdateErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookUpdateError = V2RelayHookUpdateErrors[keyof V2RelayHookUpdateErrors]
+
+export type V2RelayHookUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstall
+  }
+}
+
+export type V2RelayHookUpdateResponse = V2RelayHookUpdateResponses[keyof V2RelayHookUpdateResponses]
+
+export type V2RelayHookEnableData = {
+  body?: never
+  path: {
+    installID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/{installID}/enable"
+}
+
+export type V2RelayHookEnableErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookEnableError = V2RelayHookEnableErrors[keyof V2RelayHookEnableErrors]
+
+export type V2RelayHookEnableResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstall
+  }
+}
+
+export type V2RelayHookEnableResponse = V2RelayHookEnableResponses[keyof V2RelayHookEnableResponses]
+
+export type V2RelayHookDisableData = {
+  body?: never
+  path: {
+    installID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/{installID}/disable"
+}
+
+export type V2RelayHookDisableErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookDisableError = V2RelayHookDisableErrors[keyof V2RelayHookDisableErrors]
+
+export type V2RelayHookDisableResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstall
+  }
+}
+
+export type V2RelayHookDisableResponse = V2RelayHookDisableResponses[keyof V2RelayHookDisableResponses]
+
+export type V2RelayHookOrderData = {
+  body: RelayHookOrderInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/order"
+}
+
+export type V2RelayHookOrderErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookOrderError = V2RelayHookOrderErrors[keyof V2RelayHookOrderErrors]
+
+export type V2RelayHookOrderResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookInstalls
+  }
+}
+
+export type V2RelayHookOrderResponse = V2RelayHookOrderResponses[keyof V2RelayHookOrderResponses]
+
+export type V2RelayHookUninstallData = {
+  body?: never
+  path: {
+    installID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/{installID}"
+}
+
+export type V2RelayHookUninstallErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookUninstallError = V2RelayHookUninstallErrors[keyof V2RelayHookUninstallErrors]
+
+export type V2RelayHookUninstallResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2RelayHookUninstallResponse = V2RelayHookUninstallResponses[keyof V2RelayHookUninstallResponses]
+
+export type V2RelayHookDecisionsData = {
+  body?: never
+  path: {
+    installID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/{installID}/decisions"
+}
+
+export type V2RelayHookDecisionsErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookDecisionsError = V2RelayHookDecisionsErrors[keyof V2RelayHookDecisionsErrors]
+
+export type V2RelayHookDecisionsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<RelayHookDecision>
+  }
+}
+
+export type V2RelayHookDecisionsResponse = V2RelayHookDecisionsResponses[keyof V2RelayHookDecisionsResponses]
+
+export type V2RelayHookRepairData = {
+  body: RelayHookRepairInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/hook/repair"
+}
+
+export type V2RelayHookRepairErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayHookRepairError = V2RelayHookRepairErrors[keyof V2RelayHookRepairErrors]
+
+export type V2RelayHookRepairResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayHookRepaired
+  }
+}
+
+export type V2RelayHookRepairResponse = V2RelayHookRepairResponses[keyof V2RelayHookRepairResponses]
 
 export type V2PullRequestListData = {
   body?: never

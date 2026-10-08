@@ -16,7 +16,7 @@ beforeAll(async () => {
   }))
 
   // Each use() runs the real Local init against the route, roster and saved state of the current test.
-  mock.module("@opencode-ai/ui/context", () => ({
+  mock.module("@orchestra/ui/context", () => ({
     createSimpleContext: (input: { init: () => unknown }) => ({ use: input.init, provider: () => undefined }),
   }))
 

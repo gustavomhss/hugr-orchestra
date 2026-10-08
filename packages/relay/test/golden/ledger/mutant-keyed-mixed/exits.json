@@ -1,0 +1,7 @@
+{
+  "verify": 1,
+  "verify.keyed": 1,
+  "verify.wrong-key": 1,
+  "problems": 0,
+  "cost": 0
+}

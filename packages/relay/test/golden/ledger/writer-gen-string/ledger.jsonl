@@ -1,0 +1,2 @@
+{"event":"note","wp":"wp1","gen":7,"prev":"GENESIS","seq":0,"mac":"sha256","h":"893d4dfa91079e1ca1059d658ba68eea6b349bab9752216c78b1176319e24080"}
+{"event":"sprint-complete","wp":"wp1","gen":7,"prev":"893d4dfa91079e1ca1059d658ba68eea6b349bab9752216c78b1176319e24080","seq":1,"mac":"sha256","h":"e47ade50cf8f658e6619b32c7495cadfe5ae23187611acfdc5c57ff0590c17b7"}

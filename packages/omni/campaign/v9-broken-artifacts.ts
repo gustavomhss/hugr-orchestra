@@ -3,7 +3,7 @@
 import { chmodSync, copyFileSync, existsSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import os from "node:os"
-import { OPENCODE, ROOT, cleanup, cli, isolated, load, win } from "./lib.ts"
+import { ORCHESTRA, ROOT, cleanup, cli, isolated, load, win } from "./lib.ts"
 import { authorized, deliveryEnv, evidence, execute, record } from "./delivery-fixtures.ts"
 
 type Observation = Awaited<ReturnType<typeof execute>>
@@ -30,7 +30,7 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
   try {
     const source = realpathSync(cli())
     const names = { addon: "hugr_omni.node", supervisor: `hugr-omni-supervisor${win ? ".exe" : ""}` }
-    const env: Record<string, string> = { ...deliveryEnv(scratch.env), OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1" }
+    const env: Record<string, string> = { ...deliveryEnv(scratch.env), ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1" }
     // Strip Bun mode and Node resolution escape hatches from the actual child environment.
     for (const key of Object.keys(env))
       if (/^(BUN_BE_BUN|BUN_OPTIONS|NODE_OPTIONS|NODE_PATH|OMNI_|HUGR_OMNI_)/i.test(key)) delete env[key]
@@ -83,21 +83,21 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
     if (!corrupt || !missing) throw new Error("V9 did not construct both guard controls")
     for (const mode of ["0", "unset"]) {
       const off = { ...env }
-      if (mode === "unset") delete off.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER
-      if (mode === "0") off.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER = "0"
+      if (mode === "unset") delete off.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+      if (mode === "0") off.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
       const result = await execute(corrupt.bin, ["--version"], off, scratch.project, 5000, [scratch.home])
       controls.push({ name: `legacy-${mode}-stays-lazy`, result, pass: result.code === 0 && !result.timedOut &&
         /^\d+\.\d+\.\d+/.test(result.stdout) && !result.stderr.includes("hugr-omni CLI preflight") })
     }
     if (!quiet()) throw new Error(`V9 machine became busy before strict control: ${load()}`)
-    const strict = await execute(missing.bin, ["debug", "omni"], { ...env, OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
+    const strict = await execute(missing.bin, ["debug", "omni"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])
     controls.push({ name: "strict-preflights", result: strict, pass: rejectsArtifact(strict, missing.addon, "addon") && quiet() })
     // Compile a fixture variant of the actual preflight with shipped configure() removed. Its loader really selects
     // an implicit resources candidate. No HUGR_OMNI_* override: this exercises the forbidden fallback seam.
     const mutation = options.mutation ? await (async () => {
       const target = cells.find((cell) => cell.cell === "addon-missing")
       if (!target) throw new Error("V9 missing negative-control cell")
-      const entry = await Bun.file(path.join(OPENCODE, "src/cli/omni-entry.ts")).text()
+      const entry = await Bun.file(path.join(ORCHESTRA, "src/cli/omni-entry.ts")).text()
       const start = entry.indexOf("    Omni.configure({")
       const end = entry.indexOf("    await Omni.load()", start)
       const app = entry.indexOf('await import("../index")')
@@ -105,7 +105,7 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
       const fixture = path.join(scratch.home, "implicit-fallback-mutant.ts")
       const loader = JSON.stringify(path.join(ROOT, "packages/core/src/omni.ts"))
       await Bun.write(fixture, `Object.defineProperty(process, "resourcesPath", { value: ${JSON.stringify(resources)} });\n` +
-        (entry.slice(0, start) + entry.slice(end, app)).replace('"@opencode-ai/core/omni"', loader) + `
+        (entry.slice(0, start) + entry.slice(end, app)).replace('"@orchestra/core/omni"', loader) + `
 const { Omni } = await import(${loader});
 const binding = await Omni.load();
 const result = await binding.run("git", ["-c", ${JSON.stringify(`orchestra.campaignnonce=${scratch.home}`)}, "rev-parse", "HEAD"], { cwd: ${JSON.stringify(ROOT)}, inheritEnv: false, env: Omni.childEnv(), timeoutMs: 5000 });

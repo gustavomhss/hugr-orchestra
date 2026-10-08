@@ -1,0 +1,32 @@
+{
+  "params": {
+    "n": 500,
+    "k": 25,
+    "seeds": "1",
+    "arms": "M",
+    "timeout": 2400,
+    "out_root": "/Users/gustavoschneiter/Documents/HuGR/relay/benchmark/_runs",
+    "json_out": "/Users/gustavoschneiter/Documents/HuGR/relay/benchmark/_runs/crossover_results.json",
+    "headroom_rsr": 0.85,
+    "check_grader": false
+  },
+  "results": [
+    {
+      "n": 500,
+      "k": 25,
+      "seed": 1,
+      "arm": "M",
+      "rsr": 1.0,
+      "valid": true,
+      "reasons": [],
+      "usage": {
+        "cost_usd": 1.8373097999999999,
+        "out_tok": 88178,
+        "turns": 7,
+        "is_error": false
+      },
+      "secs": 1866.2,
+      "out_dir": "_runs/N500-s1-k25-M"
+    }
+  ]
+}

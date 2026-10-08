@@ -434,17 +434,17 @@ const legacy = Effect.gen(function* () {
 })
 
 /**
- * The spawner for a mode of OPENCODE_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` is the legacy spawner exactly; `on` and
+ * The spawner for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` is the legacy spawner exactly; `on` and
  * `strict` spawn through omni, which delegates (on) or refuses (strict) what it does not support.
  */
-export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) {
+export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) {
   const base = yield* legacy
   if (mode === "off") return makeSpawner(base.spawnCommand)
   return makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
 })
 
 /** The flag is read once, when the layer is built. */
-export const make = Effect.suspend(() => makeWith(Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER))
+export const make = Effect.suspend(() => makeWith(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER))
 
 const layer: Layer.Layer<ChildProcessSpawner, never, FileSystem.FileSystem | Path.Path> = Layer.effect(
   ChildProcessSpawner,

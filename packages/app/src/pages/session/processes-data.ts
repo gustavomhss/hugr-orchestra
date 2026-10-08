@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store"
-import type { SessionProcess } from "@opencode-ai/sdk/v2/client"
+import type { SessionProcess } from "@orchestra/sdk/v2/client"
 
 // Background processes a session's shell tool left running (O1(b)). The server owns them; this view polls the list
 // and asks the server to stop one. Session removal stops them all on the server side.

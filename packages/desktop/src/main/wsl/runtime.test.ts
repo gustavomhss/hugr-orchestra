@@ -3,7 +3,7 @@ import { runCommand } from "./runtime"
 
 // wsl.exe writes UTF-16LE, with or without a BOM, and Linux programs behind it write UTF-8. runCommand picks the
 // encoding from the first chunk of each stream and decodes across chunk boundaries. A real process writes the bytes,
-// so the same test covers the legacy spawn and the omni one (OPENCODE_EXPERIMENTAL_OMNI_SPAWNER).
+// so the same test covers the legacy spawn and the omni one (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).
 
 // Splits a string's UTF-16LE bytes inside a code unit, so the second write starts with half a character.
 function halves(text: string) {

@@ -4,32 +4,32 @@ import path from "node:path"
 import { createHash } from "node:crypto"
 import { lstat } from "node:fs/promises"
 import { Effect, Exit, Layer, Option, Schema } from "effect"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { FSUtil } from "@opencode-ai/core/fs-util"
-import { Global } from "@opencode-ai/core/global"
-import type { EventV2 } from "@opencode-ai/core/event"
-import { Location } from "@opencode-ai/core/location"
-import { LocationMutation } from "@opencode-ai/core/location-mutation"
-import { PermissionV2 } from "@opencode-ai/core/permission"
-import { ApplicationTools } from "@opencode-ai/core/tool/application-tools"
-import { Tool } from "@opencode-ai/core/tool/tool"
-import { Tools } from "@opencode-ai/core/tool/tools"
-import { ToolRegistry } from "@opencode-ai/core/tool/registry"
-import { ToolSafety } from "@opencode-ai/core/tool-safety"
-import { ToolSafetyProfile } from "@opencode-ai/core/tool-safety-profile"
-import { ToolOutputStore } from "@opencode-ai/core/tool-output-store"
-import { Flag } from "@opencode-ai/core/flag/flag"
-import { Omni } from "@opencode-ai/core/omni"
-import type { ProcessRequest, ProcessResult } from "@opencode-ai/maestro-arsenal"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AgentV2 } from "@orchestra/core/agent"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import type { EventV2 } from "@orchestra/core/event"
+import { Location } from "@orchestra/core/location"
+import { LocationMutation } from "@orchestra/core/location-mutation"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { ApplicationTools } from "@orchestra/core/tool/application-tools"
+import { Tool } from "@orchestra/core/tool/tool"
+import { Tools } from "@orchestra/core/tool/tools"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { Flag } from "@orchestra/core/flag/flag"
+import { Omni } from "@orchestra/core/omni"
+import type { ProcessRequest, ProcessResult } from "@orchestra/maestro-arsenal"
 
 /**
  * Loads arsenal, and with the omni flag on installs the omni process runner into it (integration plan §7): arsenal
  * cannot depend on core, so this is where its processes move to omni. With the flag off arsenal keeps Bun.spawn.
  */
 export function loadArsenal() {
-  return import("@opencode-ai/maestro-arsenal").then((module) => {
-    if (Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER !== "off") module.Arsenal.setProcessRunner(omniRunner)
+  return import("@orchestra/maestro-arsenal").then((module) => {
+    if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off") module.Arsenal.setProcessRunner(omniRunner)
     return module
   })
 }

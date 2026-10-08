@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { BackgroundJob } from "@opencode-ai/core/background-job"
-import { LayerNode } from "@opencode-ai/core/effect/layer-node"
-import type { Child } from "@opencode-ai/core/omni"
-import { OmniBackground } from "@opencode-ai/core/omni-background"
+import { BackgroundJob } from "@orchestra/core/background-job"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import type { Child } from "@orchestra/core/omni"
+import { OmniBackground } from "@orchestra/core/omni-background"
 import { Effect, Exit, Layer, Scope } from "effect"
 import { it } from "./lib/effect"
 

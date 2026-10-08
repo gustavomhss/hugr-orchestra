@@ -1,5 +1,5 @@
-import { resolveThemeVariant } from "@opencode-ai/ui/theme/resolve"
-import type { DesktopTheme } from "@opencode-ai/ui/theme/types"
+import { resolveThemeVariant } from "@orchestra/ui/theme/resolve"
+import type { DesktopTheme } from "@orchestra/ui/theme/types"
 import { parseColor, type Rgba } from "./color"
 
 // One palette's colors. Everything else (glass, borders, radii, fonts, spacing) stays Orchestra's.

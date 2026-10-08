@@ -11,13 +11,13 @@ import os from "node:os"
 import path from "node:path"
 import { Cause, Effect, Exit, Fiber, Layer, Stream } from "effect"
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
-import { BackgroundJob } from "@opencode-ai/core/background-job"
-import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
-import { Omni } from "@opencode-ai/core/omni"
-import { OmniAdoption } from "@opencode-ai/core/omni-adoption"
-import { OmniBackground } from "@opencode-ai/core/omni-background"
-import { omniSpawner } from "@opencode-ai/core/flag/flag"
-import { AppProcess } from "@opencode-ai/core/process"
+import { BackgroundJob } from "@orchestra/core/background-job"
+import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { Omni } from "@orchestra/core/omni"
+import { OmniAdoption } from "@orchestra/core/omni-adoption"
+import { OmniBackground } from "@orchestra/core/omni-background"
+import { omniSpawner } from "@orchestra/core/flag/flag"
+import { AppProcess } from "@orchestra/core/process"
 import { gone, sweep, tree } from "../fixture/process-tree"
 import { testEffect } from "../lib/effect"
 
@@ -120,7 +120,7 @@ const catFile = (repo: { dir: string; ids: string[] }) =>
 
 const sha = (data: Buffer) => createHash("sha256").update(data).digest("hex")
 
-const mode = omniSpawner(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER)
+const mode = omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
 
 // The omni binaries exist only in runs that turn omni on (test-ci provides them with the flag), so a flag-off run
 // skips this file; the positive control (D-L1) makes sure flag-on runs do spawn through omni.

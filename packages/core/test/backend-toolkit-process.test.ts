@@ -43,7 +43,7 @@ const path = require("node:path")
 const config = JSON.parse(readFileSync("package.json", "utf8"))
 writeFileSync(path.join(process.env.npm_config_cache, "..", "call.json"), JSON.stringify({
   cwd: process.cwd(), argv: process.argv.slice(2), cache: process.env.npm_config_cache, pid: process.pid,
-  notifier: process.env.npm_config_update_notifier, inherited: process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER,
+  notifier: process.env.npm_config_update_notifier, inherited: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER,
 }))
 appendFileSync(path.join(process.env.npm_config_cache, "..", "starts.log"), process.pid + "\\n")
 if (config.output) {
@@ -118,7 +118,7 @@ it.live(
       const f = yield* fixture
       const before = Omni.snapshot()
       yield* f.install({ output: "stdout", mib: 64 })
-      if (process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER === "1") {
+      if (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1") {
         expect(Omni.snapshot().spawns).toBeGreaterThan(before.spawns)
         expect(Omni.snapshot().delegations).toBe(before.delegations)
       }
@@ -127,7 +127,7 @@ it.live(
       expect(call.argv).toEqual(["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"])
       expect(call.cache).toBe(path.join(f.root, "cache", "npm"))
       expect(call.notifier).toBe("false")
-      expect(call.inherited).toBe(process.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER)
+      expect(call.inherited).toBe(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
       expect(yield* PinnedArtifact.installed(f.directory)).toBe(true)
       expect(yield* Effect.promise(() => readFile(path.join(f.directory, "package-lock.json"), "utf8"))).toBe("{}")
     }),
@@ -271,7 +271,7 @@ await server.stop(true)
           cwd: f.root,
           env: {
             ...process.env,
-            OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
+            ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1",
             HUGR_OMNI_ADDON: path.join(f.root, "missing-addon.node"),
           },
           stdout: "pipe",

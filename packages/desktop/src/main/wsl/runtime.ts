@@ -53,7 +53,7 @@ function runPowerShell(command: string, opts: RunWslOptions = {}) {
 // Exported for its test: wsl.exe writes UTF-16LE, and every command runs through here.
 export function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   return new Promise<WslCommandResult>((resolve, reject) => {
-    // Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER through omni: bytes, decoded below exactly as before.
+    // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER through omni: bytes, decoded below exactly as before.
     const child: Pick<DesktopOmni.Spawned, "stdout" | "stderr" | "kill" | "once"> = DesktopOmni.enabled()
       ? DesktopOmni.spawn(command, args, { stdin: "closed", signal: opts.signal })
       : spawn(command, args, {
@@ -123,7 +123,7 @@ async function runInteractiveCommand(
   opts: RunWslOptions = {},
   defaultTimeoutMs: number,
 ) {
-  // Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER the terminal is omni's (ConPTY on Windows).
+  // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the terminal is omni's (ConPTY on Windows).
   const terminal = { name: "xterm-color", cols: 80, rows: 24, cwd: process.cwd() }
   const legacy = DesktopOmni.enabled() ? undefined : await import("@lydell/node-pty")
   const child: DesktopOmni.Terminal = legacy
@@ -296,11 +296,11 @@ export async function probeWslDistro(name: string, opts?: RunWslOptions): Promis
   }
 }
 
-export async function resolveWslOpencode(distro: string, opts?: RunWslOptions) {
+export async function resolveWslOrchestra(distro: string, opts?: RunWslOptions) {
   return firstLine(
     (
       await runWslSh(
-        'if [ -x "$HOME/.opencode/bin/opencode" ]; then printf "%s\\n" "$HOME/.opencode/bin/opencode"; fi',
+        'if [ -x "$HOME/.orchestra/bin/orchestra" ]; then printf "%s\\n" "$HOME/.orchestra/bin/orchestra"; fi',
         distro,
         opts,
       )

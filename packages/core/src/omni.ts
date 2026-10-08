@@ -104,7 +104,7 @@ export function locate(given: Paths = injected): Found {
   if (addon && supervisor) return { addon, supervisor }
   throw new Error(
     [
-      `hugr-omni is required (OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) but its ${locations.some((entry) => existsSync(entry.addon)) ? "supervisor" : "addon"} was not found. Looked at:`,
+      `hugr-omni is required (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) but its ${locations.some((entry) => existsSync(entry.addon)) ? "supervisor" : "addon"} was not found. Looked at:`,
       ...locations.map((entry) => `  ${entry.addon} + ${entry.supervisor}`),
       "Build it with `bun run omni:build`, or set HUGR_OMNI_ADDON and HUGR_OMNI_SUPERVISOR.",
     ].join("\n"),
@@ -142,9 +142,9 @@ export function snapshot() {
 export function verdict(mode: "off" | "on" | "strict", counts: { spawns: number; delegations: number }) {
   if (mode === "off") return
   if (counts.spawns === 0)
-    return `OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=${mode === "on" ? "1" : mode}, but this run made no omni spawn.`
+    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${mode === "on" ? "1" : mode}, but this run made no omni spawn.`
   if (mode === "strict" && counts.delegations > 0)
-    return `OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=strict, but this run delegated ${counts.delegations} spawn(s) to legacy.`
+    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict, but this run delegated ${counts.delegations} spawn(s) to legacy.`
 }
 
 /**

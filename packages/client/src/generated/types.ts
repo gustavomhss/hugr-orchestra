@@ -1,6 +1,6 @@
 import type { SessionEventEncoded } from "../wire"
 
-import type { OpenCodeEventEncoded } from "@opencode-ai/protocol/groups/event"
+import type { OrchestraEventEncoded } from "@orchestra/protocol/groups/event"
 
 export type JsonValue =
   | null
@@ -102,6 +102,34 @@ export type ProjectCopyError = {
 }
 export const isProjectCopyError = (value: unknown): value is ProjectCopyError =>
   typeof value === "object" && value !== null && "name" in value && value["name"] === "ProjectCopyError"
+
+export type RelayInvalidError = { readonly _tag: "RelayInvalidError"; readonly code: string; readonly message: string }
+export const isRelayInvalidError = (value: unknown): value is RelayInvalidError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayInvalidError"
+
+export type RelayNotFoundError = {
+  readonly _tag: "RelayNotFoundError"
+  readonly code: string
+  readonly message: string
+}
+export const isRelayNotFoundError = (value: unknown): value is RelayNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayNotFoundError"
+
+export type RelayConflictError = {
+  readonly _tag: "RelayConflictError"
+  readonly code: string
+  readonly message: string
+}
+export const isRelayConflictError = (value: unknown): value is RelayConflictError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayConflictError"
+
+export type RelayUnavailableError = {
+  readonly _tag: "RelayUnavailableError"
+  readonly code: string
+  readonly message: string
+}
+export const isRelayUnavailableError = (value: unknown): value is RelayUnavailableError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "RelayUnavailableError"
 
 export type PullRequestError = {
   readonly name: "PullRequestError"
@@ -2370,7 +2398,7 @@ export type BehaviorsSetOutput = {
   readonly data: ReadonlyArray<{ readonly id: string; readonly name: string; readonly instructions: string }>
 }
 
-export type EventsSubscribeOutput = OpenCodeEventEncoded
+export type EventsSubscribeOutput = OrchestraEventEncoded
 
 export type PtysListInput = {
   readonly location?: {
@@ -2665,6 +2693,3816 @@ export type ProjectCopiesRefreshInput = {
 }
 
 export type ProjectCopiesRefreshOutput = void
+
+export type RelayDocumentsListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }>
+}
+
+export type RelayDocumentsCreateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["name"]
+  readonly description?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["description"]
+  readonly nodes?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["nodes"]
+  readonly connections?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["connections"]
+  readonly nodeGroups?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["nodeGroups"]
+  readonly tags?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["tags"]
+  readonly meta?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["meta"]
+  readonly isArchived?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+  }["isArchived"]
+}
+
+export type RelayDocumentsCreateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }
+}
+
+export type RelayDocumentsGetInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }
+}
+
+export type RelayDocumentsUpdateInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["name"]
+  readonly description?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["description"]
+  readonly nodes?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["nodes"]
+  readonly connections?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["connections"]
+  readonly nodeGroups?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["nodeGroups"]
+  readonly tags?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["tags"]
+  readonly meta?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["meta"]
+  readonly isArchived?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["isArchived"]
+  readonly versionId?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["versionId"]
+  readonly expectedChecksum?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["expectedChecksum"]
+  readonly force?: {
+    readonly name?: string
+    readonly description?: string
+    readonly nodes?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: unknown }
+      readonly typeVersion?: number
+    }>
+    readonly connections?: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags?: ReadonlyArray<string | { readonly id: string }>
+    readonly meta?: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly isArchived?: boolean
+    readonly versionId?: string
+    readonly expectedChecksum?: string
+    readonly force?: boolean
+  }["force"]
+}
+
+export type RelayDocumentsUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }
+}
+
+export type RelayDocumentsRemoveInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsRemoveOutput = void
+
+export type RelayDocumentsVersionsInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsVersionsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<string | { readonly id: string }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly workflowId: string
+  }>
+}
+
+export type RelayDocumentsVersionInput = {
+  readonly documentID: { readonly documentID: string; readonly versionID: string }["documentID"]
+  readonly versionID: { readonly documentID: string; readonly versionID: string }["versionID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsVersionOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<string | { readonly id: string }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly workflowId: string
+  }
+}
+
+export type RelayDocumentsSprintInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsSprintOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly sprint: {
+      readonly brief?: string
+      readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+      readonly retry_budget?: number
+      readonly macros?: ReadonlyArray<{ readonly id: string; readonly title?: string; readonly instructions?: string }>
+      readonly work_packages: ReadonlyArray<{
+        readonly id: string
+        readonly title?: string
+        readonly macro?: string | null
+        readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+        readonly instructions?: string
+        readonly self_check?: ReadonlyArray<string>
+        readonly checklist?: ReadonlyArray<{
+          readonly id: string
+          readonly assert?: string | null
+          readonly cmd?: string | null
+          readonly judge?: string | null
+          readonly blocking?: boolean
+          readonly diff?: boolean
+          readonly context?: string | ReadonlyArray<string>
+          readonly paths?: ReadonlyArray<string>
+          readonly origin?: string
+          readonly policy?: string
+          readonly host_check?: string
+        }> | null
+        readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+        readonly file?: string
+        readonly text?: string
+      }>
+    }
+    readonly skillBindings: ReadonlyArray<{
+      readonly wp: string
+      readonly skill: string
+      readonly sha256: string
+      readonly mode: "combine" | "replace"
+    }>
+  }
+}
+
+export type RelayDocumentsDefinitionInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsDefinitionOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | {
+        readonly kind: "hook"
+        readonly definition: {
+          readonly schema: "relay.hook.v1"
+          readonly name: string
+          readonly nodes: ReadonlyArray<
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookEventTrigger"
+                readonly position: readonly [number, number]
+                readonly parameters:
+                  | {
+                      readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                      readonly timing: "before" | "after"
+                    }
+                  | { readonly operation: "session-start"; readonly timing: "after" }
+                  | { readonly operation: "prompt"; readonly timing: "before" }
+                  | { readonly operation: "session-idle"; readonly timing: "after" }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookCondition"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookRemind"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookBlock"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookApprove"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookVerify"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string; readonly check: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookRepair"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookRecord"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+            | {
+                readonly id: string
+                readonly name: string
+                readonly type: "relay.hookAllow"
+                readonly position: readonly [number, number]
+                readonly parameters: { readonly message: string }
+                readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+              }
+          >
+          readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+          readonly binding: "host-required"
+          readonly installed: false
+        }
+      }
+    | {
+        readonly kind: "workflow"
+        readonly definition: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+      }
+}
+
+export type RelayDocumentsCheckInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly position?: {
+    readonly position?: string
+    readonly counter?: number
+    readonly baseRef?: string
+    readonly params?: { readonly [x: string]: string }
+  }["position"]
+  readonly counter?: {
+    readonly position?: string
+    readonly counter?: number
+    readonly baseRef?: string
+    readonly params?: { readonly [x: string]: string }
+  }["counter"]
+  readonly baseRef?: {
+    readonly position?: string
+    readonly counter?: number
+    readonly baseRef?: string
+    readonly params?: { readonly [x: string]: string }
+  }["baseRef"]
+  readonly params?: {
+    readonly position?: string
+    readonly counter?: number
+    readonly baseRef?: string
+    readonly params?: { readonly [x: string]: string }
+  }["params"]
+}
+
+export type RelayDocumentsCheckOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | {
+        readonly outcome: "check"
+        readonly i: number
+        readonly wp: string
+        readonly failing: ReadonlyArray<string>
+        readonly macro?: string
+      }
+    | { readonly outcome: "complete"; readonly i: number }
+    | { readonly outcome: "error"; readonly error: "unknown-position"; readonly position: string }
+}
+
+export type RelayDocumentsNodeTypesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsNodeTypesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly workflow: ReadonlyArray<{
+      readonly type: string
+      readonly label: string
+      readonly inputs: number
+      readonly outputs: ReadonlyArray<string>
+      readonly maximum?: number
+      readonly parameters: ReadonlyArray<{
+        readonly name: string
+        readonly label: string
+        readonly type: string
+        readonly default: JsonValue
+        readonly options?: ReadonlyArray<{ readonly value: string; readonly label: string }>
+        readonly minimum?: number | "Infinity" | "-Infinity" | "NaN"
+        readonly maximum?: number | "Infinity" | "-Infinity" | "NaN"
+        readonly placeholder?: string
+      }>
+    }>
+    readonly hook: ReadonlyArray<{
+      readonly type: string
+      readonly label: string
+      readonly inputs: number
+      readonly outputs: ReadonlyArray<string>
+      readonly maximum?: number
+      readonly parameters: ReadonlyArray<{
+        readonly name: string
+        readonly label: string
+        readonly type: string
+        readonly default: JsonValue
+        readonly options?: ReadonlyArray<{ readonly value: string; readonly label: string }>
+        readonly minimum?: number | "Infinity" | "-Infinity" | "NaN"
+        readonly maximum?: number | "Infinity" | "-Infinity" | "NaN"
+        readonly placeholder?: string
+      }>
+    }>
+  }
+}
+
+export type RelayDocumentsListScopesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsListScopesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly description: string
+    readonly createdAt: string
+    readonly updatedAt: string
+  }>
+}
+
+export type RelayDocumentsCreateScopeInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name: { readonly name: string; readonly description?: string }["name"]
+  readonly description?: { readonly name: string; readonly description?: string }["description"]
+}
+
+export type RelayDocumentsCreateScopeOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description: string
+    readonly createdAt: string
+    readonly updatedAt: string
+  }
+}
+
+export type RelayDocumentsUpdateScopeInput = {
+  readonly scopeID: { readonly scopeID: string }["scopeID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name: { readonly name: string; readonly description?: string }["name"]
+  readonly description?: { readonly name: string; readonly description?: string }["description"]
+}
+
+export type RelayDocumentsUpdateScopeOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description: string
+    readonly createdAt: string
+    readonly updatedAt: string
+  }
+}
+
+export type RelayDocumentsRemoveScopeInput = {
+  readonly scopeID: { readonly scopeID: string }["scopeID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayDocumentsRemoveScopeOutput = void
+
+export type RelayPublishPublishInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly versionId: { readonly versionId: string; readonly expectedChecksum?: string }["versionId"]
+  readonly expectedChecksum?: { readonly versionId: string; readonly expectedChecksum?: string }["expectedChecksum"]
+}
+
+export type RelayPublishPublishOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }
+}
+
+export type RelayPublishUnpublishInput = {
+  readonly documentID: { readonly documentID: string }["documentID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly expectedChecksum?: { readonly expectedChecksum?: string }["expectedChecksum"]
+}
+
+export type RelayPublishUnpublishOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly description?: string
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly type: string
+      readonly position: readonly [number, number]
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly connections: {
+      readonly [x: string]: {
+        readonly main: ReadonlyArray<ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>>
+      }
+    }
+    readonly nodeGroups?: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodeIds: ReadonlyArray<string>
+    }>
+    readonly tags: ReadonlyArray<{
+      readonly id: string
+      readonly name: string
+      readonly description: string
+      readonly createdAt: string
+      readonly updatedAt: string
+    }>
+    readonly isArchived: boolean
+    readonly active: boolean
+    readonly activeVersionId: string | null
+    readonly meta: {
+      readonly relay?: {
+        readonly schema?: 1
+        readonly kind?: "workflow" | "hook"
+        readonly sprint?: {
+          readonly brief?: string
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+          readonly retry_budget?: number
+          readonly macros?: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly instructions?: string
+          }>
+          readonly work_packages: ReadonlyArray<{
+            readonly id: string
+            readonly title?: string
+            readonly macro?: string | null
+            readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+            readonly instructions?: string
+            readonly self_check?: ReadonlyArray<string>
+            readonly checklist?: ReadonlyArray<{
+              readonly id: string
+              readonly assert?: string | null
+              readonly cmd?: string | null
+              readonly judge?: string | null
+              readonly blocking?: boolean
+              readonly diff?: boolean
+              readonly context?: string | ReadonlyArray<string>
+              readonly paths?: ReadonlyArray<string>
+              readonly origin?: string
+              readonly policy?: string
+              readonly host_check?: string
+            }> | null
+            readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+            readonly file?: string
+            readonly text?: string
+          }>
+        }
+        readonly names?: { readonly [x: string]: string }
+        readonly diagnostics?: ReadonlyArray<string>
+        readonly profile?: string
+      }
+    }
+    readonly createdAt: string
+    readonly updatedAt: string
+    readonly versionId: string
+    readonly versionCounter: number
+    readonly checksum: string
+    readonly activeVersion: {
+      readonly id: string
+      readonly name: string
+      readonly description?: string
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly type: string
+        readonly position: readonly [number, number]
+        readonly parameters: { readonly [x: string]: JsonValue }
+        readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+      }>
+      readonly connections: {
+        readonly [x: string]: {
+          readonly main: ReadonlyArray<
+            ReadonlyArray<{ readonly node: string; readonly type: "main"; readonly index: 0 }>
+          >
+        }
+      }
+      readonly nodeGroups?: ReadonlyArray<{
+        readonly id: string
+        readonly name: string
+        readonly description?: string
+        readonly nodeIds: ReadonlyArray<string>
+      }>
+      readonly tags: ReadonlyArray<string | { readonly id: string }>
+      readonly isArchived: boolean
+      readonly active: boolean
+      readonly activeVersionId: string | null
+      readonly meta: {
+        readonly relay?: {
+          readonly schema?: 1
+          readonly kind?: "workflow" | "hook"
+          readonly sprint?: {
+            readonly brief?: string
+            readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
+            readonly retry_budget?: number
+            readonly macros?: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly instructions?: string
+            }>
+            readonly work_packages: ReadonlyArray<{
+              readonly id: string
+              readonly title?: string
+              readonly macro?: string | null
+              readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
+              readonly instructions?: string
+              readonly self_check?: ReadonlyArray<string>
+              readonly checklist?: ReadonlyArray<{
+                readonly id: string
+                readonly assert?: string | null
+                readonly cmd?: string | null
+                readonly judge?: string | null
+                readonly blocking?: boolean
+                readonly diff?: boolean
+                readonly context?: string | ReadonlyArray<string>
+                readonly paths?: ReadonlyArray<string>
+                readonly origin?: string
+                readonly policy?: string
+                readonly host_check?: string
+              }> | null
+              readonly dod?: ReadonlyArray<{ readonly id?: string; readonly cmd: string }> | null
+              readonly file?: string
+              readonly text?: string
+            }>
+          }
+          readonly names?: { readonly [x: string]: string }
+          readonly diagnostics?: ReadonlyArray<string>
+          readonly profile?: string
+        }
+      }
+      readonly createdAt: string
+      readonly updatedAt: string
+      readonly versionId: string
+      readonly versionCounter: number
+      readonly workflowId: string
+    } | null
+    readonly runnable: boolean
+    readonly publishedBy?: string
+    readonly unpublishedBy?: string
+  }
+}
+
+export type RelayHooksListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayHooksListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installs: ReadonlyArray<{
+      readonly installID: string
+      readonly document: string
+      readonly version: string
+      readonly sha256: string
+      readonly order: number
+      readonly enabled: boolean
+      readonly installedBy: string
+      readonly installedAt: number
+      readonly snapshot: {
+        readonly schema: "relay.hook.v1"
+        readonly name: string
+        readonly nodes: ReadonlyArray<
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookEventTrigger"
+              readonly position: readonly [number, number]
+              readonly parameters:
+                | {
+                    readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                    readonly timing: "before" | "after"
+                  }
+                | { readonly operation: "session-start"; readonly timing: "after" }
+                | { readonly operation: "prompt"; readonly timing: "before" }
+                | { readonly operation: "session-idle"; readonly timing: "after" }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookCondition"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRemind"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookBlock"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookApprove"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookVerify"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string; readonly check: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRepair"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRecord"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookAllow"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+        >
+        readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+        readonly binding: "host-required"
+        readonly installed: false
+      }
+    }>
+  }
+}
+
+export type RelayHooksInstallInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly document: { readonly document: string; readonly version?: string }["document"]
+  readonly version?: { readonly document: string; readonly version?: string }["version"]
+}
+
+export type RelayHooksInstallOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installID: string
+    readonly document: string
+    readonly version: string
+    readonly sha256: string
+    readonly order: number
+    readonly enabled: boolean
+    readonly installedBy: string
+    readonly installedAt: number
+    readonly snapshot: {
+      readonly schema: "relay.hook.v1"
+      readonly name: string
+      readonly nodes: ReadonlyArray<
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookEventTrigger"
+            readonly position: readonly [number, number]
+            readonly parameters:
+              | {
+                  readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                  readonly timing: "before" | "after"
+                }
+              | { readonly operation: "session-start"; readonly timing: "after" }
+              | { readonly operation: "prompt"; readonly timing: "before" }
+              | { readonly operation: "session-idle"; readonly timing: "after" }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookCondition"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRemind"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookBlock"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookApprove"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookVerify"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string; readonly check: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRepair"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRecord"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookAllow"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+      readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+      readonly binding: "host-required"
+      readonly installed: false
+    }
+  }
+}
+
+export type RelayHooksUpdateInput = {
+  readonly installID: { readonly installID: string }["installID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly version?: { readonly version?: string }["version"]
+}
+
+export type RelayHooksUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installID: string
+    readonly document: string
+    readonly version: string
+    readonly sha256: string
+    readonly order: number
+    readonly enabled: boolean
+    readonly installedBy: string
+    readonly installedAt: number
+    readonly snapshot: {
+      readonly schema: "relay.hook.v1"
+      readonly name: string
+      readonly nodes: ReadonlyArray<
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookEventTrigger"
+            readonly position: readonly [number, number]
+            readonly parameters:
+              | {
+                  readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                  readonly timing: "before" | "after"
+                }
+              | { readonly operation: "session-start"; readonly timing: "after" }
+              | { readonly operation: "prompt"; readonly timing: "before" }
+              | { readonly operation: "session-idle"; readonly timing: "after" }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookCondition"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRemind"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookBlock"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookApprove"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookVerify"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string; readonly check: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRepair"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRecord"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookAllow"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+      readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+      readonly binding: "host-required"
+      readonly installed: false
+    }
+  }
+}
+
+export type RelayHooksEnableInput = {
+  readonly installID: { readonly installID: string }["installID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayHooksEnableOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installID: string
+    readonly document: string
+    readonly version: string
+    readonly sha256: string
+    readonly order: number
+    readonly enabled: boolean
+    readonly installedBy: string
+    readonly installedAt: number
+    readonly snapshot: {
+      readonly schema: "relay.hook.v1"
+      readonly name: string
+      readonly nodes: ReadonlyArray<
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookEventTrigger"
+            readonly position: readonly [number, number]
+            readonly parameters:
+              | {
+                  readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                  readonly timing: "before" | "after"
+                }
+              | { readonly operation: "session-start"; readonly timing: "after" }
+              | { readonly operation: "prompt"; readonly timing: "before" }
+              | { readonly operation: "session-idle"; readonly timing: "after" }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookCondition"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRemind"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookBlock"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookApprove"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookVerify"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string; readonly check: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRepair"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRecord"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookAllow"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+      readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+      readonly binding: "host-required"
+      readonly installed: false
+    }
+  }
+}
+
+export type RelayHooksDisableInput = {
+  readonly installID: { readonly installID: string }["installID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayHooksDisableOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installID: string
+    readonly document: string
+    readonly version: string
+    readonly sha256: string
+    readonly order: number
+    readonly enabled: boolean
+    readonly installedBy: string
+    readonly installedAt: number
+    readonly snapshot: {
+      readonly schema: "relay.hook.v1"
+      readonly name: string
+      readonly nodes: ReadonlyArray<
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookEventTrigger"
+            readonly position: readonly [number, number]
+            readonly parameters:
+              | {
+                  readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                  readonly timing: "before" | "after"
+                }
+              | { readonly operation: "session-start"; readonly timing: "after" }
+              | { readonly operation: "prompt"; readonly timing: "before" }
+              | { readonly operation: "session-idle"; readonly timing: "after" }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookCondition"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRemind"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookBlock"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookApprove"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookVerify"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string; readonly check: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRepair"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookRecord"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+        | {
+            readonly id: string
+            readonly name: string
+            readonly type: "relay.hookAllow"
+            readonly position: readonly [number, number]
+            readonly parameters: { readonly message: string }
+            readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+          }
+      >
+      readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+      readonly binding: "host-required"
+      readonly installed: false
+    }
+  }
+}
+
+export type RelayHooksOrderInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly installIDs: { readonly installIDs: ReadonlyArray<string> }["installIDs"]
+}
+
+export type RelayHooksOrderOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly installs: ReadonlyArray<{
+      readonly installID: string
+      readonly document: string
+      readonly version: string
+      readonly sha256: string
+      readonly order: number
+      readonly enabled: boolean
+      readonly installedBy: string
+      readonly installedAt: number
+      readonly snapshot: {
+        readonly schema: "relay.hook.v1"
+        readonly name: string
+        readonly nodes: ReadonlyArray<
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookEventTrigger"
+              readonly position: readonly [number, number]
+              readonly parameters:
+                | {
+                    readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                    readonly timing: "before" | "after"
+                  }
+                | { readonly operation: "session-start"; readonly timing: "after" }
+                | { readonly operation: "prompt"; readonly timing: "before" }
+                | { readonly operation: "session-idle"; readonly timing: "after" }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookCondition"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRemind"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookBlock"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookApprove"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookVerify"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string; readonly check: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRepair"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRecord"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookAllow"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+        >
+        readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+        readonly binding: "host-required"
+        readonly installed: false
+      }
+    }>
+  }
+}
+
+export type RelayHooksUninstallInput = {
+  readonly installID: { readonly installID: string }["installID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayHooksUninstallOutput = void
+
+export type RelayHooksDecisionsInput = {
+  readonly installID: { readonly installID: string }["installID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayHooksDecisionsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly ts: number
+    readonly event: "hook-decision"
+    readonly decision: string
+    readonly install: string
+    readonly version: string
+    readonly node: string
+    readonly action: "remind" | "block" | "approve" | "verify" | "repair" | "record" | "allow"
+    readonly trigger: string
+    readonly tool: string | null
+    readonly session: string
+    readonly call: string | null
+    readonly subject: string
+    readonly outcome:
+      | "blocked"
+      | "approved"
+      | "rejected"
+      | "cancelled"
+      | "passed"
+      | "failed"
+      | "unavailable"
+      | "repair-required"
+      | "reminded"
+      | "recorded"
+      | "allowed"
+    readonly deferred?: true
+    readonly seq: number
+  }>
+}
+
+export type RelayHooksRepairInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly confirm: { readonly confirm: true }["confirm"]
+}
+
+export type RelayHooksRepairOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly backup: string
+    readonly installs: ReadonlyArray<{
+      readonly installID: string
+      readonly document: string
+      readonly version: string
+      readonly sha256: string
+      readonly order: number
+      readonly enabled: boolean
+      readonly installedBy: string
+      readonly installedAt: number
+      readonly snapshot: {
+        readonly schema: "relay.hook.v1"
+        readonly name: string
+        readonly nodes: ReadonlyArray<
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookEventTrigger"
+              readonly position: readonly [number, number]
+              readonly parameters:
+                | {
+                    readonly operation: "read" | "edit" | "write" | "command" | "tool"
+                    readonly timing: "before" | "after"
+                  }
+                | { readonly operation: "session-start"; readonly timing: "after" }
+                | { readonly operation: "prompt"; readonly timing: "before" }
+                | { readonly operation: "session-idle"; readonly timing: "after" }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookCondition"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly field: "path" | "tool" | "command" | "event"; readonly pattern: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRemind"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookBlock"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookApprove"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookVerify"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string; readonly check: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRepair"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookRecord"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+          | {
+              readonly id: string
+              readonly name: string
+              readonly type: "relay.hookAllow"
+              readonly position: readonly [number, number]
+              readonly parameters: { readonly message: string }
+              readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
+            }
+        >
+        readonly connections: ReadonlyArray<{ readonly from: string; readonly port: number; readonly to: string }>
+        readonly binding: "host-required"
+        readonly installed: false
+      }
+    }>
+  }
+}
 
 export type PullRequestsListInput = {
   readonly location?: {

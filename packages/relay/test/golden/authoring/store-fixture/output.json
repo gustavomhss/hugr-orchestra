@@ -1,0 +1,1934 @@
+{
+  "workspace-a": {
+    "documents": [
+      {
+        "name": "Relay · tdd_feature",
+        "nodes": [
+          {
+            "id": "relay-start",
+            "name": "Workflow start",
+            "type": "relay.startTrigger",
+            "typeVersion": 1,
+            "position": [
+              16,
+              240
+            ],
+            "parameters": {
+              "relayBrief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+              "relayRetryBudget": 3
+            }
+          },
+          {
+            "id": "implement.inject_context",
+            "name": "Inject context",
+            "type": "relay.inject",
+            "typeVersion": 1,
+            "position": [
+              240,
+              240
+            ],
+            "parameters": {
+              "title": "Inject context",
+              "macro": "implement",
+              "instructions": "Seed the task context",
+              "checklist": "[]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "Task: add a token-bucket rate limiter to the gateway.",
+              "file": ""
+            }
+          },
+          {
+            "id": "implement.write",
+            "name": "Write code (TDD)",
+            "type": "relay.execute",
+            "typeVersion": 1,
+            "position": [
+              464,
+              240
+            ],
+            "parameters": {
+              "title": "Write code (TDD)",
+              "macro": "implement",
+              "instructions": "Implement using the TDD skill",
+              "checklist": "[\n  {\n    \"id\": \"write-produced-a-change\",\n    \"assert\": \"this state changed something under the declared source or test paths\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          },
+          {
+            "id": "implement.checklist",
+            "name": "Implement gate",
+            "type": "relay.gate",
+            "typeVersion": 1,
+            "position": [
+              688,
+              240
+            ],
+            "parameters": {
+              "title": "Implement gate",
+              "macro": "implement",
+              "instructions": "Exit criteria for implementation",
+              "checklist": "[\n  {\n    \"id\": \"tests_written\",\n    \"assert\": \"tests_written\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"implementation_done\",\n    \"assert\": \"implementation_done\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"suite_green\",\n    \"assert\": \"suite_green\",\n    \"cmd\": \"${test_cmd}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          },
+          {
+            "id": "review.self_review",
+            "name": "Self review",
+            "type": "relay.review",
+            "typeVersion": 1,
+            "position": [
+              912,
+              240
+            ],
+            "parameters": {
+              "title": "Self review",
+              "macro": "review",
+              "instructions": "Review using the code-review protocol",
+              "checklist": "[\n  {\n    \"id\": \"review-is-substantive\",\n    \"assert\": \"the review artifact carries at least 50 words\",\n    \"cmd\": \"test \\\"$(wc -w < ${review_artifact})\\\" -ge 50\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"review-engages-with-the-diff\",\n    \"context\": [\n      \"${review_artifact}\"\n    ],\n    \"judge\": \"Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          },
+          {
+            "id": "review.checklist",
+            "name": "Review gate",
+            "type": "relay.gate",
+            "typeVersion": 1,
+            "position": [
+              1136,
+              240
+            ],
+            "parameters": {
+              "title": "Review gate",
+              "macro": "review",
+              "instructions": "Exit criteria for review",
+              "checklist": "[\n  {\n    \"id\": \"review_done\",\n    \"assert\": \"review_done\",\n    \"cmd\": \"test -s ${review_artifact}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          }
+        ],
+        "connections": {
+          "Inject context": {
+            "main": [
+              [
+                {
+                  "node": "Write code (TDD)",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Write code (TDD)": {
+            "main": [
+              [
+                {
+                  "node": "Implement gate",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Implement gate": {
+            "main": [
+              [
+                {
+                  "node": "Self review",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Self review": {
+            "main": [
+              [
+                {
+                  "node": "Review gate",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Workflow start": {
+            "main": [
+              [
+                {
+                  "node": "Inject context",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "tags": [],
+        "meta": {
+          "relay": {
+            "schema": 1,
+            "kind": "workflow",
+            "sprint": {
+              "brief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+              "gen": 0,
+              "retry_budget": 3,
+              "macros": [
+                {
+                  "id": "implement",
+                  "title": "Implement (TDD)"
+                },
+                {
+                  "id": "review",
+                  "title": "Review"
+                }
+              ],
+              "work_packages": [
+                {
+                  "id": "implement.inject_context",
+                  "macro": "implement",
+                  "kind": "inject",
+                  "title": "Inject context",
+                  "instructions": "Seed the task context",
+                  "file": "",
+                  "text": "Task: add a token-bucket rate limiter to the gateway.",
+                  "checklist": []
+                },
+                {
+                  "id": "implement.write",
+                  "macro": "implement",
+                  "kind": "execute",
+                  "title": "Write code (TDD)",
+                  "instructions": "Implement using the TDD skill",
+                  "checklist": [
+                    {
+                      "id": "write-produced-a-change",
+                      "assert": "this state changed something under the declared source or test paths",
+                      "cmd": "git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    }
+                  ]
+                },
+                {
+                  "id": "implement.checklist",
+                  "macro": "implement",
+                  "kind": "gate",
+                  "title": "Implement gate",
+                  "instructions": "Exit criteria for implementation",
+                  "checklist": [
+                    {
+                      "id": "tests_written",
+                      "assert": "tests_written",
+                      "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    },
+                    {
+                      "id": "implementation_done",
+                      "assert": "implementation_done",
+                      "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    },
+                    {
+                      "id": "suite_green",
+                      "assert": "suite_green",
+                      "cmd": "${test_cmd}",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    }
+                  ]
+                },
+                {
+                  "id": "review.self_review",
+                  "macro": "review",
+                  "kind": "review",
+                  "title": "Self review",
+                  "instructions": "Review using the code-review protocol",
+                  "checklist": [
+                    {
+                      "id": "review-is-substantive",
+                      "assert": "the review artifact carries at least 50 words",
+                      "cmd": "test \"$(wc -w < ${review_artifact})\" -ge 50",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    },
+                    {
+                      "id": "review-engages-with-the-diff",
+                      "context": [
+                        "${review_artifact}"
+                      ],
+                      "judge": "Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                      "diff": true,
+                      "blocking": true,
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    }
+                  ]
+                },
+                {
+                  "id": "review.checklist",
+                  "macro": "review",
+                  "kind": "gate",
+                  "title": "Review gate",
+                  "instructions": "Exit criteria for review",
+                  "checklist": [
+                    {
+                      "id": "review_done",
+                      "assert": "review_done",
+                      "cmd": "test -s ${review_artifact}",
+                      "origin": "pe-profile:tdd_feature@1.0.0"
+                    }
+                  ]
+                }
+              ]
+            },
+            "names": {
+              "implement.inject_context": "Inject context",
+              "implement.write": "Write code (TDD)",
+              "implement.checklist": "Implement gate",
+              "review.self_review": "Self review",
+              "review.checklist": "Review gate"
+            }
+          }
+        },
+        "nodeGroups": [
+          {
+            "id": "implement",
+            "name": "Implement (TDD)",
+            "description": "",
+            "nodeIds": [
+              "implement.inject_context",
+              "implement.write",
+              "implement.checklist"
+            ]
+          },
+          {
+            "id": "review",
+            "name": "Review",
+            "description": "",
+            "nodeIds": [
+              "review.self_review",
+              "review.checklist"
+            ]
+          }
+        ],
+        "active": false,
+        "activeVersionId": null,
+        "isArchived": false,
+        "id": "relay-tdd_feature",
+        "createdAt": "2023-11-14T22:13:39.020000Z",
+        "updatedAt": "2023-11-14T22:13:41.022000Z",
+        "versionId": "00000000-0000-0000-0000-00005e1a0008",
+        "versionCounter": 1
+      },
+      {
+        "name": "Protect generated files",
+        "nodes": [
+          {
+            "id": "event",
+            "name": "Before edit",
+            "type": "relay.hookEventTrigger",
+            "position": [
+              0,
+              0
+            ],
+            "parameters": {
+              "operation": "edit",
+              "timing": "before"
+            }
+          },
+          {
+            "id": "condition",
+            "name": "Generated file?",
+            "type": "relay.hookCondition",
+            "position": [
+              224,
+              0
+            ],
+            "parameters": {
+              "field": "path",
+              "pattern": "src/generated/**"
+            }
+          },
+          {
+            "id": "block",
+            "name": "Block change",
+            "type": "relay.hookBlock",
+            "position": [
+              448,
+              0
+            ],
+            "parameters": {
+              "message": "Edit the source contract and regenerate."
+            }
+          },
+          {
+            "id": "record",
+            "name": "Record",
+            "type": "relay.hookRecord",
+            "position": [
+              448,
+              224
+            ],
+            "parameters": {
+              "message": "File is outside the generated tree."
+            }
+          }
+        ],
+        "connections": {
+          "Before edit": {
+            "main": [
+              [
+                {
+                  "node": "Generated file?",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Generated file?": {
+            "main": [
+              [
+                {
+                  "node": "Block change",
+                  "type": "main",
+                  "index": 0
+                }
+              ],
+              [
+                {
+                  "node": "Record",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "meta": {
+          "relay": {
+            "schema": 1,
+            "kind": "hook"
+          }
+        },
+        "tags": [],
+        "active": false,
+        "activeVersionId": null,
+        "isArchived": false,
+        "id": "00000000-0000-0000-0000-00005e1a0006",
+        "createdAt": "2023-11-14T22:13:35.016000Z",
+        "updatedAt": "2023-11-14T22:13:37.018000Z",
+        "versionId": "00000000-0000-0000-0000-00005e1a0007",
+        "versionCounter": 1
+      },
+      {
+        "name": "Changed",
+        "nodes": [
+          {
+            "id": "relay-start",
+            "name": "Workflow start",
+            "type": "relay.startTrigger",
+            "typeVersion": 1,
+            "position": [
+              16,
+              240
+            ],
+            "parameters": {
+              "relayBrief": "Exact author intent\n",
+              "relayRetryBudget": 2
+            }
+          },
+          {
+            "id": "first\n",
+            "name": "Same name",
+            "type": "relay.execute",
+            "typeVersion": 1,
+            "position": [
+              240,
+              240
+            ],
+            "parameters": {
+              "title": "Same name",
+              "macro": "phase",
+              "instructions": "Do it\n\n",
+              "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          },
+          {
+            "id": "second",
+            "name": "Same name · second",
+            "type": "relay.review",
+            "typeVersion": 1,
+            "position": [
+              464,
+              240
+            ],
+            "parameters": {
+              "title": "Same name",
+              "macro": "phase",
+              "instructions": "Review",
+              "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          }
+        ],
+        "connections": {
+          "Same name": {
+            "main": [
+              [
+                {
+                  "node": "Same name · second",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Workflow start": {
+            "main": [
+              [
+                {
+                  "node": "Same name",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "tags": [
+          "00000000-0000-0000-0000-00005e1a0004"
+        ],
+        "meta": {
+          "relay": {
+            "schema": 1,
+            "kind": "workflow",
+            "sprint": {
+              "brief": "Exact author intent\n",
+              "gen": 7,
+              "retry_budget": 2,
+              "extra": {
+                "retained": true
+              },
+              "macros": [
+                {
+                  "id": "phase",
+                  "title": "Phase",
+                  "instructions": "Context\n",
+                  "extra": 3
+                }
+              ],
+              "work_packages": [
+                {
+                  "id": "first\n",
+                  "title": "Same name",
+                  "macro": "phase",
+                  "instructions": "Do it\n\n",
+                  "self_check": [
+                    "Evidence?"
+                  ],
+                  "checklist": [
+                    {
+                      "id": "check\r\n",
+                      "assert": "Keep\tbytes\n",
+                      "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                      "context": [
+                        "a.md"
+                      ],
+                      "origin": "test"
+                    }
+                  ],
+                  "dod": [
+                    {
+                      "cmd": "test -s evidence.txt"
+                    }
+                  ]
+                },
+                {
+                  "id": "second",
+                  "title": "Same name",
+                  "macro": "phase",
+                  "kind": "review",
+                  "instructions": "Review",
+                  "checklist": [
+                    {
+                      "id": "review",
+                      "judge": "Keep exact\n",
+                      "blocking": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "names": {
+              "first\n": "Same name",
+              "second": "Same name · second"
+            }
+          }
+        },
+        "nodeGroups": [
+          {
+            "id": "phase",
+            "name": "Phase",
+            "description": "Context\n",
+            "nodeIds": [
+              "first\n",
+              "second"
+            ]
+          }
+        ],
+        "active": true,
+        "activeVersionId": "00000000-0000-0000-0000-00005e1a0003",
+        "isArchived": false,
+        "id": "00000000-0000-0000-0000-00005e1a0001",
+        "createdAt": "2023-11-14T22:13:21.002000Z",
+        "updatedAt": "2023-11-14T22:13:33.014000Z",
+        "versionId": "00000000-0000-0000-0000-00005e1a0005",
+        "versionCounter": 3
+      }
+    ],
+    "checksums": {
+      "relay-tdd_feature": "f353baec42d4954da0b81f7e0357e8cc8f1c9b059499d1c571a5189282a3d482",
+      "00000000-0000-0000-0000-00005e1a0006": "fde55ee9d2d9cd0a6f9736316194b6971d4e6122dfb04315c27e81676d790047",
+      "00000000-0000-0000-0000-00005e1a0001": "9a8c236971eba7824e8054c4c46e3c766e832c1f02194673b677abf0250acba0"
+    },
+    "versions": {
+      "relay-tdd_feature": [
+        {
+          "name": "Relay · tdd_feature",
+          "nodes": [
+            {
+              "id": "relay-start",
+              "name": "Workflow start",
+              "type": "relay.startTrigger",
+              "typeVersion": 1,
+              "position": [
+                16,
+                240
+              ],
+              "parameters": {
+                "relayBrief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+                "relayRetryBudget": 3
+              }
+            },
+            {
+              "id": "implement.inject_context",
+              "name": "Inject context",
+              "type": "relay.inject",
+              "typeVersion": 1,
+              "position": [
+                240,
+                240
+              ],
+              "parameters": {
+                "title": "Inject context",
+                "macro": "implement",
+                "instructions": "Seed the task context",
+                "checklist": "[]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "Task: add a token-bucket rate limiter to the gateway.",
+                "file": ""
+              }
+            },
+            {
+              "id": "implement.write",
+              "name": "Write code (TDD)",
+              "type": "relay.execute",
+              "typeVersion": 1,
+              "position": [
+                464,
+                240
+              ],
+              "parameters": {
+                "title": "Write code (TDD)",
+                "macro": "implement",
+                "instructions": "Implement using the TDD skill",
+                "checklist": "[\n  {\n    \"id\": \"write-produced-a-change\",\n    \"assert\": \"this state changed something under the declared source or test paths\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "implement.checklist",
+              "name": "Implement gate",
+              "type": "relay.gate",
+              "typeVersion": 1,
+              "position": [
+                688,
+                240
+              ],
+              "parameters": {
+                "title": "Implement gate",
+                "macro": "implement",
+                "instructions": "Exit criteria for implementation",
+                "checklist": "[\n  {\n    \"id\": \"tests_written\",\n    \"assert\": \"tests_written\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"implementation_done\",\n    \"assert\": \"implementation_done\",\n    \"cmd\": \"git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"suite_green\",\n    \"assert\": \"suite_green\",\n    \"cmd\": \"${test_cmd}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "review.self_review",
+              "name": "Self review",
+              "type": "relay.review",
+              "typeVersion": 1,
+              "position": [
+                912,
+                240
+              ],
+              "parameters": {
+                "title": "Self review",
+                "macro": "review",
+                "instructions": "Review using the code-review protocol",
+                "checklist": "[\n  {\n    \"id\": \"review-is-substantive\",\n    \"assert\": \"the review artifact carries at least 50 words\",\n    \"cmd\": \"test \\\"$(wc -w < ${review_artifact})\\\" -ge 50\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  },\n  {\n    \"id\": \"review-engages-with-the-diff\",\n    \"context\": [\n      \"${review_artifact}\"\n    ],\n    \"judge\": \"Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.\",\n    \"diff\": true,\n    \"blocking\": true,\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "review.checklist",
+              "name": "Review gate",
+              "type": "relay.gate",
+              "typeVersion": 1,
+              "position": [
+                1136,
+                240
+              ],
+              "parameters": {
+                "title": "Review gate",
+                "macro": "review",
+                "instructions": "Exit criteria for review",
+                "checklist": "[\n  {\n    \"id\": \"review_done\",\n    \"assert\": \"review_done\",\n    \"cmd\": \"test -s ${review_artifact}\",\n    \"origin\": \"pe-profile:tdd_feature@1.0.0\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            }
+          ],
+          "connections": {
+            "Inject context": {
+              "main": [
+                [
+                  {
+                    "node": "Write code (TDD)",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Write code (TDD)": {
+              "main": [
+                [
+                  {
+                    "node": "Implement gate",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Implement gate": {
+              "main": [
+                [
+                  {
+                    "node": "Self review",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Self review": {
+              "main": [
+                [
+                  {
+                    "node": "Review gate",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Workflow start": {
+              "main": [
+                [
+                  {
+                    "node": "Inject context",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "tags": [],
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "workflow",
+              "sprint": {
+                "brief": "tdd_feature v1.0.0 — TDD feature workflow that injects reusable library skills/protocols",
+                "gen": 0,
+                "retry_budget": 3,
+                "macros": [
+                  {
+                    "id": "implement",
+                    "title": "Implement (TDD)"
+                  },
+                  {
+                    "id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "work_packages": [
+                  {
+                    "id": "implement.inject_context",
+                    "macro": "implement",
+                    "kind": "inject",
+                    "title": "Inject context",
+                    "instructions": "Seed the task context",
+                    "file": "",
+                    "text": "Task: add a token-bucket rate limiter to the gateway.",
+                    "checklist": []
+                  },
+                  {
+                    "id": "implement.write",
+                    "macro": "implement",
+                    "kind": "execute",
+                    "title": "Write code (TDD)",
+                    "instructions": "Implement using the TDD skill",
+                    "checklist": [
+                      {
+                        "id": "write-produced-a-change",
+                        "assert": "this state changed something under the declared source or test paths",
+                        "cmd": "git diff --name-only ${base_ref} -- ${src_path} ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} ${test_path} | grep -q .",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "implement.checklist",
+                    "macro": "implement",
+                    "kind": "gate",
+                    "title": "Implement gate",
+                    "instructions": "Exit criteria for implementation",
+                    "checklist": [
+                      {
+                        "id": "tests_written",
+                        "assert": "tests_written",
+                        "cmd": "git diff --name-only ${base_ref} -- ${test_path} | grep -q . || git ls-files --others --exclude-standard -- ${test_path} | grep -q .",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      },
+                      {
+                        "id": "implementation_done",
+                        "assert": "implementation_done",
+                        "cmd": "git diff --name-only ${base_ref} -- ${src_path} | grep -q . || git ls-files --others --exclude-standard -- ${src_path} | grep -q .",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      },
+                      {
+                        "id": "suite_green",
+                        "assert": "suite_green",
+                        "cmd": "${test_cmd}",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "review.self_review",
+                    "macro": "review",
+                    "kind": "review",
+                    "title": "Self review",
+                    "instructions": "Review using the code-review protocol",
+                    "checklist": [
+                      {
+                        "id": "review-is-substantive",
+                        "assert": "the review artifact carries at least 50 words",
+                        "cmd": "test \"$(wc -w < ${review_artifact})\" -ge 50",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      },
+                      {
+                        "id": "review-engages-with-the-diff",
+                        "context": [
+                          "${review_artifact}"
+                        ],
+                        "judge": "Does this review describe the specific change in the diff — the functions, behaviours and edge cases it introduces — and raise concrete concerns about it? FAIL if it approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.",
+                        "diff": true,
+                        "blocking": true,
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "review.checklist",
+                    "macro": "review",
+                    "kind": "gate",
+                    "title": "Review gate",
+                    "instructions": "Exit criteria for review",
+                    "checklist": [
+                      {
+                        "id": "review_done",
+                        "assert": "review_done",
+                        "cmd": "test -s ${review_artifact}",
+                        "origin": "pe-profile:tdd_feature@1.0.0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "names": {
+                "implement.inject_context": "Inject context",
+                "implement.write": "Write code (TDD)",
+                "implement.checklist": "Implement gate",
+                "review.self_review": "Self review",
+                "review.checklist": "Review gate"
+              }
+            }
+          },
+          "nodeGroups": [
+            {
+              "id": "implement",
+              "name": "Implement (TDD)",
+              "description": "",
+              "nodeIds": [
+                "implement.inject_context",
+                "implement.write",
+                "implement.checklist"
+              ]
+            },
+            {
+              "id": "review",
+              "name": "Review",
+              "description": "",
+              "nodeIds": [
+                "review.self_review",
+                "review.checklist"
+              ]
+            }
+          ],
+          "active": false,
+          "activeVersionId": null,
+          "isArchived": false,
+          "id": "relay-tdd_feature",
+          "createdAt": "2023-11-14T22:13:39.020000Z",
+          "updatedAt": "2023-11-14T22:13:41.022000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a0008",
+          "versionCounter": 1,
+          "workflowId": "relay-tdd_feature"
+        }
+      ],
+      "00000000-0000-0000-0000-00005e1a0006": [
+        {
+          "name": "Protect generated files",
+          "nodes": [
+            {
+              "id": "event",
+              "name": "Before edit",
+              "type": "relay.hookEventTrigger",
+              "position": [
+                0,
+                0
+              ],
+              "parameters": {
+                "operation": "edit",
+                "timing": "before"
+              }
+            },
+            {
+              "id": "condition",
+              "name": "Generated file?",
+              "type": "relay.hookCondition",
+              "position": [
+                224,
+                0
+              ],
+              "parameters": {
+                "field": "path",
+                "pattern": "src/generated/**"
+              }
+            },
+            {
+              "id": "block",
+              "name": "Block change",
+              "type": "relay.hookBlock",
+              "position": [
+                448,
+                0
+              ],
+              "parameters": {
+                "message": "Edit the source contract and regenerate."
+              }
+            },
+            {
+              "id": "record",
+              "name": "Record",
+              "type": "relay.hookRecord",
+              "position": [
+                448,
+                224
+              ],
+              "parameters": {
+                "message": "File is outside the generated tree."
+              }
+            }
+          ],
+          "connections": {
+            "Before edit": {
+              "main": [
+                [
+                  {
+                    "node": "Generated file?",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Generated file?": {
+              "main": [
+                [
+                  {
+                    "node": "Block change",
+                    "type": "main",
+                    "index": 0
+                  }
+                ],
+                [
+                  {
+                    "node": "Record",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "hook"
+            }
+          },
+          "tags": [],
+          "active": false,
+          "activeVersionId": null,
+          "isArchived": false,
+          "id": "00000000-0000-0000-0000-00005e1a0006",
+          "createdAt": "2023-11-14T22:13:35.016000Z",
+          "updatedAt": "2023-11-14T22:13:37.018000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a0007",
+          "versionCounter": 1,
+          "workflowId": "00000000-0000-0000-0000-00005e1a0006"
+        }
+      ],
+      "00000000-0000-0000-0000-00005e1a0001": [
+        {
+          "name": "Changed",
+          "nodes": [
+            {
+              "id": "relay-start",
+              "name": "Workflow start",
+              "type": "relay.startTrigger",
+              "typeVersion": 1,
+              "position": [
+                16,
+                240
+              ],
+              "parameters": {
+                "relayBrief": "Exact author intent\n",
+                "relayRetryBudget": 2
+              }
+            },
+            {
+              "id": "first\n",
+              "name": "Same name",
+              "type": "relay.execute",
+              "typeVersion": 1,
+              "position": [
+                240,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Do it\n\n",
+                "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "second",
+              "name": "Same name · second",
+              "type": "relay.review",
+              "typeVersion": 1,
+              "position": [
+                464,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Review",
+                "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            }
+          ],
+          "connections": {
+            "Same name": {
+              "main": [
+                [
+                  {
+                    "node": "Same name · second",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Workflow start": {
+              "main": [
+                [
+                  {
+                    "node": "Same name",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "tags": [
+            "00000000-0000-0000-0000-00005e1a0004"
+          ],
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "workflow",
+              "sprint": {
+                "brief": "Exact author intent\n",
+                "gen": 7,
+                "retry_budget": 2,
+                "extra": {
+                  "retained": true
+                },
+                "macros": [
+                  {
+                    "id": "phase",
+                    "title": "Phase",
+                    "instructions": "Context\n",
+                    "extra": 3
+                  }
+                ],
+                "work_packages": [
+                  {
+                    "id": "first\n",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "instructions": "Do it\n\n",
+                    "self_check": [
+                      "Evidence?"
+                    ],
+                    "checklist": [
+                      {
+                        "id": "check\r\n",
+                        "assert": "Keep\tbytes\n",
+                        "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                        "context": [
+                          "a.md"
+                        ],
+                        "origin": "test"
+                      }
+                    ],
+                    "dod": [
+                      {
+                        "cmd": "test -s evidence.txt"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "second",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "kind": "review",
+                    "instructions": "Review",
+                    "checklist": [
+                      {
+                        "id": "review",
+                        "judge": "Keep exact\n",
+                        "blocking": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "names": {
+                "first\n": "Same name",
+                "second": "Same name · second"
+              }
+            }
+          },
+          "nodeGroups": [
+            {
+              "id": "phase",
+              "name": "Phase",
+              "description": "Context\n",
+              "nodeIds": [
+                "first\n",
+                "second"
+              ]
+            }
+          ],
+          "active": true,
+          "activeVersionId": "00000000-0000-0000-0000-00005e1a0003",
+          "isArchived": false,
+          "id": "00000000-0000-0000-0000-00005e1a0001",
+          "createdAt": "2023-11-14T22:13:21.002000Z",
+          "updatedAt": "2023-11-14T22:13:33.014000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a0005",
+          "versionCounter": 3,
+          "workflowId": "00000000-0000-0000-0000-00005e1a0001"
+        },
+        {
+          "name": "Changed",
+          "nodes": [
+            {
+              "id": "relay-start",
+              "name": "Workflow start",
+              "type": "relay.startTrigger",
+              "typeVersion": 1,
+              "position": [
+                16,
+                240
+              ],
+              "parameters": {
+                "relayBrief": "Exact author intent\n",
+                "relayRetryBudget": 2
+              }
+            },
+            {
+              "id": "first\n",
+              "name": "Same name",
+              "type": "relay.execute",
+              "typeVersion": 1,
+              "position": [
+                240,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Do it\n\n",
+                "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "second",
+              "name": "Same name · second",
+              "type": "relay.review",
+              "typeVersion": 1,
+              "position": [
+                464,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Review",
+                "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            }
+          ],
+          "connections": {
+            "Same name": {
+              "main": [
+                [
+                  {
+                    "node": "Same name · second",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Workflow start": {
+              "main": [
+                [
+                  {
+                    "node": "Same name",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "tags": [],
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "workflow",
+              "sprint": {
+                "brief": "Exact author intent\n",
+                "gen": 7,
+                "retry_budget": 2,
+                "extra": {
+                  "retained": true
+                },
+                "macros": [
+                  {
+                    "id": "phase",
+                    "title": "Phase",
+                    "instructions": "Context\n",
+                    "extra": 3
+                  }
+                ],
+                "work_packages": [
+                  {
+                    "id": "first\n",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "instructions": "Do it\n\n",
+                    "self_check": [
+                      "Evidence?"
+                    ],
+                    "checklist": [
+                      {
+                        "id": "check\r\n",
+                        "assert": "Keep\tbytes\n",
+                        "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                        "context": [
+                          "a.md"
+                        ],
+                        "origin": "test"
+                      }
+                    ],
+                    "dod": [
+                      {
+                        "cmd": "test -s evidence.txt"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "second",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "kind": "review",
+                    "instructions": "Review",
+                    "checklist": [
+                      {
+                        "id": "review",
+                        "judge": "Keep exact\n",
+                        "blocking": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "names": {
+                "first\n": "Same name",
+                "second": "Same name · second"
+              }
+            }
+          },
+          "nodeGroups": [
+            {
+              "id": "phase",
+              "name": "Phase",
+              "description": "Context\n",
+              "nodeIds": [
+                "first\n",
+                "second"
+              ]
+            }
+          ],
+          "active": false,
+          "activeVersionId": null,
+          "isArchived": false,
+          "id": "00000000-0000-0000-0000-00005e1a0001",
+          "createdAt": "2023-11-14T22:13:21.002000Z",
+          "updatedAt": "2023-11-14T22:13:25.006000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a0003",
+          "versionCounter": 2,
+          "workflowId": "00000000-0000-0000-0000-00005e1a0001"
+        },
+        {
+          "name": "Title",
+          "nodes": [
+            {
+              "id": "relay-start",
+              "name": "Workflow start",
+              "type": "relay.startTrigger",
+              "typeVersion": 1,
+              "position": [
+                16,
+                240
+              ],
+              "parameters": {
+                "relayBrief": "Exact author intent\n",
+                "relayRetryBudget": 2
+              }
+            },
+            {
+              "id": "first\n",
+              "name": "Same name",
+              "type": "relay.execute",
+              "typeVersion": 1,
+              "position": [
+                240,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Do it\n\n",
+                "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "second",
+              "name": "Same name · second",
+              "type": "relay.review",
+              "typeVersion": 1,
+              "position": [
+                464,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Review",
+                "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            }
+          ],
+          "connections": {
+            "Same name": {
+              "main": [
+                [
+                  {
+                    "node": "Same name · second",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Workflow start": {
+              "main": [
+                [
+                  {
+                    "node": "Same name",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "tags": [],
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "workflow",
+              "sprint": {
+                "brief": "Exact author intent\n",
+                "gen": 7,
+                "retry_budget": 2,
+                "extra": {
+                  "retained": true
+                },
+                "macros": [
+                  {
+                    "id": "phase",
+                    "title": "Phase",
+                    "instructions": "Context\n",
+                    "extra": 3
+                  }
+                ],
+                "work_packages": [
+                  {
+                    "id": "first\n",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "instructions": "Do it\n\n",
+                    "self_check": [
+                      "Evidence?"
+                    ],
+                    "checklist": [
+                      {
+                        "id": "check\r\n",
+                        "assert": "Keep\tbytes\n",
+                        "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                        "context": [
+                          "a.md"
+                        ],
+                        "origin": "test"
+                      }
+                    ],
+                    "dod": [
+                      {
+                        "cmd": "test -s evidence.txt"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "second",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "kind": "review",
+                    "instructions": "Review",
+                    "checklist": [
+                      {
+                        "id": "review",
+                        "judge": "Keep exact\n",
+                        "blocking": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "names": {
+                "first\n": "Same name",
+                "second": "Same name · second"
+              }
+            }
+          },
+          "nodeGroups": [
+            {
+              "id": "phase",
+              "name": "Phase",
+              "description": "Context\n",
+              "nodeIds": [
+                "first\n",
+                "second"
+              ]
+            }
+          ],
+          "active": false,
+          "activeVersionId": null,
+          "isArchived": false,
+          "id": "00000000-0000-0000-0000-00005e1a0001",
+          "createdAt": "2023-11-14T22:13:21.002000Z",
+          "updatedAt": "2023-11-14T22:13:23.004000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a0002",
+          "versionCounter": 1,
+          "workflowId": "00000000-0000-0000-0000-00005e1a0001"
+        }
+      ]
+    },
+    "scopes": [
+      {
+        "id": "00000000-0000-0000-0000-00005e1a0004",
+        "name": "Review",
+        "description": "Review deliveries",
+        "createdAt": "2023-11-14T22:13:29.010000Z",
+        "updatedAt": "2023-11-14T22:13:31.012000Z"
+      }
+    ]
+  },
+  "workspace-b": {
+    "documents": [
+      {
+        "name": "Other workspace",
+        "nodes": [
+          {
+            "id": "relay-start",
+            "name": "Workflow start",
+            "type": "relay.startTrigger",
+            "typeVersion": 1,
+            "position": [
+              16,
+              240
+            ],
+            "parameters": {
+              "relayBrief": "Exact author intent\n",
+              "relayRetryBudget": 2
+            }
+          },
+          {
+            "id": "first\n",
+            "name": "Same name",
+            "type": "relay.execute",
+            "typeVersion": 1,
+            "position": [
+              240,
+              240
+            ],
+            "parameters": {
+              "title": "Same name",
+              "macro": "phase",
+              "instructions": "Do it\n\n",
+              "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          },
+          {
+            "id": "second",
+            "name": "Same name · second",
+            "type": "relay.review",
+            "typeVersion": 1,
+            "position": [
+              464,
+              240
+            ],
+            "parameters": {
+              "title": "Same name",
+              "macro": "phase",
+              "instructions": "Review",
+              "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+              "skill": "",
+              "skillMode": "combine",
+              "text": "",
+              "file": ""
+            }
+          }
+        ],
+        "connections": {
+          "Same name": {
+            "main": [
+              [
+                {
+                  "node": "Same name · second",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          },
+          "Workflow start": {
+            "main": [
+              [
+                {
+                  "node": "Same name",
+                  "type": "main",
+                  "index": 0
+                }
+              ]
+            ]
+          }
+        },
+        "tags": [],
+        "meta": {
+          "relay": {
+            "schema": 1,
+            "kind": "workflow",
+            "sprint": {
+              "brief": "Exact author intent\n",
+              "gen": 7,
+              "retry_budget": 2,
+              "extra": {
+                "retained": true
+              },
+              "macros": [
+                {
+                  "id": "phase",
+                  "title": "Phase",
+                  "instructions": "Context\n",
+                  "extra": 3
+                }
+              ],
+              "work_packages": [
+                {
+                  "id": "first\n",
+                  "title": "Same name",
+                  "macro": "phase",
+                  "instructions": "Do it\n\n",
+                  "self_check": [
+                    "Evidence?"
+                  ],
+                  "checklist": [
+                    {
+                      "id": "check\r\n",
+                      "assert": "Keep\tbytes\n",
+                      "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                      "context": [
+                        "a.md"
+                      ],
+                      "origin": "test"
+                    }
+                  ],
+                  "dod": [
+                    {
+                      "cmd": "test -s evidence.txt"
+                    }
+                  ]
+                },
+                {
+                  "id": "second",
+                  "title": "Same name",
+                  "macro": "phase",
+                  "kind": "review",
+                  "instructions": "Review",
+                  "checklist": [
+                    {
+                      "id": "review",
+                      "judge": "Keep exact\n",
+                      "blocking": true
+                    }
+                  ]
+                }
+              ]
+            },
+            "names": {
+              "first\n": "Same name",
+              "second": "Same name · second"
+            }
+          }
+        },
+        "nodeGroups": [
+          {
+            "id": "phase",
+            "name": "Phase",
+            "description": "Context\n",
+            "nodeIds": [
+              "first\n",
+              "second"
+            ]
+          }
+        ],
+        "active": false,
+        "activeVersionId": null,
+        "isArchived": false,
+        "id": "00000000-0000-0000-0000-00005e1a000b",
+        "createdAt": "2023-11-14T22:13:47.028000Z",
+        "updatedAt": "2023-11-14T22:13:49.030000Z",
+        "versionId": "00000000-0000-0000-0000-00005e1a000c",
+        "versionCounter": 1
+      }
+    ],
+    "checksums": {
+      "00000000-0000-0000-0000-00005e1a000b": "b4d9005feb10e92e3b0375996404c1728ab2b4e07c5e22c9480a8f0bcee96ea4"
+    },
+    "versions": {
+      "00000000-0000-0000-0000-00005e1a000b": [
+        {
+          "name": "Other workspace",
+          "nodes": [
+            {
+              "id": "relay-start",
+              "name": "Workflow start",
+              "type": "relay.startTrigger",
+              "typeVersion": 1,
+              "position": [
+                16,
+                240
+              ],
+              "parameters": {
+                "relayBrief": "Exact author intent\n",
+                "relayRetryBudget": 2
+              }
+            },
+            {
+              "id": "first\n",
+              "name": "Same name",
+              "type": "relay.execute",
+              "typeVersion": 1,
+              "position": [
+                240,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Do it\n\n",
+                "checklist": "[\n  {\n    \"id\": \"check\\r\\n\",\n    \"assert\": \"Keep\\tbytes\\n\",\n    \"cmd\": \"printf 'a\\\\tb\\\\n' > evidence.txt\\n\",\n    \"context\": [\n      \"a.md\"\n    ],\n    \"origin\": \"test\"\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            },
+            {
+              "id": "second",
+              "name": "Same name · second",
+              "type": "relay.review",
+              "typeVersion": 1,
+              "position": [
+                464,
+                240
+              ],
+              "parameters": {
+                "title": "Same name",
+                "macro": "phase",
+                "instructions": "Review",
+                "checklist": "[\n  {\n    \"id\": \"review\",\n    \"judge\": \"Keep exact\\n\",\n    \"blocking\": true\n  }\n]",
+                "skill": "",
+                "skillMode": "combine",
+                "text": "",
+                "file": ""
+              }
+            }
+          ],
+          "connections": {
+            "Same name": {
+              "main": [
+                [
+                  {
+                    "node": "Same name · second",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "Workflow start": {
+              "main": [
+                [
+                  {
+                    "node": "Same name",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          "tags": [],
+          "meta": {
+            "relay": {
+              "schema": 1,
+              "kind": "workflow",
+              "sprint": {
+                "brief": "Exact author intent\n",
+                "gen": 7,
+                "retry_budget": 2,
+                "extra": {
+                  "retained": true
+                },
+                "macros": [
+                  {
+                    "id": "phase",
+                    "title": "Phase",
+                    "instructions": "Context\n",
+                    "extra": 3
+                  }
+                ],
+                "work_packages": [
+                  {
+                    "id": "first\n",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "instructions": "Do it\n\n",
+                    "self_check": [
+                      "Evidence?"
+                    ],
+                    "checklist": [
+                      {
+                        "id": "check\r\n",
+                        "assert": "Keep\tbytes\n",
+                        "cmd": "printf 'a\\tb\\n' > evidence.txt\n",
+                        "context": [
+                          "a.md"
+                        ],
+                        "origin": "test"
+                      }
+                    ],
+                    "dod": [
+                      {
+                        "cmd": "test -s evidence.txt"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "second",
+                    "title": "Same name",
+                    "macro": "phase",
+                    "kind": "review",
+                    "instructions": "Review",
+                    "checklist": [
+                      {
+                        "id": "review",
+                        "judge": "Keep exact\n",
+                        "blocking": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "names": {
+                "first\n": "Same name",
+                "second": "Same name · second"
+              }
+            }
+          },
+          "nodeGroups": [
+            {
+              "id": "phase",
+              "name": "Phase",
+              "description": "Context\n",
+              "nodeIds": [
+                "first\n",
+                "second"
+              ]
+            }
+          ],
+          "active": false,
+          "activeVersionId": null,
+          "isArchived": false,
+          "id": "00000000-0000-0000-0000-00005e1a000b",
+          "createdAt": "2023-11-14T22:13:47.028000Z",
+          "updatedAt": "2023-11-14T22:13:49.030000Z",
+          "versionId": "00000000-0000-0000-0000-00005e1a000c",
+          "versionCounter": 1,
+          "workflowId": "00000000-0000-0000-0000-00005e1a000b"
+        }
+      ]
+    },
+    "scopes": []
+  },
+  "workspace-absent": {
+    "documents": [],
+    "checksums": {},
+    "versions": {},
+    "scopes": []
+  }
+}

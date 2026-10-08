@@ -1,12 +1,12 @@
 export * as OmniHost from "./omni-host"
 
 // Where the desktop's omni files are (D-L8), for the main process and for the server's utilityProcess, each with its
-// own supervisor. Only with OPENCODE_EXPERIMENTAL_OMNI_SPAWNER on; off, nothing here runs.
+// own supervisor. Only with ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER on; off, nothing here runs.
 
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { app } from "electron"
-import { Omni } from "@opencode-ai/core/omni"
+import { Omni } from "@orchestra/core/omni"
 import { DesktopOmni } from "./omni-process"
 
 export const ADDON = "hugr_omni.node"

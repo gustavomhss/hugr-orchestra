@@ -59,7 +59,7 @@ export type Interface = ChildProcessSpawner["Service"] & {
   ) => Stream.Stream<string, AppProcessError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/AppProcess") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/AppProcess") {}
 
 export const requireSuccess = (result: RunResult): Effect.Effect<RunResult, AppProcessError> =>
   result.exitCode === 0
@@ -142,10 +142,10 @@ export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutput
   ).pipe(Effect.map((x) => ({ buffer: Buffer.concat(x.chunks), truncated: x.truncated })))
 
 /**
- * AppProcess over the spawner in context, for a mode of OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: with omni on, run()
+ * AppProcess over the spawner in context, for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: with omni on, run()
  * collects through omni itself where it can (R2-1).
  */
-export const layerWith = (mode: typeof Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) => Layer.effect(
+export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) => Layer.effect(
   Service,
   Effect.gen(function* () {
     const spawner = yield* ChildProcessSpawner
@@ -309,7 +309,7 @@ export const layerWith = (mode: typeof Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER) 
 )
 
 // The flag is read once, when the layer is built.
-const layer = Layer.unwrap(Effect.sync(() => layerWith(Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER)))
+const layer = Layer.unwrap(Effect.sync(() => layerWith(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)))
 
 export const node = makeGlobalNode({ service: Service, layer: layer, deps: [CrossSpawnSpawner.node] })
 

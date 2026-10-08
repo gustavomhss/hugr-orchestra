@@ -5,8 +5,8 @@ import { createStore } from "solid-js/store"
 import { Ghostty, Terminal } from "ghostty-web"
 import { setOptionIfSupported } from "@/utils/runtime-adapters"
 import { createTerminalTheme } from "@/utils/terminal-theme"
-import { withAlpha } from "@opencode-ai/ui/theme/color"
-import type { DesktopTheme } from "@opencode-ai/ui/theme/types"
+import { withAlpha } from "@orchestra/ui/theme/color"
+import type { DesktopTheme } from "@orchestra/ui/theme/types"
 
 const owners: VoidFunction[] = []
 const style = document.createElement("style")

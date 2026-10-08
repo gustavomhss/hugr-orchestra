@@ -25,11 +25,11 @@ on:
       - "packages/core/src/pty.ts"
       - "packages/core/src/pty/**"
       - "packages/core/test/fixture/process-tree.ts"
-      - "packages/opencode/src/tool/shell.ts"
-      - "packages/opencode/src/session/prompt.ts"
-      - "packages/opencode/src/cli/cmd/debug/omni.ts"
-      - "packages/opencode/src/cli/omni-entry.ts"
-      - "packages/opencode/script/build.ts"
+      - "packages/orchestra/src/tool/shell.ts"
+      - "packages/orchestra/src/session/prompt.ts"
+      - "packages/orchestra/src/cli/cmd/debug/omni.ts"
+      - "packages/orchestra/src/cli/omni-entry.ts"
+      - "packages/orchestra/script/build.ts"
       - "packages/core/src/omni.ts"
 
 concurrency:
@@ -59,7 +59,7 @@ jobs:
       - uses: ./.github/actions/omni-binaries
       - name: Build the real shipped CLI
         id: build
-        working-directory: packages/opencode
+        working-directory: packages/orchestra
         run: |
           # --single takes the exact checkout binaries restored or built by omni-binaries.
           unset OMNI_ARTIFACTS

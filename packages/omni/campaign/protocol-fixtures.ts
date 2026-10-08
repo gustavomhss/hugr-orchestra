@@ -16,11 +16,11 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   const scratch = isolated(name, { plugin: [], ...config })
   // Do not inherit provider tokens, server credentials, npm/git auth, or a user configuration path.
   const env = Object.fromEntries(Object.entries(scratch.env).filter(([key]) =>
-    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|OPENCODE_.*)$/i.test(key),
+    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
   ))
-  Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", OPENCODE_DISABLE_DEFAULT_PLUGINS: "1" })
-  delete env.OPENCODE_SERVER_PASSWORD
-  delete env.OPENCODE_SERVER_USERNAME
+  Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
+  delete env.ORCHESTRA_SERVER_PASSWORD
+  delete env.ORCHESTRA_SERVER_USERNAME
   const resolved = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p", "process.execPath"], {
     env, encoding: "utf8", windowsHide: true, timeout: 10_000,
   })
@@ -39,7 +39,7 @@ export function evidence(scratch: Fixture) {
   }
   const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
   if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||
-    ["packages/opencode/src/lsp/client.ts", "packages/opencode/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
+    ["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
     baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
@@ -113,7 +113,7 @@ export function finalSweep(nonce: string) {
 export function api(url: string, directory: string) {
   return async <T = unknown>(method: string, route: string, body?: unknown, timeoutMs = 120_000): Promise<T> => {
     const response = await fetch(new URL(route, url), {
-      method, headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(directory) },
+      method, headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(directory) },
       body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs),
     })
     const text = await response.text()

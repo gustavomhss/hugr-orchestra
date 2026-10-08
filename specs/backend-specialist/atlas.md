@@ -91,7 +91,7 @@ Any deferred observation, checkpoint or learning proposal retains its originatin
 
 The foundation, not the backend specialist, resolves an installed Atlas implementation and owns its lifecycle. Every specialist and Maestro consumes that same capability. No runtime consumer imports `foundation/atlas` by relative path, reads `.atlas/*.jsonl` directly, or imports a developer-global Atlas checkout.
 
-The specialist consumes the native Atlas interface exposed by its owner. The earlier `@opencode-ai/atlas-boundary/memory` spelling is a historical packaging proposal, not a backend specialist requirement or an available-API claim. Missing exposure belongs to the provider owner. The thin adapter preserves package/runtime boundaries and does not create a private store or another persistence implementation.
+The specialist consumes the native Atlas interface exposed by its owner. The earlier `@orchestra/atlas-boundary/memory` spelling is a historical packaging proposal, not a backend specialist requirement or an available-API claim. Missing exposure belongs to the provider owner. The thin adapter preserves package/runtime boundaries and does not create a private store or another persistence implementation.
 
 Conceptual native surface:
 
@@ -172,7 +172,7 @@ The public V1 hook's `sessionID` is optional. Invocation without a real Session 
 
 The public V2 plugin context currently exposes agent/skill/command/etc. transforms but no generic System Context or tool-registration domain. The host integration must supply or extend a supported seam. A plugin descriptor alone is not proof that dynamic Atlas context or tools reach a provider request.
 
-Ordinary OpenCode compatibility must be versioned and exercised against its real installed loader. Any narrower host support is published explicitly. Native integration is not replaced with instructions telling the model to simulate an unavailable hook.
+Ordinary Orchestra compatibility must be versioned and exercised against its real installed loader. Any narrower host support is published explicitly. Native integration is not replaced with instructions telling the model to simulate an unavailable hook.
 
 ### V2 degraded-context state mapping
 
@@ -226,8 +226,8 @@ These observations come from an inspected source baseline, not new runtime test 
 | Memory/Orientation logs are rooted in a supplied repository path | `foundation/atlas/packages/adapter-io/src/memory-store.ts`, `orientation-store.ts` | Define project storage versus source-worktree binding and prove continuity across worktrees |
 | Awareness's current top tier is a taste source label or constitution count, and the composed `read()` uses non-drift-flagging `rollup`; other facets remain unseeded | `foundation/atlas/packages/adapter-io/src/awareness-store.ts`, `foundation/atlas/packages/memory/src/awareness.ts` | Produce substantive, source-backed facet content and freshness-aware assembly; preserve missing-source status |
 | Current Orientation missing-source fields are empty strings | `foundation/atlas/packages/memory/src/orient.ts` | Expose missing-source status rather than presenting empty or guessed milestones as current orientation |
-| Current grounded Own loader rejects incomplete coverage, dropped advisory and pull-reachable tails | `packages/opencode/src/maestro/atlas-source.ts` | Preserve full-current static Own admission for initial governed dispatch; any future drill consumption requires its own verified contract, not a fallback around this guard |
-| Native specialist profile currently denies `skill` and custom capabilities | `packages/opencode/src/maestro/roster.ts`, `session/tools.ts` | Grant only the implemented specialist/foundation capabilities through native policy |
+| Current grounded Own loader rejects incomplete coverage, dropped advisory and pull-reachable tails | `packages/orchestra/src/maestro/atlas-source.ts` | Preserve full-current static Own admission for initial governed dispatch; any future drill consumption requires its own verified contract, not a fallback around this guard |
+| Native specialist profile currently denies `skill` and custom capabilities | `packages/orchestra/src/maestro/roster.ts`, `session/tools.ts` | Grant only the implemented specialist/foundation capabilities through native policy |
 | V1/V2 plugin context seams differ | `packages/plugin/src/index.ts`, `v2/effect/context.ts` | Prove each claimed host integration independently |
 
 Some Atlas README sections and source headers still say the Memory doors have no callers. Current `compose.ts`, `wire.ts`, CLI dispatch and MCP `server-memory-tools.ts` contain those callers. Use the actual call chain to assess reachability.

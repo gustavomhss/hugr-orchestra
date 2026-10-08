@@ -1,4 +1,4 @@
-const registryKey = "__opencodeDockRefs"
+const registryKey = "__orchestraDockRefs"
 
 const registryExpr = (namespaceExpression = `window[${JSON.stringify(registryKey)}]?.namespace ?? 0`) => `(() => {
   const key = ${JSON.stringify(registryKey)}
@@ -57,7 +57,7 @@ export function buildSnapshotScript(options: SnapshotOptions = {}) {
   const geometry = mode === "full"
   const scanCap = Math.min(4000, budget * 6 + 60)
   return `(() => {
-  window.__opencodeDockRefNamespace = ${namespace}
+  window.__orchestraDockRefNamespace = ${namespace}
   if (window[${JSON.stringify(registryKey)}] && window[${JSON.stringify(registryKey)}].namespace !== ${namespace}) delete window[${JSON.stringify(registryKey)}]
   const registry = ${registryExpr(String(namespace))}
   const budget = ${budget}
@@ -520,7 +520,7 @@ export function buildClickAtProbeScript(x: number, y: number, expectedNamespace?
   const hidden = (node) => { for (let depth = 0; node && depth < 64; depth++) { const style = getComputedStyle(node); if (node.getAttribute?.("aria-hidden") === "true" || node.getAttribute?.("aria-disabled") === "true" || node.hasAttribute?.("hidden") || node.hasAttribute?.("inert") || node.inert === true || (node.tagName === "FIELDSET" && node.disabled === true) || style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0 || style.pointerEvents === "none") return true; const root = node.getRootNode?.(); node = node.parentElement || (root instanceof ShadowRoot ? root.host : null) } return false }
   if (hidden(el)) return { ok: false, error: "Element at coordinates is inert" }
   const ref = registry.refFor(el)
-  const key = "__opencodeDockClickProbe"
+  const key = "__orchestraDockClickProbe"
   const previous = window[key]
   if (previous?.cleanup) previous.cleanup()
   let fired = false
@@ -597,7 +597,7 @@ export function buildEvaluateScript(script: string) {
 export function buildNetworkScript(config: { blockUrls?: string[]; allowedOrigins?: string[]; blockMethods?: string[] }) {
   return `(async () => {
   const config = ${JSON.stringify(config)}
-  const marker = "__opencodeDockNetwork"
+  const marker = "__orchestraDockNetwork"
   const previous = window[marker]
   if (previous) {
     window.fetch = previous.fetch

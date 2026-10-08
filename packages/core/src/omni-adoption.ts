@@ -14,7 +14,7 @@ export type Policy = "never" | "tool"
  * still alive when the bash or shell tool's scope closes successfully; `never` stops it.
  */
 export class Service extends Context.Service<Service, { readonly sessionID: string; readonly policy: Policy }>()(
-  "@opencode/OmniAdoption",
+  "@orchestra/OmniAdoption",
 ) {}
 
 export type RegisterInput = { sessionID: string; title: string }
@@ -24,7 +24,7 @@ export interface Interface {
   readonly register: (child: Child, input: RegisterInput) => Effect.Effect<void>
 }
 
-export class Registry extends Context.Service<Registry, Interface>()("@opencode/OmniAdoptionRegistry") {}
+export class Registry extends Context.Service<Registry, Interface>()("@orchestra/OmniAdoptionRegistry") {}
 
 /** The registry until WP11: it adopts nothing and stops the child at once. */
 export const stub: Interface = {

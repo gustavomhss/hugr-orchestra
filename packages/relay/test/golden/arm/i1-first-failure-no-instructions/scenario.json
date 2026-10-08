@@ -1,0 +1,21 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "A",
+        "checklist": [
+          {
+            "id": "c1",
+            "cmd": "false"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {}
+  ]
+}

@@ -1,7 +1,7 @@
 export * as OmniSpawner from "./omni-spawner"
 
 // The Effect ChildProcessSpawner over hugr-omni (integration plan WP1: D-L1, D-L3..D-L6, D-L12, R2-1..R2-4, R2-17).
-// cross-spawn-spawner.ts builds it when OPENCODE_EXPERIMENTAL_OMNI_SPAWNER is 1 or strict and hands it the legacy
+// cross-spawn-spawner.ts builds it when ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER is 1 or strict and hands it the legacy
 // spawn function for what omni does not support: `1` delegates, `strict` refuses. A cmd.exe
 // shell runs through omni too, with Node's verbatim command line (WP8b).
 //
@@ -43,7 +43,7 @@ const HIGH_WATER = 8 * 1024 * 1024
  * visible line saying how many bytes were lost, then the stream goes on (the shell tool, R2-2). With backpressure a
  * gap cannot happen; this is the second line of defence. Read at spawn.
  */
-export const GapPolicy = Context.Reference<"fail" | "marker">("@opencode/OmniSpawner/GapPolicy", {
+export const GapPolicy = Context.Reference<"fail" | "marker">("@orchestra/OmniSpawner/GapPolicy", {
   defaultValue: () => "fail",
 })
 
@@ -72,7 +72,7 @@ export const make = Effect.fnUntraced(function* (input: {
       return yield* PlatformError.badArgument({
         module: "ChildProcess",
         method: "spawn",
-        description: `OPENCODE_EXPERIMENTAL_OMNI_SPAWNER=strict runs ${reason} nowhere: omni does not support it and strict never delegates to legacy (${describe(command)})`,
+        description: `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict runs ${reason} nowhere: omni does not support it and strict never delegates to legacy (${describe(command)})`,
       })
     Omni.count("delegations")
     yield* Effect.logDebug("omni delegation", { event: "omni.delegation", reason, command: describe(command) })

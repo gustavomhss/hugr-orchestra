@@ -14,7 +14,6 @@ const keys = new Set([
   "reference",
   "snapshot",
   "plugin",
-  "autoshare",
   "disabled_providers",
   "enabled_providers",
   "small_model",
@@ -39,8 +38,6 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     model: info.model,
     default_agent: info.default_agent,
     autoupdate: info.autoupdate,
-    share: info.share ?? (info.autoshare ? "auto" : undefined),
-    enterprise: info.enterprise,
     username: info.username,
     permissions: permissions(info.permission, info.tools),
     agents: agents(info),
@@ -67,6 +64,7 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
       typeof plugin === "string" ? plugin : { package: plugin[0], options: plugin[1] },
     ),
     experimental: info.experimental?.policies && { policies: info.experimental.policies },
+    relay: info.relay,
     providers: providers(info.provider),
   }
 }

@@ -3,7 +3,7 @@ export * as Pty from "./pty"
 import { makeLocationNode } from "./effect/app-node"
 import type { Disp, Proc } from "#pty"
 import { Context, Effect, Exit, Layer, Option, Schema, Types } from "effect"
-import { Pty } from "@opencode-ai/schema/pty"
+import { Pty } from "@orchestra/schema/pty"
 import { Config } from "./config"
 import { EventV2 } from "./event"
 import { Flag } from "./flag/flag"
@@ -103,7 +103,7 @@ export interface Interface {
   readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError | ExitedError>
 }
 
-export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Pty") {}
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Pty") {}
 
 const layer = Layer.effect(
   Service,
@@ -216,7 +216,7 @@ const layer = Layer.effect(
         ...process.env,
         ...input.env,
         TERM: "xterm-256color",
-        OPENCODE_TERMINAL: "1",
+        ORCHESTRA_TERMINAL: "1",
       } as Record<string, string>
       if (process.platform === "win32") {
         env.LC_ALL = "C.UTF-8"
@@ -228,7 +228,7 @@ const layer = Layer.effect(
         ...(input.cols === undefined ? {} : { cols: clampSize(input.cols) }),
         ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),
       }
-      const backend = Flag.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
+      const backend = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
       yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd, backend })
       const omni =
         backend === "omni"

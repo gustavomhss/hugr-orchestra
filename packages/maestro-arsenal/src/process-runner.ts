@@ -1,4 +1,4 @@
-// The process-runner injection point (integration plan §7). Arsenal cannot depend on @opencode-ai/core (core depends
+// The process-runner injection point (integration plan §7). Arsenal cannot depend on @orchestra/core (core depends
 // on arsenal), so the host injects how processes run: core installs its omni runner when it loads arsenal and the omni
 // flag is on. With nothing injected, arsenal keeps its own Bun.spawn path.
 

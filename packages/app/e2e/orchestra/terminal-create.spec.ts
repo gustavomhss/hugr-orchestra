@@ -1,6 +1,6 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 import { expectSessionTitle } from "../utils/waits"
 
 const directory = "/work/terminal-create"
@@ -165,7 +165,7 @@ async function setup(page: Page, protocol: "v1" | "v2", respond: (route: Route, 
   const connections: string[] = []
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     protocol,
     directory,
     project: {
@@ -218,14 +218,14 @@ async function setup(page: Page, protocol: "v1" | "v2", respond: (route: Route, 
         JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           projects: { local: [{ worktree: directory, expanded: true }] },
           lastProject: { local: directory },
         }),
       )
       localStorage.setItem(
-        "opencode.window.browser.dat:tabs",
+        "orchestra.window.browser.dat:tabs",
         JSON.stringify([{ type: "session", server, sessionId: sessionID }]),
       )
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))

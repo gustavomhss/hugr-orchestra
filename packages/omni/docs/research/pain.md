@@ -133,9 +133,9 @@ Selection rule (deterministic): among counted issues, take the one with the high
 | 4 | [openai/codex#40752](https://github.com/openai/codex/issues/40752) | C4 | open | 87 | Windows 11 x64 | Windows desktop app fails to start after update: bundled binary not found, then `spawn EINVAL` when CODEX_CLI_PATH points at the npm `codex.cmd` shim. |
 | 5 | [cline/cline#3445](https://github.com/cline/cline/issues/3445) | C5 | closed | 103 | macOS client to Ubuntu 24.04 remote | Terminal output capture fails after upgrade (shell integration over a remote SSH host); commands run but output is not seen. |
 | 6 | [cline/cline#1404](https://github.com/cline/cline/issues/1404) | C6 | closed | 31 | macOS 15.3 | Cline hangs after command execution; first command runs, second hangs every time, only workaround is closing the terminal. |
-| 7 | [anomalyco/opencode#2242](https://github.com/anomalyco/opencode/issues/2242) | C7 | open | 94 | macOS referenced (seatbelt); OS not stated | Asks how to confine terminal commands of the agent to the project directory; notes Gemini CLI and Codex use macOS seatbelt and opencode has no equivalent. |
+| 7 | [anomalyco/opencode#2242](https://github.com/anomalyco/opencode/issues/2242) | C7 | open | 94 | macOS referenced (seatbelt); OS not stated | Asks how to confine terminal commands of the agent to the project directory; notes Gemini CLI and Codex use macOS seatbelt and orchestra has no equivalent. |
 | 8 | [microsoft/autogen#7462](https://github.com/microsoft/autogen/issues/7462) | C7 | open | 19 | OS not stated | LocalCommandLineCodeExecutor runs LLM-generated code as a host subprocess with no sandboxing, filesystem isolation or network restriction. |
-| 9 | [anomalyco/opencode#2447](https://github.com/anomalyco/opencode/issues/2447) | C4 | closed | 17 | Windows (PowerShell, Git Bash) | npm-installed `opencode` fails on Windows: the generated .ps1 wrapper calls `/bin/sh.exe`, and Git Bash cannot execute the Unix shell script. |
+| 9 | [anomalyco/opencode#2447](https://github.com/anomalyco/opencode/issues/2447) | C4 | closed | 17 | Windows (PowerShell, Git Bash) | npm-installed `orchestra` fails on Windows: the generated .ps1 wrapper calls `/bin/sh.exe`, and Git Bash cannot execute the Unix shell script. |
 | 10 | [OpenHands/OpenHands#6218](https://github.com/OpenHands/OpenHands/issues/6218) | C6 | closed | 16 | macOS | Commands in the OpenHands terminal are executed with long delay and hit the 120 s timeout, then the agent loops. |
 
 ## 6. Pipeline: from raw hits to counted
@@ -175,9 +175,9 @@ Many counted issues are repeated reports of one defect. Text-signature clusters 
 | Windows sandbox `CreateProcessAsUserW/WithLogonW failed` | 33 | codex 33 |
 | aider `NoConsoleScreenBufferError` / `No Windows console found` | 10 | aider 10 |
 | Windows `taskkill.exe`/`conhost.exe` storms | 20 | codex 20 |
-| `spawn npx/npm/uvx/powershell.exe ENOENT` | 16 | cline 9, continue 5, opencode 2 |
+| `spawn npx/npm/uvx/powershell.exe ENOENT` | 16 | cline 9, continue 5, orchestra 2 |
 | aider `pty_spawn.py` TypeError | 4 | aider 4 |
-| PTY master (`ptmx`) leak | 11 | gemini-cli 8, codex 2, opencode 1 |
+| PTY master (`ptmx`) leak | 11 | gemini-cli 8, codex 2, orchestra 1 |
 
 The union of these signatures covers 218 counted issues (Rust 129, TypeScript 75, Python 14). If each signature were collapsed to a single issue the total would be about **1386** instead of 1592, and every ecosystem and every category would still have counted issues (distinct-root-cause sensitivity, lower bound).
 
@@ -210,7 +210,7 @@ Query cap (`--limit 100`): queries that returned exactly 100 results (so results
 
 ## 9. Method limits
 
-- **Cap and ranking.** Every query returns at most the 100 best-matching issues; 109 of 650 queries were capped (codex 41/65, opencode 27/65, gemini-cli 20/65). Large trackers are therefore undercounted more than small ones, and counts across repos are not comparable as rates.
+- **Cap and ranking.** Every query returns at most the 100 best-matching issues; 109 of 650 queries were capped (codex 41/65, orchestra 27/65, gemini-cli 20/65). Large trackers are therefore undercounted more than small ones, and counts across repos are not comparable as rates.
 - **Not rates.** Counts are numbers of issues, not users affected, severity or frequency; trackers differ in size, age, template and triage culture (openai/codex alone is 49% of all counted issues; its tracker covers the desktop app as well as the CLI; 321 of its 786 counted issues are C7 sandbox failures of that product's own sandbox).
 - **Single reader.** Classification was done by one reader, from the first message of the issue, with no second rater; U/O handling reduces false positives but the boundaries between categories (notably C3 vs C5 for 'cannot read terminal output', C4 vs C7 for Windows sandbox launch errors, C1 vs C2 for leaked process trees) are judgment calls. Repeated reports of one defect are counted separately (section 7).
 - **Unread tail.** Stage 1 dropped 4148 hits and Tier 3 (1533) was not read; the audit (section 6) estimates 6 to 9% additional counted-type issues in Tier 3. Comments after the first message were never read.
@@ -218,7 +218,7 @@ Query cap (`--limit 100`): queries that returned exactly 100 results (so results
 - **Extras.** claude-code was queried but excluded (section 1); the ProcessKit repos have too few issues to count. Ecosystem labels follow the implementation language of each repository.
 - **Python is the thinnest sample** (104 counted over 4 repos; OpenHands and SWE-agent execute commands in Docker containers by default), and 24 of the 104 come from the two extras.
 - **Category definitions are mine** (the brief gives short labels); in particular C7 counts sandbox failures and requests, not only cross-platform sandbox abstractions, and C4 includes some non-Windows spawn/shell-dialect problems (97% of C4 issues still mention Windows).
-- **Snapshot.** Issues are read as of 2026-10-01; later edits or issue deletions are not reflected. Issue dates run up to 2026-09/10, so numbers for recent products (codex desktop, opencode v2) include very recent reports.
+- **Snapshot.** Issues are read as of 2026-10-01; later edits or issue deletions are not reflected. Issue dates run up to 2026-09/10, so numbers for recent products (codex desktop, orchestra v2) include very recent reports.
 
 ## Appendix A. Full list of queries
 
@@ -236,7 +236,7 @@ Category the query was designed for -> terms:
 
 Results returned per query and repo (`*` = 100, capped):
 
-| Cat | Terms | gemini-cli | cline | opencode | continue | aider | OpenHands | codex | goose | SWE-agent | autogen |
+| Cat | Terms | gemini-cli | cline | orchestra | continue | aider | OpenHands | codex | goose | SWE-agent | autogen |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | C1 | `orphan` | 53 | 49 | 100* | 4 | 3 | 24 | 100* | 23 | 1 | 7 |
 | C1 | `orphaned process` | 25 | 34 | 100* | 0 | 0 | 9 | 100* | 9 | 1 | 2 |
@@ -409,6 +409,6 @@ Issue numbers (open and closed) per repo and primary category; open issues are w
 
 ## Lead verification (2026-10-01)
 
-- **Raw hits reproduced 9/9** (`orphan`, `"spawn ENOENT"`, `conpty` × cline, opencode, codex): 49/100*/100*, 0/12/7, 5/34/68, identical to Appendix A.
-- **Classification spot-check, 5 sampled counted issues:** 3 clearly in category (gemini-cli #15873 orphaned process; codex #11278 orphaned app-server; opencode #6703 is a Windows-shell request, plausible for C4), 2 loose (gemini-cli #22612 is children dying under Bun, not a failed stop; aider #1244 is a Windows console error in the agent's own UI, not a PTY of an executed command).
+- **Raw hits reproduced 9/9** (`orphan`, `"spawn ENOENT"`, `conpty` × cline, orchestra, codex): 49/100*/100*, 0/12/7, 5/34/68, identical to Appendix A.
+- **Classification spot-check, 5 sampled counted issues:** 3 clearly in category (gemini-cli #15873 orphaned process; codex #11278 orphaned app-server; orchestra #6703 is a Windows-shell request, plausible for C4), 2 loose (gemini-cli #22612 is children dying under Bun, not a failed stop; aider #1244 is a Windows console error in the agent's own UI, not a PTY of an executed command).
 - **Reading for the G0:** pain exists in all three ecosystems and the Windows share is high, but the counts are an **upper bound** that tracks tracker size (openai/codex is 49% of the total) — use them as direction, not as a measure.

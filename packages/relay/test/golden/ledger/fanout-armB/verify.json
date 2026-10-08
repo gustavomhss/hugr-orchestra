@@ -1,0 +1,42 @@
+{
+  "ledger": "test/fixtures/fanout-armB.ledger.jsonl",
+  "chain_intact": true,
+  "chain_detail": "LEDGER INTACT — 9 chained entries [PLAIN (SHA-256)], chain head eecd96397e59…\n  (3 checklist-item verdicts on the chain)\n  NOTE: plain mode is tamper-evident, not unforgeable. Set RELAY_LEDGER_KEY for an adversary-resistant (keyed) chain.",
+  "record_errors": [],
+  "controls": [
+    {
+      "id": "armB-c1",
+      "assert": "armB_x.txt says X",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "armB-c2",
+      "assert": "armB_y.txt says Y",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    },
+    {
+      "id": "armB-c3",
+      "assert": "armB_z.txt says Z",
+      "verdict": "pass",
+      "graded_by": "deterministic"
+    }
+  ],
+  "deterministic_total": 3,
+  "deterministic_passed": 3,
+  "advisory": 0,
+  "last_event": "sprint-complete",
+  "truncated": false,
+  "laundered_controls": [],
+  "oracle_drift": [],
+  "oracle_recheck": {
+    "status": "not-run",
+    "items": [],
+    "note": "Recorded controls only; no current sprint comparison. Pass --sprint to compare."
+  },
+  "no_controls": false,
+  "escalated": false,
+  "result": "PASS",
+  "exit": 0
+}

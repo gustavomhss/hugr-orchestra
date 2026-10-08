@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/diverged-judge-paths/input/run",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

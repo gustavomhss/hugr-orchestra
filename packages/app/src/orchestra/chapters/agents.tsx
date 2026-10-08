@@ -1,8 +1,8 @@
 import { createEffect, createMemo, For, Show } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useQuery, useQueryClient } from "@tanstack/solid-query"
-import type { Agent, AgentFileInput } from "@opencode-ai/sdk/v2/client"
-import { getFilename } from "@opencode-ai/core/util/path"
+import type { Agent, AgentFileInput } from "@orchestra/sdk/v2/client"
+import { getFilename } from "@orchestra/core/util/path"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
@@ -96,7 +96,7 @@ export default function Agents(props: ChapterPageProps) {
     return true
   }
 
-  // Agent files live in `<profile>/.opencode/agent`; the server reloads its V2 agents after a write.
+  // Agent files live in `<profile>/.orchestra/agent`; the server reloads its V2 agents after a write.
   const load = async (name: string) => {
     const result = await legacy()
       .v2.agent.file.get({ agentID: name, location: { directory: props.directory } })

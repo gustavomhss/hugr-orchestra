@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readdir } from "node:fs/promises"
 import path from "node:path"
-import { nordTheme } from "@opencode-ai/ui/theme/default-themes"
+import { nordTheme } from "@orchestra/ui/theme/default-themes"
 import { PALETTES, recolors } from "./catalog"
 import { parseColor, toLch } from "./color"
 import { convertTheme } from "./convert"

@@ -97,8 +97,8 @@ setInterval(() => {}, 1e9);
           initialization: { disableAutomaticTypingAcquisition: true, tsserver: { path: path.join(ts, "lib/tsserver.js") } } },
       },
     }
-    scratch.env.OPENCODE_CONFIG_CONTENT = JSON.stringify(config)
-    if (options.mutation) scratch.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER = "0"
+    scratch.env.ORCHESTRA_CONFIG_CONTENT = JSON.stringify(config)
+    if (options.mutation) scratch.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
     const host = await start(scratch)
     const call = api(host.url, scratch.project)
     const session = await call<{ id: string }>("POST", "/session", {}, 120_000)

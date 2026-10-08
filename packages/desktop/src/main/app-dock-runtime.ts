@@ -1,6 +1,6 @@
 export * as AppDockRuntime from "./app-dock-runtime"
 
-import type { LinuxApp, LinuxState } from "@opencode-ai/app/app-dock-linux"
+import type { LinuxApp, LinuxState } from "@orchestra/app/app-dock-linux"
 import { spawn } from "node:child_process"
 import { randomBytes, randomUUID, X509Certificate } from "node:crypto"
 import { mkdir, rename, stat, writeFile } from "node:fs/promises"

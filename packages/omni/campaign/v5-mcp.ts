@@ -13,7 +13,7 @@ export async function run(options: { mutation?: "legacy" } = {}) {
   const metrics: Record<string, unknown> = {}
   let pass = false
   let error: string | undefined
-  if (options.mutation === "legacy") scratch.env.OPENCODE_EXPERIMENTAL_OMNI_SPAWNER = "0"
+  if (options.mutation === "legacy") scratch.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
   try {
     processTable()
     const server = await start(scratch)

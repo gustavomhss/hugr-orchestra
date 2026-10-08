@@ -5,7 +5,7 @@ import util from "node:util"
 import { DesktopOmni } from "./omni-process"
 
 const legacyExecFile = util.promisify(execFile)
-// Behind OPENCODE_EXPERIMENTAL_OMNI_SPAWNER the lookups run through omni; legacy stays the default.
+// Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the lookups run through omni; legacy stays the default.
 const execFilePromise = (file: string, args: string[]) =>
   DesktopOmni.enabled() ? DesktopOmni.execFile(file, args) : legacyExecFile(file, args)
 

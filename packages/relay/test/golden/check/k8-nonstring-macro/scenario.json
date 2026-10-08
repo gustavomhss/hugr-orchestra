@@ -1,0 +1,25 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "current",
+        "instructions": "do current",
+        "checklist": [
+          {
+            "id": "SIDE-EFFECT",
+            "cmd": "touch ran"
+          }
+        ],
+        "macro": false
+      }
+    ]
+  },
+  "prestate": {
+    "counter": "0"
+  },
+  "fires": [
+    {
+      "check": {}
+    }
+  ]
+}

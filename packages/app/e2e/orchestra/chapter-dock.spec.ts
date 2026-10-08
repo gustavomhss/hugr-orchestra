@@ -1,6 +1,6 @@
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { base64Encode } from "@orchestra/core/util/encode"
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { mockOpenCodeServer } from "../utils/mock-server"
+import { mockOrchestraServer } from "../utils/mock-server"
 
 const serverA = "http://127.0.0.1:4096"
 const serverB = "http://127.0.0.1:4097"
@@ -334,7 +334,7 @@ async function chooseProfile(page: Page, name: string) {
 }
 
 async function setup(page: Page, options: { bridge: boolean | "partial"; session: boolean; legacy?: boolean }) {
-  await mockOpenCodeServer(page, {
+  await mockOrchestraServer(page, {
     directory,
     project: {
       id: "project-a",
@@ -372,7 +372,7 @@ async function setup(page: Page, options: { bridge: boolean | "partial"; session
       )
       if (legacy) localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.17.20" }))
       localStorage.setItem(
-        "opencode.global.dat:server",
+        "orchestra.global.dat:server",
         JSON.stringify({
           list: [serverA, serverB],
           projects: {
@@ -385,11 +385,11 @@ async function setup(page: Page, options: { bridge: boolean | "partial"; session
       )
       if (session)
         localStorage.setItem(
-          "opencode.window.browser.dat:tabs",
+          "orchestra.window.browser.dat:tabs",
           JSON.stringify([{ type: "session", server: serverA, sessionId: sessionID }]),
         )
-      localStorage.setItem("opencode-theme-id", "oc-2")
-      localStorage.setItem("opencode-color-scheme", "dark")
+      localStorage.setItem("orchestra-theme-id", "oc-2")
+      localStorage.setItem("orchestra-color-scheme", "dark")
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     },
     { serverA, serverB, directory, sessionID, session: options.session, legacy: !!options.legacy },

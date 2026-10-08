@@ -1,11 +1,11 @@
 // V8 must execute on Windows; importing/run() on macOS reports unrun, never Windows green.
-// CI wrapper in opencode/test: import { run } from '../../omni/campaign/v8-windows.ts'; expect((await run()).pass).toBe(true)
+// CI wrapper in orchestra/test: import { run } from '../../omni/campaign/v8-windows.ts'; expect((await run()).pass).toBe(true)
 // Run alongside util/process.test.ts: the preload's process-local control cannot see this harness's child counters.
-// The wrapper belongs in opencode/test and is deliberately outside this work package's write-set.
+// The wrapper belongs in orchestra/test and is deliberately outside this work package's write-set.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import type { OmniProc } from "../../core/src/pty/omni.ts"
-import { BUN, OPENCODE, ROOT, cleanup, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
+import { BUN, ORCHESTRA, ROOT, cleanup, fileTree, isolated, kill9, remaining, supervised, until, win } from "./lib.ts"
 import { appRuntime, authorized, deliveryEnv, effectModules, evidence, execute, record, startServer } from "./delivery-fixtures.ts"
 
 type Cell = { name: string; pass: boolean; [key: string]: unknown }
@@ -20,7 +20,7 @@ export async function run() {
   const descriptor = path.join(scratch.home, "conpty-fixture.json")
   writeFileSync(descriptor, JSON.stringify(tree))
   try {
-    const env = { ...deliveryEnv(scratch.env), OPENCODE_EXPERIMENTAL_OMNI_SPAWNER: "1",
+    const env = { ...deliveryEnv(scratch.env), ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1",
       ...(process.env.HUGR_OMNI_ADDON ? { HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON } : {}),
       ...(process.env.HUGR_OMNI_SUPERVISOR ? { HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR } : {}),
     }
@@ -44,14 +44,14 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
   const tree = fileTree(scratch.home, 1)
   const hosts: Awaited<ReturnType<typeof startServer>>[] = []
   try {
-    const server = await startServer(BUN, [path.join(OPENCODE, "src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
-      ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify({ shell: "powershell.exe", formatter: false, lsp: false, plugin: [],
+    const server = await startServer(BUN, [path.join(ORCHESTRA, "src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
+      ...env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ shell: "powershell.exe", formatter: false, lsp: false, plugin: [],
         permission: { "*": "allow" }, share: "disabled" }),
     }, scratch.project)
     hosts.push(server)
     const post = async (route: string, body: unknown) => {
       const response = await fetch(new URL(route, server.url), { method: "POST", signal: AbortSignal.timeout(15_000),
-        headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(scratch.project) },
+        headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(scratch.project) },
         body: JSON.stringify(body) })
       if (!response.ok) throw new Error(`PowerShell bash ${route}: ${response.status} ${await response.text()}`)
       return response.json()
@@ -59,7 +59,7 @@ async function powershellBash(scratch: ReturnType<typeof isolated>, env: Record<
     const session = await post("/session", {}) as { id: string }
     const pending = fetch(new URL(`/session/${session.id}/shell`, server.url), {
       method: "POST", signal: AbortSignal.timeout(45_000),
-      headers: { "content-type": "application/json", "x-opencode-directory": encodeURIComponent(scratch.project) },
+      headers: { "content-type": "application/json", "x-orchestra-directory": encodeURIComponent(scratch.project) },
       body: JSON.stringify({ agent: "maestro", model: { providerID: "test", modelID: "test-model" }, command: `& ${tree.line}` }),
     }).then(async (response) => ({ status: response.status, text: await response.text() }),
       (error: unknown) => ({ status: 0, text: String(error) }))
