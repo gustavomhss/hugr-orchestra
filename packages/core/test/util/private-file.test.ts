@@ -101,6 +101,10 @@ test("real Node runtime protects normal and broad files and propagates native ba
       if (operation === "create") await writeFile(filename, "node fixture-only", { mode: 0o644 });
       strict.equal((await lstat(filename)).isFile(), true);
       if (operation === "failure") {
+        if (process.platform === "win32") {
+          strict.ok(process.env.ORCHESTRA_NODE_PRIVATE_BAD_ROOT);
+          process.env.SystemRoot = process.env.ORCHESTRA_NODE_PRIVATE_BAD_ROOT;
+        }
         await strict.rejects(() => PrivateFile.protect(filename), (error) => {
           strict.match(error.message, /^PrivateFile.protect failed/);
           strict.equal(error.cause.code, process.platform === "win32" ? "ENOENT" : "EPERM");
@@ -132,8 +136,8 @@ test("real Node runtime protects normal and broad files and propagates native ba
   await run(broad, "protect")
   await assertPrivateFile(broad)
   if (process.platform === "win32") {
-    // Child-only environment fault: real Node execFile must report native ENOENT.
-    await run(broad, "failure", { ...process.env, SystemRoot: join(root, "unavailable-windows-backend") })
+    // Node needs the real SystemRoot during crypto startup; fault only after boot.
+    await run(broad, "failure", { ...process.env, ORCHESTRA_NODE_PRIVATE_BAD_ROOT: join(root, "unavailable-windows-backend") })
   }
   if (process.platform === "linux") {
     await using failure = await preventNativeProtection(broad)
