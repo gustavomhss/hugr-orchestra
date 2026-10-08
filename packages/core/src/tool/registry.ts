@@ -42,6 +42,11 @@ export interface Materialization {
   readonly definitions: ReadonlyArray<ToolDefinition>
   /** Captured eligible metadata, including unadvertised tools; not execution authorization. */
   readonly definition: (name: string) => ToolDefinition | undefined
+  /** Host-only captured registration token, including unadvertised eligible tools.
+   * Metadata, not authorization or a current-liveness query. Callers must compare against
+   * the authoritative current materialization and generations.
+   */
+  readonly registrationIdentity: (name: string) => object | undefined
   readonly settle: (input: ExecuteInput) => Effect.Effect<Settlement, ToolOutputStore.Error>
 }
 
@@ -212,6 +217,7 @@ const registryLayer = Layer.effect(
             advertised === undefined || advertised.has(definition.name),
           ),
           definition: (name) => definitions.get(name),
+          registrationIdentity: (name) => registrations.get(name)?.identity,
           settle: (input) => {
             const registration = registrations.get(input.call.name)
             if (registration) return settleWith(input, registration.identity)
