@@ -47,7 +47,7 @@ export function fingerprint(message: SessionV1.WithParts) {
     user: info.role === "user" ? { system: info.system } : undefined,
     assistant: info.role === "assistant" ? { parentID: info.parentID, finish: info.finish, error: info.error, providerID: info.providerID, modelID: info.modelID,
       completed: info.time.completed !== undefined, summary: info.summary, structured: info.structured, agent: info.agent, mode: info.mode } : undefined,
-    parts: message.parts.filter((part) => !["step-start", "step-finish"].includes(part.type)).map(semanticPart) }
+    parts: message.parts.map(semanticPart) }
   return createHash("sha256").update(JSON.stringify(data, (_key, value) => value && typeof value === "object" && !Array.isArray(value)
     ? Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right))) : value)).digest("hex")
 }
@@ -60,6 +60,8 @@ function metadata(value: unknown, read = false) {
 
 export function semanticPart(part: SessionV1.Part): unknown {
   const base = { id: part.id, type: part.type, sessionID: part.sessionID, messageID: part.messageID }
+  if (part.type === "step-start") return { ...base, snapshot: part.snapshot }
+  if (part.type === "step-finish") return { ...base, snapshot: part.snapshot, reason: part.reason }
   if (part.type === "tool") {
     const state = part.state
     return { ...base, callID: part.callID, tool: part.tool, callMetadata: metadata(part.metadata), status: state.status, input: state.input,
