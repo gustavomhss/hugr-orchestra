@@ -8,7 +8,7 @@ export function details(text: string, env: NodeJS.ProcessEnv = process.env) {
   const normalized = stripVTControlCharacters(text)
   if (OutputInspector.reason(text) || OutputInspector.reason(normalized)) return
   // These repository settings are boolean policy switches, not credential material (tests set the value to "0").
-  if (Object.entries(env).some(([key, value]) => value && !/^(?:ORCHESTRA|OPENCODE)_INHERIT_CREDENTIALS$/i.test(key) &&
+  if (Object.entries(env).some(([key, value]) => value && !/^ORCHESTRA_INHERIT_CREDENTIALS$/i.test(key) &&
     /(?:^|_)(?:SECRET|TOKEN|PASSWORD|CREDENTIALS?|AUTH|(?:API|ACCESS|PRIVATE|CLIENT)_KEY)$/i.test(key) &&
     (text.includes(value) || normalized.includes(stripVTControlCharacters(value))))) return
   return normalized.slice(-4096).trim()
