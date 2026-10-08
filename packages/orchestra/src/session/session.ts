@@ -3,6 +3,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Slug } from "@orchestra/core/util/slug"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
+import { PromptHost } from "./prompt-host"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import path from "path"
 import { BackgroundJob } from "@/background/job"
@@ -654,21 +655,7 @@ const layer: Layer.Layer<
     })
 
     const reconcilePrompt: Interface["reconcilePrompt"] = (input) => PromptAdmission.reconcile(db, input)
-    const admitPrompt: Interface["admitPrompt"] = Effect.fn("Session.admitPrompt")(function* (payload, commitCache) {
-      const created = yield* events.publish(SessionV1.Event.PromptAdmitted, payload, {
-        ...(commitCache ? { commit: () => commitCache } : {}),
-      }).pipe(
-        Effect.as(true),
-        Effect.catchDefect((defect) => {
-          if (defect instanceof PromptAdmission.AlreadyAdmitted) return Effect.succeed(false)
-          if (defect instanceof PromptAdmission.Conflict) return Effect.fail(defect)
-          return Effect.die(defect)
-        }),
-      )
-      const message = yield* reconcilePrompt(payload)
-      if (!message) return yield* Effect.die(new Error("Committed V1 prompt admission receipt is missing"))
-      return { created, message }
-    })
+    const admitPrompt: Interface["admitPrompt"] = (payload, commitCache) => PromptHost.admit(db, events, payload, commitCache)
 
     // Only persist ordinary message/part updates when cross-instance sync is enabled.
     // Creation receipts always use one durable admission event, independently of this streaming-edit policy.

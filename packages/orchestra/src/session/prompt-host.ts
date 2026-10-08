@@ -13,6 +13,33 @@ import type { SessionPrompt } from "./prompt"
 import type { Session } from "./session"
 import { MessageID, SessionID } from "./schema"
 import { PromptIdentity } from "./prompt-identity"
+import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
+import type { Database } from "@orchestra/core/database/database"
+import type { EventV2 } from "@orchestra/core/event"
+
+/** Publish through the native bridge; only the tagged exact winner may turn a losing publication into a retry. */
+export const admit = Effect.fn("PromptHost.publishAdmission")(function* (
+  db: Database.Interface["db"],
+  events: EventV2.Interface,
+  payload: PromptAdmission.Payload,
+  commitCache?: Effect.Effect<void>,
+) {
+  const created = yield* events
+    .publish(SessionV1.Event.PromptAdmitted, payload, {
+      ...(commitCache ? { commit: () => commitCache } : {}),
+    })
+    .pipe(
+      Effect.as(true),
+      Effect.catchDefect((defect) => {
+        if (defect instanceof PromptAdmission.AlreadyAdmitted) return Effect.succeed(false)
+        if (defect instanceof PromptAdmission.Conflict) return Effect.fail(defect)
+        return Effect.die(defect)
+      }),
+    )
+  const message = yield* PromptAdmission.reconcile(db, payload)
+  if (!message) return yield* Effect.die(new Error("Committed V1 prompt admission receipt is missing"))
+  return { created, message }
+})
 
 /** Host authority is restored after the mutable plugin boundary; rendered notes never belong to the plugin. */
 export function protectUser(
