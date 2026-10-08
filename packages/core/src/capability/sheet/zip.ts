@@ -1,5 +1,6 @@
 import { inflateRawSync } from "node:zlib"
 import { DocumentWork } from "../document/work"
+import { coordinate } from "./formula"
 
 /** Decode ZIP entries under aggregate inflation limits before ExcelJS can allocate the workbook model. */
 export async function requirePackage(data: Uint8Array, editable: boolean) {
@@ -11,7 +12,7 @@ export async function requirePackage(data: Uint8Array, editable: boolean) {
     throw DocumentWork.failure("unsupported_schema")
   const count = view.getUint16(end + 10, true)
   if (count > 1024) throw DocumentWork.failure("quota_exceeded")
-  const budget = { offset: view.getUint32(end + 16, true), inflated: 0 }
+  const budget = { offset: view.getUint32(end + 16, true), inflated: 0, cells: 0, sheets: 0, names: 0, namedCells: 0 }
   const seen = new Set<string>()
   for (let i = 0; i < count; i++) {
     const offset = budget.offset
@@ -39,11 +40,49 @@ export async function requirePackage(data: Uint8Array, editable: boolean) {
     if (name.endsWith(".xml") || name.endsWith(".rels")) {
       const xml = new TextDecoder("utf-8", { fatal: true }).decode(content)
       if (/<!DOCTYPE|<!ENTITY/i.test(xml)) throw DocumentWork.failure()
+      const worksheet = name.startsWith("xl/worksheets/") && name.endsWith(".xml")
+      if (worksheet && ++budget.sheets > DocumentWork.limits.sheets) throw DocumentWork.failure("quota_exceeded")
+      const named = { active: false, text: "" }
       const parser = new Parser({ onopentag: (tag, attrs) => {
-        if (tag.split(":").at(-1) === "Relationship" && attrs.TargetMode === "External") throw DocumentWork.failure()
+        const localTag = tag.split(":").at(-1)
+        if (localTag === "Relationship" && attrs.TargetMode === "External") throw DocumentWork.failure()
+        if (worksheet && localTag === "c") {
+          coordinate(attrs.r)
+          if (++budget.cells > DocumentWork.limits.cells) throw DocumentWork.failure("quota_exceeded")
+        }
+        if (worksheet && localTag === "row" && (!/^[1-9][0-9]*$/.test(attrs.r) || Number(attrs.r) > 10000))
+          throw DocumentWork.failure("quota_exceeded")
+        if (worksheet && localTag === "col" && (![attrs.min, attrs.max].every((n) => /^[1-9][0-9]*$/.test(n) && Number(n) <= 256)))
+          throw DocumentWork.failure("quota_exceeded")
+        if (worksheet && ["dimension", "mergeCell"].includes(localTag ?? "")) {
+          const range = attrs.ref.split(":").map(coordinate)
+          if (range.length > 2 || range.length === 2 && (range[1].row - range[0].row + 1) * (range[1].column - range[0].column + 1) > DocumentWork.limits.cells)
+            throw DocumentWork.failure("quota_exceeded")
+        }
+        if (name === "xl/workbook.xml" && localTag === "definedName") {
+          if (++budget.names > 100) throw DocumentWork.failure("quota_exceeded")
+          named.active = true
+          named.text = ""
+        }
         if (editable && (name === "xl/workbook.xml" || name.startsWith("xl/worksheets/")) &&
-          ["extLst", "tableParts", "drawing", "legacyDrawing", "oleObjects", "controls", "dataValidations", "conditionalFormatting"].includes(tag.split(":").at(-1) ?? ""))
+          ["extLst", "tableParts", "drawing", "legacyDrawing", "oleObjects", "controls", "dataValidations", "conditionalFormatting"].includes(localTag ?? ""))
           throw DocumentWork.failure()
+      }, ontext: (text) => {
+        if (!named.active) return
+        named.text += text
+        if (named.text.length > 4096) throw DocumentWork.failure("quota_exceeded")
+      }, onclosetag: (tag) => {
+        if (!named.active || tag.split(":").at(-1) !== "definedName") return
+        named.active = false
+        // ExcelJS expands named ranges into a cell matrix. Bound them before its decoder sees the bytes.
+        named.text.split(",").forEach((range) => {
+          const match = /^(?:'(?:[^']|'')+'|[^!']+)!([\$A-Z0-9]+)(?::([\$A-Z0-9]+))?$/.exec(range)
+          if (!match) throw DocumentWork.failure()
+          const start = coordinate(match[1])
+          const end = coordinate(match[2] ?? match[1])
+          const cells = (end.row - start.row + 1) * (end.column - start.column + 1)
+          if (cells < 1 || (budget.namedCells += cells) > DocumentWork.limits.cells) throw DocumentWork.failure("quota_exceeded")
+        })
       } }, { xmlMode: true, decodeEntities: true })
       parser.end(xml)
     }

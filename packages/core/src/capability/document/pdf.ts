@@ -50,6 +50,14 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
 
     const target = input.operation === "create" || input.operation === "merge" ? await PDFDocument.create() : sources[0]
     if (!target) throw DocumentWork.failure("unsupported_schema")
+    const originalText = await Promise.all(bytes.map(async (data) => {
+      const pdf = await engine.open(data)
+      try {
+        const pages = [...pdf.pages()].map((page) => page.text())
+        if (pages.reduce((n, text) => n + text.length, 0) > DocumentWork.limits.text) throw DocumentWork.failure("quota_exceeded")
+        return pages
+      } finally { pdf.destroy() }
+    }))
     const expectedText: string[] = []
     if (input.operation === "create") {
       const font = await target.embedFont(StandardFonts.Helvetica)
@@ -82,7 +90,7 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
         const split = await PDFDocument.create()
         const copied = await split.copyPages(target, group.map((n) => n - 1))
         copied.forEach((page) => split.addPage(page))
-        files.push(await saveVerified(split, false, []))
+        files.push(await saveVerified(split, false, [], group.map((n) => originalText[0][n - 1])))
       }
       return { status: "ok", files, metadata: { groups, outputs: files.length }, incomplete: [] }
     }
@@ -135,10 +143,10 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
       await flattenForm(target)
     }
     requireBounded(target)
-    const file = await saveVerified(target, flatten, expectedText)
+    const file = await saveVerified(target, flatten, expectedText, input.operation === "merge" ? originalText.flat() : originalText[0] ?? [])
     return { status: "ok", files: [file], metadata: file.metadata, incomplete: [] }
 
-    async function saveVerified(doc: PDFDocument, flattened: boolean, text: readonly string[]) {
+    async function saveVerified(doc: PDFDocument, flattened: boolean, text: readonly string[], preserved: readonly string[]) {
       const geometry = doc.getPages().map((p) => ({ ...p.getSize(), rotation: p.getRotation().angle }))
       const fields = fieldValues(doc)
       const data = await doc.save()
@@ -152,8 +160,9 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
         if (parsed.pageCount !== geometry.length) throw DocumentWork.failure("outcome_unknown")
         const extracted = parsed.text({ maxPages: DocumentWork.limits.pages, maxChars: DocumentWork.limits.text })
         if (text.some((value) => !extracted.includes(value))) throw DocumentWork.failure("outcome_unknown")
+        if (preserved.some((value, i) => !parsed.page(i + 1).text().includes(value))) throw DocumentWork.failure("outcome_unknown")
         // Small independent PDFium render catches broken appearance/content streams without allocating full-page rasters.
-        for (const page of parsed.pages()) page.render({ width: 32, forms: true })
+        for (const page of parsed.pages()) page.render(page.width >= page.height ? { width: 32, forms: true } : { height: 32, forms: true })
       } finally { parsed.destroy() }
       return { data, mime: "application/pdf", metadata: { pageCount: geometry.length, geometry, fieldCount: fields.length,
         flattened, verification: "reopened-field-tree-widget-check-and-pdfium-parse-render" } }
@@ -178,15 +187,20 @@ function select(pages: readonly number[], doc: PDFDocument) {
 function fieldValues(doc: PDFDocument) {
   return doc.getForm().getFields().map((field) => {
     // Public classes are operation-local; the field dictionary supplies independent raw value/type readback.
-    return { name: field.getName().slice(0, 1024), type: field.constructor.name, value: rawValue(field) }
+    const options = "getOptions" in field && typeof field.getOptions === "function"
+      ? Schema.decodeUnknownSync(Schema.Array(Schema.String))(field.getOptions()) : []
+    if (field.getName().length > 1024 || options.length > 100 || options.some((value) => value.length > 1024))
+      throw DocumentWork.failure("quota_exceeded")
+    return { name: field.getName(), type: field.constructor.name, value: rawValue(field), options }
   })
 }
 
 function rawValue(field: PDFField) {
   const value = field.acroField.V()
   if (!value) return null
-  if ("decodeText" in value && typeof value.decodeText === "function") return String(value.decodeText()).slice(0, 4096)
-  return value.toString().slice(0, 4096)
+  const text = "decodeText" in value && typeof value.decodeText === "function" ? String(value.decodeText()) : value.toString()
+  if (text.length > 4096) throw DocumentWork.failure("quota_exceeded")
+  return text
 }
 
 async function requireFlattened(doc: PDFDocument) {

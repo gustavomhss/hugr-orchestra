@@ -22,7 +22,7 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
     }
     if (input.operation === "edit") {
       input.cells.forEach((cell) => {
-        while (rows.length < cell.row) rows.push([])
+        while (rows.length < cell.row) rows.push([""])
         const row = rows[cell.row - 1]
         while (row.length < cell.column) row.push("")
         row[cell.column - 1] = cell.value
@@ -70,6 +70,9 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
       metadata: { format: "xlsx", sheets: workbook.worksheets.map((s) => ({ name: s.name, rows: s.rowCount, columns: s.columnCount })),
         sheet: sheet.name, range, cells: captured, names: workbook.definedNames.model.map((n) => ({ name: n.name, ranges: n.ranges })), calculation: "not-performed" } }
   }
+  if (input.operation !== "export") workbook.eachSheet((s) => s.eachRow((row) => row.eachCell((cell) => {
+    if (cell.formula) formula(cell.formula)
+  })))
   if (input.operation === "create") {
     if (new Set(input.worksheets.map((s) => s.name.toLowerCase())).size !== input.worksheets.length) throw DocumentWork.failure("unsupported_schema")
     input.worksheets.forEach((s) => preflightCells(s.cells))

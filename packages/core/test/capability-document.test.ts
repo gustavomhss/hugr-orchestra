@@ -45,19 +45,19 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, Event
 ]))
 const allow: PermissionV2.Ruleset = [{ action: "artifact.*", resource: "*", effect: "allow" },
   { action: "document_*", resource: "*", effect: "allow" }]
-function fixture() {
+function fixture(rootToolName = "document_edit") {
   return Effect.gen(function* () {
-    const f = yield* CapabilityPolicyFixture.fixture({ name: "document_edit" })
+    const f = yield* CapabilityPolicyFixture.fixture({ name: rootToolName })
     const placement = yield* Location.Service
     yield* f.database.db.update(SessionTable).set({ directory: placement.directory }).where(eq(SessionTable.id, f.context.sessionID)).run()
     yield* CapabilityPolicyFixture.setRules(allow)
-    const binding = { ...f.binding, rootToolName: "document_edit", effectiveRules: allow,
+    const binding = { ...f.binding, rootToolName, effectiveRules: allow,
       owner: { ...f.binding.owner, location: { directory: placement.directory } } }
     const options = { root: join(placement.directory, "artifacts") }
     const tools = yield* CapabilityDocuments.make(options)
     const artifacts = yield* CapabilityArtifacts.make(options)
     const invoke = (tool: Tool.AnyTool, input: unknown) => CapabilityInvocation.withContext(binding,
-      Tool.settle(tool, ToolCall.make({ type: "tool-call", id: f.context.toolCallID, name: "document_edit", input }), f.context)
+      Tool.settle(tool, ToolCall.make({ type: "tool-call", id: f.context.toolCallID, name: rootToolName, input }), f.context)
         .pipe(Effect.flatMap((out) => Schema.decodeUnknownEffect(Output)(out.structured))))
     const read = (ref: Capability.ArtifactRef) => CapabilityInvocation.withContext(binding, artifacts.read(f.context, ref))
     return { ...f, binding, tools, artifacts, invoke, read }
@@ -69,6 +69,28 @@ function ref(output: typeof Output.Type, index = 0) {
 }
 
 describe("native local PDF canonical tools", () => {
+  it.live("read canonical PDF text/geometry/fields and raster artifacts; blank page remains explicitly incomplete", () => Effect.gen(function* () {
+    const f = yield* fixture("document_read")
+    const data = yield* Effect.promise(async () => {
+      const pdf = await PDFDocument.create()
+      pdf.setTitle("Read fixture")
+      pdf.addPage([300, 300]).drawText("Readable", { x: 20, y: 200 })
+      pdf.addPage([200, 100])
+      return pdf.save()
+    })
+    const source = yield* CapabilityInvocation.withContext(f.binding, f.artifacts.publish(f.context,
+      { data, mime: "application/pdf", kind: "document", verification: "observed", metadata: { secret: "host-only" } }))
+    const output = yield* f.invoke(f.tools.document_read, { format: "localpdf", artifact: source, raster: true })
+    expect(output.metadata).toMatchObject({ pageCount: 2, title: "Read fixture", ocr: false,
+      pages: [{ page: 1, text: "Readable", width: 300, height: 300, noTextLayer: false }, { page: 2, noTextLayer: true }] })
+    expect(output.result.status).toBe("partial")
+    expect(JSON.stringify(output.result)).toContain("OCR not performed")
+    expect(JSON.stringify(output)).not.toContain("host-only")
+    const raster = yield* f.read(ref(output))
+    expect(raster.metadata.mime).toBe("image/png")
+    expect([...raster.data.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10])
+  }), 30000)
+
   it.live("create, stamp, rotate, merge and split real bytes with immutable CAS readback", () => Effect.gen(function* () {
     const f = yield* fixture()
     const created = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "create", title: "Tiny",
@@ -87,7 +109,7 @@ describe("native local PDF canonical tools", () => {
     const rotatedBytes = yield* f.read(ref(rotated))
     expect((yield* Effect.promise(() => PDFDocument.load(rotatedBytes.data))).getPage(1).getRotation().angle).toBe(90)
     const stale = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "rotate", artifact: ref(created), expectedRevision: 0, pages: [1], degrees: 90 }).pipe(Effect.flip)
-    expect(stale.message).toContain("Native artifact operation failed")
+    expect(stale.message).toContain("revision_conflict")
     const merged = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "merge", artifacts: [ref(created), ref(rotated)] })
     const mergedBytes = yield* f.read(ref(merged))
     expect((yield* Effect.promise(() => PDFDocument.load(mergedBytes.data))).getPageCount()).toBe(4)

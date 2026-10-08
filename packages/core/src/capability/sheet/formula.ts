@@ -20,7 +20,7 @@ export function columnName(column: number): string {
 export function formula(value: string) {
   const source = value.startsWith("=") ? value.slice(1) : value
   const state = { offset: 0, tokens: [] as string[], index: 0 }
-  const token = /\s*(\$?[A-Z]{1,3}\$?[1-9][0-9]{0,4}(?![A-Z0-9_(])|SUM|AVERAGE|MIN|MAX|COUNT|(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)|[+\-*/^():,])\s*/y
+  const token = /\s*(\$?[A-Z]{1,3}\$?[1-9][0-9]{0,4}(?![A-Z0-9_(])|SUM|AVERAGE|MIN|MAX|COUNT|#REF!|(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)|[+\-*/^():,])\s*/y
   while (state.offset < source.length) {
     token.lastIndex = state.offset
     const found = token.exec(source)
@@ -32,6 +32,7 @@ export function formula(value: string) {
   const primary = (depth: number): void => {
     if (depth > 32) throw DocumentWork.failure("quota_exceeded")
     const text = state.tokens[state.index++]
+    if (text === "#REF!") return
     if (text === "+" || text === "-") return primary(depth + 1)
     if (text === "(") { expression(depth + 1); expect(")"); return }
     if (["SUM", "AVERAGE", "MIN", "MAX", "COUNT"].includes(text)) {
@@ -78,16 +79,21 @@ export function shift(value: string, axis: "rows" | "columns", index: number, co
     if (row > 10000 || col > 256) throw DocumentWork.failure("quota_exceeded")
     return `${old.columnAbsolute}${columnName(col)}${old.rowAbsolute}${row}`
   }
-  return tokens.map((token, i) => {
-    if (!/^\$?[A-Z]{1,3}\$?[1-9][0-9]*$/.test(token)) return token
+  const skipped = new Set<number>()
+  return tokens.flatMap((token, i) => {
+    if (skipped.has(i)) return []
+    if (!/^\$?[A-Z]{1,3}\$?[1-9][0-9]*$/.test(token)) return [token]
     const old = coordinate(token)
     const n = axis === "rows" ? old.row : old.column
-    const partner = tokens[i + 1] === ":" ? tokens[i + 2] : tokens[i - 1] === ":" ? tokens[i - 2] : undefined
-    if (!partner || action === "insert") return render(token, point(n))
+    const partner = tokens[i + 1] === ":" ? tokens[i + 2] : undefined
+    if (!partner) return [render(token, point(n))]
+    skipped.add(i + 1)
+    skipped.add(i + 2)
     const other = coordinate(partner)
     const p = axis === "rows" ? other.row : other.column
+    if (action === "insert") return [render(token, point(n)), ":", render(partner, point(p))]
     const start = Math.min(n, p) < index ? Math.min(n, p) : Math.min(n, p) >= index + count ? Math.min(n, p) - count : index
     const end = Math.max(n, p) < index ? Math.max(n, p) : Math.max(n, p) >= index + count ? Math.max(n, p) - count : index - 1
-    return render(token, start > end ? undefined : tokens[i + 1] === ":" ? start : end)
+    return start > end ? ["#REF!"] : [render(token, start), ":", render(partner, end)]
   }).join("")
 }

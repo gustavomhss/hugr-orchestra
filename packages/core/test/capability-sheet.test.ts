@@ -100,7 +100,9 @@ describe("native XLSX/CSV canonical tools", () => {
     expect(updated.getWorksheet("Data")?.getCell("A2").value).toBe("2026-10-08")
     expect((yield* f.read(ref(created))).data).toEqual(original.data)
     expect(ref(edited)).toEqual({ id: ref(created).id, revision: 1 })
-    expect((yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "edit", artifact: ref(created), expectedRevision: 0, sheet: "Data", cells: [] }).pipe(Effect.flip)).message).toContain("Native artifact operation failed")
+    expect((yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "restructure", artifact: ref(edited), expectedRevision: 1,
+      sheet: "Data", axis: "rows", action: "insert", index: 2, count: 1 }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+    expect((yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "edit", artifact: ref(created), expectedRevision: 0, sheet: "Data", cells: [] }).pipe(Effect.flip)).message).toContain("revision_conflict")
   }), 30000)
 
   it.live("UTF-8 CSV quotes/newlines/delimiters survive import and export; formulas stay opt-in", () => Effect.gen(function* () {
@@ -146,7 +148,7 @@ describe("native XLSX/CSV canonical tools", () => {
     expect(JSON.stringify(output)).not.toContain("private metadata")
     expect((yield* f.invoke(f.tools.sheet_edit, tiny).pipe(Effect.flip)).message).toContain("invocation_binding_mismatch")
     const foreign = yield* fixture("sheet_read")
-    expect((yield* foreign.invoke(foreign.tools.sheet_read, { format: "xlsx", artifact }).pipe(Effect.flip)).message).toContain("Native artifact operation failed")
+    expect((yield* foreign.invoke(foreign.tools.sheet_read, { format: "xlsx", artifact }).pipe(Effect.flip)).message).toContain("artifact_not_found")
     expect((yield* f.invoke(f.tools.sheet_read, { format: "xlsx", artifact, range: { startRow: 1, endRow: 10000, startColumn: 1, endColumn: 256 } }).pipe(Effect.flip)).message).toContain("quota_exceeded")
   }), 30000)
 
@@ -155,6 +157,7 @@ describe("native XLSX/CSV canonical tools", () => {
     const created = yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "create", worksheets: [{ name: "Data", cells: [
       { address: "A1", value: { kind: "literal", value: 1 } }, { address: "A2", value: { kind: "literal", value: 2 } },
       { address: "B2", value: { kind: "formula", formula: "SUM($A$1:A2)" } },
+      { address: "B5", value: { kind: "formula", formula: "SUM(A1:A2)" } },
     ] }] })
     const shifted = yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "restructure", artifact: ref(created), expectedRevision: 0,
       sheet: "Data", axis: "rows", action: "insert", index: 2, count: 1 })
@@ -163,6 +166,12 @@ describe("native XLSX/CSV canonical tools", () => {
     yield* Effect.promise(() => workbook.xlsx.load(new Uint8Array(bytes.data).buffer))
     expect(workbook.getWorksheet("Data")?.getCell("A3").value).toBe(2)
     expect(workbook.getWorksheet("Data")?.getCell("B3").formula).toBe("SUM($A$1:A3)")
+    const deleted = yield* f.invoke(f.tools.sheet_edit, { format: "xlsx", operation: "restructure", artifact: ref(shifted), expectedRevision: 1,
+      sheet: "Data", axis: "rows", action: "delete", index: 1, count: 3 })
+    const deletedBytes = yield* f.read(ref(deleted))
+    const deletedBook = new Workbook()
+    yield* Effect.promise(() => deletedBook.xlsx.load(new Uint8Array(deletedBytes.data).buffer))
+    expect(deletedBook.getWorksheet("Data")?.getCell("B3").formula).toBe("SUM(#REF!)")
     const before = yield* f.database.db.select().from(CapabilityArtifactTable)
     const unsupported = { ...tiny, worksheets: [{ name: "Data", cells: [{ address: "A1", value: { kind: "formula", formula: 'WEBSERVICE("https://secret")' } }] }] }
     expect((yield* f.invoke(f.tools.sheet_edit, unsupported).pipe(Effect.flip)).message).toContain("unsupported_schema")
@@ -175,7 +184,22 @@ describe("native XLSX/CSV canonical tools", () => {
     expect(tooBig.code).toBe("quota_exceeded")
     const f = yield* fixture()
     const fiber = yield* f.invoke(f.tools.sheet_edit, tiny).pipe(Effect.forkChild)
+    yield* Effect.sleep("20 millis")
     yield* Fiber.interrupt(fiber)
     expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
+  }), 30000)
+
+  it.live("real external relationship and out-of-scope cell XML are rejected before workbook decoding", () => Effect.gen(function* () {
+    const f = yield* fixture("sheet_read")
+    const publish = (data: Uint8Array) => CapabilityInvocation.withContext(f.binding, f.artifacts.publish(f.context,
+      { data, mime, kind: "sheet", verification: "observed", metadata: {} }))
+    const external = new Workbook()
+    external.addWorksheet("Data").getCell("A1").value = { text: "External", hyperlink: "https://example.invalid/no-fetch" }
+    const externalRef = yield* publish(new Uint8Array(yield* Effect.promise(() => external.xlsx.writeBuffer())))
+    expect((yield* f.invoke(f.tools.sheet_read, { format: "xlsx", artifact: externalRef }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+    const large = new Workbook()
+    large.addWorksheet("Data").getCell("A10001").value = "Outside bound"
+    const largeRef = yield* publish(new Uint8Array(yield* Effect.promise(() => large.xlsx.writeBuffer())))
+    expect((yield* f.invoke(f.tools.sheet_read, { format: "xlsx", artifact: largeRef }).pipe(Effect.flip)).message).toContain("quota_exceeded")
   }), 30000)
 })

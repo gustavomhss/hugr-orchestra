@@ -22,19 +22,27 @@ export const make = (options: CapabilityArtifacts.Options = {}) => Effect.gen(fu
     const permit = yield* policy.authorize(context, { action: name, resources })
     yield* policy.commit(permit, () => Effect.void)
   })
-  const execute = (name: string, kind: "pdf" | "sheet", input: unknown, context: Tool.Context,
+  const execute = (name: string, kind: "pdf" | "sheet", input: unknown, supplied: Tool.Context,
     refs: readonly Capability.ArtifactRef[], mimes: readonly string[], update?: Capability.ArtifactRef) => Effect.gen(function* () {
-    const resources = refs.length ? refs.map((ref) => `artifact:${ref.id}:${ref.revision}`) : [`capability:native:${kind}`]
+    // Capture decoded caller data before the first policy or storage yield.
+    const snapshot = yield* Effect.try({ try: () => structuredClone({ input, context: supplied, refs, update }),
+      catch: () => DocumentWork.failure("unsupported_schema") })
+    const resources = snapshot.refs.length ? snapshot.refs.map((ref) => `artifact:${ref.id}:${ref.revision}`) : [`capability:native:${kind}`]
+    const context = snapshot.context
     yield* authorize(context, name, resources)
-    const data = yield* Effect.forEach(refs, (ref) => artifacts.read(context, ref).pipe(Effect.flatMap((found) =>
-      mimes.includes(found.metadata.mime) ? Effect.succeed(found.data) : Effect.fail(DocumentWork.failure("unsupported_schema")))))
-    const output = yield* DocumentWork.run(kind, input, data)
+    const budget = { bytes: 0 }
+    const data = yield* Effect.forEach(snapshot.refs, (ref) => artifacts.read(context, ref).pipe(Effect.flatMap((found) => {
+      budget.bytes += found.data.byteLength
+      if (budget.bytes > DocumentWork.limits.bytes) return Effect.fail(DocumentWork.failure("quota_exceeded"))
+      return mimes.includes(found.metadata.mime) ? Effect.succeed(found.data) : Effect.fail(DocumentWork.failure("unsupported_schema"))
+    })))
+    const output = yield* DocumentWork.run(kind, snapshot.input, data)
     // Work is staged in the worker. Revoked native permission prevents publication after work completes.
     yield* authorize(context, name, resources)
     const artifactRefs = yield* Effect.forEach(output.files, (file) => Effect.gen(function* () {
       yield* authorize(context, name, resources)
       const value: CapabilityArtifacts.Input = { ...file, kind: kind === "pdf" ? "document" : "sheet", verification: "verified" }
-      return yield* update ? artifacts.update(context, update, value) : artifacts.publish(context, value)
+      return yield* snapshot.update ? artifacts.update(context, snapshot.update, value) : artifacts.publish(context, value)
     }))
     const receipt = `native:${randomUUID()}`
     const result: Capability.Result = output.incomplete.length ? { status: "partial", receipt,
@@ -42,7 +50,7 @@ export const make = (options: CapabilityArtifacts.Options = {}) => Effect.gen(fu
       unresolvedEffects: output.incomplete, artifactRefs } : { status: "completed", receipt,
       summary: "Native operation read back and verified", verification: "verified", artifactRefs }
     return { result, metadata: output.metadata }
-  }).pipe(Effect.mapError((error) => new Tool.Failure({ message: error instanceof Capability.Failure
+  }).pipe(Effect.mapError((error) => new Tool.Failure({ message: error instanceof Capability.Failure || error instanceof CapabilityArtifacts.Failure
     ? `${error.code}: ${error.message}` : "Native artifact operation failed" })))
   return { execute }
 })
