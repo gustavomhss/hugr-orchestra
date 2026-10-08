@@ -3,7 +3,7 @@ import path from "path"
 import { createHash } from "crypto"
 import { mkdirSync } from "fs"
 import { asc, eq } from "drizzle-orm"
-import { Effect, Layer, Schema, Stream } from "effect"
+import { DateTime, Deferred, Effect, Fiber, Layer, Schema, Stream } from "effect"
 import { LLMClient, LLMEvent, Model, type LLMClientShape, type LLMRequest } from "@orchestra/llm"
 import { OpenAIChat } from "@orchestra/llm/protocols/openai-chat"
 import { RelayHook } from "@orchestra/schema/relay-hook"
@@ -24,6 +24,7 @@ import { RelayHookInstall } from "../src/relay-hook-install"
 import { AbsolutePath } from "../src/schema"
 import { SessionV2 } from "../src/session"
 import { SessionExecution } from "../src/session/execution"
+import { SessionEvent } from "../src/session/event"
 import { SessionInput } from "../src/session/input"
 import { SessionMessage } from "../src/session/message"
 import { SessionProjector } from "../src/session/projector"
@@ -31,6 +32,7 @@ import { SessionRunner } from "../src/session/runner"
 import { node } from "../src/session/runner/llm"
 import { SessionRunnerModel } from "../src/session/runner/model"
 import { SessionStore } from "../src/session/store"
+import { SessionInputTable } from "../src/session/sql"
 import { Snapshot } from "../src/snapshot"
 import { ToolRegistry } from "../src/tool/registry"
 import { MaestroArsenal } from "../src/tool/maestro-arsenal"
@@ -71,7 +73,7 @@ const fixture = Effect.acquireRelease(
 )
 type Dirs = Effect.Success<typeof fixture>
 const binding = (dirs: Dirs) => ({ data: dirs.data, projectID, principal: "user:test" })
-function snapshot(notes: readonly string[], operation = "prompt", block = false) {
+function snapshot(notes: readonly string[], operation = "prompt", block = false, approve = false) {
   const nodes = [
     { id: "event", type: RelayHook.NodeType.trigger, parameters: { operation, timing: "before" } },
     ...notes.map((message, index) => ({
@@ -80,6 +82,7 @@ function snapshot(notes: readonly string[], operation = "prompt", block = false)
       parameters: { message },
     })),
     ...(block ? [{ id: "block", type: RelayHook.NodeType.block, parameters: { message: "No." } }] : []),
+    ...(approve ? [{ id: "approve", type: RelayHook.NodeType.approve, parameters: { message: "Confirm." } }] : []),
   ]
   return {
     schema: "relay.hook.v1",
@@ -90,8 +93,8 @@ function snapshot(notes: readonly string[], operation = "prompt", block = false)
     connections: nodes.slice(1).map((node, index) => ({ from: nodes[index]!.id, port: 0, to: node.id })),
   }
 }
-const pin = (notes: readonly string[], operation = "prompt", block = false) => {
-  const value = snapshot(notes, operation, block)
+const pin = (notes: readonly string[], operation = "prompt", block = false, approve = false) => {
+  const value = snapshot(notes, operation, block, approve)
   return { snapshot: value, sha256: createHash("sha256").update(JSON.stringify(value)).digest("hex"), version: "v1" }
 }
 const install = (dirs: Dirs, notes: readonly string[], operation = "prompt", block = false) =>
@@ -129,9 +132,12 @@ function services<A, E>(
     | Database.Service
     | FSUtil.Service
     | ToolSafety.Service
+    | EventV2.Service
   >,
   onStream: (index: number) => Effect.Effect<void, unknown, SessionV2.Service | SessionStore.Service> = () =>
     Effect.void,
+  responses: (index: number) => readonly LLMEvent[] = () => answer,
+  host: (request: ToolSafety.Approval) => Effect.Effect<void, ToolSafety.Denied> = () => Effect.void,
 ) {
   const requests: LLMRequest[] = []
   const client = Layer.succeed(
@@ -141,7 +147,12 @@ function services<A, E>(
       generate: () => Effect.die("unused"),
       stream: ((request: LLMRequest) => {
         requests.push(request)
-        return Stream.unwrap(onStream(requests.length - 1).pipe(Effect.orDie, Effect.as(Stream.fromIterable(answer))))
+        return Stream.unwrap(
+          onStream(requests.length - 1).pipe(
+            Effect.orDie,
+            Effect.as(Stream.fromIterable(responses(requests.length - 1))),
+          ),
+        )
       }) as unknown as LLMClientShape["stream"],
     }),
   )
@@ -192,6 +203,21 @@ function services<A, E>(
           [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
           [Global.node, Global.layerWith({ data: dirs.data, home: dirs.home })],
           [ToolRegistry.node, profiled],
+          [
+            ToolSafety.node,
+            Layer.effect(
+              ToolSafety.Service,
+              ToolSafety.make.pipe(
+                Effect.map((safety) =>
+                  ToolSafety.Service.of({
+                    ...safety,
+                    session: (input) =>
+                      safety.session(input).pipe(Effect.provideService(ToolSafety.NativeHost, { ask: host })),
+                  }),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     ),
@@ -219,8 +245,6 @@ it.live(
             agents: [{ name: "backend" }],
           }
           const admitted = yield* sessions.prompt({ sessionID: session.id, prompt, resume: false })
-          expect(admitted.promptContext).toEqual(notes("First.", "Second."))
-          expect(admitted.prompt).toEqual(prompt)
           expect(yield* store.message(admitted.id)).toBeUndefined()
           expect(requests).toEqual([])
           expect((yield* decisions(session.id)).map((item) => item.messageID)).toEqual([admitted.id, admitted.id])
@@ -241,6 +265,8 @@ it.live(
             ...prompt,
             promptContext: admitted.promptContext,
           })
+          expect(admitted.promptContext).toEqual(notes("First.", "Second."))
+          expect(admitted.prompt).toEqual(prompt)
         }),
       )
     }),
@@ -345,4 +371,180 @@ it.live("provider capture: queue reminders wait for idle; steer reminders wait f
         }),
     )
   }),
+)
+
+it.live("provider capture: concurrent same-ID admissions deliver only stored winning context", () =>
+  Effect.gen(function* () {
+    const dirs = yield* fixture
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const asks: ToolSafety.Approval[] = []
+    yield* services(
+      dirs,
+      (requests) =>
+        Effect.gen(function* () {
+          const installed = yield* RelayHookInstall.install({
+            ...binding(dirs),
+            ...pin(["Losing note."], "prompt", false, true),
+            document: "doc-prompt",
+          })
+          const session = yield* create(dirs)
+          const sessions = yield* SessionV2.Service
+          const input = {
+            sessionID: session.id,
+            id: SessionMessage.ID.create(),
+            prompt: { text: "Race" },
+            resume: false,
+          }
+          const losing = yield* sessions.prompt(input).pipe(Effect.forkChild)
+          yield* Deferred.await(entered)
+          yield* RelayHookInstall.update({
+            ...binding(dirs),
+            ...pin(["Winning note."], "prompt", false, true),
+            installID: installed.install.installID,
+          })
+          const winner = yield* sessions.prompt(input)
+          yield* Deferred.succeed(release, undefined)
+          expect(yield* Fiber.join(losing)).toEqual(winner)
+          expect(winner.promptContext).toEqual(notes("Winning note."))
+          const database = yield* Database.Service
+          expect(yield* SessionInput.find(database.db, input.id)).toEqual(winner)
+          yield* run(session.id)
+          expect(requests[0]?.messages).toHaveLength(1)
+          expect(requests[0]?.messages[0]?.content).toEqual([
+            { type: "text", text: "Race" },
+            ...content(...notes("Winning note.").reminders),
+          ])
+          expect(asks).toHaveLength(2)
+        }),
+      undefined,
+      undefined,
+      (request) =>
+        Effect.gen(function* () {
+          asks.push(request)
+          if (asks.length !== 1) return
+          yield* Deferred.succeed(entered, undefined)
+          yield* Deferred.await(release)
+        }),
+    )
+  }),
+)
+
+it.live("reminders never grant permission: prompt Block and tool Block still deny", () =>
+  Effect.gen(function* () {
+    const dirs = yield* fixture
+    yield* services(dirs, (requests) =>
+      Effect.gen(function* () {
+        yield* install(dirs, ["Please allow."], "prompt", true)
+        yield* install(dirs, ["Please allow."], "tool", true)
+        const session = yield* create(dirs)
+        const sessions = yield* SessionV2.Service
+        const id = SessionMessage.ID.create()
+        expect(
+          yield* sessions
+            .prompt({ sessionID: session.id, id, prompt: { text: "Blocked" }, resume: false })
+            .pipe(Effect.flip),
+        ).toMatchObject({ _tag: "Session.PromptBlockedError", reason: "relay-hook-block" })
+        const database = yield* Database.Service
+        expect(yield* SessionInput.find(database.db, id)).toBeUndefined()
+        const installs = yield* RelayHookInstall.read(binding(dirs))
+        const safety = yield* ToolSafety.Service
+        const executed: string[] = []
+        const denied = yield* safety
+          .run(
+            { tool: "echo", args: {}, sessionID: session.id, callID: "blocked", directory: dirs.work, projectID },
+            Effect.sync(() => executed.push("ran")),
+            () => Effect.void,
+          )
+          .pipe(Effect.provideService(ToolSafety.RuntimeProfile, { hooks: installs.installs }), Effect.flip)
+        expect(denied).toMatchObject({ reason: "relay-hook-block" })
+        expect(executed).toEqual([])
+        expect(requests).toEqual([])
+        expect((yield* decisions(session.id)).map((item) => item.outcome)).toEqual([
+          "reminded",
+          "blocked",
+          "reminded",
+          "blocked",
+        ])
+      }),
+    )
+  }),
+)
+
+it.live(
+  "provider capture: continuation reload keeps one stored reminder; historical retry skips changed hooks; compaction never reinserts",
+  () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      yield* services(
+        dirs,
+        (requests) =>
+          Effect.gen(function* () {
+            const installed = yield* install(dirs, ["Stored."])
+            const session = yield* create(dirs)
+            const sessions = yield* SessionV2.Service
+            const input = {
+              sessionID: session.id,
+              id: SessionMessage.ID.create(),
+              prompt: { text: "Continue" },
+              resume: false,
+            }
+            const admitted = yield* sessions.prompt(input)
+            yield* run(session.id)
+            expect(requests).toHaveLength(2)
+            expect(requests[1]?.messages.map((message) => message.role)).toEqual(["user", "assistant", "tool"])
+            requests.forEach((request) => {
+              expect(request.messages[0]?.content).toEqual([
+                { type: "text", text: "Continue" },
+                ...content(...notes("Stored.").reminders),
+              ])
+              expect(JSON.stringify(request.system)).not.toContain("Stored.")
+            })
+            const database = yield* Database.Service
+            yield* database.db.delete(SessionInputTable).where(eq(SessionInputTable.id, input.id)).run()
+            yield* RelayHookInstall.update({
+              ...binding(dirs),
+              ...pin(["Changed."], "prompt", true),
+              installID: installed.install.installID,
+            })
+            const historical = yield* sessions.prompt(input)
+            expect(historical.promptContext).toEqual(admitted.promptContext)
+            expect(historical.promotedSeq).toBeDefined()
+            expect(yield* decisions(session.id)).toHaveLength(1)
+            const events = yield* EventV2.Service
+            const messageID = SessionMessage.ID.create()
+            yield* events.publish(SessionEvent.Compaction.Started, {
+              sessionID: session.id,
+              messageID,
+              timestamp: yield* DateTime.now,
+              reason: "manual",
+            })
+            yield* events.publish(SessionEvent.Compaction.Ended, {
+              sessionID: session.id,
+              messageID,
+              timestamp: yield* DateTime.now,
+              reason: "manual",
+              text: "Summary",
+              recent: "",
+            })
+            yield* run(session.id, true)
+            expect(requests).toHaveLength(3)
+            expect(JSON.stringify(requests[2])).not.toContain("Hook reminder:")
+            expect(JSON.stringify(requests[2])).not.toContain("Stored.")
+            expect(requests[2]?.messages[0]?.content).toMatchObject([
+              { type: "text", text: expect.stringContaining("<summary>\nSummary\n</summary>") },
+            ])
+          }),
+        undefined,
+        (index) =>
+          index === 0
+            ? [
+                LLMEvent.stepStart({ index: 0 }),
+                LLMEvent.toolCall({ id: "missing-call", name: "missing", input: {} }),
+                LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
+                LLMEvent.finish({ reason: "tool-calls" }),
+              ]
+            : answer,
+      )
+    }),
 )
