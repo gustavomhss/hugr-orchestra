@@ -4,9 +4,9 @@
 import { appendFileSync, writeFileSync } from "node:fs"
 import { randomUUID } from "node:crypto"
 import path from "node:path"
-import { cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, prepareCapture, provider, remaining, serve, until, win } from "./lib.ts"
+import { cleanup, cli, client, control, fakeLLM, fileTree, identity, isolated, matches, members, provider, remaining, serve, until, win } from "./lib.ts"
 import { record, deliveryEnv } from "./delivery-fixtures.ts"
-import { backgroundCommand, consoleHost, consoleInput } from "./windows-lifecycle.ts"
+import { backgroundCommand, consoleHost, consoleInput, windowsInventory } from "./windows-lifecycle.ts"
 
 type Message = {
   info: { role: string; finish?: string; error?: unknown }
@@ -15,7 +15,6 @@ type Message = {
 type Listed = { id: string; pid: number; title: string; output: string; written: number; processes: { pid: number }[] }
 
 export async function run() {
-  await prepareCapture()
   const scratch = isolated("v1", {})
   const tree = fileTree(scratch.home, 2)
   const channel = path.join(scratch.home, "post-tool-output-control")
@@ -30,11 +29,13 @@ export async function run() {
   }
   const env = deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) })
   const terminalHost = { host: undefined as Awaited<ReturnType<typeof consoleHost>> | undefined }
+  const recorder = { inventory: undefined as Awaited<ReturnType<typeof windowsInventory>> | undefined }
   const steps: string[] = []
   const step = (line: string) => { steps.push(`${new Date().toISOString()} ${line}`); console.error(`[v1] ${line}`) }
   try {
     const prompt = "Start the background campaign tree, then finish the turn."
-    const host = win ? await consoleHost(env, scratch.project, "tui", ["--agent", "maestro", "--model", "test/test-model", "--prompt", prompt]) : await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, scratch.project)
+    if (win) recorder.inventory = await windowsInventory(env)
+    const host = win ? await consoleHost(env, scratch.project, "tui", ["--agent", "maestro", "--model", "test/test-model", "--prompt", prompt], recorder.inventory) : await serve(cli(), ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, scratch.project)
     if ("terminal" in host) terminalHost.host = host
     const api = client(host.url, scratch.project)
     const session = win ? await until(30_000, "TUI prompt session", async () => {
@@ -45,8 +46,8 @@ export async function run() {
     step(`host ${host.pid}; session ${session.id}; nonce ${tree.nonce}; home ${scratch.home}`)
     if (!win) await api.post(`/session/${session.id}/prompt_async`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: prompt }] })
     const pinnedHost = host.identity ?? identity(host.pid)
-    const before = await until(90_000, "every exact background member protected", () => {
-      const found = control(tree.nonce, tree.size, [pinnedHost])
+    const before = await until(90_000, "every exact background member protected", async () => {
+      const found = control(tree.nonce, tree.size, [pinnedHost], recorder.inventory ? await recorder.inventory.query() : undefined)
       return found.pass ? found : undefined
     })
     writeFileSync(release, "release\n")
@@ -86,7 +87,7 @@ export async function run() {
     })
     const afterTurn = await remaining(tree.nonce)
     // Escape invokes the real TUI key handler; abort is the same Session cancellation contract on other hosts.
-    if (terminalHost.host) consoleInput(terminalHost.host, "Escape")
+    if (terminalHost.host) await consoleInput(terminalHost.host, "Escape", recorder.inventory)
     await api.post(`/session/${session.id}/abort`)
     const afterEsc = await until(5000, "adopted tree and fresh output surviving cancellation", async () => {
       const next = `post-escape-${randomUUID()}`
@@ -106,15 +107,18 @@ export async function run() {
     step(`Session.remove stopped tree in ${stopMs} ms`)
     return record("v1-background", {
       kpi: "tool returns within 20 s against a 600 s hang; background tree survives turn, is listed with output, stops on Session.remove",
-      home: scratch.home, nonce: tree.nonce, sessionID: session.id, pinnedHost, before, toolMs, adopted, marker, markerSent, listed, afterTurn, afterEsc, afterRemove, stopMs,
+      home: scratch.home, nonce: tree.nonce, sessionID: session.id, pinnedHost, before, toolMs, adopted, marker, markerSent, listed, afterTurn, afterEsc, afterRemove, stopMs, recorderPreparationMs: recorder.inventory?.preparationMs,
       llm: llm.seen, offered: llm.offered, pass: before.pass && toolMs <= 20_000 && afterTurn === tree.size && afterEsc.count === tree.size && afterRemove === 0 && stopMs < 20_000, steps,
     })
   } catch (error) {
     return record("v1-background", { pass: false, error: String(error), home: scratch.home, nonce: tree.nonce, llm: llm.seen, offered: llm.offered, output: terminalHost.host?.out().slice(-4000), steps })
   } finally {
     llm.stop()
-    await terminalHost.host?.terminal.stop()
-    await cleanup(scratch.home, [tree.nonce])
+    try { await terminalHost.host?.terminal.stop() }
+    finally {
+      try { await recorder.inventory?.stop() }
+      finally { await cleanup(scratch.home, [tree.nonce]) }
+    }
   }
 }
 

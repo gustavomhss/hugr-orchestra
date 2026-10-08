@@ -4,10 +4,10 @@
 //   bun packages/omni/campaign/v2-kill.ts [serve|tui|hold]
 //
 //   serve  the compiled CLI's `orchestra serve`; a fake LLM drives a real agent turn (bash + write tools)
-//   tui    the compiled CLI's TUI (its server runs in a Bun Worker) on a fixed port, inside a python pty (Unix only)
+//   tui    compiled TUI/Worker, fixed HTTP port; product ConPTY on Windows, python pty on Unix
 //   hold   the compiled CLI's `debug omni --hold` (the WP5 crash smoke, as a baseline)
 
-import { spawn } from "node:child_process"
+import { spawn, type ChildProcess } from "node:child_process"
 import { createServer } from "node:net"
 import path from "node:path"
 import {
@@ -24,8 +24,8 @@ import {
   identity,
   kill9,
   mentioning,
+  members,
   own,
-  prepareCapture,
   provider,
   serve,
   table,
@@ -34,7 +34,7 @@ import {
   win,
 } from "./lib.ts"
 import { record, deliveryEnv } from "./delivery-fixtures.ts"
-import { consoleHost, consoleInput, gracefulEvidence, isolatedEnvironment } from "./windows-lifecycle.ts"
+import { consoleHost, consoleInput, gracefulEvidence, isolatedEnvironment, windowsInventory, windowsSnapshots } from "./windows-lifecycle.ts"
 import { PtyOmni } from "../../core/src/pty/omni.ts"
 
 const KPI_MS = 8_000
@@ -42,7 +42,6 @@ const KPI_MS = 8_000
 export async function run(target: "serve" | "tui" | "hold" = "serve", action: "kill" | "quit" = "kill") {
   if (process.env.ORCHESTRA_LOCAL_TESTS !== "1" && !process.env.CI) throw new Error("local campaign requires ORCHESTRA_LOCAL_TESTS=1")
   if (target === "hold") return hold()
-  await prepareCapture()
   return host(target, action)
 }
 
@@ -91,8 +90,9 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
   const lspNonce = `omni-lsp-${trees.bash.nonce.slice(10)}`
   const mcpNonce = `omni-mcp-${trees.bash.nonce.slice(10)}`
   const llm = await fakeLLM([
+    // The CLI canonicalizes Windows 8.3 temp paths. Resolve inside its Location, not through RUNNER~1.
+    { name: "write", args: { filePath: "b.ts", content: "export const b = 2\n" } },
     { name: "bash", args: { command: win ? `& ${trees.bash.line}` : trees.bash.line, timeout: 600_000, description: "Run the campaign tree" } },
-    { name: "write", args: { filePath: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } },
   ])
   const config = {
     formatter: false,
@@ -121,8 +121,10 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
   }
   const { env, home, project } = { ...scratch, env: deliveryEnv({ ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config) }) }
   const terminalHost = { host: undefined as Awaited<ReturnType<typeof consoleHost>> | undefined }
+  const processHost = { proc: undefined as ChildProcess | undefined }
   const outside = { terminal: undefined as PtyOmni.OmniProc | undefined }
   const probes = { controls: undefined as Record<string, ReturnType<typeof control>> | undefined }
+  const recorder = { inventory: undefined as Awaited<ReturnType<typeof windowsInventory>> | undefined }
   const nonces = Object.values(trees).map((t) => t.nonce)
   const steps: string[] = []
   const step = (line: string) => {
@@ -130,8 +132,10 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
     console.error(`[v2-${target}] ${line}`)
   }
   try {
-    const started = win && (target === "tui" || action === "quit") ? await consoleHost(env, project, target) : target === "serve" ? await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, project) : await tui(bin, env, project)
+    if (win) recorder.inventory = await windowsInventory(env)
+    const started = win && (target === "tui" || action === "quit") ? await consoleHost(env, project, target, [], recorder.inventory) : target === "serve" ? await serve(bin, ["serve", "--port", "0", "--hostname", "127.0.0.1"], env, project) : await tui(bin, env, project)
     if ("terminal" in started) terminalHost.host = started
+    if ("proc" in started) processHost.proc = started.proc
     step(`host ${started.pid} listening on ${started.url}`)
     const api = client(started.url, project)
     const session = await api.post("/session", {})
@@ -153,22 +157,26 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
 
     const hostIdentity = started.identity ?? identity(started.pid)
     const specs = [...Object.entries(trees).map(([name, tree]) => ({ name, nonce: tree.nonce, size: tree.size })), { name: "lsp", nonce: lspNonce, size: 1 }, { name: "mcpServer", nonce: mcpNonce, size: 1 }]
-    const live = await until(outside.terminal ? 15_000 : 90_000, "every exact fixture member protected under the pinned host", () => {
-      const rows = table()
+    const live = await until(outside.terminal ? 15_000 : 90_000, "every exact fixture member protected under the pinned host", async () => {
+      const rows = recorder.inventory ? await recorder.inventory.query() : table()
       const found = Object.fromEntries(specs.map((spec) => [spec.name, control(spec.nonce, spec.size, [hostIdentity], rows)]))
       probes.controls = found
       return Object.values(found).every((found) => found.pass) ? found : undefined
-    }).catch((error) => { throw new Error(`${error}; llm ${JSON.stringify(llm.seen)}; offered ${JSON.stringify(llm.offered)}; host ${started.out()}`) })
+    }).catch(async (error) => {
+      const messages = await api.get(`/session/${session.id}/message`) as { info: { error?: unknown }; parts: { type: string; tool?: string; state?: { status: string; error?: string } }[] }[]
+      throw new Error(`${error}; tool states ${JSON.stringify(messages.flatMap((message) => message.parts.filter((part) => part.type === "tool")))}; llm ${JSON.stringify(llm.seen)}; host ${started.out().slice(-2000)}`)
+    })
     const supervisors = [...new Map(Object.values(live).flatMap((found) => found.protectedMembers.flatMap((member) => member.supervisors)).map((pinned) => [pinned.pid, pinned])).values()]
     step(`exact tree controls: ${JSON.stringify(live)}; supervisors ${JSON.stringify(supervisors)}`)
     if (supervisors.length === 0) throw new Error("positive control found no pinned supervisors")
     const input = action === "quit" && process.env.OMNI_CAMPAIGN_MUTATION !== "forced-kill-graceful" ? "Ctrl+C" : "TerminateProcess"
     const killed = Date.now()
-    if (input === "Ctrl+C") consoleInput(terminalHost.host!, "Ctrl+C")
+    if (input === "Ctrl+C") await consoleInput(terminalHost.host!, "Ctrl+C", recorder.inventory)
     if (input === "TerminateProcess" && !kill9(hostIdentity)) throw new Error(`could not kill pinned host ${started.pid}`)
     step(`${input} ${started.pid}`)
     const all = [...nonces, lspNonce, mcpNonce]
-    const observed = await deadlineSnapshots(killed, action === "quit" ? 20_000 : KPI_MS, all, [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])])
+    const retained = [hostIdentity, ...supervisors, ...Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers])]
+    const observed = recorder.inventory ? await windowsSnapshots(recorder.inventory, killed, action === "quit" ? 20_000 : KPI_MS, all, retained) : await deadlineSnapshots(killed, KPI_MS, all, retained)
     const shutdown = action === "quit" ? gracefulEvidence(target, terminalHost.host!, input) : undefined
     const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args?.slice(0, 160) ?? "<argv unavailable>"}`)
     step(`deadline snapshots zero at ${observed.zeroAtMs} ms; last ${JSON.stringify(observed.last)}`)
@@ -180,7 +188,7 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
       supervisors,
       observationEndedMs: Date.now() - killed,
       observed,
-      input, shutdown, preparationMs: terminalHost.host?.preparationMs,
+      input, shutdown, recorderPreparationMs: recorder.inventory?.preparationMs, preparationMs: terminalHost.host?.preparationMs, identityCaptureMs: terminalHost.host?.identityCaptureMs,
       kpi: action === "quit" ? "real console Ctrl+C exits and cleans every owned fixture within 20 s" : "0 omni-tree processes 8 s after kill -9 of the host",
       live,
       leftovers,
@@ -193,9 +201,23 @@ async function host(target: "serve" | "tui", action: "kill" | "quit") {
     return record(scenario, { target, pass: false, error: String(error).slice(0, 4000), controls: probes.controls, output: terminalHost.host?.out().slice(-4000), steps })
   } finally {
     llm.stop()
-    await outside.terminal?.stop()
-    await terminalHost.host?.terminal.stop()
-    await cleanup(home, nonces)
+    try {
+      await outside.terminal?.stop()
+      await terminalHost.host?.terminal.stop()
+      // Teardown follows the completed/red observation. Let the product supervisor finish first so a
+      // snapshot of descendants cannot race its own host's forced teardown inside lib.cleanup.
+      if (processHost.proc?.exitCode === null && processHost.proc.signalCode === null) processHost.proc.kill("SIGKILL")
+      await until(10_000, "post-verdict fixture teardown", async () => {
+        const rows = recorder.inventory ? await recorder.inventory.query() : table()
+        return [...nonces, lspNonce, mcpNonce].every((nonce) => {
+          const found = members(nonce, rows)
+          return found.members.length === 0 && found.wrappers.length === 0
+        }) ? true : undefined
+      })
+    } finally {
+      try { await recorder.inventory?.stop() }
+      finally { await cleanup(home, nonces) }
+    }
   }
 }
 

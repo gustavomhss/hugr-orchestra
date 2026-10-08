@@ -9,6 +9,7 @@ import { run } from "../../omni/campaign/v1-background.ts"
 test("Windows compiled CLI V1 adoption, V2 serve/TUI crash, V10 console quit and oracle mutations", async () => {
   expect(process.platform).toBe("win32")
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
+  process.env.OMNI_CAMPAIGN_BUILD_SHA = process.env.GITHUB_SHA
   expect(existsSync(process.env.HUGR_OMNI_ADDON ?? "")).toBe(true)
   expect(existsSync(process.env.HUGR_OMNI_SUPERVISOR ?? "")).toBe(true)
   const { Effect, ChildProcess } = await effectModules()
@@ -37,7 +38,8 @@ test("Windows compiled CLI V1 adoption, V2 serve/TUI crash, V10 console quit and
   expect(await build.exited).toBe(0)
   expect(existsSync(cli())).toBe(true)
   const v2 = await import("../../omni/campaign/v2-kill.ts")
-  const results = { v1: await run(), v2Serve: await v2.run("serve"), v2Tui: await v2.run("tui"), v10Tui: await v2.run("tui", "quit"), v10Serve: await v2.run("serve", "quit") }
+  const failure = (error: unknown) => ({ pass: false, error: String(error), phase: "unhandled campaign/cleanup failure" })
+  const results = { v1: await run().catch(failure), v2Serve: await v2.run("serve").catch(failure), v2Tui: await v2.run("tui").catch(failure), v10Tui: await v2.run("tui", "quit").catch(failure), v10Serve: await v2.run("serve", "quit").catch(failure) }
   console.log("WINDOWS_LIFECYCLE_PROOF " + JSON.stringify(results))
   const mutants = []
   for (const mutation of ["omit-adoption", "skip-inner-owner", "forced-kill-graceful"]) {
