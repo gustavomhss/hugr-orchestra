@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Gate extension: locked native Bun/Electron only; no CLI/desktop closure claim.
 set -euo pipefail
+export PYTHONPATH="$PWD/nix"
 fail() { printf 'TOOLCHAIN_GATE_FAILURE:%s\n' "$*" >&2; exit 1; }
 [[ $# == 1 && -n $1 ]] || fail MISSING_EXPECTED_SYSTEM
 export TOOLCHAIN_SYSTEM="$1"
@@ -18,30 +19,31 @@ require() {
   python3 - "$dir/$1.stderr" "$2" <<'PY'
 import sys
 from pathlib import Path
-if sys.argv[2] not in Path(sys.argv[1]).read_text():
+from toolchain_metadata import text
+if sys.argv[2] not in text(sys.argv[1]):
     raise SystemExit("TOOLCHAIN_GATE_FAILURE:MISSING_LOG_EVIDENCE:" + sys.argv[2])
 PY
 }
 trap 'status=$?; if ! git diff --exit-code -- flake.lock >"$dir/lock.diff"; then status=1; printf "TOOLCHAIN_GATE_FAILURE:LOCK_CHANGED\n" >&2; fi; exit "$status"' EXIT
-git diff --exit-code -- flake.lock
+git diff --exit-code -- flake.lock >"$dir/lock.diff"
 run native-system nix eval --impure --raw --expr 'builtins.currentSystem'
 [[ $(<"$dir/native-system.stdout") == "$TOOLCHAIN_SYSTEM" ]] || fail NATIVE_SYSTEM_MISMATCH
 run declared-systems nix eval --impure --json --expr 'builtins.attrNames (builtins.getFlake (toString ./.)).packages'
 python3 - "$dir" "$TOOLCHAIN_SYSTEM" <<'PY'
 import base64, json, sys
 from pathlib import Path
+from toolchain_metadata import read_json, systems_from
 def need(condition, name):
     if not condition: raise SystemExit("TOOLCHAIN_GATE_FAILURE:" + name)
 out, system = Path(sys.argv[1]), sys.argv[2]
-systems = json.loads((out / "declared-systems.stdout").read_text())
-need(isinstance(systems, list) and len(systems) == 4 and len(set(systems)) == 4, "EMPTY_OR_INVALID_FLAKE_SYSTEMS")
+systems = systems_from(out / "declared-systems.stdout")
 need(system in systems, "UNDECLARED_NATIVE_SYSTEM")
-m = json.loads(Path("nix/toolchain-sources.json").read_text())
-root = json.loads(Path("package.json").read_text())
-desktop = json.loads(Path("packages/desktop/package.json").read_text())
+m = read_json("nix/toolchain-sources.json")
+root = read_json("package.json")
+desktop = read_json("packages/desktop/package.json")
 need(root["packageManager"] == "bun@" + m["bun"]["version"], "ROOT_BUN_VERSION_DRIFT")
 need(desktop["devDependencies"]["electron"] == m["electron"]["version"], "DESKTOP_ELECTRON_VERSION_DRIFT")
-need(json.loads(Path("flake.lock").read_text())["nodes"]["nixpkgs"]["locked"]["rev"] == m["nixpkgsRevision"], "NIXPKGS_PIN_DRIFT")
+need(read_json("flake.lock")["nodes"]["nixpkgs"]["locked"]["rev"] == m["nixpkgsRevision"], "NIXPKGS_PIN_DRIFT")
 for tool in ("bun", "electron"):
     need(set(m[tool]["sources"]) == set(systems), "SOURCE_SYSTEMS_MISMATCH:" + tool)
     for key, source in m[tool]["sources"].items():
@@ -68,9 +70,10 @@ NIX
   python3 - "$dir" "$tool" <<'PY'
 import json, sys
 from pathlib import Path
+from toolchain_metadata import read_json
 out, tool = Path(sys.argv[1]), sys.argv[2]
-expected = json.loads((out / (tool + "-expected.json")).read_text())
-actual = json.loads((out / (tool + "-render.stdout")).read_text())
+expected = read_json(out / (tool + "-expected.json"))
+actual = read_json(out / (tool + "-render.stdout"))
 checks = {"version": actual["version"] == expected["version"], "doInstallCheck": actual["doInstallCheck"] is True,
           "sourceURL": actual["source"]["urls"] == [expected["url"]], "sourceHash": actual["source"]["outputHash"] == expected["hash"],
           "hashMode": actual["source"]["outputHashMode"] == "flat"}
@@ -109,8 +112,9 @@ NIX
   python3 - "$dir" "$tool" <<'PY'
 import json, re, sys
 from pathlib import Path
+from toolchain_metadata import read_json
 out, tool = Path(sys.argv[1]), sys.argv[2]
-expected = json.loads((out / (tool + "-expected.json")).read_text())
+expected = read_json(out / (tool + "-expected.json"))
 got = re.findall(r"^\s*got:\s*(\S+)\s*$", (out / (tool + "-hash-mutant.stderr")).read_text(), re.M)
 if got != [expected["hash"]]: raise SystemExit("TOOLCHAIN_GATE_FAILURE:HASH_PROBE_GOT:" + tool)
 PY
@@ -128,7 +132,8 @@ PY
   python3 - "$binary" "$TOOLCHAIN_SYSTEM" >"$dir/$tool-native-image.json" <<'PY'
 import json, struct, sys
 from pathlib import Path
-data = Path(sys.argv[1]).read_bytes()[:64]
+with Path(sys.argv[1]).open("rb") as binary:
+    data = binary.read(64)
 system = sys.argv[2]
 arch, os = system.split("-")
 if os == "linux":
@@ -146,12 +151,15 @@ PY
   python3 - "$dir" "$tool" <<'PY'
 import json, sys
 from pathlib import Path
+from toolchain_metadata import read_json
 out, tool = Path(sys.argv[1]), sys.argv[2]
-expected = json.loads((out / (tool + "-expected.json")).read_text())["version"]
+expected = read_json(out / (tool + "-expected.json"))["version"]
 if (out / (tool + "-execute.stdout")).read_text().strip() != expected:
     raise SystemExit("TOOLCHAIN_GATE_FAILURE:NATIVE_EXECUTION_VERSION:" + tool)
 PY
   completed+=("$tool")
 done
-[[ ${#completed[@]} == ${#tools[@]} ]] || fail INCOMPLETE_TOOL_COVERAGE
+[[ ${completed[*]} == 'bun electron' ]] || fail INCOMPLETE_TOOL_COVERAGE
+git diff --exit-code -- flake.lock >"$dir/lock.diff"
+python3 nix/toolchain_metadata.py record "$dir"
 printf 'TOOLCHAIN_GATE_OK:%s:%s\n' "$TOOLCHAIN_SYSTEM" "${completed[*]}" | tee "$dir/result.txt"

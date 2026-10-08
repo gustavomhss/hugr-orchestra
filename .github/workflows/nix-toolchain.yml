@@ -1,12 +1,13 @@
 name: nix-toolchain
 
-# Gate extension: native toolchain execution and mutation probes, not app closure.
+# Gate repair + extension: flake-derived native coverage, independent completion.
 on:
   push:
     branches: [nix-closure]
-    paths: ["nix/**", ".github/workflows/nix-toolchain.yml"]
+    paths: ["flake.nix", "flake.lock", "package.json", "packages/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
   pull_request:
-    types: [labeled]
+    types: [opened, reopened, synchronize, labeled]
+    paths: ["flake.nix", "flake.lock", "package.json", "packages/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
   workflow_dispatch:
 
 permissions:
@@ -17,22 +18,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  prepare:
+    name: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/toolchain-prepare"
+          mkdir -p "$dir"
+          nix eval --impure --json --expr 'builtins.attrNames (builtins.getFlake (toString ./.)).packages' >"$dir/systems.json"
+          matrix=$(python3 nix/toolchain_metadata.py matrix "$dir/systems.json")
+          printf 'matrix=%s\n' "$matrix" >>"$GITHUB_OUTPUT"
   native-toolchain:
-    if: github.event_name != 'pull_request' || github.event.label.name == 'epic'
+    name: native (${{ matrix.system }})
+    needs: prepare
     timeout-minutes: 45
     strategy:
       fail-fast: false
-      # Labels/architectures verified against GitHub's hosted-runner reference.
-      matrix:
-        include:
-          - runner: ubuntu-24.04
-            system: x86_64-linux
-          - runner: ubuntu-24.04-arm
-            system: aarch64-linux
-          - runner: macos-15-intel
-            system: x86_64-darwin
-          - runner: macos-15
-            system: aarch64-darwin
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -48,7 +60,53 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: nix-toolchain-${{ matrix.system }}
+          name: nix-toolchain-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
           path: ${{ runner.temp }}/nix-toolchain-${{ matrix.system }}
+          if-no-files-found: error
+          retention-days: 14
+  completion:
+    name: completion
+    if: always()
+    needs: [prepare, native-toolchain]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - name: Independent current-run completion and captured-metadata teeth
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          NATIVE_RESULT: ${{ needs['native-toolchain'].result }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/toolchain-completion"
+          mkdir -p "$dir"
+          python3 nix/toolchain_metadata.py identity "$dir/identity.json"
+          nix eval --impure --json --expr 'builtins.attrNames (builtins.getFlake (toString ./.)).packages' >"$dir/systems.json"
+          cp nix/toolchain-sources.json "$dir/manifest.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >"$dir/run.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=latest&per_page=100" >"$dir/jobs.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" >"$dir/artifacts.json"
+          python3 nix/toolchain_metadata.py orchestration "$dir"
+          if ! gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --pattern "nix-toolchain-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-*" --dir "$dir/artifacts"; then
+            printf 'TOOLCHAIN_GATE_FAILURE:EVIDENCE_DOWNLOAD_FAILED\n' >&2
+            exit 1
+          fi
+          python3 nix/toolchain_metadata.py complete "$dir" | tee "$dir/completion.json"
+          python3 nix/test_toolchain_metadata.py "$dir" | tee "$dir/teeth.txt"
+          git diff --exit-code -- flake.lock
+      - name: Preserve independent completion and real fixtures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: toolchain-completion-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/toolchain-completion
           if-no-files-found: error
           retention-days: 14
