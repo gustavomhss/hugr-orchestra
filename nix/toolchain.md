@@ -27,8 +27,26 @@ The locked Nixpkgs revision is `9dd5558b06dbdacbf635a3dd36dce1b1a7ee3a89`:
 - The generic's lazy `.headers` is removed: binary packaging does not need it,
   and its `fetchzip` needs an unpacked recursive hash. A native-addon rebuild
   must provision independently measured headers; there is no guessed hash.
-- Native install checks verify the actual Bun executable version and Electron's
-  `process.versions.electron` with `ELECTRON_RUN_AS_NODE=1`, without a display.
+- Install checks are authored to require exact Bun executable version and
+  Electron's `process.versions.electron` with `ELECTRON_RUN_AS_NODE=1`, without a
+  display. Native execution and failure probes below have **not run locally**.
+- Cold review found Electron Darwin's upstream `buildCommand` bypassed the phase
+  loop, so the initial checkpoint's install check was unreachable there. Local
+  code now appends `runPhase installCheckPhase` to that inherited command. The
+  upstream `runPhase` guard still skips checks when the host cannot execute or
+  `doInstallCheck` is disabled; Linux retains normal phases.
+- Bun has no `buildCommand` and uses the normal phase loop on both OSes. Upstream
+  placed Darwin ICU repair/signing in `postPhases`, after `installCheckPhase`.
+  Local code moves that same Darwin work into `postFixup`, before checking the
+  final executable. Linux keeps upstream completion ordering. The existing
+  version hook is retained and an exact version comparison is added.
+- These paths were inspected in pinned [setup.sh](https://github.com/NixOS/nixpkgs/blob/9dd5558b06dbdacbf635a3dd36dce1b1a7ee3a89/pkgs/stdenv/generic/setup.sh)
+  (`genericBuild`, `definePhases`, `runPhase`) and [make-derivation.nix](https://github.com/NixOS/nixpkgs/blob/9dd5558b06dbdacbf635a3dd36dce1b1a7ee3a89/pkgs/stdenv/generic/make-derivation.nix)
+  (`doInstallCheck && canExecuteHostOnBuild` and conditional check inputs).
+  This is source evidence, not native runtime proof.
+- Both constructors force the selected manifest source lookup, with a named
+  unsupported-system error. Electron passes the injected `stdenv` into the
+  generic so platform overrides and source selection stay aligned.
 
 `toolchain-sources.json` records eight full ZIP downloads, independently measured
 with Python SHA-256, `shasum` and OpenSSL, then compared against upstream
@@ -100,7 +118,7 @@ nix eval --impure --json --expr '
 ```
 
 On **each matching native runner**, set its actual Nix system, then build both
-packages. This executes the version install checks when the host is executable:
+packages. Required result: both exact version checks execute successfully:
 
 ```sh
 export TOOLCHAIN_SYSTEM=x86_64-linux
@@ -111,6 +129,108 @@ nix build --impure --no-link --print-out-paths --print-build-logs --expr '
   in [ (pkgs.callPackage ./nix/bun.nix {}) (pkgs.callPackage ./nix/electron.nix {}) ]
 '
 ```
+
+### Required native install-check reach probe
+
+Run this Bash sequence on each of the four native runners. Quoted heredocs keep
+Nix `${...}` and shell `$out` in rendered phase strings intact. It renders selected
+attributes, builds the real package, forces a rebuild to require its success
+marker, then appends an intentional failure to `postInstallCheck`. That failure
+marker is reachable only after the real version comparison succeeds. A generic
+failure without the marker, or a successful mutant build, is a failed probe.
+Commands and probes are unexecuted locally.
+
+```bash
+set -euo pipefail
+export TOOLCHAIN_SYSTEM
+TOOLCHAIN_SYSTEM=$(nix eval --impure --raw --expr 'builtins.currentSystem')
+for tool in bun electron; do
+  export TOOLCHAIN_TOOL="$tool"
+  packageExpr=$(cat <<'NIX'
+    let
+      flake = builtins.getFlake (toString ./.);
+      pkgs = flake.inputs.nixpkgs.legacyPackages.${builtins.getEnv "TOOLCHAIN_SYSTEM"};
+    in assert pkgs.stdenv.buildPlatform.system == builtins.currentSystem;
+       assert pkgs.stdenv.buildPlatform.canExecute pkgs.stdenv.hostPlatform;
+       pkgs.callPackage (./nix + "/${builtins.getEnv "TOOLCHAIN_TOOL"}.nix") {}
+NIX
+  )
+  nix eval --impure --json --expr "let package = ($packageExpr); in {
+    inherit (package) version doInstallCheck installCheckPhase;
+    buildCommand = package.buildCommand or null;
+    postFixup = package.postFixup or null;
+    postPhases = package.postPhases or [];
+    source = { inherit (package.src) urls outputHash outputHashMode; };
+  }"
+  nix build --impure --no-link --print-build-logs --expr "$packageExpr"
+  positiveLog=$(mktemp)
+  nix build --impure --no-link --rebuild --print-build-logs --expr "$packageExpr" >"$positiveLog" 2>&1
+  cat "$positiveLog"
+  rg --fixed-strings "TOOLCHAIN_INSTALL_CHECK_OK:$tool:" "$positiveLog"
+
+  probe=$(cat <<'NIX'
+    package.overrideAttrs (old: {
+      postInstallCheck = (old.postInstallCheck or "") + ''
+        echo "TOOLCHAIN_INSTALL_CHECK_FAIL_PROBE" >&2
+        exit 97
+      '';
+    })
+NIX
+  )
+  negativeLog=$(mktemp)
+  if nix build --impure --no-link --print-build-logs --expr "let package = ($packageExpr); in $probe" >"$negativeLog" 2>&1; then
+    cat "$negativeLog"
+    exit 1
+  fi
+  cat "$negativeLog"
+  rg --fixed-strings 'TOOLCHAIN_INSTALL_CHECK_FAIL_PROBE' "$negativeLog"
+  rg 'exit code 97|exit status 97' "$negativeLog"
+done
+```
+
+The rendered Bun/Electron `version` must be 1.3.14/42.3.3 and the selected source
+URL/hash must match that system's manifest. Darwin Electron `buildCommand` must
+end with `runPhase installCheckPhase`; Linux has no `buildCommand`. Darwin Bun
+`postFixup` must contain inherited ICU repair/signing, and its `postPhases` must
+no longer contain `postPatchelf`. Both native `doInstallCheck` values must be true.
+Retain all rendered attributes and positive/negative logs for cold re-review.
+
+For an unsupported-source lookup control, force `.src.drvPath` using the same
+native package set with an injected unsupported host-system name:
+
+```bash
+for tool in bun electron; do
+  export TOOLCHAIN_TOOL="$tool"
+  unsupportedExpr=$(cat <<'NIX'
+    let
+      flake = builtins.getFlake (toString ./.);
+      pkgs = flake.inputs.nixpkgs.legacyPackages.${builtins.getEnv "TOOLCHAIN_SYSTEM"};
+      tool = builtins.getEnv "TOOLCHAIN_TOOL";
+      override = if tool == "bun" then {
+        stdenvNoCC = pkgs.stdenvNoCC // {
+          hostPlatform = pkgs.stdenvNoCC.hostPlatform // { system = "toolchain-unsupported"; };
+        };
+      } else {
+        stdenv = pkgs.stdenv // {
+          hostPlatform = pkgs.stdenv.hostPlatform // { system = "toolchain-unsupported"; };
+        };
+      };
+    in (pkgs.callPackage (./nix + "/${tool}.nix") override).src.drvPath
+NIX
+  )
+  log=$(mktemp)
+  if nix eval --impure --raw --expr "$unsupportedExpr" >"$log" 2>&1; then
+    cat "$log"
+    exit 1
+  fi
+  cat "$log"
+  label=Bun
+  if [ "$tool" = electron ]; then label=Electron; fi
+  rg --fixed-strings "Unsupported $label toolchain system: toolchain-unsupported" "$log"
+done
+```
+
+### Required source hash probe
 
 Negative control, for **each tool on each native runner**: override only the
 actual `.src` derivation output hash in memory, retaining its URL and downloader.
@@ -128,6 +248,7 @@ for tool in bun electron; do
       pkgs = flake.inputs.nixpkgs.legacyPackages.${builtins.getEnv "TOOLCHAIN_SYSTEM"};
       package = pkgs.callPackage (./nix + "/${builtins.getEnv "TOOLCHAIN_TOOL"}.nix") {};
     in package.src.overrideAttrs (_: {
+      outputHashAlgo = "sha256";
       outputHash = builtins.hashString "sha256" "toolchain-negative-control-${package.name}";
     })
   ' >"$log" 2>&1; then
