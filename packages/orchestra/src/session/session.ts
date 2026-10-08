@@ -440,7 +440,8 @@ export interface Interface {
     identity: string
   }) => Effect.Effect<SessionV1.WithParts | undefined, PromptAdmission.Conflict>
   readonly admitPrompt: (payload: PromptAdmission.Payload) => Effect.Effect<
-    { created: boolean; message: SessionV1.WithParts }, PromptAdmission.Conflict
+    { created: boolean; message: SessionV1.WithParts },
+    PromptAdmission.Conflict
   >
   readonly removeMessage: (input: { sessionID: SessionID; messageID: MessageID }) => Effect.Effect<MessageID>
   readonly removePart: (input: { sessionID: SessionID; messageID: MessageID; partID: PartID }) => Effect.Effect<PartID>
@@ -652,11 +653,6 @@ const layer: Layer.Layer<
       }
     })
 
-    // Only persist message/part updates to the durable event log when
-    // workspaces (cross-instance sync) are enabled. Locally the projected
-    // tables are the sole reader (UI/SSE/LLM); the event rows are dead weight
-    // that grew the log superlinearly for long streaming turns. Workspaces ON
-    // keeps them, preserving byte-identical sync behavior.
     const reconcilePrompt: Interface["reconcilePrompt"] = (input) => PromptAdmission.reconcile(db, input)
     const admitPrompt: Interface["admitPrompt"] = Effect.fn("Session.admitPrompt")(function* (payload) {
       const created = yield* events.publish(SessionV1.Event.PromptAdmitted, payload).pipe(
@@ -672,6 +668,8 @@ const layer: Layer.Layer<
       return { created, message }
     })
 
+    // Only persist ordinary message/part updates when cross-instance sync is enabled.
+    // Creation receipts always use one durable admission event, independently of this streaming-edit policy.
     const updateMessage = <T extends SessionV1.Info>(msg: T): Effect.Effect<T> =>
       Effect.gen(function* () {
         yield* events.publish(

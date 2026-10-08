@@ -36,15 +36,16 @@ const layer = Layer.effect(
     const unsubscribe = yield* events.listen((event) =>
       Effect.gen(function* () {
         const ctx = yield* InstanceRef
-        const workspaceID = (yield* WorkspaceRef) ?? event.location?.workspaceID
+        const workspaceID = event.location?.workspaceID ?? (yield* WorkspaceRef)
         const route = {
           directory: event.location?.directory ?? ctx?.directory,
           project: ctx?.project.id,
           workspace: workspaceID,
         }
-        const admitted = event.type === SessionV1.Event.PromptAdmitted.type && event.durable !== undefined
-          ? Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data)
-          : undefined
+        const admitted =
+          event.type === SessionV1.Event.PromptAdmitted.type && event.durable !== undefined
+            ? Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data)
+            : undefined
         if (admitted) {
           GlobalBus.emit("event", {
             ...route,
@@ -65,7 +66,8 @@ const layer = Layer.effect(
             }),
           )
         }
-        if (!admitted) GlobalBus.emit("event", { ...route, payload: { id: event.id, type: event.type, properties: event.data } })
+        if (!admitted)
+          GlobalBus.emit("event", { ...route, payload: { id: event.id, type: event.type, properties: event.data } })
         if (event.durable === undefined) return
         GlobalBus.emit("event", {
           ...route,
