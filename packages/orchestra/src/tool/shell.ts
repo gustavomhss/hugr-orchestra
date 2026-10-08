@@ -180,7 +180,7 @@ export const ShellTool = Tool.define(
       const code: number | null = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Effect.addFinalizer(closeSink)
-          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env)).pipe(
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: true }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
           )

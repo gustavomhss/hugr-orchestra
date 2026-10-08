@@ -2,7 +2,8 @@ export * as SandboxParents from "./sandbox-parents"
 
 import path from "node:path"
 import { lstat } from "node:fs/promises"
-import { Effect } from "effect"
+import { lstatSync, mkdirSync, realpathSync, rmdirSync } from "node:fs"
+import { Effect, Exit, Result } from "effect"
 import { FSUtil } from "./fs-util"
 import { ToolSafety } from "./tool-safety"
 
@@ -49,26 +50,45 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
   directory: string,
   targets: readonly string[],
 ) {
-  yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
-    if ((yield* fs.realPath(path.dirname(target)).pipe(
-      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
-    )) !== path.dirname(target)) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
-    yield* fs.makeDirectory(target, { mode: 0o755 }).pipe(
-      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-exclusive-mkdir" })),
-    )
-    const info = yield* stat(target)
-    const physical = yield* fs.realPath(target).pipe(
-      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
-    )
-    if (!info?.isDirectory() || info.isSymbolicLink() || physical !== target || !FSUtil.contains(directory, physical))
-      return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
-  }), { discard: true })
-  yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
-    const physical = yield* fs.realPath(target).pipe(
-      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
-    )
-    if (physical !== target) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
-  }), { discard: true })
+  const created: { path: string; dev: number; ino: number }[] = []
+  return yield* Effect.gen(function* () {
+    yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
+      if ((yield* fs.realPath(path.dirname(target)).pipe(
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+      )) !== path.dirname(target)) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
+      // Register identity synchronously with exclusive mkdir, so interruption cannot lose the cleanup record.
+      const info = yield* Effect.try({
+        try: () => {
+          mkdirSync(target, { mode: 0o755 })
+          const info = lstatSync(target)
+          created.push({ path: target, dev: info.dev, ino: info.ino })
+          return info
+        },
+        catch: () => new ToolSafety.Denied({ reason: "sandbox-parent-exclusive-mkdir" }),
+      })
+      const physical = yield* fs.realPath(target).pipe(
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+      )
+      if (!info.isDirectory() || info.isSymbolicLink() || physical !== target || !FSUtil.contains(directory, physical))
+        return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
+    }), { discard: true })
+    yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
+      const physical = yield* fs.realPath(target).pipe(
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-parent-placement-acquisition" })),
+      )
+      if (physical !== target) return yield* new ToolSafety.Denied({ reason: "sandbox-parent-placement-changed" })
+    }), { discard: true })
+  }).pipe(Effect.onExit((exit) => Exit.isSuccess(exit) ? Effect.void : Effect.sync(() => {
+    // Nonrecursive rmdir refuses unfamiliar bytes. Changed identities or redirected ancestors are left alone.
+    // Synchronous cleanup also runs on interruption with this Effect version.
+    created.toReversed().forEach((entry) => Result.try(() => {
+      const info = lstatSync(entry.path)
+      if (!info.isDirectory() || info.isSymbolicLink() || info.dev !== entry.dev || info.ino !== entry.ino ||
+        realpathSync(path.dirname(entry.path)) !== path.dirname(entry.path) || realpathSync(entry.path) !== entry.path)
+        return
+      rmdirSync(entry.path)
+    }))
+  })))
 })
 
 const stat = (target: string) => Effect.tryPromise({

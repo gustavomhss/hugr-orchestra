@@ -1,7 +1,8 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { createServer } from "node:net"
-import { Effect } from "effect"
+import { pathToFileURL } from "node:url"
+import { Deferred, Effect, Fiber } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
@@ -12,6 +13,10 @@ import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
+const fact = await Effect.runPromise(ToolSafetySandbox.status())
+// Unsupported/unavailable hosts measure HOLD separately, never count it as confinement conformance.
+const confined = fact.shellWrites === "enforced" ? it.live : it.live.skip
+if (fact.shellWrites === "unenforced") console.info(`Confinement tests skipped: ${fact.shellSandbox.reason}`)
 const fixture = Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const processes = yield* AppProcess.Service
@@ -23,7 +28,7 @@ const fixture = Effect.gen(function* () {
       Effect.provideService(ToolSafety.RuntimeProfile, profile),
       Effect.provideService(ToolSafety.NativeContext, { directory: native }),
     )
-  return { fs, processes, directory, wrap }
+  return { fs, processes, directory, node, wrap }
 })
 
 it.live("parent plan validates all roots before exclusive mkdir and never creates the ambiguous leaf", () =>
@@ -79,6 +84,89 @@ it.live("child environment scrubs ORCHESTRA_AUTH_CONTENT without changing owner 
     const child = ToolSafetySandbox.environment(owner)
     expect(child).toEqual({ GOMODCACHE: "owner-mod", GOCACHE: "owner-build", SAFE: "yes" })
     expect(owner).toEqual(before)
+  }),
+)
+
+it.live("default wrap does not prepare output parents, including with a model-style environment hint", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", ""], {
+      cwd: f.directory, env: { ORCHESTRA_PREPARE_PARENTS: "true" },
+    })).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["pending/deep/out.ts"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    )
+    expect(command._tag).toBe("StandardCommand")
+    expect(yield* f.fs.exists(path.join(f.directory, "pending"))).toBe(false)
+  }),
+)
+
+it.live("later multi-root mkdir failure rolls back only owned empty directories and preserves foreign bytes", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const a = path.join(f.directory, "a")
+    const b = path.join(f.directory, "b")
+    const targets = yield* SandboxParents.plan(f.fs, f.directory, [path.join(a, "deep", "out"), path.join(b, "deep", "out")], [])
+    // Another host actor occupies the second root after planning. None of its directories belong to preparation.
+    yield* f.fs.makeDirectory(path.join(b, "deep"), { recursive: true })
+    yield* f.fs.writeFileString(path.join(b, "deep", "owner"), "unfamiliar")
+    const failed = yield* Effect.flip(SandboxParents.prepare(f.fs, f.directory, targets))
+    expect(failed.reason).toBe("sandbox-parent-exclusive-mkdir")
+    expect(yield* f.fs.exists(a)).toBe(false)
+    expect(yield* f.fs.readFileString(path.join(b, "deep", "owner"))).toBe("unfamiliar")
+
+    // Inject a real foreign write at the filesystem yield before the second root's exclusive mkdir.
+    const occupied = yield* Effect.flip(SandboxParents.prepare({
+      ...f.fs,
+      realPath: (target) => f.fs.realPath(target).pipe(Effect.tap(() => Effect.gen(function* () {
+        if (target === f.directory && (yield* f.fs.exists(path.join(a, "deep"))))
+          yield* f.fs.writeFileString(path.join(a, "deep", "owner"), "new unfamiliar bytes")
+      }))),
+    }, f.directory, targets))
+    expect(occupied.reason).toBe("sandbox-parent-exclusive-mkdir")
+    expect(yield* f.fs.readFileString(path.join(a, "deep", "owner"))).toBe("new unfamiliar bytes")
+    expect(yield* f.fs.readFileString(path.join(b, "deep", "owner"))).toBe("unfamiliar")
+  }),
+)
+
+it.live("failed preparation preserves a replacement directory with a different identity", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const target = path.join(f.directory, "owned")
+    const moved = path.join(f.directory, "moved")
+    const failed = yield* Effect.flip(SandboxParents.prepare({
+      ...f.fs,
+      realPath: (entry) => f.fs.realPath(entry).pipe(Effect.tap(() => Effect.gen(function* () {
+        if (entry !== target) return
+        yield* f.fs.rename(target, moved)
+        yield* f.fs.makeDirectory(target)
+        yield* f.fs.realPath(path.join(f.directory, "absent-control"))
+      }))),
+    }, f.directory, [target]))
+    expect(failed.reason).toBe("sandbox-parent-placement-acquisition")
+    expect(yield* f.fs.isDir(target)).toBe(true)
+    expect(yield* f.fs.isDir(moved)).toBe(true)
+  }),
+)
+
+it.live("interrupted multi-root preparation rolls back its own empty directories", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const ready = yield* Deferred.make<void>()
+    const targets = yield* SandboxParents.plan(f.fs, f.directory, [path.join(f.directory, "a", "deep", "out"), path.join(f.directory, "b", "out")], [])
+    const fiber = yield* SandboxParents.prepare({
+      ...f.fs,
+      realPath: (target) => f.fs.realPath(target).pipe(Effect.tap(() => Effect.gen(function* () {
+        if (target !== f.directory || !(yield* f.fs.exists(path.join(f.directory, "a", "deep")))) return
+        yield* Deferred.succeed(ready, undefined)
+        yield* Effect.never
+      }))),
+    }, f.directory, targets).pipe(Effect.forkScoped)
+    yield* Deferred.await(ready).pipe(Effect.timeout("5 seconds"))
+    expect(yield* f.fs.isDir(path.join(f.directory, "a", "deep"))).toBe(true)
+    yield* Fiber.interrupt(fiber)
+    expect(yield* f.fs.exists(path.join(f.directory, "a"))).toBe(false)
+    expect(yield* f.fs.exists(path.join(f.directory, "b"))).toBe(false)
   }),
 )
 
@@ -150,28 +238,119 @@ it.live("invalid Unix socket grants HOLD before preparing output parents or unco
   }),
 )
 
-it.live("confined generator prepares nested file parents; sibling denied and caches scratch-scoped", () =>
+it.live("malformed Unix grants are typed HOLD even with sandbox disabled and fallback enabled", () =>
   Effect.gen(function* () {
     const f = yield* fixture
-    const fact = yield* ToolSafetySandbox.status()
-    if (fact.shellWrites === "unenforced") {
-      const held = yield* Effect.flip(f.wrap("", { requireSandbox: true }))
-      expect(held.reason).toMatch(/^(?:required-process-sandbox-unavailable|sandbox-platform-unavailable)$/)
-      console.info(`No live jail: ${fact.shellSandbox.reason}; unavailable HOLD measured, no confinement claim`)
+    yield* Effect.forEach([null, {}, "socket", [null], [false], [{}], [{ directory: 7, path: "/socket" }], [{ directory: f.directory, path: 7 }]], (value) => Effect.gen(function* () {
+      const profile = { writeRoots: ["must/not/out"], sandbox: { enabled: false, unconfinedFallback: true,
+        allowedUnixSockets: [{ directory: f.directory, path: path.join(f.directory, "missing.sock") }] } }
+      Reflect.set(profile.sandbox, "allowedUnixSockets", value)
+      const result = yield* f.wrap("", profile).pipe(Effect.result)
+      expect(result._tag).toBe("Failure")
+      if (result._tag !== "Failure") throw new Error("Malformed socket grant was not held")
+      expect(result.failure).toBeInstanceOf(ToolSafety.Denied)
+      expect(result.failure.reason).toBe(Array.isArray(value) ? "sandbox-unix-socket-invalid-entry" : "sandbox-unix-socket-invalid-grants")
+      expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
+    }), { discard: true })
+  }),
+)
+
+it.live("other native location does not acquire an absent foreign socket", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const elsewhere = path.join(f.directory, "elsewhere")
+    yield* f.fs.makeDirectory(elsewhere)
+    const profile = { requireSandbox: true, writeRoots: [], sandbox: { enabled: true, unconfinedFallback: true,
+      allowedUnixSockets: [{ directory: f.directory, path: path.join(f.directory, "absent-parent", "missing.sock") }] } }
+    const result = yield* f.wrap("", profile, elsewhere).pipe(Effect.result)
+    if (process.platform === "darwin") {
+      expect(result._tag).toBe("Success")
       return
     }
+    expect(result._tag).toBe("Failure")
+    if (result._tag !== "Failure") throw new Error("Unsupported socket policy did not HOLD")
+    expect(result.failure.reason).toBe(process.platform === "linux"
+      ? "sandbox-unix-socket-exact-policy-unsupported" : "sandbox-unix-socket-platform-unsupported")
+    expect(yield* f.fs.exists(path.join(f.directory, "absent-parent"))).toBe(false)
+  }),
+)
+
+it.live("unavailable process sandbox HOLDs without preparing parents", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    if (fact.shellWrites === "enforced") return
+    const held = yield* Effect.flip(f.wrap("", { requireSandbox: true, writeRoots: ["unavailable/deep/out"] }))
+    expect(held.reason).toMatch(/^(?:required-process-sandbox-unavailable|sandbox-platform-unavailable)$/)
+    expect(yield* f.fs.exists(path.join(f.directory, "unavailable"))).toBe(false)
+  }),
+)
+
+confined("confined generator prepares nested file parents; sibling denied and caches scratch-scoped", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
     const profile = { requireSandbox: true, writeRoots: ["gen/nested/out.ts"], sandbox: { enabled: true, scratch: true } }
-    const command = yield* f.wrap("const f=require('fs');f.mkdirSync('gen/nested',{recursive:true});f.writeFileSync('gen/nested/out.ts','generated');let denied=false;try{f.writeFileSync('gen/nested/sibling','bad')}catch(e){denied=['EACCES','EPERM'].includes(e.code)};f.writeFileSync(require('path').join(process.env.GOMODCACHE,'probe'),'module');console.log(JSON.stringify({denied,go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))", profile)
+    const env = { GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") }
+    yield* Effect.forEach(Object.values(env), (directory) => f.fs.makeDirectory(directory), { discard: true })
+    yield* Effect.forEach(Object.values(env), (directory) => f.fs.writeFileString(path.join(directory, "sentinel"), "owner"), { discard: true })
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", "const f=require('fs'),p=require('path');f.mkdirSync('gen/nested',{recursive:true});f.writeFileSync('gen/nested/out.ts','generated');let denied=false;try{f.writeFileSync('gen/nested/sibling','bad')}catch(e){denied=['EACCES','EPERM'].includes(e.code)};f.writeFileSync(p.join(process.env.GOMODCACHE,'probe'),'module');f.writeFileSync(p.join(process.env.GOCACHE,'probe'),'build');const ownerDenied=[process.env.OWNER_BUILD,process.env.OWNER_MOD].every(dir=>{try{f.writeFileSync(p.join(dir,'sentinel'),'changed');return false}catch(e){if(!['EPERM','EACCES'].includes(e.code))throw e;return true}});console.log(JSON.stringify({denied,ownerDenied,go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))"], {
+      cwd: f.directory, env: { ...env, OWNER_BUILD: env.GOCACHE, OWNER_MOD: env.GOMODCACHE },
+    }), { prepareParents: true }).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, profile),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    )
     expect(yield* f.fs.isDir(path.join(f.directory, "gen", "nested"))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "gen", "nested", "out.ts"))).toBe(false)
     const result = yield* f.processes.run(command, { timeout: "5 seconds" })
     expect(result.exitCode).toBe(0)
     const out = JSON.parse(result.stdout.toString())
     expect(out.denied).toBe(true)
+    expect(out.ownerDenied).toBe(true)
     expect(out.go).toBe(path.join(out.tmp, "go-build"))
     expect(out.mod).toBe(path.join(out.tmp, "go-mod"))
     expect(yield* f.fs.readFileString(path.join(out.mod, "probe"))).toBe("module")
+    expect(yield* f.fs.readFileString(path.join(out.go, "probe"))).toBe("build")
+    yield* Effect.forEach(Object.values(env), (directory) => Effect.gen(function* () {
+      expect(yield* f.fs.readFileString(path.join(directory, "sentinel"))).toBe("owner")
+    }), { discard: true })
+    expect(env).toEqual({ GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") })
     expect(yield* f.fs.readFileString(path.join(f.directory, "gen", "nested", "out.ts"))).toBe("generated")
     expect(yield* f.fs.exists(path.join(f.directory, "gen", "nested", "sibling"))).toBe(false)
   }), 30_000,
+)
+
+confined("real Go builds and downloads into scratch GOCACHE/GOMODCACHE, leaving owner caches untouched", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const go = yield* ToolSafetySandbox.available("go")
+    if (!go) throw new Error("BLOCKED: real Go unavailable")
+    const proxy = path.join(f.directory, "proxy", "example.com", "scratch", "@v")
+    yield* f.fs.makeDirectory(proxy, { recursive: true })
+    yield* f.fs.writeFileString(path.join(proxy, "v1.0.0.mod"), "module example.com/scratch\n\ngo 1.20\n")
+    yield* f.fs.writeFileString(path.join(proxy, "v1.0.0.info"), JSON.stringify({ Version: "v1.0.0", Time: "2020-01-01T00:00:00Z" }))
+    // Offline module proxy ZIP: go.mod plus scratch.go exporting Value = 42; no network/cache seeding needed.
+    yield* f.fs.writeFile(path.join(proxy, "v1.0.0.zip"), Buffer.from("UEsDBBQAAAAAAIYJSF2hrap0JAAAACQAAAAhAAAAZXhhbXBsZS5jb20vc2NyYXRjaEB2MS4wLjAvZ28ubW9kbW9kdWxlIGV4YW1wbGUuY29tL3NjcmF0Y2gKCmdvIDEuMjAKUEsDBBQAAAAAAIYJSF3Re78jIgAAACIAAAAlAAAAZXhhbXBsZS5jb20vc2NyYXRjaEB2MS4wLjAvc2NyYXRjaC5nb3BhY2thZ2Ugc2NyYXRjaAoKY29uc3QgVmFsdWUgPSA0MgpQSwECFAMUAAAAAACGCUhdoa2qdCQAAAAkAAAAIQAAAAAAAAAAAAAAgAEAAAAAZXhhbXBsZS5jb20vc2NyYXRjaEB2MS4wLjAvZ28ubW9kUEsBAhQDFAAAAAAAhglIXdF7vyMiAAAAIgAAACUAAAAAAAAAAAAAAIABYwAAAGV4YW1wbGUuY29tL3NjcmF0Y2hAdjEuMC4wL3NjcmF0Y2guZ29QSwUGAAAAAAIAAgCiAAAAyAAAAAAA", "base64"))
+    yield* f.fs.writeFileString(path.join(f.directory, "go.mod"), "module fixture\n\ngo 1.20\n\nrequire example.com/scratch v1.0.0\n")
+    yield* f.fs.writeFileString(path.join(f.directory, "main.go"), 'package main\nimport "example.com/scratch"\nfunc main() { println(scratch.Value) }\n')
+    const owner = { GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") }
+    yield* Effect.forEach(Object.values(owner), (directory) => f.fs.makeDirectory(directory), { discard: true })
+    yield* Effect.forEach(Object.values(owner), (directory) => f.fs.writeFileString(path.join(directory, "sentinel"), "owner"), { discard: true })
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", `const c=require('child_process'),f=require('fs');const r=c.spawnSync(${JSON.stringify(go)},['build','-mod=mod','-o','gen/deep/out','.'],{encoding:'utf8'});if(r.status!==0)throw Error(r.stderr||String(r.error));console.log(JSON.stringify({go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))`], {
+      cwd: f.directory, env: { ...owner, GOPROXY: pathToFileURL(path.join(f.directory, "proxy")).href, GOSUMDB: "off", GOTOOLCHAIN: "local", GOTELEMETRY: "off", GOENV: "off", CGO_ENABLED: "0", GOFLAGS: "", GOPRIVATE: "", GONOPROXY: "", GONOSUMDB: "" },
+    }), { prepareParents: true }).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["gen/deep/out", "go.sum"], sandbox: { enabled: true, scratch: true } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    )
+    const result = yield* f.processes.run(command, { timeout: "120 seconds" })
+    if (result.exitCode !== 0) throw new Error(`Real Go control failed: ${result.stderr.toString()}`)
+    const out = JSON.parse(result.stdout.toString())
+    expect(out.go).toBe(path.join(out.tmp, "go-build"))
+    expect(out.mod).toBe(path.join(out.tmp, "go-mod"))
+    expect((yield* f.fs.readDirectory(out.go)).some((entry) => /^[a-f0-9]{2}$/.test(entry))).toBe(true)
+    expect(yield* f.fs.readFileString(path.join(out.mod, "example.com", "scratch@v1.0.0", "scratch.go"))).toContain("const Value = 42")
+    expect(yield* f.fs.exists(path.join(f.directory, "gen", "deep", "out"))).toBe(true)
+    yield* Effect.forEach(Object.values(owner), (directory) => Effect.gen(function* () {
+      expect(yield* f.fs.readDirectory(directory)).toEqual(["sentinel"])
+      expect(yield* f.fs.readFileString(path.join(directory, "sentinel"))).toBe("owner")
+    }), { discard: true })
+  }), 150_000,
 )
