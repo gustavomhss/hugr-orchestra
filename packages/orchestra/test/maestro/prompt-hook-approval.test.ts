@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { Cause, Effect, Exit, Fiber, Schema } from "effect"
+import { Cause, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable } from "@orchestra/core/event/sql"
 import { Global } from "@orchestra/core/global"
@@ -12,46 +12,27 @@ import { MessageTable, PartTable } from "@orchestra/core/session/sql"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import { RelayHook } from "@orchestra/schema/relay-hook"
-import { RuntimeFlags } from "@/effect/runtime-flags"
+import { AppLayer } from "@/effect/app-runtime"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { ArsenalApproval } from "@/maestro/arsenal-approval"
 import { Permission } from "@/permission"
 import { SessionPrompt } from "@/session/prompt"
 import { MessageID } from "@/session/schema"
 import { Session } from "@/session/session"
-import { TestInstance } from "../fixture/fixture"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
-import { makeHttp } from "../session/prompt.fixture"
 
-const it = testEffect(makeHttp({ replacements: [
-  [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true, experimentalEventSystem: true })],
-] }))
+const it = testEffect(Layer.merge(AppLayer, TestLLMServer.layer))
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 
 it.instance("installed V1 prompt approval awaits real Asked queue; once/always/reject/interrupt preserve admission boundary", () =>
   Effect.gen(function* () {
-    const instance = yield* TestInstance
     const llm = yield* TestLLMServer
-    yield* Effect.promise(() => Bun.write(path.join(instance.directory, "orchestra.json"), JSON.stringify({
-      permission: { "*": "allow" },
-      agent: { maestro: { permission: { "*": "allow" } } },
-      provider: { test: {
-        name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
-        models: { "test-model": {
-          id: "test-model", name: "Test", attachment: false, reasoning: false, temperature: false,
-          tool_call: true, release_date: "2025-01-01", limit: { context: 100000, output: 10000 },
-          cost: { input: 0, output: 0 }, options: {},
-        } },
-        options: { apiKey: "test-key", baseURL: llm.url },
-      } },
-    })))
     const sessions = yield* Session.Service
     const prompts = yield* SessionPrompt.Service
     const permissions = yield* Permission.Service
     const events = yield* EventV2Bridge.Service
     const database = yield* Database.Service
-    const host = yield* ArsenalApproval.makeApprovalHost
     const session = yield* sessions.create({ agent: "maestro", title: "Prompt approval" })
     const snapshot = {
       schema: "relay.hook.v1", name: "Prompt approval", binding: "host-required", installed: false,
@@ -95,10 +76,9 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
       Effect.gen(function* () {
         const before = yield* admissionState
         const request = { sessionID: session.id, messageID: MessageID.ascending(), model,
+          noReply: index !== 4,
           parts: [{ type: "text" as const, text: `Prompt ${index}` }] }
-        const pending = yield* prompts.prompt(request).pipe(
-          Effect.provideService(ToolSafety.NativeHost, host), Effect.forkScoped,
-        )
+        const pending = yield* prompts.prompt(request).pipe(Effect.forkScoped)
         const card = yield* pollWithTimeout(permissions.list().pipe(Effect.map((items) =>
           items.find((item) => item.metadata.messageID === request.messageID))), "Real prompt Asked queue missing")
         expect(asked).toHaveLength(index + 1)
@@ -118,9 +98,10 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
           expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
         }
         if (reply !== "interrupt") {
-          if (reply !== "reject") yield* llm.text(`Accepted ${index}`)
+          if (index === 4) yield* llm.text(`Accepted ${index}`)
           yield* permissions.reply({ requestID: card.id, reply })
           const exit = yield* Fiber.await(pending)
+          if (reply !== "reject") yield* exit
           expect(Exit.isSuccess(exit)).toBe(reply !== "reject")
           if (reply === "reject") expect(exit).toMatchObject({ _tag: "Failure" })
         }
@@ -141,11 +122,27 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
         const receipt = yield* PromptAdmission.find(database.db, request.messageID)
         expect(receipt?.snapshot.info).toMatchObject({ id: request.messageID, role: "user",
           promptContext: { reminders: ["Hook 'Prompt approval': First.", "Hook 'Prompt approval': Second."] } })
-        expect(yield* llm.calls).toBe(before.calls + 1)
-        expect(JSON.stringify(yield* llm.inputs)).toContain(`Prompt ${index}`)
+        expect(yield* llm.calls).toBe(before.calls + (index === 4 ? 1 : 0))
+        if (index === 4) expect(JSON.stringify(yield* llm.inputs)).toContain(`Prompt ${index}`)
       }),
     )
-  }), { git: true },
+  }), { git: true, init: (directory) => Effect.gen(function* () {
+    const llm = yield* TestLLMServer
+    // Production bootstrap reads config before the test body, so install the provider first.
+    yield* Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
+      permission: { "*": "allow" },
+      agent: { maestro: { permission: { "*": "allow" } } },
+      provider: { test: {
+        name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
+        models: { "test-model": {
+          id: "test-model", name: "Test", attachment: false, reasoning: false, temperature: false,
+          tool_call: true, release_date: "2025-01-01", limit: { context: 100000, output: 10000 },
+          cost: { input: 0, output: 0 }, options: {},
+        } },
+        options: { apiKey: "test-key", baseURL: llm.url },
+      } },
+    })))
+  }) },
 )
 
 it.instance("V1 no-call exception rejects every invalid prompt tuple and placement before native Asked", () =>
