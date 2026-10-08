@@ -5,9 +5,9 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-08T14:06:29Z
+- **Generated:** 2026-10-08T14:46:23Z
 - **Files:** 74
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `79c3d09196b0161c9fa07cea93edb49813bb0458e1efcde399fbb3e3306c06d5`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `edccff59978fc5bf838bc4a0d96f0e28a1c64e0e72df7a85eff17debbf52fdc3`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -29,7 +29,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8181 | `561ea2e78936e8d479f686c68e62930a0da37a7dfd8f7438e3f14705b2248b10` |
 | `docs/README.md` | 47 | 2806 | `0abdb3deb1ee2b22c0904dc099b3fe81dbabd34aa6efe873840219dc972cdbc2` |
 | `docs/architecture.md` | 199 | 15560 | `7a81d8513ce5df669c562fb8868454347d32df9dd57c4e68c60b6955e182b988` |
-| `docs/authoring-api.md` | 88 | 5609 | `b99efc95686c8a636a96015f8c863631835af2ca17cef074624a016f2908f012` |
+| `docs/authoring-api.md` | 89 | 5685 | `a0914a2222a5cde0a41ec94e2dc2deb1af1cdb708ff5aabab22afb8da1fd92cd` |
 | `docs/authoring-sprints.md` | 248 | 16966 | `a54d5c8e16cc0f515b70d2f626fa2f2cc93e51dc8ff72ae134e25a4787481c11` |
 | `docs/auto-decompose.md` | 71 | 3589 | `a614f0b3b432fe36d1efdecb79a58e8fa6a9efb9cd6705cf20b0e3fd11a27e09` |
 | `docs/compaction.md` | 58 | 2569 | `ab6c2fc73746c1005748540a44bd586defe2619b049d9bd911e7f86eda96683a` |

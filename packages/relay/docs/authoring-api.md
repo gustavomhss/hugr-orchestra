@@ -42,7 +42,8 @@ Paths below use the native `/api/relay` prefix. Consult Protocol for payloads an
 | `POST /document/:documentID/check` | 403 `maestro-execution-required`; executable workflow checks are owned by Maestro |
 | `GET /node-types` | Workflow and hook catalogs |
 | `GET/POST /scope`, `PATCH/DELETE /scope/:scopeID` | Project document scopes |
-| `GET/POST /hook`, `PATCH/DELETE /hook/:installID` | List, install, update or uninstall published hook snapshots |
+| `GET/POST /hook`, `DELETE /hook/:installID` | List, install or uninstall published hook snapshots |
+| `POST /hook/:installID/update` | Repin an install to its document's published version |
 | `POST /hook/:installID/enable`, `/disable`; `PATCH /hook/order` | Hook activation and order |
 | `GET /hook/:installID/decisions`, `POST /hook/repair` | Recorded decisions and explicit store repair |
 
