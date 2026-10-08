@@ -2,7 +2,7 @@
 
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
-import { chmod, lstat, mkdir, mkdtemp, open, rename, rm, writeFile } from "node:fs/promises"
+import { chmod, lstat, mkdir, mkdtemp, open, readdir, rename, rm, writeFile } from "node:fs/promises"
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { parseArgs } from "node:util"
 import { namedTargets } from "./targets"
@@ -27,7 +27,7 @@ export async function exportArtifacts(input: { dist: string; out: string; versio
   )
     throw new Error("Artifact source/output overlap")
   await requireDirectory(dist)
-  await requireDirectory(out, true)
+  await requireDirectory(dirname(out), true)
   // Capture every validated source before creating staging or changing output.
   const sources = await Promise.all(
     input.targets.map(async (target) => {
@@ -59,6 +59,13 @@ export async function exportArtifacts(input: { dist: string; out: string; versio
       }
     }),
   )
+  const manifest = {
+    schema: 1 as const,
+    version: input.version,
+    artifacts: sources.map((source) => ({ target: source.target, file: source.file, sha256: source.sha256 })),
+  }
+  // Immutable retry reads and verifies every byte before doing any filesystem writes.
+  if (await verifyPublication(out, manifest)) return manifest
   await mkdir(dirname(out), { recursive: true })
   const staging = await mkdtemp(join(dirname(out), ".cli-export-"))
   return Promise.allSettled(
@@ -78,30 +85,124 @@ export async function exportArtifacts(input: { dist: string; out: string; versio
     .then(async (results) => {
       const failed = results.find((result) => result.status === "rejected")
       if (failed?.status === "rejected") throw failed.reason
-      const manifest = {
-        schema: 1,
-        version: input.version,
-        artifacts: results.flatMap((result) => (result.status === "fulfilled" ? [result.value] : [])),
-      }
       await writeFile(join(staging, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", { flag: "wx" })
-      await requireDirectory(out, true)
-      const previous = `${staging}-previous`
-      // Portable directory replacement uses two renames, with rollback on publish failure.
-      const moved = await rename(out, previous).then(
-        () => true,
-        (error: NodeJS.ErrnoException) => {
-          if (error.code === "ENOENT") return false
-          throw error
-        },
-      )
-      await rename(staging, out).catch(async (error) => {
-        if (moved) await rename(previous, out)
+      await requireDirectory(dirname(out))
+      // No-replace is enforced by the OS, not an exists-then-rename race.
+      await publishDirectory(staging, out).catch(async (error) => {
+        if (await verifyPublication(out, manifest)) return
         throw error
       })
-      if (moved) await rm(previous, { recursive: true, force: true })
       return manifest
     })
     .finally(() => rm(staging, { recursive: true, force: true }))
+}
+
+async function verifyPublication(
+  directory: string,
+  manifest: {
+    schema: 1
+    version: string
+    artifacts: { target: string; file: string; sha256: string }[]
+  },
+) {
+  const stat = await lstat(directory).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return undefined
+    throw error
+  })
+  if (!stat) return false
+  return Promise.resolve()
+    .then(async () => {
+      if (!stat.isDirectory()) throw new Error("Publication root must be a real directory")
+      const value: unknown = JSON.parse((await readRegular(join(directory, "manifest.json"))).toString("utf8"))
+      if (
+        !value ||
+        typeof value !== "object" ||
+        Object.keys(value).length !== 3 ||
+        !("schema" in value) ||
+        value.schema !== manifest.schema ||
+        !("version" in value) ||
+        value.version !== manifest.version ||
+        !("artifacts" in value) ||
+        !Array.isArray(value.artifacts) ||
+        value.artifacts.length !== manifest.artifacts.length
+      )
+        throw new Error("Publication descriptor mismatch")
+      const targets = new Set<string>()
+      await Promise.all(
+        value.artifacts.map(async (artifact: unknown) => {
+          if (
+            !artifact ||
+            typeof artifact !== "object" ||
+            Object.keys(artifact).length !== 3 ||
+            !("target" in artifact) ||
+            !("file" in artifact) ||
+            !("sha256" in artifact)
+          )
+            throw new Error("Invalid publication artifact")
+          const expected = manifest.artifacts.find((entry) => entry.target === artifact.target)
+          if (
+            !expected ||
+            artifact.file !== expected.file ||
+            artifact.sha256 !== expected.sha256 ||
+            targets.has(expected.target)
+          )
+            throw new Error("Publication artifact mismatch")
+          targets.add(expected.target)
+          if (
+            createHash("sha256")
+              .update(await readRegular(join(directory, expected.file)))
+              .digest("hex") !== expected.sha256
+          )
+            throw new Error("Publication artifact digest mismatch")
+        }),
+      )
+      const files = await readdir(directory)
+      if (
+        files.length !== manifest.artifacts.length + 1 ||
+        files.some((file) => file !== "manifest.json" && !manifest.artifacts.some((entry) => entry.file === file))
+      )
+        throw new Error("Publication contains unowned files")
+      const current = await lstat(directory)
+      if (!current.isDirectory() || current.dev !== stat.dev || current.ino !== stat.ino)
+        throw new Error("Publication root changed during verification")
+      return true
+    })
+    .catch((cause) => {
+      throw new Error(`Artifact publication conflict: ${directory}`, { cause })
+    })
+}
+
+// POSIX rename replaces an existing empty directory. Use native exclusive rename
+// so even a concurrent empty/invalid destination cannot be overwritten.
+export async function publishDirectory(source: string, destination: string) {
+  await requireDirectory(source)
+  await requireDirectory(dirname(destination))
+  if (process.platform === "win32") return rename(source, destination)
+  if (process.platform !== "linux" && process.platform !== "darwin")
+    throw new Error(`Unsupported atomic artifact publication platform: ${process.platform}`)
+  const { dlopen, ptr, read } = await import("bun:ffi")
+  const from = Buffer.from(`${source}\0`)
+  const to = Buffer.from(`${destination}\0`)
+  if (process.platform === "linux") {
+    const musl = `/lib/ld-musl-${process.arch === "arm64" ? "aarch64" : "x86_64"}.so.1`
+    const library = dlopen((await Bun.file(musl).exists()) ? musl : "libc.so.6", {
+      renameat2: { args: ["i32", "ptr", "i32", "ptr", "u32"], returns: "i32" },
+      __errno_location: { args: [], returns: "ptr" },
+    })
+    const result = library.symbols.renameat2(-100, ptr(from), -100, ptr(to), 1)
+    const errno = result === 0 ? 0 : read.i32(library.symbols.__errno_location()!)
+    library.close()
+    if (result !== 0) throw new Error(`Exclusive artifact publication failed (errno ${errno}): ${destination}`)
+    return
+  }
+  const library = dlopen("/usr/lib/libSystem.B.dylib", {
+    renamex_np: { args: ["ptr", "ptr", "u32"], returns: "i32" },
+    __error: { args: [], returns: "ptr" },
+  })
+  const result = library.symbols.renamex_np(ptr(from), ptr(to), 4)
+  const errno = result === 0 ? 0 : read.i32(library.symbols.__error()!)
+  library.close()
+  if (result !== 0) throw new Error(`Exclusive artifact publication failed (errno ${errno}): ${destination}`)
 }
 
 // Check every ancestor, including roots and new output's existing parents.
