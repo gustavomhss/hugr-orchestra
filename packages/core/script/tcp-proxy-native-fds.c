@@ -13,6 +13,8 @@
 #include <errno.h>
 #include <stddef.h>
 #include <poll.h>
+#include <netinet/tcp.h>
+#include <time.h>
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "FAIL line %d errno %d\n", __LINE__, errno); exit(9); } } while (0)
 static int port;
@@ -25,13 +27,14 @@ static int kernel_call(int number, int first, int second) {
 #if defined(__x86_64__)
     long result = 0x2000000 | number;
     unsigned char failed;
-    __asm__ volatile("syscall; setc %1" : "+a"(result), "=qm"(failed) : "D"((long)first), "S"((long)second) : "rcx", "r11", "cc", "memory");
+    __asm__ volatile("syscall; setc %1" : "+a"(result), "=qm"(failed) : "D"((long)first), "S"((long)second), "d"(0L) : "rcx", "r11", "cc", "memory");
 #elif defined(__aarch64__)
     register long result __asm__("x0") = first;
     register long argument __asm__("x1") = second;
     register long call __asm__("x16") = number;
+    register long protocol __asm__("x2") = 0;
     unsigned failed;
-    __asm__ volatile("svc #0x80; cset %w1, cs" : "+r"(result), "=r"(failed) : "r"(argument), "r"(call) : "cc", "memory");
+    __asm__ volatile("svc #0x80; cset %w1, cs" : "+r"(result), "=r"(failed) : "r"(argument), "r"(call), "r"(protocol) : "cc", "memory");
 #else
 #error Unsupported Darwin syscall ABI
 #endif
@@ -109,8 +112,185 @@ static int fd_count(void) {
     CHECK(bytes > 0 && bytes < (int)sizeof(fds) && bytes % sizeof(*fds) == 0);
     return bytes / (int)sizeof(*fds);
 }
+static void count_eventually(int expected, const char *tag) {
+    for (int i = 0; i < 300; i++) {
+        if (fd_count() == expected) return;
+        usleep(10000);
+    }
+    fprintf(stderr, "%s expected=%d actual=%d\n", tag, expected, fd_count());
+    exit(9);
+}
+static struct sockaddr_in target(void) {
+    struct sockaddr_in addr = {0}; addr.sin_len = sizeof(addr); addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); addr.sin_port = htons(port);
+    return addr;
+}
+static void echo(int fd, const char *text) {
+    size_t n = strlen(text); CHECK(n < 128);
+    CHECK(write(fd, text, n) == (ssize_t)n);
+    char received[128];
+    for (size_t i = 0; i < n;) {
+        ssize_t got = read(fd, received + i, n - i); CHECK(got > 0); i += (size_t)got;
+    }
+    CHECK(memcmp(text, received, n) == 0);
+}
+static void unconnected(int fd) {
+    struct sockaddr_in addr = {0}; socklen_t size = sizeof(addr);
+    CHECK(getsockname(fd, (struct sockaddr *)&addr, &size) == 0);
+    CHECK(size == sizeof(addr) && addr.sin_family == AF_INET && addr.sin_addr.s_addr == htonl(INADDR_LOOPBACK) && addr.sin_port == 0);
+    CHECK(getpeername(fd, (struct sockaddr *)&addr, &size) == -1 && errno == ENOTCONN);
+}
+static void preconnect(int with_fork) {
+    int before = fd_count();
+    int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); CHECK(fd >= 0);
+    int aliases[4] = {fd, dup(fd), fcntl(fd, F_DUPFD, 40), fcntl(fd, F_DUPFD_CLOEXEC, 40)};
+    struct socket_fdinfo info = {0};
+    CHECK(proc_pidfdinfo(getpid(), fd, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info));
+    uint64_t handle = info.psi.soi_so; CHECK(handle && info.psi.soi_family == AF_UNIX);
+    for (int i = 0; i < 4; i++) { CHECK(aliases[i] >= 0); unconnected(aliases[i]); }
+    struct sockaddr_in addr = target();
+    CHECK(bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1 && errno == EPERM);
+    addr.sin_port = 0;
+    CHECK(connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == -1 && errno == EPERM);
+    unconnected(fd);
+    int enabled = 1;
+    CHECK(setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &enabled, sizeof(enabled)) == -1 && (errno == ENOTSUP || errno == EOPNOTSUPP || errno == ENOPROTOOPT));
+    addr = target();
+    if (with_fork) {
+        int signal[2]; CHECK(pipe(signal) == 0);
+        pid_t child = fork(); CHECK(child >= 0);
+        if (child == 0) {
+            alarm(5); close(signal[0]);
+            CHECK(connect(aliases[1], (struct sockaddr *)&addr, sizeof(addr)) == 0);
+            family(fd, AF_INET); echo(aliases[2], "preconnect-child");
+            CHECK(write(signal[1], "G", 1) == 1);
+            for (int i = 0; i < 4; i++) close(aliases[i]);
+            close(signal[1]); exit(0);
+        }
+        close(signal[1]); char ready; CHECK(read(signal[0], &ready, 1) == 1 && ready == 'G'); close(signal[0]);
+        int status; CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    } else CHECK(connect(aliases[1], (struct sockaddr *)&addr, sizeof(addr)) == 0);
+    for (int i = 0; i < 4; i++) {
+        CHECK(proc_pidfdinfo(getpid(), aliases[i], PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info));
+        if (info.psi.soi_so != handle) { fprintf(stderr, "PRECONNECT_IDENTITY split alias=%d\n", i); exit(9); }
+    }
+    for (int i = 0; i < 4; i++) { family(aliases[i], AF_INET); echo(aliases[i], "preconnect-parent"); }
+    for (int i = 0; i < 4; i++) CHECK(close(aliases[i]) == 0);
+    int raw = kernel_call(SYS_socket, AF_INET, SOCK_STREAM); CHECK(raw >= 0);
+    CHECK(connect(raw, (struct sockaddr *)&addr, sizeof(addr)) == -1 && errno == EPERM); close(raw);
+    count_eventually(before, "PRECONNECT_KEEPERS");
+    puts(with_fork ? "PRECONNECT fork shared socket/addresses/bytes OK" : "PRECONNECT dup/fcntl shared socket/addresses/bytes OK");
+}
+struct connect_race {
+    pthread_mutex_t lock;
+    pthread_cond_t ready;
+    int arrived, go, fd;
+    const struct sockaddr *addr;
+    socklen_t size;
+};
+struct connect_result { struct connect_race *race; int result, error; };
+static void *connect_worker(void *input) {
+    struct connect_result *out = input;
+    pthread_mutex_lock(&out->race->lock);
+    out->race->arrived++;
+    pthread_cond_broadcast(&out->race->ready);
+    while (!out->race->go) pthread_cond_wait(&out->race->ready, &out->race->lock);
+    pthread_mutex_unlock(&out->race->lock);
+    out->result = connect(out->race->fd, out->race->addr, out->race->size); out->error = errno;
+    return NULL;
+}
+static void concurrent_connect(int native_unix) {
+    int before = fd_count();
+    for (int round = 0; round < 20; round++) {
+        struct sockaddr_in in = target();
+        struct sockaddr_un un = {0}; un.sun_family = AF_UNIX; strcpy(un.sun_path, path);
+        un.sun_len = (unsigned char)(offsetof(struct sockaddr_un, sun_path) + strlen(path) + 1);
+        int fd = socket(native_unix ? AF_UNIX : AF_INET, SOCK_STREAM, 0); CHECK(fd >= 0);
+        struct connect_race race = {.lock = PTHREAD_MUTEX_INITIALIZER, .ready = PTHREAD_COND_INITIALIZER, .fd = fd,
+            .addr = native_unix ? (struct sockaddr *)&un : (struct sockaddr *)&in, .size = native_unix ? un.sun_len : sizeof(in)};
+        struct connect_result results[8]; pthread_t workers[8];
+        for (int i = 0; i < 8; i++) { results[i].race = &race; CHECK(pthread_create(&workers[i], NULL, connect_worker, &results[i]) == 0); }
+        pthread_mutex_lock(&race.lock);
+        while (race.arrived != 8) pthread_cond_wait(&race.ready, &race.lock);
+        race.go = 1; pthread_cond_broadcast(&race.ready); pthread_mutex_unlock(&race.lock);
+        int successes = 0, eisconn = 0;
+        for (int i = 0; i < 8; i++) {
+            CHECK(pthread_join(workers[i], NULL) == 0);
+            successes += results[i].result == 0; eisconn += results[i].result == -1 && results[i].error == EISCONN;
+        }
+        if (successes != 1 || eisconn != 7) {
+            fprintf(stderr, "CONNECT_WINNERS round=%d successes=%d eisconn=%d\n", round, successes, eisconn); exit(9);
+        }
+        family(fd, native_unix ? AF_UNIX : AF_INET); echo(fd, "concurrent-connect"); close(fd);
+        CHECK(pthread_mutex_destroy(&race.lock) == 0 && pthread_cond_destroy(&race.ready) == 0);
+    }
+    count_eventually(before, "CONNECT_KEEPERS");
+    puts(native_unix ? "UNIX control 20x8 one success/seven EISCONN OK" : "VIRTUAL 20x8 one success/seven EISCONN OK");
+}
+static void fork_eof(void) {
+    int before = fd_count();
+    int fd = dial(0), child_to_parent[2], parent_to_child[2];
+    CHECK(pipe(child_to_parent) == 0 && pipe(parent_to_child) == 0);
+    pid_t child = fork(); CHECK(child >= 0);
+    if (child == 0) {
+        alarm(8); close(child_to_parent[0]); close(parent_to_child[1]);
+        char command; CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'H');
+        usleep(150000); family(fd, AF_INET); echo(fd, "retained-child-client");
+        CHECK(fd_count() == before + 4); // Two control pipes, client and its pin.
+        CHECK(write(child_to_parent[1], "H", 1) == 1);
+        CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'C');
+        CHECK(kernel_call(SYS_close, fd, 0) == 0);
+        // No interposed close or socket calls here: only the child worker can
+        // reap its pin while this process stays alive on its control pipes.
+        count_eventually(before + 2, "FORK_KEEPER_COUNT child");
+        CHECK(write(child_to_parent[1], "G", 1) == 1);
+        CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'X');
+        close(child_to_parent[1]); close(parent_to_child[0]); exit(0);
+    }
+    close(child_to_parent[1]); close(parent_to_child[0]);
+    char marker[100]; snprintf(marker, sizeof(marker), "fork-eof:%ld:%ld\n", (long)getpid(), (long)child); echo(fd, marker);
+    CHECK(kernel_call(SYS_close, fd, 0) == 0);
+    CHECK(write(parent_to_child[1], "H", 1) == 1);
+    char response; CHECK(read(child_to_parent[0], &response, 1) == 1 && response == 'H');
+    CHECK(write(parent_to_child[1], "C", 1) == 1);
+    CHECK(read(child_to_parent[0], &response, 1) == 1 && response == 'G');
+    count_eventually(before + 2, "FORK_KEEPER_COUNT parent");
+    printf("FORK_KEEPERS_GONE parent=%ld child=%ld both_alive\n", (long)getpid(), (long)child); fflush(stdout);
+    usleep(500000);
+    CHECK(write(parent_to_child[1], "X", 1) == 1);
+    close(parent_to_child[1]); close(child_to_parent[0]);
+    int status; CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    count_eventually(before, "FORK_FINAL_INVENTORY");
+    puts("FORK EOF both alive; retained-client control; local pins gone OK");
+}
+static void *raw_alias_worker(void *input) {
+    int anchor = *(int *)input;
+    for (int i = 0; i < 100; i++) {
+        int alias = kernel_call(SYS_dup, anchor, 0); CHECK(alias >= 0); family(alias, AF_INET);
+        CHECK(kernel_call(SYS_close, alias, 0) == 0);
+    }
+    return NULL;
+}
+static void raw_alias_race(void) {
+    int before = fd_count(), anchor = dial(0); pthread_t workers[8];
+    for (int i = 0; i < 8; i++) CHECK(pthread_create(&workers[i], NULL, raw_alias_worker, &anchor) == 0);
+    for (int i = 0; i < 8; i++) CHECK(pthread_join(workers[i], NULL) == 0);
+    family(anchor, AF_INET); echo(anchor, "raw-alias-anchor");
+    CHECK(kernel_call(SYS_close, anchor, 0) == 0);
+    count_eventually(before, "RAW_ALIAS_KEEPERS");
+    puts("RAW dup/close race 8x100 with live source anchor OK");
+}
 int main(int argc, char **argv) {
-    CHECK(argc == 3); port = atoi(argv[1]); path = argv[2];
+    CHECK(argc == 3 || argc == 4); port = atoi(argv[1]); path = argv[2];
+    if (argc == 4) {
+        if (strcmp(argv[3], "preconnect") == 0) { preconnect(0); return 0; }
+        if (strcmp(argv[3], "preconnect-fork") == 0) { preconnect(1); return 0; }
+        if (strcmp(argv[3], "concurrent") == 0) { concurrent_connect(0); return 0; }
+        if (strcmp(argv[3], "unix-control") == 0) { concurrent_connect(1); return 0; }
+        if (strcmp(argv[3], "fork-eof") == 0) { fork_eof(); return 0; }
+        if (strcmp(argv[3], "raw-race") == 0) { raw_alias_race(); return 0; }
+        CHECK(0);
+    }
     int before = fd_count();
     int control = socket(AF_UNIX, SOCK_STREAM, 0); CHECK(control >= 0);
     CHECK(fd_count() == before + 1);
@@ -142,6 +322,7 @@ int main(int argc, char **argv) {
     CHECK(kernel_call(SYS_close, fd, 0) == 0); family(copy, AF_INET); CHECK(close(copy) == 0);
     fd = dial(0); CHECK(kernel_call(SYS_close, fd, 0) == 0); copy = unix_dial(); CHECK(copy == fd); family(copy, AF_UNIX); CHECK(close(copy) == 0);
     fd = dial(0); CHECK(close(fd) == 0); copy = open("/dev/null", O_RDONLY); CHECK(copy == fd);
+    char pathname[1024]; CHECK(fcntl(copy, F_GETPATH, pathname) == 0 && strcmp(pathname, "/dev/null") == 0);
     struct sockaddr_storage addr; socklen_t size = sizeof(addr);
     CHECK(getpeername(copy, (struct sockaddr *)&addr, &size) == -1 && errno == ENOTSOCK); CHECK(close(copy) == 0);
     CHECK(dup(-1) == -1 && dup2(-1, direct) == -1);
@@ -171,7 +352,7 @@ int main(int argc, char **argv) {
         CHECK(kernel_call(SYS_close, fd, 0) == 0);
     }
     fd = dial(0); family(fd, AF_INET); CHECK(close(fd) == 0);
-    CHECK(fd_count() == before);
+    count_eventually(before, "FINAL_KEEPERS");
     puts("REGISTRY bounded raw-close churn/reclamation OK");
     puts("FD inventory positive control/final baseline restored OK");
     return 0;

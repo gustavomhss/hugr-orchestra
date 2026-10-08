@@ -11,6 +11,7 @@ network configuration, generator files or dependency installations.
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import select
 import shlex
@@ -81,11 +82,21 @@ def main():
     parser.add_argument("--pinned", type=pathlib.Path, required=True)
     parser.add_argument("--lan", required=True)
     parser.add_argument("--artifacts", type=pathlib.Path, required=True)
+    parser.add_argument("--go-client", type=pathlib.Path, help="Reuse an owned Go client unchanged for source-only reruns")
+    parser.add_argument("--discard-go-cache", type=pathlib.Path, action="append", default=[], help="Discard only an explicitly owned previous proof's Go build cache")
     args = parser.parse_args()
     if sys.platform != "darwin":
         raise RuntimeError("real Darwin required; no skip/green on another OS")
     args.runtime = args.runtime.resolve(strict=True)
     args.pinned = args.pinned.resolve(strict=True)
+    for previous in args.discard_go_cache:
+        previous = previous.resolve(strict=True)
+        receipt = json.loads((previous / "evidence.json").read_text())
+        assert previous.parent == args.artifacts.resolve(strict=True) and previous.name.startswith("tcp-n-")
+        assert receipt["root"] == str(previous) and receipt["runtime"] == str(args.runtime) and receipt["pinned"] == str(args.pinned)
+        assert receipt["cleanup"]["open_sockets"] == 0 and receipt["cleanup"]["threads_alive"] == 0
+        if (previous / "go-build").exists():
+            shutil.rmtree(previous / "go-build")
     root = pathlib.Path(tempfile.mkdtemp(prefix="tcp-n-", dir=args.artifacts.resolve(strict=True)))
     evidence = {"root": str(root), "runs": [], "started": time.time(), "runtime": str(args.runtime), "pinned": str(args.pinned)}
     events, resources, threads = [], [], []
@@ -103,9 +114,16 @@ def main():
     def save():
         (root / "evidence.json").write_text(json.dumps(evidence, indent=2))
 
-    def event(name, kind, data=None):
+    def event(name, kind, data=None, **extra):
         with event_lock:
-            events.append({"listener": name, "event": kind, **({"hex": data.hex()} if data is not None else {})})
+            events.append({"listener": name, "event": kind, **({"hex": data.hex()} if data is not None else {}), **extra})
+
+    def alive(pid):
+        try:
+            os.kill(pid, 0)
+            return True
+        except ProcessLookupError:
+            return False
 
     def start(fn, *values):
         t = threading.Thread(target=fn, args=values)
@@ -125,6 +143,7 @@ def main():
 
         def serve_connection(c):
             upstream = None
+            first = b""
             try:
                 if target:
                     # Destination captured by host at listener creation. No
@@ -136,7 +155,12 @@ def main():
                         for src in ready:
                             data = src.recv(65536)
                             if not data:
+                                if src is c:
+                                    pids = first.strip().split(b":") if first.startswith(b"fork-eof:") else []
+                                    event(name, "eof", first, alive=[alive(int(pid)) for pid in pids[1:]] if len(pids) == 3 else [])
                                 return
+                            if src is c and b"\n" not in first and len(first) < 128:
+                                first = (first + data)[:128]
                             (upstream if src is c else c).sendall(data)
                 else:
                     c.settimeout(2)
@@ -183,9 +207,11 @@ def main():
             command = argv
         elif mode == "deny-all":
             command = ["/usr/bin/sandbox-exec", "-p", "(version 1)(allow default)(deny network*)"] + command
-        elif mode == "native":
+        elif mode in {"native", "production"}:
             inp = {"runtime": str(args.runtime), "shell": shell, "root": str(root),
                    "sockets": [cfg["socket"], cfg["socket2"]], "artifact": str(root / (label + "-policy.json"))}
+            if mode == "production":
+                inp.update(production=cfg["port"], source=str(SCRIPT.parent / "src/tcp-proxy-native.ts"), argv=argv)
             command = [bun, str(SCRIPT / "tcp-proxy-native-wrap.ts"), json.dumps(inp)]
         else:
             raise RuntimeError("unknown mode")
@@ -200,11 +226,19 @@ def main():
         evidence["runs"].append(row)
         save()
         print(label + ": exit=" + str(p.returncode), flush=True)
-        if mode == "native":
+        if mode in {"native", "production"}:
             policy = json.loads((root / (label + "-policy.json")).read_text())
             assert policy["report"]["fact"]["shellWrites"] == "enforced", policy
             assert policy["report"]["fact"]["shellSandbox"]["kind"] == "seatbelt", policy
             assert policy["command"] == "/usr/bin/sandbox-exec", policy
+            if mode == "production":
+                proxy = policy["proxy"]
+                library = pathlib.Path(proxy["library"])
+                assert (library.parent / "proxy.c").read_text() == source, "production compiled stale SOURCE"
+                assert hashlib.sha256(library.read_bytes()).hexdigest() == (library.parent / "sha256").read_text(), "production cache integrity"
+                assert all(not pathlib.Path(p).exists() for p in proxy["sockets"]), "production socket scope leak"
+                evidence["production_acquisition"] = {"library": str(library), "source_sha256": evidence["source_sha256"], "sockets_cleaned": True}
+                save()
         return row
 
     def baseline(row):
@@ -246,7 +280,12 @@ def main():
         flags = ["clang", "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wpedantic"]
         subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "adapter.dylib"), str(root / "adapter.c")], check=True)
         subprocess.run(flags + ["-pthread", "-o", str(root / "fds"), str(SCRIPT / "tcp-proxy-native-fds.c")], check=True)
-        subprocess.run(["go", "build", "-o", str(root / "go-client"), str(SCRIPT / "tcp-proxy-native-client.go")], env={**env, "GOCACHE": str(root / "go-build"), "GOPATH": str(root / "go-path")}, check=True)
+        if args.go_client:
+            shutil.copyfile(args.go_client.resolve(strict=True), root / "go-client")
+            (root / "go-client").chmod(0o700)
+        else:
+            subprocess.run(["go", "build", "-o", str(root / "go-client"), str(SCRIPT / "tcp-proxy-native-client.go")], env={**env, "GOCACHE": str(root / "go-build"), "GOPATH": str(root / "go-path")}, check=True)
+        evidence["go_client_hash_before"] = hashlib.sha256((root / "go-client").read_bytes()).hexdigest()
         evidence["compile"] = {"flags": flags, "warnings_fatal": True}
 
         port = listener("loop", "127.0.0.1")
@@ -296,16 +335,36 @@ def main():
         fds = run("fd-native", [str(root / "fds"), str(port), sock])
         assert fds["code"] == 0 and "REGISTRY bounded raw-close churn/reclamation OK" in fds["out"] and "FORK concurrent/inherited/fresh OK" in fds["out"], (fds["code"], fds["out"], fds["err"])
         assert all(e["listener"] in {"loop", "broker"} for e in fds["events"]), fds
+        critical = [str(root / "fds"), str(port), sock]
+        for mode in ["preconnect", "preconnect-fork", "unix-control", "concurrent", "raw-race", "fork-eof"]:
+            row = run("critical-" + mode, critical + [mode])
+            assert row["code"] == 0, (mode, row["code"], row["out"], row["err"])
+            if mode == "fork-eof":
+                assert any(e["listener"] == "broker" and e["event"] == "eof" and e.get("alive") == [True, True] for e in row["events"]), "no broker EOF while both processes alive"
+                assert "FORK EOF both alive; retained-client control; local pins gone OK" in row["out"], row
+        shared_route = run("critical-fork-shared-route", [critical[0], "1", sock, "preconnect-fork"], routes=primary + ";1:" + sock.encode().hex())
+        assert shared_route["code"] == 0, (shared_route["out"], shared_route["err"])
+        positive(run("go-production-acquisition", go, "production"))
 
-        generator = run("pinned-cql-negative", [str(args.pinned), "-cluster", "127.0.0.1:" + str(port),
-                        "-keyspace", "owned_absent", "-output", str(root / "output"), "-connection-timeout", "500ms", "-query-timeout", "500ms"])
-        diagnostic = generator["out"] + generator["err"]
-        assert generator["code"] == 1 and "unable to discover protocol version: got a request frame from server" in diagnostic, generator
-        assert "panic" not in diagnostic.lower() and "operation not permitted" not in diagnostic.lower(), generator
-        assert any(e["listener"] == "loop" and e.get("hex") == "040000010500000000" for e in generator["events"]), generator
-        assert all(e["listener"] in {"loop", "broker"} for e in generator["events"]), generator
+        for label, mode in [("pinned-cql-negative", "native"), ("pinned-cql-production", "production")]:
+            generator = run(label, [str(args.pinned), "-cluster", "127.0.0.1:" + str(port),
+                            "-keyspace", "owned_absent", "-output", str(root / "output"), "-connection-timeout", "500ms", "-query-timeout", "500ms"], mode)
+            diagnostic = generator["out"] + generator["err"]
+            assert generator["code"] == 1 and "unable to discover protocol version: got a request frame from server" in diagnostic, generator
+            assert "panic" not in diagnostic.lower() and "operation not permitted" not in diagnostic.lower(), generator
+            assert any(e["listener"] == "loop" and e.get("hex") == "040000010500000000" for e in generator["events"]), generator
+            assert all(e["listener"] in {"loop", "broker"} for e in generator["events"]), generator
 
-        guard = "if (in->sin_addr.s_addr != htonl(INADDR_LOOPBACK)) return connect(fd, addr, len);"
+        # Real OS FD inventory exceeds this deliberately tiny capacity. The
+        # adapter must refuse socket creation, not release unproven pins.
+        assert source.count("#define FD_LIMIT 65536") == 1
+        (root / "small-inventory.c").write_text(source.replace("#define FD_LIMIT 65536", "#define FD_LIMIT 2"))
+        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "small-inventory.dylib"), str(root / "small-inventory.c")], check=True)
+        unavailable = run("inventory-truncated-deny", go, helper="small-inventory.dylib")
+        assert unavailable["code"] == 2 and "socket: operation not permitted" in unavailable["out"] and not unavailable["events"], unavailable
+        positive(run("inventory-restored", go))
+
+        guard = "if (in->sin_addr.s_addr != htonl(INADDR_LOOPBACK)) goto denied;"
         assert source.count(guard) == 1, "mutation target missing/ambiguous"
         (root / "mutant.c").write_text(source.replace(guard, "/* address guard deliberately removed */"))
         subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "mutant.dylib"), str(root / "mutant.c")], check=True)
@@ -321,6 +380,54 @@ def main():
             raise RuntimeError("mutation escaped oracle")
         confined(run("matrix-restored", matrix))
         evidence["mutation"]["restored_green"] = True
+        connect_call = "int result = connect(fd, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);"
+        assert source.count(connect_call) == 1
+        replacement = """int replacement = socket(AF_UNIX, SOCK_STREAM, 0);
+    int result = connect(replacement, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);
+    if (result == 0) dup2(replacement, fd);
+    close(replacement);"""
+        split = source.replace(connect_call, replacement)
+        state_guard = """    struct sockaddr_un peer = {0};
+    socklen_t size = sizeof(peer);
+    if (getpeername(fd, (struct sockaddr *)&peer, &size) == 0) {
+        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+    }
+    if (errno != ENOTCONN) { int error = errno; pthread_mutex_unlock(&lock); errno = error; return -1; }
+    // Publish the route before the kernel makes the shared socket connected:
+    // another process can query its peer before this connect call returns.
+    // The claim also serializes competing parent/child connects after fork.
+    unsigned unclaimed = 0;
+    if (!atomic_compare_exchange_strong(p->port, &unclaimed, routes[route].port)) {
+        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+    }
+"""
+        assert source.count(state_guard) == 1
+        overwrite = source.replace(state_guard, "").replace(connect_call, replacement.replace(
+            "if (result == 0) dup2(replacement, fd);",
+            "if (result == 0) { dup2(replacement, fd); dup2(replacement, p->keeper); p->handle = identity(fd); }"))
+        prune_start = source.index("static int prune(void)")
+        prune_end = source.index("static void *maintain", prune_start)
+        pin_close = "if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);"
+        assert source[prune_start:prune_end].count(pin_close) == 1
+        retain = source[:prune_start] + source[prune_start:prune_end].replace(pin_close, """struct socket_fdinfo refs = {0};
+        if (proc_pidfdinfo(getpid(), records[i].keeper, PROC_PIDFDSOCKETINFO, &refs, sizeof(refs)) == sizeof(refs) && (refs.pfi.fi_status & PROC_FP_SHARED)) continue;
+        """ + pin_close) + source[prune_end:]
+        evidence["blocker_mutations"] = []
+        for bug, mutant_source, mode, diagnostic in [
+            ("preconnect-alias-split", split, "preconnect", "PRECONNECT_IDENTITY split"),
+            ("concurrent-overwrite", overwrite, "concurrent", "successes=8 eisconn=0"),
+            ("fork-mutual-retention", retain, "fork-eof", "FORK_KEEPER_COUNT child"),
+        ]:
+            (root / (bug + ".c")).write_text(mutant_source)
+            subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / (bug + ".dylib")), str(root / (bug + ".c"))], check=True)
+            broken = run("mutation-" + bug, critical + [mode], helper=bug + ".dylib")
+            assert broken["code"] != 0 and diagnostic in broken["err"], (bug, broken["code"], broken["out"], broken["err"])
+            restored = run("restored-" + bug, critical + [mode])
+            assert restored["code"] == 0, (bug, restored["out"], restored["err"])
+            if mode == "fork-eof":
+                assert any(e["event"] == "eof" and e.get("alive") == [True, True] for e in restored["events"])
+            evidence["blocker_mutations"].append({"bug": bug, "red": True, "restored_green": True, "diagnostic": diagnostic})
+            save()
         baseline(run("baseline-after", matrix, "baseline"))
         evidence["generated_files"] = [str(p.relative_to(root)) for p in (root / "output").rglob("*") if p.is_file()]
         assert not evidence["generated_files"], evidence["generated_files"]
@@ -337,6 +444,9 @@ def main():
         for p in root.glob("*.sock"):
             p.unlink()
         evidence["hash_after"] = hashlib.sha256(args.pinned.read_bytes()).hexdigest()
+        if (root / "go-client").exists():
+            evidence["go_client_hash_after"] = hashlib.sha256((root / "go-client").read_bytes()).hexdigest()
+            assert evidence["go_client_hash_after"] == evidence["go_client_hash_before"], "Go client changed"
         evidence["cleanup"] = {"threads_alive": sum(t.is_alive() for t in threads), "open_sockets": sum(s.fileno() >= 0 for s in resources),
                                "socket_leaves": [str(p) for p in root.glob("*.sock")], "scratch_leaves": [str(p) for p in (root / "tmp").glob("orchestra-tool-scratch-*")]}
         evidence["finished"] = time.time()
