@@ -147,9 +147,9 @@ const compiled = Effect.fn("TcpProxy.compiled")(function* () {
   yield* fs.makeDirectory(parent, { recursive: true, mode: 0o700 }).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-cache-acquisition" })),
   )
-  const staging = yield* fs.makeTempDirectoryScoped({ directory: parent, prefix: ".build-" }).pipe(
+  const staging = yield* Effect.acquireRelease(fs.makeTempDirectory({ directory: parent, prefix: ".build-" }).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-build-directory" })),
-  )
+  ), (directory) => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.orDie))
   yield* fs.chmod(staging, 0o700).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-build-directory" })),
   )

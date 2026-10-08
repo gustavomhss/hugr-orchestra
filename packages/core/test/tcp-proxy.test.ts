@@ -156,6 +156,28 @@ live("64 active connections cap is shared across declared endpoints and scope te
   expect(one.accepted.length + two.accepted.length).toBe(before)
 }), 30_000)
 
+live("32 declared endpoints remain separate fixed targets at the supported boundary", () => Effect.gen(function* () {
+  const targets = yield* Effect.forEach(Array.from({ length: 32 }, (_, index) => index), (index) =>
+    target("127.0.0.1", 0, `target-${index}`))
+  const sockets = yield* TcpProxy.listen(targets.map((entry) => entry.port))
+  expect(sockets.length).toBe(32)
+  expect(new Set(sockets).size).toBe(32)
+  expect((yield* exchange(sockets[0])).toString()).toBe("target-0")
+  expect((yield* exchange(sockets[31])).toString()).toBe("target-31")
+  expect(targets.slice(1, 31).every((entry) => entry.accepted.length === 0)).toBe(true)
+}), 30_000)
+
+const darwin = process.platform === "darwin" ? it.live : it.live.skip
+darwin("real Darwin helper publication survives scope cleanup and routes name only removed private sockets", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const one = yield* target()
+  const proxy = yield* Effect.scoped(TcpProxy.open([one.port]))
+  expect(proxy.env).toEqual({ ORCHESTRA_TCP_PROXY_ROUTES: `${one.port}:${Buffer.from(proxy.sockets[0], "utf8").toString("hex")}` })
+  expect(yield* fs.exists(proxy.library)).toBe(true)
+  expect(yield* fs.exists(path.dirname(proxy.sockets[0]))).toBe(false)
+  expect((yield* Effect.promise(() => lstat(proxy.library))).mode & 0o777).toBe(0o500)
+}))
+
 it.live("port shape/resource limits HOLD before acquisition; non-Darwin open never widens policy", () => Effect.gen(function* () {
   yield* Effect.forEach([[], [0], [65536], [1.5], [NaN], [Infinity], [1234, 1234], Array.from({ length: 33 }, (_, index) => index + 1)],
     (ports) => Effect.gen(function* () {
