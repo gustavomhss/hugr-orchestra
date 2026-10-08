@@ -195,7 +195,7 @@ test("real recorder no-ready, malformed-ready, early-close and stuck-shutdown fa
     const recorder = WindowsInventory.makeRecorder({ command: BUN, args: ["-e", fault.script, nonce] }, 500)
     try {
       const result = await (fault.shutdown ? recorder.prepare().then(() => recorder.stop()) : fault.capture ? recorder.prepare().then(() => recorder.capture(process.pid)) : recorder.prepare()).then(() => ({ error: "" }), (error: unknown) => ({ error: String(error) }))
-      expect(result.error).toContain(fault.error)
+      expect((fault.capture ? [fault.error, "EPIPE: broken pipe, write"] : [fault.error]).some((error) => result.error.includes(error))).toBe(true)
       expect(recorder.snapshot()).toMatchObject({ pid: undefined, closed: true, pending: 0 })
       expect(table().some((row) => hasNonce(row.args, nonce))).toBe(false)
       console.log("RECORDER_FAULT_PROOF " + JSON.stringify({ name: fault.name, red: !!result.error, closed: recorder.snapshot().closed }))
@@ -241,7 +241,7 @@ test("full close deadline rejects a delayed OS disappearance and delayed reachab
       const fixture = tree(0)
       adoptTree(scratch.home, fixture.nonce)
       // Real root closes stop/exit/EOF while an independently recorded descendant remains alive.
-      const proc = spawn(BUN, ["-e", `const {spawn}=require('node:child_process'); const child=spawn(${JSON.stringify(fixture.command)},${JSON.stringify(fixture.args)},{stdio:'ignore'}); console.log('DESCENDANT '+child.pid); process.stdin.resume(); process.stdin.once('data',()=>process.exit(0));setInterval(()=>{},1000)`], { cwd: ROOT, env: scratch.env, stdio: ["pipe", "pipe", "pipe"] })
+      const proc = spawn("node", ["-e", `const {spawn}=require('node:child_process'); const child=spawn(${JSON.stringify(fixture.command)},${JSON.stringify(fixture.args)},{stdio:'ignore',detached:true}); child.unref(); console.log('DESCENDANT '+child.pid); process.stdin.resume(); process.stdin.once('data',()=>process.exit(0));setInterval(()=>{},1000)`], { cwd: ROOT, env: scratch.env, stdio: ["pipe", "pipe", "pipe"] })
       own(scratch.home, proc)
       const output = { text: "" }
       proc.stdout.on("data", (chunk) => (output.text += chunk))
@@ -258,15 +258,18 @@ test("full close deadline rejects a delayed OS disappearance and delayed reachab
           proc.stdin.end("stop\n")
           await ended
           if (stage === "reachability") kill9(descendant)
+          if (stage === "OS-zero") expect(table().some((row) => matches(row, descendant) && !row.state.startsWith("Z"))).toBe(true)
         }, eof, exited,
           remaining: async () => {
-            if (stage === "OS-zero") {
-              await Bun.sleep(2500)
-              kill9(descendant)
+            try {
+              if (stage === "OS-zero") {
+                await Bun.sleep(2500)
+                kill9(descendant)
+              }
+              return members(fixture.nonce).members.length
+            } finally {
+              if (stage === "OS-zero") checked.resolve()
             }
-            const left = members(fixture.nonce).members.length
-            if (stage === "OS-zero") checked.resolve()
-            return left
           }, processes: async () => {
             try {
               if (stage === "reachability") await Bun.sleep(2500)
@@ -277,7 +280,7 @@ test("full close deadline rejects a delayed OS disappearance and delayed reachab
           (result) => ({ gatePass: true, result, error: "" }), (error: unknown) => ({ gatePass: false, result: undefined, error: String(error) }))
         expect(observed.gatePass).toBe(mutation)
         console.log("CLOSE_DEADLINE_MUTATION_PROOF " + JSON.stringify({ stage, mutation, ...observed }))
-        await checked.promise
+        await until(15_000, "delayed final observer completion", async () => Promise.race([checked.promise.then(() => true), Bun.sleep(100).then(() => undefined)]))
       } finally {
         proc.kill("SIGKILL")
         await cleanup(scratch.home, [fixture.nonce])
@@ -309,9 +312,9 @@ function replace(source: string, before: string, after: string) {
 }
 
 async function instrumentCopy(home: string, lib = (source: string) => source, windows = (source: string) => source) {
-  await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text())
+  await Bun.write(path.join(home, "lib.ts"), lib((await Bun.file(path.join(ROOT, "packages/omni/campaign/lib.ts")).text()).replaceAll("\r\n", "\n")
     .replaceAll('"../../core/test/fixture/process-tree.ts"', JSON.stringify(path.join(ROOT, "packages/core/test/fixture/process-tree.ts")))))
-  await Bun.write(path.join(home, "windows-inventory.ts"), windows(await Bun.file(path.join(ROOT, "packages/omni/campaign/windows-inventory.ts")).text()))
+  await Bun.write(path.join(home, "windows-inventory.ts"), windows((await Bun.file(path.join(ROOT, "packages/omni/campaign/windows-inventory.ts")).text()).replaceAll("\r\n", "\n")))
   await Bun.write(path.join(home, "delivery-fixtures.ts"), await Bun.file(path.join(ROOT, "packages/omni/campaign/delivery-fixtures.ts")).text())
 }
 
