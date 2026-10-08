@@ -13,9 +13,10 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 
-export const layer = (filename = ":memory:") =>
+export const layer = (filename = ":memory:", events = EventV2.layerWith()) =>
   AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node]), [
     [Database.node, Database.layerFromPath(filename)],
+    [EventV2.node, events],
   ])
 export const sessionID = SessionID.make("ses_v1_admission")
 export const otherSessionID = SessionID.make("ses_v1_other")

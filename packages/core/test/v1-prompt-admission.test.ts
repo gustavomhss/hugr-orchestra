@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Effect, Layer, Schema } from "effect"
+import { Deferred, Effect, Layer, Schema, Stream } from "effect"
 import { asc, eq, sql } from "drizzle-orm"
 import path from "node:path"
 import { Durable } from "@orchestra/schema/durable-event-manifest"
@@ -128,36 +128,79 @@ describe("V1 prompt admission", () => {
     }),
   )
 
-  it.effect("last-part SQL failure rolls back receipt, message, parts, sequence, event and notification", () =>
-    Effect.gen(function* () {
-      const database = yield* Database.Service
-      const db = database.db
-      const events = yield* EventV2.Service
-      yield* seed
-      const notified: string[] = []
-      yield* events.listen((event) =>
-        Effect.sync(() => {
-          notified.push(event.type)
-        }),
-      )
-      yield* db.run(
-        sql.raw(`CREATE TRIGGER fail_last_part BEFORE INSERT ON part WHEN NEW.id = 'prt_v1_a'
+  it.live(
+    "last-part SQL failure rolls back receipt, message, parts, sequence, event, notification and durable wake",
+    () =>
+      Effect.gen(function* () {
+        const reads: string[] = []
+        const ready = yield* Deferred.make<void>()
+        const admitted = yield* Deferred.make<void>()
+        yield* Effect.gen(function* () {
+          const database = yield* Database.Service
+          const db = database.db
+          const events = yield* EventV2.Service
+          yield* seed
+          const received: string[] = []
+          yield* events.durable({ aggregateID: sessionID }).pipe(
+            Stream.runForEach((event) =>
+              Effect.gen(function* () {
+                received.push(event.type)
+                if (event.type === SessionV1.Event.Created.type) yield* Deferred.succeed(ready, undefined)
+                if (event.type === SessionV1.Event.PromptAdmitted.type) yield* Deferred.succeed(admitted, undefined)
+              }),
+            ),
+            Effect.forkScoped,
+          )
+          // Historical Created reaches the consumer only after subscription and its initial real DB read.
+          yield* Deferred.await(ready).pipe(Effect.timeout("10 seconds"))
+          expect(reads).toEqual([sessionID])
+          const notified: string[] = []
+          yield* events.listen((event) =>
+            Effect.sync(() => {
+              notified.push(event.type)
+            }),
+          )
+          yield* db.run(
+            sql.raw(`CREATE TRIGGER fail_last_part BEFORE INSERT ON part WHEN NEW.id = 'prt_v1_a'
         BEGIN SELECT RAISE(ABORT, 'last-part-failure'); END`),
-      )
-      const failed = yield* defect(events.publish(SessionV1.Event.PromptAdmitted, payload))
-      expect(failed).not.toHaveProperty("type")
-      expect(failed).not.toBeInstanceOf(PromptAdmission.AlreadyAdmitted)
-      expect(yield* db.select().from(PromptAdmissionTable).all()).toEqual([])
-      expect(yield* db.select().from(MessageTable).all()).toEqual([])
-      expect(yield* db.select().from(PartTable).all()).toEqual([])
-      expect(yield* EventV2.latestSequence(db, sessionID)).toBe(0)
-      expect(yield* db.select().from(EventTable).all()).toHaveLength(2)
-      expect(notified).toEqual([])
-      yield* db.run(sql`DROP TRIGGER fail_last_part`)
-      yield* events.publish(SessionV1.Event.PromptAdmitted, payload)
-      expect(notified).toEqual([SessionV1.Event.PromptAdmitted.type])
-      expect(yield* db.select().from(PartTable).all()).toHaveLength(2)
-    }),
+          )
+          const failed = yield* defect(events.publish(SessionV1.Event.PromptAdmitted, payload))
+          // Drain continuations already queued by publication; no wall-clock sleeps or missing-event timeout.
+          yield* Effect.yieldNow
+          expect(reads).toEqual([sessionID])
+          expect(received).toEqual([SessionV1.Event.Created.type])
+          expect(failed).not.toHaveProperty("type")
+          expect(failed).not.toBeInstanceOf(PromptAdmission.AlreadyAdmitted)
+          expect(yield* db.select().from(PromptAdmissionTable).all()).toEqual([])
+          expect(yield* db.select().from(MessageTable).all()).toEqual([])
+          expect(yield* db.select().from(PartTable).all()).toEqual([])
+          expect(yield* EventV2.latestSequence(db, sessionID)).toBe(0)
+          expect(yield* db.select().from(EventTable).all()).toHaveLength(2)
+          expect(notified).toEqual([])
+          yield* db.run(sql`DROP TRIGGER fail_last_part`)
+          yield* events.publish(SessionV1.Event.PromptAdmitted, payload)
+          yield* Deferred.await(admitted).pipe(Effect.timeout("10 seconds"))
+          // Positive control: committed admission wakes this same subscriber and starts another real DB read.
+          expect(reads).toEqual([sessionID, sessionID])
+          expect(received).toEqual([SessionV1.Event.Created.type, SessionV1.Event.PromptAdmitted.type])
+          expect(notified).toEqual([SessionV1.Event.PromptAdmitted.type])
+          expect(yield* db.select().from(PartTable).all()).toHaveLength(2)
+        }).pipe(
+          Effect.provide(
+            Layer.fresh(
+              layer(
+                ":memory:",
+                EventV2.layerWith({
+                  beforeAggregateRead: (aggregateID) =>
+                    Effect.sync(() => {
+                      reads.push(aggregateID)
+                    }),
+                }),
+              ),
+            ),
+          ),
+        )
+      }),
   )
 
   it.effect("older data lacks sidecar; historical ID conflicts; ordinary edits leave receipt intact", () =>
