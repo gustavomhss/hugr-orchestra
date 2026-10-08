@@ -61,6 +61,7 @@ const Stored = Schema.Struct({
 })
 type Row = typeof CapabilityJobTable.$inferSelect
 
+/** Durable metadata only: constructing or replaying this service never dispatches work. */
 export const make = Effect.gen(function* () {
   const database = yield* Database.Service
   const location = yield* Location.Service
@@ -138,44 +139,54 @@ export const make = Effect.gen(function* () {
   })
 
   const update = Effect.fn("CapabilityJobs.update")(function* (row: Row, input: TransitionInput, lost = false) {
-    const observation = yield* decodeObservation(input.observation)
-    if (!Number.isSafeInteger(input.expectedGeneration) || input.expectedGeneration < 0 ||
-      row.generation !== input.expectedGeneration || row.generation >= Number.MAX_SAFE_INTEGER)
-      return yield* failure("stale_descriptor")
-    if (Option.isNone(Schema.decodeUnknownOption(Capability.JobState)(input.state)) ||
-      !allowed(row.state, input.state, lost)) return yield* failure("unsupported_operation")
-    if (input.providerID !== undefined && (!/^[0-9A-Za-z._:-]{1,256}(?![\s\S])/.test(input.providerID) ||
-      row.kind !== "provider" || (row.provider_id !== null && row.provider_id !== input.providerID)))
-      return yield* failure("outcome_unknown")
-    const providerID = input.providerID ?? row.provider_id
-    if (row.kind === "provider" && ["submitted", "running", "completed"].includes(input.state) && !providerID)
-      return yield* failure("outcome_unknown")
-    if (input.state === "cancel-requested" && observation.cancellation !== "requested")
-      return yield* failure("unsupported_operation")
-    if (input.state === "cancelled" && row.state !== "intent" && observation.cancellation !== "confirmed")
-      return yield* failure("unsupported_operation")
-    const stored = yield* Schema.decodeUnknownEffect(Stored)(row.observation).pipe(Effect.orDie)
-    // Remote completion survives materialization failures; only observation can change afterward.
-    if ((stored.data.remoteOutcome === "completed" && observation.remoteOutcome !== "completed") ||
-      (observation.remoteOutcome === "completed" && input.state !== "completed"))
-      return yield* failure("unsupported_operation")
-    yield* Effect.forEach(observation.artifactRefs ?? [], (ref) => Effect.gen(function* () {
-      const artifact = yield* database.db.select().from(CapabilityArtifactTable).where(and(
-        eq(CapabilityArtifactTable.id, ref.id), eq(CapabilityArtifactTable.revision, ref.revision),
-      )).get().pipe(Effect.orDie)
-      const retained = yield* database.db.select().from(CapabilityArtifactReferenceTable).where(and(
-        eq(CapabilityArtifactReferenceTable.artifact_id, ref.id), eq(CapabilityArtifactReferenceTable.revision, ref.revision),
-        eq(CapabilityArtifactReferenceTable.session_id, row.owner.sessionID),
-      )).get().pipe(Effect.orDie)
-      if (!artifact || !retained || !sameOwner(artifact.owner, row.owner)) return yield* failure("target_denied")
-    }))
-    const next = yield* database.db.update(CapabilityJobTable).set({
-      state: input.state, provider_id: providerID, observation: { ...stored, data: observation },
-      generation: row.generation + 1, time_updated: Date.now(),
-    }).where(and(eq(CapabilityJobTable.id, row.id), eq(CapabilityJobTable.generation, input.expectedGeneration)))
-      .returning().get().pipe(Effect.orDie)
-    if (!next) return yield* failure("stale_descriptor")
-    return yield* receipt(next)
+    // Ref/artifact ownership checks and CAS share SQLite's writer boundary.
+    return yield* database.db.transaction(() => Effect.gen(function* () {
+      yield* refs(row)
+      const observation = yield* decodeObservation(input.observation)
+      if (!Number.isSafeInteger(input.expectedGeneration) || input.expectedGeneration < 0 ||
+        row.generation !== input.expectedGeneration || row.generation >= Number.MAX_SAFE_INTEGER)
+        return yield* failure("stale_descriptor")
+      if (Option.isNone(Schema.decodeUnknownOption(Capability.JobState)(input.state)) ||
+        !allowed(row.state, input.state, lost)) return yield* failure("unsupported_operation")
+      if (input.providerID !== undefined && (!/^[0-9A-Za-z._:-]{1,256}(?![\s\S])/.test(input.providerID) ||
+        row.kind !== "provider" || (row.provider_id !== null && row.provider_id !== input.providerID)))
+        return yield* failure("outcome_unknown")
+      const providerID = input.providerID ?? row.provider_id
+      if (row.kind === "provider" && ["submitted", "running", "completed"].includes(input.state) && !providerID)
+        return yield* failure("outcome_unknown")
+      if (input.state === "cancel-requested" && observation.cancellation !== "requested")
+        return yield* failure("unsupported_operation")
+      if (input.state === "cancelled" && row.state !== "intent" && observation.cancellation !== "confirmed")
+        return yield* failure("unsupported_operation")
+      if ((observation.cancellation === "confirmed" && input.state !== "cancelled") ||
+        (observation.cancellation === "requested" && input.state !== "cancel-requested") ||
+        (row.kind === "provider" && row.state !== "intent" && input.state === "cancelled" && !providerID))
+        return yield* failure("unsupported_operation")
+      const stored = yield* Schema.decodeUnknownEffect(Stored)(row.observation).pipe(Effect.orDie)
+      // Remote completion survives materialization failures; only observation can change afterward.
+      if ((stored.data.remoteOutcome === "completed" && observation.remoteOutcome !== "completed") ||
+        (observation.remoteOutcome === "completed" && input.state !== "completed"))
+        return yield* failure("unsupported_operation")
+      yield* Effect.forEach(observation.artifactRefs ?? [], (ref) => Effect.gen(function* () {
+        const artifact = yield* database.db.select().from(CapabilityArtifactTable).where(and(
+          eq(CapabilityArtifactTable.id, ref.id), eq(CapabilityArtifactTable.revision, ref.revision),
+        )).get().pipe(Effect.orDie)
+        const retained = yield* database.db.select().from(CapabilityArtifactReferenceTable).where(and(
+          eq(CapabilityArtifactReferenceTable.artifact_id, ref.id), eq(CapabilityArtifactReferenceTable.revision, ref.revision),
+          eq(CapabilityArtifactReferenceTable.session_id, row.owner.sessionID),
+        )).get().pipe(Effect.orDie)
+        if (!artifact || !retained || !sameOwner(artifact.owner, row.owner)) return yield* failure("target_denied")
+      }))
+      const nextObservation = { ...stored, data: observation }
+      if (!boundedJson(nextObservation)) return yield* failure("quota_exceeded")
+      const next = yield* database.db.update(CapabilityJobTable).set({
+        state: input.state, provider_id: providerID, observation: nextObservation,
+        generation: row.generation + 1, time_updated: Date.now(),
+      }).where(and(eq(CapabilityJobTable.id, row.id), eq(CapabilityJobTable.generation, input.expectedGeneration)))
+        .returning().get().pipe(Effect.orDie)
+      if (!next) return yield* failure("stale_descriptor")
+      return yield* receipt(next)
+    }), { behavior: "immediate" }).pipe(Effect.catchTag("SqlError", Effect.die))
   })
 
   return {
@@ -185,13 +196,17 @@ export const make = Effect.gen(function* () {
       const binding = yield* CapabilityInvocation.require(context, placement)
       const row = { ...decoded.value, owner: binding.owner }
       yield* policy.assert(context, { action: "effect", resources: resources(row) })
-      yield* refs({ ...row, connection: row.connection ?? null, target: row.target ?? null })
       const ref = { id: Capability.JobID.create() }
-      yield* database.db.insert(CapabilityJobTable).values({
-        id: ref.id, owner: binding.owner, invocation: binding.invocation, ...decoded.value, state: "intent",
-        observation: { rootToolName: binding.rootToolName, effectiveRules: binding.effectiveRules,
-          nativeDenyFloor: binding.nativeDenyFloor, data: {} },
-      }).run().pipe(Effect.orDie)
+      const observation = { rootToolName: binding.rootToolName, effectiveRules: binding.effectiveRules,
+        nativeDenyFloor: binding.nativeDenyFloor, data: {} }
+      if (!boundedJson(observation)) return yield* failure("quota_exceeded")
+      yield* database.db.transaction(() => Effect.gen(function* () {
+        yield* refs({ ...row, connection: row.connection ?? null, target: row.target ?? null })
+        yield* database.db.insert(CapabilityJobTable).values({
+          id: ref.id, owner: binding.owner, invocation: binding.invocation, ...decoded.value, state: "intent",
+          observation,
+        }).run().pipe(Effect.orDie)
+      }), { behavior: "immediate" }).pipe(Effect.catchTag("SqlError", Effect.die))
       return ref
     }),
     read: Effect.fn("CapabilityJobs.read")(function* (context: Tool.Context, ref: Capability.JobRef) {
@@ -221,6 +236,7 @@ export const make = Effect.gen(function* () {
     }),
     markLostHost: Effect.fn("CapabilityJobs.markLostHost")(function* (
       proof: ProducerProof, ref: Capability.JobRef,
+      // Trusted startup host must check actual owner absence; restart alone is not evidence.
       input: { expectedGeneration: number; evidence: "startup-owner-absent" },
     ) {
       const row = yield* load(ref)
@@ -273,35 +289,39 @@ function receipt(row: Row) {
 
 function decodeObservation(value: Schema.Json) {
   return Effect.suspend(() => {
-    // Preflight bounds before recursive schema decoding, including hostile host input and non-finite numbers.
-    const seen = new Set<object>()
-    const budget = { nodes: 0, bytes: 0 }
-    const valid = (item: unknown, depth: number): boolean => {
-      budget.nodes++
-      if (depth > 8 || budget.nodes > 256) return false
-      if (item === null || typeof item === "boolean") return true
-      if (typeof item === "number") return Number.isFinite(item)
-      if (typeof item === "string") {
-        budget.bytes += new TextEncoder().encode(item).byteLength
-        return budget.bytes <= 4096
-      }
-      if (typeof item !== "object" || seen.has(item)) return false
-      if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null)
-        return false
-      seen.add(item)
-      const descriptors = Object.getOwnPropertyDescriptors(item)
-      return Object.entries(descriptors).every(([key, descriptor]) => {
-        if (Array.isArray(item) && key === "length") return true
-        if (!("value" in descriptor) || !descriptor.enumerable) return false
-        budget.bytes += new TextEncoder().encode(key).byteLength
-        return budget.bytes <= 4096 && valid(descriptor.value, depth + 1)
-      })
-    }
-    if (!valid(value, 0)) return Effect.fail(failure("quota_exceeded"))
-    if (new TextEncoder().encode(JSON.stringify(value)).byteLength > 4096)
-      return Effect.fail(failure("quota_exceeded"))
+    if (!boundedJson(value)) return Effect.fail(failure("quota_exceeded"))
     const decoded = Schema.decodeUnknownOption(Observation)(value)
     if (Option.isNone(decoded)) return Effect.fail(failure("unsupported_schema"))
     return Effect.succeed(decoded.value)
   })
+}
+
+function boundedJson(value: unknown) {
+  // Full persisted envelope: 4 KiB UTF-8 JSON, 256 nodes, depth 8; preflight precedes recursive decoding.
+  const seen = new Set<object>()
+  const budget = { nodes: 0, bytes: 0 }
+  const valid = (item: unknown, depth: number): boolean => {
+    budget.nodes++
+    if (depth > 8 || budget.nodes > 256) return false
+    if (item === null || typeof item === "boolean") return true
+    if (typeof item === "number") return Number.isFinite(item)
+    if (typeof item === "string") {
+      budget.bytes += new TextEncoder().encode(item).byteLength
+      return budget.bytes <= 4096
+    }
+    if (typeof item !== "object" || seen.has(item)) return false
+    if (!Array.isArray(item) && Object.getPrototypeOf(item) !== Object.prototype && Object.getPrototypeOf(item) !== null)
+      return false
+    seen.add(item)
+    const descriptors = Object.getOwnPropertyDescriptors(item)
+    const result = Object.entries(descriptors).every(([key, descriptor]) => {
+      if (Array.isArray(item) && key === "length") return true
+      if (!("value" in descriptor) || !descriptor.enumerable) return false
+      budget.bytes += new TextEncoder().encode(key).byteLength
+      return budget.bytes <= 4096 && valid(descriptor.value, depth + 1)
+    })
+    seen.delete(item)
+    return result
+  }
+  return valid(value, 0) && new TextEncoder().encode(JSON.stringify(value)).byteLength <= 4096
 }
