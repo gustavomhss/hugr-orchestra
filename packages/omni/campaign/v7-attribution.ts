@@ -8,8 +8,12 @@ import { appRuntime, authorized, deliveryEnv, effectModules, evidence, startServ
 type Sample = { ms: number; stdout: string; spawns: number; delegations: number; pid: number; stages?: Record<string, number> }
 
 export async function settle() {
+  const quiet = { since: Date.now() }
   await until(600_000, "V7 quiet host (unchanged load1 <= 0.5 * CPUs)", () =>
-    os.loadavg()[0] <= os.availableParallelism() * 0.5 ? true : undefined)
+    {
+      if (os.loadavg()[0] > os.availableParallelism() * 0.5) quiet.since = Date.now()
+      return Date.now() - quiet.since >= 30_000 ? true : undefined
+    })
 }
 
 export async function run(trace = false) {
