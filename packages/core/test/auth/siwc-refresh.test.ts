@@ -47,7 +47,7 @@ const fixture = Effect.fn(function* () {
       ...(control.mode === "no-id" || control.mode === "revoked" ? {} : { id_token: await sign(claims, control.mode === "signature") }) })
   } })), (server) => Effect.sync(() => server.stop(true)))
   const layer = Credential.layerFrom(undefined).pipe(Layer.provide(Database.layerFromPath(filename)))
-  const credentials = Context.get(yield* Layer.build(layer), Credential.Service)
+  const credentials = Context.get(yield* Layer.build(Layer.fresh(layer)), Credential.Service)
   const created = yield* credentials.create({ integrationID: Integration.ID.make("openai"), label: "original", value: initial })
   const refresh = (value: Credential.OAuth) => Effect.tryPromise(() => SiwcRefresh.exchange(value,
     (url, init) => {
@@ -55,7 +55,7 @@ const fixture = Effect.fn(function* () {
       return fetch(new URL("/token", server.url), init)
     }, new URL("/jwks", server.url)))
   const resolve = () => SiwcRefresh.resolve({ credentials, credentialID: created.id, storePath: filename, refresh })
-  const events = Context.get(yield* Layer.build(LayerNode.compile(EventV2.node)), EventV2.Service)
+  const events = Context.get(yield* Layer.build(Layer.fresh(LayerNode.compile(EventV2.node))), EventV2.Service)
   const location = Effect.fn(function* () {
     const integration = Context.get(yield* Layer.build(Layer.fresh(Integration.locationLayerFrom(filename).pipe(
       Layer.provide(Layer.merge(Layer.succeed(Credential.Service, credentials), Layer.succeed(EventV2.Service, events))),
@@ -191,11 +191,12 @@ it.live("inherited credentials reject CAS and refresh before HTTP", () => Effect
   const f = yield* fixture()
   const release = join(f.directory, "release.db")
   const installed = yield* Effect.scoped(Effect.gen(function* () {
-    const store = Context.get(yield* Layer.build(Credential.layerFrom(undefined).pipe(Layer.provide(Database.layerFromPath(release)))), Credential.Service)
+    const store = Context.get(yield* Layer.build(Layer.fresh(Credential.layerFrom(undefined).pipe(Layer.provide(Database.layerFromPath(release))))), Credential.Service)
     return yield* store.create({ integrationID: Integration.ID.make("openai"), value: f.initial })
   }))
   const dev = join(f.directory, "dev.db")
-  const credentials = Context.get(yield* Layer.build(Credential.layerFrom(release).pipe(Layer.provide(Database.layerFromPath(dev)))), Credential.Service)
+  const credentials = Context.get(yield* Layer.build(Layer.fresh(Credential.layerFrom(release).pipe(Layer.provide(Database.layerFromPath(dev))))), Credential.Service)
+  expect(yield* credentials.inheritedFrom(installed.id)).toBe(release)
   expect((yield* credentials.get(installed.id))?.value).toEqual(f.initial)
   expect((yield* credentials.replaceValueIf(installed.id, f.initial, f.initial).pipe(Effect.flip))).toBeInstanceOf(Credential.InheritedError)
   const exit = yield* SiwcRefresh.resolve({ credentials, credentialID: installed.id, storePath: dev,
