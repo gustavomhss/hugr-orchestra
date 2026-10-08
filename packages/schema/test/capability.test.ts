@@ -209,6 +209,15 @@ describe("capability contracts", () => {
       summary: "Uncertain",
     })
     expect(
+      Schema.encodeSync(Capability.Failure)(
+        new Capability.Failure({
+          code: "outcome_unknown",
+          message: "Uncertain",
+          detail: undefined,
+        }),
+      ),
+    ).toEqual({ _tag: "Capability.Failure", code: "outcome_unknown", message: "Uncertain" })
+    expect(
       Schema.encodeSync(Capability.Owner)(
         Capability.Owner.make({
           ...owner,
@@ -244,7 +253,52 @@ describe("capability contracts", () => {
     ).toThrow()
   })
 
-  test("readiness, verification and job vocabularies match frozen contracts", () => {
+  test("failure uses closed codes and bounded JSON detail", () => {
+    const failure = {
+      _tag: "Capability.Failure",
+      code: "authentication_revoked",
+      message: "Access revoked",
+      detail: { source: "example", status: 401, requestID: "request-1", observations: [true, null] },
+    } satisfies typeof Capability.Failure.Encoded
+    const decoded = Schema.decodeUnknownSync(Capability.Failure)(failure)
+    expect(decoded).toBeInstanceOf(Capability.Failure)
+    expect(Schema.encodeSync(Capability.Failure)(decoded)).toEqual(failure)
+    expect(
+      Schema.encodeSync(Capability.Failure)(
+        new Capability.Failure({
+          code: failure.code,
+          message: failure.message,
+          detail: failure.detail,
+        }),
+      ),
+    ).toEqual(failure)
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, code: "provider_error" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Error" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Failure" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, secret: "secret" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, runtime: "local diagnostic" })).toThrow()
+    // Error codecs project declared wire fields; runtime additions must never leak into the encoded object.
+    const encoded = Schema.encodeSync(Capability.Failure)(
+      Object.assign(decoded, {
+        runtime: "local diagnostic",
+        secret: "secret",
+        stack: "local stack",
+        cause: new Error("local cause"),
+      }),
+    )
+    expect(encoded).toEqual(failure)
+    expect(Object.keys(encoded).sort()).toEqual(["_tag", "code", "detail", "message"])
+    ;["runtime", "secret", "stack", "cause"].forEach((key) => expect(encoded).not.toHaveProperty(key))
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4094))).toHaveLength(4094)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4095))).toThrow()
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2047))).toHaveLength(2047)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2048))).toThrow()
+    ;[{ value: undefined }, { value: NaN }, { value: Infinity }, { value: 1n }, { value: () => 1 }].forEach((detail) =>
+      expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail })).toThrow(),
+    )
+  })
+
+  test("readiness, verification, error codes and job vocabularies match frozen contracts", () => {
     const sets: Array<{ schema: Schema.Codec<string>; values: string[] }> = [
       {
         schema: Capability.Readiness,
@@ -260,6 +314,24 @@ describe("capability contracts", () => {
         ],
       },
       { schema: Capability.Verification, values: ["acknowledged", "observed", "verified"] },
+      {
+        schema: Capability.ErrorCode,
+        values: [
+          "connection_unavailable",
+          "authentication_required",
+          "authentication_revoked",
+          "target_denied",
+          "ambiguous_target",
+          "stale_descriptor",
+          "unsupported_operation",
+          "unsupported_schema",
+          "acquisition_failed",
+          "quota_exceeded",
+          "outcome_unknown",
+          "invocation_binding_missing",
+          "invocation_binding_mismatch",
+        ],
+      },
       { schema: Capability.JobKind, values: ["provider", "local-process", "worker", "script"] },
       {
         schema: Capability.JobState,
@@ -283,7 +355,53 @@ describe("capability contracts", () => {
     })
   })
 
+  test.each([
+    { label: "ASCII", value: "a".repeat(4094), oversize: "a".repeat(4095) },
+    { label: "quotes", value: '"'.repeat(2047), oversize: '"'.repeat(2048) },
+    { label: "backslashes", value: "\\".repeat(2047), oversize: "\\".repeat(2048) },
+    { label: "newlines", value: "\n".repeat(2047), oversize: "\n".repeat(2048) },
+    { label: "control escapes", value: "\0".repeat(682) + "aa", oversize: "\0".repeat(682) + "aaa" },
+    { label: "multibyte", value: "é".repeat(2047), oversize: "é".repeat(2048) },
+    { label: "astral", value: "😀".repeat(1023) + "aa", oversize: "😀".repeat(1023) + "aaa" },
+    { label: "object", value: { value: "a".repeat(4084) }, oversize: { value: "a".repeat(4085) } },
+  ])("$label detail budget preserves JSON and rejects oversize in both directions", ({ value, oversize }) => {
+    expect(new TextEncoder().encode(JSON.stringify(value)).byteLength).toBe(4096)
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)(value)).toEqual(value)
+    expect(Schema.encodeSync(Capability.FailureDetail)(value)).toEqual(value)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)(oversize)).toThrow(
+      "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+    )
+    expect(() => Schema.encodeSync(Capability.FailureDetail)(oversize)).toThrow(
+      "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+    )
+    const failure = {
+      _tag: "Capability.Failure",
+      code: "outcome_unknown",
+      message: "Uncertain",
+    } satisfies typeof Capability.Failure.Encoded
+    const decoded = Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: value })
+    expect(decoded).toBeInstanceOf(Capability.Failure)
+    expect(Schema.encodeSync(Capability.Failure)(decoded)).toEqual({
+      ...failure,
+      detail: value,
+    })
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail: oversize })).toThrow()
+    expect(() =>
+      Schema.encodeSync(Capability.Failure)(
+        new Capability.Failure({
+          code: failure.code,
+          message: failure.message,
+          detail: oversize,
+        }),
+      ),
+    ).toThrow()
+  })
+
   test("public identifiers remain stable and unique", () => {
+    expect(SchemaAST.resolveIdentifier(Capability.FailureDetail.ast)).toBe("Capability.FailureDetail")
+    expect(SchemaAST.resolveIdentifier(Capability.Failure.ast)).toBe("Capability.Failure")
+    expect(Capability.Failure.identifier).toBe("Capability.Failure")
+    expect(new Capability.Failure({ code: "outcome_unknown", message: "Uncertain" })._tag).toBe("Capability.Failure")
     ids.forEach(({ schema, name }) => {
       expect(SchemaAST.resolveIdentifier(schema.ast)).toBe(`Capability.${name}`)
       expect(SchemaAST.resolve(schema.ast)?.brands).toEqual([`Capability.${name}`])
@@ -304,6 +422,9 @@ describe("capability contracts", () => {
       Capability.Partial,
       Capability.Unknown,
       Capability.Result,
+      Capability.ErrorCode,
+      Capability.FailureDetail,
+      Capability.Failure,
       Capability.JobKind,
       Capability.JobState,
     ]
