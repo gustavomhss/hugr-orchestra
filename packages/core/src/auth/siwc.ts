@@ -56,6 +56,7 @@ export function begin(input: { hostId: string; redirect: string; registration?: 
     redirect_uri: input.redirect,
     scope: scopes,
     resource,
+    originator: "opencode",
     state,
     nonce,
     code_challenge_method: "S256",

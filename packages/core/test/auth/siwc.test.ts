@@ -7,6 +7,10 @@ import { exportJWK, generateKeyPair, SignJWT } from "jose"
 import { IntegrationMethodID } from "@orchestra/schema/integration-id"
 import { Siwc } from "../../src/auth/siwc"
 import { SiwcHost } from "../../src/auth/siwc-host"
+import { SiwcListener } from "../../src/auth/siwc-listener"
+import { SiwcInference } from "../../src/auth/siwc-inference"
+import { Effect } from "effect"
+import { it } from "../lib/effect"
 
 const methodID = IntegrationMethodID.make("chatgpt-browser")
 const hostId = "urn:uuid:fixture-host"
@@ -20,6 +24,52 @@ function returned(attempt: Siwc.Attempt, values: Record<string, string> = {}) {
 }
 
 describe("ChatGPT OSS registration scaffold", () => {
+  it.live("loopback listener validates signed grants; plan transport isolates accounts and public endpoints", () => Effect.gen(function* () {
+    const directory = yield* Effect.promise(() => mkdtemp(join(tmpdir(), "siwc-listener-test-")))
+    yield* Effect.addFinalizer(() => Effect.promise(() => rm(directory, { recursive: true, force: true })))
+    const key = yield* Effect.promise(() => generateKeyPair("RS256", { extractable: true }))
+    const jwk = yield* Effect.promise(() => exportJWK(key.publicKey))
+    const current = { token: "" }
+    const seen: Array<{ path: string; bearer: string | null; body: string }> = []
+    const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
+      const path = new URL(request.url).pathname
+      seen.push({ path, bearer: request.headers.get("authorization"), body: await request.text() })
+      if (path === "/jwks") return Response.json({ keys: [{ ...jwk, kid: "listener", alg: "RS256", use: "sig" }] })
+      if (path === "/models") return Response.json({ models: [
+        { slug: "fixture-model", display_name: "Fixture", visibility: "list" },
+        { slug: "hidden-model", display_name: "Hidden", visibility: "hidden" },
+      ] })
+      if (path === "/responses") return new Response('data: {"type":"response.completed"}\n\n', { headers: { "Content-Type": "text/event-stream" } })
+      return Response.json({ access_token: "listener-access", refresh_token: "listener-refresh", id_token: current.token,
+        token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes })
+    } })), (value) => Effect.sync(() => value.stop(true)))
+    const authorization = yield* SiwcListener.authorize({ hostFile: join(directory, "host-id"), methodID, port: 0,
+      transport: (_url, init) => fetch(new URL("/token", server.url), init), jwksURL: new URL("/jwks", server.url) })
+    const url = new URL(authorization.url)
+    const callback = new URL(url.searchParams.get("redirect_uri") ?? "")
+    callback.search = new URLSearchParams({ state: "wrong", code: "fixture-code", client_id: saved.clientId }).toString()
+    expect((yield* Effect.promise(() => fetch(callback))).status).toBe(400)
+    callback.searchParams.set("state", url.searchParams.get("state") ?? "")
+    current.token = yield* Effect.promise(() => new SignJWT({ nonce: url.searchParams.get("nonce") })
+      .setProtectedHeader({ alg: "RS256", kid: "listener" }).setIssuer(Siwc.issuer).setAudience(saved.clientId)
+      .setSubject(saved.subject).setIssuedAt().setExpirationTime("1h").sign(key.privateKey))
+    expect((yield* Effect.promise(() => fetch(callback))).status).toBe(200)
+    const credential = yield* authorization.callback
+    const selected = Siwc.registration(credential.metadata)
+    expect(selected.clientId).toBe(saved.clientId)
+    expect(selected.hostId).toMatch(/^urn:uuid:/)
+    const send = (request: Request) => fetch(new Request(new URL(new URL(request.url).pathname.replace("/v1", ""), server.url).href, request))
+    const request = () => new Request(`${Siwc.resource}/responses`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "fixture-model", input: "fixture", store: true, stream: false }) })
+    const transport = SiwcInference.transport(selected, async () => credential, send)
+    yield* Effect.promise(() => transport(request()))
+    expect(seen.filter((item) => item.path === "/responses")).toEqual([{ path: "/responses", bearer: "Bearer listener-access",
+      body: JSON.stringify({ model: "fixture-model", input: "fixture", store: false, stream: true }) }])
+    expect((yield* Effect.promise(() => SiwcInference.models(credential, send))).map((model) => model.slug)).toEqual(["fixture-model"])
+    const changed = { ...credential, metadata: { ...selected, clientId: "another-client" } }
+    yield* Effect.promise(async () => { await expect(SiwcInference.transport(selected, async () => changed, send)(request())).rejects.toThrow("account changed") })
+    yield* Effect.promise(async () => { await expect(transport("https://chatgpt.com/backend-api/codex/responses", { method: "POST" })).rejects.toThrow("endpoint") })
+  }))
   test("persists one owner-only host ID across concurrent starts and rejects corruption", async () => {
     const directory = await mkdtemp(join(tmpdir(), "siwc-host-test-"))
     const filename = join(directory, "host-id")
