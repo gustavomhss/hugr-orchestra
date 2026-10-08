@@ -3,8 +3,10 @@ export * as CapabilityArtifacts from "./index"
 import { isUtf8 } from "node:buffer"
 import { createHash } from "node:crypto"
 import { isAbsolute, join } from "node:path"
-import { and, desc, eq, lt } from "drizzle-orm"
+import { and, desc, eq, lt, sql } from "drizzle-orm"
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Effect, Option, Schema } from "effect"
+import { SqlError } from "effect/unstable/sql/SqlError"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
 import { Database } from "../../database/database"
@@ -100,6 +102,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
 
   const verified = Effect.fn("CapabilityArtifacts.verified")(function* (path: string, hash: string, bytes: number, mime: string) {
+    if (!/^[0-9a-f]{64}$/.test(hash) || !Number.isSafeInteger(bytes) || bytes < 0 || !validMime(mime))
+      return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
     const info = yield* fs.stat(path).pipe(Effect.mapError(() => failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")))
     if (info.type !== "File" || Number(info.size) !== bytes || bytes > boundedBytes)
       return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
@@ -123,7 +127,11 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     // Holding the immediate transaction prevents cleanup from removing a just-published orphan before insertion.
     yield* Effect.scoped(Effect.gen(function* () {
       yield* fs.makeDirectory(root, { recursive: true, mode: 0o700 })
-      const staging = yield* fs.makeTempDirectoryScoped({ directory: root, prefix: "stage-" })
+      const staging = yield* Effect.acquireRelease(
+        fs.makeTempDirectory({ directory: root, prefix: "stage-" }),
+        // Cleanup failure leaves TTL-eligible scratch, never an unredacted finalizer defect.
+        (path) => fs.remove(path, { recursive: true }).pipe(Effect.catch(() => Effect.void)),
+      )
       const path = join(staging, "blob")
       yield* fs.writeFile(path, value.data, { flag: "wx", mode: 0o600 })
       yield* verified(path, hash, value.data.byteLength, value.mime)
@@ -137,7 +145,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       ...ref, owner: issued.owner, producer: issued.invocation, mime: value.mime, kind: value.kind,
       verification: value.verification, metadata: value.metadata, hash, bytes: value.data.byteLength, time_created: Date.now(),
     }
-    yield* tx.insert(CapabilityArtifactTable).values(record).run()
+    // Drizzle treats JS null as SQL NULL even in a JSON column. Keep JSON null as the non-null JSON text "null".
+    yield* tx.insert(CapabilityArtifactTable).values({ ...record, metadata: sql`${JSON.stringify(value.metadata)}` }).run()
     yield* tx.insert(CapabilityArtifactReferenceTable).values({
       artifact_id: ref.id, revision: ref.revision, session_id: context.sessionID,
     }).run()
@@ -185,6 +194,9 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     yield* authorize(context, "artifact.read", [resource(ref)])
     return yield* database.db.transaction((tx) => Effect.gen(function* () {
       const found = yield* resolve(tx, context, ref)
+      if (!/^[0-9a-f]{64}$/.test(found.record.hash))
+        return yield* failure("artifact_corrupt", "Artifact blob is unavailable or corrupt")
+      yield* verified(join(root, found.record.hash), found.record.hash, found.record.bytes, found.record.mime)
       // User metadata and producer/owner placement are host-only; arbitrary metadata may contain secrets.
       return {
         id: found.record.id, revision: found.record.revision, mime: found.record.mime, kind: found.record.kind,
@@ -271,7 +283,8 @@ function failure(code: Failure["code"], message: string) {
 
 function storageErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
   return effect.pipe(Effect.catchIf(
-    (error) => typeof error === "object" && error !== null && "_tag" in error && error._tag === "SqlError",
+    (error): error is Extract<E, SqlError | EffectDrizzleQueryError> =>
+      error instanceof SqlError || error instanceof EffectDrizzleQueryError,
     () => Effect.fail(failure("artifact_storage_failed", "Artifact storage transaction failed")),
   ))
 }
@@ -318,9 +331,7 @@ function jsonBytes(value: Schema.Json) {
 function snapshot(input: Input, boundedBytes: number) {
   return Effect.try({
     try: () => {
-      if (!(input.data instanceof Uint8Array) || typeof input.mime !== "string" ||
-        !/^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+(?:; charset=utf-8)?$/.test(input.mime) ||
-        input.mime.length > 256 || typeof input.kind !== "string" || !input.kind.trim() ||
+      if (!(input.data instanceof Uint8Array) || !validMime(input.mime) || typeof input.kind !== "string" || !input.kind.trim() ||
         new TextEncoder().encode(input.kind).byteLength > 256 ||
         Option.isNone(Schema.decodeUnknownOption(Capability.Verification)(input.verification)))
         throw failure("invalid_input", "Artifact input is invalid")
@@ -337,7 +348,8 @@ function snapshot(input: Input, boundedBytes: number) {
       if (Option.isNone(decoded)) throw failure("invalid_input", "Artifact metadata is invalid")
       const json = Schema.decodeUnknownOption(Schema.Json)(decoded.value)
       if (Option.isNone(json)) throw failure("invalid_input", "Artifact metadata is invalid")
-      const data = input.data.slice()
+      // Buffer.slice() aliases caller memory; the Uint8Array constructor always copies it.
+      const data = new Uint8Array(input.data)
       if (!matchesMime(data, input.mime)) throw failure("invalid_input", "Artifact bytes do not match MIME")
       return { data, mime: input.mime, kind: input.kind, verification: input.verification, metadata: json.value }
     },
@@ -352,4 +364,9 @@ function matchesMime(data: Uint8Array, mime: string) {
   return mime.startsWith("text/") || Option.isSome(
     Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(new TextDecoder().decode(data)),
   )
+}
+
+function validMime(mime: string) {
+  return typeof mime === "string" && mime.length <= 256 &&
+    /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+(?:; charset=utf-8)?$/.test(mime)
 }
