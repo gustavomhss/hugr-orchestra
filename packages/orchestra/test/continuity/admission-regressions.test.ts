@@ -114,7 +114,7 @@ for (const phase of ["publish", "list"] as const) for (const change of ["invalid
       if (change === "invalidate") yield* continuity.invalidate(sessionID)
       if (change === "advance") yield* continuity.advance(sessionID)
       yield* Deferred.succeed(release, undefined)
-      yield* terminal(hit.jobID, "completed", change === "none" ? "masked" : "provider")
+      yield* terminal(hit.jobID, "completed")
       const history = yield* sessions.messages({ sessionID })
       const view = yield* continuity.prepare({ sessionID, messages: history, canRecall: true })
       const output = view.messages.flatMap((message) => message.parts).find((part) => part.type === "tool")
@@ -125,8 +125,8 @@ for (const phase of ["publish", "list"] as const) for (const change of ["invalid
         expect(durable?.masks).toHaveLength(1)
       }
       if (change !== "none") {
-        expect(output.state.output).toBe(receipt)
         expect(durable).toBeUndefined()
+        expect(output.state.output).toBe(receipt)
       }
       const refs = yield* archive.list(sessionID)
       expect(refs.length).toBeGreaterThan(0)
@@ -195,6 +195,7 @@ it.instance("admission-selected model controls catch-up stream and render capaci
     const admitting = yield* continuity.admit({ sessionID, messages: yield* sessions.messages({ sessionID }), model: selected, expectedUserID: current.id, canRecall: true }).pipe(Effect.forkChild)
     const next = yield* entered(catchup)
     expect(next.request.model).toEqual(selected)
+    expect(next.request.user.model).toMatchObject({ modelID: selected.id, providerID: selected.providerID })
     yield* Deferred.succeed(catchup.release, undefined)
     const view = yield* Fiber.join(admitting)
     expect(view.system[0]).toContain(SECOND)
@@ -207,7 +208,7 @@ it.instance("admission-selected model controls catch-up stream and render capaci
 }), 120_000)
 
 for (const overhead of ["supplied", "system", "tool"] as const)
-  it.instance(`configured backend hard-fit includes ${overhead} system/tool overhead after idempotent configure`, () => Effect.gen(function* () {
+  it.instance(`configured backend hard-fit includes ${overhead} overhead after idempotent configure`, () => Effect.gen(function* () {
     const plan = yield* held(FIRST)
     yield* Effect.gen(function* () {
       const continuity = yield* SessionContinuity.Service
@@ -221,7 +222,10 @@ for (const overhead of ["supplied", "system", "tool"] as const)
       const model = { ...selected, limit: { context: 20_000, output: 2_000 } }
       yield* continuity.configure({ sessionID, model, llm })
       expect((yield* continuity.admit({ sessionID, messages: history, canRecall: true })).system[0]).toContain(FIRST)
-      if (overhead === "supplied") yield* continuity.configure({ sessionID, model, llm, overhead: 100_000 })
+      if (overhead === "supplied") {
+        yield* continuity.release(sessionID)
+        yield* continuity.configure({ sessionID, model, llm, overhead: 100_000 })
+      }
       if (overhead !== "supplied") yield* continuity.observe({ sessionID, messageIDs: history.map((message) => message.info.id), request: {
         ...request, model, purpose: undefined, system: overhead === "system" ? ["SYSTEM_OVERHEAD ".repeat(20_000)] : [],
         tools: overhead === "tool" ? { large: { description: "TOOL_OVERHEAD ".repeat(20_000), inputSchema: jsonSchema({ type: "object" }) } } : {},
