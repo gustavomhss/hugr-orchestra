@@ -101,8 +101,16 @@ type Entry = { pid: number; nonce: string; startTime: string }
 const WINDOWS_READER = `
 import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { stripTypeScriptTypes } from 'node:module';
+import { fileURLToPath } from 'node:url';
 const settings = JSON.parse(readFileSync(import.meta.filename + '.config', 'utf8'));
-const { WindowsInventory } = await import(settings.decoder);
+// Its Bun namespace self-reexport is extensionless. Load the unchanged implementation with Node's own TS
+// stripper, removing only that closed self-projection boundary; CIM and decode remain the authoritative exports.
+const source = readFileSync(fileURLToPath(settings.decoder), 'utf8');
+const projection = 'export * as WindowsInventory from "./windows-inventory"';
+if (!source.includes(projection)) throw Error('fixture birth query failed: Windows decoder projection boundary missing');
+const javascript = stripTypeScriptTypes(source.replace(projection, ''), {mode: 'strip'});
+const WindowsInventory = await import('data:text/javascript;base64,' + Buffer.from(javascript).toString('base64'));
 const requested = JSON.parse(process.argv[2]);
 const output = {stdout: '', stderr: '', error: '', timedOut: false};
 const child = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand',
