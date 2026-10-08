@@ -1,0 +1,10 @@
+{
+  "id": "pytest-green",
+  "title": "Make a pytest suite green",
+  "description": "A generic, reusable sprint: drive an existing pytest suite from red to green without modifying the tests. Parameterized on the test path and the runner so it fits any repo whose Definition-of-Done is already encoded as tests.",
+  "version": "1.0.0",
+  "params": [
+    {"name": "tests", "description": "Path passed to pytest (file, dir, or nodeid expression) — the suite that must pass."},
+    {"name": "runner", "description": "Test runner invocation.", "default": "python3 -m pytest"}
+  ]
+}

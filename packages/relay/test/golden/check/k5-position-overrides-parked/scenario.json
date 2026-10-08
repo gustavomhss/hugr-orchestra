@@ -1,0 +1,50 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "alpha",
+        "instructions": "do alpha",
+        "checklist": [
+          {
+            "id": "F-ALPHA",
+            "cmd": "test -f alpha.txt",
+            "assert": "alpha.txt exists"
+          }
+        ]
+      },
+      {
+        "id": "beta",
+        "instructions": "do beta",
+        "checklist": [
+          {
+            "id": "F-BETA",
+            "cmd": "test -f beta.txt",
+            "assert": "beta.txt exists"
+          }
+        ]
+      }
+    ]
+  },
+  "prestate": {
+    "position": "beta",
+    "state": "awaiting-human",
+    "counter": "2\n",
+    "retry_beta": "3\n"
+  },
+  "tree": {
+    "alpha.txt": "a\n"
+  },
+  "fires": [
+    {
+      "check": {
+        "position": "alpha"
+      }
+    },
+    {
+      "check": {
+        "position": "beta"
+      }
+    }
+  ]
+}

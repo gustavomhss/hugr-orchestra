@@ -77,6 +77,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { MCP } from "@/mcp"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { McpCatalog } from "@/mcp/catalog"
 
 export function webSearchEnabled(flags = { exa: false, parallel: false }) {
@@ -666,6 +667,8 @@ export const node = LayerNode.make({
     InstanceStore.node,
     Permission.node,
     Ripgrep.node,
+    // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).
+    LocationServiceMap.node,
   ],
 })
 

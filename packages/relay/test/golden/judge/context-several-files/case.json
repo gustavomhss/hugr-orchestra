@@ -1,0 +1,35 @@
+{
+  "criterion": "crit",
+  "files": [
+    {
+      "name": "a.md",
+      "text": "alpha\n"
+    },
+    {
+      "name": "b.md",
+      "text": "beta\n"
+    }
+  ],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "api",
+    "RELAY_JUDGE_BASE_URL": "{server}",
+    "RELAY_JUDGE_API_KEY": "local",
+    "RELAY_JUDGE_MODEL": "test-model",
+    "RELAY_JUDGE_MAX_CTX": "4"
+  },
+  "status": 200,
+  "replies": [
+    {
+      "content": [
+        {
+          "type": "tool_use",
+          "name": "submit_verdict",
+          "input": {
+            "verdict": "pass",
+            "reason": "because"
+          }
+        }
+      ]
+    }
+  ]
+}

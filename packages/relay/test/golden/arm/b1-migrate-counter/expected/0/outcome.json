@@ -1,0 +1,8 @@
+{
+  "exit": 0,
+  "stdout": {
+    "decision": "block",
+    "reason": "Relay gate 'B' is NOT satisfied. Still failing:; B-file. Address these, then finish. Instructions: do B"
+  },
+  "stderr": ""
+}

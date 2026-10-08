@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "code": "unsupported-macro-topology",
+  "message": "A phase must be one contiguous stretch of the sequence. Interleaved phases need distinct phase declarations."
+}

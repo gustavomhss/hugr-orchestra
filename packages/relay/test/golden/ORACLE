@@ -1,0 +1,29 @@
+# Relay parity oracle. The goldens under test/golden and the ledgers under test/fixtures were generated from
+# exactly the sources pinned below. Regenerating goldens, or changing anything pinned here, is its own reviewed
+# change. The generators refuse to run when a pinned sha256 differs from the file on disk.
+relay            0b8b08724077db03b2aacce524db29bfb6b834ed  HuGR Relay main, imported as packages/relay by c2098b4ae2ac327981a06a2946a1d383673c598d
+relay_authoring  b52d976163b1713e59cbe5ff8b2bf807d934f94f  lib/relay_authoring at its relay-native landing commit
+base             93481de6c22c7755dad5d075f8af7bc39d7cb03d  relay-native WP0, the tree the generators ran against
+# Tools the committed goldens were generated with; each area's GENERATOR.json records them per run. The plan named
+# jq 1.7.x, which was not available: the generators assert exactly jq-1.8.1 (FORMAT.md). Apple's
+# jq-1.6-159-apple-gcff5336 (decNumber) printed byte-identical escape, number and object tables.
+tool             jq-1.8.1
+tool             Python 3.14.5
+tool             GNU bash 5.3.3
+tool             git 2.51.0
+tool             LibreSSL 3.3.6 (openssl dgst -hmac), shasum 6.02
+tool             SQLite 3.53.1 (Python sqlite3; wrote test/fixtures/authoring.sqlite3)
+sha256 bf0d96cbc9efee59225b1e8211d88ffaa5116fa112aa81257f8830ed61c3db75  benchmark/judge.py
+sha256 ce7fe19291da6b468679883db9372882062833cae3be4edd1e037c58fff9c45c  benchmark/verify_ledger.py
+sha256 81b1cca267d535c47dcd04399ff877c1625a316d94427904a76857dbfa3cfbff  bin/relay
+sha256 3ac92ae05e25d6fe2ac32754b18127a5c0a6dec3d8ff5063300b21b3c41bb264  bin/relay-arm-hook.sh
+sha256 c57aabbff29c47683988948145dd71cd1d33e2cf5accd457750241cc66c008f8  bin/relay-gate
+sha256 5c8dc07c16a5229303d5a7db97d429c7fe983a90e1f156d47453dc18421abb33  bin/relay-note
+sha256 0c551fca206a37bd306a55494845336651cd46105d8a9fd06e5858561df8f6dd  bin/relay-spec.py
+sha256 06b731c1378130e55acb324c3e8e10c8818cd446530ba017cbc64cbe56494247  lib/relay-gate.sh
+sha256 e6e40854a7269b7b457bf4e914b06fb7e2a6966c87a57a377a89a3b200d86cad  lib/relay_authoring/__init__.py
+sha256 cf0146ca49ab8025429449eae3659f546b6f6892a93f1f54e187980e7c4eac73  lib/relay_authoring/config.py
+sha256 c674fcb716c3fb61c4fb1d51de1ec0e66d0de5edd8ecfafeb3d8d032a89d662d  lib/relay_authoring/graph.py
+sha256 c4094bd9564ec0826b61216fe45faa6326cf5794c71275f82579e847b3e481be  lib/relay_authoring/hooks.py
+sha256 e6b14467633c5a9278e31f39650e5c61d0d216ae78639e6e0eb7325242b911ac  lib/relay_authoring/skills.py
+sha256 68a38b0b6bf0074fa659cda938b49c4886b7333e3cf80f39a37924c9152bc11c  lib/relay_authoring/store.py

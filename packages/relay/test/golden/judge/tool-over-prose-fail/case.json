@@ -1,0 +1,29 @@
+{
+  "criterion": "crit",
+  "files": [],
+  "env": {
+    "RELAY_JUDGE_BACKEND": "api",
+    "RELAY_JUDGE_BASE_URL": "{server}",
+    "RELAY_JUDGE_API_KEY": "local",
+    "RELAY_JUDGE_MODEL": "test-model"
+  },
+  "status": 200,
+  "replies": [
+    {
+      "content": [
+        {
+          "type": "text",
+          "text": "VERDICT: PASS"
+        },
+        {
+          "type": "tool_use",
+          "name": "submit_verdict",
+          "input": {
+            "verdict": "fail",
+            "reason": "tool judgment"
+          }
+        }
+      ]
+    }
+  ]
+}

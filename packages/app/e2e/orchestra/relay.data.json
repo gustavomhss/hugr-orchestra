@@ -1,0 +1,304 @@
+{
+  "profiles": {
+    "design": { "published": null, "updated": 8640 },
+    "planning": { "published": null, "updated": 4320 },
+    "research-v2": { "published": null, "updated": 11520 },
+    "spec-decompose": { "published": null, "updated": 1560 },
+    "tdd_feature": { "published": 1, "draft": 1, "updated": 3000 },
+    "wp-execute": { "published": 3, "draft": 4, "updated": 9 }
+  },
+  "runnable": ["tdd_feature", "wp-execute"],
+  "hooks": [
+    {
+      "id": "protect-generated",
+      "name": "Protect generated files",
+      "description": "Stop edits to generated client code.",
+      "draft": 2,
+      "published": 2,
+      "updated": 2880,
+      "nodes": [
+        ["t", "Before edit file", "relay.hookEventTrigger", 120, 200, { "operation": "edit", "timing": "before" }],
+        ["c", "Path matches", "relay.hookCondition", 320, 200, { "field": "path", "pattern": "src/generated/**" }],
+        [
+          "b",
+          "Block change",
+          "relay.hookBlock",
+          540,
+          100,
+          {
+            "message": "Generated files are rebuilt by bun run generate. Change the schema in packages/client and regenerate."
+          }
+        ],
+        ["a", "Allow", "relay.hookAllow", 540, 300, { "message": "" }]
+      ],
+      "edges": [
+        ["t", "c", 0],
+        ["c", "b", 0],
+        ["c", "a", 1]
+      ]
+    },
+    {
+      "id": "ask-shell",
+      "name": "Ask before risky commands",
+      "description": "Pause pushes and recursive deletes for approval.",
+      "draft": 1,
+      "published": 1,
+      "updated": 5760,
+      "nodes": [
+        [
+          "t",
+          "Before shell command",
+          "relay.hookEventTrigger",
+          120,
+          200,
+          { "operation": "command", "timing": "before" }
+        ],
+        ["push", "Push command", "relay.hookCondition", 320, 200, { "field": "command", "pattern": "git push *" }],
+        ["delete", "Recursive delete", "relay.hookCondition", 320, 360, { "field": "command", "pattern": "rm -rf *" }],
+        [
+          "q",
+          "Ask",
+          "relay.hookApprove",
+          540,
+          100,
+          { "message": "This command changes shared state. Approve to continue." }
+        ],
+        ["a", "Allow", "relay.hookAllow", 540, 360, { "message": "" }]
+      ],
+      "edges": [
+        ["t", "push", 0],
+        ["push", "q", 0],
+        ["push", "delete", 1],
+        ["delete", "q", 0],
+        ["delete", "a", 1]
+      ]
+    },
+    {
+      "id": "typecheck-stop",
+      "name": "Typecheck when a session stops",
+      "description": "Run the type checker before an agent may stop.",
+      "draft": 1,
+      "published": 1,
+      "updated": 12960,
+      "nodes": [
+        [
+          "t",
+          "On session stop",
+          "relay.hookEventTrigger",
+          120,
+          200,
+          { "operation": "session-idle", "timing": "after" }
+        ],
+        [
+          "g",
+          "Run gate",
+          "relay.hookVerify",
+          320,
+          200,
+          { "check": "bun typecheck", "message": "Type errors must be fixed before stopping." }
+        ],
+        ["k", "Record", "relay.hookRecord", 540, 100, { "message": "Typecheck passed at stop." }],
+        [
+          "r",
+          "Require repair",
+          "relay.hookRepair",
+          540,
+          300,
+          { "message": "Fix the reported type errors, then stop again." }
+        ]
+      ],
+      "edges": [
+        ["t", "g", 0],
+        ["g", "k", 0],
+        ["g", "r", 1]
+      ]
+    },
+    {
+      "id": "read-first",
+      "name": "Read instructions first",
+      "description": "Remind the agent to read project instructions.",
+      "draft": 1,
+      "published": null,
+      "updated": 40,
+      "nodes": [
+        ["t", "Before edit file", "relay.hookEventTrigger", 120, 200, { "operation": "edit", "timing": "before" }],
+        [
+          "m",
+          "Remind",
+          "relay.hookRemind",
+          320,
+          200,
+          { "message": "Read AGENTS.md before the first edit in a session." }
+        ]
+      ],
+      "edges": [["t", "m", 0]]
+    }
+  ],
+  "installs": [
+    { "installID": "inst-protect", "document": "protect-generated", "order": 0, "enabled": true, "installed": 2400 },
+    { "installID": "inst-ask", "document": "ask-shell", "order": 1, "enabled": true, "installed": 5400 }
+  ],
+  "decisions": {
+    "inst-protect": [
+      ["d5", "b", "block", "edit.before", "edit", "src/generated/client.ts", "blocked", 303, "ses_regenerate"],
+      ["d4", "a", "allow", "edit.before", "edit", "packages/client/src/api.ts", "allowed", 300, "ses_regenerate"],
+      ["d3", "b", "block", "edit.before", "edit", "src/generated/types.gen.ts", "blocked", 95, "ses_tabs"],
+      ["d2", "a", "allow", "edit.before", "edit", "src/session/recovery.ts", "allowed", 19, "ses_recovery"],
+      ["d1", "b", "block", "edit.before", "edit", "src/generated/client.ts", "blocked", 18, "ses_recovery"]
+    ],
+    "inst-ask": [
+      [
+        "d6",
+        "q",
+        "approve",
+        "command.before",
+        "bash",
+        "5b8c0f1f2d0b9d3e8e2b5d7f6c1a4e9b3d2c7f0a8e6b4d1c9f2e5a7b3c0d8e6f",
+        "approved",
+        125,
+        "ses_tabs"
+      ]
+    ]
+  },
+  "nodeTypes": {
+    "workflow": [
+      {
+        "type": "relay.startTrigger",
+        "label": "Workflow start",
+        "inputs": 0,
+        "outputs": ["main"],
+        "maximum": 1,
+        "parameters": [
+          { "name": "relayBrief", "label": "Workflow objective", "type": "text", "default": "" },
+          {
+            "name": "relayRetryBudget",
+            "label": "Fixes allowed per step",
+            "type": "number",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 99
+          }
+        ]
+      },
+      { "type": "relay.execute", "label": "Run task", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.gate", "label": "Check criteria", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.review", "label": "Review change", "inputs": 1, "outputs": ["main"], "parameters": "step" },
+      { "type": "relay.inject", "label": "Provide context", "inputs": 1, "outputs": ["main"], "parameters": "context" },
+      { "type": "relay.human", "label": "Human approval", "inputs": 1, "outputs": ["main"], "parameters": "step" }
+    ],
+    "step": [
+      { "name": "instructions", "label": "Instructions", "type": "text", "default": "" },
+      { "name": "skill", "label": "Skill", "type": "skill", "default": "" },
+      {
+        "name": "skillMode",
+        "label": "How to use the skill",
+        "type": "options",
+        "default": "combine",
+        "options": [
+          { "value": "combine", "label": "Skill plus instructions" },
+          { "value": "replace", "label": "Skill replaces instructions" }
+        ]
+      },
+      { "name": "checklist", "label": "Criteria to advance", "type": "json", "default": "[]" }
+    ],
+    "context": [
+      { "name": "text", "label": "Context", "type": "text", "default": "" },
+      { "name": "file", "label": "Context file", "type": "string", "default": "" }
+    ],
+    "hook": [
+      {
+        "type": "relay.hookEventTrigger",
+        "label": "Agent event",
+        "inputs": 0,
+        "outputs": ["main"],
+        "maximum": 1,
+        "parameters": [
+          {
+            "name": "operation",
+            "label": "Operation",
+            "type": "options",
+            "default": "edit",
+            "options": [
+              { "value": "read", "label": "Read file" },
+              { "value": "edit", "label": "Edit file" },
+              { "value": "write", "label": "Create file" },
+              { "value": "command", "label": "Run command" },
+              { "value": "tool", "label": "Any tool" },
+              { "value": "session-start", "label": "Session start" },
+              { "value": "prompt", "label": "Prompt" },
+              { "value": "session-idle", "label": "Session stop" }
+            ]
+          },
+          {
+            "name": "timing",
+            "label": "Timing",
+            "type": "options",
+            "default": "before",
+            "options": [
+              { "value": "before", "label": "Before the operation" },
+              { "value": "after", "label": "After the operation" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "relay.hookCondition",
+        "label": "Hook condition",
+        "inputs": 1,
+        "outputs": ["Yes", "No"],
+        "parameters": [
+          {
+            "name": "field",
+            "label": "Field",
+            "type": "options",
+            "default": "path",
+            "options": [
+              { "value": "path", "label": "File path" },
+              { "value": "tool", "label": "Tool" },
+              { "value": "command", "label": "Command" },
+              { "value": "event", "label": "Event" }
+            ]
+          },
+          {
+            "name": "pattern",
+            "label": "Matches pattern",
+            "type": "string",
+            "default": "",
+            "placeholder": "src/generated/**"
+          }
+        ]
+      },
+      {
+        "type": "relay.hookRemind",
+        "label": "Send reminder",
+        "inputs": 1,
+        "outputs": ["main"],
+        "parameters": "message"
+      },
+      { "type": "relay.hookBlock", "label": "Block", "inputs": 1, "outputs": [], "parameters": "message" },
+      {
+        "type": "relay.hookApprove",
+        "label": "Ask for approval",
+        "inputs": 1,
+        "outputs": ["main"],
+        "parameters": "message"
+      },
+      {
+        "type": "relay.hookVerify",
+        "label": "Run check",
+        "inputs": 1,
+        "outputs": ["Pass", "Fail"],
+        "parameters": "verify"
+      },
+      {
+        "type": "relay.hookRepair",
+        "label": "Require repair",
+        "inputs": 1,
+        "outputs": ["main"],
+        "parameters": "message"
+      },
+      { "type": "relay.hookRecord", "label": "Record only", "inputs": 1, "outputs": ["main"], "parameters": "message" },
+      { "type": "relay.hookAllow", "label": "Allow", "inputs": 1, "outputs": ["main"], "parameters": "note" }
+    ]
+  }
+}

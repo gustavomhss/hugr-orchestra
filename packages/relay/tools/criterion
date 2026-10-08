@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+"""criterion — exit 0 iff ONE named criterion of a phase checker is PASS.
+
+Generalized from tools/edd/plan-criterion, which did this for plan-check alone. Any checker that
+takes `--phase <name> --json` and prints `[{criterion, status, evidence}]` works here, so a protocol
+gains per-criterion Relay controls by shipping a checker rather than by shipping a shim.
+
+Why per-criterion at all: a phase checker grades a whole phase, and a Relay control is finer than
+that. Each criterion becomes its own control with its own verdict, oracle sha and origin on the
+chain, so a failure localizes to the criterion rather than to "the phase is wrong". That costs one
+checker invocation per control, which is a deliberate trade — localization is what the state machine
+exists to provide.
+
+    criterion <checker> <phase> <criterion> [-- extra args for the checker...]
+
+exit 0  PASS · 1  FAIL / SKIP / absent · 2  the checker could not be run or produced no report
+
+SKIP is a FAILURE. A checker skips a criterion when the inputs it needs are missing, and a control
+that could not be evaluated has not been satisfied — the same rule the gate applies to a judge whose
+diff cannot be computed.
+"""
+import json
+import subprocess
+import sys
+
+
+def main(argv):
+    if len(argv) < 3:
+        print(__doc__.strip().splitlines()[0], file=sys.stderr)
+        print("usage: criterion <checker> <phase> <criterion> [checker args...]", file=sys.stderr)
+        return 2
+    checker, phase, want = argv[0], argv[1], argv[2]
+    extra = [a for a in argv[3:] if a != "--"]
+
+    r = subprocess.run([sys.executable, checker, "--phase", phase, "--json", *extra],
+                       capture_output=True, text=True)
+    try:
+        report = json.loads(r.stdout or "")
+    except ValueError:
+        print(f"criterion: {checker} produced no parseable report for phase {phase!r}", file=sys.stderr)
+        print(r.stderr.strip()[:400], file=sys.stderr)
+        return 2
+
+    rows = report if isinstance(report, list) else report.get("results", report.get("criteria", []))
+    for row in rows:
+        if row.get("criterion") == want:
+            if row.get("status") == "PASS":
+                return 0
+            print(f"{row.get('status')} {want} — {row.get('evidence', '')}", file=sys.stderr)
+            return 1
+    print(f"criterion: {want!r} is not a criterion of phase {phase!r}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

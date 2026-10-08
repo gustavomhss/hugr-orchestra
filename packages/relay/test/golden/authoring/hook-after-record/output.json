@@ -1,0 +1,40 @@
+{
+  "schema": "relay.hook.v1",
+  "name": "Actions",
+  "nodes": [
+    {
+      "id": "event",
+      "name": "Before edit",
+      "type": "relay.hookEventTrigger",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "operation": "command",
+        "timing": "after"
+      }
+    },
+    {
+      "id": "record",
+      "name": "Record",
+      "type": "relay.hookRecord",
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "message": "Recorded after the command."
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "event",
+      "port": 0,
+      "to": "record"
+    }
+  ],
+  "binding": "host-required",
+  "installed": false
+}

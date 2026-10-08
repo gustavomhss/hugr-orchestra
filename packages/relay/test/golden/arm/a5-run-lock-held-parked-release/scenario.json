@@ -1,0 +1,40 @@
+{
+  "sprint": {
+    "retry_budget": 3,
+    "work_packages": [
+      {
+        "id": "A",
+        "instructions": "create done",
+        "checklist": [
+          {
+            "id": "A-file",
+            "cmd": "test -f done"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "state": "awaiting-human",
+    "position": "A",
+    "counter": "1\n",
+    "retry_A": "1\n",
+    "release": "GS investigated",
+    "agent_id": "other-worker",
+    ".run.lock/owner": "another evaluator"
+  },
+  "fires": [
+    {
+      "agentID": "worker-1",
+      "transcript": [
+        {
+          "type": "user",
+          "content": "RELAY-ARM:tok"
+        }
+      ]
+    }
+  ]
+}

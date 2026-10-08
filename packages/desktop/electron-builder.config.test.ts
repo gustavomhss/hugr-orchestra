@@ -45,6 +45,24 @@ for (const channel of channels) {
 }
 
 for (const channel of channels) {
+  test(`ships native window and Dock icons outside the app archive for ${channel.channel}`, async () => {
+    const previous = process.env.ORCHESTRA_CHANNEL
+    process.env.ORCHESTRA_CHANNEL = channel.channel
+
+    const module = await import(`./electron-builder.config.ts?icons=${channel.channel}`)
+    const config = module.default as Configuration
+
+    if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
+    if (previous !== undefined) process.env.ORCHESTRA_CHANNEL = previous
+
+    // windows.ts resolves these at process.resourcesPath/icons, not inside app.asar.
+    expect(config.extraResources).toContainEqual({ from: "resources/icons", to: "icons" })
+    expect(config.files).toContain("!resources/icons/**/*")
+    for (const icon of ["icon.png", "icon.ico", "dock.png"]) {
+      expect(await Bun.file(path.join(import.meta.dir, "icons", channel.channel, icon)).exists()).toBe(true)
+    }
+  })
+
   test(`ships Maestro's playbooks outside the app archive for ${channel.channel}`, async () => {
     const previous = process.env.ORCHESTRA_CHANNEL
     process.env.ORCHESTRA_CHANNEL = channel.channel

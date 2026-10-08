@@ -1,0 +1,28 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "DIFF",
+            "judge": "inspect change",
+            "diff": true,
+            "blocking": true
+          }
+        ]
+      }
+    ]
+  },
+  "tree": {
+    "result.txt": "RELAY_JUDGE_OK\n"
+  },
+  "fires": [
+    {
+      "check": {
+        "baseRef": "0123456789abcdef0123456789abcdef01234567"
+      }
+    }
+  ]
+}

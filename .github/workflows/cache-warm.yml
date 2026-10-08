@@ -70,6 +70,19 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-
 
+      # Same Python version and dependency file as the Relay steps in test.yml, so epic runs restore this pip cache.
+      - name: Setup Python for Relay
+        if: runner.os == 'Linux'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: packages/relay/requirements-dev.txt
+
+      - name: Warm Relay pip cache
+        if: runner.os == 'Linux'
+        run: python -m pip install -r packages/relay/requirements-dev.txt
+
       - name: Warm typecheck
         if: runner.os == 'Linux'
         # Same memory limit as typecheck.yml.

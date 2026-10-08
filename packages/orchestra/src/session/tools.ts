@@ -13,7 +13,7 @@ import { Truncate } from "@/tool/truncate"
 import { Plugin } from "@/plugin"
 import type { TaskPromptOps } from "@/tool/task"
 import { type Tool as AITool, tool, jsonSchema, type ToolExecutionOptions, asSchema } from "ai"
-import { Effect } from "effect"
+import { Context, Effect, Exit, Layer, Option, Scope } from "effect"
 import { MessageV2 } from "./message-v2"
 import { Session } from "./session"
 import { SessionProcessor } from "./processor"
@@ -26,6 +26,9 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { nativeProfiles, roster } from "@/maestro/roster"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyHooks } from "@orchestra/core/tool-safety-hooks"
+import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { InstanceRef } from "@/effect/instance-ref"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -65,6 +68,26 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const flags = yield* RuntimeFlags.Service
   const safety = yield* ToolSafety.make.pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
   const binding = yield* InstanceRef
+  const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
+  // V1 calls run outside a Location; their hooks' decisions belong to the Session's, which is opened for its Relay
+  // service only once an enabled hook is in play, and held for the rest of the call.
+  const placement = (scope: Scope.Scope) => {
+    if (!input.session.directory) return undefined
+    const location = {
+      directory: AbsolutePath.make(input.session.directory),
+      ...(input.session.workspaceID ? { workspaceID: input.session.workspaceID } : {}),
+    }
+    return {
+      location,
+      relay: Effect.gen(function* () {
+        if (!locations) return undefined
+        const { Relay } = yield* Effect.promise(() => import("@orchestra/core/relay"))
+        const services = yield* Layer.buildWithScope(locations.get(location), scope).pipe(Effect.exit)
+        if (Exit.isFailure(services)) return undefined
+        return Option.getOrUndefined(Context.getOption(services.value, Relay.Service))
+      }),
+    }
+  }
   const nativeSeat = input.agent.native
     ? roster.find((member) => member.memberId === input.agent.id && member.nativeProfile)
     : undefined
@@ -113,17 +136,24 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       }).pipe(Effect.orDie),
   })
 
+  // The V1 hook boundary: the native host's wrapper around these tools leaves this call's hooks to it.
   const guard = <A, E, R>(name: string, args: unknown, options: ToolExecutionOptions, effect: Effect.Effect<A, E, R>) =>
-    intercept(safety, {
-      tool: name,
-      args,
-      sessionID: input.session.id,
-      callID: options.toolCallId,
-      directory: binding?.directory,
-      projectID: binding?.project.id,
-      projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-    }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
-    () => !!options.abortSignal?.aborted).pipe(Effect.orDie)
+    Effect.scoped(
+      Effect.flatMap(Effect.scope, (scope) =>
+        intercept(safety, {
+          tool: name,
+          args,
+          sessionID: input.session.id,
+          callID: options.toolCallId,
+          assistantMessageID: input.processor.message.id,
+          agent: input.agent.id ?? input.agent.name,
+          directory: binding?.directory,
+          projectID: binding?.project.id,
+          projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
+        }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+        () => !!options.abortSignal?.aborted).pipe(Effect.provideService(ToolSafetyHooks.Placement, placement(scope))),
+      ),
+    ).pipe(Effect.orDie)
 
   for (const item of yield* registry.tools({
     modelID: ModelV2.ID.make(input.model.api.id),

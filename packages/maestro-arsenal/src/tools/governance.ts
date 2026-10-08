@@ -8,7 +8,6 @@ import { changeBudget, changedFiles, selectCI, metrics, metricsReport, changelog
 import { type ScopedPolicy, policyProposal } from "../governance/policy.ts"
 import { recoveryBegin, recoveryPrepare, recoveryRestore, recoveryReplay } from "../governance/recovery.ts"
 import { preflightArm, preflightCheck, preflightDisarm } from "../governance/preflight.ts"
-import { type CompletionContract, evaluateCompletion } from "../governance/completion.ts"
 import { type OperatorRequest, runRelease, runRuleset, writeChangelog } from "../governance/operators.ts"
 import { governanceToolDescriptor, GOVERNANCE_DEFINITIONS, GOVERNANCE_OPERATIONS } from "../governance/descriptors.ts"
 import type { ToolDef } from "../contract.ts"
@@ -23,9 +22,7 @@ export interface GovernanceInput {
   baseline?: Capture
   final?: Capture
   acceptance?: Acceptance[]
-  contract?: CompletionContract
   checks?: Capture
-  bindings?: string[]
   base?: string
   soft?: number
   hard?: number
@@ -79,10 +76,6 @@ const tool: ToolDef<GovernanceInput> = {
     if (input.operation === "acceptance") {
       requireValue(input.baseline && input.final && input.acceptance, "ACCEPTANCE_INPUT_REQUIRED")
       return text({ ...acceptance(context.projectID, input.baseline, input.final, input.acceptance), authoritative: false })
-    }
-    if (input.operation === "completion-check") {
-      requireValue(input.contract && input.checks && input.bindings, "COMPLETION_INPUT_REQUIRED")
-      return text({ ...evaluateCompletion(context.projectID, input.contract, input.checks, input.bindings), checksExecuted: false })
     }
     if (input.operation === "metrics-report") {
       requireValue(input.metricsBaseline && input.metricsFinal, "METRICS_CAPTURES_REQUIRED")

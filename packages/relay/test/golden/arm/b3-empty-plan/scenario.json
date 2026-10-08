@@ -1,0 +1,11 @@
+{
+  "sprint": {
+    "work_packages": []
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "fires": [
+    {}
+  ]
+}
