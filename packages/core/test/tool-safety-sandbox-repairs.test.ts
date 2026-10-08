@@ -101,14 +101,34 @@ it.live("default wrap does not prepare output parents, including with a model-st
   }),
 )
 
-it.live("explicit Go read-only cache flags HOLD before filesystem acquisition, scratch or parents", () =>
+it.live("Go cache flag semantics use the final matching flag, including quoted boolean spellings", () =>
+  Effect.sync(() => {
+    const flags = ["0", "f", "F", "false", "FALSE", "False"].flatMap((value) =>
+      ["-", "--"].flatMap((prefix) => ["", "'", '"'].map((quote) => `${quote}${prefix}modcacherw=${value}${quote}`)),
+    )
+    const writable = ["-modcacherw", "--modcacherw", ...["1", "t", "T", "true", "TRUE", "True"].map((value) => `"--modcacherw=${value}"`)]
+    flags.forEach((flag) => {
+      expect(ToolSafetySandbox.readonlyGoCache(flag)).toBe(true)
+      writable.forEach((value) => {
+        expect(ToolSafetySandbox.readonlyGoCache(`${flag}\t${value}`)).toBe(false)
+        expect(ToolSafetySandbox.readonlyGoCache(`${value}\r\n${flag}`)).toBe(true)
+      })
+    })
+    const malformed = ["", "-trimpath", '-ldflags="-modcacherw=false"', "-modcacherw='false'", '"-modcacherw=false', "-modcacherw=FALSELY", "-modcacherw=invalid -modcacherw=false", "-modcacherw=false -modcacherw=invalid"]
+    malformed.forEach((value) => {
+      expect(ToolSafetySandbox.readonlyGoCache(value)).toBe(false)
+    })
+  }),
+)
+
+confined("confined final Go read-only cache flags HOLD before scratch or parent writes", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const acquisitions: string[] = []
-    const fs = {
+    const fs: FSUtil.Interface = {
       ...f.fs,
-      realPath: (target: string) => f.fs.realPath(target).pipe(Effect.tap(() => Effect.sync(() => acquisitions.push(target)))),
-      makeTempDirectoryScoped: f.fs.makeTempDirectoryScoped,
+      makeTempDirectoryScoped: (options) => f.fs.makeTempDirectoryScoped({ ...options, directory: f.directory }).pipe(Effect.tap(() => Effect.sync(() => acquisitions.push("scratch")))),
+      makeDirectory: (target, options) => f.fs.makeDirectory(target, options).pipe(Effect.tap(() => Effect.sync(() => acquisitions.push(target)))),
     }
     yield* Effect.forEach(["0", "f", "F", "false", "FALSE", "False"].flatMap((value) =>
       ["-", "--"].flatMap((prefix) => ["", "'", '"'].map((quote) => `-trimpath\t${quote}${prefix}modcacherw=${value}${quote}\r\n-buildvcs=false`))), (GOFLAGS) => Effect.gen(function* () {
@@ -133,7 +153,56 @@ it.live("explicit Go read-only cache flags HOLD before filesystem acquisition, s
   }),
 )
 
-it.live("Go quoted fields do not interpret inner quotes or unrelated flag values as read-only cache requests", () =>
+it.live("disabled scratch sandbox returns ordinary commands with caller Go cache flags unchanged", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const env = { GOFLAGS: "-trimpath '-modcacherw=false'" }
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", "console.log(process.env.GOFLAGS)"], {
+      cwd: f.directory, env, extendEnv: false,
+    }), { prepareParents: true }).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { writeRoots: ["pending/deep/out"], sandbox: { enabled: false, scratch: true } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    )
+    expect(command._tag).toBe("StandardCommand")
+    if (command._tag !== "StandardCommand") throw new Error("Unexpected ordinary pipeline")
+    expect(command.command).toBe(f.node)
+    expect(command.options.env).toEqual(env)
+    const result = yield* f.processes.run(command)
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.toString().trim()).toBe(env.GOFLAGS)
+    expect(yield* f.fs.exists(path.join(f.directory, "pending"))).toBe(false)
+  }),
+)
+
+// This is an ordinary-fallback proof, not confinement. Supported hosts have separate confined assertions above.
+const unavailable = fact.shellWrites === "unenforced" ? it.live : it.live.skip
+unavailable("unavailable sandbox names its required HOLD, then fallback keeps caller Go flags ordinary", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const env = { GOFLAGS: "-modcacherw=false" }
+    const input = ChildProcess.make(f.node, ["-e", "console.log(process.env.GOFLAGS)"], { cwd: f.directory, env, extendEnv: false })
+    const profile = { requireSandbox: true, writeRoots: ["pending/deep/out"], sandbox: { enabled: true, scratch: true } }
+    const baseline = yield* Effect.flip(ToolSafetySandbox.wrap(input, { prepareParents: true }).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, profile),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    ))
+    expect(baseline.reason).toBe(process.platform === "win32" ? "sandbox-platform-unavailable" : "required-process-sandbox-unavailable")
+    const command = yield* ToolSafetySandbox.wrap(input, { prepareParents: true }).pipe(
+      Effect.provideService(ToolSafety.RuntimeProfile, { ...profile, sandbox: { ...profile.sandbox, unconfinedFallback: true } }),
+      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+    )
+    expect(command._tag).toBe("StandardCommand")
+    if (command._tag !== "StandardCommand") throw new Error("Unexpected fallback pipeline")
+    expect(command.command).toBe(f.node)
+    expect(command.options.env).toEqual(env)
+    const result = yield* f.processes.run(command)
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.toString().trim()).toBe(env.GOFLAGS)
+    expect(yield* f.fs.exists(path.join(f.directory, "pending"))).toBe(false)
+  }),
+)
+
+it.live("ordinary children preserve quoted or malformed Go flags unchanged", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     yield* Effect.forEach(["-modcacherw", "--modcacherw=true", '-ldflags="-modcacherw=false"', "-modcacherw='false'", '"-modcacherw=false', "-modcacherw=FALSELY"], (GOFLAGS) => Effect.gen(function* () {
@@ -381,7 +450,7 @@ confined("real Go downloads and builds in removable scoped scratch, preserving o
     const owner = { GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") }
     yield* Effect.forEach(Object.values(owner), (directory) => f.fs.makeDirectory(directory), { discard: true })
     yield* Effect.forEach(Object.values(owner), (directory) => f.fs.writeFileString(path.join(directory, "sentinel"), "owner"), { discard: true })
-    const env = { ...owner, GOPROXY: pathToFileURL(path.join(f.directory, "proxy")).href, GOSUMDB: "off", GOTOOLCHAIN: "local", GOTELEMETRY: "off", GOENV: "off", CGO_ENABLED: "0", GOFLAGS: "-trimpath -buildvcs=false", GOPRIVATE: "", GONOPROXY: "", GONOSUMDB: "" }
+    const env = { ...owner, GOPROXY: pathToFileURL(path.join(f.directory, "proxy")).href, GOSUMDB: "off", GOTOOLCHAIN: "local", GOTELEMETRY: "off", GOENV: "off", CGO_ENABLED: "0", GOFLAGS: "-trimpath -buildvcs=false -modcacherw=false -modcacherw", GOPRIVATE: "", GONOPROXY: "", GONOSUMDB: "" }
     const before = { ...env }
     const scratch = yield* Effect.scoped(Effect.gen(function* () {
       const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", `const c=require('child_process');for(const args of [['mod','download','example.com/scratch'],['build','-mod=mod','-o','gen/deep/out','.']]){const r=c.spawnSync(${JSON.stringify(go)},args,{encoding:'utf8'});if(r.status!==0)throw Error(r.stderr||String(r.error));}console.log(JSON.stringify({go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR,flags:process.env.GOFLAGS}))`], {
@@ -396,7 +465,7 @@ confined("real Go downloads and builds in removable scoped scratch, preserving o
       const result = yield* f.processes.run(command, { timeout: "120 seconds" })
       if (result.exitCode !== 0) throw new Error(`Real Go control failed: ${result.stderr.toString()}`)
       const out = JSON.parse(result.stdout.toString())
-      expect(out.flags).toBe("-trimpath -buildvcs=false -modcacherw")
+      expect(out.flags).toBe(`${env.GOFLAGS} -modcacherw`)
       expect(out.go).toBe(path.join(out.tmp, "go-build"))
       expect(out.mod).toBe(path.join(out.tmp, "go-mod"))
       expect((yield* f.fs.readDirectory(out.go)).some((entry) => /^[a-f0-9]{2}$/.test(entry))).toBe(true)
