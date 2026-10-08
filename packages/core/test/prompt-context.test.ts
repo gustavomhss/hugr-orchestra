@@ -5,7 +5,7 @@ import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
-import { EventTable } from "@orchestra/core/event/sql"
+import { EventSequenceTable, EventTable } from "@orchestra/core/event/sql"
 import { Project } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -20,8 +20,11 @@ import { Prompt } from "@orchestra/schema/prompt"
 import { PromptContext } from "@orchestra/schema/prompt-context"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import { testEffect } from "./lib/effect"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node])))
+const sessionsLayer = AppNodeBuilder.build(SessionV2.node, [[SessionExecution.node, SessionExecution.noopLayer]])
 const sessionID = SessionSchema.ID.make("ses_prompt_context")
 const permission = [{ permission: "bash", pattern: "*", action: "deny" as const }]
 const prompt = Prompt.make({
@@ -71,6 +74,146 @@ const replay = Effect.gen(function* () {
     })),
   )
 })
+
+const seedHistorical = (promptContext?: PromptContext.Info) =>
+  Effect.gen(function* () {
+    const db = yield* seed
+    const id = SessionMessage.ID.make("msg_projected_only")
+    const timestamp = DateTime.makeUnsafe(123)
+    const data = Schema.encodeSync(SessionEvent.Prompted.data)({
+      sessionID,
+      messageID: id,
+      timestamp,
+      prompt,
+      delivery: "queue",
+      promptContext,
+    })
+    const row = {
+      id,
+      session_id: sessionID,
+      type: "user" as const,
+      seq: 7,
+      time_created: 123,
+      data: {
+        ...prompt,
+        time: { created: 123 },
+        metadata: { delivery: "steer" },
+        ...(promptContext === undefined ? {} : { promptContext }),
+      },
+    }
+    yield* db.insert(SessionMessageTable).values(row).run()
+    yield* db.insert(EventSequenceTable).values({ aggregate_id: sessionID, seq: 7 }).run()
+    yield* db
+      .insert(EventTable)
+      .values({
+        id: EventV2.ID.make("evt_historical_prompt"),
+        aggregate_id: sessionID,
+        seq: 7,
+        type: "session.next.prompted.1",
+        data,
+      })
+      .run()
+    expect(yield* db.select().from(SessionInputTable).all()).toEqual([])
+    return { db, id, data }
+  })
+
+it.effect("projected-user-only exact retry lazily reconciles authoritative delivery without new events", () =>
+  Effect.gen(function* () {
+    const { db, id } = yield* seedHistorical()
+    const events = yield* EventV2.Service
+    const before = yield* db.select().from(SessionMessageTable).all()
+    const history = yield* db.select().from(EventTable).all()
+    const admitted = yield* SessionInput.admit(db, events, {
+      id,
+      sessionID,
+      prompt,
+      delivery: "queue",
+      promptContext: { reminders: ["new hook context must not leak"] },
+    })
+    expect(admitted).toMatchObject({ id, sessionID, prompt, delivery: "queue", admittedSeq: 7, promotedSeq: 7 })
+    expect(admitted.promptContext).toBeUndefined()
+    expect((yield* db.select().from(SessionInputTable).get())?.prompt_context).toBeNull()
+    expect(DateTime.toEpochMillis(admitted.timeCreated)).toBe(123)
+    const sessions = yield* SessionV2.Service
+    expect(yield* sessions.prompt({ id, sessionID, prompt, delivery: "queue", resume: false })).toEqual(admitted)
+    expect(yield* db.select().from(SessionMessageTable).all()).toEqual(before)
+    expect(yield* db.select().from(EventTable).all()).toEqual(history)
+    expect(yield* SessionInput.promoteNextQueued(db, events, sessionID)).toBe(false)
+  }).pipe(Effect.provide(sessionsLayer)),
+)
+
+it.effect("projected-user-only retries reject Session, text, attachments, and delivery conflicts", () =>
+  Effect.gen(function* () {
+    const { db, id } = yield* seedHistorical()
+    const events = yield* EventV2.Service
+    const input = { id, sessionID, prompt, delivery: "queue" as const }
+    for (const conflict of [
+      { ...input, sessionID: SessionSchema.ID.make("ses_other") },
+      { ...input, prompt: Prompt.make({ ...prompt, text: "changed" }) },
+      { ...input, prompt: Prompt.make({ ...prompt, files: [] }) },
+      { ...input, prompt: Prompt.make({ ...prompt, agents: [] }) },
+      { ...input, delivery: "steer" as const },
+    ]) {
+      const exit = yield* SessionInput.admit(db, events, conflict).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain("SessionInput.LifecycleConflict")
+      expect(yield* db.select().from(SessionInputTable).all()).toEqual([])
+    }
+    yield* SessionInput.admit(db, events, input)
+    const exit = yield* SessionInput.admit(db, events, { ...input, delivery: "steer" }).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect((yield* db.select().from(EventTable).all()).length).toBe(1)
+  }),
+)
+
+it.effect("projected-user-only reconciliation rejects unknown or inconsistent provenance", () =>
+  Effect.gen(function* () {
+    const { db, id, data } = yield* seedHistorical({ reminders: ["stored"] })
+    const events = yield* EventV2.Service
+    const before = yield* db.select().from(SessionMessageTable).get()
+    if (before === undefined) return yield* Effect.die("Historical projection missing")
+    const input = { id, sessionID, prompt, delivery: "queue" as const }
+    const refuse = Effect.gen(function* () {
+      const exit = yield* SessionInput.admit(db, events, input).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain("SessionInput.LifecycleConflict")
+      expect(yield* db.select().from(SessionInputTable).all()).toEqual([])
+    })
+    for (const invalid of [
+      { ...data, delivery: undefined },
+      { ...data, delivery: "unknown" },
+      { ...data, messageID: "msg_wrong" },
+      { ...data, sessionID: "ses_other" },
+      { ...data, timestamp: 124 },
+      { ...data, promptContext: { reminders: ["drift"] } },
+      { ...data, promptContext: undefined },
+    ]) {
+      yield* db.update(EventTable).set({ data: invalid }).run()
+      yield* refuse
+    }
+    yield* db.update(EventTable).set({ data, type: "session.next.prompted.99" }).run()
+    yield* refuse
+    yield* db.update(EventTable).set({ type: "session.next.prompted.1", seq: 6 }).run()
+    yield* refuse
+    yield* db.update(EventTable).set({ seq: 7 }).run()
+    yield* db.update(SessionMessageTable).set({ type: "synthetic" }).run()
+    yield* refuse
+    const drift = { ...before.data, promptContext: { reminders: ["projection drift"] } }
+    yield* db
+      .update(SessionMessageTable)
+      .set({ type: "user", data: drift })
+      .run()
+    yield* refuse
+    yield* db.update(SessionMessageTable).set({ data: before.data }).run()
+    const restored = yield* db.select().from(SessionMessageTable).get()
+    const admitted = yield* SessionInput.admit(db, events, {
+      ...input,
+      promptContext: { reminders: ["caller ignored"] },
+    })
+    expect(admitted.promptContext).toEqual({ reminders: ["stored"] })
+    expect(yield* db.select().from(SessionMessageTable).get()).toEqual(restored)
+  }),
+)
 
 it.effect("prompt context survives admission, promotion and replay without changing text or permissions", () =>
   Effect.gen(function* () {

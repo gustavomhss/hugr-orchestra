@@ -1,11 +1,13 @@
 export * as SessionInput from "./input"
 
 import { and, asc, eq, isNull, lte } from "drizzle-orm"
-import { DateTime, Effect, Schema } from "effect"
+import { DateTime, Effect, Option, Schema } from "effect"
+import { Event } from "@orchestra/schema/event"
 import { Admitted, Delivery } from "@orchestra/schema/session-input"
 import { PromptContext } from "@orchestra/schema/prompt-context"
 import type { Database } from "../database/database"
 import type { EventV2 } from "../event"
+import { EventTable } from "../event/sql"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
 import { Prompt } from "./prompt"
@@ -31,7 +33,10 @@ const fromRow = (row: typeof SessionInputTable.$inferSelect): Admitted =>
     ...(row.promoted_seq === null ? {} : { promotedSeq: row.promoted_seq }),
   })
 
-export const find = Effect.fn("SessionInput.find")(function* (db: DatabaseService, id: SessionMessage.ID) {
+export const find = Effect.fn("SessionInput.find")(function* (
+  db: Pick<DatabaseService, "select">,
+  id: SessionMessage.ID,
+) {
   const row = yield* db.select().from(SessionInputTable).where(eq(SessionInputTable.id, id)).get().pipe(Effect.orDie)
   return row === undefined ? undefined : fromRow(row)
 })
@@ -52,7 +57,12 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
   },
 ) {
   const existing = yield* find(db, input.id)
-  if (existing !== undefined) return existing
+  if (existing !== undefined) {
+    if (!equivalent(existing, input)) return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+    return existing
+  }
+  const historical = yield* reconcileHistorical(db, input)
+  if (historical !== undefined) return historical
   const timestamp = yield* DateTime.now
   return yield* events
     .publish(SessionEvent.PromptAdmitted, {
@@ -74,9 +84,80 @@ export const admit = Effect.fn("SessionInput.admit")(function* (
             ),
       ),
       Effect.catchDefect((defect) =>
-        find(db, input.id).pipe(Effect.flatMap((stored) => (stored ? Effect.succeed(stored) : Effect.die(defect)))),
+        find(db, input.id).pipe(
+          Effect.flatMap((stored) =>
+            stored && equivalent(stored, input) ? Effect.succeed(stored) : Effect.die(defect),
+          ),
+        ),
       ),
     )
+})
+
+// User projections omit delivery. Only their original durable Prompted event can establish it.
+const reconcileHistorical = Effect.fn("SessionInput.reconcileHistorical")(function* (
+  db: DatabaseService,
+  input: Parameters<typeof equivalent>[1] & { readonly id: SessionMessage.ID },
+) {
+  const version = SessionEvent.Prompted.durable?.version
+  if (version === undefined) return yield* Effect.die("Prompted event is not durable")
+  return yield* db
+    .transaction(
+      (tx) =>
+        Effect.gen(function* () {
+          const existing = yield* find(tx, input.id)
+          if (existing !== undefined) {
+            if (!equivalent(existing, input)) return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+            return existing
+          }
+          const row = yield* tx.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.id)).get()
+          if (row === undefined) return
+          if (row.session_id !== input.sessionID || row.type !== "user")
+            return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+          const message = Schema.decodeUnknownOption(SessionMessage.User)({ ...row.data, id: row.id, type: row.type })
+          const event = yield* tx
+            .select()
+            .from(EventTable)
+            .where(and(eq(EventTable.aggregate_id, row.session_id), eq(EventTable.seq, row.seq)))
+            .get()
+          if (Option.isNone(message) || event?.type !== Event.versionedType(SessionEvent.Prompted.type, version))
+            return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+          const provenance = Schema.decodeUnknownOption(SessionEvent.Prompted.data)(event.data)
+          if (Option.isNone(provenance)) return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+          const canonical = Admitted.make({
+            id: message.value.id,
+            sessionID: input.sessionID,
+            prompt: Prompt.fromUserMessage(message.value),
+            promptContext: message.value.promptContext,
+            delivery: provenance.value.delivery,
+            timeCreated: message.value.time.created,
+            admittedSeq: row.seq,
+            promotedSeq: row.seq,
+          })
+          if (
+            provenance.value.messageID !== row.id ||
+            !matchesProjection(canonical, { ...provenance.value, timeCreated: provenance.value.timestamp }) ||
+            DateTime.toEpochMillis(canonical.timeCreated) !== row.time_created ||
+            !equivalent(canonical, input)
+          )
+            return yield* Effect.die(new LifecycleConflict({ id: input.id }))
+          yield* tx
+            .insert(SessionInputTable)
+            .values({
+              id: canonical.id,
+              session_id: canonical.sessionID,
+              prompt: encodePrompt(canonical.prompt),
+              prompt_context: canonical.promptContext,
+              delivery: canonical.delivery,
+              admitted_seq: row.seq,
+              promoted_seq: row.seq,
+              time_created: row.time_created,
+            })
+            .run()
+          return canonical
+        }),
+      { behavior: "immediate" },
+    )
+    .pipe(Effect.orDie)
 })
 
 export const projectAdmitted = Effect.fn("SessionInput.projectAdmitted")(function* (
