@@ -2,11 +2,12 @@ import { expect } from "bun:test"
 import path from "node:path"
 import { createConnection, createServer, type Socket } from "node:net"
 import { lstat } from "node:fs/promises"
-import { Effect } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
 import { AppProcess } from "../src/process"
+import { Global } from "../src/global"
 import { TcpProxy } from "../src/tcp-proxy"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
@@ -168,6 +169,104 @@ live("32 declared endpoints remain separate fixed targets at the supported bound
 }), 30_000)
 
 const darwin = process.platform === "darwin" ? it.live : it.live.skip
+
+live("planning denies canonical infrastructure before builds or listeners and reserves only private empty sockets", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const one = yield* target()
+  const cache = path.join(yield* fs.realPath(Global.Path.cache), "tcp-proxy")
+  const base = yield* fs.realPath("/tmp")
+  const before = (yield* fs.readDirectory(base)).filter((entry) => entry.startsWith("otcp-"))
+  const existed = yield* fs.exists(cache)
+  yield* Effect.forEach([path.dirname(cache), cache, path.join(cache, "denied-child"), base], (deny) => Effect.gen(function* () {
+    const held = yield* Effect.scoped(TcpProxy.listen([one.port], [deny])).pipe(Effect.flip)
+    expect(held.reason).toBe("sandbox-tcp-proxy-denied-path")
+    expect(yield* fs.exists(cache)).toBe(existed)
+    expect((yield* fs.readDirectory(base)).filter((entry) => entry.startsWith("otcp-")).sort()).toEqual(before.slice().sort())
+    expect(one.accepted.length).toBe(0)
+  }), { discard: true })
+  const planned = yield* Effect.scoped(Effect.gen(function* () {
+    const planned = yield* TcpProxy.plan([one.port])
+    expect(yield* fs.exists(planned.directory)).toBe(true)
+    expect((yield* fs.readDirectory(planned.directory)).length).toBe(0)
+    expect((yield* Effect.result(exchange(planned.sockets[0])))._tag).toBe("Failure")
+    expect(one.accepted.length).toBe(0)
+    expect(yield* fs.exists(cache)).toBe(existed)
+    return planned
+  }))
+  expect(yield* fs.exists(planned.directory)).toBe(false)
+}))
+
+live("actual compiler interruption reaps owned PID before removing staging; normal version controls survive", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const processes = yield* AppProcess.Service
+  const compiler = yield* ToolSafetySandbox.available("clang")
+  if (!compiler) throw new Error("BLOCKED: real Clang unavailable")
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "compiler-control-" })
+  expect((yield* TcpProxy.runCompiler(compiler, ["--version"], { cwd: root, timeout: 5000 })).stdout).toContain("clang")
+  const started = yield* Deferred.make<number>()
+  const observed: { staging?: string; reapedBeforeRemoval?: boolean } = {}
+  const fiber = yield* Effect.forkScoped(Effect.scoped(Effect.gen(function* () {
+    const staging = yield* fs.makeTempDirectoryScoped({ directory: root, prefix: "build-" })
+    observed.staging = staging
+    yield* AppProcess.requireSuccess(yield* processes.run(ChildProcess.make("mkfifo", [path.join(staging, "input.c")]), { timeout: "5 seconds" }))
+    const pid = { value: 0 }
+    yield* Effect.addFinalizer(() => Effect.gen(function* () {
+      const alive = running(pid.value)
+      observed.reapedBeforeRemoval = !alive
+      // Independent fixture cleanup keeps a deliberately broken ownership mutation from leaving a live child.
+      if (alive) {
+        process.kill(pid.value, "SIGKILL")
+        yield* Effect.whileLoop({ while: () => running(pid.value), body: () => Effect.sleep("10 millis"), step: () => undefined }).pipe(Effect.timeout("2 seconds"), Effect.orDie)
+      }
+      expect(yield* fs.exists(staging)).toBe(true)
+    }).pipe(Effect.orDie))
+    return yield* TcpProxy.runCompiler(compiler, ["-x", "c", "-fsyntax-only", path.join(staging, "input.c")], {
+      cwd: staging, timeout: 30_000,
+      onStart: (value) => { pid.value = value; Deferred.doneUnsafe(started, Effect.succeed(value)) },
+    })
+  })))
+  const pid = yield* Deferred.await(started)
+  const identity = yield* processes.run(ChildProcess.make("ps", ["-p", String(pid), "-o", "comm="]), { timeout: "5 seconds" })
+  expect(identity.stdout.toString()).toContain("clang")
+  expect(running(pid)).toBe(true)
+  if (!observed.staging) throw new Error("compiler did not reserve staging")
+  expect(yield* fs.exists(observed.staging)).toBe(true)
+  yield* Fiber.interrupt(fiber)
+  const exit = yield* Fiber.await(fiber)
+  expect(observed.reapedBeforeRemoval).toBe(true)
+  expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
+  expect(running(pid)).toBe(false)
+  expect(yield* fs.exists(observed.staging)).toBe(false)
+  expect((yield* TcpProxy.runCompiler(compiler, ["--version"], { cwd: root, timeout: 5000 })).stdout).toContain("clang")
+}), 15_000)
+
+live("actual stalled compiler timeout HOLDs only after close, never as an ordinary successful exit", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const processes = yield* AppProcess.Service
+  const compiler = yield* ToolSafetySandbox.available("clang")
+  if (!compiler) throw new Error("BLOCKED: real Clang unavailable")
+  const staging = yield* fs.makeTempDirectoryScoped({ prefix: "compiler-timeout-" })
+  yield* AppProcess.requireSuccess(yield* processes.run(ChildProcess.make("mkfifo", [path.join(staging, "input.c")]), { timeout: "5 seconds" }))
+  const observed = { pid: 0 }
+  const held = yield* Effect.flip(TcpProxy.runCompiler(compiler, ["-x", "c", "-fsyntax-only", path.join(staging, "input.c")], {
+    cwd: staging, timeout: 200, onStart: (pid) => { observed.pid = pid },
+  }))
+  expect(held.reason).toBe("sandbox-tcp-proxy-compiler-timeout")
+  expect(observed.pid).toBeGreaterThan(0)
+  expect(running(observed.pid)).toBe(false)
+}))
+
+function running(pid: number) {
+  if (pid < 1) throw new Error("owned compiler PID missing")
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ESRCH") return false
+    throw error
+  }
+}
+
 darwin("real Darwin helper publication survives scope cleanup and routes name only removed private sockets", () => Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const one = yield* target()
