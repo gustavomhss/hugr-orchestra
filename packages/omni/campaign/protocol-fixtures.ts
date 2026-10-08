@@ -15,8 +15,9 @@ export function fixture(name: string, config: Record<string, unknown> = {}) {
   requireLocal()
   const scratch = isolated(name, { plugin: [], ...config })
   // Do not inherit provider tokens, server credentials, npm/git auth, or a user configuration path.
+  // Keep Windows machine/module discovery for Core's real PowerShell/CIM birth recorder; HOME/AppData stay isolated.
   const env = Object.fromEntries(Object.entries(scratch.env).filter(([key]) =>
-    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
+    /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|COMPUTERNAME|OS|PROCESSOR_.*|NUMBER_OF_PROCESSORS|PSMODULEPATH|PROGRAMFILES(?:\(X86\))?|PROGRAMW6432|COMMONPROGRAMFILES(?:\(X86\))?|PROGRAMDATA|ALLUSERSPROFILE|APPDATA|LOCALAPPDATA|TEMP|TMP|TMPDIR|LANG|LC_.*|TERM|HOME|USERPROFILE|XDG_.*|ORCHESTRA_.*)$/i.test(key),
   ))
   Object.assign(env, { ORCHESTRA_LOCAL_TESTS: "1", TERM: "xterm-256color", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1" })
   delete env.ORCHESTRA_SERVER_PASSWORD
