@@ -113,7 +113,7 @@ const javascript = stripTypeScriptTypes(source.replace(projection, ''), {mode: '
 const WindowsInventory = await import('data:text/javascript;base64,' + Buffer.from(javascript).toString('base64'));
 const requested = JSON.parse(process.argv[2]);
 const output = {stdout: '', stderr: '', error: '', timedOut: false};
-const child = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand',
+const child = spawn('pwsh', ['-NoProfile', '-NonInteractive', '-EncodedCommand',
   Buffer.from('[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ' + WindowsInventory.CIM, 'utf16le').toString('base64')],
   {windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
 const closed = new Promise(resolve => child.once('close', resolve));
