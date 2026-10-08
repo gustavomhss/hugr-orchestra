@@ -5,7 +5,7 @@ Baseline: `57a3d32731326e7625d52d3e3f3bab66f0b35e20`.
 ## Owner decisions
 
 - Workflows execute through Maestro only. The app creates, modifies, explains and observes workflows; it does not dispatch them.
-- Planning, decomposition, tasks and work packages are moving to Wallie, which another front is building. Maestro owns orchestration, organization and decision. This is the owner-directed target, not a claim that the transition already shipped.
+- Planning, decomposition, tasks and work packages are moving to Archie (previously called Wallie), which another front is building. Maestro owns orchestration, organization and decision. This is the owner-directed target, not a claim that the transition already shipped.
 - Agents, MCP, CI/CD, Workspaces and Janitor remain deferred. This campaign does not reopen their product specification.
 - The lead owns architecture, shared contracts, integration and the final milestone. Authors own disjoint work packages; cold reviewers cannot author their reviewed changes.
 - Each work package runs only affected tests on Actions. The complete suite runs at milestone close.
@@ -14,7 +14,7 @@ Baseline: `57a3d32731326e7625d52d3e3f3bab66f0b35e20`.
 
 - The native Relay arm already owns evaluation, parking, per-gate retry budgets, release and audit. Arsenal binds actual Maestro/Task/Session authority to that arm.
 - Published authoring definitions currently do not bind directly to an approved native Task contract. Publishing itself must not arm or schedule work.
-- Historical WP15/WP16 labels do not authorize a second planner, an autonomous workflow scheduler, or UI execution. New lifecycle work stays Session-owned; planning artifacts come from Wallie's eventual authoritative interface, and Maestro remains the orchestrator.
+- Historical WP15/WP16 labels do not authorize a second planner, an autonomous workflow scheduler, or UI execution. New lifecycle work stays Session-owned; planning artifacts come from Archie's eventual authoritative interface, and Maestro remains the orchestrator.
 - Prompt hook Remind notes are produced but discarded by the Session path. They must become durable prompt-bound context without rewriting user text.
 - Receipt recovery currently happens at an enabled-hook boundary in the same Session. Recovery outside that boundary must never invoke hooks, models, tools, SessionExecution.wake or resume.
 - Python runtime is not used by the native engine. Legacy services/tools, workload checks and frozen oracle sources still exist; those roles must not be retired as one blanket deletion.
@@ -65,8 +65,8 @@ Baseline: `57a3d32731326e7625d52d3e3f3bab66f0b35e20`.
 
 ### W6 — Maestro definition binding and lifecycle
 
-- Bind selected published document/version/checksum and Wallie-produced planning artifacts to actual approved native dispatch authority. Authoring state alone cannot mint execution permission.
-- Reuse native dispatch and the single Relay evaluator. The current Task path is an implementation fact, not a mandate to leave planning/tasks/WPs owned by Maestro. Coordinate with Wallie's construction front before fixing member IDs or changing ownership/charters.
+- Bind selected published document/version/checksum and Archie-produced planning artifacts to actual approved native dispatch authority. Authoring state alone cannot mint execution permission.
+- Reuse native dispatch and the single Relay evaluator. The current Task path is an implementation fact, not a mandate to leave planning/tasks/WPs owned by Maestro. Coordinate with Archie's construction front before fixing member IDs or changing ownership/charters.
 - No additional provider loop, second grader, autonomous supervisor or UI scheduler.
 - Reject unsupported profile tooling and invalid/unpublished/drifted definitions before dispatch; `runnable` is necessary, not a substitute for authority or publication checks.
 - Define any `session.next.settled` event at the existing Session execution ownership boundary, with no durable drain identity. Joins, advisory wakes and idle/missing interruptions must not synthesize duplicate work.
@@ -82,7 +82,7 @@ Baseline: `57a3d32731326e7625d52d3e3f3bab66f0b35e20`.
 
 ## External ownership
 
-Maestro runtime-closure owns release lookup, CLI artifacts/background CLI, desktop CLI resources/bootstrap, WSL, Core npm/SDK helpers and provider OAuth/registration probes. Its branch is `runtime-closure`; do not duplicate these files. Nix final hashes depend on its final tree. Backend charter/prompt/roster coordination stays with that lead, and Wallie construction/charters stay with their separate owner, until ownership is explicitly transferred. Do not claim universal UI/API agent routing from roster prose alone.
+Maestro runtime-closure owns release lookup, CLI artifacts/background CLI, desktop CLI resources/bootstrap, WSL, Core npm/SDK helpers and provider OAuth/registration probes. Its branch is `runtime-closure`; do not duplicate these files. Nix final hashes depend on its final tree. Backend charter/prompt/roster coordination stays with that lead, and Archie construction/charters stay with their separate owner, until ownership is explicitly transferred. Candidate lead Session: `ses_ee6d55370ffe6CYDCP42Ox46NN`; confirm its interface before treating this contact as ownership. Do not claim universal UI/API agent routing from roster prose alone.
 
 ## Landing
 
