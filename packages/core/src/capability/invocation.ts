@@ -39,7 +39,8 @@ export function withContext<A, E, R>(
   effect: Effect.Effect<A, E, R>,
 ): Effect.Effect<A, E | Capability.Failure, R> {
   return Effect.suspend<A, E | Capability.Failure, R>(() => {
-    const decoded = Schema.decodeUnknownOption(Input)(input)
+    // HostInput is decoded data; optional decoded fields may explicitly contain undefined.
+    const decoded = Schema.decodeUnknownOption(Schema.toType(Input))(input)
     if (Option.isNone(decoded)) return Effect.fail(mismatch())
     const value = decoded.value
     if (value.owner.sessionID !== value.invocation.sessionID || value.owner.agentID !== value.invocation.agentID)

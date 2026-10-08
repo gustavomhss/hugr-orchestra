@@ -199,7 +199,7 @@ describe("capability invocation host binding", () => {
     }),
   )
 
-  it.effect("isolates overlapping same-Location opposite-policy fibers", () =>
+  it.live("isolates overlapping same-Location opposite-policy fibers", () =>
     Effect.gen(function* () {
       const first = yield* Deferred.make<void>()
       const second = yield* Deferred.make<void>()
@@ -224,10 +224,10 @@ describe("capability invocation host binding", () => {
       yield* Deferred.succeed(release, undefined)
       expect(yield* Fiber.join(a)).toBe("allow")
       expect(yield* Fiber.join(b)).toBe("deny")
-    }),
+    }).pipe(Effect.timeout("5 seconds")),
   )
 
-  it.effect("restores nested context after success, error, interruption and finalization", () =>
+  it.live("restores nested context after success, error, interruption and finalization", () =>
     Effect.gen(function* () {
       yield* CapabilityInvocation.withContext(
         host("app"),
@@ -261,6 +261,6 @@ describe("capability invocation host binding", () => {
         }),
       )
       expect((yield* read().pipe(Effect.flip)).code).toBe("invocation_binding_missing")
-    }),
+    }).pipe(Effect.timeout("5 seconds")),
   )
 })
