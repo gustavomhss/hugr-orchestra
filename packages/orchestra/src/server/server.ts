@@ -15,6 +15,7 @@ import { PublicApi } from "./routes/instance/httpapi/public"
 import type { CorsOptions } from "@orchestra/server/cors"
 import { lazy } from "@/util/lazy"
 import { startJanitorLoop } from "@/janitor/bootstrap"
+import { ListenerContext } from "./listener-context"
 
 // @ts-ignore This global is needed to prevent ai-sdk from logging warnings to stdout https://github.com/vercel/ai/blob/2dc67e0ef538307f21368db32d5a12345d98831b/packages/ai/src/logger/log-warnings.ts#L85
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -40,6 +41,7 @@ type ListenOptions = CorsOptions & {
 }
 type ListenerState = {
   scope: Scope.Scope
+  binding: ListenerContext.Binding
   server: Context.Service.Shape<typeof HttpServer.HttpServer>
   http: ListenerServer
   websockets: WebSocketTracker.Interface
@@ -91,6 +93,7 @@ const listenEffect: (opts: ListenOptions) => Effect.Effect<EffectListener, unkno
     yield* startJanitorLoop(state.scope)
     const address = yield* tcpAddress(state)
     const listenerUrl = makeURL(opts.hostname, address.port)
+    state.binding.url = listenerUrl
     const unpublishMdns = yield* setupMdns(opts, address.port, state.scope)
     url = listenerUrl
 
@@ -103,7 +106,7 @@ const listenEffect: (opts: ListenOptions) => Effect.Effect<EffectListener, unkno
   },
 )
 
-function listenerLayer(opts: ListenOptions, port: number) {
+function listenerLayer(opts: ListenOptions, port: number, binding: ListenerContext.Binding) {
   return HttpRouter.serve(HttpApiApp.createRoutes(opts), {
     middleware: disposeMiddleware,
     disableLogger: true,
@@ -118,6 +121,7 @@ function listenerLayer(opts: ListenOptions, port: number) {
     // every later `Server.listen()` keeps observing that initial snapshot.
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv())),
     Layer.provide(Layer.succeed(ToolSafety.RuntimeProfile)(opts.toolSafetyProfile)),
+    Layer.provide(Layer.succeed(ListenerContext.Current)(binding)),
   )
 }
 
@@ -130,12 +134,14 @@ function startWithPortFallback(opts: ListenOptions) {
 
 function startListener(opts: ListenOptions, port: number) {
   const scope = Scope.makeUnsafe()
-  return Layer.buildWithMemoMap(listenerLayer(opts, port), Layer.makeMemoMapUnsafe(), scope).pipe(
+  const binding: ListenerContext.Binding = {}
+  return Layer.buildWithMemoMap(listenerLayer(opts, port, binding), Layer.makeMemoMapUnsafe(), scope).pipe(
     Effect.provide(HttpApiApp.context),
     Effect.onError(() => Scope.close(scope, Exit.void).pipe(Effect.ignore)),
     Effect.map(
       (ctx): ListenerState => ({
         scope,
+        binding,
         server: Context.get(ctx, HttpServer.HttpServer),
         http: Context.get(ctx, ListenerServerService),
         websockets: Context.get(ctx, WebSocketTracker.Service),
