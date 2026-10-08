@@ -91,7 +91,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         env:
           ORCHESTRA_LOCAL_TESTS: "1"
-        run: bun packages/omni/campaign/v7-overhead.ts --quiet
+        run: bun packages/omni/campaign/v7-overhead.ts --quiet ${{ runner.os == 'macOS' && '--idle-ms=5' || '' }}
       - name: Record exact scope
         if: always()
         env:
