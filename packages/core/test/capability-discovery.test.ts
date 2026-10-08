@@ -2,6 +2,7 @@ import { describe, expect } from "bun:test"
 import path from "node:path"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityDiscovery } from "@orchestra/core/capability/catalog/discovery"
+import { CapabilityVendorSchema } from "@orchestra/core/capability/catalog/schema"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { Credential } from "@orchestra/core/credential"
@@ -294,4 +295,84 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     if (exit._tag === "Failure") expect(Cause.hasInterrupts(exit.cause)).toBe(true)
     yield* expectCode(f.describe(ref(first)), "stale_descriptor")
   }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("concurrent unsupported schema compilation cannot exceed cache quota", () => Effect.gen(function* () {
+    const f = yield* fixture({ maxEntries: 1 })
+    yield* Ref.set(f.list, { tools: [
+      { name: "first", summary: "First", inputSchema: { $ref: "https://unsupported.test/schema" } },
+      { name: "second", summary: "Second", inputSchema: { type: "string", format: "unknown-format" } },
+    ], catalogGeneration: 1, coverage: "complete" })
+    const results = yield* Effect.forEach(["first", "second"], (query) => f.find({ ...request, query }).pipe(Effect.result),
+      { concurrency: "unbounded" })
+    expect(results.filter((result) => result._tag === "Success")).toHaveLength(1)
+    const failures = results.filter((result) => result._tag === "Failure")
+    expect(failures).toHaveLength(1)
+    expect(failures[0]?.failure.code).toBe("quota_exceeded")
+  }))
+
+  it.live("root settlement, policy revoke and identical registry replacement during acquisition prevent disclosure", () => Effect.gen(function* () {
+    yield* Effect.forEach(["root", "policy", "registration"] as const, (change) => Effect.gen(function* () {
+      const f = yield* fixture()
+      const reached = yield* Deferred.make<void>()
+      const release = yield* Deferred.make<void>()
+      yield* Ref.set(f.transport, Deferred.succeed(reached, undefined).pipe(Effect.andThen(Deferred.await(release))))
+      const pending = yield* f.find().pipe(Effect.result, Effect.forkChild)
+      yield* Deferred.await(reached)
+      if (change === "root") {
+        yield* f.events.publish(SessionEvent.Tool.Called, { sessionID: f.context.sessionID,
+          assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID, tool: "service_call",
+          input: {}, provider: { executed: false }, timestamp: CapabilityPolicyFixture.timestamp })
+        yield* f.events.publish(SessionEvent.Tool.Success, { sessionID: f.context.sessionID,
+          assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID,
+          structured: {}, content: [], provider: { executed: false }, timestamp: CapabilityPolicyFixture.timestamp })
+      }
+      if (change === "policy") yield* CapabilityPolicyFixture.setRules([
+        { action: CapabilityDiscovery.disclosureAction, resource: "*", effect: "deny" },
+      ])
+      if (change === "registration") yield* f.registry.register({ platform_example: leaf() })
+      yield* Deferred.succeed(release, undefined)
+      const result = yield* Fiber.join(pending)
+      expect(result._tag).toBe("Failure")
+      if (result._tag === "Failure") expect(result.failure.code).toBe(change === "root" ? "invocation_binding_mismatch"
+        : change === "policy" ? "target_denied" : "stale_descriptor")
+      expect(yield* Ref.get(f.calls)).toHaveLength(1)
+    }))
+  }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("canonical leaf wiring example validates before dispatch and raw output before canonical Result projection", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const validator = yield* CapabilityVendorSchema.compile({ type: "string", minLength: 1 }, { type: "integer", minimum: 0 })
+    const dispatches = yield* Ref.make(0)
+    const projections = yield* Ref.make(0)
+    const response = yield* Ref.make<Schema.Json>(1)
+    yield* f.registry.register({ platform_validation_example: Tool.make({
+      description: "Validation-boundary example only", input: Schema.Json, output: Capability.Result,
+      execute: Effect.fnUntraced(function* (input) {
+        const checked = validator.validateInput(input)
+        if (!checked.valid) return yield* new Tool.Failure({ message: checked.failure.message })
+        yield* Ref.update(dispatches, (n) => n + 1)
+        const output = validator.validateOutput(yield* Ref.get(response))
+        if (!output.valid) return yield* new Tool.Failure({ message: output.failure.message })
+        yield* Ref.update(projections, (n) => n + 1)
+        return { status: "completed" as const, receipt: "validation-example", summary: String(output.value),
+          verification: "acknowledged" as const, artifactRefs: [] }
+      }),
+    }) })
+    const materialization = yield* f.registry.materialize()
+    const settle = (input: Schema.Json) => materialization.settle({ ...f.context,
+      call: { type: "tool-call", id: f.context.toolCallID, name: "platform_validation_example", input } })
+    expect((yield* settle(1)).result.type).toBe("error")
+    expect(yield* Ref.get(dispatches)).toBe(0)
+    expect(yield* Ref.get(projections)).toBe(0)
+    yield* Ref.set(response, "wrong-output")
+    expect((yield* settle("valid-input")).result.type).toBe("error")
+    expect(yield* Ref.get(dispatches)).toBe(1)
+    expect(yield* Ref.get(projections)).toBe(0)
+    yield* Ref.set(response, 2)
+    const valid = yield* settle("valid-input")
+    expect(valid.result.type).not.toBe("error")
+    expect(valid.output?.structured).toMatchObject({ status: "completed", summary: "2" })
+    expect(yield* Ref.get(dispatches)).toBe(2)
+    expect(yield* Ref.get(projections)).toBe(1)
+  }))
 })

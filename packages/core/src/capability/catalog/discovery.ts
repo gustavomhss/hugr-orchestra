@@ -1,7 +1,7 @@
 export * as CapabilityDiscovery from "./discovery"
 
 import { and, eq } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
+import { Effect, Option, Schema, Semaphore } from "effect"
 import { Capability } from "@orchestra/schema/capability"
 import type { Credential } from "../../credential"
 import type { Database } from "../../database/database"
@@ -108,6 +108,7 @@ export function make(options: Options) {
     const cursors = yield* CapabilityCursors.make({ maxEntries, ttlMillis, now })
     const locators = new Map<Capability.DescriptorID, { provider: string; name: string; expiresAt: number }>()
     const validators = new Map<string, { value: CapabilityVendorSchema.Validator | Capability.Failure; expiresAt: number }>()
+    const compilation = Semaphore.makeUnsafe(1)
     const placement = { projectID: location.project.id,
       location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) }
 
@@ -160,7 +161,7 @@ export function make(options: Options) {
       )
       validators.set(key, { value, expiresAt: time + ttlMillis })
       return value
-    })
+    }, compilation.withPermit)
 
     const find = Effect.fn("CapabilityDiscovery.find")(function* (
       context: Tool.Context, input: FindInput, materialization: ToolRegistry.Materialization,
@@ -186,19 +187,19 @@ export function make(options: Options) {
       }
       const offset = value.cursor === undefined ? 0 : yield* cursors.read(value.cursor, scope)
       const matches = acquired.catalog.tools.filter((tool) => `${tool.name}\n${tool.summary}`.toLowerCase().includes(value.query.toLowerCase()))
-      const permitted = (yield* Effect.forEach(matches, (tool) => policy.authorize(supplied, {
+      const permitted = (yield* Effect.forEach(matches, (tool) => policy.assert(supplied, {
         action: disclosureAction, resources: [...resources(scope), operationResource(value.provider, tool.name)],
-      }).pipe(Effect.map((permit) => ({ tool, permit })), Effect.catchTag("Capability.Failure", (error) =>
+      }).pipe(Effect.as(tool), Effect.catchTag("Capability.Failure", (error) =>
         error.code === "target_denied" ? Effect.succeed(undefined) : Effect.fail(error),
       )))).filter((item) => item !== undefined)
-      const page = yield* Effect.forEach(permitted.slice(offset, offset + value.limit), (item) => Effect.gen(function* () {
-        const validator = yield* compile(item.tool)
-        return { ...item, validator }
+      const page = yield* Effect.forEach(permitted.slice(offset, offset + value.limit), (tool) => Effect.gen(function* () {
+        const validator = yield* compile(tool)
+        return { tool, validator }
       }))
       const permit = yield* policy.authorize(supplied, { action: disclosureAction,
         resources: [...resources(scope), ...page.map((item) => operationResource(value.provider, item.tool.name))] })
       const operations = yield* policy.commit(permit, (tx) => Effect.gen(function* () {
-        yield* checkSelection(tx, supplied, acquired.resolution)
+        yield* checkSelection(tx, supplied, binding.owner, acquired.resolution)
         yield* identity(binding, value.provider, materialization)
         return yield* Effect.forEach(page, (item) => Effect.gen(function* () {
           // Final permit covers every disclosed operation; commit reassesses under actor/SQL gate.
@@ -250,7 +251,7 @@ export function make(options: Options) {
           operationResource(locator.provider, locator.name)],
       })
       return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
-        yield* checkSelection(tx, supplied, acquired.resolution)
+        yield* checkSelection(tx, supplied, binding.owner, acquired.resolution)
         yield* identity(binding, locator.provider, materialization)
         const record = yield* descriptors.read(value, {
           owner: binding.owner, connectionGeneration: acquired.resolution.connection.generation,
@@ -306,7 +307,7 @@ function boundedList(list: VendorList, maxTools: number, maxBytes: number): Vend
 }
 
 // Recheck authoritative selection in the disclosure commit, closing retarget/binding races after transport.
-function checkSelection(tx: Transaction, context: Tool.Context, resolution: CapabilityConnections.Resolution) {
+function checkSelection(tx: Transaction, context: Tool.Context, owner: Capability.Owner, resolution: CapabilityConnections.Resolution) {
   return Effect.gen(function* () {
     const connection = yield* tx.select().from(CapabilityConnectionTable)
       .where(eq(CapabilityConnectionTable.id, resolution.connection.id)).get()
@@ -316,8 +317,11 @@ function checkSelection(tx: Transaction, context: Tool.Context, resolution: Capa
       eq(CapabilityBindingTable.agent_id, context.agent),
     )).get()
     if (!connection || !target || connection.state !== "active" || connection.generation !== resolution.connection.generation ||
+      connection.project_id !== owner.projectID || connection.directory !== owner.location.directory ||
+      (connection.workspace_id ?? undefined) !== owner.location.workspaceID || connection.provider !== resolution.connection.provider ||
       target.generation !== resolution.target.generation || target.connection_id !== connection.id ||
       connection.credential_id !== resolution.credentialID || connection.endpoint !== resolution.endpoint ||
+      CapabilityVendorSchema.hash(target.resource) !== CapabilityVendorSchema.hash(resolution.resource) ||
       target.environment !== resolution.target.environment || !binding ||
       (!binding.actions.includes(disclosureAction) && !binding.actions.includes("*"))) return yield* failure("stale_descriptor")
   }).pipe(Effect.mapError((error) => error instanceof Capability.Failure ? error : failure("connection_unavailable")))
