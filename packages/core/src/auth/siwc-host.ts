@@ -6,6 +6,7 @@ import { dirname, join } from "node:path"
 import { PrivateFile } from "../util/private-file"
 
 /** Own app-defined host-ID file; never an installed app's credential file. */
+// Optional native boundaries are trusted code, never config or public JSON.
 export async function load(filename: string, input: {
   readonly protect?: typeof PrivateFile.protect
   readonly publish?: (source: string, destination: string) => Promise<void>

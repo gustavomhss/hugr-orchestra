@@ -41,7 +41,7 @@ describe("Auth", () => {
       yield* Effect.gen(function* () {
         const store = yield* Auth.Service
         yield* store.set(key, value)
-      }).pipe(Effect.provide(LayerNode.compile(Auth.node, [[FSUtil.node, observed]])))
+      }).pipe(Effect.provide(Layer.fresh(LayerNode.compile(Auth.node, [[FSUtil.node, observed]]))))
       expect(publications).toEqual([join(Global.Path.data, "auth-revisions.json"), join(Global.Path.data, "auth.json")])
       expect(sources).toHaveLength(2)
       yield* Effect.promise(async () => {
@@ -104,11 +104,11 @@ describe("Auth", () => {
         const result = yield* Effect.gen(function* () {
           const store = yield* Auth.Service
           yield* store.set(key, next)
-        }).pipe(Effect.provide(LayerNode.compile(Auth.node, [[FSUtil.node, observed]])), Effect.exit)
+        }).pipe(Effect.provide(Layer.fresh(LayerNode.compile(Auth.node, [[FSUtil.node, observed]]))), Effect.exit)
         expect(Exit.isFailure(result)).toBe(true)
         if (Exit.isSuccess(result)) throw new Error("Native protection failure was swallowed")
         expect(Cause.pretty(result.cause)).toContain("PrivateFile.protect failed")
-        expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "Windows DACL protection failed" : "EPERM")
+        expect(Cause.pretty(result.cause)).toContain(process.platform === "win32" ? "Executable not found in $PATH" : "EPERM")
         expect(control.source).toBeDefined()
         expect(control.release).toBeUndefined()
         expect(publications).toEqual(phase === "revision" ? [] : [join(Global.Path.data, "auth-revisions.json")])

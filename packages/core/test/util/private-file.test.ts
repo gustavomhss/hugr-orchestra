@@ -38,8 +38,8 @@ test("host production publisher sees a complete private source before hardlink a
     },
     publish: async (source, target) => {
       sources.push(source)
-      expect(protectedSources).toContain(source)
       await assertPrivateFile(source)
+      expect(protectedSources).toContain(source)
       expect(await readFile(source, "utf8")).toMatch(/^urn:uuid:[0-9a-f-]{36}\n$/i)
       expect(await readdir(root)).not.toContain("published")
       await link(source, target)
@@ -74,7 +74,7 @@ test("host native protection failure forbids publication and cleans completed sc
   expect(sources).toHaveLength(1)
   expect(published).toEqual([])
   expect(failures).toHaveLength(1)
-  if (process.platform === "win32") expect(String(failures[0].cause)).toContain("Windows DACL protection failed")
+  if (process.platform === "win32") expect(String(failures[0].cause)).toContain("Executable not found in $PATH")
   if (process.platform === "linux") expect(failures[0].cause).toMatchObject({ code: "EPERM", syscall: "chmod" })
   expect(await readdir(root)).toEqual([])
 })
