@@ -47,7 +47,7 @@ it.live("diagnostics inspect ANSI-split tokens and actual ordinary secret values
     expect(BackendToolkitDiagnostics.details(`failure ordinary-secret-value${" harmless".repeat(1000)}`, { HOST_SECRET: "ordinary-secret-value" })).toBeUndefined()
     expect(BackendToolkitDiagnostics.details("\x1b[31mordinary installer failure\x1b[0m", {})).toBe("ordinary installer failure")
     expect(BackendToolkitDiagnostics.details("download:404", { ACTIONS_AUTHENTICATION_LEVEL: "0" })).toBe("download:404")
-  expect(BackendToolkitDiagnostics.details("download:404", { ORCHESTRA_INHERIT_CREDENTIALS: "0" })).toBe("download:404")
+    expect(BackendToolkitDiagnostics.details("download:404", { ORCHESTRA_INHERIT_CREDENTIALS: "0" })).toBe("download:404")
     expect(BackendToolkitDiagnostics.details("download:404", { HOST_SECRET: "0" })).toBeUndefined()
     expect(BackendToolkitDiagnostics.details("bounded ".repeat(1000), {})?.length).toBeLessThanOrEqual(4096)
     const env = BackendToolkitDiagnostics.environment("/private/staging", { HOST_SECRET: "ordinary-secret-value", PATH: "compiler-path", TMPDIR: "/private/tmp" })
