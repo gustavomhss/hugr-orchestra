@@ -11,6 +11,7 @@ import { ascending } from "../identifier"
 import { SessionID } from "../session-id"
 import { WorkspaceID } from "../workspace-id"
 import { PermissionV1 } from "./permission"
+import { PromptContext } from "../prompt-context"
 
 const Timestamp = Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0))
 
@@ -351,6 +352,7 @@ export const User = Schema.Struct({
   }),
   system: Schema.optional(Schema.String),
   tools: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
+  promptContext: optional(PromptContext.Info),
 }).annotate({ identifier: "UserMessage" })
 export type User = Types.DeepMutable<Schema.Schema.Type<typeof User>>
 
@@ -588,6 +590,18 @@ const events = {
       info: SessionInfo,
     },
   }),
+  PromptAdmitted: define({
+    type: "session.v1.prompt.admitted",
+    ...options,
+    schema: {
+      sessionID: SessionID,
+      messageID: MessageID,
+      identityVersion: Schema.Literal(1),
+      identity: Schema.String,
+      info: User,
+      parts: Schema.Array(Part),
+    },
+  }),
   MessageUpdated: define({
     type: "message.updated",
     ...options,
@@ -660,6 +674,7 @@ export const Event = {
     events.Created,
     events.Updated,
     events.Deleted,
+    events.PromptAdmitted,
     events.MessageUpdated,
     events.MessageRemoved,
     events.PartUpdated,
