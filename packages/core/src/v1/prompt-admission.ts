@@ -52,6 +52,13 @@ export const reconcile = Effect.fn("PromptAdmission.reconcile")(function* (
   db: Pick<DB, "select">,
   input: { readonly sessionID: SessionID; readonly messageID: SessionV1.MessageID; readonly identity: string },
 ): Effect.fn.Return<SessionV1.WithParts | undefined, Conflict> {
+  // Read occupancy first: a concurrent atomic admission must be visible to the later receipt lookup.
+  const occupied = yield* db
+    .select({ id: MessageTable.id })
+    .from(MessageTable)
+    .where(eq(MessageTable.id, input.messageID))
+    .get()
+    .pipe(Effect.orDie)
   const receipt = yield* find(db, input.messageID)
   if (receipt) {
     if (receipt.sessionID !== input.sessionID || receipt.identity !== input.identity)
@@ -59,12 +66,6 @@ export const reconcile = Effect.fn("PromptAdmission.reconcile")(function* (
     // Schema contracts are readonly; the legacy runtime facade explicitly owns mutable decoded copies.
     return receipt.snapshot as SessionV1.WithParts
   }
-  const occupied = yield* db
-    .select({ id: MessageTable.id })
-    .from(MessageTable)
-    .where(eq(MessageTable.id, input.messageID))
-    .get()
-    .pipe(Effect.orDie)
   if (occupied) return yield* Effect.fail(new Conflict({ ...input, reason: "historical-message-without-receipt" }))
 })
 
@@ -87,7 +88,12 @@ export const project = Effect.fn("PromptAdmission.project")(function* (db: DB, p
     const occupied = yield* db
       .select({ id: PartTable.id })
       .from(PartTable)
-      .where(inArray(PartTable.id, payload.parts.map((part) => part.id)))
+      .where(
+        inArray(
+          PartTable.id,
+          payload.parts.map((part) => part.id),
+        ),
+      )
       .get()
       .pipe(Effect.orDie)
     if (occupied) return yield* Effect.die(new Conflict({ ...payload, reason: "occupied-part-id" }))
