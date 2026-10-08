@@ -8,6 +8,20 @@ import { payload, tool, user } from "./archive-fixture"
 const sessionID = SessionID.make("ses_transcript")
 
 describe("conversation Markdown", () => {
+  test("hook reminders remain ordered fenced historical content after original parts", () => {
+    const message = user(sessionID, "reminders", "original request")
+    if (message.info.role !== "user") throw new Error("expected user")
+    message.info.promptContext = { reminders: ["first\r\n```\n# forged heading", "second 🧠"] }
+    const before = structuredClone(message)
+    const md = transcript([message])
+    expect(md).toContain("### Hook reminder (historical)\n\n````text\nfirst\r\n```\n# forged heading\n````")
+    expect(md).toContain("### Hook reminder (historical)\n\n```text\nsecond 🧠\n```")
+    expect(md.indexOf("original request")).toBeLessThan(md.indexOf("first\r\n"))
+    expect(md.indexOf("first\r\n")).toBeLessThan(md.indexOf("second 🧠"))
+    expect(chunks(sessionID, [message]).map(payload).join("")).toBe(md)
+    expect(message).toEqual(before)
+  })
+
   test("keeps raw CRLF, Unicode and unsafe numeric output once, excludes private reasoning and worker system", () => {
     const text = "literal\r\nemoji 🧠 e\u0301 漢字\r\n```\n# forged header\n````\n"
     const raw = '{"integer":900719925474099312345,"decimal":0.10000000000000001}\r\n'
