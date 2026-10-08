@@ -318,7 +318,7 @@ confined("confined generator prepares nested file parents; sibling denied and ca
   }), 30_000,
 )
 
-confined("real Go builds and downloads into scratch GOCACHE/GOMODCACHE, leaving owner caches untouched", () =>
+confined("real Go downloads and builds in removable scoped scratch, preserving owner flags and caches", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const go = yield* ToolSafetySandbox.available("go")
@@ -334,19 +334,31 @@ confined("real Go builds and downloads into scratch GOCACHE/GOMODCACHE, leaving 
     const owner = { GOCACHE: path.join(f.directory, "owner-build"), GOMODCACHE: path.join(f.directory, "owner-mod") }
     yield* Effect.forEach(Object.values(owner), (directory) => f.fs.makeDirectory(directory), { discard: true })
     yield* Effect.forEach(Object.values(owner), (directory) => f.fs.writeFileString(path.join(directory, "sentinel"), "owner"), { discard: true })
-    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", `const c=require('child_process'),f=require('fs');const r=c.spawnSync(${JSON.stringify(go)},['build','-mod=mod','-o','gen/deep/out','.'],{encoding:'utf8'});if(r.status!==0)throw Error(r.stderr||String(r.error));console.log(JSON.stringify({go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR}))`], {
-      cwd: f.directory, env: { ...owner, GOPROXY: pathToFileURL(path.join(f.directory, "proxy")).href, GOSUMDB: "off", GOTOOLCHAIN: "local", GOTELEMETRY: "off", GOENV: "off", CGO_ENABLED: "0", GOFLAGS: "", GOPRIVATE: "", GONOPROXY: "", GONOSUMDB: "" },
-    }), { prepareParents: true }).pipe(
-      Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["gen/deep/out", "go.sum"], sandbox: { enabled: true, scratch: true } }),
-      Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
-    )
-    const result = yield* f.processes.run(command, { timeout: "120 seconds" })
-    if (result.exitCode !== 0) throw new Error(`Real Go control failed: ${result.stderr.toString()}`)
-    const out = JSON.parse(result.stdout.toString())
-    expect(out.go).toBe(path.join(out.tmp, "go-build"))
-    expect(out.mod).toBe(path.join(out.tmp, "go-mod"))
-    expect((yield* f.fs.readDirectory(out.go)).some((entry) => /^[a-f0-9]{2}$/.test(entry))).toBe(true)
-    expect(yield* f.fs.readFileString(path.join(out.mod, "example.com", "scratch@v1.0.0", "scratch.go"))).toContain("const Value = 42")
+    const env = { ...owner, GOPROXY: pathToFileURL(path.join(f.directory, "proxy")).href, GOSUMDB: "off", GOTOOLCHAIN: "local", GOTELEMETRY: "off", GOENV: "off", CGO_ENABLED: "0", GOFLAGS: "-trimpath -buildvcs=false", GOPRIVATE: "", GONOPROXY: "", GONOSUMDB: "" }
+    const before = { ...env }
+    const scratch = yield* Effect.scoped(Effect.gen(function* () {
+      const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(f.node, ["-e", `const c=require('child_process');for(const args of [['mod','download','example.com/scratch'],['build','-mod=mod','-o','gen/deep/out','.']]){const r=c.spawnSync(${JSON.stringify(go)},args,{encoding:'utf8'});if(r.status!==0)throw Error(r.stderr||String(r.error));}console.log(JSON.stringify({go:process.env.GOCACHE,mod:process.env.GOMODCACHE,tmp:process.env.TMPDIR,flags:process.env.GOFLAGS}))`], {
+        cwd: f.directory, env,
+      }), { prepareParents: true }).pipe(
+        Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: ["gen/deep/out", "go.sum"], sandbox: { enabled: true, scratch: true } }),
+        Effect.provideService(ToolSafety.NativeContext, { directory: f.directory }),
+      )
+      expect(command._tag).toBe("StandardCommand")
+      if (command._tag !== "StandardCommand") throw new Error("Unexpected Go pipeline")
+      expect(command.options.env?.GOFLAGS).toBe(`${env.GOFLAGS} -modcacherw`)
+      const result = yield* f.processes.run(command, { timeout: "120 seconds" })
+      if (result.exitCode !== 0) throw new Error(`Real Go control failed: ${result.stderr.toString()}`)
+      const out = JSON.parse(result.stdout.toString())
+      expect(out.flags).toBe("-trimpath -buildvcs=false -modcacherw")
+      expect(out.go).toBe(path.join(out.tmp, "go-build"))
+      expect(out.mod).toBe(path.join(out.tmp, "go-mod"))
+      expect((yield* f.fs.readDirectory(out.go)).some((entry) => /^[a-f0-9]{2}$/.test(entry))).toBe(true)
+      expect(yield* f.fs.readFileString(path.join(out.mod, "example.com", "scratch@v1.0.0", "scratch.go"))).toContain("const Value = 42")
+      if (typeof out.tmp !== "string") throw new Error("Go child did not report its scratch directory")
+      return out.tmp
+    }))
+    expect(yield* f.fs.exists(scratch)).toBe(false)
+    expect(env).toEqual(before)
     expect(yield* f.fs.exists(path.join(f.directory, "gen", "deep", "out"))).toBe(true)
     yield* Effect.forEach(Object.values(owner), (directory) => Effect.gen(function* () {
       expect(yield* f.fs.readDirectory(directory)).toEqual(["sentinel"])

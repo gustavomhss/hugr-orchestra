@@ -185,6 +185,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const confined = scratch ? {
     ...env, TMPDIR: scratch, TMP: scratch, TEMP: scratch,
     GOCACHE: path.join(scratch, "go-build"), GOMODCACHE: path.join(scratch, "go-mod"), XDG_CACHE_HOME: path.join(scratch, "cache"),
+    // Go's default read-only module directories prevent scoped scratch cleanup; keep only this child's cache writable.
+    GOFLAGS: [env.GOFLAGS, "-modcacherw"].filter(Boolean).join(" "),
     npm_config_cache: path.join(scratch, "npm"), BUN_INSTALL_CACHE_DIR: path.join(scratch, "bun"),
     PIP_CACHE_DIR: path.join(scratch, "pip"), UV_CACHE_DIR: path.join(scratch, "uv"),
   } : env
