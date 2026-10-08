@@ -136,6 +136,7 @@ export default {
           \`kind\` text NOT NULL,
           \`operation\` text NOT NULL,
           \`creation_key\` text UNIQUE,
+          \`request_hash\` text,
           \`state\` text NOT NULL,
           \`connection\` text,
           \`target\` text,
