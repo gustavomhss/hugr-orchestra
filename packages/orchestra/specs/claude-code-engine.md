@@ -330,8 +330,9 @@ Sealing rechecks backend epoch, admission generation and the latest completed bo
 The bound uses the current user's selected model, not the previous assistant's larger model. Ordinary plugin message
 transforms run on the admitted view, so refreshing canonical history cannot silently discard their outgoing changes.
 The ordinary prompt path calls admission before streaming; the SDK pre-spawn path freezes the checked native view for
-`sessionStore.load`. The producer's 600-second deadline includes model lookup, the first reply, its one schema retry
-and joined transport cleanup. Diagnostics retain structural input-budget, timeout, invalid-schema, archive,
+`sessionStore.load`. The producer's 600-second abort deadline includes model lookup, the first reply and its one schema retry.
+Return waits for joined transport cleanup; a blocked uninterruptible finalizer can extend elapsed time beyond the abort deadline.
+The owner explicitly approved this ownership-preserving contract on 2026-10-08. Diagnostics retain structural input-budget, timeout, invalid-schema, archive,
 stale/backend-change and cancellation reasons, without conversation content. Emergency masking is not complete compaction.
 
 `script/continuity-bench/complete.ts` exposes production capture/run/decoder/projection to an evaluator-supplied transport,

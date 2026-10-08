@@ -22,6 +22,14 @@ Existing source snapshots and original compaction results are frozen externally 
 10. Support validated v4 persisted memory as a migration input; new complete-prefix artifacts use an explicit v5 discriminator. Do not reinterpret a partial v4 boundary as complete coverage.
 11. Orchestra and Claude Code adapters must materialize the same coverage contract. Native SDK dependency repair cannot silently pull covered completed turns back into context. Unknown native shapes keep an explicit native-compaction fallback.
 12. Maintenance failures retain structural failure classes (for example input budget, timeout, invalid output, archive, stale/backend change) without conversation content. A timeout or false input estimate cannot silently turn a failed pass into success or discard durable memory.
+13. The producer has one 600-second abort deadline across model lookup and retries. Return and ownership release wait for confirmed transport cleanup. A blocked uninterruptible finalizer may extend elapsed time beyond 600 seconds; this is not a bounded teardown guarantee.
+
+### Owner-approved deadline clarification
+
+WAIVER (human-authorized) — strict 600-second total elapsed-time guarantee, including teardown
+- Authorized by Gustavo, 2026-10-08: "Manter cleanup confirmado".
+- Reason: aborting an Effect does not forcibly terminate an uninterruptible transport finalizer. Returning before it closes would release ownership without confirmed teardown.
+- Contract: abort at 600 seconds, join cleanup, then report failure. Forced bounded teardown requires a separate transport-specific design; no orphaning or silent cleanup detachment.
 
 ## Acceptance evidence
 

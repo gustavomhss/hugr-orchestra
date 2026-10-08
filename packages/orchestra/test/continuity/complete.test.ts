@@ -252,7 +252,7 @@ it.live("whole input budget failure names unmet span and leaves prior v5 intact 
   expect(called).toBe(false)
 }))
 
-it.effect("600-second full producer deadline joins transport cleanup and classifies timeout without an artifact", Effect.gen(function* () {
+it.effect("600-second producer abort deadline retains cleanup ownership until transport confirms closure", Effect.gen(function* () {
   const history = messages(["user", "assistant"])
   const captured = completeSnapshot(history[0].info.sessionID, history)
   if (!captured) throw new Error("No snapshot")
@@ -268,6 +268,8 @@ it.effect("600-second full producer deadline joins transport cleanup and classif
   yield* Deferred.await(entered)
   const deadline = yield* TestClock.adjust("600 seconds").pipe(Effect.forkChild)
   yield* Deferred.await(closing)
+  expect(yield* Deferred.isDone(returned)).toBe(false)
+  yield* TestClock.adjust("30 seconds")
   expect(yield* Deferred.isDone(returned)).toBe(false)
   yield* Deferred.succeed(cleanup, undefined)
   yield* Fiber.join(deadline)

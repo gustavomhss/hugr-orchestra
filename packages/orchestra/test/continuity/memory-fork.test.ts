@@ -170,7 +170,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(call.toolChoice).toBe("none")
   expect(call.system).toEqual([])
   expect(call.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
-  expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v5 complete prefix")
+  expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(call.agent.prompt).toContain("do not continue the task, call tools or answer anyone")
   expect(call.agent.prompt).toContain("There is no size limit")
   expect(call.user.system).toBeUndefined()
