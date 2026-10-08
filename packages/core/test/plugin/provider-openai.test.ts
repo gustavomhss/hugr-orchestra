@@ -1,7 +1,11 @@
 import { AISDK } from "@orchestra/core/aisdk"
 import { describe, expect, spyOn } from "bun:test"
+import { mkdtemp, rm } from "node:fs/promises"
+import { join } from "node:path"
+import { tmpdir } from "node:os"
 import type { LanguageModelV3 } from "@ai-sdk/provider"
 import { Effect, Schema } from "effect"
+import { Global } from "@orchestra/core/global"
 import { Catalog } from "@orchestra/core/catalog"
 import { Integration } from "@orchestra/core/integration"
 import { ModelV2 } from "@orchestra/core/model"
@@ -15,11 +19,19 @@ import { PluginTestLayer } from "./fixture"
 const it = testEffect(PluginTestLayer)
 
 const addPlugin = Effect.fn(function* () {
+  const directory = yield* Effect.acquireRelease(
+    Effect.promise(() => mkdtemp(join(tmpdir(), "openai-plugin-test-"))),
+    (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+  )
   const plugin = yield* PluginV2.Service
   const aisdk = yield* AISDK.Service
   const host = yield* PluginHost.make(plugin)
   const integrations = yield* Integration.Service
-  yield* OpenAIPlugin.effect(host).pipe(Effect.provideService(Integration.Service, integrations))
+  yield* OpenAIPlugin.effect(host).pipe(
+    Effect.provideService(Integration.Service, integrations),
+    Effect.provideService(Global.Service, Global.make({ data: directory })),
+  )
+  return directory
 })
 
 function required<T>(value: T | undefined): T {
