@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "d97d2802-5634-4627-8057-cc2d2b4b77de",
+  "id": "893d056b-865d-4deb-ac13-f51cec8f4bb8",
   "prevIds": [
-    "b31de7b7-673c-4d16-8675-b677ce8f0872"
+    "d97d2802-5634-4627-8057-cc2d2b4b77de"
   ],
   "ddl": [
     {
@@ -875,6 +875,16 @@
       "default": null,
       "generated": null,
       "name": "creation_key",
+      "entityType": "columns",
+      "table": "capability_job"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "request_hash",
       "entityType": "columns",
       "table": "capability_job"
     },

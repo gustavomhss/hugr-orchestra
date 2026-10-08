@@ -107,9 +107,12 @@ export const make = Effect.gen(function* () {
     return permit
   })
 
-  const commit = <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
+  const commitMany = <A, E, R>(supplied: readonly Permit[], write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
     Effect.gen(function* () {
-      if (!permit || permit[approved] !== true || !permits.has(permit)) return yield* mismatch()
+      const pending = [...supplied]
+      const permit = pending[0]
+      if (!permit || pending.length > 16 || pending.some((item) => !item || item[approved] !== true ||
+        !permits.has(item) || item.binding !== permit.binding)) return yield* mismatch()
       if (!database.inTransaction) return yield* Effect.die("Capability commit requires SQL transaction identity")
       if (yield* database.inTransaction) return yield* mismatch()
       // Lock ordering is actor state -> SQLite writer. Approval never happens under either lock.
@@ -120,16 +123,19 @@ export const make = Effect.gen(function* () {
         })
         if (current !== permit.binding) return yield* mismatch()
         yield* validate(current)
-        const request = { sessionID: permit.context.sessionID, agent: permit.context.agent,
-          action: permit.action, resources: [...permit.resources] }
-        if ((yield* permissions.evaluate(request).pipe(
-          Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())),
-        )) === "deny") return yield* denied()
+        yield* Effect.forEach(pending, (item) => Effect.gen(function* () {
+          const request = { sessionID: item.context.sessionID, agent: item.context.agent,
+            action: item.action, resources: [...item.resources] }
+          if ((yield* permissions.evaluate(request).pipe(
+            Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())),
+          )) === "deny") return yield* denied()
+        }))
         return yield* write(tx)
       }), { behavior: "immediate" }))
     })
 
-  return { authorize, commit, assert: (context: Tool.Context, input: { action: string; resources: readonly string[] }) =>
+  return { authorize, commitMany, commit: <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
+    commitMany([permit], write), assert: (context: Tool.Context, input: { action: string; resources: readonly string[] }) =>
     authorize(context, input).pipe(Effect.asVoid) }
 })
 
