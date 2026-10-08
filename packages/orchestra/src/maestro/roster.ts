@@ -1,26 +1,13 @@
 import path from "path"
-import PROMPT_BILLY from "../agent/prompt/billy.txt"
-import PROMPT_BOBBY from "../agent/prompt/bobby.txt"
-import PROMPT_BACKEND from "../agent/prompt/backend.txt"
-import PROMPT_FRANKIE from "../agent/prompt/frankie.txt"
-import PROMPT_JIMMY from "../agent/prompt/jimmy.txt"
-import PROMPT_LUCY from "../agent/prompt/lucy.txt"
-import PROMPT_PATTY from "../agent/prompt/patty.txt"
-import PROMPT_ROSIE from "../agent/prompt/rosie.txt"
-import { BackendSkillRoot } from "./backend-skill-root"
+import { Seats, type Seat } from "./seats"
+import { validateInstalled } from "./seats/seat"
+import { SeatSkillRoot } from "./seat-skill-root"
 import { TRUNCATION_DIR } from "../tool/truncation-dir"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({
-  root: BackendSkillRoot.root,
-  names: Object.freeze([
-    "backend-implement",
-    "backend-api",
-    "backend-data",
-    "backend-concurrency",
-    "backend-refactor",
-    "backend-check",
-  ] as const),
+  root: SeatSkillRoot.roots.backend,
+  names: Seats.all.backend.skills,
 })
 
 // The backend seat's default display label, its only literal name in the repository (F1.2): config
@@ -38,8 +25,14 @@ export function canonicalMemberId(id: string | undefined) {
   return id === LEGACY_BACKEND_ID ? "backend" : id
 }
 
+// Validate installed definitions before creating any profile or roster entry. Scaffold seeds have no prompt yet.
+Object.values(Seats.all).forEach((seat) => {
+  if (canonicalMemberId(seat.id) !== seat.id) throw new Error(`Native seat id must be canonical: ${seat.id}`)
+  validateInstalled(seat)
+})
+
 // Seats never get a permission prompt, so what asks the owner elsewhere, reading .env files and publishing, is denied.
-export const nativeProfiles = Object.freeze({
+export const baseProfiles = Object.freeze({
   execution: Object.freeze({
     "*": "deny",
     read: envRead("deny"),
@@ -47,24 +40,6 @@ export const nativeProfiles = Object.freeze({
     grep: "allow",
     bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
     edit: "allow",
-  } as const),
-  // Backend-specialist-only (F1.8): the execution set plus its bound Atlas Memory tools (F3 clause 29), its six entry
-  // skills and access to their packaged root. Agent registration adds the worktree-relative edit deny that keeps that
-  // root read-only.
-  backend: Object.freeze({
-    "*": "deny",
-    read: envRead("deny"),
-    glob: "allow",
-    grep: "allow",
-    bash: Object.freeze({ "*": "allow", ...publishRules("deny") }),
-    edit: "allow",
-    atlas_memory_recall: "allow",
-    atlas_memory_emit: "allow",
-    skill: Object.freeze({
-      "*": "deny",
-      ...Object.fromEntries(backendSkills.names.map((name) => [name, "allow" as const])),
-    }),
-    external_directory: Object.freeze({ "*": "deny", [path.join(backendSkills.root, "*")]: "allow" } as const),
   } as const),
   // A truncated tool result points at its saved full output, so review seats may read that directory. External access
   // also covers bash and edit, so only this profile, which holds neither, gets it; the others get no saved-file hint.
@@ -77,6 +52,35 @@ export const nativeProfiles = Object.freeze({
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),
 } as const)
+
+type NativeProfile = Readonly<Record<string, "allow" | "deny" | Readonly<Record<string, "allow" | "deny">>>>
+
+// These seats historically hashed their shared profile name. Keep that projection exactly; new seats use their id.
+const historicalProfiles: Readonly<Record<string, Seat["profile"]>> = {
+  patty: "execution", lucy: "review", bobby: "review", billy: "review", jimmy: "review", rosie: "execution", frankie: "review",
+}
+
+export const nativeProfiles: Readonly<Record<string, NativeProfile>> = Object.freeze({
+  ...baseProfiles,
+  ...Object.fromEntries(Object.values(Seats.all).map((seat) => [seat.id, seatProfile(seat)])),
+})
+
+// Seat-specific grants extend the unchanged base. The root edit deny is worktree-relative and added by Agent.
+function seatProfile(seat: Seat): NativeProfile {
+  const root = SeatSkillRoot.roots[seat.id]
+  if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
+  return Object.freeze({
+    ...baseProfiles[seat.profile],
+    ...(seat.atlasMemory ? { atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
+    ...(seat.skills.length > 0 ? {
+      skill: Object.freeze({ "*": "deny" as const, ...Object.fromEntries(seat.skills.map((name) => [name, "allow" as const])) }),
+      external_directory: Object.freeze({
+        ...(seat.profile === "review" ? baseProfiles.review.external_directory : { "*": "deny" as const }),
+        [path.join(root, "*")]: "allow" as const,
+      }),
+    } : {}),
+  })
+}
 
 // Reads every file but .env files, which hold secrets; .env.example stays readable.
 // Mirrors the github.com/github/gitignore Node.gitignore pattern for .env files.
@@ -100,7 +104,7 @@ export type RosterMember = {
   readonly abilityClass: string
   readonly returnCard: string
   readonly forbiddenActions: readonly string[]
-  readonly nativeProfile?: keyof typeof nativeProfiles
+  readonly nativeProfile?: string
   readonly prompt?: string
 }
 
@@ -126,104 +130,31 @@ export const roster = createRoster([
     returnCard: "transition/Project/merge receipt",
     forbiddenActions: ["product implementation", "self-approval", "self-review"],
   },
-  {
-    displayName: BACKEND_DEFAULT_LABEL,
-    memberId: "backend",
-    role: "backend execution",
-    abilityClass: "scoped repository write",
-    returnCard: "backend-result",
-    // Single source of the charter's Forbidden line; native-team.test.ts asserts the prompt renders it verbatim.
-    forbiddenActions: [
-      "investigation or diagnosis",
-      "architecture or scope decisions",
-      "delegation",
-      "self-review",
-      "claims of verification or acceptance",
-      "commit, push, branch, merge or pull request",
-      "installing tools",
-      "working around permission denials or safety holds",
-      "editing Atlas memory files",
-    ],
-    nativeProfile: "backend",
-    prompt: PROMPT_BACKEND,
-  },
-  {
-    displayName: "Patty",
-    memberId: "patty",
-    role: "frontend execution",
-    abilityClass: "scoped repository write",
-    returnCard: "implementation card, sensory evidence, diff receipt",
-    forbiddenActions: ["approve", "review own work", "merge"],
-    nativeProfile: "execution",
-    prompt: PROMPT_PATTY,
-  },
-  {
-    displayName: "Lucy",
-    memberId: "lucy",
-    role: "cold code review; records governed reviews",
-    abilityClass: "read-only artifact review",
-    returnCard: "cited APPROVE/FIX_FIRST/REJECT card",
-    forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
-    nativeProfile: "review",
-    prompt: PROMPT_LUCY,
-  },
-  {
-    displayName: "Bobby",
-    memberId: "bobby",
-    role: "architecture review",
-    abilityClass: "read-only contract review",
-    returnCard: "seam/contract verdict",
-    forbiddenActions: ["implement product", "merge"],
-    nativeProfile: "review",
-    prompt: PROMPT_BOBBY,
-  },
-  {
-    displayName: "Billy",
-    memberId: "billy",
-    role: "security review",
-    abilityClass: "read-only threat review",
-    returnCard: "threat verdict and cited controls",
-    forbiddenActions: ["implement product", "merge"],
-    nativeProfile: "review",
-    prompt: PROMPT_BILLY,
-  },
-  {
-    displayName: "Jimmy",
-    memberId: "jimmy",
-    role: "codebase exploration",
-    abilityClass: "read-only discovery",
-    returnCard: "grounded findings card",
-    forbiddenActions: ["ratify alone", "edit product"],
-    nativeProfile: "review",
-    prompt: PROMPT_JIMMY,
-  },
-  {
-    displayName: "Rosie",
-    memberId: "rosie",
-    role: "documentation changes",
-    abilityClass: "scoped docs write",
-    returnCard: "docs evidence card",
-    forbiddenActions: ["decide product behavior"],
-    nativeProfile: "execution",
-    prompt: PROMPT_ROSIE,
-  },
-  {
-    displayName: "Frankie",
-    memberId: "frankie",
-    role: "process audit",
-    abilityClass: "read-only process/ledger audit",
-    returnCard: "audit verdict",
-    forbiddenActions: ["implement product", "merge"],
-    nativeProfile: "review",
-    prompt: PROMPT_FRANKIE,
-  },
+  ...Object.values(Seats.all).map(seatMember),
 ])
+
+function seatMember(seat: Seat): RosterMember {
+  const labels: Readonly<Record<string, string>> = {
+    backend: BACKEND_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", bobby: "Bobby", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
+  }
+  return {
+    displayName: labels[seat.id] ?? seat.id,
+    memberId: seat.id,
+    role: seat.role,
+    abilityClass: seat.abilityClass,
+    returnCard: seat.returnCard,
+    forbiddenActions: seat.forbiddenActions,
+    nativeProfile: historicalProfiles[seat.id] ?? seat.id,
+    prompt: seat.prompt,
+  }
+}
 
 export function createRoster(members: readonly RosterMember[]): Roster {
   const memberIds = new Set<string>()
   return Object.freeze(
     members.map((member) => {
-      if (!wellFormedMemberId(member.memberId)) throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
+      if (!wellFormedMemberId(member.memberId) || canonicalMemberId(member.memberId) !== member.memberId)
+        throw new Error(`Roster memberId must be canonical: ${member.memberId}`)
       if (memberIds.has(member.memberId)) throw new Error(`Roster memberId must be unique: ${member.memberId}`)
       memberIds.add(member.memberId)
       // Windows checkouts may convert prompt files to CRLF; prompts and their hashes must not depend on the checkout.
