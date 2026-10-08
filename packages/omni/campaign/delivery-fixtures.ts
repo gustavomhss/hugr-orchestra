@@ -2,7 +2,7 @@
 import { spawn } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { LOGS, afterCleanup, captureStarted, inventoryScope, kill9, matches, members, own, ownedIdentities, table, until, verdict } from "./lib.ts"
+import { LOGS, afterCleanup, captureStarted, inventoryScope, kill9, matches, members, own, ownedIdentities, prepareCapture, table, until, verdict } from "./lib.ts"
 
 export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {
   if (!result.pass) return { ...verdict(name, result), ...result }
@@ -37,6 +37,7 @@ export function evidence(name: string, value: unknown) {
 
 /** Measures stdio close normally; watchdog resolves independently of descendants retaining those pipes. */
 export async function execute(bin: string, args: string[], env: Record<string, string>, cwd: string, deadlineMs: number, nonces: string[] = []) {
+  await prepareCapture()
   const started = performance.now()
   const proc = spawn(bin, args, { env, cwd, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
   proc.stdout.setEncoding("utf8")

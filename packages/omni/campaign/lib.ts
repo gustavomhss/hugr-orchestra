@@ -287,32 +287,86 @@ process.stdout.write(JSON.stringify({ pid: out.pid, status: out.status, stdout: 
   return JSON.parse(out.stdout) as { pid: number; status: number | null; stdout: string; stderr: string; error?: string }
 }
 
-/** Start capture at spawn without blocking stdio/watchdogs or adding query time to the measured close. */
+const recorder = { proc: undefined as ChildProcess | undefined, ready: undefined as Promise<void> | undefined,
+  pending: new Map<number, ReturnType<typeof Promise.withResolvers<Identity | undefined>>>() }
+
+/** Start the OS recorder before the KPI clock: creating PowerShell during a cell can block Bun's stdio delivery. */
+export async function prepareCapture() {
+  if (!win) return
+  if (recorder.ready) {
+    if (!recorder.proc || recorder.proc.exitCode !== null || recorder.proc.signalCode !== null) throw new Error("identity recorder is not live")
+    return recorder.ready
+  }
+  const ready = Promise.withResolvers<void>()
+  recorder.ready = ready.promise
+  const proc = spawn("powershell", ["-NoProfile", "-NonInteractive", "-Command", `
+$ErrorActionPreference='Stop'; Get-CimInstance Win32_Process -Filter 'ProcessId=${process.pid}' | Out-Null;
+Write-Output '{"ready":true}';
+while ($line=[Console]::ReadLine()) {
+  $request=ConvertFrom-Json $line;
+  try {$p=Get-CimInstance Win32_Process -Filter ('ProcessId='+[int]$request.pid);
+    $reply=if ($p) {@{pid=[int]$p.ProcessId;startTime=$p.CreationDate.ToFileTimeUtc().ToString()}} else {@{pid=[int]$request.pid;gone=$true}}
+  } catch {$reply=@{pid=[int]$request.pid;error=$_.Exception.Message}}
+  ConvertTo-Json -Compress -InputObject $reply
+}`], { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] })
+  recorder.proc = proc
+  const text = { stdout: "", stderr: "" }
+  const fail = (error: unknown) => { ready.reject(error); recorder.pending.forEach((request) => request.reject(error)); recorder.pending.clear() }
+  proc.stderr!.on("data", (chunk) => (text.stderr += chunk))
+  proc.stdin!.on("error", fail)
+  proc.on("error", fail)
+  proc.on("close", () => fail(new Error(`identity recorder closed: ${text.stderr}`)))
+  proc.stdout!.on("data", (chunk) => {
+    text.stdout += chunk
+    for (;;) {
+      const end = text.stdout.indexOf("\n")
+      if (end < 0) return
+      const line = text.stdout.slice(0, end)
+      text.stdout = text.stdout.slice(end + 1)
+      try {
+        const reply = JSON.parse(line) as { ready?: boolean; pid: number; startTime?: string; gone?: boolean; error?: string }
+        if (reply.ready === true) { ready.resolve(); continue }
+        const request = recorder.pending.get(reply.pid)
+        if (!request) throw new Error(`unexpected identity recorder PID ${reply.pid}`)
+        recorder.pending.delete(reply.pid)
+        if (reply.error || !reply.gone && (typeof reply.startTime !== "string" || !/^\d+$/.test(reply.startTime))) { request.reject(new Error(`identity recorder failed: ${JSON.stringify(reply)}`)); continue }
+        request.resolve(reply.gone ? undefined : { pid: reply.pid, startTime: reply.startTime! })
+      } catch (error) { fail(error); proc.kill("SIGKILL") }
+    }
+  })
+  const timer = setTimeout(() => { fail(new Error("identity recorder readiness deadline expired")); proc.kill("SIGKILL") }, QUERY_MS)
+  await ready.promise.finally(() => clearTimeout(timer))
+}
+
+/** Request identity immediately after spawn; short exited commands retain only their exact ChildProcess handle. */
 export async function captureStarted(home: string, proc: ChildProcess) {
   if (!win) return own(home, proc)
+  await prepareCapture()
   if (proc.pid === undefined) throw new Error("spawned campaign process has no PID")
-  const query = spawn("powershell", ["-NoProfile", "-NonInteractive", "-Command", CIM.replace("Win32_Process |", `Win32_Process -Filter 'ProcessId=${proc.pid} OR ProcessId=${process.pid}' |`)], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] })
-  const text = { stdout: "", stderr: "" }
-  query.stdout.on("data", (chunk) => (text.stdout += chunk))
-  query.stderr.on("data", (chunk) => (text.stderr += chunk))
-  const timer = setTimeout(() => query.kill("SIGKILL"), QUERY_MS)
+  const request = Promise.withResolvers<Identity | undefined>()
+  recorder.pending.set(proc.pid, request)
+  const timer = setTimeout(() => { request.reject(new Error(`identity capture deadline expired for PID ${proc.pid}`)); recorder.proc?.kill("SIGKILL") }, QUERY_MS)
+  recorder.proc!.stdin!.write(JSON.stringify({ pid: proc.pid }) + "\n")
+  const captured = await request.promise.finally(() => clearTimeout(timer))
+  if (proc.exitCode !== null || proc.signalCode !== null) return
+  if (!captured) throw new Error(`cannot capture live process identity for PID ${proc.pid}`)
+  pins.set(captured.pid, captured)
+  const entries = hosts.get(home) ?? []
+  entries.push({ proc, identity: captured })
+  hosts.set(home, entries)
+  return captured
+}
+
+async function stopCapture() {
+  const proc = recorder.proc
+  if (!proc) return
+  proc.stdin!.end()
   try {
-    const code = await new Promise<number | null>((resolve, reject) => {
-      query.once("error", reject)
-      query.once("close", resolve)
-    })
-    if (code !== 0) throw new Error(`spawn identity query failed: ${text.stderr || code}`)
-    const rows = decodeWindowsTable(JSON.parse(text.stdout), query.pid!)
-    // A short command may have closed before CIM ran. Its retained ChildProcess handle needs no numeric kill.
-    if (proc.exitCode !== null || proc.signalCode !== null) return
-    const captured = identity(proc.pid!, rows)
-    pins.set(captured.pid, captured)
-    const entries = hosts.get(home) ?? []
-    entries.push({ proc, identity: captured })
-    hosts.set(home, entries)
-    return captured
+    await until(QUERY_MS, "identity recorder close", () => proc.exitCode !== null || proc.signalCode !== null ? true : undefined)
   } finally {
-    clearTimeout(timer)
+    if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
+    recorder.proc = undefined
+    recorder.ready = undefined
   }
 }
 
@@ -485,6 +539,7 @@ export function kill9(target: Identity | number) {
 export async function cleanup(marker: string, nonces: string[]) {
   const owned = hosts.get(marker) ?? []
   try {
+    await stopCapture()
     const rows = table()
     const fixtures = nonces.flatMap((nonce) => { const found = members(nonce, rows); return [...found.members, ...found.wrappers] })
     const named = [...owned.map((host) => host.identity), ...fixtures]

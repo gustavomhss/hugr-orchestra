@@ -56,13 +56,22 @@ test("real OS sees launched host; stale identity cannot kill; captured numeric i
 
 test("real execute captures live child before watchdog and preserves measured close time", async () => {
   const scratch = isolated("execute-inventory", {})
-  const observed = await execute(BUN, ["-e", 'console.log("EXECUTE_READY"); setInterval(() => {}, 1000)'], scratch.env, ROOT, 15_000)
-  expect(observed.stdout).toContain("EXECUTE_READY")
-  expect(observed.error).toBe("")
-  expect(observed.identity?.pid).toBe(observed.pid)
-  expect(observed.timedOut).toBe(true)
-  expect(observed.ms).toBeLessThan(17_000)
-  await cleanup(scratch.home, [])
+  try {
+    const observed = await execute(BUN, ["-e", 'console.log("EXECUTE_READY"); setInterval(() => {}, 1000)'], scratch.env, ROOT, 15_000)
+    expect(observed.stdout).toContain("EXECUTE_READY")
+    expect(observed.error).toBe("")
+    expect(observed.identity?.pid).toBe(observed.pid)
+    expect(observed.timedOut).toBe(true)
+    expect(observed.ms).toBeLessThan(17_000)
+    const fast = await execute(BUN, ["-e", 'console.error("FAST_REFUSAL"); process.exit(1)'], scratch.env, ROOT, 2000)
+    expect(fast.error).toBe("")
+    expect(fast.timedOut).toBe(false)
+    expect(fast.code).toBe(1)
+    expect(fast.stderr).toContain("FAST_REFUSAL")
+    expect(fast.ms).toBeLessThanOrEqual(2000)
+  } finally {
+    await cleanup(scratch.home, [])
+  }
 }, 60_000)
 
 test("real query failure remains red; finally kills retained host; no premature green verdict", async () => {
