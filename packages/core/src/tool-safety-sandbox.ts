@@ -10,6 +10,7 @@ import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
 import { SandboxParents } from "./sandbox-parents"
+import { TcpProxy } from "./tcp-proxy"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
 export function environment(input: NodeJS.ProcessEnv = process.env) {
@@ -72,6 +73,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const requestedEndpoints = profile?.sandbox?.allowedLoopbackEndpoints
   if (requestedEndpoints !== undefined && !Array.isArray(requestedEndpoints))
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-grants" })
+  if (requestedEndpoints && requestedEndpoints.length > 32)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-resource-limit" })
   const endpointGrants = Array.from(requestedEndpoints ?? [], (entry) => ({ ...entry }))
   yield* Effect.forEach(endpointGrants, (entry) => Effect.gen(function* () {
     if (typeof entry.directory !== "string" || !path.isAbsolute(entry.directory) || /[*?\[\]\0]/.test(entry.directory))
@@ -114,9 +117,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     )
     return placement === directory ? [entry.port] : []
   })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
-  // SRT domain proxies do not enforce raw endpoint grants. Our measured seatbelt localhost filter also admits
-  // host LAN IPv4 at the same port, so it cannot honor the requested exact 127.0.0.1 capability either.
-  if ((endpointGrants.length && process.platform === "linux") || endpoints.length)
+  // SRT domain proxies cannot enforce exact raw endpoints. Darwin uses fixed-target Unix brokers below.
+  if (endpointGrants.length && process.platform === "linux")
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
   const sockets = yield* Effect.forEach(grants, (entry) => Effect.gen(function* () {
     const placement = yield* fs.realPath(entry.directory).pipe(
@@ -176,6 +178,15 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const parents = options?.prepareParents === true
     ? yield* SandboxParents.plan(fs, directory, requested, [...deny, ...protectedWrites])
     : []
+  const invocation = command.options.shell
+    ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
+    : [command.command, ...command.args]
+  const inject = endpoints.length ? proxyInvocation(invocation, !!command.options.shell) : undefined
+  if (inject instanceof ToolSafety.Denied) return yield* inject
+  // Acquiring exact network capabilities is last: no malformed policy or unsupported shell starts a broker/build.
+  const proxy = endpoints.length ? yield* TcpProxy.open(endpoints) : undefined
+  if (proxy && [proxy.library, ...proxy.sockets].some((target) => deny.some((entry) => FSUtil.contains(entry, target))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-denied-path" })
   const scratch = profile?.sandbox?.scratch
     ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
@@ -196,23 +207,25 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     fs.makeDirectory(path.join(scratch, name)).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-cache-acquisition" })),
     ), { discard: true })
-  const invocation = command.options.shell
-    ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
-    : [command.command, ...command.args]
+  const privateEnv = proxy ? Object.fromEntries(Object.entries(confined).filter(([name]) =>
+    !name.startsWith("DYLD_") && name !== "ORCHESTRA_TCP_PROXY_ROUTES" &&
+    !["ENV", "BASH_ENV", "SHELLOPTS", "BASHOPTS", "ZDOTDIR"].includes(name) && !name.startsWith("BASH_FUNC_"))) : confined
+  const childEnv = proxy ? { ...privateEnv, ENV: "/dev/null", BASH_ENV: "/dev/null", ZDOTDIR: "/dev/null" } : privateEnv
+  const childInvocation = proxy && inject ? inject(proxy) : invocation
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
     // file-write* also covers mode, flag, owner and xattr changes (chmod, chflags), so those stay inside the roots.
     // /dev/null stays writable so ordinary redirections work.
     const outside = `(require-all (require-not (literal "/dev/null")) ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})`
     const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
-      ...sockets.map((socket) => `(allow network-outbound (remote unix-socket (literal ${JSON.stringify(socket)})))`),
+      ...[...sockets, ...(proxy?.sockets ?? [])].map((socket) => `(allow network-outbound (remote unix-socket (literal ${JSON.stringify(socket)})))`),
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
       ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
     if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
     yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
-    return ChildProcess.make(sandbox.binary, ["-p", policy, ...invocation], {
-      ...command.options, cwd, shell: false, env: confined, extendEnv: false,
+    return ChildProcess.make(sandbox.binary, ["-p", policy, ...childInvocation], {
+      ...command.options, cwd, shell: false, env: childEnv, extendEnv: false,
     })
   }
   const temp = yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-sandbox-" }).pipe(
@@ -232,6 +245,25 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ...command.options, cwd, shell: false, env: { ...confined, ...sandbox.env }, extendEnv: false,
   })
 })
+
+/** Build only a protected Darwin launch. Loader values enter after trusted shell initialization / env startup. */
+export function proxyInvocation(invocation: readonly string[], shellOption = false) {
+  const name = path.basename(invocation[0])
+  const shell = ["sh", "bash", "zsh"].includes(name)
+  if (!shell && (shellOption || ["fish", "csh", "tcsh", "ksh", "dash", "nu", "pwsh", "powershell"].includes(name)))
+    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-unsupported" })
+  if (shell && invocation[0] !== name && invocation[0] !== `/bin/${name}`)
+    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-unsupported" })
+  if (shell && (invocation[1] !== "-c" || typeof invocation[2] !== "string"))
+    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-invocation-unsupported" })
+  return (proxy: { library: string; env: Record<string, string> }) => {
+    const assignments = [`DYLD_INSERT_LIBRARIES=${proxy.library}`, ...Object.entries(proxy.env).map(([key, value]) => `${key}=${value}`)]
+    if (!shell) return ["/usr/bin/env", ...assignments, ...invocation]
+    const init = name === "bash" ? ["--noprofile", "--norc"] : name === "zsh" ? ["-f"] : []
+    const exports = assignments.map((assignment) => `'${assignment.replaceAll("'", "'\\''")}'`).join(" ")
+    return [`/bin/${name}`, ...init, "-c", `export ${exports};\n${invocation[2]}`, ...invocation.slice(3)]
+  }
+}
 
 /**
  * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by

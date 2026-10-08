@@ -35,7 +35,7 @@ const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
   (server) => Effect.promise(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))),
 )
 
-it.live("exact loopback request HOLDs instead of admitting other working host addresses; default and bind stay denied", () =>
+it.live("exact loopback uses only declared Darwin IPv4 broker; other hosts HOLD and default/bind stay denied", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const one = yield* listen()
@@ -62,11 +62,17 @@ it.live("exact loopback request HOLDs instead of admitting other working host ad
     const grants = [{ directory: f.directory, host: "127.0.0.1" as const, port: first.port }]
     const profile = { requireSandbox: true, writeRoots: ["must/not/out"], sandbox: { enabled: true, scratch: true, unconfinedFallback: true,
       allowedLoopbackEndpoints: grants } } satisfies ToolSafety.Profile
-    const held = yield* Effect.flip(f.wrap(script, profile))
-    expect(held.reason).toBe("sandbox-loopback-endpoint-exact-policy-unsupported")
+    if (process.platform !== "darwin") {
+      const held = yield* Effect.flip(f.wrap(script, profile))
+      expect(held.reason).toBe("sandbox-loopback-endpoint-exact-policy-unsupported")
+      expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
+      console.info(`${process.platform}: working TCP controls and exact loopback policy HOLD measured`)
+      return
+    }
+    const bridged = yield* f.processes.run(yield* f.wrap(script, profile), { timeout: "5 seconds" })
+    expect(bridged.exitCode).toBe(0)
+    expect(JSON.parse(bridged.stdout.toString())).toEqual(["127.0.0.1", ...endpoints.slice(1).map(() => "EPERM")])
     expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
-    console.info(`${process.platform}: working TCP controls and exact loopback policy HOLD measured; no exact-grant conformance claim`)
-    if (process.platform !== "darwin") return
     const elsewhere = path.join(f.directory, "elsewhere")
     yield* f.fs.makeDirectory(elsewhere)
     const mismatch = yield* f.processes.run(yield* f.wrap(script, { ...profile, writeRoots: [] }, elsewhere), { timeout: "5 seconds" })
@@ -76,7 +82,7 @@ it.live("exact loopback request HOLDs instead of admitting other working host ad
     const bind = "const s=require('net').createServer();s.on('error',e=>console.log(e.code));s.listen({host:'127.0.0.1',port:0},()=>s.close(()=>console.log('BOUND')))"
     const bindControl = yield* f.processes.run(yield* f.wrap(bind), { timeout: "5 seconds" })
     expect(bindControl.stdout.toString().trim()).toBe("BOUND")
-    const bound = yield* f.processes.run(yield* f.wrap(bind, { requireSandbox: true, writeRoots: [] }), { timeout: "5 seconds" })
+    const bound = yield* f.processes.run(yield* f.wrap(bind, { ...profile, writeRoots: [] }), { timeout: "5 seconds" })
     expect(bound.stdout.toString().trim()).toBe("EPERM")
   }), 30_000,
 )
@@ -100,12 +106,14 @@ it.live("invalid loopback IP, port, directory and grant shapes HOLD before outpu
         ? "sandbox-loopback-endpoint-exact-policy-unsupported" : `sandbox-loopback-endpoint-${entry.reason}`)
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
     }), { discard: true })
-    yield* Effect.forEach([{}, null, [null], ["127.0.0.1:9042"]], (value) => Effect.gen(function* () {
+    yield* Effect.forEach([{}, null, [null], ["127.0.0.1:9042"], Array.from({ length: 33 }, () => ({ directory: f.directory, host: "127.0.0.1", port: 9042 }))], (value) => Effect.gen(function* () {
       const profile = { requireSandbox: true, writeRoots: ["must/not/out"], sandbox: { enabled: true, unconfinedFallback: true,
         allowedLoopbackEndpoints: [{ directory: f.directory, host: "127.0.0.1" as const, port: 9042 }] } }
       Reflect.set(profile.sandbox, "allowedLoopbackEndpoints", value)
       const held = yield* Effect.flip(f.wrap("", profile))
-      expect(held.reason).toBe(Array.isArray(value) ? "sandbox-loopback-endpoint-invalid-directory" : "sandbox-loopback-endpoint-invalid-grants")
+      expect(held.reason).toBe(Array.isArray(value)
+        ? value.length > 32 ? "sandbox-loopback-endpoint-resource-limit" : "sandbox-loopback-endpoint-invalid-directory"
+        : "sandbox-loopback-endpoint-invalid-grants")
       expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
     }), { discard: true })
   }),
