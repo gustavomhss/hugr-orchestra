@@ -10,7 +10,12 @@ export class GenerationError extends Schema.TaggedErrorClass<GenerationError>()(
 }
 
 export function errorSymbols<
-  T extends { readonly identifier: string; readonly key: string; readonly ast: SchemaAST.AST },
+  T extends {
+    readonly identifier: string
+    readonly key: string
+    readonly ast: SchemaAST.AST
+    readonly declaration: unknown
+  },
 >(errors: ReadonlyArray<T>) {
   const symbols = new Map<string, T>()
   for (const error of errors) {
@@ -18,7 +23,10 @@ export function errorSymbols<
     const previous = symbols.get(identifier)
     if (
       previous !== undefined &&
-      (previous.identifier !== error.identifier || previous.key !== error.key || previous.ast !== error.ast)
+      (previous.identifier !== error.identifier ||
+        previous.key !== error.key ||
+        previous.ast !== error.ast ||
+        previous.declaration !== error.declaration)
     ) {
       throw new GenerationError({
         reason: `Promise error name collision: ${previous.identifier} and ${error.identifier} normalize to ${identifier}`,
@@ -37,12 +45,11 @@ export function assertErrorSymbols(symbols: Iterable<string>, declarations: stri
   const visit = (node: unknown, bindings: boolean) => {
     if (Array.isArray(node)) return node.forEach((value) => visit(value, bindings))
     if (!isNode(node)) return
-    const binding =
-      ["TSTypeAliasDeclaration", "TSImportEqualsDeclaration"].includes(String(node.type))
-        ? node.id
-        : ["ImportSpecifier", "ImportDefaultSpecifier", "ImportNamespaceSpecifier"].includes(String(node.type))
-          ? node.local
-          : undefined
+    const binding = ["TSTypeAliasDeclaration", "TSImportEqualsDeclaration"].includes(String(node.type))
+      ? node.id
+      : ["ImportSpecifier", "ImportDefaultSpecifier", "ImportNamespaceSpecifier"].includes(String(node.type))
+        ? node.local
+        : undefined
     if (bindings && isNode(binding) && typeof binding.name === "string") reserved.add(binding.name)
     if (node.type === "TSTypeReference" && isNode(node.typeArguments)) {
       const reference = node.typeName

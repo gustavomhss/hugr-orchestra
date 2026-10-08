@@ -370,6 +370,61 @@ describe("capability contract portability", () => {
     expect(() => emitPromise(contract)).toThrow(GenerationError)
     expect(() => emitPromise(contract)).toThrow("normalize to NamespaceFailure")
   })
+
+  test.each(["same class", "distinct classes"])(
+    "uses canonical error declaration identity with a shared Struct: %s",
+    async (identity) => {
+      const fields = Schema.Struct({ _tag: Schema.Literal("Shared.Failure"), message: Schema.String })
+      class First extends Schema.ErrorClass<First>("Shared.Failure")(fields) {}
+      class Second extends Schema.ErrorClass<Second>("Shared.Failure")(fields) {}
+      expect(First.ast.typeParameters[0]).toBe(Second.ast.typeParameters[0])
+      expect(First.ast).not.toBe(Second.ast)
+      const contract = compile(
+        HttpApi.make("identity")
+          .add(
+            HttpApiGroup.make("first")
+              .add(
+                HttpApiEndpoint.get("get", "/first", {
+                  success: Schema.String,
+                  error: First.pipe(HttpApiSchema.status(400)),
+                }),
+              )
+              .add(
+                HttpApiEndpoint.get("again", "/again", {
+                  success: Schema.String,
+                  error: First.pipe(HttpApiSchema.status(409)),
+                }),
+              ),
+          )
+          .add(
+            HttpApiGroup.make("second").add(
+              HttpApiEndpoint.get("get", "/second", {
+                success: Schema.String,
+                error: (identity === "same class" ? First : Second).pipe(HttpApiSchema.status(410)),
+              }),
+            ),
+          ),
+      )
+      expect(contract.groups.flatMap((group) => group.endpoints.map((endpoint) => endpoint.operation.errors))).toEqual([
+        ["Shared.Failure", "ClientError"],
+        ["Shared.Failure", "ClientError"],
+        ["Shared.Failure", "ClientError"],
+      ])
+      if (identity === "distinct classes") {
+        expect(() => emitPromise(contract)).toThrow(GenerationError)
+        expect(() => emitPromise(contract)).toThrow("Shared.Failure and Shared.Failure normalize to SharedFailure")
+        return
+      }
+      expect(
+        (
+          await checkConsumer(emitPromise(contract), "SharedFailure", {
+            _tag: "Shared.Failure",
+            message: "lost",
+          })
+        ).code,
+      ).toBe(0)
+    },
+  )
 })
 
 async function checkConsumer(

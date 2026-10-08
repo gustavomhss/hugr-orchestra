@@ -946,6 +946,8 @@ function declaredErrorFields(schema: Schema.Top) {
   if (tag === undefined || !SchemaAST.isLiteral(tag) || typeof tag.literal !== "string") return undefined
   return {
     ast: fields,
+    // The class-bound factory is canonical across transport/status AST copies, unlike the shared fields Struct.
+    declaration: schema.ast.annotations["~effect/Schema/Class"],
     key,
     tag: tag.literal,
     identifier: SchemaAST.resolveIdentifier(schema.ast) ?? tag.literal,
