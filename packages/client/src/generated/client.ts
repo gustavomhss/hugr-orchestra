@@ -1288,7 +1288,7 @@ export function make(options: ClientOptions) {
               params: input["params"],
             },
             successStatus: 200,
-            declaredStatuses: [400, 404, 409, 503, 401],
+            declaredStatuses: [400, 404, 409, 503, 403, 401],
             empty: false,
           },
           requestOptions,

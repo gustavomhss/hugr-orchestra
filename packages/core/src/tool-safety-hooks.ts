@@ -29,6 +29,7 @@ export interface Scope {
   readonly profile: ToolSafety.Profile | undefined
   // A Session event's: the sha256 of the prompt text, or nothing.
   readonly subject?: string
+  readonly messageID?: ToolSafety.SessionEvent["messageID"]
   readonly events?: EventV2.Interface
   readonly db?: Database.Interface["db"]
   readonly location?: Location.Ref
@@ -73,8 +74,8 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
   readonly event: ToolSafety.SessionEvent
   readonly profile: ToolSafety.Profile | undefined
   readonly ambient: Context.Context<never>
-}) {
-  if (!input.installs.some((install) => install.enabled)) return
+}): Effect.fn.Return<ReadonlyArray<string>, ToolSafety.Denied> {
+  if (!input.installs.some((install) => install.enabled)) return []
   const event = input.event
   // There is no tool call: decisions leave out the empty tool and call ID, and hosts bind the Session instead.
   const call = {
@@ -89,7 +90,10 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
   } satisfies ToolSafety.Invocation
   const subject = event.text === undefined ? undefined : createHash("sha256").update(event.text).digest("hex")
   const scope = yield* scoped(input, call, { operation: event.operation, paths: [] }, subject)
-  yield* enforce(scope, event.operation === "prompt" ? "before" : "after")
+  return yield* enforce(
+    { ...scope, ...(event.operation === "prompt" ? { messageID: event.messageID } : {}) },
+    event.operation === "prompt" ? "before" : "after",
+  )
 })
 
 /**
@@ -391,6 +395,7 @@ const decided = Effect.fnUntraced(function* (
     sessionID: scope.call.sessionID,
     ...(scope.invocation.tool === undefined ? {} : { callID: scope.call.callID }),
     ...(scope.call.assistantMessageID ? { assistantMessageID: scope.call.assistantMessageID } : {}),
+    ...(scope.messageID === undefined ? {} : { messageID: scope.messageID }),
     ...(scope.call.agent ? { agent: scope.call.agent } : {}),
     subject: subject(scope, operation),
     outcome,
