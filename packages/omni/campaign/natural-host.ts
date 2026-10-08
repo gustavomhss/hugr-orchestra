@@ -2,6 +2,7 @@
 // No exit hook, forced exit, watchdog, or unref belongs in this child. Parent owns failure cleanup.
 import { createServer } from "node:http"
 import { writeFileSync } from "node:fs"
+import { spawn, type ChildProcess } from "node:child_process"
 
 export async function naturalHost(input: {
   listen: () => Promise<{ url: URL; stop: (close?: boolean) => Promise<void> }>
@@ -10,13 +11,27 @@ export async function naturalHost(input: {
 }) {
   const listener = await input.listen()
   const requests: string[] = []
+  const descendants: ChildProcess[] = []
   const control = createServer((req, res) => {
     requests.push(`${req.method} ${req.url}`)
-    if (req.method !== "POST" || !["/write", "/dispose"].includes(req.url ?? "")) {
+    if (req.method !== "POST" || !["/write", "/dispose", "/pipe-holder"].includes(req.url ?? "")) {
       res.writeHead(404).end()
       return
     }
-    const action = req.url === "/write" ? input.activate() : (async () => {
+    const action = req.url === "/pipe-holder" ? (async () => {
+      if (process.env.NATURAL_FAULT !== "pipe-holder") throw new Error("Pipe-holder fault was not enabled")
+      // Deliberately outside product supervision: this failure-control descendant must outlive host death.
+      const holder = spawn(process.env.NATURAL_NODE!, ["-e", `
+        const fs = require('node:fs')
+        const [ready, home, nonce] = process.argv.slice(-3)
+        fs.writeFileSync(ready, JSON.stringify({ pid: process.pid, parent: process.ppid, nonce }))
+        console.log('PIPE_HOLDER_READY ' + nonce)
+        setInterval(() => {}, 1000)
+      `, process.env.NATURAL_PIPE_READY!, process.env.NATURAL_PROJECT!, process.env.NATURAL_PIPE_NONCE!], { stdio: ["ignore", 1, 2], detached: true, windowsHide: true })
+      descendants.push(holder)
+      await new Promise<void>((resolve, reject) => { holder.once("spawn", resolve); holder.once("error", reject) })
+      return { pid: holder.pid }
+    })() : req.url === "/write" ? input.activate() : (async () => {
       console.log("NATURAL_EVENT " + JSON.stringify({ event: "dispose-started", pid: process.pid }))
       await listener.stop(true)
       await input.dispose()

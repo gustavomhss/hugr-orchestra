@@ -5,7 +5,7 @@ import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { BUN, ORCHESTRA, ROOT, cleanup, client, control, fileTree, identity, inventoryScope, isolated, markerArgument, matches, members, own, prepareCapture, table, until, verdict, type Identity } from "./lib.ts"
+import { BUN, ORCHESTRA, ROOT, adoptTree, cleanup, client, control, fileTree, identity, inventoryScope, isolated, markerArgument, matches, members, own, prepareCapture, table, until, verdict, type Identity } from "./lib.ts"
 import { authorized } from "./delivery-fixtures.ts"
 import { WindowsInventory } from "./windows-inventory.ts"
 
@@ -127,7 +127,7 @@ function packageRoot(file: string, name: string): string {
   return packageRoot(dir, name)
 }
 
-export async function run(input: { runtime: "bun" | "node"; build: Awaited<ReturnType<typeof buildHosts>>; mutation?: "timer" }) {
+export async function run(input: { runtime: "bun" | "node"; build: Awaited<ReturnType<typeof buildHosts>>; mutation?: "timer"; fault?: "pipe-holder" }) {
   authorized()
   const boundMs = input.runtime === "bun" ? 10_000 : 20_000
   const scratch = isolated(`natural-${input.runtime}`, { formatter: false, share: "disabled", plugin: [] })
@@ -144,10 +144,12 @@ export async function run(input: { runtime: "bun" | "node"; build: Awaited<Retur
     mcp: { campaign: { type: "local", command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), nonces.mcp], environment: { MCP_OMNI_TREE: JSON.stringify({ command: tree.command, args: tree.args }) }, timeout: 30_000 } },
   }
   const disposed = path.join(scratch.home, "disposed.json")
+  const pipeReady = path.join(scratch.home, "pipe-ready.json")
+  const pipeNonce = `omni-natural-pipe-${tree.nonce.slice(10)}`
   const file = path.join(scratch.project, "natural.ts")
   const bundle = input.build.results.find((build) => build.target === input.runtime)
   if (!bundle) throw new Error(`Missing ${input.runtime} natural bundle`)
-  const env = { ...scratch.env, HUGR_OMNI_ADDON: addon, HUGR_OMNI_SUPERVISOR: supervisor, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "DEBUG", ORCHESTRA_DB: ":memory:", ORCHESTRA_MODELS_PATH: path.join(ORCHESTRA, "test/tool/fixtures/models-api.json"), ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", NATURAL_PROJECT: scratch.project, NATURAL_FILE: file, NATURAL_NODE: node, NATURAL_NATIVE_NONCE: nonces.native, NATURAL_DISPOSED: disposed, NATURAL_MUTATION: input.mutation ?? "none" }
+  const env = { ...scratch.env, HUGR_OMNI_ADDON: addon, HUGR_OMNI_SUPERVISOR: supervisor, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "DEBUG", ORCHESTRA_DB: ":memory:", ORCHESTRA_MODELS_PATH: path.join(ORCHESTRA, "test/tool/fixtures/models-api.json"), ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", NATURAL_PROJECT: scratch.project, NATURAL_FILE: file, NATURAL_NODE: node, NATURAL_NATIVE_NONCE: nonces.native, NATURAL_DISPOSED: disposed, NATURAL_MUTATION: input.mutation ?? "none", NATURAL_FAULT: input.fault ?? "none", NATURAL_PIPE_READY: pipeReady, NATURAL_PIPE_NONCE: pipeNonce }
   await prepareCapture()
   const proc = spawn(input.runtime === "bun" ? BUN : node, [bundle.file, scratch.home], { env, cwd: ORCHESTRA, stdio: ["ignore", "pipe", "pipe"], windowsHide: true })
   const state = { output: "", error: "", closed: false, exitAt: 0 }
@@ -160,6 +162,10 @@ export async function run(input: { runtime: "bun" | "node"; build: Awaited<Retur
   const observation = { left: [] as Identity[], fixtures: [] as { nonce: string; members: Identity[]; wrappers: Identity[] }[], atMs: 0, disposed: false, exitCode: null as number | null, signalCode: null as string | null, closed: false }
   const retained: Identity[] = []
   const started = { value: 0 }
+  const cleanupErrors: string[] = []
+  const cleanupState = { ownedAttempted: false, ownedCompleted: false, hostClosed: false, brokerStopped: process.platform !== "win32" }
+  const faultControl = { holder: undefined as Identity | undefined, ready: false, hostExitObserved: false, pipeBlocked: false, after: [] as Identity[], broker: undefined as Identity | undefined, brokerVisible: false, brokerGone: false }
+  const verifier = { recorder: undefined as ReturnType<typeof WindowsInventory.makeRecorder> | undefined }
   let pass = false
   let failure = ""
   try {
@@ -181,24 +187,56 @@ export async function run(input: { runtime: "bun" | "node"; build: Awaited<Retur
     if (!health.healthy || health.version !== "natural-proof") throw new Error("Real Server health control failed")
     evidence.http = { health }
     const live = await until(30_000, "all real fixtures under native supervisors", () => {
-      const rows = hostRows(host)
+      const rows = table()
       const found = { lsp: control(nonces.lsp, 1, [host], rows), mcp: control(nonces.mcp, 1, [host], rows), native: control(nonces.native, 1, [host], rows), tree: control(tree.nonce, tree.size, [host], rows) }
       evidence.liveProbe = found
       evidence.ownerRows = inventoryScope(rows, [host])
       return Object.values(found).every((found) => found.pass) ? found : undefined
     })
     evidence.live = live
-    const rows = hostRows(host)
+    const rows = table()
     inventoryScope(rows, [host]).filter((row) => row.pid !== process.pid).forEach((row) => retained.push(identity(row.pid, rows)))
     evidence.retained = retained
+    if (input.fault === "pipe-holder") {
+      if (process.platform === "win32") {
+        faultControl.broker = WindowsInventory.query(WindowsInventory.CIM).instrument
+        verifier.recorder = WindowsInventory.makeRecorder()
+        const observed = await verifier.recorder.capture(faultControl.broker.pid)
+        if (!observed || !matches(observed, faultControl.broker)) throw new Error("Pipe-holder fault could not observe live Windows broker")
+        faultControl.brokerVisible = true
+      }
+      const response = await ctl.post("/pipe-holder") as { pid: number }
+      const ready = await until(10_000, "pipe-holder descendant readiness barrier", () => existsSync(pipeReady) ? JSON.parse(readFileSync(pipeReady, "utf8")) as { pid: number; parent: number; nonce: string } : undefined)
+      if (ready.pid !== response.pid || ready.parent !== host.pid || ready.nonce !== pipeNonce) throw new Error("Pipe-holder readiness did not match actual host descendant")
+      adoptTree(scratch.home, pipeNonce, [host])
+      markerArgument(scratch.home, pipeNonce)
+      const rows = table()
+      faultControl.holder = identity(ready.pid, rows)
+      const found = members(pipeNonce, rows)
+      if (!found.wrappers.some((row) => matches(row, faultControl.holder!))) throw new Error("Pipe-holder identity was not retained before host kill")
+      retained.push(faultControl.holder)
+      faultControl.ready = true
+      if (!proc.kill("SIGKILL")) throw new Error("Pipe-holder fault host kill was not delivered")
+      await until(10_000, "pipe-holder host exit with descendant still writing inherited stdout", () => {
+        if (!state.exitAt) return undefined
+        const rows = table()
+        if (!rows.some((row) => matches(row, faultControl.holder!) && !row.state.startsWith("Z"))) throw new Error("Pipe-holder descendant did not survive host death")
+        if (state.closed) throw new Error("Pipe-holder did not retain the real host stdout pipe")
+        faultControl.hostExitObserved = true
+        faultControl.pipeBlocked = true
+        return true
+      })
+      throw new Error("pipe-holder fault: host killed after descendant readiness; inherited stdout remains open")
+    }
     started.value = Date.now()
     // HTTP timeout is failure only. Successful child is never signalled and has no watchdog of its own.
     const shutdown = ctl.post("/dispose")
     void shutdown.catch(() => undefined)
     await until(boundMs, "natural code-zero unsignalled host close and owned inventory zero", () => {
       const budget = boundMs - (Date.now() - started.value)
-      if (budget < 250) return undefined
-      const rows = hostRows(host, Math.min(2000, budget))
+      // Windows queries include executable startup. Do not start one without its full bounded query budget.
+      if (budget < 2000) return undefined
+      const rows = table(Math.min(2000, budget))
       const left = retained.filter((id) => rows.some((row) => matches(row, id) && !row.state.startsWith("Z")))
       const fixtures = [...Object.values(nonces), tree.nonce].map((nonce) => { const found = members(nonce, rows); return { nonce, members: found.members, wrappers: found.wrappers } })
       Object.assign(observation, { left, fixtures, atMs: Date.now() - started.value, disposed: existsSync(disposed), exitCode: proc.exitCode, signalCode: proc.signalCode, closed: state.closed })
@@ -212,29 +250,60 @@ export async function run(input: { runtime: "bun" | "node"; build: Awaited<Retur
     pass = true
   } catch (error) {
     failure = String(error)
-    evidence.logs = await Promise.all((await Array.fromAsync(new Bun.Glob("**/orchestra.log").scan({ cwd: scratch.home, absolute: true }))).map(async (file) => ({ file, text: (await Bun.file(file).text()).slice(-12_000) })))
+    evidence.logs = await (async () => Promise.all((await Array.fromAsync(new Bun.Glob("**/orchestra.log").scan({ cwd: scratch.home, absolute: true }))).map(async (file) => ({ file, text: (await Bun.file(file).text()).slice(-12_000) }))))()
+      .catch((error: unknown) => { cleanupErrors.push(`diagnostics: ${error}`); return [] })
   } finally {
     // This can only force failed hosts. Final verdict comes after fallback cleanup, never before it.
-    if (!pass) {
-      if (proc.exitCode === null && proc.signalCode === null) proc.kill("SIGKILL")
-      await until(10_000, "failed natural host handle closing", () => state.closed ? true : undefined)
-      await cleanup(scratch.home, [tree.nonce]).catch((error) => { failure += `; failed cleanup: ${error}` })
+    try {
+      if (!pass) {
+        try {
+          if (proc.exitCode === null && proc.signalCode === null && !proc.kill("SIGKILL")) throw new Error("failed natural host kill was not delivered")
+          await until(10_000, "failed natural host handle closing", () => state.closed ? true : undefined)
+        } catch (error) {
+          cleanupErrors.push(`host-close: ${error}`)
+        } finally {
+          cleanupState.ownedAttempted = true
+          try {
+            await cleanup(scratch.home, [tree.nonce, ...(input.fault ? [pipeNonce] : [])])
+            const rows = table()
+            faultControl.after = retained.filter((id) => rows.some((row) => matches(row, id) && !row.state.startsWith("Z")))
+            if (faultControl.after.length) throw new Error(`Owned identities remain after failure cleanup: ${JSON.stringify(faultControl.after)}`)
+            cleanupState.ownedCompleted = true
+          } catch (error) {
+            cleanupErrors.push(`owned-cleanup: ${error}`)
+          } finally {
+            // Keep the exact ChildProcess/stdio handles until cleanup has released any descendant-held pipes.
+            await until(10_000, "failed natural host close after owned cleanup", () => state.closed ? true : undefined)
+              .then(() => { cleanupState.hostClosed = true }, (error: unknown) => { cleanupErrors.push(`post-cleanup-close: ${error}`) })
+          }
+        }
+      }
+    } finally {
+      // This is the parent's OS-query broker, not any product-owned host or supervisor.
+      try {
+        if (process.platform === "win32") {
+          await WindowsInventory.stop()
+          cleanupState.brokerStopped = true
+          if (verifier.recorder && faultControl.broker) {
+            const observed = await verifier.recorder.capture(faultControl.broker.pid)
+            if (observed && matches(observed, faultControl.broker)) throw new Error("Windows broker remained alive after stop")
+            faultControl.brokerGone = true
+          }
+        }
+      } catch (error) {
+        cleanupErrors.push(`broker-stop: ${error}`)
+      } finally {
+        if (verifier.recorder) await verifier.recorder.stop().catch((error: unknown) => { cleanupErrors.push(`broker-verifier-stop: ${error}`) })
+      }
     }
-    // This is the parent's OS-query broker, not any product-owned host or supervisor.
-    if (process.platform === "win32") await WindowsInventory.stop()
+    if (cleanupErrors.length) {
+      pass = false
+      failure += `${failure ? "; " : ""}failed cleanup: ${cleanupErrors.join("; ")}`
+    }
   }
   const sourceHashes = Object.fromEntries(Object.entries(input.build.inputs).filter(([file]) => /(?:app-runtime|build-node|src\/node|natural-host|lsp\/(?:lsp|client|launch)|mcp\/(?:index|stdio)|server\/server|core\/src\/(?:omni|omni-spawner|process))\.ts$/.test(file)))
   const manifest = path.join(path.dirname(bundle.file), "source-hashes.json")
   writeFileSync(manifest, JSON.stringify(input.build.inputs, null, 2))
-  console.log("NATURAL_SUMMARY " + JSON.stringify({ os: process.platform, runtime: input.runtime, mutation: input.mutation ?? "none", pass, error: failure, after: evidence.after }))
-  return verdict("v10-natural-exit", { runtime: input.runtime, mutation: input.mutation ?? "none", boundMs, pass, error: failure, hostPID: proc.pid, observation, exitMs: pass && started.value && state.exitAt ? state.exitAt - started.value : undefined, output: state.output, evidence, bundle, sourceHashes, sourceManifest: { file: manifest, sha256: createHash("sha256").update(readFileSync(manifest)).digest("hex") }, entrySHA256: input.build.entrySHA256, scope: input.build.scope, publicEntry: input.build.publicEntry, releaseArtifacts: { addon, supervisor }, compiledCLI: "explicit process.exit: not natural-exit evidence" })
-}
-
-function hostRows(host: Identity, timeoutMs = 10_000) {
-  const rows = table(timeoutMs)
-  // Windows keeps historical numeric PPIDs after parent death. A reused PID cannot adopt older processes.
-  // Keep the query-host visibility control; all real child-host descendants satisfy this birth constraint.
-  return process.platform === "win32"
-    ? rows.filter((row) => row.pid === process.pid || BigInt(row.startTime) >= BigInt(host.startTime))
-    : rows
+  console.log("NATURAL_SUMMARY " + JSON.stringify({ os: process.platform, runtime: input.runtime, mutation: input.mutation ?? "none", fault: input.fault ?? "none", pass, error: failure, after: evidence.after, cleanupState, faultControl }))
+  return verdict("v10-natural-exit", { runtime: input.runtime, mutation: input.mutation ?? "none", fault: input.fault ?? "none", boundMs, pass, error: failure, cleanupErrors, cleanupState, faultControl, hostPID: proc.pid, observation, exitMs: pass && started.value && state.exitAt ? state.exitAt - started.value : undefined, output: state.output, evidence, bundle, sourceHashes, sourceManifest: { file: manifest, sha256: createHash("sha256").update(readFileSync(manifest)).digest("hex") }, entrySHA256: input.build.entrySHA256, scope: input.build.scope, publicEntry: input.build.publicEntry, releaseArtifacts: { addon, supervisor }, compiledCLI: "explicit process.exit: not natural-exit evidence" })
 }

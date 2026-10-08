@@ -29,6 +29,28 @@ test("V10 real AppRuntime LSP/MCP disposal releases Bun and built Node event loo
   ])
 }, 300_000)
 
+test("V10 real orphan stdout holder cannot skip owned cleanup or Windows broker shutdown", async () => {
+  const build = await buildHosts()
+  for (const runtime of ["bun", "node"] as const) {
+    const result = await run({ runtime, build, fault: "pipe-holder" })
+    expect(result.pass).toBe(false)
+    expect(result.error).toContain("pipe-holder fault: host killed after descendant readiness; inherited stdout remains open")
+    expect(result.cleanupErrors).toHaveLength(1)
+    expect(result.cleanupErrors[0]).toContain("host-close: Error: timed out after 10000 ms waiting for failed natural host handle closing")
+    expect(result.faultControl.ready).toBe(true)
+    expect(result.faultControl.hostExitObserved).toBe(true)
+    expect(result.faultControl.pipeBlocked).toBe(true)
+    expect(result.faultControl.after).toEqual([])
+    expect(result.cleanupState).toEqual({ ownedAttempted: true, ownedCompleted: true, hostClosed: true, brokerStopped: true })
+    expect(result.observation.disposed).toBe(false)
+    expect(result.output).not.toContain('"event":"disposed"')
+    if (process.platform === "win32") {
+      expect(result.faultControl.brokerVisible).toBe(true)
+      expect(result.faultControl.brokerGone).toBe(true)
+    }
+  }
+}, 300_000)
+
 test("V10 held timer mutation is red after actual disposal within unchanged bounds", async () => {
   const build = await buildHosts()
   for (const runtime of ["bun", "node"] as const) {
