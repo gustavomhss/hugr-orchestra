@@ -18,23 +18,36 @@ export const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query
 // What one inline file (an image, a PDF page) costs a model request; its base64 length says nothing about it.
 export const ATTACHMENT_TOKENS = 1_600
 
-/** Media is identified by domain block/type and MIME, never by a string's alphabet or length. */
+/** Only message/attachment media positions are discounted; schemas, JSON results and arguments remain text. */
 export function estimate(value: unknown) {
   let files = 0
-  const visit = (item: unknown, allowed = true): unknown => {
-    if (Array.isArray(item)) return item.map((entry) => visit(entry, allowed))
+  const visit = (item: unknown, place: "root" | "message" | "native" | "part" | "state" | "output" | "plain" = "root"): unknown => {
+    if (Array.isArray(item)) return item.map((entry) => visit(entry, place === "root" ? "message" : place))
     if (!item || typeof item !== "object") return item
     const object = Object.fromEntries(Object.entries(item))
     const mime = object.mime ?? object.mediaType ?? object.mimeType ?? object.media_type
     const source = object.source && typeof object.source === "object" && !Array.isArray(object.source) ? Object.fromEntries(Object.entries(object.source)) : undefined
-    const media = allowed && (object.type === "image" && (object.image !== undefined || object.data !== undefined && typeof mime === "string" && mime.startsWith("image/") ||
+    const media = (place === "part" || place === "root") && (object.type === "image" && (object.image !== undefined || object.data !== undefined && typeof mime === "string" && mime.startsWith("image/") ||
       source?.data !== undefined && typeof source.media_type === "string" && source.media_type.startsWith("image/")) ||
-      object.type === "file" && typeof mime === "string" && /^(image\/|application\/pdf$|audio\/|video\/)/.test(mime) && (object.url !== undefined || object.data !== undefined))
+      ["file", "media"].includes(String(object.type)) && typeof mime === "string" && /^(image\/|application\/pdf$|audio\/|video\/)/.test(mime) && (object.url !== undefined || object.data !== undefined))
     if (media) {
       files++
-      return Object.fromEntries(Object.entries(object).filter(([key]) => !["image", "data", "url", "source"].includes(key)).map(([key, entry]) => [key, visit(entry, allowed)]))
+      return Object.fromEntries(Object.entries(object).filter(([key]) => !["image", "data", "url", "source"].includes(key)).map(([key, entry]) => [key, visit(entry, "plain")]))
     }
-    return Object.fromEntries(Object.entries(object).map(([key, entry]) => [key, visit(entry, allowed && !["input", "arguments", "metadata"].includes(key))]))
+    const info = object.info && typeof object.info === "object" ? Object.fromEntries(Object.entries(object.info)) : undefined
+    return Object.fromEntries(Object.entries(object).map(([key, entry]) => {
+      const next = place === "root" && key === "messages" ? "message" :
+        place === "message" && key === "message" && ["user", "assistant"].includes(String(object.type)) ? "native" :
+        place === "message" && key === "attachment" && object.type === "attachment" ? "part" :
+        place === "message" && key === "parts" && ["user", "assistant"].includes(String(info?.role)) ? "part" :
+        (place === "native" || place === "message" && ["user", "assistant", "tool"].includes(String(object.role))) && key === "content" ? "part" :
+        place === "part" && object.type === "tool" && key === "state" ? "state" :
+        place === "state" && key === "attachments" ? "part" :
+        place === "part" && object.type === "tool-result" && key === "output" ? "output" :
+        place === "part" && object.type === "tool_result" && key === "content" ? "part" :
+        place === "output" && object.type === "content" && key === "value" ? "part" : "plain"
+      return [key, visit(entry, next)]
+    }))
   }
   const text = JSON.stringify(visit(value))
   return Token.estimate(text ?? "") + files * ATTACHMENT_TOKENS

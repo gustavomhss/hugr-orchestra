@@ -20,9 +20,10 @@ export function assistant(user: SessionV1.User, agent: Agent.Info, model: Provid
 
 export const select = Effect.fn("PromptContinuity.select")(function* (messages: SessionV1.WithParts[], sessions: Session.Interface, sessionID: SessionID) {
   const logical = MessageV2.latest(messages)
-  const originalRequest = RequestSource.latest(yield* sessions.messages({ sessionID }).pipe(Effect.orDie))
+  const sourceHistory = yield* sessions.messages({ sessionID }).pipe(Effect.orDie)
+  const originalRequest = RequestSource.latest(sourceHistory)
   const user = originalRequest?.info
-  return { ...logical, user: user?.role === "user" ? user : undefined, originalRequest, logicalUser: logical.user }
+  return { ...logical, user: user?.role === "user" ? user : undefined, originalRequest, sourceHistory, logicalUser: logical.user }
 })
 
 export const fault = Effect.fn("PromptContinuity.fault")(function* (message: SessionV1.Assistant, error: NonNullable<SessionV1.Assistant["error"]>,

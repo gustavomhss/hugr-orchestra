@@ -1108,7 +1108,7 @@ const layer = Layer.effect(
             Effect.provideService(Database.Service, database),
           )
 
-          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest } = yield* PromptContinuity.select(msgs, sessions, sessionID)
+          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest, sourceHistory } = yield* PromptContinuity.select(msgs, sessions, sessionID)
           if (!lastUser) break
 
           const lastAssistantMsg = msgs.findLast(
@@ -1289,7 +1289,7 @@ const layer = Layer.effect(
               sessionID,
               request: llm.receipt?.(checked.plan) ?? planned,
               messageIDs: prepared.messages.map((message) => message.info.id),
-              sources: prepared.messages,
+              sources: prepared.messages.flatMap((message) => sourceHistory.find((source) => source.info.id === message.info.id) ?? []),
               responseMessageID: handle.message.id,
             })
             const result = yield* handle.process(planned)

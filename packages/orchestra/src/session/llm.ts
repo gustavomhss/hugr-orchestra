@@ -163,7 +163,9 @@ const live: Layer.Layer<
           JSON.stringify(request.preflightParams) !== JSON.stringify(data.prepared.params))
           return yield* Effect.fail(new Error("LLM prepared replay prefix changed"))
         prepared.messages = [...prepared.messages, ...structuredClone(request.messages.slice(size))]
-        prepared.tools = Object.fromEntries(Object.entries(data.prepared.tools).map(([name, tool]) => [name, { ...tool, execute: request.tools[name]?.execute ?? tool.execute }]))
+        if (Object.keys(data.prepared.tools).some((name) => typeof request.tools[name]?.execute !== "function"))
+          return yield* Effect.fail(new Error("LLM prepared replay tool executor missing"))
+        prepared.tools = Object.fromEntries(Object.entries(data.prepared.tools).map(([name, tool]) => [name, { ...tool, execute: request.tools[name].execute }]))
       }
       const isWorkflow = data.isWorkflow
       const toolChoice = input.purpose === "context-maintenance" ? "none" : input.toolChoice

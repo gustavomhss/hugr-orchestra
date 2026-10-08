@@ -64,7 +64,7 @@ it.live("matched parent receipt preserves cache prefix but supplies full origina
   if (user.role !== "user") throw new Error("Expected user")
   const parent: ParentRequest = ParentReceipt.capture({ input: { user, model, sessionID: user.sessionID,
     agent: { name: "build", mode: "primary", permission: [], options: {} }, system: ["SAME_CACHE_SYSTEM"], messages: [{ role: "user", content: "PLUGIN_OR_MASK_STUB" }],
-    tools: {}, toolChoice: "auto" }, messageIDs: [user.id] }, last.id, projected)
+    tools: {}, toolChoice: "auto" }, messageIDs: [user.id] }, last.id, [history[0]])
   ParentReceipt.complete(parent, last)
   const requests: LLM.StreamInput[] = []
   const services = { provider: provider(), llm: { stream: (request: LLM.StreamInput) => { requests.push(request); return Stream.fail(new Error("fixture transport")) } } }
@@ -73,7 +73,7 @@ it.live("matched parent receipt preserves cache prefix but supplies full origina
   expect(requests[0].messages.slice(0, -1)).toEqual(parent.input.messages)
   expect(requests[0].system).toEqual(parent.input.system)
   expect(String(requests[0].messages.at(-1)?.content)).toContain("ORIGINAL_BEYOND_INDEX_CLIP")
-  const wrong = ParentReceipt.capture({ ...parent }, MessageID.make("msg_newer_unmatched_response"), projected)
+  const wrong = ParentReceipt.capture({ ...parent }, MessageID.make("msg_newer_unmatched_response"), [history[0]])
   requests.length = 0
   yield* run(captured, services, host(history), { parent: wrong })
   expect(requests[0].purpose).toBe("context-maintenance")
