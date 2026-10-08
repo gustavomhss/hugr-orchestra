@@ -168,9 +168,11 @@ export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnTy
   const events = [...host.out().matchAll(/CLI_SHUTDOWN (\{[^\r\n]+\})/g)].map((match) => JSON.parse(match[1]!) as {
     event: string; level: string; pid: number; signal: string; status: string; elapsedMs: number
   }).filter((event) => event.pid === host.pid)
-  const expectedExitCode = events[0] && ["SIGINT", "SIGBREAK"].includes(events[0].signal)
-    ? 128 + os.constants.signals[events[0].signal]
+  const signalCodes: Readonly<Record<string, number | undefined>> = os.constants.signals
+  const signalCode = events[0] && ["SIGINT", "SIGBREAK"].includes(events[0].signal)
+    ? signalCodes[events[0].signal]
     : undefined
+  const expectedExitCode = signalCode === undefined ? undefined : 128 + signalCode
   const pass = input === "Ctrl+C" && host.state.exit !== undefined && host.state.exit.exitCode === expectedExitCode &&
     host.state.exit.signal === undefined && Number.isFinite(expectedExitCode) && events.length === 2 &&
     events.every((event) => event.event === "cli.shutdown" && event.level === "DEBUG" && ["SIGINT", "SIGBREAK"].includes(event.signal) && Number.isFinite(event.elapsedMs)) &&
