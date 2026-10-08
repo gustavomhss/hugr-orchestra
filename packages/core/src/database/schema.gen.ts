@@ -24,6 +24,16 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`session_v1_prompt_admission\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`identity_version\` integer DEFAULT 1 NOT NULL,
+          \`identity\` text NOT NULL,
+          \`snapshot\` text NOT NULL,
+          CONSTRAINT \`fk_session_v1_prompt_admission_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`account_state\` (
           \`id\` integer PRIMARY KEY,
           \`active_account_id\` text,

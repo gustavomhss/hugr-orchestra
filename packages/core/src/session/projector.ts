@@ -7,6 +7,7 @@ import { EventV2 } from "../event"
 import { makeGlobalNode } from "../effect/app-node"
 import { SessionEvent } from "./event"
 import { SessionV1 } from "../v1/session"
+import { PromptAdmission } from "../v1/prompt-admission"
 import { WorkspaceTable } from "../control-plane/workspace.sql"
 import { SessionMessage } from "./message"
 import { SessionMessageUpdater } from "./message-updater"
@@ -256,6 +257,7 @@ const layer = Layer.effectDiscard(
     yield* events.project(SessionV1.Event.Deleted, (event) =>
       db.delete(SessionTable).where(eq(SessionTable.id, event.data.sessionID)).run().pipe(Effect.orDie),
     )
+    yield* events.project(SessionV1.Event.PromptAdmitted, (event) => PromptAdmission.project(db, event.data))
     yield* events.project(SessionV1.Event.MessageUpdated, (event) =>
       Effect.gen(function* () {
         const time_created = event.data.info.time.created
