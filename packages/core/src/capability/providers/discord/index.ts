@@ -26,6 +26,9 @@ export const make = Effect.fn("CapabilityDiscord.make")(function* (rpc: RPC, res
   if (target.threadID && selectedThread && selectedThread !== target.threadID) return yield* denied()
   const threadID = selectedThread ?? target.threadID
   if (threadID) yield* decode(Snowflake, threadID).pipe(Effect.mapError(() => denied()))
+  const guild = yield* rpc({ method: "GET", path: `/guilds/${target.guildID}` })
+    .pipe(Effect.flatMap((value) => decode(Schema.Struct({ id: Snowflake }), value)))
+  if (guild.id !== target.guildID) return yield* denied()
   const base = yield* rpc({ method: "GET", path: `/channels/${target.channelID}` })
     .pipe(Effect.flatMap((value) => decode(Channel, value)))
   if (base.id !== target.channelID || base.guild_id !== target.guildID || ![0, 5].includes(base.type)) return yield* denied()
@@ -53,11 +56,11 @@ export const make = Effect.fn("CapabilityDiscord.make")(function* (rpc: RPC, res
     return yield* rpc({ method: "GET", path: `/channels/${channelID}/messages/${messageID}` }).pipe(
       Effect.flatMap(project), Effect.flatMap((message) => message.id === messageID ? Effect.succeed(message) : Effect.fail(denied())),
       Effect.catchTag("CapabilityChannel.TransportFailure", (error) =>
-        error.reason === "http" && error.status === 404 ? Effect.succeed(undefined) : Effect.fail(error)),
+        error.reason === "http" && error.status === 404 && error.missing ? Effect.succeed(undefined) : Effect.fail(error)),
     )
   })
   return {
-    channelID, get,
+    channelID, get, observe: (input: Update) => get(input.messageID),
     read: Effect.fn("CapabilityDiscord.read")(function* (input: Read) {
       if (input.action === "message") {
         const message = yield* get(input.messageID)

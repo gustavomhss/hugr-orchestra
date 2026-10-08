@@ -21,9 +21,9 @@ export const Send = Schema.Struct({ ...Selection, text: Text,
   threadID: Schema.optionalKey(ID), replyTo: Schema.optionalKey(ID),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 export const Update = Schema.Union([
-  Schema.Struct({ ...Selection, action: Schema.Literal("edit"), messageID: ID, text: Text }),
-  Schema.Struct({ ...Selection, action: Schema.Literal("delete"), messageID: ID }),
-  Schema.Struct({ ...Selection, action: Schema.Literals(["reaction_add", "reaction_remove"]), messageID: ID,
+  Schema.Struct({ ...Selection, threadID: Schema.optionalKey(ID), action: Schema.Literal("edit"), messageID: ID, text: Text }),
+  Schema.Struct({ ...Selection, threadID: Schema.optionalKey(ID), action: Schema.Literal("delete"), messageID: ID }),
+  Schema.Struct({ ...Selection, threadID: Schema.optionalKey(ID), action: Schema.Literals(["reaction_add", "reaction_remove"]), messageID: ID,
     emoji: Schema.NonEmptyString.check(Schema.isMaxLength(80)) }),
 ]).annotate({ parseOptions: { onExcessProperty: "error" } })
 export type Read = typeof Read.Type

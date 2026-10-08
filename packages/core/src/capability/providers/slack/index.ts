@@ -31,7 +31,8 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     if (!envelope.ok) {
       if (["invalid_auth", "token_revoked", "token_expired", "not_authed"].includes(envelope.error ?? ""))
         return yield* new Capability.Failure({ code: "authentication_required", message: "Channel authentication is required" })
-      return yield* new Failure({ reason: "provider", missing: envelope.error === "message_not_found" })
+      return yield* new Failure({ reason: "provider", missing: envelope.error === "message_not_found",
+        ambiguous: ["internal_error", "fatal_error", "request_timeout", "service_unavailable"].includes(envelope.error ?? "") })
     }
     return value
   })))
@@ -56,6 +57,7 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     if (messageID) yield* decode(Timestamp, messageID).pipe(Effect.mapError(() => denied()))
     const value = yield* call({ method: "GET", path: threadID ? "/conversations.replies" : "/conversations.history",
       query: { channel: target.channelID, ...(threadID ? { ts: threadID } : {}), limit, cursor,
+        ...(threadID && !messageID ? { oldest: threadID, inclusive: false } : {}),
         ...(messageID ? { oldest: messageID, latest: messageID, inclusive: true } : {}) },
     }).pipe(Effect.flatMap((value) => decode(Page, value)))
     if (value.messages.length > limit || value.messages.some((message) =>
@@ -64,7 +66,9 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     const next = value.response_metadata?.next_cursor || undefined
     if (next && !/^[0-9A-Za-z_+=\/-]{1,512}(?![\s\S])/.test(next)) return yield* new Failure({ reason: "invalid_response" })
     if (value.has_more && !next && !messageID) return yield* new Failure({ reason: "invalid_response" })
-    return { channelID: target.channelID, messages: value.messages.map(project),
+    if (next && next === cursor) return yield* new Failure({ reason: "invalid_response" })
+    return { channelID: target.channelID, messages: value.messages.filter((message) =>
+      messageID || !threadID || message.ts !== threadID).map(project),
       hasMore: !!value.has_more || !!next, ...(next ? { cursor: next } : {}),
     } satisfies Acquisition
   })
@@ -77,6 +81,15 @@ export const make = Effect.fn("CapabilitySlack.make")(function* (rpc: RPC, resou
     channelID: target.channelID,
     read: (input: Read) => input.action === "message" ? page(1, undefined, input.messageID) : page(input.limit ?? 20, input.cursor),
     get,
+    observe: Effect.fn("CapabilitySlack.observe")(function* (input: Update) {
+      if (!("emoji" in input)) return yield* get(input.messageID)
+      const result = yield* call({ method: "GET", path: "/reactions.get",
+        query: { channel: target.channelID, timestamp: input.messageID, full: true } }).pipe(Effect.flatMap((value) =>
+        decode(Schema.Struct({ channel: ChannelID, message: RemoteMessage }), value)))
+      if (result.channel !== target.channelID || result.message.ts !== input.messageID ||
+        (threadID && result.message.ts !== threadID && result.message.thread_ts !== threadID)) return yield* denied()
+      return project(result.message)
+    }),
     send: Effect.fn("CapabilitySlack.send")(function* (input: Send) {
       if (input.replyTo) return yield* new Capability.Failure({ code: "unsupported_operation", message: "Slack replies use threadID" })
       const sent = yield* call({ effect: true, method: "POST", path: "/chat.postMessage", body: {

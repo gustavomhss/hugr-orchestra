@@ -1,7 +1,7 @@
 export * as CapabilityChannels from "./index"
 
 import { Capability } from "@orchestra/schema/capability"
-import { Effect } from "effect"
+import { Effect, Schema } from "effect"
 import { Location } from "../../location"
 import { Tool } from "../../tool/tool"
 import { CapabilityArtifacts } from "../artifact"
@@ -39,7 +39,8 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     const binding = yield* CapabilityInvocation.require(context, placement)
     if (binding.rootToolName !== root) return yield* failure("invocation_binding_mismatch")
     const resolved = yield* connections.resolve(context, { provider: input.provider,
-      connectionID: input.connectionID, targetID: input.targetID, action: operation }).pipe(
+      ...(input.connectionID ? { connectionID: input.connectionID } : {}),
+      ...(input.targetID ? { targetID: input.targetID } : {}), action: operation }).pipe(
         Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("invocation_binding_mismatch"))),
       )
     const endpoint = input.provider === "slack" ? CapabilitySlack.endpoint : CapabilityDiscord.endpoint
@@ -64,13 +65,18 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const clean = (message: Message): Message => ({ ...message, text: safeText(message.text, secret),
       reactions: message.reactions.map((reaction) => ({ ...reaction, emoji: safeText(reaction.emoji, secret) })) })
-    return { adapter, resolved, proof, clean }
+    const safeMetadata = (value: unknown) => !JSON.stringify(value).includes(secret)
+    if (!safeMetadata({ channelID: adapter.channelID })) return yield* failure("target_denied")
+    return { adapter, resolved, proof, clean, safeMetadata }
   })
 
   const retain = Effect.fn("CapabilityChannels.retain")(function* (
     context: Tool.Context, provider: "slack" | "discord", acquisition: Acquisition, verification: Capability.Verification,
+    acknowledgment?: Schema.Json,
   ) {
-    return yield* artifacts.publish(context, { data: new TextEncoder().encode(JSON.stringify(acquisition)),
+    return yield* artifacts.publish(context, { data: new TextEncoder().encode(JSON.stringify(
+      acknowledgment === undefined ? acquisition : { acknowledgment, acquisition },
+    )),
       mime: "application/json", kind: "channel-evidence", verification,
       metadata: { provider, channelID: acquisition.channelID },
     })
@@ -81,6 +87,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     const prepared = yield* prepare(context, input, "read", "channel_read")
     const acquired = yield* prepared.adapter.read(input)
     const acquisition = { ...acquired, messages: acquired.messages.map(prepared.clean) }
+    if (!prepared.safeMetadata(acquisition)) return yield* failure("acquisition_failed")
     const ref = yield* retain(context, input.provider, acquisition, "observed")
     return { provider: input.provider, channelID: acquisition.channelID, acquisition,
       result: { status: "completed", receipt: ref.id, summary: "Bounded channel page acquired and retained",
@@ -108,24 +115,29 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     const observe = (generation: number, state: Capability.JobState, providerID?: string, observation: CapabilityJobs.Observation = {}) =>
       jobs.observeHost(prepared.proof, ref, { expectedGeneration: generation, state, providerID, observation })
     // Acceptance and ID persistence are indivisible locally; the HTTP wait itself remains interruptible.
-    const submitted = yield* Effect.uninterruptibleMask((restore) => restore(
-      "action" in input ? prepared.adapter.update(input) : prepared.adapter.send(input),
-    ).pipe(Effect.result, Effect.flatMap((result) => Effect.gen(function* () {
+    const submitted = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const result = yield* restore("action" in input ? prepared.adapter.update(input) : prepared.adapter.send(input)).pipe(
+        Effect.onInterrupt(() => observe(1, "unknown").pipe(Effect.orDie)), Effect.result,
+      )
       if (result._tag === "Failure") {
         const error = result.failure
         const rejected = error instanceof Capability.Failure || (error.reason === "http" &&
-          (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) || error.reason === "provider"
+          (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) || (error.reason === "provider" && !error.ambiguous)
         yield* observe(1, rejected ? "failed" : "unknown")
         if (rejected) return yield* error
         return undefined
       }
+      if (!prepared.safeMetadata({ messageID: result.success })) {
+        yield* observe(1, "unknown")
+        return undefined
+      }
       yield* observe(1, "submitted", result.success)
       return result.success
-    }))))
+    }))
     if (!submitted) return { provider: input.provider, channelID: prepared.adapter.channelID, jobRef: ref,
       result: { status: "unknown", receipt: ref.id, summary: "Provider mutation outcome unknown; automatic retry prohibited",
         reconciliationRef: ref.id } }
-    const observed = yield* prepared.adapter.get(submitted).pipe(Effect.result)
+    const observed = yield* ("action" in input ? prepared.adapter.observe(input) : prepared.adapter.get(submitted)).pipe(Effect.result)
     const message = observed._tag === "Success" ? observed.success : undefined
     const verified = observed._tag === "Success" && (
       "action" in input && input.action === "delete" ? !message
@@ -136,7 +148,13 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     )
     const acquisition: Acquisition = { channelID: prepared.adapter.channelID,
       messages: message ? [prepared.clean(message)] : [], hasMore: false }
-    const retained = yield* retain(context, input.provider, acquisition, verified ? "verified" : "acknowledged").pipe(Effect.result)
+    if (!prepared.safeMetadata(acquisition)) return { provider: input.provider, messageID: submitted, jobRef: ref,
+      result: { status: "partial", receipt: ref.id, summary: "Provider acknowledged mutation; evidence metadata rejected",
+        completedEffects: ["provider_acknowledged"], unresolvedEffects: ["evidence_metadata"], artifactRefs: [] } }
+    const retained = yield* retain(context, input.provider, acquisition, verified ? "verified" : "acknowledged",
+      { messageID: submitted, operation, postcondition: verified ? "verified" : "unresolved",
+        readback: observed._tag === "Success" ? "acquired" : "failed" },
+    ).pipe(Effect.result)
     const artifactRefs = retained._tag === "Success" ? [retained.success] : []
     if (verified) yield* observe(2, "completed", submitted, { remoteOutcome: "completed",
       materialization: retained._tag === "Success" ? "complete" : "failed", artifactRefs })

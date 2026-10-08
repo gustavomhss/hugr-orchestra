@@ -8,6 +8,7 @@ export class Failure extends Schema.TaggedErrorClass<Failure>()("CapabilityChann
   reason: Schema.Literals(["timeout", "transport", "response_limit", "invalid_response", "redirect", "http", "provider"]),
   status: Schema.optionalKey(Schema.Number),
   missing: Schema.optionalKey(Schema.Boolean),
+  ambiguous: Schema.optionalKey(Schema.Boolean),
 }) {}
 export type Request = {
   effect?: boolean
@@ -49,15 +50,18 @@ export function request(endpoint: string, authorization: string, input: Request,
         headers: { authorization, accept: "application/json", "accept-encoding": "identity",
           ...(body === undefined ? {} : { "content-type": "application/json", "content-length": Buffer.byteLength(body) }) },
       })
-      const timer = setTimeout(() => req.destroy(new Failure({ reason: "timeout" })), options.timeoutMs ?? 10000)
-      req.once("close", () => clearTimeout(timer))
-      req.once("error", (error) => reject(error instanceof Failure ? error : new Failure({ reason: "transport" })))
+      const timer = setTimeout(() => {
+        reject(new Failure({ reason: "timeout" }))
+        req.destroy()
+      }, options.timeoutMs ?? 10000)
+      const fail = (error: Failure) => { clearTimeout(timer); reject(error) }
+      req.once("error", (error) => fail(error instanceof Failure ? error : new Failure({ reason: "transport" })))
       req.once("response", (response) => {
         const status = response.statusCode ?? 0
         // Node HTTP never follows redirects; reject rather than consuming another origin.
         if (status >= 300 && status < 400) {
+          fail(new Failure({ reason: "redirect", status }))
           response.destroy()
-          reject(new Failure({ reason: "redirect", status }))
           return
         }
         const chunks: Buffer[] = []
@@ -65,18 +69,22 @@ export function request(endpoint: string, authorization: string, input: Request,
         response.on("data", (chunk: Buffer) => {
           budget.bytes += chunk.byteLength
           if (budget.bytes > (options.maxResponseBytes ?? 256 * 1024)) {
-            req.destroy(new Failure({ reason: "response_limit" }))
-            reject(new Failure({ reason: "response_limit", status }))
+            fail(new Failure({ reason: "response_limit", status }))
+            req.destroy()
             return
           }
           chunks.push(chunk)
         })
-        response.once("error", () => reject(new Failure({ reason: "transport", status })))
+        response.once("error", () => fail(new Failure({ reason: "transport", status })))
         response.once("end", () => {
           if (status < 200 || status >= 300) {
-            reject(new Failure({ reason: "http", status }))
+            const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(Buffer.concat(chunks).toString("utf8"))
+            const code = Option.isSome(parsed) ? Schema.decodeUnknownOption(Schema.Struct({ code: Schema.Number }))(parsed.value) : Option.none()
+            fail(new Failure({ reason: "http", status,
+              missing: status === 404 && Option.isSome(code) && code.value.code === 10008 }))
             return
           }
+          clearTimeout(timer)
           resolve(status === 204 ? "null" : Buffer.concat(chunks).toString("utf8"))
         })
       })
