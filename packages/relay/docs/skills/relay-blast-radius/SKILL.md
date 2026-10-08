@@ -43,7 +43,7 @@ Send catalog, routing-page, validator, and index edits to the lead during a docu
 
    | Changed surface | Direct consumers and downstream readers |
    |---|---|
-   | `bin/relay-api`, `lib/relay_authoring/` | Orchestra Workflows and Hooks screens through `api/v1`; profile seeding, skill bindings, daemon/CLI gate evaluation and audit |
+   | `lib/relay_authoring/` | Direct Python authoring regression tests and frozen parity generators; daemon/CLI evaluation and audit within that test service. Installed screens use native Server handlers, not this host |
    | `lib/relay-gate.sh` | `bin/relay-arm-hook.sh`, `bin/relay-gate`, `bin/relay-note`, `benchmark/relay_hook.sh`; audit, corpus, and dashboard readers |
    | `bin/relay-note` | Daemon wait-channel ledger notes; offline chain verification |
    | `bin/relay-arm-hook.sh` | Armed harness payloads, arm state readers, fleet-chain example, corpus retention, audit and telemetry |
@@ -68,7 +68,7 @@ Send catalog, routing-page, validator, and index edits to the lead during a docu
 
 | Change | Targeted tests or commands | Documentation to review |
 |---|---|---|
-| Authoring service, compiler or API | `tests/test_authoring.py`, `tests/test_authoring_hooks.py` | [authoring](../relay-authoring/SKILL.md), [authoring API](../../../docs/authoring-api.md) |
+| Retained Python authoring service/compiler | `tests/test_authoring.py`, `tests/test_authoring_hooks.py`; native handler changes select Orchestra `test/server/httpapi-relay.test.ts` through CI | [authoring](../relay-authoring/SKILL.md), [authoring API](../../../docs/authoring-api.md) |
 | Chain serialization or MAC | `tests/test_gate_core_runtime.py`, `tests/test_audit_runtime.py`, `tests/test_relay.py`, `tests/test_ledger_provenance.py` | [gate-core](../relay-gate-core/SKILL.md), [audit](../relay-audit/SKILL.md), [control plane](../../../docs/control-plane.md) |
 | Shared-chain append locking | `tests/test_gate_core_runtime.py` runs concurrent `bin/relay-note` writers sharing the append lock; require their exact count/sequence/link/exit evidence. `tests/test_concurrent_gate.sh` serializes through the CLI run lock and does not race appenders | [gate-core](../relay-gate-core/SKILL.md), [audit](../relay-audit/SKILL.md) |
 | Mandatory evidence/transition append ordering | `tests/test_arm_runtime.py`, `tests/test_command_transport.py`, `tests/test_await_human.py`; require fatal append faults before corresponding state/retry/release updates, not atomicity or rollback | [arm hook](../relay-arm-hook/SKILL.md), [gate CLI](../relay-gate-cli/SKILL.md), [benchmark](../relay-benchmark/SKILL.md) |
