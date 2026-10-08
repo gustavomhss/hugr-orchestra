@@ -22,9 +22,10 @@ The packet assigns Rust types for a Kubernetes custom resource generated from a 
 1. Check the project's pin first. An existing generated module whose header names a kopium version other than `0.24.1` means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=0.24.1)` and do not regenerate.
 2. Generate with the options the header or the packet records:
    ```sh
-   "$BACKEND_TOOLKIT_BIN/kopium" -f <crd.yaml> --api-version <version> --derive Default --docs > src/<module>.rs
+   temporary="$(mktemp "$TMPDIR/kopium.XXXXXX")"
+   "$BACKEND_TOOLKIT_BIN/kopium" -f <crd.yaml> --api-version <version> --derive Default --docs > "$temporary" && mv "$temporary" src/<module>.rs
    ```
-   `--schema derived` (or `-A`, which also adds `--derive JsonSchema` and `--docs`) only when the packet assigns a schema that compiles on its own. Write to a temporary file first and move it over the module only after a zero exit, so a failed run never truncates it.
+   `--schema derived` (or `-A`, which also adds `--derive JsonSchema` and `--docs`) only when the packet assigns a schema that compiles on its own. The native shell's `$TMPDIR` is scoped to that command; create and move the temporary file in the same call. Never choose a fixed host path such as `/tmp/<module>.rs` or a sibling outside the packet's write paths. Move over the module only after a zero exit, so a failed run never truncates it.
 3. The first run on a machine compiles the engine once; it can take several minutes. Later runs reuse that build. Do not interrupt it or retry in a loop.
 4. Read the diff. Only the generated module may move, and only for the fields the CRD change touched.
 5. Use the types from handwritten code, then compile and run the packet's checks.

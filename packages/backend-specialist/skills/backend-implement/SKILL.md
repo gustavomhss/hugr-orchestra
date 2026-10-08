@@ -83,6 +83,8 @@ The final message is the result. Write, in as few sentences as it takes:
 
 English, terse; the caller reads the typed card, so do not restate it. Then write exactly one `backend-result` block as the prompt defines, with no tool call after it. The card carries worker claims only: no verification, acceptance, memory status, Session or task IDs.
 
+For generated outputs, list the concrete files created or changed in `changes`, including files first produced by a shell generator. A directory write scope is permission to generate beneath it, not a substitute for the resulting file inventory. Inspect the generated paths before returning; do not claim only their directory when the packet names an output file.
+
 ## 6. Continuity
 
 When an Atlas header is in context, the packet declares a resume, or bound Atlas memory tools are available, read [continuity](references/continuity.md).
