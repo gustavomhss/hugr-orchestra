@@ -8,6 +8,7 @@ import { OwnOAuthApp } from "../../auth/oauth-app"
 import { Siwc } from "../../auth/siwc"
 import { SiwcInference } from "../../auth/siwc-inference"
 import { SiwcListener } from "../../auth/siwc-listener"
+import { SiwcRefresh } from "../../auth/siwc-refresh"
 import { Credential } from "../../credential"
 import { Global } from "../../global"
 import { Integration } from "../../integration"
@@ -15,7 +16,7 @@ import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import type { PluginInternal } from "../internal"
 
-function browser(ctx: PluginContext, hostFile: string, methodID: Integration.MethodID, label: string, owned = false) {
+function browser(ctx: PluginContext, integration: Integration.Interface, hostFile: string, methodID: Integration.MethodID, label: string, owned = false) {
   return {
     integrationID: Integration.ID.make("openai"),
     method: { id: methodID, type: "oauth", label, prompts: [{ type: "select", key: "account",
@@ -26,7 +27,8 @@ function browser(ctx: PluginContext, hostFile: string, methodID: Integration.Met
     authorize: (inputs) => Effect.gen(function* () {
       const connection = inputs.account === "saved" ? yield* ctx.integration.connection.active("openai") : undefined
       if (inputs.account === "saved" && !connection) return yield* Effect.fail(new Error("No saved ChatGPT account selected"))
-      const value = connection ? yield* ctx.integration.connection.resolve(connection) : undefined
+      const value = connection?.type === "credential"
+        ? yield* integration.connection.saved({ ...connection, id: Credential.ID.make(connection.id) }) : undefined
       if (connection && value?.type !== "oauth") return yield* Effect.fail(new Error("Select a saved ChatGPT account, not an API key"))
       const registration = value?.type === "oauth"
         ? yield* Effect.try({ try: () => Siwc.registration(value.metadata), catch: (cause) => cause }) : undefined
@@ -36,11 +38,9 @@ function browser(ctx: PluginContext, hostFile: string, methodID: Integration.Met
         ? yield* Effect.try({ try: () => OwnOAuthApp.requireClientID("openai"), catch: (cause) => cause }) : undefined
       return yield* SiwcListener.authorize({ hostFile, methodID, registration, clientId })
     }),
-    refresh: (value) => Effect.try({ try: () => Siwc.registration(value.metadata), catch: (cause) => cause }).pipe(
-      Effect.flatMap(() => Effect.fail(new Error(
-        "ChatGPT refresh requires credential-ID singleflight and compare-and-swap support; sign in again after that integration is enabled",
-      ))),
-    ),
+    refresh: (value) => Effect.tryPromise(() => SiwcRefresh.exchange(
+      Credential.OAuth.make({ ...value, methodID: Integration.MethodID.make(value.methodID) }),
+    )),
     label: (value) => {
       const registration = Siwc.registration(value.metadata)
       return `${registration.subject} (${registration.clientId})`
@@ -52,12 +52,13 @@ export const OpenAIPlugin = define({
   id: "openai",
   effect: Effect.fn(function* (ctx) {
     const global = yield* Global.Service
+    const integration = yield* Integration.Service
     const hostFile = join(global.data, "siwc", "host-id")
     yield* ctx.integration.transform((draft) => {
-      draft.method.update(browser(ctx, hostFile, Integration.MethodID.make("chatgpt-browser"), "Continue with ChatGPT (Orchestra)"))
-      draft.method.update(browser(ctx, hostFile, Integration.MethodID.make("chatgpt-headless"), "Continue with ChatGPT (manual browser)"))
+      draft.method.update(browser(ctx, integration, hostFile, Integration.MethodID.make("chatgpt-browser"), "Continue with ChatGPT (Orchestra)"))
+      draft.method.update(browser(ctx, integration, hostFile, Integration.MethodID.make("chatgpt-headless"), "Continue with ChatGPT (manual browser)"))
       if (process.env.ORCHESTRA_OPENAI_CLIENT_ID?.trim())
-        draft.method.update(browser(ctx, hostFile, Integration.MethodID.make("chatgpt-browser-owned"), "ChatGPT (approved partner client, advanced)", true))
+        draft.method.update(browser(ctx, integration, hostFile, Integration.MethodID.make("chatgpt-browser-owned"), "ChatGPT (approved partner client, advanced)", true))
     })
     yield* ctx.catalog.transform(
       Effect.fn(function* (evt) {

@@ -3,7 +3,7 @@ export * as Credential from "./credential"
 import { closeSync, existsSync, openSync, readSync } from "fs"
 import { resolve } from "path"
 import { pathToFileURL } from "url"
-import { asc, eq, isNotNull } from "drizzle-orm"
+import { and, asc, eq, isNotNull } from "drizzle-orm"
 import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
 import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
 import { layer } from "#sqlite"
@@ -72,6 +72,8 @@ export interface Interface {
   }) => Effect.Effect<Info>
   /** Updates the label or secret value of a stored credential. Inherited credentials are read-only. */
   readonly update: (id: ID, updates: Partial<Pick<Info, "label" | "value">>) => Effect.Effect<void, InheritedError>
+  /** Atomically replaces exactly the expected value; never inserts or changes a label. */
+  readonly replaceValueIf: (id: ID, expected: Value, next: Value) => Effect.Effect<boolean, InheritedError>
   /** Removes a stored credential. Inherited credentials cannot be removed from this build. */
   readonly remove: (id: ID) => Effect.Effect<void, InheritedError>
 }
@@ -181,6 +183,17 @@ export const layerFrom = (release: string | undefined) =>
             .where(eq(CredentialTable.id, id))
             .run()
             .pipe(Effect.orDie)
+        }),
+        replaceValueIf: Effect.fn("Credential.replaceValueIf")(function* (id, expected, next) {
+          const match = yield* find(id)
+          if (match.inherited && match.credential && release) {
+            return yield* new InheritedError({ credentialID: id, source: release, reason: "readonly" })
+          }
+          // eq binds through the column's Drizzle JSON encoder, exactly like set.
+          // Different serialization is a conservative miss, never a lost update.
+          return (yield* db.update(CredentialTable).set({ value: next })
+            .where(and(eq(CredentialTable.id, id), eq(CredentialTable.value, expected)))
+            .returning({ id: CredentialTable.id }).get().pipe(Effect.orDie)) !== undefined
         }),
         remove: Effect.fn("Credential.remove")(function* (id) {
           const match = yield* find(id)

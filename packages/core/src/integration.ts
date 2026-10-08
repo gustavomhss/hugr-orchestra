@@ -20,6 +20,8 @@ import { Credential } from "./credential"
 import { State } from "./state"
 import { EventV2 } from "./event"
 import { IntegrationConnection } from "./integration/connection"
+import { Database } from "./database/database"
+import { SiwcRefresh } from "./auth/siwc-refresh"
 
 export const ID = Integration.ID
 export type ID = Integration.ID
@@ -146,6 +148,8 @@ export interface Interface extends State.Transformable<Draft> {
   readonly connection: {
     /** Returns the active connection for one integration. */
     readonly active: (id: ID) => Effect.Effect<IntegrationConnection.Info | undefined>
+    /** Internal raw lookup for reauthorization; does not refresh expired credentials. */
+    readonly saved: (connection: IntegrationConnection.Info) => Effect.Effect<Credential.Value | undefined>
     /** Resolves a connection into usable credential material. */
     readonly resolve: (
       connection: IntegrationConnection.Info,
@@ -218,7 +222,8 @@ type TerminalAttempt = {
 }
 type AttemptEntry = PendingAttempt | TerminalAttempt
 
-export const locationLayer = Layer.effect(
+/** Custom stores must supply the same filename used to build their Credential layer. */
+export const locationLayerFrom = (storePath: string) => Layer.effect(
   Service,
   Effect.gen(function* () {
     const credentials = yield* Credential.Service
@@ -382,6 +387,10 @@ export const locationLayer = Layer.effect(
           const entry = state.get().integrations.get(id)
           return resolveConnections(entry, yield* credentials.list(id))[0]
         }),
+        saved: Effect.fn("Integration.connection.saved")(function* (connection) {
+          if (connection.type === "env") return undefined
+          return (yield* credentials.get(connection.id))?.value
+        }),
         resolve: Effect.fn("Integration.connection.resolve")(function* (connection) {
           if (connection.type === "env") {
             const key = process.env[connection.name]
@@ -400,6 +409,10 @@ export const locationLayer = Layer.effect(
           const source = yield* credentials.inheritedFrom(credential.id)
           if (source) {
             return yield* new Credential.InheritedError({ credentialID: credential.id, source, reason: "refresh" })
+          }
+          if (credential.integrationID === ID.make("openai")) {
+            return yield* authorize(SiwcRefresh.resolve({ credentials, credentialID: credential.id,
+              storePath, refresh: implementation.refresh }))
           }
           const value = yield* authorize(implementation.refresh(credential.value))
           yield* credentials.update(credential.id, { value })
@@ -516,4 +529,5 @@ export const locationLayer = Layer.effect(
   }),
 )
 
+export const locationLayer = locationLayerFrom(Database.path())
 export const node = makeLocationNode({ service: Service, layer: locationLayer, deps: [Credential.node, EventV2.node] })
