@@ -7,7 +7,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { expect } from "bun:test"
-import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber } from "effect"
+import { Cause, Clock, Deferred, Duration, Effect, Exit, Fiber, Schema } from "effect"
 import path from "path"
 import { fileURLToPath } from "url"
 import { NamedError } from "@orchestra/core/util/error"
@@ -417,7 +417,7 @@ withMcpInstructions.instance(
   15_000,
 )
 
-it.instance("legacy prompt emits message events without session.next events", () =>
+it.instance("legacy prompt emits one atomic Core admission per User without session.next events", () =>
   Effect.gen(function* () {
     const events = yield* EventV2Bridge.Service
     const prompt = yield* SessionPrompt.Service
@@ -427,11 +427,8 @@ it.instance("legacy prompt emits message events without session.next events", ()
       agent: "general",
       model: { providerID: ProviderV2.ID.make("old"), id: ModelV2.ID.make("old-model") },
     })
-    const seen: string[] = []
-    const off = yield* events.listen((event) => {
-      seen.push(event.type)
-      return Effect.void
-    })
+    const seen: Array<{ type: string; data: unknown }> = []
+    const off = yield* events.listen((event) => Effect.sync(() => { seen.push(event) }))
 
     const first = yield* prompt.prompt({
       sessionID: chat.id,
@@ -448,20 +445,21 @@ it.instance("legacy prompt emits message events without session.next events", ()
     })
     yield* off
 
-    expect(first.info.role).toBe("user")
-    expect(second.info.role).toBe("user")
-    if (first.info.role === "user" && second.info.role === "user") {
-      expect(first.info.model).toEqual(ref)
-      expect(second.info.model).toEqual(ref)
-    }
+    expect([first.info.role, second.info.role]).toEqual(["user", "user"])
+    expect(first.info.role === "user" ? first.info.model : undefined).toEqual(ref)
+    expect(second.info.role === "user" ? second.info.model : undefined).toEqual(ref)
     expect(yield* sessions.get(chat.id)).toMatchObject({
       agent: "maestro",
       model: { providerID: ref.providerID, id: ref.modelID },
     })
-    expect(seen).toContain(Session.Event.Updated.type)
-    expect(seen).toContain(MessageV2.Event.Updated.type)
-    expect(seen).toContain(MessageV2.Event.PartUpdated.type)
-    expect(seen.filter((type) => type.startsWith("session.next."))).toEqual([])
+    expect(seen.map((event) => event.type)).toContain(Session.Event.Updated.type)
+    const admissions = seen.filter((event) => event.type === SessionV1.Event.PromptAdmitted.type)
+      .map((event) => Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data))
+    expect<unknown>(admissions.map((event) => ({ info: event.info, parts: event.parts }))).toEqual([first, second])
+    expect(admissions.map((event) => [event.sessionID, event.messageID, event.identityVersion])).toEqual([
+      [chat.id, first.info.id, 1], [chat.id, second.info.id, 1],
+    ])
+    expect(seen.filter((event) => event.type.startsWith("session.next."))).toEqual([])
   }),
 )
 
