@@ -44,7 +44,7 @@ export function evidence(scratch: Fixture) {
   return {
     baseline: "1b5f6e68201349cb5dab6298d0ac3388beac2a45",
     cli: bin, ...Object.fromEntries(Object.entries(built).map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
-    harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
+    harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "pty-byte-probe.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
     fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),
     osCoverage: Object.fromEntries(["darwin", "linux", "win32"].map((os) => [os, os === process.platform ? "executed-local" : "not-run"])),
