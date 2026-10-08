@@ -45,7 +45,11 @@ export function evidence(scratch: Fixture) {
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
     baseline: "3d1fc21428",
-    cli: bin, ...Object.fromEntries(Object.entries(built).map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
+    // GitHub log lines truncate at 64 KiB. Full source manifests stay in cli-provenance.json; emit checked keys + digest.
+    cli: bin, ...Object.fromEntries(Object.entries(built).filter(([key]) => key !== "sourceHashes" && key !== "nativeSourceHashes")
+      .map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
+    sourceHashes: Object.fromEntries(["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"]
+      .map((file) => [file, built.sourceHashes[file]])),
     harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "pty-byte-probe.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,
     fixtureEvidence: path.join(LOGS, `${scratch.tag}.evidence`), osRelease: os.release(),
