@@ -133,4 +133,236 @@ describe("capability contracts", () => {
     const root = await import("../src/index")
     expect(root.Capability).toBe(Capability)
   })
+
+  test("completed requires verification and artifact evidence", () => {
+    const input = {
+      status: "completed",
+      receipt: "receipt-1",
+      summary: "Published",
+      artifactRefs: [artifact],
+      verification: "verified",
+    } satisfies Capability.Completed
+    expect(Schema.decodeUnknownSync(Capability.Result)(input)).toEqual(input)
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, status: "success" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, verification: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, artifactRefs: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, verification: "assumed" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, receipt: "" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...input, receipt: { id: "receipt-1" } })).toThrow()
+  })
+
+  test("submitted and pending stay distinct from completion", () => {
+    const submitted = {
+      status: "submitted",
+      receipt: "receipt-2",
+      summary: "Queued",
+      jobRef: { id: Capability.JobID.create() },
+    } satisfies Capability.Submitted
+    const pending = {
+      status: "pending",
+      receipt: "receipt-3",
+      summary: "Consent needed",
+      userActionRef: "action-1",
+    } satisfies Capability.Pending
+    expect(Schema.decodeUnknownSync(Capability.Result)(submitted)).toEqual(submitted)
+    expect(Schema.decodeUnknownSync(Capability.Result)(pending)).toEqual(pending)
+    expect(() => Schema.decodeUnknownSync(Capability.Completed)(submitted)).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Completed)(pending)).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...submitted, jobRef: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...pending, userActionRef: "" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...submitted, verification: "verified" })).toThrow()
+  })
+
+  test("partial and unknown retain known effects and reconciliation evidence", () => {
+    const partial = {
+      status: "partial",
+      receipt: "receipt-4",
+      summary: "Provider effect known, retention failed",
+      completedEffects: ["provider accepted request"],
+      unresolvedEffects: ["output not retained"],
+      artifactRefs: [artifact],
+    } satisfies Capability.Partial
+    const unknown = {
+      status: "unknown",
+      receipt: "receipt-5",
+      summary: "Submit response lost",
+      reconciliationRef: "reconcile-1",
+    } satisfies Capability.Unknown
+    expect(Schema.encodeSync(Capability.Result)(Schema.decodeUnknownSync(Capability.Result)(partial))).toEqual(partial)
+    expect(Schema.encodeSync(Capability.Result)(Schema.decodeUnknownSync(Capability.Result)(unknown))).toEqual(unknown)
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...partial, unresolvedEffects: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...partial, completedEffects: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...partial, artifactRefs: undefined })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...unknown, reconciliationRef: "" })).toThrow()
+  })
+
+  test("optional fields serialize without undefined keys", () => {
+    const unknown = Capability.Unknown.make({
+      status: "unknown",
+      receipt: "receipt-6",
+      summary: "Uncertain",
+      reconciliationRef: undefined,
+    })
+    expect(Schema.encodeSync(Capability.Result)(unknown)).toEqual({
+      status: "unknown",
+      receipt: "receipt-6",
+      summary: "Uncertain",
+    })
+    expect(
+      Schema.encodeSync(Capability.Failure)(
+        Capability.Failure.make({
+          code: "outcome_unknown",
+          message: "Uncertain",
+          detail: undefined,
+        }),
+      ),
+    ).toEqual({ _tag: "Failure", code: "outcome_unknown", message: "Uncertain" })
+    expect(
+      Schema.encodeSync(Capability.Owner)(
+        Capability.Owner.make({
+          ...owner,
+          location: { ...owner.location, workspaceID: undefined },
+        }),
+      ),
+    ).toEqual(owner)
+  })
+
+  test("strict results reject secret fields at top level and inside refs", () => {
+    const completed = Capability.Completed.make({
+      status: "completed",
+      receipt: "receipt-7",
+      summary: "Published",
+      artifactRefs: [artifact],
+      verification: "observed",
+    })
+    expect(() => Schema.decodeUnknownSync(Capability.Result)({ ...completed, accessToken: "secret" })).toThrow()
+    expect(() => Schema.encodeUnknownSync(Capability.Result)({ ...completed, accessToken: "secret" })).toThrow()
+    expect(() =>
+      Schema.decodeUnknownSync(Capability.Result)({
+        ...completed,
+        artifactRefs: [{ ...artifact, credentials: "secret" }],
+      }),
+    ).toThrow()
+    expect(() =>
+      Schema.decodeUnknownSync(Capability.Result)({
+        status: "submitted",
+        receipt: "receipt-8",
+        summary: "Queued",
+        jobRef: { id: Capability.JobID.create(), token: "secret" },
+      }),
+    ).toThrow()
+  })
+
+  test("failure uses closed codes and bounded JSON detail", () => {
+    const failure = {
+      _tag: "Failure",
+      code: "authentication_revoked",
+      message: "Access revoked",
+      detail: { source: "example", status: 401, requestID: "request-1", observations: [true, null] },
+    } satisfies Capability.Failure
+    expect(Schema.decodeUnknownSync(Capability.Failure)(failure)).toEqual(failure)
+    expect(Schema.encodeSync(Capability.Failure)(Schema.decodeUnknownSync(Capability.Failure)(failure))).toEqual(
+      failure,
+    )
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, code: "provider_error" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, _tag: "Error" })).toThrow()
+    expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, secret: "secret" })).toThrow()
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4094))).toHaveLength(4094)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("a".repeat(4095))).toThrow()
+    expect(Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2047))).toHaveLength(2047)
+    expect(() => Schema.decodeUnknownSync(Capability.FailureDetail)("é".repeat(2048))).toThrow()
+    ;[{ value: undefined }, { value: NaN }, { value: Infinity }, { value: 1n }, { value: () => 1 }].forEach((detail) =>
+      expect(() => Schema.decodeUnknownSync(Capability.Failure)({ ...failure, detail })).toThrow(),
+    )
+  })
+
+  test("readiness, verification, error codes and job vocabularies match frozen contracts", () => {
+    const sets: Array<{ schema: Schema.Codec<string>; values: string[] }> = [
+      {
+        schema: Capability.Readiness,
+        values: [
+          "disabled",
+          "absent",
+          "acquiring",
+          "installed",
+          "authentication-required",
+          "ready",
+          "failed",
+          "unsupported",
+        ],
+      },
+      { schema: Capability.Verification, values: ["acknowledged", "observed", "verified"] },
+      {
+        schema: Capability.ErrorCode,
+        values: [
+          "connection_unavailable",
+          "authentication_required",
+          "authentication_revoked",
+          "target_denied",
+          "ambiguous_target",
+          "stale_descriptor",
+          "unsupported_operation",
+          "unsupported_schema",
+          "acquisition_failed",
+          "quota_exceeded",
+          "outcome_unknown",
+          "invocation_binding_missing",
+          "invocation_binding_mismatch",
+        ],
+      },
+      { schema: Capability.JobKind, values: ["provider", "local-process", "worker", "script"] },
+      {
+        schema: Capability.JobState,
+        values: [
+          "intent",
+          "submitting",
+          "submitted",
+          "running",
+          "completed",
+          "failed",
+          "cancel-requested",
+          "cancelled",
+          "unknown",
+          "lost",
+        ],
+      },
+    ]
+    sets.forEach(({ schema, values }) => {
+      values.forEach((value) => expect(Schema.decodeUnknownSync(schema)(value)).toBe(value))
+      expect(() => Schema.decodeUnknownSync(schema)("unrecognized")).toThrow()
+    })
+  })
+
+  test("public identifiers remain stable and unique", () => {
+    ids.forEach(({ schema, name }) => expect(schema.ast.annotations?.identifier).toBe(`Capability.${name}`))
+    const schemas = [
+      Capability.ConnectionRef,
+      Capability.TargetRef,
+      Capability.DescriptorRef,
+      Capability.ArtifactRef,
+      Capability.JobRef,
+      Capability.InvocationRef,
+      Capability.Owner,
+      Capability.Readiness,
+      Capability.Verification,
+      Capability.Completed,
+      Capability.Submitted,
+      Capability.Pending,
+      Capability.Partial,
+      Capability.Unknown,
+      Capability.Result,
+      Capability.ErrorCode,
+      Capability.FailureDetail,
+      Capability.Failure,
+      Capability.JobKind,
+      Capability.JobState,
+    ]
+    const identifiers = [...ids.map((entry) => entry.schema), ...schemas].map(
+      (schema) => schema.ast.annotations?.identifier,
+    )
+    expect(
+      identifiers.every((identifier) => typeof identifier === "string" && identifier.startsWith("Capability.")),
+    ).toBe(true)
+    expect(new Set(identifiers).size).toBe(identifiers.length)
+  })
 })
