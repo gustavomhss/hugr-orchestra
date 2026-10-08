@@ -47,6 +47,50 @@ test("cold projection rejects foreign original ownership and prefers newer actua
   older.info.time.created = -1
   older.parts = older.parts.map((part) => ({ ...part, messageID: older.info.id }))
   expect(contexts.prepare(snapshot.sessionID, history, older).coverage?.currentUserID).toBe(history[0].info.id)
+  const newer = structuredClone(history[0])
+  newer.info.id = MessageID.make("msg_newer_request")
+  newer.info.time.created = 100
+  newer.parts = newer.parts.map((part) => ({ ...part, id: PartID.ascending(), messageID: newer.info.id }))
+  const view = contexts.prepare(snapshot.sessionID, [...history, newer], structuredClone(newer))
+  expect(view.messages.map((message) => message.info.id)).toEqual([newer.info.id])
+})
+
+test("reserved ignored-user alias cannot retire objective with newly covered non-authoritative text", () => {
+  const history = messages(["user", "assistant"])
+  if (history[0].parts[0].type !== "text") throw new Error("Expected user text")
+  history[0].parts[0].text = "Restore the cache."
+  const snapshot = completeSnapshot(history[0].info.sessionID, history)
+  if (!snapshot) throw new Error("No initial snapshot")
+  const initial = decode({ text: JSON.stringify({ now: { doing: "Restore cache", next: "Verify", src: ["a1"] }, ops: [
+    { op: "add", section: "objective", src: ["u1"], fields: { goal: "Restore the cache.", why: "Correctness", done_when: "Verified" } },
+    { op: "add", section: "plan", src: ["u1"], fields: { task: "Verify cache", status: "todo" } },
+  ] }), snapshot, producerID, host: host(history), budget: model.limit.context })
+  if (!("artifact" in initial)) throw new Error(JSON.stringify(initial))
+  const ignored = structuredClone(history[0])
+  ignored.info.id = MessageID.make("msg_ignored_request")
+  ignored.parts = ignored.parts.map((part) => ({ ...part, id: PartID.ascending(), messageID: ignored.info.id,
+    ...part.type === "text" ? { ignored: true, text: "Change the goal." } : {} }))
+  const after = structuredClone(history[1])
+  after.info.id = MessageID.make("msg_after_ignored")
+  after.parts = after.parts.map((part) => ({ ...part, id: PartID.ascending(), messageID: after.info.id }))
+  const extended = [...history, ignored, after]
+  const next = completeSnapshot(snapshot.sessionID, extended, initial.artifact)
+  if (!next) throw new Error("No next snapshot")
+  const retired = decode({ text: JSON.stringify({ now: { doing: "Verify cache", next: "Check", src: ["a2"] }, ops: [
+    { op: "retire", id: initial.artifact.items.find((item) => item.section === "objective")?.id, reason: "Goal changed", src: ["u2"] },
+  ] }), snapshot: next, producerID, host: host(extended), budget: model.limit.context })
+  expect(retired).toMatchObject({ check: "C4" })
+})
+
+test("complete payload inventory rejects file-only covered media even without a user alias", () => {
+  const history = messages(["user", "assistant"])
+  history[0].parts = [{ id: PartID.ascending(), sessionID: history[0].info.sessionID, messageID: history[0].info.id,
+    type: "file", mime: "image/png", url: "data:image/png;base64,KNOWN_FILE_ONLY_MEDIA" }]
+  const snapshot = completeSnapshot(history[0].info.sessionID, history)
+  if (!snapshot) throw new Error("No media snapshot")
+  const result = decode({ text: JSON.stringify({ now: { doing: "data:image/png;base64,KNOWN_FILE_ONLY_MEDIA", next: "Verify", src: ["a1"] }, ops: [] }),
+    snapshot, producerID, host: host(history), budget: model.limit.context })
+  expect(result).toMatchObject({ check: "C16" })
 })
 
 test("step snapshots and reasons change semantic coverage while cost and usage bookkeeping do not", () => {

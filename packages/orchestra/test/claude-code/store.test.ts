@@ -107,8 +107,10 @@ it.instance("full native archive and mapping survive reload; masks remove only t
   expect(native.mapping.api).toBe(f.assistant.id)
   expect(native.mapping.u).toBe(f.user.id)
   // Windows stat exposes synthetic POSIX bits rather than ACL permissions.
-  if (process.platform !== "win32") expect((yield* f.fs.stat(path.join(store.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
-  expect((yield* f.fs.stat(store.directory)).mode & 0o777).toBe(0o700)
+  if (process.platform !== "win32") {
+    expect((yield* f.fs.stat(path.join(store.directory, "archive.sqlite"))).mode & 0o777).toBe(0o600)
+    expect((yield* f.fs.stat(store.directory)).mode & 0o777).toBe(0o700)
+  }
 }), 60_000)
 
 it.instance("append is serialized, duplicates deduplicate, UUID revisions remain archived, and subkeys stay separate", () => Effect.gen(function* () {

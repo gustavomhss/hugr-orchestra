@@ -32,7 +32,8 @@ export function create() {
         if (index === undefined) { entries.delete(sessionID); return { messages, system: [] } }
         const current = RequestSource.latest(messages, original, sessionID)
         const newer = messages.slice(index)
-        return { messages: [...current && !newer.includes(current) ? [current] : [], ...newer], system: [entry.artifact.text],
+        return { messages: [...current && !newer.some((message) => message.info.id === current.info.id) ? [current] : [],
+          ...newer.map((message) => current && message.info.id === current.info.id ? current : message)], system: [entry.artifact.text],
           coverage: { version: 5, boundary: entry.boundary, coveredThrough: entry.artifact.coveredThrough, currentUserID: current?.info.id } }
       }
       const index = tailIndex(entry, messages)

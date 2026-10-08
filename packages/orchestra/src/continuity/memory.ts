@@ -55,7 +55,8 @@ export function scope(snapshot: MemorySnapshot, host: Host) {
   const last = position.get(snapshot.head.at(-1)!.info.id) ?? -1
   const head = new Set(snapshot.head.map((message) => message.info.id))
   const all = aliases(host.history)
-  const covered = all.filter((source) => (position.get(source.message.info.id) ?? Infinity) <= last)
+  const covered = all.filter((source) => (position.get(source.message.info.id) ?? Infinity) <= last &&
+    (!source.alias.startsWith("u") || source.text.trim().length > 0))
   const span = covered.filter((source) => head.has(source.message.info.id))
   const previous = snapshot.previous
   const priorValid = !previous || tailIndex({ sessionID: snapshot.sessionID, boundary: previous.boundary, tailStart: previous.tailStart,
@@ -105,7 +106,8 @@ export function decode(input: {
     !cursor.src.some((alias) => ctx.span.some((source) => source.alias === alias && source.message.info.id === snapshot.boundary &&
       (source.alias.startsWith("a") || source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status))))))
     return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases at or before its boundary")
-  const prohibited = RawPayload.inventory(host.history.filter((message) => ctx.covered.some((source) => source.message.info.id === message.info.id)))
+  const prohibited = RawPayload.inventory(snapshot.complete ? snapshot.covered ?? snapshot.head :
+    host.history.filter((message) => ctx.covered.some((source) => source.message.info.id === message.info.id)))
   if (snapshot.complete && [cursor, ...body.ops].some((value) => {
     if (!record(value)) return false
     const fields = value === cursor ? value : record(value.fields) ? value.fields : {}
