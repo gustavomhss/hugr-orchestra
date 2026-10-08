@@ -52,6 +52,8 @@ export interface Options<State, DraftApi> {
 
 export interface Interface<State, DraftApi> extends Transformable<DraftApi> {
   readonly get: () => State
+  /** Hold the materialized state stable across an effectful read or authorized commit. */
+  readonly withRead: <A, E, R>(read: (state: State) => Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
   /**
    * Registers and applies a scoped transform. Closing the owning Scope removes
    * the transform and reloads the materialized state.
@@ -86,6 +88,7 @@ export function create<State, DraftApi>(options: Options<State, DraftApi>): Inte
 
   const result: Interface<State, DraftApi> = {
     get: () => state,
+    withRead: (read) => semaphore.withPermit(Effect.suspend(() => read(state))),
     transform: Effect.fn("State.transform")(function* (update) {
       const scope = yield* Scope.Scope
       return yield* Effect.uninterruptible(
