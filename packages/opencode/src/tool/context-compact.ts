@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect"
 import { SessionContinuity } from "@/continuity/service"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 
 export const Parameters = Schema.Struct({})
 
@@ -27,8 +27,11 @@ export const ContextCompactTool = Tool.define(
       parameters: Parameters,
       execute: (_params: {}, ctx: Tool.Context) =>
         Effect.gen(function* () {
-          const outcome = yield* continuity.compact({ sessionID: ctx.sessionID, force: true })
-          return { title: "Context compaction", output: OUTPUT[outcome], metadata: { outcome, truncated: false } }
+          yield* ctx.ask({ permission: "context_compact", patterns: [ctx.sessionID], always: [ctx.sessionID], metadata: {} })
+          const outcome = yield* continuity.compact({ sessionID: ctx.sessionID, force: true, canRecall: ctx.extra?.canRecall === true })
+          return { title: "Context compaction", output: OUTPUT[outcome] +
+            (ctx.extra?.claudeCode === true ? " The prepared context is loaded at the next SDK resume, not during this query." : ""),
+            metadata: { outcome, truncated: false } }
         }),
     }
   }),

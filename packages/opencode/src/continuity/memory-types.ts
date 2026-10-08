@@ -22,7 +22,7 @@ export type MemoryItem = {
   src: readonly string[]
 }
 
-export type MemoryArtifact = {
+export type PartialArtifact = {
   version: 4
   parentID: SessionID
   producerID: SessionID
@@ -35,6 +35,18 @@ export type MemoryArtifact = {
   /** The rendered block, injected as is. */
   text: string
 }
+
+export type Now = { doing: string; next: string; src: readonly string[] }
+export type CompleteArtifact = Omit<PartialArtifact, "version" | "tailStart"> & {
+  version: 5
+  tailStart?: never
+  now: Now
+  /** Host-owned source fingerprint inventory, not producer-authored coverage. */
+  covered: readonly { id: MessageID; digest: string }[]
+}
+export type MemoryArtifact = PartialArtifact | CompleteArtifact
+export type Coverage = { version: 5; boundary: MessageID; coveredThrough: MessageID; currentUserID?: MessageID }
+export type Prepared = { messages: SessionV1.WithParts[]; system: string[]; coverage?: Coverage }
 
 /** Host data the producer never writes. */
 export type Host = {
@@ -49,7 +61,10 @@ export type Host = {
 export type MemorySnapshot = {
   sessionID: SessionID
   boundary: MessageID
-  tailStart: MessageID
+  tailStart?: MessageID
+  complete?: true
+  /** Entire declared prefix, including prior coverage on an incremental complete pass. */
+  covered?: SessionV1.WithParts[]
   head: SessionV1.WithParts[]
   tail: SessionV1.WithParts[]
   previous?: MemoryArtifact

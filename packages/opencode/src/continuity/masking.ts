@@ -1,3 +1,5 @@
+export * as ContinuityMasking from "./masking"
+
 import type { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Token } from "@/util/token"
 
@@ -16,16 +18,25 @@ export const KEY_ARGS = ["filePath", "path", "command", "pattern", "url", "query
 // What one inline file (an image, a PDF page) costs a model request; its base64 length says nothing about it.
 export const ATTACHMENT_TOKENS = 1_600
 
-const INLINE = /^(data:[^,]*,)?[A-Za-z0-9+/=\r\n]+$/
-
-/** Token estimate of a request value; each inline base64 file counts ATTACHMENT_TOKENS. */
+/** Media is identified by domain block/type and MIME, never by a string's alphabet or length. */
 export function estimate(value: unknown) {
   let files = 0
-  const text = JSON.stringify(value, (_key, item) => {
-    if (typeof item !== "string" || item.length < 4 * ATTACHMENT_TOKENS || !INLINE.test(item)) return item
-    files++
-    return ""
-  })
+  const visit = (item: unknown, allowed = true): unknown => {
+    if (Array.isArray(item)) return item.map((entry) => visit(entry, allowed))
+    if (!item || typeof item !== "object") return item
+    const object = Object.fromEntries(Object.entries(item))
+    const mime = object.mime ?? object.mediaType ?? object.mimeType ?? object.media_type
+    const source = object.source && typeof object.source === "object" && !Array.isArray(object.source) ? Object.fromEntries(Object.entries(object.source)) : undefined
+    const media = allowed && (object.type === "image" && (object.image !== undefined || object.data !== undefined && typeof mime === "string" && mime.startsWith("image/") ||
+      source?.data !== undefined && typeof source.media_type === "string" && source.media_type.startsWith("image/")) ||
+      object.type === "file" && typeof mime === "string" && /^(image\/|application\/pdf$|audio\/|video\/)/.test(mime) && (object.url !== undefined || object.data !== undefined))
+    if (media) {
+      files++
+      return Object.fromEntries(Object.entries(object).filter(([key]) => !["image", "data", "url", "source"].includes(key)).map(([key, entry]) => [key, visit(entry, allowed)]))
+    }
+    return Object.fromEntries(Object.entries(object).map(([key, entry]) => [key, visit(entry, allowed && !["input", "arguments", "metadata"].includes(key))]))
+  }
+  const text = JSON.stringify(visit(value))
   return Token.estimate(text ?? "") + files * ATTACHMENT_TOKENS
 }
 

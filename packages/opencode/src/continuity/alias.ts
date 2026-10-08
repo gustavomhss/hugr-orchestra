@@ -44,6 +44,7 @@ export function userText(message: SessionV1.WithParts) {
     if (part.type !== "text") return []
     const source = marker(part)
     if (source?.type === "command") return [source.invocation]
+    if (part.ignored) return []
     if (part.synthetic || source) return []
     return part.text.trim() ? [part.text.trim()] : []
   }).join("\n\n")
@@ -80,10 +81,10 @@ export function aliases(history: SessionV1.WithParts[]): Source[] {
       const text = userText(message)
       return [
         ...(notice?.type === "text" ? [{ alias: next("t"), message, part: notice, time: created, text: notice.text }] : []),
-        ...(text ? [{ alias: next("u"), message, time: created, text }] : []),
+        ...(text || message.parts.some((part) => part.type === "file") ? [{ alias: next("u"), message, time: created, text }] : []),
       ]
     }
-    const text = message.parts.flatMap((part) => part.type === "text" && !part.synthetic && part.text.trim() ? [part.text.trim()] : []).join("\n\n")
+    const text = message.parts.flatMap((part) => part.type === "text" && !part.ignored && !part.synthetic && part.text.trim() ? [part.text.trim()] : []).join("\n\n")
     const result: Source[] = text ? [{ alias: next("a"), message, time: created, text }] : []
     for (const part of message.parts) {
       if (part.type !== "tool") continue

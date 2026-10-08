@@ -2,9 +2,9 @@
 // patterns Orchestra's own tools use, so one ruleset and one prompt decide for both engines.
 import { Effect, Exit } from "effect"
 import type { CanUseTool, HookCallbackMatcher, PermissionResult } from "@anthropic-ai/claude-agent-sdk"
-import type * as Tool from "@/tool/tool"
+import type { Tool } from "@/tool/tool"
 import { assertExternalDirectoryEffect } from "@/tool/external-directory"
-import { failure, NAMES as ORCHESTRA_TOOLS } from "./tools"
+import { ClaudeCodeTools } from "./tools"
 
 type Input = Record<string, unknown>
 const text = (input: Input, key: string) => (typeof input[key] === "string" ? (input[key] as string) : undefined)
@@ -37,7 +37,7 @@ export function asks(
 }
 
 type Gate = {
-  run: <A>(effect: Effect.Effect<A, unknown, any>) => Promise<A>
+  run: <A>(effect: Effect.Effect<A, unknown>) => Promise<A>
   /** The context of the call: the mirrored part's message and call, and Orchestra's ask. */
   context: (toolUseID: string) => Tool.Context
   shell: (ctx: Tool.Context, command: string) => Effect.Effect<void, unknown, never>
@@ -46,10 +46,10 @@ type Gate = {
 /** Orchestra's decision on one call. Orchestra's own tools ask inside their implementation, so they pass here. */
 function decide(gate: Gate, name: string, toolInput: Input, toolUseID: string) {
   return gate.run(Effect.gen(function* () {
-    if (ORCHESTRA_TOOLS.includes(name)) return { allow: true as const }
+    if (ClaudeCodeTools.NAMES.includes(name)) return { allow: true as const }
     const ctx = gate.context(toolUseID)
     const exit = yield* asks(name, toolInput, ctx, (command) => gate.shell(ctx, command)).pipe(Effect.exit)
-    return Exit.isSuccess(exit) ? { allow: true as const } : { allow: false as const, message: failure(exit.cause) }
+    return Exit.isSuccess(exit) ? { allow: true as const } : { allow: false as const, message: ClaudeCodeTools.failure(exit.cause) }
   }))
 }
 

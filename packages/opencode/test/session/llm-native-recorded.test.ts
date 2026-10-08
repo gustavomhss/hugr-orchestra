@@ -382,7 +382,7 @@ const driveToolLoop = (scenario: RecordedScenario) =>
     expect(toolCall).toBeDefined()
     expect(turn1.find(LLMEvent.is.toolResult)).toBeDefined()
     expect(toolCall!.name).toBe("get_weather")
-    expect(toolCall!.input).toMatchObject({ city: expect.stringMatching(/Paris/i) })
+    expect(structuredClone(toolCall!.input)).toMatchObject({ city: expect.stringMatching(/Paris/i) })
     expect(turn1.filter(LLMEvent.is.stepFinish)).toHaveLength(1)
 
     const turn2 = yield* collect({
