@@ -26,6 +26,7 @@ export const make = Effect.gen(function* () {
   const permissions = yield* PermissionV2.Service
   const agents = yield* AgentV2.Service
   const database = yield* Database.Service
+  const permits = new WeakSet<Permit>()
 
   const validate = Effect.fn("CapabilityPolicy.validate")(function* (binding: CapabilityInvocation.Binding) {
     const session = yield* sessions.get(binding.owner.sessionID)
@@ -97,16 +98,18 @@ export const make = Effect.gen(function* () {
       }),
     )
     yield* validate(binding)
-    return Object.freeze({
+    const permit = Object.freeze({
       [approved]: true as const,
       context: Object.freeze({ ...context }), binding,
       action: request.action, resources: Object.freeze([...request.resources]),
     })
+    permits.add(permit)
+    return permit
   })
 
   const commit = <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
     Effect.suspend(() => {
-      if (!permit || permit[approved] !== true) return Effect.fail(mismatch())
+      if (!permit || permit[approved] !== true || !permits.has(permit)) return Effect.fail(mismatch())
       // Lock ordering is actor state -> SQLite writer. Approval never happens under either lock.
       return agents.withPermissions(permit.context.agent, () => database.db.transaction((tx) => Effect.gen(function* () {
         const current = yield* CapabilityInvocation.require(permit.context, {
