@@ -1,5 +1,5 @@
 import { expect } from "bun:test"
-import { Effect, Layer, Schema } from "effect"
+import { Deferred, Effect, Layer, Schema } from "effect"
 import path from "node:path"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -14,6 +14,7 @@ import { it } from "./lib/effect"
 
 const Result = Schema.Struct({
   pid: Schema.Int,
+  label: Schema.Literals(["worker-A", "worker-B"]),
   status: Schema.Literals(["admitted", "already"]),
   notified: Schema.Array(Schema.String),
   snapshot: SessionV1.WithParts,
@@ -49,13 +50,21 @@ it.live("two processes sharing one DB admit one immutable winner with no losing 
       ),
     )
     const readers = workers.map((child) => child.stdout.getReader())
-    yield* Effect.forEach(readers, (reader) =>
-      Effect.gen(function* () {
-        const ready = yield* Effect.promise(() => reader.read())
-        expect(ready.done).toBe(false)
-        expect(new TextDecoder().decode(ready.value)).toBe("ready\n")
-      }),
-    ).pipe(Effect.timeout("30 seconds"))
+    const ready = yield* Deferred.make<void>()
+    yield* Deferred.complete(
+      ready,
+      Effect.forEach(
+        readers,
+        (reader) =>
+          Effect.gen(function* () {
+            const chunk = yield* Effect.promise(() => reader.read())
+            expect(chunk.done).toBe(false)
+            expect(new TextDecoder().decode(chunk.value)).toBe("ready\n")
+          }),
+        { discard: true },
+      ),
+    ).pipe(Effect.forkScoped)
+    yield* Deferred.await(ready).pipe(Effect.timeout("30 seconds"))
     workers.forEach((child) => {
       child.stdin.write("publish\n")
       child.stdin.end()
@@ -84,23 +93,27 @@ it.live("two processes sharing one DB admit one immutable winner with no losing 
     const winner = results.find((result) => result.status === "admitted")
     const loser = results.find((result) => result.status === "already")
     if (!winner || !loser) return yield* Effect.die("Expected one winner and one loser")
+    expect(new Set(results.map((result) => result.label)).size).toBe(2)
+    const expected = {
+      info: { ...payload.info, promptContext: { reminders: [winner.label] } },
+      parts: payload.parts.map((part) => ({ ...part, text: winner.label })),
+    }
+    expect(winner.snapshot).toEqual(expected)
     expect(winner.notified).toEqual([SessionV1.Event.PromptAdmitted.type])
     expect(loser.notified).toEqual([])
     expect(loser.snapshot).toEqual(winner.snapshot)
-    expect(winner.snapshot.info).toMatchObject({
-      promptContext: { reminders: [expect.stringMatching(/^worker-[AB]$/)] },
-    })
     yield* Effect.gen(function* () {
       const database = yield* Database.Service
       const db = database.db
-      expect((yield* PromptAdmission.find(db, payload.messageID))?.snapshot).toEqual(winner.snapshot)
+      expect((yield* PromptAdmission.find(db, payload.messageID))?.snapshot).toEqual(expected)
+      expect(loser.snapshot).toEqual(expected)
       expect(yield* db.select().from(PromptAdmissionTable).all()).toHaveLength(1)
       expect(yield* db.select().from(MessageTable).all()).toHaveLength(1)
       expect((yield* db.select().from(MessageTable).get())?.data).toMatchObject({
-        promptContext: winner.snapshot.info.role === "user" ? winner.snapshot.info.promptContext : undefined,
+        promptContext: expected.info.promptContext,
       })
       expect((yield* db.select().from(PartTable).all()).map((row) => row.data)).toEqual(
-        winner.snapshot.parts.map((part) => {
+        expected.parts.map((part) => {
           const { id: _, sessionID: __, messageID: ___, ...data } = part
           return data
         }),

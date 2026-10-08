@@ -37,6 +37,6 @@ const result = await Effect.gen(function* () {
   )
   const snapshot = yield* PromptAdmission.reconcile(database.db, input)
   if (!snapshot) return yield* Effect.die("Winning receipt missing")
-  return { pid: process.pid, status, notified, snapshot }
+  return { pid: process.pid, label, status, notified, snapshot }
 }).pipe(Effect.scoped, Effect.provide(layer(filename)), Effect.runPromise)
 process.stdout.write(JSON.stringify(result) + "\n")
