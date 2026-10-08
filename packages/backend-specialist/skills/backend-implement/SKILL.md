@@ -30,6 +30,8 @@ The packet may be plain text, earlier messages or a structured dispatch. Never a
 
 Return one `packet` blocker per missing required item, all in one result, naming whose decision it is. Continue assigned work that does not depend on a missing item. Never fill a gap by reading other code.
 
+Write targets must name files or directories. A function name, acceptance example or repository cwd alone does not authorize edits. An absent dispatch write scope is read-only and does not fill a missing packet field.
+
 When the packet supplies a baseline revision, run this in the assigned worktree before editing:
 
 ```sh
@@ -60,7 +62,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
 - Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md), [Ruby](references/languages/ruby.md), [PHP](references/languages/php.md). Read only the packet's language.
-- With a generator or owned tool ([toolkit recipes](references/recipes/external/index.md)), generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
+- Before invoking a generator or owned tool, read its exact entry in the [toolkit recipes](references/recipes/external/index.md), including version pins, prerequisites and generation command. A packet naming a check such as `--check` or `--verify` does not make that command a generator: produce the assigned artifact with the recipe's generation command first, then run the named check. Generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
 
 ## 4. Run the checks
 
