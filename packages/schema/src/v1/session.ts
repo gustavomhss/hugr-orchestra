@@ -605,7 +605,8 @@ const events = {
         removeMessageIDs: Schema.Array(MessageID),
         removePartIDs: Schema.Array(PartID),
         permission: optional(PermissionV1.Ruleset),
-        expectedPermission: optional(Schema.NullOr(PermissionV1.Ruleset)),
+        // Let the projector name omission/undefined consistently for both typed publication and replay.
+        expectedPermission: Schema.optional(Schema.NullOr(PermissionV1.Ruleset)),
         timeUpdated: NonNegativeInt,
       })),
     },

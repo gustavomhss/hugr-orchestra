@@ -146,6 +146,8 @@ const projectTransition = Effect.fn("PromptAdmission.projectTransition")(functio
 ) {
   const transition = payload.transition
   if (!transition) return
+  if (transition.permission !== undefined && transition.expectedPermission === undefined)
+    return yield* Effect.die(new Conflict({ ...payload, reason: "permission-expectation-missing" }))
   const encoded = Schema.encodeSync(SessionV1.Event.PromptAdmitted.data)(payload).transition
   if (!isDeepStrictEqual(session.revert, encoded?.expectedRevert))
     return yield* Effect.die(new Conflict({ ...payload, reason: "revert-changed" }))
