@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { Effect, Schema } from "effect"
+import { Effect, Fiber, Scheduler, Schema } from "effect"
 import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
 import { Project } from "@orchestra/schema/project"
@@ -8,8 +8,8 @@ import { SessionID } from "@orchestra/schema/session-id"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
 import { CapabilityDescriptors } from "../src/capability/catalog/descriptors"
 
-function fixture(maxEntries = 8) {
-  const clock = { value: 1000 }
+function fixture(maxEntries = 8, ttlMillis = 50) {
+  const clock = { value: 1000, reads: 0 }
   const input = {
     owner: {
       projectID: Project.ID.make("project"),
@@ -41,7 +41,16 @@ function fixture(maxEntries = 8) {
     clock,
     input,
     scope,
-    store: Effect.runSync(CapabilityDescriptors.make({ maxEntries, ttlMillis: 50, now: () => clock.value })),
+    store: Effect.runSync(
+      CapabilityDescriptors.make({
+        maxEntries,
+        ttlMillis,
+        now: () => {
+          clock.reads++
+          return clock.value
+        },
+      }),
+    ),
   }
 }
 
@@ -61,6 +70,85 @@ function frozen(value: Schema.Json) {
 }
 
 describe("capability descriptor metadata", () => {
+  test("accepts decoded host Owners after importing the strict schema root", async () => {
+    const { Capability } = await import("@orchestra/schema")
+    const f = fixture()
+    const owner = Capability.Owner.make({
+      ...f.input.owner,
+      location: { ...f.input.owner.location, workspaceID: undefined },
+    })
+    expect(Object.hasOwn(owner.location, "workspaceID")).toBe(true)
+    expect(owner.location.workspaceID).toBeUndefined()
+    const old = Effect.runSync(f.store.issue({ ...f.input, owner }))
+    expect(Effect.runSync(f.store.read(old.ref, { ...f.scope, owner }))).toBe(old)
+    const newOwner = Capability.Owner.make({ ...owner, sessionID: SessionID.create() })
+    const next = Effect.runSync(f.store.reissue(old.ref, { ...f.scope, owner }, newOwner))
+    expect(Effect.runSync(f.store.read(next.ref, { ...f.scope, owner: newOwner }))).toBe(next)
+    expect(next.ref.id).not.toBe(old.ref.id)
+  })
+
+  test.each(["clear", "invalidateConnection"] as const)(
+    "reissue cannot resurrect after %s at a forced yield",
+    (action) => {
+      const f = fixture()
+      const old = Effect.runSync(f.store.issue(f.input))
+      const newOwner = { ...f.input.owner, sessionID: SessionID.create() }
+      const tasks: Array<() => void> = []
+      const state = { armed: false, yielded: false }
+      const before = f.clock.reads
+      const scheduler: Scheduler.Scheduler = {
+        executionMode: "async",
+        shouldYield: () => {
+          if (!state.armed || state.yielded || f.clock.reads === before) return false
+          state.yielded = true
+          return true
+        },
+        makeDispatcher: () => ({
+          scheduleTask: (task) => {
+            tasks.push(task)
+          },
+          flush: () => {
+            tasks.splice(0).forEach((task) => task())
+          },
+        }),
+      }
+      // Positive control: explicit yieldNow really pauses this runtime until dispatched.
+      const control = Effect.runFork(Effect.yieldNow, { scheduler })
+      expect(control.pollUnsafe()).toBeUndefined()
+      expect(tasks.length).toBe(1)
+      tasks.splice(0).forEach((task) => task())
+      Effect.runSync(Fiber.join(control))
+      state.armed = true
+      // Pause at the first Effect boundary after old-scope validation touches the clock.
+      const fiber = Effect.runFork(f.store.reissue(old.ref, f.scope, newOwner), { scheduler })
+      expect(state.yielded).toBe(true)
+      expect(fiber.pollUnsafe()).toBeUndefined()
+      expect(tasks.length).toBe(1)
+      Effect.runSync(action === "clear" ? f.store.clear() : f.store.invalidateConnection(old.ref.connectionID))
+      denied(f.store.read(old.ref, f.scope), "stale_descriptor")
+      tasks.splice(0).forEach((task) => task())
+      const next = Effect.runSync(Fiber.join(fiber))
+      denied(f.store.read(next.ref, { ...f.scope, owner: newOwner }), "stale_descriptor")
+    },
+  )
+
+  test("invalid clock and expiry overflow leave live records intact before cleanup or quota", () => {
+    const f = fixture(1)
+    const old = Effect.runSync(f.store.issue(f.input))
+    ;[Infinity, -Infinity, NaN].forEach((value) => {
+      f.clock.value = value
+      denied(f.store.issue(f.input), "stale_descriptor")
+      f.clock.value = 1000
+      expect(Effect.runSync(f.store.read(old.ref, f.scope))).toBe(old)
+    })
+    const overflow = fixture(1, Number.MAX_VALUE)
+    const live = Effect.runSync(overflow.store.issue(overflow.input))
+    overflow.clock.value = Number.MAX_VALUE
+    denied(overflow.store.issue(overflow.input), "stale_descriptor")
+    overflow.clock.value = 1000
+    expect(Effect.runSync(overflow.store.read(live.ref, overflow.scope))).toBe(live)
+  })
+
   test("issues valid refs lazily, permits current cross-turn scope, never serializes identity", () => {
     const f = fixture()
     const pending = f.store.issue(f.input)

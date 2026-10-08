@@ -3,6 +3,9 @@ export * as CapabilityDescriptors from "./descriptors"
 import { Effect, Option, Schema } from "effect"
 import { Capability } from "@orchestra/schema/capability"
 
+// Store callers pass decoded host values; the public codec remains the strict wire boundary.
+const OwnerInput = Schema.toType(Capability.Owner)
+
 export type DescriptorRecord = Readonly<{
   ref: Capability.DescriptorRef
   owner: Capability.Owner
@@ -73,61 +76,64 @@ export function make(options: { maxEntries: number; ttlMillis: number; now: () =
         return failure("stale_descriptor")
       return record
     }
-    const issue: Store["issue"] = (input) =>
-      Effect.suspend(() => {
-        const issuedAt = now()
-        Array.from(records.entries()).forEach(([id, record]) => {
-          if (record.expiresAt <= issuedAt) records.delete(id)
-        })
-        if (records.size >= maxEntries) return Effect.fail(failure("quota_exceeded"))
-        const ref = Schema.decodeUnknownOption(Capability.DescriptorRef)({
-          id: Capability.DescriptorID.create(),
-          schemaHash: input.schemaHash,
-          catalogGeneration: input.catalogGeneration,
-          connectionID: input.connectionID,
-          targetID: input.targetID,
-        })
-        const owner = Schema.decodeUnknownOption(Capability.Owner)(input.owner)
-        if (
-          Option.isNone(ref) ||
-          Option.isNone(owner) ||
-          [input.connectionGeneration, input.targetGeneration].some((x) => !Number.isSafeInteger(x) || x < 0) ||
-          typeof input.canonicalIdentity !== "object" ||
-          input.canonicalIdentity === null ||
-          typeof input.canonicalName !== "string" ||
-          !input.canonicalName ||
-          typeof input.operationID !== "string" ||
-          !input.operationID ||
-          !Number.isFinite(issuedAt) ||
-          !Number.isFinite(issuedAt + ttlMillis)
-        )
-          return Effect.fail(failure("stale_descriptor"))
-        if (
-          Option.isNone(Schema.decodeUnknownOption(Schema.Json)(input.inputSchema)) ||
-          (input.outputSchema !== undefined &&
-            Option.isNone(Schema.decodeUnknownOption(Schema.Json)(input.outputSchema)))
-        )
-          return Effect.fail(failure("unsupported_schema"))
-        const record = {
-          ref: Object.freeze(ref.value),
-          owner: Object.freeze({ ...owner.value, location: Object.freeze({ ...owner.value.location }) }),
-          connectionGeneration: input.connectionGeneration,
-          targetGeneration: input.targetGeneration,
-          canonicalName: input.canonicalName,
-          canonicalIdentity: input.canonicalIdentity,
-          inputSchema: snapshot(input.inputSchema),
-          ...(input.outputSchema === undefined ? {} : { outputSchema: snapshot(input.outputSchema) }),
-          operationID: input.operationID,
-          issuedAt,
-          expiresAt: issuedAt + ttlMillis,
-        }
-        Object.defineProperty(record, "canonicalIdentity", { enumerable: false })
-        Object.freeze(record)
-        records.set(record.ref.id, record)
-        return Effect.succeed(record)
+    // Synchronous state transition: no Effect may separate validation from insertion.
+    const create = (input: IssueInput): DescriptorRecord | Capability.Failure => {
+      const issuedAt = now()
+      const expiresAt = issuedAt + ttlMillis
+      if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt)) return failure("stale_descriptor")
+      Array.from(records.entries()).forEach(([id, record]) => {
+        if (record.expiresAt <= issuedAt) records.delete(id)
       })
+      if (records.size >= maxEntries) return failure("quota_exceeded")
+      const ref = Schema.decodeUnknownOption(Capability.DescriptorRef)({
+        id: Capability.DescriptorID.create(),
+        schemaHash: input.schemaHash,
+        catalogGeneration: input.catalogGeneration,
+        connectionID: input.connectionID,
+        targetID: input.targetID,
+      })
+      const owner = Schema.decodeUnknownOption(OwnerInput)(input.owner)
+      if (
+        Option.isNone(ref) ||
+        Option.isNone(owner) ||
+        [input.connectionGeneration, input.targetGeneration].some((x) => !Number.isSafeInteger(x) || x < 0) ||
+        typeof input.canonicalIdentity !== "object" ||
+        input.canonicalIdentity === null ||
+        typeof input.canonicalName !== "string" ||
+        !input.canonicalName ||
+        typeof input.operationID !== "string" ||
+        !input.operationID
+      )
+        return failure("stale_descriptor")
+      if (
+        Option.isNone(Schema.decodeUnknownOption(Schema.Json)(input.inputSchema)) ||
+        (input.outputSchema !== undefined && Option.isNone(Schema.decodeUnknownOption(Schema.Json)(input.outputSchema)))
+      )
+        return failure("unsupported_schema")
+      const record = {
+        ref: Object.freeze(ref.value),
+        owner: Object.freeze({ ...owner.value, location: Object.freeze({ ...owner.value.location }) }),
+        connectionGeneration: input.connectionGeneration,
+        targetGeneration: input.targetGeneration,
+        canonicalName: input.canonicalName,
+        canonicalIdentity: input.canonicalIdentity,
+        inputSchema: snapshot(input.inputSchema),
+        ...(input.outputSchema === undefined ? {} : { outputSchema: snapshot(input.outputSchema) }),
+        operationID: input.operationID,
+        issuedAt,
+        expiresAt,
+      }
+      Object.defineProperty(record, "canonicalIdentity", { enumerable: false })
+      Object.freeze(record)
+      records.set(record.ref.id, record)
+      return record
+    }
     return {
-      issue,
+      issue: (input) =>
+        Effect.suspend(() => {
+          const record = create(input)
+          return record instanceof Capability.Failure ? Effect.fail(record) : Effect.succeed(record)
+        }),
       read: (ref, scope) =>
         Effect.suspend(() => {
           const record = check(ref, scope)
@@ -135,12 +141,23 @@ export function make(options: { maxEntries: number; ttlMillis: number; now: () =
         }),
       reissue: (ref, oldScope, newOwner) =>
         Effect.suspend(() => {
-          const record = check(ref, oldScope)
-          if (record instanceof Capability.Failure) return Effect.fail(record)
-          if (newOwner.projectID !== record.owner.projectID || !sameLocation(newOwner, record.owner))
+          const previous = check(ref, oldScope)
+          if (previous instanceof Capability.Failure) return Effect.fail(previous)
+          const owner = Schema.decodeUnknownOption(OwnerInput)(newOwner)
+          if (
+            Option.isNone(owner) ||
+            owner.value.projectID !== previous.owner.projectID ||
+            !sameLocation(owner.value, previous.owner)
+          )
             return Effect.fail(failure("target_denied"))
           // Trusted caller supplies the explicitly authorized new Session/actor; no grant is retained.
-          return issue({ ...record, ...record.ref, canonicalIdentity: record.canonicalIdentity, owner: newOwner })
+          const record = create({
+            ...previous,
+            ...previous.ref,
+            canonicalIdentity: previous.canonicalIdentity,
+            owner: owner.value,
+          })
+          return record instanceof Capability.Failure ? Effect.fail(record) : Effect.succeed(record)
         }),
       invalidateConnection: (connectionID) =>
         Effect.sync(() => {
