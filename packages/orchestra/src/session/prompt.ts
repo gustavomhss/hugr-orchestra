@@ -1177,7 +1177,7 @@ const layer = Layer.effect(
 
           // The last 10% of the window is reserved: past it, maintenance finishes before the next request.
           if (lastFinished && lastFinished.summary !== true && tokenCount(lastFinished.tokens) >= hardLimit(model))
-            yield* continuity.compact({ sessionID, canRecall })
+            yield* continuity.compact({ sessionID, canRecall, model })
 
           const agent = yield* agents.get(lastUser.agent)
           if (!agent) {
@@ -1357,7 +1357,7 @@ const layer = Layer.effect(
             }
             // A provider overflow (no finish) forces a pass; a step past the window's input limit only checks it.
             if (result === "compact") {
-              const shrunk = yield* continuity.compact({ sessionID, canRecall, force: !handle.message.finish })
+              const shrunk = yield* continuity.compact({ sessionID, canRecall, model, force: !handle.message.finish })
               // Retrying an overflow that maintenance could not shrink would repeat it forever.
               if (!handle.message.finish && shrunk !== "applied" && shrunk !== "masked") {
                 const message = "Session too large: context maintenance could not bring it under the model limit"
