@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { Schema } from "effect"
+import { Schema, SchemaAST } from "effect"
 import { Agent } from "../src/agent"
 import { Capability } from "../src/capability"
 import { Location } from "../src/location"
@@ -334,7 +334,10 @@ describe("capability contracts", () => {
   })
 
   test("public identifiers remain stable and unique", () => {
-    ids.forEach(({ schema, name }) => expect(schema.ast.annotations?.identifier).toBe(`Capability.${name}`))
+    ids.forEach(({ schema, name }) => {
+      expect(SchemaAST.resolveIdentifier(schema.ast)).toBe(`Capability.${name}`)
+      expect(SchemaAST.resolve(schema.ast)?.brands).toEqual([`Capability.${name}`])
+    })
     const schemas = [
       Capability.ConnectionRef,
       Capability.TargetRef,
@@ -357,8 +360,8 @@ describe("capability contracts", () => {
       Capability.JobKind,
       Capability.JobState,
     ]
-    const identifiers = [...ids.map((entry) => entry.schema), ...schemas].map(
-      (schema) => schema.ast.annotations?.identifier,
+    const identifiers = [...ids.map((entry) => entry.schema), ...schemas].map((schema) =>
+      SchemaAST.resolveIdentifier(schema.ast),
     )
     expect(
       identifiers.every((identifier) => typeof identifier === "string" && identifier.startsWith("Capability.")),
