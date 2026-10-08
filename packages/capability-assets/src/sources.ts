@@ -20,7 +20,7 @@ export const openclaw = {
 export const manifest = {
   status: "source-qualified",
   plan: "specs/orchestra-capabilities/ASSET-MAP.md",
-  importedContent: "license notices only",
+  importedContent: "license notices and provider preset data only",
   plannedAdaptations: {
     skill: "Rename frontmatter/body names; adapt referenced recipes, scripts and companions in separate owning WPs.",
     provider: "Adapt endpoint/OAuth/filter declarations to first-party connections; qualify discovered schemas per route.",
