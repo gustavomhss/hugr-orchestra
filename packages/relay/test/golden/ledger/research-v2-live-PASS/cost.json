@@ -1,0 +1,78 @@
+{
+  "ledger": "test/fixtures/research-v2-live-PASS.ledger.jsonl",
+  "total": null,
+  "states": [
+    {
+      "wp": "question.frame",
+      "macro": "question",
+      "elapsed_s": null
+    },
+    {
+      "wp": "question.gate",
+      "macro": "question",
+      "elapsed_s": null
+    },
+    {
+      "wp": "survey.gather",
+      "macro": "survey",
+      "elapsed_s": null
+    },
+    {
+      "wp": "survey.gate",
+      "macro": "survey",
+      "elapsed_s": null
+    },
+    {
+      "wp": "evidence.establish",
+      "macro": "evidence",
+      "elapsed_s": null
+    },
+    {
+      "wp": "evidence.cold_review",
+      "macro": "evidence",
+      "elapsed_s": null
+    },
+    {
+      "wp": "evidence.gate",
+      "macro": "evidence",
+      "elapsed_s": null
+    },
+    {
+      "wp": "contest.challenge",
+      "macro": "contest",
+      "elapsed_s": null
+    },
+    {
+      "wp": "contest.gate",
+      "macro": "contest",
+      "elapsed_s": null
+    },
+    {
+      "wp": "synthesis.conclude",
+      "macro": "synthesis",
+      "elapsed_s": null
+    },
+    {
+      "wp": "synthesis.cold_review",
+      "macro": "synthesis",
+      "elapsed_s": null
+    },
+    {
+      "wp": "synthesis.gate",
+      "macro": "synthesis",
+      "elapsed_s": null
+    },
+    {
+      "wp": "report.write",
+      "macro": "report",
+      "elapsed_s": null
+    },
+    {
+      "wp": "report.gate",
+      "macro": "report",
+      "elapsed_s": null
+    }
+  ],
+  "macros": [],
+  "note": "this run recorded no cost data — not zero cost, unmeasured"
+}

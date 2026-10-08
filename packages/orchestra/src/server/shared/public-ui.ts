@@ -3,8 +3,10 @@
 // the manifest icons even when a server password is configured.
 export const PUBLIC_UI_PATHS = new Set<string>([
   "/site.webmanifest",
-  "/web-app-manifest-192x192.png",
-  "/web-app-manifest-512x512.png",
+  "/android-chrome-192x192.png",
+  "/android-chrome-512x512.png",
+  "/maskable-192x192.png",
+  "/maskable-512x512.png",
 ])
 
 export function isPublicUIPath(method: string, pathname: string) {

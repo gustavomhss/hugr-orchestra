@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/sealed-constant-infinity-keyed/input/ledger.jsonl",
+  "verify": [],
+  "key": "relay-golden-ledger-key",
+  "chmod": {}
+}

@@ -190,6 +190,16 @@ import type {
   QuestionReplyErrors,
   QuestionReplyResponses,
   QuestionV2Reply,
+  RelayCheckInput,
+  RelayDocumentCreate,
+  RelayDocumentUpdate,
+  RelayHookInstallInput,
+  RelayHookOrderInput,
+  RelayHookRepairInput,
+  RelayHookUpdateInput,
+  RelayPublishInput,
+  RelayScopeInput,
+  RelayUnpublishInput,
   ScheduledTaskCreateInput,
   ScheduledTaskUpdateInput,
   SessionAbortErrors,
@@ -360,6 +370,58 @@ import type {
   V2QuestionRequestListResponses,
   V2ReferenceListErrors,
   V2ReferenceListResponses,
+  V2RelayDocumentCheckErrors,
+  V2RelayDocumentCheckResponses,
+  V2RelayDocumentCreateErrors,
+  V2RelayDocumentCreateResponses,
+  V2RelayDocumentExportErrors,
+  V2RelayDocumentExportResponses,
+  V2RelayDocumentGetErrors,
+  V2RelayDocumentGetResponses,
+  V2RelayDocumentListErrors,
+  V2RelayDocumentListResponses,
+  V2RelayDocumentNodeTypesErrors,
+  V2RelayDocumentNodeTypesResponses,
+  V2RelayDocumentRemoveErrors,
+  V2RelayDocumentRemoveResponses,
+  V2RelayDocumentSprintErrors,
+  V2RelayDocumentSprintResponses,
+  V2RelayDocumentUpdateErrors,
+  V2RelayDocumentUpdateResponses,
+  V2RelayDocumentVersionErrors,
+  V2RelayDocumentVersionResponses,
+  V2RelayDocumentVersionsErrors,
+  V2RelayDocumentVersionsResponses,
+  V2RelayHookDecisionsErrors,
+  V2RelayHookDecisionsResponses,
+  V2RelayHookDisableErrors,
+  V2RelayHookDisableResponses,
+  V2RelayHookEnableErrors,
+  V2RelayHookEnableResponses,
+  V2RelayHookInstallErrors,
+  V2RelayHookInstallResponses,
+  V2RelayHookListErrors,
+  V2RelayHookListResponses,
+  V2RelayHookOrderErrors,
+  V2RelayHookOrderResponses,
+  V2RelayHookRepairErrors,
+  V2RelayHookRepairResponses,
+  V2RelayHookUninstallErrors,
+  V2RelayHookUninstallResponses,
+  V2RelayHookUpdateErrors,
+  V2RelayHookUpdateResponses,
+  V2RelayPublishPublishErrors,
+  V2RelayPublishPublishResponses,
+  V2RelayPublishUnpublishErrors,
+  V2RelayPublishUnpublishResponses,
+  V2RelayScopeCreateErrors,
+  V2RelayScopeCreateResponses,
+  V2RelayScopeListErrors,
+  V2RelayScopeListResponses,
+  V2RelayScopeRemoveErrors,
+  V2RelayScopeRemoveResponses,
+  V2RelayScopeUpdateErrors,
+  V2RelayScopeUpdateResponses,
   V2ScheduleCreateErrors,
   V2ScheduleCreateResponses,
   V2ScheduleListErrors,
@@ -7430,6 +7492,973 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class Document extends HeyApiClient {
+  /**
+   * List Relay documents
+   *
+   * The project's workflow and hook documents, newest first. The shipped profiles are seeded once per server.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayDocumentListResponses, V2RelayDocumentListErrors, ThrowOnError>({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay document
+   *
+   * Create a document. A draft that does not compile yet is saved with its diagnostics.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentCreate: RelayDocumentCreate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayDocumentCreate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCreateResponses,
+      V2RelayDocumentCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay document
+   *
+   * Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayDocumentRemoveResponses,
+      V2RelayDocumentRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get Relay document
+   *
+   * One document with its checksum and published version.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayDocumentGetResponses, V2RelayDocumentGetErrors, ThrowOnError>({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Save Relay document
+   *
+   * Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayDocumentUpdate: RelayDocumentUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayDocumentUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<
+      V2RelayDocumentUpdateResponses,
+      V2RelayDocumentUpdateErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List document versions
+   *
+   * A document's saved versions, newest first.
+   */
+  public versions<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionsResponses,
+      V2RelayDocumentVersionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get document version
+   *
+   * One saved version of a document.
+   */
+  public version<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      versionID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "path", key: "versionID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentVersionResponses,
+      V2RelayDocumentVersionErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/version/{versionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Compile workflow
+   *
+   * Compile a workflow document to its sprint and the skill bindings resolved from the skill catalog.
+   */
+  public sprint<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentSprintResponses,
+      V2RelayDocumentSprintErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/sprint",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Export Relay document
+   *
+   * A hook document as its relay.hook.v1 export, a workflow document as its compiled sprint.
+   */
+  public export<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentExportResponses,
+      V2RelayDocumentExportErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/export",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Check workflow step
+   *
+   * Grade one step of a workflow in the project directory without recording anything or charging retries.
+   */
+  public check<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayCheckInput: RelayCheckInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayCheckInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayDocumentCheckResponses,
+      V2RelayDocumentCheckErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/check",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * List Relay node types
+   *
+   * The workflow and hook node catalogs.
+   */
+  public nodeTypes<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      V2RelayDocumentNodeTypesResponses,
+      V2RelayDocumentNodeTypesErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/node-types",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Scope extends HeyApiClient {
+  /**
+   * List Relay scopes
+   *
+   * The project's document scopes.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayScopeListResponses, V2RelayScopeListErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Create Relay scope
+   *
+   * Create a scope. A name equal to another scope's under case folding is a 409 duplicate-scope.
+   */
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayScopeCreateResponses, V2RelayScopeCreateErrors, ThrowOnError>({
+      url: "/api/relay/scope",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete Relay scope
+   *
+   * Delete a scope and remove it from every document's tags.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2RelayScopeRemoveResponses, V2RelayScopeRemoveErrors, ThrowOnError>(
+      {
+        url: "/api/relay/scope/{scopeID}",
+        ...options,
+        ...params,
+      },
+    )
+  }
+
+  /**
+   * Update Relay scope
+   *
+   * Rename or describe a scope.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      scopeID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayScopeInput: RelayScopeInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "scopeID" },
+            { in: "query", key: "location" },
+            { key: "relayScopeInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayScopeUpdateResponses, V2RelayScopeUpdateErrors, ThrowOnError>({
+      url: "/api/relay/scope/{scopeID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Publish extends HeyApiClient {
+  /**
+   * Publish Relay document
+   *
+   * Publish the document's current version once it compiles. The signed-in principal is recorded as publishedBy.
+   */
+  public publish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayPublishInput: RelayPublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayPublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishPublishResponses,
+      V2RelayPublishPublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/publish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Unpublish Relay document
+   *
+   * Withdraw the published version. The signed-in principal is recorded as unpublishedBy.
+   */
+  public unpublish<ThrowOnError extends boolean = false>(
+    parameters: {
+      documentID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayUnpublishInput: RelayUnpublishInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "documentID" },
+            { in: "query", key: "location" },
+            { key: "relayUnpublishInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2RelayPublishUnpublishResponses,
+      V2RelayPublishUnpublishErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/document/{documentID}/unpublish",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Hook extends HeyApiClient {
+  /**
+   * List installed hooks
+   *
+   * The project's installed hooks in evaluation order. A corrupt hooks.json is a 409 profile-invalid.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2RelayHookListResponses, V2RelayHookListErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Install hook
+   *
+   * Pin the published version of a hook document for every session of the project, recording the signed-in principal.
+   */
+  public install<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookInstallInput: RelayHookInstallInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookInstallInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookInstallResponses, V2RelayHookInstallErrors, ThrowOnError>({
+      url: "/api/relay/hook",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Update installed hook
+   *
+   * Repin an install to its document's published version, keeping its ID, order and enabled state.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookUpdateInput: RelayHookUpdateInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+            { key: "relayHookUpdateInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookUpdateResponses, V2RelayHookUpdateErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/update",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Enable installed hook
+   *
+   * Enable an install; recorded.
+   */
+  public enable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookEnableResponses, V2RelayHookEnableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/enable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Disable installed hook
+   *
+   * Disable an install; recorded.
+   */
+  public disable<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookDisableResponses, V2RelayHookDisableErrors, ThrowOnError>({
+      url: "/api/relay/hook/{installID}/disable",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Reorder installed hooks
+   *
+   * Set the evaluation order. The list must name every install exactly once, else 409 order-mismatch.
+   */
+  public order<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookOrderInput: RelayHookOrderInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookOrderInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2RelayHookOrderResponses, V2RelayHookOrderErrors, ThrowOnError>({
+      url: "/api/relay/hook/order",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Uninstall hook
+   *
+   * Remove an install; recorded. Its ledger is kept.
+   */
+  public uninstall<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2RelayHookUninstallResponses,
+      V2RelayHookUninstallErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List hook decisions
+   *
+   * The most recent 500 decisions in the install's ledger, oldest first.
+   */
+  public decisions<ThrowOnError extends boolean = false>(
+    parameters: {
+      installID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "installID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2RelayHookDecisionsResponses,
+      V2RelayHookDecisionsErrors,
+      ThrowOnError
+    >({
+      url: "/api/relay/hook/{installID}/decisions",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Repair hooks.json
+   *
+   * Only on this explicit request: a corrupt hooks.json (a regular file that does not decode or verify, or is over the size cap) is moved aside to a backup and replaced by an empty install list. A valid file, a symlink, a non-file or an unreadable file is never touched and answers 409.
+   */
+  public repair<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      relayHookRepairInput: RelayHookRepairInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "relayHookRepairInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2RelayHookRepairResponses, V2RelayHookRepairErrors, ThrowOnError>({
+      url: "/api/relay/hook/repair",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Relay extends HeyApiClient {
+  private _document?: Document
+  get document(): Document {
+    return (this._document ??= new Document({ client: this.client }))
+  }
+
+  private _scope?: Scope
+  get scope(): Scope {
+    return (this._scope ??= new Scope({ client: this.client }))
+  }
+
+  private _publish?: Publish
+  get publish(): Publish {
+    return (this._publish ??= new Publish({ client: this.client }))
+  }
+
+  private _hook?: Hook
+  get hook(): Hook {
+    return (this._hook ??= new Hook({ client: this.client }))
+  }
+}
+
 export class PullRequest extends HeyApiClient {
   /**
    * List open pull requests
@@ -7751,6 +8780,11 @@ export class V2 extends HeyApiClient {
   private _projectCopy?: ProjectCopy2
   get projectCopy(): ProjectCopy2 {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
+  }
+
+  private _relay?: Relay
+  get relay(): Relay {
+    return (this._relay ??= new Relay({ client: this.client }))
   }
 
   private _pullRequest?: PullRequest

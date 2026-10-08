@@ -184,7 +184,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-
 [data-orchestra-palette="graphite"] .orchestra-pending-dot {
   background: var(--v2-state-fg-warning);
 }
-[data-orchestra-palette="graphite"] :is(.orchestra-wip-chip, .orchestra-wip-mark) {
+[data-orchestra-palette="graphite"] :is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
   border: 1px solid var(--orchestra-border-muted);
   background: var(--orchestra-wip-background);
   color: var(--orchestra-wip-text);
@@ -244,7 +244,8 @@ html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-
 [data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }
-[data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-wip-chip {
+[data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-wip-chip,
+[data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-attention-chip {
   border: 0;
   background: var(--orchestra-wip-text);
 }

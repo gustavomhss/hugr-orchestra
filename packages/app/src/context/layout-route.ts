@@ -13,8 +13,9 @@ export const currentRoute = (pathname: string, search: string): LayoutRoute => {
   const parts = pathname.split("/").filter(Boolean)
   if (parts.length === 0) return { type: "home" }
 
-  // Orchestra chapter pages belong to the selected Home profile, not to a server route.
-  if (parts[0] === "orchestra" && parts[1] && parts.length === 2) return { type: "chapter", chapter: parts[1] }
+  // Orchestra chapter pages belong to the selected Home profile, not to a server route. Deeper segments are
+  // views inside the chapter (a workflow, a run, an open layer).
+  if (parts[0] === "orchestra" && parts[1]) return { type: "chapter", chapter: parts[1] }
 
   if (parts[0] === "new-session") {
     const draftID = new URLSearchParams(search).get("draftId")

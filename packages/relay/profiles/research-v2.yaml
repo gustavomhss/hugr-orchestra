@@ -1,0 +1,431 @@
+name: research-v2
+version: 2.0.0
+description: Research — derived from ACH (competing hypotheses, diagnosticity), GRADE (certainty as arithmetic),
+  the Admiralty code (source reliability apart from item credibility), PRISMA-S (a search someone else could run),
+  grounded theory (constant comparison, memoing, saturation) and Zettelkasten atomicity
+protected: false
+created_at: '2026-08-23T00:00:00Z'
+supersedes: research
+settings:
+  oscillation_detection_threshold: 3
+  auto_loop_on_checklist_failure: true
+output_contract:
+  format: json
+  destination: output/research-v2/{session_id}.json
+  schema:
+    type: object
+    additionalProperties: false
+    required:
+    - question
+    - conclusions
+    - sources
+    properties:
+      question:
+        type: string
+      conclusions:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - id
+          - statement
+          - cites
+          - calibration
+          - would_change
+          properties:
+            id:
+              type: string
+              pattern: ^C-[0-9]+$
+            statement:
+              type: string
+            cites:
+              type: array
+              minItems: 1
+              items:
+                type: string
+                pattern: ^F-[0-9]+$
+            calibration:
+              type: string
+              enum:
+              - proven
+              - likely
+              - undetermined
+            would_change:
+              type: string
+      sources:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+          - id
+          - kind
+          - ref
+          - retrieved_at
+          properties:
+            id:
+              type: string
+              pattern: ^S-[0-9]+$
+            kind:
+              type: string
+              enum:
+              - web
+              - file
+              - command
+            ref:
+              type: string
+            retrieved_at:
+              type: string
+pipeline:
+- state_id: question
+  name: Bind the question
+  description: What is being asked, what would count as an answer, what is out of scope, and what was believed before
+    looking
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: frame
+    type: execute
+    name: Frame
+    description: State the question and the setting; declare each answer criterion as A-<n>; list the exclusions;
+      record the prior belief; enumerate the competing hypotheses H-<n> BEFORE weighing evidence (ACH step 1)
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Question gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - question_stated
+    - answer_shape_declared
+    - out_of_scope_declared
+    - competing_hypotheses_enumerated
+- state_id: survey
+  name: Survey the ground
+  description: What was searched, where, what was deliberately NOT looked at, and every retrieved source frozen
+    and hashed
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: gather
+    type: execute
+    name: Gather
+    description: Register and freeze every source with an Admiralty reliability grade; record each search so someone
+      else could run it; record what was found and excluded, and what was never looked at; declare the stop rule
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Survey gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - sources_registered
+    - source_reliability_rated
+    - search_record_is_reproducible
+    - excluded_sources_recorded
+    - not_searched_declared
+    - retrieved_sources_are_snapshotted
+    - saturation_is_declared
+- state_id: evidence
+  name: Establish the findings
+  description: Each finding carries evidence that resolves to a retrieved source, a verbatim span, and what would
+    refute it
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: establish
+    type: execute
+    name: Establish
+    description: 'Record each finding as it is found: one claim, evidence that resolves to a frozen source, an Admiralty
+      credibility grade, what would refute it, and where it sits against the corpus already held. Memo as you go'
+    enabled: true
+  - id: cold_review
+    type: review
+    name: Cold review
+    description: Apply GROUNDED (the evidence supports the claim), TOOTHED (the falsifier could actually be observed)
+      and ATOMIC (one claim per finding — this one is judgment, not machine-checkable). Write the review; the gate
+      runs its OWN cold reviewer over findings.json and that one decides. Your verdict is not what opens the gate,
+      so record what you actually found rather than what you need it to say
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Evidence gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - findings_registered
+    - every_finding_has_a_falsifier
+    - evidence_traces_to_a_source
+    - quotes_are_verbatim
+    - command_evidence_replays
+    - credibility_is_earned
+    - every_finding_is_compared_to_the_corpus
+    - memos_were_written_during_the_work
+- state_id: contest
+  name: Contest the findings
+  description: For each finding, look for what contradicts it; record the contradiction resolved or declared open
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: challenge
+    type: execute
+    name: Challenge
+    description: Score every finding against EVERY hypothesis, mark what is non-diagnostic, and record each contradiction
+      resolved or declared open (ACH matrix)
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Contest gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - every_finding_contested
+    - contest_records_what_was_searched
+    - every_finding_scored_against_every_hypothesis
+    - non_diagnostic_findings_are_marked
+    - hypotheses_are_refuted_or_survival_is_declared
+    - contradictions_are_resolved_or_declared_open
+- state_id: synthesis
+  name: Conclude
+  description: Conclusions cite findings, carry a calibration the evidence supports, and name what would change
+    them
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: conclude
+    type: execute
+    name: Conclude
+    description: 'Declare the calibration policy FIRST — one rule, over kinds of evidence, fixing the starting
+      level before any conclusion is looked at — then derive each conclusion''s certainty from it: its kind''s
+      starting level, one downgrade per serious concern in a named GRADE domain. Where the four-level scale
+      absorbs a concern or every label ties, say so in floor_disclosure and name what the reader should read
+      instead. Say which A-<n> each conclusion discharges and what would change it'
+    enabled: true
+  - id: cold_review
+    type: review
+    name: Cold review
+    description: Review the calibration POLICY once — is one rule over kinds of evidence sound, and does its
+      floor_disclosure say what the tied labels no longer say? — then apply DERIVED (each conclusion follows
+      from what it cites) and CALIBRATED (the label matches the evidence) to each conclusion AGAINST that
+      policy. The starting level and the arithmetic are settled mechanically by the gate; do not propose a
+      different scheme, review the declared one. Write the review; the gate runs its OWN cold reviewer over
+      conclusions.json and that one decides. Your verdict is not what opens the gate, so record what you actually
+      found rather than what you need it to say
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Synthesis gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - conclusions_cite_findings
+    - calibration_policy_is_declared
+    - starting_level_is_derived
+    - calibration_is_derived
+    - downgrades_name_a_grade_domain
+    - calibration_matches_the_evidence
+    - the_certainty_floor_is_disclosed
+    - every_conclusion_says_what_would_change_it
+    - conclusions_answer_the_question
+- state_id: report
+  name: Write the report
+  description: 'The auditable artifact: every conclusion with its calibration, and every retrieval date the reader
+    is owed'
+  enabled: true
+  max_iterations: 5
+  sub_states:
+  - id: write
+    type: execute
+    name: Write
+    description: 'Write report.md: every conclusion with its certainty, every open contradiction, every hypothesis
+      considered, and every retrieval date'
+    enabled: true
+  - id: gate
+    type: checklist
+    name: Report gate
+    description: Tier 2 validates exit criteria
+    enabled: true
+    criteria:
+    - report_written
+    - report_carries_every_conclusion
+    - report_labels_every_conclusion_with_its_calibration
+    - report_declares_source_age
+    - report_carries_every_open_contradiction
+    - report_states_the_rejected_hypotheses
+    - report_discloses_the_certainty_floor
+    - report_states_the_setting
+    - report_confronts_the_prior_belief
+criteria_map:
+  per_criterion:
+    question_stated: ${research_tools}/../criterion ${research_tools}/research-check question question_stated --research-dir
+      ${research_dir} --repo-root ${repo_root}
+    answer_shape_declared: ${research_tools}/../criterion ${research_tools}/research-check question answer_shape_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    out_of_scope_declared: ${research_tools}/../criterion ${research_tools}/research-check question out_of_scope_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    competing_hypotheses_enumerated: ${research_tools}/../criterion ${research_tools}/research-check question competing_hypotheses_enumerated
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    sources_registered: ${research_tools}/../criterion ${research_tools}/research-check survey sources_registered
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    source_reliability_rated: ${research_tools}/../criterion ${research_tools}/research-check survey source_reliability_rated
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    search_record_is_reproducible: ${research_tools}/../criterion ${research_tools}/research-check survey search_record_is_reproducible
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    excluded_sources_recorded: ${research_tools}/../criterion ${research_tools}/research-check survey excluded_sources_recorded
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    not_searched_declared: ${research_tools}/../criterion ${research_tools}/research-check survey not_searched_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    retrieved_sources_are_snapshotted: ${research_tools}/../criterion ${research_tools}/research-check survey retrieved_sources_are_snapshotted
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    saturation_is_declared: ${research_tools}/../criterion ${research_tools}/research-check survey saturation_is_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    findings_registered: ${research_tools}/../criterion ${research_tools}/research-check evidence findings_registered
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    every_finding_has_a_falsifier: ${research_tools}/../criterion ${research_tools}/research-check evidence every_finding_has_a_falsifier
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    evidence_traces_to_a_source: ${research_tools}/../criterion ${research_tools}/research-check evidence evidence_traces_to_a_source
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    quotes_are_verbatim: ${research_tools}/../criterion ${research_tools}/research-check evidence quotes_are_verbatim
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    command_evidence_replays: ${research_tools}/../criterion ${research_tools}/research-check evidence command_evidence_replays
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    credibility_is_earned: ${research_tools}/../criterion ${research_tools}/research-check evidence credibility_is_earned
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    every_finding_is_compared_to_the_corpus: ${research_tools}/../criterion ${research_tools}/research-check evidence
+      every_finding_is_compared_to_the_corpus --research-dir ${research_dir} --repo-root ${repo_root}
+    memos_were_written_during_the_work: ${research_tools}/../criterion ${research_tools}/research-check evidence
+      memos_were_written_during_the_work --research-dir ${research_dir} --repo-root ${repo_root}
+    every_finding_contested: ${research_tools}/../criterion ${research_tools}/research-check contest every_finding_contested
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    contest_records_what_was_searched: ${research_tools}/../criterion ${research_tools}/research-check contest contest_records_what_was_searched
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    every_finding_scored_against_every_hypothesis: ${research_tools}/../criterion ${research_tools}/research-check
+      contest every_finding_scored_against_every_hypothesis --research-dir ${research_dir} --repo-root ${repo_root}
+    non_diagnostic_findings_are_marked: ${research_tools}/../criterion ${research_tools}/research-check contest
+      non_diagnostic_findings_are_marked --research-dir ${research_dir} --repo-root ${repo_root}
+    hypotheses_are_refuted_or_survival_is_declared: ${research_tools}/../criterion ${research_tools}/research-check
+      contest hypotheses_are_refuted_or_survival_is_declared --research-dir ${research_dir} --repo-root ${repo_root}
+    contradictions_are_resolved_or_declared_open: ${research_tools}/../criterion ${research_tools}/research-check
+      contest contradictions_are_resolved_or_declared_open --research-dir ${research_dir} --repo-root ${repo_root}
+    conclusions_cite_findings: ${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_cite_findings
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    calibration_policy_is_declared: ${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_policy_is_declared
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    starting_level_is_derived: ${research_tools}/../criterion ${research_tools}/research-check synthesis starting_level_is_derived
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    calibration_is_derived: ${research_tools}/../criterion ${research_tools}/research-check synthesis calibration_is_derived
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    downgrades_name_a_grade_domain: ${research_tools}/../criterion ${research_tools}/research-check synthesis downgrades_name_a_grade_domain
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    calibration_matches_the_evidence: ${research_tools}/../criterion ${research_tools}/research-check synthesis
+      calibration_matches_the_evidence --research-dir ${research_dir} --repo-root ${repo_root}
+    the_certainty_floor_is_disclosed: ${research_tools}/../criterion ${research_tools}/research-check synthesis the_certainty_floor_is_disclosed
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    every_conclusion_says_what_would_change_it: ${research_tools}/../criterion ${research_tools}/research-check
+      synthesis every_conclusion_says_what_would_change_it --research-dir ${research_dir} --repo-root ${repo_root}
+    conclusions_answer_the_question: ${research_tools}/../criterion ${research_tools}/research-check synthesis conclusions_answer_the_question
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_written: ${research_tools}/../criterion ${research_tools}/research-check report report_written --research-dir
+      ${research_dir} --repo-root ${repo_root}
+    report_carries_every_conclusion: ${research_tools}/../criterion ${research_tools}/research-check report report_carries_every_conclusion
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_labels_every_conclusion_with_its_calibration: ${research_tools}/../criterion ${research_tools}/research-check
+      report report_labels_every_conclusion_with_its_calibration --research-dir ${research_dir} --repo-root ${repo_root}
+    report_declares_source_age: ${research_tools}/../criterion ${research_tools}/research-check report report_declares_source_age
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_carries_every_open_contradiction: ${research_tools}/../criterion ${research_tools}/research-check report
+      report_carries_every_open_contradiction --research-dir ${research_dir} --repo-root ${repo_root}
+    report_states_the_rejected_hypotheses: ${research_tools}/../criterion ${research_tools}/research-check report
+      report_states_the_rejected_hypotheses --research-dir ${research_dir} --repo-root ${repo_root}
+    report_discloses_the_certainty_floor: ${research_tools}/../criterion ${research_tools}/research-check report report_discloses_the_certainty_floor
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_states_the_setting: ${research_tools}/../criterion ${research_tools}/research-check report report_states_the_setting
+      --research-dir ${research_dir} --repo-root ${repo_root}
+    report_confronts_the_prior_belief: ${research_tools}/../criterion ${research_tools}/research-check report report_confronts_the_prior_belief
+      --research-dir ${research_dir} --repo-root ${repo_root}
+  per_sub:
+    question.frame:
+    - id: question-written
+      assert: this state wrote the bound question
+      cmd: test -s ${research_dir}/question.json
+    survey.gather:
+    - id: sources-written
+      assert: this state wrote the source register
+      cmd: test -s ${research_dir}/sources.json
+    evidence.establish:
+    - id: findings-written
+      assert: this state wrote the findings register
+      cmd: test -s ${research_dir}/findings.json
+    - id: memos-written
+      assert: this state wrote analytic memos as it worked
+      cmd: test -s ${research_dir}/memos.json
+    evidence.cold_review:
+    - id: evidence-withstands-cold-review
+      paths:
+      - ${research_dir}/findings.json
+      judge: >-
+        Read the findings in the diff and judge them yourself; you are the cold reviewer, not a grader of one.
+        Apply GROUNDED (the recorded evidence really supports the claim, and the quoted span covers every
+        qualifier, comparison, subject and connector the claim uses), TOOTHED (the falsifier is a concrete
+        observation someone could make) and ATOMIC (one claim per finding). PASS only if every finding in the
+        diff satisfies all three. FAIL and name the finding ids if any does not. Do not consider whether a
+        review file approved them.
+      diff: true
+      blocking: true
+    - id: evidence-review-is-substantive
+      assert: the review carries at least 250 characters of findings
+      cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-evidence.json)" -ge 250
+    - id: evidence-review-engages-with-the-diff
+      context:
+      - ${research_dir}/review-evidence.json
+      paths:
+      - ${research_dir}/findings.json
+      judge: Does this review apply GROUNDED (the evidence really supports the claim), TOOTHED (the falsifier is
+        a concrete observation) and ATOMIC (one claim per finding) to the findings in the diff, by id? FAIL if it
+        approves or rejects without naming specific items from the diff, if it makes a claim the diff does not support,
+        if it is generic enough to apply to any artifact of this kind, or if it leaves part of the diff unjudged.
+      diff: true
+      blocking: true
+    contest.challenge:
+    - id: contest-written
+      assert: this state wrote the contest record
+      cmd: test -s ${research_dir}/contest.json
+    synthesis.conclude:
+    - id: conclusions-written
+      assert: this state wrote the conclusions
+      cmd: test -s ${research_dir}/conclusions.json
+    synthesis.cold_review:
+    - id: conclusions-withstand-cold-review
+      paths:
+      - ${research_dir}/conclusions.json
+      judge: >-
+        Read the conclusions in the diff and judge them yourself; you are the cold reviewer, not a grader of
+        one. For each conclusion, ask three questions. Does it follow from the findings it cites, or does it
+        reach past them? Does the declared calibration_policy justify its starting level as a property of the
+        KIND of evidence rather than of the claim? Is each downgrade a real concern in the domain it names?
+        PASS only if every conclusion in the diff holds. FAIL and name the conclusion ids if any does not. The
+        GRADE arithmetic is already checked mechanically by the gate — do not re-derive it, and do not propose
+        a different calibration scheme. Do not consider whether a review file approved them.
+      diff: true
+      blocking: true
+    - id: synthesis-review-is-substantive
+      assert: the review carries at least 250 characters of findings
+      cmd: test "$(jq -r '.findings // "" | length' ${research_dir}/review-synthesis.json)" -ge 250
+    - id: synthesis-review-engages-with-the-diff
+      context:
+      - ${research_dir}/review-synthesis.json
+      paths:
+      - ${research_dir}/conclusions.json
+      judge: Does this review check the declared calibration_policy AND each conclusion in the diff
+        against the findings it cites and against its downgrades, by id? FAIL if it approves or rejects without naming
+        specific items from the diff, if it makes a claim the diff does not support, if it is generic enough to
+        apply to any artifact of this kind, or if it leaves part of the diff unjudged.
+      diff: true
+      blocking: true
+    report.write:
+    - id: report-written-here
+      assert: this state wrote the report
+      cmd: test -s ${research_dir}/report.md

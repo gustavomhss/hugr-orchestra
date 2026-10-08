@@ -19,6 +19,21 @@ describe("settings sections", () => {
 })
 
 describe("permission defaults", () => {
+  test("permission defaults finish on repeated-star rules", async () => {
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        "--eval",
+        `import { permissionAction } from ${JSON.stringify(new URL("./settings-data.ts", import.meta.url).href)};
+         console.log(permissionAction({ ["*".repeat(32) + "z"]: "deny" }, "external_directory"));`,
+      ],
+      { cwd: import.meta.dir, stdout: "pipe", stderr: "pipe" },
+    )
+    const timer = setTimeout(() => child.kill(), 5_000)
+    expect(await child.exited.finally(() => clearTimeout(timer))).toBe(0)
+    expect((await new Response(child.stdout).text()).trim()).toBe("ask")
+  })
+
   test("an empty config follows the server's built-in rules", () => {
     expect(permissionAction(undefined, "read")).toBe("allow")
     expect(permissionAction({}, "bash")).toBe("allow")
@@ -33,6 +48,9 @@ describe("permission defaults", () => {
     expect(permissionAction({ "*": "deny" }, "doom_loop")).toBe("deny")
     expect(permissionAction({ "web*": "deny" }, "webfetch")).toBe("deny")
     expect(permissionAction({ "web*": "deny" }, "bash")).toBe("allow")
+    expect(permissionAction({ "web?etch": "deny" }, "webfetch")).toBe("deny")
+    expect(permissionAction({ WEBFETCH: "deny" }, "webfetch")).toBe("allow")
+    expect(permissionAction({ "web\\*": "deny" }, "webfetch")).toBe("allow")
   })
 
   test('a string config is a wildcard, and only a rule\'s "*" pattern sets the default', () => {

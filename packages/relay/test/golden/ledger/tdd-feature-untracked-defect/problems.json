@@ -1,0 +1,10 @@
+{
+  "ledger": "test/fixtures/tdd-feature-untracked-defect.ledger.jsonl",
+  "problems": [
+    {
+      "category": "gate-failing",
+      "wp": "implement.checklist",
+      "cause": "retry 1: tests_written"
+    }
+  ]
+}

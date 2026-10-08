@@ -391,21 +391,21 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 911,
-      "reason": "Generated V2 HttpApi Effect client (packages/client bun run generate); splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "maximumLines": 1142,
+      "reason": "Generated Effect V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule groups.",
+      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
       "authorizedAt": "2026-10-06"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1243,
-      "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Raised from 1111 to 1150 by the regenerated pull request and behavior routes.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "maximumLines": 1635,
+      "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule groups.",
+      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
       "authorizedAt": "2026-10-06"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 3049,
-      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "maximumLines": 6633,
+      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule groups.",
+      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
       "authorizedAt": "2026-10-06"
     },
     "packages/orchestra/src/provider/provider.ts": {
@@ -433,15 +433,15 @@
       "authorizedAt": "2026-09-09"
     },
     "packages/sdk/js/src/v2/gen/sdk.gen.ts": {
-      "maximumLines": 7977,
-      "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "maximumLines": 8691,
+      "reason": "@hey-api/OpenAPI generated V2 SDK output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request and schedule routes.",
+      "authorizedBy": "owner (gustavomhss), generated-file waivers (RELAY-PORT-PLAN §10)",
       "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 16352,
-      "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for behavior, pull request and schedule routes",
+      "maximumLines": 16592,
+      "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request, schedule routes and relay.hook.decided event.",
+      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for the Relay HttpApi and the relay.hook.decided event",
       "authorizedAt": "2026-10-06"
     }
   }

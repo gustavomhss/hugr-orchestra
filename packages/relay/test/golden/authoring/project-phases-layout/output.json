@@ -1,0 +1,294 @@
+{
+  "name": "Phases",
+  "nodes": [
+    {
+      "id": "relay-start",
+      "name": "Workflow start",
+      "type": "relay.startTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        240
+      ],
+      "parameters": {
+        "relayBrief": "Phases",
+        "relayRetryBudget": 3
+      }
+    },
+    {
+      "id": "a",
+      "name": "a",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "parameters": {
+        "title": "",
+        "macro": "m1",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "b",
+      "name": "b",
+      "type": "relay.gate",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "parameters": {
+        "title": "",
+        "macro": "m1",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "c",
+      "name": "c",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        240
+      ],
+      "parameters": {
+        "title": "",
+        "macro": "m2",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "d",
+      "name": "d",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        240,
+        528
+      ],
+      "parameters": {
+        "title": "",
+        "macro": "",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "e",
+      "name": "E",
+      "type": "relay.execute",
+      "typeVersion": 1,
+      "position": [
+        912,
+        528
+      ],
+      "parameters": {
+        "title": "E",
+        "macro": "m3",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "",
+        "file": ""
+      }
+    },
+    {
+      "id": "f",
+      "name": "f",
+      "type": "relay.inject",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        528
+      ],
+      "parameters": {
+        "title": "",
+        "macro": "m3",
+        "instructions": "",
+        "checklist": "[]",
+        "skill": "",
+        "skillMode": "combine",
+        "text": "t",
+        "file": "f.md"
+      }
+    }
+  ],
+  "connections": {
+    "a": {
+      "main": [
+        [
+          {
+            "node": "b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "b": {
+      "main": [
+        [
+          {
+            "node": "c",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "c": {
+      "main": [
+        [
+          {
+            "node": "d",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "d": {
+      "main": [
+        [
+          {
+            "node": "E",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E": {
+      "main": [
+        [
+          {
+            "node": "f",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow start": {
+      "main": [
+        [
+          {
+            "node": "a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [
+    {
+      "id": "m1",
+      "name": "One",
+      "description": "first",
+      "nodeIds": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "id": "m2",
+      "name": "m2",
+      "description": "second",
+      "nodeIds": [
+        "c"
+      ]
+    },
+    {
+      "id": "m3",
+      "name": "m3",
+      "description": "",
+      "nodeIds": [
+        "e",
+        "f"
+      ]
+    }
+  ],
+  "tags": [],
+  "meta": {
+    "relay": {
+      "schema": 1,
+      "kind": "workflow",
+      "sprint": {
+        "brief": "Phases",
+        "macros": [
+          {
+            "id": "m1",
+            "title": "One",
+            "instructions": "first"
+          },
+          {
+            "id": "m2",
+            "instructions": "second"
+          }
+        ],
+        "work_packages": [
+          {
+            "id": "a",
+            "macro": "m1"
+          },
+          {
+            "id": "b",
+            "macro": "m1",
+            "kind": "gate"
+          },
+          {
+            "id": "c",
+            "macro": "m2"
+          },
+          {
+            "id": "d"
+          },
+          {
+            "id": "e",
+            "macro": "m3",
+            "title": "E"
+          },
+          {
+            "id": "f",
+            "macro": "m3",
+            "kind": "inject",
+            "text": "t",
+            "file": "f.md"
+          }
+        ]
+      },
+      "names": {
+        "a": "a",
+        "b": "b",
+        "c": "c",
+        "d": "d",
+        "e": "E",
+        "f": "f"
+      }
+    }
+  }
+}

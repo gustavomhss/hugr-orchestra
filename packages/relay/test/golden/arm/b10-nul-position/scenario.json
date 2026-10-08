@@ -1,0 +1,26 @@
+{
+  "sprint": {
+    "work_packages": [
+      {
+        "id": "target",
+        "instructions": "do target",
+        "checklist": [
+          {
+            "id": "target-ok",
+            "cmd": "true"
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "workdir": "<workdir>"
+  },
+  "prestate": {
+    "position": "target\u0000\n",
+    "counter": "0\n"
+  },
+  "fires": [
+    {}
+  ]
+}

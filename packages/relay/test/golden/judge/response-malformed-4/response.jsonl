@@ -1,0 +1,1 @@
+{"verdict": "fail", "reason": "api error: response content must be a list of objects", "backend": "api-error:test-model", "available": false}

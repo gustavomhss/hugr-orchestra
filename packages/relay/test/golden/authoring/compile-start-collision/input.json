@@ -1,0 +1,75 @@
+{
+  "op": "compile",
+  "document": {
+    "name": "Start collision",
+    "nodes": [
+      {
+        "id": "relay-start-start",
+        "name": "Workflow start · start",
+        "type": "relay.startTrigger",
+        "typeVersion": 1,
+        "position": [
+          16,
+          240
+        ],
+        "parameters": {
+          "relayBrief": "",
+          "relayRetryBudget": 3
+        }
+      },
+      {
+        "id": "relay-start",
+        "name": "Workflow start",
+        "type": "relay.execute",
+        "typeVersion": 1,
+        "position": [
+          240,
+          240
+        ],
+        "parameters": {
+          "title": "Workflow start",
+          "macro": "",
+          "instructions": "",
+          "checklist": "[]",
+          "skill": "",
+          "skillMode": "combine",
+          "text": "",
+          "file": ""
+        }
+      }
+    ],
+    "connections": {
+      "Workflow start · start": {
+        "main": [
+          [
+            {
+              "node": "Workflow start",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "tags": [],
+    "meta": {
+      "relay": {
+        "schema": 1,
+        "kind": "workflow",
+        "sprint": {
+          "work_packages": [
+            {
+              "id": "relay-start",
+              "title": "Workflow start",
+              "checklist": []
+            }
+          ]
+        },
+        "names": {
+          "relay-start": "Workflow start"
+        }
+      }
+    }
+  }
+}

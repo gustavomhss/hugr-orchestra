@@ -27,6 +27,11 @@ export const keptPaths: Kept[] = [
     requires: "packages/relay",
   },
   {
+    path: /^packages\/relay\/test\/golden\/PARITY-EXCEPTIONS\.md$/,
+    reason: "frozen golden corpus exception register; historical test paths retain pre-rename provenance",
+    requires: "packages/relay",
+  },
+  {
     path: /^packages\/desktop\/docs\/plans\/dock-accessibility\/(?:recovery-\d+|handoff(?:-claude)?)\.md$/,
     reason: "recovery and handoff records that cite the real paths of past sessions",
   },

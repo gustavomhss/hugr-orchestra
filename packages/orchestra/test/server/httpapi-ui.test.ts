@@ -285,7 +285,13 @@ describe("HttpApi UI fallback", () => {
   // should bypass auth.
   it.live("serves the PWA manifest without auth even when a server password is set", () =>
     Effect.gen(function* () {
-      for (const path of ["/site.webmanifest", "/web-app-manifest-192x192.png", "/web-app-manifest-512x512.png"]) {
+      for (const path of [
+        "/site.webmanifest",
+        "/android-chrome-192x192.png",
+        "/android-chrome-512x512.png",
+        "/maskable-192x192.png",
+        "/maskable-512x512.png",
+      ]) {
         const response = yield* uiApp({
           password: "secret",
           username: "orchestra",

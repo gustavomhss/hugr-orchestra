@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { FileSystem, Integration, MaestroEvent, Permission, Project, Reference, Session, Workspace } from "../src"
 import { EventManifest } from "../src/event-manifest"
 import { IdeEvent } from "../src/ide-event"
+import { RelayHook } from "../src/relay-hook"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
 import { SessionV1 } from "../src/session-v1"
@@ -9,8 +10,8 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(81)
-    expect(EventManifest.Definitions.length).toBe(111)
+    expect(EventManifest.ServerDefinitions.length).toBe(82)
+    expect(EventManifest.Definitions.length).toBe(112)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -23,8 +24,8 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(103)
-    expect(EventManifest.Durable.size).toBe(58)
+    expect(EventManifest.Latest.size).toBe(104)
+    expect(EventManifest.Durable.size).toBe(59)
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -77,5 +78,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.1")).toBe(MaestroEvent.Dispatch.Reserved)
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.2")).toBe(MaestroEvent.Dispatch.ReservedV2)
     expect(EventManifest.Durable.get("maestro.task.bound.1")).toBe(MaestroEvent.Task.Bound)
+    expect(EventManifest.Latest.get("relay.hook.decided")).toBe(RelayHook.Decided)
+    expect(EventManifest.Durable.get("relay.hook.decided.1")).toBe(RelayHook.Decided)
   })
 })

@@ -1,0 +1,32 @@
+{
+  "generator": "test/golden/generate/authoring.py",
+  "oracle": {
+    "bin/relay-spec.py": "0c551fca206a37bd306a55494845336651cd46105d8a9fd06e5858561df8f6dd",
+    "lib/relay_authoring/__init__.py": "e6e40854a7269b7b457bf4e914b06fb7e2a6966c87a57a377a89a3b200d86cad",
+    "lib/relay_authoring/config.py": "cf0146ca49ab8025429449eae3659f546b6f6892a93f1f54e187980e7c4eac73",
+    "lib/relay_authoring/graph.py": "c674fcb716c3fb61c4fb1d51de1ec0e66d0de5edd8ecfafeb3d8d032a89d662d",
+    "lib/relay_authoring/hooks.py": "c4094bd9564ec0826b61216fe45faa6326cf5794c71275f82579e847b3e481be",
+    "lib/relay_authoring/store.py": "68a38b0b6bf0074fa659cda938b49c4886b7333e3cf80f39a37924c9152bc11c"
+  },
+  "tools": {
+    "jq": "jq-1.8.1",
+    "python3": "3.14.5",
+    "bash": "5.3.3(1)-release",
+    "git": "git version 2.51.0",
+    "openssl": "LibreSSL 3.3.6",
+    "sqlite": "3.53.1"
+  },
+  "cwd": "packages/relay",
+  "env": {
+    "PATH": "<tmp>/bin (fake date, links to the tools above), /usr/bin, /bin",
+    "HOME": "<tmp>/home",
+    "PYTHONHASHSEED": "0",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUTF8": "1"
+  },
+  "epoch": 1700000000,
+  "keys": {
+    "keyed": "relay-golden-ledger-key",
+    "wrong-key": "relay-golden-wrong-key"
+  }
+}

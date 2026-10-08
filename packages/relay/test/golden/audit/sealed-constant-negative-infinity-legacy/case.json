@@ -1,0 +1,6 @@
+{
+  "target": "test/golden/audit/sealed-constant-negative-infinity-legacy/input/ledger.jsonl",
+  "verify": [],
+  "key": null,
+  "chmod": {}
+}

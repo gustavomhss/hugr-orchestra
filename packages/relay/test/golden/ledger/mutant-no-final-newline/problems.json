@@ -1,0 +1,4 @@
+{
+  "ledger": "test/fixtures/mutants/no-final-newline.ledger.jsonl",
+  "problems": []
+}
