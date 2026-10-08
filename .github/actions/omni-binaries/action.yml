@@ -17,7 +17,7 @@ runs:
         path: |
           packages/omni/target/release/*hugr_omni_node.*
           packages/omni/target/release/hugr-omni-supervisor*
-        key: omni-bin-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/omni/crates/**', 'packages/omni/Cargo.lock', 'packages/omni/bindings/node/src/**', 'packages/omni/bindings/node/Cargo.toml', 'packages/omni/bindings/node/build.rs') }}
+        key: omni-bin-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/omni/crates/**', 'packages/omni/Cargo.toml', 'packages/omni/Cargo.lock', 'packages/omni/rust-toolchain.toml', 'packages/omni/.cargo/**', 'packages/omni/bindings/node/src/**', 'packages/omni/bindings/node/Cargo.toml', 'packages/omni/bindings/node/build.rs') }}
 
     - name: Build omni binaries (cache miss)
       if: steps.restore.outputs.cache-hit != 'true'

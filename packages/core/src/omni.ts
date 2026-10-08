@@ -74,7 +74,9 @@ export function locate(given: Paths = injected): Found {
     const found = { addon: explicit.addon, supervisor: explicit.supervisor ?? sibling(explicit.addon, SUPERVISOR) }
     const missing = Object.entries(found).filter(([, file]) => !existsSync(file))
     if (missing.length > 0)
-      throw new Error(`hugr-omni: the configured ${missing.map(([kind, file]) => `${kind} ${file} does not exist`).join("; ")}.`)
+      throw new Error(
+        `hugr-omni: the configured ${missing.map(([kind, file]) => `${kind} ${file} does not exist`).join("; ")}.`,
+      )
     return found
   }
   if (explicit.supervisor !== undefined && !existsSync(explicit.supervisor))
@@ -94,7 +96,9 @@ export function locate(given: Paths = injected): Found {
       supervisor: path.join(target, profile, SUPERVISOR),
     })),
   ]
-  const pair = locations.find((entry) => existsSync(entry.addon) && (explicit.supervisor !== undefined || existsSync(entry.supervisor)))
+  const pair = locations.find(
+    (entry) => existsSync(entry.addon) && (explicit.supervisor !== undefined || existsSync(entry.supervisor)),
+  )
   const addon = pair?.addon
   const supervisor = explicit.supervisor ?? pair?.supervisor
   if (addon && supervisor) return { addon, supervisor }

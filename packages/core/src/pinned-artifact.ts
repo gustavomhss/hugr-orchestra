@@ -98,15 +98,26 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
   const out = path.join(directory, "out")
   yield* step("filesystem", () => mkdir(out))
   yield* step("filesystem", () =>
-    writeFile(extractor ? path.join(directory, `archive.${artifact.format}`) : path.join(out, path.posix.basename(new URL(artifact.url).pathname)), bytes),
+    writeFile(
+      extractor
+        ? path.join(directory, `archive.${artifact.format}`)
+        : path.join(out, path.posix.basename(new URL(artifact.url).pathname)),
+      bytes,
+    ),
   )
   if (extractor)
     yield* Effect.gen(function* () {
       const processService = yield* AppProcess.Service
-      const result = yield* processService.run(
-        ChildProcess.make(extractor[0], extractor.slice(1), { cwd: directory, env: process.env, forceKillAfter: "5 seconds" }),
-        { timeout: EXTRACT_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
-      ).pipe(Effect.flatMap(AppProcess.requireSuccess))
+      const result = yield* processService
+        .run(
+          ChildProcess.make(extractor[0], extractor.slice(1), {
+            cwd: directory,
+            env: process.env,
+            forceKillAfter: "5 seconds",
+          }),
+          { timeout: EXTRACT_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
+        )
+        .pipe(Effect.flatMap(AppProcess.requireSuccess))
       if (result.stdoutTruncated || result.stderrTruncated) return yield* new Failed({ cause: "extract" })
     }).pipe(
       Effect.provide(LayerNode.compile(AppProcess.node)),

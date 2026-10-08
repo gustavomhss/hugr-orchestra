@@ -1,0 +1,95 @@
+name: omni-delivery-campaign
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/omni-delivery-campaign.yml"
+      - "packages/omni/campaign/**"
+      - "packages/omni/crates/**"
+      - "packages/omni/bindings/node/**"
+      - "packages/omni/Cargo.toml"
+      - "packages/omni/Cargo.lock"
+      - "packages/omni/rust-toolchain.toml"
+      - "packages/omni/.cargo/**"
+      - ".github/actions/omni-binaries/**"
+      - ".github/actions/setup-bun/**"
+      - "bun.lock"
+      - "package.json"
+      - "packages/core/src/process.ts"
+      - "packages/core/src/omni-spawner.ts"
+      - "packages/core/src/cross-spawn-spawner.ts"
+      - "packages/core/src/child-process-common.ts"
+      - "packages/core/src/shell.ts"
+      - "packages/core/src/flag/**"
+      - "packages/core/src/pty.ts"
+      - "packages/core/src/pty/**"
+      - "packages/core/test/fixture/process-tree.ts"
+      - "packages/opencode/src/tool/shell.ts"
+      - "packages/opencode/src/session/prompt.ts"
+      - "packages/opencode/src/cli/cmd/debug/omni.ts"
+      - "packages/opencode/src/cli/omni-entry.ts"
+      - "packages/opencode/script/build.ts"
+      - "packages/core/src/omni.ts"
+
+concurrency:
+  group: omni-delivery-campaign-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  delivery:
+    name: delivery (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Initialize evidence
+        run: mkdir -p packages/omni/campaign/logs
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/omni-binaries
+      - name: Build the real shipped CLI
+        id: build
+        working-directory: packages/opencode
+        run: |
+          # --single takes the exact checkout binaries restored or built by omni-binaries.
+          unset OMNI_ARTIFACTS
+          bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../omni/campaign/logs/build.log
+      - name: V9 shipped artifacts reject loudly within two seconds
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          ORCHESTRA_LOCAL_TESTS: "1"
+        run: bun packages/omni/campaign/v9-broken-artifacts.ts --quiet --mutation --diagnose
+      - name: V8 Windows command lines and complete ConPTY close
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os == 'Windows' }}
+        env:
+          ORCHESTRA_LOCAL_TESTS: "1"
+        run: bun packages/omni/campaign/v8-windows.ts
+      - name: V7 interleaved real caller overhead
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
+        env:
+          ORCHESTRA_LOCAL_TESTS: "1"
+        run: bun packages/omni/campaign/v7-overhead.ts --quiet
+      - name: Record exact scope
+        if: always()
+        env:
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+        run: |
+          node -e 'require("node:fs").writeFileSync("packages/omni/campaign/logs/scope.json", JSON.stringify({ os: process.platform, build: process.env.BUILD_OUTCOME, coverage: { V7: process.platform === "win32" ? "unrun" : "see-verdict", V8: process.platform === "win32" ? "see-verdict" : "not-applicable", V9: "see-verdict" }, wp10Complete: false }))'
+      - name: Preserve evidence, including red and unrun cells
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: omni-delivery-${{ matrix.os }}
+          path: packages/omni/campaign/logs/
+          if-no-files-found: error
+          retention-days: 7

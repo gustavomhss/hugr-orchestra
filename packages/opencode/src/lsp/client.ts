@@ -135,11 +135,19 @@ export async function create(input: {
   )
   input.server.process.stderr?.resume()
   const state = { connected: true, shutdown: undefined as Promise<void> | undefined }
-  connection.onClose(() => { state.connected = false })
-  connection.onDispose(() => { state.connected = false })
+  connection.onClose(() => {
+    state.connected = false
+  })
+  connection.onDispose(() => {
+    state.connected = false
+  })
   void input.server.process.exited?.then(
-    () => { state.connected = false },
-    () => { state.connected = false },
+    () => {
+      state.connected = false
+    },
+    () => {
+      state.connected = false
+    },
   )
   // --- Connection state ---
 

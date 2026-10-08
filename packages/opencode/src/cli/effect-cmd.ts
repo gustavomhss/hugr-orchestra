@@ -90,13 +90,21 @@ export const effectCmd = <Args, A>(opts: EffectCmdOpts<Args, A>) =>
           // Runtime logging is disposed along with the runtime. Keep shutdown evidence independent of its layers.
           const debug = (status: "started" | "disposed" | "timed-out" | "failed", error?: unknown) => {
             if (process.env.OPENCODE_LOG_LEVEL !== "DEBUG") return
-            writeSync(2, `CLI_SHUTDOWN ${JSON.stringify({ event: "cli.shutdown", level: "DEBUG", pid: process.pid, signal, status, elapsedMs: Date.now() - started, ...(error === undefined ? {} : { error: String(error) }) })}\n`)
+            writeSync(
+              2,
+              `CLI_SHUTDOWN ${JSON.stringify({ event: "cli.shutdown", level: "DEBUG", pid: process.pid, signal, status, elapsedMs: Date.now() - started, ...(error === undefined ? {} : { error: String(error) }) })}\n`,
+            )
           }
           debug("started")
           shutdown = Promise.race([
             AppRuntime.dispose().then(() => "disposed" as const),
             Bun.sleep(5_000).then(() => "timed-out" as const),
-          ]).then((status) => debug(status), (error) => debug("failed", error)).finally(() => process.exit())
+          ])
+            .then(
+              (status) => debug(status),
+              (error) => debug("failed", error),
+            )
+            .finally(() => process.exit())
         })
       // yargs typing wraps Args in ArgumentsCamelCase<WithDoubleDash<...>>; cast at the boundary.
       const args = rawArgs as unknown as WithDoubleDash<Args>

@@ -9,7 +9,15 @@ import { LayerNode } from "../effect/layer-node"
 import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
 import { AppProcess } from "../process"
-import { ENGINES, RUNTIMES, type Engine, type EngineId, type HostedEngine, type Runtime, type RuntimeId } from "./manifest"
+import {
+  ENGINES,
+  RUNTIMES,
+  type Engine,
+  type EngineId,
+  type HostedEngine,
+  type Runtime,
+  type RuntimeId,
+} from "./manifest"
 import { detect, type TargetId } from "./target"
 
 // The backend specialist's engines are fetched by the host on first use (the backend seat's shell has no network),
@@ -68,14 +76,19 @@ const RETRY_MS = 5 * 60_000
 const INSTALL_MS = 30 * 60_000
 
 // Keyed by install directory. Concurrent needs share the running fetch, which resolves to its failure cause.
-const attempts = new Map<string, { readonly running?: Promise<string | undefined>; readonly failed?: string; readonly at: number }>()
+const attempts = new Map<
+  string,
+  { readonly running?: Promise<string | undefined>; readonly failed?: string; readonly at: number }
+>()
 
 export const status = Effect.fn("BackendToolkit.status")(function* (engine?: EngineId) {
   const manifest = yield* Manifest
   const host = yield* Target
   const ids = engine ? [engine] : Object.values(manifest).map((item) => item.id)
   if ("unsupported" in host)
-    return ids.map((id): State => ({ engine: id, version: manifest[id].version, status: "unsupported", reason: host.unsupported }))
+    return ids.map(
+      (id): State => ({ engine: id, version: manifest[id].version, status: "unsupported", reason: host.unsupported }),
+    )
   return yield* states(ids, host.target)
 })
 
@@ -87,16 +100,23 @@ export const ensure = Effect.fn("BackendToolkit.ensure")(function* (engine: Engi
 })
 
 /** Fetch engines (all by default) for a target (the host's by default); shims are written only for the host target. */
-export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* (engines?: ReadonlyArray<EngineId>, target?: TargetId) {
+export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* (
+  engines?: ReadonlyArray<EngineId>,
+  target?: TargetId,
+) {
   const manifest = yield* Manifest
   const host = yield* Target
   const ids = engines ?? Object.values(manifest).map((item) => item.id)
   const chosen = target ?? ("target" in host ? host.target : undefined)
   if (!chosen) return yield* status().pipe(Effect.map((all) => all.filter((state) => ids.includes(state.engine))))
-  yield* Effect.forEach(ids, (id) => acquire(id, chosen, "target" in host && host.target === chosen).pipe(Effect.ignore), {
-    concurrency: "unbounded",
-    discard: true,
-  })
+  yield* Effect.forEach(
+    ids,
+    (id) => acquire(id, chosen, "target" in host && host.target === chosen).pipe(Effect.ignore),
+    {
+      concurrency: "unbounded",
+      discard: true,
+    },
+  )
   return yield* states(ids, chosen)
 })
 
@@ -113,7 +133,9 @@ export const prepare = Effect.fn("BackendToolkit.prepare")(function* (command: s
   const named = Object.values(manifest)
     .map((engine) => engine.id)
     .filter((id) =>
-      new RegExp(String.raw`\$(?:env:)?(?:BACKEND_TOOLKIT_BIN|\{BACKEND_TOOLKIT_BIN\})"?[\\/]${id}(?![\w-])`).test(command),
+      new RegExp(String.raw`\$(?:env:)?(?:BACKEND_TOOLKIT_BIN|\{BACKEND_TOOLKIT_BIN\})"?[\\/]${id}(?![\w-])`).test(
+        command,
+      ),
     )
   const blocked = yield* Effect.forEach(named, ensure, { concurrency: "unbounded", discard: true }).pipe(
     Effect.match({ onSuccess: () => undefined, onFailure: (error) => error.reason }),
@@ -135,7 +157,11 @@ const acquire = Effect.fnUntraced(function* (id: EngineId, target: TargetId, hos
       : PinnedArtifact.install(directory, [engine.targets[target].artifact]).pipe(
           Effect.andThen(
             host
-              ? shim(root, engine.id, launcher(process.platform === "win32", [executable(engine, directory, target)], engine.env ?? {}))
+              ? shim(
+                  root,
+                  engine.id,
+                  launcher(process.platform === "win32", [executable(engine, directory, target)], engine.env ?? {}),
+                )
               : Effect.void,
           ),
         )
@@ -176,7 +202,14 @@ const once = Effect.fnUntraced(function* (directory: string, work: Effect.Effect
  * source builds run the target's own interpreter or toolchain, so they install only for the host target.
  * @internal The worker may also run directly with caller-owned cancellation instead of shared admission.
  */
-export function hosted(root: string, engine: HostedEngine, runtime: Runtime, directory: string, target: TargetId, host: boolean) {
+export function hosted(
+  root: string,
+  engine: HostedEngine,
+  runtime: Runtime,
+  directory: string,
+  target: TargetId,
+  host: boolean,
+) {
   const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
   const pin = runtime.targets[target]
   const interpreter = path.join(home, pin.executable)
@@ -190,99 +223,150 @@ export function hosted(root: string, engine: HostedEngine, runtime: Runtime, dir
     Object.fromEntries(env.map(([key, value]) => [key, expand(value)])),
   )
   return Effect.gen(function* () {
-    if (install.kind !== "jar" && !host) return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
+    if (install.kind !== "jar" && !host)
+      return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
     const cause = yield* once(home, PinnedArtifact.install(home, [pin.artifact]))
     if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
-    yield* PinnedArtifact.install(directory, install.kind === "jar" || install.kind === "source" ? [install.artifact] : [], (staging) =>
-      Effect.suspend(() => {
-        const pending: { work?: Promise<void> } = {}
-        return Effect.tryPromise({
-          try: (signal) => pending.work = (async () => {
-            if (install.kind === "npm") {
-              await writeFile(path.join(staging, "package.json"), install.packageJson)
-              await writeFile(path.join(staging, "package-lock.json"), install.lock)
-              // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
-              const npm = windows
-                ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
-                : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
-              await run(interpreter, [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"], staging, {
-                npm_config_cache: path.join(root, "cache", "npm"),
-                npm_config_update_notifier: "false",
-              }, signal)
-            }
-            if (install.kind === "pip") {
-              const requirements = path.join(staging, "requirements.txt")
-              await writeFile(requirements, install.requirements)
-              await run(
-                interpreter,
-                ["-m", "pip", "install", "--require-hashes", "--no-deps", "--only-binary=:all:", "--target", staging, "-r", requirements],
-                staging,
-                { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
-                signal,
-              )
-            }
-            // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
-            if (install.kind === "source" && install.build === "go")
-              await run(interpreter, ["build", "-trimpath", "-o", executable(engine, staging, target), install.path], path.join(staging, "src"), {
-                GOFLAGS: "-mod=readonly",
-                GOTOOLCHAIN: "local",
-                GOPATH: path.join(root, "cache", "go"),
-                GOCACHE: path.join(root, "cache", "go-build"),
-                GOPROXY: "https://proxy.golang.org",
-                GOSUMDB: "sum.golang.org",
-                CGO_ENABLED: "0",
-              }, signal)
-            // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
-            // RUSTC names one, so it names the toolchain's own.
-            if (install.kind === "source" && install.build === "cargo")
-              await run(
-                interpreter,
-                [
-                  "install",
-                  "--path",
-                  path.join(staging, "src", install.path),
-                  "--locked",
-                  "--root",
-                  staging,
-                  "--no-default-features",
-                  ...(install.features?.length ? ["--features", install.features.join(",")] : []),
-                ],
-                path.join(staging, "src"),
-                {
-                  CARGO_HOME: path.join(root, "cache", "cargo"),
-                  CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
-                  RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
-                },
-                signal,
-              )
-            if (install.kind === "source") return access(executable(engine, staging, target))
-            const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
-            await writeFile(file, text)
-            await chmod(file, 0o755)
-          })(),
-          catch: () => new PinnedArtifact.Failed({ cause: `install:${install.kind === "source" ? install.build : install.kind}` }),
-        }).pipe(
-          // tryPromise aborts before its Promise settles. Join the nested root's process finalizers before install()
-          // removes staging, including interruption during the async filesystem work preceding the spawn.
-          Effect.onInterrupt(() => Effect.promise(() => pending.work?.then(() => undefined, () => undefined) ?? Promise.resolve())),
-        )
-      }),
+    yield* PinnedArtifact.install(
+      directory,
+      install.kind === "jar" || install.kind === "source" ? [install.artifact] : [],
+      (staging) =>
+        Effect.suspend(() => {
+          const pending: { work?: Promise<void> } = {}
+          return Effect.tryPromise({
+            try: (signal) =>
+              (pending.work = (async () => {
+                if (install.kind === "npm") {
+                  await writeFile(path.join(staging, "package.json"), install.packageJson)
+                  await writeFile(path.join(staging, "package-lock.json"), install.lock)
+                  // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
+                  const npm = windows
+                    ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
+                    : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
+                  await run(
+                    interpreter,
+                    [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"],
+                    staging,
+                    {
+                      npm_config_cache: path.join(root, "cache", "npm"),
+                      npm_config_update_notifier: "false",
+                    },
+                    signal,
+                  )
+                }
+                if (install.kind === "pip") {
+                  const requirements = path.join(staging, "requirements.txt")
+                  await writeFile(requirements, install.requirements)
+                  await run(
+                    interpreter,
+                    [
+                      "-m",
+                      "pip",
+                      "install",
+                      "--require-hashes",
+                      "--no-deps",
+                      "--only-binary=:all:",
+                      "--target",
+                      staging,
+                      "-r",
+                      requirements,
+                    ],
+                    staging,
+                    { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
+                    signal,
+                  )
+                }
+                // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
+                if (install.kind === "source" && install.build === "go")
+                  await run(
+                    interpreter,
+                    ["build", "-trimpath", "-o", executable(engine, staging, target), install.path],
+                    path.join(staging, "src"),
+                    {
+                      GOFLAGS: "-mod=readonly",
+                      GOTOOLCHAIN: "local",
+                      GOPATH: path.join(root, "cache", "go"),
+                      GOCACHE: path.join(root, "cache", "go-build"),
+                      GOPROXY: "https://proxy.golang.org",
+                      GOSUMDB: "sum.golang.org",
+                      CGO_ENABLED: "0",
+                    },
+                    signal,
+                  )
+                // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
+                // RUSTC names one, so it names the toolchain's own.
+                if (install.kind === "source" && install.build === "cargo")
+                  await run(
+                    interpreter,
+                    [
+                      "install",
+                      "--path",
+                      path.join(staging, "src", install.path),
+                      "--locked",
+                      "--root",
+                      staging,
+                      "--no-default-features",
+                      ...(install.features?.length ? ["--features", install.features.join(",")] : []),
+                    ],
+                    path.join(staging, "src"),
+                    {
+                      CARGO_HOME: path.join(root, "cache", "cargo"),
+                      CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
+                      RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
+                    },
+                    signal,
+                  )
+                if (install.kind === "source") return access(executable(engine, staging, target))
+                const file = path.join(staging, windows ? `${engine.id}.cmd` : engine.id)
+                await writeFile(file, text)
+                await chmod(file, 0o755)
+              })()),
+            catch: () =>
+              new PinnedArtifact.Failed({
+                cause: `install:${install.kind === "source" ? install.build : install.kind}`,
+              }),
+          }).pipe(
+            // tryPromise aborts before its Promise settles. Join the nested root's process finalizers before install()
+            // removes staging, including interruption during the async filesystem work preceding the spawn.
+            Effect.onInterrupt(() =>
+              Effect.promise(
+                () =>
+                  pending.work?.then(
+                    () => undefined,
+                    () => undefined,
+                  ) ?? Promise.resolve(),
+              ),
+            ),
+          )
+        }),
     )
     if (host) yield* shim(root, engine.id, text)
   })
 }
 
-const run = (file: string, args: ReadonlyArray<string>, cwd: string, env: Record<string, string>, signal: AbortSignal) =>
+const run = (
+  file: string,
+  args: ReadonlyArray<string>,
+  cwd: string,
+  env: Record<string, string>,
+  signal: AbortSignal,
+) =>
   Effect.runPromise(
     Effect.gen(function* () {
       const processService = yield* AppProcess.Service
-      const result = yield* processService.run(
-        ChildProcess.make(file, args, { cwd, env: { ...process.env, ...env }, forceKillAfter: "5 seconds" }),
-        { timeout: INSTALL_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
-      ).pipe(Effect.flatMap(AppProcess.requireSuccess))
+      const result = yield* processService
+        .run(ChildProcess.make(file, args, { cwd, env: { ...process.env, ...env }, forceKillAfter: "5 seconds" }), {
+          timeout: INSTALL_MS,
+          maxOutputBytes: 64 * 1024 * 1024,
+          maxErrorBytes: 64 * 1024 * 1024,
+        })
+        .pipe(Effect.flatMap(AppProcess.requireSuccess))
       // AppProcess caps capture without failing the run; an incomplete install log must still fail the install.
       if (result.stdoutTruncated || result.stderrTruncated)
-        return yield* new AppProcess.AppProcessError({ command: result.command, cause: new Error("Output exceeded 64 MiB") })
+        return yield* new AppProcess.AppProcessError({
+          command: result.command,
+          cause: new Error("Output exceeded 64 MiB"),
+        })
     }).pipe(Effect.provide(LayerNode.compile(AppProcess.node))),
     { signal },
   )
@@ -309,7 +393,12 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
       if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State
       if (yield* PinnedArtifact.installed(directory))
-        return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State
+        return {
+          ...base,
+          status: "ready",
+          directory,
+          executable: executable(engine, directory, target),
+        } satisfies State
       const attempt = attempts.get(directory)
       if (attempt?.running) return { ...base, status: "fetching" } satisfies State
       if (attempt?.failed) return { ...base, status: "failed", cause: attempt.failed, at: attempt.at } satisfies State
@@ -322,8 +411,20 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
 function launcher(windows: boolean, command: ReadonlyArray<string>, env: Readonly<Record<string, string>>) {
   const vars = Object.entries(env)
   if (windows)
-    return ["@echo off", "setlocal", ...vars.map(([key, value]) => `set "${key}=${value}"`), `${command.map((part) => `"${part}"`).join(" ")} %*`, "exit /b %errorlevel%", ""].join("\r\n")
-  return ["#!/bin/sh", ...vars.map(([key, value]) => `export ${key}=${quote(value)}`), `exec ${command.map(quote).join(" ")} "$@"`, ""].join("\n")
+    return [
+      "@echo off",
+      "setlocal",
+      ...vars.map(([key, value]) => `set "${key}=${value}"`),
+      `${command.map((part) => `"${part}"`).join(" ")} %*`,
+      "exit /b %errorlevel%",
+      "",
+    ].join("\r\n")
+  return [
+    "#!/bin/sh",
+    ...vars.map(([key, value]) => `export ${key}=${quote(value)}`),
+    `exec ${command.map(quote).join(" ")} "$@"`,
+    "",
+  ].join("\n")
 }
 
 /** Write an engine's `<root>/bin` launcher through a temp file and one rename, skipping it when it is already current. */
