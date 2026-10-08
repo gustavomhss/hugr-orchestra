@@ -2,12 +2,18 @@ import { expect, test } from "bun:test"
 import { generateKeyPairSync, sign } from "node:crypto"
 import { stat } from "node:fs/promises"
 import { join } from "node:path"
-import { Schema } from "effect"
+import { Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Siwc } from "@orchestra/core/auth/siwc"
 import { Global } from "@orchestra/core/global"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { Auth } from "../../src/auth"
 import { CodexAuthPlugin } from "../../src/plugin/openai/codex"
-import { tmpdir } from "../fixture/fixture"
+import { Plugin } from "../../src/plugin"
+import { ProviderAuth } from "../../src/provider/auth"
+import { InstanceStore } from "../../src/project/instance-store"
+import { provideInstance, testInstanceStoreLayer, tmpdir } from "../fixture/fixture"
+import { it } from "../lib/effect"
 import type { AuthOAuthResult, Hooks } from "@orchestra/plugin"
 
 async function fixture() {
@@ -23,7 +29,7 @@ async function fixture() {
     ].join(".")
     return `${signing}.${sign("RSA-SHA256", Buffer.from(signing), grant.badSignature ? other.privateKey : keys.privateKey).toString("base64url")}`
   }
-  const protocol = { refresh: async (_body: URLSearchParams): Promise<Response> => Response.json({
+  const protocol = { modelBearer: "", beforeExchange: async () => {}, refresh: async (_body: URLSearchParams): Promise<Response> => Response.json({
     access_token: "fixture-rotated", refresh_token: "fixture-rotated-refresh", token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes,
   }) }
   const requests: Array<{ path: string; body: string; authorization: string | null }> = []
@@ -38,11 +44,16 @@ async function fixture() {
         if (body.get("grant_type") === "refresh_token") return protocol.refresh(body)
         const grant = grants.get(body.get("code") ?? "")
         if (!grant || grant.invalid) return Response.json({ error: "invalid_grant" }, { status: 400 })
+        await protocol.beforeExchange()
         const id_token = signed(body.get("client_id") ?? "", grant)
         return Response.json({ id_token, access_token: "fixture-access", refresh_token: "fixture-refresh",
           token_type: "Bearer", expires_in: 3600, scope: Siwc.scopes })
       }
-      if (path === "/v1/models") return Response.json({ models: [{ slug: "fixture-model", display_name: "Fixture model", visibility: "list" }] })
+      if (path === "/v1/models") {
+        if (protocol.modelBearer && request.headers.get("authorization") !== `Bearer ${protocol.modelBearer}`)
+          return new Response("Expired fixture credential", { status: 401 })
+        return Response.json({ models: [{ slug: "fixture-model", display_name: "Fixture model", visibility: "list" }] })
+      }
       if (path === "/v1/responses") return Response.json({ id: "fixture-response" })
       return new Response("Unexpected fixture endpoint", { status: 500 })
     },
@@ -69,7 +80,7 @@ async function fixture() {
     if (method?.type !== "oauth") throw new Error("Missing browser method")
     return method.authorize({ account })
   }
-  const deliver = async (result: AuthOAuthResult, code: string, subject = "fixture-subject", badSignature = false) => {
+  const deliver = async (result: { url: string }, code: string, subject = "fixture-subject", badSignature = false) => {
     const url = new URL(result.url)
     grants.set(code, { nonce: url.searchParams.get("nonce") ?? "", subject, badSignature })
     const callback = new URL(url.searchParams.get("redirect_uri") ?? "")
@@ -305,6 +316,7 @@ test("catalog uses saved permission; API key mode and explicit partner confirmat
   await f.deliver(initial, "initial")
   const saved = await complete(initial)
   expect(saved.metadata?.clientId).toBe("fixture-issued-client")
+  await Auth.runPromise((store) => store.set("openai", saved))
   if (!hook.provider?.models) throw new Error("Missing model adapter")
   const provider = { models: {
     available: { id: "available", api: { id: "fixture-model", url: "old" }, name: "old", cost: { input: 5 } },
@@ -315,3 +327,118 @@ test("catalog uses saved permission; API key mode and explicit partner confirmat
   expect(models.available?.api.url).toBe(Siwc.resource)
   expect(models.available?.cost.input).toBe(5)
 })
+
+test("catalog refreshes expired own credentials before HTTP; expired inherited and API-key init never rotate", async () => {
+  await using f = await fixture()
+  const hook = await f.plugin()
+  const initial = await f.begin(hook)
+  await f.deliver(initial, "catalog-seed")
+  const saved = new Auth.Oauth({ ...await complete(initial), expires: 0 })
+  await Auth.runPromise((store) => store.set("openai", saved))
+  f.protocol.modelBearer = "fixture-rotated"
+  expect((await fetch(new URL("/v1/models", f.server.url), { headers: { Authorization: `Bearer ${saved.access}` } })).status).toBe(401)
+  const before = f.requests.length
+  const provider = { models: { available: { id: "available", api: { id: "fixture-model" }, cost: { input: 5 } } } }
+  if (!hook.provider?.models) throw new Error("Missing model adapter")
+  expect(Object.keys(await hook.provider.models(provider as never, { auth: saved }))).toEqual(["available"])
+  expect(f.requests.slice(before).map((item) => [item.path, item.authorization])).toEqual([
+    ["/api/accounts/oauth/token", null], ["/v1/models", "Bearer fixture-rotated"],
+  ])
+  expect(await storedAuth()).toMatchObject({ access: "fixture-rotated", refresh: "fixture-rotated-refresh" })
+  const readonly = await f.plugin({ readOnlyInheritGuard: async () => true })
+  if (!readonly.provider?.models) throw new Error("Missing readonly model adapter")
+  const after = f.requests.length
+  await expect(readonly.provider.models(provider as never, { auth: saved })).rejects.toThrow("Inherited")
+  expect(await hook.provider.models(provider as never, { auth: { type: "api", key: "fixture-api" } })).toBe(provider.models as never)
+  expect(f.requests).toHaveLength(after)
+})
+
+function providerLayer(hook: Hooks) {
+  // Only registry selection is injected: callbacks, persistence, leases and record are production implementations.
+  return LayerNode.compile(LayerNode.group([ProviderAuth.node, Auth.node]), [[Plugin.node, Layer.mock(Plugin.Service)({
+    list: () => Effect.succeed([hook]),
+  })]])
+}
+
+it.live("ProviderAuth CAS preserves B/disconnect while saved A callback awaits signed token exchange", () => Effect.gen(function* () {
+  const f = yield* Effect.acquireRelease(Effect.promise(fixture), (value) => Effect.promise(() => value[Symbol.asyncDispose]()))
+  const hook = yield* Effect.promise(() => f.plugin())
+  const seed = yield* Effect.promise(() => f.begin(hook))
+  yield* Effect.promise(() => f.deliver(seed, "saved-seed"))
+  const saved = yield* Effect.promise(() => complete(seed))
+  yield* Effect.gen(function* () {
+    const auth = yield* Auth.Service
+    const provider = yield* ProviderAuth.Service
+    const providerID = ProviderV2.ID.make("openai")
+    yield* Effect.forEach(["switch", "disconnect"] as const, (change) => Effect.gen(function* () {
+      yield* auth.set(providerID, saved)
+      const authorization = yield* provider.authorize({ providerID, method: 0, inputs: { account: "saved" } })
+      if (!authorization) return yield* Effect.die("Missing saved browser attempt")
+      const started = Promise.withResolvers<void>()
+      const release = Promise.withResolvers<void>()
+      f.protocol.beforeExchange = async () => { started.resolve(); await release.promise }
+      yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
+      const callback = yield* provider.callback({ providerID, method: 0 }).pipe(Effect.exit, Effect.forkChild)
+      const response = yield* Effect.promise(() => f.deliver(authorization, `saved-${change}`)).pipe(Effect.forkChild)
+      yield* Effect.promise(() => started.promise)
+      const next = new Auth.Oauth({ ...saved, access: "B-access", refresh: "B-refresh", metadata: { ...saved.metadata, subject: "B-subject" } })
+      if (change === "switch") yield* auth.set(providerID, next)
+      if (change === "disconnect") yield* auth.remove(providerID)
+      release.resolve()
+      expect((yield* Fiber.join(response)).status).toBe(200)
+      expect(Exit.isFailure(yield* Fiber.join(callback))).toBe(true)
+      expect(yield* auth.get(providerID)).toEqual(change === "switch" ? next : undefined)
+      const record = Schema.decodeUnknownSync(Schema.Record(Schema.String, Auth.Info))(
+        yield* Effect.promise(() => Bun.file(join(Global.Path.data, "auth.json")).json()),
+      )
+      if (change === "switch") expect(record[providerID]).toEqual(next)
+      if (change === "disconnect") expect(record[providerID]).toBeUndefined()
+      expect((yield* Effect.promise(() => stat(join(Global.Path.data, "auth.json")))).mode & 0o777).toBe(0o600)
+    }))
+  }).pipe(Effect.provide(providerLayer(hook)), provideInstance(f.tmp.path), Effect.provide(testInstanceStoreLayer))
+}))
+
+it.live("ProviderAuth attempt replacement, explicit cancel and scope expiry reject stale absent-row callbacks", () => Effect.gen(function* () {
+  const f = yield* Effect.acquireRelease(Effect.promise(fixture), (value) => Effect.promise(() => value[Symbol.asyncDispose]()))
+  const unrelated = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (value) => Effect.promise(() => value[Symbol.asyncDispose]()))
+  const hook = yield* Effect.promise(() => f.plugin())
+  yield* Effect.gen(function* () {
+    const auth = yield* Auth.Service
+    const provider = yield* ProviderAuth.Service
+    const instances = yield* InstanceStore.Service
+    const providerID = ProviderV2.ID.make("openai")
+    yield* Effect.forEach(["replace", "cancel", "new-slot", "scope"] as const, (change) => Effect.gen(function* () {
+      yield* auth.remove(providerID)
+      const authorization = yield* provider.authorize({ providerID, method: 0, inputs: { account: "new" } })
+      if (!authorization) return yield* Effect.die("Missing new browser attempt")
+      const started = Promise.withResolvers<void>()
+      const release = Promise.withResolvers<void>()
+      f.protocol.beforeExchange = async () => { started.resolve(); await release.promise }
+      yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
+      const callback = yield* provider.callback({ providerID, method: 0 }).pipe(Effect.exit, Effect.forkChild)
+      const response = yield* Effect.promise(() => f.deliver(authorization, `absent-${change}`)).pipe(Effect.forkChild)
+      yield* Effect.promise(() => started.promise)
+      const newer = change === "replace"
+        ? yield* provider.authorize({ providerID, method: 0, inputs: { account: "new" } }) : undefined
+      if (newer) {
+        yield* instances.load({ directory: unrelated.path })
+        yield* instances.disposeDirectory(unrelated.path)
+      }
+      if (change === "cancel") yield* provider.cancel({ providerID })
+      const slot = new Auth.Api({ type: "api", key: "new-slot-B" })
+      if (change === "new-slot") yield* auth.set(providerID, slot)
+      if (change === "scope") yield* instances.disposeDirectory(f.tmp.path)
+      release.resolve()
+      expect((yield* Fiber.join(response)).status).toBe(200)
+      expect(Exit.isFailure(yield* Fiber.join(callback))).toBe(true)
+      expect(yield* auth.get(providerID)).toEqual(change === "new-slot" ? slot : undefined)
+      f.protocol.beforeExchange = async () => {}
+      if (newer) {
+        yield* Effect.promise(() => f.deliver(newer, "replacement-accepted"))
+        yield* provider.callback({ providerID, method: 0 })
+        expect(yield* auth.get(providerID)).toMatchObject({ access: "fixture-access", metadata: { subject: "fixture-subject" } })
+        expect(Exit.isFailure(yield* provider.callback({ providerID, method: 0 }).pipe(Effect.exit))).toBe(true)
+      }
+    }))
+  }).pipe(Effect.provide(providerLayer(hook)), provideInstance(f.tmp.path), Effect.provide(testInstanceStoreLayer))
+}))

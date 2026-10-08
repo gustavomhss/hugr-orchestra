@@ -6,7 +6,7 @@ import { InstanceState } from "@/effect/instance-state"
 import { optional } from "@orchestra/core/schema"
 import { Plugin } from "../plugin"
 import { ProviderV2 } from "@orchestra/core/provider"
-import { Array as Arr, Effect, Layer, Record, Result, Context, Schema } from "effect"
+import { Array as Arr, Effect, Layer, Record, Result, Context, Schema, Semaphore } from "effect"
 
 const When = Schema.Struct({
   key: Schema.String,
@@ -95,11 +95,19 @@ export interface Interface {
     } & AuthorizeInput,
   ) => Effect.Effect<Authorization | undefined, Error>
   readonly callback: (input: { providerID: ProviderV2.ID } & CallbackInput) => Effect.Effect<void, Error>
+  readonly cancel: (input: { providerID: ProviderV2.ID }) => Effect.Effect<void>
+}
+
+interface BrowserAttempt {
+  expected: Auth.Info | undefined
+  method: number
+  result?: AuthOAuthResult
 }
 
 interface State {
   hooks: Record<ProviderV2.ID, Hook>
   pending: Map<ProviderV2.ID, AuthOAuthResult>
+  browser: { active: boolean; lock: Semaphore.Semaphore; attempt?: BrowserAttempt }
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ProviderAuth") {}
@@ -114,6 +122,11 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
     const state = yield* InstanceState.make<State>(
       Effect.fn("ProviderAuth.state")(function* () {
         const plugins = yield* plugin.list()
+        const browser: State["browser"] = { active: true, lock: Semaphore.makeUnsafe(1) }
+        yield* Effect.addFinalizer(() => browser.lock.withPermits(1)(Effect.sync(() => {
+          browser.active = false
+          browser.attempt = undefined
+        })))
         return {
           hooks: Record.fromEntries(
             Arr.filterMap(plugins, (x) =>
@@ -123,6 +136,7 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
             ),
           ),
           pending: new Map<ProviderV2.ID, AuthOAuthResult>(),
+          browser,
         }
       }),
     )
@@ -163,8 +177,18 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
     const authorize = Effect.fn("ProviderAuth.authorize")(function* (
       input: { providerID: ProviderV2.ID } & AuthorizeInput,
     ) {
-      const { hooks, pending } = yield* InstanceState.get(state)
-      const method = hooks[input.providerID].methods[input.method]
+      const current = yield* InstanceState.get(state)
+      const method = current.hooks[input.providerID].methods[input.method]
+      const attempt = input.providerID === "openai"
+        ? yield* current.browser.lock.withPermits(1)(Effect.gen(function* () {
+            current.browser.attempt = undefined
+            if (!current.browser.active) return yield* new OauthMissing({ providerID: input.providerID })
+            if (method.type !== "oauth") return
+            const expected = yield* auth.get(input.providerID)
+            const attempt: BrowserAttempt = { expected, method: input.method }
+            current.browser.attempt = attempt
+            return attempt
+          })) : undefined
       if (method.type !== "oauth") return
 
       if (method.prompts && input.inputs) {
@@ -176,8 +200,16 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
         }
       }
 
-      const result = yield* Effect.promise(() => method.authorize(input.inputs))
-      pending.set(input.providerID, result)
+      const result = yield* Effect.promise(() => method.authorize(input.inputs)).pipe(
+        Effect.onError(() => attempt ? invalidateBrowser(current.browser, attempt) : Effect.void),
+      )
+      if (attempt) {
+        yield* current.browser.lock.withPermits(1)(Effect.gen(function* () {
+          if (!current.browser.active || current.browser.attempt !== attempt) return yield* new OauthCallbackFailed({})
+          attempt.result = result
+        }))
+      }
+      if (!attempt) current.pending.set(input.providerID, result)
       return {
         url: result.url,
         method: result.method,
@@ -188,20 +220,33 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
     const callback = Effect.fn("ProviderAuth.callback")(function* (
       input: { providerID: ProviderV2.ID } & CallbackInput,
     ) {
-      const pending = (yield* InstanceState.get(state)).pending
-      const match = pending.get(input.providerID)
+      const current = yield* InstanceState.get(state)
+      const attempt = input.providerID === "openai" ? current.browser.attempt : undefined
+      const match = input.providerID === "openai" ? attempt?.result : current.pending.get(input.providerID)
       if (!match) return yield* new OauthMissing({ providerID: input.providerID })
+      if (attempt && attempt.method !== input.method) return yield* new OauthMissing({ providerID: input.providerID })
       if (match.method === "code" && !input.code) {
         return yield* new OauthCodeMissing({ providerID: input.providerID })
       }
 
       const result = yield* Effect.promise(() =>
         match.method === "code" ? match.callback(input.code!) : match.callback(),
-      )
-      if (!result || result.type !== "success") return yield* new OauthCallbackFailed({})
+      ).pipe(Effect.onError(() => attempt ? invalidateBrowser(current.browser, attempt) : Effect.void))
+      if (!result || result.type !== "success") {
+        if (attempt) yield* invalidateBrowser(current.browser, attempt)
+        return yield* new OauthCallbackFailed({})
+      }
+
+      const persist = (next: Auth.Info) => attempt
+        ? current.browser.lock.withPermits(1)(Effect.gen(function* () {
+            if (!current.browser.active || current.browser.attempt !== attempt) return yield* new OauthCallbackFailed({})
+            // Consume once while replacement/cancel/scope expiry share this lock.
+            current.browser.attempt = undefined
+            if (!(yield* auth.replaceIf(input.providerID, attempt.expected, next))) return yield* new OauthCallbackFailed({})
+          })) : auth.set(input.providerID, next)
 
       if ("key" in result) {
-        yield* auth.set(input.providerID, {
+        yield* persist({
           type: "api",
           key: result.key,
           ...(result.metadata ? { metadata: result.metadata } : {}),
@@ -210,7 +255,7 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
 
       if ("refresh" in result) {
         const { type: _, provider: __, refresh, access, expires, ...extra } = result
-        yield* auth.set(input.providerID, {
+        yield* persist({
           type: "oauth",
           access,
           refresh,
@@ -220,10 +265,22 @@ const layer: Layer.Layer<Service, never, Auth.Service | Plugin.Service> = Layer.
       }
     })
 
-    return Service.of({ methods, authorize, callback })
+    const cancel = Effect.fn("ProviderAuth.cancel")(function* (input: { providerID: ProviderV2.ID }) {
+      const current = yield* InstanceState.get(state)
+      if (input.providerID !== "openai") { current.pending.delete(input.providerID); return }
+      yield* current.browser.lock.withPermits(1)(Effect.sync(() => { current.browser.attempt = undefined }))
+    })
+
+    return Service.of({ methods, authorize, callback, cancel })
   }),
 )
 
 export const node = LayerNode.make({ service: Service, layer: layer, deps: [Auth.node, Plugin.node] })
+
+function invalidateBrowser(browser: State["browser"], attempt: BrowserAttempt) {
+  return browser.lock.withPermits(1)(Effect.sync(() => {
+    if (browser.attempt === attempt) browser.attempt = undefined
+  }))
+}
 
 export * as ProviderAuth from "./auth"
