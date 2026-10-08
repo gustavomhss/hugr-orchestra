@@ -329,7 +329,10 @@ function fixedTransition(input: TransitionInput): FixedTransition | Capability.F
   if (providerID !== undefined && (typeof providerID !== "string" || providerID.length > 256 ||
     !/^[0-9A-Za-z._:-]{1,256}(?![\s\S])/.test(providerID))) return failure("outcome_unknown")
   if (!boundedJson(observation)) return failure("quota_exceeded")
-  const decoded = Schema.decodeUnknownOption(Observation)(copyJson(observation))
+  const snapshot = copyJson(observation)
+  if (snapshot instanceof Capability.Failure) return snapshot
+  if (!boundedJson(snapshot)) return failure("quota_exceeded")
+  const decoded = Schema.decodeUnknownOption(Observation)(snapshot)
   if (Option.isNone(decoded)) return failure("unsupported_schema")
   return Object.freeze({ state, expectedGeneration, providerID, observation: Object.freeze({ ...decoded.value,
     ...(decoded.value.artifactRefs ? { artifactRefs: Object.freeze(decoded.value.artifactRefs.map((ref) => Object.freeze({ ...ref }))) } : {}),
@@ -399,10 +402,43 @@ function receipt(row: Row) {
   })
 }
 
-function copyJson(value: Schema.Json): Schema.Json {
-  if (value === null || typeof value !== "object") return value
-  if (Array.isArray(value)) return Object.freeze(value.map(copyJson))
-  return Object.freeze(Object.fromEntries(Object.entries(value).map(([key, item]) => [key, copyJson(item)])))
+function copyJson(value: unknown): Schema.Json | Capability.Failure {
+  const budget = { nodes: 0 }
+  const copy = (item: unknown, depth: number): Schema.Json | Capability.Failure => {
+    budget.nodes++
+    if (depth > 8 || budget.nodes > 256) return failure("quota_exceeded")
+    if (item === null || typeof item === "boolean") return item
+    if (typeof item === "number") return Number.isFinite(item) ? item : failure("quota_exceeded")
+    if (typeof item === "string") return item.length <= 4096 ? item : failure("quota_exceeded")
+    if (typeof item !== "object") return failure("quota_exceeded")
+    if (Array.isArray(item)) {
+      // Numeric data descriptors only: never call caller map/slice, constructor or species hooks.
+      const length: unknown = Object.getOwnPropertyDescriptor(item, "length")?.value
+      if (typeof length !== "number" || !Number.isSafeInteger(length) || length < 0 || length > 256 - budget.nodes)
+        return failure("quota_exceeded")
+      const result: Schema.Json[] = []
+      for (let index = 0; index < length; index++) {
+        const descriptor = Object.getOwnPropertyDescriptor(item, String(index))
+        if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) return failure("quota_exceeded")
+        const child = copy(descriptor.value, depth + 1)
+        if (child instanceof Capability.Failure) return child
+        Object.defineProperty(result, String(index), { value: child, enumerable: true })
+      }
+      return Object.freeze(result)
+    }
+    const result: { [key: string]: Schema.Json } = {}
+    for (const key in item) {
+      if (!Object.hasOwn(item, key)) continue
+      if (budget.nodes >= 256 || key.length > 4096) return failure("quota_exceeded")
+      const descriptor = Object.getOwnPropertyDescriptor(item, key)
+      if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) return failure("quota_exceeded")
+      const child = copy(descriptor.value, depth + 1)
+      if (child instanceof Capability.Failure) return child
+      Object.defineProperty(result, key, { value: child, enumerable: true })
+    }
+    return Object.freeze(result)
+  }
+  return copy(value, 0)
 }
 
 function boundedJson(value: unknown, bytes = 4096, nodes = 256) {

@@ -475,6 +475,56 @@ describe("CapabilityJobs durable receipts", () => {
     expect(yield* f.change(ref, 1, "running", { progress: 1 })).toMatchObject({ observation: { progress: 1 } })
   }))
 
+  it.live("JSON snapshot ignores hidden array map/constructor/species hooks; ordinary arrays still copy", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const ref = yield* f.create("worker")
+    yield* f.change(ref, 0, "submitting")
+    const artifact: Capability.ArtifactRef = { id: Capability.ArtifactID.create(), revision: 0 }
+    yield* f.database.db.insert(CapabilityArtifactTable).values({ ...artifact, owner: f.binding.owner,
+      producer: f.binding.invocation, mime: "text/plain", kind: "text", hash: "test", bytes: 0,
+      verification: "observed", metadata: {},
+    }).run().pipe(Effect.orDie)
+    yield* f.database.db.insert(CapabilityArtifactReferenceTable).values({ artifact_id: artifact.id,
+      revision: artifact.revision, session_id: f.context.sessionID,
+    }).run().pipe(Effect.orDie)
+    yield* Effect.forEach(["map-getter", "map-function", "constructor-getter", "species-getter", "ordinary"] as const,
+      (hook, index) => Effect.gen(function* () {
+        const calls = { value: 0 }
+        const refs = [artifact]
+        if (hook === "map-getter") Object.defineProperty(refs, "map", { get() {
+          calls.value++
+          throw new Error("CALLER_MAP_GETTER_EXECUTED")
+        } })
+        if (hook === "map-function") Object.defineProperty(refs, "map", { value: () => {
+          calls.value++
+          return [artifact]
+        } })
+        if (hook === "constructor-getter") Object.defineProperty(refs, "constructor", { get() {
+          calls.value++
+          throw new Error("CALLER_CONSTRUCTOR_GETTER_EXECUTED")
+        } })
+        if (hook === "species-getter") Object.defineProperty(refs, "constructor", { value: {
+          get [Symbol.species]() {
+            calls.value++
+            throw new Error("CALLER_SPECIES_GETTER_EXECUTED")
+          },
+        } })
+        const receipt = yield* f.change(ref, index + 1, "running", { artifactRefs: refs })
+        expect(calls.value).toBe(0)
+        expect(receipt.observation.artifactRefs).toEqual([artifact])
+        expect(receipt.observation.artifactRefs).not.toBe(refs)
+      }))
+    const getter = { calls: 0 }
+    const invalid: { [key: string]: Schema.Json } = {}
+    Object.defineProperty(invalid, "progress", { enumerable: true, get() {
+      getter.calls++
+      throw new Error("CALLER_OBJECT_GETTER_EXECUTED")
+    } })
+    yield* rejected(f.change(ref, 6, "running", invalid), "quota_exceeded")
+    expect(getter.calls).toBe(0)
+    expect((yield* f.run(f.jobs.read(f.context, ref))).generation).toBe(6)
+  }))
+
   it.live("execution validates wildcard/current refs; receipt and acquired completion survive retarget/removal", () => Effect.gen(function* () {
     const f = yield* fixture()
     const connection: Capability.ConnectionRef = { id: Capability.ConnectionID.create(), provider: "test", generation: 0 }
