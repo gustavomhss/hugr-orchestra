@@ -6,10 +6,35 @@ import { join } from "node:path"
 import { Effect, Exit } from "effect"
 import { Auth } from "../../src/auth"
 import { testEffect } from "../lib/effect"
+import { assertPrivateFile, broadenPrivateFile } from "../../../core/test/fixture/private-file"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([Auth.node, FSUtil.node])))
 
 describe("Auth", () => {
+  it.instance("auth and revision replacements publish private complete files with exact credential shape", () =>
+    Effect.gen(function* () {
+      const auth = yield* Auth.Service
+      const key = "private-publication-fixture"
+      const value = new Auth.Api({ type: "api", key: "fixture-only" })
+      yield* auth.set(key, value)
+      yield* Effect.promise(async () => {
+        for (const name of ["auth.json", "auth-revisions.json"]) {
+          const filename = join(Global.Path.data, name)
+          await assertPrivateFile(filename)
+          await broadenPrivateFile(filename, true)
+          await expect(assertPrivateFile(filename)).rejects.toThrow("Private-file oracle")
+        }
+      })
+      yield* auth.set(key, value)
+      yield* Effect.promise(async () => {
+        await assertPrivateFile(join(Global.Path.data, "auth.json"))
+        await assertPrivateFile(join(Global.Path.data, "auth-revisions.json"))
+        expect((await Bun.file(join(Global.Path.data, "auth.json")).json())[key]).toEqual({ type: "api", key: "fixture-only" })
+      })
+      yield* auth.remove(key)
+    }),
+  )
+
   it.instance("malformed auth revisions fail closed instead of becoming initial generations", () =>
     Effect.gen(function* () {
       const auth = yield* Auth.Service

@@ -8,6 +8,7 @@ import { OwnOAuthApp } from "@orchestra/core/auth/oauth-app"
 import { Auth } from "../../src/auth"
 import { createDigitalOceanAuthHooks } from "../../src/plugin/digitalocean"
 import { testEffect } from "../lib/effect"
+import { assertPrivateFile } from "../../../core/test/fixture/private-file"
 
 const it = testEffect(LayerNode.compile(Auth.node))
 const issued = "8927d6fd39836377289fc753b996b8bb7a9f71870f0a2b01ddf1f45d7d9bc3cb"
@@ -99,7 +100,8 @@ it.live("DigitalOcean PKCE, callback rejection, bound-ID rotation and inherited 
       expect(forms[1].has("client_secret")).toBe(false)
       expect(await getAuth()).toMatchObject({ access: "fixture-access-2", refresh: "fixture-refresh-2", metadata: { clientID: issued, scopes: "genai:read" } })
       const after = await stat(path.join(Global.Path.data, "auth.json"))
-      expect(after.mode & 0o777).toBe(0o600)
+      await assertPrivateFile(path.join(Global.Path.data, "auth.json"))
+      await assertPrivateFile(path.join(Global.Path.data, "auth-revisions.json"))
       expect(after.ino).not.toBe(before.ino)
       expect(bearers.slice(-2)).toEqual(["Bearer fixture-access-2", "Bearer fixture-access-2"])
       for (const change of ["disconnect", "api"] as const) {

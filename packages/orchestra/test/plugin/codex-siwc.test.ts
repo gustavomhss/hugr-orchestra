@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import { generateKeyPairSync, sign } from "node:crypto"
-import { stat } from "node:fs/promises"
 import { join } from "node:path"
 import { Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Siwc } from "@orchestra/core/auth/siwc"
@@ -14,6 +13,7 @@ import { ProviderAuth } from "../../src/provider/auth"
 import { InstanceStore } from "../../src/project/instance-store"
 import { provideInstance, testInstanceStoreLayer, tmpdir } from "../fixture/fixture"
 import { it } from "../lib/effect"
+import { assertPrivateFile } from "../../../core/test/fixture/private-file"
 import type { AuthOAuthResult, Hooks } from "@orchestra/plugin"
 
 async function fixture() {
@@ -126,7 +126,7 @@ test("legacy browser uses own host, dynamic Orchestra hint and signed metadata; 
   expect(value.metadata).toMatchObject({ clientId: "fixture-issued-client", subject: "fixture-subject",
     issuer: Siwc.issuer, resource: Siwc.resource, scopes: Siwc.scopes.split(" ") })
   expect(value.metadata?.idToken).toMatch(/^ey/)
-  expect((await stat(join(f.tmp.path, "siwc", "host-id"))).mode & 0o777).toBe(0o600)
+  await assertPrivateFile(join(f.tmp.path, "siwc", "host-id"))
   const body = new URLSearchParams(f.requests.find((item) => item.path.endsWith("/token"))?.body)
   expect(body.get("client_id")).toBe("fixture-issued-client")
   expect(body.get("code_verifier")).toBeTruthy()
@@ -234,7 +234,8 @@ test("two legacy adapters share own-store lease; refresh keeps saved client and 
   expect(stored).toMatchObject({ refresh: "fixture-rotated-refresh", access: "fixture-rotated", metadata: {
     clientId: "fixture-issued-client", subject: "fixture-subject", resource: Siwc.resource,
   } })
-  expect((await stat(join(Global.Path.data, "auth.json"))).mode & 0o777).toBe(0o600)
+  await assertPrivateFile(join(Global.Path.data, "auth.json"))
+  await assertPrivateFile(join(Global.Path.data, "auth-revisions.json"))
   const sent = f.requests.filter((item) => item.path === "/v1/responses")
   expect(sent).toHaveLength(2)
   expect(sent[0]?.authorization).toBe("Bearer fixture-rotated")
@@ -393,7 +394,7 @@ it.live("ProviderAuth CAS preserves B/disconnect while saved A callback awaits s
       )
       if (change === "switch") expect(record[providerID]).toEqual(next)
       if (change === "disconnect") expect(record[providerID]).toBeUndefined()
-      expect((yield* Effect.promise(() => stat(join(Global.Path.data, "auth.json")))).mode & 0o777).toBe(0o600)
+      yield* Effect.promise(() => assertPrivateFile(join(Global.Path.data, "auth.json")))
     }))
   }).pipe(Effect.provide(providerLayer(hook)), provideInstance(f.tmp.path), Effect.provide(testInstanceStoreLayer))
 }))
@@ -444,7 +445,7 @@ it.live("ProviderAuth attempt replacement, disconnect and scope expiry reject st
       expect((yield* Fiber.join(response)).status).toBe(200)
       expect(Exit.isFailure(yield* Fiber.join(callback))).toBe(true)
       expect(yield* auth.get(providerID)).toEqual(change === "new-slot" ? slot : undefined)
-      expect((yield* Effect.promise(() => stat(join(Global.Path.data, "auth-revisions.json")))).mode & 0o777).toBe(0o600)
+      yield* Effect.promise(() => assertPrivateFile(join(Global.Path.data, "auth-revisions.json")))
       f.protocol.beforeExchange = async () => {}
       if (newer) {
         yield* Effect.promise(() => f.deliver(newer, "replacement-accepted"))

@@ -4,6 +4,7 @@ import { Effect, Layer, Record, Result, Schema, Context, Semaphore } from "effec
 import { isDeepStrictEqual } from "node:util"
 import { randomUUID } from "node:crypto"
 import { Flock } from "@orchestra/core/util/flock"
+import { PrivateFile } from "@orchestra/core/util/private-file"
 import { makeRuntime } from "../effect/run-service"
 import { NonNegativeInt } from "@orchestra/core/schema"
 import { Global } from "@orchestra/core/global"
@@ -111,7 +112,10 @@ const layer = Layer.effect(
 
     const write = (destination: string, data: unknown) => Effect.acquireUseRelease(
         fsys.makeTempFile({ directory: path.dirname(file), prefix: ".auth-" }),
-        (temporary) => fsys.writeJson(temporary, data, 0o600).pipe(Effect.andThen(fsys.rename(temporary, destination))),
+        (temporary) => fsys.writeJson(temporary, data, 0o600).pipe(
+          Effect.andThen(Effect.tryPromise({ try: () => PrivateFile.protect(temporary), catch: fail("Failed to protect auth data") })),
+          Effect.andThen(fsys.rename(temporary, destination)),
+        ),
         (temporary) => fsys.remove(path.dirname(temporary), { recursive: true }).pipe(Effect.ignore),
       ).pipe(Effect.mapError(fail("Failed to write auth data")))
 

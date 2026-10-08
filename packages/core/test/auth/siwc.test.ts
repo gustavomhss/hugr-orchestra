@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdtemp, rm, stat, writeFile } from "node:fs/promises"
+import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { exportJWK, generateKeyPair, SignJWT } from "jose"
@@ -11,6 +11,7 @@ import { SiwcListener } from "../../src/auth/siwc-listener"
 import { SiwcInference } from "../../src/auth/siwc-inference"
 import { Effect } from "effect"
 import { it } from "../lib/effect"
+import { assertPrivateFile, broadenPrivateFile } from "../fixture/private-file"
 
 const methodID = IntegrationMethodID.make("chatgpt-browser")
 const hostId = "urn:uuid:fixture-host"
@@ -74,10 +75,17 @@ describe("ChatGPT OSS registration scaffold", () => {
     const directory = await mkdtemp(join(tmpdir(), "siwc-host-test-"))
     const filename = join(directory, "host-id")
     try {
-      const ids = await Promise.all(Array.from({ length: 8 }, () => SiwcHost.load(filename)))
+      const ids = await Promise.all(Array.from({ length: 8 }, async () => {
+        const id = await SiwcHost.load(filename)
+        expect(id).toMatch(/^urn:uuid:[0-9a-f-]{36}$/i)
+        await assertPrivateFile(filename)
+        return id
+      }))
       expect(new Set(ids).size).toBe(1)
+      await broadenPrivateFile(filename, true)
+      await expect(assertPrivateFile(filename)).rejects.toThrow("Private-file oracle")
       expect(await SiwcHost.load(filename)).toBe(ids[0])
-      expect((await stat(filename)).mode & 0o777).toBe(0o600)
+      await assertPrivateFile(filename)
       await writeFile(filename, "corrupt")
       await expect(SiwcHost.load(filename)).rejects.toThrow("Invalid persisted")
     } finally {
