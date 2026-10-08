@@ -3,7 +3,8 @@
 // npm install --prefix packages/omni/campaign/logs/tools --ignore-scripts typescript-language-server@4.3.4 typescript@5.8.2
 // ORCHESTRA_LOCAL_TESTS=1 bun packages/omni/campaign/v4-lsp.ts [--mutation-legacy]
 import { createServer } from "node:http"
-import { cpSync, existsSync, readFileSync, appendFileSync } from "node:fs"
+import { cpSync, existsSync, readFileSync, appendFileSync, readdirSync, writeFileSync } from "node:fs"
+import os from "node:os"
 import path from "node:path"
 import { fileTree, kill9, LOGS, markerArgument, members, provider, supervised, supervisorsOf, sweep, until, verdict } from "./lib.ts"
 import { api, evidence, finalSweep, finish, fixture, main, processTable, script, start } from "./protocol-fixtures.ts"
@@ -119,8 +120,14 @@ setInterval(() => {}, 1e9);
       return [...found.members, ...found.wrappers]
     }
     const rpc = () => existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").trim().split("\n").map((line) => JSON.parse(line) as { pid: number; method: string }) : []
+    const records = () => readdirSync(path.join(os.tmpdir(), tree.nonce)).filter((file) => file.endsWith(".json"))
+      .map((file) => ({ file, raw: readFileSync(path.join(os.tmpdir(), tree.nonce, file), "utf8") }))
     const live = () => until(45_000, "wrapper, real tsservers and fresh protocol handshake", async () => {
-        const found = members(tree.nonce, processTable())
+        const beforeRecords = records()
+        const at = new Date().toISOString()
+        const inventory = processTable()
+        const afterRecords = records()
+        const found = members(tree.nonce, inventory)
         const current = [...found.members, ...found.wrappers]
         const wrapperRow = current.find((row) => row.args?.includes(wrapper))
         const tsservers = current.filter((row) => row.args?.includes("tsserver.js"))
@@ -128,7 +135,10 @@ setInterval(() => {}, 1e9);
         const recorded = found.members.length
         Object.assign(readiness, { recorded, expected: tree.size, wrapperPID: wrapperRow?.pid,
           tsserverPIDs: tsservers.map((row) => row.pid), fixtureIds: found.members.map((row) => ({ pid: row.pid, startTime: row.startTime })),
-          methods: rpc().filter((event) => event.pid === wrapperRow?.pid).map((event) => event.method) })
+          methods: rpc().filter((event) => event.pid === wrapperRow?.pid).map((event) => event.method),
+          birthControl: { at, observedAt: new Date().toISOString(), beforeRecords, afterRecords,
+            cim: inventory.filter((row) => row.args?.includes(tree.nonce)).map((row) => ({ pid: row.pid, parent: row.parent, startTime: row.startTime })) } })
+        writeFileSync(path.join(LOGS, `${scratch.tag}.birth-control.json`), JSON.stringify(readiness))
         // Pinned TLS starts syntax and semantic tsservers; wait for both before counting processes.
         return wrapperRow && tsservers.length === 2 && recorded === tree.size &&
           ["initialize", "initialized", "textDocument/didOpen"].every((method) => rpc().some((event) => event.pid === wrapperRow.pid && event.method === method))
@@ -185,6 +195,7 @@ setInterval(() => {}, 1e9);
     appendFileSync(path.join(scratch.home, "llm.calls.json"), JSON.stringify({ calls, writes: drive.writes }))
   } catch (cause) {
     error = String(cause)
+    console.log("V4_IDENTITY_CONTROL " + JSON.stringify(readiness))
     findings.push(JSON.stringify({ readiness, inventory: processTable().filter((row) => row.args?.includes(tree.nonce))
       .map((row) => ({ ...row, args: row.args?.slice(-1500) })),
       rpc: existsSync(rpcLog) ? readFileSync(rpcLog, "utf8").slice(-4000) : null,
