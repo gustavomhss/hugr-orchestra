@@ -2,7 +2,9 @@
 
 ## Applicability
 
-The packet assigns Go table models (gocqlx `table.Table` values and UDT structs) generated from a Cassandra or Scylla keyspace, names the generated package directory as part of the write paths, gives its package name, and supplies a disposable cluster that already holds the keyspace schema. The engine is gocqlx schemagen `3.0.4`, compiled by the host from its pinned source with its own Go toolchain and run only as `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
+The packet assigns Go table models (gocqlx `table.Table` values and UDT structs) generated from a Cassandra or Scylla keyspace, names the generated package directory as part of the write paths, gives its package name, and supplies a disposable cluster that already holds the keyspace schema. The engine is owned build `3.0.4+orchestra.cassandra1`: unchanged upstream gocqlx schemagen/library `3.0.4`, compiled by the host with its own Go toolchain and run only as `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
+
+The host retains the Scylla gocql `1.15.3` API and applies a controlled Apache-2.0 driver backport in a private build overlay. It verifies the upstream module ZIP and exact source hashes before and after the patch. The standard `system_schema.tables` catalog determines whether the optional `scylla_tables` extension exists: absent returns standard metadata; query/close errors fail; present keeps the original Scylla query. The private build alone replaces the driver path; project `go.mod`, upstream `go.sum` and shared module caches are not patched. Generated imports remain `github.com/scylladb/gocqlx/v3`; compare project pins against library `3.0.4`, not host build revision. This cache identity does not reuse the original `3.0.4` binary. Upstream licenses and modification provenance accompany the private source. Cassandra 5.0.5 generation is runtime verified; Scylla 6.1.2 catalog behavior is source verified, runtime unverified.
 
 ## Non-trigger
 

@@ -259,3 +259,12 @@ posix("a toolchain that cannot be fetched blocks the engine with runtime-<cause>
     expect(f.hits).toEqual({ "/missing/toolchain.tar.gz": 1 })
   }), 30_000,
 )
+
+posix("Cassandra compatibility is rejected for another Go engine before its source build", () => Effect.gen(function* () {
+  const f = yield* fixture
+  if (f.ogen.install.kind !== "source") throw new Error("fixture must be a source engine")
+  const engine = { ...f.ogen, install: { ...f.ogen.install, compatibility: "cassandra-metadata" as const } }
+  const error = yield* BackendToolkit.ensure("ogen").pipe(within(f.root, f.manifest([engine]), f.runtimes()), Effect.flip)
+  expect(error.reason).toBe("toolkit-not-ready:failed:ogen:compatibility:cassandra-metadata:unsupported-engine")
+  expect(f.hits).toEqual({ "/toolchain.tar.gz": 1 })
+}))

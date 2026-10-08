@@ -47,8 +47,10 @@ const SOURCE = [
 // Its dependencies are pinned by the module's own go.sum and verified against the checksum database at build time.
 export default {
   id: "gocqlx-schemagen",
-  version: VERSION,
+  version: `${VERSION}+orchestra.cassandra1`,
   license: "Apache-2.0",
+  // Owned build: unchanged gocqlx v3.0.4 generator + Scylla gocql v1.15.3 with the catalog-availability backport.
+  // Both upstream licenses and source notices remain in the install; provenance and byte pins live in the helper.
   upstream: "scylladb/gocqlx",
   runtime: "go",
   install: {
@@ -62,6 +64,7 @@ export default {
     build: "go",
     path: "./cmd/schemagen",
     binary: "gocqlx-schemagen",
+    compatibility: "cassandra-metadata",
   },
   launch: [],
   fit: {
