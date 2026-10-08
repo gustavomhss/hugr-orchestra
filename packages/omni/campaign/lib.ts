@@ -275,7 +275,10 @@ export function table(timeoutMs = QUERY_MS): Row[] {
     const parsed = decodeWindowsTable(JSON.parse(out.stdout), out.pid).filter((row) => !matches(row, out.instrument))
     return parsed
   }
-  const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], options)
+  const out = spawnSync("ps", [process.platform === "darwin" ? "-axww" : "-eww", "-o", "pid=,ppid=,stat=,lstart=,args="], {
+    ...options,
+    ...(process.platform === "darwin" ? { env: { ...process.env, TZ: "UTC", LC_ALL: "C" } } : {}),
+  })
   if (out.status !== 0 || out.error || !out.stdout.trim()) throw new Error(`ps failed: ${out.error ?? out.stderr}`)
   const rows = decodeUnixTable(out.stdout, out.pid)
   return rows
@@ -312,7 +315,8 @@ export function decodeUnixTable(stdout: string, queryPID: number): Row[] {
       const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\S+)\s+(\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4})\s+(.*)$/)
       if (!match) throw new Error(`malformed ps row: ${line}`)
       const pid = Number(match[1])
-      if (process.platform !== "linux") return [{ pid, parent: Number(match[2]), state: match[3]!, startTime: match[4]!, args: match[5]! }]
+      // macOS ps runs in UTC/C; preserve that clock in the identity, never reinterpret local lstart.
+      if (process.platform !== "linux") return [{ pid, parent: Number(match[2]), state: match[3]!, startTime: `UTC:${match[4]!}`, args: match[5]! }]
       const observed = (() => {
         try {
           const stat = readFileSync(`/proc/${pid}/stat`, "utf8")
@@ -398,9 +402,9 @@ function bornAfter(child: Row, parent: Row) {
 
 function birth(row: Identity) {
   if (typeof row.startTime === "string" && /^\d+$/.test(row.startTime)) return BigInt(row.startTime)
-  const match = typeof row.startTime === "string" && row.startTime.match(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$/)
-  const date = new Date(match ? Date.parse(row.startTime) : NaN)
-  if (!match || !Number.isFinite(date.getTime()) || date.getFullYear() !== Number(match[7]) || date.getMonth() !== ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(match[2]!) || date.getDate() !== Number(match[3]) || date.getHours() !== Number(match[4]) || date.getMinutes() !== Number(match[5]) || date.getSeconds() !== Number(match[6]) || date.getDay() !== ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(match[1]!))
+  const match = typeof row.startTime === "string" && row.startTime.match(/^UTC:(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$/)
+  const date = new Date(match ? Date.parse(row.startTime.slice(4) + " GMT") : NaN)
+  if (!match || !Number.isFinite(date.getTime()) || date.getUTCFullYear() !== Number(match[7]) || date.getUTCMonth() !== ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].indexOf(match[2]!) || date.getUTCDate() !== Number(match[3]) || date.getUTCHours() !== Number(match[4]) || date.getUTCMinutes() !== Number(match[5]) || date.getUTCSeconds() !== Number(match[6]) || date.getUTCDay() !== ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(match[1]!))
     throw new Error(`campaign birth time unavailable/unparseable for PID ${row.pid}: ${row.startTime}`)
   return BigInt(date.getTime())
 }

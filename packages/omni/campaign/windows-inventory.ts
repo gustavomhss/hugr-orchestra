@@ -149,9 +149,7 @@ export function run(command: string, args: string[], timeoutMs = TIMEOUT_MS) {
   ensureBroker(deadline)
   const key = `${randomUUID()}.json`
   const file = path.join(broker.dir!, `request-${key}`)
-  // Close the complete JSON write before publishing; the broker never enumerates temporary files.
-  writeFileSync(file + ".tmp", JSON.stringify({ command, args, deadline: Date.now() + Math.max(0, deadline - performance.now()) }))
-  renameSync(file + ".tmp", file)
+  publishRequest(file, JSON.stringify({ command, args, deadline: Date.now() + Math.max(0, deadline - performance.now()) }))
   const replyFile = path.join(broker.dir!, `reply-${key}`)
   // Two seconds belong to failed-operation teardown only; no late result can pass the caller's KPI.
   while (!existsSync(replyFile) && performance.now() < deadline + 2000) Bun.sleepSync(5)
@@ -166,6 +164,13 @@ export function run(command: string, args: string[], timeoutMs = TIMEOUT_MS) {
   if (reply.error) throw new Error(`Windows helper failed: ${reply.error}`)
   if (!Number.isSafeInteger(reply.pid) || reply.pid <= 0 || !Number.isInteger(reply.status) || typeof reply.stdout !== "string" || typeof reply.stderr !== "string") throw new Error("malformed Windows helper result")
   return { ...reply, instrument: broker.identity! }
+}
+
+/** Publish only closed snapshots. The fault-control hook runs at the exact pre-rename boundary. */
+export function publishRequest(file: string, text: string, written?: () => void) {
+  writeFileSync(file + ".tmp", text)
+  written?.()
+  renameSync(file + ".tmp", file)
 }
 
 export function query(command: string, timeoutMs = TIMEOUT_MS) {

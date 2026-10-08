@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
-import { existsSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { until, win } from "../../omni/campaign/lib.ts"
@@ -11,7 +11,8 @@ if (win) test("real broker survives exclusive sharing and partial publication; r
   for (const mutation of ["none", "unprotected", "no-retry"] as const) {
     for (const fault of ["lock", "partial"] as const) {
       const dir = mkdtempSync(path.join(os.tmpdir(), "omni-sharing-control-"))
-      const source = WindowsInventory.brokerScript(dir)
+      // Observe the real read failure, then release its cause; no delay guesses broker scheduling.
+      const source = replace(WindowsInventory.brokerScript(dir), "$cause=$_.Exception;", "Put ('blocked-'+$key) @{observed=$true}; $cause=$_.Exception;")
       const script = mutation === "unprotected"
         ? replace(source, "$p=$null; $closed=$true;", "$request=ConvertFrom-Json ([IO.File]::ReadAllText($file)); $p=$null; $closed=$true;")
         : mutation === "no-retry" ? replace(source, ".ToUnixTimeMilliseconds()+1000;", ".ToUnixTimeMilliseconds()+0;") : source
@@ -22,21 +23,23 @@ if (win) test("real broker survives exclusive sharing and partial publication; r
       const reply = path.join(dir, "reply-first.json")
       const executed = path.join(dir, "executed")
       const request = JSON.stringify({ command: "node", args: ["-e", `require('node:fs').appendFileSync(${JSON.stringify(executed)},'once\\n');console.log('FIRST_SNAPSHOT')`], deadline: Date.now() + 20_000 })
-      const holder = fault === "lock" ? powershell(`$ErrorActionPreference='Stop'; $until=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()+10000; while (!(Test-Path '${quote(file + ".tmp")}')) {if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $until) {throw 'lock fixture publication deadline'}; [Threading.Thread]::Sleep(5)}; $s=[IO.File]::Open('${quote(file + ".tmp")}',[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::Delete); try {[IO.File]::WriteAllText('${quote(path.join(dir, "locked"))}','locked'); while (!(Test-Path '${quote(path.join(dir, "release"))}')) {if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $until) {throw 'lock fixture release deadline'}; [Threading.Thread]::Sleep(5)}} finally {$s.Dispose()}`) : undefined
+      const holder = fault === "lock" ? powershell(`$ErrorActionPreference='Stop'; $until=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()+10000; while (!(Test-Path '${quote(path.join(dir, "write-closed"))}')) {if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $until) {throw 'lock fixture publication deadline'}; [Threading.Thread]::Sleep(5)}; $s=[IO.File]::Open('${quote(file + ".tmp")}',[IO.FileMode]::Open,[IO.FileAccess]::ReadWrite,[IO.FileShare]::Delete); try {[IO.File]::WriteAllText('${quote(path.join(dir, "locked"))}','locked'); while (!(Test-Path '${quote(path.join(dir, "release"))}')) {if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $until) {throw 'lock fixture release deadline'}; [Threading.Thread]::Sleep(5)}} finally {$s.Dispose()}`) : undefined
       try {
-        // Holder starts after the complete temp snapshot exists, before atomic publication.
-        // Its startup script waits for that file so handle creation cannot race this write.
+        // Production publisher confirms write closure before the holder can open the temp file.
         await until(10_000, "real broker ready", () => {
           if (broker.exitCode !== null || broker.signalCode !== null) throw new Error(`broker startup failed: ${output.stderr}`)
           return existsSync(path.join(dir, "ready.json")) ? true : undefined
         })
-        writeFileSync(file + ".tmp", fault === "partial" ? '{"command":' : request)
-        if (holder) await until(10_000, "exclusive Windows file handle", () => {
-          if (holder.exitCode !== null || holder.signalCode !== null) throw new Error("exclusive file holder exited before lock")
-          return existsSync(path.join(dir, "locked")) ? true : undefined
+        WindowsInventory.publishRequest(file, fault === "partial" ? '{"command":' : request, () => {
+          writeFileSync(path.join(dir, "write-closed"), "closed")
+          if (!holder) return
+          const deadline = performance.now() + 10_000
+          while (!existsSync(path.join(dir, "locked"))) {
+            if (performance.now() >= deadline) throw new Error("exclusive Windows handle acquisition deadline")
+            Bun.sleepSync(5)
+          }
         })
-        renameSync(file + ".tmp", file)
-        await Bun.sleep(150)
+        await until(3000, "broker observed injected read fault", () => existsSync(path.join(dir, "blocked-first.json")) || existsSync(reply) || broker.exitCode !== null || broker.signalCode !== null ? true : undefined)
         if (mutation === "none") {
           expect(broker.exitCode).toBeNull()
           expect(existsSync(reply)).toBe(false)
@@ -106,9 +109,7 @@ function quote(value: string) {
 }
 
 function publish(dir: string, key: string, text: string) {
-  const file = path.join(dir, `request-${key}.json`)
-  writeFileSync(file + ".tmp", JSON.stringify({ command: "node", args: ["-e", `console.log(${JSON.stringify(text)})`], deadline: Date.now() + 10_000 }))
-  renameSync(file + ".tmp", file)
+  WindowsInventory.publishRequest(path.join(dir, `request-${key}.json`), JSON.stringify({ command: "node", args: ["-e", `console.log(${JSON.stringify(text)})`], deadline: Date.now() + 10_000 }))
 }
 
 async function close(proc: ReturnType<typeof powershell>) {
