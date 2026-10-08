@@ -439,7 +439,7 @@ export interface Interface {
     messageID: MessageID
     identity: string
   }) => Effect.Effect<SessionV1.WithParts | undefined, PromptAdmission.Conflict>
-  readonly admitPrompt: (payload: PromptAdmission.Payload) => Effect.Effect<
+  readonly admitPrompt: (payload: PromptAdmission.Payload, commitCache?: Effect.Effect<void>) => Effect.Effect<
     { created: boolean; message: SessionV1.WithParts },
     PromptAdmission.Conflict
   >
@@ -654,8 +654,10 @@ const layer: Layer.Layer<
     })
 
     const reconcilePrompt: Interface["reconcilePrompt"] = (input) => PromptAdmission.reconcile(db, input)
-    const admitPrompt: Interface["admitPrompt"] = Effect.fn("Session.admitPrompt")(function* (payload) {
-      const created = yield* events.publish(SessionV1.Event.PromptAdmitted, payload).pipe(
+    const admitPrompt: Interface["admitPrompt"] = Effect.fn("Session.admitPrompt")(function* (payload, commitCache) {
+      const created = yield* events.publish(SessionV1.Event.PromptAdmitted, payload, {
+        ...(commitCache ? { commit: () => commitCache } : {}),
+      }).pipe(
         Effect.as(true),
         Effect.catchDefect((defect) => {
           if (defect instanceof PromptAdmission.AlreadyAdmitted) return Effect.succeed(false)

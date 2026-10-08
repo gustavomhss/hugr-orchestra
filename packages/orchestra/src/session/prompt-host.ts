@@ -47,9 +47,10 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
 
   return Effect.fn("PromptHost.admit")(function* (input: SessionPrompt.PromptInput) {
     const messageID = input.messageID ?? MessageID.ascending()
-    const original = Schema.encodeSync(dependencies.schema)(input)
+    // Schema.Any metadata can retain caller references; detach before identity and any asynchronous hook.
+    const original = structuredClone(Schema.encodeSync(dependencies.schema)(input))
     const identity = PromptIdentity.fromEncoded(original)
-    const request = Schema.decodeUnknownSync(dependencies.schema)(structuredClone(original))
+    const request = Schema.decodeUnknownSync(dependencies.schema)(original)
     const existing = yield* dependencies.sessions.reconcilePrompt({ sessionID: request.sessionID, messageID, identity })
     if (existing)
       return request.noReply === true ? existing : yield* dependencies.loop({ sessionID: request.sessionID })
@@ -100,61 +101,50 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
       notes.length ? { reminders: notes } : undefined,
       history && boundary >= 0 ? history.slice(0, boundary + (session.revert?.partID ? 1 : 0)) : history,
     )
-    const admitted = yield* dependencies.sessions.admitPrompt({
-      sessionID: session.id,
-      messageID,
-      identityVersion: 1,
-      identity,
-      ...draft,
-    })
-    const message = admitted.message
-    if (!admitted.created)
-      return request.noReply === true ? message : yield* dependencies.loop({ sessionID: session.id })
-
-    if (session.revert && history) {
-      yield* dependencies.continuity.invalidate(session.id)
-      yield* Effect.forEach(boundary < 0 ? [] : history.slice(boundary + (session.revert.partID ? 1 : 0)), (message) =>
-        dependencies.sessions.removeMessage({ sessionID: session.id, messageID: message.info.id }),
-      )
-      const target = history[boundary]
-      const partBoundary = target?.parts.findIndex((part) => part.id === session.revert?.partID) ?? -1
-      if (session.revert.partID && target && partBoundary >= 0)
-        yield* Effect.forEach(target.parts.slice(partBoundary), (part) =>
-          dependencies.sessions.removePart({
-            sessionID: session.id,
-            messageID: target.info.id,
-            partID: part.id,
-          }),
-        )
-      yield* dependencies.sessions.clearRevert(session.id)
-    }
-    yield* dependencies.continuity.advance(session.id)
-    if (message.info.role !== "user") return yield* Effect.die(new Error("V1 admission winner must be a User"))
-    if (
-      session.agent !== message.info.agent ||
-      session.model?.providerID !== message.info.model.providerID ||
-      session.model?.id !== message.info.model.modelID ||
-      (session.model?.variant === "default" ? undefined : session.model?.variant) !== message.info.model.variant
-    )
-      yield* dependencies.sessions.setAgentModel({
-        sessionID: session.id,
-        agent: message.info.agent,
-        model: {
-          id: message.info.model.modelID,
-          providerID: message.info.model.providerID,
-          variant: message.info.model.variant ?? "default",
-        },
-        time: message.info.time.created,
-      })
-    yield* dependencies.sessions.touch(session.id)
-
+    const target = history?.[boundary]
+    const partBoundary = target?.parts.findIndex((part) => part.id === session.revert?.partID) ?? -1
     const permissions = Object.entries(request.tools ?? {}).map(
       ([t, enabled]): PermissionV1.Rule => ({ permission: t, action: enabled ? "allow" : "deny", pattern: "*" }),
     )
-    if (permissions.length > 0) {
-      session.permission = WriteRoots.keep(session.permission, permissions)
-      yield* dependencies.sessions.setPermission({ sessionID: session.id, permission: session.permission })
-    }
+    const admitted = yield* dependencies.sessions.admitPrompt(
+      {
+        sessionID: session.id,
+        messageID,
+        identityVersion: 1,
+        identity,
+        ...draft,
+        transition: {
+          expectedRevert: session.revert
+            ? Schema.decodeUnknownSync(SessionV1.SessionRevert)(
+                Schema.encodeSync(SessionV1.SessionRevert)(session.revert),
+              )
+            : null,
+          removeMessageIDs:
+            boundary < 0
+              ? []
+              : (history ?? []).slice(boundary + (session.revert?.partID ? 1 : 0)).map((message) => message.info.id),
+          removePartIDs:
+            session.revert?.partID && target && partBoundary >= 0
+              ? target.parts.slice(partBoundary).map((part) => part.id)
+              : [],
+          ...(permissions.length
+            ? {
+                permission: WriteRoots.keep(session.permission, permissions),
+                expectedPermission: session.permission ?? null,
+              }
+            : {}),
+          timeUpdated: Date.now(),
+        },
+      },
+      Effect.gen(function* () {
+        // Operational cache/file I/O only: EventV2 runs this after the winner projector and before visibility.
+        if (session.revert) yield* dependencies.continuity.invalidate(session.id)
+        yield* dependencies.continuity.advance(session.id)
+      }),
+    )
+    const message = admitted.message
+    if (!admitted.created)
+      return request.noReply === true ? message : yield* dependencies.loop({ sessionID: session.id })
 
     if (request.noReply === true) return message
     return yield* dependencies.loop({ sessionID: session.id })

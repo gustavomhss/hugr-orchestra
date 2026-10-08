@@ -8,14 +8,18 @@ import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
-import { Context, Effect, Layer, Schema } from "effect"
+import { Database } from "@orchestra/core/database/database"
+import { SessionTable } from "@orchestra/core/session/sql"
+import { eq } from "drizzle-orm"
+import { Context, Effect, Layer, Option, Schema } from "effect"
 
 export class Service extends Context.Service<Service, EventV2.Interface>()("@orchestra/EventV2Bridge") {}
 
-const layer = Layer.effect(
+const layer: Layer.Layer<Service, never, EventV2.Service | Database.Service> = Layer.effect(
   Service,
   Effect.gen(function* () {
     const events = yield* EventV2.Service
+    const database = yield* Database.Service
 
     const publish: EventV2.Interface["publish"] = (definition, data, options) =>
       Effect.gen(function* () {
@@ -36,17 +40,44 @@ const layer = Layer.effect(
     const unsubscribe = yield* events.listen((event) =>
       Effect.gen(function* () {
         const ctx = yield* InstanceRef
-        const workspaceID = event.location?.workspaceID ?? (yield* WorkspaceRef)
+        const explicit = event.location
+        const project =
+          explicit && typeof explicit === "object" && "project" in explicit
+            ? Schema.decodeUnknownOption(Schema.Struct({ project: Schema.Struct({ id: Schema.String }) }))(explicit)
+            : undefined
         const route = {
-          directory: event.location?.directory ?? ctx?.directory,
-          project: ctx?.project.id,
-          workspace: workspaceID,
+          directory: explicit ? explicit.directory : ctx?.directory,
+          project: explicit
+            ? project && Option.isSome(project)
+              ? project.value.project.id
+              : undefined
+            : ctx?.project.id,
+          workspace: explicit ? explicit.workspaceID : yield* WorkspaceRef,
         }
         const admitted =
           event.type === SessionV1.Event.PromptAdmitted.type && event.durable !== undefined
             ? Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data)
             : undefined
         if (admitted) {
+          if (admitted.transition) {
+            const row = yield* database.db
+              .select()
+              .from(SessionTable)
+              .where(eq(SessionTable.id, admitted.sessionID))
+              .get()
+              .pipe(Effect.orDie)
+            if (row) {
+              const { Session } = yield* Effect.promise(() => import("@/session/session"))
+              GlobalBus.emit("event", {
+                ...route,
+                payload: {
+                  id: EventV2.ID.create(),
+                  type: SessionV1.Event.Updated.type,
+                  properties: { sessionID: admitted.sessionID, info: Session.fromRow(row) },
+                },
+              })
+            }
+          }
           GlobalBus.emit("event", {
             ...route,
             payload: {
@@ -90,6 +121,6 @@ const layer = Layer.effect(
   }),
 )
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [EventV2.node] })
+export const node = LayerNode.make({ service: Service, layer: layer, deps: [EventV2.node, Database.node] })
 
 export * as EventV2Bridge from "./event-v2-bridge"
