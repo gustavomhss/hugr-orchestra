@@ -682,4 +682,19 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     const fresh = yield* f.registry.materialize(allow)
     expect((yield* f.run(discovery.find(f.context, { ...request, limit: 2 }, fresh))).operations).toHaveLength(2)
   }))
+
+  it.live("descriptor TTL expiring during asynchronous batch delivery prevents publication and reclaims refs", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    // Complete two-operation page has no cursor, so this exercises descriptor expiry itself.
+    yield* Ref.set(f.list, { tools: tools.slice(0, 2), catalogGeneration: 1, coverage: "complete" })
+    yield* Ref.set(f.afterBatch, Effect.yieldNow.pipe(Effect.andThen(Effect.sync(() => { f.clock.time += 100 }))))
+    yield* expectCode(f.find(), "stale_descriptor")
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Ref.set(f.afterBatch, Effect.void)
+    const retry = yield* f.find()
+    expect(retry.operations).toHaveLength(2)
+    expect(retry.cursor).toBeUndefined()
+  }))
 })
