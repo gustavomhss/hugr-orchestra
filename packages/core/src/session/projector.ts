@@ -1,6 +1,7 @@
 export * as SessionProjector from "./projector"
 
 import { and, desc, eq, gt, or, sql } from "drizzle-orm"
+import { isDeepStrictEqual } from "node:util"
 import { DateTime, Effect, Layer, Schema } from "effect"
 import { Database } from "../database/database"
 import { EventV2 } from "../event"
@@ -327,12 +328,41 @@ const layer = Layer.effectDiscard(
           return yield* Effect.die(new Error("UPSTREAM_SETTLEMENT_TASK_MISMATCH"))
         const owner = receipt ? storedOwner : incoming.type === "tool" ? { sessionID, messageID,
           callID: incoming.callID, tool: incoming.tool, input: incoming.state.input } : undefined
-        const part = receipt && owner && incoming.type === "tool" && previous?.type === "tool" &&
-          "metadata" in previous.state && "metadata" in incoming.state
-          ? { ...incoming, state: { ...(previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status)
-              ? previous.state : incoming.state), input: previous.state.input,
+        // A private first install carries an acquired snapshot, not authority to replace the latest Task state.
+        const installed = !receipt && incoming.type === "tool" && "metadata" in incoming.state &&
+          incoming.state.metadata?.upstreamSettlement !== undefined ? yield* Effect.gen(function* () {
+            if (!storedOwner || previous?.type !== "tool" || !("metadata" in previous.state) || !("metadata" in incoming.state) ||
+              incoming.callID !== storedOwner.callID || incoming.tool !== storedOwner.tool ||
+              sessionID !== storedOwner.sessionID || messageID !== storedOwner.messageID ||
+              event.data.sessionID !== storedOwner.sessionID || previous.metadata?.providerExecuted ||
+              incoming.metadata?.providerExecuted || !isDeepStrictEqual(incoming.state.input, previous.state.input))
+              return yield* Effect.die(new Error("UPSTREAM_SETTLEMENT_TASK_MISMATCH"))
+            const metadata = incoming.state.metadata ?? {}
+            const offered = SessionMessageUpdater.upstreamSettlement(metadata, storedOwner)
+            if (!offered || previous.state.metadata?.parentSessionId !== storedOwner.sessionID ||
+              previous.state.metadata?.sessionId !== metadata.sessionId)
+              return yield* Effect.die(new Error("UPSTREAM_SETTLEMENT_TASK_MISMATCH"))
+            const authorityRow = yield* db.select().from(MessageTable).where(eq(MessageTable.id,
+              SessionV1.MessageID.make(storedOwner.messageID))).get().pipe(Effect.orDie)
+            const authority = authorityRow ? Schema.decodeUnknownOption(SessionV1.Info)({ ...authorityRow.data,
+              id: authorityRow.id, sessionID: authorityRow.session_id }).valueOrUndefined : undefined
+            if (!authority || authority.sessionID !== storedOwner.sessionID || authority.role !== "assistant" || authority.agent !== "maestro")
+              return yield* Effect.die(new Error("UPSTREAM_SETTLEMENT_TASK_MISMATCH"))
+            return { ...previous, state: { ...previous.state, metadata: { ...previous.state.metadata,
+              upstreamSettlement: offered, workResult: offered.workResult,
+              parentSessionId: storedOwner.sessionID, sessionId: metadata.sessionId } } }
+          }) : undefined
+        const part = installed ?? (receipt && owner && incoming.type === "tool" && previous?.type === "tool" &&
+          "metadata" in previous.state
+          ? { ...previous, ...incoming,
+              ...(previous.metadata || incoming.metadata ? { metadata: { ...previous.metadata, ...incoming.metadata } } : {}),
+              state: { ...(previous.state.status === "error" ||
+                (previous.state.metadata?.interrupted === true && incoming.state.status !== "error") ||
+                (previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status))
+                ? { ...incoming.state, ...previous.state } : { ...previous.state, ...incoming.state }),
+                input: previous.state.input,
                 metadata: SessionMessageUpdater.taskMetadata(previous.state.metadata ?? {},
-                incoming.state.metadata ?? {}, owner) } } : incoming
+                  "metadata" in incoming.state ? incoming.state.metadata ?? {} : {}, owner) } } : incoming)
         const data = partData(Schema.decodeUnknownSync(SessionV1.Part)(part))
         yield* db
           .insert(PartTable)

@@ -31,25 +31,28 @@ export function upstreamSettlement(metadata: Record<string, unknown>, owner: Tas
     card: Schema.Struct({ messageID: Schema.NonEmptyString }),
     author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
   }))(receipt.value.workResult)
+  // Task's resume parameter names the child Session; logical Task identity is checked by the private host port.
   if (Option.isNone(result) || result.value.author.executionSessionID !== metadata.sessionId ||
     result.value.card.messageID !== result.value.author.messageID ||
-    (input.value.task_id !== undefined && input.value.task_id !== result.value.taskId)) return
+    (input.value.task_id !== undefined && input.value.task_id !== result.value.author.executionSessionID)) return
   return receipt.value
 }
 
 export function taskMetadata(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
   const { upstreamSettlement: ignored, ...metadata } = next
   const receipt = upstreamSettlement(previous, owner)
-  return receipt ? { ...metadata, parentSessionId: previous.parentSessionId, sessionId: previous.sessionId,
+  return receipt ? { ...previous, ...metadata, parentSessionId: previous.parentSessionId, sessionId: previous.sessionId,
     workResult: receipt.workResult, upstreamSettlement: receipt,
-    ...(previous.background === true ? { background: true } : {}) } : metadata
+    ...(previous.background === true ? { background: true } : {}),
+    ...(previous.interrupted === true ? { interrupted: true } : {}) } : metadata
 }
 
 function taskStructured(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
   const before = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(previous.metadata))
   const after = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(next.metadata))
   if (!before && !after) return next
-  return { ...next, metadata: taskMetadata(before ?? {}, after ?? {}, owner) }
+  return { ...(before && upstreamSettlement(before, owner) ? previous : {}),
+    ...next, metadata: taskMetadata(before ?? {}, after ?? {}, owner) }
 }
 
 export type MemoryState = {
@@ -322,6 +325,11 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
           if (match) {
+            if ("structured" in match.state) {
+              const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata))
+              if (metadata && upstreamSettlement(metadata, { sessionID: event.data.sessionID,
+                messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input })) return
+            }
             match.provider = event.data.provider
             match.time.ran = event.data.timestamp
             match.state = castDraft(
@@ -340,22 +348,36 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           const match = latestTool(draft, event.data.callID)
           if (match && "structured" in match.state) {
             const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
+            const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
             const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
-            const receipt = metadata ? upstreamSettlement(metadata, owner) : undefined
-            if (match.state.status !== "running" && !receipt) return
+            // The private host validates author/delivery before publishing Progress; also require retained Task anchors.
+            const receipt = metadata && draft.agent === "maestro" && !match.provider?.executed &&
+              previous.parentSessionId === event.data.sessionID && previous.sessionId === metadata.sessionId
+              ? upstreamSettlement(metadata, owner) : undefined
+            const stored = upstreamSettlement(previous, owner)
+            if (match.state.status !== "running" && !receipt && !stored) return
             const structured = taskStructured(match.state.structured, event.data.structured, owner)
             const carriedMetadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(structured.metadata)) ?? {}
             const carried = upstreamSettlement(carriedMetadata, owner)
-            match.state.structured = castDraft(carried ? structured : receipt ? { ...structured, metadata: { ...carriedMetadata, upstreamSettlement: receipt,
-              workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId } } : structured)
-            if (match.state.status === "running") match.state.content = [...event.data.content]
+            match.state.structured = castDraft(carried ? structured : receipt ? { ...match.state.structured, ...structured,
+              metadata: { ...previous, ...carriedMetadata, upstreamSettlement: receipt,
+                workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId,
+                ...(previous.interrupted === true ? { interrupted: true } : {}) } } : structured)
+            if (match.state.status === "running" && !stored) match.state.content = [...event.data.content]
           }
         })
       },
       "session.next.tool.success": (event) => {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
-          if (match && match.state.status === "running") {
+          if (match && "structured" in match.state) {
+            const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
+            const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
+            const receipt = upstreamSettlement(metadata, owner)
+            if (match.state.status !== "running" || (receipt && metadata.interrupted === true)) {
+              if (receipt) match.state.structured = castDraft(taskStructured(match.state.structured, event.data.structured, owner))
+              return
+            }
             match.provider = {
               executed: event.data.provider.executed || match.provider?.executed === true,
               metadata: match.provider?.metadata,
@@ -380,7 +402,12 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
       "session.next.tool.failed": (event) => {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
-          if (match && (match.state.status === "pending" || match.state.status === "running")) {
+          const metadata = match && "structured" in match.state
+            ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) : undefined
+          const receipt = match && metadata ? upstreamSettlement(metadata, { sessionID: event.data.sessionID,
+            messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }) : undefined
+          if (match && (match.state.status === "pending" || match.state.status === "running" ||
+            (match.state.status === "completed" && receipt))) {
             match.provider = {
               executed: event.data.provider.executed || match.provider?.executed === true,
               metadata: match.provider?.metadata,
@@ -392,8 +419,8 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 status: "error",
                 error: event.data.error,
                 input: typeof match.state.input === "string" ? {} : match.state.input,
-                structured: match.state.status === "running" ? match.state.structured : {},
-                content: match.state.status === "running" ? match.state.content : [],
+                structured: "structured" in match.state ? match.state.structured : {},
+                content: "content" in match.state ? match.state.content : [],
                 result: event.data.result,
               }),
             )
