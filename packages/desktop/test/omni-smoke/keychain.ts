@@ -1,10 +1,16 @@
 // Actual macOS encryption store fixture, not signing credentials or a mocked crypto backend.
 import { spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
+import { mkdirSync } from "node:fs"
 import path from "node:path"
 
 export function keychain(home: string, env: Record<string, string>) {
   if (process.platform !== "darwin" || !process.env.CI) throw new Error("private keychain fixture requires owned hosted macOS VM")
+  if (path.resolve(env.HOME!) !== path.resolve(home)) throw new Error("keychain fixture HOME does not match owned isolated home")
+  // Apple's DLDbListCFPref writes ~/Library/Preferences/com.apple.security.plist without creating its
+  // parent or reporting open() failure. A setter can exit 0 while the next process sees no default.
+  mkdirSync(path.join(home, "Library/Preferences"), { recursive: true })
+  mkdirSync(path.join(home, "Library/Keychains"), { recursive: true })
   const file = path.join(home, "smoke.keychain-db")
   const password = randomUUID()
   const invoke = (...args: string[]) => {
