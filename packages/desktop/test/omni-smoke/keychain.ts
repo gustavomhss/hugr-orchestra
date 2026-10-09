@@ -1,12 +1,12 @@
 // Actual macOS encryption store fixture, not signing credentials or a mocked crypto backend.
 import { spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { mkdirSync } from "node:fs"
+import { existsSync, mkdirSync } from "node:fs"
 import path from "node:path"
 
 export function keychain(home: string, env: Record<string, string>) {
   if (process.platform !== "darwin" || !process.env.CI) throw new Error("private keychain fixture requires owned hosted macOS VM")
-  if (path.resolve(env.HOME!) !== path.resolve(home)) throw new Error("keychain fixture HOME does not match owned isolated home")
+  if (!env.HOME || path.resolve(env.HOME) !== path.resolve(home)) throw new Error("keychain fixture HOME does not match owned isolated home")
   // Apple's DLDbListCFPref writes ~/Library/Preferences/com.apple.security.plist without creating its
   // parent or reporting open() failure. A setter can exit 0 while the next process sees no default.
   mkdirSync(path.join(home, "Library/Preferences"), { recursive: true })
@@ -25,10 +25,13 @@ export function keychain(home: string, env: Record<string, string>) {
     return result.stdout.trim()
   }
   const originalSearch = command("list-keychains", "-d", "user").split("\n").filter((line) => line.trim()).map((line) => JSON.parse(line.trim()) as string)
-  const originalDefault = invoke("default-keychain", "-d", "user")
-  const missingDefault = originalDefault.status !== 0 && /default keychain could not be found|specified keychain could not be found/.test(originalDefault.stderr)
-  if (originalDefault.status !== 0 && !missingDefault) throw new Error(`cannot capture original CI keychain: ${originalDefault.stderr}`)
-  const defaultPath = missingDefault ? undefined : JSON.parse(originalDefault.stdout.trim()) as string
+  const selectedDefault = () => {
+    const result = invoke("default-keychain", "-d", "user")
+    if (result.status === 0) return JSON.parse(result.stdout.trim()) as string
+    if (/default keychain could not be found|specified keychain could not be found/.test(result.stderr)) return undefined
+    throw new Error(`cannot capture CI keychain default: ${result.stderr}`)
+  }
+  const defaultPath = selectedDefault()
   const state = { created: false, configured: false, restored: false }
   const dispose = () => {
     const errors: string[] = []
@@ -43,12 +46,18 @@ export function keychain(home: string, env: Record<string, string>) {
       try { command("delete-keychain", file); state.created = false }
       catch (error) { errors.push(String(error)) }
     }
+    try {
+      if (existsSync(file)) throw new Error("owned keychain file still exists after delete")
+      const currentSearch = command("list-keychains", "-d", "user").split("\n").filter((line) => line.trim()).map((line) => JSON.parse(line.trim()) as string)
+      if (JSON.stringify(currentSearch) !== JSON.stringify(originalSearch) || selectedDefault() !== defaultPath) throw new Error("isolated keychain preference restoration mismatch")
+    } catch (error) { errors.push(String(error)) }
     if (errors.length) throw new Error(`CI keychain restoration failed: ${errors.join("; ")}`)
     state.restored = true
   }
   try {
     command("create-keychain", "-p", password, file)
     state.created = true
+    if (!existsSync(file)) throw new Error("security create-keychain did not create owned file")
     command("set-keychain-settings", "-lut", "3600", file)
     command("unlock-keychain", "-p", password, file)
     command("list-keychains", "-d", "user", "-s", file)

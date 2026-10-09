@@ -10,7 +10,7 @@ import { emergency, observe, owned } from "./inventory"
 import { keychain } from "./keychain"
 
 type Cell = "main-kill" | "utility-kill" | "quit"
-type Mutation = "legacy" | "forced-kill" | "empty"
+type Mutation = "legacy" | "forced-kill" | "empty" | "missing-keychain"
 type Diagnostic = "stop-main" | "no-main-native" | "load-only" | "completed-run" | "private-keychain"
 
 export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnostic) {
@@ -29,7 +29,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   }
   const destination = path.join(logs, `${cell}-${diagnostic ? `diagnostic-${diagnostic}` : mutation ?? "restored"}`)
   mkdirSync(destination, { recursive: true })
-  const store = await Promise.resolve().then(() => diagnostic === "private-keychain" && process.platform === "darwin" ? keychain(scratch.home, scratch.env) : undefined)
+  const store = await Promise.resolve().then(() => process.platform === "darwin" && mutation !== "missing-keychain" ? keychain(scratch.home, scratch.env) : undefined)
     .catch((error: unknown) => { scratch.llm.stop(); throw error })
   const launcher = process.platform === "linux" ? ["xvfb-run", "-a", manifest.executable] : [manifest.executable]
   const app = spawn(launcher[0]!, [...launcher.slice(1), "--no-sandbox"], { cwd: scratch.project, env: scratch.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: false })
@@ -44,7 +44,8 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   const evidence: Record<string, unknown> = {}
   evidence.keychain = store?.evidence
   const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
-    scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown", pass: false, error: "", cleanup: false }
+    scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown",
+    hostFixture: process.platform === "darwin" ? store ? "real isolated unlocked keychain" : "missing-keychain root mutation" : "native hosted OS", pass: false, error: "", cleanup: false }
   const legacy = { proc: undefined as ReturnType<typeof spawn> | undefined }
   try {
     if (win) await WindowsInventory.prepare()
@@ -173,12 +174,17 @@ export async function matrix() {
   const execute = (cell: Cell, mutation?: Mutation, diagnostic?: Diagnostic) => run(cell, mutation, diagnostic)
     .catch((error: unknown) => ({ cell, mutation: mutation ?? "none", diagnostic, pass: false, error: String(error), cleanup: false }))
   const mutations = [await execute("main-kill", "legacy"), await execute("quit", "forced-kill"), await execute("quit", "empty")]
+  // Measured root cause was host keychain authorization, not native child ownership. Remove only the
+  // real host fixture and require the unchanged Mac host-exit gate to reject the actual app.
+  const rootMutation = process.platform === "darwin" ? await execute("quit", "missing-keychain") : undefined
   const restored = [await execute("main-kill"), await execute("utility-kill"), await execute("quit")]
   const diagnostic = process.argv.includes("--diagnose-main") ? [await execute("quit", undefined, "stop-main"), await execute("quit", undefined, "no-main-native"),
     await execute("quit", undefined, "load-only"), await execute("quit", undefined, "completed-run"), await execute("quit", undefined, "private-keychain")] : []
   const expected = ["legacy unowned tree positive control rejected", "actual app.quit did not prove orderly code-zero exit", "empty required fixtures rejected"]
-  const pass = mutations.every((cell, index) => !cell.pass && cell.cleanup && cell.error.includes(expected[index]!)) && restored.every((cell) => cell.pass && cell.cleanup)
+  const pass = mutations.every((cell, index) => !cell.pass && cell.cleanup && cell.error.includes(expected[index]!)) &&
+    (rootMutation === undefined || !rootMutation.pass && rootMutation.cleanup && rootMutation.error.includes("actual app.quit did not prove orderly code-zero exit")) && restored.every((cell) => cell.pass && cell.cleanup)
   const summary = { pass, sourceSHA: provenance().sourceSHA, os: process.platform, arch: process.arch, at: new Date().toISOString(), mutations: mutations.map(({ cell, mutation, pass, error, cleanup }) => ({ cell, mutation, pass, error, cleanup })),
+    rootMutation: rootMutation && { pass: rootMutation.pass, error: rootMutation.error, cleanup: rootMutation.cleanup },
     restored: restored.map(({ cell, pass, error, cleanup }) => ({ cell, pass, error, cleanup })),
     diagnostic: diagnostic.map((result) => ({ diagnostic: result.diagnostic, pass: result.pass, error: result.error, cleanup: result.cleanup, scope: "diagnostic ONLY" })) }
   writeFileSync(path.join(logs, "matrix.json"), JSON.stringify(summary, null, 2))
