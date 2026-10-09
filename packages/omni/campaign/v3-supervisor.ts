@@ -1,5 +1,5 @@
 // V3: pinned supervisor SIGKILL, exact per-OS tier snapshots inside 8 s, then protected next-spawn recovery.
-import { cleanup, cli, client, control, deadlineSnapshots, fakeLLM, fileTree, identity, isolated, kill9, matches, members, provider, remaining, serve, table, until, verdict, win } from "./lib.ts"
+import { cleanup, cli, client, control, fakeLLM, fileTree, identity, inventoryScope, isolated, kill9, matches, members, provider, remaining, serve, sleep, table, until, verdict, win, type Identity, type Row } from "./lib.ts"
 import { deliveryEnv } from "./delivery-fixtures.ts"
 import type { ChildProcess } from "node:child_process"
 
@@ -38,14 +38,29 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
     }
     if (supervisors.length === 0) throw new Error("no pinned supervisors in positive control")
     step(`full controls ${JSON.stringify(before)}; supervisor identities ${JSON.stringify(supervisors)}`)
+    const mutations: { mutation: string; error: string }[] = []
+    for (const mutation of ["late", "empty", "unknown"] as const) {
+      const rejected = await sampleDeadline(Date.now(), 3000, [trees.pty.nonce], supervisors, [before.pty], [], async () => {
+        const rows = table(2000)
+        if (mutation === "late") await sleep(2250)
+        if (mutation === "empty") return []
+        return mutation === "unknown" ? rows.map((row) => row.pid === process.pid ? { ...row, args: null } : row) : rows
+      }).then(() => ({ error: "" }), (cause: unknown) => ({ error: String(cause) }))
+      const expected = mutation === "late" ? "V3 bounded inventory query deadline expired" :
+        mutation === "empty" ? "V3 inventory observation empty" : "querying host identity/argv unavailable"
+      if (!rejected.error.includes(expected)) throw new Error(`V3 ${mutation} observation mutation did not fail its named gate: ${rejected.error}`)
+      mutations.push({ mutation, error: rejected.error })
+    }
+    console.log("V3_OBSERVATION_MUTATIONS_RED " + JSON.stringify(mutations))
     for (const supervisor of supervisors) if (!kill9(supervisor)) throw new Error(`could not kill pinned supervisor ${JSON.stringify(supervisor)}`)
     const killed = Date.now()
     step(`supervisor kill succeeded at ${killed}`)
-    const observed = await deadlineSnapshots(killed, 8000, [trees.bash.nonce, trees.pty.nonce], supervisors)
-    const serverAlive = table().some((row) => matches(row, pinnedHost) && !row.state.startsWith("Z"))
+    const observed = await sampleDeadline(killed, 8000, [trees.bash.nonce, trees.pty.nonce], supervisors, [before.bash, before.pty], [pinnedHost])
+    const serverAlive = observed.last.watched.some((row) => matches(row, pinnedHost))
     const tier = win
       ? { expected: "Jobs close", matches: observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) }
-      : { expected: "Unix trees remain unprotected", matches: observed.samples.every((sample) => sample.fixtureIds.every((ids, index) => ids.length === 3 && ids.every((id) => (index === 0 ? before.bash : before.pty).fixtureIds.some((original) => matches(id, original))))) }
+      : { expected: "Unix trees remain unprotected", observedAtMs: observed.last.atMs,
+          matches: observed.last.terminal && observed.samples.every((sample) => sample.fixtureIds.every((ids, index) => ids.length === 3 && ids.every((id) => (index === 0 ? before.bash : before.pty).fixtureIds.some((original) => matches(id, original))))) }
     step(`supervisor kill tier ${JSON.stringify(tier)}; last deadline snapshot ${JSON.stringify(observed.last)}`)
 
     const created = Date.now()
@@ -60,10 +75,10 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
     const recoveryMs = Date.now() - created
     if (!fresh.some((pinned) => !supervisors.some((old) => matches(old, pinned)))) throw new Error("recovery did not create a new supervisor identity")
     if (!kill9(pinnedHost)) throw new Error("could not kill pinned server")
-    const afterHost = await deadlineSnapshots(Date.now(), 8000, [trees.after.nonce], [pinnedHost, ...fresh, ...recovered.fixtureIds, ...recovered.wrappers])
+    const afterHost = await sampleDeadline(Date.now(), 8000, [trees.after.nonce], [pinnedHost, ...fresh, ...recovered.fixtureIds, ...recovered.wrappers], [recovered])
     step(`recovery ${recoveryMs} ms; new host-owned tree zero at ${afterHost.zeroAtMs} ms`)
     result.value = {
-      home: scratch.home, nonces, pinnedHost, before, supervisors, observed, serverAlive, tier,
+      home: scratch.home, nonces, pinnedHost, before, supervisors, observed, serverAlive, tier, mutations,
       recovery: { ms: recoveryMs, control: recovered, supervisors: fresh }, afterHost,
       oldTreesFinal: { bash: await remaining(trees.bash.nonce), pty: await remaining(trees.pty.nonce) },
       pass: tier.matches && serverAlive && observed.last.retained.length === 0 && recoveryMs < 30_000 && afterHost.zeroAtMs !== undefined && afterHost.last.counts[0] === 0 && afterHost.last.retained.length === 0,
@@ -86,6 +101,55 @@ export async function run(options: { mutation?: "wrong-owner" } = {}) {
     })
   }
   return verdict("v3-supervisor", result.value)
+}
+
+/** V3 observation window: two-second fresh queries, with a reserved final probe and no late/stale acceptance. */
+export async function sampleDeadline(started: number, boundMs: number, nonces: string[], retained: Identity[],
+  positive: ReturnType<typeof control>[], watched: Identity[] = [], probe: () => Row[] | Promise<Row[]> = () => table(2000)) {
+  const queryBudgetMs = 2000
+  const terminalAtMs = boundMs - queryBudgetMs - 250
+  if (positive.length !== nonces.length || !positive.length || positive.some((entry) => !entry.pass || !entry.fixtureIds.length))
+    throw new Error("V3 observation requires prior positive alive controls")
+  if (terminalAtMs < 0) throw new Error("V3 observation window cannot fit a full bounded query")
+  const origin = performance.now() - (Date.now() - started)
+  const elapsed = () => Math.max(performance.now() - origin, Date.now() - started)
+  const samples: { queryAtMs: number; atMs: number; observedAt: string; terminal: boolean; counts: number[];
+    fixtureIds: Identity[][]; wrappers: Identity[][]; retained: Identity[]; watched: Identity[] }[] = []
+  const capture = async (terminal: boolean) => {
+    const queryAtMs = elapsed()
+    if (queryAtMs + queryBudgetMs >= boundMs) throw new Error("V3 full inventory query budget no longer fits observation window")
+    const timer = { value: undefined as ReturnType<typeof setTimeout> | undefined }
+    const rows = await Promise.race([Promise.resolve().then(probe), new Promise<never>((_, reject) => {
+      timer.value = setTimeout(() => reject(new Error("V3 bounded inventory query deadline expired")), queryBudgetMs)
+    })]).finally(() => clearTimeout(timer.value))
+    if (elapsed() >= boundMs || elapsed() - queryAtMs > queryBudgetMs)
+      throw new Error("V3 late inventory observation rejected")
+    if (!rows.length) throw new Error("V3 inventory observation empty")
+    const scope = inventoryScope(rows, [...retained, ...watched, ...positive.flatMap((entry) => [...entry.fixtureIds, ...entry.wrappers])])
+    if (scope.some((row) => row.args === null)) throw new Error("V3 inventory observation has unknown argv in owned scope")
+    const found = nonces.map((nonce) => members(nonce, rows))
+    const atMs = elapsed()
+    if (atMs >= boundMs) throw new Error("V3 late identity projection rejected")
+    const live = (ids: Identity[]) => ids.filter((pinned) => rows.some((row) => matches(row, pinned) && !row.state.startsWith("Z")))
+    samples.push({ queryAtMs, atMs, observedAt: new Date().toISOString(), terminal,
+      counts: found.map((tree) => tree.members.length + tree.wrappers.length),
+      fixtureIds: found.map((tree) => tree.members.map((row) => identity(row.pid, rows))),
+      wrappers: found.map((tree) => tree.wrappers.map((row) => identity(row.pid, rows))), retained: live(retained), watched: live(watched) })
+  }
+  // Ordinary queries must also leave a full budget for the fixed predeadline final observation.
+  while (elapsed() + queryBudgetMs < terminalAtMs) {
+    await capture(false)
+    await sleep(Math.min(250, Math.max(0, terminalAtMs - queryBudgetMs - elapsed())))
+  }
+  await sleep(Math.max(0, terminalAtMs - elapsed()))
+  await capture(true)
+  if (!samples.length || !samples.at(-1)?.terminal) throw new Error("V3 observation produced no valid final snapshot")
+  const last = samples.at(-1)!
+  const zeroAtMs = samples.find((sample) => sample.counts.every((count) => count === 0) && sample.retained.length === 0)?.atMs
+  // Exact pinned death is irreversible; Unix survival is certified only by the fresh reserved final positive probe.
+  // Waiting closes the window, but does not relabel the last query as an observation at exactly boundMs.
+  await sleep(Math.max(0, boundMs - elapsed()))
+  return { samples, zeroAtMs, last, windowMs: boundMs, queryBudgetMs, terminalAtMs, lastObservedAtMs: last.atMs }
 }
 
 if (import.meta.main) process.exit((await run()).pass ? 0 : 1)
