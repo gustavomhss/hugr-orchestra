@@ -10,7 +10,79 @@ build or product smoke while combined implementation is incomplete. Prepare runn
 checks now; perform one integrated validation batch after combined source is ready.
 Reuse existing source-bound evidence; keep gates intact. Static cold review remains required.
 
-## Current ready pin and validation handoff
+## Current repair wave and qualification hold
+
+Current published integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
+This is not a qualified runtime freeze. The measured source freeze was
+`1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
+
+| Run | Measured result | Follow-up |
+| --- | --- | --- |
+| Orchestra `37953895229` | 171 pass / 10 fail on each OS | Repair the five failed files only |
+| Core `37956127836` | 48 pass / 1 fail on each OS | Correct the after-signed-disposition fault fixture |
+| Relay `37953896008` | 33 pass / 0 fail on each OS | Reuse unchanged source-bound evidence |
+| Native products `37955682776` | Six consumer jobs failed | Runtime owns version formatting and shared real models.dev snapshot repair |
+| Nix measurement `37954180585` | Prepare succeeded; four native lanes and completion failed | Repair parser conformance, then measure the new source freeze |
+
+The integration checkpoint includes SDK activation fixture `87442e5384`, Core fault
+fixture `be5a5280fb`, private-port fixtures `de8191d564`, initial Task detail/hash repair
+`1347d53401`, upstream provenance fixture `99517ce5eb` (mapped to `236017530b`), and Nix
+parser repair `5f7e3b0c7c`. Those repairs are source-reviewed, not qualified by a new run.
+
+### Remaining Core / background seam
+
+Existing author A owns only Core `session/message-updater.ts`, `session/projector.ts`,
+and `test/upstream-settlement-preservation.test.ts`. A must publish a minimal immutable
+repair for receipt-free unfavorable host observation on an already completed original
+native Task. The existing adapter receives an internal validation callback backed by
+the projector's captured Database and real parent, child, project, directory, agent,
+original Task tuple, and returned-assistant rows. Ambient optional Database presence
+does not establish trust. An unbacked memory adapter refuses observation.
+
+Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
+`2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
+reconciles the same tracker, publishes existing typed Task metadata events, and reads
+back the retained result before resolving the Deferred and admitting delivery. EventV2
+owns each commit and announcement; there is no outer rollback transaction. Sequential
+partial observation commits remain possible and fail closed. Completed native and dual
+view cases exercise the actual scheduler and private setter, without preseeded receipts.
+
+C has conditional static approval only:
+`ses_ede811595ffe8onazcY8NaqjdT/msg_121cda10a001AnodaWbWSLCjSm`.
+The unchanged Core completed-Task guard still blocks that path until A is composed.
+No new Session API, service, event, store, receipt before admission, Core-to-Orchestra
+dependency, permission waiver, or relaxed private-port terminal equality is authorized.
+
+After A publishes, the coordinator composes A and C and obtains bounded independent
+cross-caller review. Runtime alone then owns Core typecheck and the affected selectors:
+
+- Core: `test/relay-workflow-evaluator.test.ts` and
+  `test/upstream-settlement-preservation.test.ts`.
+- Orchestra: `test/maestro/upstream-provenance.test.ts`,
+  `test/maestro/upstream-settlement.test.ts`, `test/maestro/task-hash.test.ts`,
+  `test/maestro/arsenal-activation.test.ts`, and `test/tool/task-backend-result.test.ts`.
+
+The final clean post-check/generated source freeze is still pending. Runtime owns the
+approved CLI/version and native models.dev workflow changes; the Relay coordinator
+does not edit those dirty files. Generated caps remain SDK **16718 LOC**, Client **6646**.
+
+### Nix and pilot qualification
+
+Relay is the sole Nix activation/hash writer. Request-only `7eb2bb766a80f130a8d0758f3337729237b9ea8a`
+had exact parent `1f4f2929b0`; upstream created no duplicate request or run. Actual Linux
+artifacts falsified the old parser assumptions: Nix 2.29.2 exits 1 on the expected fixed
+output mismatch, counts carry SGR decoration, and derivation fields are `sha256` / `nar`.
+The repaired parser replayed both Linux artifacts and rejected six defect classes per
+OS in offline conformance checks. This does not qualify the failed native run or authorize
+applying its hashes. Package changes require a fresh source fingerprint and four native
+measurements before an exact direct-child hash/request-only consumer verification.
+
+WSL still lacks an operational runner proof. The real-model pilot remains unexecuted
+and must collect linked actual Task return, author/logical Task, receipt/durable delivery,
+grounded V3/current context, publication/materialization/skills, WorkflowBound, same-Session
+ledger/cursor/retry, and distinct Maestro validation and Lucy artifacts. Exit 0 is insufficient.
+
+## Historical ready pin and validation handoff
 
 All known semantic repairs and source-growth extractions are composed in clean published
 `35c52d2c6716afb18e89cd3fa219da2f1bd55873`. Runtime received exact pin and three independent
@@ -38,7 +110,7 @@ APPROVE only, not compilation, runtime, budget-gate or acceptance results.
 | Prompt operations extraction | `ses_eded6319bffeD54cwmmW8s7mS8` | `msg_1212cbf3e001w3F8P9BvZWcIAp` |
 | Background Task extraction | `ses_eded6318fffevTIEIZGheWYg6T` | `msg_1212b2c36001g13xxJvzkDehF7` |
 
-Runtime owns one coalesced failed-package/Godfile/scoped QA pass after composition and local
+At that historical checkpoint, runtime owned one coalesced failed-package/Godfile/scoped QA pass after composition and local
 PTY setup. Official bun-pty 0.4.9 archive was inspected by runtime; empty installed dist is
 local cache/install corruption, not a new source dependency/version change. Relay does not
 duplicate those checks. Nix measurement activation waits for actual post-generation/checks
