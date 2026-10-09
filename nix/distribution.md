@@ -1,7 +1,7 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": "aec262940e6f86dbf55baf33ab7ebe7ccd91770f", "measurementRun": null, "measurementAttempt": null}
+{"ready": false, "phase": "measure", "sourceParent": "d69abdf4834265f8b23fa6770907f98e2a7dc9d8", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
 Historical request `7eb2bb766a80f130a8d0758f3337729237b9ea8a` had exact clean source
@@ -21,6 +21,19 @@ holds `ready: false`, so a later repaired-source request can fast-forward normal
 The new Core updater candidate changes a recorded package input; the successful
 9c measurement cannot qualify a different fingerprint. Compare the actual final
 source before the next capture/hash-only consumer checkpoint; never relabel artifacts.
+
+Qualified request `d69abdf4834265f8b23fa6770907f98e2a7dc9d8`, parent
+`791d7e1846588df03b64c3981fe105cea805d036`, measured all four systems successfully
+in run `37989995766`. Its direct child `b208e93c6d` applied only those four hashes
+and the verify request. Run `37991613494` failed before consumer builds: matching
+measurement/provenance passed, but hash controls needed `d69^` and native checkout
+depth 2 hid that real parent. The repair retains depth 3, preserves every control,
+and is source-reviewed. Actual shallow reproduction failed before deepening and
+resolved the exact qualified parent afterward; clean depth-3 replay with bytecode
+disabled completed `HASH_CAPTURE_CONTROLS_OK` for the unchanged full control list.
+The applied values are measured dependencies, not a consumer/product pass. This
+integration retains failed-verification ancestry and holds the next request inactive
+until a fresh source/root-bound capture can precede its strict hash-only child.
 
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
