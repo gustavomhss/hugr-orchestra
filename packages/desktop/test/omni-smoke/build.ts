@@ -60,7 +60,8 @@ export async function build() {
   if (!outputs.some((file) => file.replaceAll("\\", "/").endsWith("/main/sidecar.js")) || !outputs.some((file) => file.replaceAll("\\", "/").endsWith("/main/index.js")) || !outputs.some((file) => file.endsWith(".wasm"))) throw new Error("actual Node/sidecar bundle assets incomplete")
   const bundleHashes = Object.fromEntries(outputs.map((file) => {
     const relative = path.relative(desktop, file).replaceAll("\\", "/")
-    const packaged = createHash("sha256").update(asar.extractFile(path.join(resources, "app.asar"), relative)).digest("hex")
+    // asar walks path.sep, not URL separators, on Windows; manifest keys remain portable.
+    const packaged = createHash("sha256").update(asar.extractFile(path.join(resources, "app.asar"), path.relative(desktop, file))).digest("hex")
     if (packaged !== digest(file)) throw new Error(`app.asar byte mismatch: ${relative}`)
     return [relative, packaged]
   }))

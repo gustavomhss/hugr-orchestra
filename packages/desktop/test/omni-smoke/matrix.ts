@@ -74,9 +74,13 @@ export async function run(cell: Cell, mutation?: Mutation) {
     if (!Object.values(live).every((found) => found.pass) || !mainSupervisors.length || !utilitySupervisors.length || mainSupervisors.some((id) => utilitySupervisors.some((other) => matches(id, other)))) throw new Error("fixture supervisor ancestry/main vs utility ownership control failed")
     evidence.allTrees3 = Object.fromEntries(["main", "shell", "terminal"].map((name) => [name, live[name]]))
     const before = table()
+    evidence.ownerRows = owned(before, roots)
     owned(before, roots).forEach((row) => retained.push(identity(row.pid, before)))
     Object.values(live).flatMap((found) => [...found.fixtureIds, ...found.wrappers, ...found.protectedMembers.flatMap((member) => member.supervisors)]).forEach((id) => { if (!retained.some((old) => matches(old, id))) retained.push(id) })
     evidence.retained = retained
+    // A dying known Electron root can lose argv before ps marks it zombie. Keep its exact birth identity
+    // in every observation scope; unknown NEW descendants still fail the unchanged campaign decoder.
+    scratch.specs.forEach((spec) => adoptTree(scratch.home, spec.nonce, [...roots, ...retained]))
     const utilityOwned = owned(before, [utility]).map((row) => identity(row.pid, before))
     const selected = cell === "utility-kill" ? scratch.specs.filter((spec) => spec.name !== "main") : scratch.specs
     const boundMs = cell === "quit" ? 20_000 : 8000
@@ -105,7 +109,11 @@ export async function run(cell: Cell, mutation?: Mutation) {
       if (!independent.pass) throw new Error("utility kill also killed independent main supervisor/tree")
     }
     result.pass = true
-  } catch (error) { result.error = String(error) }
+  } catch (error) {
+    result.error = String(error)
+    try { evidence.failureRows = table().filter((row) => retained.some((id) => matches(row, id))) }
+    catch (error) { evidence.failureInventoryError = String(error) }
+  }
   finally {
     scratch.llm.stop()
     // Capture newly observed descendants even after partial startup; kill only exact owned identities.
@@ -123,7 +131,8 @@ export async function run(cell: Cell, mutation?: Mutation) {
     sourceSHA: manifest.sourceSHA, sourceTree: manifest.sourceTree, buildManifestSha256: digest(path.join(logs, "build.json")),
     evidence, capabilities: { gui: process.platform === "linux" ? "actual Electron under Xvfb" : "actual Electron GUI on hosted VM", pty: win ? "ConPTY" : "POSIX PTY", lsp: "real product LSP service with stdio protocol fixture", mcp: "real product MCP stdio service + grandchild", signing: "unsigned probe; owner keys unavailable" } }
   writeFileSync(path.join(destination, "verdict.json"), JSON.stringify(record, null, 2))
-  console.log("DESKTOP_CELL " + JSON.stringify({ ...record, evidence: { hosts: evidence.hosts, action: evidence.action, observed: evidence.observed, orderly: evidence.orderly } }))
+  console.log("DESKTOP_CELL " + JSON.stringify({ ...record, evidence: { hosts: evidence.hosts, action: evidence.action, orderly: evidence.orderly,
+    observation: evidence.observed ? Object.fromEntries(Object.entries(evidence.observed).filter(([key]) => key !== "samples")) : undefined, failureRows: evidence.failureRows } }))
   return record
 }
 
