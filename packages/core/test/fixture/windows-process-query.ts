@@ -1,12 +1,41 @@
 export * as WindowsProcessQuery from "./windows-process-query.ts"
 
 import { spawn } from "node:child_process"
+import { randomUUID } from "node:crypto"
 import { accessSync, constants, mkdtempSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { performance } from "node:perf_hooks"
 
-/** Resolve without bootstrapping Node through Bun's Windows synchronous spawn path. */
+// Native Node owns source OS/stdio lifetime and cancellation. The RUN handshake prevents source
+// startup before runtime attestation; cancellation retains ownership through inherited-pipe close.
+const BROKER = `
+import {spawn} from 'node:child_process';
+if (process.versions.bun || process.release.name !== 'node' || !/^\\d+\\.\\d+\\.\\d+/.test(process.versions.node ?? '')) throw Error('native Node attestation rejected');
+const [file,request,until,nonce] = process.argv.slice(2);
+const deadline = performance.now() + Math.max(0, Number(until) - Date.now());
+process.stdout.write('OMNI_NODE_ATTEST ' + JSON.stringify({nonce,bun:false,release:process.release.name,version:process.versions.node}) + '\\n');
+const admitted = await new Promise(resolve => {
+  process.stdin.once('data',data=>resolve(data.toString()==='RUN\\n'));
+  process.stdin.once('end',()=>resolve(false)); process.stdin.resume();
+});
+if (!admitted || performance.now() >= deadline) {process.exitCode=1; process.stdin.destroy()}
+if (admitted && performance.now() < deadline) {
+  const child=spawn(process.execPath,['--experimental-strip-types',file,request],{stdio:['ignore','pipe','pipe'],windowsHide:true});
+  const stop=()=>{process.exitCode=1; try {if(child.pid) child.kill('SIGKILL')} catch(error) {console.error(error)}};
+  process.stdin.once('end',stop); process.stdin.on('error',stop);
+  if (process.stdin.readableEnded) stop();
+  child.on('error',error=>{console.error(error); process.exitCode=1});
+  child.stdout.on('error',stop); child.stderr.on('error',stop);
+  child.stdout.pipe(process.stdout,{end:false}); child.stderr.pipe(process.stderr,{end:false});
+  const timer=setTimeout(stop,Math.max(0,deadline-performance.now()));
+  const [code,signal]=await new Promise(resolve=>child.once('close',(code,signal)=>resolve([code,signal])));
+  clearTimeout(timer); process.stdin.removeListener('end',stop); process.stdin.destroy();
+  if (signal || code!==0) {console.error('source failed: code '+code+', signal '+signal); process.exitCode=code ?? 1}
+}
+`
+
+/** Resolve a candidate without spawning; invoke must attest its runtime, not trust its filename. */
 export function nodeExecutable(): string {
   const explicit = process.env.OMNI_CAMPAIGN_NODE
   if (explicit && !path.isAbsolute(explicit)) throw new Error("OMNI_CAMPAIGN_NODE must be an absolute native Node path")
@@ -34,45 +63,75 @@ export async function invoke(source: string, decoder: string, request: readonly 
   const node = nodeExecutable()
   const dir = mkdtempSync(path.join(os.tmpdir(), "omni-windows-query-"))
   const file = path.join(dir, "query.mjs")
+  const nonce = randomUUID()
   const state = { closed: true, failure: undefined as unknown }
   try {
     writeFileSync(file, source)
     writeFileSync(file + ".config", JSON.stringify({ node, decoder }))
+    writeFileSync(path.join(dir, "broker.mjs"), BROKER)
     if (performance.now() >= deadline) throw new Error("Windows process query deadline expired before startup")
     return await new Promise<string>((resolve, reject) => {
-      const child = spawn(node, ["--experimental-strip-types", file, JSON.stringify(request)], {
-        windowsHide: true, stdio: ["ignore", "pipe", "pipe"],
+      const child = spawn(node, ["--experimental-strip-types", path.join(dir, "broker.mjs"), file, JSON.stringify(request),
+        String(Date.now() + Math.max(0, deadline - performance.now())), nonce], {
+        windowsHide: true, stdio: ["pipe", "pipe", "pipe"],
       })
       state.closed = false
-      const output = { chunks: [] as Buffer[], bytes: 0, stderr: Buffer.alloc(0), error: undefined as Error | undefined }
+      const closed = Promise.withResolvers<void>()
+      const output = { chunks: [] as Buffer[], bytes: 0, stderr: Buffer.alloc(0), header: Buffer.alloc(0) as Buffer, attested: false, error: undefined as Error | undefined }
       const timers = { operation: undefined as ReturnType<typeof setTimeout> | undefined, cleanup: undefined as ReturnType<typeof setTimeout> | undefined }
       const fail = (error: Error) => {
         if (output.error) return
         output.error = error
         clearTimeout(timers.operation)
-        timers.cleanup = setTimeout(() => reject(new AggregateError([output.error],
-          `Windows process query OS/stdio close unconfirmed; files retained: ${dir}; PID ${child.pid}`)), 2000)
-        try { if (child.pid) child.kill("SIGKILL") }
+        timers.cleanup = setTimeout(() => reject(Object.assign(new AggregateError([output.error],
+          `Windows process query OS/stdio close unconfirmed; files retained: ${dir}; PID ${child.pid}`),
+          { directory: dir, helperPID: child.pid, closed: closed.promise })), 2000)
+        try {
+          if (output.attested) child.stdin.end()
+          if (!output.attested && child.pid) child.kill("SIGKILL")
+        }
         catch (killError) { output.error = new AggregateError([error, killError], "Windows process query kill failed") }
       }
       child.on("error", (error) => fail(new Error(`Windows process query spawn failed: ${error.message}`, { cause: error })))
       child.stdout.on("error", fail)
       child.stderr.on("error", fail)
+      child.stdin.on("error", fail)
       child.stdout.on("data", (chunk: Buffer) => {
-        output.bytes += chunk.length
+        if (output.error) return
+        const data = output.attested ? chunk : Buffer.concat([output.header, chunk])
+        const end = output.attested ? -1 : data.indexOf(10)
+        if (!output.attested) {
+          if (end < 0) {
+            if (data.length > 4096) return fail(new Error("Windows process query native Node attestation missing"))
+            output.header = data
+            return
+          }
+          try {
+            if (end > 4096 || !data.subarray(0, 17).equals(Buffer.from("OMNI_NODE_ATTEST "))) throw new Error("invalid control header")
+            const control = JSON.parse(data.subarray(17, end).toString("utf8"))
+            if (control.nonce !== nonce || control.bun !== false || control.release !== "node" || typeof control.version !== "string" || !/^\d+\.\d+\.\d+/.test(control.version)) throw new Error("runtime identity mismatch")
+            output.attested = true
+            child.stdin.write("RUN\n")
+            output.header = Buffer.alloc(0)
+          } catch (error) { return fail(new Error("Windows process query native Node attestation invalid", { cause: error })) }
+        }
+        const payload = end < 0 ? data : data.subarray(end + 1)
+        output.bytes += payload.length
         if (output.bytes > 64 * 1024 * 1024) return fail(new Error("Windows process query stdout exceeded 64 MiB"))
-        if (!output.error) output.chunks.push(chunk)
+        output.chunks.push(payload)
       })
       child.stderr.on("data", (chunk: Buffer) => {
         output.stderr = Buffer.concat([output.stderr, chunk.subarray(0, Math.max(0, 16384 - output.stderr.length))])
       })
       child.once("close", (code, signal) => {
         state.closed = true
+        closed.resolve()
         clearTimeout(timers.operation)
         clearTimeout(timers.cleanup)
         if (output.error) return reject(output.error)
         if (performance.now() >= deadline) return reject(new Error("Windows process query deadline expired"))
         if (signal || code !== 0) return reject(new Error(`Windows process query failed: code ${code}, signal ${signal}: ${output.stderr.toString("utf8")}`))
+        if (!output.attested) return reject(new Error("Windows process query native Node attestation missing"))
         const stdout = Buffer.concat(output.chunks).toString("utf8")
         if (!stdout.trim()) return reject(new Error("Windows process query empty output"))
         if (performance.now() >= deadline) return reject(new Error("Windows process query deadline expired"))
