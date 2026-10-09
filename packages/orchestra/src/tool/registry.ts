@@ -5,7 +5,7 @@ import { Session } from "@/session/session"
 import { QuestionTool } from "./question"
 import { ShellTool } from "./shell"
 import { ShellPrompt } from "./shell/prompt"
-import { roster } from "@/maestro/roster"
+import { nativeProfiles, roster } from "@/maestro/roster"
 import { AtlasMemory } from "@/maestro/atlas-memory"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
@@ -499,7 +499,12 @@ const layer = Layer.effect(
         ) {
           return false
         }
+        // A path-scoped skill-root edit deny can mask the wildcard discovery deny in disabled().
+        // Discovery schemas must also respect the immutable native floor, independent of Session grants.
         if (
+          (input.agent.native === true &&
+            input.agent.id === "jimmy" &&
+            Permission.disabled([tool.id], Permission.fromConfig(nativeProfiles[input.agent.id])).has(tool.id)) ||
           Permission.disabled([tool.id], input.agent.permission).has(tool.id) ||
           Permission.disabled([tool.id], Permission.merge(input.agent.permission, input.permission ?? [])).has(tool.id)
         ) {
