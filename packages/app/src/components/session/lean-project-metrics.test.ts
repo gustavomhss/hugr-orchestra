@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { createComponent, createRoot, createStore, render } from "./lean-project-metrics.test-helper"
-import type { Config, Part, Message } from "@orchestra/sdk/v2/client"
+import type { Config, Part } from "@orchestra/sdk/v2/client"
 
 const panel = await import("./lean-project-metrics")
 const { createLeanSettingsController } = await import("../settings-v2/general-controllers")
@@ -16,7 +16,9 @@ test("Lean reads backend false and preserves sibling limits in one awaited patch
     dispose,
     lean: createLeanSettingsController(() => ({
       data,
-      updateConfig: async (patch) => { calls.push(patch) },
+      updateConfig: async (patch) => {
+        calls.push(patch)
+      },
     })),
   }))
   try {
@@ -31,10 +33,30 @@ test("Lean reads backend false and preserves sibling limits in one awaited patch
 })
 
 test("loaded repository selection excludes foreign, unknown, unfinished, orphan and reverted tool parts", () => {
-  const message = (id: string, sessionID: string): Message => ({ id, sessionID, role: "assistant", time: { created: 1, completed: 2 }, parentID: "user", modelID: "model", providerID: "provider", mode: "primary", agent: "build", path: { cwd: "/repo", root: "/repo" }, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } })
-  const part = (messageID: string, sessionID: string): Part => ({ id: `part-${messageID}`, messageID, sessionID, type: "tool", callID: messageID, tool: "bash", state: { status: "completed", input: {}, output: "", title: "", metadata: { lean: messageID }, time: { start: 1, end: 2 } } })
-  const data = { project: "native-repo", message: { one: [message("m1", "one"), message("m2", "one")], two: [message("m3", "two")], foreign: [message("m4", "foreign")], unknown: [message("m5", "unknown")] }, part: { m1: [part("m1", "one"), { ...part("m1", "one"), state: { status: "running" as const, input: {}, time: { start: 1 } } }], m2: [part("m2", "one")], m3: [part("m3", "two")], m4: [part("m4", "foreign")], m5: [part("m5", "unknown")], orphan: [part("orphan", "one")] } }
-  const owner = (id: string) => id === "unknown" ? undefined : { projectID: id === "foreign" ? "other-repo" : "native-repo", ...(id === "one" ? { revert: { messageID: "m2" } } : {}) }
+  const message = (id: string, sessionID: string) => ({ id, sessionID })
+  const part = (messageID: string, sessionID: string): Part => ({
+    id: `part-${messageID}`, messageID, sessionID, type: "tool", callID: messageID, tool: "bash",
+    state: {
+      status: "completed", input: {}, output: "", title: "",
+      metadata: { lean: messageID }, time: { start: 1, end: 2 },
+    },
+  })
+  const data = {
+    project: "native-repo",
+    message: {
+      one: [message("m1", "one"), message("m2", "one")], two: [message("m3", "two")],
+      foreign: [message("m4", "foreign")], unknown: [message("m5", "unknown")],
+    },
+    part: {
+      m1: [part("m1", "one"), { ...part("m1", "one"), state: { status: "running" as const, input: {}, time: { start: 1 } } }],
+      m2: [part("m2", "one")], m3: [part("m3", "two")], m4: [part("m4", "foreign")],
+      m5: [part("m5", "unknown")], orphan: [part("orphan", "one")],
+    },
+  }
+  const owner = (id: string) => id === "unknown" ? undefined : {
+    projectID: id === "foreign" ? "other-repo" : "native-repo",
+    ...(id === "one" ? { revert: { messageID: "m2" } } : {}),
+  }
   expect(panel.collectLeanProjectRecords(data, owner)).toEqual(["m1", "m3"])
   expect(panel.collectLeanProjectRecords(data, owner)).toEqual(["m1", "m3"])
   expect(panel.collectLeanProjectRecords({ ...data, project: "" }, owner)).toEqual([])
@@ -74,7 +96,10 @@ test("Lean backend rejection remains visible, does not fake enabled state or ret
     dispose,
     lean: createLeanSettingsController(() => ({
       data: { config: { tool_output: { lean: { enabled: false } } } },
-      updateConfig: async (patch) => { calls.push(patch); throw failure },
+      updateConfig: async (patch) => {
+        calls.push(patch)
+        throw failure
+      },
     })),
   }))
   try {
