@@ -11,10 +11,8 @@ import { SessionID } from "@orchestra/schema/session-id"
 import { Database } from "../../database/database"
 import { FSUtil } from "../../fs-util"
 import { Global } from "../../global"
-import { Location } from "../../location"
 import { SessionStore } from "../../session/store"
 import type { Tool } from "../../tool/tool"
-import { CapabilityInvocation } from "../invocation"
 import { CapabilityPolicy } from "../policy"
 import { CapabilityArtifactPinTable, CapabilityArtifactReferenceTable, CapabilityArtifactTable } from "../sql"
 import { ArtifactBlobs } from "./blob"
@@ -52,7 +50,6 @@ type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]
 
 export const make = (options: Options = {}) => Effect.gen(function* () {
   const database = yield* Database.Service
-  const location = yield* Location.Service
   const sessions = yield* SessionStore.Service
   const fs = yield* FSUtil.Service
   const global = yield* Global.Service
@@ -65,28 +62,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   if (![boundedBytes, quota, scratchTTL].every((n) => Number.isSafeInteger(n) && n > 0) || !isAbsolute(root))
     return yield* failure("invalid_input", "Artifact store options are invalid")
   const blobs = ArtifactBlobs.make({ root, boundedBytes, storageID, fs })
-  const placement = {
-    projectID: location.project.id,
-    location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
-  }
-
   // Repeat persisted identity validation under the storage transaction, without opening an approval queue there.
-  const binding = Effect.fn("CapabilityArtifacts.binding")(function* (context: Tool.Context) {
-    const issued = yield* CapabilityInvocation.require(context, placement)
-    const session = yield* sessions.get(context.sessionID)
-    const stored = yield* sessions.message(context.assistantMessageID)
-    if (!session || session.projectID !== issued.owner.projectID ||
-      session.location.directory !== issued.owner.location.directory ||
-      session.location.workspaceID !== issued.owner.location.workspaceID ||
-      !stored || stored.sessionID !== context.sessionID || stored.message.type !== "assistant" ||
-      stored.message.agent !== context.agent || !stored.message.content.some((part) =>
-        part.type === "tool" && part.id === context.toolCallID && part.name === issued.rootToolName &&
-        (part.state.status === "pending" || part.state.status === "running")))
-      return yield* new Capability.Failure({
-        code: "invocation_binding_mismatch", message: "Capability invocation binding does not match",
-      })
-    return issued
-  })
+  const binding = policy.binding
 
   const authorize = Effect.fn("CapabilityArtifacts.authorize")(function* (
     context: Tool.Context, action: string, resources: readonly string[],
