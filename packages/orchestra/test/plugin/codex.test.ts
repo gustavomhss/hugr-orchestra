@@ -289,7 +289,26 @@ describe("plugin.codex", () => {
     const provider = {
       models: {
         ...Object.fromEntries(
-          ["gpt-5.4", "gpt-5.5", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.7-pro"].map((id) => [
+          [
+            "gpt-5.4",
+            "gpt-5.5",
+            "gpt-5.6-sol",
+            "gpt-5.6-terra",
+            "gpt-5.6-luna",
+            "gpt-5.7-pro",
+            "gpt-6",
+            "gpt-6-luna",
+            "gpt-6.1-sol",
+            "gpt-10-mini",
+            "gpt-5",
+            "gpt-5.3",
+            "gpt-5.4-large",
+            "gpt-5.5-pro",
+            "gpt-5.6",
+            "gpt-6invalid",
+            "gpt-6.1invalid",
+            "o3",
+          ].map((id) => [
             id,
             { id, api: { id }, limit, cost: {}, options: {} },
           ]),
@@ -308,6 +327,13 @@ describe("plugin.codex", () => {
           cost: {},
           options: { reasoningEffort: "high" },
         },
+        "gpt-6-luna-pro": {
+          id: "gpt-6-luna-pro",
+          api: { id: "gpt-6-luna" },
+          limit,
+          cost: {},
+          options: { reasoningMode: "pro" },
+        },
       },
     }
 
@@ -321,6 +347,22 @@ describe("plugin.codex", () => {
     expect(models["gpt-5.4-pro"]).toBeUndefined()
     expect(models["gpt-5.7-pro"]).toBeDefined()
     expect(models["gpt-5.6-sol-high"]).toBeDefined()
+    ;["gpt-6", "gpt-6-luna", "gpt-6.1-sol", "gpt-10-mini"].forEach((id) => {
+      expect(models[id]?.limit).toEqual(limit)
+      expect(models[id]?.api.id).toBe(id)
+      expect(models[id]?.cost).toEqual({ input: 0, output: 0, cache: { read: 0, write: 0 } })
+    })
+    ;[
+      "gpt-5",
+      "gpt-5.3",
+      "gpt-5.4-large",
+      "gpt-5.5-pro",
+      "gpt-5.6",
+      "gpt-6invalid",
+      "gpt-6.1invalid",
+      "gpt-6-luna-pro",
+      "o3",
+    ].forEach((id) => expect(models[id]).toBeUndefined())
     expect(await hooks.provider!.models!(provider as never, { auth: { type: "api" } } as never)).toBe(
       provider.models as never,
     )
