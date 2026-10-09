@@ -4,6 +4,7 @@ import { Script } from "@orchestra/script"
 import path from "path"
 import { fileURLToPath } from "url"
 import { seatSkillsFiles } from "./seat-skills"
+import { leanNotices } from "./lean-notices"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -45,4 +46,5 @@ const unresolved = (
 ).flat()
 if (unresolved.length > 0) throw new Error(`Unresolved generated modules in the Node build:\n${unresolved.join("\n")}`)
 
+await leanNotices("./dist/node")
 console.log("Build complete")
