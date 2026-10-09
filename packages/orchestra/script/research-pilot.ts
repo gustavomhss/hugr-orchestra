@@ -70,8 +70,8 @@ const source = path.join(root, "source")
 const data = path.join(root, "state")
 // Exclusive creation refuses both reuse and symlinks. Preserve failed setups as separate attempts.
 await fs.mkdir(root, { mode: 0o700 })
-await fs.mkdir(source, { recursive: true })
-await fs.mkdir(data, { recursive: true })
+await Promise.all(["source", "state", "home", "tmp", "config", "managed", "xdg-data", "xdg-cache", "xdg-config", "xdg-state", "toolkit"].map((dir) => fs.mkdir(path.join(root, dir), { mode: 0o700 })))
+await fs.mkdir(path.join(data, "frozen-public"), { mode: 0o700 })
 const canonicalSource = await fs.realpath(source)
 const sources = await Promise.all(fixture.inputFiles.map(async (file) => {
   if (/[\\:<>"|?*\p{Cc}]/u.test(file) || file.startsWith("/") || file.split("/").some((part) => ["", ".", "..", ".git"].includes(part.toLowerCase()) || /[. ]$/.test(part)))
@@ -84,6 +84,8 @@ const sources = await Promise.all(fixture.inputFiles.map(async (file) => {
   if (references.length !== 1 || digest !== references[0]?.sha256) throw new Error("Disclosed source hash differs from frozen manifest")
   await fs.mkdir(path.dirname(path.join(source, file)), { recursive: true })
   await fs.writeFile(path.join(source, file), bytes, { flag: "wx", mode: 0o600 })
+  // Host-only archive is outside the child Location and its native external-directory read scope.
+  await fs.writeFile(path.join(data, "frozen-public", createHash("sha256").update(file).digest("hex") + ".bytes"), bytes, { flag: "wx", mode: 0o400 })
   return { path: file, sha256: digest, bytes: bytes.length }
 }))
 const config = { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
@@ -153,12 +155,11 @@ const lsp = setup?.lsp ? await (async () => {
 })() : false
 const operationalConfig = { ...config, lsp, ...(setup?.atlas ? { maestro: { atlas: setup.atlas } } : {}) }
 process.env.ORCHESTRA_CONFIG_CONTENT = JSON.stringify(operationalConfig)
-await Promise.all(["home", "tmp", "config", "managed"].map((dir) => fs.mkdir(path.join(root, dir))))
 await fs.writeFile(path.join(root, "config", "git-empty"), "", { flag: "wx", mode: 0o600 })
 // This is a new snapshot commit, not supplied historical or deployed-build identity.
 const sourceSnapshotRevision = setup?.snapshotGit ? await (async () => {
   await sourceGit(["init", "--template=", "--initial-branch=evaluation"])
-  await sourceGit(["add", "--", ...fixture.inputFiles])
+  await sourceGit(["add", "-f", "--", ...fixture.inputFiles])
   await sourceGit(["-c", "user.name=Evaluation", "-c", "user.email=evaluation@invalid", "-c", "commit.gpgsign=false", "commit", "-m", "Disclosed evaluation snapshot"])
   return sourceGit(["rev-parse", "HEAD"])
 })() : undefined
@@ -277,7 +278,7 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     if (caseID === "R14" && Date.now() >= preparedAt + totalTimeoutMs) throw new Error("total-wall-clock-exhausted before first native dispatch")
     const first = yield* call(input, `pilot-${caseID}-first`, caseID === "R14" ? Math.max(1, Math.min(timeoutMs, preparedAt + totalTimeoutMs - Date.now())) : timeoutMs)
     const continuation = caseID === "R14" ? yield* ResearchContinuation.run({ first, call, input, observation, parent,
-      preparedAt, totalTimeoutMs, resumeTimeoutMs, source, disclosedFiles: fixture.inputFiles, data, scannerConfigured: !!setup?.scanner }) : undefined
+      preparedAt, totalTimeoutMs, resumeTimeoutMs, source, sources, data, scannerConfigured: !!setup?.scanner }) : undefined
     const output = continuation ? continuation.output : yield* first.run.pipe(Effect.exit)
     const deadlineSignaled = continuation?.deadlineSignaled ?? first.abort.aborted
     const children = yield* sessions.children(parent.id)

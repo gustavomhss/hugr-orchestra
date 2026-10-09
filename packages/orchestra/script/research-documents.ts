@@ -17,7 +17,7 @@ await Promise.all(["source", "home", "tmp", "config", "managed", "xdg-data", "xd
   if (!(await fs.lstat(target)).isDirectory() || await fs.realpath(target) !== target)
     throw new Error("Document export requires retained non-symlink isolated directories")
 }))
-await Promise.all(["native.db", "evaluation.json"].map(async (file) => {
+await Promise.all(["native.db", "evaluation.json", "preparation.json"].map(async (file) => {
   const stat = await fs.lstat(path.join(root, file))
   if (!stat.isFile() || stat.isSymbolicLink()) throw new Error("Document export requires retained regular pilot files")
 }))
@@ -40,12 +40,14 @@ const projection = Schema.decodeUnknownSync(Schema.Struct({
   schema: Schema.Literal("jimmy-pilot-evaluation-v2"), stage: Schema.Literal("provisional-pilot"),
   terminal: Schema.Literal("task-returned"), caseID: Schema.String, parentSessionID: Schema.String,
   timeoutMs: Schema.Number, deadlineSignaled: Schema.Boolean,
-  identity: Schema.Struct({ sources: Schema.Array(Schema.Struct({ path: Schema.String, sha256: Research.Digest })) }),
+  identity: Schema.Struct({ sources: Schema.Array(Schema.Struct({ path: Schema.String, sha256: Research.Digest, bytes: Schema.Int })) }),
   continuation: Schema.optional(Schema.Struct({ schema: Schema.Literal("jimmy-native-continuation-v1"),
     checkpoint: Schema.optional(Schema.Struct({ binding: Research.Binding, sources: Schema.Array(Schema.Struct({ receipt: Research.SourceReceipt })) })) })),
   output: Schema.Struct({ metadata: Schema.Struct({ workResult: Schema.Struct({ documents: Schema.optional(Schema.Array(Research.DocumentReceipt)) }) }) }),
 }))(await Bun.file(path.join(root, "evaluation.json")).json())
 const declared = projection.output.metadata.workResult.documents ?? []
+const frozen = Schema.decodeUnknownSync(Schema.Struct({ identity: Schema.Struct({ sources: Schema.Array(Schema.Struct({ path: Schema.String, sha256: Research.Digest, bytes: Schema.Int })) }) }))(await Bun.file(path.join(root, "preparation.json")).json())
+if (!isDeepStrictEqual(projection.identity.sources, frozen.identity.sources)) throw new Error("Grader source identities differ from retained preparation")
 if (projection.identity.sources.some((file) => !path.resolve(runRoot, "source", file.path).startsWith(path.join(runRoot, "source") + path.sep)))
   throw new Error("Grader disclosed source paths must stay inside the isolated source")
 if (new Set(declared.map((receipt) => `${receipt.ref.id}:${receipt.ref.revision}`)).size !== declared.length ||
@@ -72,7 +74,7 @@ const exported = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       page.receipt.binding.directory !== path.join(runRoot, "source") ||
       !projection.identity.sources.some((file) => path.join(runRoot, "source", file.path) === page.receipt.origin.uri))
       return yield* new Research.Error({ code: "reference_invalid", message: "Grader evidence must be admitted disclosed input; skill, prompt and outside-file bodies are excluded" })
-    return yield* ResearchRetained.read(page.receipt)
+    return yield* ResearchRetained.authenticate(page.receipt, { source: path.join(runRoot, "source"), data: root, sources: frozen.identity.sources })
   }))
   return { documents, evidence }
 }).pipe(Effect.provide(AppNodeBuilder.build(ResearchArtifacts.node, [[Global.node, Global.layerWith({ data: root })]])))))
