@@ -45,8 +45,9 @@ export async function load(input: { manifest: typeof File.Type; caseID: string }
   if (model.providerID !== approved.providerID || model.id !== approved.modelID || !(model.limit.context > 0) || !(model.limit.output > 0) ||
     !(Math.min(model.limit.input ?? Infinity, model.limit.context - model.limit.output) > 0)) throw new Error("complete-replay-model-mismatch")
   const messages = Schema.decodeUnknownSync(Schema.Array(SessionV1.WithParts))(await read(approved.source)) as SessionV1.WithParts[]
-  const user = RequestSource.latest(messages)?.info
+  const boundaryIndex = messages.findIndex((message) => message.info.id === horizon.boundaryMessageID)
+  if (boundaryIndex < 0) throw new Error("complete-replay-boundary-missing")
+  const user = RequestSource.latest(messages.slice(0, boundaryIndex + 1))?.info
   if (!user || user.role !== "user" || user.model.providerID !== model.providerID || user.model.modelID !== model.id) throw new Error("complete-replay-source-model-mismatch")
-  if (!messages.some((message) => message.info.id === horizon.boundaryMessageID)) throw new Error("complete-replay-boundary-missing")
   return { messages, model, boundary: MessageID.make(horizon.boundaryMessageID) }
 }

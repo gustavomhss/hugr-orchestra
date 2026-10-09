@@ -8,6 +8,8 @@ import { Provider } from "@/provider/provider"
 import { CaseCapabilities } from "./case-capabilities"
 
 export async function prepare(input: { catalog: typeof CaseCapabilities.File.Type; descriptors: readonly (typeof CaseCapabilities.File.Type)[]; output: string }) {
+  // POSIX mode bits cannot prove private Windows ACLs; refuse authoring before any I/O.
+  if (process.platform === "win32") throw new Error("complete-replay-output-platform")
   const catalog = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(await CaseCapabilities.read(input.catalog))
   const root = path.resolve(input.output)
   await mkdir(root, { recursive: true, mode: 0o700 })
