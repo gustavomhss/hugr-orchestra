@@ -306,7 +306,8 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   if ("check" in outcome) {
     // One cache-hot retry: the same request, the rejected reply and the failed check.
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
-      "Reply with one complete, corrected ops object for the same new span, and nothing else."
+      (captured.complete ? "Reply with one complete, corrected JSON object containing now and ops for the same new span. Now.src must include a completed boundary alias listed in the host index. Return nothing else." :
+        "Reply with one complete, corrected ops object for the same new span, and nothing else.")
     // A paid reply that failed and cannot be retried is a failure, so the breaker can stop it.
     if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check, failure: "invalid-schema" })
     const retry = { ...first, messages: [...first.messages,
