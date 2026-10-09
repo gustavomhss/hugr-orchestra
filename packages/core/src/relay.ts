@@ -28,6 +28,10 @@ import { Location } from "./location"
 import { AppProcess } from "./process"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySandbox } from "./tool-safety-sandbox"
+import { RelayWorkflowBinding } from "./relay-workflow-binding"
+import { RelayWorkflowCurrentStep } from "./relay-workflow-currentstep"
+import { RelayWorkflowTransition } from "./relay-workflow-transition"
+import { RelayWorkflowEvaluator } from "./relay-workflow-evaluator"
 
 // The Relay engine as one Location node (relay-exec-spec §1, port plan §5). It binds the engine's ports: checks run
 // through AppProcess and the ToolSafety sandbox, git through a sandboxed helper, the judge from Orchestra config, and
@@ -86,6 +90,10 @@ export interface Interface {
     input: ArmCreate.Input,
   ) => Effect.Effect<"created" | "unchanged", ArmCreate.Conflict | ArmState.StateError | Unavailable>
   readonly evaluate: (input: RelayArm.EvaluateInput) => Effect.Effect<RelayArm.Evaluation, Unavailable>
+  readonly currentStep: (token: RelayArm.Token, binding: RelayArm.WorkflowBinding) =>
+    Effect.Effect<RelayWorkflowCurrentStep.View, RelayWorkflowBinding.Held | Unavailable>
+  readonly transition: (input: RelayWorkflowTransition.Input) =>
+    Effect.Effect<RelayArm.Evaluation, RelayWorkflowBinding.Held | Unavailable>
   readonly release: (
     token: RelayArm.Token,
     reason: string,
@@ -362,8 +370,29 @@ const layer = Layer.effect(
         return yield* armed(ArmCreate.create(input))
       }),
       evaluate: Effect.fn("Relay.evaluate")(function* (input: RelayArm.EvaluateInput) {
+        if (!Schema.is(RelayArm.Token)(input.token)) return { outcome: "refused" as const, failing: [], ledgerSeq: -1 }
+        // Bound progressive arms may only cross the guarded native settlement boundary; an API/CLI evaluate cannot
+        // spend their retry budget or advance them. Missing/invalid arm data remains the existing engine's defect.
+        const bound = yield* ArmLoad.arm(path.join(paths.arms, input.token)).pipe(Effect.option)
+        if (Option.isSome(bound) && bound.value.meta.workflow)
+          return { outcome: "refused" as const, failing: [], ledgerSeq: -1,
+            reason: "WORKFLOW_NATIVE_SETTLEMENT_REQUIRED" }
         yield* recover(input.token).pipe(Effect.ignore)
         return yield* armed(ArmEvaluate.evaluate(input))
+      }),
+      currentStep: Effect.fn("Relay.currentStep")(function* (token: RelayArm.Token, binding: RelayArm.WorkflowBinding) {
+        return yield* armed(RelayWorkflowCurrentStep.read(token, binding).pipe(
+          Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+            : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_STATE_ACQUISITION" })),
+        ))
+      }),
+      transition: Effect.fn("Relay.transition")(function* (input: RelayWorkflowTransition.Input) {
+        return yield* armed(Effect.gen(function* () {
+          const evaluator = RelayWorkflowEvaluator.native
+          return yield* RelayWorkflowTransition.transition(input).pipe(
+            Effect.provideService(RelayWorkflowTransition.NativeEvaluator, evaluator),
+          )
+        }))
       }),
       release: Effect.fn("Relay.release")(function* (token: RelayArm.Token, reason: string) {
         yield* recover(token).pipe(Effect.ignore)

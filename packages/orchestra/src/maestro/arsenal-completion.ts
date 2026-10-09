@@ -15,6 +15,10 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolFailure } from "@orchestra/llm"
 import { ToolSafetyGit } from "@orchestra/core/tool-safety-git"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
+import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
+import { WorkflowBinding } from "./workflow-binding"
+import { isDeepStrictEqual } from "node:util"
 
 // The Arsenal completion host on the Relay arm (port plan §6). The model only arms a contract; the native dispatch binds
 // it, the Relay arm under the same token is the one evaluator, and Relay is the only writer of the arm and its ledger.
@@ -26,6 +30,15 @@ export type Dispatch = {
   readonly directory: string
   readonly projectID: string
   readonly planID?: string
+  readonly workflow?: {
+    readonly selection: WorkflowBinding.Selection
+    readonly assistantMessageID: string
+    readonly logicalTaskID: string
+    readonly writePaths: readonly string[]
+    readonly subagentType: string
+    readonly prompt: string
+    readonly model?: string
+  }
 }
 export type Binding = Dispatch & {
   readonly planID: string
@@ -49,6 +62,7 @@ export type Receipt = { readonly taskID: string; readonly planID: string; readon
 const receipts = new WeakMap<Receipt, {
   host: Host; binding: Binding; contract: RelayArm.Contract; fingerprint: string; checks: ReadonlyMap<string, HostCheck>
   relay: Relay.Interface
+  workflow?: Effect.Success<ReturnType<typeof WorkflowBinding.adopt>>
 }>()
 
 export const make = Effect.gen(function* () {
@@ -129,8 +143,10 @@ export const make = Effect.gen(function* () {
   })
 
   const beforeDispatch = Effect.fn("ArsenalCompletion.beforeDispatch")(function* (input: Dispatch) {
+    if (!host && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
     if (!host) return
     const binding = yield* host.resolve(input)
+    if (!binding && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
     if (!binding) return
     if (typeof host.relay !== "function" || typeof host.observe !== "function")
       return yield* new ToolSafety.Denied({ reason: "completion-evaluator-or-observer-unbound" })
@@ -145,6 +161,16 @@ export const make = Effect.gen(function* () {
       return yield* new ToolSafety.Denied({ reason: "completion-host-check-unbound" })
     yield* head(binding.directory)
     const relay = yield* host.relay(binding)
+    if (input.workflow) {
+      const workflow = yield* WorkflowBinding.adopt({ token: binding.token, relay,
+        dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
+        globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
+      }).pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof RelayWorkflowBinding.Held
+        ? error.reason : "WORKFLOW_BINDING_ACQUISITION" })))
+      const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
+      receipts.set(receipt, { host, binding, ...loaded, checks, relay, workflow })
+      return receipt
+    }
     yield* arm(relay, binding, loaded)
     const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
     receipts.set(receipt, { host, binding, ...loaded, checks, relay })
@@ -158,6 +184,20 @@ export const make = Effect.gen(function* () {
     receipts.delete(receipt)
     if ((yield* load(current.binding)).fingerprint !== current.fingerprint)
       return yield* new ToolSafety.Denied({ reason: "completion-contract-drift" })
+    if (current.workflow) {
+      yield* current.workflow.revalidate().pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })))
+      const view = yield* current.relay.currentStep(current.workflow.token, current.workflow.binding).pipe(
+        Effect.mapError(() => new ToolSafety.Denied({ reason: "WORKFLOW_STATE_ACQUISITION" })),
+      )
+      if (view.state !== "complete") return yield* new ToolSafety.Denied({ reason: "WORKFLOW_CHAIN_INCOMPLETE" })
+      const audit = yield* current.relay.audit(current.workflow.token).pipe(Effect.option)
+      if (Option.isNone(audit) || audit.value.result !== "PASS")
+        return yield* new ToolSafety.Denied({ reason: "WORKFLOW_AUDIT_UNAVAILABLE" })
+      yield* current.workflow.host.complete(current.workflow.binding).pipe(
+        Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
+      )
+      return { verified: true as const, planID: current.binding.planID, taskID, checks: audit.value.controls.length }
+    }
     const binding = current.binding
     const revision = yield* head(binding.directory)
     // Every result this evaluation produced; each gate's observation carries all of them, so the last one is whole.
@@ -200,7 +240,42 @@ export const make = Effect.gen(function* () {
     return { verified: true as const, planID: binding.planID, taskID, checks: seen.length }
   })
 
-  return { beforeDispatch, verifiedCompletion }
+  const withWorkflow = <A, E, R>(receipt: Receipt | undefined, effect: Effect.Effect<A, E, R>) => {
+    const current = receipt ? receipts.get(receipt) : undefined
+    if (!current?.workflow) return effect
+    const ready = current.workflow
+    const sessionHost: RelayWorkflowSession.Host = {
+      current: (bound) => Effect.gen(function* () {
+        if (bound.token !== ready.token || !isDeepStrictEqual(bound.binding, ready.binding))
+          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
+        yield* ready.revalidate()
+        const view = yield* current.relay.currentStep(ready.token, ready.binding).pipe(
+          Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_STATE_ACQUISITION" })),
+        )
+        return { token: ready.token, binding: ready.binding, view }
+      }),
+      settle: (position, settlement) => Effect.gen(function* () {
+        if (position.token !== ready.token || !isDeepStrictEqual(position.binding, ready.binding))
+          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
+        yield* ready.verifySettlement(settlement.assistantMessageID)
+        return yield* current.relay.transition({
+        token: ready.token, binding: ready.binding, settlement,
+        agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,
+        hostChecks: new Map([...current.checks].map(([name, check]) => [name, adapt(check, current.binding, "")])),
+        observe: (capture) => current.host.observe(current.binding, capture),
+        })
+      }).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+        : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_ACQUISITION" }))),
+    }
+    return effect.pipe(Effect.provideService(RelayWorkflowSession.NativeHost, sessionHost))
+  }
+  const revalidateWorkflow = (receipt: Receipt | undefined) => {
+    const current = receipt ? receipts.get(receipt) : undefined
+    return current?.workflow ? current.workflow.revalidate().pipe(
+      Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
+    ) : Effect.void
+  }
+  return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow }
 })
 
 /** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */

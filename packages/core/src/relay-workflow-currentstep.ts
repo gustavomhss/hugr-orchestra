@@ -47,9 +47,12 @@ export const read = Effect.fn("RelayWorkflowCurrentStep.read")(function* (
     onSome: Effect.succeed,
   })
   const wp = loaded.sprint.work_packages[index]
-  const retry = Option.getOrElse(yield* ArmState.read(arm, `retry_${ArmState.safe(wp.id)}`), () => "0").trim()
+  const storedRetry = yield* ArmState.read(arm, `retry_${ArmState.safe(wp.id)}`)
+  const retry = Option.getOrElse(Option.isSome(storedRetry) ? storedRetry
+    : yield* ArmState.read(arm, `retry_${index}`), () => "0").trim()
   const regression = Option.getOrElse(yield* ArmState.read(arm, RelayArm.Files.regRetry), () => "0").trim()
-  if (![retry, regression].every((value) => /^\d+$/.test(value) && Number.isSafeInteger(Number(value))))
+  if (![retry, regression].every((value) => /^\d+$/.test(value) && Number.isSafeInteger(Number(value))) ||
+    !Number.isSafeInteger(Number(retry) + Number(regression)))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ATTEMPT_INVALID" })
   const entries = yield* LedgerRead.entries(path.join(arm, RelayArm.Files.ledger)).pipe(
     Effect.catchTag("LedgerRead.Missing", () => Effect.succeed([])),

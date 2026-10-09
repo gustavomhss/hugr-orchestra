@@ -11,7 +11,11 @@ import { RelaySprint } from "@orchestra/schema/relay-sprint"
 
 export class Held extends Schema.TaggedErrorClass<Held>()("RelayWorkflow.Held", {
   reason: Schema.String,
-}) {}
+}) {
+  override get message() {
+    return `Tool safety HOLD: ${this.reason}`
+  }
+}
 
 // A read-only trusted port: the host supplies the selected project's store, never a model-supplied project label.
 // Server's RelayDocuments.use can supply this port without a Core -> Server dependency.

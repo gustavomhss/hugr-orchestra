@@ -35,6 +35,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
+import { WorkflowBinding } from "@/maestro/workflow-binding"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -98,6 +99,7 @@ const BaseParameterFields = {
     description: "AuthorizationGranted ID for current team dispatch.",
   }),
   writePaths: WriteRoots.Param,
+  workflow: Schema.optional(WorkflowBinding.Selection),
   memoryUnit: AtlasResume.Param,
 }
 
@@ -178,6 +180,8 @@ export const TaskTool = Tool.define(
       }
 
       const parent = yield* sessions.get(ctx.sessionID)
+      if (yield* WorkflowBinding.read(ctx.sessionID))
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_NESTED_TASK_REFUSED"))
       const next = yield* agent.get(params.subagent_type)
       if (!next) {
         return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
@@ -187,6 +191,15 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
+      if (params.workflow) {
+        if (!params.governed && !params.authorizationID)
+          return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+        yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
+          callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
+          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
+          model: params.model, workflow: params.workflow,
+        }).pipe(Effect.orDie)
+      }
       const seat = next.native === true ? Seats.find(nextID) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
@@ -218,7 +231,7 @@ export const TaskTool = Tool.define(
         replayReserved = true
         requireCompletedReplay = true
       }
-      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined
+      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
       const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
         parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
       if (params.task_id && !resumed) {
@@ -435,7 +448,12 @@ export const TaskTool = Tool.define(
       const placement = yield* InstanceState.context
       const completionReceipt = yield* completion.beforeDispatch({
         sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",
-        directory: placement.directory, projectID: placement.project.id, planID: params.governed?.planRevisionID,
+        directory: placement.directory, projectID: placement.project.id,
+        planID: params.workflow?.planRevisionID ?? params.governed?.planRevisionID,
+        ...(params.workflow && logical ? { workflow: { selection: params.workflow,
+          assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
+          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
+        } } : {}),
       })
 
       if (params.governed) {
@@ -519,6 +537,7 @@ export const TaskTool = Tool.define(
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
+        yield* completion.revalidateWorkflow(completionReceipt)
         // Session-start hooks run after reservation and can change the repository.
         if (params.authorizationID) {
           yield* reserveDispatch({
@@ -558,7 +577,7 @@ export const TaskTool = Tool.define(
             )
           : undefined
         const promptID = MessageID.ascending()
-        const result = yield* ops.prompt(
+        const result = yield* completion.withWorkflow(completionReceipt, ops.prompt(
           {
             messageID: promptID,
             sessionID: nextSession.id,
@@ -570,8 +589,8 @@ export const TaskTool = Tool.define(
             agent: nextID,
             parts: [...parts, ...own, ...resume],
           },
-          beforeModel ? { beforeModel } : undefined,
-        )
+          { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }) },
+        ))
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
         yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
         if (result.info.role === "assistant" && result.info.error) {
