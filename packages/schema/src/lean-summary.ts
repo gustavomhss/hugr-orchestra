@@ -3,8 +3,10 @@ export * as LeanSummary from "./lean-summary"
 import type { LeanMetrics } from "./lean-metrics"
 
 export interface Input {
-  readonly location: string
-  readonly sessionID: string
+  readonly projectID: string
+  readonly orchestraProfile?: string
+  readonly sessionID?: string
+  readonly location?: string
   readonly coverage: LeanMetrics.Summary["coverage"]
   readonly records: ReadonlyArray<unknown>
 }
@@ -12,6 +14,6 @@ export interface Input {
 /** Derived from unique persisted owner identities, never render or replay increments. */
 export const summarize: (input: Input) => LeanMetrics.Summary = (input) => ({
   coverage: input.coverage, observedCalls: 0, eligibleCalls: 0, appliedCalls: 0, bytesSaved: 0,
-  estimatedTokensSaved: 0, estimatedTokenCalls: 0, reasons: {}, profiles: {}, models: {},
+  estimatedTokensSaved: 0, estimatedTokenCalls: 0, reasons: {}, filterProfiles: {}, orchestraProfiles: {}, models: {},
   latency: { samples: 0, p50: null, p95: null, p99: null },
 })

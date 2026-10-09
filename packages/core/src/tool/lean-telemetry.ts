@@ -5,11 +5,12 @@ import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
 export interface Input {
   readonly owner: LeanMetrics.Decision["owner"]
   readonly model: LeanMetrics.Decision["model"]
+  readonly orchestraProfile?: string
   readonly producer: LeanMetrics.Decision["producer"]
   readonly eligible: boolean
   readonly status: LeanMetrics.Decision["status"]
   readonly reason: string
-  readonly profile?: string
+  readonly filterProfile?: string
   readonly before: string
   readonly after: string
   readonly durationMs: number
