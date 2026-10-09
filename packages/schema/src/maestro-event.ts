@@ -596,6 +596,8 @@ export namespace Task {
     durable: { version: 1, aggregate: "executionSessionID" },
     schema: {
       executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      authorityCallID: Schema.NonEmptyString,
       token: RelayArm.Token,
       binding: RelayArm.WorkflowBinding,
     },
@@ -629,6 +631,7 @@ export const Definitions = Event.inventory(
   Admission.Decided,
   PlanRevision.Recorded,
   PlanRevision.RecordedV2,
+  PlanRevision.RecordedV3,
   Context.Recorded,
   Context.RecordedV2,
   Clarification.Decided,

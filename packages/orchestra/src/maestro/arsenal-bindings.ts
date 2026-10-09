@@ -25,8 +25,8 @@ import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { readAtlasSource } from "./atlas-source"
 import { readAuthorization } from "./authorization"
-import { readValidation } from "./validation-record"
-import { readPlanRevision } from "./plan-revision"
+import { readValidation, validationRecordHash, findReview, rosterHash, reviewPolicyHash } from "./validation-record"
+import { readPlanRevision, readWorkflowRevision } from "./plan-revision"
 import { compileContextToolPlan } from "./context-tool-plan"
 import { ToolFailure } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -50,10 +50,20 @@ import { EffectBridge } from "@/effect/bridge"
 import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
-import { canonicalMemberId } from "./roster"
+import { canonicalMemberId, roster, nativeProfiles } from "./roster"
 import { WriteRoots } from "./write-roots"
 import { WorkflowBinding } from "./workflow-binding"
-import { NativeWorkflowRevision } from "./plan-revision"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
+import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
+import { SkillV2 } from "@orchestra/core/skill"
+import { AuthoringStore } from "@orchestra/relay/authoring/store"
+import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
+import { UpstreamProvenance } from "./upstream-provenance"
+import { readContext, contextIsCurrent } from "./context-record"
+import { recordApproval } from "./approval-record"
+import { taskHash } from "./task-hash"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { AbsolutePath } from "@orchestra/core/schema"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -66,7 +76,9 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const observations = yield* ArsenalObservations.Service
     const registrations = yield* ApplicationTools.Service
-    const runtime = yield* make
+     const runtime = yield* make
+     const workflowSessions = yield* RelayWorkflowSession.Service
+     yield* workflowSessions.register(runtime.workflowSessionHost)
     yield* registrations
       .register(
         MaestroArsenal.applicationTools((context) =>
@@ -186,7 +198,8 @@ export const node = makeGlobalNode({
     Database.node,
     Permission.node,
     Config.node,
-    Git.node,
+     Git.node,
+     RelayWorkflowSession.node,
   ],
 })
 
@@ -249,8 +262,7 @@ export const make = Effect.gen(function* () {
   const observations = yield* ArsenalObservations.Service
   const locations = yield* LocationServiceMap.Service
   const safety = yield* ToolSafety.make
-  const workflowHost = yield* WorkflowBinding.NativeHost
-  const workflowRevision = yield* NativeWorkflowRevision
+   const events = yield* EventV2Bridge.Service
   const runnerReports = new WeakMap<ArsenalCompletion.Binding, Effect.Success<ReturnType<typeof ArsenalVerification.run>>>()
   const approvalHost = yield* makeApprovalHost
   const state = yield* InstanceState.make((instance) =>
@@ -295,7 +307,7 @@ export const make = Effect.gen(function* () {
         child.directory !== session.directory
       )
         return yield* new ToolSafety.Denied({ reason: "completion-native-child-mismatch" })
-      const calls = yield* database.db
+       const calls = input.workflow ? [] : yield* database.db
         .select({ data: PartTable.data })
         .from(PartTable)
         .innerJoin(
@@ -312,17 +324,15 @@ export const make = Effect.gen(function* () {
         .limit(2)
         .all()
         .pipe(Effect.orDie)
-      if (calls.length !== 1)
+       if (!input.workflow && calls.length !== 1)
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-missing-or-ambiguous" })
-      const call = Schema.decodeUnknownOption(
-        Schema.Struct({
-          type: Schema.Literal("tool"),
-          tool: Schema.Literal("task"),
-          state: Schema.Struct({ input: Schema.Struct({ subagent_type: Schema.String }) }),
-        }),
-      )(calls[0].data)
+       const call = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String }))(
+         input.workflow ? (yield* WorkflowBinding.taskCall(session.id, input.workflow.assistantMessageID, input.callID)).input
+           : Schema.decodeUnknownSync(Schema.Struct({ type: Schema.Literal("tool"), tool: Schema.Literal("task"),
+             state: Schema.Struct({ input: Schema.Unknown }) }))(calls[0].data).state.input,
+       )
       if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
-      const actor = yield* agents.get(call.value.state.input.subagent_type)
+       const actor = yield* agents.get(call.value.subagent_type)
       if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
       const rows = yield* database.db
@@ -518,11 +528,12 @@ export const make = Effect.gen(function* () {
           Effect.gen(function* () {
             const authority = yield* approved({ ...binding, planID: undefined })
             if (!authority.planID) return { status: "missing" as const }
-            const plan = yield* readPlanRevision(authority.planID)
-            if (!plan || plan.sessionID !== binding.sessionID || plan.revision !== "v2")
+             const plan = yield* readPlanRevision(authority.planID)
+             const grounding = plan && plan.revision !== "v1" ? plan.grounding : undefined
+             if (!plan || plan.sessionID !== binding.sessionID || !grounding)
               return { status: "missing" as const }
             const source = yield* readAtlasSource(authority.session)
-            if (source.identityHash !== plan.grounding.sourceIdentityHash) return outcome(false)
+             if (source.identityHash !== grounding.sourceIdentityHash) return outcome(false)
             const compiled = compileContextToolPlan({
               actor: { projectId: binding.projectID, sessionId: binding.sessionID, memberId: "maestro" },
               revision: {
@@ -532,7 +543,7 @@ export const make = Effect.gen(function* () {
                 sessionId: binding.sessionID,
               },
               territories: plan.scope.map((field) => field.value),
-              units: plan.grounding.units,
+               units: grounding.units,
               context: source.context,
             })
             return outcome(compiled.status === "READY" && compiled.plan.actions.length > 0)
@@ -553,7 +564,7 @@ export const make = Effect.gen(function* () {
       return acquired.outcome
     }))],
   ])
-  const host: ArsenalCompletion.Host = {
+   const host: ArsenalCompletion.Host = {
     resolve,
     checks,
     relay: ArsenalCompletion.locationRelay((ref) => locations.get(ref)),
@@ -588,7 +599,218 @@ export const make = Effect.gen(function* () {
           },
         })
       }).pipe(Effect.orDie),
-  }
+   }
+   const held = (error: unknown) => error instanceof RelayWorkflowBinding.Held ? error
+     : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_ACQUISITION" })
+   const workflowContext = yield* Effect.context<Database.Service | Session.Service | Agent.Service |
+     Config.Service | Git.Service | FileSystem.FileSystem | EventV2Bridge.Service>().pipe(
+     Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(EventV2Bridge.Service, events),
+   )
+   const currentRevision = (sessionID: string, planRevisionID: string) => Effect.gen(function* () {
+     const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, sessionID))
+       .orderBy(desc(EventTable.seq)).all().pipe(Effect.orDie)
+     const latest = rows.find((row) => [1, 2, 3].some((version) =>
+       row.type === EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, version)))
+     if (!latest || latest.id !== planRevisionID)
+       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_STALE" })
+   })
+   const coldReview = (binding: ArsenalCompletion.Binding) => under(binding.directory, Effect.gen(function* () {
+     const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, binding.sessionID))
+       .orderBy(desc(EventTable.seq)).all().pipe(Effect.orDie)
+     const selected = rows.find((row) => [1, 2, 3].some((version) =>
+       row.type === EventV2.versionedType(MaestroEvent.Validation.Recorded.type, version)) && row.data.planRevisionID === binding.planID)
+     const validation = selected ? yield* readValidation(selected.id) : undefined
+     const review = validation ? yield* findReview(binding.sessionID, validation.id) : undefined
+     const reviewer = roster.find((member) => member.memberId === "lucy")
+     const nativeReviewer = yield* agents.get("lucy")
+     if (!validation || validation.outcome !== "VALID" || validation.projectID !== binding.projectID || !review ||
+       review.data.verdict !== "APPROVE" || review.data.reviewerID !== "lucy" ||
+       review.data.routedMemberID === "lucy" || review.data.workCardHash !== validation.workCardHash ||
+       review.data.reviewPolicyHash !== validation.reviewPolicyHash || review.data.projectID !== binding.projectID ||
+       !reviewer?.nativeProfile || nativeReviewer?.id !== "lucy" || nativeReviewer.native !== true ||
+       validation.rosterHash !== rosterHash(roster) ||
+       validation.reviewPolicyHash !== reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]) ||
+       review.data.rosterHash !== validation.rosterHash || review.data.grantHash !== validation.grantHash ||
+       !isDeepStrictEqual(review.data.actor, validation.actor) ||
+       ![review.data.artifact.baseSHA, review.data.artifact.headSHA].every((sha) => /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)))
+       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+     const status = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
+     const head = yield* git.run(["rev-parse", "HEAD"], { cwd: binding.directory })
+     const placement = yield* InstanceState.context
+     const diff = yield* git.run(["diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames",
+       "--src-prefix=a/", "--dst-prefix=b/", review.data.artifact.baseSHA, review.data.artifact.headSHA, "--", "."],
+       { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 })
+     if (status.exitCode || status.truncated || status.text().trim() || head.exitCode || head.truncated ||
+       head.text().trim() !== review.data.artifact.headSHA || diff.exitCode || diff.truncated || !diff.stdout.length ||
+       RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
+       (yield* fs.realPath(review.data.artifact.worktree)) !== (yield* fs.realPath(placement.worktree)))
+       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
+   }).pipe(Effect.provide(workflowContext)))
+   checks.set("cold-review", (binding) => coldReview(binding).pipe(Effect.as(outcome(true))))
+   const workflowHost: WorkflowBinding.Host = {
+     publication: (placement) => Effect.gen(function* () {
+       const relay = yield* host.relay(placement)
+       if (path.basename(relay.paths.root) !== placement.projectID)
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_PROJECT_MISMATCH" })
+       const catalog = yield* SkillV2.Service.pipe(Effect.provide(locations.get(Location.Ref.make({
+         directory: AbsolutePath.make(placement.directory) }))))
+       return {
+         projectID: placement.projectID,
+         use: <A, E>(read: (store: Pick<AuthoringStore.Interface, "get" | "version">) => Effect.Effect<A, E>) =>
+           Effect.scoped(Effect.gen(function* () {
+             const store = yield* AuthoringStore.open(relay.paths.root, placement.projectID)
+             return yield* read({ get: store.get, version: store.version })
+           })).pipe(Effect.catchDefect(() => Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_ACQUISITION" })))),
+         skills: (name: string) => catalog.list().pipe(Effect.flatMap((list) => {
+           const skill = list.find((entry) => entry.name === name)
+           if (!skill || !skill.content.trim() || skill.content.includes("\0") || Buffer.byteLength(skill.content) > 2 * 1024 * 1024)
+             return Effect.fail(new AuthoringGraph.Refusal({ status: 404, code: "skill-unavailable", message: "Skill unavailable" }))
+           return Effect.succeed({ id: skill.name, content: skill.content,
+             sha256: RelayWorkflowBinding.digest(Buffer.from(skill.content)) })
+         })),
+       } satisfies RelayWorkflowBinding.PublicationPort
+     }).pipe(Effect.mapError(held)),
+     verifyUpstream: (id) => Effect.gen(function* () {
+       const revision = yield* readWorkflowRevision(id)
+       if (!revision.upstreamAttribution) return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING" })
+       if (revision.workflowBinding.publication.projectID !== revision.upstreamAttribution.projectID)
+         return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH" })
+       const session = yield* sessions.get(SessionID.make(revision.sessionID))
+       const observed = yield* under(session.directory, UpstreamProvenance.observe(revision.upstreamAttribution))
+       if (!isDeepStrictEqual(observed, revision.upstreamAttribution))
+         return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_TASK_MISMATCH" })
+     }).pipe(Effect.provide(workflowContext), Effect.mapError((error) => error instanceof UpstreamProvenance.Denied
+       ? new RelayWorkflowBinding.Held({ reason: error.code }) : held(error))),
+     approve: (input, definition, phase) => under(input.directory, Effect.gen(function* () {
+       const revision = yield* readWorkflowRevision(input.workflow.planRevisionID)
+       yield* currentRevision(input.sessionID, revision.id)
+       const owner = yield* agents.get("maestro")
+       const actor = yield* agents.get(input.subagentType)
+       if (owner?.id !== "maestro" || owner.native !== true)
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_OWNER_MISSING" })
+       if (actor?.native !== true || actor.mode !== "subagent")
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_WORKER_MISSING" })
+       const task = yield* WorkflowBinding.taskCall(input.sessionID, input.assistantMessageID, input.callID)
+       const intent = Schema.decodeUnknownSync(Schema.Struct({ authorizationID: Schema.optional(Schema.String),
+         governed: Schema.optional(Schema.Struct({ approvalMessageID: Schema.String, planRevisionID: Schema.String, taskHash: Schema.String })) }))(task.input)
+       const approval = phase === "dispatch" ? yield* recordApproval(input.sessionID) : yield* Effect.gen(function* () {
+         // Continue the already reserved Task under its observed owner decision. A synthetic Task delivery or a
+         // later resume message is not a fresh owner reply and cannot create or erase that original decision.
+         const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, input.sessionID))
+           .orderBy(desc(EventTable.seq)).all().pipe(Effect.orDie)
+         const latest = rows.find((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.Presented.type, 1))
+         const presentation = latest ? Schema.decodeUnknownSync(MaestroEvent.Approval.Presented.data)(latest.data) : undefined
+         const selected = rows.find((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.Decided.type, 1) &&
+           row.data.presentationID === presentation?.id)
+         if (!selected) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+         const decision = Schema.decodeUnknownSync(MaestroEvent.Approval.Decided.data)(selected.data)
+         if (decision.outcome !== "APPROVED" || !presentation || presentation.planRevisionID !== revision.id ||
+           presentation.taskHash !== decision.taskHash || presentation.revisionHash !== decision.revisionHash ||
+           presentation.validationHash !== decision.validationHash || presentation.contextHash !== decision.contextHash ||
+           presentation.policyHash !== decision.policyHash || presentation.assistantMessageID !== decision.presentationMessageID)
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
+         const reserved = rows.some((row) =>
+           row.type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2) &&
+             row.data.presentationID === decision.presentationID && row.data.callID === input.callID &&
+             row.data.taskHash === decision.taskHash ||
+           row.type === EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2) &&
+             row.data.authorizationID === intent.authorizationID && row.data.sessionID === input.sessionID)
+         if (!reserved) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_RESERVATION_MISSING" })
+         return { status: "APPROVED" as const, decision: { ...decision,
+           actor: { projectId: decision.projectID, sessionId: decision.sessionID, memberId: decision.memberID } } }
+       })
+       if (approval.status !== "APPROVED") return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+       const authorization = intent.authorizationID ? yield* readAuthorization(intent.authorizationID) : undefined
+       if (intent.governed ? intent.governed.approvalMessageID !== approval.decision.approvalMessageID ||
+         intent.governed.planRevisionID !== revision.id || intent.governed.taskHash !== approval.decision.taskHash
+         : !authorization || authorization.sessionID !== input.sessionID || authorization.projectID !== input.projectID ||
+           authorization.validationRecordID !== approval.decision.validationRecordID ||
+           authorization.approvalMessageID !== approval.decision.approvalMessageID || authorization.routedMemberID !== input.subagentType)
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
+       const validation = yield* readValidation(approval.decision.validationRecordID)
+       const reviewer = roster.find((member) => member.memberId === "lucy")
+       const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
+       if (!validation || !context || validation.outcome !== "VALID" || validation.sessionID !== input.sessionID ||
+         validation.projectID !== input.projectID || validation.planRevisionID !== revision.id ||
+         canonicalMemberId(validation.routedMemberID) !== (actor.id ?? input.subagentType) ||
+         validation.rosterHash !== rosterHash(roster) || !reviewer?.nativeProfile ||
+         validation.reviewPolicyHash !== reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]) ||
+         context.sessionID !== input.sessionID || context.projectID !== input.projectID || context.directory !== input.directory ||
+         context.planRevisionID !== revision.id || validation.contextHash !== context.contextHash ||
+         approval.decision.actor.memberId !== "maestro" || approval.decision.actor.projectId !== input.projectID ||
+         approval.decision.actor.sessionId !== input.sessionID || approval.decision.planRevisionID !== revision.id ||
+         approval.decision.revisionHash !== revision.revisionHash || approval.decision.validationHash !== validationRecordHash(validation) ||
+         approval.decision.contextHash !== context.contextHash || approval.decision.policyHash !== validation.reviewPolicyHash ||
+         approval.decision.taskHash !== taskHash({ subagentType: input.subagentType, prompt: input.prompt, model: input.model,
+           planRevisionID: revision.id, revisionHash: revision.revisionHash, validationRecordID: validation.id,
+           validationHash: validationRecordHash(validation), contextHash: context.contextHash, policyHash: validation.reviewPolicyHash,
+           workflowBinding: definition, writePaths: input.writePaths }))
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
+       if (phase === "dispatch" && (!(yield* contextIsCurrent(context)) || context.changedPaths.length))
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_STALE" })
+       if (phase === "continuation") {
+         // Approved implementation may move HEAD. It may not widen the original context's write roots.
+         if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(context.headSHA))
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_STALE" })
+         const placement = yield* InstanceState.context
+         const worktree = placement.worktree === "/" ? placement.directory : placement.worktree
+         const changes = yield* Effect.forEach([
+           ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", context.headSHA, "--", "."],
+           ["ls-files", "--full-name", "--others", "--exclude-standard", "-z"],
+         ], (args) => git.run(args, { cwd: worktree, maxOutputBytes: 512 * 1024 }))
+         if (changes.some((result) => result.exitCode || result.truncated || result.stdout.length && !result.text().endsWith("\0")) ||
+           changes.flatMap((result) => result.text().split("\0").filter(Boolean)).some((file) =>
+             !definition.writePaths.some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file)))))
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
+       }
+       if (revision.grounding) {
+         const source = yield* readAtlasSource(yield* sessions.get(SessionID.make(input.sessionID)))
+         if (source.identityHash !== revision.grounding.sourceIdentityHash)
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_SOURCE_STALE" })
+       }
+     }).pipe(Effect.provide(workflowContext), Effect.mapError(held))),
+     complete: (binding) => Effect.gen(function* () {
+       yield* currentRevision(binding.authoritySessionID, binding.planRevisionID)
+       const session = yield* sessions.get(SessionID.make(binding.authoritySessionID))
+       const current = yield* workflowSessionHost.current(yield* WorkflowBinding.read(binding.executionSessionID).pipe(
+         Effect.flatMap((stored) => stored ? Effect.succeed(stored) : Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISSING" }))),
+         Effect.provideService(Database.Service, database)))
+       if (current.view.state !== "complete") return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CHAIN_INCOMPLETE" })
+       yield* coldReview({ sessionID: session.id, taskID: binding.executionSessionID, callID: "",
+         directory: session.directory, projectID: session.projectID, planID: binding.planRevisionID,
+         token: current.token, stateDirectory: "", ownedPaths: binding.definition.writePaths })
+     }).pipe(Effect.mapError(held)),
+   }
+   const reconstruct = (bound: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowBound.data>) => Effect.gen(function* () {
+     const parent = yield* sessions.get(SessionID.make(bound.binding.authoritySessionID))
+     return yield* under(parent.directory, Effect.gen(function* () {
+       const call = yield* WorkflowBinding.taskCall(parent.id, bound.authorityMessageID, bound.authorityCallID)
+       const input = yield* Schema.decodeUnknownEffect(Schema.Struct({ subagent_type: Schema.String, prompt: Schema.String,
+         model: Schema.optional(Schema.String), writePaths: Schema.optional(Schema.Array(Schema.String)), workflow: WorkflowBinding.Selection }))(call.input)
+       if (input.workflow.planRevisionID !== bound.binding.planRevisionID || parent.projectID !== bound.binding.definition.publication.projectID)
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
+       const completion = yield* ArsenalCompletion.make.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host))
+       const receipt = yield* completion.beforeDispatch({ sessionID: parent.id, taskID: bound.executionSessionID,
+         callID: bound.authorityCallID, directory: parent.directory, projectID: parent.projectID, planID: bound.binding.planRevisionID,
+         workflow: { selection: input.workflow, assistantMessageID: bound.authorityMessageID,
+           logicalTaskID: bound.binding.logicalTaskID, writePaths: input.writePaths ?? [],
+           subagentType: input.subagent_type, prompt: input.prompt, model: input.model } })
+       const native = completion.workflowSessionHost(receipt)
+       if (!native) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
+       return native
+     }).pipe(Effect.provideService(WorkflowBinding.NativeHost, workflowHost)))
+   }).pipe(Effect.provide(workflowContext), Effect.provideService(FSUtil.Service, fs),
+     Effect.provideService(AppProcess.Service, processes), Effect.mapError(held))
+   const workflowSessionHost: RelayWorkflowSession.Host = {
+     current: (bound) => reconstruct(bound).pipe(Effect.flatMap((native) => native.current(bound))),
+     settle: (current, settlement) => Effect.gen(function* () {
+       const bound = yield* WorkflowBinding.read(current.binding.executionSessionID)
+       if (!bound || bound.token !== current.token || !isDeepStrictEqual(bound.binding, current.binding))
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
+       const native = yield* reconstruct(bound)
+       return yield* native.settle(current, settlement)
+     }).pipe(Effect.provideService(Database.Service, database), Effect.mapError(held)),
+   }
   // A release request (Maestro condition 2) names an arm this session armed natively; the owner's answer decides.
   const release = Effect.fn("ArsenalBindings.release")(function* (context: { sessionID: string; assistantMessageID: string; callID: string }, args: unknown) {
     const request = Schema.decodeUnknownOption(Schema.Struct({ token: Schema.NonEmptyString, reason: Schema.NonEmptyString }))(args)
@@ -615,8 +837,8 @@ export const make = Effect.gen(function* () {
           return yield* effect.pipe(
             Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, () => sessions.get(session.id).pipe(Effect.orDie))),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
-            Effect.provideService(WorkflowBinding.NativeHost, workflowHost),
-            Effect.provideService(NativeWorkflowRevision, workflowRevision),
+             Effect.provideService(WorkflowBinding.NativeHost, workflowHost),
+             Effect.provideService(RelayWorkflowSession.NativeHost, workflowSessionHost),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),
           )
@@ -651,7 +873,8 @@ export const make = Effect.gen(function* () {
   return {
     withSession,
     run,
-    approvalHost,
+     approvalHost,
+     workflowSessionHost,
     wrapTools: Effect.fn("ArsenalBindings.wrapTools")(function* (
       input: { sessionID: string; assistantMessageID: string; agent?: string; directory: string; projectID: string },
       tools: Record<string, Tool>,
@@ -679,8 +902,9 @@ export const make = Effect.gen(function* () {
         }),
       )
     }),
-    construct: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-      effect.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host)),
+     construct: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+       effect.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host),
+         Effect.provideService(WorkflowBinding.NativeHost, workflowHost)),
     observe: (
       input: { sessionID: string; assistantMessageID: string; callID: string; directory: string; projectID: string },
       value: ToolSafety.Observation,

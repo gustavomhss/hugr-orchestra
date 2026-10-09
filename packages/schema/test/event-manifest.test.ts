@@ -10,8 +10,8 @@ import { WorkspaceEvent } from "../src/workspace-event"
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(83)
-    expect(EventManifest.Definitions.length).toBe(113)
+    expect(EventManifest.ServerDefinitions.length).toBe(85)
+    expect(EventManifest.Definitions.length).toBe(115)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -25,8 +25,8 @@ describe("public event manifest", () => {
       SessionV1.Event.Diff,
       SessionV1.Event.Error,
     ])
-    expect(EventManifest.Latest.size).toBe(105)
-    expect(EventManifest.Durable.size).toBe(60)
+    expect(EventManifest.Latest.size).toBe(106)
+    expect(EventManifest.Durable.size).toBe(62)
   })
 
   test("uses canonical definitions for current public events", () => {
@@ -41,7 +41,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.get("maestro.approval.consumed")).toBe(MaestroEvent.Approval.ConsumedV2)
     expect(EventManifest.Latest.get("maestro.approval.reserved")).toBe(MaestroEvent.Approval.ReservedV2)
     expect(EventManifest.Latest.get("maestro.admission.decided")).toBe(MaestroEvent.Admission.Decided)
-    expect(EventManifest.Latest.get("maestro.plan_revision.recorded")).toBe(MaestroEvent.PlanRevision.RecordedV2)
+    expect(EventManifest.Latest.get("maestro.plan_revision.recorded")).toBe(MaestroEvent.PlanRevision.RecordedV3)
     expect(EventManifest.Latest.get("maestro.context.recorded")).toBe(MaestroEvent.Context.RecordedV2)
     expect(EventManifest.Latest.get("maestro.clarification.decided")).toBe(MaestroEvent.Clarification.Decided)
     expect(EventManifest.Latest.get("maestro.scope.decided")).toBe(MaestroEvent.Scope.Decided)
@@ -51,6 +51,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.get("maestro.authorization.granted")).toBe(MaestroEvent.Authorization.Granted)
     expect(EventManifest.Latest.get("maestro.dispatch.reserved")).toBe(MaestroEvent.Dispatch.ReservedV2)
     expect(EventManifest.Latest.get("maestro.task.bound")).toBe(MaestroEvent.Task.Bound)
+    expect(EventManifest.Latest.get("maestro.task.workflow_bound")).toBe(MaestroEvent.Task.WorkflowBound)
     expect(EventManifest.Latest.get("project.updated")).toBe(Project.Event.Updated)
     expect(Project.Event.Definitions).toEqual([Project.Event.Updated])
     expect(FileSystem.Event.Definitions).toEqual([FileSystem.Event.Edited])
@@ -69,6 +70,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Durable.get("maestro.plan_revision.recorded.1")).toBe(MaestroEvent.PlanRevision.Recorded)
     expect(EventManifest.Durable.get("maestro.context.recorded.1")).toBe(MaestroEvent.Context.Recorded)
     expect(EventManifest.Durable.get("maestro.plan_revision.recorded.2")).toBe(MaestroEvent.PlanRevision.RecordedV2)
+    expect(EventManifest.Durable.get("maestro.plan_revision.recorded.3")).toBe(MaestroEvent.PlanRevision.RecordedV3)
     expect(EventManifest.Durable.get("maestro.context.recorded.2")).toBe(MaestroEvent.Context.RecordedV2)
     expect(EventManifest.Durable.get("maestro.validation.recorded.1")).toBe(MaestroEvent.Validation.Recorded)
     expect(EventManifest.Durable.get("maestro.validation.recorded.2")).toBe(MaestroEvent.Validation.RecordedV2)
@@ -79,6 +81,7 @@ describe("public event manifest", () => {
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.1")).toBe(MaestroEvent.Dispatch.Reserved)
     expect(EventManifest.Durable.get("maestro.dispatch.reserved.2")).toBe(MaestroEvent.Dispatch.ReservedV2)
     expect(EventManifest.Durable.get("maestro.task.bound.1")).toBe(MaestroEvent.Task.Bound)
+    expect(EventManifest.Durable.get("maestro.task.workflow_bound.1")).toBe(MaestroEvent.Task.WorkflowBound)
     expect(EventManifest.Latest.get("relay.hook.decided")).toBe(RelayHook.Decided)
     expect(EventManifest.Durable.get("relay.hook.decided.1")).toBe(RelayHook.Decided)
   })

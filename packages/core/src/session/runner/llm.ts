@@ -201,6 +201,8 @@ const layer = Layer.effect(
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.orDie)
+      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
+        Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(agent.info?.permissions)
@@ -444,6 +446,7 @@ export const node = makeLocationNode({
     ReferenceGuidance.node,
     Config.node,
     Snapshot.node,
-    Database.node,
+     Database.node,
+     RelayWorkflowSession.node,
   ],
 })

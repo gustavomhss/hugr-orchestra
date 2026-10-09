@@ -6,6 +6,7 @@ import { MaestroContext } from "../src/maestro-context"
 import { MaestroEvent } from "../src/maestro-event"
 import { Project } from "../src/project"
 import { ProjectID } from "../src/project-id"
+import { RelayArm } from "../src/relay-arm"
 import { SessionID } from "../src/session-id"
 import { SessionMessage } from "../src/session-message"
 import { UpstreamAttribution } from "../src/upstream-attribution"
@@ -305,6 +306,111 @@ describe("PlanRevision attribution versions", () => {
           grounding: { ...grounding, units: [] },
         }),
       ).toThrow()
+    })
+  })
+})
+
+describe("PlanRevision workflow binding integration", () => {
+  // Structural fixture only; publication references establish neither authorship nor approval.
+  const workflowBinding = {
+    publication: {
+      projectID: attribution.projectID,
+      documentID: "packet",
+      activeVersionID: "version-1",
+      immutableVersionBodyChecksum: "1".repeat(64),
+      livePublicationChecksum: "2".repeat(64),
+    },
+    materialization: {
+      schemaIdentifier: "RelaySprint.Sprint",
+      digest: "3".repeat(64),
+      byteLength: 128,
+    },
+    resolvedSkills: [
+      { wp: "implement", skill: "implementation", mode: "combine", content: "Approved skill", sha256: "4".repeat(64) },
+    ],
+    parameters: { target: "src", mode: "product" },
+    writePaths: ["src"],
+  } as const satisfies typeof RelayArm.WorkflowDefinition.Encoded
+
+  test("V3 canonical workflow binding round trips through data and full envelope", () => {
+    const current = MaestroEvent.PlanRevision.RecordedV3
+    const input = { ...revisionV3, goal: upstream, upstreamAttribution: attribution, workflowBinding }
+    const decoded = Schema.decodeUnknownSync(current.data)(input)
+    expect(decoded).toEqual(input)
+    expect(Schema.encodeSync(current.data)(decoded)).toEqual(input)
+    const event = Schema.decodeUnknownSync(current)(envelope(input, 3))
+    expect(event).toEqual(envelope(input, 3))
+    expect(Schema.encodeSync(current)(event)).toEqual(envelope(input, 3))
+  })
+
+  test("production Durable inventory registers the canonical V3 workflow event", async () => {
+    const currentProductionEvent = await import("../src/event-manifest")
+    expect(currentProductionEvent.Durable.get("maestro.plan_revision.recorded.3")).toBe(
+      MaestroEvent.PlanRevision.RecordedV3,
+    )
+  })
+
+  test("V3 encoding omits explicit undefined workflow binding from data and envelope", () => {
+    const current = MaestroEvent.PlanRevision.RecordedV3
+    const event = Schema.decodeUnknownSync(current)(envelope(revisionV3, 3))
+    const data = { ...event.data, workflowBinding: undefined }
+    const encodedData = Schema.encodeSync(current.data)(data)
+    expect(encodedData).not.toHaveProperty("workflowBinding")
+    expect(encodedData).toEqual(revisionV3)
+    const encodedEvent = Schema.encodeSync(current)({ ...event, data })
+    expect(encodedEvent.data).not.toHaveProperty("workflowBinding")
+    expect(encodedEvent).toEqual(envelope(revisionV3, 3))
+  })
+
+  test("V3 workflow binding never replaces required upstream attribution in data or envelope", () => {
+    const input = { ...revisionV3, goal: upstream, workflowBinding }
+    expect(() => Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)(input)).toThrow(
+      "UPSTREAM_ATTRIBUTION_MISSING",
+    )
+    expect(() => Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope(input, 3))).toThrow(
+      "UPSTREAM_ATTRIBUTION_MISSING",
+    )
+  })
+
+  test.each([
+    {
+      issue: "materialization schema identifier",
+      patch: { materialization: { ...workflowBinding.materialization, schemaIdentifier: "RelayAuthoring.Document" } },
+    },
+    {
+      issue: "materialization digest",
+      patch: { materialization: { ...workflowBinding.materialization, digest: "g".repeat(64) } },
+    },
+    {
+      issue: "immutable version body checksum",
+      patch: { publication: { ...workflowBinding.publication, immutableVersionBodyChecksum: "A".repeat(64) } },
+    },
+    {
+      issue: "noncanonical skill shape",
+      patch: { resolvedSkills: [{ id: "implementation", content: "Approved skill", sha256: "4".repeat(64) }] },
+    },
+  ])("V3 rejects $issue in workflow binding data and envelope", ({ patch }) => {
+    const input = {
+      ...revisionV3,
+      goal: upstream,
+      upstreamAttribution: attribution,
+      workflowBinding: { ...workflowBinding, ...patch },
+    }
+    expect(() => Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)(input)).toThrow("workflowBinding")
+    expect(() => Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope(input, 3))).toThrow(
+      "workflowBinding",
+    )
+  })
+
+  test("legacy V1 and V2 replay never synthesizes workflow binding or attribution", () => {
+    ;[
+      { schema: MaestroEvent.PlanRevision.Recorded, input: revisionV1, version: 1 },
+      { schema: MaestroEvent.PlanRevision.RecordedV2, input: revisionV2, version: 2 },
+    ].forEach(({ schema, input, version }) => {
+      const event = Schema.decodeUnknownSync(schema)(envelope(input, version))
+      expect(event.data).not.toHaveProperty("workflowBinding")
+      expect(event.data).not.toHaveProperty("upstreamAttribution")
+      expect(Schema.encodeSync(schema)(event)).toEqual(envelope(input, version))
     })
   })
 })

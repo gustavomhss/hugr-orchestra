@@ -1086,6 +1086,11 @@ const layer = Layer.effect(
           const workflow = yield* RelayWorkflowSession.current(sessionID).pipe(
             Effect.provideService(Database.Service, database), Effect.orDie,
           )
+          if (workflow?.view.pending) {
+            const next = yield* RelayWorkflowSession.reconcile(workflow).pipe(Effect.orDie)
+            if (!next) break
+            continue
+          }
           if (workflow?.view.state === "complete") break
 
           if (!lastUser) throw new Error("No user message found in stream. This should never happen.")

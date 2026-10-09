@@ -392,7 +392,8 @@ const layer = Layer.effect(
           return yield* RelayWorkflowTransition.transition(input).pipe(
             Effect.provideService(RelayWorkflowTransition.NativeEvaluator, evaluator),
           )
-        }))
+        })).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+          : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_ACQUISITION" })))
       }),
       release: Effect.fn("Relay.release")(function* (token: RelayArm.Token, reason: string) {
         yield* recover(token).pipe(Effect.ignore)

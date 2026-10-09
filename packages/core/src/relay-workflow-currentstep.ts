@@ -14,6 +14,7 @@ export interface View extends RelayArm.WorkflowPosition {
   readonly index: number
   readonly wp: string
   readonly instructions: string
+  readonly pending?: RelayArm.WorkflowCheckpoint
 }
 
 // Pure view: no position migration, run-lock recovery, macro markers, entered_at or retry writes. In particular,
@@ -61,10 +62,20 @@ export const read = Effect.fn("RelayWorkflowCurrentStep.read")(function* (
   if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < -1)
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_LEDGER_INVALID" })
   const macro = wp.macro ? loaded.sprint.macros?.find((macro) => macro.id === wp.macro)?.instructions : undefined
+  const pendingFile = path.join(arm, "workflow_pending.json")
+  const pending = yield* ArmLoad.bytes(pendingFile).pipe(
+    Effect.flatMap((bytes) => ArmLoad.decode(pendingFile, bytes, RelayArm.WorkflowCheckpoint)),
+    Effect.map(Option.some),
+    Effect.catchIf((error) => error.reason === "missing", () => Effect.succeed(Option.none<RelayArm.WorkflowCheckpoint>())),
+    Effect.map(Option.getOrUndefined),
+  )
+  if (pending && !isDeepStrictEqual(pending.binding, binding))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH" })
   return {
     position, attempt: Number(retry) + Number(regression), ledgerSeq: seq,
     state: state === "escalated" ? "awaiting-human" : state,
     index, wp: wp.id,
+    pending,
     instructions: [macro, wp.instructions,
       wp.self_check?.length ? `Before finishing this step:\n${wp.self_check.map((item) => `- ${item}`).join("\n")}` : undefined,
       wp.kind === "review" ? "REVIEW: cold-read frozen artifacts. Their author cannot review them in this context." : undefined,
