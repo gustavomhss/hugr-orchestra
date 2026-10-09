@@ -12,8 +12,8 @@ const targetSchema = Schema.Struct({
   resource: Schema.optional(Schema.Struct({ kind: Schema.NonEmptyString, id: Schema.NonEmptyString })),
 })
 
-export const payloadBudget = { bytes: 256 * 1024, nodes: 4096 }
-export const resultBudget = { bytes: 16 * 1024, nodes: 1024 }
+export const payloadBudget = Object.freeze({ bytes: 256 * 1024, nodes: 4096 })
+export const resultBudget = Object.freeze({ bytes: 16 * 1024, nodes: 1024 })
 
 /** Descriptor inspection precedes serialization; neither accessors nor toJSON may run here. */
 export function snapshot(input: unknown, budget: { bytes: number; nodes: number }) {
@@ -50,7 +50,7 @@ export function snapshot(input: unknown, budget: { bytes: number; nodes: number 
       encode("[]" + ",".repeat(Math.max(0, length - 1)))
       const items = Array.from({ length }, (_, index) => visit(descriptors[String(index)].value, depth + 1))
       active.delete(value)
-      return { data: Object.freeze(items.map((item) => item.data)) as Schema.Json,
+      return { data: Object.freeze(items.map((item) => item.data)),
         json: `[${items.map((item) => item.json).join(",")}]` }
     }
     const names = keys.filter((key): key is string => typeof key === "string").sort()
@@ -86,11 +86,11 @@ export function capture(suppliedTarget: CapabilityOperatorContract.Target, paylo
       if (target.resource) Object.freeze(target.resource)
       Object.freeze(target)
       const value = snapshot(payload, payloadBudget)
-      return { target, payloadHash: hash(value.json), targetHash: hash(JSON.stringify([
+      return { target, payloadHash: hash(value.json), targetHash: hash(snapshot([
         target.action, target.placement.projectID, target.placement.location.directory,
         target.placement.location.workspaceID ?? null,
         target.resource ? [target.resource.kind, target.resource.id] : null,
-      ])) }
+      ], payloadBudget).json) }
     },
     catch: (error) => error instanceof Capability.Failure ? error : invalid(),
   })
