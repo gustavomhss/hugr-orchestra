@@ -12,6 +12,12 @@ Reuse existing source-bound evidence; keep gates intact. Static cold review rema
 
 ## Current repair wave and qualification hold
 
+The final reviewed source set is A `9358d3833a8efc385ddaaeb501264c013859d5a0`
+(includes `fd0a7ed2e7`, `4b0b09b17a`, `84513c9ecd`, `66c0532e2d`), C `0c8bc60369`
+(includes `2c28b537f4` / `a3b767422a`), runtime `f73d92d083`, and neutralized failed
+Nix-request ancestry `7eb2bb766a`. Bounded source findings are closed within their
+reviewed scopes. Execution remains unqualified until runtime's affected batch.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
@@ -76,8 +82,29 @@ identity, missing live Location with spoofed replay metadata for durable and loc
 publish, and actual recorded events replayed into a fresh isolated destination DB.
 The replay case uses real source rows/events and observes a replay-origin callback,
 not an already-applied-sequence retry. The malformed owner keeps required common
-`time` while omitting required assistant details. Source and fixture follow-up review
-remain pending; no author QA ran.
+`time` while omitting required assistant details. Production static APPROVE:
+`ses_ede10b10bffeZj7Sr8S8b57wwj/msg_122055f5b001QfnkGcwc0uI94q`, exact joint `54c644fc4e` against
+`a76306c684`, only the three Core production files. No author QA ran.
+
+The replay fixture initially compared two potentially unchanged projections. A's
+single-file six-line `fd0a7ed2e70916a2e2eef9f548b5c30757af74e3` adds explicit accepted
+live expected state, inequality against the original call, and the same expected
+state for the fresh destination. Independent oracle static APPROVE:
+`ses_ede09c550ffehFp17l17waWde3/msg_122078c6f001TrGz12quIRzc3I`.
+
+A's single-file 32-line `9358d3833a8efc385ddaaeb501264c013859d5a0` closes the final
+finite authority-fixture finding: malformed card/author/terminal and empty/non-string
+initial host detail leave the full eligible call unchanged in all author views;
+duplicate native same-call entries leave the full stored owner unchanged. Restored
+actual rows and valid results must produce explicit accepted work-result deltas.
+Independent final fixture static APPROVE:
+`ses_ede1c82cfffe66nn95toC1bBPo/msg_1220d1606001oIa1NeTHu7SbgI`.
+Neither fixture follow-up changes production or the already approved replay route.
+
+Provisional handoff of `817b243512` was superseded by HOLD for that last fixture
+finding. Runtime explicitly confirmed no affected typecheck, CI, native check or
+pilot had started, and no run/PID needed cancellation. Final handoff must include
+`9358d3833a`, not attribute results on the earlier source to these new probes.
 
 Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
 `2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
@@ -89,8 +116,8 @@ view cases exercise the actual scheduler and private setter, without preseeded r
 
 C has conditional static approval only:
 `ses_ede811595ffe8onazcY8NaqjdT/msg_121cda10a001AnodaWbWSLCjSm`.
-The initial Core blocker is composed, but the new concrete review findings still
-hold qualification. Runtime also confirmed that C's protected retained observation
+The initial Core blocker and reviewed follow-ups are composed. Runtime also confirmed
+that C's protected retained observation
 path must apply only to the existing host-derived `upstream-work-result-v1` schema.
 The established `backend-work-result-v1` contract has no author and must retain its
 generic unfavorable-detail/notice path. Same C owns that correction and an actual
