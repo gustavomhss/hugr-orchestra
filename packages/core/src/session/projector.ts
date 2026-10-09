@@ -155,6 +155,29 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
           if (!metadata || !observed || metadata.upstreamSettlement !== undefined ||
             metadata.parentSessionId !== parent.id || metadata.sessionId !== child.id ||
             !isDeepStrictEqual(metadata.workResult, observed.workResult)) return false
+          // Any retained original view is a veto, not a fallback to the favorable native Task.
+          const original = yield* db.select().from(MessageTable).where(eq(MessageTable.id,
+            SessionV1.MessageID.make(input.assistant.id))).get().pipe(Effect.orDie)
+          const parts = yield* db.select().from(PartTable).where(and(eq(PartTable.message_id,
+            SessionV1.MessageID.make(input.assistant.id)), sql`json_extract(${PartTable.data}, '$.callID') = ${input.call.id}`))
+            .limit(2).all().pipe(Effect.orDie)
+          if (original || parts.length) {
+            const legacyOwner = original ? Schema.decodeUnknownOption(SessionV1.Info)({ ...original.data,
+              id: original.id, sessionID: original.session_id }).valueOrUndefined : undefined
+            const row = parts[0]
+            const part = row ? Schema.decodeUnknownOption(SessionV1.Part)({ ...row.data,
+              id: row.id, messageID: row.message_id, sessionID: row.session_id }).valueOrUndefined : undefined
+            if (!original || !legacyOwner || original.session_id !== parent.id || legacyOwner.role !== "assistant" ||
+              legacyOwner.agent !== "maestro" || parts.length !== 1 || !part || part.type !== "tool" ||
+              part.tool !== "task" || part.callID !== input.call.id || part.sessionID !== parent.id ||
+              part.messageID !== SessionV1.MessageID.make(input.assistant.id) || part.metadata?.providerExecuted || part.state.status !== "completed" ||
+              !isDeepStrictEqual(part.state.input, call.state.input)) return false
+            const legacyMetadata = record(part.state.metadata).valueOrUndefined
+            if (!legacyMetadata || legacyMetadata.parentSessionId !== parent.id || legacyMetadata.sessionId !== child.id ||
+              legacyMetadata.upstreamSettlement !== undefined ||
+              legacyMetadata.interrupted === true && metadata.interrupted !== true ||
+              !isDeepStrictEqual(legacyMetadata.workResult, metadata.workResult)) return false
+          }
           const modern = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.authorMessageID)).get().pipe(Effect.orDie)
           const legacy = yield* db.select().from(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(input.authorMessageID))).get().pipe(Effect.orDie)
           if (!modern && !legacy) return false
