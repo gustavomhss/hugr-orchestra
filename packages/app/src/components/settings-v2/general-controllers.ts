@@ -2,7 +2,7 @@ import { createMemo, createResource, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Config } from "@orchestra/sdk/v2/client"
 import { usePermission } from "@/context/permission"
-import { useServerSDK } from "@/context/server-sdk"
+import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import {
   monoDefault,
@@ -108,15 +108,19 @@ export const soundOptions = [noneSound, ...SOUND_OPTIONS]
 export type SoundSelectOption = (typeof soundOptions)[number]
 
 export function createLeanSettingsController(
-  serverSync: Accessor<{ data: { config: Config }; updateConfig: (config: Config) => Promise<unknown> }> = useServerSync(),
+  serverSync: Accessor<{ data: { config: Config }; ready?: boolean; error?: unknown; updateConfig: (config: Config) => Promise<unknown> }> = useServerSync(),
+  capability?: Accessor<boolean>,
 ) {
   const [state, setState] = createStore({ pending: false, failed: false })
+  const protocol = capability ? undefined : useServerProtocol()
+  const editable = createMemo(capability ?? (() => protocol?.() === "v1" && serverSync().ready === true && !serverSync().error))
   return {
-    enabled: createMemo(() => serverSync().data.config.tool_output?.lean?.enabled !== false),
+    editable,
+    enabled: createMemo(() => editable() ? serverSync().data.config.tool_output?.lean?.enabled !== false : undefined),
     pending: () => state.pending,
     failed: () => state.failed,
     set: async (checked: boolean) => {
-      if (state.pending) return
+      if (state.pending || !editable()) return
       setState({ pending: true, failed: false })
       const current = serverSync().data.config.tool_output
       try {

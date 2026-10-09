@@ -33,7 +33,7 @@ import {
   createShellOptions,
   createShellSettingsController,
 } from "./settings-v2/general-controllers"
-import { showToast } from "@/utils/toast"
+import { LeanSettingControl } from "./settings-v2/lean-setting"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -235,23 +235,7 @@ export const SettingsGeneral: Component = () => {
     <div class="flex flex-col gap-1">
       <SettingsList>
         <SettingsRow title={language.t("lean.settings.title")} description={language.t("lean.settings.description")}>
-          <div class="flex items-center gap-3" data-action="settings-lean">
-            <Show when={lean.failed()}>
-              <span role="alert">{language.t("lean.settings.failed")}</span>
-            </Show>
-            <Switch
-              aria-label={language.t("lean.settings.title")}
-              checked={lean.enabled()}
-              disabled={lean.pending()}
-              onChange={(checked) =>
-                void lean.set(checked).catch((error) => showToast({
-                  variant: "error",
-                  title: language.t("lean.settings.failed"),
-                  description: error instanceof Error ? error.message : language.t("lean.settings.failed"),
-                }))
-              }
-            />
-          </div>
+          <LeanSettingControl controller={lean} />
         </SettingsRow>
         <SettingsRow
           title={language.t("settings.general.row.language.title")}
