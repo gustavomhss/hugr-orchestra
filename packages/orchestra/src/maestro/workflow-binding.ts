@@ -99,6 +99,20 @@ export const prepare = Effect.fn("WorkflowBinding.prepare")(function* (input: Di
      input.writePaths, child.permission ?? []))
    if (!approvedRoots || !isDeepStrictEqual(WriteRoots.read(child.permission), approvedRoots))
      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
+   const database = yield* Database.Service
+   const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, ready.parent.id))
+     .all().pipe(Effect.orDie)
+   const reservations = rows.filter((row) => row.data.childSessionID === child.id &&
+     (row.type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2) ||
+       row.type === EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2)))
+   if (reservations.length !== 1)
+     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_RESERVATION_MISSING" })
+   const reserved = reservations[0].type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2)
+     ? Schema.decodeUnknownSync(MaestroEvent.Approval.ReservedV2.data)(reservations[0].data)
+     : Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)(reservations[0].data)
+   if (reserved.projectID !== child.projectID || reserved.sessionID !== ready.parent.id ||
+     !isDeepStrictEqual(reserved.permission, child.permission ?? []))
+     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
   const binding = Schema.decodeUnknownSync(RelayArm.WorkflowBinding)({
     definition: ready.materialized.definition, planRevisionID: ready.revision.id,
     executionSessionID: child.id, authoritySessionID: ready.parent.id, logicalTaskID: logical.taskId,
@@ -147,7 +161,7 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_CHECK_UNBOUND" })
   if (existing && (!isDeepStrictEqual(existing.binding, ready.binding) || existing.token !== input.token))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
-  yield* input.relay.create({ token: input.token, sprint: ready.materialized.sprint,
+  if (!existing) yield* input.relay.create({ token: input.token, sprint: ready.materialized.sprint,
     agentID: ready.binding.executionSessionID,
     meta: { workdir: input.dispatch.directory, token: input.token,
       project_id: input.dispatch.projectID, session_id: ready.binding.executionSessionID, workflow: ready.binding },
@@ -187,11 +201,13 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
         ["unknown", "error", "content-filter"].includes(message.info.finish) ||
         message.parts.some((part) => part.type === "tool" && part.state.status !== "completed"))
         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" })
-    }).pipe(Effect.provide(context)),
+    }).pipe(Effect.provide(context), Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+      : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" }))),
     revalidate: () => prepare(input.dispatch, "continuation").pipe(Effect.flatMap((current) =>
       isDeepStrictEqual(current.binding, ready.binding) ? Effect.void
         : Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" }))),
-      Effect.provide(context)),
+      Effect.provide(context), Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+        : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_BINDING_ACQUISITION" }))),
   }
 })
 
@@ -201,7 +217,9 @@ export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessio
   if (!row) return
   if (row.type !== EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
-  return Schema.decodeUnknownSync(MaestroEvent.Task.WorkflowBound.data)(row.data)
+  return yield* Schema.decodeUnknownEffect(MaestroEvent.Task.WorkflowBound.data)(row.data).pipe(
+    Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })),
+  )
 })
 
 function eventID(executionSessionID: string) {

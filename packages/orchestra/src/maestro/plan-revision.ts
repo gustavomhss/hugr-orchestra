@@ -97,7 +97,7 @@ function wanted(input: RecordPlanRevisionInput): LegacyRevisionData {
   return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.Recorded.data)({ ...body, id: eventID(input), revisionHash: hash(body), createdAt: Date.now() })
 }
 
-const decodeV3 = (data: unknown) => Schema.decodeUnknownEffect(MaestroEvent.PlanRevision.RecordedV3.data)(data).pipe(
+const decodeV3 = (data: unknown) => Schema.decodeUnknownEffect(MaestroEvent.PlanRevision.RecordedV3.data)(data, { onExcessProperty: "error" }).pipe(
   Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_INVALID" })),
   Effect.flatMap((revision) => {
     const { id, revisionHash, createdAt, ...body } = revision
@@ -134,6 +134,9 @@ export const recordPlanRevision = Effect.fn("MaestroPlanRevision.record")(functi
   if (!admission || admission.outcome !== "READY_TO_DRAFT") {
     return yield* new PlanRevisionConflictError(input)
   }
+  if (!input.upstream && [input.goal, input.reviewRequirement, ...input.acceptance, ...input.scope,
+    ...input.constraints, ...input.assumptions, ...input.risks].some((field) => field.source === "upstream"))
+    return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING" })
   if (input.workflow || input.upstream) {
     const sessions = yield* Session.Service
     const session = yield* sessions.get(SessionID.make(input.sessionID))

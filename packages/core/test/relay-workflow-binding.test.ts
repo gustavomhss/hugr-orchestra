@@ -133,11 +133,21 @@ describe("pure current step and guarded transition seam", () => {
     expect(first.position).toBe("implement")
     expect(first.attempt).toBe(0)
     expect(yield* Effect.sync(snapshot)).toEqual(before)
+    const pending = { binding, settlement: { assistantMessageID: SessionMessage.ID.make("msg_existing_assistant"),
+      expected: { position: first.position, attempt: first.attempt, ledgerSeq: first.ledgerSeq } }, phase: "pending" as const }
+    yield* Effect.sync(() => writeFileSync(path.join(arm, "workflow_pending.json"), JSON.stringify(pending)))
+    const fenced = yield* Effect.sync(snapshot)
+    const resumable = yield* RelayWorkflowCurrentStep.read("native-arm", binding).pipe(Effect.provideService(ArmState.Store, store))
+    expect(resumable.pending).toEqual(pending)
+    expect(resumable.position).toBe(first.position)
+    expect(resumable.attempt).toBe(first.attempt)
+    expect(resumable.ledgerSeq).toBe(first.ledgerSeq)
+    expect(yield* Effect.sync(snapshot)).toEqual(fenced)
     expect(yield* reason(RelayWorkflowTransition.transition({ token: "native-arm", binding,
       settlement: { assistantMessageID: SessionMessage.ID.make("msg_existing_assistant"), expected: first },
       revalidate: () => RelayWorkflowBinding.revalidate(f.port, acquired.definition).pipe(Effect.asVoid),
     }).pipe(Effect.provideService(ArmState.Store, store)))).toBe("WORKFLOW_SETTLEMENT_UNBOUND")
-    expect(yield* Effect.sync(snapshot)).toEqual(before)
+    expect(yield* Effect.sync(snapshot)).toEqual(fenced)
     yield* Effect.sync(() => writeFileSync(path.join(arm, "sprint.json"), JSON.stringify({ ...acquired.sprint, brief: "Tampered" })))
     expect(yield* reason(RelayWorkflowCurrentStep.read("native-arm", binding).pipe(Effect.provideService(ArmState.Store, store))))
       .toBe("WORKFLOW_MATERIALIZATION_DRIFT")

@@ -1,7 +1,7 @@
 export * as RelayWorkflowSession from "./relay-workflow-session"
 
 import { and, eq } from "drizzle-orm"
-import { Context, Effect, Layer, Schema } from "effect"
+import { Context, Effect, Layer, Option, Schema } from "effect"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -42,8 +42,8 @@ export const node = makeGlobalNode({ service: Service, layer: Layer.effect(Servi
 const nativeHost = Effect.gen(function* () {
   const scoped = yield* NativeHost
   if (scoped) return scoped
-  const service = yield* Service
-  return yield* service.host()
+  const service = yield* Effect.serviceOption(Service)
+  return Option.isSome(service) ? yield* service.value.host() : undefined
 })
 
 // Only a stored native Task binding activates the boundary. An absent host for a bound Session is a HOLD, never an
@@ -54,7 +54,9 @@ export const current = Effect.fn("RelayWorkflowSession.current")(function* (sess
     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1)))).limit(2).all().pipe(Effect.orDie)
   if (!rows.length) return
   if (rows.length !== 1) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_AMBIGUOUS" })
-  const bound = Schema.decodeUnknownSync(MaestroEvent.Task.WorkflowBound.data)(rows[0].data)
+  const bound = yield* Schema.decodeUnknownEffect(MaestroEvent.Task.WorkflowBound.data)(rows[0].data).pipe(
+    Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })),
+  )
   if (bound.executionSessionID !== sessionID || bound.binding.executionSessionID !== sessionID)
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_LINEAGE_MISMATCH" })
   const host = yield* nativeHost

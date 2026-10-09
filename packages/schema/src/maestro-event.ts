@@ -632,6 +632,7 @@ export const Definitions = Event.inventory(
   Admission.Decided,
   PlanRevision.Recorded,
   PlanRevision.RecordedV2,
+  PlanRevision.RecordedV3,
   Context.Recorded,
   Context.RecordedV2,
   Clarification.Decided,

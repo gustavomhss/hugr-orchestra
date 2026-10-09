@@ -25,7 +25,7 @@ import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { readAtlasSource } from "./atlas-source"
 import { readAuthorization } from "./authorization"
-import { readValidation, validationRecordHash, findReview } from "./validation-record"
+import { readValidation, validationRecordHash, findReview, rosterHash, reviewPolicyHash } from "./validation-record"
 import { readPlanRevision, readWorkflowRevision } from "./plan-revision"
 import { compileContextToolPlan } from "./context-tool-plan"
 import { ToolFailure } from "@orchestra/llm"
@@ -50,7 +50,7 @@ import { EffectBridge } from "@/effect/bridge"
 import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
-import { canonicalMemberId } from "./roster"
+import { canonicalMemberId, roster, nativeProfiles } from "./roster"
 import { WriteRoots } from "./write-roots"
 import { WorkflowBinding } from "./workflow-binding"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
@@ -527,11 +527,12 @@ export const make = Effect.gen(function* () {
           Effect.gen(function* () {
             const authority = yield* approved({ ...binding, planID: undefined })
             if (!authority.planID) return { status: "missing" as const }
-            const plan = yield* readPlanRevision(authority.planID)
-            if (!plan || plan.sessionID !== binding.sessionID || plan.revision !== "v2")
+             const plan = yield* readPlanRevision(authority.planID)
+             const grounding = plan && plan.revision !== "v1" ? plan.grounding : undefined
+             if (!plan || plan.sessionID !== binding.sessionID || !grounding)
               return { status: "missing" as const }
             const source = yield* readAtlasSource(authority.session)
-            if (source.identityHash !== plan.grounding.sourceIdentityHash) return outcome(false)
+             if (source.identityHash !== grounding.sourceIdentityHash) return outcome(false)
             const compiled = compileContextToolPlan({
               actor: { projectId: binding.projectID, sessionId: binding.sessionID, memberId: "maestro" },
               revision: {
@@ -541,7 +542,7 @@ export const make = Effect.gen(function* () {
                 sessionId: binding.sessionID,
               },
               territories: plan.scope.map((field) => field.value),
-              units: plan.grounding.units,
+               units: grounding.units,
               context: source.context,
             })
             return outcome(compiled.status === "READY" && compiled.plan.actions.length > 0)
@@ -619,20 +620,29 @@ export const make = Effect.gen(function* () {
        row.type === EventV2.versionedType(MaestroEvent.Validation.Recorded.type, version)) && row.data.planRevisionID === binding.planID)
      const validation = selected ? yield* readValidation(selected.id) : undefined
      const review = validation ? yield* findReview(binding.sessionID, validation.id) : undefined
+     const reviewer = roster.find((member) => member.memberId === "lucy")
+     const nativeReviewer = yield* agents.get("lucy")
      if (!validation || validation.outcome !== "VALID" || validation.projectID !== binding.projectID || !review ||
        review.data.verdict !== "APPROVE" || review.data.reviewerID !== "lucy" ||
        review.data.routedMemberID === "lucy" || review.data.workCardHash !== validation.workCardHash ||
-       review.data.reviewPolicyHash !== validation.reviewPolicyHash || review.data.projectID !== binding.projectID)
+       review.data.reviewPolicyHash !== validation.reviewPolicyHash || review.data.projectID !== binding.projectID ||
+       !reviewer?.nativeProfile || nativeReviewer?.id !== "lucy" || nativeReviewer.native !== true ||
+       validation.rosterHash !== rosterHash(roster) ||
+       validation.reviewPolicyHash !== reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]) ||
+       review.data.rosterHash !== validation.rosterHash || review.data.grantHash !== validation.grantHash ||
+       !isDeepStrictEqual(review.data.actor, validation.actor) ||
+       ![review.data.artifact.baseSHA, review.data.artifact.headSHA].every((sha) => /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)))
        return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
      const status = yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
      const head = yield* git.run(["rev-parse", "HEAD"], { cwd: binding.directory })
+     const placement = yield* InstanceState.context
      const diff = yield* git.run(["diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames",
        "--src-prefix=a/", "--dst-prefix=b/", review.data.artifact.baseSHA, review.data.artifact.headSHA, "--", "."],
        { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 })
      if (status.exitCode || status.truncated || status.text().trim() || head.exitCode || head.truncated ||
        head.text().trim() !== review.data.artifact.headSHA || diff.exitCode || diff.truncated || !diff.stdout.length ||
        RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
-       !FSUtil.contains(yield* fs.realPath(review.data.artifact.worktree), yield* fs.realPath(binding.directory)))
+       (yield* fs.realPath(review.data.artifact.worktree)) !== (yield* fs.realPath(placement.worktree)))
        return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
    }).pipe(Effect.provide(workflowContext)))
    checks.set("cold-review", (binding) => coldReview(binding).pipe(Effect.as(outcome(true))))
@@ -649,7 +659,7 @@ export const make = Effect.gen(function* () {
            Effect.scoped(Effect.gen(function* () {
              const store = yield* AuthoringStore.open(relay.paths.root, placement.projectID)
              return yield* read({ get: store.get, version: store.version })
-           })),
+           })).pipe(Effect.catchDefect(() => Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_ACQUISITION" })))),
          skills: (name: string) => catalog.list().pipe(Effect.flatMap((list) => {
            const skill = list.find((entry) => entry.name === name)
            if (!skill || !skill.content.trim() || skill.content.includes("\0") || Buffer.byteLength(skill.content) > 2 * 1024 * 1024)
@@ -674,13 +684,41 @@ export const make = Effect.gen(function* () {
        const revision = yield* readWorkflowRevision(input.workflow.planRevisionID)
        yield* currentRevision(input.sessionID, revision.id)
        const owner = yield* agents.get("maestro")
+       const actor = yield* agents.get(input.subagentType)
        if (owner?.id !== "maestro" || owner.native !== true)
          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_OWNER_MISSING" })
-       const approval = yield* recordApproval(input.sessionID)
-       if (approval.status !== "APPROVED") return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+       if (actor?.native !== true || actor.mode !== "subagent")
+         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_WORKER_MISSING" })
        const task = yield* WorkflowBinding.taskCall(input.sessionID, input.assistantMessageID, input.callID)
        const intent = Schema.decodeUnknownSync(Schema.Struct({ authorizationID: Schema.optional(Schema.String),
          governed: Schema.optional(Schema.Struct({ approvalMessageID: Schema.String, planRevisionID: Schema.String, taskHash: Schema.String })) }))(task.input)
+       const approval = phase === "dispatch" ? yield* recordApproval(input.sessionID) : yield* Effect.gen(function* () {
+         // Continue the already reserved Task under its observed owner decision. A synthetic Task delivery or a
+         // later resume message is not a fresh owner reply and cannot create or erase that original decision.
+         const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, input.sessionID))
+           .orderBy(desc(EventTable.seq)).all().pipe(Effect.orDie)
+         const latest = rows.find((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.Presented.type, 1))
+         const presentation = latest ? Schema.decodeUnknownSync(MaestroEvent.Approval.Presented.data)(latest.data) : undefined
+         const selected = rows.find((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.Decided.type, 1) &&
+           row.data.presentationID === presentation?.id)
+         if (!selected) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
+         const decision = Schema.decodeUnknownSync(MaestroEvent.Approval.Decided.data)(selected.data)
+         if (decision.outcome !== "APPROVED" || !presentation || presentation.planRevisionID !== revision.id ||
+           presentation.taskHash !== decision.taskHash || presentation.revisionHash !== decision.revisionHash ||
+           presentation.validationHash !== decision.validationHash || presentation.contextHash !== decision.contextHash ||
+           presentation.policyHash !== decision.policyHash || presentation.assistantMessageID !== decision.presentationMessageID)
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
+         const reserved = rows.some((row) =>
+           row.type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2) &&
+             row.data.presentationID === decision.presentationID && row.data.callID === input.callID &&
+             row.data.taskHash === decision.taskHash ||
+           row.type === EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2) &&
+             row.data.authorizationID === intent.authorizationID && row.data.sessionID === input.sessionID)
+         if (!reserved) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_RESERVATION_MISSING" })
+         return { status: "APPROVED" as const, decision: { ...decision,
+           actor: { projectId: decision.projectID, sessionId: decision.sessionID, memberId: decision.memberID } } }
+       })
+       if (approval.status !== "APPROVED") return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_DIRECT_APPROVAL_MISSING" })
        const authorization = intent.authorizationID ? yield* readAuthorization(intent.authorizationID) : undefined
        if (intent.governed ? intent.governed.approvalMessageID !== approval.decision.approvalMessageID ||
          intent.governed.planRevisionID !== revision.id || intent.governed.taskHash !== approval.decision.taskHash
@@ -689,9 +727,13 @@ export const make = Effect.gen(function* () {
            authorization.approvalMessageID !== approval.decision.approvalMessageID || authorization.routedMemberID !== input.subagentType)
          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
        const validation = yield* readValidation(approval.decision.validationRecordID)
+       const reviewer = roster.find((member) => member.memberId === "lucy")
        const context = validation?.contextRecordID ? yield* readContext(validation.contextRecordID) : undefined
        if (!validation || !context || validation.outcome !== "VALID" || validation.sessionID !== input.sessionID ||
          validation.projectID !== input.projectID || validation.planRevisionID !== revision.id ||
+         canonicalMemberId(validation.routedMemberID) !== (actor.id ?? input.subagentType) ||
+         validation.rosterHash !== rosterHash(roster) || !reviewer?.nativeProfile ||
+         validation.reviewPolicyHash !== reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]) ||
          context.sessionID !== input.sessionID || context.projectID !== input.projectID || context.directory !== input.directory ||
          context.planRevisionID !== revision.id || validation.contextHash !== context.contextHash ||
          approval.decision.actor.memberId !== "maestro" || approval.decision.actor.projectId !== input.projectID ||
@@ -705,6 +747,21 @@ export const make = Effect.gen(function* () {
          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVAL_BINDING_MISMATCH" })
        if (phase === "dispatch" && (!(yield* contextIsCurrent(context)) || context.changedPaths.length))
          return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_STALE" })
+       if (phase === "continuation") {
+         // Approved implementation may move HEAD. It may not widen the original context's write roots.
+         if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(context.headSHA))
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_STALE" })
+         const placement = yield* InstanceState.context
+         const worktree = placement.worktree === "/" ? placement.directory : placement.worktree
+         const changes = yield* Effect.forEach([
+           ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", context.headSHA, "--", "."],
+           ["ls-files", "--full-name", "--others", "--exclude-standard", "-z"],
+         ], (args) => git.run(args, { cwd: worktree, maxOutputBytes: 512 * 1024 }))
+         if (changes.some((result) => result.exitCode || result.truncated || result.stdout.length && !result.text().endsWith("\0")) ||
+           changes.flatMap((result) => result.text().split("\0").filter(Boolean)).some((file) =>
+             !definition.writePaths.some((root) => FSUtil.contains(path.resolve(worktree, root), path.resolve(worktree, file)))))
+           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
+       }
        if (revision.grounding) {
          const source = yield* readAtlasSource(yield* sessions.get(SessionID.make(input.sessionID)))
          if (source.identityHash !== revision.grounding.sourceIdentityHash)

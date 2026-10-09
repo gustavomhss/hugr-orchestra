@@ -191,15 +191,13 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      const workflowReady = params.workflow ? yield* Effect.gen(function* () {
-        if (!params.governed && !params.authorizationID)
-          return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
-        return yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
+      if (params.workflow && !params.governed && !params.authorizationID)
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+      const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
           callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
           model: params.model, workflow: params.workflow,
-        }).pipe(Effect.orDie)
-      }) : undefined
+        }).pipe(Effect.orDie) : undefined
       const seat = next.native === true ? Seats.find(nextID) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
