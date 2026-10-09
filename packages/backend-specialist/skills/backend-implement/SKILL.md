@@ -62,7 +62,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
 - Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md), [Ruby](references/languages/ruby.md), [PHP](references/languages/php.md). Read only the packet's language.
-- Before invoking a generator or owned tool, read its exact entry in the [toolkit recipes](references/recipes/external/index.md), including version pins, prerequisites and generation command. A packet naming a check such as `--check` or `--verify` does not make that command a generator: produce the assigned artifact with the recipe's generation command first, then run the named check. Generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
+- Before invoking a generator or owned tool, read its [exact recipe](references/recipes/external/index.md): pins, prerequisites and generation command. `--check` or `--verify` alone does not generate: produce the assigned artifact first, then run the check. Generate only affected artifacts; a skeleton is not completed behavior. Copy failure `error.code` into a `tool` blocker. Inspect partial or unknown effects before another mutating call; never replay blindly.
 
 ## 4. Run the checks
 
@@ -73,7 +73,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 
 ## 5. Return
 
-The final message is the result. Write, in as few sentences as it takes:
+The final message is the result. State briefly:
 
 1. The outcome: done or blocked.
 2. What changed.
@@ -81,9 +81,9 @@ The final message is the result. Write, in as few sentences as it takes:
 4. How to use or run the change.
 5. Remaining limits and risks.
 
-English, terse; the caller reads the typed card, so do not restate it. Then write exactly one `backend-result` block as the prompt defines, with no tool call after it. The card carries worker claims only: no verification, acceptance, memory status, Session or task IDs.
+Write terse English, then exactly one `backend-result` block as the prompt defines; no later tool call. Do not repeat the typed card in prose. Card fields carry worker claims, never verification, acceptance, memory status, Session or task IDs.
 
-For generated outputs, list the concrete files created or changed in `changes`, including files first produced by a shell generator. A directory write scope is permission to generate beneath it, not a substitute for the resulting file inventory. Inspect the generated paths before returning; do not claim only their directory when the packet names an output file.
+Inspect generated paths and list concrete created/changed files in `changes`, including shell-generated files. Directory write permission does not replace file inventory; report the named output file, not only its directory.
 
 ## 6. Continuity
 
