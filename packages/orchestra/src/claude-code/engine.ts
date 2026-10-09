@@ -90,8 +90,9 @@ const layer = Layer.effect(
       const selected = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
       const shape = selected ? yield* provider.getModel(input.user.model.providerID, selected).pipe(Effect.catch(() =>
         catalog.get().pipe(Effect.map((models) => models.anthropic ? Provider.fromModelsDevProvider(models.anthropic).models[selected] : undefined)))) : undefined
-       let effective: Provider.Model | undefined
-       let admissionModel: Provider.Model | undefined
+      let effective: Provider.Model | undefined
+      let admissionModel = shape && Number.isFinite(shape.limit.context) && shape.limit.context > 0 &&
+        Number.isFinite(shape.limit.output) && shape.limit.output > 0 && hardLimit(shape) > 0 ? shape : undefined
       let nativeVersion = state.version
       let actualModel = state.model ?? selected
       let sdkModel: string | undefined
@@ -109,8 +110,8 @@ const layer = Layer.effect(
             ? "SDK model/window metadata unavailable" : nativeOverhead === undefined ? "SDK system/tool snapshot unavailable; native compaction enabled" : undefined
          if (model && window !== undefined && output !== undefined && Number.isFinite(window) && Number.isFinite(output))
            yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output })
-         admissionModel = shape && model && window && output && Number.isFinite(window) && Number.isFinite(output) && output < window
-           ? { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { context: window, output } } : undefined
+        if (shape && model && window && output && Number.isFinite(window) && Number.isFinite(output) && output < window)
+          admissionModel = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { ...shape.limit, context: window, output } }
         if (reason) {
           effective = undefined
           yield* continuity.pause(sessionID)
@@ -118,7 +119,7 @@ const layer = Layer.effect(
           return
         }
         if (!shape || !model || window === undefined || output === undefined) return
-        const resolved = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { context: window, output } }
+        const resolved = { ...shape, id: ModelV2.ID.make(model), api: { ...shape.api, id: model }, limit: { ...shape.limit, context: window, output } }
         effective = resolved
         yield* continuity.configure({ sessionID, model: resolved, llm: backend, overhead: nativeOverhead })
         yield* metadata({ model, selectedModel: selected, contextWindow: window, maxOutputTokens: output, version: nativeVersion, continuityPaused: null })
@@ -204,8 +205,12 @@ const layer = Layer.effect(
         shell: (ctx: Tool.Context, command: string) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
           Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
+      const append = [agent.prompt, ...instructions].filter(Boolean).join("\n\n") || undefined
       const prepare = Effect.gen(function* () {
       const stored = yield* native.read
+      const key = stored.keys.find((item) => !item.key.subpath && item.key.sessionId === state.sessionId)?.key
+      if (state.sessionId && !key)
+        return yield* Effect.fail(new Error("Claude Code native archive unavailable; legacy SDK resume is blocked until a complete native archive is imported."))
       nativeOverhead = measureNativeOverhead(ClaudeCodeNative.fold(stored.keys.filter((item) => !item.key.subpath).flatMap((item) => item.entries)))
       yield* configure(state.selectedModel === selected ? state.model : undefined, state.contextWindow, state.maxOutputTokens)
       stored.delivered.forEach((id) => delivered.add(MessageID.make(id)))
@@ -227,42 +232,35 @@ const layer = Layer.effect(
           return yield* Effect.fail(new Error("Claude Code continuity remains over the hard limit; next query was not started."))
         }
       }
-      const key = stored.keys.find((item) => !item.key.subpath && item.key.sessionId === state.sessionId)?.key
-      if (state.sessionId && !key && stored.keys.length) return yield* Effect.fail(new Error("Claude Code native session key is unavailable"))
-       const materialized = key ? yield* native.prepare(key, { admit: true, model: effective }) : undefined
-      if (effective && state.sessionId) {
-         if (materialized?.kind === "fallback") {
-          effective = undefined
-          yield* continuity.pause(sessionID)
-          yield* metadata({ continuityPaused: `Native replay ${materialized.reason}; native compaction enabled` })
-           const fallback = key ? yield* native.prepare(key) : undefined
-           const tokens = (fallback?.tokens ?? 0) + estimate(prompt) + estimate({ system: fallback && ClaudeCodeNative.overhead(fallback.entries),
-             tools: defs.map((def) => ({ name: def.id, description: def.description, schema: ToolJsonSchema.fromTool(def) })) })
-           yield* metadata({ nativeAdmission: { ready: !!admissionModel && tokens < hardLimit(admissionModel), reason: materialized.reason, tokens,
-             limit: admissionModel && hardLimit(admissionModel), nativeFallback: true } })
-           if (admissionModel && tokens >= hardLimit(admissionModel))
-             return yield* Effect.fail(new Error("Claude Code native admission blocked before spawn: authoritative native payload exceeds hard limit"))
-           return fallback
-        }
-        const last = history.findLast((message) => message.info.role === "assistant")?.info
-        const actual = last?.role === "assistant" ? tokenCount(last.tokens) : 0
-        const system = materialized ? ClaudeCodeNative.overhead(materialized.entries) : undefined
-        const overhead = estimate({ system, tools: defs.map((def) => ({ name: def.id,
-          description: def.description, schema: ToolJsonSchema.fromTool(def) })) })
-        const tokens = (materialized?.tokens ?? Infinity) + estimate(prompt) + overhead
-        yield* metadata({ nativeAdmission: { ready: materialized?.ready === true, reason: materialized?.reason ?? "missing-native-view", tokens,
-          bounded: !!system, priorActual: actual, limit: hardLimit(effective) } })
-        if (!system) {
-          nativeOverhead = undefined
-          effective = undefined
-          yield* continuity.pause(sessionID)
-          yield* metadata({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
-          return key ? yield* native.prepare(key) : undefined
-        }
-        if (!materialized?.ready || tokens >= hardLimit(effective))
-          return yield* Effect.fail(new Error(`Claude Code native admission blocked before spawn: ${materialized?.reason ?? "missing-native-view"}; exact native view is over or cannot be bounded under the hard limit.`))
+       let materialized = key ? yield* native.prepare(key, { admit: true, model: effective }) : undefined
+       const reason = materialized?.reason ?? "first-turn"
+       const nativeFallback = materialized?.kind === "fallback"
+       if (effective && state.sessionId) {
+         if (nativeFallback) {
+           effective = undefined
+           yield* continuity.pause(sessionID)
+           yield* metadata({ continuityPaused: `Native replay ${reason}; native compaction enabled` })
+           materialized = key ? yield* native.prepare(key) : undefined
+         }
+         if (effective && !(materialized && ClaudeCodeNative.overhead(materialized.entries))) {
+           nativeOverhead = undefined
+           effective = undefined
+           yield* continuity.pause(sessionID)
+           yield* metadata({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
+           materialized = key ? yield* native.prepare(key) : undefined
+         }
+         if (effective && !materialized?.ready)
+           return yield* Effect.fail(new Error(`Claude Code native admission blocked before spawn: ${reason}; exact native view cannot be bounded under the hard limit.`))
        }
-       if (!effective && admissionModel && (materialized?.tokens ?? 0) + estimate(prompt) >= hardLimit(admissionModel))
+       const system = materialized && ClaudeCodeNative.overhead(materialized.entries)
+       // Unknown CLI overhead prevents an exact budget, but known payload alone can already exceed the limit.
+        const tokens = estimate(materialized?.entries ?? []) + estimate(prompt) + estimate({ system, append,
+         tools: defs.map((def) => ({ name: def.id, description: def.description, schema: ToolJsonSchema.fromTool(def) })) })
+       const last = history.findLast((message) => message.info.role === "assistant")?.info
+       yield* metadata({ nativeAdmission: { ready: !!admissionModel && tokens < hardLimit(admissionModel), reason, tokens,
+         bounded: !!system && !!admissionModel, priorActual: last?.role === "assistant" ? tokenCount(last.tokens) : 0,
+         limit: admissionModel && hardLimit(admissionModel), nativeFallback } })
+       if (admissionModel && tokens >= hardLimit(admissionModel))
          return yield* Effect.fail(new Error("Claude Code native admission blocked before spawn: authoritative native payload exceeds hard limit"))
        return materialized
       })
@@ -272,7 +270,7 @@ const layer = Layer.effect(
         model: selected,
         resume: state.sessionId,
         systemPrompt: { type: "preset" as const, preset: "claude_code" as const,
-          append: [agent.prompt, ...instructions].filter(Boolean).join("\n\n") || undefined, snapshot: true },
+          append, snapshot: true },
         disallowedTools: ["Read", "Edit", "Write", "NotebookEdit", "Task"],
         toolAliases: { Read: `mcp__${SERVER}__read`, Edit: `mcp__${SERVER}__edit`, Write: `mcp__${SERVER}__write` },
         mcpServers: { [SERVER]: server({ defs, run: toolRun, claim, complete: view.complete,
@@ -303,21 +301,26 @@ const layer = Layer.effect(
       }
 
       const outcome = yield* Effect.gen(function* () {
-          const materialized = yield* prepare
-          options.settings.autoCompactEnabled = !effective
-          const query = yield* Effect.acquireRelease(Effect.sync(() => sdk.query({ prompt, options: { ...options,
-            sessionStore: { ...options.sessionStore, load: async (key) => {
-              if (materialized && key.sessionId === materialized.key.sessionId && key.projectKey === materialized.key.projectKey && !key.subpath)
-                return structuredClone(materialized.entries)
-              return native.store.load(key)
-            } },
-          } })), (query) => Effect.gen(function* () {
-            abort.abort()
-            query.close?.()
-            yield* Effect.tryPromise({ try: () => query.return(undefined), catch: (error) => error }).pipe(Effect.ensuring(Effect.promise(async () => {
+           const materialized = yield* prepare
+           options.settings.autoCompactEnabled = !effective
+           const env = yield* ClaudeCodeSDK.Environment
+           const lifetime = ClaudeCodeSDK.processLifetime({ ...options, env,
+             sessionStore: { ...options.sessionStore, load: async (key) => {
+               if (materialized && key.sessionId === materialized.key.sessionId && key.projectKey === materialized.key.projectKey && !key.subpath)
+                 return structuredClone(materialized.entries)
+               return native.store.load(key)
+             } },
+           })
+            const join = Effect.promise(lifetime.join).pipe(Effect.ensuring(Effect.promise(async () => {
               while (callbacks.size) await Promise.allSettled([...callbacks])
-            })), Effect.orDie)
-          }))
+            })))
+           // query() can throw after spawning; register ownership before construction.
+           yield* Effect.addFinalizer(() => Effect.sync(() => abort.abort()).pipe(Effect.andThen(join)))
+           const query = yield* Effect.acquireRelease(Effect.sync(() => sdk.query({ prompt, options: lifetime.options })), (query) => Effect.gen(function* () {
+             abort.abort()
+             yield* Effect.sync(() => query.close?.())
+             yield* Effect.tryPromise({ try: () => query.return(undefined), catch: (error) => error }).pipe(Effect.orDie)
+           }).pipe(Effect.ensuring(join)))
           while (true) {
             const next = yield* Effect.tryPromise({ try: () => query.next(), catch: (error) => error })
             if (next.done) break
@@ -330,8 +333,7 @@ const layer = Layer.effect(
             if (message.type === "system" && message.subtype === "init" && message.session_id !== state.sessionId)
               yield* metadata({ sessionId: message.session_id })
             if (message.type === "system" && message.subtype === "init") sdkModel = message.model
-            if (message.type === "assistant" && !message.parent_tool_use_id && message.message.model) actualModel = message.message.model
-            if (message.type === "assistant" && !message.parent_tool_use_id) yield* handoff(userIDs)
+             if (message.type === "assistant" && !message.parent_tool_use_id && message.message.model) actualModel = message.message.model
             if (message.type === "assistant" && message.supersedes?.length) {
               yield* native.retract(message.supersedes)
               yield* view.retract(message.supersedes)

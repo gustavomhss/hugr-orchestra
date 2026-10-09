@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import { writeFileSync } from "node:fs"
 import path from "node:path"
 import { Deferred, Effect, Fiber, Layer, Schema, Stream } from "effect"
-import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
+import type { SDKMessage, SessionStoreEntry, SpawnedProcess } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { LLM } from "@/session/llm"
@@ -27,6 +27,10 @@ import { SessionRevert } from "@/session/revert"
 import { MessageID } from "@/session/schema"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { ModelsDev } from "@orchestra/core/models-dev"
+import { Provider } from "@/provider/provider"
+import { hardLimit } from "@/continuity/trigger"
+import { estimate } from "@/continuity/masking"
 
 // A scripted Claude Code: each query records its options and plays the next script.
 type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
@@ -36,9 +40,11 @@ const scripts: Script[] = []
 let producer: ((params: Params) => AsyncGenerator<unknown>) | undefined
 let producers = 0
 let apiCalls = 0
+let construct: ClaudeCodeSDK.Interface["query"] | undefined
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   query: (params) => {
     queries.push(params)
+    if (construct) return construct(params)
     if (params.options?.persistSession === false) {
       producers++
       if (!producer) throw new Error("Unexpected SDK producer")
@@ -67,17 +73,20 @@ const it = testEffect(makeHttp({ replacements: [[ClaudeCodeSDK.node, sdk], [FSUt
 })]] }))
 
 const frame = { parent_tool_use_id: null, uuid: "u", session_id: "sdk-1" }
-const reply = (text: string, id: string): Script => async function* () {
+const reply = (text: string, id: string): Script => async function* (_signal, params) {
   yield { type: "system", subtype: "init", ...frame }
+  const key = { projectKey: params.options?.cwd ?? "fixture", sessionId: frame.session_id }
+  await params.options?.sessionStore?.append(key, [{ type: "user", uuid: `${id}-user`, sessionId: key.sessionId,
+    parentUuid: (await params.options?.sessionStore?.load(key))?.at(-1)?.uuid ?? null, message: { role: "user", content: params.prompt } }])
   yield { type: "assistant", message: { id, content: [{ type: "text", text }], stop_reason: "end_turn", usage: { input_tokens: 5, output_tokens: 2 } }, ...frame, uuid: id }
   yield { type: "result", subtype: "success", total_cost_usd: 0.01, ...frame }
 }
 
-const setup = (continuity?: { enabled: boolean }) => Effect.gen(function* () {
+const setup = (continuity?: { enabled: boolean }, append?: string) => Effect.gen(function* () {
   const { directory } = yield* TestInstance
   writeFileSync(path.join(directory, "orchestra.json"), JSON.stringify({
     continuity,
-    agent: { claude: { mode: "primary", engine: "claude-code", model: "anthropic/claude-haiku-4-5-20251001" } },
+    agent: { claude: { mode: "primary", engine: "claude-code", model: "anthropic/claude-haiku-4-5-20251001", prompt: append } },
   }))
   const sessions = yield* Session.Service
   const chat = yield* sessions.create({ title: "Claude Code", permission: [{ permission: "*", pattern: "*", action: "allow" }] })
@@ -557,6 +566,7 @@ it.instance("Stop joins a held mirror record and query.return disposal before cr
   expect(assistants).toHaveLength(1)
   expect(assistants[0].info.role === "assistant" && assistants[0].info.error?.name).toBe("MessageAbortedError")
   expect(assistants[0].parts.some((part) => part.type === "tool" && part.state.status === "running")).toBe(false)
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toMatchObject({ nativeArchiveFailed: true })
 }), 120_000)
 
 it.instance("a queued user admitted before a late SDK assistant is delivered exactly once on the next query", () => Effect.gen(function* () {
@@ -567,8 +577,11 @@ it.instance("a queued user admitted before a late SDK assistant is delivered exa
   const release = yield* Deferred.make<void>()
   const context = yield* Effect.context<never>()
   yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
-  scripts.push(async function* () {
+  scripts.push(async function* (_signal, params) {
     yield { type: "system", subtype: "init", ...frame }
+    await params.options?.sessionStore?.append({ projectKey: params.options.cwd ?? "fixture", sessionId: "sdk-1" }, [
+      { type: "user", uuid: "first-user", sessionId: "sdk-1", parentUuid: null, message: { role: "user", content: params.prompt } },
+    ])
     await Effect.runPromiseWith(context)(Deferred.succeed(entered, undefined))
     await Effect.runPromiseWith(context)(Deferred.await(release))
     yield { type: "assistant", ...frame, uuid: "first-late", message: { id: "first-late-api", content: [{ type: "text", text: "first done" }], stop_reason: "end_turn", usage: {} } }
@@ -587,6 +600,224 @@ it.instance("a queued user admitted before a late SDK assistant is delivered exa
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toHaveProperty("delivered")
 }), 120_000)
 
+it.instance("assistant with uncommitted exact receipt cannot hand off; Stop joins callbacks without poisoning archive", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  const returned = yield* Deferred.make<void>()
+  const stopped = yield* Deferred.make<void>()
+  const mirrored = yield* Deferred.make<void>()
+  const context = yield* Effect.context<never>()
+  const fs = yield* FSUtil.Service
+  const data = yield* fs.realPath(Global.Path.data)
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
+  scripts.push(async function* (signal, params) {
+    const aborted = new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }))
+    yield { type: "system", subtype: "init", ...frame }
+    heldRead.plan = { file: path.join(data, "claude-code", hash(chat.id)), entered, release }
+    // SDK may return while a store RPC is still pending; engine must retain that callback.
+    void params.options?.sessionStore?.append({ projectKey: params.options.cwd ?? "fixture", sessionId: "sdk-1" }, [
+      { type: "user", uuid: "held-receipt", parentUuid: null, message: { role: "user", content: params.prompt } },
+    ]).catch(() => {})
+    await Effect.runPromiseWith(context)(Deferred.await(entered))
+    yield { type: "assistant", ...frame, uuid: "pending-receipt-answer", message: { id: "pending-api", content: [{ type: "text", text: "not a delivery receipt" }], usage: {} } }
+    await Effect.runPromiseWith(context)(Deferred.succeed(mirrored, undefined))
+    await aborted
+    await Effect.runPromiseWith(context)(Deferred.succeed(returned, undefined))
+  })
+  const worker = yield* prompt.prompt({ sessionID: chat.id, ...say("held callback") }).pipe(Effect.forkChild)
+  yield* Deferred.await(entered)
+  yield* Deferred.await(mirrored)
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  const stop = yield* prompt.cancel(chat.id).pipe(Effect.andThen(Deferred.succeed(stopped, undefined)), Effect.forkChild)
+  yield* Deferred.await(returned)
+  yield* Effect.yieldNow
+  expect(yield* Deferred.isDone(stopped)).toBe(false)
+  yield* Deferred.succeed(release, undefined)
+  yield* Fiber.join(stop)
+  yield* Fiber.await(worker)
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toMatchObject({ nativeArchiveFailed: true })
+}), 60_000)
+
+it.instance("assistant frames without an exact durable receipt cannot hand off host input", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  scripts.push(async function* (_signal, params) {
+    yield { type: "system", subtype: "init", ...frame }
+    await params.options?.sessionStore?.append({ projectKey: params.options.cwd ?? "fixture", sessionId: "sdk-1" }, [
+      { type: "user", uuid: "unrelated-input", message: { role: "user", content: "not the admitted host prompt" }, parentUuid: null },
+    ])
+    yield { type: "assistant", ...frame, uuid: "unreceipted-answer", message: { id: "unreceipted-api", content: [{ type: "text", text: "partial" }], usage: {} } }
+    throw new Error("crash before exact native receipt")
+  }, reply("retried", "retry-api"))
+  yield* prompt.prompt({ sessionID: chat.id, ...say("original input") })
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  yield* prompt.prompt({ sessionID: chat.id, ...say("retry input") })
+  expect(queries).toHaveLength(2)
+  expect(queries[1].prompt).toBe("original input\n\nretry input")
+}), 60_000)
+
+it.instance("durable receipt survives crash before onDelivery metadata handoff and is never resent", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  const context = yield* Effect.context<never>()
+  const fs = yield* FSUtil.Service
+  const continuity = yield* SessionContinuity.Service
+  scripts.push(async function* (_signal, params) {
+    yield { type: "system", subtype: "init", ...frame }
+    const history = await Effect.runPromiseWith(context)(sessions.messages({ sessionID: chat.id }))
+    const ids = history.filter((message) => message.info.role === "user").map((message) => message.info.id)
+    const archive = ClaudeCodeStore.create({ sessionID: chat.id, sessions, fs, continuity, userID: ids.at(-1), userIDs: ids,
+      run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: true, rewrite: () => false,
+      onDelivery: () => Effect.die(new Error("crash between durable receipt and metadata handoff")) })
+    await archive.store.append({ projectKey: params.options?.cwd ?? "fixture", sessionId: "sdk-1" }, [
+      { type: "user", uuid: "committed-input", message: { role: "user", content: params.prompt }, parentUuid: null },
+    ])
+  }, reply("next", "after-gap"))
+  const first = yield* prompt.prompt({ sessionID: chat.id, ...say("committed once") })
+  expect(first.info.role === "assistant" && first.info.error?.data).toMatchObject({ message: expect.stringContaining("crash between durable receipt") })
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  yield* prompt.prompt({ sessionID: chat.id, ...say("after crash") })
+  expect(queries).toHaveLength(2)
+  expect(queries[1].prompt).toBe("after crash")
+}), 60_000)
+
+for (const payload of ["prompt", "append"]) {
+  it.instance(`huge first ${payload} blocks before query even without SDK overhead snapshot`, () => Effect.gen(function* () {
+    queries.length = 0
+    scripts.length = 0
+    const { sessions, prompt, chat } = yield* setup(undefined, payload === "append" ? "huge append ".repeat(100_000) : undefined)
+    const result = yield* prompt.prompt({ sessionID: chat.id, ...say(payload === "prompt" ? "huge input ".repeat(100_000) : "tiny input") })
+    expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: expect.stringContaining("native admission blocked before spawn") })
+    expect(queries).toHaveLength(0)
+    expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ nativeAdmission: { ready: false, bounded: false } })
+  }), 60_000)
+}
+
+it.instance("model change bounds known payload using selected catalog limit before query", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  scripts.push(nativeReply(0))
+  yield* prompt.prompt({ sessionID: chat.id, ...say("previous model") })
+  const models = yield* Effect.gen(function* () {
+    const catalog = yield* ModelsDev.Service
+    return yield* catalog.get()
+  }).pipe(Effect.provide(LayerNode.compile(ModelsDev.node)))
+  if (!models.anthropic) throw new Error("Missing Anthropic catalog fixture")
+  const selected = Object.values(Provider.fromModelsDevProvider(models.anthropic).models).find((model) =>
+    model.id !== "claude-haiku-4-5-20251001" && model.limit.context > 0 && model.limit.output > 0 && hardLimit(model) > 0)
+  if (!selected) throw new Error("Missing second bounded Anthropic catalog model")
+  expect(hardLimit(selected)).toBeGreaterThan(0)
+  const result = yield* prompt.prompt({ sessionID: chat.id, ...say("huge changed-model input ".repeat(hardLimit(selected))),
+    model: { providerID: ProviderV2.ID.make("anthropic"), modelID: selected.id } })
+  expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: expect.stringContaining("native admission blocked before spawn") })
+  expect(queries).toHaveLength(1)
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ nativeAdmission: { ready: false, limit: hardLimit(selected) } })
+}), 60_000)
+
+it.instance("first-turn tool schemas count toward admission even when prompt alone fits", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  scripts.push(nativeReply(0, { snapshot: false }))
+  yield* prompt.prompt({ sessionID: chat.id, ...say("measure selected limit") })
+  const state = Schema.decodeUnknownSync(Schema.Struct({ nativeAdmission: Schema.Struct({ limit: Schema.Number }) }))(
+    (yield* sessions.get(chat.id)).metadata?.claudeCode)
+  const system = queries[0].options?.systemPrompt
+  if (!system || typeof system === "string" || Array.isArray(system) || system.type !== "preset") throw new Error("Missing preset system options")
+  const text = "x".repeat(4 * (state.nativeAdmission.limit - estimate({ append: system.append }) - estimate([]) - 5))
+  expect(estimate(text) + estimate({ append: system.append }) + estimate([])).toBeLessThan(state.nativeAdmission.limit)
+  const next = yield* sessions.create({ title: "Near-limit first turn", permission: chat.permission })
+  const result = yield* prompt.prompt({ sessionID: next.id, ...say(text) })
+  expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: expect.stringContaining("native admission blocked before spawn") })
+  expect(queries).toHaveLength(1)
+  expect((yield* sessions.get(next.id)).metadata?.claudeCode).toMatchObject({ nativeAdmission: { ready: false, bounded: false } })
+}), 60_000)
+
+for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
+  it.instance(`engine joins real child before turn settles (${mode})`, () => Effect.gen(function* () {
+    queries.length = 0
+    scripts.length = 0
+    const { directory } = yield* TestInstance
+    writeFileSync(path.join(directory, ".credentials.json"), JSON.stringify({ claudeAiOauth: {
+      accessToken: "local-test-token", refreshToken: "local-test-refresh", expiresAt: 4102444800000, scopes: ["user:inference"],
+    } }))
+    const { sessions, prompt, chat } = yield* setup()
+    const entered = yield* Deferred.make<void>()
+    const returned = yield* Deferred.make<void>()
+    const done = yield* Deferred.make<void>()
+    const context = yield* Effect.context<never>()
+    const children: SpawnedProcess[] = []
+    yield* Effect.addFinalizer(() => Effect.sync(() => { construct = undefined; children.forEach((child) => child.kill("SIGKILL")) }))
+    construct = (params) => {
+      if (!params.options?.spawnClaudeCodeProcess || !params.options.env) throw new Error("missing lifetime options")
+      expect(params.options.env).toEqual({ HOME: directory, CLAUDE_CONFIG_DIR: directory })
+      expect(params.options.managedSettings).toMatchObject({ forceLoginMethod: "claudeai", allowedProviders: ["anthropic"] })
+      const child = params.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
+        process.stdin.resume();
+        process.stdin.on("end", () => setInterval(() => {
+          if (require("node:fs").existsSync(${JSON.stringify(path.join(directory, "release-child"))})) process.exit(0);
+        }, 10));
+        process.stdout.write("ready");
+      `], env: params.options.env, signal: new AbortController().signal })
+      children.push(child)
+      if (mode === "construct-error") {
+        // No Query exists to dispose this child; only the pre-registered finalizer owns it.
+        params.options.abortController?.signal.addEventListener("abort", () => child.stdin.end(), { once: true })
+        void Effect.runPromiseWith(context)(Deferred.succeed(returned, undefined))
+        throw new Error("query constructor threw after spawn")
+      }
+      return Object.assign((async function* () {
+        await new Promise<void>((resolve) => child.stdout.once("data", () => resolve()))
+        if (mode === "cancel") {
+          const aborted = new Promise<void>((resolve) => params.options?.abortController?.signal.addEventListener("abort", () => resolve(), { once: true }))
+          yield { type: "system", subtype: "init", ...frame }
+          await Effect.runPromiseWith(context)(Deferred.succeed(entered, undefined))
+          await aborted
+          return
+        }
+        yield* reply("joined", "joined-api")(params.options?.abortController?.signal ?? AbortSignal.any([]), params) as AsyncGenerator<SDKMessage>
+      })(), {
+        close: () => child.stdin.end(),
+        return: async () => {
+          await Effect.runPromiseWith(context)(Deferred.succeed(returned, undefined))
+          if (mode === "return-error") throw new Error("query.return rejected")
+          return { done: true as const, value: undefined }
+        },
+      }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
+    }
+    const worker = yield* prompt.prompt({ sessionID: chat.id, ...say("local child only") }).pipe(
+      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip", CLAUDE_CODE_USE_VERTEX: "1" }),
+      Effect.onExit(() => Deferred.succeed(done, undefined)), Effect.forkChild)
+    const stop = mode === "cancel" ? yield* Deferred.await(entered).pipe(Effect.andThen(prompt.cancel(chat.id)), Effect.forkChild) : undefined
+    yield* Deferred.await(returned)
+    yield* Effect.yieldNow
+    expect(children).toHaveLength(1)
+    expect(children[0].exitCode).toBeNull()
+    expect(yield* Deferred.isDone(done)).toBe(false)
+    writeFileSync(path.join(directory, "release-child"), "release")
+    yield* Fiber.await(worker)
+    if (stop) yield* Fiber.join(stop)
+    expect(children[0].exitCode).toBe(0)
+    const result = (yield* sessions.messages({ sessionID: chat.id })).findLast((message) => message.info.role === "assistant")
+    expect(result?.info.role === "assistant" && result.info.finish).toBe(mode === "success" ? "stop" : "error")
+    if (mode === "return-error" || mode === "construct-error")
+      expect(result?.info.role === "assistant" && result.info.error?.data).toMatchObject({ message:
+        mode === "return-error" ? "query.return rejected" : "query constructor threw after spawn" })
+    if (mode === "cancel") {
+      expect(result?.info.role === "assistant" && result.info.error?.name).toBe("MessageAbortedError")
+      expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toMatchObject({ nativeArchiveFailed: true })
+    }
+    construct = undefined
+  }), 60_000)
+}
+
 it.instance("missing SDK snapshot keeps native compaction on, but known SDK limit still rejects huge ordinary next prompt", () => Effect.gen(function* () {
   queries.length = 0
   scripts.length = 0
@@ -600,10 +831,11 @@ it.instance("missing SDK snapshot keeps native compaction on, but known SDK limi
   expect(queries).toHaveLength(1)
   expect(queries[0].options?.settings).toMatchObject({ autoCompactEnabled: true })
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ nativeAdmission: { bounded: false } })
   expect(producers).toBe(0)
 }), 120_000)
 
-it.instance("legacy sessionId/cost migration uses answered parent boundaries and leaves pre-assistant queued users pending", () => Effect.gen(function* () {
+it.instance("legacy sessionId without a complete host archive fails explicitly before query", () => Effect.gen(function* () {
   queries.length = 0
   scripts.length = 0
   const { sessions, prompt, chat } = yield* setup()
@@ -617,12 +849,14 @@ it.instance("legacy sessionId/cost migration uses answered parent boundaries and
   yield* sessions.updateMessage(answered(first.info.id))
   yield* sessions.updateMessage(answered(second.info.id))
   yield* sessions.setMetadata({ sessionID: chat.id, metadata: { claudeCode: { sessionId: "sdk-1", cost: 0 } } })
-  scripts.push(reply("migrated done", "migrated-api"), reply("later done", "later-api"))
-  yield* prompt.prompt({ sessionID: chat.id, ...say("new followup") })
-  yield* prompt.prompt({ sessionID: chat.id, ...say("later followup") })
-  expect(queries[0].prompt).toBe("legacy queued\n\nnew followup")
-  expect(queries[1].prompt).toBe("later followup")
-  expect(queries.filter((query) => String(query.prompt).includes("old answered"))).toEqual([])
+  const result = yield* prompt.prompt({ sessionID: chat.id, ...say("new followup") })
+  expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message:
+    "Claude Code native archive unavailable; legacy SDK resume is blocked until a complete native archive is imported." })
+  expect(queries).toHaveLength(0)
+  const context = yield* Effect.context<never>()
+  const archive = ClaudeCodeStore.create({ sessionID: chat.id, sessions, continuity: yield* SessionContinuity.Service, fs: yield* FSUtil.Service,
+    run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: true, rewrite: () => false })
+  expect((yield* archive.read).keys).toHaveLength(0)
 }), 120_000)
 
 it.instance("ordinary SDK Stop retains real patch evidence and SessionRevert restores edited file bytes", () => Effect.gen(function* () {
@@ -646,6 +880,7 @@ it.instance("ordinary SDK Stop retains real patch evidence and SessionRevert res
   yield* Deferred.await(changed)
   yield* prompt.cancel(chat.id)
   yield* Fiber.await(worker)
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toMatchObject({ nativeArchiveFailed: true })
   const history = yield* sessions.messages({ sessionID: chat.id })
   expect(history.flatMap((message) => message.parts).some((part) => part.type === "patch" && part.files.some((path) => path.endsWith("notes.txt")))).toBe(true)
   const user = history.find((message) => message.info.role === "user")
