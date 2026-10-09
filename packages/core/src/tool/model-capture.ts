@@ -67,10 +67,10 @@ export const authentic = (candidate: Candidate): boolean => issued.has(candidate
 export function bind(carrier: Output, baseline: Output, owner: Owner): Binding | undefined {
   const candidate = get(carrier)
   if (!candidate || candidate.owner.sessionID !== owner.sessionID || candidate.owner.callID !== owner.callID) return
-  if (!isDeepStrictEqual(candidate.template.structured, baseline.structured)) return
-  if (!isDeepStrictEqual(candidate.template.content.filter((part) => part.type === "file"), baseline.content.filter((part) => part.type === "file"))) return
   const copy = snapshot(baseline)
   if (!copy) return
+  if (!isDeepStrictEqual(candidate.template.structured, copy.structured)) return
+  if (!isDeepStrictEqual(candidate.template.content.filter((part) => part.type === "file"), copy.content.filter((part) => part.type === "file"))) return
   const binding = Object.freeze({ candidate, baseline: copy }) as Binding
   bindings.add(binding)
   return binding
@@ -80,6 +80,7 @@ export const bound = (binding: Binding): boolean => bindings.has(binding)
 
 function snapshot(output: Output): Output | undefined {
   try {
+    if (!plain(output)) return undefined
     const copy = structuredClone(output)
     if (!plain(copy)) return undefined
     return freeze(copy)
@@ -94,7 +95,8 @@ function plain(value: unknown, parents = new Set<object>()): boolean {
   if (typeof value !== "object" || parents.has(value)) return false
   if (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) return false
   parents.add(value)
-  const valid = Object.values(value).every((child) => plain(child, parents))
+  const valid = Object.values(Object.getOwnPropertyDescriptors(value)).every((property) =>
+    "value" in property && plain(property.value, parents))
   parents.delete(value)
   return valid
 }
