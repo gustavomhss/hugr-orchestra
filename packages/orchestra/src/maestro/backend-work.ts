@@ -66,7 +66,7 @@ export function track(input: {
       const session = evidence.value ? [] : yield* history()
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(yield* hostEnded(lastAssistant(session), session, reason, detail))
+        : yield* bound(yield* hostEnded(latestAssistant(session), session, reason, detail))
       yield* input.publish(evidence.value)
     }),
     // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
@@ -75,7 +75,7 @@ export function track(input: {
     notice: Effect.fn("SeatWork.notice")(function* (state: "completed" | "error", text: string) {
       if (!input.enabled) return undefined
       const session = yield* history()
-      const last = lastAssistant(session)
+      const last = latestAssistant(session)
       if (state === "error")
         return yield* bound(yield* hostEnded(last, session, "failed", text))
       if (last) return yield* bound(yield* assemble(last, session))
@@ -86,6 +86,7 @@ export function track(input: {
   }
 }
 
-function lastAssistant(messages: readonly SessionV1.WithParts[]) {
-  return messages.findLast((message) => message.info.role === "assistant")
+function latestAssistant(messages: readonly SessionV1.WithParts[]) {
+  // MessageV2.stream returns newest-first; the final worker turn is the first assistant in that projection.
+  return messages.find((message) => message.info.role === "assistant")
 }

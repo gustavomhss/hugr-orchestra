@@ -10,6 +10,7 @@
     "../src/orchestra/palette/catalog.ts",
     "../src/orchestra/palette/context.tsx",
     "../playwright.config.ts",
+    "./playwright.production.config.ts",
     "./orchestra/**/*.ts",
     "./orchestra-screenshots/**/*.ts",
     "./orchestra/theme-first-paint.fixture.tsx",

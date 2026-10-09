@@ -60,7 +60,7 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
       findingRefs: [], evidenceRefs: [{ source: admitted.receipt.ref, locator: { kind: "quote", exact: "Only version 1 is supported." } }], documentRefs: [],
       coverage: { examined: ["conditions.txt"], excluded: ["Atlas"], failures: ["Atlas unavailable"] }, limitations: ["Current Atlas rules could not be loaded"], nextActions: [] }
     yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes("Read conditions.txt; report scope and Atlas availability"), `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`)
-  }))
+  }).pipe(Effect.orDie))
   yield* Effect.addFinalizer(() => unsubscribe)
   yield* fixture.remote.toolMatch((hit) => JSON.stringify(hit.body).includes("Read conditions.txt; report scope and Atlas availability"), "read", { filePath: path.join(fixture.instance.directory, "conditions.txt") })
   const discovery = yield* awaitWithTimeout(fixture.call({ description: "Observe discovery outage", prompt: "Read conditions.txt; report scope and Atlas availability", subagent_type: "jimmy" }, "jimmy-outage"), "Discovery outage turns did not settle", "30 seconds")
