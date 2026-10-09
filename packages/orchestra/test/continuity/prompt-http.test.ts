@@ -331,6 +331,29 @@ it.instance("queued caller during outgoing preparation rebinds agent/model/permi
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
 }), 120_000)
 
+it.instance("permission changes during real preflight rebind same caller before allocation and provider dispatch", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Permission snapshot binding", permission: [{ permission: "read", pattern: "*", action: "allow" }] })
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  preparation.plan = { systemCalls: 0, paramCalls: 0, entered, release }
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Effect.sync(() => { preparation.plan = undefined }))))
+  yield* llm.pushMatch((hit) => parent("PERMISSION_BOUND_REQUEST")(hit) && !JSON.stringify(hit.body.tools).includes('"name":"read"'), answer("PERMISSION_BOUND_DONE"))
+  const running = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "PERMISSION_BOUND_REQUEST" }] }).pipe(Effect.forkChild)
+  yield* awaitWithTimeout(Deferred.await(entered), "Permission preflight never reached plugin", "15 seconds")
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "*", action: "deny" }] })
+  yield* Deferred.succeed(release, undefined)
+  const result = yield* Fiber.join(running)
+  expect(result.parts.some((part) => part.type === "text" && part.text === "PERMISSION_BOUND_DONE")).toBe(true)
+  expect((yield* llm.hits).length).toBe(1)
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
+}), 120_000)
+
 it.instance("different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error", () => Effect.gen(function* () {
   const llm = yield* TestLLMServer
   const instance = yield* TestInstance

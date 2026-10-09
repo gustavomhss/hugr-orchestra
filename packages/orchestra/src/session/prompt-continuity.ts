@@ -1,6 +1,7 @@
 export * as PromptContinuity from "./prompt-continuity"
 
 import { Deferred, Effect } from "effect"
+import { isDeepStrictEqual } from "node:util"
 import type { Session } from "./session"
 import type { SessionProcessor } from "./processor"
 import type { LLM } from "./llm"
@@ -57,6 +58,8 @@ export function proxy(message: SessionProcessor.Handle["message"]) {
 export const check = Effect.fn("PromptContinuity.check")(function* (request: LLM.StreamInput, sessions: Session.Interface, llm: LLM.Interface) {
   const budget = yield* (llm.preflight ? llm.preflight(request) : Effect.fail(new Error("LLM preflight service missing"))).pipe(Effect.result)
   const actual = RequestSource.latest(yield* sessions.messages({ sessionID: request.user.sessionID }).pipe(Effect.orDie))
+  const session = yield* sessions.get(request.user.sessionID).pipe(Effect.orDie)
+  if (!isDeepStrictEqual(session.permission, request.permission)) return { kind: "stale" as const }
   if (actual?.info.id !== request.user.id) return { kind: "stale" as const }
   if (budget._tag === "Failure") return { kind: "failed" as const, error: MessageV2.fromError(budget.failure, { providerID: request.model.providerID }) }
   return { kind: "ready" as const, plan: budget.success }
