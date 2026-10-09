@@ -1,5 +1,6 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
+import { AgentV2 } from "@orchestra/core/agent"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
@@ -66,8 +67,8 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
   const task = !modern ? yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id,
     sessionID: parent.id, type: "tool", tool: "task", callID, state }) : undefined
   if (modern) {
-    const base = { sessionID: parent.id, assistantMessageID: owner.id, callID }
-    yield* events.publish(SessionEvent.Step.Started, { ...base, agent: "maestro", model: { id: model.modelID, providerID: model.providerID }, timestamp: yield* DateTime.now })
+    const base = { sessionID: parent.id, assistantMessageID: SessionMessage.ID.make(owner.id), callID }
+    yield* events.publish(SessionEvent.Step.Started, { ...base, agent: AgentV2.ID.make("maestro"), model: { id: model.modelID, providerID: model.providerID }, timestamp: yield* DateTime.now })
     yield* events.publish(SessionEvent.Tool.Input.Started, { ...base, name: "task", timestamp: yield* DateTime.now })
     yield* events.publish(SessionEvent.Tool.Called, { ...base, tool: "task", input: state.input, provider: { executed: false }, timestamp: yield* DateTime.now })
     yield* events.publish(SessionEvent.Tool.Progress, { ...base, structured: { metadata }, content: [], timestamp: yield* DateTime.now })
@@ -110,7 +111,7 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
         source: { ...part.metadata.source, state: selected.state } } })) }, capture: selected })
   const read = () => Effect.gen(function* () {
     if (modern) {
-      const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, owner.id)).get().pipe(Effect.orDie)
+      const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, SessionMessage.ID.make(owner.id))).get().pipe(Effect.orDie)
       if (!row) throw new Error("parent projection missing")
       const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
       if (message.type !== "assistant") throw new Error("expected assistant")
@@ -203,7 +204,7 @@ it.instance("V2 terminal Task accepts exact progress receipt referencing durable
   yield* deliver()
   yield* deliver()
   expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID, parentMessageID: f.owner.id } })
-  const row = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.request.messageID)).get().pipe(Effect.orDie)
+  const row = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, SessionMessage.ID.make(f.request.messageID))).get().pipe(Effect.orDie)
   expect(row?.type).toBe("synthetic")
   expect(yield* f.read()).not.toHaveProperty("upstreamSettlement.deliveryPartID")
   const events = yield* f.database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
@@ -217,7 +218,7 @@ it.instance("V2 terminal Task accepts exact progress receipt referencing durable
 
 it.instance("V2 conflicting synthetic identity is held without append or resume", () => Effect.gen(function* () {
   const f = yield* seed(true)
-  yield* f.events.publish(SessionEvent.Synthetic, { sessionID: f.parent.id, messageID: f.request.messageID,
+  yield* f.events.publish(SessionEvent.Synthetic, { sessionID: f.parent.id, messageID: SessionMessage.ID.make(f.request.messageID),
     timestamp: yield* DateTime.now, text: "other dispatch" })
   expect(Exit.isFailure(yield* Effect.exit(f.deliver()()))).toBe(true)
   expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
@@ -280,7 +281,7 @@ it.instance("settle before completion survives native V2 success and late generi
   const f = yield* seed(true, true)
   yield* f.deliver()()
   const settled = yield* f.read()
-  const base = { sessionID: f.parent.id, assistantMessageID: f.owner.id, callID: f.callID }
+  const base = { sessionID: f.parent.id, assistantMessageID: SessionMessage.ID.make(f.owner.id), callID: f.callID }
   yield* f.events.publish(SessionEvent.Tool.Success, { ...base, structured: { metadata: { background: true } },
     content: [], provider: { executed: false }, timestamp: yield* DateTime.now })
   expect(yield* f.read()).toEqual(settled)

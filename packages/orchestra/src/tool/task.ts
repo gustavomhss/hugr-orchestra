@@ -686,14 +686,15 @@ export const TaskTool = Tool.define(
         )
       })
 
-      const dispatched = runTask().pipe(Effect.onExit((exit) => {
+      const dispatched = runTask().pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.onExit((exit) => {
         const captured = dispatch.capture
-        return Deferred.succeed(dispatchDone, captured && Exit.isFailure(exit) ? {
+        const settled: UpstreamSettlement.Capture | undefined = captured && Exit.isFailure(exit) ? {
           ...captured, state: "error",
           ...(captured.workResult ? { workResult: { ...captured.workResult,
             terminal: { reason: Exit.hasInterrupts(exit) ? "interrupted" : "failed", hostDetail: "Task host ended after returned assistant" },
           } } : {}),
-        } : captured)
+        } : captured
+        return Deferred.succeed(dispatchDone, settled)
       }))
       // Keep extend/start atomic for this child. Otherwise start can join another caller without running this dispatch.
       const scheduled = yield* dispatchLock.withLock(`background:${nextSession.id}`)(Effect.gen(function* () {
@@ -703,7 +704,7 @@ export const TaskTool = Tool.define(
           onPromote: Effect.all([
             ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
             notify(),
-          ]),
+          ], { discard: true }),
           run: dispatched.pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
         })
         return { extended: false as const, info }
