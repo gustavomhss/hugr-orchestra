@@ -13,7 +13,7 @@ const user = { id: MessageID.ascending(), sessionID, role: "user", time: { creat
   model: { providerID: "anthropic", modelID: "claude-haiku-4-5-20251001" } } as SessionV1.User
 const agent = { name: "claude", id: "claude", mode: "primary", permission: [], options: {}, engine: "claude-code" } as Agent.Info
 
-function setup() {
+function setup(onStep?: (message: SessionV1.Assistant) => Effect.Effect<void>) {
   const messages = new Map<string, SessionV1.Info>()
   const parts = new Map<string, SessionV1.Part>()
   const deltas: string[] = []
@@ -27,7 +27,7 @@ function setup() {
     track: () => Effect.sync(() => `tree${++tracked}`),
     patch: (hash: string) => Effect.succeed({ hash, files: ["/repo/notes.txt"] }),
   } as unknown as Snapshot.Interface
-  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot })
+  const view = create({ sessionID, user, agent, path: { cwd: "/repo", root: "/repo" }, sessions, snapshot, onStep })
   const feed = (list: unknown[]) => Effect.runPromise(Effect.forEach(list as SDKMessage[], (message) => view.on(message)))
   const ofType = <T extends SessionV1.Part["type"]>(type: T) =>
     [...parts.values()].filter((part): part is Extract<SessionV1.Part, { type: T }> => part.type === type)
@@ -118,4 +118,47 @@ test("subagent frames are not mirrored", async () => {
   const { feed, messages } = setup()
   await feed([{ ...assistant("msg_sub", [{ type: "text", text: "inner" }]), parent_tool_use_id: "toolu_task" }])
   expect(messages.size).toBe(0)
+})
+
+test("maintenance is notified only at a completed step after every tool result, never on partial blocks", async () => {
+  const safe: SessionV1.Assistant[] = []
+  const { view, feed } = setup((message) => Effect.sync(() => { safe.push(message) }))
+  await feed([assistant("tools", [
+    { type: "tool_use", id: "a", name: "Bash", input: {} },
+    { type: "tool_use", id: "b", name: "Bash", input: {} },
+  ], "tool_use"), result([{ type: "tool_result", tool_use_id: "a", content: "a" }])])
+  expect(safe).toEqual([])
+  await feed([result([{ type: "tool_result", tool_use_id: "b", content: "b" }]), assistant("next", [{ type: "text", text: "done" }], "end_turn")])
+  expect(safe.map((message) => message.finish)).toEqual(["tool-calls"])
+  await Effect.runPromise(view.finish(0))
+  expect(safe.map((message) => message.finish)).toEqual(["tool-calls", "stop"])
+  const partial = setup((message) => Effect.sync(() => { safe.push(message) }))
+  await partial.feed([stream({ type: "message_start", message: { id: "partial", usage: {} } }),
+    stream({ type: "content_block_start", index: 0, content_block: { type: "text", text: "" } }),
+    stream({ type: "message_delta", delta: { stop_reason: "end_turn" }, usage: {} })])
+  await Effect.runPromise(partial.view.finish(0))
+  expect(safe).toHaveLength(2)
+})
+
+test("blockless SDK completion answers the turn, while unknown stop reasons never trigger maintenance", async () => {
+  const safe: SessionV1.Assistant[] = []
+  const f = setup((message) => Effect.sync(() => { safe.push(message) }))
+  await f.feed([{ type: "result", subtype: "success", result: "local command finished", stop_reason: null, uuid: "result", session_id: "s" }])
+  await Effect.runPromise(f.view.finish(0))
+  expect([...f.messages.values()].map((info) => info.role === "assistant" ? info.finish : "")).toEqual(["other"])
+  expect(f.ofType("text")[0].text).toBe("local command finished")
+  expect(safe).toEqual([])
+})
+
+test("native tool-result images become host attachments while full text output remains intact", async () => {
+  const f = setup()
+  await f.feed([assistant("image", [{ type: "tool_use", id: "image-call", name: "Read", input: {} }], "tool_use"),
+    result([{ type: "tool_result", tool_use_id: "image-call", content: [{ type: "text", text: "full output" },
+      { type: "image", source: { type: "base64", media_type: "image/png", data: "image-bytes" } }] }])])
+  const part = f.ofType("tool")[0]
+  expect(part.state.status).toBe("completed")
+  if (part.state.status !== "completed") throw new Error("Tool did not complete")
+  expect(part.state.output).toBe("full output")
+  expect(part.state.attachments).toMatchObject([{ messageID: part.messageID, sessionID,
+    mime: "image/png", url: "data:image/png;base64,image-bytes" }])
 })
