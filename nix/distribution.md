@@ -1,7 +1,7 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": true, "phase": "measure", "sourceParent": "791d7e1846588df03b64c3981fe105cea805d036", "measurementRun": null, "measurementAttempt": null}
+{"ready": true, "phase": "verify", "sourceParent": "d69abdf4834265f8b23fa6770907f98e2a7dc9d8", "measurementRun": 37989995766, "measurementAttempt": 1}
 <!-- NIX_BATCH_REQUEST_END -->
 
 Historical request `7eb2bb766a80f130a8d0758f3337729237b9ea8a` had exact clean source
