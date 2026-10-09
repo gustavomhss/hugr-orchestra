@@ -31,8 +31,9 @@ export function server(input: {
   messages?: () => Effect.Effect<SessionV1.WithParts[]>
   complete: (part: SessionV1.ToolPart) => Effect.Effect<void>
 }) {
+  const defs = input.defs.filter((def) => IDS.includes(def.id))
   const handler = (name: string, args: Record<string, unknown>) => input.run(Effect.gen(function* () {
-    const def = input.defs.find((item) => item.id === name)
+    const def = defs.find((item) => item.id === name)
     if (!def) return { content: [{ type: "text" as const, text: `Orchestra tool ${name} is not available.` }], isError: true }
     const part = yield* input.claim(name)
     const start = part.state.status === "running" ? part.state.time.start : Date.now()
@@ -58,7 +59,7 @@ export function server(input: {
   // SDK tool() accepts a Zod raw object only. Recall is a closed union, so expose the actual host JSON schemas through
   // the MCP protocol instead of weakening that union into optional fields. Tool.execute remains the validator.
   const server = createSdkMcpServer({ name: SERVER, tools: [] })
-  server.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: input.defs.filter((def) => IDS.includes(def.id)).map((def) => ({
+  server.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: defs.map((def) => ({
     name: def.id, description: def.description, inputSchema: { type: "object" as const, ...ToolJsonSchema.fromTool(def) },
     _meta: { "anthropic/alwaysLoad": true },
   })) }))

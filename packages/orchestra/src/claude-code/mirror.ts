@@ -286,13 +286,16 @@ export function create(input: {
       const error = cause.aborted
         ? new AbortedError({ message: cause.message }).toObject()
         : new NamedError.Unknown({ message: cause.message }).toObject()
-      // Failure admission must never touch the failed native store or filesystem snapshots.
-      const info: SessionV1.Assistant = step?.info ?? { id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
+      // Persist the failure before best-effort snapshots, without touching the failed native store.
+      const info: SessionV1.Assistant = current?.info ?? { id: MessageID.ascending(), sessionID, parentID: input.user.id, role: "assistant",
         mode: input.agent.id ?? input.agent.name, agent: input.agent.id ?? input.agent.name, path: input.path,
         modelID: input.user.model.modelID, providerID: input.user.model.providerID, cost: 0,
         tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: now } }
-      for (const part of step?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
-      last = { ...info, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
+      const usage = current?.usage
+      const tokens = { input: usage?.input_tokens ?? 0, output: usage?.output_tokens ?? 0, reasoning: 0,
+        cache: { read: usage?.cache_read_input_tokens ?? 0, write: usage?.cache_creation_input_tokens ?? 0 } }
+      for (const part of current?.open ?? []) yield* sessions.updatePart({ ...part, time: { start: part.time?.start ?? now, end: now } })
+      last = { ...info, tokens, finish: "error", error: error as SessionV1.Assistant["error"], time: { ...info.time, completed: now } }
       step = undefined
       yield* sessions.updateMessage(last)
       // Native persistence is not part of this path. Healthy snapshots still retain actual undo evidence on Stop.
