@@ -7,6 +7,7 @@ name: runtime-desktop
 # Dev controls cover two pre-launch digest falsifications, not every failure class.
 # dev_only is a limited dev rerun, not full-matrix green; reuse admits source-equivalent producers only.
 # Previous reuse cancellation did not locate its stall; safe phase markers establish next run's reach.
+# Package pass preserves packaging evidence only; it cannot imply bootstrap pass.
 on:
   push:
     branches: [runtime-desktop-validation]
@@ -298,6 +299,24 @@ jobs:
           bun run package:linux --dir --x64 --publish never --config.directories.output="$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL"
           test -s "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources/app.asar" || { echo DESKTOP_PACKAGED_RESOURCES_MISSING >&2; exit 1; }
           bun ../../.github/scripts/runtime-desktop-package-proof.ts --resources "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources" --channel "$ORCHESTRA_CHANNEL" --report "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL.json"
+      - name: Validate actual package report before preserving independent packaging evidence
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
+        run: |
+          bun -e '
+          const fail = name => { throw Error(name); };
+          const read = async name => { const file = Bun.file(`${process.env.RUNNER_TEMP}/${name}.json`); if (!(await file.exists()) || !file.size) fail(`DESKTOP_REPORT_MISSING_OR_EMPTY:${name}`); return file.json(); };
+          const { spawnSync } = await import("node:child_process");
+          const head = spawnSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", timeout: 10000 });
+          const channel = process.env.ORCHESTRA_CHANNEL, m = await read(`build-manifest-${channel}`);
+          if (head.error || head.status !== 0 || head.stdout.trim() !== process.env.GITHUB_SHA || m.schema !== 1 || m.sourceCommit !== process.env.GITHUB_SHA) fail("DESKTOP_PACKAGE_REPORT_SOURCE_MISMATCH");
+          const config = (await import("./electron-builder.config.ts")).default, version = config.extraMetadata.version;
+          const p = await read(`package-${channel}`);
+          if (p.schema !== 1 || p.packageName !== (await Bun.file("package.json").json()).name || p.channel !== channel || p.version !== version || p.platform !== "linux" || p.arch !== "x64" || p.target !== "linux-x64-baseline" || p.expectedAppId !== config.appId || p.desktopName !== config.extraMetadata.desktopName || p.resources !== `${process.env.RUNNER_TEMP}/package-${channel}/linux-unpacked/resources` || !Array.isArray(p.artifacts) || !p.artifacts.length || !p.artifacts.some(a => a.target === p.target) || !p.artifacts.every(a => typeof a.sha256 === "string" && /^[a-f0-9]{64}$/.test(a.sha256)) || ![p.archiveSha256, p.metadataSha256, p.manifestSha256].every(hash => typeof hash === "string" && /^[a-f0-9]{64}$/.test(hash)) || ![p.hostCPUVerified, p.packagedMetadataVerified, p.outsideAsar, p.artifactDigestsVerified, p.nativeCompiledVersionVerified].every(v => v === true)) fail("DESKTOP_PACKAGE_REPORT_MISMATCH");'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-linux-x64-package-${{ matrix.channel }}
+          path: ${{ runner.temp }}/package-${{ matrix.channel }}.json
+          if-no-files-found: error
       - name: Provision dev-only X11 inspection prerequisite
         if: matrix.channel == 'dev'
         env:
@@ -323,17 +342,16 @@ jobs:
           sudo chmod 4755 "$(dirname "$electron")/chrome-sandbox"
           # Frozen bootstrap env carries DISPLAY, not XAUTHORITY; local-only Xvfb needs -ac.
           xvfb-run --auto-servernum --server-args='-ac -screen 0 1280x800x24 -nolisten tcp' bash -c 'xdpyinfo >/dev/null || { echo DESKTOP_DISPLAY_UNAVAILABLE >&2; exit 1; }; bun ../../.github/scripts/runtime-desktop-bootstrap-proof.ts --desktop "$PWD" --build-manifest "$RUNNER_TEMP/build-manifest-dev.json" --report "$RUNNER_TEMP/bootstrap-dev.json"' || { echo DESKTOP_BOOTSTRAP_OR_DISPLAY_FAILED >&2; exit 1; }
-      - name: Read back required nonempty matching native reports
+      - name: Read back required nonempty matching dev bootstrap report
+        if: matrix.channel == 'dev'
         working-directory: ${{ github.workspace }}/candidate/packages/desktop
         run: |
           bun -e '
           const fail = name => { throw Error(name); };
           const read = async name => { const file = Bun.file(`${process.env.RUNNER_TEMP}/${name}.json`); if (!(await file.exists()) || !file.size) fail(`DESKTOP_REPORT_MISSING_OR_EMPTY:${name}`); return file.json(); };
-          const channel = process.env.ORCHESTRA_CHANNEL;
+          if (process.env.ORCHESTRA_CHANNEL !== "dev") fail("DESKTOP_BOOTSTRAP_REPORT_CHANNEL_MISMATCH");
           const config = (await import("./electron-builder.config.ts")).default, version = config.extraMetadata.version;
-          const p = await read(`package-${channel}`);
-          if (p.schema !== 1 || p.channel !== channel || p.version !== version || p.platform !== "linux" || p.arch !== "x64" || p.target !== "linux-x64-baseline" || p.expectedAppId !== config.appId || p.desktopName !== config.extraMetadata.desktopName || p.resources !== `${process.env.RUNNER_TEMP}/package-${channel}/linux-unpacked/resources` || !Array.isArray(p.artifacts) || !p.artifacts.length || !p.artifacts.some(a => a.target === p.target) || ![p.hostCPUVerified, p.packagedMetadataVerified, p.outsideAsar, p.artifactDigestsVerified, p.nativeCompiledVersionVerified].every(v => v === true)) fail("DESKTOP_PACKAGE_REPORT_MISMATCH");
-          if (channel === "dev") { const b = await read("bootstrap-dev"), m = await read("build-manifest-dev"); const { createHash } = await import("node:crypto"); if (b.schema !== 1 || b.sourceCommit !== process.env.GITHUB_SHA || b.buildManifestSha256 !== createHash("sha256").update(await Bun.file(`${process.env.RUNNER_TEMP}/build-manifest-dev.json`).bytes()).digest("hex") || JSON.stringify(b.outputDigests) !== JSON.stringify(m.files.toSorted((l, r) => l.file.localeCompare(r.file))) || b.serviceIdentity?.subtype !== "node.mojom.NodeService" || !Number.isSafeInteger(b.serviceIdentity.pid) || !/^[1-9][0-9]*$/.test(b.serviceIdentity.listenerInode) || b.desktopVersion !== version || b.electronVersion !== (await Bun.file("package.json").json()).devDependencies.electron || b.platform !== "linux" || b.arch !== "x64" || b.startup !== "default-v1-utilityProcess" || b.readyEvidence !== "production-preload-awaitInitialization-via-owned-CDP" || ![b.healthy, b.wrongCredentialRejected, b.noCredentialRejected, b.desktopAlive, b.utilityAlive].every(v => v === true)) fail("DESKTOP_BOOTSTRAP_REPORT_MISMATCH"); }'
+          const b = await read("bootstrap-dev"), m = await read("build-manifest-dev"); const { createHash } = await import("node:crypto"); if (b.schema !== 1 || b.sourceCommit !== process.env.GITHUB_SHA || b.buildManifestSha256 !== createHash("sha256").update(await Bun.file(`${process.env.RUNNER_TEMP}/build-manifest-dev.json`).bytes()).digest("hex") || JSON.stringify(b.outputDigests) !== JSON.stringify(m.files.toSorted((l, r) => l.file.localeCompare(r.file))) || b.serviceIdentity?.subtype !== "node.mojom.NodeService" || !Number.isSafeInteger(b.serviceIdentity.pid) || !/^[1-9][0-9]*$/.test(b.serviceIdentity.listenerInode) || b.desktopVersion !== version || b.electronVersion !== (await Bun.file("package.json").json()).devDependencies.electron || b.platform !== "linux" || b.arch !== "x64" || b.startup !== "default-v1-utilityProcess" || b.readyEvidence !== "production-preload-awaitInitialization-via-owned-CDP" || ![b.healthy, b.wrongCredentialRejected, b.noCredentialRejected, b.desktopAlive, b.utilityAlive].every(v => v === true)) fail("DESKTOP_BOOTSTRAP_REPORT_MISMATCH");'
       - name: Falsify two pre-launch digests using clones after positive report readback
         if: matrix.channel == 'dev'
         working-directory: ${{ github.workspace }}/candidate/packages/desktop
@@ -356,11 +374,6 @@ jobs:
         with:
           name: desktop-linux-x64-controls-dev
           path: ${{ runner.temp }}/controls-dev.json
-          if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: desktop-linux-x64-package-${{ matrix.channel }}
-          path: ${{ runner.temp }}/package-${{ matrix.channel }}.json
           if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: matrix.channel == 'dev'
