@@ -194,9 +194,16 @@ export async function mockResearchArtifacts(
   } = {},
 ) {
   const requests: { sessionID: string; artifactID: string; revision: string | null; cursor: string | null }[] = []
+  // Include the build's default backend authority used by the timeline benchmark bridge.
+  const origins = new Set(
+    [process.env.PLAYWRIGHT_SERVER_PORT ?? "4096", "4096"].map(
+      (port) => new URL(`http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${port}`).origin,
+    ),
+  )
   // Install after the shared mock server so its catch-all cannot swallow this generated-client route.
   await page.route(/\/api\/session\/[^/]+\/research\/[^/?]+(?:\?|$)/, async (route) => {
     const url = new URL(route.request().url())
+    if (!origins.has(url.origin)) return route.fallback()
     const segments = url.pathname.split("/")
     const request = {
       sessionID: segments[3]!,
@@ -204,19 +211,25 @@ export async function mockResearchArtifacts(
       revision: url.searchParams.get("revision"),
       cursor: url.searchParams.get("cursor"),
     }
-    requests.push(request)
-    const document = documents.find((value) => value.receipt.artifact.id === request.artifactID)
+    const document = documents.find(
+      (value) =>
+        value.receipt.binding.executionSessionID === request.sessionID &&
+        value.receipt.artifact.id === request.artifactID &&
+        String(value.receipt.artifact.revision) === request.revision,
+    )
     const index = request.cursor === null ? 0 : document?.pages.findIndex((value) => value.cursor === request.cursor)
     const body = document?.pages[request.cursor === null ? 0 : (index ?? -1) + 1]
+    const directoryHeader = route.request().headers()["x-orchestra-directory"]
     if (
       route.request().method() !== "GET" ||
       !document ||
       !body ||
       index === -1 ||
-      request.sessionID !== document.receipt.binding.executionSessionID ||
-      request.revision !== "1"
+      (directoryHeader !== undefined && decodeURIComponent(directoryHeader) !== document.receipt.binding.directory)
     )
       throw new Error(`Unexpected research artifact request: ${url.href}`)
+    // Native session lookup may omit the directory header; the receipt-bound session path still owns the request.
+    requests.push(request)
     await input.beforeReply?.(request)
     if (route.request().failure()?.errorText === "net::ERR_ABORTED") return
     const reply = input.reply?.(body) ?? { status: 200, body }
