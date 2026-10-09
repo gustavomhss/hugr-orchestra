@@ -1,6 +1,6 @@
 export * as TaskBackground from "./task-background"
 
-import { Deferred, Effect, Exit, FileSystem, Scope } from "effect"
+import { Cause, Deferred, Effect, Exit, FileSystem, Scope } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import type { EventV2 } from "@orchestra/core/event"
 import type { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
@@ -11,6 +11,7 @@ import type { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import type { BackendResult } from "@/maestro/backend-result"
 import type { SeatWork } from "@/maestro/backend-work"
 import { UpstreamSettlement } from "@/maestro/upstream-settlement"
+import { UpstreamResult } from "@/maestro/upstream-result"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { TaskPromptOps } from "./task"
@@ -45,6 +46,8 @@ export interface Input {
   readonly description: string
   readonly metadata: Metadata
   readonly work: Pick<ReturnType<typeof SeatWork.track>, "hostEnded" | "attach">
+  readonly observe: (value: BackendResult.WorkResult) => Effect.Effect<BackendResult.WorkResult, unknown, Database.Service>
+  readonly publishObservation: (value: BackendResult.WorkResult) => Effect.Effect<void, unknown, Database.Service>
   readonly variant?: string
   readonly renderOutput: (input: {
     id: string
@@ -136,23 +139,54 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
   ) {
     const dispatched = run.pipe(
       Effect.provideService(FileSystem.FileSystem, input.fs),
-      Effect.onExit((exit) => {
+      Effect.onExit((exit) => Effect.gen(function* () {
         const captured = dispatch.capture
+        const protectedObservation = captured?.workResult?.schema === UpstreamResult.SCHEMA
+        const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+        const detail = failure instanceof Error ? failure.message.slice(0, 4096) : "Task host ended after returned assistant"
+        const canonical = protectedObservation && captured?.workResult && Exit.isFailure(exit)
+          ? yield* input.observe(captured.workResult) : captured?.workResult
+        const unfavorable = canonical?.terminal.reason === "failed" || canonical?.terminal.reason === "interrupted"
         const settled: UpstreamSettlement.Capture | undefined = captured && Exit.isFailure(exit) ? {
           ...captured,
           state: "error",
-          ...(captured.workResult ? {
+          ...(canonical ? {
             workResult: {
-              ...captured.workResult,
-              terminal: {
+              ...canonical,
+              // Preserve the returned failure/interruption; a later host exit cannot replace its root cause.
+              terminal: unfavorable ? {
+                ...canonical.terminal,
+                ...(canonical.terminal.hostDetail === undefined && failure instanceof Error
+                  ? { hostDetail: detail }
+                  : {}),
+              } : {
                 reason: Exit.hasInterrupts(exit) ? "interrupted" : "failed",
-                hostDetail: "Task host ended after returned assistant",
+                hostDetail: detail,
               },
             },
           } : {}),
         } : captured
-        return Deferred.succeed(dispatchDone, settled)
-      }),
+        if (settled?.workResult && Exit.isFailure(exit)) {
+          const terminal = settled.workResult.terminal
+          if (terminal.reason !== "failed" && terminal.reason !== "interrupted")
+            return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation missing unfavorable exit" })
+          yield* input.work.hostEnded(terminal.reason, terminal.hostDetail ?? "Task host ended after returned assistant")
+          const tracked = input.work.attach({}).workResult
+          if (!tracked) return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation tracker missing" })
+          const snapshot = structuredClone(tracked)
+          // Only upstream returns carry protected authorship/receipts; other seats retain generic notice delivery.
+          if (protectedObservation) yield* input.publishObservation(snapshot)
+          const retained = protectedObservation ? yield* input.observe(snapshot) : snapshot
+          yield* Deferred.succeed(dispatchDone, { ...settled, workResult: retained })
+          return
+        }
+        yield* Deferred.succeed(dispatchDone, settled)
+      }).pipe(
+        Effect.provideService(Database.Service, input.database),
+        Effect.catchCause(() => Effect.logWarning("Background Task host observation HOLD", {
+          sessionID: input.ctx.sessionID, messageID: input.ctx.messageID, callID: input.ctx.callID,
+        }).pipe(Effect.andThen(Deferred.succeed(dispatchDone, undefined)))),
+      )),
     )
     // Keep extend/start atomic for this child. Otherwise start can join another caller without running this dispatch.
     return yield* input.lock.withLock(`background:${input.childSessionID}`)(Effect.gen(function* () {

@@ -10,8 +10,10 @@ import { SessionEvent } from "./event"
 import { SessionV1 } from "../v1/session"
 import { PromptAdmission } from "../v1/prompt-admission"
 import { WorkspaceTable } from "../control-plane/workspace.sql"
+import { ProjectTable } from "../project/sql"
 import { SessionMessage } from "./message"
 import { SessionMessageUpdater } from "./message-updater"
+import { fromRow } from "./info"
 import { SessionInput } from "./input"
 import { WorkspaceV2 } from "../workspace"
 import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
@@ -109,7 +111,7 @@ function applyUsage(
     .pipe(Effect.orDie)
 }
 
-function run(db: DatabaseService, event: SessionEvent.Event) {
+function run(db: DatabaseService, event: SessionEvent.Event, replay = false) {
   return Effect.gen(function* () {
     const decodeRow = (row: typeof SessionMessageTable.$inferSelect) =>
       decodeMessage({ ...row.data, id: row.id, type: row.type })
@@ -131,6 +133,68 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
     }
     const appendMessage = (message: SessionMessage.Message) => insertMessage(db, event, message)
     const adapter: SessionMessageUpdater.Adapter = {
+      validateTaskObservation(input) {
+        return Effect.gen(function* () {
+          const parent = yield* db.select().from(SessionTable).where(eq(SessionTable.id, input.sessionID)).get().pipe(Effect.orDie)
+          const child = yield* db.select().from(SessionTable).where(eq(SessionTable.id, input.childSessionID)).get().pipe(Effect.orDie)
+          const owner = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.assistant.id)).get().pipe(Effect.orDie)
+          if (!parent || !child || !owner || owner.session_id !== parent.id || child.parent_id !== parent.id ||
+            child.project_id !== parent.project_id || child.directory !== parent.directory ||
+            child.workspace_id !== parent.workspace_id || child.agent !== input.memberID) return false
+          const project = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, parent.project_id)).get().pipe(Effect.orDie)
+          if (!project) return false
+          const retained = decodeRow(owner)
+          const calls = retained.type === "assistant" && retained.agent === "maestro"
+            ? retained.content.filter((part) => part.type === "tool" && part.id === input.call.id) : []
+          const call = calls[0]
+          if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed ||
+            call.state.status !== "completed" || input.call.state.status !== "completed" ||
+            !isDeepStrictEqual(call.state.input, input.call.state.input)) return false
+          const record = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
+          const metadata = record(call.state.structured.metadata).valueOrUndefined
+          const observed = record(input.call.state.structured.metadata).valueOrUndefined
+          if (!metadata || !observed || metadata.upstreamSettlement !== undefined ||
+            metadata.parentSessionId !== parent.id || metadata.sessionId !== child.id ||
+            !isDeepStrictEqual(metadata.workResult, observed.workResult)) return false
+          // Any retained original view is a veto, not a fallback to the favorable native Task.
+          const original = yield* db.select().from(MessageTable).where(eq(MessageTable.id,
+            SessionV1.MessageID.make(input.assistant.id))).get().pipe(Effect.orDie)
+          const parts = yield* db.select().from(PartTable).where(and(eq(PartTable.message_id,
+            SessionV1.MessageID.make(input.assistant.id)), sql`json_extract(${PartTable.data}, '$.callID') = ${input.call.id}`))
+            .limit(2).all().pipe(Effect.orDie)
+          if (original || parts.length) {
+            const legacyOwner = original ? Schema.decodeUnknownOption(SessionV1.Info)({ ...original.data,
+              id: original.id, sessionID: original.session_id }).valueOrUndefined : undefined
+            const row = parts[0]
+            const part = row ? Schema.decodeUnknownOption(SessionV1.Part)({ ...row.data,
+              id: row.id, messageID: row.message_id, sessionID: row.session_id }).valueOrUndefined : undefined
+            if (!original || !legacyOwner || original.session_id !== parent.id || legacyOwner.role !== "assistant" ||
+              legacyOwner.agent !== "maestro" || parts.length !== 1 || !part || part.type !== "tool" ||
+              part.tool !== "task" || part.callID !== input.call.id || part.sessionID !== parent.id ||
+              part.messageID !== SessionV1.MessageID.make(input.assistant.id) || part.metadata?.providerExecuted || part.state.status !== "completed" ||
+              !isDeepStrictEqual(part.state.input, call.state.input)) return false
+            const legacyMetadata = record(part.state.metadata).valueOrUndefined
+            if (!legacyMetadata || legacyMetadata.parentSessionId !== parent.id || legacyMetadata.sessionId !== child.id ||
+              legacyMetadata.upstreamSettlement !== undefined ||
+              legacyMetadata.interrupted === true && metadata.interrupted !== true ||
+              !isDeepStrictEqual(legacyMetadata.workResult, metadata.workResult)) return false
+          }
+          const modern = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.authorMessageID)).get().pipe(Effect.orDie)
+          const legacy = yield* db.select().from(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(input.authorMessageID))).get().pipe(Effect.orDie)
+          if (!modern && !legacy) return false
+          if (modern) {
+            const author = decodeRow(modern)
+            if (modern.session_id !== child.id || author.type !== "assistant" || author.agent !== child.agent || author.time.completed === undefined) return false
+          }
+          if (legacy) {
+            const author = Schema.decodeUnknownSync(SessionV1.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
+            if (legacy.session_id !== child.id || author.role !== "assistant" || author.agent !== child.agent || author.time.completed === undefined) return false
+          }
+          // Replay origin is supplied only by EventV2's internal commit path, never event payload or metadata.
+          const location = replay ? fromRow(parent).location : input.location
+          return location?.directory === parent.directory && (location?.workspaceID ?? null) === parent.workspace_id
+        })
+      },
       getCurrentAssistant() {
         return Effect.gen(function* () {
           // A newer turn supersedes stale incomplete rows; never resume an older assistant projection.
@@ -436,7 +500,7 @@ const layer = Layer.effectDiscard(
     yield* events.project(SessionEvent.Tool.Input.Started, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Input.Ended, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Called, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Progress, (event) => run(db, event))
+    yield* events.project(SessionEvent.Tool.Progress, (event, origin) => run(db, event, origin.replay))
     yield* events.project(SessionEvent.Tool.Success, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Failed, (event) => run(db, event))
     yield* events.project(SessionEvent.Reasoning.Started, (event) => run(db, event))

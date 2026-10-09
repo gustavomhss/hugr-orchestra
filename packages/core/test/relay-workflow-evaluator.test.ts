@@ -108,14 +108,22 @@ describe("native workflow settlement", () => {
 
   test("partial failed round repairs retry once", async () => {
     const item = await fixture(true)
-    const input = { ...item.input, observe: () => Effect.sync(() => { mkdirSync(path.join(item.env.arm, "round_first")) }) }
+    // Fresh rounds do not read repeat_first; its write fails after the signed workflow-disposition receipt.
+    const input = { ...item.input, observe: () => Effect.sync(() => { mkdirSync(path.join(item.env.arm, "repeat_first")) }) }
     held(await transition(item.env, input), "WORKFLOW_SETTLEMENT_ACQUISITION")
-    rmSync(path.join(item.env.arm, "round_first"), { recursive: true })
+    expect((await entries(item.env)).filter((entry) => entry.event === "workflow-disposition")).toMatchObject([{
+      checkpoint: { binding: item.input.binding, settlement: item.input.settlement },
+      evaluation: { outcome: "gate-fail", wp: "first" },
+      writes: expect.arrayContaining([{ name: "repeat_first", value: "0" }, { name: "retry_first", value: "1" }]),
+    }])
+    const ledger = await read(path.join(item.env.arm, "ledger.jsonl"))
+    rmSync(path.join(item.env.arm, "repeat_first"), { recursive: true })
     const repaired = await transition(item.env, input)
     expect(repaired._tag).toBe("Success")
     expect(await read(path.join(item.env.arm, "retry_first"))).toBe("1\n")
     expect(await read(path.join(item.env.arm, "round_first"))).toMatch(/^[0-9a-f]{64}$/)
     expect(await read(path.join(item.env.work, "grades"))).toBe("grade\n")
+    expect(await read(path.join(item.env.arm, "ledger.jsonl"))).toBe(ledger)
   })
 
   test("missing disposition holds even when ordinary old PASS exists", async () => {
