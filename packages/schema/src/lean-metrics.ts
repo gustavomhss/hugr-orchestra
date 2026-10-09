@@ -27,7 +27,16 @@ export interface Group {
   readonly estimatedTokenCalls: number
 }
 
-export interface Summary {
+export type Summary = AvailableSummary | UnavailableSummary
+
+/** Unavailable totals carry no numeric placeholders that could be mistaken for exact savings. */
+export interface UnavailableSummary {
+  readonly unavailable: "overflow" | "invalid-scope"
+  readonly coverage: "loaded-history" | "complete-history"
+}
+
+export interface AvailableSummary {
+  readonly unavailable?: never
   readonly coverage: "loaded-history" | "complete-history"
   readonly observedCalls: number
   readonly eligibleCalls: number
