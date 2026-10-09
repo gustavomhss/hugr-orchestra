@@ -26,6 +26,8 @@ export type ExecuteInput = {
 }
 
 export interface Interface {
+  /** Host-only current effective registration token; synchronous metadata, never authorization. */
+  readonly currentRegistrationIdentity: (name: string) => object | undefined
   readonly materialize: (
     permissions?: PermissionV2.Ruleset,
     options?: { readonly advertisedNames?: readonly string[] },
@@ -179,6 +181,8 @@ const registryLayer = Layer.effect(
 
     return Service.of({
       session,
+      currentRegistrationIdentity: (name) =>
+        (local.get(name)?.at(-1)?.registration ?? applications.entries().get(name))?.identity,
       register: Effect.fn("ToolRegistry.register")(function* (tools) {
         const entries = Object.entries(tools)
         if (entries.length === 0) return
