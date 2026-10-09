@@ -2,6 +2,9 @@ export * as CapabilityPolicy from "./policy"
 
 import { Capability } from "@orchestra/schema/capability"
 import { Effect } from "effect"
+import { eq } from "drizzle-orm"
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
+import { SqlError } from "effect/unstable/sql/SqlError"
 import { AgentV2 } from "../agent"
 import { Database } from "../database/database"
 import { Location } from "../location"
@@ -9,6 +12,7 @@ import { PermissionV2 } from "../permission"
 import { SessionStore } from "../session/store"
 import type { Tool } from "../tool/tool"
 import { CapabilityInvocation } from "./invocation"
+import { CapabilityChildTable } from "./sql"
 
 const approved = Symbol("CapabilityPolicy.approved")
 type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
@@ -30,7 +34,7 @@ export const make = Effect.gen(function* () {
 
   const validate = Effect.fn("CapabilityPolicy.validate")(function* (binding: CapabilityInvocation.Binding) {
     const session = yield* sessions.get(binding.owner.sessionID)
-    const stored = yield* sessions.message(binding.invocation.assistantMessageID)
+    const stored = yield* sessions.message(binding.rootInvocation.assistantMessageID)
     if (
       !session ||
       session.id !== binding.owner.sessionID ||
@@ -38,30 +42,57 @@ export const make = Effect.gen(function* () {
       session.location.directory !== binding.owner.location.directory ||
       session.location.workspaceID !== binding.owner.location.workspaceID ||
       !stored ||
-      stored.sessionID !== binding.invocation.sessionID ||
-      stored.message.id !== binding.invocation.assistantMessageID ||
+      stored.sessionID !== binding.rootInvocation.sessionID ||
+      stored.message.id !== binding.rootInvocation.assistantMessageID ||
       stored.message.type !== "assistant" ||
-      stored.message.agent !== binding.invocation.agentID ||
+      stored.message.agent !== binding.rootInvocation.agentID ||
       !stored.message.content.some(
         (part) =>
           part.type === "tool" &&
-          part.id === binding.invocation.callID &&
+          part.id === binding.rootInvocation.callID &&
           part.name === binding.rootToolName &&
           (part.state.status === "pending" || part.state.status === "running"),
       )
     )
       return yield* mismatch()
+    if (binding.lineage.length > 8) return yield* mismatch()
+    yield* Effect.forEach(binding.lineage, (proof, index) => Effect.gen(function* () {
+      const parentCallID = index === 0 ? binding.rootInvocation.callID : binding.lineage[index - 1]?.callID
+      const row = yield* database.db.select().from(CapabilityChildTable)
+        .where(eq(CapabilityChildTable.id, proof.callID)).get().pipe(
+          Effect.catchIf((error) => error instanceof SqlError || error instanceof EffectDrizzleQueryError,
+            () => Effect.fail(mismatch())),
+        )
+      if (!row || proof.parentCallID !== parentCallID || !Number.isSafeInteger(proof.ordinal) ||
+        proof.ordinal < 1 || proof.ordinal > 64 || proof.callID !== CapabilityInvocation.childID({
+          ...binding.rootInvocation, callID: proof.parentCallID,
+        }, proof.ordinal) || row.id !== proof.callID || row.session_id !== binding.owner.sessionID ||
+        row.agent_id !== binding.owner.agentID || row.assistant_message_id !== binding.rootInvocation.assistantMessageID ||
+        row.root_call_id !== binding.rootInvocation.callID || row.root_tool_name !== binding.rootToolName ||
+        row.parent_call_id !== proof.parentCallID || row.ordinal !== proof.ordinal || row.depth !== index + 1 ||
+        row.tool_name !== proof.toolName || row.request_hash !== proof.requestHash || row.state !== "running")
+        return yield* mismatch()
+    }), { discard: true })
+    if (binding.invocation.callID !== (binding.lineage.at(-1)?.callID ?? binding.rootInvocation.callID))
+      return yield* mismatch()
+  })
+
+  const getBinding = Effect.fn("CapabilityPolicy.binding")(function* (
+    context: Tool.Context,
+  ): Effect.fn.Return<CapabilityInvocation.Binding, Capability.Failure> {
+    const binding = yield* CapabilityInvocation.require(context, {
+      projectID: location.project.id,
+      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+    })
+    yield* validate(binding)
+    return binding
   })
 
   const authorize = Effect.fn("CapabilityPolicy.authorize")(function* (
     context: Tool.Context,
     input: { action: string; resources: readonly string[] },
   ): Effect.fn.Return<Permit, Capability.Failure> {
-    const binding = yield* CapabilityInvocation.require(context, {
-      projectID: location.project.id,
-      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
-    })
-    yield* validate(binding)
+    const binding = yield* getBinding(context)
     if (
       !input.action.trim() ||
       input.action !== input.action.trim() ||
@@ -134,7 +165,7 @@ export const make = Effect.gen(function* () {
       }), { behavior: "immediate" }))
     })
 
-  return { authorize, commitMany, commit: <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
+  return { binding: getBinding, authorize, commitMany, commit: <A, E, R>(permit: Permit, write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
     commitMany([permit], write), assert: (context: Tool.Context, input: { action: string; resources: readonly string[] }) =>
     authorize(context, input).pipe(Effect.asVoid) }
 })

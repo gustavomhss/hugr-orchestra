@@ -5,6 +5,7 @@ import type { Location } from "@orchestra/schema/location"
 import { Permission } from "@orchestra/schema/permission"
 import type { Project } from "@orchestra/schema/project"
 import { Context, Effect, Option, Schema } from "effect"
+import { createHash } from "node:crypto"
 import type { PermissionV2 } from "../permission"
 import type { Tool } from "../tool/tool"
 
@@ -17,7 +18,18 @@ export type HostInput = {
   readonly nativeDenyFloor: PermissionV2.Ruleset
 }
 
-export type Binding = HostInput
+export type ChildProof = Readonly<{
+  callID: string
+  parentCallID: string
+  ordinal: number
+  toolName: string
+  requestHash: string
+}>
+
+export type Binding = HostInput & {
+  readonly rootInvocation: Capability.InvocationRef
+  readonly lineage: readonly ChildProof[]
+}
 
 const issued = Symbol("CapabilityInvocation.issued")
 type Frame = Binding & { readonly [issued]: true }
@@ -50,6 +62,8 @@ export function withContext<A, E, R>(
       issuer: value.issuer,
       owner: Object.freeze({ ...value.owner, location: Object.freeze({ ...value.owner.location }) }),
       invocation: Object.freeze({ ...value.invocation }),
+      rootInvocation: Object.freeze({ ...value.invocation }),
+      lineage: Object.freeze([]),
       rootToolName: value.rootToolName,
       effectiveRules: Object.freeze(value.effectiveRules.map((rule) => Object.freeze({ ...rule }))),
       nativeDenyFloor: Object.freeze(value.nativeDenyFloor.map((rule) => Object.freeze({ ...rule }))),
@@ -58,7 +72,39 @@ export function withContext<A, E, R>(
   })
 }
 
-/** Exact root identity only. Child settlement needs a separate host-issued proof contract. */
+export function childID(invocation: Capability.InvocationRef, ordinal: number): string {
+  return "child_" + createHash("sha256").update(JSON.stringify([
+    invocation.sessionID, invocation.assistantMessageID, invocation.callID, ordinal,
+  ])).digest("hex")
+}
+
+/** Trusted host boundary: extends an issued frame; SQL admission remains policy-owned. */
+export function withChildContext<A, E, R>(
+  parentContext: Tool.Context,
+  proof: ChildProof,
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | Capability.Failure, R> {
+  return Effect.gen(function* () {
+    const current = yield* Current
+    if (!current || current[issued] !== true || !matches(parentContext, current.invocation) ||
+      proof.parentCallID !== current.invocation.callID || !Number.isSafeInteger(proof.ordinal) ||
+      proof.ordinal < 1 || proof.ordinal > 64 || current.lineage.length >= 8 ||
+      proof.callID !== childID(current.invocation, proof.ordinal) ||
+      !/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(proof.toolName) ||
+      !/^[0-9a-f]{64}(?![\s\S])/.test(proof.requestHash)) return yield* mismatch()
+    const frame: Frame = Object.freeze({
+      ...current,
+      invocation: Object.freeze({ ...current.invocation, callID: proof.callID }),
+      lineage: Object.freeze([...current.lineage, Object.freeze({
+        callID: proof.callID, parentCallID: proof.parentCallID, ordinal: proof.ordinal,
+        toolName: proof.toolName, requestHash: proof.requestHash,
+      })]),
+    })
+    return yield* Effect.provideService(effect, Current, frame)
+  })
+}
+
+/** Exact current invocation identity; public claims cannot manufacture a child frame. */
 export const require = Effect.fn("CapabilityInvocation.require")(function* (
   context: Tool.Context,
   placement: { readonly projectID: Project.ID; readonly location: Location.Ref },
@@ -72,10 +118,7 @@ export const require = Effect.fn("CapabilityInvocation.require")(function* (
   if (
     !frame ||
     frame[issued] !== true ||
-    context.sessionID !== frame.invocation.sessionID ||
-    context.agent !== frame.invocation.agentID ||
-    context.assistantMessageID !== frame.invocation.assistantMessageID ||
-    context.toolCallID !== frame.invocation.callID ||
+    !matches(context, frame.invocation) ||
     placement.projectID !== frame.owner.projectID ||
     placement.location.directory !== frame.owner.location.directory ||
     placement.location.workspaceID !== frame.owner.location.workspaceID
@@ -83,6 +126,11 @@ export const require = Effect.fn("CapabilityInvocation.require")(function* (
     return yield* mismatch()
   return frame
 })
+
+function matches(context: Tool.Context, invocation: Capability.InvocationRef) {
+  return context.sessionID === invocation.sessionID && context.agent === invocation.agentID &&
+    context.assistantMessageID === invocation.assistantMessageID && context.toolCallID === invocation.callID
+}
 
 function mismatch() {
   // Never echo caller-supplied identifiers, policy, or provider detail into wire failures.
