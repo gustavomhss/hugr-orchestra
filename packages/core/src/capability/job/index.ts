@@ -186,8 +186,7 @@ export const make = Effect.gen(function* () {
     return yield* receipt(next)
   })
 
-  return {
-    create: Effect.fn("CapabilityJobs.create")(function* (supplied: Tool.Context, input: CreateInput) {
+  const admit = Effect.fn("CapabilityJobs.admit")(function* (supplied: Tool.Context, input: CreateInput) {
       const decoded = Schema.decodeUnknownOption(Create)(input)
       if (Option.isNone(decoded)) return yield* failure("unsupported_schema")
       const fixed = Object.freeze({ ...decoded.value,
@@ -226,7 +225,7 @@ export const make = Effect.gen(function* () {
             return yield* failure("outcome_unknown")
           if (existing.creation_key === null) yield* tx.update(CapabilityJobTable).set({ creation_key: creationKey })
             .where(eq(CapabilityJobTable.id, existing.id)).run().pipe(Effect.orDie)
-          return { id: existing.id }
+          return { ref: { id: existing.id }, reused: true }
         }
         yield* refs(tx, { ...fixed, owner: binding.owner, connection: fixed.connection ?? null, target: fixed.target ?? null })
         const ref = { id: Capability.JobID.create() }
@@ -234,9 +233,12 @@ export const make = Effect.gen(function* () {
           kind: fixed.kind, operation: fixed.operation, connection: fixed.connection, target: fixed.target,
           creation_key: creationKey, request_hash: fixed.requestHash, state: "intent", observation,
         }).run().pipe(Effect.orDie)
-        return ref
+        return { ref, reused: false }
       })).pipe(Effect.catchTag("SqlError", Effect.die))
-    }),
+    })
+  return {
+    admit,
+    create: (context: Tool.Context, input: CreateInput) => admit(context, input).pipe(Effect.map((result) => result.ref)),
     read: Effect.fn("CapabilityJobs.read")(function* (supplied: Tool.Context, suppliedRef: Capability.JobRef) {
       const ref = fixedRef(suppliedRef)
       if (ref instanceof Capability.Failure) return yield* ref
