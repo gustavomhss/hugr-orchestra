@@ -1,7 +1,11 @@
 name: runtime-products
 
 # Native CLI/resource/service proof only; Desktop channels, packaging and WSL remain unproved.
+# The dedicated branch bootstraps this workflow before default-branch registration.
 on:
+  push:
+    branches: [runtime-validation]
+    paths: [.github/workflows/runtime-products.yml]
   workflow_dispatch:
 
 permissions:
