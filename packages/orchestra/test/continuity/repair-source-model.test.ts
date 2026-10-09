@@ -4,12 +4,16 @@ import { chmod, lstat, mkdir, realpath, symlink } from "node:fs/promises"
 import { Effect } from "effect"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { MessageID } from "@/session/schema"
 import { replay, replayProvider } from "../../script/continuity-bench/complete"
 import { prepare } from "../../script/continuity-bench/prepare-capabilities"
 import { CaseCapabilities } from "../../script/continuity-bench/case-capabilities"
 import { TestInstance } from "../fixture/fixture"
 import { it } from "../lib/effect"
 import { messages, model } from "./memory-fixture"
+
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
+const windows = process.platform === "win32" ? it.instance : it.instance.skip
 
 it.live("replay provider rejects foreign provider or model instead of substituting approved model", Effect.gen(function* () {
   const provider = replayProvider(model)
@@ -61,7 +65,55 @@ const fixture = Effect.gen(function* () {
   return { root, write, catalog, descriptor, output: path.join(root, "output") }
 })
 
-it.instance("capability preparation rejects ../case filename before writes; safe case creates private contained outputs", () => Effect.gen(function* () {
+for (const field of ["model", "provider"] as const) it.instance(`capability load validates earlier horizon against actual prefix, not later ${field}`, () => Effect.gen(function* () {
+  const f = yield* fixture
+  const history = messages(["user", "assistant", "user", "assistant"])
+  const later = { ...model, id: field === "model" ? ModelV2.ID.make("later-model") : model.id,
+    providerID: field === "provider" ? ProviderV2.ID.make("later-provider") : model.providerID }
+  if (history[2].info.role !== "user") throw new Error("fixture-user-required")
+  history[2].info.model = { providerID: later.providerID, modelID: later.id }
+  const source = yield* f.write("mixed-source.json", history)
+  const manifest = (selected: typeof model, boundary = history[1].info.id) => Effect.gen(function* () {
+    const horizon = yield* f.write("mixed-horizon.json", { boundaryMessageID: boundary })
+    const selectedModel = yield* f.write("selected-model.json", selected)
+    const descriptor = yield* f.write("mixed-descriptor.json", { caseID: "mixed", sourceHistoryPath: source.path, sourceHistorySHA256: source.sha256,
+      horizonPath: horizon.path, horizonSHA256: horizon.sha256, model: { providerID: selected.providerID, modelID: selected.id } })
+    return yield* f.write("mixed-capabilities.json", { version: 1, cases: { mixed: { descriptor, source, horizon, model: selectedModel,
+      providerID: selected.providerID, modelID: selected.id, boundaryMessageID: boundary } } })
+  })
+  const earlier = yield* manifest(model)
+  const loaded = yield* Effect.promise(() => CaseCapabilities.load({ manifest: earlier, caseID: "mixed" }))
+  expect(loaded.messages).toEqual(history)
+  expect(loaded.model).toEqual(model)
+  expect(loaded.boundary).toBe(history[1].info.id)
+  const captured = yield* replay(loaded)
+  expect(captured.result).toEqual({ status: "dry-request-captured" })
+  expect(captured.snapshot.sources).toEqual(history.slice(0, 2).map((message) => message.info.id))
+  const wrong = yield* manifest(later)
+  const rejected = yield* Effect.tryPromise(() => CaseCapabilities.load({ manifest: wrong, caseID: "mixed" })).pipe(Effect.exit)
+  expect(rejected._tag).toBe("Failure")
+  if (rejected._tag === "Failure") expect(String(rejected.cause)).toContain("complete-replay-source-model-mismatch")
+  const missing = yield* manifest(later, MessageID.make("msg_missing_horizon"))
+  const absent = yield* Effect.tryPromise(() => CaseCapabilities.load({ manifest: missing, caseID: "mixed" })).pipe(Effect.exit)
+  expect(absent._tag).toBe("Failure")
+  if (absent._tag === "Failure") expect(String(absent.cause)).toContain("complete-replay-boundary-missing")
+}))
+
+windows("Windows capability authoring fails explicitly before catalog reads or output creation", () => Effect.gen(function* () {
+  const instance = yield* TestInstance
+  const output = path.join(instance.directory, "unsupported-output")
+  const result = yield* Effect.tryPromise(() => prepare({ catalog: { path: path.join(instance.directory, "absent-catalog.json"), sha256: "0".repeat(64) },
+    descriptors: [], output })).pipe(Effect.exit)
+  expect(result._tag).toBe("Failure")
+  if (result._tag === "Failure") expect(String(result.cause)).toContain("complete-replay-output-platform")
+  expect(yield* Effect.promise(() => Bun.file(path.join(output, "capabilities.json")).exists())).toBe(false)
+  expect(yield* Effect.promise(() => lstat(output).then(() => true, (error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return false
+    throw error
+  }))).toBe(false)
+}))
+
+posix("capability preparation rejects ../case filename before writes; safe case creates private contained outputs", () => Effect.gen(function* () {
   const f = yield* fixture
   const bad = yield* f.descriptor("../case")
   const rejected = yield* Effect.tryPromise(() => prepare({ catalog: f.catalog, descriptors: [bad], output: f.output })).pipe(Effect.exit)
@@ -80,7 +132,7 @@ it.instance("capability preparation rejects ../case filename before writes; safe
 }))
 
 for (const target of ["symlink", "directory", "public-file", "private-file", "manifest"] as const)
-  it.instance(`capability preparation refuses existing ${target} output without overwriting`, () => Effect.gen(function* () {
+  posix(`capability preparation refuses existing ${target} output without overwriting`, () => Effect.gen(function* () {
     const f = yield* fixture
     const descriptor = yield* f.descriptor("safe")
     yield* Effect.promise(() => mkdir(f.output, { mode: 0o700 }))
@@ -94,14 +146,17 @@ for (const target of ["symlink", "directory", "public-file", "private-file", "ma
       yield* Effect.promise(() => Bun.write(file, "DO_NOT_OVERWRITE"))
       yield* Effect.promise(() => chmod(file, target === "public-file" ? 0o644 : 0o600))
     }
-    const result = yield* Effect.tryPromise(() => prepare({ catalog: f.catalog, descriptors: [descriptor], output: f.output })).pipe(Effect.exit)
-    expect(result._tag).toBe("Failure")
+    const result = yield* Effect.promise(() => prepare({ catalog: f.catalog, descriptors: [descriptor], output: f.output }).then(
+      () => undefined, (error: NodeJS.ErrnoException) => error))
+    expect(result?.code).toBe("EEXIST")
+    expect(result?.syscall).toBe("open")
+    expect(result?.path).toBe(file)
     if (target !== "directory") expect(yield* Effect.promise(() => Bun.file(file).text())).toContain(target === "symlink" ? "PRIVATE_POISON" : "DO_NOT_OVERWRITE")
     if (target === "directory") expect((yield* Effect.promise(() => lstat(file))).isDirectory()).toBe(true)
   }))
 
 for (const target of ["symlink", "public-directory", "file"] as const)
-  it.instance(`capability preparation refuses ${target} output root`, () => Effect.gen(function* () {
+  posix(`capability preparation refuses ${target} output root`, () => Effect.gen(function* () {
     const f = yield* fixture
     const descriptor = yield* f.descriptor("safe")
     if (target === "symlink") yield* Effect.promise(() => symlink(f.root, f.output))
