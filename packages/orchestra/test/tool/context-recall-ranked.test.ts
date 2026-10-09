@@ -65,7 +65,7 @@ describe("context_recall ranked archive", () => {
       }
       expect(decode(input)).toEqual(input)
     }
-    expect(decode({ archive_query: "", match: "terms" })).toEqual({ archive_query: "", match: "terms" })
+    expect(() => decode({ archive_query: "", match: "terms" })).toThrow()
     for (const input of [
       { archive_query: "x".repeat(257) },
       { archive_query: "x", match: "semantic" },

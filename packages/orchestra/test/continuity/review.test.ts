@@ -100,7 +100,7 @@ test("request carries full raw covered source, candidate, indexed aliases and ty
   expect(result.request.system[0]).toContain("false-completion")
 })
 
-test("valid prior seal enables only head transcript plus prior memory/seal; unreviewed or stale receipt rechecks full covered source", () => {
+test("valid prior seal enables incremental review; absent receipt rechecks full sources and stale receipt fails closed", () => {
   const previous = prior()
   const incremental = fixture(previous)
   const result = envelope(incremental)
@@ -109,14 +109,14 @@ test("valid prior seal enables only head transcript plus prior memory/seal; unre
   expect(result.data.transcript).not.toContain("OLD_RAW_REQUIREMENT")
   expect(result.data.transcript).toContain("NEW_USER_EVIDENCE")
   expect(result.data.previous).toEqual({ text: previous.text, items: previous.items, review: previous.review })
-  for (const candidate of [{ ...previous, review: undefined }, { ...previous, review: { ...previous.review, digest: "stale" } }]) {
-    const value = fixture({ ...previous, review: undefined })
-    value.snapshot.previous = candidate
-    const full = envelope(value)
-    expect(full.data.mode).toBe("full-covered")
-    expect(full.data.transcript).toContain("OLD_RAW_REQUIREMENT")
-    expect(full.data.previous.review).toBeNull()
-  }
+  const old = fixture({ ...previous, review: undefined })
+  const full = envelope(old)
+  expect(full.data.mode).toBe("full-covered")
+  expect(full.data.transcript).toContain("OLD_RAW_REQUIREMENT")
+  expect(full.data.previous.review).toBeNull()
+  old.snapshot.previous = { ...previous, review: { ...previous.review!, digest: "stale" } }
+  expect(() => envelope(old)).toThrow("C18")
+  failure(review(old), "matching owned complete coverage")
 })
 
 test("accept returns host decision and conserves guarded IDs without reclassifying agent decisions", () => {
