@@ -101,6 +101,15 @@ consumer succeeded. The sole Windows x64 native job failed during CLI build with
 The real model snapshot loaded before this compiler fallback extraction failure.
 Runtime owns the exact failed-lane/vendor-artifact diagnosis; passed lanes are not
 silently rerun or promoted into an overall green.
+Runtime published one-file repair `905facae5508054e98f617f9345de8a3eaae9222`,
+parent `f48ed761aa`: acquire the official Windows x64 baseline ZIP, verify publisher
+SHA-256 `538f9c846355d9e847b2671bc00c47da4229a0befb24df3282b739770f3b475f`,
+binary/version and PATH ordering before the existing host/build/proof steps. The
+publisher API asset `418774449` reports that exact digest for the named 1.3.14 ZIP.
+Bounded independent static APPROVE: `ses_ede10b10bffeZj7Sr8S8b57wwj`, workflow blob
+`2cd60aac24191ef0e93f5cc49b0f52818ea11d6f`. Explicit `windows_x64_only` dispatch
+covers models and that lane only; its success cannot certify the whole matrix.
+The repair is composed in `02308248dc`; actual failed-lane verification remains pending.
 
 A published minimal candidate `5c6426d8f5bb0a473d15447dece6e205be7cc32c`, parent
 `fca89fc1d4`, changing only the updater. It snapshots current Immer state before
@@ -120,6 +129,19 @@ resume the same Runtime Session. The coordinator confirmed clean `be485928d5`,
 HTTP abort 200/true and idle status, then persisted compact recovery handoff
 `msg_1225fcfdd001kvvyAG5aQZIlIP`. No server was restarted, no source work discarded,
 and no new author or qualification result was invented.
+
+Runtime then measured the actual first refusal in Actions diagnostic **`37988400717`**,
+head `18262711b544b006587ff07ba0e67191d2336679`, based on `f48ed761aa` with temporary
+instrumentation. Both OS jobs completed **24 pass / 0 fail**. Eligible real rows
+reported `observation: true`, `dbValidated: true`, and all other branch predicates true.
+The actual equality booleans were `draftInput: false`, `snapshotInput: true`,
+`draftResult: false`, `snapshotResult: true`; `originalFirstFalse: "input"` and
+`snapshotFirstFalse: null`. Invalid lineage/workspace/owner/author cases still refused,
+and restored cases accepted. Live and fresh-DB replay controls passed. Raw job evidence:
+`tool_122670e4f001vzfR63fgvonmB1` (Linux), `tool_1226b3565001mTRgPFtSpbrkZa` (Windows).
+This establishes the refusal boundary in the real fixtures, beyond the earlier static
+proxy hypothesis. Runtime removed instrumentation and restored the exact approved
+candidate blob; uninstrumented Core and linked Orchestra Task qualification remain pending.
 
 Relay's sole request-only `9c76824c5ce27849f42685dc3579e3201e6103af` has exact parent
 AEC and changes only the ready/source-parent JSON line in `nix/distribution.md`.
