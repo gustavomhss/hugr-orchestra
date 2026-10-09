@@ -1117,6 +1117,13 @@ export function MessageTimeline(props: {
       }
       case "AssistantPart": {
         const assistantPartRow = row as Accessor<TimelineRowByTag<"AssistantPart">>
+        // Running Tasks expose child navigation and admitted research documents.
+        const interactiveTask = createMemo(() => {
+          const group = assistantPartRow().group
+          if (group.type !== "part") return false
+          const part = getMsgPart(group.ref.messageID, group.ref.partID)
+          return part?.type === "tool" && part.tool === "task"
+        })
         const head = createMemo(() => {
           const group = assistantPartRow().group
           const message = messageByID().get(
@@ -1136,7 +1143,7 @@ export function MessageTimeline(props: {
               >
                 <div
                   data-slot="session-turn-assistant-content"
-                  aria-hidden={workingTurn(assistantPartRow().userMessageID)}
+                  aria-hidden={workingTurn(assistantPartRow().userMessageID) && !interactiveTask()}
                 >
                   {renderAssistantPartGroup(assistantPartRow, onSizeChange)}
                 </div>

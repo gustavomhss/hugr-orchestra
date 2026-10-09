@@ -243,11 +243,25 @@ for (const profile of [
 test("SPA navigation disposes pending document and return cannot restore stale display", async ({ page }) => {
   const document = researchDocument(["# Stale navigation document\n\n", "Old navigation body."])
   const held = Promise.withResolvers<void>()
+  const destinationTitle = "Research child destination"
+  const task = researchTask(researchEnvelope({ documents: [document.receipt] }))
   await setupTimeline(page, {
-    messages: [userMessage(), assistantMessage([researchTask(researchEnvelope({ documents: [document.receipt] }))])],
-    sessions: [session(), session({ id: researchSessionID, parentID: sessionID, title: "Research child destination" })],
+    // Child headers prefer the parent Task description over the stored Session title.
+    messages: [
+      userMessage(),
+      assistantMessage([
+        {
+          ...task,
+          state: { ...task.state, input: { ...task.state.input, description: destinationTitle } },
+        },
+      ]),
+    ],
+    sessions: [session(), session({ id: researchSessionID, parentID: sessionID, title: destinationTitle })],
   })
-  const destination = userMessage([{ id: "prt_destination", type: "text", text: "Navigation destination ready" }])
+  const destination = userMessage(
+    [{ id: "prt_destination", type: "text", text: "Navigation destination ready" }],
+    { id: "msg_research_destination" },
+  )
   await page.route(new RegExp(`/session/${researchSessionID}/message(?:\\?|$)`), (route) =>
     route.fulfill({
       contentType: "application/json",
@@ -268,9 +282,10 @@ test("SPA navigation disposes pending document and return cannot restore stale d
   const failed = page.waitForEvent("requestfailed", { predicate: (request) => request === pending })
   await page
     .locator(`[data-timeline-part-id="${researchPartID}"]`)
-    .getByRole("link", { name: new RegExp(researchDescription) })
+    .getByRole("link", { name: new RegExp(destinationTitle) })
     .click()
-  await expectSessionTitle(page, "Research child destination")
+  await expect(page).toHaveURL(new RegExp(`/session/${researchSessionID}$`))
+  await expectSessionTitle(page, destinationTitle)
   await expect(page.getByText("Navigation destination ready", { exact: true })).toBeVisible()
   await expect(result).toHaveCount(0)
   expect((await failed).failure()?.errorText).toBe("net::ERR_ABORTED")
