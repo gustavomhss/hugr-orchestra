@@ -2,6 +2,8 @@
 
 Published integration base for the focused checks below: `59e73080cb` on `runtime-closure`. These results describe the verified corrections before the subsequent Relay integration. This checkpoint is not milestone closure or exact-head epic CI evidence.
 
+Latest integration details live in `WAVE-2.md`: Relay parity checkpoint `937cf2b1de`, actual native exporter completion `374da1e154` (Actions `37875718504`), and prepared SDK matrix plus portable Node admission correction `22addae2df` (Actions `37877015907`). These are reviewed, scoped results; product builds and operational OAuth requirements remain open.
+
 ## Reviewed corrections
 
 - Core/legacy ChatGPT corrections were integrated: validated identity continuity survives retired signing keys, omitted refresh/scope values retain saved values, and model catalog refresh precedes the first model request.
@@ -43,7 +45,7 @@ Core declares `jose: "6.2.3"`; Desktop declares Electron `42.3.3`. These manifes
 
 - A08: real consent displaying Orchestra, entitled inference and real refresh/re-login. DigitalOcean registration exists, but scope and OAuth-bearer inference eligibility remain unproved. ChatGPT needs real OSS consent to issue its account-bound registration. Copilot/xAI owned registration and provider approval remain outstanding.
 - A02–A04: full matching-OS/CPU compiled CLI and desktop matrix, actual Linux-producer/Windows-consumer artifact handoff, and real Windows/WSL guest transport/authenticated health. Staging fixtures do not prove those executions.
-- A05–A06: remaining complete resolver/import authority matrix under Node, compiled Bun, supported require paths and warm caches.
+- A05–A06: final exact-head composition/qualification of resolver cold/warm and foreign-footprint checks. The previously missing successful prepared Bun, Node ESM bundle, compiled Bun, supported require and real OpenTUI matrix now passes on Linux/Windows in `37877015907`; the counted Bun registration mutation fails inside the same run. This does not turn unrelated historical resolver runs into exact-head milestone evidence.
 - A10–A11: deterministic dependency output hashes and real CLI/Desktop Nix builds on all four declared systems, matching Electron and executable artifacts.
 - A12: final committed/generated tree, remaining integration evidence, exact-head full applicable epic CI, and the single milestone PR/merge.
 

@@ -71,7 +71,7 @@ async function admit(specifier: string, sourceRoot?: string) {
     const sdk = new Set<string>()
     const create = new Set<string>()
     const quota = PluginSdkLimits.budget()
-    const bundledPath = path.resolve(import.meta.dir, "../../../plugin")
+    const bundledPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../plugin")
     const bundled = await PluginSdkPackage.exists(bundledPath) ? await realpath(bundledPath) : undefined
     // This exact host package is already the authority backing runtime modules.
     // A different tree bearing its name (including any foreign link) is untrusted.

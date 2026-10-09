@@ -55,3 +55,13 @@ Producer/native candidate `374da1e154acc7d5df4c7d84bd69fd0aa1b8d494` repairs bot
 [37875718504](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37875718504) completed all six actual hosted lanes: 28 tests each on Darwin Intel/ARM, 27 each on native musl x64/ARM and glibc-with-foreign-musl x64/ARM. The lead verified named admission, actual exporter-subprocess and retained POSIX limitation tests executed in every lane. The earlier spaced-config job statuses are not reused as evidence.
 
 This closes the producer's native exporter/ABI handoff checks. It does not certify full compiled CLI/Desktop products, Windows/WSL guest transport, final SDK authority matrix, Nix dependency hashes/builds or operational OAuth consent. Those acceptance items remain explicit.
+
+## Prepared SDK runtime matrix
+
+The new focused matrix uses one real loopback-registry `Npm.install` with canonical and alias bridges, ordinary dependency fetch/execution controls and zero SDK registry requests. Prepared workers check all seven public exports under Bun, a Node ESM bundle, compiled Bun and real OpenTUI. Runtime exports require nonempty exact key sets and object identity through external ESM and supported `require`; integration is explicitly runtime-empty, with public type fields checked by package typecheck. Unknown/deep imports reject; accepted Bun `.js` retries and `package.json` exceptions may expose only owned modules/metadata.
+
+[37876355764](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37876355764) reproduced a real Node admission failure on both OSes: Bun-only `import.meta.dir` was undefined. Candidate `22addae2df` uses the existing `fileURLToPath(import.meta.url)` to obtain a portable module directory, preserving optional physical-host authority and foreign-footprint checks. Independent review approved the one-line correction and the matrix.
+
+[37877015907](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37877015907) passed the one matrix test with 40 parent assertions on each of Linux and Windows. Each run includes a counted real Bun registration mutation: external identity comparison rejects a fresh registered `tool` function while expected bundled objects remain unchanged. The mutation is not a separate rerun or a changed oracle. Normal workers cover canonical/alias ESM and `require`; the registration control specifically calibrates the Bun comparison, not every runtime independently.
+
+Combined Core and Orchestra package typechecks passed, including the integration public-type field references. The earlier resolver and production-footprint suites were not rerun. Final exact-head milestone CI and full product/operational proofs remain separate acceptance items.
