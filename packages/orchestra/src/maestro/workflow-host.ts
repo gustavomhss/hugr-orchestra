@@ -258,7 +258,8 @@ export function make(deps: Dependencies) {
           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
       }
       if (revision.grounding) {
-        const source = yield* readAtlasSource(yield* deps.sessions.get(SessionID.make(input.sessionID)))
+        const session = yield* deps.sessions.get(SessionID.make(input.sessionID))
+        const source = yield* readAtlasSource(session)
         if (source.identityHash !== revision.grounding.sourceIdentityHash)
           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CONTEXT_SOURCE_STALE" })
       }
@@ -364,5 +365,8 @@ export function make(deps: Dependencies) {
 }
 
 export function held(error: unknown) {
-  return error instanceof RelayWorkflowBinding.Held ? error : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_ACQUISITION" })
+  if (error instanceof RelayWorkflowBinding.Held) return error
+  return new RelayWorkflowBinding.Held({
+    reason: error instanceof ToolSafety.Denied ? error.reason : "WORKFLOW_HOST_ACQUISITION",
+  })
 }

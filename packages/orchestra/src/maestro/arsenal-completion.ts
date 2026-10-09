@@ -2,7 +2,7 @@ export * as ArsenalCompletion from "./arsenal-completion"
 
 import path from "path"
 import { createHash, randomUUID } from "node:crypto"
-import { Cause, Context, Effect, Layer, Option, Schema } from "effect"
+import { Cause, Context, Effect, FileSystem, Layer, Option, Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -165,7 +165,8 @@ export const make = Effect.gen(function* () {
       const workflow = yield* WorkflowBinding.adopt({ token: binding.token, relay,
         dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
         globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
-      }).pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof RelayWorkflowBinding.Held
+      }).pipe(Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof RelayWorkflowBinding.Held
         ? error.reason : "WORKFLOW_BINDING_ACQUISITION" })))
       const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
       receipts.set(receipt, { host, binding, ...loaded, checks, relay, workflow })
