@@ -17,13 +17,15 @@ import { PromptGuard } from "./prompt-guard"
 import type { SessionRunState } from "./run-state"
 import { SessionID } from "./schema"
 
+export type Prompt = (...args: Parameters<TaskPromptOps["prompt"]>) => ReturnType<SessionPrompt.Interface["prompt"]>
+
 /** Private Task callbacks share the already captured native host and instance-scoped prompt services. */
 export function make(deps: {
   readonly fs: FSUtil.Interface
   readonly agents: Agent.Interface
   readonly state: SessionRunState.Interface
   readonly nativeHost: Pick<Effect.Success<typeof ArsenalBindings.make>, "withSession">
-  readonly prompt: SessionPrompt.Interface["prompt"]
+  readonly prompt: Prompt
 }) {
   const ops = Effect.fn("SessionPrompt.ops")(function* () {
     const execution = yield* Effect.serviceOption(SessionExecution.Service)
@@ -31,7 +33,10 @@ export function make(deps: {
       cancel: (sessionID: SessionID) => cancel(sessionID),
       resolvePromptParts: (template: string) => resolvePromptParts(template),
       prompt: (input: Parameters<TaskPromptOps["prompt"]>[0], options?: Parameters<TaskPromptOps["prompt"]>[1]) =>
-        deps.nativeHost.withSession(input.sessionID, PromptGuard.wrap(deps.prompt)(input, options)),
+        deps.nativeHost.withSession(
+          input.sessionID,
+          PromptGuard.wrap((request: SessionPrompt.PromptInput) => deps.prompt(request, options))(input, options),
+        ),
       resumeNotice: (sessionID: SessionID) => Option.isSome(execution)
         ? execution.value.resume(SessionSchema.ID.make(sessionID)).pipe(Effect.orDie)
         : Effect.die(new Error("UPSTREAM_NOTICE_RESUME_UNAVAILABLE")),

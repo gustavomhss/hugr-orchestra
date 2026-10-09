@@ -160,7 +160,7 @@ const layer = Layer.effect(
       agents,
       state,
       nativeHost,
-      prompt: (input) => prompt(input),
+      prompt: (input, options) => prompt(input, options),
     })
 
     const title = Effect.fn("SessionPrompt.ensureTitle")(function* (input: {
@@ -1013,7 +1013,7 @@ const layer = Layer.effect(
       return { info: protectedInfo, parts }
     }, Effect.scoped)
 
-    const prompt: Interface["prompt"] = yield* PromptHost.make({
+    const prompt: TaskPromptOperations.Prompt = yield* PromptHost.make({
       sessions, continuity, schema: PromptInput, build: createUserMessage, loop: (input) => loop(input),
     })
 
