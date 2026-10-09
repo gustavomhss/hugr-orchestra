@@ -1,6 +1,6 @@
 # Independent final fixture setup
 
-Preparation baseline: `1e9260f629b9cde336e4509b86e6e5221985d80c`. This document is the only repository change owned by fixture preparation. No tests, typecheck, model/provider requests, installs, live app changes or trials ran. Versions and byte hashes were inspected; operational qualification and independent calibration remain final work.
+Preparation checkout: `86aa4d8acf1ce28da0d159dffe088c118e7bc850`, following the setup baseline `1e9260f629b9cde336e4509b86e6e5221985d80c`. This document is the only repository change owned by fixture preparation. Trusted developer installation provisioned only TypeScript Language Server 4.3.4 and TypeScript 5.9.3 outside checkout, with lifecycle scripts ignored. No tests, typecheck, baseline execution, LSP initialization, model/provider requests, live app changes or trials ran. Package/source/version/hash inspection is not operational qualification or independent calibration.
 
 Comparator is **original native Jimmy at `73651a0e69a2912d9244dbb73e985c5828c03058`** under the same `openai/gpt-6.1-sol` account route, captured sources and declared ceilings. Label this a **SYSTEM comparison** because capabilities differ. Neither three repetitions nor different tools establish method superiority. Preserve the original role and native Maestro Task/Session loops.
 
@@ -10,8 +10,8 @@ Evaluator-owned roots remain outside every checkout/ref/CI snapshot: `/var/folde
 
 | Scope | Prepared setup | Remaining executor requirement |
 | --- | --- | --- |
-| R01, R07–R12 | Existing frozen official/academic captures; `setup-readonly-v3.json` | Final dependencies, enforced isolation, comparator driver and calibration |
-| R02, R03, R04, R13 semantic variants | Original disclosed TS/JS alias/generation corpus; pinned Node and TypeScript 5.9.3 identities | Real TypeScript LSP CLI/transitive dependencies and actual readiness/known-reference/partial controls; no LSP launch occurred |
+| R01, R07–R12 | Existing frozen official/academic captures; `setup-readonly-v3.json` | Final dependencies, enforced isolation, original-driver qualification and calibration |
+| R02, R03, R04, R13 semantic variants | Original disclosed TS/JS alias/generation corpus; real TLS 4.3.4 + TypeScript 5.9.3 tree; `setup-typescript-v4.json` | Actual initialization/readiness/known-reference/partial controls remain final; no LSP launch occurred |
 | R05/R06 documentary variants | Original synthetic source/history/environment records remain intact | Native multi-revision history variants require a trusted history import; documentary inputs are not deployed observations |
 | R14 | New `jimmy-eval-inputs/r14-final-v3` regular-file manifest/captures/workflow; separate ready question manifest; `setup-memory-v3.json` | Actual compaction collection, final isolated lane and fresh native/state-control calibration |
 | Atlas Own variants, including R02/R03/R10 when selected | Source binding semantics inspected | Derived project-ID configuration plus real catalog/snapshot/blob/ancestry admission; Memory is not Own coverage |
@@ -25,7 +25,10 @@ R14's disclosed workflow permits genuine investigative progress, an actual faile
 - Scanner: `/usr/local/Cellar/gitleaks/8.30.1/bin/gitleaks`, version `8.30.1`, SHA256 `bb73559cd722f511a32885e298a5bb124046ccf3f5b3ee173b18694901ee9bd0`.
 - Outer timeout: `/usr/local/Cellar/coreutils/9.10/bin/gtimeout`, GNU coreutils `9.10`, SHA256 `2e6d2aebf762de4aae3b731b4fb5129363f5698255a186a03a59c68717895132`.
 - Bun: `/Users/gustavoschneiter/.bun/bin/bun`, version `1.3.14`; Node: `/usr/local/bin/node`, version `v22.17.1`. Their digests, Git/dylib identities and setup-file digests are in the evaluator-owned setup freeze.
-- Compiler: `/Users/gustavoschneiter/.bun/install/cache/typescript@5.9.3@@@1/lib/tsserver.js`. This is **not an LSP executable**. No replacement server, semantic stub or implicit installer is supplied.
+- Operational tools root: `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-operational-tools`. Trusted `npm install --ignore-scripts --no-audit --no-fund --prefer-offline --save-exact` provisioned TLS `4.3.4` and TypeScript `5.9.3`; no workspace/runtime installation occurred.
+- Real LSP CLI: `node_modules/typescript-language-server/lib/cli.mjs` under that root, SHA256 `557a242e685e6b49967597a8d33934190f391090c763a0d344b9e7211e55b5dd`. The command is the canonical Node executable, that regular CLI file, then `--stdio`.
+- Compiler: `node_modules/typescript/lib/tsserver.js` under that root, SHA256 `e3ccfeec65ec5c470b8ffc5611878a31182650c7e8a062c38a719f83b523edcb`. Initialization uses this actual file and disables automatic typing acquisition. `tsserver` is not passed as an LSP executable.
+- `setup-typescript-v4.json` and `executor-tool-freeze-v4.json` bind Node, scanner, CLI, compiler implementation/libraries, bundled dependencies, source maps, package metadata and lockfile. Hashing Node alone is insufficient. No semantic stub or runtime implicit installer is supplied.
 
 The runner selects native PATH scanner fallback through its no-install toolkit target. Put the scanner directory on PATH before Bun starts. Actual clean/refusal/unavailable scanner controls remain unexecuted. A hashed timeout executable likewise does not prove descendant/resource cleanup.
 
@@ -40,7 +43,7 @@ Minimum integration contracts to return to their owners:
 1. **R14 compaction:** call the supported native compaction operation after witnessed interruption, before strict resume; collect actual compaction and retained checkpoint/finding/source identity/restoration evidence. The driver currently sets `compaction.auto:false`; interruption alone must not close the retained R14 compaction assertion.
 2. **Atlas Own:** add an explicit trusted native-derived project binding, resolved after snapshot creation before Atlas configuration use; verify it against native Session project identity and freeze it with actual Own snapshot/blob ancestry. Do not accept a fabricated static ID.
 3. **R05/R06 native history variants:** add trusted digest-checked Git bundle import, pinned checkout and allowed revisions before Instance initialization. `snapshotGit` creates one new snapshot, not supplied history. Do not walk into an ancestor author repository.
-4. **Original baseline executor:** the original SHA has no candidate `research-pilot`, `research-continuation` or `research-documents` scripts. Supply an external evaluator-side native Task adapter over original services, preserving original outputs/capabilities and comparable all-attributable ceilings. Do not copy candidate Research/decoder/continuation services into the old runtime. Until qualified, no baseline command is claimed executable.
+4. **Original baseline byte/capability scope:** the evaluator-owned `original-jimmy-baseline-v4.mjs` now implements the original native Task bridge. It imports original services only; original native orchestration, role, permissions and output remain original. Request/tool guards admit before the original OAuth fetch/native registry execution, including actor-independent helper/maintenance/retry work, and seal at caps/deadlines. Native inventory and effective prompt/model settings are frozen before dispatch. Actual boundary/cancellation coverage remains final qualification. Raw acquisition/capture-byte parity is explicitly unsupported by the original interface; default strict mode refuses before credentials/model work. Optional returned-text-bounded collection never claims comparable capture enforcement. Original Jimmy has no own Atlas/candidate corpus capability; optional native Session interruption/resume uses the original returned execution ID and retains R14 unsupported classifications rather than fabricate checkpoint success.
 
 This isolated checkout lacks its installed runtime dependency tree. Final execution also needs an enforced OS/container/account boundary protecting private data, owned process-group/resource cleanup, permitted account lifetime/route and final prompt/build identity. No credentials or live DB were inspected.
 
@@ -70,4 +73,24 @@ PATH=/usr/local/Cellar/gitleaks/8.30.1/bin:/usr/local/Cellar/git/2.51.0/bin:$PAT
 
 For ordinary supported captured-source cases, replace the R14 input root with `"$ROOT/jimmy-eval-inputs"`, question manifest with the original host-only `manifest.json`, setup with `setup-readonly-v3.json`, dispatch timeout with `600000`, outer timeout with `660s`, and omit resume/total options. Use the actual case ID and a new arm/repetition/attempt leaf. Do not schedule blocked semantic/history/Own variants under this ordinary command and call them qualified.
 
-Baseline invocation remains blocked on its independently frozen external native driver; the absence of that command is explicit, not a silent candidate-driver substitution. Source artifacts remain provisional even when used during final evaluation. Missing evidence, infrastructure failures, expired deadlines and unknown usage are retained; no quality, speed, method or runtime-success claim follows from this setup document.
+## External original baseline commands — authored, not run
+
+The actual external driver is `$ROOT/jimmy-eval-private/original-jimmy-baseline-v4.mjs`, not a script transplanted into the old checkout. Its ordinary source bridge uses original Agent/Provider/ToolRegistry/SessionPrompt/Task services. The original checkout needs its own frozen runtime dependency installation before native execution. Native tool inventory is collected from original services before first Task; no inventory is invented during authoring. Original rich output/child histories are evaluator-only; the projected trace does not fabricate candidate cards or receipts.
+
+Strict mode below records the named capture-byte unsupported result before credential/native loading. Use a new leaf for every attempt:
+
+```sh
+/usr/local/Cellar/coreutils/9.10/bin/gtimeout --signal=TERM --kill-after=10s 660s \
+  /Users/gustavoschneiter/.bun/bin/bun "$ROOT/jimmy-eval-private/original-jimmy-baseline-v4.mjs" \
+  --baseline-root "$ROOT/jimmy-cold" --case R02 \
+  --inputs "$ROOT/jimmy-eval-inputs" --manifest "$ROOT/jimmy-eval-private/manifest.json" \
+  --run-root "$RUNS/R02-rep$REP-baseline-attempt1" \
+  --setup "$ROOT/jimmy-eval-private/setup-typescript-v4.json" \
+  --timeout-ms 600000 --total-timeout-ms 660000 \
+  --provider-calls 24 --tool-calls 64 --captured-bytes 67108864 \
+  --byte-policy strict-captured
+```
+
+After final original-runtime/counter/isolation qualification, `--byte-policy reported-output-only` permits actual original Task collection but retains `unsupported-comparable-captured-byte-enforcement`; it is not a fully comparable byte-capped confirmation run. For R14 native lifecycle collection only, use the R14 public/question roots above, `--case R14 --r14-mode native-lifecycle`, first/resume `900000`, total `1800000`, outer `1860s`, and a new R14 baseline leaf. This does not satisfy absent original corpus/own Atlas/compaction requirements. Default R14 mode is named unsupported.
+
+Candidate semantic runs use the same pinned `setup-typescript-v4.json` with the existing native pilot interface and unchanged disclosed files. Both arms still need fresh actual LSP readiness/partial controls; physical installation is not semantic readiness. Keep the fixed paired order and recorded limits. Source artifacts remain provisional. Missing evidence, unsupported capabilities, infrastructure failures, expired deadlines and unknown usage are retained; no quality, speed, method or runtime-success claim follows from setup or Task return.
