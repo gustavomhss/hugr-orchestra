@@ -34,6 +34,10 @@ disabled completed `HASH_CAPTURE_CONTROLS_OK` for the unchanged full control lis
 The applied values are measured dependencies, not a consumer/product pass. This
 integration retains failed-verification ancestry and holds the next request inactive
 until a fresh source/root-bound capture can precede its strict hash-only child.
+The retry source restores the exact pre-application stale hash fields rather than
+retaining an unqualified consumer checkpoint. Fresh updater measurement remains
+independent (`fakeHash`); its next real four-value application will be an actual
+hash-only change. This does not guess or alter any measured candidate.
 
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
