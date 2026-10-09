@@ -328,11 +328,16 @@ const layer = Layer.effectDiscard(
         const owner = receipt ? storedOwner : incoming.type === "tool" ? { sessionID, messageID,
           callID: incoming.callID, tool: incoming.tool, input: incoming.state.input } : undefined
         const part = receipt && owner && incoming.type === "tool" && previous?.type === "tool" &&
-          "metadata" in previous.state && "metadata" in incoming.state
-          ? { ...incoming, state: { ...(previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status)
-              ? previous.state : incoming.state), input: previous.state.input,
+          "metadata" in previous.state
+          ? { ...previous, ...incoming,
+              ...(previous.metadata || incoming.metadata ? { metadata: { ...previous.metadata, ...incoming.metadata } } : {}),
+              state: { ...(previous.state.status === "error" ||
+                (previous.state.metadata?.interrupted === true && incoming.state.status !== "error") ||
+                (previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status))
+                ? { ...incoming.state, ...previous.state } : { ...previous.state, ...incoming.state }),
+                input: previous.state.input,
                 metadata: SessionMessageUpdater.taskMetadata(previous.state.metadata ?? {},
-                incoming.state.metadata ?? {}, owner) } } : incoming
+                  "metadata" in incoming.state ? incoming.state.metadata ?? {} : {}, owner) } } : incoming
         const data = partData(Schema.decodeUnknownSync(SessionV1.Part)(part))
         yield* db
           .insert(PartTable)
