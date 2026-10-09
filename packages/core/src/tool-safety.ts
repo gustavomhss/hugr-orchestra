@@ -229,7 +229,7 @@ const remediations: ReadonlyArray<readonly [RegExp, string]> = [
   ],
   [
     /^write-outside-physical-roots$/,
-    "The project's safety profile allows writes only inside its write roots and this path is outside them, so nothing was written. Write inside those roots, or ask the owner.",
+    "Effective write roots respect project limits and any bound dispatch `writePaths`. This path is outside them, so nothing was written. A teammate must return a blocker naming the path and missing write scope; otherwise ask the owner. Do not widen an explicit packet's scope.",
   ],
   [
     /^defense-corpus-bulk-read$/,
