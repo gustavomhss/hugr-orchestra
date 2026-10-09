@@ -2,25 +2,34 @@ import { expect } from "bun:test"
 import path from "node:path"
 import { Cause, Deferred, Effect, Exit, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { BackgroundJob } from "@/background/job"
 import { NativeResearchTask } from "./fixtures/native-task"
-import { testEffect } from "../lib/effect"
+import { pollWithTimeout, testEffect } from "../lib/effect"
 import { reply } from "../lib/llm-server"
 
 const it = testEffect(NativeResearchTask.layer)
 const result = Schema.Struct({ schema: Schema.Literal("discovery-work-result-v1"),
   referencesChecked: Schema.Boolean, card: Schema.Struct({ parsed: Schema.Boolean }),
-  terminal: Schema.Struct({ reason: Schema.String }), documents: Schema.optional(Schema.Array(Research.DocumentReceipt)),
+  terminal: Schema.Struct({ reason: Schema.String }), outcome: Schema.optional(Schema.String), documents: Schema.optional(Schema.Array(Research.DocumentReceipt)),
   corpus: Schema.optional(Research.Corpus), discovery: Schema.optional(Research.Card) })
 
 // Actual native dispatch/provider/store behavior; scripted responses earn no research-quality credit.
 it.instance("background native Task is running before worker facts and delivers admitted documents to parent after completion", () => Effect.gen(function* () {
   const fixture = yield* NativeResearchTask.setup()
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    yield* fixture.prompt.cancel(fixture.parent.id)
+    yield* Effect.forEach(yield* fixture.sessions.children(fixture.parent.id), (child) => fixture.prompt.cancel(child.id))
+    yield* fixture.sessions.remove(fixture.parent.id)
+  }).pipe(Effect.orDie))
   const events = yield* EventV2.Service
   const jobs = yield* BackgroundJob.Service
+  const artifacts = yield* ResearchArtifacts.Service
+  const records = yield* ResearchRecords.Service
   const release = Promise.withResolvers<void>()
   yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
   const notice = yield* Deferred.make<Schema.Schema.Type<typeof result>>()
@@ -59,27 +68,65 @@ it.instance("background native Task is running before worker facts and delivers 
   yield* fixture.remote.push(reply().tool("read", { filePath: "conditions.txt" }).wait(release.promise))
   const called = yield* fixture.call({ description: "Background conditional discovery", prompt: "Retain conditional evidence and publish answer", subagent_type: "jimmy", background: true }, "background-discovery")
   if (Exit.isFailure(called.exit)) return yield* Effect.failCause(called.exit.cause)
-  expect(Schema.decodeUnknownSync(result)(called.exit.value.metadata.workResult)).toMatchObject({ terminal: { reason: "running" }, card: { parsed: false }, referencesChecked: false })
+  const running = Schema.decodeUnknownSync(result)(called.exit.value.metadata.workResult)
+  expect(running).toMatchObject({ terminal: { reason: "running" }, card: { parsed: false }, referencesChecked: false })
+  expect(running.discovery).toBeUndefined()
+  expect(running.documents).toBeUndefined()
   const child = Schema.decodeUnknownSync(Schema.Struct({ sessionId: Schema.String }))(called.exit.value.metadata).sessionId
+  // The SSE stream has reached the real provider, but its tool payload cannot pass the held tail.
+  yield* fixture.remote.wait(1).pipe(Effect.timeout("30 seconds"))
   expect((yield* jobs.get(child))?.status).toBe("running")
+  expect(state).toEqual({})
+  expect(yield* fixture.remote.calls).toBe(1)
   release.resolve()
   const completed = yield* Deferred.await(notice).pipe(Effect.timeout("30 seconds"))
   if (!state.document || !state.source) throw new Error("Native background worker omitted admitted source/document")
   expect(completed).toMatchObject({ terminal: { reason: "ended" }, card: { parsed: true }, referencesChecked: true })
+  expect(completed.discovery).toMatchObject({ sufficiency: "answered", documentRefs: [state.document.ref], evidenceRefs: [state.document.citations.condition] })
   expect(completed.documents).toEqual([state.document])
   expect(completed.corpus?.sources).toContainEqual(state.source)
   expect(completed.corpus?.documents).toEqual([state.document])
+  expect(state.source.binding).toMatchObject({ authoritySessionID: fixture.parent.id, executionSessionID: child, memberID: "jimmy" })
+  expect(state.document.binding).toEqual(state.source.binding)
+  expect(yield* artifacts.read(state.source.binding, state.source.ref.artifact)).toMatchObject({
+    receipt: state.source, text: "Only version 1.\nDisabled operation rejects the request.", complete: true,
+  })
+  expect(yield* records.view(state.document.binding, { action: "document", ref: state.document.ref })).toMatchObject({
+    ref: state.document.artifact, receipt: state.document, representation: "markdown", text: body, complete: true,
+  })
   expect((yield* jobs.wait({ id: child, timeout: 30_000 })).info?.status).toBe("completed")
+  // Notice persistence precedes the parent provider request; wait for its completed answer too.
+  yield* pollWithTimeout(Effect.gen(function* () {
+    const history = yield* fixture.sessions.messages({ sessionID: fixture.parent.id })
+    return history.find((message) => message.info.role === "assistant" && message.info.time.completed !== undefined &&
+      message.parts.some((part) => part.type === "text" && part.text === "Parent received completed background research."))
+  }), "Native task-return did not complete the parent provider turn", "30 seconds")
+  yield* fixture.prompt.cancel(fixture.parent.id)
   const history = yield* fixture.sessions.messages({ sessionID: fixture.parent.id })
   const published = history.flatMap((message) => message.parts).filter((part) => part.type === "text" && part.metadata?.source?.type === "task-return")
   expect(published).toHaveLength(1)
-  expect(published[0]).toMatchObject({ metadata: { source: { task_id: child, state: "completed" }, workResult: { documents: [state.document] } } })
+  expect(published[0]).toMatchObject({ metadata: { source: { task_id: child, state: "completed" } } })
+  expect(published[0]?.type === "text" && Schema.decodeUnknownSync(result)(published[0].metadata?.workResult)).toEqual(completed)
+  expect(history.flatMap((message) => message.parts).find((part) => part.id === called.partID))
+    .toMatchObject({ state: { status: "completed", metadata: { workResult: running } } })
+  // Three child requests (read, document, card), then one native parent-notice request.
+  expect(yield* fixture.remote.calls).toBe(4)
+  expect(JSON.stringify((yield* fixture.remote.inputs)[3])).toContain("Background task completed: Background conditional discovery")
+  expect(yield* fixture.remote.pending).toBe(0)
 }), { git: true }, 120_000)
 
 it.instance("worker success card before terminal provider failure cannot overwrite failed native Task or lose admitted document", () => Effect.gen(function* () {
   const fixture = yield* NativeResearchTask.setup()
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    yield* fixture.prompt.cancel(fixture.parent.id)
+    yield* Effect.forEach(yield* fixture.sessions.children(fixture.parent.id), (child) => fixture.prompt.cancel(child.id))
+    yield* fixture.sessions.remove(fixture.parent.id)
+  }).pipe(Effect.orDie))
   const events = yield* EventV2.Service
+  const artifacts = yield* ResearchArtifacts.Service
+  const records = yield* ResearchRecords.Service
   const state: { source?: Research.SourceReceipt; document?: Research.DocumentReceipt; card?: Research.Card } = {}
+  const body = "Only version 1 [source](research:version)."
   yield* fixture.fs.writeFileString(path.join(fixture.instance.directory, "evidence.txt"), "Only version 1.\n")
   const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
     if (event.type === ResearchEvent.SourceAdmitted.type) {
@@ -87,7 +134,7 @@ it.instance("worker success card before terminal provider failure cannot overwri
       if (admitted.binding.authoritySessionID !== fixture.parent.id || admitted.receipt.ref.representation !== "text" || state.source) return
       state.source = admitted.receipt
       yield* fixture.remote.tool("research_record", { action: "document", document: {
-        title: "Retained before failure", genre: "answer", body: "Only version 1 [source](research:version).", findingRefs: [],
+        title: "Retained before failure", genre: "answer", body, findingRefs: [],
         citations: { version: { source: admitted.receipt.ref, locator: { kind: "quote", exact: "Only version 1." } } },
       } })
       return
@@ -108,13 +155,31 @@ it.instance("worker success card before terminal provider failure cannot overwri
   expect(Exit.isFailure(called.exit) && Cause.pretty(called.exit.cause)).toContain("Subagent failed")
   if (!state.document || !state.source || !state.card) throw new Error("Controlled provider path omitted the real admitted document")
   const failed = Schema.decodeUnknownSync(Schema.Struct({ workResult: result }))(called.metadata).workResult
-  expect(failed.terminal.reason).toBe("failed")
+  expect(failed).toMatchObject({ terminal: { reason: "failed" }, card: { parsed: false }, referencesChecked: false })
+  expect(failed.outcome).toBeUndefined()
+  expect(failed.discovery).toBeUndefined()
   expect(failed.corpus?.documents).toEqual([state.document])
   expect(failed.corpus?.sources).toContainEqual(state.source)
+  expect(state.document.binding).toEqual(state.source.binding)
+  yield* records.verifyEvidence(state.source.binding, state.card.evidenceRefs[0])
   const history = yield* fixture.sessions.messages({ sessionID: state.source.binding.executionSessionID })
-  expect(history.flatMap((message) => message.parts).some((part) => part.type === "text" && part.text.includes("Successfully finished"))).toBe(true)
+  const claimed = history.find((message) => message.parts.some((part) => part.type === "text" &&
+    part.text === `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`))
+  expect(claimed).toMatchObject({ info: { role: "assistant", finish: "tool-calls" } })
+  expect(claimed?.parts).toContainEqual(expect.objectContaining({ type: "tool", tool: "research_view",
+    state: expect.objectContaining({ status: "completed", input: { action: "document", ref: state.document.ref } }) }))
   const last = history.findLast((message) => message.info.role === "assistant")
-  expect(last?.info.role === "assistant" && last.info.error !== undefined).toBe(true)
+  expect(last?.info).toMatchObject({ role: "assistant", error: { name: "APIError", data: { statusCode: 401, isRetryable: false } } })
+  expect(last?.info.id).not.toBe(claimed?.info.id)
+  expect(yield* artifacts.read(state.source.binding, state.source.ref.artifact)).toMatchObject({ receipt: state.source, text: "Only version 1.", complete: true })
+  expect(yield* records.view(state.document.binding, { action: "document", ref: state.document.ref })).toMatchObject({
+    ref: state.document.artifact, receipt: state.document, representation: "markdown", text: body, complete: true,
+  })
+  expect((yield* fixture.sessions.messages({ sessionID: fixture.parent.id })).flatMap((message) => message.parts)
+    .find((part) => part.id === called.partID)).toMatchObject({ state: { status: "error", metadata: { workResult: failed } } })
+  // Four child requests: read, document, text+view, HTTP 401. Foreground failure sends no parent notice.
   expect(yield* fixture.remote.calls).toBe(4)
+  expect(JSON.stringify((yield* fixture.remote.inputs)[3])).toContain(state.card.answer)
+  expect(JSON.stringify((yield* fixture.remote.inputs)[3])).toContain(body)
   expect(yield* fixture.remote.pending).toBe(0)
 }), { git: true }, 120_000)
