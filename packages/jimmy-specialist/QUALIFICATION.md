@@ -1,6 +1,8 @@
 # Current qualification map
 
-This map reconciles the governing `specs/jimmy-specialist/audition.md` with executable controls. It is not a new acceptance specification or a pass ledger. Historical CI evidence belongs to the exact tested revisions listed in `IMPLEMENTATION.md`. New controls and mutations below remain unexecuted until the consolidated final gate.
+This map reconciles the governing `specs/jimmy-specialist/audition.md` with executable controls. It is not a new acceptance specification or a pass ledger. CI evidence belongs to the exact tested revisions listed in `IMPLEMENTATION.md`; control authorship, execution and detecting mutation are separate states.
+
+Update: consolidated remote gates have now executed. Exact successful and failed runs are recorded under `IMPLEMENTATION.md` → Remote mechanical closure checks. Authored controls below retain their original scope map; a listed remaining qualification is not erased by an unrelated green. Detecting mutations, independent model execution and full epic/Electron acceptance remain open.
 
 Paths are relative to `packages/`. A listed file means the assertion exists, not that every requirement assigned to the case has passed across every runtime.
 
@@ -13,7 +15,7 @@ Paths are relative to `packages/`. A listed file means the assertion exists, not
 | N03 assets | `orchestra/test/maestro/seat-skills-build.test.ts`, `test/research/packaged-runtime.test.ts` | Run both compiled lanes; actual desktop consumer and macOS evidence remain distinct |
 | N04 semantics | `orchestra/test/research/corpus-integration.test.ts`, `fixtures/semantic-server.ts` | Execute pinned TS alias/RPC/truncation controls on final build; qualify configured services required by research scenarios |
 | N05 result | Joined corpus fixture now rejects duplicate/wrong fences and extra authority fields while retaining admitted documents | Run these new decoder controls and detecting mutations |
-| N06 termination | Native interruption/resume plus pre-aborted/startup controls; real registry-start boundary in `orchestra/test/tool/task.test.ts`; decoder keeps host terminal independent of sufficiency | Joined background and provider-failure outcomes with retained evidence still need explicit coverage |
+| N06 termination | Native interruption/resume/startup plus real background notice and provider-failure controls in `orchestra/test/research/task-outcomes.test.ts`; those cases passed on all three OSes | Detecting mutations and final candidate confirmation; host facts remain separate from worker sufficiency |
 | N07 retention | `core/test/research-records.test.ts` reads exact refs from a new native process after event snapshot compaction; artifact tests reject missing/corrupt bytes | Final restart/compaction controls; full native continuation is separate from snapshot compaction |
 | N08 revisions | `core/test/research-records.test.ts` exercises competing revisions, historical wording, contrary refs and relation endpoints | Final concurrency/stale-base/mirror controls and mutations |
 | N09 resume | Actual interrupted Task resumes same child/task; unknown ID does not replace it | Complete foreign-seat/project controls across final native/compiled paths |
@@ -29,17 +31,17 @@ Paths are relative to `packages/`. A listed file means the assertion exists, not
 | Case | Current controls | Remaining qualification |
 | --- | --- | --- |
 | A01 binding | Atlas owner/rename tools plus Core/native research binding guards | Joined final configured-label/project changes and wrong invocation controls |
-| A02 header | Contradictory own/backend Rules and bounded header assertions in owner tests | Actual provider-request header consumption and its removal mutation |
+| A02 header | Contradictory Rules, direct positive header and actual provider-request current header in `atlas-provider.test.ts`; repaired cases passed on all three OSes | Header-removal and foreign-root mutation controls |
 | A03 degraded stores | Owner tests distinguish complete-empty, rejected-line partial and unreadable unavailable | Final tool/header/report transition controls |
 | A04 templates | Real task/PR/project writes, owner recall and malformed/foreign-ref refusal | Final native template/extra-field mutations on both owners |
 | A05 scanner | Real installed provider/scanner admits harmless entries and rejects measured non-allowlisted scanner control | Reexecute actual scanner controls, including unavailability; no fake scanner qualification |
 | A06 reconciliation | Actual append followed by response loss; identical retry reconciles without another append | Final uncertainty/variant-retry mutations |
 | A07 selection | Latest receipt selection, reconciled-old/refused-write controls; R14 now calls the same native selector | Execute final exact-selection and ambiguous/wrong-unit controls |
-| A08 once-only | Durable admission and restore-once tests; actual interrupted Task has one admission | Actual compaction/restart/eviction matrix beyond the current isolated restoration control |
+| A08 once-only | Durable admission plus native Task retry and actual provider-driven compaction/restore in `atlas-provider.test.ts` passed on all three OSes | Automatic overflow scheduling, full restart/eviction and detecting mutations remain separate |
 | A09 evidence pointer | Source Task continuity reopens exact contrary source via full own recall; R14 authenticates checkpoint sources against frozen input bytes | Execute missing-artifact continuation control and real-model continuation; Memory text alone does not recover evidence |
 | A10 Own | Verified unit/catalog, dirty blob, ancestry, missing artifact, cache substitution and truncated coverage controls | Final grounded/ordinary consumers and target runtime equivalence |
 | A11 partitions | Atlas Own receipts, distinct Memory owner records and corpus sources remain separate | Explicit candidate/Knowledge/promotion-door assertion; Memory admission never ratifies external truth |
-| A12 outages | Owner fixture changes complete store to partial/unavailable and renders fresh headers for both owners | Joined cold/mid-session/member-switch provider inputs must retire stale authority claims |
+| A12 outages | Actual provider headers retire current Rules on mid-session outage and subsequent backend dispatch; targeted rerun passed on all three OSes | Different-worktree and additional outage interleavings; detecting stale-header mutation |
 | A13 backend | Paired owner controls, legacy owner reads and generic embedded backend assets | Final backend dispatch/receipt/header/resume controls in packaged consumers |
 | A14 writers | New overlapping same-process native owner writes, identical retries and exact own recalls | Run real scanner/store control. It does not qualify multi-process or cross-clone writers |
 

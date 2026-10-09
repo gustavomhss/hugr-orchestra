@@ -2,9 +2,9 @@
 
 ## Status and identity
 
-**UNRUN.** These files are detecting controls awaiting final execution, not acceptance evidence. No test, typecheck, production build, browser, model evaluation, dependency installation, push, PR or merge was run during this preparation.
+Preparation originally authored these controls without execution. Subsequent production Chromium execution passed all 28 cases in [37985413261](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37985413261), and the candidate benchmark completed its three predeclared repetitions in [37985414156](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37985414156). Original-baseline comparison and detecting mutations are still pending; scoped browser results do not establish full desktop or real-model acceptance.
 
-Lead integration subsequently compiled the app/E2E and session-ui packages; browser, benchmark and mutation execution is still UNRUN. Root AGENTS prescribes GitHub Actions testing. The local production recipes below require separately authorized local execution and do not themselves grant it.
+Lead integration compiled app/E2E and session-ui. Root AGENTS prescribes GitHub Actions testing; measured runs above used the snapshot CI Playwright runner. Local production recipes below require separately authorized local execution and do not themselves grant it.
 
 - Preparation checkout: `jimmy-ui-close`, starting at `3a62efbcee`.
 - Original product comparator: `73651a0e69a2912d9244dbb73e985c5828c03058` (`73651`). It has no `ResearchResult` renderer.
@@ -162,9 +162,9 @@ Run each mutation separately only at final qualification; restore production sou
 
 ## Remaining evidence gaps
 
-- Every execution, mutation result, browser report, timing, trace and CI URL is **UNRUN**. Authored assertions are not demonstrated detecting assertions until the corresponding mutation is observed failing.
+- Production browser and candidate benchmark execution are measured in the runs above. Original-baseline timing and detecting mutation results remain **UNRUN**; no comparative speed claim follows from candidate metrics alone.
 - The integrated `packages/app/e2e/tsconfig.json` includes these regression/benchmark files and their reused performance helpers. Consolidated compilation uses `bun typecheck tsconfig.json e2e/tsconfig.json` from `packages/app`, plus `bun typecheck` from `packages/session-ui`. Compilation does not execute browser assertions.
 - Direct live-server storage/admission/authorization, actual server-switch during a pending request, desktop Electron multi-process behavior, native screen reader review, zoom/resize/full RTL scrolling, other locales/browsers and maximum document/page-count bounds remain outside these browser controls. Their existing native/unit/manual qualification remains separate; no skipped test represents them here.
-- Lead integration preserves native Task `state.structured` metadata in running/completed presentation. The authored V2 controls still require browser execution.
-- Lead integration adapts the actual `session.next.tool.success` envelope into the older rendering client's `session.tool.success` shape at `server-sdk.tsx`, preserving timestamp, structured output and optional durable facts. The V2 replacement fixture keeps the native event name; it does not supply its own compatibility adapter. Unit/browser detecting assertions remain unexecuted.
+- Native Task `state.structured` metadata is preserved in running/completed presentation. Production V2 controls passed, including active-row accessibility and cancellation.
+- The actual `session.next.tool.success` envelope adapts into the older rendering client's shape at `server-sdk.tsx`, preserving timestamp, structured output and optional durable facts. Fixture events retain the native name; unit controls passed across the three OSes in [37982434542](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37982434542), and production replacement/cancellation passed. Deliberate mutation execution remains separate.
 - Original comparator cannot measure research render/open work. This limitation cannot be removed by copying the candidate renderer into it.

@@ -29,7 +29,7 @@ All three execution packages are independent under the frozen contract. The lead
 
 ## Remaining acceptance work
 
-- Packaged runtime proof has not yet passed.
+- The compiled Bun/Node native Task/provider/Client/HTTP proof now passed on Linux, Windows and macOS arm64; actual desktop Electron and epic acceptance remain separate.
 - The system prompt is provisional until the closure review completes.
 - R01/R08 are provisional single pilots; paired R01–R14 repetitions are not complete. The R14 collector is implemented but still requires evaluator-owned scenario/setup and actual execution.
 - [QUALIFICATION.md](QUALIFICATION.md) maps every named native/Atlas case to current controls and remaining execution gaps. Desktop runtime reach, UI accessibility/direction/locale and production benchmark evidence remain pending.
@@ -61,7 +61,20 @@ These are final-stage commands, not results from this wave. Run from the impleme
 bun run test:ci orchestra test/maestro/seat-skills-build.test.ts test/research/packaged-runtime.test.ts test/research/corpus-integration.test.ts test/research/task-continuation.test.ts test/research/atlas-context.test.ts test/research/atlas-owners.test.ts test/research/allowance.test.ts test/tool/task.test.ts --os both
 bun run test:ci core test/research-binding.test.ts test/research-artifacts.test.ts test/research-records.test.ts test/research-allowance.test.ts --os both
 bun run test:ci session-ui src/components/research-document.test.ts --os both
-bun run test:ci app src/utils/session-message.test.ts src/context/server-sdk.test.ts src/context/server-session-v2-reducer.test.ts --os both
+bun run test:ci app src/utils/session-message.test.ts src/context/server-sdk.test.ts src/context/server-session-v2-reducer.test.ts --conditions=browser --os all
 ```
 
 These scoped commands alone are not the complete epic acceptance matrix. The actual desktop/browser, named uncovered native/Atlas cases, epic lane and independent audition still need their declared execution evidence.
+
+## Measured checkpoint
+
+Final-stage execution has started. `IMPLEMENTATION.md` records exact revisions/runs, including initial failures and targeted repairs. Core guards/services passed on all three platforms; native compiled and Atlas failing cases passed their targeted rerun; document loader and projection controls passed. Production Chromium now passes 28 cases, and the candidate production benchmark completed three repetitions with metrics. No whole-epic, Electron, paired performance or final-prompt real-model acceptance is implied.
+
+Snapshot CI supports `--os macos|all` and explicit Playwright configuration. These are remote commands; no local tests are authorized by their presence:
+
+```sh
+bun run test:ci app e2e/regression/session-research-result.spec.ts --runner playwright --config e2e/playwright.production.config.ts --os linux
+bun run test:ci app e2e/performance/timeline/session-research-benchmark.spec.ts --runner playwright --config e2e/performance/playwright.config.ts --benchmark-renderer current --os linux
+```
+
+Next closure work: finalize the capability-accurate charter/source identity; complete independent calibrated model execution and comparator scope; run detecting mutations and outstanding platform/epic checks. Preserve every prior scheduled failure and unknown usage value.
