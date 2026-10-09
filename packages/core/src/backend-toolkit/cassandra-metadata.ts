@@ -5,6 +5,7 @@ import { createHash } from "crypto"
 import { readFile, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { PinnedArtifact } from "../pinned-artifact"
+import { BackendToolkitCassandraDialer } from "./cassandra-dialer"
 
 // Apache-2.0, scylladb/gocql v1.15.3, revision e35803084ebafd200e3f7fd74a5be5dfdb409b2d.
 // Public module sum: h1:0vJT5pm7g5v8/pCs3tuXuRAfSRWvc1kib8J846Z+Z4g=.
@@ -47,6 +48,7 @@ export const prepare = Effect.fn("BackendToolkitCassandra.prepare")(function* (s
   const driver = yield* read(path.join(staging, "driver", "metadata_scylla.go"), "driver-source")
   const module = yield* read(path.join(staging, "src", "go.mod"), "generator-module")
   const sum = yield* read(path.join(staging, "src", "go.sum"), "generator-sum")
+  const generator = yield* read(path.join(staging, "src", "cmd", "schemagen", "schemagen.go"), "generator-source")
   const prepared = yield* Effect.try({
     try: () => {
       requireHash(module, MODULE, "generator-module")
@@ -56,7 +58,7 @@ export const prepare = Effect.fn("BackendToolkitCassandra.prepare")(function* (s
         "replace github.com/gocql/gocql => ../driver",
       ))
       requireHash(replaced, REPLACED_MODULE, "replaced-generator-module")
-      return { driver: patch(driver), module: replaced }
+      return { driver: patch(driver), module: replaced, generator: BackendToolkitCassandraDialer.patch(generator) }
     },
     catch: (error) => error instanceof PinnedArtifact.Failed ? error : hold("source-invalid"),
   })
@@ -64,6 +66,10 @@ export const prepare = Effect.fn("BackendToolkitCassandra.prepare")(function* (s
     try: async () => {
       await writeFile(path.join(staging, "driver", "metadata_scylla.go"), prepared.driver)
       await writeFile(path.join(staging, "src", "go.mod"), prepared.module)
+      await writeFile(path.join(staging, "src", "cmd", "schemagen", "schemagen.go"), prepared.generator)
+      await writeFile(path.join(staging, "src", "cmd", "schemagen", "ORCHESTRA-MODIFICATIONS.txt"),
+        "Orchestra cassandra2: schemagen.go changed to dial host-captured Unix routes through the pinned driver's public Dialer API.\n" +
+        `Upstream gocqlx v3.0.4 (Apache-2.0); source SHA-256 ${BackendToolkitCassandraDialer.BEFORE}; modified SHA-256 ${BackendToolkitCassandraDialer.AFTER}.\n`)
       await writeFile(path.join(staging, "driver", "ORCHESTRA-MODIFICATIONS.txt"),
         "Orchestra cassandra1: metadata_scylla.go changed to check the standard catalog before reading optional Scylla metadata.\n" +
         `Upstream scylladb/gocql v1.15.3 (Apache-2.0); source SHA-256 ${BEFORE}; modified SHA-256 ${AFTER}.\n`)
