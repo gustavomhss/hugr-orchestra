@@ -146,8 +146,16 @@ const withBash = <A, E, R>(options: {
     const runs: string[] = []
     const tools = Layer.succeed(Tools.Service, Tools.Service.of({ register: (entries) => Effect.sync(() => { native = entries.bash }) }))
     const permission = Layer.succeed(PermissionV2.Service, PermissionV2.Service.of({
+      evaluate: () => Effect.die("unused permission evaluation"),
+      authorize: () => Effect.die("unused permission authorization"),
+      askExplicit: () => Effect.die("unused permission askExplicit"),
       assert: () => options.failure === "permission" ? Effect.fail(new PermissionV2.BlockedError({ rules: [] })) : Effect.void,
-    } as PermissionV2.Interface))
+      ask: () => Effect.die("unused permission ask"),
+      reply: () => Effect.die("unused permission reply"),
+      get: () => Effect.die("unused permission get"),
+      forSession: () => Effect.die("unused permission forSession"),
+      list: () => Effect.die("unused permission list"),
+    }))
     const appProcess = Layer.succeed(AppProcess.Service, AppProcess.Service.of({
       run: (command, runOptions) => Effect.suspend(() => {
         if (command._tag !== "StandardCommand") throw new Error("expected standard command")
@@ -157,7 +165,7 @@ const withBash = <A, E, R>(options: {
           command: command.command, cause: new Error(options.failure === "timeout" ? "Timed out" : "spawn failed"),
         }))
         if (options.failure === "inspect") {
-          try { runOptions?.inspect?.("-----BEGIN PRIVATE KEY-----") }
+          try { runOptions?.inspect?.(Buffer.from("-----BEGIN PRIVATE KEY-----")) }
           catch (cause) { return Effect.fail(new AppProcess.AppProcessError({ command: command.command, cause })) }
         }
         return Effect.succeed({ command: command.command, exitCode: options.exit,
@@ -192,7 +200,7 @@ for (const facts of [
   { failure: "timeout" as const, termination: { kind: "timed_out" }, completeness: "unknown" },
   { exit: 0, truncated: true, termination: { kind: "exited", code: 0 }, completeness: "truncated" },
   { exit: 0, text: "", termination: { kind: "exited", code: 0 }, completeness: "complete" },
-]) {
+] satisfies Array<Parameters<typeof withBash>[0] & Pick<ToolModelCapture.Observation, "termination" | "completeness">>) {
   it.live(`native Bash source facts ${JSON.stringify(facts)}`, () => withBash(facts, (tool, runs) =>
     Effect.gen(function* () {
       const output = yield* Tool.settle(Tool.withPermission(tool, "bash"), call, context)
