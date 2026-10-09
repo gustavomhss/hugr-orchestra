@@ -7,10 +7,10 @@ import { ConfigMigrateV1 } from "@orchestra/core/v1/config/migrate"
 
 const limits = { max_lines: 123, max_bytes: 4567 }
 
-for (const [name, schema] of [
-  ["v1", ConfigV1.Info],
-  ["v2", Config.Info],
-] as const) {
+function leanSuite<T extends { readonly tool_output?: object }, I extends { readonly tool_output?: object }>(
+  name: string,
+  schema: Schema.Codec<T, I>,
+) {
   describe(`${name} lean config`, () => {
     for (const lean of [undefined, {}, { enabled: true }, { enabled: false }]) {
       test(`lean decode and encode preserves ${JSON.stringify(lean)}`, () => {
@@ -32,6 +32,9 @@ for (const [name, schema] of [
     }
   })
 }
+
+leanSuite("v1", ConfigV1.Info)
+leanSuite("v2", Config.Info)
 
 describe("lean v1 migration to v2", () => {
   for (const lean of [undefined, {}, { enabled: true }, { enabled: false }]) {
