@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { and, eq } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { Capability } from "@orchestra/schema/capability"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Effect, Option, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Credential } from "../../credential"
 import { CredentialTable } from "../../credential/sql"
@@ -107,16 +107,27 @@ export const checkSelection = Effect.fn("CapabilityArtifacts.checkSelection")(fu
     .where(eq(CredentialTable.id, connection.credential_id)).get()
   if (!local) return yield* failure("authentication_required")
   if (local.integrationID !== connection.integration_id) return yield* failure("authentication_revoked")
-  const saved = yield* credentialService.get(connection.credential_id).pipe(Effect.catchDefect((error) =>
-    error instanceof SqlError || error instanceof EffectDrizzleQueryError ? Effect.fail(failure("connection_unavailable")) : Effect.die(error)))
+  const saved = yield* credentialService.get(connection.credential_id)
   if (!saved) return yield* failure("authentication_required")
   if (saved.id !== connection.credential_id || saved.integrationID !== connection.integration_id) return yield* failure("authentication_revoked")
   if (saved.value.type === "oauth" && saved.value.expires <= Date.now()) return yield* failure("authentication_required")
   const hash = yield* Effect.try({ try: () => selectionCredentialHash(saved.value),
     catch: (error) => { if (error instanceof Capability.Failure) return failure("authentication_revoked"); throw error } })
   if (hash !== selected.credentialHash) return yield* failure("authentication_revoked")
-}, (effect) => effect.pipe(Effect.catchIf((error) => error instanceof SqlError || error instanceof EffectDrizzleQueryError,
-  () => Effect.fail(failure("connection_unavailable")))))
+}, selectionSqlErrors)
+
+/** SQL platform boundary: recover the whole Cause only; a mixed Cause must keep every original reason. */
+export function selectionSqlErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.catchCauseIf(effect, (cause: Cause.Cause<E>) => sqlOnlyCause(cause),
+    () => Effect.fail(failure("connection_unavailable")))
+}
+
+function sqlOnlyCause(cause: Cause.Cause<unknown>) {
+  return cause.reasons.length > 0 && cause.reasons.every((reason) => {
+    const error = reason._tag === "Fail" ? reason.error : reason._tag === "Die" ? reason.defect : undefined
+    return error instanceof SqlError || error instanceof EffectDrizzleQueryError
+  })
+}
 
 function failure(code: Capability.ErrorCode) {
   return new Capability.Failure({ code, message: "Artifact selected capability condition failed" })

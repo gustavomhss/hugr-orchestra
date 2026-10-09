@@ -2,6 +2,7 @@ import { describe, expect } from "bun:test"
 import { createHash } from "node:crypto"
 import { join } from "node:path"
 import { CapabilityArtifacts } from "../src/capability/artifact/index"
+import { selectionSqlErrors } from "../src/capability/artifact/selection"
 import { CapabilityConnections } from "../src/capability/connection/index"
 import { CapabilityInvocation } from "../src/capability/invocation"
 import { CapabilityArtifactTable, CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../src/capability/sql"
@@ -17,7 +18,9 @@ import { Tool } from "../src/tool/tool"
 import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
-import { Context, Effect, Exit, Layer, Schema } from "effect"
+import { Cause, Context, Effect, Exit, Layer, Schema } from "effect"
+import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError"
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { eq } from "drizzle-orm"
 import { CapabilityChildrenFixture } from "./fixture/capability-children"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
@@ -282,5 +285,77 @@ describe("selected artifact publication", () => {
     yield* f.credentials.update(f.selected.id, { label: "new label", value: { type: "key", key: secret, metadata: { changed: true } } })
     yield* f.run(f.artifacts.publish(f.context, input, [f.requirement]))
     expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+  }))
+
+  it.live("selected credential SQL defect mixtures preserve original leaf defects and interruption without blobs", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const sql = new SqlError({ reason: new ConnectionError({ cause: new Error(secret), message: secret }) })
+    const drizzle = new EffectDrizzleQueryError({ query: "private-query " + secret, params: [secret], cause: sql })
+    const sentinel = new Error("unrelated sentinel defect")
+    const marker = Context.Service<never, Error>("artifact-selection-cause-fixture")
+    const causes = [Cause.combine(Cause.die(sql), Cause.die(sentinel)), Cause.combine(Cause.die(sentinel), Cause.die(sql)),
+      Cause.combine(Cause.die(drizzle), Cause.interrupt(123)), Cause.combine(Cause.die(sql), Cause.die(drizzle))]
+      .map((cause) => Cause.annotate(cause, Context.make(marker, sentinel)))
+    for (const cause of causes) {
+      const requested: Credential.ID[] = []
+      const facade = Credential.Service.of({ ...f.credentials, get: (id) => Effect.gen(function* () {
+        requested.push(id)
+        expect(id).toBe(f.selected.id)
+        expect((yield* f.credentials.get(id))?.integrationID).toBe(f.selected.integrationID)
+        return yield* Effect.failCause(cause)
+      }) })
+      const artifacts = yield* CapabilityArtifacts.make({ root: f.root }).pipe(Effect.provideService(Credential.Service, facade))
+      // Same typed-error conversion used by a canonical leaf: defects/interruption must bypass it.
+      const leaf = artifacts.publish(f.context, input, [f.requirement]).pipe(
+        Effect.mapError((error) => new Tool.Failure({ message: "Selected artifact denied", error })))
+      const exit = yield* f.run(leaf).pipe(Effect.exit)
+      expect(requested).toEqual([f.selected.id])
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (!Exit.isFailure(exit)) throw new Error("SQL boundary unexpectedly succeeded")
+      if (cause === causes[3]) {
+        const error = yield* Effect.flip(exit)
+        expect(error).toBeInstanceOf(Tool.Failure)
+        expect(JSON.stringify(error)).not.toContain(secret)
+        expect(JSON.stringify(error)).toContain("connection_unavailable")
+      }
+      if (cause !== causes[3]) {
+        // Named Effects add stack-trace annotations; payload identity, reason kind/order and interruptor must survive.
+        expect(exit.cause.reasons).toHaveLength(cause.reasons.length)
+        exit.cause.reasons.forEach((reason, index) => {
+          const original = cause.reasons[index]
+          expect(reason._tag).toBe(original._tag)
+          if (Cause.isDieReason(reason) && Cause.isDieReason(original)) expect(reason.defect).toBe(original.defect)
+          if (Cause.isInterruptReason(reason) && Cause.isInterruptReason(original)) expect(reason.fiberId).toBe(original.fiberId)
+          original.annotations.forEach((value, key) => expect(reason.annotations.get(key)).toBe(value))
+        })
+      }
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
+      expect(yield* f.fs.exists(f.root)).toBe(false)
+    }
+  }))
+
+  it.live("selected SQL platform boundary maps pure typed SQL and preserves mixed typed Causes and empty Cause verbatim", () => Effect.gen(function* () {
+    const sql = new SqlError({ reason: new ConnectionError({ cause: new Error(secret), message: secret }) })
+    const drizzle = new EffectDrizzleQueryError({ query: "private-query " + secret, params: [secret], cause: sql })
+    const pure: Cause.Cause<SqlError | EffectDrizzleQueryError>[] = [Cause.fail(sql), Cause.fail(drizzle), Cause.die(sql),
+      Cause.combine(Cause.fail(sql), Cause.die(drizzle))]
+    for (const cause of pure) {
+      const error = yield* selectionSqlErrors(Effect.failCause(cause)).pipe(Effect.flip)
+      expect(error).toBeInstanceOf(Capability.Failure)
+      expect(JSON.stringify(error)).toBe(JSON.stringify(new Capability.Failure({ code: "connection_unavailable",
+        message: "Artifact selected capability condition failed" })))
+      expect(JSON.stringify(error)).not.toContain(secret)
+    }
+    const sentinel = new Error("typed SQL unrelated sentinel")
+    const mixed: Cause.Cause<unknown>[] = [Cause.combine(Cause.fail(sql), Cause.die(sentinel)),
+      Cause.combine(Cause.fail(drizzle), Cause.interrupt(456)), Cause.combine(Cause.die(sql), Cause.fail("unrelated typed failure")),
+      Cause.die({ _tag: "SqlError" }), Cause.empty]
+    for (const cause of mixed) {
+      const exit = yield* selectionSqlErrors(Effect.failCause(cause)).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (!Exit.isFailure(exit)) throw new Error("Mixed SQL boundary unexpectedly succeeded")
+      expect(exit.cause).toBe(cause)
+      expect(exit.cause.reasons).toEqual(cause.reasons)
+    }
   }))
 })
