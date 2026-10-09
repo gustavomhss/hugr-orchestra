@@ -11,7 +11,7 @@ import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
+import { Deferred, Effect, Exit, FileSystem, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
@@ -36,6 +36,7 @@ import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
+import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -537,6 +538,8 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
+      const dispatchDone = yield* Deferred.make<void>()
+      const dispatch: { capture?: UpstreamSettlement.Capture; notified: boolean } = { notified: false }
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
         yield* completion.revalidateWorkflow(completionReceipt)
@@ -593,8 +596,15 @@ export const TaskTool = Tool.define(
           },
           { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }) },
         ))
+        const returned = result.info.role === "assistant" ? {
+          assistantMessageID: result.info.id,
+          text: result.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n"),
+          state: result.info.error || result.parts.some((part) => part.type === "tool" && part.state.status === "error")
+            ? "error" as const : "completed" as const,
+        } : undefined
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
-        yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
+        const workResult = yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
+        if (returned) dispatch.capture = { ...returned, workResult }
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -626,14 +636,17 @@ export const TaskTool = Tool.define(
           TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
-      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (
-        state: "completed" | "error",
-        text: string,
-      ) {
+      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* () {
+        const captured = dispatch.capture
+        if (!captured) return // Setup failure/interruption has no returned assistant and cannot mint a receipt.
+        const state = captured.workResult?.terminal.reason === "failed" || captured.workResult?.terminal.reason === "interrupted"
+          ? "error" : captured.state
         const currentParent = yield* sessions.get(ctx.sessionID)
-        const workResult = yield* work.notice(state, text).pipe(Effect.provideService(Database.Service, database))
-        yield* ops
-          .prompt({
+        const deliver = UpstreamSettlement.make({
+          sessionID: ctx.sessionID, messageID: ctx.messageID, callID: ctx.callID ?? "",
+          childSessionID: nextSession.id, taskID: shownID, ops, capture: captured,
+          request: {
+            messageID: MessageID.ascending(),
             sessionID: ctx.sessionID,
             agent: currentParent.agent ?? ctx.agentID ?? ctx.agent,
             variant,
@@ -643,7 +656,7 @@ export const TaskTool = Tool.define(
                 synthetic: true,
                 metadata: {
                   source: { type: "task-return", task_id: nextSession.id, state },
-                  ...(workResult ? { workResult } : {}),
+                  ...(captured.workResult ? { workResult: captured.workResult } : {}),
                 },
                 text: renderOutput({
                   id: shownID,
@@ -652,26 +665,29 @@ export const TaskTool = Tool.define(
                     state === "completed"
                       ? `Background task completed: ${params.description}`
                       : `Background task failed: ${params.description}`,
-                  text,
+                  text: captured.text,
                 }),
               },
             ],
-          })
-          .pipe(Effect.ignore, Effect.forkIn(scope, { startImmediately: true }))
+          },
+        })
+        // One bounded exact-admission reconciliation; wake errors never repeat provider execution.
+        yield* deliver().pipe(Effect.catchCause(() => deliver()))
       })
 
-      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* (jobID: string) {
-        yield* background.wait({ id: jobID }).pipe(
-          Effect.flatMap((result) => {
-            if (result.info?.status === "completed") return inject("completed", result.info.output ?? "")
-            if (result.info?.status === "error") return inject("error", result.info.error ?? "")
-            return Effect.void
-          }),
+      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* () {
+        if (dispatch.notified) return
+        dispatch.notified = true
+        yield* Deferred.await(dispatchDone).pipe(
+          Effect.andThen(inject()),
+          Effect.catchCause(() => Effect.logWarning("Background Task delivery HOLD", { sessionID: ctx.sessionID, messageID: ctx.messageID, callID: ctx.callID })),
           Effect.forkIn(scope, { startImmediately: true }),
         )
       })
 
-      if (yield* background.extend({ id: nextSession.id, run: runTask() })) {
+      const dispatched = runTask().pipe(Effect.ensuring(Deferred.succeed(dispatchDone, undefined)))
+      if (yield* background.extend({ id: nextSession.id, run: dispatched })) {
+        yield* notify()
         yield* work.hostEnded("running", "Background task updated")
         return {
           title: params.description,
@@ -695,9 +711,9 @@ export const TaskTool = Tool.define(
             title: params.description,
             metadata: { ...metadata, background: true, jobId: nextSession.id },
           }),
-          notify(nextSession.id),
+          notify(),
         ]),
-        run: runTask().pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
+        run: dispatched.pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
       })
 
       // The child is still running: the work result says so and carries no worker fields yet.
@@ -716,7 +732,7 @@ export const TaskTool = Tool.define(
       })
 
       if (runInBackground) {
-        yield* notify(info.id)
+        yield* notify()
         return yield* backgroundResult()
       }
 
