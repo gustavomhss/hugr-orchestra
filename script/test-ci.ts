@@ -9,19 +9,22 @@
 // Named test files run exactly and in the given order. Any other argument, such as a directory, is a Bun substring
 // filter that may match several files, which Bun runs in its own order.
 //
-// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]
+// Playwright requires package app, existing .spec.ts files and one of the two explicit app configs.
+// Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms]
+//        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
 // --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
 // only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"
-import { existsSync, statSync } from "node:fs"
+import { existsSync, realpathSync, statSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
+import { parseOptions, validateRequest } from "./test-ci-request"
 
-const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both] [--timeout ms]"
+const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms] [--runner playwright --config <config>]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -70,22 +73,25 @@ const failed = await report(finished)
 process.exit(failed ? 1 : 0)
 
 function parse(argv: string[]) {
-  const positional: string[] = []
-  const options = { os: "linux", timeout: "120000", pattern: undefined as string | undefined }
-  for (let index = 0; index < argv.length; index++) {
-    const arg = argv[index]!
-    if (arg === "-t" || arg === "--test-name-pattern") options.pattern = argv[++index]
-    else if (arg === "--os") options.os = argv[++index] ?? ""
-    else if (arg === "--timeout") options.timeout = argv[++index] ?? ""
-    else if (arg === "-h" || arg === "--help") fail(USAGE, 0)
-    else positional.push(arg)
-  }
+  const parsed = parseOptions(argv)
+  if (argv.some((arg) => arg === "-h" || arg === "--help")) fail(USAGE, 0)
+  const positional = parsed.positional
+  const options = parsed.options
   const name = positional[0]?.replace(/^packages\//, "").replace(/\/$/, "")
   if (!name) fail(USAGE, 2)
-  if (!["linux", "windows", "both"].includes(options.os)) fail(`--os must be linux, windows or both\n${USAGE}`, 2)
-  if (!/^\d+$/.test(options.timeout)) fail(`--timeout must be milliseconds\n${USAGE}`, 2)
-  if (options.pattern === undefined && argv.some((arg) => arg === "-t" || arg === "--test-name-pattern"))
-    fail(`-t needs a pattern\n${USAGE}`, 2)
+  if (!/^[\w-]+(?:\/[\w-]+)*$/.test(name)) fail(`Invalid package: ${name}`, 2)
+  if (options.runner === "playwright")
+    return {
+      ...validateRequest(
+        { package: name, runner: options.runner, config: options.config, args: positional.slice(1) },
+        (file) => {
+          const full = path.join(root, file)
+          return (statSync(full, { throwIfNoEntry: false })?.isFile() ?? false) &&
+            realpathSync(full).startsWith(realpathSync(root) + path.sep)
+        },
+      ),
+      os: options.os,
+    }
   // Test paths may be given from the repository root or from the package directory.
   const named = positional.slice(1).map((file) => file.replace(new RegExp(`^(\\./)?packages/${name}/`), ""))
   if (pytest(name, named))
@@ -149,7 +155,10 @@ async function snapshot() {
   )
   const env = { ...process.env, GIT_INDEX_FILE: index }
   await $`git add -A`.cwd(root).env(env).quiet()
-  const body = JSON.stringify({ package: request.package, runner: request.runner, args: request.args })
+  const body = JSON.stringify({
+    package: request.package, runner: request.runner, args: request.args,
+    ...("config" in request && request.config ? { config: request.config } : {}),
+  })
   const blob = (await $`git hash-object -w --stdin < ${Buffer.from(body)}`.cwd(root).text()).trim()
   await $`git update-index --add --cacheinfo ${`100644,${blob},.ci-run.json`}`.cwd(root).env(env).quiet()
   const result = (await $`git write-tree`.cwd(root).env(env).text()).trim()
