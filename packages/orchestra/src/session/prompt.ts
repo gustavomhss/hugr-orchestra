@@ -1214,8 +1214,7 @@ const layer = Layer.effect(
             // what the model is sent, so it is refilled with that choice once continuity prepares it.
             const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
-              canRecall: () => canRecall,
-              agent,
+              agent, canRecall: () => canRecall,
               session,
               model,
               processor: proxy.processor,

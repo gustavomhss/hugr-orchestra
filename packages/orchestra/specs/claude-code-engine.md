@@ -1,6 +1,6 @@
 # Claude Code as Orchestra's harness
 
-Status: 2026-10-07. Owner approved. Prototype: `script/claude-code-engine/proto.ts` (passes). Design complete (sections 4-10); delivery in three steps (9).
+Status: 2026-10-09. Owner-approved implementation and cold-review repairs complete; publication and final bundle CI pending. Historical prototype and verification records below retain their original scope.
 
 ## 1. Goal
 
@@ -197,13 +197,13 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
 - `claude-code/llm.ts` supplies the isolated SDK producer: the actual SDK query entry point, the same model, custom
   host system prompt, JSON-labelled historical roles/content, no tools/MCP/settings sources, one model turn, no session
   persistence. It publishes text and stop only after a successful non-truncated result. Stream-scope cleanup aborts and
-  closes the query. The existing host memory decoder, archive, delta checks, persistence and explicit retry remain in
+  closes the query, then joins the real child exit through `ClaudeCodeSDK.processLifetime`; SDK `query.return()` alone races exit against two seconds. The existing host memory decoder, archive, delta checks, persistence and explicit retry remain in
   charge; there is no second compactor or direct provider API transport.
 - SDK `result.modelUsage` supplies `contextWindow` and `maxOutputTokens`; cumulative token counters are not context
   pressure. Mirrored per-step usage supplies the trigger. SDK model/limits and transcript version are stored in session
-  metadata for resume. The catalog supplies only model shape/options, including an unauthenticated `ModelsDev` lookup
+  metadata for resume. The catalog supplies model shape/options and known selected-model pre-spawn admission limits, including an unauthenticated `ModelsDev` lookup
   when Orchestra has no Anthropic API credentials. Missing SDK metadata pauses Orchestra continuity rather than
-  falling back to an API transport or catalog limits.
+  falling back to an API transport or claiming catalog limits as observed SDK continuity metadata.
 - The supported native format is CLI **2.1.289**, embedded in pinned SDK **0.3.289**. Both SDK package metadata and
   its native executable (`--version`) identify that CLI version. The first query keeps native auto-compaction on until
   transcript version and SDK model limits are verified. Known resumes disable native auto-compaction; unknown versions
@@ -213,6 +213,7 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   uses a private auxiliary `archive.sqlite` (0600), independent of the public/main Session database. SQLite immediate
   transactions with full synchronous durability and a busy timeout protect read/modify/write across processes. Each
   mutation decodes ownership and transforms current state inside the transaction; acknowledgement follows COMMIT.
+  A private initialization marker is flushed under the same lock before acknowledgement. A previously sealed database that becomes empty/corrupt fails closed rather than reimporting stale legacy history; a crash between marker publication and COMMIT may also fail closed.
   The previous unpublished JSON archive is retained as a backup and imported only into an empty database; it is never
   deleted or written over. Database and side-file symlinks/type mismatches are rejected. Connections are scoped/closed.
   There is no heartbeat lease or project-state lock root in the native store.
@@ -230,14 +231,14 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   Recall capability follows the actual tool list and session-pattern permissions; a denied/unavailable recall
   tool prevents masking. A masked short failure can keep all its text while still removing its images. Unknown versions
   bypass custom rewriting. Unmapped/unsafe boundaries, dependencies or discovery shapes return full native context with a structural
-  diagnostic (`claudeCode.transcriptView`), never a guessed shortened transcript.
+  diagnostic (`claudeCode.transcriptView`), never a guessed shortened transcript. Explicit native clears remain authoritative during fallback; admission counts the exact returned payload.
 - Historical user UUID revisions preserve their original host mapping, membership, and delivery checkpoint; only a new
   true prompt identity can acknowledge the current admission. Optional native session identity is validated on both
   append and reload. Default active-leaf selection uses last-write physical order, not a stale inferred UUID. Explicit
   checkpoint selection is separate; an explicit null checkpoint clears conversation until later native writes.
 - Resume checks mappings against visible Orchestra history, including revert/removed parts. Reverted native branches
   remain archived but cannot become resumed future context. Removal follows original revision ancestry, `parentUuid`,
-  `logicalParentUuid`, and compact preserved-message/segment provenance; restarted summaries cannot retain reverted
+  `logicalParentUuid`, source-tool ownership, deferred-definition `sameAs`, and compact preserved-message/segment provenance; restarted summaries cannot retain reverted
   text. Replay selects one SDK active leaf/parent chain and its complete API-message siblings, not append order.
   Preserved tails are resolved after compaction relinking, promoting a non-rewind summary anchor checkpoint to its
   retained tail. Parallel result users sharing an assistant/sourceToolAssistantUUID are recovered in their API group;
@@ -256,17 +257,15 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   have no effect: without a genuinely recorded system/tool snapshot, the engine never disables native compaction,
   regardless of previous pressure. Custom rewriting/production stays paused until such a snapshot is observed. The
   fallback admits the unchanged authoritative native payload with native compaction enabled. First-query native
-  compaction remains enabled. The host projected view alone is never an admission oracle.
+  compaction remains enabled. Known selected-model limits still reject an oversized first/model-change request, including appended instructions and host schemas. Unknown native overhead is explicitly `bounded: false`; a successful lower-bound check is not an exact budget proof. The host projected view alone is never an admission oracle.
 - The turn owns mirror effects directly. It aborts/closes the SDK query, awaits asynchronous `query.return`, and joins
-  outstanding callbacks before constructing an aborted/error reply. Native storage failures at read, record, append or
+  real child exit and outstanding callbacks before constructing an aborted/error reply. Interruption-only store causes do not poison the native archive. Native storage failures at read, record, append or
   postquery preparation set the resume-blocking marker. Error construction bypasses native record. A healthy current
   snapshot still supplies patch/end evidence for Stop and real SessionRevert; snapshot failures are optional and cannot
   prevent the completed host error.
 - A persisted delivered-user cursor (with native append checkpoints and all queued user IDs) determines input selection.
   A user queued before a late assistant remains eligible for the next turn and is handed over once, independently of
-  assistant append order. Legacy metadata without a cursor migrates from confirmed answered assistant parent IDs,
-  consuming users only through the highest answered parent and leaving users beyond it pending. Cursor advancement
-  requires native prompt acknowledgement or main-assistant delivery.
+  assistant append order. New SDK sessions initialize an explicit empty cursor; successful assistant frames cannot infer delivery. Cursor advancement requires a committed native user receipt whose content exactly matches the admitted host input batch. A legacy session without a complete host native archive fails before spawn, preventing a partial new mirror from shadowing its historical local transcript.
 - Backend epochs fence admissions and already-forked follow-ups even without an active job. Cancel joins the registry
   gap and transport disposal; changed configure joins the old worker before publishing one immutable model/LLM revision.
   The same revision owns the complete pass and retry. Equivalent repeated configurations leave progress alone. Configure
@@ -279,8 +278,10 @@ run on Haiku 4.5 (`script/claude-code-engine/smoke.ts`): Orchestra's `read` and 
   `deferred_tools_delta.surfacedNames/surfacedDefinitions/addedNames/removedNames`, including `sameAs` definition carriers.
   Announcement identifiers suppress carrier replay rather than introducing tool names. Native discovery restores actual
   tool-reference/surfaced names into `preCompactDiscoveredTools` and preserves carrier dependencies after head removal.
+- `processLifetime` replaces ambient auth/backend environment with the current local machine OAuth selected by native keychain-first/secure-storage precedence. The pinned CLI host-managed provider capability prevents settings/policy auth overrides; API-only bare mode is rejected. Expired access tokens fail closed: injected OAuth does not carry the local refresh token. This proves credential selection, not server-side token validity.
+- POSIX storage permissions are checked independently of Windows synthetic mode bits; they are not Windows ACL evidence. Offline capability authoring explicitly rejects Windows without an ACL privacy oracle; approved replay/model validation remains cross-platform.
 
-Verification sources: `test/claude-code/{engine,llm,mirror,permissions,store,tools,transcript}.test.ts`, existing continuity
+Verification sources: `test/claude-code/engine*.test.ts`, `test/claude-code/{llm,mirror,native,permissions,sdk-lifecycle,sqlite,store,tools,transcript}.test.ts`, existing continuity
 and recall tests, and `script/claude-code-engine/continuity-smoke.ts`. The scripted integration exercises the real host
 producer/decoder/persistence with an injected SDK and a window different from the catalog. It does not establish live
 model summarization quality. Live verification on 2026-10-07 is blocked: an isolated HOME hides the machine login;

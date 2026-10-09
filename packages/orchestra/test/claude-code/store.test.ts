@@ -242,18 +242,16 @@ it.instance("a masked short failure preserves its full text but still removes on
   expect((yield* f.create().read).keys[0].entries).toEqual(entries)
 }), 60_000)
 
-it.instance("corrupt or foreign storage fails explicitly instead of becoming empty context", () => Effect.gen(function* () {
+for (const failure of ["corrupt", "foreign"] as const) it.instance(`${failure} storage fails explicitly instead of becoming empty context`, () => Effect.gen(function* () {
   const f = yield* fixture
   const store = f.create()
   yield* Effect.promise(() => store.store.append(key, f.entries))
-  yield* f.fs.writeFileString(path.join(store.directory, "archive.sqlite"), "{broken")
-  const corrupt = yield* Effect.tryPromise(() => f.create().store.load(key)).pipe(Effect.exit)
-  expect(Exit.isFailure(corrupt)).toBe(true)
-  yield* f.fs.remove(path.join(store.directory, "archive.sqlite"))
-  yield* Effect.promise(() => f.create().store.append(key, f.entries))
-  const db = new Database(path.join(store.directory, "archive.sqlite"))
-  db.query("UPDATE native_state SET payload=? WHERE id=1").run(JSON.stringify({ version: 1, sessionID: "foreign", mapping: {}, keys: [] }))
-  db.close()
+  if (failure === "corrupt") yield* f.fs.writeFileString(path.join(store.directory, "archive.sqlite"), "{broken")
+  if (failure === "foreign") {
+    const db = new Database(path.join(store.directory, "archive.sqlite"))
+    db.query("UPDATE native_state SET payload=? WHERE id=1").run(JSON.stringify({ version: 1, sessionID: "foreign", mapping: {}, keys: [] }))
+    db.close()
+  }
   expect(Exit.isFailure(yield* Effect.tryPromise(() => f.create().store.load(key)).pipe(Effect.exit))).toBe(true)
 }), 60_000)
 
