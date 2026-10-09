@@ -24,10 +24,16 @@ export function processLifetime(options: QueryOptions) {
     options: {
       ...options,
       env,
-      managedSettings: { ...options.managedSettings, forceLoginMethod: "claudeai", allowedProviders: ["anthropic"] },
       spawnClaudeCodeProcess: (input) => {
+        // CLI oW/Hh give --bare an API-only path ahead of the host-managed OAuth path.
+        if (input.args.includes("--bare")) throw new Error("Claude Code bare mode cannot enforce machine OAuth login")
         const environment = machineEnvironment(input.env)
-        requireMachineLogin(environment)
+        const login = requireMachineLogin(environment)
+        // Pinned CLI yK selects this token first; nc/Hh and settings-env u exclude all settings-sourced auth/routing.
+        environment.CLAUDE_CODE_OAUTH_TOKEN = login.accessToken
+        environment.CLAUDE_CODE_OAUTH_SCOPES = login.scopes.join(" ")
+        if (login.subscriptionType) environment.CLAUDE_CODE_SUBSCRIPTION_TYPE = login.subscriptionType
+        if (login.rateLimitTier) environment.CLAUDE_CODE_RATE_LIMIT_TIER = login.rateLimitTier
         const spawner = options.spawnClaudeCodeProcess ?? ((input) => {
           const child = spawn(input.command, input.args, {
             cwd: input.cwd, env: input.env, signal: input.signal,
@@ -65,7 +71,7 @@ export function processLifetime(options: QueryOptions) {
   }
 }
 
-function machineEnvironment(env: NonNullable<QueryOptions["env"]>) {
+function machineEnvironment(env: NonNullable<QueryOptions["env"]>): Record<string, string> {
   // Allowlist rather than a finite denylist: new API/backend/host-auth overrides must not leak through.
   const essentials = new Set([
     "HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "PATH", "PATHEXT", "SYSTEMROOT", "WINDIR", "COMSPEC",
@@ -75,7 +81,11 @@ function machineEnvironment(env: NonNullable<QueryOptions["env"]>) {
     "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_AGENT_SDK_VERSION", "CLAUDE_CODE_SDK_READS_SESSION_STATE",
     "CLAUDE_CODE_ENABLE_SDK_FILE_CHECKPOINTING", "CLAUDE_CODE_PROJECT_DIR_NAME",
   ])
-  return Object.fromEntries(Object.entries(env).filter(([key, value]) => value !== undefined && essentials.has(key.toUpperCase())))
+  return {
+    ...Object.fromEntries(Object.entries(env).filter(([key, value]) => value !== undefined && essentials.has(key.toUpperCase()))),
+    // Launch-only CLI capability. Settings cannot unset it or replace the selected credential/provider.
+    CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
+  }
 }
 
 const credentials = Schema.Struct({ claudeAiOauth: Schema.Struct({
@@ -83,28 +93,30 @@ const credentials = Schema.Struct({ claudeAiOauth: Schema.Struct({
   refreshToken: Schema.optional(Schema.NonEmptyString),
   expiresAt: Schema.Number,
   scopes: Schema.Array(Schema.String),
+  subscriptionType: Schema.optional(Schema.NullOr(Schema.String)),
+  rateLimitTier: Schema.optional(Schema.NullOr(Schema.String)),
 }) })
 const decodeCredentials = Schema.decodeUnknownOption(Schema.fromJsonString(credentials))
 
 function requireMachineLogin(env: NonNullable<QueryOptions["env"]>) {
   const directory = env.CLAUDE_CONFIG_DIR ?? join(env.HOME ?? env.USERPROFILE ?? homedir(), ".claude")
   const file = join(directory, ".credentials.json")
-  const local = decodeCredentials(existsSync(file) ? readFileSync(file, "utf8") : "")
-  if (Option.isSome(local) && local.value.claudeAiOauth.scopes.includes("user:inference") &&
-    (local.value.claudeAiOauth.expiresAt > Date.now() || local.value.claudeAiOauth.refreshToken)) return
   // Match pinned SDK z2/JBe keychain naming, including isolated config directories. No model/API probe.
   const secure = env.CLAUDE_SECURESTORAGE_CONFIG_DIR
   const suffix = (secure !== undefined ? !secure : !env.CLAUDE_CONFIG_DIR)
     ? "" : "-" + createHash("sha256").update((secure ?? directory).normalize("NFC")).digest("hex").slice(0, 8)
-  const account = env.USER ?? userInfo().username
-  const keychain = process.platform === "darwin" ? spawnSync("/usr/bin/security", [
+  const account = (() => {
+    try { return env.USER || userInfo().username } catch { return "claude-code-user" }
+  })()
+  const keychain = process.platform === "darwin" && (!env.CLAUDE_CONFIG_DIR || !existsSync(file)) ? spawnSync("/usr/bin/security", [
     "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(account) ? account : "claude-code-user",
     "-w", "-s", "Claude Code-credentials" + suffix,
   ], { env, encoding: "utf8", timeout: 5000, windowsHide: true }) : undefined
   const parsed = decodeCredentials(keychain?.status === 0 && keychain.stdout.trim()
     ? keychain.stdout : existsSync(file) ? readFileSync(file, "utf8") : "")
+  // Explicit env OAuth has no refresh token in pinned CLI yK/EK: expired local access tokens must fail closed.
   if (Option.isSome(parsed) && parsed.value.claudeAiOauth.scopes.includes("user:inference") &&
-    (parsed.value.claudeAiOauth.expiresAt > Date.now() || parsed.value.claudeAiOauth.refreshToken)) return
+    parsed.value.claudeAiOauth.expiresAt > Date.now()) return parsed.value.claudeAiOauth
   throw new Error("Claude Code machine login unavailable; run claude auth login with a Claude subscription")
 }
 
