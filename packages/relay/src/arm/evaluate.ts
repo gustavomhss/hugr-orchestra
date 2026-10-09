@@ -1,8 +1,10 @@
 export * as ArmEvaluate from "./evaluate"
+export { Invalid, Write, repair } from "./settlement"
+export type { Boundary } from "./settlement"
 
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { appendFileSync, copyFileSync, readFileSync, rmSync, statSync } from "node:fs"
+import { appendFileSync, copyFileSync, readFileSync, statSync } from "node:fs"
 import { Clock, Effect, Exit, Option, Redacted, Result, Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
@@ -16,33 +18,13 @@ import { LedgerRead } from "../ledger/read"
 import { ArmCost } from "./cost"
 import { ArmLoad } from "./load"
 import { ArmRound } from "./round"
+import { ArmSettlement, Invalid, type Boundary } from "./settlement"
 import { ArmState } from "./state"
 
 // One stop of `bin/relay-arm-hook.sh` (WP6), byte for byte in the arm files and the ledger. Dropped (§1): the
 // transcript marker scan (the token is explicit), the corpus archive, and the environment cap preflight (`blockCap`).
 
-// An arm defect where the hook exits 1. Records already made stay recorded; the outcome is `defect`, never a pass.
-export class Invalid extends Schema.TaggedErrorClass<Invalid>()("ArmEvaluate.Invalid", { reason: Schema.String }) {}
-
 type Requirements = ArmState.Store | GateShell.Service | GateShell.Git | JudgeConfig.Service
-
-// Relay owns the lock and disposition ordering; callers own identity and durable receipts. No Core dependency.
-export const Write = Schema.Struct({ name: Schema.String, value: Schema.Union([Schema.String, Schema.Null]) })
-export interface Write extends Schema.Schema.Type<typeof Write> {}
-export interface Boundary<E> {
-  readonly before: () => Effect.Effect<RelayArm.Evaluation | undefined, E>
-  readonly after: (evaluation: RelayArm.Evaluation) => Effect.Effect<void, E>
-  readonly disposition?: (evaluation: RelayArm.Evaluation, writes: ReadonlyArray<Write>) => Effect.Effect<void, E>
-}
-
-// Called only by the lock owner, including interrupted-disposition reconciliation. Null means the existing removal.
-export const repair = (arm: string, writes: ReadonlyArray<Write>) => Effect.gen(function* () {
-  if (!ArmState.held(arm)) return yield* new Invalid({ reason: "disposition repair requires the run lock" })
-  if (writes.some((write) => !/^[A-Za-z0-9._-]+$/.test(write.name) || write.name === "." || write.name === ".."))
-    return yield* new Invalid({ reason: "invalid disposition repair file" })
-  yield* Effect.forEach(writes, (write) => write.value === null
-    ? remove(arm, write.name) : ArmState.write(arm, write.name, write.value))
-})
 
 /**
  * One stop of the arm hook. Unbound calls never fail: busy, refused and defective arms are outcomes, and an evaluation
@@ -63,25 +45,20 @@ export function evaluate<E>(input: RelayArm.EvaluateInput, boundary?: Boundary<E
     const arm = path.join(store.armsDir, input.token)
     const ledger = path.join(arm, RelayArm.Files.ledger)
     if (!isFile(path.join(arm, RelayArm.Files.sprint)))
-      return { outcome: "defect" as const, defect: "arm-missing" as const, failing: [], ledgerSeq: lastSeq(ledger) }
+      return { outcome: "defect" as const, defect: "arm-missing" as const, failing: [], ledgerSeq: ArmSettlement.lastSeq(ledger) }
     const failed = () => Effect.succeed<Step>({ outcome: "defect", failing: [] })
     return yield* ArmState.withRunLock(
       arm,
-      boundary ? Effect.gen(function* () {
-        const saved = yield* boundary.before()
-        if (saved !== undefined) return saved
-        const step = yield* locked(input, arm, ledger, store.ledgerKey, boundary)
-        const evaluation = { ...step, ledgerSeq: lastSeq(ledger) }
-        yield* boundary.after(evaluation)
-        return evaluation
-      }) : locked(input, arm, ledger, store.ledgerKey).pipe(
-        Effect.catch(failed),
-        Effect.catchDefect(failed),
-        Effect.map((step): RelayArm.Evaluation => ({ ...step, ledgerSeq: lastSeq(ledger) })),
-      ),
+      boundary
+        ? ArmSettlement.run(boundary, () => locked(input, arm, ledger, store.ledgerKey, boundary), ledger)
+        : locked(input, arm, ledger, store.ledgerKey).pipe(
+            Effect.catch(failed),
+            Effect.catchDefect(failed),
+            Effect.map((step): RelayArm.Evaluation => ({ ...step, ledgerSeq: ArmSettlement.lastSeq(ledger) })),
+          ),
     ).pipe(
       Effect.catchIf((error) => error instanceof ArmState.Busy, () =>
-        Effect.succeed<RelayArm.Evaluation>({ outcome: "busy", failing: [], ledgerSeq: lastSeq(ledger) }),
+        Effect.succeed<RelayArm.Evaluation>({ outcome: "busy", failing: [], ledgerSeq: ArmSettlement.lastSeq(ledger) }),
       ),
     )
   })
@@ -161,7 +138,7 @@ export const parkedHold = (wp: string, failing: ReadonlyArray<string>): string =
 
 // ---- The evaluation under the run lock ----
 
-type Step = Omit<RelayArm.Evaluation, "ledgerSeq">
+type Step = ArmSettlement.Step
 
 interface Context {
   readonly input: RelayArm.EvaluateInput
@@ -291,9 +268,9 @@ const step = (context: Context) =>
       yield* note(context, { wp: id, event: "human-release", reason: release.value })
       yield* Effect.forEach(
         [RelayArm.Files.release, `retry_${safe}`, `retry_${i}`, `round_${safe}`, `repeat_${safe}`, `blocked_${safe}`],
-        (name) => remove(arm, name),
+        (name) => ArmSettlement.remove(arm, name),
       )
-      yield* remove(arm, RelayArm.Files.regRetry)
+      yield* ArmSettlement.remove(arm, RelayArm.Files.regRetry)
       yield* ArmState.write(arm, RelayArm.Files.state, "active")
       yield* ArmState.write(arm, RelayArm.Files.counter, String(i))
       log(context, `RELEASED by human at ${id} — ${release.value}`)
@@ -400,7 +377,7 @@ const settle = (context: Context, gate: Gate) =>
         yield* ArmRound.flush(context.ledger, buffered, context.chain)
         yield* record(context, { ...disposition, retry: budget }, "escalate")
         log(context, `gate ${id} ESCALATE (${which} budget=${budget}) fails:${fails} reg:${reg}`)
-        return yield* dispose(context, { outcome: "escalate", wp: id, failing }, [
+        return yield* ArmSettlement.dispose(context, { outcome: "escalate", wp: id, failing }, [
           { name: roundFile, value: sha }, { name: repeatFile, value: String(repeat) },
           { name: RelayArm.Files.state, value: "awaiting-human" }, { name: RelayArm.Files.counter, value: String(count) },
         ], remember.pipe(Effect.andThen(ArmState.write(arm, RelayArm.Files.state, "awaiting-human")),
@@ -416,7 +393,7 @@ const settle = (context: Context, gate: Gate) =>
       yield* fail(spent + 1)
       log(context, `gate ${id} REGRESSION in earlier gate (retry ${spent + 1}) reg:${reg}`)
       const restore = reg.replace(/^; /, "")
-      return yield* dispose(context, {
+      return yield* ArmSettlement.dispose(context, {
         outcome: "regression-fail" as const,
         wp: id,
         failing,
@@ -437,7 +414,7 @@ const settle = (context: Context, gate: Gate) =>
         ? `Relay gate '${id}' still failing. Fix these: ${fails}${regressions}`
         : `Relay gate '${id}' is NOT satisfied. Still failing:${fails}${regressions}. Address these, then finish.` +
           (instructions ? ` Instructions: ${instructions}` : "")
-    return yield* dispose(context, { outcome: "gate-fail", wp: id, failing, reason }, [
+    return yield* ArmSettlement.dispose(context, { outcome: "gate-fail", wp: id, failing, reason }, [
       { name: roundFile, value: sha }, { name: repeatFile, value: String(repeat) },
       { name: `retry_${safe}`, value: String(spent + 1) },
     ], remember.pipe(Effect.andThen(ArmState.write(arm, `retry_${safe}`, String(spent + 1)))))
@@ -453,13 +430,13 @@ const advance = (context: Context, envelope: Envelope, buffered: ReadonlyArray<s
     yield* ArmRound.flush(context.ledger, buffered, context.chain)
     const safe = ArmState.safe(envelope.wp)
     const clear = Effect.forEach([`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry], (name) =>
-      remove(arm, name),
+      ArmSettlement.remove(arm, name),
     )
     const cleared = [`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry].map((name) => ({ name, value: null }))
     if (next === undefined) {
       yield* record(context, envelope, "sprint-complete")
       log(context, `gate ${envelope.wp} OK -> CHAIN COMPLETE`)
-      return yield* dispose(context, { outcome: "complete", wp: envelope.wp, failing: [] }, [
+      return yield* ArmSettlement.dispose(context, { outcome: "complete", wp: envelope.wp, failing: [] }, [
         ...cleared, { name: RelayArm.Files.counter, value: String(ni) }, { name: RelayArm.Files.state, value: "complete" },
       ], clear.pipe(Effect.andThen(ArmState.write(arm, RelayArm.Files.counter, String(ni))),
         Effect.andThen(ArmState.write(arm, RelayArm.Files.state, "complete"))))
@@ -476,7 +453,7 @@ const advance = (context: Context, envelope: Envelope, buffered: ReadonlyArray<s
     yield* record(context, { ...envelope, base }, "advance-reveal")
     if (checkpoint) yield* record(context, { ...envelope, base }, "compaction-hint")
     log(context, `gate ${envelope.wp} OK -> reveal ${next.id}`)
-    return yield* dispose(context, { outcome: "advance", wp: envelope.wp, next: next.id, failing: [], reason }, [
+    return yield* ArmSettlement.dispose(context, { outcome: "advance", wp: envelope.wp, next: next.id, failing: [], reason }, [
       ...cleared, { name: RelayArm.Files.counter, value: String(ni) },
       { name: RelayArm.Files.position, value: ArmState.canonicalPosition(next) },
       ...(base ? [{ name: `base_${ArmState.safe(next.id)}`, value: base }] : []),
@@ -488,19 +465,6 @@ const advance = (context: Context, envelope: Envelope, buffered: ReadonlyArray<s
       if (base) yield* ArmState.write(arm, `base_${ArmState.safe(next.id)}`, base)
       if (revealed.marker) yield* ArmState.write(arm, revealed.marker, "")
     }))
-  })
-
-// Receipt precedes state writes, follows the engine's ordinary signed disposition. Legacy ledger is untouched.
-const dispose = (context: Context, evaluation: Step, writes: ReadonlyArray<Write>, apply: Effect.Effect<unknown, unknown>) =>
-  Effect.gen(function* () {
-    if (context.boundary?.disposition) yield* context.boundary.disposition({
-      ...evaluation, ledgerSeq: lastSeq(context.ledger),
-      ...(evaluation.reason === undefined ? {} : { reason: context.warning + evaluation.reason }),
-      ...(context.hosted ? { capture: { complete: context.complete, results: [...context.results] } } : {}),
-      ...(context.injection === undefined ? {} : { inject: context.injection }),
-    }, writes)
-    yield* apply
-    return evaluation
   })
 
 // The next state's instructions: its macro's protocol on first entry, its own text, the self-check asked in advance,
@@ -760,19 +724,6 @@ const head = (workdir: string) =>
     return Result.isSuccess(result) ? substitution(new TextDecoder().decode(result.success.stdout)) : ""
   })
 
-// The seq of the ledger's last nonblank line; -1 for an empty, missing or unreadable ledger.
-function lastSeq(ledger: string) {
-  const bytes = Result.try(() => readFileSync(ledger))
-  if (Result.isFailure(bytes)) return -1
-  const last = RelayJson.argText(bytes.success)
-    .split("\n")
-    .findLast((line) => line.trim() !== "")
-  const node = last === undefined ? undefined : RelayJson.read(last, { flavor: "jq" })
-  if (node === undefined || Result.isFailure(node) || !(node.success instanceof RelayJson.Members)) return -1
-  const seq = node.success.get("seq")
-  return seq instanceof RelayJson.Int && Number.isSafeInteger(Number(seq.digits)) ? Number(seq.digits) : -1
-}
-
 // A stored counter: its digits, else 0.
 // `repeat_*` and `reg_retry` as the hook's `case` read them: digits, else 0.
 function counted(value: Option.Option<string>) {
@@ -789,10 +740,6 @@ function retries(value: Option.Option<string>) {
 }
 
 const seconds = Effect.map(Clock.currentTimeMillis, (millis) => Math.floor(millis / 1000))
-
-function remove(arm: string, name: string) {
-  return io(arm, () => rmSync(path.join(arm, name), { force: true }))
-}
 
 function io<A>(file: string, run: () => A) {
   return Effect.try({
