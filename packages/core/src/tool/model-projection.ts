@@ -69,7 +69,16 @@ export const project: (input: Input) => Projection = (input) => {
 function process(filter: Input["filter"], observation: ToolModelCapture.Observation): FilterResult | undefined {
   try {
     const result = filter(observation)
-    return typeof result === "object" && result !== null ? result : undefined
+    if (typeof result !== "object" || result === null) return undefined
+    // Read untrusted accessors once, inside the failure boundary; validate only the detached snapshot.
+    const { status, inputBytes, outputBytes, reason, replacement, profile } = result as FilterResult & {
+      readonly replacement?: string
+      readonly profile?: string
+    }
+    return Object.freeze({ status, inputBytes, outputBytes, reason,
+      ...(replacement === undefined ? {} : { replacement }),
+      ...(profile === undefined ? {} : { profile }),
+    }) as FilterResult
   } catch {
     return undefined
   }
