@@ -8,6 +8,7 @@ import { CapabilityInvocation } from "../src/capability/invocation"
 import { CapabilityArtifactTable, CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../src/capability/sql"
 import { Credential } from "../src/credential"
 import { CredentialTable } from "../src/credential/sql"
+import { Database } from "../src/database/database"
 import { FSUtil } from "../src/fs-util"
 import { Global } from "../src/global"
 import { PermissionV2 } from "../src/permission"
@@ -18,7 +19,7 @@ import { Tool } from "../src/tool/tool"
 import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
-import { Cause, Context, Effect, Exit, Layer, Schema } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { eq } from "drizzle-orm"
@@ -76,11 +77,16 @@ function expectCode<A, E, R>(effect: Effect.Effect<A, E, R>, code: Capability.Er
   })
 }
 
-function queued(f: Effect.Success<ReturnType<typeof fixture>>, effect: Effect.Effect<unknown, Capability.Failure | CapabilityArtifacts.Failure>) {
+function queued<A, E>(f: Effect.Success<ReturnType<typeof fixture>>, effect: Effect.Effect<A, E>) {
   return Effect.gen(function* () {
     yield* CapabilityPolicyFixture.setRules([...rules, { action: "artifact.write", resource: "*", effect: "ask" }])
-    return yield* CapabilityPolicyFixture.queued(f.context, f.run(effect).pipe(Effect.asVoid,
-      Effect.catchTag("CapabilityArtifacts.Failure", Effect.die)))
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const fiber = yield* f.run(effect).pipe(Effect.result, Effect.forkChild)
+    const request = yield* Effect.raceFirst(Deferred.await(observation.first), Fiber.join(fiber).pipe(
+      Effect.andThen(Effect.die("ARTIFACT_SELECTION_BYPASSED_APPROVAL"))))
+    const join = Effect.raceFirst(Fiber.join(fiber), Deferred.await(observation.repeated).pipe(
+      Effect.andThen(Effect.die("ARTIFACT_SELECTION_REQUEUED_APPROVAL"))))
+    return { fiber, request, observation, join }
   })
 }
 
@@ -132,6 +138,7 @@ describe("selected artifact publication", () => {
       const result = yield* waiting.join
       expect(result._tag).toBe("Failure")
       if (result._tag !== "Failure") throw new Error("Selected artifact condition bypassed")
+      if (!(result.failure instanceof Capability.Failure)) throw new Error("Expected selected capability failure")
       expect(result.failure.code).toBe(mode === "retarget" || mode === "disconnect" ? "stale_descriptor"
         : mode === "rotation" ? "authentication_revoked" : mode === "expiry" ? "authentication_required" : "target_denied")
       expect(JSON.stringify(result.failure)).not.toContain(f.requirement.selection.credentialHash)
@@ -170,7 +177,7 @@ describe("selected artifact publication", () => {
     Object.assign(resolution, { resource: { account: "two" } })
     yield* f.permissions.reply({ requestID: waiting.request.id, reply: "once" })
     const result = yield* waiting.join
-    expect(result._tag === "Failure" && result.failure.code).toBe("stale_descriptor")
+    expect(result._tag === "Failure" && result.failure instanceof Capability.Failure && result.failure.code).toBe("stale_descriptor")
     expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
     expect(yield* f.fs.exists(f.root)).toBe(false)
   }))
@@ -184,7 +191,7 @@ describe("selected artifact publication", () => {
     yield* f.credentials.update(f.selected.id, { value: { type: "key", key: "rotated-fixture-secret" } })
     yield* f.permissions.reply({ requestID: waiting.request.id, reply: "once" })
     const result = yield* waiting.join
-    expect(result._tag === "Failure" && result.failure.code).toBe("authentication_revoked")
+    expect(result._tag === "Failure" && result.failure instanceof Capability.Failure && result.failure.code).toBe("authentication_revoked")
     expect(yield* f.fs.readDirectory(f.root)).toEqual(before)
     expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
     yield* f.credentials.update(f.selected.id, { value: f.selected.value })
@@ -356,6 +363,60 @@ describe("selected artifact publication", () => {
       if (!Exit.isFailure(exit)) throw new Error("Mixed SQL boundary unexpectedly succeeded")
       expect(exit.cause).toBe(cause)
       expect(exit.cause.reasons).toEqual(cause.reasons)
+    }
+  }))
+
+  it.live("full publish storage boundary masks pure typed SQL, preserves mixed SQL Causes and leaves SQL defects intact", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const sql = new SqlError({ reason: new ConnectionError({ cause: new Error(secret), message: secret }) })
+    const sentinel = new Error("artifact storage rollback sentinel")
+    const cases: { cause: Cause.Cause<SqlError>; recover: boolean }[] = [
+      { cause: Cause.fail(sql), recover: true },
+      { cause: Cause.combine(Cause.fail(sql), Cause.die(sentinel)), recover: false },
+      { cause: Cause.combine(Cause.fail(sql), Cause.interrupt(789)), recover: false },
+      { cause: Cause.combine(Cause.die(sentinel), Cause.fail(sql)), recover: false },
+      { cause: Cause.combine(Cause.fail(sql), Cause.die(sql)), recover: false },
+      { cause: Cause.die(sql), recover: false },
+    ]
+    for (const entry of cases) {
+      const reads = { completed: 0 }
+      // Host-scoped facade around the actual SQLite writer. Its real SELECT finishes before the
+      // injected platform Cause; no global replacement and no blob or INSERT is reached.
+      const transaction: typeof f.database.db.transaction = (_use, options) => f.database.db.transaction((tx) => Effect.gen(function* () {
+        if (!f.database.inTransaction) throw new Error("Missing transaction identity")
+        expect(yield* f.database.inTransaction).toBe(true)
+        expect(yield* tx.select().from(CapabilityArtifactTable).pipe(Effect.orDie)).toHaveLength(0)
+        reads.completed++
+        return yield* Effect.failCause(entry.cause)
+      }), options)
+      const db = new Proxy(f.database.db, { get: (target, key) =>
+        key === "transaction" ? transaction : Reflect.get(target, key, target) })
+      const artifacts = yield* CapabilityArtifacts.make({ root: f.root }).pipe(
+        Effect.provideService(Database.Service, { ...f.database, db }))
+      // Unselected publication exercises the outer boundary, independently of selected SQL recovery.
+      const exit = yield* f.run(artifacts.publish(f.context, input)).pipe(Effect.exit)
+      expect(reads.completed).toBe(1)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (!Exit.isFailure(exit)) throw new Error("Storage fault unexpectedly published")
+      if (entry.recover) {
+        const error = yield* Effect.flip(exit)
+        expect(error).toBeInstanceOf(CapabilityArtifacts.Failure)
+        expect(JSON.stringify(error)).toBe(JSON.stringify(new CapabilityArtifacts.Failure({ code: "artifact_storage_failed",
+          message: "Artifact storage transaction failed" })))
+        expect(JSON.stringify(error)).not.toContain(secret)
+      }
+      if (!entry.recover) {
+        expect(exit.cause.reasons).toHaveLength(entry.cause.reasons.length)
+        exit.cause.reasons.forEach((reason, index) => {
+          const original = entry.cause.reasons[index]
+          expect(reason._tag).toBe(original._tag)
+          if (Cause.isFailReason(reason) && Cause.isFailReason(original)) expect(reason.error).toBe(original.error)
+          if (Cause.isDieReason(reason) && Cause.isDieReason(original)) expect(reason.defect).toBe(original.defect)
+          if (Cause.isInterruptReason(reason) && Cause.isInterruptReason(original)) expect(reason.fiberId).toBe(original.fiberId)
+        })
+      }
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
+      expect(yield* f.fs.exists(f.root)).toBe(false)
     }
   }))
 })

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto"
 import { isAbsolute, join } from "node:path"
 import { and, desc, eq, lt, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Effect, Option, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
@@ -237,11 +237,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
 })
 
 function storageErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
-  return effect.pipe(Effect.catchIf(
-    (error): error is Extract<E, SqlError | EffectDrizzleQueryError> =>
-      error instanceof SqlError || error instanceof EffectDrizzleQueryError,
+  // Mixed Causes retain their SQL Fail reasons, so their original E must also remain in the inferred error channel.
+  return Effect.catchCauseIf(effect,
+    (cause: Cause.Cause<E>) => cause.reasons.length > 0 && cause.reasons.every((reason) => reason._tag === "Fail" &&
+      (reason.error instanceof SqlError || reason.error instanceof EffectDrizzleQueryError)),
     () => Effect.fail(failure("artifact_storage_failed", "Artifact storage transaction failed")),
-  ))
+  )
 }
 
 function denied() {
