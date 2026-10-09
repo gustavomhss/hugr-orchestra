@@ -68,10 +68,10 @@ async function main() {
   if (resources.split(/[\\/]/).some((part) => part.endsWith(".asar"))) fail("CLI_RESOURCES_INSIDE_ASAR")
   if (within(resources, join(await realpath(dirname(report)), report.split(/[\\/]/).at(-1)!)))
     fail("REPORT_OVERLAPS_PACKAGE")
-  const source: unknown = await Bun.file(join(desktop, "package.json")).json().catch(() => fail("DESKTOP_VERSION_MISSING"))
-  if (!source || typeof source !== "object" || !("version" in source) || typeof source.version !== "string" || !source.version ||
-    !("name" in source) || source.name !== "@orchestra/desktop" || !("main" in source) || typeof source.main !== "string")
-    fail("DESKTOP_VERSION_INVALID")
+  const source: unknown = await Bun.file(join(desktop, "package.json")).json().catch(() => fail("DESKTOP_PACKAGE_FACTS_MISSING"))
+  if (!source || typeof source !== "object" || !("name" in source) || source.name !== "@orchestra/desktop" ||
+    !("main" in source) || typeof source.main !== "string" || !source.main)
+    fail("DESKTOP_PACKAGE_FACTS_INVALID")
   const previous = process.env.ORCHESTRA_CHANNEL
   process.env.ORCHESTRA_CHANNEL = args.channel
   const config = await import("../../packages/desktop/electron-builder.config").finally(() => {
@@ -80,33 +80,37 @@ async function main() {
   }).catch(() => fail("CHANNEL_CONTRACT_UNAVAILABLE"))
   if (!config.default.appId || typeof config.default.extraMetadata?.desktopName !== "string")
     fail("CHANNEL_CONTRACT_UNAVAILABLE")
+  // Production authority: ORCHESTRA_VERSION ?? packages/orchestra/package.json.version.
+  const expectedVersion = config.default.extraMetadata?.version
+  if (typeof expectedVersion !== "string" || !expectedVersion.trim() || expectedVersion !== expectedVersion.trim() ||
+    /[\x00-\x1f]/.test(expectedVersion)) fail("PRODUCTION_PACKAGE_VERSION_INVALID")
   const archive = join(resources, "app.asar")
   await regular(archive, "PACKAGED_APP_ARCHIVE_MISSING_OR_NOT_REGULAR")
-  const asar = await Promise.resolve().then(() => {
+  const asar: unknown = await Promise.resolve().then(() => {
     const require = createRequire(join(desktop, "package.json"))
     const builder = createRequire(require.resolve("electron-builder"))
-    return createRequire(builder.resolve("app-builder-lib"))("@electron/asar") as {
-      statFile: (archive: string, file: string, followLinks: boolean) => { size?: number; unpacked?: boolean; link?: string }
-      extractFile: (archive: string, file: string) => Buffer
-    }
+    return createRequire(builder.resolve("app-builder-lib"))("@electron/asar")
   }).catch(() => fail("PACKAGED_ASAR_READER_UNAVAILABLE"))
-  const metadataEntry = await Promise.resolve().then(() => asar.statFile(archive, "package.json", false))
-    .catch(() => fail("PACKAGED_METADATA_MISSING_OR_ARCHIVE_INVALID"))
-  if (!metadataEntry.size || metadataEntry.unpacked || metadataEntry.link) fail("PACKAGED_METADATA_NOT_OWNED_REGULAR")
-  const metadataBytes = await Promise.resolve().then(() => asar.extractFile(archive, "package.json"))
+  if (!asar || typeof asar !== "object" || !("statFile" in asar) || typeof asar.statFile !== "function" ||
+    !("extractFile" in asar) || typeof asar.extractFile !== "function") fail("PACKAGED_ASAR_READER_API_INVALID")
+  const statFile = asar.statFile
+  const extractFile = asar.extractFile
+  const metadataEntry = requirePackedEntry(await Promise.resolve().then(() => statFile(archive, "package.json", false))
+    .catch(() => fail("PACKAGED_METADATA_MISSING_OR_ARCHIVE_INVALID")), "PACKAGED_METADATA_NOT_OWNED_REGULAR")
+  const metadataBytes: unknown = await Promise.resolve().then(() => extractFile(archive, "package.json", false))
     .catch(() => fail("PACKAGED_METADATA_UNREADABLE"))
+  if (!Buffer.isBuffer(metadataBytes) || metadataBytes.length !== metadataEntry.size) fail("PACKAGED_METADATA_BYTES_INVALID")
   const metadata: unknown = await Promise.resolve().then(() => JSON.parse(metadataBytes.toString("utf8")))
     .catch(() => fail("PACKAGED_METADATA_INVALID_JSON"))
   if (!metadata || typeof metadata !== "object" || !("name" in metadata) || metadata.name !== source.name)
     fail("PACKAGED_DESKTOP_IDENTITY_MISMATCH")
   if (!("desktopName" in metadata)) fail("PACKAGED_CHANNEL_METADATA_MISSING")
   if (metadata.desktopName !== config.default.extraMetadata!.desktopName) fail("PACKAGED_CHANNEL_MISMATCH")
-  if (!("version" in metadata) || metadata.version !== source.version) fail("PACKAGED_DESKTOP_VERSION_MISMATCH")
+  if (!("version" in metadata) || metadata.version !== expectedVersion) fail("PACKAGED_DESKTOP_VERSION_MISMATCH")
   if (!("main" in metadata) || metadata.main !== source.main) fail("PACKAGED_MAIN_IDENTITY_MISMATCH")
   const main = source.main.replace(/^\.\//, "")
-  const mainEntry = await Promise.resolve().then(() => asar.statFile(archive, main, false))
-    .catch(() => fail("PACKAGED_MAIN_OUTPUT_MISSING"))
-  if (!mainEntry.size || mainEntry.unpacked || mainEntry.link) fail("PACKAGED_MAIN_OUTPUT_MISSING_OR_NOT_REGULAR")
+  requirePackedEntry(await Promise.resolve().then(() => statFile(archive, main, false))
+    .catch(() => fail("PACKAGED_MAIN_OUTPUT_MISSING")), "PACKAGED_MAIN_OUTPUT_MISSING_OR_NOT_REGULAR")
   const archiveSha256 = digest(await readFile(archive))
   const directory = join(resources, "cli")
   await regular(join(directory, "manifest.json"), "CLI_MANIFEST_MISSING_OR_NOT_REGULAR")
@@ -115,7 +119,7 @@ async function main() {
     if (error.code === "ENOENT") fail("CLI_ARTIFACT_OUTPUT_MISSING")
     fail("CLI_MANIFEST_INVALID_OR_UNCONFINED")
   })
-  if (manifest.version !== source.version) fail("CLI_MANIFEST_VERSION_MISMATCH")
+  if (manifest.version !== expectedVersion) fail("CLI_MANIFEST_VERSION_MISMATCH")
   const required = [target, ...(process.platform === "win32" ? ["linux-x64-baseline", "linux-arm64"] : [])]
   if (required.some((name) => !manifest.artifacts.some((entry) => entry.target === name))) fail("REQUIRED_CLI_TARGET_MISSING")
   const artifacts = await Promise.all(manifest.artifacts.map(async (entry) => {
@@ -162,7 +166,7 @@ async function main() {
       if (exit !== 0) fail("NATIVE_VERSION_EXECUTION_FAILED")
       if ((await output.stat()).size > 1024) fail("NATIVE_VERSION_OUTPUT_INVALID")
       const version = (await readFile(join(sandbox, "version.stdout"), "utf8")).trim()
-      if (version !== source.version) fail("NATIVE_COMPILED_VERSION_MISMATCH")
+      if (version !== expectedVersion) fail("NATIVE_COMPILED_VERSION_MISMATCH")
     })().finally(() => output.close())
   })().finally(() => rm(sandbox, { recursive: true, force: true }))
   await Promise.all(artifacts.map(async (entry) => {
@@ -171,12 +175,23 @@ async function main() {
   if (digest(await readFile(archive)) !== archiveSha256) fail("PACKAGED_ARCHIVE_CHANGED_DURING_PROOF")
   if (digest(await readFile(join(directory, "manifest.json"))) !== manifestSha256) fail("CLI_MANIFEST_CHANGED_DURING_PROOF")
   await writeFile(report, JSON.stringify({
-    schema: 1, channel: args.channel, appId: config.default.appId, packageName: metadata.name,
-    desktopName: metadata.desktopName, version: source.version, resources, platform: process.platform, arch: process.arch,
+    schema: 1, channel: args.channel, expectedAppId: config.default.appId, packageName: metadata.name,
+    desktopName: metadata.desktopName, version: expectedVersion, resources, platform: process.platform, arch: process.arch,
     target, requiredTargets: required, archiveSha256, metadataSha256: digest(metadataBytes), manifestSha256, artifacts,
     hostCPUVerified: true, packagedMetadataVerified: true, outsideAsar: true,
     artifactDigestsVerified: true, nativeCompiledVersionVerified: true,
   }) + "\n", { flag: "wx", mode: 0o600 }).catch(() => fail("REPORT_EXCLUSIVE_CREATION_FAILED"))
+}
+
+// @electron/asar v3.4.1 src/asar.ts and src/filesystem.ts: false disables link following;
+// packed files have size/offset, omit unpacked or set it false; directories/links are separate variants.
+function requirePackedEntry(entry: unknown, name: string) {
+  if (!entry || typeof entry !== "object" || "link" in entry || "files" in entry ||
+    ("unpacked" in entry && entry.unpacked !== false) || !("size" in entry) || typeof entry.size !== "number" ||
+    !Number.isSafeInteger(entry.size) || entry.size <= 0 || entry.size > 0xffffffff ||
+    !("offset" in entry) || typeof entry.offset !== "string" || !/^(0|[1-9]\d*)$/.test(entry.offset) ||
+    !Number.isSafeInteger(Number(entry.offset))) fail(name)
+  return entry
 }
 
 async function regular(file: string, name: string) {
