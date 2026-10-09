@@ -1,5 +1,10 @@
 import { afterEach, describe, expect } from "bun:test"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { AgentV2 } from "@orchestra/core/agent"
+import { SessionEvent } from "@orchestra/core/session/event"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
+import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -9,7 +14,8 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
-import { Cause, Deferred, Effect, Exit, Schema } from "effect"
+import { Cause, DateTime, Deferred, Effect, Exit, Schema } from "effect"
+import { eq } from "drizzle-orm"
 import { Agent } from "../../src/agent/agent"
 import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
 import { BackgroundJob } from "@/background/job"
@@ -206,11 +212,15 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   text: string,
   error?: NonNullable<SessionV1.Assistant["error"]>,
   subagent = "backend",
+  projection: "legacy" | "native" | "dual" = "legacy",
 ) {
   const sessions = yield* Session.Service
   const jobs = yield* BackgroundJob.Service
   const notice = yield* Deferred.make<Parameters<TaskPromptOps["prompt"]>[0]>()
   const release = yield* Deferred.make<void>()
+  const resumed = yield* Deferred.make<void>()
+  const database = yield* Database.Service
+  const events = yield* EventV2Bridge.Service
   const written: string[] = []
   const parent = yield* seed()
   const parameters = { description: "implement repo query", prompt: "packet", subagent_type: subagent, background: true }
@@ -220,6 +230,20 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     state: { status: "running", input: parameters, time: { start: Date.now() }, metadata: {} } })
   const promptOps: TaskPromptOps = {
     cancel: () => Effect.void,
+    resumeNotice: (sessionID) => Effect.gen(function* () {
+      expect(sessionID).toBe(parent.chat.id)
+      const row = yield* database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(parent.assistant.id))).get().pipe(Effect.orDie)
+      if (!row) throw new Error("actual native Task missing before resume")
+      const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+      const calls = message.type === "assistant" ? message.content.filter((part) => part.type === "tool" && part.id === callID) : []
+      const call = calls[0]
+      if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state))
+        throw new Error("actual native Task call missing before resume")
+      const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
+      expect(metadata).toHaveProperty("upstreamSettlement")
+      yield* Deferred.succeed(resumed, undefined)
+    }),
     resolvePromptParts: (value) => Effect.succeed([{ type: "text", text: value }]),
     prompt: (input) => Effect.gen(function* () {
       if (input.sessionID === parent.chat.id) {
@@ -282,15 +306,49 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   })
   yield* sessions.updatePart({ ...original, state: { status: "completed", input: parameters,
     title: result.title, output: result.output, metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
+  if (projection !== "legacy") {
+    const base = { sessionID: parent.chat.id, assistantMessageID: SessionMessage.ID.make(parent.assistant.id), callID }
+    yield* events.publish(SessionEvent.Step.Started, { ...base, agent: AgentV2.ID.make("maestro"),
+      model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Input.Started, { ...base, name: "task", timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Called, { ...base, tool: "task", input: parameters,
+      provider: { executed: false }, timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Success, { ...base, structured: { title: result.title, output: result.output,
+      metadata: result.metadata }, content: [], provider: { executed: false }, timestamp: yield* DateTime.now })
+    if (projection === "native") {
+      // Seed's compatibility rows served initial TaskTool lookup; actual exit now has only the native original Task.
+      yield* database.db.delete(PartTable).where(eq(PartTable.id, original.id)).run().pipe(Effect.orDie)
+      yield* database.db.delete(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(parent.assistant.id))).run().pipe(Effect.orDie)
+    }
+  }
   yield* Deferred.succeed(release, undefined)
   yield* jobs.wait({ id: result.metadata.sessionId })
-  const delivered = (yield* awaitWithTimeout(Deferred.await(notice), "actual background settlement did not resume parent")).parts[0]
+  const delivered = projection === "legacy"
+    ? (yield* awaitWithTimeout(Deferred.await(notice), "actual background settlement did not resume parent")).parts[0]
+    : undefined
+  if (projection !== "legacy") yield* awaitWithTimeout(Deferred.await(resumed), "actual native private settlement did not resume parent")
   const retained = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+  const native = projection !== "legacy" ? yield* Effect.gen(function* () {
+    const rows = yield* database.db.select().from(SessionMessageTable)
+      .where(eq(SessionMessageTable.session_id, parent.chat.id)).all().pipe(Effect.orDie)
+    const messages = rows.map((row) => Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }))
+    const message = messages.find((message) => message.id === parent.assistant.id)
+    const calls = message?.type === "assistant" ? message.content.filter((part) => part.type === "tool" && part.id === callID) : []
+    const call = calls[0]
+    if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state)) throw new Error("actual native Task readback missing")
+    const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
+    const receipt = Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
+    const notice = messages.find((message) => message.id === receipt.deliveryMessageID)
+    if (notice?.type !== "synthetic") throw new Error("actual native synthetic projection missing")
+    expect(metadata.workResult).toEqual(receipt.workResult)
+    return { call, receipt, notice }
+  }) : undefined
   return {
     started: result.metadata,
     childMessageID: written[0],
-    workResult: delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+    workResult: native ? native.receipt.workResult : delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
     retained,
+    native,
   }
 })
 
@@ -429,6 +487,27 @@ describe("tool.task backend-result", () => {
           upstreamSettlement: { parentCallID: "actual-background-return", workResult: result.workResult } } } })
     }),
   )
+
+  ;(["native", "dual"] as const).forEach((projection) => {
+    background.instance(`failed background schedule observes completed ${projection} Task before native private settlement`, () =>
+      Effect.gen(function* () {
+        const proposal = { outcome: "done", artifacts: [], blockers: [], risks: [], nextActions: [] }
+        const result = yield* deliverBackground("```upstream-result\n" + JSON.stringify(proposal) + "\n```",
+          new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(), "walt", projection)
+        expect(result.workResult).toMatchObject({ schema: "upstream-work-result-v1",
+          card: { messageID: result.childMessageID },
+          author: { memberId: "walt", executionSessionID: result.started.sessionId, messageID: result.childMessageID },
+          terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") } })
+        expect(result.native).toMatchObject({
+          call: { name: "task", state: { status: "completed", structured: { title: "implement repo query" } } },
+          receipt: { parentCallID: "actual-background-return", workResult: result.workResult },
+          notice: { type: "synthetic" },
+        })
+        if (projection === "dual") expect(result.retained).toMatchObject({ state: { status: "completed",
+          metadata: { workResult: result.workResult, upstreamSettlement: { workResult: result.workResult } } } })
+      }),
+    )
+  })
 
   background.instance("upstream running child without a message has no invented proposal or author", () =>
     Effect.gen(function* () {

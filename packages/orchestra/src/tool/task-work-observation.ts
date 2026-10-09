@@ -119,56 +119,67 @@ export function make(input: {
       return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation original invocation missing" })
     if (value.terminal.reason !== "failed" && value.terminal.reason !== "interrupted")
       return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation requires unfavorable exit" })
-    yield* input.database.db.transaction(() => Effect.gen(function* () {
-      const current = yield* read()
-      current.views.forEach((view) => verifyIdentity(value, view.metadata))
-      yield* verifyAuthor(value)
-      const failures = current.views.flatMap((view) => {
-        if (view.metadata.workResult === undefined) return []
-        const previous = record(view.metadata.workResult)
-        return ["failed", "interrupted"].includes(String(record(previous.terminal).reason)) ? [previous] : []
-      })
-      if (failures.some((failure) => !isDeepStrictEqual(failure, failures[0])))
-        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation terminal views conflict" })
-      const canonical = failures[0]
-      if (canonical) {
-        const { terminal: ignored, ...fields } = canonical
-        const { terminal: incoming, ...offered } = value
-        if (!isDeepStrictEqual(fields, offered))
-          return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation captured fields conflict" })
-      }
-      const observed = canonical ? terminal(canonical.terminal) : undefined
-      if (observed && observed.reason !== value.terminal.reason)
-        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation original terminal conflict" })
-      const result = observed ? {
-        ...value, terminal: { ...observed,
-          ...(observed.hostDetail === undefined && value.terminal.hostDetail !== undefined
-            ? { hostDetail: value.terminal.hostDetail } : {}) },
-      } : value
-      if (current.views.some((view) => view.metadata.upstreamSettlement !== undefined && !isDeepStrictEqual(view.metadata.workResult, result)))
-        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation already settled" })
-      // Retain native inspection/streaming callback; completed Task metadata needs the existing event boundary below.
-      yield* input.ctx.metadata({ metadata: { ...input.metadata, workResult: result } })
-      const latest = yield* read()
-      latest.views.forEach((view) => verifyIdentity(value, view.metadata))
-      if (latest.views.some((view) => view.metadata.upstreamSettlement !== undefined && !isDeepStrictEqual(view.metadata.workResult, result)))
-        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation already settled" })
-      yield* Effect.forEach(latest.views, (view) => {
-        const metadata = { ...view.metadata, workResult: result }
-        if (view.kind === "modern") return input.events.publish(SessionEvent.Tool.Progress, {
-          sessionID: input.ctx.sessionID, assistantMessageID: SessionMessage.ID.make(input.ctx.messageID),
-          callID: input.ctx.callID ?? "", timestamp: DateTime.makeUnsafe(Date.now()),
-          structured: { ...view.call.state.structured, metadata }, content: view.call.state.content,
-        }, { location: latest.location }).pipe(Effect.asVoid)
-        return input.events.publish(SessionV1.Event.PartUpdated, {
-          sessionID: input.ctx.sessionID, time: Date.now(),
-          part: { ...view.part, state: { ...view.part.state, metadata } },
-        }, { persist: true, location: latest.location }).pipe(Effect.asVoid)
-      }, { concurrency: 1 })
-      const stored = yield* read()
-      if (stored.views.some((view) => !isDeepStrictEqual(view.metadata.workResult, result)))
-        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation readback mismatch" })
-    }))
+    const current = yield* read()
+    current.views.forEach((view) => verifyIdentity(value, view.metadata))
+    yield* verifyAuthor(value)
+    const failures = current.views.flatMap((view) => {
+      if (view.metadata.workResult === undefined) return []
+      const previous = record(view.metadata.workResult)
+      return ["failed", "interrupted"].includes(String(record(previous.terminal).reason)) ? [previous] : []
+    })
+    if (failures.some((failure) => !isDeepStrictEqual(failure, failures[0])))
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation terminal views conflict" })
+    const canonical = failures[0]
+    if (canonical) {
+      const { terminal: ignored, ...fields } = canonical
+      const { terminal: incoming, ...offered } = value
+      if (!isDeepStrictEqual(fields, offered))
+        return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation captured fields conflict" })
+    }
+    const observed = canonical ? terminal(canonical.terminal) : undefined
+    if (observed && observed.reason !== value.terminal.reason)
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation original terminal conflict" })
+    const result = observed ? {
+      ...value, terminal: { ...observed,
+        ...(observed.hostDetail === undefined && value.terminal.hostDetail !== undefined
+          ? { hostDetail: value.terminal.hostDetail } : {}) },
+    } : value
+    if (current.views.some((view) => view.metadata.upstreamSettlement !== undefined && !isDeepStrictEqual(view.metadata.workResult, result)))
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation already settled" })
+    // Retain native inspection/streaming callback; completed Task metadata needs the existing event boundary below.
+    yield* input.ctx.metadata({ metadata: { ...input.metadata, workResult: result } })
+    const latest = yield* read()
+    latest.views.forEach((view) => verifyIdentity(value, view.metadata))
+    yield* verifyAuthor(value)
+    latest.views.forEach((view) => {
+      if (view.metadata.workResult === undefined) return
+      const previous = record(view.metadata.workResult)
+      const observed = terminal(previous.terminal)
+      if (observed.reason !== "failed" && observed.reason !== "interrupted") return
+      const { terminal: ignored, ...fields } = previous
+      const { terminal: offered, ...next } = result
+      if (!isDeepStrictEqual(fields, next) || observed.reason !== result.terminal.reason ||
+        observed.hostDetail !== undefined && observed.hostDetail !== result.terminal.hostDetail)
+        throw new UpstreamSettlement.Hold({ message: "HOLD: Task host observation current terminal conflict" })
+    })
+    if (latest.views.some((view) => view.metadata.upstreamSettlement !== undefined && !isDeepStrictEqual(view.metadata.workResult, result)))
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation already settled" })
+    // EventV2 owns each commit/notification. A later HOLD must not roll back an already announced event.
+    yield* Effect.forEach(latest.views, (view) => {
+      const metadata = { ...view.metadata, workResult: result }
+      if (view.kind === "modern") return input.events.publish(SessionEvent.Tool.Progress, {
+        sessionID: input.ctx.sessionID, assistantMessageID: SessionMessage.ID.make(input.ctx.messageID),
+        callID: input.ctx.callID ?? "", timestamp: DateTime.makeUnsafe(Date.now()),
+        structured: { ...view.call.state.structured, metadata }, content: view.call.state.content,
+      }, { location: latest.location }).pipe(Effect.asVoid)
+      return input.events.publish(SessionV1.Event.PartUpdated, {
+        sessionID: input.ctx.sessionID, time: Date.now(),
+        part: { ...view.part, state: { ...view.part.state, metadata } },
+      }, { persist: true, location: latest.location }).pipe(Effect.asVoid)
+    }, { concurrency: 1 })
+    const stored = yield* read()
+    if (stored.views.some((view) => !isDeepStrictEqual(view.metadata.workResult, result)))
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation readback mismatch" })
   })
 
   const capture = Effect.fn("TaskWorkObservation.capture")(function* (value: BackendResult.WorkResult) {
