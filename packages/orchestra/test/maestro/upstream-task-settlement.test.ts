@@ -106,7 +106,7 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   return { sessions, database, events, input, parent, child, task, owner, author, proposal, state, modern, legacy, progress }
 })
 
-(["failed", "interrupted", "host-failed"] as const).forEach((returned) => {
+;(["failed", "interrupted", "host-failed"] as const).forEach((returned) => {
   it.instance(`actual stored or Task-observed ${returned} result retains exact failure and capture identity`, () => Effect.gen(function* () {
     const f = yield* seed(undefined, returned)
     const original = yield* f.progress()
