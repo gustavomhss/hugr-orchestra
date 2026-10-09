@@ -21,10 +21,13 @@ export const SOURCE = String.raw`
 #include <pthread.h>
 #include <stdatomic.h>
 #include <time.h>
+#include <poll.h>
 
 #define ROUTE_LIMIT 32
 #define RECORD_LIMIT 1024
 #define FD_LIMIT 65536
+#define LEASE_LIMIT 64
+#define SCAN_BUDGET 8192
 #define PATH_LIMIT sizeof(((struct sockaddr_un *)0)->sun_path)
 #define CONFIG_LIMIT (ROUTE_LIMIT * (7 + 2 * (PATH_LIMIT - 1)))
 _Static_assert(ATOMIC_INT_LOCK_FREE == 2, "fork-shared route state must be lock-free");
@@ -36,10 +39,37 @@ struct route {
 struct record {
     uint64_t handle;
     int keeper;
-    // Only the selected port is shared across fork. Descriptor ownership and
-    // reclamation remain process-local. Duplicate Unix paths stay unambiguous.
+    // Selected port and pin-liveness are shared across fork; descriptor
+    // ownership stays local. Duplicate Unix paths stay unambiguous.
     _Atomic unsigned *port;
 };
+// Darwin's extended PIDINFO syscall binds a list request to the recorded
+// process unique ID inside the kernel. PIDFDINFO ignores that flag in XNU and
+// must never be used for descendant socket inspection.
+extern int __proc_info_extended_id(int32_t, int32_t, uint32_t, uint32_t, uint64_t, uint64_t, uintptr_t, int32_t);
+extern int close_nocancel(int) __asm__("_close$NOCANCEL");
+struct birth {
+    unsigned char executable[16];
+    uint64_t unique, parent;
+    int32_t version, parent_version;
+    uint64_t reserved[2];
+};
+_Static_assert(sizeof(struct birth) == 56, "Darwin process birth ABI");
+enum { LEASE_FREE, LEASE_PENDING, LEASE_KNOWN, LEASE_UNKNOWN, LEASE_READY, LEASE_INSPECTING };
+struct lease {
+    _Atomic unsigned state;
+    _Atomic int pid;
+    _Atomic uint64_t unique;
+    _Atomic uint64_t owner;
+};
+struct family {
+    struct lease leases[LEASE_LIMIT];
+    _Atomic unsigned records;
+};
+static struct family *family;
+static uint64_t self_unique;
+static int fork_child_scope;
+static int guardian[2] = {-1, -1};
 static struct route routes[ROUTE_LIMIT];
 static unsigned route_count;
 static struct record records[RECORD_LIMIT];
@@ -125,14 +155,18 @@ struct ownership {
     struct record *record;
     uint64_t handle;
     unsigned claim;
+    int lease;
+    int inspected;
 };
 static struct ownership acquire(void) {
-    struct ownership owned = { .created = -1 };
+    struct ownership owned = { .created = -1, .lease = -1, .inspected = -1 };
+    if (fork_child_scope) return owned;
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &owned.cancel_type);
     pthread_mutex_lock(&lock);
     return owned;
 }
 static void release(struct ownership *owned) {
+    if (fork_child_scope) return;
     pthread_mutex_unlock(&lock);
     pthread_setcanceltype(owned->cancel_type, NULL);
 }
@@ -142,47 +176,89 @@ static struct record *lookup(int fd) {
     if (!handle) return NULL;
     for (unsigned i = 0; i < RECORD_LIMIT; i++) {
         if (records[i].handle != handle) continue;
-        if (identity(records[i].keeper) != handle) return NULL;
+        if (records[i].keeper >= 0 && identity(records[i].keeper) != handle) return NULL;
+        if (records[i].keeper < 0) {
+            struct pollfd watch = { .fd = guardian[0], .events = POLLIN };
+            if (!atomic_load(records[i].port + 1) || poll(&watch, 1, 0) < 0 || (watch.revents & (POLLHUP | POLLERR | POLLNVAL))) return NULL;
+        }
         return &records[i];
     }
     return NULL;
 }
 
-// Only a complete local FD inventory can justify releasing a pin. Global
-// fileglob reference counts include other processes' keepers and deadlock EOF
-// after fork. Every internal keeper is excluded, even for another entry.
-// Ordinary close/dup/fcntl-dup are serialized. Raw duplication must retain a
+// Complete own/registered-birth FD inventories gate reclamation. Socket
+// reference facts come only from our stable keeper; every child keeper is
+// closed atfork, so internal copies cannot mutually retain a connection.
+// Missing inventories/births retain pins. Ordinary close/dup/fcntl-dup are
+// serialized. Raw duplication must retain a
 // live client anchor until the duplicate is installed; dup versus closing its
 // last source without such ownership is an undefined descriptor-use race.
-static int prune(void) {
-    int needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, NULL, 0);
+static int guarded_info(struct lease *lease, int call, int flavor, uint64_t arg, void *out, int size) {
+    uint64_t unique = atomic_load(&lease->unique);
+    if (!unique || atomic_load(&lease->state) != LEASE_KNOWN) { errno = EAGAIN; return -1; }
+    if (call != 2 || flavor != PROC_PIDLISTFDS) { errno = EINVAL; return -1; }
+    // PIF_COMPARE_UNIQUEID=2; PIDINFO=2, from Darwin proc ABI.
+    return __proc_info_extended_id(call, atomic_load(&lease->pid), (uint32_t)flavor, 2, unique, arg, (uintptr_t)out, size);
+}
+static int inventory_live(struct lease *lease, unsigned *budget) {
+    int needed = lease ? guarded_info(lease, 2, PROC_PIDLISTFDS, 0, NULL, 0) : proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, NULL, 0);
     if (needed <= 0 || (size_t)needed >= sizeof(inventory)) return 0;
-    int got = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, inventory, sizeof(inventory));
+    int got = lease ? guarded_info(lease, 2, PROC_PIDLISTFDS, 0, inventory, sizeof(inventory)) : proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, inventory, sizeof(inventory));
     if (got <= 0 || (size_t)got >= sizeof(inventory) || got % sizeof(*inventory)) return 0;
-    needed = proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, NULL, 0);
+    unsigned count = (unsigned)((size_t)got / sizeof(*inventory));
+    if (count > *budget) { errno = EAGAIN; return 0; }
+    *budget -= count;
+    needed = lease ? guarded_info(lease, 2, PROC_PIDLISTFDS, 0, NULL, 0) : proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, NULL, 0);
     if (needed <= 0 || (size_t)needed >= sizeof(inventory)) return 0;
-    unsigned char live[RECORD_LIMIT] = {0};
-    for (size_t i = 0; i < (size_t)got / sizeof(*inventory); i++) {
-        if (inventory[i].proc_fdtype != PROX_FDTYPE_SOCKET) continue;
-        int fd = inventory[i].proc_fd;
-        unsigned j = 0;
-        while (j < RECORD_LIMIT && (!records[j].handle || records[j].keeper != fd)) j++;
-        if (j < RECORD_LIMIT) continue;
-        uint64_t handle = identity(fd);
-        // A racing raw close invalidates this snapshot; retry next tick.
-        if (!handle) return 0;
-        for (j = 0; j < RECORD_LIMIT; j++) if (records[j].handle == handle) live[j] = 1;
+    return 1;
+}
+static int prune(void) {
+    // No socket can lose its pin between the fork snapshot and birth capture.
+    for (unsigned i = 0; i < LEASE_LIMIT; i++) {
+        unsigned state = atomic_load(&family->leases[i].state);
+        if (state == LEASE_PENDING || state == LEASE_READY || state == LEASE_UNKNOWN || state == LEASE_INSPECTING) return 1;
+    }
+    unsigned budget = SCAN_BUDGET;
+    if (!inventory_live(NULL, &budget)) return 0;
+    for (unsigned i = 0; i < LEASE_LIMIT; i++) {
+        struct lease *lease = &family->leases[i];
+        // The root observer owns the registered tree. A single-threaded child
+        // only queries descendants created by its own actual fork returns.
+        if (fork_child_scope && atomic_load(&lease->owner) != self_unique) continue;
+        unsigned known = LEASE_KNOWN;
+        if (!atomic_compare_exchange_strong(&lease->state, &known, LEASE_INSPECTING)) continue;
+        struct lease snapshot = { .state = LEASE_KNOWN, .pid = atomic_load(&lease->pid), .unique = atomic_load(&lease->unique) };
+        if (!inventory_live(&snapshot, &budget)) {
+            if (errno != ESRCH) { atomic_store(&lease->state, LEASE_KNOWN); return 0; }
+            // Kernel UID mismatch/death retires this recorded birth only.
+            atomic_store(&lease->state, LEASE_FREE);
+        } else atomic_store(&lease->state, LEASE_KNOWN);
     }
     for (unsigned i = 0; i < RECORD_LIMIT; i++) {
-        if (!records[i].handle || live[i]) continue;
+        if (!records[i].handle) continue;
+        if (records[i].keeper >= 0) {
+            // Inspect only our stable keeper, under our mutex. Inspecting a
+            // child's socket fd while it closes can trigger XNU fo_drain and
+            // make a still-live parent's read return EBADF. FD lists take no
+            // socket I/O references. After atfork drops every child keeper,
+            // PROC_FP_SHARED reflects client aliases, never a keeper cycle.
+            struct socket_fdinfo info = {0};
+            if (proc_pidfdinfo(getpid(), records[i].keeper, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) != sizeof(info) ||
+                info.psi.soi_so != records[i].handle) return 0;
+            if (info.pfi.fi_status & PROC_FP_SHARED) continue;
+        } else if (atomic_load(records[i].port + 1)) continue;
         // Internal pin disposal is finite bookkeeping, not the caller's
         // blocking operation. Commit removal before restoring cancellation.
-        int cancel_state;
-        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
-        if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);
-        munmap(records[i].port, sizeof(*records[i].port));
+        int cancel_state = PTHREAD_CANCEL_DISABLE;
+        if (!fork_child_scope) pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
+        if (records[i].keeper >= 0) {
+            atomic_store(records[i].port + 1, 0);
+            if (identity(records[i].keeper) == records[i].handle) close_nocancel(records[i].keeper);
+            atomic_fetch_sub(&family->records, 1);
+        }
+        munmap(records[i].port, 2 * sizeof(*records[i].port));
         records[i].handle = 0;
-        pthread_setcancelstate(cancel_state, NULL);
+        if (!fork_child_scope) pthread_setcancelstate(cancel_state, NULL);
     }
     return 1;
 }
@@ -190,11 +266,12 @@ static int prune(void) {
 static void cancelled(void *input) {
     struct ownership *owned = input;
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    if (owned->lease >= 0) atomic_store(&family->leases[owned->lease].state, LEASE_UNKNOWN);
     if (owned->claim && owned->record->handle == owned->handle) {
         // Cancellation can arrive before the syscall or after it connected.
         // Inspect the pinned socket, never an fd another caller may have reused.
         struct socket_fdinfo info = {0};
-        int keeper = owned->record->keeper;
+        int keeper = owned->record->keeper >= 0 ? owned->record->keeper : owned->inspected;
         if (proc_pidfdinfo(getpid(), keeper, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info) &&
             info.psi.soi_so == owned->handle && !(info.psi.soi_state & (SOI_S_ISCONNECTED | SOI_S_ISCONNECTING))) {
             struct sockaddr_un peer = {0}; socklen_t size = sizeof(peer);
@@ -208,7 +285,7 @@ static void cancelled(void *input) {
     // does not transfer caller ownership or justify deleting a foreign fd.
     if (owned->created >= 0 && identity(owned->created) == owned->handle) close(owned->created);
     prune();
-    pthread_mutex_unlock(&lock);
+    if (!fork_child_scope) pthread_mutex_unlock(&lock);
 }
 
 static void *maintain(void *unused) {
@@ -226,6 +303,7 @@ static void *maintain(void *unused) {
     return NULL;
 }
 static int start_maintenance(void) {
+    if (fork_child_scope) return 1;
     if (maintenance_started) return 1;
     if (pthread_create(&maintenance, NULL, maintain, NULL) != 0) return 0;
     maintenance_started = 1;
@@ -234,22 +312,59 @@ static int start_maintenance(void) {
 static void fork_prepare(void) { pthread_mutex_lock(&lock); }
 static void fork_parent(void) { pthread_mutex_unlock(&lock); }
 static void fork_child(void) {
-    // No thread creation or allocation inside the atfork handler. The fork
-    // interposer restarts this process's worker after libc fork returns.
+    // This handler only closes already-planned internal descriptors and
+    // unlocks. No allocation, proc queries or child thread acquisition.
+    for (unsigned i = 0; i < RECORD_LIMIT; i++) {
+        if (!records[i].handle || records[i].keeper < 0) continue;
+        close_nocancel(records[i].keeper);
+        records[i].keeper = -1;
+    }
+    if (guardian[1] >= 0) close_nocancel(guardian[1]);
+    guardian[1] = -1;
+    fork_child_scope = 1;
     maintenance_started = 0;
-    changed = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
     pthread_mutex_unlock(&lock);
 }
 __attribute__((constructor)) static void loaded(void) {
-    route_count = parse(getenv("ORCHESTRA_TCP_PROXY_ROUTES"));
-    if (!route_count) return;
-    if (pthread_atfork(fork_prepare, fork_parent, fork_child) != 0) { route_count = 0; return; }
+    unsigned count = parse(getenv("ORCHESTRA_TCP_PROXY_ROUTES"));
+    if (!count) return;
+    struct birth birth = {0};
+    if (proc_pidinfo(getpid(), 17, 0, &birth, sizeof(birth)) != sizeof(birth) || !birth.unique) return;
+    self_unique = birth.unique;
+    family = mmap(NULL, sizeof(*family), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
+    if (family == MAP_FAILED) { family = NULL; return; }
+    atomic_init(&family->records, 0);
+    for (unsigned i = 0; i < LEASE_LIMIT; i++) {
+        atomic_init(&family->leases[i].state, LEASE_FREE);
+        atomic_init(&family->leases[i].pid, 0);
+        atomic_init(&family->leases[i].unique, 0);
+        atomic_init(&family->leases[i].owner, 0);
+    }
+    if (pipe(guardian) < 0 || fcntl(guardian[0], F_SETFD, FD_CLOEXEC) < 0 || fcntl(guardian[1], F_SETFD, FD_CLOEXEC) < 0 ||
+        pthread_atfork(fork_prepare, fork_parent, fork_child) != 0) {
+        if (guardian[0] >= 0) close_nocancel(guardian[0]);
+        if (guardian[1] >= 0) close_nocancel(guardian[1]);
+        munmap(family, sizeof(*family)); family = NULL; return;
+    }
+    route_count = count;
     pthread_mutex_lock(&lock);
     if (!start_maintenance()) route_count = 0;
     pthread_mutex_unlock(&lock);
 }
 __attribute__((destructor)) static void unloaded(void) {
     if (!route_count) return;
+    if (fork_child_scope) {
+        // Darwin child hooks are single-threaded and synchronous. Inherited
+        // loans belong to the parent; only child-created local pins close here.
+        for (unsigned i = 0; i < RECORD_LIMIT; i++) {
+            if (!records[i].handle || records[i].keeper < 0) continue;
+            atomic_store(records[i].port + 1, 0);
+            if (identity(records[i].keeper) == records[i].handle) close_nocancel(records[i].keeper);
+            atomic_fetch_sub(&family->records, 1);
+        }
+        close_nocancel(guardian[0]);
+        return;
+    }
     int cancel_state;
     pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
     pthread_mutex_lock(&lock);
@@ -261,25 +376,66 @@ __attribute__((destructor)) static void unloaded(void) {
     pthread_mutex_lock(&lock);
     for (unsigned i = 0; i < RECORD_LIMIT; i++) {
         if (!records[i].handle) continue;
+        atomic_store(records[i].port + 1, 0);
         if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);
-        munmap(records[i].port, sizeof(*records[i].port));
+        munmap(records[i].port, 2 * sizeof(*records[i].port));
+        atomic_fetch_sub(&family->records, 1);
         records[i].handle = 0;
     }
     pthread_mutex_unlock(&lock);
+    close_nocancel(guardian[1]);
+    close_nocancel(guardian[0]);
+    munmap(family, sizeof(*family));
     pthread_setcancelstate(cancel_state, NULL);
 }
 static pid_t tracked_fork(void) {
+    if (!route_count) return fork();
+    struct ownership owned = acquire();
+    unsigned slot = 0;
+    for (; slot < LEASE_LIMIT; slot++) {
+        unsigned free = LEASE_FREE;
+        if (atomic_compare_exchange_strong(&family->leases[slot].state, &free, LEASE_PENDING)) break;
+    }
+    if (slot == LEASE_LIMIT) { release(&owned); errno = ENOBUFS; return -1; }
+    struct lease *lease = &family->leases[slot];
+    atomic_store(&lease->owner, self_unique);
+    atomic_store(&lease->pid, 0); atomic_store(&lease->unique, 0);
+    release(&owned);
+    // POSIX does not make arbitrary post-fork libc code portable. Only the
+    // atfork close/unlock handler above has that claim; the self-birth syscall
+    // and client hooks below are measured Darwin-specific operations.
     pid_t result = fork();
     int saved = errno;
-    if (route_count) {
-        pthread_mutex_lock(&lock);
-        int ready = start_maintenance();
-        pthread_mutex_unlock(&lock);
-        // A child cannot keep inherited pins alive without its own reaper.
-        // Thread acquisition failure terminates that child rather than
-        // silently returning a fork with broken EOF/resource ownership.
-        if (result == 0 && !ready) _exit(127);
+    if (result == 0) {
+        struct birth birth = {0};
+        int valid = proc_pidinfo(getpid(), 17, 0, &birth, sizeof(birth)) == sizeof(birth) && birth.unique && birth.parent == self_unique;
+        if (valid) self_unique = birth.unique;
+        atomic_store(&lease->pid, getpid());
+        atomic_store(&lease->unique, valid ? birth.unique : 0);
+        unsigned pending = LEASE_PENDING;
+        atomic_compare_exchange_strong(&lease->state, &pending, LEASE_READY);
+        while (atomic_load(&lease->state) == LEASE_READY || atomic_load(&lease->state) == LEASE_PENDING) {
+            struct pollfd watch = { .fd = guardian[0], .events = POLLIN };
+            if (poll(&watch, 1, 1) < 0 || (watch.revents & (POLLHUP | POLLERR | POLLNVAL))) {
+                atomic_store(&lease->state, LEASE_UNKNOWN);
+                break;
+            }
+        }
+        errno = saved;
+        return 0;
     }
+    if (result < 0) { atomic_store(&lease->state, LEASE_FREE); errno = saved; return result; }
+    owned = acquire();
+    owned.lease = (int)slot;
+    pthread_cleanup_push(cancelled, &owned);
+    for (unsigned waited = 0; waited < 100 && atomic_load(&lease->state) == LEASE_PENDING; waited++) poll(NULL, 0, 1);
+    unsigned state = atomic_load(&lease->state);
+    // PID authority comes from this actual return and a self-birth report
+    // while pruning is held. Missing/late identity never enables PID inspection.
+    atomic_store(&lease->state, state == LEASE_READY && atomic_load(&lease->pid) == result && atomic_load(&lease->unique) ? LEASE_KNOWN : LEASE_UNKNOWN);
+    owned.lease = -1;
+    pthread_cleanup_pop(0);
+    release(&owned);
     errno = saved;
     return result;
 }
@@ -356,6 +512,10 @@ static int create_socket(struct ownership *owned) {
     unsigned slot = 0;
     while (slot < RECORD_LIMIT && records[slot].handle) slot++;
     if (slot == RECORD_LIMIT) { errno = ENOBUFS; return -1; }
+    unsigned count = atomic_load(&family->records);
+    do {
+        if (count >= RECORD_LIMIT) { errno = ENOBUFS; return -1; }
+    } while (!atomic_compare_exchange_weak(&family->records, &count, count + 1));
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     int keeper = -1;
     uint64_t handle = 0;
@@ -365,9 +525,10 @@ static int create_socket(struct ownership *owned) {
     if (keeper < 0) goto fail;
     handle = identity(fd);
     if (!handle) { errno = EPERM; goto fail; }
-    port = mmap(NULL, sizeof(*port), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
+    port = mmap(NULL, 2 * sizeof(*port), PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
     if (port == MAP_FAILED) goto fail;
     atomic_init(port, 0);
+    atomic_init(port + 1, 1);
     records[slot] = (struct record){ .handle = handle, .keeper = keeper, .port = port };
     owned->created = fd;
     owned->handle = handle;
@@ -378,7 +539,8 @@ fail:
         int error = errno;
         if (fd >= 0) close(fd);
         if (keeper >= 0) close(keeper);
-        if (port != MAP_FAILED) munmap(port, sizeof(*port));
+        if (port != MAP_FAILED) munmap(port, 2 * sizeof(*port));
+        atomic_fetch_sub(&family->records, 1);
         errno = error; return -1;
     }
 }
@@ -488,6 +650,7 @@ static int connect_socket(int fd, const struct sockaddr *addr, socklen_t len, st
     owned->record = p;
     owned->handle = p->handle;
     owned->claim = routes[route].port;
+    owned->inspected = fd;
     // Connect the socket created at socket(), never replace a single alias.
     int result = connect(fd, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);
     int error = result < 0 ? errno : saved;

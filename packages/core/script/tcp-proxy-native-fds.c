@@ -133,7 +133,10 @@ static void echo(int fd, const char *text) {
     CHECK(write(fd, text, n) == (ssize_t)n);
     char received[128];
     for (size_t i = 0; i < n;) {
-        ssize_t got = read(fd, received + i, n - i); CHECK(got > 0); i += (size_t)got;
+        ssize_t got = read(fd, received + i, n - i);
+        if (got < 0 && errno == EINTR) continue;
+        if (got <= 0) { fprintf(stderr, "ECHO_READ fd=%d got=%ld errno=%d text=%s flags=%d\n", fd, (long)got, errno, text, fcntl(fd, F_GETFL)); exit(9); }
+        i += (size_t)got;
     }
     CHECK(memcmp(text, received, n) == 0);
 }
@@ -237,15 +240,17 @@ static void fork_eof(void) {
     pid_t child = fork(); CHECK(child >= 0);
     if (child == 0) {
         alarm(8); close(child_to_parent[0]); close(parent_to_child[1]);
+        int local_without_client = fd_count() - 1;
+        if (fd_count() != before + 2) { fprintf(stderr, "FORK_KEEPER_COUNT child_start\n"); exit(9); }
         char command; CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'H');
         usleep(150000); family(fd, AF_INET); echo(fd, "retained-child-client");
-        CHECK(fd_count() == before + 4); // Two control pipes, client and its pin.
+        CHECK(fd_count() == local_without_client + 1); // No inherited internal keepers.
         CHECK(write(child_to_parent[1], "H", 1) == 1);
         CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'C');
         CHECK(kernel_call(SYS_close, fd, 0) == 0);
-        // No interposed close or socket calls here: only the child worker can
-        // reap its pin while this process stays alive on its control pipes.
-        count_eventually(before + 2, "FORK_KEEPER_COUNT child");
+        // No child worker or subsequent hook: the parent observer must reap
+        // its own pin while both processes stay alive on these control pipes.
+        count_eventually(local_without_client, "FORK_KEEPER_COUNT child");
         CHECK(write(child_to_parent[1], "G", 1) == 1);
         CHECK(read(parent_to_child[0], &command, 1) == 1 && command == 'X');
         close(child_to_parent[1]); close(parent_to_child[0]); exit(0);
@@ -355,6 +360,131 @@ static void established_cancel(void) {
     count_eventually(before, "ESTABLISHED_CANCEL_KEEPERS"); alarm(0);
     puts("ESTABLISHED_CANCEL actual kernel peer/selected port preserved OK");
 }
+static void only_child_thread(void) {
+    struct proc_taskinfo info = {0};
+    CHECK(proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &info, sizeof(info)) == sizeof(info));
+    CHECK(info.pti_threadnum == 1);
+}
+static void child_created(int raw) {
+    int to_child[2], from_child[2]; CHECK(pipe(to_child) == 0 && pipe(from_child) == 0);
+    pid_t child = fork(); CHECK(child >= 0);
+    if (child == 0) {
+        alarm(8); close(to_child[1]); close(from_child[0]); only_child_thread();
+        int before = fd_count();
+        int fd = socket(AF_INET, SOCK_STREAM, 0); CHECK(fd >= 0);
+        int alias = fcntl(fd, F_DUPFD_CLOEXEC, 40); CHECK(alias >= 40);
+        struct sockaddr_in addr = target(); CHECK(connect(alias, (struct sockaddr *)&addr, sizeof(addr)) == 0);
+        family(fd, AF_INET); family(alias, AF_INET); only_child_thread();
+        char marker[100]; snprintf(marker, sizeof(marker), "fork-eof:%ld:%ld\n", (long)getppid(), (long)getpid()); echo(fd, marker);
+        CHECK(close(fd) == 0); family(alias, AF_INET); echo(alias, "child-created-retained-alias");
+        CHECK(write(from_child[1], "H", 1) == 1); char command;
+        CHECK(read(to_child[0], &command, 1) == 1 && command == 'C');
+        if (raw) CHECK(kernel_call(SYS_close, alias, 0) == 0);
+        else CHECK(close(alias) == 0);
+        if (raw) {
+            usleep(300000);
+            if (fd_count() != before) { fprintf(stderr, "CHILD_CREATED_RAW_CLOSE local keeper retained\n"); exit(9); }
+        } else count_eventually(before, "CHILD_CREATED_HOOKED_CLOSE");
+        only_child_thread(); CHECK(write(from_child[1], "G", 1) == 1);
+        CHECK(read(to_child[0], &command, 1) == 1 && command == 'X');
+        close(to_child[0]); close(from_child[1]); exit(0);
+    }
+    close(to_child[0]); close(from_child[1]); char report;
+    CHECK(read(from_child[0], &report, 1) == 1 && report == 'H');
+    CHECK(write(to_child[1], "C", 1) == 1);
+    CHECK(read(from_child[0], &report, 1) == 1 && report == 'G');
+    usleep(500000); CHECK(write(to_child[1], "X", 1) == 1);
+    close(to_child[1]); close(from_child[0]); int status;
+    CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    puts("CHILD_CREATED aliases/addresses/bytes/hooked-close; one child thread OK");
+}
+static void lease_capacity(void) {
+    int control[2]; CHECK(pipe(control) == 0);
+    pid_t children[64];
+    for (int i = 0; i < 64; i++) {
+        children[i] = fork(); CHECK(children[i] >= 0);
+        if (children[i] == 0) { close(control[1]); char byte; CHECK(read(control[0], &byte, 1) == 1); close(control[0]); _exit(0); }
+    }
+    CHECK(fork() == -1 && errno == ENOBUFS);
+    for (int i = 0; i < 64; i++) CHECK(write(control[1], "X", 1) == 1);
+    for (int i = 0; i < 64; i++) { int status; CHECK(waitpid(children[i], &status, 0) == children[i] && WIFEXITED(status) && WEXITSTATUS(status) == 0); }
+    close(control[0]); close(control[1]); usleep(150000);
+    pid_t next = fork(); CHECK(next >= 0);
+    if (next == 0) _exit(0);
+    int status; CHECK(waitpid(next, &status, 0) == next && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    puts("LEASE capacity 64; fork 65 ENOBUFS; exited births retire/reuse OK");
+}
+extern int __proc_info_extended_id(int32_t, int32_t, uint32_t, uint32_t, uint64_t, uint64_t, uintptr_t, int32_t);
+static void uid_guard(void) {
+    // Own-process control demonstrates the API limit without querying any
+    // foreign PID: PIDFDINFO does not enforce the extended unique-ID flag.
+    unsigned char own_birth[56] = {0}; CHECK(proc_pidinfo(getpid(), 17, 0, own_birth, sizeof(own_birth)) == sizeof(own_birth));
+    uint64_t own_unique; memcpy(&own_unique, own_birth + 16, sizeof(own_unique));
+    int own_socket = socket(AF_UNIX, SOCK_STREAM, 0); CHECK(own_socket >= 0);
+    struct socket_fdinfo own_info = {0};
+    CHECK(__proc_info_extended_id(3, getpid(), PROC_PIDFDSOCKETINFO, 2, own_unique + 1, (uint64_t)own_socket, (uintptr_t)&own_info, sizeof(own_info)) == sizeof(own_info));
+    close(own_socket);
+    int report[2], control[2]; CHECK(pipe(report) == 0 && pipe(control) == 0);
+    pid_t child = fork(); CHECK(child >= 0);
+    if (child == 0) {
+        close(report[0]); close(control[1]);
+        unsigned char birth[56] = {0}; CHECK(proc_pidinfo(getpid(), 17, 0, birth, sizeof(birth)) == sizeof(birth));
+        CHECK(write(report[1], birth + 16, 8) == 8); char byte; CHECK(read(control[0], &byte, 1) == 1); _exit(0);
+    }
+    close(report[1]); close(control[0]); uint64_t unique = 0; CHECK(read(report[0], &unique, sizeof(unique)) == sizeof(unique) && unique);
+    struct proc_fdinfo fds[4096];
+    CHECK(__proc_info_extended_id(2, child, PROC_PIDLISTFDS, 2, unique, 0, (uintptr_t)fds, sizeof(fds)) > 0);
+    memset(fds, 0xa5, sizeof(fds));
+    CHECK(__proc_info_extended_id(2, child, PROC_PIDLISTFDS, 2, unique + 1, 0, (uintptr_t)fds, sizeof(fds)) == -1 && errno == ESRCH);
+    CHECK(((unsigned char *)fds)[0] == 0xa5); // No metadata copied for another birth.
+    CHECK(write(control[1], "X", 1) == 1); close(report[0]); close(control[1]); int status;
+    CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    puts("UID guard real descendant list positive/mismatched birth ESRCH/no data copy; own PIDFDINFO ignores guard control OK");
+}
+static void orphan_data(void) {
+    int outer[2]; CHECK(pipe(outer) == 0);
+    pid_t parent = fork(); CHECK(parent >= 0);
+    if (parent == 0) {
+        close(outer[0]); int fd = dial(0), gate[2]; CHECK(pipe(gate) == 0);
+        struct socket_fdinfo info = {0}; CHECK(proc_pidfdinfo(getpid(), fd, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info));
+        uint64_t handle = info.psi.soi_so;
+        pid_t child = fork(); CHECK(child >= 0);
+        if (child == 0) {
+            alarm(5); close(gate[1]); char byte; CHECK(read(gate[0], &byte, 1) == 0);
+            CHECK(proc_pidfdinfo(getpid(), fd, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info) && info.psi.soi_so == handle);
+            echo(fd, "orphan-physical-client-safe"); close(fd);
+            CHECK(write(outer[1], "G", 1) == 1); close(outer[1]); close(gate[0]); _exit(0);
+        }
+        close(gate[0]); _exit(0); // Kernel closes this parent's pins; child client stays real.
+    }
+    close(outer[1]); char result; CHECK(read(outer[0], &result, 1) == 1 && result == 'G'); close(outer[0]); int status;
+    CHECK(waitpid(parent, &status, 0) == parent && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    puts("ORPHAN parent exit leaves descendant physical fd identity/bytes safe OK");
+}
+static void exec_clients(const char *binary) {
+    int before = fd_count(), fd = dial(0);
+    pid_t child = fork(); CHECK(child >= 0);
+    if (child == 0) {
+        char number[20]; snprintf(number, sizeof(number), "%d", port);
+        execl(binary, binary, number, path, "exec-child-wait", (char *)NULL); _exit(9);
+    }
+    char marker[100]; snprintf(marker, sizeof(marker), "fork-eof:%ld:%ld\n", (long)getpid(), (long)child); echo(fd, marker);
+    CHECK(kernel_call(SYS_close, fd, 0) == 0);
+    count_eventually(before, "EXEC_CLOEXEC_PIN");
+    int status; CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    puts("EXEC same birth/closed CLOEXEC client/parent pin EOF while child alive OK");
+}
+static void unix_fork_control(void) {
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0); CHECK(fd >= 0); int copy = dup(fd); CHECK(copy >= 0);
+    struct sockaddr_un addr = {0}; addr.sun_family = AF_UNIX; strcpy(addr.sun_path, path);
+    addr.sun_len = (unsigned char)(offsetof(struct sockaddr_un, sun_path) + strlen(path) + 1);
+    pid_t child = fork(); CHECK(child >= 0);
+    if (child == 0) {
+        CHECK(connect(copy, (struct sockaddr *)&addr, addr.sun_len) == 0); echo(fd, "unix-fork-child"); close(fd); close(copy); exit(0);
+    }
+    int status; CHECK(waitpid(child, &status, 0) == child && WIFEXITED(status) && WEXITSTATUS(status) == 0);
+    echo(fd, "unix-fork-parent"); close(copy); close(fd); puts("UNIX fork same socket/client-close control OK");
+}
 int main(int argc, char **argv) {
     CHECK(argc == 3 || argc == 4); port = atoi(argv[1]); path = argv[2];
     if (argc == 4) {
@@ -371,6 +501,14 @@ int main(int argc, char **argv) {
         if (strcmp(argv[3], "cancel-unix-close-control") == 0) { queued_cancel(1, 1, 0); return 0; }
         if (strcmp(argv[3], "dup-minimum") == 0) { duplicate_minimum(); return 0; }
         if (strcmp(argv[3], "cancel-established") == 0) { established_cancel(); return 0; }
+        if (strcmp(argv[3], "child-created") == 0) { child_created(0); return 0; }
+        if (strcmp(argv[3], "child-created-raw") == 0) { child_created(1); return 0; }
+        if (strcmp(argv[3], "lease-capacity") == 0) { lease_capacity(); return 0; }
+        if (strcmp(argv[3], "uid-guard") == 0) { uid_guard(); return 0; }
+        if (strcmp(argv[3], "orphan-data") == 0) { orphan_data(); return 0; }
+        if (strcmp(argv[3], "fork-exec") == 0) { exec_clients(argv[0]); return 0; }
+        if (strcmp(argv[3], "exec-child-wait") == 0) { usleep(1000000); return 0; }
+        if (strcmp(argv[3], "unix-fork-control") == 0) { unix_fork_control(); return 0; }
         CHECK(0);
     }
     int before = fd_count();

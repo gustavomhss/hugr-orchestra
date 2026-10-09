@@ -85,6 +85,7 @@ def main():
     parser.add_argument("--artifacts", type=pathlib.Path, required=True)
     parser.add_argument("--go-client", type=pathlib.Path, help="Reuse an owned Go client unchanged for source-only reruns")
     parser.add_argument("--discard-go-cache", type=pathlib.Path, action="append", default=[], help="Discard only an explicitly owned previous proof's Go build cache")
+    parser.add_argument("--focus", action="append", help="Run selected real C CLI modes with calibrated before/after listeners")
     args = parser.parse_args()
     if sys.platform != "darwin":
         raise RuntimeError("real Darwin required; no skip/green on another OS")
@@ -164,9 +165,12 @@ def main():
                                 first = (first + data)[:128]
                             (upstream if src is c else c).sendall(data)
                 else:
-                    c.settimeout(2)
+                    c.settimeout(.2)
                     while not stop.is_set():
-                        data = c.recv(65536)
+                        try:
+                            data = c.recv(65536)
+                        except socket.timeout:
+                            continue
                         if not data:
                             break
                         event(name, "bytes", data)
@@ -319,7 +323,7 @@ int fixed_helper(int fd, int command, int minimum) { return fd + command + minim
         subprocess.run(flags + ["-target", "arm64-apple-macos11", "-O1", "-S", str(root / "bad-arm.c"), "-o", str(root / "bad-arm64.s")], check=True)
         assert marshal not in " ".join(body((root / "bad-arm64.s").read_text(), "tracked_fcntl").split()), "ABI mutation did not remove real entry marshal"
         evidence["arm64_abi"] = {"compiler_control": True, "requested_minimum": 4096, "variadic_argument": "[entry sp]", "fixed_argument": "w2", "mutation_red": True, "restored_green": True, "runtime_verified": False}
-        evidence["pending"] = ["ARM64 runtime execution", "POSIX pre-exec fork-child keeper ownership redesign", "lead repeat of Cassandra positive through changed SOURCE"]
+        evidence["pending"] = ["ARM64 runtime execution", "child-created raw-last-close keeper ownership", "lead repeat of Cassandra positive through changed SOURCE"]
 
         port = listener("loop", "127.0.0.1")
         listener("lan", args.lan, port)
@@ -338,6 +342,15 @@ int fixed_helper(int fd, int command, int minimum) { return fd + command + minim
         route_map = primary + ";" + str(second) + ":" + sock2.encode().hex()
         matrix = [sys.executable, "-B", str(SCRIPT / "tcp-proxy-native-proof.py"), "--client", json.dumps(cfg)]
         go = [str(root / "go-client"), "127.0.0.1:" + str(port)]
+        if args.focus:
+            baseline(run("baseline-before", matrix, "baseline"))
+            for mode in args.focus:
+                row = run("focus-" + mode, [str(root / "fds"), str(port), sock, mode])
+                assert row["code"] == 0, (mode, row["code"], row["out"], row["err"])
+            baseline(run("baseline-after", matrix, "baseline"))
+            evidence["focused_modes"] = args.focus
+            evidence["passed"] = True
+            return
         baseline(run("baseline-before", matrix, "baseline"))
         confined(run("matrix-native", matrix))
         confined(run("matrix-no-helper", matrix, helper=None), False)
@@ -380,6 +393,14 @@ int fixed_helper(int fd, int command, int minimum) { return fd + command + minim
             assert row["code"] == 0, (mode, row["code"], row["out"], row["err"])
             if mode.startswith("cancel-"):
                 assert "PTHREAD_CANCELED" in row["err"] and "QUEUED_CANCEL delivered" in row["out"], row
+        for mode in ["uid-guard", "lease-capacity", "child-created", "orphan-data", "fork-exec"]:
+            row = run("lease-" + mode, critical + [mode])
+            assert row["code"] == 0, (mode, row["code"], row["out"], row["err"])
+            if mode in {"child-created", "fork-exec"}:
+                assert any(e["event"] == "eof" and e.get("alive") == [True, True] for e in row["events"]), (mode, "no real EOF with both processes alive")
+        raw_created = run("child-created-raw-blocker", critical + ["child-created-raw"])
+        assert raw_created["code"] != 0 and "CHILD_CREATED_RAW_CLOSE local keeper retained" in raw_created["err"], (raw_created["code"], raw_created["err"])
+        evidence["child_created"] = {"hooked_close": "passed", "no_child_worker": True, "raw_last_close": "blocked: parent cannot close a child-local keeper with metadata-read authority", "integration_blocked": True}
         connect_checkpoint = "int result = connect(fd, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);"
         assert source.count(connect_checkpoint) == 1
         established = source.replace(connect_checkpoint, connect_checkpoint + "\n    if (result == 0) { pthread_cancel(pthread_self()); pthread_testcancel(); }")
@@ -454,16 +475,19 @@ int fixed_helper(int fd, int command, int minimum) { return fd + command + minim
             "if (result == 0) { dup2(replacement, fd); dup2(replacement, p->keeper); p->handle = identity(fd); }"))
         prune_start = source.index("static int prune(void)")
         prune_end = source.index("static void cancelled", prune_start)
-        pin_close = "if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);"
+        pin_close = "if (identity(records[i].keeper) == records[i].handle) close_nocancel(records[i].keeper);"
         assert source[prune_start:prune_end].count(pin_close) == 1
         retain = source[:prune_start] + source[prune_start:prune_end].replace(pin_close, """struct socket_fdinfo refs = {0};
         if (proc_pidfdinfo(getpid(), records[i].keeper, PROC_PIDFDSOCKETINFO, &refs, sizeof(refs)) == sizeof(refs) && (refs.pfi.fi_status & PROC_FP_SHARED)) { pthread_setcancelstate(cancel_state, NULL); continue; }
         """ + pin_close) + source[prune_end:]
+        child_drop = "close_nocancel(records[i].keeper);\n        records[i].keeper = -1;"
+        assert source.count(child_drop) == 1
+        retain = retain.replace(child_drop, "/* original bug: inherited keeper retained */")
         evidence["blocker_mutations"] = []
         for bug, mutant_source, mode, diagnostic in [
             ("preconnect-alias-split", split, "preconnect", "PRECONNECT_IDENTITY split"),
             ("concurrent-overwrite", overwrite, "concurrent", "successes=8 eisconn=0"),
-            ("fork-mutual-retention", retain, "fork-eof", "FORK_KEEPER_COUNT child"),
+            ("fork-mutual-retention", retain, "fork-eof", "FORK_KEEPER_COUNT child_start"),
         ]:
             (root / (bug + ".c")).write_text(mutant_source)
             subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / (bug + ".dylib")), str(root / (bug + ".c"))], check=True)
@@ -490,20 +514,22 @@ int fixed_helper(int fd, int command, int minimum) { return fd + command + minim
             assert restored["code"] == 0 and "PTHREAD_CANCELED" in restored["err"], (mode, restored["code"], restored["err"])
             evidence["cancellation_mutations"].append({"mode": mode, "red_watchdog": 88, "restored_green": True})
             save()
-        # Measure the unresolved ownership constraint rather than claim a
-        # portable post-fork fix: removing all child thread acquisition leaves
-        # no observer for a raw last-close while the child stays alive.
-        scoped = source.replace("static int maintenance_started, stopping;", "static int maintenance_started, stopping, fork_scope;")
-        scoped = scoped.replace("maintenance_started = 0;", "maintenance_started = 0; fork_scope = 1;")
-        scoped = scoped.replace("if (maintenance_started) return 1;", "if (fork_scope || maintenance_started) return 1;")
-        assert scoped != source
-        (root / "no-child-worker.c").write_text(scoped)
-        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "no-child-worker.dylib"), str(root / "no-child-worker.c")], check=True)
-        hooked = run("fork-scope-hooked-positive", critical + ["preconnect-fork"], helper="no-child-worker.dylib")
-        assert hooked["code"] == 0, (hooked["code"], hooked["err"])
-        raw_last = run("fork-scope-raw-last-close-blocker", critical + ["fork-eof"], helper="no-child-worker.dylib")
-        assert raw_last["code"] != 0 and "FORK_KEEPER_COUNT child" in raw_last["err"], (raw_last["code"], raw_last["err"])
-        evidence["fork_scope_control"] = {"child_threads_removed": True, "hooked_child_positive": True, "raw_last_close": "blocked: child identity keeper has no executor", "integration_blocked": True}
+        guard_call = "return __proc_info_extended_id(call, atomic_load(&lease->pid), (uint32_t)flavor, 2, unique, arg, (uintptr_t)out, size);"
+        assert source.count(guard_call) == 1
+        missing = source.replace(guard_call, "(void)call; (void)flavor; (void)arg; (void)out; (void)size; errno = EACCES; return -1;")
+        (root / "missing-child-inventory.c").write_text(missing)
+        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "missing-child-inventory.dylib"), str(root / "missing-child-inventory.c")], check=True)
+        held = run("lease-missing-inventory-failclosed", critical + ["fork-eof"], helper="missing-child-inventory.dylib")
+        assert held["code"] != 0 and "FORK_KEEPER_COUNT parent" in held["err"], (held["code"], held["err"])
+        missing_birth = source.replace("atomic_store(&lease->unique, valid ? birth.unique : 0);", "atomic_store(&lease->unique, 0);")
+        assert missing_birth != source
+        (root / "unknown-child-birth.c").write_text(missing_birth)
+        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "unknown-child-birth.dylib"), str(root / "unknown-child-birth.c")], check=True)
+        unknown = run("lease-unknown-birth-failclosed", critical + ["fork-eof"], helper="unknown-child-birth.dylib")
+        assert unknown["code"] != 0 and "FORK_KEEPER_COUNT parent" in unknown["err"], (unknown["code"], unknown["err"])
+        restored = run("lease-observer-restored", critical + ["fork-eof"])
+        assert restored["code"] == 0 and any(e["event"] == "eof" and e.get("alive") == [True, True] for e in restored["events"])
+        evidence["parent_leases"] = {"capacity": 64, "socket_limit": 1024, "inventory_budget": 8192, "kernel_unique_id_guard": True, "unknown_birth_no_inspection": True, "missing_inventory_retains_pin": True, "restored_green": True}
         baseline(run("baseline-after", matrix, "baseline"))
         evidence["generated_files"] = [str(p.relative_to(root)) for p in (root / "output").rglob("*") if p.is_file()]
         assert not evidence["generated_files"], evidence["generated_files"]
