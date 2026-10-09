@@ -79,5 +79,6 @@ jobs:
         with:
           name: omni-desktop-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: packages/desktop/.omni-desktop-evidence/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7

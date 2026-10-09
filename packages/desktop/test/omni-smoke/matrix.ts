@@ -46,7 +46,8 @@ export async function run(cell: Cell, mutation?: Mutation) {
     if (!inventoryScope(rows, [main]).some((row) => matches(row, utility))) throw new Error("actual utilityProcess not descendant of pinned Electron main")
     roots.push(main, utility)
     scratch.specs.forEach((spec) => adoptTree(scratch.home, spec.nonce, [spec.name === "main" ? main : utility]))
-    evidence.hosts = { main, utility, launcher: roots[0], versions: server.versions, resources: server.resources, userData: server.userData, home: server.home, nonce: server.nonce }
+    evidence.hosts = { main, utility, launcher: roots[0], mainSession: rows.find((row) => matches(row, main))?.session, utilitySession: rows.find((row) => matches(row, utility))?.session,
+      versions: server.versions, resources: server.resources, userData: server.userData, home: server.home, nonce: server.nonce }
     await until(30_000, "actual Electron visible GUI window/display", () => events(scratch.report).find((event) => event.name === "gui-visible" && event.pid === main.pid && event.windows?.some((window) => window.visible) && event.displays?.length) ?? undefined)
     evidence.protocols = await activate(scratch, server, mutation === "legacy")
     if (mutation === "legacy") {

@@ -38,6 +38,8 @@ export async function build() {
   copyFileSync(addon, path.join(native, "hugr_omni.node"))
   copyFileSync(supervisor, path.join(native, path.basename(supervisor)))
   const at = new Date().toISOString()
+  writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
+    at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
   const env = { ...process.env, ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: native }
   await command([process.execPath, "scripts/prebuild.ts"], env)
   await command([process.execPath, "x", "electron-vite", "build"], env)
