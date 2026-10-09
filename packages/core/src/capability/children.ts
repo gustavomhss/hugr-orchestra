@@ -64,7 +64,7 @@ export const make = Effect.gen(function* () {
         return Effect.gen(function* () {
           if (ordinal > 64 || binding.lineage.length >= 8) return yield* failure("quota_exceeded")
           // Same grammar as Tool.validateName, with an exact end assertion (no trailing newline).
-          if (!/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(name))
+          if (typeof name !== "string" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(name))
             return yield* failure("unsupported_operation")
           const input = CapabilityVendorSchema.snapshot(suppliedInput)
           if (input instanceof Capability.Failure) return yield* input
@@ -95,6 +95,8 @@ export const make = Effect.gen(function* () {
                 if (existing) return yield* failure(
                   existing.id === proof.callID && existing.request_hash === proof.requestHash &&
                   existing.tool_name === name && existing.agent_id === context.agent &&
+                  existing.session_id === context.sessionID && existing.assistant_message_id === context.assistantMessageID &&
+                  existing.parent_call_id === proof.parentCallID && existing.ordinal === ordinal &&
                   existing.root_call_id === binding.rootInvocation.callID &&
                   existing.root_tool_name === binding.rootToolName && existing.depth === binding.lineage.length + 1
                     ? "outcome_unknown" : "invocation_binding_mismatch",

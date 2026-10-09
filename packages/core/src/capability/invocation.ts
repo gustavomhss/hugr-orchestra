@@ -57,12 +57,13 @@ export function withContext<A, E, R>(
     const value = decoded.value
     if (value.owner.sessionID !== value.invocation.sessionID || value.owner.agentID !== value.invocation.agentID)
       return Effect.fail(mismatch())
+    const invocation = Object.freeze({ ...value.invocation })
     const frame: Frame = Object.freeze({
       [issued]: true as const,
       issuer: value.issuer,
       owner: Object.freeze({ ...value.owner, location: Object.freeze({ ...value.owner.location }) }),
-      invocation: Object.freeze({ ...value.invocation }),
-      rootInvocation: Object.freeze({ ...value.invocation }),
+      invocation,
+      rootInvocation: invocation,
       lineage: Object.freeze([]),
       rootToolName: value.rootToolName,
       effectiveRules: Object.freeze(value.effectiveRules.map((rule) => Object.freeze({ ...rule }))),
@@ -86,12 +87,12 @@ export function withChildContext<A, E, R>(
 ): Effect.Effect<A, E | Capability.Failure, R> {
   return Effect.gen(function* () {
     const current = yield* Current
-    if (!current || current[issued] !== true || !matches(parentContext, current.invocation) ||
+    if (!current || current[issued] !== true || !proof || !matches(parentContext, current.invocation) ||
       proof.parentCallID !== current.invocation.callID || !Number.isSafeInteger(proof.ordinal) ||
       proof.ordinal < 1 || proof.ordinal > 64 || current.lineage.length >= 8 ||
       proof.callID !== childID(current.invocation, proof.ordinal) ||
-      !/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(proof.toolName) ||
-      !/^[0-9a-f]{64}(?![\s\S])/.test(proof.requestHash)) return yield* mismatch()
+      typeof proof.toolName !== "string" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(proof.toolName) ||
+      typeof proof.requestHash !== "string" || !/^[0-9a-f]{64}(?![\s\S])/.test(proof.requestHash)) return yield* mismatch()
     const frame: Frame = Object.freeze({
       ...current,
       invocation: Object.freeze({ ...current.invocation, callID: proof.callID }),
