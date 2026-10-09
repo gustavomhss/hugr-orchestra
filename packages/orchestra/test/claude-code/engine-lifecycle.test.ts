@@ -193,7 +193,11 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
     expect(children).toHaveLength(1)
     expect(children[0].exitCode).toBeNull()
     expect(yield* Deferred.isDone(done)).toBe(false)
-    expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(yield* Effect.promise(() => environments[0]))).toEqual({
+    const environment = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.String))(
+      Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(yield* Effect.promise(() => environments[0])))
+    // Bun's Windows child runtime restores these OS fields even when options.env omits them.
+    expect(Object.fromEntries(Object.entries(environment).filter(([key]) => process.platform !== "win32" ||
+      !["HOMEDRIVE", "HOMEPATH", "LOGONSERVER", "PATH", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERDOMAIN", "USERNAME", "USERPROFILE", "WINDIR"].includes(key)))).toEqual({
       HOME: directory, CLAUDE_CONFIG_DIR: directory, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
       CLAUDE_CODE_OAUTH_TOKEN: "local-test-token", CLAUDE_CODE_OAUTH_SCOPES: "user:inference",
     })
