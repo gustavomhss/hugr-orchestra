@@ -1,5 +1,7 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
+import { EventTable } from "@orchestra/core/event/sql"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -7,7 +9,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
-import { MessageTable, SessionMessageTable } from "@orchestra/core/session/sql"
+import { MessageTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -82,8 +84,13 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
   const counters = { wake: 0, admit: 0 }
   const ops: TaskPromptOps = {
     cancel: () => Effect.void,
+    resumeNotice: (sessionID) => Effect.sync(() => {
+      expect(sessionID).toBe(parent.id)
+      counters.wake++
+    }),
     resolvePromptParts: (value) => Effect.succeed([{ type: "text", text: value }]),
     prompt: (input) => Effect.gen(function* () {
+      if (modern) throw new Error("V2 notice must not enter V1 prompt transport")
       if (!input.messageID) throw new Error("expected exact notice identity")
       counters.admit++
       const identity = PromptIdentity.fromEncoded(Schema.encodeSync(SessionPrompt.PromptInput)(input))
@@ -92,10 +99,6 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
       const admitted = previous ?? (yield* sessions.admitPrompt({ sessionID: input.sessionID, messageID: input.messageID,
         identityVersion: 1, identity, info: user, parts: input.parts.flatMap((item) => item.type === "text" ?
           [{ ...item, id: PartID.ascending(), messageID: input.messageID, sessionID: input.sessionID }] : []) })).message
-      if (modern) {
-        const stored = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.messageID)).get().pipe(Effect.orDie)
-        if (!stored) yield* events.publish(SessionEvent.Synthetic, { sessionID: input.sessionID, messageID: input.messageID, text, timestamp: yield* DateTime.now })
-      }
       if (!input.noReply) counters.wake++
       return admitted
     }).pipe(Effect.orDie),
@@ -194,11 +197,81 @@ it.instance("interrupted admission leaves receipt absent", () => Effect.gen(func
 
 it.instance("V2 terminal Task accepts exact progress receipt referencing durable synthetic projection", () => Effect.gen(function* () {
   const f = yield* seed(true)
-  yield* f.deliver()()
+  const deliver = f.deliver()
+  yield* deliver()
+  yield* deliver()
   expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID, parentMessageID: f.owner.id } })
   const row = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.request.messageID)).get().pipe(Effect.orDie)
   expect(row?.type).toBe("synthetic")
   expect(yield* f.read()).not.toHaveProperty("upstreamSettlement.deliveryPartID")
+  const events = yield* f.database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
+  expect(events.filter((event) => event.type === EventV2.versionedType(SessionEvent.Synthetic.type, 1) &&
+    event.data.messageID === f.request.messageID)).toHaveLength(1)
+  const legacy = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, f.request.messageID)).get().pipe(Effect.orDie)
+  expect(legacy).toBeUndefined()
+  expect(f.counters.admit).toBe(0)
+  expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("V2 conflicting synthetic identity is held without append or resume", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  yield* f.events.publish(SessionEvent.Synthetic, { sessionID: f.parent.id, messageID: f.request.messageID,
+    timestamp: yield* DateTime.now, text: "other dispatch" })
+  expect(Exit.isFailure(yield* Effect.exit(f.deliver()()))).toBe(true)
+  expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
+  expect(f.counters.admit).toBe(0)
+  expect(f.counters.wake).toBe(0)
+}))
+
+it.instance("V2 fault after native Synthetic commit reconciles existing projection without second append", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const fault = { once: true }
+  const events = EventV2Bridge.Service.of({ ...f.events, publish: (definition, data, options) =>
+    f.events.publish(definition, data, options).pipe(Effect.flatMap((event) => {
+      if (definition.type === SessionEvent.Synthetic.type && fault.once) {
+        fault.once = false
+        return Effect.die(new Error("after native Synthetic commit"))
+      }
+      return Effect.succeed(event)
+    })) })
+  const deliver = f.deliver()
+  expect(Exit.isFailure(yield* Effect.exit(deliver().pipe(Effect.provideService(EventV2Bridge.Service, events))))).toBe(true)
+  expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
+  yield* deliver().pipe(Effect.provideService(EventV2Bridge.Service, events))
+  const rows = yield* f.database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
+  expect(rows.filter((event) => event.type === EventV2.versionedType(SessionEvent.Synthetic.type, 1) &&
+    event.data.messageID === f.request.messageID)).toHaveLength(1)
+  expect(f.counters.admit).toBe(0)
+  expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("native Synthetic and Task progress use actual parent Location instead of ambient placement", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const directory = "/tmp/upstream-settlement-parent-location"
+  yield* f.database.db.update(SessionTable).set({ directory }).where(eq(SessionTable.id, f.parent.id)).run().pipe(Effect.orDie)
+  const locations: EventV2.PublishOptions["location"][] = []
+  const events = EventV2Bridge.Service.of({ ...f.events, publish: (definition, data, options) => {
+    if (definition.type === SessionEvent.Synthetic.type || definition.type === SessionEvent.Tool.Progress.type)
+      locations.push(options?.location)
+    return f.events.publish(definition, data, options)
+  } })
+  yield* f.deliver()().pipe(Effect.provideService(EventV2Bridge.Service, events))
+  expect(locations).toHaveLength(2)
+  locations.forEach((location) => expect(location).toMatchObject({ directory }))
+  expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+}))
+
+it.instance("V2 native resume failure cannot repeat execution on delivery retry", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const ops: TaskPromptOps = { ...f.ops, resumeNotice: (sessionID) => {
+    if (!f.ops.resumeNotice) throw new Error("expected private resume adapter")
+    return f.ops.resumeNotice(sessionID).pipe(Effect.andThen(Effect.die(new Error("native resume failed after starting"))))
+  } }
+  const deliver = f.deliver(f.capture, ops)
+  expect(Exit.isFailure(yield* Effect.exit(deliver()))).toBe(true)
+  yield* deliver()
+  expect(f.counters.wake).toBe(1)
+  expect(f.counters.admit).toBe(0)
 }))
 
 it.instance("settle before completion survives native V2 success and late generic progress", () => Effect.gen(function* () {

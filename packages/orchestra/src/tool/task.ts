@@ -40,6 +40,8 @@ import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
+  /** Private host notice continuation through the existing process-global serialized V2 execution owner. */
+  resumeNotice?(sessionID: SessionID): Effect.Effect<void>
   resolvePromptParts(template: string): Effect.Effect<SessionPrompt.PromptInput["parts"]>
   prompt(
     input: SessionPrompt.PromptInput,

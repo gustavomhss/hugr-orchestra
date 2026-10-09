@@ -1,9 +1,13 @@
 export * as UpstreamSettlement from "./upstream-settlement"
 
 import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
-import { MessageTable, SessionMessageTable } from "@orchestra/core/session/sql"
+import { MessageTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
+import { SessionStore } from "@orchestra/core/session/store"
+import { SessionSchema } from "@orchestra/core/session/schema"
+import { fromRow } from "@orchestra/core/session/info"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
@@ -46,6 +50,8 @@ export function make(binding: {
   const input = { ...binding, request: structuredClone(binding.request), capture: structuredClone(binding.capture) }
   // Retain one request identity across faults before/after admission. Once wake starts, never retry provider work.
   const progress = { wakeStarted: false }
+  const admission: { data?: typeof SessionEvent.Synthetic.data.Type } = {}
+  const eventID = EventV2.ID.create()
   const lock = KeyedMutex.makeUnsafe<string>()
   const deliver = Effect.fn("UpstreamSettlement.deliver")(function* () {
     const database = yield* Database.Service
@@ -61,19 +67,48 @@ export function make(binding: {
       ? "error" : input.capture.state
     if (source?.type !== "task-return" || source.task_id !== input.childSessionID || source.state !== state)
       return yield* new Hold({ message: "HOLD: settlement Task source mismatch" })
+    const result = input.capture.workResult?.schema === UpstreamResult.SCHEMA ? input.capture.workResult : undefined
+    if (result && (result.author?.memberId !== "walt" || result.author.messageID !== input.capture.assistantMessageID ||
+      result.author.executionSessionID !== input.childSessionID || result.card.messageID !== input.capture.assistantMessageID ||
+      result.taskId !== input.taskID))
+      return yield* new Hold({ message: "HOLD: captured assistant binding mismatch" })
 
-    // Admit-only is deliberately outside the execution loop. Repeating this exact ID reconciles durable admission.
-    yield* input.ops.prompt({ ...input.request, noReply: true })
     const modern = yield* database.db.select().from(SessionMessageTable)
       .where(eq(SessionMessageTable.id, input.messageID)).get().pipe(Effect.orDie)
     const legacy = yield* database.db.select().from(MessageTable)
       .where(eq(MessageTable.id, input.messageID)).get().pipe(Effect.orDie)
     if ((modern && modern.session_id !== input.sessionID) || (legacy && legacy.session_id !== input.sessionID))
       return yield* new Hold({ message: "HOLD: settlement parent projection owner mismatch" })
-
-    const delivered = yield* database.db.select().from(SessionMessageTable)
-      .where(eq(SessionMessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+    const parentLocation = modern ? yield* Effect.gen(function* () {
+      const store = yield* Effect.serviceOption(SessionStore.Service)
+      if (Option.isSome(store)) {
+        const parent = yield* store.value.get(SessionSchema.ID.make(input.sessionID))
+        if (!parent) return yield* new Hold({ message: "HOLD: native parent Session missing" })
+        return parent.location
+      }
+      // Legacy-host contexts may omit the global Store binding. Use its exact canonical row decoder, no new layer.
+      const row = yield* database.db.select().from(SessionTable)
+        .where(eq(SessionTable.id, input.sessionID)).get().pipe(Effect.orDie)
+      if (!row) return yield* new Hold({ message: "HOLD: native parent Session missing" })
+      return fromRow(row).location
+    }) : undefined
     const receipt = modern ? yield* Effect.gen(function* () {
+      if (modern.type !== "assistant") return yield* new Hold({ message: "HOLD: original parent not assistant" })
+      if (!input.ops.resumeNotice) return yield* new Hold({ message: "HOLD: native notice resume adapter missing" })
+      const existing = yield* database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+      const retained = yield* database.db.select().from(MessageTable)
+        .where(eq(MessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+      if (retained) return yield* new Hold({ message: "HOLD: native notice identity already belongs to a legacy message" })
+      if (!existing) {
+        // Native host delivery, not a V1 prompt or a fabricated projection. Keep event ID/data stable across faults.
+        const data = admission.data ?? { sessionID: input.sessionID, messageID: input.request.messageID,
+          timestamp: yield* DateTime.now, text: text.text }
+        admission.data = data
+        yield* events.publish(SessionEvent.Synthetic, data, { id: eventID, location: parentLocation })
+      }
+      const delivered = yield* database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
       if (!delivered || delivered.session_id !== input.sessionID)
         return yield* new Hold({ message: "HOLD: synthetic delivery not projected" })
       const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...delivered.data, id: delivered.id, type: delivered.type })
@@ -82,6 +117,9 @@ export function make(binding: {
       return { deliveryMessageID: message.id }
     }) : yield* Effect.gen(function* () {
       if (!legacy) return yield* new Hold({ message: "HOLD: original parent missing" })
+      if (legacy.data.role !== "assistant") return yield* new Hold({ message: "HOLD: original parent not assistant" })
+      // V1 admission-only stays outside execution; exact retry reconciles the same request and message ID.
+      yield* input.ops.prompt({ ...input.request, noReply: true })
       const message = yield* MessageV2.get({ sessionID: input.sessionID, messageID: input.request.messageID })
       const part = message.parts[0]
       if (message.info.role !== "user" || message.info.sessionID !== input.sessionID ||
@@ -92,12 +130,7 @@ export function make(binding: {
       return { deliveryMessageID: message.info.id, deliveryPartID: part.id }
     })
 
-    const result = input.capture.workResult?.schema === UpstreamResult.SCHEMA ? input.capture.workResult : undefined
     if (result) {
-      if (result.author?.memberId !== "walt" || result.author.messageID !== input.capture.assistantMessageID ||
-        result.author.executionSessionID !== input.childSessionID || result.card.messageID !== input.capture.assistantMessageID ||
-        result.taskId !== input.taskID)
-        return yield* new Hold({ message: "HOLD: captured assistant binding mismatch" })
       const settlement = { parentMessageID: input.messageID, parentCallID: input.callID, workResult: result, ...receipt }
       if (modern) {
         const parent = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
@@ -110,11 +143,15 @@ export function make(binding: {
         const metadata = { ...previous, parentSessionId: input.sessionID, sessionId: input.childSessionID,
           workResult: result, upstreamSettlement: settlement }
         const owner = { sessionID: input.sessionID, messageID: input.messageID, callID: input.callID, tool: tool.name, input: tool.state.input }
+        const before = SessionMessageUpdater.upstreamSettlement(previous, owner)
+        if (before && !isDeepStrictEqual(before, settlement))
+          return yield* new Hold({ message: "HOLD: original Task settlement conflicts" })
         if (previous.parentSessionId !== input.sessionID || previous.sessionId !== input.childSessionID ||
           !SessionMessageUpdater.upstreamSettlement(metadata, owner))
           return yield* new Hold({ message: "HOLD: original Task binding mismatch" })
-        yield* events.publish(SessionEvent.Tool.Progress, { sessionID: input.sessionID, assistantMessageID: input.messageID,
-          callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content })
+        if (!before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: input.sessionID, assistantMessageID: input.messageID,
+          callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content },
+          { location: parentLocation })
       }
       if (!modern) {
         const parent = yield* MessageV2.get({ sessionID: input.sessionID, messageID: input.messageID })
@@ -125,16 +162,25 @@ export function make(binding: {
           part.state.status === "pending") return yield* new Hold({ message: "HOLD: original Task part missing" })
         const metadata = { ...part.state.metadata, parentSessionId: input.sessionID, sessionId: input.childSessionID,
           workResult: result, upstreamSettlement: settlement }
+        const before = SessionMessageUpdater.upstreamSettlement(part.state.metadata ?? {}, { sessionID: input.sessionID,
+          messageID: input.messageID, callID: input.callID, tool: part.tool, input: part.state.input })
+        if (before && !isDeepStrictEqual(before, settlement))
+          return yield* new Hold({ message: "HOLD: original Task part settlement conflicts" })
         if (part.state.metadata?.parentSessionId !== input.sessionID || part.state.metadata?.sessionId !== input.childSessionID ||
           !SessionMessageUpdater.upstreamSettlement(metadata, { sessionID: input.sessionID, messageID: input.messageID,
             callID: input.callID, tool: part.tool, input: part.state.input }))
           return yield* new Hold({ message: "HOLD: original Task part binding mismatch" })
-        yield* sessions.updatePart(Schema.decodeUnknownSync(SessionV1.ToolPart)({ ...part, state: { ...part.state, metadata } },
+        if (!before) yield* sessions.updatePart(Schema.decodeUnknownSync(SessionV1.ToolPart)({ ...part, state: { ...part.state, metadata } },
           { onExcessProperty: "error" }))
       }
     }
     if (progress.wakeStarted) return
     progress.wakeStarted = true
+    if (modern) {
+      if (!input.ops.resumeNotice) return yield* new Hold({ message: "HOLD: native notice resume adapter missing" })
+      yield* input.ops.resumeNotice(input.sessionID)
+      return
+    }
     yield* input.ops.prompt({ ...input.request, noReply: false })
   })
   return () => lock.withLock(input.request.messageID)(deliver())
