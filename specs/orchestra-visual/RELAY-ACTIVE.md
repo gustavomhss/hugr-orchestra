@@ -10,6 +10,40 @@ build or product smoke while combined implementation is incomplete. Prepare runn
 checks now; perform one integrated validation batch after combined source is ready.
 Reuse existing source-bound evidence; keep gates intact. Static cold review remains required.
 
+## Current ready pin and validation handoff
+
+All known semantic repairs and source-growth extractions are composed in clean published
+`35c52d2c6716afb18e89cd3fa219da2f1bd55873`. Runtime received exact pin and three independent
+static review receipts in `msg_1212e620c001b0GSfQACTiy8h6`.
+
+- Guards/private port/writer and distinct Maestro-validator/Lucy-reviewer identity fixes:
+  `e5e0507dd532ccc63f0af39a021b358cf6171585`.
+- Grounded V3 consumer: exact upstream `db4b028360` + prepared cases `0cc55ee829`, mapped to
+  `eb1d670878` / `75e643f51b`; V3 requires actual grounding, historical V1/V2 preserved.
+- Evaluator settlement/repair extraction: `5acf4d190f`.
+- Private prompt operations extraction plus options forwarding: `09ce00affa` (includes `0f29096aad`).
+- Background Task extraction: `294c98f6f7`.
+- Runtime candidate `75c4370b6c` contributes exactly one internal Relay workspace dependency line
+  in Orchestra manifest and Bun lock, plus supported generated SDK and human-only generated cap.
+  SDK **16718 LOC** explicitly human-authorized; Client **6646** unchanged. No source waiver.
+
+### Cold source-review receipts
+
+All three review exact HEAD `35c52d2c67` against baseline `75e643f51b`. Verdicts are static
+APPROVE only, not compilation, runtime, budget-gate or acceptance results.
+
+| Slice | Reviewer Session | Final assistant receipt |
+| --- | --- | --- |
+| Evaluator extraction | `ses_eded631b9ffeeuH7Y2JlpZ4P4Q` | `msg_1212a84b7001tGQY9nCG1fj2cZ` |
+| Prompt operations extraction | `ses_eded6319bffeD54cwmmW8s7mS8` | `msg_1212cbf3e001w3F8P9BvZWcIAp` |
+| Background Task extraction | `ses_eded6318fffevTIEIZGheWYg6T` | `msg_1212b2c36001g13xxJvzkDehF7` |
+
+Runtime owns one coalesced failed-package/Godfile/scoped QA pass after composition and local
+PTY setup. Official bun-pty 0.4.9 archive was inspected by runtime; empty installed dist is
+local cache/install corruption, not a new source dependency/version change. Relay does not
+duplicate those checks. Nix measurement activation waits for actual post-generation/checks
+freeze. Core Omni `37943566437` on unrelated `f3b2b67` is not Maestro evidence or a failure card.
+
 ## Exact source state
 
 | Front | Source checkpoint | State |

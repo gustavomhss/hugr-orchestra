@@ -36,7 +36,7 @@ import { testEffect } from "../lib/effect"
 
 afterEach(disposeAllInstances)
 const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, CrossSpawnSpawner.node, BackgroundJob.node, Session.node, SessionProjector.node, EventV2Bridge.node, Database.node]),
+  LayerNode.group([filesystem, CrossSpawnSpawner.node, BackgroundJob.node, Session.node, SessionProjector.node, EventV2.node, EventV2Bridge.node, Database.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })]],
 ))
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
