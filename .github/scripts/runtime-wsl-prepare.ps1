@@ -4,6 +4,7 @@
 # PUB-NS-001: controlled CI, build-owned cooperating publisher/account namespace.
 # Stable regular/reparse/confinement checks apply; hostile same-UID mutation is excluded.
 # Registrations are per Windows account. Cleanup uses that same account/temp setting.
+# Explicit RUNNER_TEMP is required; reports stay beneath this declared CI namespace.
 # Hard kill can bypass finally or leave WSL service import work: an external janitor
 # MUST discover OrchestraCI-*/recovery.json, retain a copy before cleanup, and retry
 # this entrypoint while its owned root remains. No hard-kill cleanup guarantee.
@@ -105,10 +106,22 @@ function Wsl([string[]]$Arguments, [string]$Failure, [int]$Seconds = 20) {
         }
     }
 }
-function Registrations([string]$Name) {
+function Registrations([string]$Name = '') {
     $Key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss'
     if (-not (Test-Path $Key)) { return }
-    Get-ChildItem $Key | Get-ItemProperty | Where-Object { $_.DistributionName -ceq $Name }
+    Get-ChildItem $Key | Get-ItemProperty | Where-Object { -not $Name -or $_.DistributionName -ceq $Name }
+}
+function OutsideForeign([string]$Path, [string]$OwnName = '') {
+    foreach ($Entry in @(Registrations)) {
+        if ($OwnName -and $Entry.DistributionName -ceq $OwnName) { continue }
+        $Base = AbsolutePath ($Entry.BasePath -replace '^\\\\\?\\', '')
+        Require (-not ($Path.Equals($Base, [StringComparison]::OrdinalIgnoreCase) -or $Path.StartsWith($Base + '\', [StringComparison]::OrdinalIgnoreCase))) 'INFRA_FOREIGN_DISTRO_STORAGE_REFUSED'
+    }
+}
+function ReportNamespace([string]$Path, [string]$OwnName = '') {
+    Require ($Path -ceq (AbsolutePath $Path) -and $Path.StartsWith($script:Temp + '\', [StringComparison]::OrdinalIgnoreCase)) 'INFRA_CI_REPORT_NAMESPACE_REQUIRED'
+    NoReparse (Split-Path $Path -Parent)
+    OutsideForeign $Path $OwnName
 }
 function SaveRecovery($Record) {
     NoReparse $Record.root
@@ -133,16 +146,19 @@ function OwnedRecovery($Entry, [string]$EntryPath) {
     Require ($Record.name -ceq $Entry.name -and $Record.root -ceq $Entry.root -and $Record.recovery -ceq $RecoveryPath -and $Record.account -ceq $script:Account) 'INFRA_OWN_RECOVERY_MISMATCH'
     Require ($Record.state -cin @('prepared', 'importAttempt', 'imported') -and $Record.namespace -ceq 'PUB-NS-001') 'INFRA_OWN_RECOVERY_STATE_INVALID'
     Require ($Record.nonce -cmatch '^[0-9a-f-]{36}$' -and $Record.version -in @(1, 2)) 'INFRA_OWN_RECOVERY_IDENTITY_INVALID'
-    $null = AbsolutePath $Record.report
+    ReportNamespace $Record.report $Record.name
     if ($EntryPath -cne $RecoveryPath) {
         Require ($EntryPath -ceq $Record.report) 'INFRA_OWN_REPORT_PATH_MISMATCH'
         RegularFile $EntryPath
-        Require ($Entry.ownership -ceq $Record.nonce -and (Get-FileHash -LiteralPath $EntryPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $Record.reportHash) 'INFRA_OWN_REPORT_REPLACED'
+        Require ($Entry.account -ceq $Record.account -and $Entry.ownership -ceq $Record.nonce -and (Get-FileHash -LiteralPath $EntryPath -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $Record.reportHash) 'INFRA_OWN_REPORT_REPLACED'
     }
     return $Record
 }
-function RemoveOwned($Record) {
-    $Record = OwnedRecovery $Record $Record.recovery
+function RemoveOwned($Record, [bool]$KeepRecovery = $false) {
+    $Owned = OwnedRecovery $Record $Record.recovery
+    Require ($Owned.nonce -ceq $Record.nonce -and $Owned.account -ceq $Record.account -and $Owned.report -ceq $Record.report) 'INFRA_CURRENT_RECOVERY_REPLACED'
+    $Record = $Owned
+    OutsideForeign $Record.root $Record.name
     $Entries = @(Registrations $Record.name)
     $Names = (Wsl @('--list', '--quiet') 'INFRA_CLEANUP_LIST_REQUIRED') -split '\r?\n'
     Require ($Entries.Count -le 1 -and ($Names -ccontains $Record.name) -eq ($Entries.Count -eq 1)) 'INFRA_CLEANUP_REGISTRATION_LIST_MISMATCH'
@@ -160,6 +176,7 @@ function RemoveOwned($Record) {
         # Killing wsl.exe does not prove a service-side import stopped or cannot finish.
         Require ($Record.state -cne 'importAttempt') 'INFRA_IMPORT_RECONCILIATION_UNRESOLVED_EXTERNAL_JANITOR_REQUIRED'
     }
+    if ($KeepRecovery) { return } # Guest reconciled; another finalization failure still needs recovery.
     # WSL removes WSL1 Linux symlinks first. Refuse reparse points in leftovers.
     $Pending = [Collections.Generic.Stack[string]]::new()
     $Pending.Push($Record.root)
@@ -183,9 +200,13 @@ function RemoveOwned($Record) {
 function RemoveFailedReport($Record) {
     if (-not (Test-Path -LiteralPath $Record.report)) { return }
     # Identity/content check in the declared stable namespace, not an anti-race ACL claim.
-    RegularFile $Record.report
-    $Entry = Get-Content -LiteralPath $Record.report -Raw | ConvertFrom-Json
-    $null = OwnedRecovery $Entry $Record.report
+    try {
+        ReportNamespace $Record.report $Record.name
+        RegularFile $Record.report
+        $Entry = Get-Content -LiteralPath $Record.report -Raw | ConvertFrom-Json
+        Require ($Record.account -ceq $script:Account -and $Entry.account -ceq $Record.account -and $Entry.name -ceq $Record.name -and $Entry.root -ceq $Record.root -and $Entry.ownership -ceq $Record.nonce) 'INFRA_CURRENT_REPORT_IDENTITY_MISMATCH'
+        Require ((Get-FileHash -LiteralPath $Record.report -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $Record.reportHash) 'INFRA_CURRENT_REPORT_HASH_MISMATCH'
+    } catch { throw "INFRA_FAILED_REPORT_REPLACED_OR_MALFORMED:$($_.Exception.Message)" }
     Remove-Item -LiteralPath $Record.report
 }
 
@@ -195,22 +216,30 @@ Require ($HostCPU -in @('x64', 'arm64') -and [Runtime.InteropServices.RuntimeInf
 $Account = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 $WslExe = Join-Path $env:SystemRoot 'System32\wsl.exe'
 RegularFile $WslExe
-$Temp = AbsolutePath $(if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { [IO.Path]::GetTempPath() })
+Require (-not [string]::IsNullOrWhiteSpace($env:RUNNER_TEMP)) 'INFRA_CI_REPORT_NAMESPACE_REQUIRED'
+$Temp = AbsolutePath $env:RUNNER_TEMP
 NoReparse $Temp
 Require (Test-Path -LiteralPath $Temp -PathType Container) 'INFRA_TEMP_DIRECTORY_REQUIRED'
 $ReportPath = AbsolutePath $Report
-NoReparse (Split-Path $ReportPath -Parent)
+ReportNamespace $ReportPath
+OutsideForeign $Temp
 if ($Cleanup) {
     RegularFile $ReportPath
     $Entry = Get-Content -LiteralPath $ReportPath -Raw | ConvertFrom-Json
     $Record = OwnedRecovery $Entry $ReportPath
-    try { RemoveOwned $Record }
-    catch { throw "INFRA_CLEANUP_BLOCKED:recovery=$($Record.recovery); failure=$($_.Exception.Message)" }
+    $Failures = [Collections.Generic.List[string]]::new()
+    if ($ReportPath -ceq $Record.recovery) {
+        try { RemoveFailedReport $Record } catch { $Failures.Add("report:$($_.Exception.Message)") }
+    }
+    try { RemoveOwned $Record ($Failures.Count -gt 0) }
+    catch { $Failures.Add("guest:$($_.Exception.Message)") }
+    Require ($Failures.Count -eq 0) "INFRA_CLEANUP_BLOCKED:recovery=$($Record.recovery); failures=$($Failures -join '; ')"
     return
 }
 Require ($Sha256 -cmatch '^[0-9a-f]{64}$') 'INFRA_ROOTFS_SHA256_INVALID'
 $RootfsPath = AbsolutePath $Rootfs
 RegularFile $RootfsPath
+OutsideForeign $RootfsPath
 Require (-not (Test-Path -LiteralPath $ReportPath)) 'INFRA_REPORT_NOT_FRESH'
 Require ($RootfsPath -ine $ReportPath) 'INFRA_REPORT_ROOTFS_COLLISION'
 Require (-not (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') -and -not (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired')) 'INFRA_HOST_REBOOT_REQUIRED'
@@ -222,6 +251,7 @@ Require ($FeatureState -eq 'Enabled') 'INFRA_WSL_FEATURE_OR_REBOOT_REQUIRED'
 $null = Wsl @('--status') 'INFRA_WSL_KERNEL_OR_READINESS_REQUIRED'
 $Name = 'OrchestraCI-' + [guid]::NewGuid().ToString()
 $Root = Join-Path $Temp $Name
+OutsideForeign $Root
 Require (-not (Test-Path -LiteralPath $Root)) 'INFRA_OWN_ROOT_NOT_FRESH'
 Require (@(Registrations $Name).Count -eq 0 -and -not ((Wsl @('--list', '--quiet') 'INFRA_WSL_LIST_REQUIRED') -split '\r?\n' -ccontains $Name)) 'INFRA_OWN_NAME_COLLISION'
 $Record = $null
@@ -267,7 +297,7 @@ try {
     $Interop = 'set -eu; p=$(wslpath -u "$1"); test -x "$p"; "$p" /d /c exit 0'
     $null = Wsl ($GuestArgs + @('/bin/bash', '--noprofile', '--norc', '-c', $Interop, 'interop', (Join-Path $env:SystemRoot 'System32\cmd.exe'))) 'INFRA_GUEST_INTEROP_REQUIRED'
     $Evidence = [ordered]@{
-        name = $Name; root = $Root; ownership = $Record.nonce; nativeHost = "windows-$HostCPU"
+        name = $Name; root = $Root; ownership = $Record.nonce; account = $Account; nativeHost = "windows-$HostCPU"
         guest = $GuestCPU; ABI = $ProbeOutput[1]; bashElfMachine = $Machine; hash = $Hash; version = $Version
         digestVerified = $true; registrationVerified = $true; nativeBashVerified = $true
         bashVerified = $true; commandsVerified = $true; glibcVerified = $true; interopVerified = $true
@@ -282,19 +312,25 @@ try {
     $ReportStream.Flush($true)
     $ReportStream.Dispose(); $ReportStream = $null
     RegularFile $ReportPath
-    $null = OwnedRecovery (Get-Content -LiteralPath $ReportPath -Raw | ConvertFrom-Json) $ReportPath
+    $Verified = OwnedRecovery (Get-Content -LiteralPath $ReportPath -Raw | ConvertFrom-Json) $ReportPath
+    Require ($Verified.nonce -ceq $Record.nonce -and $Verified.account -ceq $Record.account -and $Verified.name -ceq $Record.name -and $Verified.root -ceq $Record.root) 'INFRA_CURRENT_REPORT_REPLACED'
     $Completed = $true
 } catch { throw "INFRA_PREPARATION_FAILED:recovery=$(Join-Path $Root 'recovery.json'); failure=$($_.Exception.Message)" }
 finally {
     # Includes cooperative cancellation. Hard termination is explicitly janitor-owned.
+    $Failures = [Collections.Generic.List[string]]::new()
     try {
-        StopLauncher
-        if ($null -ne $ReportStream) { $ReportStream.Dispose(); $ReportStream = $null }
+        try { StopLauncher } catch { $Failures.Add("launcher:$($_.Exception.Message)") }
+        try { if ($null -ne $ReportStream) { $ReportStream.Dispose(); $ReportStream = $null } }
+        catch { $Failures.Add("report-close:$($_.Exception.Message)") }
         if (-not $Completed -and $null -ne $Record) {
-            if ($ReportCreated) { RemoveFailedReport $Record }
-            RemoveOwned $Record
+            try { if ($ReportCreated) { RemoveFailedReport $Record } }
+            catch { $Failures.Add("report:$($_.Exception.Message)") }
+            try { RemoveOwned $Record ($Failures.Count -gt 0) }
+            catch { $Failures.Add("guest:$($_.Exception.Message)") }
         }
-    } catch { throw "INFRA_RECOVERY_REQUIRED:entrypoint=$(Join-Path $Root 'recovery.json'); failure=$($_.Exception.Message)" }
+        Require ($Failures.Count -eq 0) "INFRA_RECOVERY_REQUIRED:entrypoint=$(Join-Path $Root 'recovery.json'); failures=$($Failures -join '; ')"
+    }
     finally {
         if ($null -ne $InputStream) { $InputStream.Dispose() }
         if ($null -ne $ReportStream) { $ReportStream.Dispose() }
