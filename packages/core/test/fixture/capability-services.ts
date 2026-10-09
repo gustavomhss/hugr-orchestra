@@ -12,6 +12,7 @@ import type { CapabilityServiceContract } from "@orchestra/core/capability/servi
 import type { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { CapabilityChildTable } from "@orchestra/core/capability/sql"
 import { Config } from "@orchestra/core/config"
+import { ConfigToolOutput } from "@orchestra/core/config/tool-output"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -32,24 +33,29 @@ import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { eq } from "drizzle-orm"
-import { Effect, Layer, Ref, Schema } from "effect"
+import { Context, Effect, Layer, Ref, Schema } from "effect"
 import { join } from "node:path"
 import { CapabilityPolicyFixture } from "./capability-policy"
 import { tmpdir } from "./tmpdir"
 
+export class OutputLimits extends Context.Service<OutputLimits, Ref.Ref<{ max_bytes: number; max_lines: number }>>()
+  ("@orchestra/test/CapabilityServices/OutputLimits") {}
+
 export const layer = Layer.unwrap(Effect.gen(function* () {
   const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()),
     (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
-  return AppNodeBuilder.build(LayerNode.group([
+  const limits = yield* Ref.make({ max_bytes: ToolOutputStore.MAX_BYTES, max_lines: ToolOutputStore.MAX_LINES })
+  return Layer.merge(AppNodeBuilder.build(LayerNode.group([
     Database.node, EventV2.node, SessionProjector.node, SessionStore.node, PermissionV2.node, AgentV2.node,
-    Location.node, PermissionSaved.node, ToolRegistry.nativeNode, Global.node, FSUtil.node, Credential.node,
+    Location.node, PermissionSaved.node, ToolRegistry.nativeNode, Global.node, FSUtil.node, Credential.node, ToolOutputStore.node,
   ]), [
     [Location.node, Layer.succeed(Location.Service, CapabilityPolicyFixture.placement)],
     [Global.node, Global.layerWith({ data: join(tmp.path, "data"), home: tmp.path })],
     [Credential.node, Credential.layerFrom(undefined)],
-    [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
-    [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
-  ])
+    [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Ref.get(limits).pipe(Effect.map((limits) => [
+      new Config.Document({ type: "document", info: { tool_output: new ConfigToolOutput.Info(limits) } }),
+    ])) }))],
+  ]), Layer.succeed(OutputLimits, limits))
 }))
 
 export const allow: PermissionV2.Ruleset = [

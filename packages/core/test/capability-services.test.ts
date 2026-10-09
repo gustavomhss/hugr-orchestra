@@ -14,12 +14,14 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionStore } from "@orchestra/core/session/store"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { Capability } from "@orchestra/schema/capability"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
 import { RelayHook } from "@orchestra/schema/relay-hook"
-import { Cause, Deferred, Effect, Exit, Fiber, Option, Ref, Schema } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Option, Ref, Schema } from "effect"
 import { createHash } from "node:crypto"
+import { join } from "node:path"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { CapabilityServicesFixture } from "./fixture/capability-services"
 import { testEffect } from "./lib/effect"
@@ -345,6 +347,103 @@ it.live("platform boundary catches Artifact failures only as typed ToolFailure; 
   expect(Exit.isFailure(interrupted) && Cause.hasInterrupts(interrupted.cause)).toBe(true)
   expect((yield* waiting.rows()).map((row) => row.state)).toEqual(["interrupted"])
 }).pipe(Effect.timeout("10 seconds")))
+
+it.live("real service_call large canonical child failure uses current registry limits and one retained file, without a leaf budget", () => Effect.gen(function* () {
+  const limits = yield* CapabilityServicesFixture.OutputLimits
+  const store = yield* ToolOutputStore.Service
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  const directory = join(global.data, ToolOutputStore.MANAGED_DIRECTORY)
+  yield* fs.ensureDir(directory)
+  const message = "🙂 canonical child failure\n".repeat(2000)
+  yield* Effect.forEach([{ max_bytes: 512, max_lines: 3 }, { max_bytes: 1024, max_lines: 7 }], (configured) => Effect.gen(function* () {
+    const f = yield* CapabilityServicesFixture.fixture()
+    const descriptor = ref(yield* f.find())
+    // Reconfigure after factory/materialization capture: limits are read dynamically by the real registry.
+    yield* Ref.set(limits, configured)
+    expect(yield* store.limits()).toEqual({ maxBytes: configured.max_bytes, maxLines: configured.max_lines })
+    yield* Ref.set(f.behavior, Effect.fail(new Capability.Failure({ code: "unsupported_operation", message })))
+    const before = yield* fs.readDirectory(directory)
+    const root = yield* f.settle("service_call", { descriptor, input: {} })
+    expect(root.result.type).toBe("error")
+    expect(Buffer.byteLength(String(root.result.value))).toBeLessThanOrEqual(configured.max_bytes)
+    expect(String(root.result.value).split("\n").length).toBeLessThanOrEqual(configured.max_lines)
+    expect(String(root.result.value)).not.toContain("�")
+    const retained = (yield* fs.readDirectory(directory)).filter((name) => !before.includes(name))
+    expect(retained).toHaveLength(1)
+    const name = retained[0]
+    if (!name) return yield* Effect.die("SERVICE_FAILURE_EVIDENCE_MISSING")
+    expect(yield* fs.readFileString(join(directory, name))).toBe(message)
+    expect(String(root.result.value)).toContain(join(directory, name))
+    expect(root.output).toBeUndefined()
+    expect(root.outputPaths).toBeUndefined()
+    expect((yield* f.rows()).map((row) => row.state)).toEqual(["failed"])
+    expect(yield* Ref.get(f.effects)).toBe(0)
+  }))
+}))
+
+it.live("service_call preserves real managed-output storage failure as a defect and records failed child", () => Effect.gen(function* () {
+  const f = yield* CapabilityServicesFixture.fixture()
+  const descriptor = ref(yield* f.find())
+  const limits = yield* CapabilityServicesFixture.OutputLimits
+  yield* Ref.set(limits, { max_bytes: 512, max_lines: 3 })
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  yield* fs.ensureDir(global.data)
+  const directory = join(global.data, ToolOutputStore.MANAGED_DIRECTORY)
+  // A real file where retention requires a directory forces the actual FS/storage error path.
+  yield* fs.writeFileString(directory, "retention directory blocked")
+  yield* Ref.set(f.behavior, Effect.fail(new Capability.Failure({ code: "unsupported_operation", message: "failure\n".repeat(1000) })))
+  const exit = yield* f.settle("service_call", { descriptor, input: {} }).pipe(Effect.exit)
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) expect(exit.cause.reasons.some((reason) =>
+    reason._tag === "Die" && reason.defect instanceof ToolOutputStore.StorageError && reason.defect.operation === "write")).toBe(true)
+  expect((yield* f.rows()).map((row) => row.state)).toEqual(["failed"])
+  expect(yield* Ref.get(f.effects)).toBe(0)
+  expect(yield* fs.readFileString(directory)).toBe("retention directory blocked")
+}))
+
+it.live("mixed Capability/Artifact failures preserve exact defects, interruptors and annotations through canonical platform and service_call", () => Effect.gen(function* () {
+  const sentinel = new Error("service mixed fault sentinel")
+  const marker = Context.Service<never, Error>("service-cause-fixture")
+  const cases = [
+    { failure: new Capability.Failure({ code: "unsupported_operation", message: "Expected service rejection" }), fault: Cause.die(sentinel), state: "failed" },
+    { failure: new CapabilityArtifacts.Failure({ code: "artifact_io_failed", message: "Expected artifact rejection" }), fault: Cause.interrupt(123), state: "interrupted" },
+  ] as const
+  yield* Effect.forEach(cases, (item) => Effect.forEach([false, true], (reversed) => Effect.forEach(["platform_supabase", "service_call"], (name) => Effect.gen(function* () {
+    const f = yield* CapabilityServicesFixture.fixture()
+    const descriptor = ref(yield* f.find())
+    const cause = Cause.annotate(reversed ? Cause.combine(item.fault, Cause.fail(item.failure))
+      : Cause.combine(Cause.fail(item.failure), item.fault), Context.make(marker, sentinel))
+    yield* Ref.set(f.behavior, Effect.failCause(cause))
+    const exit = yield* f.settle(name, { descriptor, input: {} }).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (!Exit.isFailure(exit)) return yield* Effect.die("SERVICE_MIXED_CAUSE_PROJECTED_AS_RESULT")
+    expect(exit.cause.reasons).toHaveLength(cause.reasons.length)
+    cause.reasons.forEach((original, index) => {
+      const actual = exit.cause.reasons[index]
+      if (!actual) throw new Error("SERVICE_CAUSE_REASON_MISSING")
+      original.annotations.forEach((value, key) => expect(actual.annotations.get(key)).toBe(value))
+      if (original._tag === "Die") {
+        expect(actual._tag).toBe("Die")
+        if (actual._tag === "Die") expect(actual.defect).toBe(sentinel)
+        return
+      }
+      if (original._tag === "Interrupt") {
+        expect(actual._tag).toBe("Interrupt")
+        if (actual._tag === "Interrupt") expect(actual.fiberId).toBe(original.fiberId)
+        return
+      }
+      // Registry promotes mixed ToolFailure reasons to defects while preserving the domain error object.
+      expect(actual._tag).toBe("Die")
+      if (actual._tag !== "Die" || !(actual.defect instanceof Tool.Failure)) throw new Error("SERVICE_FAILURE_TRANSLATION_LOST")
+      expect(actual.defect.error).toBe(item.failure)
+      expect(actual.defect.message).toBe(item.failure.message)
+    })
+    expect((yield* f.rows()).map((row) => row.state)).toEqual(name === "service_call" ? [item.state] : [])
+    expect(yield* Ref.get(f.effects)).toBe(0)
+  }))))
+}).pipe(Effect.timeout("20 seconds")))
 
 function expectCode<A, R>(effect: Effect.Effect<A, Capability.Failure, R>, code: Capability.ErrorCode) {
   return effect.pipe(Effect.flip, Effect.map((error) => {
