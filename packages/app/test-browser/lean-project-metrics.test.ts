@@ -15,6 +15,7 @@ test("Lean reads backend false and preserves sibling limits in one awaited patch
   const owned = createRoot((dispose) => ({
     dispose,
     lean: createLeanSettingsController(() => ({
+      ready: true, configReady: true,
       data,
       updateConfig: async (patch) => {
         calls.push(patch)
@@ -196,6 +197,7 @@ test("Lean backend rejection remains visible, does not fake enabled state or ret
   const owned = createRoot((dispose) => ({
     dispose,
     lean: createLeanSettingsController(() => ({
+      ready: true, configReady: true,
       data: { config: { tool_output: { lean: { enabled: false } } } },
       updateConfig: async (patch) => {
         calls.push(patch)
