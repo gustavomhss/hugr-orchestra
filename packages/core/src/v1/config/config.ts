@@ -132,6 +132,7 @@ export const Info = Schema.Struct({
       max_bytes: Schema.optional(PositiveInt).annotate({
         description: "Maximum bytes of tool output before it is truncated and saved to disk (default: 51200)",
       }),
+      lean: Schema.optional(Schema.Struct({ enabled: Schema.optional(Schema.Boolean) })),
     }),
   ).annotate({
     description:
