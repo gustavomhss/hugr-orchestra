@@ -76,7 +76,7 @@ async function reopen(data: Uint8Array) {
 }
 
 // Tiny fixture-only ZIP writer. Parts originate from real ExcelJS; decoder readback checks generated ZIP/CRC correctness.
-async function xmlFixture(sheetData: string, names = "", dateFormat = false) {
+async function xmlFixture(sheetData: string, names = "", dateFormat = false, date1904?: "true" | "1") {
   const workbook = new Workbook()
   const sheet = workbook.addWorksheet("Data")
   sheet.getCell("A1").value = 1
@@ -97,7 +97,8 @@ async function xmlFixture(sheetData: string, names = "", dateFormat = false) {
     const xml = new TextDecoder().decode(content)
     const replacement = name === "xl/worksheets/sheet1.xml"
       ? xml.slice(0, xml.indexOf("<sheetData>")) + `<sheetData>${sheetData}</sheetData>` + xml.slice(xml.indexOf("</sheetData>") + 12)
-      : name === "xl/workbook.xml" && names ? xml.replace("</workbook>", `<definedNames>${names}</definedNames></workbook>`) : undefined
+      : name === "xl/workbook.xml" ? (names ? xml.replace("</workbook>", `<definedNames>${names}</definedNames></workbook>`) : xml)
+        .replace("<workbookPr ", date1904 ? `<workbookPr date1904="${date1904}" ` : "<workbookPr ") : undefined
     parts.push({ name, data: replacement === undefined ? new Uint8Array(content) : new TextEncoder().encode(replacement) })
     state.offset += 46 + length + view.getUint16(offset + 30, true) + view.getUint16(offset + 32, true)
   })
@@ -136,6 +137,92 @@ async function xmlFixture(sheetData: string, names = "", dateFormat = false) {
 }
 
 describe("cold sheet byte/library boundaries", () => {
+  it.live("protected workbook rejects restructuring before mutation, including protection on an untouched sheet", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* Effect.forEach(["Data", "Other"], (name) => Effect.gen(function* () {
+      const workbook = new Workbook()
+      workbook.addWorksheet("Data").getCell("A1").value = 7
+      workbook.addWorksheet("Other").getCell("A1").value = 8
+      const protectedSheet = workbook.getWorksheet(name)
+      if (!protectedSheet) throw new Error("Missing protected fixture sheet")
+      yield* Effect.promise(() => protectedSheet.protect("fixture", { spinCount: 1 }))
+      const data = new Uint8Array(yield* Effect.promise(() => workbook.xlsx.writeBuffer()))
+      const raw = yield* Effect.promise(() => requirePackage(data, false))
+      expect(raw.sheets.get(name)?.structure.has("sheetProtection")).toBe(true)
+      const artifact = yield* f.publish(data)
+      const before = yield* f.database.db.select().from(CapabilityArtifactTable)
+      expect((yield* f.invoke({ format: "xlsx", operation: "restructure", artifact, expectedRevision: 0,
+        sheet: "Data", axis: "rows", action: "insert", index: 1, count: 1 }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(before)
+      expect((yield* f.read(artifact)).data).toEqual(data)
+    }))
+  }), 30000)
+
+  it.live("implicit trailing default columns do not break insert-after-A1 or deletion of all rows", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const source = new Workbook()
+    source.addWorksheet("Data").getCell("A1").value = 7
+    const data = new Uint8Array(yield* Effect.promise(() => source.xlsx.writeBuffer()))
+    const artifact = yield* f.publish(data)
+    const inserted = yield* f.invoke({ format: "xlsx", operation: "restructure", artifact, expectedRevision: 0,
+      sheet: "Data", axis: "columns", action: "insert", index: 2, count: 1 })
+    expect(inserted.result.status).toBe("completed")
+    const insertedBytes = yield* f.read(ref(inserted))
+    const actual = yield* Effect.promise(() => reopen(insertedBytes.data))
+    expect(actual.getWorksheet("Data")?.columnCount).toBe(1)
+    expect(actual.getWorksheet("Data")?.getCell("A1").value).toBe(7)
+    const deleted = yield* f.invoke({ format: "xlsx", operation: "restructure", artifact: ref(inserted), expectedRevision: 1,
+      sheet: "Data", axis: "rows", action: "delete", index: 1, count: 1 })
+    expect(deleted.result.status).toBe("completed")
+    const deletedBytes = yield* f.read(ref(deleted))
+    const empty = yield* Effect.promise(() => reopen(deletedBytes.data))
+    expect(empty.getWorksheet("Data")?.rowCount).toBe(0)
+    expect(empty.getWorksheet("Data")?.columnCount).toBe(0)
+    expect((yield* Effect.promise(() => requirePackage(deletedBytes.data, false))).sheets.get("Data")?.cells.size).toBe(0)
+    expect((yield* f.read(artifact)).data).toEqual(data)
+  }), 30000)
+
+  it.live("date-formatted formula caches restore exact raw types; 1904 true and 1 share numeric date semantics", () => Effect.gen(function* () {
+    const f = yield* fixture("sheet_read")
+    const xml = '<row r="1"><c r="A1" s="1" t="b"><f>1+2</f><v>0</v></c></row>'
+      + '<row r="2"><c r="A2" s="1" t="e"><f>1+2</f><v>#DIV/0!</v></c></row>'
+      + '<row r="3"><c r="A3" s="1" t="str"><f>1+2</f><v>cached text</v></c></row>'
+      + '<row r="4"><c r="A4" s="1" t="str"><f>1+2</f><v/></c></row>'
+      + '<row r="5"><c r="A5" s="1"><f>1+2</f><v>45292</v></c></row>'
+      + '<row r="6"><c r="A6" s="1"><v>45292</v></c></row>'
+    yield* Effect.forEach(["true", "1"] as const, (flag) => Effect.gen(function* () {
+      const data = yield* Effect.promise(() => xmlFixture(xml, "", true, flag))
+      const lib = yield* Effect.promise(() => reopen(data))
+      expect(lib.getWorksheet("Data")?.getCell("A1").result).toBeInstanceOf(Date)
+      expect(lib.getWorksheet("Data")?.getCell("A2").result).toBeInstanceOf(Date)
+      expect(lib.getWorksheet("Data")?.getCell("A3").result).toBeInstanceOf(Date)
+      expect(lib.properties.date1904).toBe(flag === "1")
+      const artifact = yield* f.publish(data)
+      const read = yield* f.invoke({ format: "xlsx", artifact })
+      expect(read.result.status).toBe("partial")
+      expect(read.metadata).toMatchObject({ dateSystem: "1904", cells: [
+        { cached: "false", cachePresent: true, cacheType: "b" },
+        { cached: "#DIV/0!", cachePresent: true, cacheType: "e" },
+        { cached: "cached text", cachePresent: true, cacheType: "str" },
+        { cached: "", cachePresent: true, cacheType: "str" },
+        { cached: "45292", cachePresent: true, cacheType: "n" },
+        { value: "45292", valueType: "number", datePresentation: "2028-01-02T00:00:00.000Z" },
+      ] })
+      const edit = yield* fixture()
+      yield* CapabilityInvocation.withContext(f.binding, f.artifacts.share(f.context, artifact, edit.context.sessionID))
+      const exported = yield* edit.invoke({ format: "xlsx", operation: "export", artifact, sheet: "Data",
+        range: { startRow: 1, endRow: 5, startColumn: 1, endColumn: 1 } })
+      expect(new TextDecoder().decode((yield* edit.read(ref(exported))).data)).toBe("false\r\n#DIV/0!\r\ncached text\r\n\r\n45292\r\n")
+      const updated = yield* edit.invoke({ format: "xlsx", operation: "edit", artifact, expectedRevision: 0, sheet: "Data", cells: [] })
+      const updatedBytes = yield* edit.read(ref(updated))
+      const raw = yield* Effect.promise(() => requirePackage(updatedBytes.data, false))
+      expect(raw.date1904).toBe(true)
+      expect(raw.sheets.get("Data")?.cells.get("A6")?.value).toBe("45292")
+      expect(raw.sheets.get("Data")?.cells.get("A1")?.valuePresent).toBe(false)
+      expect((yield* f.read(artifact)).data).toEqual(data)
+    }))
+  }), 60000)
+
   it.live("terminal deletion uses original row mapping and preserves surviving height, style and source bytes", () => Effect.gen(function* () {
     const f = yield* fixture()
     const original = new Workbook()
