@@ -348,7 +348,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
             const carried = upstreamSettlement(carriedMetadata, owner)
             match.state.structured = castDraft(carried ? structured : receipt ? { ...structured, metadata: { ...carriedMetadata, upstreamSettlement: receipt,
               workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId } } : structured)
-            match.state.content = [...event.data.content]
+            if (match.state.status === "running") match.state.content = [...event.data.content]
           }
         })
       },

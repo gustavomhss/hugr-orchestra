@@ -109,9 +109,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           ...match,
           state: {
             title: val.title,
-             metadata: SessionMessageUpdater.taskMetadata("metadata" in match.state ? match.state.metadata ?? {} : {},
-               val.metadata ?? {}, { sessionID: match.sessionID, messageID: match.messageID, callID: match.callID,
-                 tool: match.tool, input: match.state.input }),
+            metadata: SessionMessageUpdater.taskMetadata("metadata" in match.state ? match.state.metadata ?? {} : {},
+              val.metadata ?? {}, { sessionID: match.sessionID, messageID: match.messageID, callID: match.callID,
+                tool: match.tool, input: match.state.input }),
             status: "running",
             input: args,
             time: match.state.status === "running" ? match.state.time : { start: Date.now() },

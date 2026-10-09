@@ -318,10 +318,15 @@ const layer = Layer.effectDiscard(
         const previousPart = row ? Schema.decodeUnknownOption(SessionV1.Part)({ ...row.data,
           id: row.id, messageID: row.message_id, sessionID: row.session_id }) : undefined
         const previous = previousPart?.valueOrUndefined
-        const owner = incoming.type === "tool" ? { sessionID, messageID, callID: incoming.callID,
-          tool: incoming.tool, input: incoming.state.input } : undefined
-        const receipt = owner && previous?.type === "tool" && "metadata" in previous.state
-          ? SessionMessageUpdater.upstreamSettlement(previous.state.metadata ?? {}, owner) : undefined
+        const storedOwner = row && previous?.type === "tool" ? { sessionID: row.session_id, messageID: row.message_id,
+          callID: previous.callID, tool: previous.tool, input: previous.state.input } : undefined
+        const receipt = storedOwner && previous?.type === "tool" && "metadata" in previous.state
+          ? SessionMessageUpdater.upstreamSettlement(previous.state.metadata ?? {}, storedOwner) : undefined
+        if (receipt && storedOwner && (incoming.type !== "tool" || incoming.callID !== storedOwner.callID ||
+          incoming.tool !== storedOwner.tool || sessionID !== storedOwner.sessionID || messageID !== storedOwner.messageID))
+          return yield* Effect.die(new Error("UPSTREAM_SETTLEMENT_TASK_MISMATCH"))
+        const owner = receipt ? storedOwner : incoming.type === "tool" ? { sessionID, messageID,
+          callID: incoming.callID, tool: incoming.tool, input: incoming.state.input } : undefined
         const part = receipt && owner && incoming.type === "tool" && previous?.type === "tool" &&
           "metadata" in previous.state && "metadata" in incoming.state
           ? { ...incoming, state: { ...(previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status)
