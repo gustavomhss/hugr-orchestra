@@ -76,6 +76,8 @@ import { LLMEvent } from "@orchestra/llm"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { SessionMessage } from "@orchestra/schema/session-message"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionSchema } from "@orchestra/core/session/schema"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -156,11 +158,17 @@ const layer = Layer.effect(
     const database = yield* Database.Service
     const nativeHost = yield* ArsenalBindings.make
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
-      return {
+      const execution = yield* Effect.serviceOption(SessionExecution.Service)
+      const result = {
         cancel: (sessionID: SessionID) => cancel(sessionID),
         resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input, options) => nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
-      } satisfies TaskPromptOps
+        prompt: (input: Parameters<TaskPromptOps["prompt"]>[0], options?: Parameters<TaskPromptOps["prompt"]>[1]) =>
+          nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
+        resumeNotice: (sessionID: SessionID) => Option.isSome(execution)
+          ? execution.value.resume(SessionSchema.ID.make(sessionID)).pipe(Effect.orDie)
+          : Effect.die(new Error("UPSTREAM_NOTICE_RESUME_UNAVAILABLE")),
+      }
+      return result satisfies TaskPromptOps
     })
 
     const cancel = Effect.fn("SessionPrompt.cancel")(function* (sessionID: SessionID) {
