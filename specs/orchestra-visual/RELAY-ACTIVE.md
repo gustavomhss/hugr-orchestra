@@ -51,10 +51,19 @@ The same three disjoint authors published fixture-only repairs, composed in clea
   preserved. Independent static approval:
   `ses_ede811595ffe8onazcY8NaqjdT/msg_1221e24d600132TzjMhDMnUgSI`.
 
-Only Core/Orchestra typechecks and the failed size gate are eligible for the next
-runtime retry. CLI and unchanged Relay evidence are reused. No compiler/size pass
-is inferred from these static repairs; final clean post-check source freeze and
-fresh Nix measurement remain pending.
+Runtime's next affected retry measured Core and Orchestra package `bun typecheck`
+**exit 0**, and Godfile **exit 0**: **4025 files / 324 warnings / 0 errors**.
+Preservation fixture is **719 LOC** and Task backend fixture **738 LOC**, both
+below the hard limit. Actual tool exit metadata is recorded in
+`msg_12226f5be0015Y5wLrhD5WTA93`; CLI and unchanged Relay evidence are reused.
+
+Runtime published clean source `8d15972b45c95ac91a1f31c3c87946b5c67606aa`, tree
+`f28d3cbe9e91186f8584d5658a889cb0e90ce734`, after that retry. Its code matches
+`8ef07624ba`; only the campaign ledger is older. The integrator preserves the
+current ledger while adopting this measured runtime ancestry. These results are
+typing and budget evidence, not scoped CI/native/model qualification. Runtime
+owns the next focused Core/Orchestra/native runs; Relay requests the explicit
+freeze card before its sole fresh four-native Nix measurement activation.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
