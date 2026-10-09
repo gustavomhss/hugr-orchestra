@@ -229,6 +229,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           const enabled = !!cfg && cfg.tool_output?.lean?.enabled !== false
           const limits = enabled && selected.binding && !selected.policyMappingChanged
             ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
+          if (options.abortSignal?.aborted) return output
           return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
             enabled, limits, policyMappingChanged: selected.policyMappingChanged,
             telemetry: binding ? {

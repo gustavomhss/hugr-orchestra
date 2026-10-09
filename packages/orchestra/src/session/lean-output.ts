@@ -4,6 +4,7 @@ import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 import { ToolModelProjection } from "@orchestra/core/tool/model-projection"
 import { LeanProcessor } from "@orchestra/core/tool/lean-processor"
 import { LeanTelemetry } from "@orchestra/core/tool/lean-telemetry"
+import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { isDeepStrictEqual } from "node:util"
 
@@ -38,7 +39,7 @@ export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A 
       && candidate.owner.callID === input.owner.callID && candidate.observation.source === "shell"
     const eligible = !!trusted && candidate.observation.completeness === "complete"
       && candidate.observation.termination.kind === "exited" && candidate.observation.termination.code === 0
-    const metrics = LeanTelemetry.measure({
+    const metrics = LeanMetrics.decode(LeanTelemetry.measure({
       owner: input.telemetry.owner, model: input.telemetry.model, orchestraProfile: input.telemetry.orchestraProfile,
       producer: trusted ? "native-shell" : "unverified", eligible,
       status: selected.decision?.status === "reduced" ? "applied"
@@ -46,7 +47,7 @@ export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A 
       reason: !eligible && selected.reason === "projection_declined" ? "not_eligible" : selected.reason,
       filterProfile: selected.decision && "profile" in selected.decision ? selected.decision.profile : undefined,
       before: input.output.output, after: selected.output.output, durationMs: end - start,
-    })
+    }))
     if (!metrics) return selected.output
     return { ...selected.output, metadata: { ...selected.output.metadata, lean: metrics } }
   } catch {
