@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { createServer } from "node:net"
+import { createServer, type Socket } from "node:net"
 import { networkInterfaces } from "node:os"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -9,6 +9,9 @@ import { FSUtil } from "../src/fs-util"
 import { AppProcess } from "../src/process"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
+import { TcpProxy } from "../src/tcp-proxy"
+import { BackendToolkit } from "../src/backend-toolkit"
+import pack from "../src/backend-toolkit/packs/gocqlx-schemagen"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
@@ -18,12 +21,12 @@ const fixture = Effect.gen(function* () {
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "le-" }).pipe(Effect.flatMap(fs.realPath))
   const node = yield* ToolSafetySandbox.available("node")
   if (!node) throw new Error("BLOCKED: Node unavailable")
-  const wrap = (script: string, profile?: ToolSafety.Profile, native = directory) =>
-    ToolSafetySandbox.wrap(ChildProcess.make(node, ["-e", script], { cwd: directory })).pipe(
+  const wrap = (script: string, profile?: ToolSafety.Profile, native = directory, env?: Record<string, string>) =>
+    ToolSafetySandbox.wrap(ChildProcess.make(node, ["-e", script], { cwd: directory, env })).pipe(
       Effect.provideService(ToolSafety.RuntimeProfile, profile),
       Effect.provideService(ToolSafety.NativeContext, { directory: native }),
     )
-  return { fs, processes, directory, wrap }
+  return { fs, processes, directory, node, wrap }
 })
 
 const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
@@ -35,7 +38,7 @@ const listen = (host = "127.0.0.1", port = 0) => Effect.acquireRelease(
   (server) => Effect.promise(() => new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))),
 )
 
-it.live("exact loopback uses only declared Darwin IPv4 broker; other hosts HOLD and default/bind stay denied", () =>
+it.live("host service grants keep generic TCP and bind denied; Darwin only supplies an exact Unix route", () =>
   Effect.gen(function* () {
     const f = yield* fixture
     const one = yield* listen()
@@ -71,8 +74,18 @@ it.live("exact loopback uses only declared Darwin IPv4 broker; other hosts HOLD 
     }
     const bridged = yield* f.processes.run(yield* f.wrap(script, profile), { timeout: "5 seconds" })
     expect(bridged.exitCode).toBe(0)
-    expect(JSON.parse(bridged.stdout.toString())).toEqual(["127.0.0.1", ...endpoints.slice(1).map(() => "EPERM")])
+    expect(JSON.parse(bridged.stdout.toString())).toEqual(endpoints.map(() => "EPERM"))
     expect(yield* f.fs.exists(path.join(f.directory, "must"))).toBe(false)
+    const unix = "const map=process.env.ORCHESTRA_TCP_PROXY_ROUTES;const c=require('net').connect({path:Buffer.from(map.split(':')[1],'hex').toString('utf8')});" +
+      "let out='';c.on('data',d=>out+=d);c.on('end',()=>console.log(JSON.stringify({out,map,safe:process.env.SAFE,dyld:Object.keys(process.env).filter(k=>k.startsWith('DYLD_'))})));c.on('error',e=>{throw e})"
+    const command = yield* f.wrap(unix, profile, f.directory, { ORCHESTRA_TCP_PROXY_ROUTES: "caller-map", SAFE: "kept" })
+    if (command._tag !== "StandardCommand") throw new Error("unexpected pipeline")
+    expect(command.args.slice(-3)).toEqual([f.node, "-e", unix])
+    expect(command.options.env?.ORCHESTRA_TCP_PROXY_ROUTES).not.toBe("caller-map")
+    expect(Object.keys(command.options.env ?? {}).some((key) => key.startsWith("DYLD_"))).toBe(false)
+    const routed = yield* f.processes.run(command, { timeout: "5 seconds" })
+    expect(routed.exitCode).toBe(0)
+    expect(JSON.parse(routed.stdout.toString())).toMatchObject({ out: "127.0.0.1", safe: "kept", dyld: [] })
     const elsewhere = path.join(f.directory, "elsewhere")
     yield* f.fs.makeDirectory(elsewhere)
     const mismatch = yield* f.processes.run(yield* f.wrap(script, { ...profile, writeRoots: [] }, elsewhere), { timeout: "5 seconds" })
@@ -86,6 +99,57 @@ it.live("exact loopback uses only declared Darwin IPv4 broker; other hosts HOLD 
     expect(bound.stdout.toString().trim()).toBe("EPERM")
   }), 30_000,
 )
+
+// The adapter owner supplies cassandra2; this branch must not substitute upstream or invent its parser.
+const adapted = String(pack.version).includes("+orchestra.cassandra2") && process.platform !== "win32" ? it.live : it.live.skip
+adapted("owned cassandra2 parser consumes real broker routes and rejects malformed map, undeclared port and foreign addresses", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const root = yield* Effect.acquireRelease(f.fs.makeTempDirectory({ prefix: "loopback-owned-adapter-" }), (root) => Effect.gen(function* () {
+    yield* AppProcess.requireSuccess(yield* f.processes.run(ChildProcess.make("chmod", ["-R", "u+w", root])))
+    yield* f.fs.remove(root, { recursive: true, force: true })
+  }).pipe(Effect.orDie))
+  const owned = yield* BackendToolkit.ensure("gocqlx-schemagen").pipe(Effect.provideService(BackendToolkit.Root, root))
+  expect(path.dirname(owned.executable)).toContain("+orchestra.cassandra2-")
+  const counters = [0, 0]
+  const targets = yield* Effect.forEach([0, 1], (index) => Effect.gen(function* () {
+    const clients = new Set<Socket>()
+    const server = yield* Effect.acquireRelease(Effect.sync(() => createServer((socket) => {
+      counters[index]++
+      clients.add(socket)
+      socket.on("error", () => socket.destroy())
+      socket.on("close", () => clients.delete(socket))
+      socket.pipe(socket)
+    })), (server) => Effect.promise(() => new Promise<void>((resolve) => {
+      clients.forEach((socket) => socket.destroy())
+      server.close(() => resolve())
+    })))
+    yield* Effect.promise(() => new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve())))
+    const address = server.address()
+    if (!address || typeof address === "string") throw new Error("owned adapter TCP target unavailable")
+    return address.port
+  }))
+  const sockets = yield* TcpProxy.listen(targets)
+  const map = `${targets[0]}:${Buffer.from(sockets[0], "utf8").toString("hex")}`
+  const invoke = (address: string, routes: string) => f.processes.run(ChildProcess.make(owned.executable, [
+    "-cluster", address, "-keyspace", "owned_absent", "-output", path.join(f.directory, "output"), "-connection-timeout", "500ms", "-query-timeout", "500ms",
+  ], { cwd: f.directory, env: { ORCHESTRA_TCP_PROXY_ROUTES: routes }, extendEnv: false }), { timeout: "10 seconds" })
+  const positive = yield* invoke(`127.0.0.1:${targets[0]}`, map)
+  expect(positive.stderr.toString()).toContain("got a request frame from server")
+  expect(counters[0]).toBeGreaterThan(0)
+  const accepted = counters.slice()
+  yield* Effect.forEach([
+    { address: `127.0.0.1:${targets[0]}`, routes: "", reason: "invalid-routes" },
+    { address: `127.0.0.1:${targets[0]}`, routes: `${targets[0]}:ff`, reason: "invalid-routes" },
+    { address: `127.0.0.1:${targets[1]}`, routes: map, reason: "undeclared-port" },
+    { address: `127.0.0.2:${targets[0]}`, routes: map, reason: "invalid-address" },
+    { address: `[::1]:${targets[0]}`, routes: map, reason: "invalid-address" },
+  ], (entry) => Effect.gen(function* () {
+    const rejected = yield* invoke(entry.address, entry.routes)
+    expect(rejected.exitCode).not.toBe(0)
+    expect(rejected.stderr.toString()).toContain(`orchestra-cassandra-dialer:${entry.reason}`)
+    expect(counters).toEqual(accepted)
+  }), { discard: true })
+}), 5 * 60_000)
 
 it.live("invalid loopback IP, port, directory and grant shapes HOLD before output parent mkdir on every host", () =>
   Effect.gen(function* () {

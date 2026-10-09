@@ -181,12 +181,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const invocation = command.options.shell
     ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
     : [command.command, ...command.args]
-  const inject = endpoints.length ? proxyInvocation(invocation, !!command.options.shell) : undefined
-  if (inject instanceof ToolSafety.Denied) return yield* inject
-  // Acquiring exact network capabilities is last: no malformed policy or unsupported shell starts a broker/build.
+  // Only owned route-adapted clients consume these host services; kernel TCP remains denied.
   const proxy = endpoints.length ? yield* TcpProxy.open(endpoints, deny) : undefined
-  if (proxy && [proxy.library, ...proxy.sockets].some((target) => deny.some((entry) => FSUtil.contains(entry, target))))
-    return yield* new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-denied-path" })
   const scratch = profile?.sandbox?.scratch
     ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
@@ -207,11 +203,6 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     fs.makeDirectory(path.join(scratch, name)).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-cache-acquisition" })),
     ), { discard: true })
-  const privateEnv = proxy ? Object.fromEntries(Object.entries(confined).filter(([name]) =>
-    !name.startsWith("DYLD_") && name !== "ORCHESTRA_TCP_PROXY_ROUTES" &&
-    !["ENV", "BASH_ENV", "SHELLOPTS", "BASHOPTS", "ZDOTDIR"].includes(name) && !name.startsWith("BASH_FUNC_"))) : confined
-  const childEnv = proxy ? { ...privateEnv, ENV: "/dev/null", BASH_ENV: "/dev/null", ZDOTDIR: "/dev/null" } : privateEnv
-  const childInvocation = proxy && inject ? inject(proxy) : invocation
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
     // file-write* also covers mode, flag, owner and xattr changes (chmod, chflags), so those stay inside the roots.
@@ -224,8 +215,8 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ].join("\n")
     if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
     yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
-    return ChildProcess.make(sandbox.binary, ["-p", policy, ...childInvocation], {
-      ...command.options, cwd, shell: false, env: childEnv, extendEnv: false,
+    return ChildProcess.make(sandbox.binary, ["-p", policy, ...invocation], {
+      ...command.options, cwd, shell: false, env: { ...confined, ...proxy?.env }, extendEnv: false,
     })
   }
   const temp = yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-sandbox-" }).pipe(
@@ -245,25 +236,6 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ...command.options, cwd, shell: false, env: { ...confined, ...sandbox.env }, extendEnv: false,
   })
 })
-
-/** Build only a protected Darwin launch. Loader values enter after trusted shell initialization / env startup. */
-export function proxyInvocation(invocation: readonly string[], shellOption = false) {
-  const name = path.basename(invocation[0])
-  const shell = ["sh", "bash", "zsh"].includes(name)
-  if (!shell && (shellOption || ["fish", "csh", "tcsh", "ksh", "dash", "nu", "pwsh", "powershell"].includes(name)))
-    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-unsupported" })
-  if (shell && invocation[0] !== name && invocation[0] !== `/bin/${name}`)
-    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-unsupported" })
-  if (shell && (invocation[1] !== "-c" || typeof invocation[2] !== "string"))
-    return new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-shell-invocation-unsupported" })
-  return (proxy: { library: string; env: Record<string, string> }) => {
-    const assignments = [`DYLD_INSERT_LIBRARIES=${proxy.library}`, ...Object.entries(proxy.env).map(([key, value]) => `${key}=${value}`)]
-    if (!shell) return ["/usr/bin/env", ...assignments, ...invocation]
-    const init = name === "bash" ? ["--noprofile", "--norc"] : name === "zsh" ? ["-f"] : []
-    const exports = assignments.map((assignment) => `'${assignment.replaceAll("'", "'\\''")}'`).join(" ")
-    return [`/bin/${name}`, ...init, "-c", `export ${exports};\n${invocation[2]}`, ...invocation.slice(3)]
-  }
-}
 
 /**
  * The sandbox for this host: `srt` on PATH, else seatbelt on macOS, else on Linux the fetched sandbox runtime run by
