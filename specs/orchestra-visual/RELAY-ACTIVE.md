@@ -12,11 +12,49 @@ Reuse existing source-bound evidence; keep gates intact. Static cold review rema
 
 ## Current repair wave and qualification hold
 
-The final reviewed source set is A `9358d3833a8efc385ddaaeb501264c013859d5a0`
+The reviewed authority source set is A `9358d3833a8efc385ddaaeb501264c013859d5a0`
 (includes `fd0a7ed2e7`, `4b0b09b17a`, `84513c9ecd`, `66c0532e2d`), C `0c8bc60369`
 (includes `2c28b537f4` / `a3b767422a`), runtime `f73d92d083`, and neutralized failed
 Nix-request ancestry `7eb2bb766a`. Bounded source findings are closed within their
 reviewed scopes. Execution remains unqualified until runtime's affected batch.
+
+### Actual resumed qualification and fixture-only repairs
+
+Runtime composed the accepted full authority source into pending index tree
+`26568fd901991632904a682b31c37b4da48acd0f`. Its first Core/Orchestra/CLI typecheck
+attempts all exited **127**, exact error `tsgo: comando não encontrado`: missing
+installed tool, not a compiler or source diagnostic. Runtime restored frozen
+dependencies with `bun install --frozen-lockfile --ignore-scripts` and retained
+manifest/lock versions; no lifecycle scripts were run.
+
+The restored compiler batch measured CLI **exit 0**, reused after fixture-only
+changes. Core reported only a readonly decoded legacy summary assigned to mutable
+storage data in the preservation fixture. Orchestra reported a settlement-fixture
+ASI continuation/cascade and a native-versus-legacy message-ID comparison. Actual
+Godfile measured **4025 files / 323 warnings / 1 error**: Task backend fixture
+**753 LOC**, limit **750**. No scoped CI/native/pilot retry had started at that card.
+
+The same three disjoint authors published fixture-only repairs, composed in clean
+`8ef07624bab33dcc51d64fd0b14b7e93f7bf6a81`:
+
+- A `fca89fc1d4ac65472a5144fc146af21205f7d1e2`: use actual mutable legacy storage
+  data and typed user storage shape, retaining all authority/replay assertions.
+  Independent static approval: `ses_ede1c82cfffe66nn95toC1bBPo`.
+- B `c328d3d72c793a873e266ff023be51426be0517a`: one leading semicolon separates
+  the completed seed initializer from the case-array `.forEach`. Cases, ports and
+  Effect requirements are unchanged. Independent static approval:
+  `ses_ede10b0f9ffe2GoE20KDmpgx3V`, exact joint `8ef07624ba`, only that file's delta.
+- C `b5b3cdf34f168d03d6c1eba9ec3f68b3910a4160`: includes real fixture-builder reuse
+  `2d06d1cbc5`, shared native original-Task validation `b50e5040e0`, and native
+  `SessionMessage.ID.make(parent.assistant.id)` at the comparison boundary.
+  Scenarios, assertions, actual storage/delivery order and identifier bytes are
+  preserved. Independent static approval:
+  `ses_ede811595ffe8onazcY8NaqjdT/msg_1221e24d600132TzjMhDMnUgSI`.
+
+Only Core/Orchestra typechecks and the failed size gate are eligible for the next
+runtime retry. CLI and unchanged Relay evidence are reused. No compiler/size pass
+is inferred from these static repairs; final clean post-check source freeze and
+fresh Nix measurement remain pending.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
