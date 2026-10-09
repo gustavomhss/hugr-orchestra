@@ -269,7 +269,9 @@ export function make(options: Options) {
         catalogGeneration: scope.catalogGeneration, schemaHash: item.validator.schemaHash,
         inputSchema: item.validator.inputSchema, outputSchema: item.validator.outputSchema, operationID: item.tool.name,
       }])
-      const pending: { records: readonly CapabilityDescriptors.DescriptorRecord[]; cursor?: string } = { records: [] }
+      const pending: { records: readonly CapabilityDescriptors.DescriptorRecord[]; cursor?: string; cancelled: boolean } = {
+        records: [], cancelled: false,
+      }
       return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         // Reserve actual cursor capacity before descriptor issuance. Pending token remains host-only.
         const cursor = offset + page.length < matches.length ? yield* cursors.issue(scope, offset + page.length) : undefined
@@ -321,6 +323,9 @@ export function make(options: Options) {
             const currentIdentity = identity(value.provider, materialization)
             if (currentIdentity instanceof Capability.Failure) return Effect.fail(currentIdentity)
             const time = now()
+            // A synchronous host callback can request interruption and run rollback reentrantly.
+            // Never republish locators after that cleanup, even if this callback resumes afterward.
+            if (pending.cancelled) return Effect.interrupt
             if (!Number.isFinite(time) || pending.records.some((record) => record.expiresAt <= time))
               return Effect.fail(failure("stale_descriptor"))
             Array.from(locators).forEach(([id, value]) => { if (value.expiresAt <= time) locators.delete(id) })
@@ -334,6 +339,7 @@ export function make(options: Options) {
         }))
       })).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
         // This observer encloses the mask itself, including interruption delivered at restoration.
+        pending.cancelled = true
         if (pending.cursor !== undefined) yield* cursors.remove(pending.cursor)
         yield* Effect.forEach(pending.records, (record) => descriptors.remove(record.ref), { discard: true })
         pending.records.forEach((record) => locators.delete(record.ref.id))

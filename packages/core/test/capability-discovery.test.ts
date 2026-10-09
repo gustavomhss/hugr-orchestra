@@ -790,8 +790,9 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(yield* f.permissions.list()).toEqual([])
   }).pipe(Effect.timeout("15 seconds")))
 
-  it.live("pending interruption at outer publication restoration removes returned-tuple refs, locators and cursor", () => Effect.gen(function* () {
+  it.live("pending interruption at outer publication restoration removes returned-tuple refs, locators and cursor", () => Effect.forEach([2, 3], (count) => Effect.gen(function* () {
     const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    yield* Ref.set(f.list, { tools: tools.slice(0, count), catalogGeneration: 1, coverage: "complete" })
     const state: { fiber?: Fiber.Fiber<CapabilityDiscovery.Page, Capability.Failure>; injected: boolean } = { injected: false }
     // Inject interruption at final synchronous publication, after the real batch tuple has arrived.
     yield* Ref.set(f.afterBatch, Effect.sync(() => {
@@ -813,7 +814,10 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(issued).toHaveLength(2)
     expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
     yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    const calls = (yield* Ref.get(f.calls)).length
+    yield* Effect.forEach(issued, (record) => expectCode(f.run(f.discovery.describe(f.context, record.ref, f.materialization)), "stale_descriptor"))
+    expect(yield* Ref.get(f.calls)).toHaveLength(calls)
     yield* Ref.set(f.afterBatch, Effect.void)
     expect((yield* f.find()).operations).toHaveLength(2)
-  }).pipe(Effect.timeout("15 seconds")))
+  })).pipe(Effect.timeout("15 seconds")))
 })
