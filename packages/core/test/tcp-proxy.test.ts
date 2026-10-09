@@ -166,3 +166,83 @@ live("32 declared endpoints remain separate fixed targets at the supported bound
   expect((yield* exchange(sockets[31])).toString()).toBe("target-31")
   expect(targets.slice(1, 31).every((entry) => entry.accepted.length === 0)).toBe(true)
 }), 30_000)
+
+const darwin = process.platform === "darwin" ? it.live : it.live.skip
+
+live("planning denies canonical socket parent before listeners; unrelated denied cache paths do not affect broker", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const one = yield* target()
+  const cache = path.join(yield* fs.realPath(Global.Path.cache), "tcp-proxy")
+  const base = yield* fs.realPath("/tmp")
+  const before = (yield* fs.readDirectory(base)).filter((entry) => entry.startsWith("otcp-"))
+  const existed = yield* fs.exists(cache)
+  yield* Effect.forEach([path.dirname(base), base], (deny) => Effect.gen(function* () {
+    const held = yield* Effect.scoped(TcpProxy.listen([one.port], [deny])).pipe(Effect.flip)
+    expect(held.reason).toBe("sandbox-tcp-proxy-denied-path")
+    expect(yield* fs.exists(cache)).toBe(existed)
+    expect((yield* fs.readDirectory(base)).filter((entry) => entry.startsWith("otcp-")).sort()).toEqual(before.slice().sort())
+    expect(one.accepted.length).toBe(0)
+  }), { discard: true })
+  yield* Effect.forEach([path.dirname(cache), cache, path.join(cache, "denied-child")], (deny) => Effect.scoped(Effect.gen(function* () {
+    const sockets = yield* TcpProxy.listen([one.port], [deny])
+    expect((yield* exchange(sockets[0])).toString()).toBe("echo")
+    expect(yield* fs.exists(cache)).toBe(existed)
+  })), { discard: true })
+  const accepted = one.accepted.length
+  const planned = yield* Effect.scoped(Effect.gen(function* () {
+    const planned = yield* TcpProxy.plan([one.port])
+    expect(yield* fs.exists(planned.directory)).toBe(true)
+    expect((yield* fs.readDirectory(planned.directory)).length).toBe(0)
+    expect((yield* Effect.result(exchange(planned.sockets[0])))._tag).toBe("Failure")
+    expect(one.accepted.length).toBe(accepted)
+    expect(yield* fs.exists(cache)).toBe(existed)
+    return planned
+  }))
+  expect(yield* fs.exists(planned.directory)).toBe(false)
+}))
+
+live("interrupted broker scope closes owned active connections before removing socket directory", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const one = yield* target("127.0.0.1", 0, undefined, true)
+  const started = yield* Deferred.make<readonly string[]>()
+  const fiber = yield* Effect.forkScoped(Effect.scoped(Effect.gen(function* () {
+    const sockets = yield* TcpProxy.listen([one.port])
+    yield* Deferred.succeed(started, sockets)
+    return yield* Effect.never
+  })))
+  const sockets = yield* Deferred.await(started)
+  const client = yield* Effect.acquireRelease(Effect.promise(() => new Promise<Socket>((resolve, reject) => {
+    const client = createConnection(sockets[0])
+    client.on("error", reject)
+    client.on("data", () => resolve(client))
+    client.once("connect", () => client.write("active-control"))
+  })), (client) => Effect.sync(() => client.destroy()))
+  expect(one.accepted.length).toBe(1)
+  yield* Fiber.interrupt(fiber)
+  const exit = yield* Fiber.await(fiber)
+  expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
+  yield* Effect.promise(() => new Promise<void>((resolve) => {
+    if (client.closed) { resolve(); return }
+    client.once("close", () => resolve())
+  }))
+  expect(yield* fs.exists(path.dirname(sockets[0]))).toBe(false)
+  expect((yield* Effect.result(exchange(sockets[0])))._tag).toBe("Failure")
+}), 15_000)
+
+darwin("Darwin open supplies only owned routes and removed scoped sockets, without a library", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const one = yield* target()
+  const proxy = yield* Effect.scoped(TcpProxy.open([one.port]))
+  expect(proxy.env).toEqual({ ORCHESTRA_TCP_PROXY_ROUTES: `${one.port}:${Buffer.from(proxy.sockets[0], "utf8").toString("hex")}` })
+  expect(Object.keys(proxy).sort()).toEqual(["env", "sockets"])
+  expect(yield* fs.exists(path.dirname(proxy.sockets[0]))).toBe(false)
+}))
+
+it.live("port shape/resource limits HOLD before acquisition; non-Darwin open never widens policy", () => Effect.gen(function* () {
+  yield* Effect.forEach([[], [0], [65536], [1.5], [NaN], [Infinity], [1234, 1234], Array.from({ length: 33 }, (_, index) => index + 1)],
+    (ports) => Effect.gen(function* () {
+      expect((yield* Effect.flip(TcpProxy.listen(ports))).reason).toBe("sandbox-tcp-proxy-invalid-ports")
+    }), { discard: true })
+  if (process.platform !== "darwin")
+    expect((yield* Effect.flip(TcpProxy.open([1234]))).reason).toBe("sandbox-loopback-endpoint-exact-policy-unsupported")
+}))
