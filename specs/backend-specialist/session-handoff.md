@@ -1,5 +1,7 @@
 # Session snapshot + handoff — the backend specialist
 
+Latest compaction checkpoint: [session-state-2026-10-09.md](session-state-2026-10-09.md). Read it first for exact refs, completed repair/publication scope and remaining benchmark implementation integration. Stop after saving until compaction completes.
+
 Current closure: read **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first. Functional repairs, final epic CI, Cassandra proof and public bench evidence/protocol landed; the dated plan below is historical context.
 
 **Current execution snapshot:** read [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first,
