@@ -3,6 +3,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { MemoryArtifact, MemorySnapshot } from "./memory-types"
 import { createHash } from "node:crypto"
 import { isSafe } from "./trigger"
+import { validReview } from "./review-seal"
 
 export type Snapshot = {
   sessionID: SessionID
@@ -33,7 +34,7 @@ export function hasArtifact(
         singleLine(artifact.now?.next) && Array.isArray(artifact.now?.src) && artifact.now.src.length > 0 &&
         artifact.now.src.every((alias) => /^[uat][1-9][0-9]*$/.test(alias)) && Array.isArray(artifact.covered) &&
         artifact.covered.length > 0 && artifact.covered.at(-1)?.id === artifact.boundary &&
-        artifact.covered.every((source) => nonempty(source.id) && /^[a-f0-9]{64}$/.test(source.digest))) &&
+        artifact.covered.every((source) => nonempty(source.id) && /^[a-f0-9]{64}$/.test(source.digest)) && validReview(artifact)) &&
     nonempty(artifact.text)
   )
 }
