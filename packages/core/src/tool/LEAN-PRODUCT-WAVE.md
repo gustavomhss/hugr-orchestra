@@ -23,7 +23,7 @@ declare unavailable metrics; they do not claim successful collection or totals.
 - Scope is standard registry calls, not missing MCP/SDK/hosted calls. Disabled,
   missing capability, unsafe mapping, processor/budget refusal get honest labels.
 - Aggregate unique persisted location/session/call identity; reject invalid records
-  and foreign session. Identical duplicates count once; conflicting duplicates
+  and foreign caller location/session. Identical duplicates count once; conflicting duplicates
   are not summed into savings. Replay/retry must not increase a total.
 - Loaded browser history summaries are explicitly `loaded-history`, not falsely
   whole-Session totals. Complete-history applies only to an actually complete
