@@ -51,3 +51,43 @@ it.instance("MCP bridge advertises actual host schemas and executes real recall/
   const invalid = yield* Effect.promise(() => client.callTool({ name: "context_recall", arguments: { archive_list: true, query: "mixed modes" } }))
   expect(invalid.isError).toBe(true)
 }), 60_000)
+
+it.instance("an unlisted MCP tool cannot claim or execute even when its definition exists", () => Effect.gen(function* () {
+  const sessions = yield* Session.Service
+  const chat = yield* sessions.create({ title: "Forged SDK tool call" })
+  const messageID = MessageID.ascending()
+  const context = yield* Effect.context<never>()
+  const claims: string[] = []
+  const executions: string[] = []
+  const completed: SessionV1.ToolPart[] = []
+  const server = ClaudeCodeTools.server({
+    defs: ["read", "bash"].map((id) => ({ id, description: id, parameters: Schema.Struct({}),
+      execute: () => Effect.sync(() => { executions.push(id); return { title: id, output: id, metadata: {} } }),
+    })),
+    run: (effect) => Effect.runPromiseWith(context)(effect),
+    claim: (tool) => Effect.sync(() => {
+      claims.push(tool)
+      return { id: PartID.ascending(), sessionID: chat.id, messageID, type: "tool" as const, tool, callID: tool,
+        state: { status: "running" as const, input: {}, time: { start: 1 } } }
+    }),
+    context: (part) => ({ sessionID: chat.id, messageID, agent: "build", callID: part.callID, abort: AbortSignal.any([]),
+      messages: [], metadata: () => Effect.void, ask: () => Effect.void }),
+    complete: (part) => Effect.sync(() => { completed.push(part) }),
+  })
+  const client = new Client({ name: "forged-call", version: "1" })
+  const transports = InMemoryTransport.createLinkedPair()
+  yield* Effect.addFinalizer(() => Effect.promise(() => client.close()))
+  yield* Effect.promise(async () => { await server.instance.connect(transports[0]); await client.connect(transports[1]) })
+  expect((yield* Effect.promise(() => client.listTools())).tools.map((tool) => tool.name)).toEqual(["read"])
+  const forged = yield* Effect.promise(() => client.callTool({ name: "bash", arguments: {} }))
+  expect(forged.isError).toBe(true)
+  expect(forged.content).toEqual([{ type: "text", text: "Orchestra tool bash is not available." }])
+  expect(claims).toEqual([])
+  expect(executions).toEqual([])
+  expect(completed).toEqual([])
+  const allowed = yield* Effect.promise(() => client.callTool({ name: "read", arguments: {} }))
+  expect(allowed.isError).not.toBe(true)
+  expect(claims).toEqual(["read"])
+  expect(executions).toEqual(["read"])
+  expect(completed.map((part) => part.state.status)).toEqual(["completed"])
+}), 60_000)

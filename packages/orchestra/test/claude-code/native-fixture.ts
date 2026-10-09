@@ -8,6 +8,10 @@ import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 // The same embedded module's rAr recovers tool_result sibling users by parent/sourceToolAssistantUUID;
 // Zxr relinks preserved anchor/tail before spt. JSONL last-prompt carries leafUuid and explicit, including null clear.
 // UUIDs/content/names are scenario data; field shapes and restoration rules come from those functions.
+// Prompt snapshot proof: darwin-x64 claude, LEn/N1/KGn/Fan at 194352667 and Ts at 202425795.
+// LEn validates systemPrompt:string[] and tools:{name,description,schema?,server?}[];
+// N1 restores system/tool definitions, KGn rejects a later render point, Ts records real schemas.
+// Conversion to API messages skips these attachments; that does not make their replay contents metadata-only.
 export const base = { version: "2.1.289", sessionId: "native-session", isSidechain: false, cwd: "/fixture",
   userType: "external", timestamp: "2026-10-07T00:00:00.000Z" }
 export const definition = { name: "mcp__docs__lookup", description: "Look up documents",

@@ -52,7 +52,8 @@ export function prepare(input: {
       typeof entry.message.content !== "string" && (!Array.isArray(entry.message.content) || !entry.message.content.every(record)))))
     return { entries: input.entries, reason: "unknown-native-shape" }
   const mapped = (entry: SessionStoreEntry) => input.mapping[entry.uuid ?? ""] ?? input.mapping[apiID(entry) ?? ""]
-  if (entries.some((entry) => entry.type === "assistant" && !entry.isSidechain && !mapped(entry)))
+  if (entries.some((entry) => main(entry) && (entry.type === "assistant" || prompt(entry)) &&
+    (!mapped(entry) || !input.history.some((message) => message.info.id === mapped(entry)))))
     return { entries: input.entries, reason: "unmapped-native-message" }
   if (input.view.coverage?.version === 5) return complete(input, entries, mapped)
   const originals = new Map(input.history.flatMap((message) => message.parts.flatMap((part) =>
@@ -105,7 +106,7 @@ export function prepare(input: {
   const tail = mask(native.slice(cut))
   if (!tail.length || !opener) return { entries: input.entries, reason: "unmapped-opener" }
   const repaired = tail.some((entry) => entry.uuid === opener.uuid) ? tail : [opener, ...tail]
-  if (!validTools(repaired)) return { entries: input.entries, reason: "unsafe-tool-dependencies" }
+  if (!ClaudeCodeNative.validTools(repaired)) return { entries: input.entries, reason: "unsafe-tool-dependencies" }
   const discovered = ClaudeCodeNative.discovery(native)
   if (discovered.reason || !discovered.carriers || !discovered.names)
     return { entries: input.entries, reason: discovered.reason ?? "unknown-deferred-tools-shape" }
@@ -127,7 +128,8 @@ function complete(input: { entries: SessionStoreEntry[]; history: SessionV1.With
   const coverage = input.view.coverage
   if (!coverage || coverage.coveredThrough !== coverage.boundary || !input.view.system.length) return { entries: input.entries, reason: "invalid-complete-coverage" }
   const boundary = input.history.findIndex((message) => message.info.id === coverage.boundary)
-  if (boundary < 0 || !entries.some((entry) => entry.type === "assistant" && mapped(entry) === coverage.boundary))
+  const covered = entries.findLast((entry) => entry.type === "assistant" && mapped(entry) === coverage.boundary)
+  if (boundary < 0 || !covered?.uuid)
     return { entries: input.entries, reason: "unmapped-complete-boundary" }
   const calls = new Map(input.history.flatMap((message, index) => message.parts.flatMap((part) => part.type === "tool" ? [[part.callID, index] as const] : [])))
   if (entries.some((entry) => blocks(entry).some((block) => block.type === "tool_result" && !calls.has(String(block.tool_use_id)))))
@@ -139,7 +141,7 @@ function complete(input: { entries: SessionStoreEntry[]; history: SessionV1.With
     if (entry.uuid && discovery.carriers.has(entry.uuid)) return true
     if (record(entry.attachment) && ["prompt_snapshot", "prompt_render_point"].includes(String(entry.attachment.type))) return true
     const id = mapped(entry)
-    if (entry.type === "user" && prompt(entry) && id === coverage.currentUserID) return true
+    if (entry.type === "user" && prompt(entry) && coverage.currentUserID !== undefined && id === coverage.currentUserID) return true
     if (entry.type === "assistant" || entry.type === "user") {
       const result = blocks(entry).filter((block) => block.type === "tool_result")
       if (result.length) return result.every((block) => (calls.get(String(block.tool_use_id)) ?? -1) > boundary)
@@ -149,22 +151,41 @@ function complete(input: { entries: SessionStoreEntry[]; history: SessionV1.With
       const data = record(entry.attachment) ? entry.attachment : {}
       const call = data.toolUseID ?? data.tool_use_id ?? entry.toolUseID
       if (typeof call === "string") return (calls.get(call) ?? -1) > boundary
-      const parent = entries.find((row) => row.uuid === entry.parentUuid)
-      const owner = parent && mapped(parent)
-      if (owner) return (ids.get(owner) ?? -1) > boundary
     }
     // Arbitrary covered attachments/system noise never reappear through a dependency-repair tail.
     return false
   })
-  if (!ClaudeCodeNative.validTools(kept)) return { entries: input.entries, reason: "unsafe-complete-postboundary-dependencies" }
+  // Retained prompts own their media/reminder descendants, including a current prompt inside coverage.
+  // Call ownership wins over parent topology: covered tool payload must never return through this closure.
+  const retained = new Set(kept.flatMap((entry) => {
+    if (typeof entry.uuid !== "string") return []
+    if (entry.type === "user" || entry.type === "assistant") return [entry.uuid]
+    const data = record(entry.attachment) ? entry.attachment : {}
+    const call = data.toolUseID ?? data.tool_use_id ?? entry.toolUseID
+    return typeof call === "string" && (calls.get(call) ?? -1) > boundary ? [entry.uuid] : []
+  }))
+  for (let round = 0; round < entries.length; round++) {
+    const before = retained.size
+    for (const entry of entries) {
+      if (entry.type !== "attachment" || typeof entry.uuid !== "string" || typeof entry.parentUuid !== "string" || !retained.has(entry.parentUuid)) continue
+      const data = record(entry.attachment) ? entry.attachment : {}
+      const call = data.toolUseID ?? data.tool_use_id ?? entry.toolUseID
+      if (call !== undefined && (typeof call !== "string" || (calls.get(call) ?? -1) <= boundary)) continue
+      retained.add(entry.uuid)
+    }
+    if (retained.size === before) break
+  }
+  const replay = entries.filter((entry) => kept.includes(entry) || typeof entry.uuid === "string" && retained.has(entry.uuid))
+  if (!ClaudeCodeNative.validTools(replay)) return { entries: input.entries, reason: "unsafe-complete-postboundary-dependencies" }
   const base = Object.fromEntries(["cwd", "sessionId", "version", "gitBranch", "entrypoint", "userType"].flatMap((key) =>
     entries.at(-1)?.[key] === undefined ? [] : [[key, entries.at(-1)?.[key]]]))
   const marker: SessionStoreEntry = { ...base, type: "system", subtype: "compact_boundary", uuid: randomUUID(), parentUuid: null,
+    logicalParentUuid: covered.uuid,
     timestamp: new Date().toISOString(), isSidechain: false, level: "info", content: "Conversation compacted",
     compactMetadata: { trigger: "manual", preTokens: 0, preCompactDiscoveredTools: discovery.names } }
   const summary: SessionStoreEntry = { ...base, type: "user", uuid: randomUUID(), parentUuid: marker.uuid, timestamp: marker.timestamp,
     isSidechain: false, isCompactSummary: true, isVisibleInTranscriptOnly: true, message: { role: "user", content: input.view.system.join("\n\n") } }
-  return { entries: [marker, summary, ...rechain(kept, summary.uuid)], reason: "swapped-complete" }
+  return { entries: [marker, summary, ...rechain(replay, summary.uuid)], reason: "swapped-complete" }
 }
 
 function rechain(entries: SessionStoreEntry[], initial?: string) {
@@ -175,19 +196,4 @@ function rechain(entries: SessionStoreEntry[], initial?: string) {
     parent = entry.uuid
     return next
   })
-}
-
-function validTools(entries: SessionStoreEntry[]) {
-  const calls = new Set<string>()
-  const results = new Set<string>()
-  for (const entry of entries) {
-    for (const block of blocks(entry)) {
-      if (block.type === "tool_use") calls.add(String(block.id))
-      if (block.type !== "tool_result") continue
-      const id = String(block.tool_use_id)
-      if (!calls.has(id) || results.has(id)) return false
-      results.add(id)
-    }
-  }
-  return [...calls].every((id) => results.has(id))
 }
