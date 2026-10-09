@@ -2,9 +2,11 @@
 
 ## Applicability
 
-The packet assigns Go table models (gocqlx `table.Table` values and UDT structs) generated from a Cassandra or Scylla keyspace, names the generated package directory as part of the write paths, gives its package name, and supplies a disposable cluster that already holds the keyspace schema. The engine is owned build `3.0.4+orchestra.cassandra1`: unchanged upstream gocqlx schemagen/library `3.0.4`, compiled by the host with its own Go toolchain and run only as `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
+The packet assigns Go table models (gocqlx `table.Table` values and UDT structs) generated from a Cassandra or Scylla keyspace, names the generated package directory as part of the write paths, gives its package name, and supplies a disposable cluster that already holds the keyspace schema. The engine is owned build `3.0.4+orchestra.cassandra2`: upstream gocqlx library `3.0.4` with a command-only host transport adapter, compiled by the host with its own Go toolchain and run only as `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
 
 Compare project pins against library `3.0.4`, not the host build revision; generated imports remain `github.com/scylladb/gocqlx/v3`. The owned build uses a private, hash-pinned driver backport and retains upstream licenses and modification notices. See the [Cassandra build provenance and measured compatibility](https://github.com/gustavomhss/hugr-orchestra/blob/cassandra-metadata/specs/backend-specialist/cassandra-build.md) for exact driver/artifact pins, catalog behavior and verification limits.
+
+The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` only for its declared loopback endpoints. The owned Go adapter strictly parses that captured map and connects through the host's fixed-destination Unix broker; no DYLD injection or clang acquisition is required. Present-but-invalid maps and undeclared, LAN or IPv6 addresses fail without direct TCP fallback. With the map absent, the generator keeps normal Go TCP for unconfined host probes; sandbox policy still denies raw TCP. Do not author, modify or substitute the map or broker.
 
 ## Non-trigger
 
