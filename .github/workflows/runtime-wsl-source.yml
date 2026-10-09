@@ -1,0 +1,128 @@
+name: runtime-wsl-source
+# Prepared source only; unexecuted. Lead dispatches SOURCE/ARGUMENT checks explicitly.
+# Not A04, guest readiness, provisioning privilege, product installation, or auth proof.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-argument:
+    name: SOURCE/ARGUMENT Windows ${{ matrix.cpu }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {cpu: x64, label: X64}
+          - {cpu: arm64, label: ARM64}
+    runs-on: [self-hosted, Windows, '${{ matrix.label }}', orchestra-wsl]
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      EXPECTED_CPU: ${{ matrix.cpu }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Parse actual approved helper without executing it
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          if (-not [Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([Runtime.InteropServices.OSPlatform]::Windows)) { throw 'SOURCE_NATIVE_WINDOWS_REQUIRED' }
+          $OSCPU = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+          $ProcessCPU = [Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant()
+          if ($OSCPU -cne $env:EXPECTED_CPU -or $ProcessCPU -cne $OSCPU -or $PSVersionTable.PSVersion -lt [version]'7.3') { throw 'SOURCE_NATIVE_CPU_OR_PWSH73_REQUIRED' }
+          $Helper = Join-Path $env:GITHUB_WORKSPACE '.github/scripts/runtime-wsl-prepare.ps1'
+          $Blob = git hash-object -- $Helper
+          if ($LASTEXITCODE -ne 0 -or $Blob -cne 'a0c9b67beb9363c76e73401479046ea3d7446ce5') { throw 'SOURCE_APPROVED_HELPER_BLOB_REQUIRED' }
+          git merge-base --is-ancestor cf36a7e237731515cd774c95d694f77a3ab8ccb6 HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'SOURCE_APPROVED_HELPER_ANCESTRY_REQUIRED' }
+          $Tokens = $null
+          $Errors = $null
+          $Ast = [System.Management.Automation.Language.Parser]::ParseFile($Helper, [ref]$Tokens, [ref]$Errors)
+          if ($null -eq $Ast -or @($Tokens).Count -eq 0 -or @($Errors).Count -ne 0) {
+            $Errors | ForEach-Object { Write-Output "$($_.ErrorId):$($_.Extent.StartLineNumber):$($_.Message)" }
+            throw 'SOURCE_ACTUAL_HELPER_PARSE_FAILED'
+          }
+          if ($null -eq $Ast.ParamBlock -or @($Ast.ParamBlock.Parameters).Count -ne 5) { throw 'SOURCE_PARAMETER_SURFACE_REQUIRED' }
+          $Names = @($Ast.ParamBlock.Parameters | ForEach-Object { $_.Name.VariablePath.UserPath })
+          if (($Names -join ',') -cne 'Rootfs,Sha256,Version,Report,Cleanup') { throw 'SOURCE_PARAMETER_SURFACE_MISMATCH' }
+          Write-Output "SOURCE_ONLY_PARSED:blob=$Blob; native=windows-$OSCPU; process=$ProcessCPU; pwsh=$($PSVersionTable.PSVersion)"
+      - name: Execute actual early negative arguments in private fixtures
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $OSCPU = [Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant()
+          $ProcessCPU = [Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant()
+          if (-not [Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([Runtime.InteropServices.OSPlatform]::Windows) -or $OSCPU -cne $env:EXPECTED_CPU -or $ProcessCPU -cne $OSCPU -or $PSVersionTable.PSVersion -lt [version]'7.3') { throw 'ARGUMENT_NATIVE_WINDOWS_CPU_OR_PWSH73_REQUIRED' }
+          function RegularPath([string]$Path) {
+            $Item = Get-Item -LiteralPath $Path -Force
+            while ($null -ne $Item) {
+              if (($Item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'ARGUMENT_FIXTURE_REPARSE_REFUSED' }
+              $Item = if ($Item -is [IO.DirectoryInfo]) { $Item.Parent } else { $Item.Directory }
+            }
+          }
+          $Helper = Join-Path $env:GITHUB_WORKSPACE '.github/scripts/runtime-wsl-prepare.ps1'
+          # Recheck bytes in the executing step; never dot-source, mock, or extract helper bodies.
+          $Blob = git hash-object -- $Helper
+          if ($LASTEXITCODE -ne 0 -or $Blob -cne 'a0c9b67beb9363c76e73401479046ea3d7446ce5') { throw 'ARGUMENT_APPROVED_HELPER_BLOB_REQUIRED' }
+          $Wsl = Join-Path $env:SystemRoot 'System32/wsl.exe'
+          if (-not (Test-Path -LiteralPath $Wsl -PathType Leaf)) { throw 'ARGUMENT_WSL_TOOL_REQUIRED' }
+          RegularPath $Wsl
+          if ([string]::IsNullOrWhiteSpace($env:RUNNER_TEMP) -or $env:RUNNER_TEMP -notmatch '^[A-Za-z]:\\') { throw 'ARGUMENT_CI_TEMP_REQUIRED' }
+          $OriginalTemp = [IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\')
+          RegularPath $OriginalTemp
+          if (-not (Test-Path -LiteralPath $OriginalTemp -PathType Container)) { throw 'ARGUMENT_CI_TEMP_DIRECTORY_REQUIRED' }
+          # Read-only registration access is needed by the helper before SHA refusal.
+          # This does not measure DISM/elevation or start/list/change any distribution.
+          try {
+            $Key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss'
+            $Entries = if (Test-Path $Key) { @(Get-ChildItem $Key | Get-ItemProperty) } else { @() }
+            foreach ($Entry in $Entries) {
+              $Base = [IO.Path]::GetFullPath(($Entry.BasePath -replace '^\\\\\?\\', '')).TrimEnd('\')
+              if ($OriginalTemp.Equals($Base, [StringComparison]::OrdinalIgnoreCase) -or $OriginalTemp.StartsWith($Base + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'ARGUMENT_FOREIGN_DISTRO_STORAGE_REFUSED' }
+            }
+          } catch { throw "ARGUMENT_REGISTRY_READ_OR_PLACEMENT_REQUIRED:$($_.Exception.Message)" }
+          $Fixture = Join-Path $OriginalTemp ('wsl-source-argument-' + [guid]::NewGuid().ToString())
+          $Created = $false
+          try {
+            try {
+              $null = New-Item -ItemType Directory -Path $Fixture
+              $Created = $true
+              $Private = Join-Path $Fixture 'runner-temp'
+              $Outside = Join-Path $Fixture 'outside-report-namespace'
+              $null = New-Item -ItemType Directory -Path $Private
+              $null = New-Item -ItemType Directory -Path $Outside
+              $Inert = Join-Path $Private 'not-a-rootfs.txt'
+              [IO.File]::WriteAllText($Inert, 'SOURCE/ARGUMENT inert fixture; never import')
+            } catch { throw "ARGUMENT_PRIVATE_FIXTURE_PRIVILEGE_REQUIRED:$($_.Exception.Message)" }
+            $env:RUNNER_TEMP = $Private
+            $Before = @(Get-ChildItem -LiteralPath $Fixture -Recurse -Force | Sort-Object FullName | ForEach-Object { $_.FullName }) -join "`n"
+            $InertHash = (Get-FileHash -LiteralPath $Inert -Algorithm SHA256).Hash
+            $Cases = @(
+              @{name='short-sha'; sha=('a' * 63); report=(Join-Path $Private 'short.json'); error='INFRA_ROOTFS_SHA256_INVALID'},
+              @{name='uppercase-sha'; sha=('A' * 64); report=(Join-Path $Private 'upper.json'); error='INFRA_ROOTFS_SHA256_INVALID'},
+              @{name='nonhex-sha'; sha=('g' * 64); report=(Join-Path $Private 'nonhex.json'); error='INFRA_ROOTFS_SHA256_INVALID'},
+              @{name='outside-report'; sha=('0' * 64); report=(Join-Path $Outside 'refused.json'); error='INFRA_CI_REPORT_NAMESPACE_REQUIRED'}
+            )
+            if ($Cases.Count -eq 0) { throw 'ARGUMENT_CASES_EMPTY' }
+            foreach ($Case in $Cases) {
+              $Failure = $null
+              try { & $Helper -Rootfs $Inert -Sha256 $Case.sha -Version 2 -Report $Case.report }
+              catch { $Failure = $_.Exception.Message }
+              if ($Failure -cne $Case.error) { throw "ARGUMENT_REFUSAL_MISMATCH:$($Case.name):expected=$($Case.error); actual=$Failure" }
+              $After = @(Get-ChildItem -LiteralPath $Fixture -Recurse -Force | Sort-Object FullName | ForEach-Object { $_.FullName }) -join "`n"
+              if ($After -cne $Before -or (Get-FileHash -LiteralPath $Inert -Algorithm SHA256).Hash -cne $InertHash) { throw "ARGUMENT_FIXTURE_CHANGED:$($Case.name)" }
+              Write-Output "SOURCE_ARGUMENT_REFUSED:$($Case.name):$Failure"
+            }
+            Write-Output "SOURCE_ARGUMENT_ONLY:cases=$($Cases.Count); no WSL command, feature query, import, or guest/product proof"
+          } finally {
+            $env:RUNNER_TEMP = $OriginalTemp
+            if ($Created) {
+              RegularPath $Fixture
+              Get-ChildItem -LiteralPath $Fixture -Recurse -Force | ForEach-Object { RegularPath $_.FullName }
+              Remove-Item -LiteralPath $Fixture -Recurse -Force
+            }
+          }
