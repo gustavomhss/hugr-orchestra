@@ -20,7 +20,7 @@ const JAR = "fake jar bytes"
 const INTERPRETER = [
   "#!/bin/sh",
   `printf '%s|%s|%s|%s\\n' "$PWD" "$npm_config_cache" "$PIP_CACHE_DIR" "$*" >> "$(dirname "$0")/../calls.log"`,
-  `grep -qs fixture-fail package.json && exit 3`,
+  `if grep -qs fixture-fail package.json; then echo 'fixture installer failure' >&2; exit 3; fi`,
   `echo "greeting=$FIXTURE_GREETING pythonpath=$PYTHONPATH argv=$*"`,
   "",
 ].join("\n")
@@ -256,7 +256,7 @@ posix("an npm engine installs its pinned lockfile with the runtime's bundled npm
       `greeting=hello ${home} pythonpath= argv=${install}/node_modules/orval/dist/bin/orval.js --config orval.config.ts`,
     )
     const reason = yield* BackendToolkit.ensure("protoc-gen-es").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
-    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm")
+    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm:exit:3:fixture installer failure")
     expect(yield* exists(path.join(f.root, "engines", "protoc-gen-es", `${VERSION}-${target}`))).toBe(false)
     expect(f.hits).toEqual({ "/node.tar.gz": 1 })
   }), 30_000,
