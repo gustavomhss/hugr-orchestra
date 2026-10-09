@@ -222,6 +222,7 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   const database = yield* Database.Service
   const events = yield* EventV2Bridge.Service
   const written: string[] = []
+  const streamed: unknown[] = []
   const parent = yield* seed()
   const parameters = { description: "implement repo query", prompt: "packet", subagent_type: subagent, background: true }
   const callID = "actual-background-return"
@@ -241,7 +242,8 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
       if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state))
         throw new Error("actual native Task call missing before resume")
       const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
-      expect(metadata).toHaveProperty("upstreamSettlement")
+      if (subagent === "walt") expect(metadata).toHaveProperty("upstreamSettlement")
+      if (subagent !== "walt") expect(metadata).not.toHaveProperty("upstreamSettlement")
       yield* Deferred.succeed(resumed, undefined)
     }),
     resolvePromptParts: (value) => Effect.succeed([{ type: "text", text: value }]),
@@ -299,6 +301,7 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     abort: new AbortController().signal, extra: { promptOps }, messages: [], ask: () => Effect.void,
     // Match native callback: completion closes generic streaming metadata; private host observation must still persist.
     metadata: (value) => Effect.gen(function* () {
+      if (value.metadata?.workResult !== undefined) streamed.push(value.metadata.workResult)
       const part = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
       if (part?.type !== "tool" || part.state.status !== "running") return
       yield* sessions.updatePart({ ...part, state: { ...part.state, ...value } })
@@ -337,16 +340,22 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     const call = calls[0]
     if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state)) throw new Error("actual native Task readback missing")
     const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
-    const receipt = Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
-    const notice = messages.find((message) => message.id === receipt.deliveryMessageID)
+    const receipt = subagent === "walt"
+      ? Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
+      : undefined
+    const notices = messages.filter((message) => message.type === "synthetic")
+    if (!receipt) expect(notices).toHaveLength(1)
+    const notice = receipt ? messages.find((message) => message.id === receipt.deliveryMessageID) : notices[0]
     if (notice?.type !== "synthetic") throw new Error("actual native synthetic projection missing")
-    expect(metadata.workResult).toEqual(receipt.workResult)
+    if (receipt) expect(metadata.workResult).toEqual(receipt.workResult)
+    if (!receipt) expect(metadata).not.toHaveProperty("upstreamSettlement")
     return { call, receipt, notice }
   }) : undefined
   return {
     started: result.metadata,
     childMessageID: written[0],
-    workResult: native ? native.receipt.workResult : delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+    workResult: native ? native.receipt?.workResult ?? streamed.at(-1)
+      : delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
     retained,
     native,
   }
@@ -508,6 +517,23 @@ describe("tool.task backend-result", () => {
       }),
     )
   })
+
+  background.instance("completed native backend Task delivers failed generic notice without upstream authorship or receipt", () =>
+    Effect.gen(function* () {
+      const result = yield* deliverBackground(final(card),
+        new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(), "backend", "native")
+      expect(result.workResult).toMatchObject({ schema: "backend-work-result-v1",
+        card: { parsed: true, messageID: result.childMessageID },
+        terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") } })
+      expect(result.workResult).not.toHaveProperty("author")
+      expect(result.native?.receipt).toBeUndefined()
+      expect(result.native).toMatchObject({ call: { state: { status: "completed" } }, notice: { type: "synthetic" } })
+      expect(result.native?.notice.text).toContain('<task id="')
+      expect(result.native?.notice.text).toContain('state="error"')
+      expect(result.native?.notice.text).toContain("<task_error>")
+      expect(result.native?.notice.text).toContain(final(card))
+    }),
+  )
 
   background.instance("upstream running child without a message has no invented proposal or author", () =>
     Effect.gen(function* () {
