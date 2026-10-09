@@ -27,8 +27,10 @@ export async function artifactNative(): Promise<ArtifactNative> {
   throw new Error(`Unsupported artifact host OS: ${process.platform}`)
 }
 
-// Scoped to owned builder outputs. Handles defeat path-component redirection;
-// this is not a sandbox against hostile mounts or arbitrary in-place mutation.
+// Requires a stable, exclusively build-owned namespace and cooperating producers.
+// Nofollow handles anchor objects/reads, not immutable pathnames. No guarantee
+// against a hostile actor already authorized to mutate the namespace or bytes.
+// Owner decision and declared exception: specs/runtime-closure/PRODUCER-BOUNDARY.md.
 export async function admitArtifacts(input: { dist: string; out: string; targets: string[] }) {
   requireArtifactHost(process.platform, process.arch)
   if (process.platform === "win32") {

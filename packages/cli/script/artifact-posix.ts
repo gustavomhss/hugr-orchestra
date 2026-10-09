@@ -103,8 +103,9 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
     publish: (parent, name, directory, output) => {
       requireArtifactLeaf(name)
       requireArtifactLeaf(output)
-      // This check does NOT pin the staging name. Commit/cleanup still require
-      // an exclusively owned namespace; a same-credential mutator can swap it.
+      // Stable, exclusively build-owned namespace; cooperating producers only.
+      // Defense in depth, not source-name CAS: an authorized hostile actor can
+      // replace this entry between the identity check and the native rename.
       const current = check(input.open(Number(parent.handle), name, input.flags.directory, 0), "reopen stage")
       try {
         if (identity(current) !== directory.identity) throw new Error("Artifact staging identity changed")
@@ -119,6 +120,8 @@ export function artifactPosix(input: ArtifactPosixInput): ArtifactNative {
       if (result < 0 && input.errno() !== 2) check(result, "unlink file")
     },
     removeDirectory: (parent, name, pinned) => {
+      // Same controlled-build boundary. This precheck is not inode/name CAS
+      // and cannot protect name-based unlink from an authorized hostile writer.
       const fd = input.open(Number(parent.handle), name, input.flags.directory, 0)
       if (fd < 0 && input.errno() === 2) return
       check(fd, "reopen cleanup directory")

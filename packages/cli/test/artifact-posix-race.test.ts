@@ -18,17 +18,21 @@ async function operations(): Promise<ArtifactPosixInput> {
   return artifactDarwinOperations()
 }
 
-// Regression gates intentionally remain red until staging-name authority is
-// resolved. Wrapping only the final native primitive inserts the actual rename
-// after the production identity check, without patching global filesystem APIs.
-test("POSIX critical publish interleaving must publish captured staging object", () =>
+// PUB-NS-001: declared human-authorized scope exception; owner selected
+// "Build controlado (Recommended)". See PRODUCER-BOUNDARY.md for provenance.
+// These retained examples assert known limitations outside that boundary.
+// The hostile same-UID writer runs after the check, before the real primitive;
+// no global filesystem APIs are patched and no cases are skipped.
+test("POSIX limitation: hostile namespace writer can replace staging entry before publication", () =>
   artifactFixture(async (input) => {
     const calls = await operations()
+    const state = { interleavings: 0 }
     const native = artifactPosix({
       ...calls,
       publish: (parent, name, output) => {
         renameSync(join(input.root, name), join(input.root, "saved-stage"))
         renameSync(join(input.root, "external", "foreign"), join(input.root, name))
+        state.interleavings++
         return calls.publish(parent, name, output)
       },
     })
@@ -50,8 +54,12 @@ test("POSIX critical publish interleaving must publish captured staging object",
       native.publish(parent, "stage", stage, "output")
       const output = native.directory(parent, "output")
       try {
-        expect(output.identity).toBe(stage.identity)
-        expect(native.list(output)).toEqual(["captured"])
+        expect(state.interleavings).toBe(1)
+        expect(output.identity).toBe(foreign.identity)
+        expect(output.identity).not.toBe(stage.identity)
+        expect(native.list(output)).toEqual(["foreign"])
+        expect(native.read(output, "foreign").bytes).toEqual(Buffer.from("foreign bytes"))
+        expect(native.read(stage, "captured").bytes).toEqual(Buffer.from("captured bytes"))
       } finally {
         native.closeDirectory(output)
       }
@@ -64,15 +72,17 @@ test("POSIX critical publish interleaving must publish captured staging object",
     }
   }))
 
-test("POSIX critical cleanup interleaving must not delete unrelated replacement entry", () =>
+test("POSIX limitation: hostile namespace writer can redirect name-based cleanup", () =>
   artifactFixture(async (input) => {
     const calls = await operations()
+    const state = { interleavings: 0 }
     const native = artifactPosix({
       ...calls,
       unlink: (parent, name, directory) => {
         if (directory && name === "stage") {
           renameSync(join(input.root, name), join(input.root, "saved-stage"))
           renameSync(join(input.root, "external", "foreign"), join(input.root, name))
+          state.interleavings++
         }
         return calls.unlink(parent, name, directory)
       },
@@ -91,8 +101,12 @@ test("POSIX critical cleanup interleaving must not delete unrelated replacement 
     const identity = await lstat(path, { bigint: true })
     try {
       native.removeDirectory(parent, "stage", stage)
-      const preserved = await lstat(join(input.root, "stage"), { bigint: true })
-      expect({ dev: preserved.dev, ino: preserved.ino }).toEqual({ dev: identity.dev, ino: identity.ino })
+      expect(state.interleavings).toBe(1)
+      await expect(lstat(join(input.root, "stage"))).rejects.toMatchObject({ code: "ENOENT" })
+      const saved = await lstat(join(input.root, "saved-stage"), { bigint: true })
+      expect(`${saved.dev}:${saved.ino}`).toBe(stage.identity)
+      expect(`${identity.dev}:${identity.ino}`).not.toBe(stage.identity)
+      expect(native.list(stage)).toEqual([])
     } finally {
       native.closeDirectory(stage)
       pins.reverse().forEach((pin) => native.closeDirectory(pin))
