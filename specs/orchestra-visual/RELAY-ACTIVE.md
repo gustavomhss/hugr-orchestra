@@ -65,6 +65,68 @@ typing and budget evidence, not scoped CI/native/model qualification. Runtime
 owns the next focused Core/Orchestra/native runs; Relay requests the explicit
 freeze card before its sole fresh four-native Nix measurement activation.
 
+### Actual focal CI and fresh Nix measurement
+
+Runtime explicitly froze clean `aec262940e6f86dbf55baf33ab7ebe7ccd91770f`, tree
+`3e1327e3cbb5d91556b02083fac6b634d1a86552`, identical to reviewed `8ef07624ba`.
+This docs-only child aligns the historical ledger; package code and typing evidence
+are unchanged. The actual focal requests each changed only `.ci-run.json` from AEC:
+
+| Run | Actual completed result on each OS | Remaining failure |
+| --- | --- | --- |
+| Core `37981431526`, head `d482e3e908` | 73 pass / 8 fail, 81 tests in three files | All eight receipt-free observation positives/restored controls remain at the old running result; live acceptance fails before the replay leg |
+| Orchestra `37981431470`, head `22423b5346` | 88 pass / 2 fail, 90 tests in five files | Completed native and dual background Task cases fail with `actual native private settlement did not resume parent` |
+
+Core Event/evaluator and the other four Orchestra files emitted passing cases.
+The generic backend notice case passed. No whole-run green is claimed. The same A
+owns actual first-rejection diagnosis in updater/projector/guard fixture, preserving
+strict stored facts and positive assertions; C diagnoses the linked caller read-only
+until the root is proven. Timeouts are not increased to hide missing settlement.
+
+Native `37981829079` and incidental `37981867753` failed before jobs. Actual GitHub
+annotation rejects `runner.temp` in job-level env at workflow lines 55 and 101.
+Runtime alone owns the one-file repair: move the unchanged model snapshot path to
+the two existing build steps' env. Independent static APPROVE:
+`ses_ede10b10bffeZj7Sr8S8b57wwj`, baseline AEC, before blob
+`bfae1f08b1ae7ae90fe15c4faf267608b97851ce`, working blob
+`295ad1e297eb02d09803a6cba7a1d78dfa4a3dc0`. No native consumer ran in those failures.
+Runtime published that exact workflow-only repair as
+`be485928d5cb9111fc50fc4dfb9be12447ee71c5`, parent AEC. Controlled native branch
+`e2ec5a868f983da025e5eb3611589e1b39b2f986` has the identical repaired tree and
+actual run `37984603006` registered. Consumer execution/results remain pending.
+
+A published minimal candidate `5c6426d8f5bb0a473d15447dece6e205be7cc32c`, parent
+`fca89fc1d4`, changing only the updater. It snapshots current Immer state before
+the same strict equality checks. Source inspection identified proxy/plain object
+comparison as the suspected refusal boundary; source-only inspection is not an
+observed first-false predicate. Runtime owns the actual eligible-fixture diagnosis
+and failed-selector verification before causal/runtime closure is claimed. Strict
+stored facts, equality constraints, original fields and positive assertions remain.
+
+Relay's sole request-only `9c76824c5ce27849f42685dc3579e3201e6103af` has exact parent
+AEC and changes only the ready/source-parent JSON line in `nix/distribution.md`.
+Run **`37981869304` completed successfully**: prepare, all four matching native
+measurements, and independent completion. Five non-expired API-bound artifacts were
+downloaded under approved temporary `nix-evidence-37981869304`. Completion identifies
+source tree `d8791dd793c0888c49b1b1dee4927d77e5cb2731`, repository `1405035578`, workflow
+`379775833`, attempt 1, and status `MEASUREMENT_ONLY_NOT_DISTRIBUTION`; completion
+positive/no-op and finite defect controls report `COMPLETION_CONTROLS_OK`.
+
+The four real recursive SHA-256 NAR candidates remain **not applied**:
+
+| System | Captured candidate |
+| --- | --- |
+| x86_64-linux | `sha256-shNngKjLShpnSR90z+1bggdb9kZ8SeZjwW4P0/pA+tI=` |
+| aarch64-linux | `sha256-L3dPE+giop893M8H7Olb0MKYhX6IrhMNEXDaIkbTXvc=` |
+| x86_64-darwin | `sha256-MLfyJbv32689GW0iqUh7UHIp4QJLHFrtjKW4c6RqTMs=` |
+| aarch64-darwin | `sha256-XG2g3KWXDvMtzyoQoKdkjLi8JNs4JO5aZzwc2Z97iIA=` |
+
+Measurement is not consumer/product qualification and does not override Core or
+Orchestra failures. The input fingerprint pins all package sources and tests.
+An actual A repair must be compared against that fingerprint before any hash-only
+consumer checkpoint; changed package inputs require fresh capture. Native-workflow
+only changes are outside that declared input set and must be assessed separately.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
