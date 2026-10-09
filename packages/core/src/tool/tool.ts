@@ -5,6 +5,7 @@ import { Effect, JsonSchema, Schema } from "effect"
 import type { AgentV2 } from "../agent"
 import type { SessionMessage } from "../session/message"
 import type { SessionSchema } from "../session/schema"
+import { ToolModelCapture } from "./model-capture"
 
 export interface Context {
   readonly sessionID: SessionSchema.ID
@@ -58,6 +59,11 @@ type Config<
     readonly input: Schema.Schema.Type<Input>
     readonly output: Output["Encoded"]
   }) => ReadonlyArray<Content>
+  /** Host-only execution provenance; failure declines metadata, never execution. */
+  readonly modelCapture?: (input: {
+    readonly input: Schema.Schema.Type<Input>
+    readonly output: Output["Encoded"]
+  }) => ToolModelCapture.Input | undefined
 }
 
 type Runtime = {
@@ -110,20 +116,29 @@ export function make<
                 ),
               ),
             ),
-            Effect.map(({ output, structured }) => ({
-              structured,
-              content:
-                config.toModelOutput?.({ input, output }).map((part) =>
-                  part.type === "text"
-                    ? { type: "text" as const, text: part.text }
-                    : {
-                        type: "file" as const,
-                        uri: `data:${part.mime};base64,${part.data}`,
-                        mime: part.mime,
-                        name: part.name,
-                      },
-                ) ?? (typeof output === "string" ? [{ type: "text" as const, text: output }] : []),
-            })),
+            Effect.map(({ output, structured }) => {
+              const result = {
+                structured,
+                content:
+                  config.toModelOutput?.({ input, output }).map((part) =>
+                    part.type === "text"
+                      ? { type: "text" as const, text: part.text }
+                      : {
+                          type: "file" as const,
+                          uri: `data:${part.mime};base64,${part.data}`,
+                          mime: part.mime,
+                          name: part.name,
+                        },
+                  ) ?? (typeof output === "string" ? [{ type: "text" as const, text: output }] : []),
+              }
+              try {
+                const capture = config.modelCapture?.({ input, output })
+                if (capture) ToolModelCapture.record(result, capture, { sessionID: context.sessionID, callID: context.toolCallID })
+              } catch {
+                // Optional metadata cannot change the successful native result.
+              }
+              return result
+            }),
           ),
         ),
       ),

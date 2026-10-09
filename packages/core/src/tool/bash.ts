@@ -143,6 +143,18 @@ const layer = Layer.effectDiscard(
             { type: "text", text: output.output },
             { type: "text", text: modelOutput(output) },
           ],
+          modelCapture: ({ input, output }) => ({
+            textIndex: 0,
+            observation: {
+              source: "shell",
+              command: input.command,
+              output: output.output,
+              termination: output.timeout ? { kind: "timed_out" }
+                : typeof output.exit === "number" ? { kind: "exited", code: output.exit } : { kind: "unknown" },
+              completeness: output.timeout ? "unknown" : output.truncated ? "truncated" : "complete",
+              presentation: "unknown",
+            },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               const source = {
