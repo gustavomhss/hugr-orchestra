@@ -120,7 +120,7 @@ export async function requirePackage(data: Uint8Array, editable: boolean) {
             scale: "100", fitToWidth: "1", fitToHeight: "1", pageOrder: "downThenOver", firstPageNumber: "1", copies: "1" }
           if (Object.entries(attrs).some(([key, value]) => defaults[key] !== value)) sheet.structure.add("custom page setup")
         }
-        if (worksheet && ["rowBreaks", "colBreaks", "headerFooter", "outlinePr", "pageSetUpPr"].includes(localTag ?? ""))
+        if (worksheet && ["rowBreaks", "colBreaks", "headerFooter", "outlinePr", "pageSetUpPr", "sheetProtection"].includes(localTag ?? ""))
           sheet.structure.add(localTag ?? "")
         if (worksheet && ["dimension", "mergeCell"].includes(localTag ?? "")) {
           boundedRange(attrs.ref)

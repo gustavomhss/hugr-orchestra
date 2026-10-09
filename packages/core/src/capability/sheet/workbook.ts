@@ -1,12 +1,12 @@
 import { isDeepStrictEqual } from "node:util"
-import { Schema } from "effect"
-import type { Cell, CellValue, Workbook, Worksheet } from "exceljs"
+import { Option, Schema } from "effect"
+import type { Cell, CellFormulaValue, CellValue, Workbook, Worksheet } from "exceljs"
 import { DocumentWork } from "../document/work"
 import { parse, encode } from "./csv"
 import { columnName, coordinate, formula, requireName, shift, shiftedIndex } from "./formula"
 import { Edit, Range, Read, mime } from "./schema"
 import { requirePackage, number } from "./zip"
-import type { Evidence, SheetEvidence } from "./zip"
+import type { CellEvidence, Evidence, SheetEvidence } from "./zip"
 
 export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): Promise<DocumentWork.Success> {
   const input = Schema.decodeUnknownSync(Schema.Union([Read, Edit]))(supplied)
@@ -59,6 +59,7 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
     const data = requireBytes(bytes)
     // ExcelJS declares its own Buffer interface as extending ArrayBuffer (not node:buffer.Buffer).
     await workbook.xlsx.load(new Uint8Array(data).buffer)
+    restoreRawCaches(workbook, evidence)
     requireBounded(workbook)
     normalizeStoredNumbers(workbook, evidence)
   }
@@ -302,10 +303,10 @@ function semantic(workbook: Workbook) {
       })
     })
     return { name: sheet.name, state: sheet.state, cells, rows, merges: sheet.model.merges,
-      columns: Array.from({ length: Math.max(sheet.columnCount, sheet.columns?.length ?? 0) }, (_, i) => {
+      columns: columnsWithinExtent(Array.from({ length: Math.max(sheet.columnCount, sheet.columns?.length ?? 0) }, (_, i) => {
         const column = sheet.getColumn(i + 1)
         return { number: i + 1, width: column.width ?? 9, hidden: !!column.hidden, outlineLevel: column.outlineLevel ?? 0, style: normalizedStyle(column.style) }
-      }),
+      }), cells),
       properties: Object.fromEntries(Object.entries(sheet.properties).filter(([, v]) => v !== undefined)),
       headerFooter: Object.fromEntries(Object.entries(sheet.headerFooter ?? {}).filter(([, v]) => v)),
       pageSetup: { firstPageNumber: 1, useFirstPageNumber: false, usePrinterDefaults: false, copies: 1,
@@ -324,6 +325,7 @@ async function saveVerified(workbook: Workbook, before?: ReturnType<typeof seman
   const { Workbook } = await import("exceljs")
   const reopened = new Workbook()
   await reopened.xlsx.load(new Uint8Array(data).buffer)
+  restoreRawCaches(reopened, evidence)
   requireBounded(reopened)
   normalizeStoredNumbers(reopened, evidence)
   if (!isDeepStrictEqual(semantic(reopened), expected)) throw DocumentWork.failure("outcome_unknown")
@@ -360,7 +362,7 @@ function expectedMapping(before: ReturnType<typeof semantic>, input: Extract<Edi
     })
     if (sheet.name === input.sheet && input.axis === "columns" && input.action === "insert")
       Array.from({ length: input.count }, (_, i) => columns.push({ number: input.index + i, width: 9, hidden: false, outlineLevel: 0, style: normalizedStyle({}) }))
-    return { ...sheet, cells, rows, columns: columns.sort((a, b) => a.number - b.number) }
+    return { ...sheet, cells, rows, columns: columnsWithinExtent(columns, cells) }
   }) }
 }
 
@@ -383,16 +385,11 @@ function normalizeStoredNumbers(workbook: Workbook, evidence: Evidence) {
       const cell = sheet.getCell(address)
       if (stored.formula?.expanded && formula(cell.formula).join("") !== stored.formula.expanded) throw DocumentWork.failure("unsupported_schema")
       if (cell.value instanceof Date) {
-        raw.datePresentation.set(address, cell.value.toISOString())
         if (stored.type !== "n" || !stored.valuePresent) throw DocumentWork.failure("unsupported_schema")
+        const presentation = new Date(Math.round((number(stored.value) - 25569 + (evidence.date1904 ? 1462 : 0)) * 86400000))
+        requireFinite(presentation)
+        raw.datePresentation.set(address, presentation.toISOString())
         cell.value = number(stored.value)
-      }
-      if (cell.result instanceof Date) {
-        raw.datePresentation.set(address, cell.result.toISOString())
-        if (stored.type !== "n" || !stored.valuePresent || !stored.formula) throw DocumentWork.failure("unsupported_schema")
-        const value = cell.value
-        if (value === null || typeof value !== "object" || !("formula" in value || "sharedFormula" in value)) throw DocumentWork.failure("unsupported_schema")
-        cell.value = { ...value, result: number(stored.value) }
       }
     })
   })
@@ -401,12 +398,55 @@ function normalizeStoredNumbers(workbook: Workbook, evidence: Evidence) {
 function formulaCache(cell: Cell, evidence?: SheetEvidence): { present: boolean; value: CellValue | undefined } {
   const raw = evidence?.cells.get(cell.address)
   if (!raw?.formula) return { present: cell.result !== undefined, value: cell.result }
+  return rawCache(raw)
+}
+
+/** Restore original cache type before inspecting ExcelJS's date-coerced model, including invalid Date artifacts. */
+function restoreRawCaches(workbook: Workbook, evidence: Evidence) {
+  // OOXML true and 1 are equivalent. ExcelJS 4.4.0 only recognizes 1 while decoding.
+  workbook.properties.date1904 = evidence.date1904
+  workbook.eachSheet((sheet) => {
+    const raw = evidence.sheets.get(sheet.name)
+    if (!raw) throw DocumentWork.failure("unsupported_schema")
+    raw.cells.forEach((stored, address) => {
+      if (!stored.formula) return
+      const cell = sheet.getCell(address)
+      const value = cell.value
+      if (value === null || typeof value !== "object" || !("formula" in value || "sharedFormula" in value))
+        throw DocumentWork.failure("unsupported_schema")
+      const cache = rawCache(stored)
+      // A genuine numeric date overflow is damaged input, not one of the spurious nonnumeric Date conversions.
+      if (stored.type === "n" && cell.result instanceof Date) requireFinite(cell.result)
+      cell.value = { ...value, result: cache.value }
+    })
+  })
+}
+
+function rawCache(raw: CellEvidence): { present: boolean; value: CellFormulaValue["result"] } {
   if (!raw.valuePresent) return { present: false, value: undefined }
   if (raw.type === "str") return { present: true, value: raw.value }
   if (raw.type === "b") return { present: true, value: raw.value === "1" }
   if (raw.type === "n") return { present: true, value: number(raw.value) }
-  if (raw.type === "e") return { present: true, value: cell.result }
+  if (raw.type === "e") {
+    const error = Schema.decodeUnknownOption(Schema.Literals(["#N/A", "#REF!", "#NAME?", "#DIV/0!", "#NULL!", "#VALUE!", "#NUM!"]))(raw.value)
+    if (Option.isNone(error)) throw DocumentWork.failure("unsupported_schema")
+    return { present: true, value: { error: error.value } }
+  }
   throw DocumentWork.failure("unsupported_schema")
+}
+
+/** Default columns outside cell/custom-column extent have no persisted OOXML representation. */
+function columnsWithinExtent(
+  columns: readonly { number: number; width: number; hidden: boolean; outlineLevel: number; style: Cell["style"] }[],
+  cells: readonly { address: string }[],
+) {
+  const extent = Math.max(0, ...cells.map((cell) => coordinate(cell.address).column), ...columns.filter((column) =>
+    column.width !== 9 || column.hidden || column.outlineLevel || Object.values(column.style).some((value) => value !== undefined),
+  ).map((column) => column.number))
+  const byNumber = new Map(columns.map((column) => [column.number, column]))
+  return Array.from({ length: extent }, (_, i) => byNumber.get(i + 1) ?? {
+    number: i + 1, width: 9, hidden: false, outlineLevel: 0, style: normalizedStyle({}),
+  })
 }
 
 function normalizedStyle(style: Cell["style"]): Cell["style"] {
