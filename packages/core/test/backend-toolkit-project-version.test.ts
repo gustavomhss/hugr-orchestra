@@ -138,6 +138,64 @@ it.live("YAML aliases cannot substitute an old output behind matching generated 
   expect(yield* Effect.promise(() => readFile(path.join(f.project, "old/.openapi-generator/VERSION"), "utf8"))).toBe("7.10.0\n")
 }))
 
+it.live("critical YAML scalars bind quoted strings/plain paths; implicit ambiguous spellings block before coercion", () => Effect.gen(function* () {
+  const f = yield* fixture
+  for (const key of ["outputDir", "inputSpec"]) {
+    for (const scalar of ["on", "OFF", "Yes", "No", "true", "FALSE", "null", "~", "42", "0x10", "7.25", ".nan", "2026-10-08"]) {
+      yield* f.write("openapi-generator.yaml", `outputDir: generated\n${key}: ${scalar}\n`)
+      expect(yield* f.check()).toBe(`engine-project-version:ambiguous-yaml-scalar:${key}`)
+    }
+  }
+  yield* f.write("on/.openapi-generator/VERSION", "7.10.0\n")
+  yield* f.write("openapi-generator.yaml", "outputDir: 'on'\ninputSpec: 'contract.yaml'\n")
+  expect(yield* f.check()).toBe(mismatch("7.10.0"))
+  for (const scalar of ["generated", "'generated'", '"generated"']) {
+    yield* f.write("openapi-generator.yaml", `outputDir: ${scalar}\ninputSpec: "contract.yaml"\nadditionalProperties:\n  packageName: fixture.client\n`)
+    expect(yield* f.check()).toBe("allowed")
+  }
+}))
+
+it.live("strict-spec consumes exactly one boolean argument, including equals spelling", () => Effect.gen(function* () {
+  const f = yield* fixture
+  for (const value of ["true", "false"]) {
+    expect(yield* f.check(["generate", "-c", "openapi-generator.yaml", "--strict-spec", value])).toBe("allowed")
+    expect(yield* f.check(["generate", "--strict-spec=" + value, "-c", "openapi-generator.yaml"])).toBe("allowed")
+  }
+  expect(yield* f.check(["generate", "-o", "out", "--strict-spec"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec", "-o", "out"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec=", "-o", "out"])).toBe("engine-project-version:unbound-args")
+  expect(yield* f.check(["generate", "--strict-spec=maybe", "-o", "out"])).toBe("engine-project-version:unsupported-owned-call")
+}))
+
+it.live("physical output, config and pin paths cannot read outside the project", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const outside = path.join(f.directory, "outside")
+  yield* Effect.promise(async () => {
+    await mkdir(outside)
+    await writeFile(path.join(outside, "VERSION"), "PRIVATE_CONTENT")
+    await writeFile(path.join(outside, "config.yaml"), "outputDir: generated")
+    await symlink(outside, path.join(f.project, "escape"), process.platform === "win32" ? "junction" : "dir")
+  })
+  expect(yield* f.check(["generate", "-o", "escape/out"])).toBe("engine-project-version:escaping-output")
+  expect(yield* f.check(["generate", "-o", outside])).toBe("engine-project-version:escaping-output")
+  expect(yield* f.check(["generate", "-c", "escape/config.yaml"])).toBe("engine-project-version:escaping-config")
+  yield* Effect.promise(() => mkdir(path.join(f.project, "generated")))
+  yield* Effect.promise(() => symlink(outside, path.join(f.project, "generated/.openapi-generator"), process.platform === "win32" ? "junction" : "dir"))
+  expect(yield* f.check()).toBe("engine-project-version:escaping-output-metadata")
+  yield* Effect.promise(() => unlink(path.join(f.project, "generated/.openapi-generator")))
+  yield* Effect.promise(() => symlink(path.join(outside, "VERSION"), path.join(f.project, "openapitools.json"), "file"))
+  expect(yield* f.check()).toBe("engine-project-version:escaping-project-metadata")
+  expect(yield* Effect.promise(() => readFile(path.join(outside, "VERSION"), "utf8"))).toBe("PRIVATE_CONTENT")
+  expect((yield* Effect.promise(() => lstat(path.join(outside, "VERSION")))).isFile()).toBe(true)
+}))
+
+it.live("read-only validation/version do not require generation metadata", () => Effect.gen(function* () {
+  const f = yield* fixture
+  yield* f.write("openapitools.json", "not JSON")
+  expect(yield* f.check(["validate", "-i", "contract.yaml"])).toBe("allowed")
+  expect(yield* f.check(["version"])).toBe("allowed")
+}))
+
 it.live("cwd binding rejects symlink traversal and external placement but allows canonical in-project aliases", () => Effect.gen(function* () {
   const f = yield* fixture
   const outside = path.join(f.directory, "outside")
