@@ -493,7 +493,7 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     yield* Ref.set(f.list, { tools: sameSchema, catalogGeneration: 1, coverage: "complete" })
     const first = yield* f.find()
     yield* expectCode(f.find({ ...request, limit: 2 }), "quota_exceeded")
-    const second = yield* f.find({ ...request, query: "get_project" })
+    const second = yield* f.find({ ...request, cursor: cursor(first) })
     expect(second.operations[0]?.name).toBe("get_project")
     expect((yield* f.describe(ref(first))).name).toBe("list_projects")
     expect((yield* f.describe(ref(second))).name).toBe("get_project")

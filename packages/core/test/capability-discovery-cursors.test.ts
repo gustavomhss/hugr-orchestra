@@ -73,7 +73,11 @@ describe("CapabilityCursors opaque bounded scope", () => {
     expect((yield* store.read(next, scope).pipe(Effect.flip)).code).toBe("stale_descriptor")
     expect((yield* store.issue(scope, 2).pipe(Effect.flip)).code).toBe("stale_descriptor")
     clock.now = 21
-    yield* store.clear()
+    yield* store.remove(next)
     expect((yield* store.read(next, scope).pipe(Effect.flip)).code).toBe("stale_descriptor")
+    const reclaimed = yield* store.issue(scope, 3)
+    expect(yield* store.read(reclaimed, scope)).toBe(3)
+    yield* store.clear()
+    expect((yield* store.read(reclaimed, scope).pipe(Effect.flip)).code).toBe("stale_descriptor")
   }))
 })
