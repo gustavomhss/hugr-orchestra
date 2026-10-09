@@ -9,6 +9,9 @@ import { Decimal } from "decimal.js"
 import type { ProviderMetadata, Usage } from "@orchestra/llm"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Database } from "@orchestra/core/database/database"
+import { ResearchBinding } from "@orchestra/core/research/binding"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
+import { Project } from "@orchestra/schema/project"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Plugin } from "../plugin"
 import { SessionV2 } from "@orchestra/core/session"
@@ -469,12 +472,13 @@ export type Patch = Omit<Partial<Info>, "time" | "summary" | "revert" | "permiss
 const layer: Layer.Layer<
   Service,
   never,
-  BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service
+  BackgroundJob.Service | RuntimeFlags.Service | Database.Service | EventV2Bridge.Service | Plugin.Service | ResearchArtifacts.Service
 > = Layer.effect(
   Service,
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     const database = yield* Database.Service
+    const artifacts = yield* ResearchArtifacts.Service
     const background = yield* BackgroundJob.Service
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
@@ -636,6 +640,12 @@ const layer: Layer.Layer<
             )
         }
 
+        if (session.agent === "jimmy") {
+          const binding = yield* ResearchBinding.resolve(session.id, Project.ID.make(session.projectID)).pipe(
+            Effect.provideService(Database.Service, database), Effect.option,
+          )
+          if (binding._tag === "Some") yield* artifacts.remove(binding.value).pipe(Effect.orDie)
+        }
         yield* events.publish(SessionV1.Event.Deleted, { sessionID, info: session })
         yield* events.remove(sessionID)
       } catch (error) {
@@ -1059,7 +1069,7 @@ const _pluginNode: LayerNode.Node<unknown, unknown, any> = new Proxy({} as Layer
 export const node = LayerNode.make({
   service: Service,
   layer: layer,
-  deps: [BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, _pluginNode] as never,
+   deps: [BackgroundJob.node, RuntimeFlags.node, Database.node, EventV2Bridge.node, ResearchArtifacts.node, _pluginNode] as never,
 })
 
 export * as Session from "./session"

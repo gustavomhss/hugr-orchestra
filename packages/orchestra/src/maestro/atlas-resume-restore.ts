@@ -1,20 +1,28 @@
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Effect } from "effect"
+import { Agent } from "@/agent/agent"
 import { MessageV2 } from "@/session/message-v2"
 import { PartID, type MessageID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import { AtlasMemory } from "./atlas-memory"
 import { canonicalMemberId } from "./roster"
 
-// Ruling M3-1 (F3-D4 over F2.8): when a compaction leaves a backend Session's admitted resume fold outside the kept
+// When compaction leaves a native Atlas Session's admitted resume fold outside the kept
 // context, the host re-pushes the same Admission once, as residency "restored", with identical text and ref. The part
 // rides the compaction's own user message, which the compacted view keeps ahead of the summary, so it opens no turn.
 export const restore = Effect.fn("AtlasResumeRestore.restore")(
   function* (input: { session: Session.Interface; sessionID: SessionID; messageID: MessageID }) {
     const info = yield* input.session.get(input.sessionID)
-    if (!AtlasMemory.supports({ id: canonicalMemberId(info.agent), native: true })) return
+    if (!info.agent) return
+    const agents = yield* Agent.Service
+    const agent = yield* agents.get(canonicalMemberId(info.agent))
+    const member = AtlasMemory.owner(agent)
+    if (!member) return
     const history = yield* input.session.messages({ sessionID: input.sessionID })
-    const all = admissions(history)
+    const all = admissions(history).filter(
+      (admission) => admission.key.memoryOwner === member && admission.key.projectID === info.projectID,
+    )
     const latest = all.findLast((admission) => admission.residency === "admitted")
     if (!latest?.verdict.ok) return
     if (all.some((admission) => admission.residency === "restored" && sameKey(admission.key, latest.key))) return
@@ -31,7 +39,7 @@ export const restore = Effect.fn("AtlasResumeRestore.restore")(
     })
   },
   // A restore never fails the compaction it follows.
-  (effect) => Effect.ignore(effect),
+  (effect) => effect.pipe(Effect.provide(LayerNode.compile(Agent.node)), Effect.ignore),
 )
 
 function admissions(history: readonly SessionV1.WithParts[]) {

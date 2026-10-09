@@ -19,9 +19,10 @@ import { hasArtifact, isCurrent } from "./model"
 import { hardLimit, isSafe, PREPARE_MARGIN, settings, shouldStart, tokenCount } from "./trigger"
 import { apply as applyMasks, candidates as maskCandidates, estimate, urgent } from "./masking"
 import type { SessionV1 } from "@orchestra/core/v1/session"
+import { ResearchExecution } from "@/research/allowance"
 
 type Active = { generation: number; boundary: MessageID; done: Deferred.Deferred<void> }
-type Pending = { message: SessionV1.Assistant; canRecall: boolean }
+type Pending = { message: SessionV1.Assistant; canRecall: boolean; attribution?: ResearchExecution.Frame }
 type Entry = {
   generation: number
   safe?: MessageID
@@ -118,6 +119,7 @@ const layer = Layer.effect(
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
     const config = yield* Config.Service
+    const research = yield* ResearchExecution.Service
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
@@ -416,7 +418,9 @@ const layer = Layer.effect(
                 return [id, { member: info?.agent, status: job?.status }] as const
               })))
               const member = !!(yield* sessions.get(sessionID).pipe(Effect.catchCause(() => Effect.succeed(undefined))))?.parentID
-              const { artifact, ...pass } = yield* run(selected, { provider, llm }, { history, delegations, member }, { parent: request })
+              const { artifact, ...pass } = yield* research.withAttribution(sessionID,
+                run(selected, { provider, llm }, { history, delegations, member }, { parent: request }),
+              ).pipe(Effect.provideService(ResearchExecution.Current, pending.attribution))
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.skip ? `skipped-${pass.skip}` : "rejected", pass)
@@ -491,7 +495,10 @@ const layer = Layer.effect(
     const start: Interface["start"] = Effect.fn("SessionContinuity.start")((input) =>
       Effect.gen(function* () {
         if (!isSafe(input.message) || input.message.sessionID !== input.sessionID) return
-        const pending: Pending = { message: input.message, canRecall: input.canRecall === true }
+        // A queued maintenance pass may start in an older worker's finalizer. Retain the initiating
+        // dispatch frame here, not whichever dispatch happens to be current when that worker finishes.
+        const pending: Pending = { message: input.message, canRecall: input.canRecall === true,
+          attribution: yield* ResearchExecution.Current }
         const current = yield* InstanceState.get(state)
         const idle = yield* Effect.sync(() => {
           const item = entry(current, input.sessionID)
@@ -555,7 +562,8 @@ const layer = Layer.effect(
         item.attempted = undefined
         item.result = undefined
       })
-      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true })
+      yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true,
+        attribution: yield* ResearchExecution.Current })
       yield* settle(current, sessionID)
       const after = yield* pressure
       const ran = item.result === "applied" ? "applied" as const : item.result === "masked" ? "masked" as const : undefined
@@ -576,5 +584,5 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node],
+  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ResearchExecution.node],
 })

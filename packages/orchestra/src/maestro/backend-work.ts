@@ -8,6 +8,8 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
+import { DiscoveryResult } from "./discovery-result"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import type { Seat } from "./seats"
 
 // F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
@@ -18,6 +20,7 @@ export function track(input: {
   readonly sessionID: SessionID
   // Host fact: the logical task bound to the child (F2.11); absent for a seat without a binding.
   readonly taskId?: string
+  readonly research?: ResearchRecords.Interface
   // Host fact: the write roots ToolSafety enforces for the child (F2.14); empty means read-only.
   readonly writeRoots?: ReadonlyArray<string>
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
@@ -31,6 +34,14 @@ export function track(input: {
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
   })
   const history = () => MessageV2.stream(input.sessionID)
+  const assemble = (message: SessionV1.WithParts, session: readonly SessionV1.WithParts[]) =>
+    input.seat?.id === "jimmy" && input.seat.workResult === "discovery-work-result-v1"
+       ? DiscoveryResult.assemble(message, session).pipe(input.research ? Effect.provideService(ResearchRecords.Service, input.research) : (effect) => effect)
+      : Effect.succeed(BackendResult.assemble(message, session, input.seat))
+  const hostEnded = (message: SessionV1.WithParts | undefined, session: readonly SessionV1.WithParts[], reason: "failed" | "interrupted" | "running", detail: string) =>
+    message && input.seat?.id === "jimmy" && input.seat.workResult === "discovery-work-result-v1"
+      ? assemble(message, session).pipe(Effect.map((result) => ({ ...result, terminal: { reason, hostDetail: detail } })))
+      : Effect.succeed(BackendResult.hostEnded({ message, session, reason, detail }, input.seat))
 
   return {
     attach: <T extends object>(metadata: T) => ({
@@ -39,7 +50,7 @@ export function track(input: {
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      evidence.value = yield* bound(BackendResult.assemble(message, yield* history(), input.seat))
+      evidence.value = yield* bound(yield* assemble(message, yield* history()))
       yield* input.publish(evidence.value)
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
@@ -52,7 +63,7 @@ export function track(input: {
       const session = evidence.value ? [] : yield* history()
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat))
+        : yield* bound(yield* hostEnded(lastAssistant(session), session, reason, detail))
       yield* input.publish(evidence.value)
     }),
     // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
@@ -63,8 +74,8 @@ export function track(input: {
       const session = yield* history()
       const last = lastAssistant(session)
       if (state === "error")
-        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat))
-      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat))
+        return yield* bound(yield* hostEnded(last, session, "failed", text))
+      if (last) return yield* bound(yield* assemble(last, session))
       return yield* bound(
         BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
       )

@@ -68,6 +68,7 @@ import { eq } from "drizzle-orm"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
+import { ResearchExecution } from "@/research/allowance"
 import { LLMEvent } from "@orchestra/llm"
 
 // @ts-ignore
@@ -148,6 +149,7 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const nativeHost = yield* ArsenalBindings.make
+    const research = yield* ResearchExecution.Service
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
       return {
         cancel: (sessionID: SessionID) => cancel(sessionID),
@@ -1233,7 +1235,7 @@ const layer = Layer.effect(
               model,
               processor: handle,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, research, nativeHost, promptOps: ops })
 
             canRecall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
@@ -1630,6 +1632,7 @@ export const node = LayerNode.make({
     MCP.node,
     LSP.node,
     ToolRegistry.node,
+    ResearchExecution.node,
     Truncate.node,
     Image.node,
     CrossSpawnSpawner.node,

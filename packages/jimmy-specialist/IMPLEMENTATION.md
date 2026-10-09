@@ -1,0 +1,72 @@
+# Discovery integration evidence
+
+Status: mechanical integration checkpoint, 2026-10-08. This is not release acceptance or evidence of research quality. The final charter, independent audition and complete target-runtime qualification remain open.
+
+Implementation baseline: `73651a0e69a2912d9244dbb73e985c5828c03058`, branch `jimmy-discovery`. The implementation remains uncommitted. Planning contracts live in the owner's planning checkout at `specs/jimmy-specialist/`.
+
+## Native vertical slice
+
+- Native discovery invocations resolve the retained Task/Session/project and actual assistant/tool identity. Session rules are carried separately from the immutable native deny floor.
+- `research_capture` acquires through the existing `read` and `webfetch` tools. File acquisition uses the same permission and ToolSafety checks, including the physical target of discovery reads. It does not provide a second file/fetch implementation.
+- Discovery reads retain bounded bytes observed by the native reader before line cropping, then retain the selected line representation separately. Receipts record original byte/line extents. Evidence locators are relative to the retained representation, starting at line 1.
+- Web acquisition enforces the body cap while streaming, retains received bytes before conversion, and retains the selected representation with its transformation and original reference. Generic model-facing truncation does not replace artifact retention.
+- Native LSP captures preserve structured results and zero-based UTF-16 coordinate metadata. Atlas Own captures preserve the verified unit, content/receipt hashes and returned coverage. These receipts do not certify runtime behavior or universal language coverage.
+- Discovery LSP validates canonical source permissions before opening a document. Its strict query path reports per-server RPC failure/timeout, missing clients and omitted results; unavailable analysis is not an empty successful result. It reuses active clients or starts explicitly owner-configured commands, without activating implicit installers.
+- Acquisition outcomes use durable `research.source.attempted.1` events. Source bodies remain outside the ledger. `research_view` exposes bounded corpus handles and acquisition attempts as distinct projections.
+- Host request admission precedes acquisition. An exact native call retries its settled historical source without a live read/fetch. Changed selectors, failed prior acquisition and unsettled requests stop explicitly; the host must issue a new call for a new attempt. If a reader exceeds the retained source cap, its explicit prefix remains partial and cannot authenticate a projection beyond it.
+- Discovery excludes configured plugin and MCP/resource tool paths. Product writes, arbitrary shell and child delegation remain denied.
+- The discovery decoder separates card parsing, reference checks, authored sufficiency and native termination. It verifies that finding references address findings and exposes retained corpus handles when the final card is unavailable or invalid.
+- The artifact HTTP handler reads the exact admitted revision and rejects an artifact belonging to a different execution Task, even within the same project. The UI adapter uses the regenerated SDK. Document pagination binds every page to the expected receipt and refuses incomplete, oversized or repeating continuations.
+- Native Session deletion removes its managed research artifacts before deleting the binding. Current roster hashes preserve the superseded baseline hash instead of rewriting historical receipts.
+- The native Session tool boundary explicitly receives the captured research allowance service. Native Task tracking likewise carries its captured corpus service into discovery decoding; a public caller does not have to expose those services in its own ambient context.
+
+## Measured checks
+
+All tests below ran through `bun run test:ci` on GitHub Actions. No local test suite ran.
+
+| Check | Evidence | Observed result |
+| --- | --- | --- |
+| Native records, artifacts, binding and allowance | [37817831208](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37817831208) | 21 passed on Linux; 21 passed on Windows |
+| UI document continuation and malformed-page controls | [37817825146](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37817825146) | 2 passed on each platform |
+| Joined read/capture/document/decoder/HTTP/deletion path | [37820091601](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37820091601) | 3 passed on each platform |
+| Acquisition request preflight, immutable retries and joined vertical slice | [37826368060](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37826368060) and [37826365425](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37826365425) | 4 integration tests and 10 record tests passed on each platform |
+| Final acquisition retry and over-cap provenance controls | [37828089079](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37828089079) | Linux and Windows jobs succeeded; the Windows log records all 5 integration cases passing without test skips. The local follower lost its network connection; the existing run was recovered with `gh run view`, not reexecuted. |
+| Finite Git history and current skill extraction | [37830908147](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37830908147) | 31 passed on each platform |
+| Independent boundary corrections and actual TypeScript semantic transport | [37837309092](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37837309092) and [37837418566](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37837418566) | 14 Orchestra and 16 Core cases passed on each platform |
+| Complete malformed UTF-8 rejection paired with valid split-scalar projection | [37842409856](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37842409856) | 9 joined integration cases passed on each platform |
+| Actual Task interruption, own Atlas full recall and corpus continuity | [37847457441](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37847457441) | Native Task case passed on each platform |
+| Task decoder uses captured corpus service without ambient caller exposure | [37856206857](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37856206857) | Same native continuity case passed on each platform with caller corpus service removed |
+| Bun and Node skill-tree extraction, roster-hash history and seat-label checks | [37821373280](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37821373280) | These named cases passed on both platforms. The run failed three other cases, corrected in the next row. This run is not an overall green. |
+| Repaired generic second-seat source/bundle fixture and native-team profile expectations | [37822787998](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37822787998) | 11 passed on each platform; the generic second-seat fixture exercised its existing isolated mutations |
+| Existing read/webfetch, native allowance maintenance, Atlas Own/owner and resume controls | [37817749600](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37817749600) | These cases passed. The original joined HTTP case failed and was repaired in 37820091601. Six legacy Task-resume cases skipped on Windows and provide no Windows evidence. |
+
+The joined HTTP fixture initially built separate native runtimes and returned 404 for the fixture's published document. Sharing the native memo map made that path observable; keeping unrelated cases on isolated runtimes prevented a closed shared scope from interrupting later tests. The production handler was not changed to bypass admission or return a fabricated success.
+
+The generic seat fixture previously copied only the backend skill tree. It now snapshots resident specialist trees without importing the registry before its loader is installed. The compiled skill tests check both backend and discovery, compare actual extracted bytes and assert that the compiled process's authored source root is unavailable.
+
+Local `bun typecheck` completed from the affected package directories: Schema, Core, Orchestra, Protocol, Server, Client, legacy JavaScript SDK, session-ui, UI and app. `git diff --check` completed. Client generation and `./packages/sdk/js/script/build.ts` regenerated the public consumers; generated files were not hand-edited.
+
+## Independent review and provisional real-model pilots
+
+Read-only cold review identified six concrete defects: LSP source-permission bypass, semantic failures hidden as empty complete results, foreign-task availability disclosed before scope rejection, split UTF-8 parent validation, missing retained-read invocation checks, and worker sufficiency rewriting native terminal facts. Corrections were independently rechecked. That review also detected malformed complete UTF-8 being silently replacement-decoded after the partial-parent fix; native acquisition now rejects it before publishing a textual projection, while permitting an unfinished valid trailing scalar in a partial observed prefix.
+
+Real native Task execution subsequently exposed two composition gaps that direct leaf tests could not see: the Session tool boundary lacked its research allowance service, and the discovery decoder depended on the public caller exposing the corpus service. Both are now captured/provided at their native boundaries. The continuation test preserves the canonical reduced Atlas closing fold; full own Memory recall retrieves the actual evidence pointer, then `research_view` reopens exact retained bytes.
+
+The owner authorized use of existing OpenAI OAuth and delegated model choice. Available IDs were queried without printing credential values; selected model is `openai/gpt-6.1-sol`. Pilot credentials are read-only runtime loans from the existing OpenCode store. The pilot neither persists nor refreshes that store, uses a separate native database and disclosed-source directory, and keeps grading oracles outside candidate access and repository/CI snapshots.
+
+Independent fixture preparation drafted R01–R13 inputs/oracles with actual source hashes and explicit source completeness. R14 quality setup remains not-ready. Initial calibration lacked a genuinely insufficient-source variant; private v2 variant/freeze records preserve the originals instead of rewriting scheduled trials.
+
+- R01 provisional pilot: fresh cold evaluator reported calibration pass and candidate pass, with native parsed card, checked references and `ended` terminal. Enumerated child trace is 4 provider responses and 11 tool calls; aggregate effort/cost is unknown. The first pilot remains archived as inconclusive because host verification was unavailable and the evaluator saw candidate method bodies in the raw transcript.
+- R08 provisional analytical pilot: native execution produced an admitted document exported through digest-checked artifact reads. A fresh R08-only packet evaluation reported calibration pass, candidate pass and document checked. Its packet-level host facts are reported, not independent runtime attestation; child trace/aggregate cost were unavailable in that packet. The earlier evaluator judgment is archived separately because it read unrelated evaluation/control material.
+
+These are single provisional pilots. They do not close the three-repetition paired study, final-prompt confirmation, full R01–R14 quality matrix or comparative performance. Sanitized evaluator exports exclude candidate skill/prompt bodies and raw tool metadata; original native transcripts remain private evidence.
+
+## Qualification still required
+
+- Complete the independent R01–R14 grading/continuation setup, calibrated variants and three-repetition paired runs outside candidate access. Disclosed mechanical fixtures and provisional pilots do not replace that matrix.
+- Extend semantic qualification only for explicitly offered configured operations/languages. The actual TypeScript alias/RPC/truncation fixture establishes its measured scope, not universal semantic or runtime activation coverage.
+- Join Atlas checkpoint pointers, artifact restoration and final Task/continuation paths across the complete A/N case matrix, including background, interruption and invalid-reference variants.
+- Qualify full compiled provider/tool/HTTP paths and the real desktop Node sidecar. The passing Bun/Node skill-tree tests prove extraction, not the complete sidecar's research behavior. Native macOS runtime evidence remains open.
+- Validate UI behavior, accessibility, mixed-direction/RTL rendering, locale fallback and the required production timeline performance baseline/comparison. Type checking and document-reader tests do not close these checks.
+- Resolve every method/reference link against the installed asset tree; finalize the capability-accurate system prompt only after mechanical closure, then run the independent real-model R01–R14 audition through Maestro.
+- Run the change-scoped cold review and final epic suite before release acceptance. No quality score, comparative performance result or production-readiness claim is made at this checkpoint.

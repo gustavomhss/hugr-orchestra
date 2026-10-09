@@ -41,6 +41,8 @@ import type {
   SessionsInterruptOutput,
   SessionsMessageInput,
   SessionsMessageOutput,
+  ResearchArtifactInput,
+  ResearchArtifactOutput,
   MessagesListInput,
   MessagesListOutput,
   ModelsListInput,
@@ -602,6 +604,20 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ).then((value) => value.data),
+    },
+    research: {
+      artifact: (input: ResearchArtifactInput, requestOptions?: RequestOptions) =>
+        request<ResearchArtifactOutput>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/research/${encodeURIComponent(input.artifactID)}`,
+            query: { revision: input["revision"], cursor: input["cursor"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 400, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     messages: {
       list: (input: MessagesListInput, requestOptions?: RequestOptions) =>

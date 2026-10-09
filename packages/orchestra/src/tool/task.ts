@@ -11,7 +11,7 @@ import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
+import { Effect, Exit, FileSystem, Schema, Scope, Option } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
@@ -28,6 +28,8 @@ import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AtlasResume } from "@/maestro/atlas-resume"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
+import { ResearchExecution } from "@/research/allowance"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -135,6 +137,8 @@ export const TaskTool = Tool.define(
     const background = yield* BackgroundJob.Service
     const config = yield* Config.Service
     const sessions = yield* Session.Service
+    const research = yield* Effect.serviceOption(ResearchExecution.Service)
+    const researchRecords = yield* Effect.serviceOption(ResearchRecords.Service)
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
@@ -464,6 +468,7 @@ export const TaskTool = Tool.define(
         seat,
         sessionID: nextSession.id,
         taskId: logical?.taskId,
+        ...(Option.isSome(researchRecords) ? { research: researchRecords.value } : {}),
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
@@ -558,7 +563,7 @@ export const TaskTool = Tool.define(
             )
           : undefined
         const promptID = MessageID.ascending()
-        const result = yield* ops.prompt(
+        const prompted = ops.prompt(
           {
             messageID: promptID,
             sessionID: nextSession.id,
@@ -572,6 +577,11 @@ export const TaskTool = Tool.define(
           },
           beforeModel ? { beforeModel } : undefined,
         )
+        const result = yield* (Option.isSome(research)
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted)
+          : nextID === "jimmy"
+            ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
+            : prompted)
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
         yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
         if (result.info.role === "assistant" && result.info.error) {

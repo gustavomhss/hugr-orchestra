@@ -61,9 +61,9 @@ const nativeTeam = [
   },
   {
     id: "jimmy",
-    profile: "review",
-    prompt: "You are Jimmy, exploration reviewer.",
-    description: `Codebase exploration. ${review} Returns grounded findings card.`,
+    profile: "jimmy",
+    prompt: "You are Jimmy, technical discovery and research specialist.",
+    description: "Technical discovery and research specialist. Locates and explains code, investigates behavior, compares solutions and researches primary sources. Read-only product access; writes only native research documents/corpus and its bound Atlas Memory. Returns cited findings, coverage, limits and next steps. Give the question and relevant scope; incomplete exploratory briefs are valid.",
   },
   {
     id: "rosie",
@@ -106,19 +106,26 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "glob")).toBe("allow")
       expect(evaluate(agent, "grep")).toBe("allow")
       expect(evaluate(agent, "task")).toBe("deny")
-      expect(evaluate(agent, "webfetch")).toBe("deny")
-      expect(evaluate(agent, "websearch")).toBe("deny")
+      expect(evaluate(agent, "webfetch")).toBe(seat.id === "jimmy" ? "allow" : "deny")
+      expect(evaluate(agent, "websearch")).toBe(seat.id === "jimmy" ? "allow" : "deny")
       expect(evaluate(agent, "skill")).toBe("deny")
       expect(evaluate(agent, "external_directory")).toBe("deny")
       // External access covers bash and edit too, so only the review profile, which holds neither, reaches saved output.
       expect(Permission.evaluate("external_directory", Truncate.GLOB, agent.permission).action).toBe(
-        seat.profile === "review" ? "allow" : "deny",
+        seat.profile === "review" || seat.id === "jimmy" ? "allow" : "deny",
       )
-      expect(evaluate(agent, "bash")).toBe(seat.profile === "review" ? "deny" : "allow")
-      expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
+      expect(evaluate(agent, "bash")).toBe(seat.profile === "review" || seat.id === "jimmy" ? "deny" : "allow")
+      expect(evaluate(agent, "edit")).toBe(seat.profile === "review" || seat.id === "jimmy" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
       expect(agent.permission.slice(0, profile.length)).toEqual(profile)
-      if (seat.id !== "backend") expect(agent.permission).toEqual(profile)
+      if (seat.id !== "backend" && seat.id !== "jimmy") expect(agent.permission).toEqual(profile)
+      if (seat.id === "jimmy") {
+        for (const name of ["jimmy-discovery", "jimmy-research"])
+          expect(Permission.evaluate("skill", name, agent.permission).action).toBe("allow")
+        for (const tool of ["research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit"])
+          expect(evaluate(agent, tool)).toBe("allow")
+        expect(evaluate(agent, "maestro_record_review")).toBe("deny")
+      }
     }
   }),
 )
@@ -145,7 +152,7 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
     ).toBe("deny")
     for (const denied of ["task", "question", "webfetch", "websearch", "todowrite", "maestro_record_review"])
       expect(check(denied, "*")).toBe("deny")
-    // F3 clause 29: the bound Atlas Memory tools are granted by explicit tool ID, to this seat only.
+    // Bound Atlas Memory tools are granted by explicit tool ID. Their runtime binding isolates supported owners.
     expect(check("atlas_memory_recall", "backend")).toBe("allow")
     expect(check("atlas_memory_emit", "backend")).toBe("allow")
     expect(check("atlas_memory_header", "*")).toBe("deny")
@@ -188,7 +195,7 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
       for (const name of backendSkills.names)
         expect(Permission.evaluate("skill", name, agent.permission).action).toBe("deny")
       for (const tool of ["atlas_memory_recall", "atlas_memory_emit"])
-        expect(Permission.evaluate(tool, "*", agent.permission).action).toBe("deny")
+        expect(Permission.evaluate(tool, "*", agent.permission).action).toBe(seat.id === "jimmy" ? "allow" : "deny")
       expect(
         Permission.evaluate("external_directory", path.join(backendSkills.root, "*"), agent.permission).action,
       ).toBe("deny")

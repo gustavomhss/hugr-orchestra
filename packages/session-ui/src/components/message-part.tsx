@@ -67,6 +67,7 @@ import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
 import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
+import { ResearchResult } from "./research-result"
 
 async function writeClipboard(text: string): Promise<boolean> {
   const body = typeof document === "undefined" ? undefined : document.body
@@ -2064,6 +2065,7 @@ ToolRegistry.register({
     )
 
     return (
+      <>
       <BasicTool
         icon="task"
         status={props.status}
@@ -2075,6 +2077,8 @@ ToolRegistry.register({
         onTriggerClick={navigate}
         onTriggerKeyDown={navigateKey}
       />
+      <ResearchResult value={props.metadata.workResult} sessionID={childSessionId()} />
+      </>
     )
   },
 })

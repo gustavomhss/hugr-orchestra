@@ -34,6 +34,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
+import { ResearchExecution } from "@/research/allowance"
 
 const MCP_RESOURCE_TOOLS = {
   list: "list_mcp_resources",
@@ -66,6 +67,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const research = yield* Effect.serviceOption(ResearchExecution.Service)
   const safety = yield* ToolSafety.make.pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
   const binding = yield* InstanceRef
   const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
@@ -100,6 +102,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps },
     agent: input.agent.name,
     agentID: input.agent.id,
+    permission: Permission.merge(input.agent.permission, input.session.permission ?? []),
     messages: input.messages,
     metadata: (val) => safety.inspect(val).pipe(Effect.orDie, Effect.andThen(
       input.processor.updateToolCall(options.toolCallId, (match) => {
@@ -150,7 +153,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           directory: binding?.directory,
           projectID: binding?.project.id,
           projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-        }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+        }, Option.isSome(research) ? research.value.tool(input.session.id,
+          options.toolCallId ? `${input.processor.message.id}:${options.toolCallId}` : "", name, effect).pipe(Effect.orDie)
+          : input.agent.id === "jimmy" ? Effect.die(new Error("Native discovery allowance service is unavailable")) : effect,
+        (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
         () => !!options.abortSignal?.aborted).pipe(Effect.provideService(ToolSafetyHooks.Placement, placement(scope))),
       ),
     ).pipe(Effect.orDie)
@@ -201,6 +207,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       },
     })
   }
+
+  // Discovery has no MCP/plugin authority, including resource APIs disguised as generic read.
+  if (input.agent.native === true && input.agent.id === "jimmy") return tools
 
   const hasMcpResourceServer = Object.values(yield* mcp.clients()).some(
     (client) => !!client.getServerCapabilities()?.resources,

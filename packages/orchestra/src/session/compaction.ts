@@ -23,6 +23,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { buildPrompt } from "@orchestra/core/session/compaction"
 import { SessionCompactionEvent } from "@orchestra/schema/session-compaction-event"
 import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
+import { ResearchExecution } from "@/research/allowance"
 
 export const Event = SessionCompactionEvent
 
@@ -200,6 +201,7 @@ const layer = Layer.effect(
     const provider = yield* Provider.Service
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
+    const research = yield* ResearchExecution.Service
 
     const isOverflow = Effect.fn("SessionCompaction.isOverflow")(function* (input: {
       tokens: SessionV1.Assistant["tokens"]
@@ -423,7 +425,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID,
         model,
       })
-      const result = yield* processor.process({
+      const result = yield* research.withAttribution(input.sessionID, processor.process({
         user: userMessage,
         agent,
         sessionID: input.sessionID,
@@ -446,7 +448,7 @@ const layer = Layer.effect(
           },
         ],
         model,
-      })
+      })).pipe(Effect.orDie)
 
       if (result === "compact") {
         processor.message.error = new SessionV1.ContextOverflowError({
@@ -606,6 +608,7 @@ export const node = LayerNode.make({
     Provider.node,
     EventV2Bridge.node,
     RuntimeFlags.node,
+    ResearchExecution.node,
   ],
 })
 
