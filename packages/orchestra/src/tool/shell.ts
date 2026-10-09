@@ -26,6 +26,7 @@ import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
 import path from "path"
 import { Seats } from "@/maestro/seats"
+import { LegacyLeanCapture } from "./lean-capture"
 
 export { Parameters } from "./shell/prompt"
 
@@ -310,7 +311,7 @@ export const ShellTool = Tool.define(
       if (meta.length > 0) {
         output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
       }
-      return {
+      const result = {
         title: input.command,
         metadata: {
           output: last || preview(output),
@@ -322,6 +323,13 @@ export const ShellTool = Tool.define(
         },
         output,
       }
+      if (ctx.callID && code === 0 && !cut && !expired && !aborted && raw === output && raw.length > 0) {
+        LegacyLeanCapture.record(result, {
+          source: "shell", command: input.command, output: raw,
+          termination: { kind: "exited", code }, completeness: "complete", presentation: "unknown",
+        }, { sessionID: ctx.sessionID, callID: ctx.callID })
+      }
+      return result
     })
 
     return () =>
