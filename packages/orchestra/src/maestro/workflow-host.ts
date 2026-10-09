@@ -1,6 +1,7 @@
 export * as WorkflowHost from "./workflow-host"
 
 import path from "node:path"
+import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { desc, eq } from "drizzle-orm"
 import { Context, Effect, FileSystem, Schema } from "effect"
@@ -85,15 +86,26 @@ export function make(deps: Dependencies) {
     const review = validation ? yield* findReview(binding.sessionID, validation.id) : undefined
     const reviewer = roster.find((member) => member.memberId === "lucy")
     const nativeReviewer = yield* deps.agents.get("lucy")
+    const nativeValidator = yield* deps.agents.get("maestro")
+    const worker = validation ? yield* deps.agents.get(canonicalMemberId(validation.routedMemberID)) : undefined
     if (!validation || validation.outcome !== "VALID" || validation.projectID !== binding.projectID || !review ||
+      validation.sessionID !== binding.sessionID || validation.planRevisionID !== binding.planID ||
+      review.data.sessionID !== binding.sessionID || review.data.validationRecordID !== validation.id ||
       review.data.verdict !== "APPROVE" || review.data.reviewerID !== "lucy" ||
       review.data.routedMemberID === "lucy" || review.data.workCardHash !== validation.workCardHash ||
       review.data.reviewPolicyHash !== validation.reviewPolicyHash || review.data.projectID !== binding.projectID ||
       !reviewer?.nativeProfile || nativeReviewer?.id !== "lucy" || nativeReviewer.native !== true ||
+      nativeReviewer.mode !== "subagent" || nativeValidator?.id !== "maestro" || nativeValidator.native !== true ||
+      nativeValidator.mode !== "primary" || validation.validatorID !== "maestro" ||
+      !worker?.native || worker.mode !== "subagent" || worker.id === "lucy" ||
+      worker.id !== canonicalMemberId(validation.routedMemberID) ||
+      review.data.routedMemberID !== validation.routedMemberID ||
+      review.data.artifact.workCardHash !== validation.workCardHash ||
       validation.rosterHash !== rosterHash(roster) ||
       validation.reviewPolicyHash !== reviewPolicyHash(reviewer, nativeProfiles[reviewer.nativeProfile]) ||
       review.data.rosterHash !== validation.rosterHash || review.data.grantHash !== validation.grantHash ||
-      !isDeepStrictEqual(review.data.actor, validation.actor) ||
+      !reviewActorMatches(validation.actor, binding, "maestro") ||
+      !reviewActorMatches(review.data.actor, binding, "lucy") ||
       ![review.data.artifact.baseSHA, review.data.artifact.headSHA].every((sha) => /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
     const status = yield* deps.git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
@@ -368,5 +380,19 @@ export function held(error: unknown) {
   if (error instanceof RelayWorkflowBinding.Held) return error
   return new RelayWorkflowBinding.Held({
     reason: error instanceof ToolSafety.Denied ? error.reason : "WORKFLOW_HOST_ACQUISITION",
+  })
+}
+
+function reviewActorMatches(
+  actor: Schema.Schema.Type<typeof MaestroEvent.Validation.Recorded.data>["actor"],
+  binding: Pick<ArsenalCompletion.Binding, "projectID" | "sessionID">,
+  memberId: "maestro" | "lucy",
+) {
+  // Producer seals canonical flat identity bytes; reviewer and validator have different native roles.
+  const bytes = JSON.stringify({ memberId, projectId: binding.projectID, sessionId: binding.sessionID })
+  return isDeepStrictEqual(actor, {
+    version: "rfc8785-v1",
+    bytes,
+    sha256: createHash("sha256").update(bytes, "utf8").digest("hex"),
   })
 }

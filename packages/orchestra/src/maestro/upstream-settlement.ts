@@ -134,7 +134,8 @@ export function make(binding: {
       const settlement = { parentMessageID: input.messageID, parentCallID: input.callID, workResult: result, ...receipt }
       if (modern) {
         const parent = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
-        if (parent.type !== "assistant") return yield* new Hold({ message: "HOLD: original parent not assistant" })
+        if (parent.type !== "assistant" || parent.agent !== "maestro")
+          return yield* new Hold({ message: "HOLD: original parent not native Maestro assistant" })
         const matches = parent.content.filter((item) => item.type === "tool" && item.id === input.callID)
         const tool = matches[0]
         if (matches.length !== 1 || tool?.type !== "tool" || tool.name !== "task" || tool.provider?.executed ||
@@ -149,9 +150,23 @@ export function make(binding: {
         if (previous.parentSessionId !== input.sessionID || previous.sessionId !== input.childSessionID ||
           !SessionMessageUpdater.upstreamSettlement(metadata, owner))
           return yield* new Hold({ message: "HOLD: original Task binding mismatch" })
-        if (!before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: SessionSchema.ID.make(input.sessionID), assistantMessageID: SessionMessage.ID.make(input.messageID),
+        // A retained V1 view must be validated and settled with the native view by the private all-view port.
+        if (legacy) yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,
+          childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: input.capture.assistantMessageID })
+        if (!legacy && !before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: SessionSchema.ID.make(input.sessionID), assistantMessageID: SessionMessage.ID.make(input.messageID),
           callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content },
           { location: parentLocation })
+        const row = yield* database.db.select().from(SessionMessageTable)
+          .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.messageID))).get().pipe(Effect.orDie)
+        if (!row || row.session_id !== input.sessionID) return yield* new Hold({ message: "HOLD: native Task settlement not projected" })
+        const stored = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+        const calls = stored.type === "assistant" && stored.agent === "maestro"
+          ? stored.content.filter((item) => item.type === "tool" && item.id === input.callID) : []
+        const call = calls[0]
+        if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed ||
+          !("structured" in call.state) || !isDeepStrictEqual(SessionMessageUpdater.upstreamSettlement(
+            Option.getOrUndefined(record(call.state.structured.metadata)) ?? {}, { ...owner, input: call.state.input }), settlement))
+          return yield* new Hold({ message: "HOLD: native Task settlement readback mismatch" })
       }
       if (!modern) {
         yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,

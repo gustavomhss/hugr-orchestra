@@ -16,6 +16,7 @@ import { SessionEvent } from "@orchestra/schema/session-event"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Exit, Schema } from "effect"
+import { omit } from "remeda"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -348,4 +349,47 @@ it.instance("wake failure cannot cause second execution on delivery retry", () =
   expect(Exit.isFailure(yield* Effect.exit(deliver()))).toBe(true)
   yield* deliver()
   expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("compatible native and retained parent views settle through private all-view port", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  yield* f.sessions.updateMessage(f.owner)
+  const part = yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.parent.id,
+    messageID: f.owner.id, type: "tool", tool: "task", callID: f.callID, state: f.state })
+  yield* f.deliver()()
+  expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+  const stored = yield* f.sessions.getPart({ sessionID: f.parent.id, messageID: f.owner.id, partID: part.id })
+  if (stored?.type !== "tool" || stored.state.status === "pending") throw new Error("retained Task missing")
+  expect(stored.state.metadata).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+  expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("conflicting retained original child anchor prevents native Task receipt and wake", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  yield* f.sessions.updateMessage(f.owner)
+  yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.parent.id, messageID: f.owner.id,
+    type: "tool", tool: "task", callID: f.callID,
+    state: { ...f.state, metadata: { ...f.state.metadata, sessionId: f.parent.id } } })
+  expect(Exit.isFailure(yield* Effect.exit(f.deliver()()))).toBe(true)
+  expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
+  expect(f.counters.wake).toBe(0)
+}))
+
+it.instance("native Task projection missing receipt after progress cannot wake parent", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const events = EventV2Bridge.Service.of({ ...f.events, publish: (definition, data, options) =>
+    f.events.publish(definition, data, options).pipe(Effect.tap(() => Effect.gen(function* () {
+      if (definition.type !== SessionEvent.Tool.Progress.type) return
+      const row = yield* f.database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(f.owner.id))).get().pipe(Effect.orDie)
+      if (!row) throw new Error("native parent missing")
+      const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+      if (message.type !== "assistant") throw new Error("native parent not assistant")
+      const encoded = Schema.encodeSync(SessionMessage.Assistant)({ ...message,
+        content: message.content.filter((item) => item.type !== "tool" || item.id !== f.callID) })
+      yield* f.database.db.update(SessionMessageTable).set({ data: omit(encoded, ["id", "type"]) })
+        .where(eq(SessionMessageTable.id, row.id)).run().pipe(Effect.orDie)
+    }))) })
+  expect(Exit.isFailure(yield* Effect.exit(f.deliver()().pipe(Effect.provideService(EventV2Bridge.Service, events))))).toBe(true)
+  expect(f.counters.wake).toBe(0)
 }))
