@@ -8,7 +8,7 @@ import {
   isContextOverflowFailure,
   type ProviderErrorEvent,
 } from "@orchestra/llm"
-import { Cause, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
 import { AgentV2 } from "../../agent"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
@@ -106,7 +106,14 @@ const layer = Layer.effect(
     const referenceGuidance = yield* ReferenceGuidance.Service
     const config = yield* Config.Service
     const snapshots = yield* Snapshot.Service
-    const db = (yield* Database.Service).db
+    const database = yield* Database.Service
+    const workflowHosts = yield* RelayWorkflowSession.Service
+    const nativeHost = yield* RelayWorkflowSession.NativeHost
+    const workflowContext = Context.make(Database.Service, database).pipe(
+      Context.add(RelayWorkflowSession.Service, workflowHosts),
+      Context.add(RelayWorkflowSession.NativeHost, nativeHost),
+    )
+    const db = database.db
     const compaction = SessionCompaction.make({ events, llm, config: yield* config.entries() })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID)
@@ -200,9 +207,9 @@ const layer = Layer.effect(
       const model = yield* models.resolve(session)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
-      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.orDie)
+      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
       if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
-        Effect.map((next) => next === true), Effect.orDie), step: currentStep }
+        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(agent.info?.permissions)
@@ -358,7 +365,7 @@ const layer = Layer.effect(
             current: workflow, assistantMessageID: yield* publisher.startAssistant(),
             succeeded: settled._tag === "Success" && !!stepSettlement && !publisher.hasProviderError() &&
               !["unknown", "error", "content-filter"].includes(stepSettlement.finish),
-          }).pipe(Effect.orDie) : false
+          }).pipe(Effect.provide(workflowContext), Effect.orDie) : false
           return { needsContinuation: workflow ? workflowContinues : !publisher.hasProviderError() && needsContinuation, step: currentStep }
         }),
       )
@@ -446,7 +453,7 @@ export const node = makeLocationNode({
     ReferenceGuidance.node,
     Config.node,
     Snapshot.node,
-     Database.node,
-     RelayWorkflowSession.node,
+    Database.node,
+    RelayWorkflowSession.node,
   ],
 })

@@ -68,7 +68,7 @@ export const native = {
         if (view.state !== "active" || !isDeepStrictEqual({ position: view.position, attempt: view.attempt,
           ledgerSeq: view.ledgerSeq }, identity.settlement.expected))
           return yield* hold("WORKFLOW_SETTLEMENT_POSITION_MISMATCH")
-      }),
+      }).pipe(Effect.provideService(ArmState.Store, store), Effect.mapError(held)),
       disposition: (evaluation, writes) => Effect.gen(function* () {
         const checkpoint = yield* pending(arm)
         if (!sameIdentity(checkpoint, identity))
@@ -84,9 +84,9 @@ export const native = {
         const appended = yield* LedgerChain.append({ ledger, key, gen: loaded.sprint.gen ?? 0, body: JSON.stringify({
           event: "workflow-disposition", arm: input.token, checkpoint,
           evaluation: { ...evaluation, ledgerSeq: seq }, writes, sourceSeq: evaluation.ledgerSeq,
-        }) })
+        }) }).pipe(Effect.mapError(held))
         if (appended.seq !== seq) return yield* hold("WORKFLOW_SETTLEMENT_LEDGER_CHANGED")
-      }),
+      }).pipe(Effect.mapError(held)),
       after: (evaluation) => Effect.gen(function* () {
         const checkpoint = yield* pending(arm)
         if (!sameIdentity(checkpoint, identity)) return yield* hold("WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH")
@@ -95,7 +95,7 @@ export const native = {
         if (!isDeepStrictEqual(receipt.evaluation, evaluation))
           return yield* hold("WORKFLOW_SETTLEMENT_DISPOSITION_UNKNOWN")
         yield* boundary.after(evaluation)
-      }),
+      }).pipe(Effect.mapError(held)),
     })
     if (["busy", "defect", "refused", "noop", "parked", "revision-drift"].includes(result.outcome))
       return yield* hold("WORKFLOW_EVALUATION_ACQUISITION")

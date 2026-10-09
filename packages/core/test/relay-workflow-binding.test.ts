@@ -16,6 +16,7 @@ import { RelayWorkflowCurrentStep } from "../src/relay-workflow-currentstep"
 import { RelayWorkflowTransition } from "../src/relay-workflow-transition"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
+import { run } from "../../relay/test/arm-harness"
 
 // Prepared for the single integrated batch. Real store/compiler/arm files; no mocked evaluator or duplicate logic.
 const it = testEffect(Layer.empty)
@@ -54,7 +55,9 @@ describe("host-acquired publication binding", () => {
     expect(yield* reason(RelayWorkflowBinding.acquire(f.input))).toBe("WORKFLOW_PUBLICATION_UNPUBLISHED")
     const live = yield* f.store.publish(f.draft.id, f.draft.versionId)
     const acquired = yield* RelayWorkflowBinding.acquire(f.input)
-    const version = yield* f.store.version(live.id, live.activeVersionId ?? "")
+    if (!live.activeVersionId) throw new Error("Published fixture has no active version")
+    const version = yield* f.store.version(live.id, live.activeVersionId)
+    if (!version) throw new Error("Published fixture's active version is missing")
     expect(version.active).toBe(false)
     expect(acquired.definition.publication).toEqual({ projectID, documentID: live.id,
       activeVersionID: live.activeVersionId, immutableVersionBodyChecksum: AuthoringStore.checksum(version),
@@ -143,10 +146,14 @@ describe("pure current step and guarded transition seam", () => {
     expect(resumable.attempt).toBe(first.attempt)
     expect(resumable.ledgerSeq).toBe(first.ledgerSeq)
     expect(yield* Effect.sync(snapshot)).toEqual(fenced)
-    expect(yield* reason(RelayWorkflowTransition.transition({ token: "native-arm", binding,
-      settlement: { assistantMessageID: SessionMessage.ID.make("msg_existing_assistant"), expected: first },
-      revalidate: () => RelayWorkflowBinding.revalidate(f.port, acquired.definition).pipe(Effect.asVoid),
-    }).pipe(Effect.provideService(ArmState.Store, store)))).toBe("WORKFLOW_SETTLEMENT_UNBOUND")
+    expect(yield* Effect.promise(() => run(
+      { dir: f.tmp.path, arms: store.armsDir, arm, work: f.tmp.path, home: f.tmp.path,
+        transcript: path.join(f.tmp.path, "transcript.jsonl") },
+      reason(RelayWorkflowTransition.transition({ token: "native-arm", binding,
+        settlement: { assistantMessageID: SessionMessage.ID.make("msg_existing_assistant"), expected: first },
+        revalidate: () => RelayWorkflowBinding.revalidate(f.port, acquired.definition).pipe(Effect.asVoid),
+      }).pipe(Effect.provideService(ArmState.Store, store))),
+    ))).toBe("WORKFLOW_SETTLEMENT_UNBOUND")
     expect(yield* Effect.sync(snapshot)).toEqual(fenced)
     yield* Effect.sync(() => writeFileSync(path.join(arm, "sprint.json"), JSON.stringify({ ...acquired.sprint, brief: "Tampered" })))
     expect(yield* reason(RelayWorkflowCurrentStep.read("native-arm", binding).pipe(Effect.provideService(ArmState.Store, store))))
