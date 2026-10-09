@@ -20,7 +20,7 @@ export type Discovery = CapabilityDiscovery.Interface & Readonly<{
 
 export type Options = Readonly<{
   transport: CapabilityMcp.Interface
-  discovery: Discovery
+  discovery: CapabilityDiscovery.Interface
   connections: CapabilityConnections.Interface
   jobs: Effect.Success<typeof CapabilityJobs.make>
   artifacts: Effect.Success<ReturnType<typeof CapabilityArtifacts.make>>
