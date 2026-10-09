@@ -47,7 +47,7 @@ export function inventory(history: SessionV1.WithParts[]) {
   }
   return (value: string) => {
     if (media.some((bytes) => bytes.length > 0 && value.replace(/\s/g, "").includes(bytes.replace(/\s/g, "")))) return true
-    if (blobs.some((bytes) => line(value).includes(bytes))) return true
+    if (blobs.some((bytes) => bytes.length > 0 && line(value).includes(bytes))) return true
     const json = parse(value)
     if (Option.isSome(json) && json.value !== null && typeof json.value === "object" && objects.has(canonical(json.value))) return true
     const known = (node: Node): boolean => {

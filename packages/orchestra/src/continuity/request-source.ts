@@ -9,9 +9,11 @@ export function actual(message: SessionV1.WithParts) {
     (marker(part)?.type === "command" || !part.ignored && !part.synthetic && !marker(part) && part.text.trim().length > 0))
 }
 
-export function latest(messages: SessionV1.WithParts[], original?: SessionV1.WithParts) {
-  const found = messages.findLast(actual)
-  return original && actual(original) && (!messages.some((message) => message.info.id === original.info.id) || !found || original.info.time.created > found.info.time.created) ? original : found
+export function latest(messages: SessionV1.WithParts[], original?: SessionV1.WithParts, sessionID = messages[0]?.info.sessionID) {
+  const found = messages.findLast((message) => message.info.sessionID === sessionID && actual(message))
+  return original && original.info.sessionID === sessionID && original.parts.every((part) =>
+    part.sessionID === sessionID && part.messageID === original.info.id) && actual(original) &&
+    (!found || original.info.id === found.info.id || original.info.time.created > found.info.time.created) ? original : found
 }
 
 /** Confirmed response to the final member acknowledges preceding real users in the delivered batch. */
