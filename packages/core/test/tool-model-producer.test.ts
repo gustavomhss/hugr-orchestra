@@ -106,6 +106,55 @@ for (const mode of ["undefined", "throws", "wrong-slot"] as const) {
   )
 }
 
+for (const mode of ["throws", "undefined"] as const) {
+  it.effect(`metadata object callback alias mutation then ${mode} preserves native payload`, () =>
+    Effect.gen(function* () {
+      const seen: Array<{ input: { command: string }; output: { nested: { n: number; items: readonly string[] } } }> = []
+      const native = { nested: { n: 7, items: ["keep"] } }
+      const input = { command: "echo native" }
+      const output = yield* Tool.settle(Tool.make({
+        ...config, output: Schema.Struct({ nested: Schema.Struct({ n: Schema.Number, items: Schema.Array(Schema.String) }) }),
+        execute: () => Effect.succeed(native), toModelOutput: () => [{ type: "text", text: "native" }],
+        modelCapture: (value) => {
+          seen.push(value)
+          Reflect.set(value.output.nested, "n", "schema-invalid")
+          Reflect.set(value.output.nested.items, "0", "changed")
+          Reflect.set(value.input, "command", "forged")
+          if (mode === "throws") throw new Error("metadata unavailable after mutation")
+          return undefined
+        },
+      }), { ...call, input }, context)
+      expect(output).toEqual({ structured: { nested: { n: 7, items: ["keep"] } }, content: [{ type: "text", text: "native" }] })
+      expect(ToolModelCapture.get(output)).toBeUndefined()
+      expect(seen).toEqual([{ input: { command: "echo native" }, output: native }])
+      expect(seen[0]!.output).not.toBe(output.structured)
+      expect(seen[0]!.input).not.toBe(input)
+      for (const value of [seen[0]!.input, seen[0]!.output, seen[0]!.output.nested, seen[0]!.output.nested.items])
+        expect(Object.isFrozen(value)).toBe(true)
+      expect(input.command).toBe("echo native")
+    }),
+  )
+}
+
+for (const mode of ["none", "input-uncloneable", "output-uncloneable"] as const) {
+  it.effect(`metadata ${mode} opts out without touching native result`, () =>
+    Effect.gen(function* () {
+      let captures = 0
+      const native = { nested: { n: 7 }, ...(mode === "input-uncloneable" ? {} : { uncloneable: () => "native" }) }
+      const output = yield* Tool.settle(Tool.make({
+        ...config, input: Schema.Unknown, output: Schema.Unknown, execute: () => Effect.succeed(native),
+        toModelOutput: () => [{ type: "text", text: "native" }],
+        modelCapture: mode === "none" ? undefined : () => { captures++; return capture() },
+      }), { ...call, input: mode === "input-uncloneable" ? { ...call.input, uncloneable: () => "input" } : call.input }, context)
+      expect(output.structured).toBe(native)
+      expect(output.content).toEqual([{ type: "text", text: "native" }])
+      expect(ToolModelCapture.get(output)).toBeUndefined()
+      expect(captures).toBe(0)
+      expect(Object.isFrozen(native)).toBe(false)
+    }),
+  )
+}
+
 for (const mode of ["input", "execute", "output", "structured", "render", "interrupt"] as const) {
   it.effect(`capture does not swallow ${mode} failure or interruption`, () =>
     Effect.gen(function* () {
