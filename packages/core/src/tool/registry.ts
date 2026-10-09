@@ -60,6 +60,13 @@ export interface Settlement {
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/ToolRegistry") {}
 
+const CapturedMaterialization = Context.Reference<Materialization | undefined>("@orchestra/ToolRegistry/CapturedMaterialization", {
+  defaultValue: () => undefined,
+})
+
+/** Host-only issuing snapshot, available inside canonical settlement. Metadata is never an execution grant. */
+export const captured = Effect.gen(function* () { return yield* CapturedMaterialization })
+
 const NativeBinding = Context.Reference<{
   location: Location.Interface
   events: EventV2.Interface
@@ -216,7 +223,7 @@ const registryLayer = Layer.effect(
           Array.from(registrations, ([name, registration]) => [name, definition(name, registration.tool)] as const),
         )
         const advertised = options?.advertisedNames === undefined ? undefined : new Set(options.advertisedNames)
-        return {
+        const materialization: Materialization = {
           definitions: Array.from(definitions.values()).filter((definition) =>
             advertised === undefined || advertised.has(definition.name),
           ),
@@ -224,10 +231,13 @@ const registryLayer = Layer.effect(
           registrationIdentity: (name) => registrations.get(name)?.identity,
           settle: (input) => {
             const registration = registrations.get(input.call.name)
-            if (registration) return settleWith(input, registration.identity)
+            if (registration) return settleWith(input, registration.identity).pipe(
+              Effect.provideService(CapturedMaterialization, materialization),
+            )
             return Effect.succeed({ result: { type: "error", value: `Unknown tool: ${input.call.name}` } })
           },
         }
+        return materialization
       }),
     })
   }),
