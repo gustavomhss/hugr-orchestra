@@ -6,11 +6,18 @@ import { spawnSync } from "node:child_process"
 import { chmod, cp, mkdir, open, readFile, symlink, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { parseArgs } from "node:util"
+import { readCliManifest } from "../../packages/desktop/src/main/cli-artifacts"
 
 const values = parseArgs({
-  options: Object.fromEntries(["source", "cli", "desktop", "system", "version", "electron-version", "directory"].map(
-    (key) => [key, { type: "string" as const }],
-  )), strict: true, allowPositionals: false,
+  options: {
+    source: { type: "string" },
+    cli: { type: "string" },
+    desktop: { type: "string" },
+    system: { type: "string" },
+    version: { type: "string" },
+    "electron-version": { type: "string" },
+    directory: { type: "string" },
+  }, strict: true, allowPositionals: false,
 }).values
 if (!values.source || !values.cli || !values.directory) throw new Error("NIX_DISTRIBUTION_FAILURE:MISSING_PROBE_ARGUMENTS")
 await mkdir(values.directory) // no recursive mkdir: reject reuse/missing parent
@@ -25,7 +32,7 @@ await Promise.all(["bash-completion", "zsh"].map((directory) =>
 ))
 await symlink(join(values.cli, "share/orchestra/schema.json"), join(values.directory, "share/orchestra/schema.json"))
 const original = await readFile(join(raw, "manifest.json"))
-const receipt = JSON.parse(original.toString())
+const receipt = await readCliManifest(raw)
 if (!Array.isArray(receipt.artifacts) || receipt.artifacts.length !== 1) throw new Error("NIX_DISTRIBUTION_FAILURE:PROBE_SOURCE_TUPLE")
 const file = join(raw, receipt.artifacts[0].file)
 await chmod(file, 0o755)

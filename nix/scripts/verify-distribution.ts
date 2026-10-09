@@ -5,11 +5,17 @@ import { spawnSync } from "node:child_process"
 import { readdir } from "node:fs/promises"
 import { join } from "node:path"
 import { parseArgs } from "node:util"
+import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
 
 const args = parseArgs({
-  options: Object.fromEntries(["source", "cli", "desktop", "system", "version", "electron-version"].map(
-    (key) => [key, { type: "string" as const }],
-  )),
+  options: {
+    source: { type: "string" },
+    cli: { type: "string" },
+    desktop: { type: "string" },
+    system: { type: "string" },
+    version: { type: "string" },
+    "electron-version": { type: "string" },
+  },
   strict: true,
   allowPositionals: false,
 }).values
@@ -25,9 +31,6 @@ if (!(system in manifest.bun.sources)) fail(`UNSUPPORTED_SYSTEM:${system}`)
 const platform = system.endsWith("-darwin") ? "darwin" : "linux"
 const arch = system.startsWith("aarch64-") ? "arm64" : "x64"
 if (process.platform !== platform || process.arch !== arch) fail(`NATIVE_HOST_MISMATCH:${system}`)
-const { nativeCliTarget, readCliManifest, verifyCliArtifact } = await import(
-  join(source, "packages/desktop/src/main/cli-artifacts.ts")
-)
 const target = nativeCliTarget(platform, arch)
 const resources = platform === "darwin"
   ? join(desktop, "Applications/HuGR Orchestra.app/Contents/Resources")
