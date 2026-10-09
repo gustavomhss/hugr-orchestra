@@ -79,9 +79,11 @@ jobs:
           import { realpathSync } from "node:fs"
           import path from "node:path"
           import { Omni } from "@orchestra/core/omni"
+          import { Flag } from "@orchestra/core/flag/flag"
           import { tree } from "../../core/test/fixture/process-tree.ts"
 
           const shipped = path.dirname(realpathSync(process.execPath))
+          if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "on") throw new Error("unset CLI flag did not select Omni")
           const found = Omni.locate()
           if (path.dirname(found.addon) !== shipped || path.dirname(found.supervisor) !== shipped)
             throw new Error(`omni was not taken from next to the binary (${shipped}): ${JSON.stringify(found)}`)
@@ -111,7 +113,8 @@ jobs:
           const link = path.join(mkdtempSync(path.join(os.tmpdir(), "omni-cli-")), "orchestra")
           if (process.platform !== "win32") symlinkSync(real, link)
           const bin = process.platform === "win32" ? real : link
-          const env: Record<string, string | undefined> = { ...process.env, BUN_BE_BUN: "1", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1" }
+          const env: Record<string, string | undefined> = { ...process.env, BUN_BE_BUN: "1" }
+          delete env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
           for (const key of Object.keys(env)) if (key.toUpperCase().startsWith("HUGR_OMNI_")) delete env[key]
           console.log(`starting ${bin}`)
           const cli = spawn(bin, [path.resolve(".omni-cli-smoke/hold.ts")], { env, stdio: ["ignore", "pipe", "inherit"] })
@@ -153,6 +156,7 @@ jobs:
         run: |
           bin=$(find dist -path '*/bin/orchestra' -o -path '*/bin/orchestra.exe' | head -1)
           [ -n "$bin" ] || { echo "::error::no built orchestra binary under dist"; exit 1; }
-          out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1 "$bin" debug omni)
+          out=$(env -u HUGR_OMNI_ADDON -u HUGR_OMNI_SUPERVISOR -u ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER "$bin" debug omni)
           echo "$out"
+          grep -Fq "path: omni (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=on)" <<<"$out"
           grep -q "nonce tree: ok" <<<"$out"

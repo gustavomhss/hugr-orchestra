@@ -21,9 +21,10 @@ export async function fixtures() {
     mcp: { campaign: { type: "local", enabled: false, command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
       environment: { MCP_OMNI_TREE: JSON.stringify({ command: trees.mcpTree.command, args: trees.mcpTree.args }) }, timeout: 30_000 } } }
   const report = path.join(scratch.home, "smoke.json")
-  const env = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_TEST_ONBOARDING: "1", ORCHESTRA_SIDECAR_V2: "0",
-    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", ORCHESTRA_DB: ":memory:", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1", ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
+  const env: Record<string, string> = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_TEST_ONBOARDING: "1", ORCHESTRA_SIDECAR_V2: "0",
+    ORCHESTRA_DB: ":memory:", ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "1", ORCHESTRA_DESKTOP_OMNI_SMOKE: report,
     ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE: trees.main.nonce, ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV: JSON.stringify([trees.main.command, ...trees.main.args]) }
+  delete env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
   return { ...scratch, env, trees, lspNonce, mcpNonce, llm, report,
     specs: [...Object.entries(trees).map(([name, tree]) => ({ name, nonce: tree.nonce, size: tree.size })), { name: "lsp", nonce: lspNonce, size: 1 }, { name: "mcp", nonce: mcpNonce, size: 1 }] }
 }

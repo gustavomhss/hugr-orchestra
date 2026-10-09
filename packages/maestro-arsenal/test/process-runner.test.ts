@@ -66,7 +66,7 @@ describe("arsenal process runner", () => {
     expect(out.stdout).toBe("own")
   })
 
-  test.skipIf((process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER ?? "0") === "0")(
+  test.skipIf(![undefined, "1", "strict"].includes(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER))(
     "core's omni runner, installed when core loads arsenal, runs real processes",
     async () => {
       const core = (await import(join(import.meta.dir, "..", "..", "core", "src", "tool", "maestro-arsenal.ts"))) as {

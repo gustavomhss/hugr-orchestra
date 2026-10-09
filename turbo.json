@@ -1,7 +1,8 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalEnv": ["CI"],
-  "globalPassThroughEnv": ["CI"],
+  "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
+  "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"],
+  "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
     "typecheck": {},
     "build": {
@@ -13,6 +14,17 @@
     // ^transit puts every workspace dependency's files into each test hash without running anything.
     "transit": {
       "dependsOn": ["^transit"]
+    },
+    "hugr-omni#transit": {
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/omni/crates/**",
+        "$TURBO_ROOT$/packages/omni/Cargo.toml",
+        "$TURBO_ROOT$/packages/omni/Cargo.lock",
+        "$TURBO_ROOT$/packages/omni/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/omni/.cargo/**"
+      ]
     },
     "orchestra#test": {
       "dependsOn": ["transit", "^build"],

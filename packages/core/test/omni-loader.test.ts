@@ -9,8 +9,8 @@ import { Shell } from "@orchestra/core/shell"
 import { alive, gone, reap, sweep, tree } from "./fixture/process-tree"
 
 describe("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
-  test("unset, empty and 0 are off; 1 is on; strict is strict", () => {
-    expect(omniSpawner(undefined)).toBe("off")
+  test("unset and 1 are on; empty and 0 select legacy rollback; strict is strict", () => {
+    expect(omniSpawner(undefined)).toBe("on")
     expect(omniSpawner("")).toBe("off")
     expect(omniSpawner("0")).toBe("off")
     expect(omniSpawner("1")).toBe("on")
@@ -26,7 +26,7 @@ describe("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
     try {
       delete process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
       process.env.ORCHESTRA_EXPERIMENTAL = "true"
-      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("off")
+      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("on")
       process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "strict"
       expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
     } finally {

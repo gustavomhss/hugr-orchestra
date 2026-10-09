@@ -11,26 +11,27 @@ const fff = process.env["ORCHESTRA_DISABLE_FFF"]
 export type OmniSpawner = "off" | "on" | "strict"
 
 // Set by the CLI build per target (packages/orchestra/script/build.ts): false where omni ships no addon yet (D-L9).
-// Undefined in dev, tests and the desktop bundle, where the flag alone decides.
+// Undefined in dev, tests and the desktop bundle, where Omni is on by default.
 declare const OMNI_ENABLED: boolean | undefined
 
 const omniWarned = new Set<string>()
 
 /**
  * ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER has three states, so it has its own parser rather than truthy(), and
- * ORCHESTRA_EXPERIMENTAL does not turn it on. Unset or "0" is off (legacy spawning), "1" is on (omni, delegating
- * unsupported options to legacy), "strict" is omni with no delegation. Anything else is off, with one warning.
+ * ORCHESTRA_EXPERIMENTAL does not affect it. Unset is on (omni, delegating unsupported options to legacy), "0"
+ * or empty selects legacy rollback, "1" is on, "strict" is omni with no delegation. Invalid values fail closed
+ * to legacy with one warning. Builds without a native target stay on legacy.
  */
 export function omniSpawner(value: string | undefined): OmniSpawner {
-  if (value === undefined || value === "" || value === "0") return "off"
+  if (value === "" || value === "0") return "off"
   if (typeof OMNI_ENABLED !== "undefined" && !OMNI_ENABLED) {
-    if (!omniWarned.has("")) {
+    if (value !== undefined && !omniWarned.has("")) {
       omniWarned.add("")
       console.warn("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER is set, but this build has no hugr-omni for its platform; omni stays off.")
     }
     return "off"
   }
-  if (value === "1") return "on"
+  if (value === undefined || value === "1") return "on"
   if (value === "strict") return "strict"
   if (!omniWarned.has(value)) {
     omniWarned.add(value)

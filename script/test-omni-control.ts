@@ -1,5 +1,5 @@
 // The omni positive control (D-L1), preloaded by the bunfig.toml of every package whose tests spawn through omni
-// (core, orchestra, maestro-arsenal, desktop). It checks nothing unless ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER is on. Then a
+// (core, orchestra, maestro-arsenal, desktop). Unset now means on; explicit legacy rollback checks nothing. Then a
 // run that made no omni spawn proved nothing about omni and fails; so does a strict run that delegated to legacy.
 //
 // This file loads no package module at preload time. It runs before each package's own preload, and core's flag.ts

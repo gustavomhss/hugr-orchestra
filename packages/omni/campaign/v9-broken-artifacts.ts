@@ -86,8 +86,10 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
       if (mode === "unset") delete off.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
       if (mode === "0") off.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "0"
       const result = await execute(corrupt.bin, ["--version"], off, scratch.project, 5000, [scratch.home])
-      controls.push({ name: `legacy-${mode}-stays-lazy`, result, pass: result.code === 0 && !result.timedOut &&
-        /^\d+\.\d+\.\d+/.test(result.stdout) && !result.stderr.includes("hugr-omni CLI preflight") })
+      controls.push({ name: mode === "0" ? "legacy-0-stays-lazy" : "unset-default-preflights", result,
+        pass: mode === "0" ? result.code === 0 && !result.timedOut &&
+          /^\d+\.\d+\.\d+/.test(result.stdout) && !result.stderr.includes("hugr-omni CLI preflight")
+          : rejectsArtifact(result, corrupt.addon, "addon") })
     }
     if (!quiet()) throw new Error(`V9 machine became busy before strict control: ${load()}`)
     const strict = await execute(missing.bin, ["debug", "omni"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" }, scratch.project, 2000, [scratch.home])

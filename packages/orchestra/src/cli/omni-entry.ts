@@ -7,7 +7,8 @@ declare const OMNI_ENABLED: boolean | undefined
 if (
   typeof OMNI_ENABLED !== "undefined" &&
   OMNI_ENABLED &&
-  (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1" ||
+  (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === undefined ||
+    process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1" ||
     process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "strict")
 ) {
   try {

@@ -101,7 +101,7 @@ jobs:
           done
 
       - name: omni binaries
-        if: env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER != ''
+        if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
       - name: Run tests

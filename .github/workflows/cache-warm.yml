@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   warm:
+    needs: omni
     name: warm (${{ matrix.settings.name }})
     strategy:
       fail-fast: false
@@ -41,6 +42,11 @@ jobs:
       # Saves the Bun package cache (Linux) or the installed node_modules tree (Windows).
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      - name: Native binaries for default-on tests
+        uses: ./.github/actions/omni-binaries
+        with:
+          artifact: omni-warm-${{ runner.os }}-${{ runner.arch }}
 
       - name: Read Playwright version
         id: playwright-version
@@ -121,3 +127,13 @@ jobs:
         uses: ./.github/actions/omni-binaries
         with:
           save: "true"
+
+      - name: Share binaries with warm tests
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: omni-warm-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ env.HUGR_OMNI_ADDON }}
+            ${{ env.HUGR_OMNI_SUPERVISOR }}
+          if-no-files-found: error
+          retention-days: 1
