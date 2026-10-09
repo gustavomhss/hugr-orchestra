@@ -27,14 +27,17 @@ test("non-plain structured state and clone failure decline capture without alter
   }
 })
 
-test("custom structured prototypes decline before clone normalization erases them", () => {
+test("custom object and array prototypes decline before clone normalization erases them", () => {
   class Status { exit = 0 }
+  class StatusList extends Array<number> {}
   const owner = { sessionID: "session", callID: "call" }
-  const output = { structured: new Status(), content: [{ type: "text" as const, text: "capture" }] }
-  ToolModelCapture.record(output, { textIndex: 0, observation: { source: "shell", command: "go test .", output: "capture",
-    termination: { kind: "exited", code: 0 }, completeness: "complete", presentation: "unknown" } }, owner)
-  expect(ToolModelCapture.get(output)).toBeUndefined()
-  expect(output.structured).toBeInstanceOf(Status)
+  for (const structured of [new Status(), new StatusList(1, 2)]) {
+    const output = { structured, content: [{ type: "text" as const, text: "capture" }] }
+    ToolModelCapture.record(output, { textIndex: 0, observation: { source: "shell", command: "go test .", output: "capture",
+      termination: { kind: "exited", code: 0 }, completeness: "complete", presentation: "unknown" } }, owner)
+    expect(ToolModelCapture.get(output)).toBeUndefined()
+    expect(output.structured).toBe(structured)
+  }
 })
 
 test("throwing baseline comparison metadata declines without changing native values", () => {

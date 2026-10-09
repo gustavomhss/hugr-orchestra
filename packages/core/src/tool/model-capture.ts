@@ -93,7 +93,8 @@ function plain(value: unknown, parents = new Set<object>()): boolean {
   if (value === null || value === undefined || typeof value === "string" || typeof value === "boolean") return true
   if (typeof value === "number") return Number.isFinite(value)
   if (typeof value !== "object" || parents.has(value)) return false
-  if (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) return false
+  const prototype = Object.getPrototypeOf(value)
+  if (Array.isArray(value) ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) return false
   parents.add(value)
   const valid = Object.values(Object.getOwnPropertyDescriptors(value)).every((property) =>
     "value" in property && plain(property.value, parents))
