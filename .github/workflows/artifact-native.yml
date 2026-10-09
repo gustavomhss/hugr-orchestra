@@ -44,7 +44,7 @@ jobs:
           ORCHESTRA_ARTIFACT_DARWIN_SDK="$(xcrun --sdk macosx --show-sdk-path)"
           export ORCHESTRA_ARTIFACT_DARWIN_SDK
           cd packages/cli
-          bun --config "$ORCHESTRA_ARTIFACT_BUNFIG" test ./test/artifact-native-lane.test.ts --timeout 120000
+          bun --config="$ORCHESTRA_ARTIFACT_BUNFIG" test ./test/artifact-native-lane.test.ts --timeout 120000
 
   musl:
     strategy:
@@ -99,7 +99,7 @@ jobs:
             --env "ORCHESTRA_ARTIFACT_NATIVE_LANE=$ORCHESTRA_ARTIFACT_NATIVE_LANE" \
             --env ORCHESTRA_ARTIFACT_BUNFIG=/native/empty.toml \
             artifact-musl:ci \
-            /native/bun --config /native/empty.toml test ./test/artifact-native-lane.test.ts --timeout 120000
+            /native/bun --config=/native/empty.toml test ./test/artifact-native-lane.test.ts --timeout 120000
 
   mixed-libc:
     strategy:
@@ -128,4 +128,4 @@ jobs:
           export ORCHESTRA_ARTIFACT_BUNFIG="$RUNNER_TEMP/artifact-empty.toml"
           : > "$ORCHESTRA_ARTIFACT_BUNFIG"
           cd packages/cli
-          bun --config "$ORCHESTRA_ARTIFACT_BUNFIG" test ./test/artifact-native-lane.test.ts --timeout 120000
+          bun --config="$ORCHESTRA_ARTIFACT_BUNFIG" test ./test/artifact-native-lane.test.ts --timeout 120000

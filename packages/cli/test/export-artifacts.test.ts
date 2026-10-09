@@ -59,7 +59,7 @@ async function run(input: { dist: string; out: string }, targets: string[], extr
   const child = Bun.spawn(
     [
       process.execPath,
-      ...(process.env.ORCHESTRA_ARTIFACT_BUNFIG ? ["--config", process.env.ORCHESTRA_ARTIFACT_BUNFIG] : []),
+      ...(process.env.ORCHESTRA_ARTIFACT_BUNFIG ? [`--config=${process.env.ORCHESTRA_ARTIFACT_BUNFIG}`] : []),
       "--bun",
       script,
       "--dist",
