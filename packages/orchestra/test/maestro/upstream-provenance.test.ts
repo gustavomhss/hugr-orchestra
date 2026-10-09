@@ -200,7 +200,7 @@ describe("UpstreamProvenance.observe", () => {
     expect(fixture.task.state.metadata.workResult.terminal.reason).toBe("running")
     expect(fixture.upstreamSettlement.workResult.author?.messageID).toBe(fixture.author.info.id)
     const first = yield* UpstreamProvenance.observe(fixture.input)
-    expect(first).toEqual({ ...fixture.input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+    expect(first).toEqual({ ...fixture.input, schema: "maestro-upstream-attribution-v1", memberID: AgentV2.ID.make("walt"), profile: "upstream" })
     expect(yield* UpstreamProvenance.observe(fixture.input)).toEqual(first)
     expect({
       parent: yield* sessions.messages({ sessionID: fixture.parent.id }),
@@ -229,7 +229,7 @@ describe("UpstreamProvenance.observe", () => {
     expect(row?.type).toBe("synthetic")
     expect(row?.data).not.toHaveProperty("metadata")
     const input = { ...fixture.input, parentMessageID: parentID, parentCallID: callID }
-    expect(yield* UpstreamProvenance.observe(input)).toEqual({ ...input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+    expect(yield* UpstreamProvenance.observe(input)).toEqual({ ...input, schema: "maestro-upstream-attribution-v1", memberID: AgentV2.ID.make("walt"), profile: "upstream" })
   }))
 
   it.instance("reconciles matching same-ID V1 and V2 deliveries and running-only Task settlement", () => Effect.gen(function* () {
@@ -243,7 +243,7 @@ describe("UpstreamProvenance.observe", () => {
     yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
       ...fixture.task.state.metadata, background: false, upstreamSettlement: fixture.upstreamSettlement,
     } } })
-    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(fixture.author.info.id)
+    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(SessionMessage.ID.make(fixture.author.info.id))
   }))
 
   it.instance("rejects malformed receipts, wrong anchors, captured authors, and mismatched canonical work results", () => Effect.gen(function* () {
@@ -327,7 +327,7 @@ describe("UpstreamProvenance.observe", () => {
     yield* sessions.updatePart({ ...stored, state: { ...stored.state, metadata: {
       ...stored.state.metadata, upstreamSettlement: fixture.upstreamSettlement,
     } } })
-    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(fixture.author.info.id)
+    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(SessionMessage.ID.make(fixture.author.info.id))
     yield* refusal({ ...fixture.input, authorMessageID: SessionMessage.ID.make(next.id) }, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
   }))
 
@@ -390,7 +390,7 @@ describe("UpstreamProvenance.observe", () => {
       binding: yield* LogicalTask.read(fixture.child.id),
     }
     const first = yield* UpstreamProvenance.observe(fixture.input)
-    expect(first).toEqual({ ...fixture.input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+    expect(first).toEqual({ ...fixture.input, schema: "maestro-upstream-attribution-v1", memberID: AgentV2.ID.make("walt"), profile: "upstream" })
     expect(yield* UpstreamProvenance.observe(fixture.input)).toEqual(first)
     expect({
       parent: yield* sessions.messages({ sessionID: fixture.parent.id }),
@@ -403,7 +403,7 @@ describe("UpstreamProvenance.observe", () => {
     const agents = yield* Agent.Service
     expect(yield* agents.get("walt")).toMatchObject({ id: "walt", name: "Proposal Seat", native: true, mode: "subagent" })
     const fixture = yield* seed()
-    expect((yield* UpstreamProvenance.observe(fixture.input)).memberID).toBe("walt")
+    expect((yield* UpstreamProvenance.observe(fixture.input)).memberID).toBe(AgentV2.ID.make("walt"))
   }), { config: { agent: { walt: { name: "Proposal Seat", disable: true, mode: "primary" } } } })
 
   it.instance("names missing references, stored messages, Sessions, and retained Task binding", () => Effect.gen(function* () {
@@ -564,7 +564,7 @@ describe("UpstreamProvenance.observe", () => {
     const nextPart = yield* sessions.updatePart({ ...fixture.text, id: PartID.ascending(), messageID: nextInfo.id })
     yield* fixture.work.record({ info: nextInfo, parts: [nextPart] })
     yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
-    expect((yield* UpstreamProvenance.observe({ ...fixture.input, authorMessageID: SessionMessage.ID.make(nextInfo.id) })).authorMessageID).toBe(nextInfo.id)
+    expect((yield* UpstreamProvenance.observe({ ...fixture.input, authorMessageID: SessionMessage.ID.make(nextInfo.id) })).authorMessageID).toBe(SessionMessage.ID.make(nextInfo.id))
     const foreign = yield* seed()
     yield* refusal({ ...fixture.input, authorMessageID: foreign.input.authorMessageID }, "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH")
     yield* sessions.updatePart({ ...fixture.task, state: {
@@ -631,7 +631,7 @@ describe("UpstreamProvenance.observe", () => {
       },
     } })
     const input = { ...fixture.input, parentMessageID: parentID, parentCallID: callID, authorMessageID: authorID }
-    expect(yield* UpstreamProvenance.observe(input)).toEqual({ ...input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+    expect(yield* UpstreamProvenance.observe(input)).toEqual({ ...input, schema: "maestro-upstream-attribution-v1", memberID: AgentV2.ID.make("walt"), profile: "upstream" })
     expect(yield* UpstreamProvenance.observe(input)).toEqual(yield* UpstreamProvenance.observe(input))
   }))
 
@@ -641,7 +641,7 @@ describe("UpstreamProvenance.observe", () => {
     const parentID = SessionMessage.ID.create()
     const callID = `call-${parentID}`
     yield* modernAssistant(fixture.parent.id, parentID, "maestro", "", { callID, metadata: fixture.task.state.metadata })
-    expect((yield* UpstreamProvenance.observe({ ...fixture.input, parentMessageID: parentID, parentCallID: callID })).authorMessageID).toBe(fixture.author.info.id)
+    expect((yield* UpstreamProvenance.observe({ ...fixture.input, parentMessageID: parentID, parentCallID: callID })).authorMessageID).toBe(SessionMessage.ID.make(fixture.author.info.id))
     const authorID = SessionMessage.ID.create()
     yield* modernAssistant(fixture.child.id, authorID, "walt", fixture.text.text)
     yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
