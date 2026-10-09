@@ -1100,7 +1100,6 @@ const layer = Layer.effect(
         let canRecall = false
         let step = 0
         while (true) {
-          const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
           yield* status.set(sessionID, { type: "busy" })
           yield* Effect.logInfo("loop", { "session.id": sessionID, step })
 
@@ -1110,6 +1109,7 @@ const layer = Layer.effect(
 
           const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest, sourceHistory } = yield* PromptContinuity.select(msgs, sessions, sessionID)
           if (!lastUser) break
+          const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
           const lastAssistantMsg = msgs.findLast(
             (msg) => msg.info.role === "assistant" && msg.info.id === lastAssistant?.id,
@@ -1214,7 +1214,7 @@ const layer = Layer.effect(
             // what the model is sent, so it is refilled with that choice once continuity prepares it.
             const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
-              agent,
+              agent, canRecall: () => canRecall,
               session,
               model,
               processor: proxy.processor,
