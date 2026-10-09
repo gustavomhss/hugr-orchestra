@@ -286,7 +286,7 @@ const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
     },
   })
   if (plan.revision !== "v3") throw new Error("expected canonical V3 plan")
-  expect(plan.upstreamAttribution?.authorMessageID).toBe(author.id)
+  expect(plan.upstreamAttribution?.authorMessageID).toBe(SessionMessage.ID.make(author.id))
   // The actual V3 reader validates both canonical body hash and hash-derived event ID.
   expect(yield* readPlanRevision(plan.id)).toEqual(plan)
   return plan
@@ -329,11 +329,12 @@ it.instance(
       const data = yield* prepare()
       const plan = yield* prepareV3(data)
       expect(plan.grounding?.units).toEqual(["module/backend"])
+      if (!plan.grounding) throw new Error("missing V3 grounding")
       const context = yield* recordContext(plan.id, data.session.id, true)
       expect(context.mode).toBe("GROUNDED")
       if (context.mode !== "GROUNDED") throw new Error("missing V3 grounding")
       expect(context.planRevisionHash).toBe(plan.revisionHash)
-      expect(context.sourceIdentityHash).toBe(plan.grounding?.sourceIdentityHash)
+      expect(context.sourceIdentityHash).toBe(plan.grounding.sourceIdentityHash)
       expect(context.toolPlan.planRevision).toEqual({ id: plan.id, hash: plan.revisionHash })
       expect(context.toolPlan.actions.map((action) => action.operation)).toEqual(["load-skill"])
       const skills = yield* Skill.Service
@@ -350,7 +351,7 @@ it.instance(
         .all()
         .pipe(Effect.orDie)
       const contexts = rows.filter((row) => row.type.startsWith(MaestroEvent.Context.Recorded.type))
-      expect(contexts.map((row) => row.id)).toEqual([context.id])
+      expect(contexts.map((row) => row.id)).toEqual([EventV2.ID.make(context.id)])
       expect(contexts[0].type).toBe(EventV2.versionedType(MaestroEvent.Context.RecordedV2.type, 2))
       expect(Schema.decodeUnknownSync(MaestroEvent.Context.RecordedV2.data)(contexts[0].data)).toEqual(context)
     }),
