@@ -132,6 +132,53 @@ for (const [name, patch] of malformed) test(`processor ${name} declines by ident
   const value = typeof patch === "object" && patch !== null ? { ...decision("noise\nKEEP 😀\n"), ...patch } : patch
   decline({ ...f.input, filter: () => value as ToolModelProjection.FilterResult })
 })
+for (const key of ["status", "replacement", "inputBytes", "outputBytes", "reason", "profile"] as const)
+  test(`processor throwing ${key} getter declines by identity`, () => {
+    const f = fixture()
+    const before = structuredClone({ original: f.original, approved: f.approved, binding: f.binding })
+    const value = Object.defineProperty(decision("noise\nKEEP 😀\n"), key, { get() { throw new Error(`bad ${key}`) } })
+    let calls = 0
+    decline({ ...f.input, filter: () => { calls++; return value } })
+    expect(calls).toBe(1)
+    expect({ original: f.original, approved: f.approved, binding: f.binding }).toEqual(before)
+  })
+test("processor revoked result proxy declines by identity", () => {
+  const f = fixture()
+  const value = Proxy.revocable(decision("noise\nKEEP 😀\n"), {})
+  value.revoke()
+  let calls = 0
+  decline({ ...f.input, filter: () => { calls++; return value.proxy } })
+  expect(calls).toBe(1)
+})
+test("processor unstable getters snapshot once into detached plain immutable decision", () => {
+  const raw = "original text must not claim false savings"
+  const f = fixture(raw, [text(raw)], 0, [])
+  const before = structuredClone({ original: f.original, approved: f.approved, binding: f.binding })
+  const values = { status: "reduced" as const, inputBytes: Buffer.byteLength(raw), outputBytes: 1,
+    reason: "preserve evidence", replacement: "K", profile: "fixture" }
+  const reads = { status: 0, inputBytes: 0, outputBytes: 0, reason: 0, replacement: 0, profile: 0 }
+  const value = Object.create({ inherited: "must not escape" }) as ToolModelProjection.FilterResult
+  for (const key of Object.keys(reads) as (keyof typeof reads)[])
+    Object.defineProperty(value, key, { enumerable: true, get() {
+      reads[key]++
+      return key === "replacement" && reads[key] > 2 ? raw : values[key]
+    } })
+  Object.defineProperty(value, "extra", { enumerable: true, get() { throw new Error("not a decision field") } })
+  const result = ToolModelProjection.project({ ...f.input, filter: () => value })
+  expect(result.output.content).toEqual([text("K")])
+  expect(result.decision).toEqual(values)
+  expect(result.decision).not.toBe(value)
+  expect(Object.getPrototypeOf(result.decision)).toBe(Object.prototype)
+  expect(Object.isFrozen(result.decision)).toBe(true)
+  expect(Object.keys(result.decision!).sort()).toEqual(Object.keys(reads).sort())
+  expect(Object.values(Object.getOwnPropertyDescriptors(result.decision!)).every((field) =>
+    "value" in field && field.writable === false && field.configurable === false)).toBe(true)
+  expect(Reflect.set(result.decision!, "replacement", raw)).toBe(false)
+  expect(reads).toEqual({ status: 1, inputBytes: 1, outputBytes: 1, reason: 1, replacement: 1, profile: 1 })
+  const emitted = result.output.content[0]
+  expect(emitted.type === "text" ? Buffer.byteLength(emitted.text) : -1).toBe(result.decision!.outputBytes)
+  expect({ original: f.original, approved: f.approved, binding: f.binding }).toEqual(before)
+})
 test("processor exception declines and immutable observation remains intact", () => {
   const f = fixture()
   const before = structuredClone(f.binding)
