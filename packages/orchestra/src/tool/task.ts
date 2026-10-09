@@ -191,15 +191,15 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
-      if (params.workflow) {
+      const workflowReady = params.workflow ? yield* Effect.gen(function* () {
         if (!params.governed && !params.authorizationID)
           return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
-        yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
+        return yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
           callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
           model: params.model, workflow: params.workflow,
         }).pipe(Effect.orDie)
-      }
+      }) : undefined
       const seat = next.native === true ? Seats.find(nextID) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
@@ -307,6 +307,8 @@ export const TaskTool = Tool.define(
           database,
           events,
           sessions,
+          workflowBinding: workflowReady?.materialized.definition,
+          writePaths: params.writePaths,
         })
         governedChildID = reservation.childSessionID
         governedPresentationID = reservation.presentationID
@@ -445,6 +447,8 @@ export const TaskTool = Tool.define(
             projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
         : undefined
       const shownID = logical?.taskId ?? nextSession.id
+      if (!params.workflow && (yield* WorkflowBinding.read(nextSession.id)))
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_TASK_BINDING_REQUIRED"))
       const placement = yield* InstanceState.context
       const completionReceipt = yield* completion.beforeDispatch({
         sessionID: ctx.sessionID, taskID: nextSession.id, callID: ctx.callID ?? "",

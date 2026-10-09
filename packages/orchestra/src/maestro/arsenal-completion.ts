@@ -240,9 +240,9 @@ export const make = Effect.gen(function* () {
     return { verified: true as const, planID: binding.planID, taskID, checks: seen.length }
   })
 
-  const withWorkflow = <A, E, R>(receipt: Receipt | undefined, effect: Effect.Effect<A, E, R>) => {
+  const workflowSessionHost = (receipt: Receipt | undefined) => {
     const current = receipt ? receipts.get(receipt) : undefined
-    if (!current?.workflow) return effect
+    if (!current?.workflow) return
     const ready = current.workflow
     const sessionHost: RelayWorkflowSession.Host = {
       current: (bound) => Effect.gen(function* () {
@@ -267,7 +267,11 @@ export const make = Effect.gen(function* () {
       }).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
         : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_ACQUISITION" }))),
     }
-    return effect.pipe(Effect.provideService(RelayWorkflowSession.NativeHost, sessionHost))
+    return sessionHost
+  }
+  const withWorkflow = <A, E, R>(receipt: Receipt | undefined, effect: Effect.Effect<A, E, R>) => {
+    const sessionHost = workflowSessionHost(receipt)
+    return sessionHost ? effect.pipe(Effect.provideService(RelayWorkflowSession.NativeHost, sessionHost)) : effect
   }
   const revalidateWorkflow = (receipt: Receipt | undefined) => {
     const current = receipt ? receipts.get(receipt) : undefined
@@ -275,7 +279,7 @@ export const make = Effect.gen(function* () {
       Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
     ) : Effect.void
   }
-  return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow }
+  return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
 })
 
 /** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */

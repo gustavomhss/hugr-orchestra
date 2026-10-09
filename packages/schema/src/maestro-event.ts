@@ -597,6 +597,8 @@ export namespace Task {
     durable: { version: 1, aggregate: "executionSessionID" },
     schema: {
       executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      authorityCallID: Schema.NonEmptyString,
       token: RelayArm.Token,
       binding: RelayArm.WorkflowBinding,
     },

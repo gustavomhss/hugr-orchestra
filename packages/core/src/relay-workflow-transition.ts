@@ -46,6 +46,7 @@ export const transition = Effect.fn("RelayWorkflowTransition.transition")(functi
   const evaluator = yield* NativeEvaluator
   if (!evaluator) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_UNBOUND" })
   const arm = yield* ArmState.dir(input.token)
+  const store = yield* ArmState.Store
   const file = `workflow_${RelayWorkflowBinding.digest(Buffer.from(input.settlement.assistantMessageID))}.json`
   const before = Effect.fn("RelayWorkflowTransition.before")(function* () {
     yield* input.revalidate()
@@ -75,7 +76,7 @@ export const transition = Effect.fn("RelayWorkflowTransition.transition")(functi
     // Fence first. If writing the identity receipt fails, a new assistant still cannot grade this arm.
     yield* write(arm, "workflow_pending.json", next)
     yield* write(arm, file, next)
-  })
+  }, Effect.provideService(ArmState.Store, store))
   const after = Effect.fn("RelayWorkflowTransition.after")(function* (evaluation: RelayArm.Evaluation) {
     yield* write(arm, file, { binding: input.binding, settlement: input.settlement, phase: "settled", evaluation })
     yield* clearPending(arm, { binding: input.binding, settlement: input.settlement, phase: "settled", evaluation })
