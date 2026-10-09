@@ -90,7 +90,11 @@ test("roster hash is independent of prompt line endings", () => {
 // Changing any seat's behavior (its prompt included) changes this value. When it does, add the previous value to the
 // historical ledger in validation-record.ts so records written under it keep verifying, then update the pin.
 test("the current roster hash is pinned and superseded ones stay verifiable", () => {
-  expect(rosterHash(roster)).toBe("e956abbc3f4ce9c67a6e453f14616de06bf20231bca302ee412355eb33610695")
+  expect(rosterHash(roster)).toBe("98bdbd8e0d788b837adea438ddb66482590247ac61b11824685d5fc6a95d0906")
+  for (const superseded of [
+    "e956abbc3f4ce9c67a6e453f14616de06bf20231bca302ee412355eb33610695",
+    "92b759346ac3366f26bc2940408770ba33767bc56108c9f3b0b5d13a58b9f127",
+  ]) expect(verifyRosterHash(superseded, roster)).toBe("maestro-roster-v2")
   expect(verifyRosterHash("8887e66c850f0cf281b059f6b437f320aa3a33c652e54f5fe379713dc92768b5", roster)).toBe(
     "maestro-roster-v2",
   )
