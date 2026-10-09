@@ -2,7 +2,7 @@ export * as CapabilityChannels from "./index"
 
 import { Capability } from "@orchestra/schema/capability"
 import { and, sql } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Cause, Context, Effect, Exit, Schema } from "effect"
 import { Database } from "../../database/database"
 import { Location } from "../../location"
 import { Tool } from "../../tool/tool"
@@ -93,7 +93,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
   })
 
   const read = Effect.fn("CapabilityChannels.read")(function* (input: Read, context: Tool.Context): Effect.fn.Return<Output,
-    Capability.Failure | Failure | CapabilityArtifacts.Failure> {
+     Failure | CapabilityArtifacts.Error> {
     const prepared = yield* prepare(context, input, "read", "channel_read")
     const adapter = yield* prepared.adapter
     const acquired = yield* adapter.read(input)
@@ -253,18 +253,25 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         verification: "verified", artifactRefs } }
   })
 
-  const toolFailure = (error: Capability.Failure | Failure | CapabilityArtifacts.Failure) => new Tool.Failure({
-    message: error instanceof Failure ? `channel_${error.reason}` : error.code,
+  const toolFailure = (error: Failure | CapabilityArtifacts.Error) => new Tool.Failure({
+    message: error instanceof Failure ? `channel_${error.reason}` : "code" in error ? error.code : "artifact_storage_failed",
   })
+  const toolErrors = <A>(effect: Effect.Effect<A, Failure | CapabilityArtifacts.Error>) => effect.pipe(
+    Effect.exit,
+    Effect.flatMap((exit) => Exit.isSuccess(exit) ? Effect.succeed(exit.value) : Effect.failCause(
+      Cause.fromReasons<Tool.Failure>(exit.cause.reasons.flatMap((reason) => reason._tag === "Fail"
+      ? Cause.fail(toolFailure(reason.error)).reasons.map((next) => next.annotate(Context.makeUnsafe(new Map(reason.annotations))))
+      : [reason])))),
+  )
   const tools = {
     channel_read: Tool.make({ description: "Read one bounded history, thread, or exact message page from a bound Slack/Discord target.",
-      input: Read, output: Output, execute: (input, context) => read(input, context).pipe(Effect.mapError(toolFailure)),
+      input: Read, output: Output, execute: (input, context) => read(input, context).pipe(toolErrors),
       toModelOutput: ({ output }) => [{ type: "text", text: JSON.stringify(output) }] }),
     channel_send: Tool.make({ description: "Send text to a bound Slack/Discord target, with explicit thread or Discord reply. Never automatically retry unknown delivery.",
-      input: Send, output: Output, execute: (input, context) => mutate(input, context, "send").pipe(Effect.mapError(toolFailure)),
+      input: Send, output: Output, execute: (input, context) => mutate(input, context, "send").pipe(toolErrors),
       toModelOutput: ({ output }) => [{ type: "text", text: JSON.stringify(output) }] }),
     channel_update: Tool.make({ description: "Edit, delete, or add/remove own reaction on a verified message in a bound Slack/Discord target.",
-      input: Update, output: Output, execute: (input, context) => mutate(input, context, "update").pipe(Effect.mapError(toolFailure)),
+      input: Update, output: Output, execute: (input, context) => mutate(input, context, "update").pipe(toolErrors),
       toModelOutput: ({ output }) => [{ type: "text", text: JSON.stringify(output) }] }),
   }
   return { tools }

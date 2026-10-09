@@ -20,6 +20,8 @@ import { Failure, failure } from "./error"
 import { matchesMime, validMime } from "./mime"
 
 export { Failure }
+// Mixed SQL Causes retain their typed failures alongside defects or interruption.
+export type Error = Failure | Capability.Failure | SqlError | EffectDrizzleQueryError
 
 // Fixture adapters may omit storageID. Persistent DB providers must supply it: object identity cannot survive reopening.
 const identities = new WeakMap<Database.Interface["db"], string>()

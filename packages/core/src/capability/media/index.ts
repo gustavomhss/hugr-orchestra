@@ -5,7 +5,7 @@ import { createHash } from "node:crypto"
 import { Capability } from "@orchestra/schema/capability"
 import { Permission } from "@orchestra/schema/permission"
 import { and, eq } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Context, Effect, Exit, Option, Schema } from "effect"
 import { AgentV2 } from "../../agent"
 import { Credential } from "../../credential"
 import { Database } from "../../database/database"
@@ -387,8 +387,13 @@ function accessToken(value: Credential.Value) {
     ? Effect.succeed(token) : Effect.fail(failure("authentication_required"))
 }
 
-function toolErrors<A>(effect: Effect.Effect<A, Capability.Failure | CapabilityArtifacts.Failure>) {
-  return effect.pipe(Effect.mapError((error) => new Tool.Failure({ message: `Media capability failed: ${error.code}` })))
+function toolErrors<A>(effect: Effect.Effect<A, CapabilityArtifacts.Error>) {
+  return effect.pipe(Effect.exit, Effect.flatMap((exit) => Exit.isSuccess(exit) ? Effect.succeed(exit.value) :
+    Effect.failCause(Cause.fromReasons<Tool.Failure>(exit.cause.reasons.flatMap((reason) =>
+    reason._tag === "Fail" ? Cause.fail(new Tool.Failure({
+      message: `Media capability failed: ${"code" in reason.error ? reason.error.code : "artifact_storage_failed"}`,
+    })).reasons.map((next) => next.annotate(Context.makeUnsafe(new Map(reason.annotations)))) : [reason]),
+  ))))
 }
 
 function project(receipt: CapabilityJobs.Receipt): Capability.Result {
