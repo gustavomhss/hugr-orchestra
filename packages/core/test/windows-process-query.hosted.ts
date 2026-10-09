@@ -1,4 +1,4 @@
-// Exact-path hosted proof; OS observations come from real Node and a pinned .NET handle/procfs identity.
+// Exact-path hosted proof: Windows pins a .NET handle; Linux observes procfs birth and uses owner-directed shutdown.
 import { beforeAll, expect, test } from "bun:test"
 import { chmodSync, copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import os from "node:os"
@@ -63,8 +63,8 @@ test("copied real Bun cannot masquerade as native Node; scoped override restored
   }
 })
 
-test("full 64 MiB source payload fits independently of attestation header", async () => {
-  const result = await WindowsProcessQuery.invoke(`process.stdout.write(Buffer.alloc(64 * 1024 * 1024, 120))`, decoder, [])
+test("full 64 MiB source payload fits independently of control receipts", async () => {
+  const result = await WindowsProcessQuery.invoke(`process.stdout.write(Buffer.alloc(64 * 1024 * 1024, 120))`, decoder, []).catch((error: Error) => { console.log("QUERY_CAP_DIAGNOSTIC " + JSON.stringify(error)); throw error })
   expect(Buffer.byteLength(result)).toBe(64 * 1024 * 1024)
   expect(result[0]).toBe("x")
   expect(result.at(-1)).toBe("x")
@@ -75,7 +75,7 @@ test("real stdout beyond byte cap rejects", async () => {
     .rejects.toThrow("stdout exceeded 64 MiB")
 })
 
-test("held live helper times out; independent pinned identity confirms exit", async () => {
+test("held live helper times out; independent OS birth observation confirms exit", async () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "query-deadline-proof-"))
   const nonce = path.join(dir, "identity.json")
   const live = path.join(dir, "live.json")
@@ -114,18 +114,18 @@ setTimeout(() => console.log('LATE SUCCESS'), 20000);
   }
 }, 45000)
 
-test("inherited stdout holder forces unknown close; retain files until pinned reap and real pipe close", async () => {
+test("inherited stdout holder forces unknown close; retain files until owner shutdown and real pipe close", async () => {
   const dir = mkdtempSync(path.join(os.tmpdir(), "query-inherited-pipe-"))
   const nonce = path.join(dir, "identity.json")
   const held = WindowsProcessQuery.invoke(`
 import fs from 'node:fs'; import path from 'node:path'; import {spawn} from 'node:child_process';
 const request = JSON.parse(process.argv[2]); const file = path.join(path.dirname(import.meta.filename),'holder.mjs');
 fs.writeFileSync(file, ${JSON.stringify(`
-import fs from 'node:fs';
+import fs from 'node:fs'; import path from 'node:path';
 const nonce = process.argv[2];
 fs.writeFileSync(nonce + '.tmp', JSON.stringify({pid:process.pid,nonce,file:import.meta.filename}));
 fs.renameSync(nonce + '.tmp',nonce);
-setInterval(()=>console.log('INHERITED STDOUT HELD'),100);
+const timer=setInterval(()=>{if(fs.existsSync(path.join(path.dirname(nonce),'reap'))) {clearInterval(timer); return}; console.log('INHERITED STDOUT HELD')},100);
 `)});
 // Detached raw descriptors preserve real inherited stdout on Windows; stream-object inheritance did not.
 spawn(process.execPath,[file,request.nonce],{stdio:['ignore',1,2],windowsHide:true,detached:true});
@@ -147,7 +147,7 @@ console.log('SOURCE OUTPUT IS NOT CLOSE'); setInterval(()=>{},1000);
     expect(existsSync(path.join(files, "holder.mjs"))).toBe(true)
     console.log("WINDOWS_QUERY_UNKNOWN_CLOSE " + JSON.stringify({ os: process.platform, pinned, files, error: result.error!.message }))
   } finally {
-    // The independent observer owns the pinned descendant, not a bare PID kill in this test.
+    // The holder consumes its own shutdown request; the observer never signals a Linux PID.
     writeFileSync(path.join(dir, "reap"), "reap")
     const results = await Promise.all([held, observer])
     console.log("WINDOWS_QUERY_INHERITED_PIPE_REAP " + JSON.stringify(results))
@@ -165,6 +165,55 @@ console.log('SOURCE OUTPUT IS NOT CLOSE'); setInterval(()=>{},1000);
   }
 }, 45000)
 
+test("source kills broker and stays live: admission is not completion, files and unresolved close retained", async () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "query-broker-death-"))
+  const nonce = path.join(dir, "identity.json")
+  const held = WindowsProcessQuery.invoke(`
+import fs from 'node:fs'; import path from 'node:path';
+const nonce=JSON.parse(process.argv[2]).nonce; const dir=path.dirname(nonce);
+fs.writeFileSync(nonce+'.tmp',JSON.stringify({pid:process.pid,broker:process.ppid,nonce,file:import.meta.filename})); fs.renameSync(nonce+'.tmp',nonce);
+console.log(JSON.stringify({type:'completed',osClosed:true,stdioClosed:true}));
+const timer=setInterval(()=>{if(fs.existsSync(path.join(dir,'reap'))) {clearInterval(timer); return}},25);
+while(!fs.existsSync(path.join(dir,'kill-broker'))) await new Promise(resolve=>setTimeout(resolve,25));
+process.kill(process.ppid,'SIGKILL');
+`, decoder, { nonce }, 15000).then((stdout) => ({ stdout, error: undefined }),
+    (error: Error & { directory?: string; helperPID?: number; source?: { pid: number; file: string; nonce: string }; brokerClosed?: boolean; closed?: Promise<void> }) => ({ stdout: "", error }))
+  const observer = WindowsProcessQuery.invoke(OBSERVER, decoder, { nonce }, 35000)
+    .then((stdout) => ({ stdout, error: "" }), (error: Error) => ({ stdout: "", error: error.message }))
+  const closure = { resolved: false }
+  try {
+    await until(() => existsSync(path.join(dir, "live.json")), 8000)
+    const recorded = JSON.parse(readFileSync(nonce, "utf8"))
+    writeFileSync(path.join(dir, "kill-broker"), "kill")
+    const result = await held
+    expect(result.stdout).toBe("")
+    expect(result.error?.message).toContain("OS/stdio close unconfirmed")
+    expect(result.error?.source?.pid).toBe(recorded.pid)
+    expect(result.error?.source?.file).toBe(recorded.file)
+    expect(result.error?.source?.nonce).toMatch(/^[0-9a-f-]{36}$/)
+    expect(result.error?.helperPID).toBe(recorded.broker)
+    expect(result.error?.brokerClosed).toBe(true)
+    result.error!.closed!.then(() => { closure.resolved = true })
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(closure.resolved).toBe(false)
+    expect(existsSync(path.join(result.error!.directory!, "query.mjs"))).toBe(true)
+    // A fresh independent OS observation proves the admitted source survived broker termination.
+    const live = JSON.parse(await WindowsProcessQuery.invoke(LIVE_CHECK, decoder, { nonce }))
+    expect(live).toEqual(JSON.parse(readFileSync(path.join(dir, "live.json"), "utf8")))
+    console.log("WINDOWS_QUERY_BROKER_DEATH " + JSON.stringify({ os: process.platform, live, captured: result.error!.source, closed: closure.resolved }))
+  } finally {
+    writeFileSync(path.join(dir, "reap"), "owner shutdown")
+    const results = await Promise.all([held, observer])
+    console.log("WINDOWS_QUERY_BROKER_DEATH_SHUTDOWN " + JSON.stringify(results))
+    if (!results[1].error && JSON.parse(results[1].stdout).exited === true && results[0].error?.brokerClosed === true) {
+      expect(closure.resolved).toBe(false)
+      console.log("WINDOWS_QUERY_BROKER_DEATH_EXIT " + JSON.stringify({ os: process.platform, proof: JSON.parse(results[1].stdout), brokerClosed: true, sourceReceiptMissing: true }))
+      rmSync(results[0].error.directory!, { recursive: true, force: true })
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }
+}, 45000)
+
 async function until(check: () => boolean, timeoutMs: number) {
   const deadline = performance.now() + timeoutMs
   while (!check()) {
@@ -177,14 +226,14 @@ const OBSERVER = `
 import fs from 'node:fs'; import path from 'node:path'; import {spawn} from 'node:child_process';
 const {nonce} = JSON.parse(process.argv[2]); const deadline = performance.now() + 8000;
 while (!fs.existsSync(nonce)) {if (performance.now() >= deadline) throw Error('held helper never started'); await new Promise(r => setTimeout(r,25))}
-const record = JSON.parse(fs.readFileSync(nonce,'utf8')); const live = path.join(path.dirname(nonce),'live.json'); const reap = path.join(path.dirname(nonce),'reap');
+const record = JSON.parse(fs.readFileSync(nonce,'utf8')); const live = path.join(path.dirname(nonce),'live.json');
 if (process.platform === 'win32') {
   const quote = text => "'" + text.replaceAll("'", "''") + "'";
   const script = "$ErrorActionPreference='Stop'; $p=[Diagnostics.Process]::GetProcessById(" + record.pid + "); $h=$p.Handle; try {" +
     "$row=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.Id); if ((!$row.CommandLine.Contains(" + quote(JSON.stringify(nonce).slice(1,-1)) + ") -and !$row.CommandLine.Contains(" + quote(nonce) + ")) -or !$row.CommandLine.Contains(" + quote(record.file) + ")) {throw 'identity mismatch'}; " +
     "$proof=@{pid=$p.Id;startTime=$p.StartTime.ToFileTimeUtc().ToString();nonce=" + quote(nonce) + "}; " +
     "[IO.File]::WriteAllText(" + quote(live+'.tmp') + ",(ConvertTo-Json -Compress $proof)); [IO.File]::Move(" + quote(live+'.tmp') + "," + quote(live) + "); " +
-    "$end=[DateTime]::UtcNow.AddSeconds(25); $killed=$false; while (!$p.WaitForExit(25)) {if (!$killed -and (Test-Path " + quote(reap) + ")) {$p.Kill(); $killed=$true}; if ([DateTime]::UtcNow -ge $end) {throw 'pinned OS handle still live'}}; $proof.exited=$true; ConvertTo-Json -Compress $proof} finally {$p.Dispose()}";
+    "if (!$p.WaitForExit(25000)) {throw 'pinned OS handle still live'}; $proof.exited=$true; ConvertTo-Json -Compress $proof} finally {$p.Dispose()}";
   const child=spawn('pwsh',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(script,'utf16le').toString('base64')],{stdio:['ignore','pipe','pipe'],windowsHide:true});
   child.stdout.pipe(process.stdout); child.stderr.pipe(process.stderr); child.on('error',error=>{throw error});
   const code=await new Promise(resolve=>child.once('close',resolve)); if (code!==0) throw Error('OS observer failed: '+code);
@@ -195,8 +244,21 @@ if (process.platform === 'win32') {
   const proof={pid:record.pid,startTime:birth.startTime,nonce}; fs.writeFileSync(live+'.tmp',JSON.stringify(proof)); fs.renameSync(live+'.tmp',live);
   const end=performance.now()+25000;
   for (;;) {const now=stat(); if (!now || now.state==='Z' || now.startTime!==birth.startTime) break;
-    if(fs.existsSync(reap)) process.kill(record.pid,'SIGKILL');
-    if(performance.now()>=end) throw Error('pinned process still live'); await new Promise(r=>setTimeout(r,25))}
+    if(performance.now()>=end) throw Error('observed process still live'); await new Promise(r=>setTimeout(r,25))}
   console.log(JSON.stringify({...proof,exited:true}));
 }
+`
+
+const LIVE_CHECK = `
+import fs from 'node:fs'; import path from 'node:path'; import {spawn} from 'node:child_process';
+const {nonce}=JSON.parse(process.argv[2]); const pinned=JSON.parse(fs.readFileSync(path.join(path.dirname(nonce),'live.json'),'utf8'));
+if(process.platform==='win32') {
+  const child=spawn('pwsh',['-NoProfile','-NonInteractive','-Command',"$p=[Diagnostics.Process]::GetProcessById("+pinned.pid+"); try {if ($p.HasExited -or $p.StartTime.ToFileTimeUtc().ToString() -ne '"+pinned.startTime+"') {throw 'source identity not live'}; 'LIVE'} finally {$p.Dispose()}"],{stdio:['ignore','pipe','pipe'],windowsHide:true});
+  const out={stdout:'',stderr:''}; child.stdout.on('data',chunk=>out.stdout+=chunk); child.stderr.on('data',chunk=>out.stderr+=chunk);
+  child.on('error',error=>{throw error}); const code=await new Promise(resolve=>child.once('close',resolve)); if(code!==0 || out.stdout.trim()!=='LIVE') throw Error('source identity not live: '+out.stderr);
+} else {
+  const stat=fs.readFileSync('/proc/'+pinned.pid+'/stat','utf8').split(') ').pop().split(' ');
+  if(stat[0]==='Z' || stat[19]!==pinned.startTime) throw Error('source identity not live');
+}
+console.log(JSON.stringify(pinned));
 `
