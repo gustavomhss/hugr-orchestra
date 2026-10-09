@@ -6,6 +6,7 @@ name: runtime-desktop
 # Default bootstrap initializes fresh isolated state through production startup.
 # Dev controls cover two pre-launch digest falsifications, not every failure class.
 # dev_only is a limited dev rerun, not full-matrix green; reuse admits source-equivalent producers only.
+# Previous reuse cancellation did not locate its stall; safe phase markers establish next run's reach.
 on:
   push:
     branches: [runtime-desktop-validation]
@@ -107,7 +108,11 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: "1.3.14"
-      - name: Admit explicit producer reuse through live API, Git objects and archive digest
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: inputs.prepared_run != ''
+        with:
+          node-version: "24"
+      - name: Admit explicit producer reuse through bounded observable Node admission
         id: reuse
         if: inputs.prepared_run != ''
         working-directory: ${{ github.workspace }}/candidate
@@ -115,17 +120,30 @@ jobs:
           PREPARED_RUN: ${{ inputs.prepared_run }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          bun -e '
+          set -euo pipefail
+          for tool in timeout node python3 git; do command -v "$tool" >/dev/null || { echo "PREPARED_ADMISSION_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
+          set +e
+          timeout --signal=TERM --kill-after=5s 300s node --input-type=module -e '
+          console.log("PREPARED_ADMISSION_PHASE:NODE_START");
           const { createHash } = await import("node:crypto"), { spawnSync } = await import("node:child_process");
-          const fail = name => { throw Error(name); }, requireValue = (value, name) => { if (!value) fail(name); };
+          const { writeFile, appendFile } = await import("node:fs/promises"), { createWriteStream } = await import("node:fs");
+          const { Readable, Transform } = await import("node:stream"), { pipeline } = await import("node:stream/promises");
+          class AdmissionFailure extends Error {}
+          await main().catch(error => { console.error(error instanceof AdmissionFailure ? error.message : "PREPARED_ADMISSION_FAILED"); process.exitCode = 1; });
+          async function main() {
+          const fail = name => { throw new AdmissionFailure(name); }, requireValue = (value, name) => { if (!value) fail(name); };
+          const phase = name => console.log(`PREPARED_ADMISSION_PHASE:${name}`), sequence = { request: 0, git: 0 };
+          requireValue(process.versions.node.split(".")[0] === "24", "PREPARED_NODE24_REQUIRED");
           const id = process.env.PREPARED_RUN, repo = process.env.GITHUB_REPOSITORY, base = `https://api.github.com/repos/${repo}`;
           requireValue(/^[1-9][0-9]{0,15}$/.test(id ?? "") && Number.isSafeInteger(Number(id)), "PREPARED_RUN_ID_INVALID");
           requireValue(process.env.GITHUB_REPOSITORY_ID === "1405035578" && /^[^/]+\/[^/]+$/.test(repo ?? "") && process.env.GH_TOKEN, "PREPARED_REPOSITORY_CONTEXT_INVALID");
-          const request = async path => fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }, redirect: "manual", signal: AbortSignal.timeout(30000) }).catch(() => fail("PREPARED_API_REQUEST_FAILED"));
-          const api = async path => { const r = await request(path); requireValue(r.ok, `PREPARED_API_HTTP_FAILURE:${r.status}`); const data = await r.json().catch(() => fail("PREPARED_API_JSON_INVALID")); requireValue(data && typeof data === "object" && !Array.isArray(data), "PREPARED_API_JSON_OBJECT_REQUIRED"); return data; };
+          const request = async path => { const ordinal = ++sequence.request; phase(`API_REQUEST_${ordinal}_BEGIN`); const r = await fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }, redirect: "manual", signal: AbortSignal.timeout(30000) }).catch(() => fail("PREPARED_API_REQUEST_FAILED")); phase(`API_REQUEST_${ordinal}_HEADERS_END`); return r; };
+          const api = async path => { const r = await request(path); requireValue(r.ok, `PREPARED_API_HTTP_FAILURE:${r.status}`); phase("API_JSON_BODY_BEGIN"); const data = await r.json().catch(() => fail("PREPARED_API_BODY_OR_JSON_FAILED")); phase("API_JSON_BODY_END"); requireValue(data && typeof data === "object" && !Array.isArray(data), "PREPARED_API_JSON_OBJECT_REQUIRED"); return data; };
+          phase("API_CONTEXT_BEGIN");
           const repository = await api(""), current = await api(`/actions/runs/${process.env.GITHUB_RUN_ID}`), producer = await api(`/actions/runs/${id}`);
           requireValue(repository.id === 1405035578 && repository.full_name === repo && current.repository?.id === repository.id && current.head_sha === process.env.GITHUB_SHA && current.path === ".github/workflows/runtime-desktop.yml" && Number.isSafeInteger(current.workflow_id) && current.workflow_id > 0, "PREPARED_CURRENT_WORKFLOW_BINDING_FAILED");
           requireValue(producer.id === Number(id) && producer.repository?.id === repository.id && producer.head_repository?.id === repository.id && producer.workflow_id === current.workflow_id && producer.path === current.path && producer.head_branch === "runtime-desktop-validation" && /^[a-f0-9]{40}$/.test(producer.head_sha ?? ""), "PREPARED_PRODUCER_BINDING_FAILED");
+          phase("API_CONTEXT_END");
           const pages = async (path, key) => {
             const items = []; const counts = [];
             for (const page of Array.from({ length: 10 }, (_, i) => i + 1)) {
@@ -137,21 +155,28 @@ jobs:
             }
             fail("PREPARED_API_INVENTORY_BOUND_EXCEEDED");
           };
+          phase("API_JOB_INVENTORY_BEGIN");
           const jobs = (await pages(`/actions/runs/${id}/jobs?filter=latest`, "jobs")).filter(j => j.name === "prepare");
           requireValue(jobs.length === 1 && Number.isSafeInteger(jobs[0].id) && jobs[0].id > 0 && jobs[0].run_id === Number(id) && jobs[0].run_attempt === producer.run_attempt && jobs[0].head_sha === producer.head_sha && jobs[0].status === "completed" && jobs[0].conclusion === "success", "PREPARED_SUCCESSFUL_JOB_REQUIRED");
+          phase("API_JOB_INVENTORY_END"); phase("API_ARTIFACT_INVENTORY_BEGIN");
           const artifacts = (await pages(`/actions/runs/${id}/artifacts`, "artifacts")).filter(a => a.name === "desktop-linux-x64-prepared");
           requireValue(artifacts.length === 1, "PREPARED_ARTIFACT_MISSING_OR_AMBIGUOUS");
           const artifact = artifacts[0], job = jobs[0];
           requireValue(artifact.expired === false && Date.parse(artifact.expires_at) > Date.now() && Number.isSafeInteger(artifact.id) && artifact.id > 0 && Number.isSafeInteger(artifact.size_in_bytes) && artifact.size_in_bytes > 0 && artifact.size_in_bytes <= 4294967296 && /^sha256:[a-f0-9]{64}$/.test(artifact.digest ?? "") && artifact.workflow_run?.id === Number(id) && artifact.workflow_run.head_sha === producer.head_sha && artifact.workflow_run.repository_id === repository.id && artifact.workflow_run.head_repository_id === repository.id && Date.parse(artifact.created_at) >= Date.parse(job.started_at) && Date.parse(artifact.created_at) <= Date.parse(job.completed_at), "PREPARED_ARTIFACT_BINDING_FAILED");
-          const git = (args, timeout = 30000) => { const r = spawnSync("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", ...args], { encoding: "utf8", timeout, maxBuffer: 33554432, env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" } }); requireValue(!r.error && r.status === 0, "PREPARED_GIT_ORACLE_FAILED"); return r.stdout; };
+          phase("API_ARTIFACT_INVENTORY_END"); phase("GIT_SOURCE_BEGIN");
+          const git = (args, timeout = 30000) => { const ordinal = ++sequence.git; phase(`GIT_COMMAND_${ordinal}_BEGIN`); const r = spawnSync("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", ...args], { encoding: "utf8", timeout, maxBuffer: 33554432, env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" } }); requireValue(!r.error && r.status === 0, "PREPARED_GIT_ORACLE_FAILED"); phase(`GIT_COMMAND_${ordinal}_END`); return r.stdout; };
           requireValue(git(["rev-parse", "HEAD"]).trim() === process.env.GITHUB_SHA, "PREPARED_CURRENT_HEAD_MISMATCH");
+          phase("GIT_AVAILABILITY_BEGIN");
           const available = spawnSync("git", ["cat-file", "-e", `${producer.head_sha}^{commit}`], { timeout: 10000 });
+          phase("GIT_AVAILABILITY_END");
           if (available.error || available.status !== 0) git(["fetch", "--no-tags", "--depth=1", `https://github.com/${repo}.git`, producer.head_sha], 90000);
           // Reuse admits only this independently reviewed old producer recipe; alternatives need reviewed repinning.
+          phase("GIT_APPROVED_RECIPE_BEGIN");
           const recipe = spawnSync("git", ["rev-parse", `${producer.head_sha}:.github/workflows/runtime-desktop.yml`], { encoding: "utf8", timeout: 10000 });
           requireValue(!recipe.error && recipe.status === 0 && /^[a-f0-9]{40}$/.test(recipe.stdout.trim()), "PREPARED_PRODUCER_RECIPE_MISSING_OR_UNAVAILABLE");
           const producerWorkflowBlob = recipe.stdout.trim();
           requireValue(producerWorkflowBlob === "d77f1c7aea89ecbd4172a0fc35b218764ccdcfa8", "PREPARED_PRODUCER_RECIPE_UNSUPPORTED");
+          phase("GIT_APPROVED_RECIPE_END");
           const producerTree = git(["rev-parse", `${producer.head_sha}^{tree}`]).trim(), currentTree = git(["rev-parse", "HEAD^{tree}"]).trim();
           requireValue([producerTree, currentTree].every(t => /^[a-f0-9]{40}$/.test(t)), "PREPARED_TREE_ID_INVALID");
           const changed = git(["diff", "--no-ext-diff", "--no-textconv", "--ignore-submodules=none", "--name-only", "-z", producer.head_sha, process.env.GITHUB_SHA, "--"]).split("\0").filter(Boolean);
@@ -159,21 +184,63 @@ jobs:
           const inventory = head => git(["ls-tree", "-r", "-z", "--full-tree", head]).split("\0").filter(Boolean).map(row => { const tab = row.indexOf("\t"); requireValue(tab > 0 && /^[0-7]{6} (blob|commit) [a-f0-9]{40}$/.test(row.slice(0, tab)), "PREPARED_TREE_INVENTORY_INVALID"); return { row, path: row.slice(tab + 1) }; });
           const hash = rows => createHash("sha256").update(rows.map(r => r.row + "\0").join("")).digest("hex");
           const fingerprints = head => { const rows = inventory(head); requireValue(["package.json", "bun.lock", "packages/desktop/package.json", "packages/cli/package.json", ".github/scripts/runtime-desktop-package-proof.ts", ".github/scripts/runtime-desktop-bootstrap-proof.ts", ".github/scripts/runtime-desktop-controls.ts"].every(p => rows.some(r => r.path === p)), "PREPARED_SOURCE_INVENTORY_INCOMPLETE"); return { sourceBytes: hash(rows.filter(r => r.path !== ".github/workflows/runtime-desktop.yml")), packages: hash(rows.filter(r => r.path.startsWith("packages/") || ["package.json", "bun.lock"].includes(r.path))) }; };
+          phase("SOURCE_FINGERPRINT_BEGIN");
           const before = fingerprints(producer.head_sha), after = fingerprints(process.env.GITHUB_SHA);
           requireValue(before.sourceBytes === after.sourceBytes && before.packages === after.packages, "PREPARED_SOURCE_FINGERPRINT_MISMATCH");
+          phase("SOURCE_FINGERPRINT_END"); phase("GIT_SOURCE_END"); phase("ARCHIVE_REDIRECT_BEGIN");
           const redirect = await request(`/actions/artifacts/${artifact.id}/zip`);
           requireValue(redirect.status === 302 && redirect.headers.get("location"), "PREPARED_ARCHIVE_REDIRECT_UNAVAILABLE");
           const location = await Promise.resolve().then(() => new URL(redirect.headers.get("location"))).catch(() => fail("PREPARED_ARCHIVE_REDIRECT_INVALID")); requireValue(location.protocol === "https:" && !location.username && !location.password, "PREPARED_ARCHIVE_REDIRECT_INVALID");
-          const archive = await fetch(location, { redirect: "error", signal: AbortSignal.timeout(180000) }).catch(() => fail("PREPARED_ARCHIVE_REQUEST_FAILED"));
+          phase("ARCHIVE_REDIRECT_END"); phase("ARCHIVE_DOWNLOAD_HEADERS_BEGIN");
+          const bodyDeadline = AbortSignal.timeout(180000);
+          const archive = await fetch(location, { redirect: "error", signal: bodyDeadline }).catch(() => fail("PREPARED_ARCHIVE_REQUEST_FAILED"));
           requireValue(archive.ok && archive.body, `PREPARED_ARCHIVE_HTTP_FAILURE:${archive.status}`);
+          phase("ARCHIVE_DOWNLOAD_HEADERS_END"); phase("ARCHIVE_DOWNLOAD_BODY_BEGIN");
           const digest = createHash("sha256"), size = { bytes: 0 }, zip = `${process.env.RUNNER_TEMP}/prepared-reuse.zip`;
-          requireValue(!(await Bun.file(zip).exists()), "PREPARED_ARCHIVE_NOT_FRESH");
-          await Bun.write(zip, new Response(archive.body.pipeThrough(new TransformStream({ transform(chunk, controller) { size.bytes += chunk.byteLength; requireValue(size.bytes <= artifact.size_in_bytes, "PREPARED_ARCHIVE_SIZE_EXCEEDED"); digest.update(chunk); controller.enqueue(chunk); } })))).catch(() => fail("PREPARED_ARCHIVE_CAPTURE_FAILED"));
+          const meter = new Transform({ transform(chunk, encoding, callback) { size.bytes += chunk.byteLength; if (size.bytes > artifact.size_in_bytes) return callback(new AdmissionFailure("PREPARED_ARCHIVE_SIZE_EXCEEDED")); digest.update(chunk); callback(null, chunk); } });
+          await pipeline(Readable.fromWeb(archive.body), meter, createWriteStream(zip, { flags: "wx", mode: 0o600 }), { signal: bodyDeadline }).catch(error => fail(error instanceof AdmissionFailure ? error.message : error.code === "EEXIST" ? "PREPARED_ARCHIVE_NOT_FRESH" : bodyDeadline.aborted ? "PREPARED_ARCHIVE_BODY_TIMEOUT" : "PREPARED_ARCHIVE_CAPTURE_FAILED"));
+          phase("ARCHIVE_DOWNLOAD_BODY_END"); phase("ARCHIVE_DIGEST_BEGIN");
           requireValue(size.bytes === artifact.size_in_bytes && `sha256:${digest.digest("hex")}` === artifact.digest, "PREPARED_ARCHIVE_DIGEST_MISMATCH");
+          phase("ARCHIVE_DIGEST_END");
+          phase("ZIP_INVENTORY_EXTRACTION_BEGIN");
+          const extracted = spawnSync("python3", ["-c", `
+          import os, shutil, stat, sys, zipfile
+          def require(value):
+              if not value: raise ValueError("invalid prepared ZIP")
+          try:
+              print("PREPARED_ADMISSION_PHASE:ZIP_INVENTORY_BEGIN", flush=True)
+              with zipfile.ZipFile(sys.argv[1]) as archive:
+                  entries = archive.infolist()
+                  require(len(entries) == 2 and {item.filename for item in entries} == {"desktop-dependencies.tar.gz", "models-api.json"})
+                  require(all(item.filename == item.orig_filename and not item.is_dir() and not (item.flag_bits & 1) and stat.S_IFMT(item.external_attr >> 16) in (0, stat.S_IFREG) and not (item.external_attr & 0x10) and item.file_size > 0 for item in entries))
+                  require(sum(item.file_size for item in entries) <= 4294967296)
+                  print("PREPARED_ADMISSION_PHASE:ZIP_INVENTORY_END", flush=True)
+                  os.mkdir(sys.argv[2], 0o700)
+                  print("PREPARED_ADMISSION_PHASE:ZIP_EXTRACTION_BEGIN", flush=True)
+                  for item in entries:
+                      path = os.path.join(sys.argv[2], item.filename)
+                      with archive.open(item) as source, open(path, "xb") as output:
+                          os.chmod(path, 0o600)
+                          shutil.copyfileobj(source, output, 1048576)
+                      info = os.lstat(path)
+                      require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_size == item.file_size)
+                  print("PREPARED_ADMISSION_PHASE:ZIP_EXTRACTION_END", flush=True)
+          except Exception:
+              print("PREPARED_ZIP_INVENTORY_OR_EXTRACTION_FAILED", file=sys.stderr)
+              sys.exit(1)
+          `, zip, `${process.env.RUNNER_TEMP}/prepared`], { timeout: 90000, maxBuffer: 1048576, stdio: ["ignore", "inherit", "pipe"] });
+          requireValue(!extracted.error && extracted.status === 0, "PREPARED_ZIP_INVENTORY_OR_EXTRACTION_FAILED");
+          phase("ZIP_INVENTORY_EXTRACTION_END");
           const admission = { run: producer.id, prepareJob: job.id, artifact: artifact.id, archiveDigest: artifact.digest, producerHead: producer.head_sha, producerWorkflowBlob, producerTree, currentHead: process.env.GITHUB_SHA, currentTree, sourceByteFingerprint: before.sourceBytes, packageFingerprint: before.packages };
-          await Bun.write(`${process.env.RUNNER_TEMP}/prepared-admission.json`, JSON.stringify(admission) + "\n");
+          await writeFile(`${process.env.RUNNER_TEMP}/prepared-admission.json`, JSON.stringify(admission) + "\n", { flag: "wx", mode: 0o600 }).catch(() => fail("PREPARED_ADMISSION_RECORD_WRITE_FAILED"));
           console.log("PREPARED_SOURCE_EQUIVALENT_PRODUCER_ADMITTED", JSON.stringify(admission));
-          await Bun.write(Bun.file(process.env.GITHUB_OUTPUT), `run_id=${id}\nartifact_id=${artifact.id}\n`);'
+          await appendFile(process.env.GITHUB_OUTPUT, `run_id=${id}\nartifact_id=${artifact.id}\n`).catch(() => fail("PREPARED_ADMISSION_OUTPUT_WRITE_FAILED"));
+          phase("ADMISSION_COMPLETE");
+          }'
+          status=$?
+          set -e
+          case "$status" in 124|137) echo PREPARED_ADMISSION_TIMEOUT >&2; exit 1;; esac
+          exit "$status"
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         if: ${{ !inputs.prepared_run }}
         with:
@@ -182,26 +249,6 @@ jobs:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
           run-id: ${{ github.run_id }}
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        if: inputs.prepared_run != ''
-        with:
-          artifact-ids: ${{ steps.reuse.outputs.artifact_id }}
-          merge-multiple: true
-          path: ${{ runner.temp }}/prepared
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ steps.reuse.outputs.run_id }}
-      - name: Bind action-downloaded payload to independently digest-verified producer ZIP
-        if: inputs.prepared_run != ''
-        working-directory: ${{ runner.temp }}
-        run: |
-          set -euo pipefail
-          for tool in unzip cmp; do command -v "$tool" >/dev/null || { echo "PREPARED_VERIFY_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
-          unzip -q prepared-reuse.zip -d prepared-verified || { echo PREPARED_VERIFIED_ARCHIVE_INVALID >&2; exit 1; }
-          for file in desktop-dependencies.tar.gz models-api.json; do
-            test -s "prepared/$file" && test -s "prepared-verified/$file" || { echo PREPARED_VERIFIED_PAYLOAD_MISSING >&2; exit 1; }
-            cmp -- "prepared/$file" "prepared-verified/$file" || { echo PREPARED_ACTION_PAYLOAD_DIGEST_MISMATCH >&2; exit 1; }
-          done
       - name: Restore dependencies into exact source checkout and require native host
         working-directory: ${{ runner.temp }}
         run: |
