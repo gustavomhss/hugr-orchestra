@@ -1,10 +1,11 @@
 # HANDOFF — estado do hugr-omni (2026-10-02, tarde)
 
-## Retomada no Orchestra — 2026-10-08
+## Retomada no Orchestra — 2026-10-09
 
 Esta seção substitui os pontos de retomada históricos abaixo. A fonte da integração é `packages/omni` no
 `gustavomhss/hugr-orchestra`; o repositório separado é o espelho. Worktree ativa:
-`~/Documents/HuGR/_worktrees/omni-native`, PR #73 (draft).
+`~/Documents/HuGR/_worktrees/omni-closeout`; produto reconciliado `50df6ac76a`. Branch de integração do PR #73
+(draft): `omni-native`. O relatório lista as revisões verificadas e os gates ainda pendentes.
 
 - O rename da `dev` foi reconciliado: pacote `packages/orchestra`, imports `@orchestra/*`, flag
   `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`. Publicação npm continua adiada. Default continua desligado.
@@ -17,13 +18,22 @@ Esta seção substitui os pontos de retomada históricos abaixo. A fonte da inte
 - Campanha reproduzível em `campaign/`, instruções em `campaign/README.md`, relatório parcial em
   `docs/ux/WP10-orchestra-integration.md`. Typecheck completo: de `packages/core`,
   `bun typecheck --project ../omni/campaign/tsconfig.json`.
-- Evidência do HEAD de produto `205d67c3cd`: gate Omni e smoke CLI verdes nos três SOs; desktop empacotado verde no
-  Linux. Delivery `37743712802`: V9 verde nos três SOs, V8 verde no Server 2022, V7 verde no Linux.
-- **Bloqueio atual de delivery:** V7 macOS foi interrompido por carga no par 495; `timingKpiRun:false`, não é verde.
-  Precisa de uma janela quieta sem afrouxar o critério. Run `37743712802` guarda a evidência.
-- WP10 completo ainda precisa da matriz inteira de hosts/SOs, TUI/background/quit no Windows, liberação natural de
-  event loop, artefatos dos oito alvos e assinatura/notarização. Não fazer WP9a enquanto o relatório não estiver
-  completo e assinado. WP9b continua depois de uma release limpa.
+- `fork/dev` (`ad40b080e9`) foi integrado por merge, incluindo capability/seat framework. O conflito semântico no
+  builder de saída natural foi corrigido: usa `seatSkillsFiles`, `ORCHESTRA_COMPILED=true` e hashes do módulo gerado.
+  Core, Orchestra e campanha passaram typecheck; revisão fria aprovou os pontos de união.
+- Produto `50df6ac76a`: CLI compilada (`37886935451`) e Electron empacotado real (`37886938068`) verdes nos três SOs.
+  Electron prova crash de main/utility e app.quit natural; packaging é unsigned --dir, sem prova de notarização.
+- Saída natural Bun/Node + controles de seats: `37886081319`, 26 testes por SO. Windows V1/V2/V10 restaurado:
+  `37887074886`, incluindo dois Esc reais e Ctrl+C. Remover SIGINT/SIGBREAK deixou `37866045782` vermelho.
+- V3–V6 verdes nos três SOs (`37866046448`); oito alvos nativos provados (`37799127882`). Raw POSIX é
+  receiver-ACK; raw ConPTY permanece unsupported, com cooked/render testado. Não confundir isso com burst raw lossless.
+- V7 macOS Intel/x64 fechado (`37832187161`): legado 9,89377 ms; Omni 11,30649 ms; limite 11,89377 ms. Slowdown
+  real de 5 ms foi rejeitado. Recusas/execuções ARM incompletas permanecem unrun; KPI inalterado.
+- Owner autorizou adiar Developer ID/notarização para uso local sem Apple Developer: **"go on"**. Waiver com alcance
+  e remediação no relatório WP10. Não autoriza distribuição notarizada nem publicação npm.
+- **Gate pendente:** assinatura do relatório pelo owner; rerun V2/V7 no Mac do owner no boundary de default-on;
+  provisionamento CI e epic suite do WP9a. Default continua off. `omni-default-ci` existe, ainda sem flip ou patch CI.
+  WP9b continua depois de uma release limpa. Artefatos dos oito alvos não habilitam sozinhos as rows CLI desativadas.
 - Provas brutas locais anteriores foram preservadas nas worktrees `omni-campaign`, `omni-protocol-qa` e
   `omni-delivery-qa` (`campaign/logs`, ignorado). Não apagar esses logs antes de arquivar as evidências.
 - O binário desktop de nome legado ficou sem ignore após o rename; foi preservado fora do snapshot como

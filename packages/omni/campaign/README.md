@@ -23,8 +23,8 @@ observations. Preserve the JSON verdicts, negative controls and command logs whe
 
 | Scenario | Entry point | Scope |
 |---|---|---|
-| V1 | `v1-background.ts` | Real agent turn, post-adoption output, session removal. Windows shell harness incomplete. |
-| V2 | `v2-kill.ts serve`, `tui`, `hold` | Compiled CLI/TUI crash with live supervised trees. Desktop uses its packaged smoke. Windows TUI harness incomplete. |
+| V1 | `v1-background.ts` | Real agent turn, post-adoption output, same-Session frontend Esc and session removal; Windows included. |
+| V2 | `v2-kill.ts serve`, `tui`, `hold` | Compiled CLI/TUI crash with live supervised trees; Windows validates inner supervisor ownership. Actual Electron main/utility use the packaged smoke. |
 | V3 | `v3-supervisor.ts` | Supervisor death, documented Unix hole, next-spawn recovery. |
 | V4 | `v4-lsp.ts` | Twenty same-instance crashes/restarts with real tsservers. |
 | V5 | `v5-mcp.ts` | One MiB measured stderr, real MCP handshake and final diagnostic marker. |
@@ -32,13 +32,16 @@ observations. Preserve the JSON verdicts, negative controls and command logs whe
 | V7 | `v7-overhead.ts --quiet` | 1,000 interleaved samples per real AppProcess caller; `--control` is readiness only. |
 | V8 | `v8-windows.ts` | Windows command lines, npx, PowerShell and ConPTY stop/exit/EOF deadline. |
 | V9 | `v9-broken-artifacts.ts --quiet --mutation --diagnose` | Copied shipped binaries; missing/corrupt native files; two-second rejection. |
-| V10 | `v10-exit.ts` | Runtime disposal and tree cleanup on serve quit. Natural event-loop retention is explicitly unproven. |
+| V10 | `v10-exit.ts`, `v10-natural-exit.ts` | Serve disposal/cleanup plus real Bun and built-Node natural code-zero unsignalled exit. Windows console quit and actual Electron app.quit have separate hosted proofs. |
 
 Timing acceptance requires a quiet host; a refused or interrupted measurement is not green. V7's limit is
 `p50(omni) <= max(p50(legacy) * 1.10, p50(legacy) + 2 ms)`. Do not loosen it to accommodate local load.
 
-The delivery workflow covers Unix V7, Windows V8, and V9 on three OSes. Its scope artifact records remaining cells;
-it does not certify all of WP10. Final acceptance still needs the complete OS/host matrix and owner signature.
+The delivery workflow covers Unix V7, Windows V8, and V9 on three OSes. Dedicated `.hosted.ts` wrappers run V3–V6,
+Windows lifecycle, fixture identity and natural-exit proofs only when explicitly selected through `test:ci`.
+`omni-desktop-smoke.yml` builds the actual unsigned Electron app on three OSes. See the WP10 report for exact
+revisions, mutation controls, raw ConPTY limits and the owner-authorized signing deferral. No individual workflow
+certifies all of WP10; owner signature and default-on boundary acceptance remain separate gates.
 
 ## PTY byte evidence
 
