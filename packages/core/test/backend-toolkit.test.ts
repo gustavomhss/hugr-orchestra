@@ -52,7 +52,11 @@ const fixture = Effect.gen(function* () {
         executable: name,
       }
       return {
-        ...BackendToolkitManifest.ENGINES[id],
+        id,
+        version: BackendToolkitManifest.ENGINES[id].version,
+        license: "MIT",
+        upstream: "fixture/engine",
+        dependencies: [],
         env: { FIXTURE_GREETING: "hello" },
         targets: { "darwin-arm64": pin, "darwin-x64": pin, "linux-arm64": pin, "linux-x64": pin, "win32-x64": pin },
       }
@@ -62,6 +66,7 @@ const fixture = Effect.gen(function* () {
       "ast-grep": engine("ast-grep"),
       sqlc: engine("sqlc"),
       buf: engine("buf"),
+      "protoc-gen-es": engine("protoc-gen-es"),
       gitleaks: engine("gitleaks"),
       kiota: engine("kiota"),
     }
