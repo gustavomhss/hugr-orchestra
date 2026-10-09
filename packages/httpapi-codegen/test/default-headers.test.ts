@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Effect, Schema, Stream } from "effect"
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http"
+import { FetchHttpClient, HttpClient, HttpClientError, HttpClientRequest } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
 import { compile, emitEffect, emitEffectImported } from "../src"
@@ -101,7 +101,11 @@ describe.each(["portable", "imported"] as const)("%s Effect factory headers", (k
           const transport = yield* HttpClient.HttpClient
           const client = yield* make({
             baseUrl: server.url,
-            headers: { Authorization: "Bearer host", "x-orchestra-location": "factory-location" },
+            headers: {
+              Authorization: "Bearer host",
+              "x-orchestra-location": "factory-location",
+              "cOnTeNt-TyPe": "application/factory-default",
+            },
           }).pipe(
             Effect.provideService(
               HttpClient.HttpClient,
@@ -121,15 +125,32 @@ describe.each(["portable", "imported"] as const)("%s Effect factory headers", (k
             headers: { "Content-Type": "application/factory-default" },
           })
           yield* contentType.probe.json({ message: "encoded content type wins" })
+          const explicit = yield* make({
+            baseUrl: server.url,
+            headers: { "Content-Type": "application/factory-default" },
+          }).pipe(
+            Effect.provideService(
+              HttpClient.HttpClient,
+              HttpClient.mapRequest(transport, (request) =>
+                HttpClientRequest.setHeader(
+                  HttpClientRequest.bodyFormData(request, new FormData()),
+                  "content-type",
+                  "application/request-explicit",
+                ),
+              ),
+            ),
+          )
+          yield* explicit.probe.upload({ message: "explicit request MIME wins" })
         }).pipe(Effect.provide(FetchHttpClient.layer)),
       )
 
-      expect(requests).toHaveLength(3)
+      expect(requests).toHaveLength(4)
       expect(requests[0].headers.get("content-type")).toBe("application/json")
       expect(requests[0].body).toBe('{"message":"json body"}')
       expect(requests[1].headers.get("content-type")).toMatch(/^multipart\/form-data; boundary=.+/)
       expect(requests[1].body).toContain('name="message"')
       expect(requests[1].body).toContain("multipart body")
+      expect(requests[1].formMessage).toBe("multipart body")
       expect(requests.slice(0, 2).map((request) => request.headers.get("x-orchestra-location"))).toEqual([
         "request-location",
         "request-location",
@@ -139,6 +160,7 @@ describe.each(["portable", "imported"] as const)("%s Effect factory headers", (k
         "Bearer host",
       ])
       expect(requests[2].headers.get("content-type")).toBe("application/json")
+      expect(requests[3].headers.get("content-type")).toBe("application/request-explicit")
     })
   })
 
@@ -163,11 +185,73 @@ describe.each(["portable", "imported"] as const)("%s Effect factory headers", (k
     })
   })
 
-  test("rejects invalid names and CRLF values synchronously at construction", async () => {
+  test("rejects invalid header data without coercion, getter execution, or token-bearing errors", async () => {
     await withClient(kind, async (make) => {
-      expect(() => make({ headers: { "bad header": "value" } })).toThrow()
-      expect(() => make({ headers: { Authorization: "Bearer ok\r\nx-injected: true" } })).toThrow()
-      expect(() => make({ headers: { Authorization: "Bearer ok\nx-injected: true" } })).toThrow()
+      const sentinel = "AUTH_SENTINEL_d9c783"
+      const accessed = { calls: 0 }
+      const accessor = Object.defineProperty({}, "Authorization", {
+        enumerable: true,
+        get() {
+          accessed.calls += 1
+          throw new Error(sentinel)
+        },
+      })
+      const invalid: ReadonlyArray<unknown> = [
+        { [`bad header ${sentinel}`]: "value" },
+        { Authorization: `Bearer ${sentinel}\r\nx-injected: true` },
+        { Authorization: `Bearer ${sentinel}\nx-injected: true` },
+        { Authorization: `\r\nBearer ${sentinel}\r\n` },
+        { Authorization: 42 },
+        { Authorization: undefined },
+        { Authorization: `Bearer ${sentinel}\u0000` },
+        { Authorization: `Bearer ${sentinel}\u0100` },
+        accessor,
+        null,
+        ["Authorization", sentinel],
+        Object.create({ Authorization: sentinel }),
+      ]
+      await Promise.all(
+        invalid.map(async (headers) => {
+          const error = await Effect.runPromise(
+            Effect.try({ try: () => Reflect.apply(make, undefined, [{ headers }]), catch: (error) => error }).pipe(
+              Effect.match({ onFailure: (error) => error, onSuccess: () => undefined }),
+            ),
+          )
+          expect(error).toBeInstanceOf(TypeError)
+          if (!(error instanceof TypeError)) throw new Error("Expected header validation TypeError")
+          expect(error.message).toBe("Invalid client headers")
+          expect(error.message).not.toContain(sentinel)
+          expect(error.cause).toBeUndefined()
+          expect(JSON.stringify(error)).not.toContain(sentinel)
+        }),
+      )
+      expect(accessed.calls).toBe(0)
+      expect(() => make({ headers: { "!#$%&'*+-.^_`|~AZaz09": "ok" } })).not.toThrow()
+    })
+  })
+
+  test("auth failure JSON redacts request headers while retaining typed HTTP failure", async () => {
+    await withClient(kind, async (make, server, requests) => {
+      const token = "Bearer AUTH_FAILURE_SENTINEL_a2fc83"
+      await Effect.runPromise(
+        Effect.gen(function* () {
+          const client = yield* make({ baseUrl: `${server.url}auth-failure`, headers: { Authorization: token } })
+          const error = yield* client.probe.read().pipe(Effect.flip)
+          expect(error._tag).toBe("ClientError")
+          if (!HttpClientError.isHttpClientError(error.cause)) throw new Error("Expected typed HTTP failure")
+          expect(error.cause.reason._tag).toBe("DecodeError")
+          expect(error.cause.response?.status).toBe(401)
+          // In-memory diagnostics retain the request; this assertion concerns JSON serialization only.
+          expect(error.cause.request.headers.authorization).toBe(token)
+          const serialized = JSON.stringify(error)
+          expect(serialized).toContain("ClientError")
+          expect(serialized).toContain("DecodeError")
+          expect(serialized).toContain("authorization")
+          expect(serialized).not.toContain(token)
+        }).pipe(Effect.provide(FetchHttpClient.layer)),
+      )
+      expect(requests).toHaveLength(1)
+      expect(requests[0].headers.get("authorization")).toBe(token)
     })
   })
 })
@@ -215,18 +299,24 @@ async function withClient(
   run: (
     make: typeof import("./default-headers-portable/client").make,
     server: ReturnType<typeof Bun.serve>,
-    requests: Array<{ headers: Headers; body: string }>,
+    requests: Array<{ headers: Headers; body: string; formMessage?: FormDataEntryValue | null }>,
     cancellations: Array<Promise<void>>,
   ) => Promise<void>,
 ) {
   const directory = await mkdtemp(join(fileURLToPath(new URL(".", import.meta.url)), ".default-headers-"))
-  const requests: Array<{ headers: Headers; body: string }> = []
+  const requests: Array<{ headers: Headers; body: string; formMessage?: FormDataEntryValue | null }> = []
   const cancellations: Array<Promise<void>> = []
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
-      requests.push({ headers: new Headers(request.headers), body: await request.text() })
+      const formMessage = request.headers.get("content-type")?.startsWith("multipart/form-data;")
+        ? (await request.clone().formData()).get("message")
+        : undefined
+      requests.push({ headers: new Headers(request.headers), body: await request.text(), formMessage })
+      if (new URL(request.url).pathname.startsWith("/auth-failure/")) {
+        return Response.json({ _tag: "Unauthorized" }, { status: 401 })
+      }
       if (new URL(request.url).pathname !== "/events") return Response.json("ok")
       const cancelled = Promise.withResolvers<void>()
       cancellations.push(cancelled.promise)
