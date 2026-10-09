@@ -44,7 +44,9 @@ export function make(options: { discovery: CapabilityServiceContract.Discovery; 
         const dispatcher = yield* children.dispatcher(context, captured)
         // One allocator per parent invocation. Managed-output infrastructure failures remain defects.
         const settlement = yield* dispatcher.settle(locator.canonicalName, input)
-        if (settlement.result.type === "error") return yield* canonicalToolFailure(settlement.result.value)
+        if (settlement.result.type === "error") return yield* canonicalToolFailure(
+          typeof settlement.result.value === "string" ? settlement.result.value : "Service child failed",
+        )
         return yield* Schema.decodeUnknownEffect(CapabilityServiceSchema.CallOutput)(settlement.output?.structured).pipe(
           Effect.mapError(() => canonicalToolFailure("Service child returned invalid output")),
         )
