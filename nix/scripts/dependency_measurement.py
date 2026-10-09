@@ -84,6 +84,18 @@ def sha256(token):
     return token
 
 
+def rendered_log(text, label):
+    # Only parsed renderer strings: observed reset/bold/yellow/magenta SGR.
+    # Receipts, JSON records and evidence bytes are never stripped or rewritten.
+    def undecorate(match):
+        require(all(code in {"0", "1", "33", "35"} for code in match[1].split(";")), label)
+        return ""
+
+    plain = re.sub(r"\x1b\[([0-9;]*)m", undecorate, text)
+    require("\x1b" not in plain, label)
+    return plain
+
+
 def measured_candidate(directory, system, revision):
     recorded, tree, inputs = source(directory)
     require(revision == recorded, "SOURCE_REVISION_MISMATCH")
@@ -93,9 +105,11 @@ def measured_candidate(directory, system, revision):
     command(directory, "native-system", ["nix", "eval", "--impure", "--raw", "--expr", "builtins.currentSystem"], 0)
     target = ".#packages." + system + ".node_modules_updater"
     command(directory, "hash-drv", ["nix", "eval", "--no-write-lock-file", "--no-update-lock-file", "--raw", target + ".drvPath"], 0)
+    # Ordinary nix build (no --keep-going) returned 1 in native Nix 2.29.2
+    # artifacts. Status alone proves nothing; target mismatch and completion below do.
     command(directory, "hash-build", ["nix", "build", "--no-write-lock-file", "--no-update-lock-file",
                                      "--option", "sandbox", "true", "--no-link", "--print-build-logs",
-                                     "--log-format", "internal-json", target], 102)
+                                     "--log-format", "internal-json", target], 1)
     drv = read(directory, "hash-drv.stdout").strip()
     require(re.fullmatch(r"/nix/store/[0-9abcdfghijklmnpqrsvwxyz]{32}-orchestra-node_modules-[^/\s]+\.drv", drv), "INVALID_UPDATER_DERIVATION")
     command(directory, "hash-drv-info", ["nix", "derivation", "show", drv], 0)
@@ -108,7 +122,7 @@ def measured_candidate(directory, system, revision):
             "DERIVATION_METADATA_IDENTITY_MISMATCH")
     outputs = metadata.get("outputs", {})
     require(isinstance(outputs, dict) and list(outputs) == ["out"] and isinstance(outputs["out"], dict)
-            and outputs["out"].get("hashAlgo") == "r:sha256",
+            and outputs["out"].get("hashAlgo") == "sha256" and outputs["out"].get("method") == "nar",
             "DERIVATION_METADATA_OUTPUT_INVALID")
     require(outputs["out"].get("hash") in ["0" * 64, "0" * 52, "sha256-" + base64.b64encode(bytes(32)).decode()],
             "DERIVATION_METADATA_HASH_INVALID")
@@ -141,8 +155,7 @@ def measured_candidate(directory, system, revision):
             "UNEXPECTED_BUILD_ERROR")
     mismatch_index, message = mismatches[0]
     require(isinstance(message, str), "MISMATCH_RAW_MESSAGE_MISSING")
-    # Nix's raw_msg omits human error headers; SGR styling is not hash data.
-    message = re.sub(r"\x1b\[[0-9;]*m", "", message)
+    message = rendered_log(message, "MISMATCH_RENDERING_INVALID")
     match = re.fullmatch(r"hash mismatch in fixed-output derivation '" + re.escape(drv)
                          + r"':\s+specified:\s+(\S+)\s+got:\s+(\S+)\s*", message)
     require(match is not None, "INVALID_UPDATER_HASH_MISMATCH")
@@ -162,7 +175,8 @@ def measured_candidate(directory, system, revision):
         line = fields[0]
         for label in counts:
             if line.startswith("[" + label + "] rebuilt "):
-                count = re.fullmatch(r"\[" + label + r"\] rebuilt ([1-9][0-9]*) links", line)
+                count = re.fullmatch(r"\[" + label + r"\] rebuilt ([1-9][0-9]*) links",
+                                     rendered_log(line, "NORMALIZATION_RENDERING_INVALID:" + label))
                 require(count is not None, "NORMALIZATION_INCOMPLETE:" + label)
                 counts[label].append(index)
         if line.startswith("NODE_MODULES_RECEIPT:"):
