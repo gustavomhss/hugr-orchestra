@@ -2,16 +2,10 @@
 import { Effect } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import { HttpApi, HttpApiClient } from "effect/unstable/httpapi"
-import { adaptGroup0, Group0 } from "./session"
-import { adaptGroup1, Group1 } from "./event"
-import { adaptGroup2, Group2 } from "./system"
+import { adaptGroup0, Group0 } from "./probe"
 
-const Api = HttpApi.make("generated").add(Group0).add(Group1).add(Group2)
-const adaptClient = (raw: HttpApiClient.ForApi<typeof Api>) => ({
-  session: adaptGroup0(raw["session"]),
-  event: adaptGroup1(raw["event"]),
-  ...adaptGroup2({ status: raw["status"] }),
-})
+const Api = HttpApi.make("generated").add(Group0)
+const adaptClient = (raw: HttpApiClient.ForApi<typeof Api>) => ({ probe: adaptGroup0(raw["probe"]) })
 
 export const make = (options?: {
   readonly baseUrl?: URL | string
