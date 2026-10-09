@@ -9,7 +9,7 @@ import { Database } from "../../database/database"
 import { CapabilityRequestTable } from "../sql"
 import type { CapabilityOperatorContract } from "./contract"
 import type { CapabilityRequestContract } from "./request-contract"
-import { capture, hash, invalid, quota, resultBudget, snapshot, stored } from "./request-data"
+import { capture, hash, quota, resultBudget, snapshot, stored } from "./request-data"
 
 export function make(options: { operators: CapabilityOperatorContract.Interface; maxReceipts?: number }) {
   const operators = Object.freeze({ ...options.operators })
@@ -25,7 +25,10 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
       // Capture at call time, before authority lookup or any caller-controlled scheduling boundary.
       const input = capture(target, payload)
       return Effect.gen(function* () {
-        if (Result.isFailure(input)) return yield* input.failure
+        if (Result.isFailure(input)) {
+          if (input.failure instanceof Capability.Failure) return yield* input.failure
+          return yield* Effect.die(input.failure)
+        }
         const binding = yield* operators.require(input.success.target)
         if (!binding.idempotencyKey) return yield* new Capability.Failure({
           code: "unsupported_operation", message: "Capability request requires an idempotency key",
@@ -58,7 +61,10 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
           const result = yield* write(tx)
           const data = yield* Effect.try({
             try: () => snapshot(result, resultBudget),
-            catch: (error) => error instanceof Capability.Failure ? error : invalid(),
+            catch: (error) => {
+              if (error instanceof Capability.Failure) return error
+              throw error
+            },
           })
           yield* operators.validate(binding, input.success.target)
           yield* tx.insert(CapabilityRequestTable).values({
@@ -78,14 +84,13 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
 }
 
 function storageErrors<A, E, R>(effect: Effect.Effect<A, E | SqlError | EffectDrizzleQueryError, R>) {
-  // The frozen API exposes domain E. SQL-only Causes translate; mixed Causes remain whole at runtime,
-  // including SQL Fail reasons alongside domain failures, defects, or interruption.
+  // SQL-only Causes translate; mixed Causes retain every reason and annotation in the honest error channel.
   return Effect.catchCauseIf(effect,
     (cause: Cause.Cause<E | SqlError | EffectDrizzleQueryError>) => cause.reasons.length > 0 &&
       cause.reasons.every((reason) => reason._tag === "Fail" &&
         (reason.error instanceof SqlError || reason.error instanceof EffectDrizzleQueryError)),
     () => Effect.fail(new Capability.Failure({ code: "outcome_unknown", message: "Capability request storage failed" })),
-  ) as Effect.Effect<A, E | Capability.Failure, R>
+  )
 }
 
 function mismatch() {

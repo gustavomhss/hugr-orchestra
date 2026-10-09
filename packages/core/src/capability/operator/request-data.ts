@@ -30,7 +30,8 @@ export function snapshot(input: unknown, budget: { bytes: number; nodes: number 
       (typeof value === "number" && Number.isFinite(value))) {
       // Reject huge strings before allocating their escaped JSON representation.
       if (typeof value === "string" && Buffer.byteLength(value) > budget.bytes) throw quota()
-      return { data: value, json: encode(JSON.stringify(value)) }
+      // JSON encodes negative zero as zero; fresh receipts must agree with durable retries.
+      return { data: typeof value === "number" && Object.is(value, -0) ? 0 : value, json: encode(JSON.stringify(value)) }
     }
     if (!value || typeof value !== "object" || types.isProxy(value) || active.has(value)) throw invalid()
     const array = Array.isArray(value)
@@ -70,29 +71,26 @@ export function snapshot(input: unknown, budget: { bytes: number; nodes: number 
 }
 
 export function capture(suppliedTarget: CapabilityOperatorContract.Target, payload: Schema.Json) {
-  return Result.try({
-    try: () => {
-      const root = fields(suppliedTarget, ["action", "placement", "resource"])
-      const placement = fields(root.placement, ["projectID", "location"])
-      const location = fields(placement.location, ["directory", "workspaceID"])
-      const decoded = Schema.decodeUnknownOption(targetSchema)({
-        action: root.action, placement: { projectID: placement.projectID, location },
-        ...(root.resource === undefined ? {} : { resource: fields(root.resource, ["kind", "id"]) }),
-      })
-      if (Option.isNone(decoded)) throw invalid()
-      const target = decoded.value
-      Object.freeze(target.placement.location)
-      Object.freeze(target.placement)
-      if (target.resource) Object.freeze(target.resource)
-      Object.freeze(target)
-      const value = snapshot(payload, payloadBudget)
-      return { target, payloadHash: hash(value.json), targetHash: hash(snapshot([
-        target.action, target.placement.projectID, target.placement.location.directory,
-        target.placement.location.workspaceID ?? null,
-        target.resource ? [target.resource.kind, target.resource.id] : null,
-      ], payloadBudget).json) }
-    },
-    catch: (error) => error instanceof Capability.Failure ? error : invalid(),
+  return Result.try(() => {
+    const root = fields(suppliedTarget, ["action", "placement", "resource"])
+    const placement = fields(root.placement, ["projectID", "location"])
+    const location = fields(placement.location, ["directory", "workspaceID"])
+    const decoded = Schema.decodeUnknownOption(targetSchema)({
+      action: root.action, placement: { projectID: placement.projectID, location },
+      ...(root.resource === undefined ? {} : { resource: fields(root.resource, ["kind", "id"]) }),
+    })
+    if (Option.isNone(decoded)) throw invalid()
+    const target = decoded.value
+    Object.freeze(target.placement.location)
+    Object.freeze(target.placement)
+    if (target.resource) Object.freeze(target.resource)
+    Object.freeze(target)
+    const value = snapshot(payload, payloadBudget)
+    return { target, payloadHash: hash(value.json), targetHash: hash(snapshot([
+      target.action, target.placement.projectID, target.placement.location.directory,
+      target.placement.location.workspaceID ?? null,
+      target.resource ? [target.resource.kind, target.resource.id] : null,
+    ], payloadBudget).json) }
   })
 }
 
@@ -102,7 +100,10 @@ export function stored(input: unknown) {
   const decoded = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(input)
   if (Option.isNone(decoded)) throw new Error("Capability request stored result is invalid")
   const result = Result.try(() => snapshot(decoded.value, resultBudget))
-  if (Result.isFailure(result)) throw new Error("Capability request stored result is invalid")
+  if (Result.isFailure(result)) {
+    if (result.failure instanceof Capability.Failure) throw new Error("Capability request stored result is invalid")
+    throw result.failure
+  }
   return result.success.data
 }
 

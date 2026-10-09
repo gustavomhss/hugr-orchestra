@@ -362,6 +362,17 @@ describe("CapabilityRequest atomic local SQL ledger", () => {
     result.refs.push("changed")
     expect(first.data).toEqual({ metadata: { name: "original" }, refs: ["opaque"] })
     expect((yield* f.run(f.store.commit(target, {}, f.write))).data).toEqual(first.data)
+    const zero = yield* f.run(f.store.commit(target, {}, (tx) => f.write(tx).pipe(Effect.as(-0))), "zero")
+    const replay = yield* f.run(f.store.commit(target, {}, () => Effect.die("ZERO_REPLAY_EXECUTED_CALLBACK")), "zero")
+    expect(Object.is(zero.data, 0)).toBe(true)
+    expect(Object.is(zero.data, replay.data)).toBe(true)
+    const nested = yield* f.run(f.store.commit(target, {}, (tx) => f.write(tx).pipe(
+      Effect.as({ value: -0, values: [-0] }),
+    )), "nested-zero")
+    const nestedReplay = yield* f.run(f.store.commit(target, {}, () => Effect.die("ZERO_REPLAY_EXECUTED_CALLBACK")), "nested-zero")
+    const decode = Schema.decodeUnknownSync(Schema.Struct({ value: Schema.Number, values: Schema.Array(Schema.Number) }))
+    expect(Object.is(decode(nested.data).value, decode(nestedReplay.data).value)).toBe(true)
+    expect(Object.is(decode(nested.data).values[0], decode(nestedReplay.data).values[0])).toBe(true)
   }))
 
   it.live("malformed or oversized stored result is a named defect, never success or execution", () => Effect.gen(function* () {
@@ -448,5 +459,19 @@ describe("CapabilityRequest JSON boundary", () => {
     expect(stored("null")).toBeNull()
     expect(() => stored("{broken")).toThrow("Capability request stored result is invalid")
     expect(() => stored(JSON.stringify("x".repeat(resultBudget.bytes)))).toThrow("Capability request stored result is invalid")
+  }))
+
+  it.live("negative zero normalizes in primitive and nested fresh snapshots exactly as durable replay", () => Effect.sync(() => {
+    const zero = snapshot(-0, resultBudget)
+    expect(Object.is(zero.data, 0)).toBe(true)
+    expect(Object.is(zero.data, stored(zero.json))).toBe(true)
+    const nested = snapshot({ value: -0, values: [-0] }, resultBudget)
+    const decode = Schema.decodeUnknownSync(Schema.Struct({ value: Schema.Number, values: Schema.Array(Schema.Number) }))
+    const first = decode(nested.data)
+    const replay = decode(stored(nested.json))
+    expect(Object.is(first.value, 0)).toBe(true)
+    expect(Object.is(first.value, replay.value)).toBe(true)
+    expect(Object.is(first.values[0], 0)).toBe(true)
+    expect(Object.is(first.values[0], replay.values[0])).toBe(true)
   }))
 })
