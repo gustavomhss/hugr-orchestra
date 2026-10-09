@@ -7,12 +7,28 @@ import type { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import type { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import type { BackendResult } from "@/maestro/backend-result"
 import type { SeatWork } from "@/maestro/backend-work"
 import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { TaskPromptOps } from "./task"
 import type { Tool } from "./tool"
+
+export type Metadata = {
+  parentSessionId: SessionID
+  sessionId: SessionID
+  model: SessionV1.User["model"]
+  background?: boolean
+  jobId?: string
+  completion?: NonNullable<
+    Effect.Success<ReturnType<Effect.Success<typeof ArsenalCompletion.make>["verifiedCompletion"]>>
+  >
+  workResult?: BackendResult.WorkResult
+}
+
+export type ExecuteResult = Tool.ExecuteResult<Metadata>
 
 export interface Input {
   readonly background: BackgroundJob.Interface
@@ -27,12 +43,7 @@ export interface Input {
   readonly childSessionID: SessionID
   readonly taskID: string
   readonly description: string
-  readonly metadata: {
-    parentSessionId: SessionID
-    sessionId: SessionID
-    model: SessionV1.User["model"]
-    background?: boolean
-  }
+  readonly metadata: Metadata
   readonly work: Pick<ReturnType<typeof SeatWork.track>, "hostEnded" | "attach">
   readonly variant?: string
   readonly renderOutput: (input: {
@@ -166,7 +177,10 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
   })
 
   // Running responses carry host state, never a worker return or a settlement receipt.
-  const result = Effect.fn("TaskBackground.result")(function* (jobID: string, extended = false) {
+  const result = Effect.fn("TaskBackground.result")(function* (
+    jobID: string,
+    extended = false,
+  ): Effect.fn.Return<ExecuteResult> {
     yield* input.work.hostEnded("running", extended ? "Background task updated" : "Background task started").pipe(
       Effect.provideService(Database.Service, input.database),
     )
