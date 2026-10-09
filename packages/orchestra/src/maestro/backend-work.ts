@@ -23,6 +23,7 @@ export function track(input: {
   readonly publish: (workResult: BackendResult.WorkResult) => Effect.Effect<void>
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
+  const returned: { value?: BackendResult.WorkResult } = {}
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
   const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult) {
     const task = input.taskId ? { ...result, taskId: input.taskId } : result
@@ -39,8 +40,12 @@ export function track(input: {
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      evidence.value = yield* bound(BackendResult.assemble(message, yield* history(), input.seat))
-      yield* input.publish(evidence.value)
+      const snapshot = structuredClone(message)
+      const captured = yield* bound(BackendResult.assemble(snapshot, yield* history(), input.seat))
+      returned.value = captured
+      evidence.value = captured
+      yield* input.publish(captured)
+      return captured
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
     // stand behind: the card already assembled, else the child's last assistant message, else no card.
@@ -55,20 +60,8 @@ export function track(input: {
         : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat))
       yield* input.publish(evidence.value)
     }),
-    // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
-    // the final work result, read from the child's durable last assistant message (a resumed job may have run several
-    // turns).
-    notice: Effect.fn("SeatWork.notice")(function* (state: "completed" | "error", text: string) {
-      if (!input.enabled) return undefined
-      const session = yield* history()
-      const last = lastAssistant(session)
-      if (state === "error")
-        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat))
-      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat))
-      return yield* bound(
-        BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
-      )
-    }),
+    // Compatibility accessor only: never reselect a resumed child's newer assistant for an older dispatch.
+    notice: (_state: "completed" | "error", _text: string) => Effect.succeed(returned.value),
   }
 }
 
