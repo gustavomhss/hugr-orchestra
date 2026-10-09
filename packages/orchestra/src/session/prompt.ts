@@ -21,6 +21,9 @@ import { createStructuredOutputTool } from "./structured-output"
 export { createStructuredOutputTool } from "./structured-output"
 import { SessionCompaction } from "./compaction"
 import { SessionContinuity } from "@/continuity/service"
+import { ContinuityAdmission } from "@/continuity/admission"
+import { RequestSource } from "@/continuity/request-source"
+import { PromptContinuity } from "./prompt-continuity"
 import { ClaudeCode } from "@/claude-code/engine"
 import { commandSource } from "@/continuity/alias"
 import { hardLimit, tokenCount } from "@/continuity/trigger"
@@ -491,6 +494,7 @@ const layer = Layer.effect(
               sessionID: input.sessionID,
               text: "The following tool was executed by the user",
               synthetic: true,
+              metadata: { source: { type: "command", invocation: input.command } },
             }
             yield* sessions.updatePart(userPart)
 
@@ -1095,8 +1099,6 @@ const layer = Layer.effect(
         let structured: unknown
         let canRecall = false
         let step = 0
-        const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
-
         while (true) {
           yield* status.set(sessionID, { type: "busy" })
           yield* Effect.logInfo("loop", { "session.id": sessionID, step })
@@ -1105,9 +1107,9 @@ const layer = Layer.effect(
             Effect.provideService(Database.Service, database),
           )
 
-          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks } = MessageV2.latest(msgs)
-
-          if (!lastUser) throw new Error("No user message found in stream. This should never happen.")
+          const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks, logicalUser, originalRequest, sourceHistory } = yield* PromptContinuity.select(msgs, sessions, sessionID)
+          if (!lastUser) break
+          const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
           const lastAssistantMsg = msgs.findLast(
             (msg) => msg.info.role === "assistant" && msg.info.id === lastAssistant?.id,
@@ -1124,7 +1126,7 @@ const layer = Layer.effect(
             lastAssistant?.finish &&
             !["tool-calls", "unknown"].includes(lastAssistant.finish) &&
             !hasToolCalls &&
-            lastAssistant.parentID === lastUser.id
+            lastAssistant.parentID === lastUser.id && (logicalUser?.id === lastUser.id || !logicalUser || logicalUser.time.created <= lastAssistant.time.created)
           ) {
             const orphan = lastAssistantMsg?.parts.find(
               (part): part is SessionV1.ToolPart => part.type === "tool" && isOrphanedInterruptedTool(part),
@@ -1175,7 +1177,7 @@ const layer = Layer.effect(
 
           // The last 10% of the window is reserved: past it, maintenance finishes before the next request.
           if (lastFinished && lastFinished.summary !== true && tokenCount(lastFinished.tokens) >= hardLimit(model))
-            yield* continuity.compact({ sessionID, canRecall })
+            yield* continuity.compact({ sessionID, canRecall, model })
 
           const agent = yield* agents.get(lastUser.agent)
           if (!agent) {
@@ -1187,51 +1189,35 @@ const layer = Layer.effect(
           }
           const maxSteps = agent.steps ?? Infinity
           const isLastStep = step >= maxSteps
-
-          const msg: SessionV1.Assistant = {
-            id: MessageID.ascending(),
-            parentID: lastUser.id,
-            role: "assistant",
-            mode: agent.id ?? agent.name,
-            agent: agent.id ?? agent.name,
-            variant: lastUser.model.variant,
-            path: { cwd: ctx.directory, root: ctx.worktree },
-            cost: 0,
-            tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-            modelID: model.id,
-            providerID: model.providerID,
-            time: { created: Date.now() },
-            sessionID,
+          const admitted = yield* continuity.admit({ sessionID, messages: msgs, originalRequest, expectedUserID: lastUser.id, model,
+            canRecall: model.capabilities.toolcall && lastUser.tools?.context_recall !== false &&
+              Permission.evaluate("context_recall", sessionID, agent.permission, session.permission ?? []).action !== "deny" }).pipe(Effect.result)
+          if (admitted._tag === "Failure" && ["complete-prefix-caller-stale", "complete-prefix-admission-stale"].includes(admitted.failure.reason)) {
+            step--
+            continue
           }
-          yield* sessions.updateMessage(msg)
 
-          const finalizeInterruptedAssistant = Effect.gen(function* () {
-            if (msg.time.completed) return
-            msg.error ??= MessageV2.fromError(new DOMException("Aborted", "AbortError"), {
-              providerID: msg.providerID,
-              aborted: true,
-            })
-            msg.time.completed = Date.now()
-            yield* sessions.updateMessage(msg)
-          })
+          const msg = PromptContinuity.assistant(lastUser, agent, model, sessionID, ctx.directory, ctx.worktree)
+          if (admitted._tag === "Failure") {
+            yield* PromptContinuity.fault(msg, new SessionV1.ContextOverflowError({ message: `Continuity admission failed: ${admitted.failure.reason}` }).toObject(),
+              sessions, (error) => events.publish(Session.Event.Error, { sessionID, error }))
+            break
+          }
+          const allocated = { value: false }
 
-          const handle = yield* processor
-            .create({
-              assistantMessage: msg,
-              sessionID,
-              model,
-            })
-            .pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
+          const finalizeInterruptedAssistant = Effect.suspend(() => PromptContinuity.interrupted(msg, allocated.value, sessions))
+
+          const proxy = yield* PromptContinuity.proxy(msg)
 
           const outcome: "break" | "continue" = yield* Effect.gen(function* () {
             // Tools read this history when they run. Working memory needs their recall capability to choose
             // what the model is sent, so it is refilled with that choice once continuity prepares it.
             const sent = [...msgs]
             const tools = yield* SessionNativeTools.resolve({
-              agent,
+              agent, canRecall: () => canRecall,
               session,
               model,
-              processor: handle,
+              processor: proxy.processor,
               messages: sent,
             }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
 
@@ -1252,9 +1238,8 @@ const layer = Layer.effect(
             if (step === 1)
               yield* summary.summarize({ sessionID, messageID: lastUser.id }).pipe(Effect.ignore, Effect.forkIn(scope))
 
-            yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: msgs })
-
-            const prepared = yield* continuity.prepare({ sessionID, messages: msgs, canRecall })
+            const prepared = admitted.success
+            yield* plugin.trigger("experimental.chat.messages.transform", {}, { messages: prepared.messages })
             sent.splice(0, sent.length, ...prepared.messages)
 
             const [skills, env, instructions, mcpInstructions, modelMsgs] = yield* Effect.all([
@@ -1289,12 +1274,25 @@ const layer = Layer.effect(
               model,
               toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,
             }
+            const checked = yield* PromptContinuity.check(streamInput, sessions, llm)
+            if (checked.kind === "stale") { step--; return "continue" }
+            if (checked.kind === "failed") {
+              yield* PromptContinuity.fault(msg, checked.error, sessions, (error) => events.publish(Session.Event.Error, { sessionID, error }))
+              return "break"
+            }
+            yield* sessions.updateMessage(msg)
+            allocated.value = true
+            const handle = yield* processor.create({ assistantMessage: msg, sessionID, model }).pipe(Effect.onInterrupt(() => finalizeInterruptedAssistant))
+            yield* proxy.bind(handle)
+            const planned = { ...streamInput, prepared: checked.plan }
             yield* continuity.observe({
               sessionID,
-              request: streamInput,
+              request: llm.receipt?.(checked.plan) ?? planned,
               messageIDs: prepared.messages.map((message) => message.info.id),
+              sources: prepared.messages.flatMap((message) => sourceHistory.find((source) => source.info.id === message.info.id) ?? []),
+              responseMessageID: handle.message.id,
             })
-            const result = yield* handle.process(streamInput)
+            const result = yield* handle.process(planned)
 
             if (structured !== undefined) {
               handle.message.structured = structured
@@ -1359,7 +1357,7 @@ const layer = Layer.effect(
             }
             // A provider overflow (no finish) forces a pass; a step past the window's input limit only checks it.
             if (result === "compact") {
-              const shrunk = yield* continuity.compact({ sessionID, canRecall, force: !handle.message.finish })
+              const shrunk = yield* continuity.compact({ sessionID, canRecall, model, force: !handle.message.finish })
               // Retrying an overflow that maintenance could not shrink would repeat it forever.
               if (!handle.message.finish && shrunk !== "applied" && shrunk !== "masked") {
                 const message = "Session too large: context maintenance could not bring it under the model limit"
@@ -1372,7 +1370,7 @@ const layer = Layer.effect(
             } else if (!handle.message.error) yield* continuity.start({ sessionID, message: handle.message, canRecall })
             return "continue" as const
           }).pipe(
-            Effect.ensuring(instruction.clear(handle.message.id)),
+            Effect.ensuring(instruction.clear(msg.id)),
             Effect.onInterrupt(() => finalizeInterruptedAssistant),
           )
           if (outcome === "break") break

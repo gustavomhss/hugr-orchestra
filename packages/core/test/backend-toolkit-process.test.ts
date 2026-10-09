@@ -18,9 +18,10 @@ type Config = {
   waitFile?: string
   treeArgs?: string[]
   stopping?: string
+  diagnosticSecret?: boolean
 }
 
-// A real Bun interpreter executes the fixture npm CLI on both OSes; no service or process result is mocked.
+// A real Node interpreter executes the fixture npm CLI; renaming Bun to node changes its -e argv handling.
 const fixture = Effect.gen(function* () {
   const root = yield* Effect.acquireRelease(
     Effect.promise(async () => realpath(await mkdtemp(path.join(tmpdir(), "backend-toolkit-process-")))),
@@ -32,7 +33,9 @@ const fixture = Effect.gen(function* () {
   const windows = process.platform === "win32"
   yield* Effect.promise(async () => {
     await mkdir(path.join(home, "bin"), { recursive: true })
-    await copyFile(process.execPath, path.join(home, "bin", windows ? "node.exe" : "node"))
+    const node = Bun.which("node")
+    if (!node) throw new Error("Toolkit process fixture requires a real Node interpreter")
+    await copyFile(node, path.join(home, "bin", windows ? "node.exe" : "node"))
     const npm = path.join(home, windows ? "bin" : "lib", "node_modules", "npm", "bin")
     await mkdir(npm, { recursive: true })
     await writeFile(
@@ -46,6 +49,10 @@ writeFileSync(path.join(process.env.npm_config_cache, "..", "call.json"), JSON.s
   notifier: process.env.npm_config_update_notifier, inherited: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER,
 }))
 appendFileSync(path.join(process.env.npm_config_cache, "..", "starts.log"), process.pid + "\\n")
+if (config.diagnosticSecret) {
+  process.stdout.write("ghp_" + "x".repeat(36) + "\\n" + " harmless".repeat(2000))
+  process.stderr.write("fixture installer failure\\n")
+}
 if (config.output) {
   const fd = config.output === "stdout" ? 1 : 2
   const chunk = Buffer.alloc(1024 * 1024, 120)
@@ -99,7 +106,7 @@ if (config.treeArgs) {
     root,
     directory,
     install,
-    worker: (config: Config) => BackendToolkit.hosted(root, engine(config), runtime, directory, host.target, true),
+    worker: (config: Config) => BackendToolkit.hosted(root, engine(config), { ...BackendToolkitManifest.RUNTIMES, node: runtime }, directory, host.target, true),
   }
 })
 
@@ -112,7 +119,7 @@ async function until(check: () => Promise<boolean>) {
 }
 
 it.live(
-  "toolkit install runs through Omni with staging cwd, inherited env and npm overrides",
+  "toolkit install runs through Omni with staging cwd, isolated installer env and npm overrides",
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
@@ -127,7 +134,7 @@ it.live(
       expect(call.argv).toEqual(["ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"])
       expect(call.cache).toBe(path.join(f.root, "cache", "npm"))
       expect(call.notifier).toBe("false")
-      expect(call.inherited).toBe(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
+      expect(call.inherited).toBeUndefined()
       expect(yield* PinnedArtifact.installed(f.directory)).toBe(true)
       expect(yield* Effect.promise(() => readFile(path.join(f.directory, "package-lock.json"), "utf8"))).toBe("{}")
     }),
@@ -144,7 +151,7 @@ it.live(
           Effect.flip,
           Effect.map((error) => error.reason),
         ),
-      ).toBe("toolkit-not-ready:failed:orval:install:npm")
+      ).toStartWith("toolkit-not-ready:failed:orval:install:npm:exit:3:")
       expect(yield* PinnedArtifact.installed(f.directory)).toBe(false)
       expect(yield* Effect.promise(() => readdir(path.dirname(f.directory)))).toEqual([])
     }),
@@ -161,13 +168,25 @@ it.live(
             Effect.flip,
             Effect.map((error) => error.reason),
           ),
-        ).toBe("toolkit-not-ready:failed:orval:install:npm")
+        ).toContain("Output exceeded 64 MiB")
         expect(yield* PinnedArtifact.installed(f.directory)).toBe(false)
         expect(yield* Effect.promise(() => readdir(path.dirname(f.directory)))).toEqual([])
       }),
     120_000,
   )
 })
+
+it.live(
+  "nonzero installer stdout is inspected for secrets before retaining its diagnostic tail",
+  () => Effect.gen(function* () {
+    const f = yield* fixture
+    const failure = yield* f.install({ exitCode: 3, diagnosticSecret: true }).pipe(Effect.flip)
+    expect(failure.reason).toBe("toolkit-not-ready:failed:orval:install:npm:details-redacted")
+    expect(yield* PinnedArtifact.installed(f.directory)).toBe(false)
+    expect(yield* Effect.promise(() => readdir(path.dirname(f.directory)))).toEqual([])
+  }),
+  30_000,
+)
 
 it.live(
   "canceling one shared toolkit waiter leaves the other waiter and one install running",
@@ -285,7 +304,7 @@ await server.stop(true)
       expect({ code, stderr }).toEqual({ code: 0, stderr: "" })
       const report = JSON.parse(stdout.trim())
       expect(report.first.tag).toBe("BackendToolkit.NotReady")
-      expect(report.first.reason).toContain("toolkit-not-ready:failed:sqlc:defect:")
+      expect(report.first.reason).toContain("toolkit-not-ready:failed:sqlc:acquisition-defect:")
       expect(report.first.reason).toContain("missing-addon.node")
       expect(report.second).toEqual(report.first)
       expect(report.state[0].status).toBe("failed")

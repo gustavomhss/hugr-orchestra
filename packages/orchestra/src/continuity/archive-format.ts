@@ -28,16 +28,20 @@ const item = Schema.Struct({
   fields: Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Array(Schema.String)])),
   src: Schema.Array(Schema.String),
 })
+const artifactFields = { parentID: SessionID, producerID: SessionID, boundary: MessageID, coveredThrough: MessageID,
+  items: Schema.Array(item), next: Schema.Int, text: Schema.String }
+const artifact = Schema.Union([
+  Schema.Struct({ version: Schema.Literal(4), ...artifactFields, tailStart: MessageID }),
+  Schema.Struct({ version: Schema.Literal(5), ...artifactFields, now: Schema.Struct({ doing: Schema.NonEmptyString, next: Schema.NonEmptyString,
+    src: Schema.Array(Schema.String) }), covered: Schema.Array(Schema.Struct({ id: MessageID, digest: Schema.String.check(Schema.isPattern(hashPattern)) })) }),
+])
 const memory = Schema.Struct({
   version: Schema.Literal(1),
   sessionID: Schema.String,
   entry: Schema.NullOr(Schema.Struct({
     boundary: MessageID,
-    tailStart: MessageID,
-    artifact: Schema.Struct({
-      version: Schema.Literal(4), parentID: SessionID, producerID: SessionID, boundary: MessageID, coveredThrough: MessageID,
-      tailStart: MessageID, items: Schema.Array(item), next: Schema.Int, text: Schema.String,
-    }),
+    tailStart: Schema.optional(MessageID),
+    artifact,
   })),
   masks: Schema.Array(Schema.Tuple([Schema.NonEmptyString, Schema.String.check(Schema.isPattern(hashPattern))])),
 })
@@ -73,7 +77,8 @@ export function readStored(text: string, sessionID: SessionID): StoredMemory {
   const result = Option.isSome(json) ? decodeStored(json.value) : Option.none()
   if (Option.isNone(result) || result.value.sessionID !== sessionID) throw new Error("archive-corrupt-memory")
   const entry = result.value.entry
-  const context = entry ? { sessionID, boundary: entry.boundary, tailStart: entry.tailStart, text: entry.artifact.text,
+  if (entry?.artifact.version === 5 && entry.tailStart !== undefined) throw new Error("archive-corrupt-memory")
+  const context = entry ? { sessionID, boundary: entry.boundary, ...(entry.artifact.version === 4 ? { tailStart: entry.tailStart } : {}), text: entry.artifact.text,
     artifact: { ...entry.artifact, items: [...entry.artifact.items] } } : undefined
   if (context && !hasArtifact(context)) throw new Error("archive-corrupt-memory")
   return { context, masks: result.value.masks.map(([part, reference]) => [part, reference]) }

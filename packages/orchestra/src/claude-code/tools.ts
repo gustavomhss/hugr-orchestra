@@ -1,19 +1,17 @@
 // Orchestra's read, edit and write, handed to Claude Code as in-process SDK tools. Claude Code calls them by name; the
 // handler runs Orchestra's own implementation on the mirrored session and writes the result on the mirrored part.
 import { Cause, Effect, Exit } from "effect"
-import { z } from "zod"
-import { createSdkMcpServer, tool } from "@anthropic-ai/claude-agent-sdk"
+import { createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk"
+import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import type * as Tool from "@/tool/tool"
+import type { Tool } from "@/tool/tool"
+import { ToolJsonSchema } from "@/tool/json-schema"
+import { PartID } from "@/session/schema"
 
 export const SERVER = "orchestra"
 
-const SHAPES = {
-  read: { filePath: z.string(), offset: z.number().int().optional(), limit: z.number().int().positive().optional() },
-  edit: { filePath: z.string(), oldString: z.string(), newString: z.string(), replaceAll: z.boolean().optional() },
-  write: { filePath: z.string(), content: z.string() },
-}
-export const NAMES = Object.keys(SHAPES).map((name) => `mcp__${SERVER}__${name}`)
+export const IDS = ["read", "edit", "write", "context_recall", "context_compact"]
+export const NAMES = IDS.map((name) => `mcp__${SERVER}__${name}`)
 
 /** A rejected or failed call, as the model reads it. */
 export function failure(cause: Cause.Cause<unknown>) {
@@ -26,18 +24,22 @@ export function failure(cause: Cause.Cause<unknown>) {
 
 export function server(input: {
   defs: Tool.Def[]
-  run: <A>(effect: Effect.Effect<A, unknown, any>) => Promise<A>
+  run: <A>(effect: Effect.Effect<A, unknown>) => Promise<A>
   /** Waits for the mirrored part of the next call of this Orchestra tool. */
   claim: (tool: string) => Effect.Effect<SessionV1.ToolPart>
   context: (part: SessionV1.ToolPart) => Tool.Context
+  messages?: () => Effect.Effect<SessionV1.WithParts[]>
   complete: (part: SessionV1.ToolPart) => Effect.Effect<void>
 }) {
-  const handler = (name: keyof typeof SHAPES) => async (args: Record<string, unknown>) => input.run(Effect.gen(function* () {
-    const def = input.defs.find((item) => item.id === name)
+  const defs = input.defs.filter((def) => IDS.includes(def.id))
+  const handler = (name: string, args: Record<string, unknown>) => input.run(Effect.gen(function* () {
+    const def = defs.find((item) => item.id === name)
     if (!def) return { content: [{ type: "text" as const, text: `Orchestra tool ${name} is not available.` }], isError: true }
     const part = yield* input.claim(name)
     const start = part.state.status === "running" ? part.state.time.start : Date.now()
-    const exit = yield* def.execute(args as never, input.context(part)).pipe(Effect.exit)
+    const context = input.context(part)
+    if (input.messages) context.messages = yield* input.messages()
+    const exit = yield* def.execute(args as never, context).pipe(Effect.exit)
     if (Exit.isFailure(exit)) {
       const text = failure(exit.cause)
       yield* input.complete({ ...part, state: { status: "error", input: args, error: text, time: { start, end: Date.now() } } })
@@ -45,19 +47,24 @@ export function server(input: {
     }
     const result = exit.value
     yield* input.complete({ ...part, state: { status: "completed", input: args, output: result.output, title: result.title,
-      metadata: result.metadata, time: { start, end: Date.now() } } })
+      metadata: result.metadata, time: { start, end: Date.now() }, attachments: result.attachments?.map((attachment) => ({
+        ...attachment, id: PartID.ascending(), sessionID: part.sessionID, messageID: part.messageID,
+      })) } })
     const images = (result.attachments ?? []).flatMap((file) => {
       const match = /^data:([^;,]+);base64,(.*)$/s.exec(file.url)
       return match && file.mime.startsWith("image/") ? [{ type: "image" as const, data: match[2], mimeType: match[1] }] : []
     })
     return { content: [{ type: "text" as const, text: result.output }, ...images] }
   }))
-  return createSdkMcpServer({
-    name: SERVER,
-    tools: (Object.keys(SHAPES) as (keyof typeof SHAPES)[]).flatMap((name) => {
-      const def = input.defs.find((item) => item.id === name)
-      // Loaded up front: Claude Code otherwise defers MCP tools behind a search, and the model falls back to its own.
-      return def ? [tool(name, def.description, SHAPES[name], handler(name), { alwaysLoad: true })] : []
-    }),
-  })
+  // SDK tool() accepts a Zod raw object only. Recall is a closed union, so expose the actual host JSON schemas through
+  // the MCP protocol instead of weakening that union into optional fields. Tool.execute remains the validator.
+  const server = createSdkMcpServer({ name: SERVER, tools: [] })
+  server.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: defs.map((def) => ({
+    name: def.id, description: def.description, inputSchema: { type: "object" as const, ...ToolJsonSchema.fromTool(def) },
+    _meta: { "anthropic/alwaysLoad": true },
+  })) }))
+  server.instance.server.setRequestHandler(CallToolRequestSchema, (request) => handler(request.params.name, request.params.arguments ?? {}))
+  return server
 }
+
+export * as ClaudeCodeTools from "./tools"

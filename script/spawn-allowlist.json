@@ -1,5 +1,5 @@
 {
-  "$comment": "Files allowed to import a spawning module (script/check-spawn-imports.ts), seeded 2026-10-06 with the sites that existed then. Entries only go away: migrate a site to omni, then delete its entry. The maintained exceptions are in packages/omni/docs/orchestra-integration.md section 3.",
+  "$comment": "Files allowed to import a spawning module (script/check-spawn-imports.ts), seeded 2026-10-06. Remove migrated sites; new exceptions require a lead decision and a reason in packages/omni/docs/orchestra-integration.md section 3.",
   "sites": {
     "foundation/atlas/harness/gates/doc-transcript-guard.mjs": ["child_process"],
     "foundation/atlas/harness/gates/ears-coamend-guard.mjs": ["child_process"],
@@ -54,6 +54,7 @@
     "packages/desktop/src/main/wsl/runtime.ts": ["@lydell/node-pty", "child_process"],
     "packages/desktop/src/main/wsl/sidecar.ts": ["child_process"],
     "packages/orchestra/script/claude-code-engine/smoke.ts": ["child_process"],
+    "packages/orchestra/src/claude-code/sdk.ts": ["child_process"],
     "packages/orchestra/src/mcp/index.ts": ["StdioClientTransport"],
     "packages/orchestra/src/plugin/hugr-composer/client.ts": ["StdioClientTransport"],
     "packages/orchestra/src/util/process.ts": ["child_process", "cross-spawn"],

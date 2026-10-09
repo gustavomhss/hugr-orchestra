@@ -164,7 +164,7 @@ function records(nonce: string): Entry[] {
       const record = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as Entry
       if (record.nonce !== nonce || !Number.isSafeInteger(record.pid) || record.pid <= 0 ||
         typeof record.startTime !== "string" || !record.startTime)
-        throw new Error(`fixture birth identity missing creation time or invalid record: ${path.join(dir, file)}`)
+        throw new Error(`fixture birth identity missing creation time or invalid record: ${path.join(dir, file)}: ${JSON.stringify(record)}`)
       return record
     })
 }

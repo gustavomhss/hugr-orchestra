@@ -170,7 +170,7 @@ it.effect("isolated request preserves parent model settings and dedicated role, 
   expect(call.toolChoice).toBe("none")
   expect(call.system).toEqual([])
   expect(call.agent.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
-  expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v4")
+  expect(call.agent.prompt).toStartWith("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(call.agent.prompt).toContain("do not continue the task, call tools or answer anyone")
   expect(call.agent.prompt).toContain("There is no size limit")
   expect(call.user.system).toBeUndefined()
@@ -209,9 +209,10 @@ it.effect("partial, refused, nonterminal and post-finish streams cannot become m
     [...text('{"memory":"partial'), LLMEvent.finish({ reason: "stop" })],
   ]) expect((yield* execute(Stream.fromIterable(events))).artifact).toBeUndefined()
   const failure = new Error("transport failed")
-  const exit = yield* execute(Stream.concat(Stream.fromIterable(text()), Stream.fail(failure))).pipe(Effect.exit)
-  expect(Exit.isFailure(exit)).toBe(true)
-  if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBe(failure)
+  const result = yield* execute(Stream.concat(Stream.fromIterable(text()), Stream.fail(failure)))
+  expect(result.pass.failure).toBe("provider")
+  expect(result.artifact).toBeUndefined()
+  expect(result.requests).toHaveLength(1)
 }))
 
 it.effect("a failed check gets one cache-hot retry with the rejected reply and the check", () => Effect.gen(function* () {
@@ -239,7 +240,10 @@ it.effect("a failed check gets one cache-hot retry with the rejected reply and t
   expect(huge.pass).toMatchObject({ check: "C1", retried: false })
   expect(huge.pass.skip).toBeUndefined()
   // A transport failure is not a check failure and is never retried.
-  expect((yield* execute([Stream.fail(new Error("down")), stopped()]).pipe(Effect.exit))._tag).toBe("Failure")
+  const down = yield* execute([Stream.fail(new Error("down")), stopped()])
+  expect(down.pass.failure).toBe("provider")
+  expect(down.artifact).toBeUndefined()
+  expect(down.requests).toHaveLength(1)
 }))
 
 it.effect("the memory has no size limit; only the producer's own input limit can skip a pass", () => Effect.gen(function* () {
@@ -294,7 +298,7 @@ it.effect("verbosity only adjusts supported defaults, respecting explicit model 
   }
 }))
 
-for (const phase of ["lookup", "stream"] as const) it.effect(`180-second timeout includes ${phase}`, () => Effect.gen(function* () {
+for (const phase of ["lookup", "stream"] as const) it.effect(`600-second timeout includes ${phase}`, () => Effect.gen(function* () {
   const ready = yield* Deferred.make<void>()
   const captured = input()
   const wait = Deferred.succeed(ready, undefined).pipe(Effect.andThen(Effect.never))
@@ -303,12 +307,15 @@ for (const phase of ["lookup", "stream"] as const) it.effect(`180-second timeout
     llm: { stream: () => Stream.fromEffect(wait) },
   }, host()).pipe(Effect.exit, Effect.forkChild)
   yield* Deferred.await(ready)
-  yield* TestClock.adjust("179 seconds")
+  yield* TestClock.adjust("599 seconds")
   expect(yield* Effect.sync(() => fiber.pollUnsafe())).toBeUndefined()
   yield* TestClock.adjust("1 second")
   const exit = yield* Fiber.join(fiber)
-  expect(Exit.isFailure(exit)).toBe(true)
-  if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toMatchObject({ _tag: "TimeoutError" })
+  expect(Exit.isSuccess(exit)).toBe(true)
+  if (Exit.isSuccess(exit)) {
+    expect(exit.value.failure).toBe("timeout")
+    expect(exit.value.artifact).toBeUndefined()
+  }
 }))
 
 it.effect("a span inside one long turn takes the model from that turn's user message in the history", () => Effect.gen(function* () {
