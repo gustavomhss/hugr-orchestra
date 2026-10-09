@@ -206,6 +206,16 @@ const dispatch = Effect.fn("TaskBackendResultTest.dispatch")(function* (
 
 const workResult = (metadata: object) => ("workResult" in metadata ? metadata.workResult : undefined)
 
+function requireOriginalTask(message: SessionMessage.Message | undefined, callID: string) {
+  if (message?.type !== "assistant" || message.agent !== "maestro") throw new Error("actual native Task assistant missing")
+  const calls = message.content.filter((part) => part.type === "tool" && part.id === callID)
+  const call = calls[0]
+  if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed || !("structured" in call.state))
+    throw new Error("actual native original Task call missing")
+  return { call: { ...call, state: call.state },
+    metadata: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata) }
+}
+
 // Runs a background backend specialist Task whose child durably writes `text` as its final message, and returns the parent's
 // completion notice: the existing background delivery (F4 cl.35) and the only place the final result can still land.
 const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(function* (
@@ -237,11 +247,7 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
         .where(eq(SessionMessageTable.id, SessionMessage.ID.make(parent.assistant.id))).get().pipe(Effect.orDie)
       if (!row) throw new Error("actual native Task missing before resume")
       const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
-      const calls = message.type === "assistant" ? message.content.filter((part) => part.type === "tool" && part.id === callID) : []
-      const call = calls[0]
-      if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state))
-        throw new Error("actual native Task call missing before resume")
-      const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
+      const metadata = requireOriginalTask(message, callID).metadata
       if (subagent === "walt") expect(metadata).toHaveProperty("upstreamSettlement")
       if (subagent !== "walt") expect(metadata).not.toHaveProperty("upstreamSettlement")
       yield* Deferred.succeed(resumed, undefined)
@@ -267,31 +273,14 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
         return admitted
       }
       yield* Deferred.await(release)
+      const returned = yield* ops(text, written, error).prompt(input)
+      if (returned.info.role !== "assistant") throw new Error("actual background fixture assistant missing")
       const info = yield* sessions.updateMessage({
-        id: MessageID.ascending(),
-        role: "assistant",
-        parentID: input.messageID ?? MessageID.ascending(),
-        sessionID: input.sessionID,
-        mode: subagent,
-        agent: subagent,
-        cost: 0,
-        path: { cwd: "/tmp", root: "/tmp" },
-        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-        modelID: ref.modelID,
-        providerID: ref.providerID,
-        time: { created: Date.now(), completed: Date.now() },
-        finish: "stop",
-        ...(error ? { error } : {}),
+        ...returned.info,
+        time: { ...returned.info.time, completed: Date.now() },
       })
-      written.push(info.id)
-      const part = yield* sessions.updatePart({
-        id: PartID.ascending(),
-        messageID: info.id,
-        sessionID: input.sessionID,
-        type: "text",
-        text,
-      })
-      return { info, parts: [part] }
+      const parts = yield* Effect.forEach(returned.parts, (part) => sessions.updatePart(part))
+      return { info, parts }
     }).pipe(Effect.orDie),
   }
   const tool = yield* TaskTool
@@ -335,11 +324,8 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     const rows = yield* database.db.select().from(SessionMessageTable)
       .where(eq(SessionMessageTable.session_id, parent.chat.id)).all().pipe(Effect.orDie)
     const messages = rows.map((row) => Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }))
-    const message = messages.find((message) => message.id === parent.assistant.id)
-    const calls = message?.type === "assistant" ? message.content.filter((part) => part.type === "tool" && part.id === callID) : []
-    const call = calls[0]
-    if (calls.length !== 1 || call?.type !== "tool" || !("structured" in call.state)) throw new Error("actual native Task readback missing")
-    const metadata = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)
+    const originalTask = requireOriginalTask(messages.find((message) => message.id === SessionMessage.ID.make(parent.assistant.id)), callID)
+    const metadata = originalTask.metadata
     const receipt = subagent === "walt"
       ? Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
       : undefined
@@ -349,7 +335,7 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     if (notice?.type !== "synthetic") throw new Error("actual native synthetic projection missing")
     if (receipt) expect(metadata.workResult).toEqual(receipt.workResult)
     if (!receipt) expect(metadata).not.toHaveProperty("upstreamSettlement")
-    return { call, receipt, notice }
+    return { call: originalTask.call, receipt, notice }
   }) : undefined
   return {
     started: result.metadata,
