@@ -13,6 +13,8 @@ import { randomUUID } from "node:crypto"
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { performance } from "node:perf_hooks"
+import { WindowsProcessQuery } from "./windows-process-query.ts"
 
 // One source for the start time, run inside the fixture processes and by the oracle: Linux reads /proc/<pid>/stat
 // field 22, macOS asks `ps -o lstart=` in UTC/C once for all pids and prefixes UTC:, Windows makes one CIM query.
@@ -104,6 +106,7 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import { fileURLToPath } from 'node:url';
 const settings = JSON.parse(readFileSync(import.meta.filename + '.config', 'utf8'));
+if (process.versions.bun || process.release.name !== 'node') throw Error('fixture birth query failed: native Node required');
 // Its Bun namespace self-reexport is extensionless. Load the unchanged implementation with Node's own TS
 // stripper, removing only that closed self-projection boundary; CIM and decode remain the authoritative exports.
 const source = readFileSync(fileURLToPath(settings.decoder), 'utf8');
@@ -112,6 +115,8 @@ if (!source.includes(projection)) throw Error('fixture birth query failed: Windo
 const javascript = stripTypeScriptTypes(source.replace(projection, ''), {mode: 'strip'});
 const WindowsInventory = await import('data:text/javascript;base64,' + Buffer.from(javascript).toString('base64'));
 const requested = JSON.parse(process.argv[2]);
+if (Array.isArray(requested) ? requested.some(pid => !Number.isSafeInteger(pid) || pid <= 0)
+  : typeof requested?.nonce !== 'string' || !requested.nonce) throw Error('fixture inventory request invalid');
 const output = {stdout: '', stderr: '', error: '', timedOut: false};
 const child = spawn('pwsh', ['-NoProfile', '-NonInteractive', '-EncodedCommand',
   Buffer.from('[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ' + WindowsInventory.CIM, 'utf16le').toString('base64')],
@@ -125,7 +130,9 @@ try {
   await Promise.race([closed, new Promise((_, reject) => setTimeout(() => reject(Error('query OS/stdio close unconfirmed')), 12000).unref())]);
   if (output.timedOut || output.error || child.exitCode !== 0) throw Error('fixture birth query failed: ' + (output.error || output.stderr || 'query deadline expired'));
   const rows = WindowsInventory.decode(JSON.parse(output.stdout), child.pid);
-  process.stdout.write(JSON.stringify(Object.fromEntries(rows.filter(row => requested.includes(row.pid)).map(row => [row.pid, row.startTime]))));
+  process.stdout.write(JSON.stringify(Array.isArray(requested)
+    ? Object.fromEntries(rows.filter(row => requested.includes(row.pid)).map(row => [row.pid, row.startTime]))
+    : rows.filter(row => row.pid !== process.pid && row.pid !== process.ppid && row.args?.includes(requested.nonce)).map(row => row.pid)));
 } catch (error) {console.error('fixture birth query failed: ' + String(error)); process.exitCode = 1}
 finally {clearTimeout(timer); if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')}
 `
@@ -139,12 +146,8 @@ export function tree(depth = 2) {
   const dir = path.join(os.tmpdir(), nonce)
   mkdirSync(dir)
   if (process.platform === "win32") {
-    const node = spawnSync(process.env.OMNI_CAMPAIGN_NODE ?? "node", ["-p", "process.execPath"], {
-      encoding: "utf8", windowsHide: true, timeout: 10_000, killSignal: "SIGKILL",
-    })
-    if (node.error || node.status !== 0 || !node.stdout.trim()) throw new Error(`fixture birth query failed: native Node bootstrap unavailable: ${node.error ?? node.stderr}`)
     writeFileSync(path.join(dir, "identity.mjs"), WINDOWS_READER)
-    writeFileSync(path.join(dir, "identity.mjs.config"), JSON.stringify({ node: node.stdout.trim(),
+    writeFileSync(path.join(dir, "identity.mjs.config"), JSON.stringify({ node: WindowsProcessQuery.nodeExecutable(),
       decoder: new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href }))
   }
   return {
@@ -183,7 +186,9 @@ export async function alive(nonce: string) {
   // Bun's Windows signal-0 result can miss a live child; the authoritative CIM snapshot decides there.
   const running = process.platform === "win32" ? records(nonce) : records(nonce).filter((record) => signalable(record.pid))
   if (running.length === 0) return 0
-  const now = startTimes(running.map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
+  const now = process.platform === "win32"
+    ? JSON.parse(await windowsQuery(nonce, running.map((record) => record.pid))) as Record<string, string>
+    : startTimes(running.map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
   return running.filter((record) => now[record.pid] === record.startTime).length
 }
 
@@ -202,7 +207,9 @@ export async function gone(nonce: string, timeoutMs = 20_000) {
 
 /** Kills whatever is left of the tree (test cleanup; never an assertion). */
 export async function reap(nonce: string) {
-  const now = startTimes(records(nonce).map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
+  const now = process.platform === "win32"
+    ? JSON.parse(await windowsQuery(nonce, records(nonce).map((record) => record.pid))) as Record<string, string>
+    : startTimes(records(nonce).map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
   for (const record of records(nonce)) {
     if (now[record.pid] !== record.startTime) continue
     try {
@@ -213,8 +220,8 @@ export async function reap(nonce: string) {
 
 /**
  * The final sweep, independent of the records: the pids of every process whose command line holds the nonce. macOS
- * needs `ps -axww` (BSD ps truncates args); Windows makes one CIM query, filtered here, excluding its own powershell,
- * with one retry on an RPC error.
+ * needs `ps -axww` (BSD ps truncates args); Windows uses the native Node watchdog and authoritative CIM decoder,
+ * excluding query helpers, with one RPC retry inside an absolute 20 s query budget.
  */
 export async function sweep(nonce: string) {
   if (process.platform !== "win32") {
@@ -231,23 +238,24 @@ export async function sweep(nonce: string) {
       .filter((line) => line.includes(nonce))
       .map((line) => Number(line.trim().split(/\s+/)[0]))
   }
+  const found: unknown = JSON.parse(await windowsQuery(nonce))
+  if (!Array.isArray(found) || found.some((pid) => !Number.isSafeInteger(pid) || pid <= 0))
+    throw new Error("fixture inventory sweep returned invalid PIDs")
+  return found as number[]
+}
+
+async function windowsQuery(nonce: string, pids?: number[]) {
+  if (!nonce) throw new Error("fixture inventory query requires a nonce")
+  const deadline = performance.now() + 20_000
   for (let attempt = 0; ; attempt++) {
-    const out = spawnSync(
-      "powershell",
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress",
-      ],
-      { encoding: "utf8", windowsHide: true, maxBuffer: 64 * 1024 * 1024 },
-    )
-    if (out.status === 0) {
-      const rows = JSON.parse(out.stdout) as { ProcessId: number; CommandLine: string | null }[]
-      return rows
-        .filter((row) => row.ProcessId !== out.pid && row.CommandLine?.includes(nonce))
-        .map((row) => row.ProcessId)
-    }
-    if (attempt > 0 || !/RPC/i.test(out.stderr)) throw new Error(`Get-CimInstance failed: ${out.stderr}`)
+    const remaining = Math.min(15000, deadline - performance.now())
+    if (remaining <= 0) throw new Error("fixture inventory query deadline expired")
+    const reply = await WindowsProcessQuery.invoke(WINDOWS_READER,
+      new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href,
+      pids ?? { nonce }, remaining)
+      .then((value) => ({ value }), (error: unknown) => ({ error }))
+    if (performance.now() >= deadline) throw new Error("fixture inventory query deadline expired")
+    if ("value" in reply) return reply.value
+    if (attempt > 0 || !/RPC/i.test(String(reply.error))) throw reply.error
   }
 }
