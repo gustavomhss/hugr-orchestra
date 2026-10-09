@@ -348,14 +348,13 @@ dbIt.live("stored returned-author completion, agent and role conflicts veto eith
     expect(yield* f.read()).toEqual(before)
     yield* f.database.db.update(SessionMessageTable).set({ type: modern.type, data: modern.data }).where(eq(SessionMessageTable.id, modern.id)).run()
   }
-  for (const message of [
-    { ...old, time: { created: old.time.created } },
-    { ...old, agent: "maestro" },
-    SessionV1.User.make({ id: old.id, sessionID: old.sessionID, role: "user", agent: "walt",
-      model: { providerID: old.providerID, modelID: old.modelID }, time: { created: old.time.created } }),
+  const user: Pick<SessionV1.User, "role" | "agent" | "model" | "time"> = { role: "user", agent: "walt",
+    model: { providerID: old.providerID, modelID: old.modelID }, time: { created: legacy.data.time.created } }
+  for (const data of [
+    { ...legacy.data, time: { created: legacy.data.time.created } },
+    { ...legacy.data, agent: "maestro" },
+    user,
   ]) {
-    const encoded = Schema.encodeSync(SessionV1.Info)(message)
-    const { id: _, sessionID: __, ...data } = encoded
     yield* f.database.db.update(MessageTable).set({ data }).where(eq(MessageTable.id, legacy.id)).run()
     yield* f.offer(offered)
     expect(yield* f.read()).toEqual(before)
