@@ -11,7 +11,7 @@ await Effect.runPromise(Effect.gen(function* () {
       Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(text)),
   })
   // A deliberately reads the old state then pauses BEFORE its modifying transaction.
-  yield* storage.read
+  if (process.argv[4] !== "initialize") yield* storage.read
   console.log("READY")
   yield* Effect.promise(() => Bun.stdin.text())
   yield* storage.modify((state) => { state.updates.push(process.argv[3]) })
