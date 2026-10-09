@@ -4,7 +4,7 @@
 
 Use this recipe when the packet assigns Go table models (`table.Table` values and UDT structs), names an authorized output package directory/name, and supplies a disposable Cassandra or Scylla cluster with schema applied. The host compiles owned build `3.0.4+orchestra.cassandra2` (library `3.0.4`, command-only transport adapter) with its private Go toolchain; invoke only `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
 
-Compare project pins against library `3.0.4`; generated imports remain `github.com/scylladb/gocqlx/v3`. The private hash-pinned driver backport retains upstream licenses/notices; [provenance and measured compatibility](https://github.com/gustavomhss/hugr-orchestra/blob/cassandra-metadata/specs/backend-specialist/cassandra-build.md) records driver/artifact pins, catalog behavior and verification limits.
+Compare project pins against library `3.0.4`; generated imports remain `github.com/scylladb/gocqlx/v3`. The private hash-pinned driver backport retains upstream licenses/notices; [provenance and measured compatibility](https://github.com/gustavomhss/hugr-orchestra/blob/dev/specs/backend-specialist/cassandra-build.md) records driver/artifact pins, catalog behavior and verification limits.
 
 The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` for declared loopback endpoints. The Go adapter strictly parses it and uses a fixed-destination Unix broker, without DYLD or clang. Invalid maps or undeclared/LAN/IPv6 addresses fail without TCP fallback. Absent maps retain normal Go TCP for unconfined host probes; sandbox raw TCP stays denied. Never author, change or replace the map/broker.
 

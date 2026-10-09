@@ -205,7 +205,7 @@ F5.25 Representative operations are fixed per engine, as listed in `S/specs/back
 | Engine | Install-time operation |
 | --- | --- |
 | ast-grep | rewrite plus no-match JSON |
-| sqlc | `generate` and `diff` with `--no-database --no-remote` |
+| sqlc | `generate` and `diff` with `--no-remote`; schema-file analysis without a `database` block, otherwise host-authorized database access |
 | ogen | generate from the bundled contract |
 | orval | generate plus mutator bundling via esbuild |
 | datamodel-code-generator | generate plus `--check` |
