@@ -1,7 +1,7 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": "1f4f2929b0153aa4f68757d9aee33d8f18f55589", "measurementRun": null, "measurementAttempt": null}
+{"ready": false, "phase": "measure", "sourceParent": "aec262940e6f86dbf55baf33ab7ebe7ccd91770f", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
 Historical request `7eb2bb766a80f130a8d0758f3337729237b9ea8a` had exact clean source
@@ -11,6 +11,16 @@ This integration retains that request's ancestry but resets `ready: false`.
 The final repaired source freeze must precede a fresh request-only direct child;
 preserved ancestry permits a normal fast-forward of `nix-validation`, without
 rewriting the published failed request or relaxing branch/source identity checks.
+
+Fresh request `9c76824c5ce27849f42685dc3579e3201e6103af` had exact parent
+`aec262940e6f86dbf55baf33ab7ebe7ccd91770f`. Run `37981869304` completed all four
+native measurements and independent completion/control capture successfully.
+Its status is `MEASUREMENT_ONLY_NOT_DISTRIBUTION`; the four candidate hashes have
+not been applied. This integration preserves that request's ancestry and again
+holds `ready: false`, so a later repaired-source request can fast-forward normally.
+The new Core updater candidate changes a recorded package input; the successful
+9c measurement cannot qualify a different fingerprint. Compare the actual final
+source before the next capture/hash-only consumer checkpoint; never relabel artifacts.
 
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
