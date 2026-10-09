@@ -1,12 +1,13 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
+{"ready": true, "phase": "measure", "sourceParent": "1f4f2929b0153aa4f68757d9aee33d8f18f55589", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
-The request above is deliberately inactive. Only the lead, after W6 + Nix are
-ready, publishes a request-only commit on `nix-validation` without `[skip ci]`.
-No request is activated or validation dispatched by this source-fix checkpoint.
+The lead activated this measurement request after the clean integrated source
+freeze `1f4f2929b0153aa4f68757d9aee33d8f18f55589` and the agreed local checks.
+This request-only commit on `nix-validation` dispatches four native measurements;
+it does not certify a dependency hash, consumer build or product closure.
 
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
