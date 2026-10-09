@@ -154,7 +154,7 @@ function packagedPty(executable: string, resources: string) {
     try { api = scoped(specifier) } catch (error) { stop("PTY_ENTRYPOINT_BROKEN", String(error)) }
     if (typeof api.spawn !== "function") stop("PTY_ENTRYPOINT_BROKEN", "spawn export missing")
     const bindings = Object.values(require.cache).map((entry) => entry.filename)
-      .filter((file) => file.startsWith(root + path.sep) && file.endsWith(".node"))
+      .filter((file) => [root, physical(root)].some((dir) => file.startsWith(dir + path.sep)) && file.endsWith(".node"))
     if (!bindings.length) stop("PTY_BINDING_MISSING", "entrypoint loaded no native binding")
     console.log(JSON.stringify({ status: "PACKAGED_PTY_OK", package: specifier, anchor, resolved, bindings,
       exports: { spawn: typeof api.spawn }, electron: process.versions.electron }))
