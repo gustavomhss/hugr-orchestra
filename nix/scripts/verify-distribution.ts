@@ -124,13 +124,17 @@ function packagedPty(executable: string, resources: string) {
     const fs = require("node:fs")
     const path = require("node:path")
     const resources = process.argv[1]
-    const anchor = path.join(resources, "app.asar/out/main/index.js")
-    const scoped = createRequire(anchor)
     const specifier = "@lydell/node-pty-" + process.platform + "-" + process.arch
     const stop = (failureCode, detail) => {
       console.log(JSON.stringify({ status: "PACKAGED_PTY_FAILED", failureCode, detail }))
       process.exit(1)
     }
+    const archive = path.join(resources, "app.asar")
+    const app = JSON.parse(fs.readFileSync(path.join(archive, "package.json"), "utf8"))
+    if (typeof app.main !== "string") stop("PTY_ORACLE_PROTOCOL", "packaged main missing")
+    const anchor = path.resolve(archive, app.main)
+    if (!anchor.startsWith(archive + path.sep) || !fs.existsSync(anchor)) stop("PTY_ORACLE_PROTOCOL", "packaged main missing")
+    const scoped = createRequire(anchor)
     let resolved
     try { resolved = scoped.resolve(specifier) } catch (error) {
       stop(fs.existsSync(path.join(resources, "app.asar/node_modules", specifier, "package.json"))
