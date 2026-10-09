@@ -270,4 +270,227 @@ describe("context_recall ranked archive", () => {
       expect(lexical.references.map((ref) => ref.first)).toEqual(["msg_20assistant"])
     }),
   )
+
+  it.live("counts late matches beyond caps and scans every retained fragment using real filesystem reads", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const chunks = yield* f.archive.publish({
+        sessionID: f.sessionID,
+        messages: Array.from({ length: 46 }, (_, index) =>
+          user(f.sessionID, `late_${String(index).padStart(3, "0")}`, index < 24 ? "unrelated" : "late recovered"),
+        ),
+      })
+      const meter = instrument(f.fs)
+      yield* meter.fs.readFile(f.file(chunks[0].id))
+      expect(meter.calls.reads).toEqual([f.file(chunks[0].id)])
+      meter.reset()
+      const archive = yield* Archive.Service.pipe(
+        Effect.provide(Layer.fresh(Archive.layer)),
+        Effect.provideService(FSUtil.Service, meter.fs),
+      )
+      const first = page(
+        yield* recall({ ...f, archive }, { archive_query: "late recovered", match: "terms", limit: 1 }),
+      )
+      expect(first).toMatchObject({ total: 22, retained: 46, complete: false, next_offset: 1 })
+      expect(first.references[0].first).toBe("msg_late_045")
+      expect(new Set(meter.calls.reads.filter((file) => file.endsWith(".md")))).toEqual(
+        new Set(chunks.map((chunk) => f.file(chunk.id))),
+      )
+      const last = page(yield* recall(f, { archive_query: "late recovered", match: "terms", offset: 21, limit: 1 }))
+      expect(last).toMatchObject({ total: 22, complete: true })
+      expect(last.references[0].first).toBe("msg_late_024")
+      const literal = page(yield* recall(f, { archive_query: "late recovered", limit: 1 }))
+      expect(literal).toMatchObject({ total: 22, continuation: { archive_list: true }, complete: false })
+      expect(literal.references[0].first).toBe("msg_late_024")
+    }),
+  )
+
+  it.live("byte-truncated ranked pages continue at returned rank and reconstruct every match", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const chunks = yield* f.archive.publish({
+        sessionID: f.sessionID,
+        messages: Array.from({ length: 20 }, (_, index) =>
+          user(f.sessionID, `bytes_${String(index).padStart(2, "0")}`, `needle receipt ${'😀"\\\n'.repeat(300)}`),
+        ),
+      })
+      const params = { archive_query: "needle receipt", match: "terms", limit: 20 } as const
+      const first = page(yield* recall(f, params))
+      expect(first.references.length).toBeGreaterThan(0)
+      expect(first.references.length).toBeLessThan(20)
+      expect(first.next_offset).toBe(first.references.length)
+      const collected: string[] = []
+      let current = first
+      while (true) {
+        expect(current.total).toBe(20)
+        collected.push(...current.references.map((ref) => ref.id))
+        expect(collected.length).toBeLessThanOrEqual(20)
+        if (current.complete) break
+        expect(current.next_offset).toBe(current.offset + current.references.length)
+        expect(current.next_offset).toBeGreaterThan(current.offset)
+        expect(current.continuation).toEqual({ ...params, offset: current.next_offset })
+        current = page(yield* recall(f, { ...params, offset: current.next_offset }))
+      }
+      expect(current.next_offset).toBeUndefined()
+      expect(collected).toEqual(chunks.toReversed().map((chunk) => chunk.id))
+    }),
+  )
+
+  it.live("reports honest offsets and oversized metadata without allocating by arbitrary offset", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "offset", "offset receipt")] })
+      const params = { archive_query: "offset receipt", match: "terms" } as const
+      expect(page(yield* recall(f, params)).total).toBe(1)
+      expect(page(yield* recall(f, { ...params, offset: 1 }))).toMatchObject({
+        complete: true,
+        references: [],
+        offset: 1,
+      })
+      for (const offset of [2, Number.MAX_SAFE_INTEGER])
+        expect(yield* recall(f, { ...params, offset })).toEqual({
+          status: "unavailable",
+          reason: "offset_out_of_range",
+          total: 1,
+        })
+      const huge = yield* fixture()
+      yield* huge.archive.publish({
+        sessionID: huge.sessionID,
+        messages: [user(huge.sessionID, "z".repeat(4100), "huge receipt")],
+      })
+      expect(yield* recall(huge, { archive_query: "huge receipt", match: "terms" })).toEqual({
+        status: "unavailable",
+        reason: "metadata_too_large",
+      })
+    }),
+  )
+
+  it.live("fails closed on late corruption and missing data even after page cap or role exclusion", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const chunks = yield* f.archive.publish({
+        sessionID: f.sessionID,
+        messages: Array.from({ length: 24 }, (_, index) =>
+          user(f.sessionID, `integrity_${String(index).padStart(2, "0")}`, "integrity receipt"),
+        ),
+      })
+      const late = chunks[chunks.length - 1]
+      expect(page(yield* recall(f, { archive_query: "integrity receipt", match: "terms", limit: 1 })).total).toBe(24)
+      yield* f.fs.writeFileString(f.file(late.id), late.markdown.replace("integrity receipt", "tampered! receipt"))
+      for (const params of [
+        { archive_query: "integrity receipt", limit: 1 },
+        { archive_query: "integrity receipt", match: "terms", limit: 1 },
+        { archive_query: "absent", match: "terms", role: "assistant" },
+        { archive_query: "integrity receipt", match: "terms", offset: Number.MAX_SAFE_INTEGER },
+      ] as const)
+        expect(yield* recall(f, params)).toEqual({ status: "unavailable", reason: "archive-corrupt-hash" })
+      expect(yield* recall(f, { reference: chunks[0].id, limit: 1 })).toMatchObject({ status: "found" })
+      expect(page(yield* recall(f, { archive_list: true, limit: 1 })).total).toBe(24)
+      yield* f.fs.remove(f.file(late.id))
+      expect(yield* recall(f, { archive_query: "integrity receipt", match: "terms", limit: 1 })).toEqual({
+        status: "unavailable",
+        reason: "archive-unavailable",
+      })
+    }),
+  )
+
+  it.live("keeps session namespace and rejects forged descriptors, foreign envelopes and external links", () =>
+    Effect.gen(function* () {
+      const own = yield* fixture()
+      const foreign = yield* fixture()
+      const [local] = yield* own.archive.publish({
+        sessionID: own.sessionID,
+        messages: [user(own.sessionID, "own", "owned receipt")],
+      })
+      const [other] = yield* foreign.archive.publish({
+        sessionID: foreign.sessionID,
+        messages: [user(foreign.sessionID, "other", "foreign secret")],
+      })
+      expect(page(yield* recall(foreign, { archive_query: "foreign secret", match: "terms" })).total).toBe(1)
+      expect(page(yield* recall(own, { archive_query: "foreign secret", match: "terms" }))).toMatchObject({
+        total: 0,
+        references: [],
+      })
+      expect(yield* recall(own, { reference: other.id })).toEqual({
+        status: "unavailable",
+        source: { reference: other.id },
+        reason: "missing",
+      })
+      yield* own.fs.writeFileString(own.file(other.id), other.markdown)
+      expect(page(yield* recall(own, { archive_query: "foreign secret", match: "terms" })).total).toBe(0)
+      const index = yield* own.fs.readFileString(own.index)
+      const refs = yield* own.archive.list(own.sessionID)
+      for (const reference of [
+        { ...refs[0], title: "invented title" },
+        { ...refs[0], first: MessageID.make("msg_fake"), last: MessageID.make("msg_fake") },
+      ]) {
+        yield* own.fs.writeFileString(
+          own.index,
+          JSON.stringify({ version: 1, sessionID: own.sessionID, references: [reference] }),
+        )
+        expect(yield* recall(own, { archive_query: "owned", match: "terms" })).toEqual({
+          status: "unavailable",
+          reason: "archive-corrupt-content",
+        })
+      }
+      const { markdown, ...descriptor } = other
+      yield* own.fs.writeFileString(
+        own.index,
+        JSON.stringify({ version: 1, sessionID: own.sessionID, references: [...refs, descriptor] }),
+      )
+      expect(yield* recall(own, { archive_query: "owned", match: "terms" })).toEqual({
+        status: "unavailable",
+        reason: "archive-corrupt-content",
+      })
+      yield* own.fs.writeFileString(
+        own.index,
+        JSON.stringify({ version: 1, sessionID: foreign.sessionID, references: refs }),
+      )
+      expect(yield* recall(own, { archive_query: "owned", match: "terms" })).toEqual({
+        status: "unavailable",
+        reason: "archive-corrupt-index",
+      })
+      yield* own.fs.writeFileString(own.index, index)
+      yield* own.fs.remove(own.file(local.id))
+      yield* own.fs.symlink(foreign.file(other.id), own.file(local.id))
+      expect(yield* recall(own, { archive_query: "owned", match: "terms" })).toEqual({
+        status: "unavailable",
+        reason: "archive-unsafe-path",
+      })
+    }),
+  )
+
+  it.live("preserves literal ascending order, escaped text, reference UTF-16 pages and list offsets", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const chunks = yield* f.archive.publish({
+        sessionID: f.sessionID,
+        messages: [
+          user(f.sessionID, "03", "[ZX.*] 😀"),
+          user(f.sessionID, "01", "[ZX.*] 😀"),
+          user(f.sessionID, "02", "[ZX.*] 😀"),
+        ],
+      })
+      const literal = page(yield* recall(f, { archive_query: "[zx.*]", limit: 1 }))
+      expect(literal).toMatchObject({
+        total: 3,
+        order: "first_message_ascending",
+        continuation: { archive_list: true },
+      })
+      expect(literal.references[0].first).toBe("msg_01")
+      const next = page(yield* recall(f, { archive_query: "[zx.*]", match: "literal", offset: 1, limit: 1 }))
+      expect(next).toMatchObject({ total: 3, offset: 1, next_offset: 2 })
+      expect(next.references[0].first).toBe("msg_02")
+      expect(next.references[0].score).toBeUndefined()
+      const listed = page(yield* recall(f, { archive_list: true, offset: 1, limit: 1 }))
+      expect(listed).toMatchObject({ total: 3, offset: 1, next_offset: 2 })
+      expect(listed.references[0].id).toBe(next.references[0].id)
+      const index = chunks[0].markdown.indexOf("😀")
+      expect(index).toBeGreaterThan(0)
+      const left = yield* recall(f, { reference: chunks[0].id, offset: index, limit: 1 })
+      const right = yield* recall(f, { reference: chunks[0].id, offset: index + 1, limit: 1 })
+      expect(left).toMatchObject({ status: "found", offset_unit: "utf16_code_units", next_offset: index + 1 })
+      expect(String(left.content) + String(right.content)).toBe("😀")
+    }),
+  )
 })
