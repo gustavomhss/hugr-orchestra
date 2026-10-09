@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "c856aae2-b84d-4cdf-b1f3-27f53ba036ea",
+  "id": "97cb4462-a723-4439-92dd-9bb21eaaf2d5",
   "prevIds": [
-    "893d056b-865d-4deb-ac13-f51cec8f4bb8"
+    "c856aae2-b84d-4cdf-b1f3-27f53ba036ea"
   ],
   "ddl": [
     {
@@ -52,6 +52,10 @@
     },
     {
       "name": "capability_job",
+      "entityType": "tables"
+    },
+    {
+      "name": "capability_request",
       "entityType": "tables"
     },
     {
@@ -1111,6 +1115,106 @@
       "name": "time_updated",
       "entityType": "columns",
       "table": "capability_job"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "idempotency_hash",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "principal",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "origin",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "scope_hash",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "action",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_hash",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "payload_hash",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "result",
+      "entityType": "columns",
+      "table": "capability_request"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "time_created",
+      "entityType": "columns",
+      "table": "capability_request"
     },
     {
       "type": "text",
@@ -3052,6 +3156,15 @@
         "id"
       ],
       "nameExplicit": false,
+      "name": "capability_request_pk",
+      "table": "capability_request",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
       "name": "capability_target_pk",
       "table": "capability_target",
       "entityType": "pks"
@@ -3594,6 +3707,15 @@
       "name": "capability_job_creation_key_unique",
       "entityType": "uniques",
       "table": "capability_job"
+    },
+    {
+      "columns": [
+        "idempotency_hash"
+      ],
+      "nameExplicit": false,
+      "name": "capability_request_idempotency_hash_unique",
+      "entityType": "uniques",
+      "table": "capability_request"
     }
   ],
   "renames": []

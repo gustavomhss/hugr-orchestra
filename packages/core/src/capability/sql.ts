@@ -121,3 +121,17 @@ export const CapabilityChildTable = sqliteTable("capability_child", {
 }, (table) => [uniqueIndex("capability_child_parent_ordinal").on(
   table.session_id, table.assistant_message_id, table.parent_call_id, table.ordinal,
 )])
+
+// Operator mutations are local SQL transitions. This ledger never admits remote/model execution.
+export const CapabilityRequestTable = sqliteTable("capability_request", {
+  id: text().primaryKey(),
+  idempotency_hash: text().unique().notNull(),
+  principal: text().notNull(),
+  origin: text().notNull(),
+  scope_hash: text().notNull(),
+  action: text().notNull(),
+  target_hash: text().notNull(),
+  payload_hash: text().notNull(),
+  result: text({ mode: "json" }).$type<Schema.Json>().notNull(),
+  time_created: Timestamps.time_created,
+})

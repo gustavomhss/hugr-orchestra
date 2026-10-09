@@ -167,6 +167,20 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`capability_request\` (
+          \`id\` text PRIMARY KEY,
+          \`idempotency_hash\` text NOT NULL UNIQUE,
+          \`principal\` text NOT NULL,
+          \`origin\` text NOT NULL,
+          \`scope_hash\` text NOT NULL,
+          \`action\` text NOT NULL,
+          \`target_hash\` text NOT NULL,
+          \`payload_hash\` text NOT NULL,
+          \`result\` text NOT NULL,
+          \`time_created\` integer NOT NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`capability_target\` (
           \`id\` text PRIMARY KEY,
           \`connection_id\` text NOT NULL,

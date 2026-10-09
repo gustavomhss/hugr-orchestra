@@ -1,0 +1,14 @@
+export * as CapabilityRequestContract from "./request-contract"
+
+import type { Capability } from "@orchestra/schema/capability"
+import type { Effect, Schema } from "effect"
+import type { Database } from "../../database/database"
+import type { CapabilityOperatorContract } from "./contract"
+
+export type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+export type Interface = Readonly<{
+  /** SQL-only mutation; result must be redacted JSON. Authority and idempotency are fenced in the same writer. */
+  commit: <E, R>(target: CapabilityOperatorContract.Target, payload: Schema.Json,
+    write: (tx: Transaction) => Effect.Effect<Schema.Json, E, R>) =>
+    Effect.Effect<Readonly<{ requestID: string; reused: boolean; data: Schema.Json }>, E | Capability.Failure, R>
+}>
