@@ -11,7 +11,7 @@ import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
 import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
-import { Deferred, Effect, Exit, FileSystem, Schema, Scope } from "effect"
+import { Effect, Exit, FileSystem, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
@@ -36,7 +36,7 @@ import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
-import { UpstreamSettlement } from "@/maestro/upstream-settlement"
+import { TaskBackground } from "./task-background"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -55,16 +55,6 @@ const BACKGROUND_DESCRIPTION = [
   "`background: true` starts the teammate and returns at once; its result arrives later as a new message.",
   "Use it only for independent work whose result you do not need before you continue. Without it, the call waits for the result.",
 ].join(" ")
-const BACKGROUND_STARTED = [
-  "The teammate is working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you started and end your turn.",
-].join("\n")
-const BACKGROUND_UPDATED = [
-  "The added context was sent to the teammate, which is still working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you sent and end your turn.",
-].join("\n")
 
 const BaseParameterFields = {
   description: Schema.String.annotate({ description: "A 3-5 word label the owner sees for this task" }),
@@ -540,8 +530,24 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
-      const dispatchDone = yield* Deferred.make<UpstreamSettlement.Capture | undefined>()
-      const dispatch: { capture?: UpstreamSettlement.Capture; notified: boolean } = { notified: false }
+      const backgroundDispatch = yield* TaskBackground.make({
+        background,
+        sessions,
+        database,
+        events,
+        fs,
+        scope,
+        lock: dispatchLock,
+        ctx,
+        ops,
+        childSessionID: nextSession.id,
+        taskID: shownID,
+        description: params.description,
+        metadata,
+        work,
+        variant,
+        renderOutput,
+      })
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
         yield* completion.revalidateWorkflow(completionReceipt)
@@ -608,7 +614,7 @@ export const TaskTool = Tool.define(
         } : undefined
         // F4 cl.6: stream the work result before any failure below so the errored tool part keeps it.
         const workResult = yield* work.record(result).pipe(Effect.provideService(Database.Service, database))
-        if (returned) dispatch.capture = { ...returned, workResult }
+        if (returned) backgroundDispatch.capture({ ...returned, workResult })
         if (result.info.role === "assistant" && result.info.error) {
           const message =
             "message" in result.info.error.data && typeof result.info.error.data.message === "string"
@@ -640,117 +646,17 @@ export const TaskTool = Tool.define(
           TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
-      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (captured: UpstreamSettlement.Capture | undefined) {
-        if (!captured) return // Setup failure/interruption has no returned assistant and cannot mint a receipt.
-        const state = captured.workResult?.terminal.reason === "failed" || captured.workResult?.terminal.reason === "interrupted"
-          ? "error" : captured.state
-        const currentParent = yield* sessions.get(ctx.sessionID)
-        const deliver = UpstreamSettlement.make({
-          sessionID: ctx.sessionID, messageID: ctx.messageID, callID: ctx.callID ?? "",
-          childSessionID: nextSession.id, taskID: shownID, ops, capture: captured,
-          request: {
-            messageID: MessageID.ascending(),
-            sessionID: ctx.sessionID,
-            agent: currentParent.agent ?? ctx.agentID ?? ctx.agent,
-            variant,
-            parts: [
-              {
-                type: "text",
-                synthetic: true,
-                metadata: {
-                  source: { type: "task-return", task_id: nextSession.id, state },
-                  ...(captured.workResult ? { workResult: captured.workResult } : {}),
-                },
-                text: renderOutput({
-                  id: shownID,
-                  state,
-                  summary:
-                    state === "completed"
-                      ? `Background task completed: ${params.description}`
-                      : `Background task failed: ${params.description}`,
-                  text: captured.text,
-                }),
-              },
-            ],
-          },
-        })
-        // One bounded exact-admission reconciliation; wake errors never repeat provider execution.
-        yield* deliver().pipe(
-          Effect.catchCause(() => deliver()),
-          Effect.provideService(Database.Service, database),
-          Effect.provideService(EventV2Bridge.Service, events),
-          Effect.provideService(Session.Service, sessions),
-        )
-      })
-
-      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* () {
-        if (dispatch.notified) return
-        dispatch.notified = true
-        yield* Deferred.await(dispatchDone).pipe(
-          Effect.flatMap(inject),
-          Effect.catchCause(() => Effect.logWarning("Background Task delivery HOLD", { sessionID: ctx.sessionID, messageID: ctx.messageID, callID: ctx.callID })),
-          Effect.forkIn(scope, { startImmediately: true }),
-        )
-      })
-
-      const dispatched = runTask().pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.onExit((exit) => {
-        const captured = dispatch.capture
-        const settled: UpstreamSettlement.Capture | undefined = captured && Exit.isFailure(exit) ? {
-          ...captured, state: "error",
-          ...(captured.workResult ? { workResult: { ...captured.workResult,
-            terminal: { reason: Exit.hasInterrupts(exit) ? "interrupted" : "failed", hostDetail: "Task host ended after returned assistant" },
-          } } : {}),
-        } : captured
-        return Deferred.succeed(dispatchDone, settled)
-      }))
-      // Keep extend/start atomic for this child. Otherwise start can join another caller without running this dispatch.
-      const scheduled = yield* dispatchLock.withLock(`background:${nextSession.id}`)(Effect.gen(function* () {
-        if (yield* background.extend({ id: nextSession.id, run: dispatched })) return { extended: true as const }
-        const info = yield* background.start({
-          id: nextSession.id, type: id, title: params.description, metadata,
-          onPromote: Effect.all([
-            ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
-            notify(),
-          ], { discard: true }),
-          run: dispatched.pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
-        })
-        return { extended: false as const, info }
-      }))
+      const scheduled = yield* backgroundDispatch.schedule(runTask())
       if (scheduled.extended) {
-        yield* notify()
-        yield* work.hostEnded("running", "Background task updated")
-        return {
-          title: params.description,
-          metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
-          output: renderOutput({
-            id: shownID,
-            state: "running",
-            summary: "Background task updated",
-            text: BACKGROUND_UPDATED,
-          }),
-        }
+        yield* backgroundDispatch.notify()
+        return yield* backgroundDispatch.result(nextSession.id, true)
       }
 
       const info = scheduled.info
 
-      // The child is still running: the work result says so and carries no worker fields yet.
-      const backgroundResult = Effect.fn("TaskTool.backgroundResult")(function* () {
-        yield* work.hostEnded("running", "Background task started")
-        return {
-          title: params.description,
-          metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
-          output: renderOutput({
-            id: shownID,
-            state: "running",
-            summary: "Background task started",
-            text: BACKGROUND_STARTED,
-          }),
-        }
-      })
-
       if (runInBackground) {
-        yield* notify()
-        return yield* backgroundResult()
+        yield* backgroundDispatch.notify()
+        return yield* backgroundDispatch.result(info.id)
       }
 
       const runCancel = yield* EffectBridge.make()
@@ -770,7 +676,7 @@ export const TaskTool = Tool.define(
               background.wait({ id: nextSession.id }).pipe(Effect.map((waited) => waited.info)),
               background.waitForPromotion(nextSession.id),
             )
-            if (result?.metadata?.background === true) return yield* backgroundResult()
+            if (result?.metadata?.background === true) return yield* backgroundDispatch.result(info.id)
             if (result?.status === "error") {
               const failure = result.error ?? "Task failed"
               yield* work.hostEnded("failed", failure)
