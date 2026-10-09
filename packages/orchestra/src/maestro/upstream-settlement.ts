@@ -7,7 +7,7 @@ import { MessageTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
-import { Effect, Option, Schema } from "effect"
+import { DateTime, Effect, Option, Schema } from "effect"
 import { isDeepStrictEqual } from "node:util"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { MessageV2 } from "@/session/message-v2"
@@ -33,7 +33,7 @@ export class Hold extends Schema.TaggedErrorClass<Hold>()("UpstreamSettlementHol
 const record = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
 
 /** Private host entrypoint. A returned job or a caller-authored notice never reaches this patch boundary. */
-export function make(input: {
+export function make(binding: {
   readonly sessionID: SessionID
   readonly messageID: MessageID
   readonly callID: string
@@ -43,6 +43,7 @@ export function make(input: {
   readonly request: SessionPrompt.PromptInput & { messageID: MessageID }
   readonly capture: Capture
 }) {
+  const input = { ...binding, request: structuredClone(binding.request), capture: structuredClone(binding.capture) }
   // Retain one request identity across faults before/after admission. Once wake starts, never retry provider work.
   const progress = { wakeStarted: false }
   const lock = KeyedMutex.makeUnsafe<string>()
@@ -56,7 +57,9 @@ export function make(input: {
     if (text?.type !== "text" || text.synthetic !== true)
       return yield* new Hold({ message: "HOLD: settlement requires synthetic text" })
     const source = Option.getOrUndefined(record(text.metadata?.source))
-    if (source?.type !== "task-return" || source.task_id !== input.childSessionID)
+    const state = input.capture.workResult?.terminal.reason === "failed" || input.capture.workResult?.terminal.reason === "interrupted"
+      ? "error" : input.capture.state
+    if (source?.type !== "task-return" || source.task_id !== input.childSessionID || source.state !== state)
       return yield* new Hold({ message: "HOLD: settlement Task source mismatch" })
 
     // Admit-only is deliberately outside the execution loop. Repeating this exact ID reconciles durable admission.
@@ -111,7 +114,7 @@ export function make(input: {
           !SessionMessageUpdater.upstreamSettlement(metadata, owner))
           return yield* new Hold({ message: "HOLD: original Task binding mismatch" })
         yield* events.publish(SessionEvent.Tool.Progress, { sessionID: input.sessionID, assistantMessageID: input.messageID,
-          callID: input.callID, timestamp: Date.now(), structured: { ...tool.state.structured, metadata }, content: tool.state.content })
+          callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content })
       }
       if (!modern) {
         const parent = yield* MessageV2.get({ sessionID: input.sessionID, messageID: input.messageID })

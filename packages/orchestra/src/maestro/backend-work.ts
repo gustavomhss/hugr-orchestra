@@ -40,7 +40,8 @@ export function track(input: {
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      const captured = yield* bound(BackendResult.assemble(message, yield* history(), input.seat))
+      const snapshot = structuredClone(message)
+      const captured = yield* bound(BackendResult.assemble(snapshot, yield* history(), input.seat))
       returned.value = captured
       evidence.value = captured
       yield* input.publish(captured)

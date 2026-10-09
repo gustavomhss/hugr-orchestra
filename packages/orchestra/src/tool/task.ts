@@ -538,7 +538,7 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
-      const dispatchDone = yield* Deferred.make<void>()
+      const dispatchDone = yield* Deferred.make<UpstreamSettlement.Capture | undefined>()
       const dispatch: { capture?: UpstreamSettlement.Capture; notified: boolean } = { notified: false }
 
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
@@ -636,8 +636,7 @@ export const TaskTool = Tool.define(
           TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
-      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* () {
-        const captured = dispatch.capture
+      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (captured: UpstreamSettlement.Capture | undefined) {
         if (!captured) return // Setup failure/interruption has no returned assistant and cannot mint a receipt.
         const state = captured.workResult?.terminal.reason === "failed" || captured.workResult?.terminal.reason === "interrupted"
           ? "error" : captured.state
@@ -679,14 +678,35 @@ export const TaskTool = Tool.define(
         if (dispatch.notified) return
         dispatch.notified = true
         yield* Deferred.await(dispatchDone).pipe(
-          Effect.andThen(inject()),
+          Effect.flatMap(inject),
           Effect.catchCause(() => Effect.logWarning("Background Task delivery HOLD", { sessionID: ctx.sessionID, messageID: ctx.messageID, callID: ctx.callID })),
           Effect.forkIn(scope, { startImmediately: true }),
         )
       })
 
-      const dispatched = runTask().pipe(Effect.ensuring(Deferred.succeed(dispatchDone, undefined)))
-      if (yield* background.extend({ id: nextSession.id, run: dispatched })) {
+      const dispatched = runTask().pipe(Effect.onExit((exit) => {
+        const captured = dispatch.capture
+        return Deferred.succeed(dispatchDone, captured && Exit.isFailure(exit) ? {
+          ...captured, state: "error",
+          ...(captured.workResult ? { workResult: { ...captured.workResult,
+            terminal: { reason: Exit.hasInterrupts(exit) ? "interrupted" : "failed", hostDetail: "Task host ended after returned assistant" },
+          } } : {}),
+        } : captured)
+      }))
+      // Keep extend/start atomic for this child. Otherwise start can join another caller without running this dispatch.
+      const scheduled = yield* dispatchLock.withLock(`background:${nextSession.id}`)(Effect.gen(function* () {
+        if (yield* background.extend({ id: nextSession.id, run: dispatched })) return { extended: true as const }
+        const info = yield* background.start({
+          id: nextSession.id, type: id, title: params.description, metadata,
+          onPromote: Effect.all([
+            ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
+            notify(),
+          ]),
+          run: dispatched.pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
+        })
+        return { extended: false as const, info }
+      }))
+      if (scheduled.extended) {
         yield* notify()
         yield* work.hostEnded("running", "Background task updated")
         return {
@@ -701,20 +721,7 @@ export const TaskTool = Tool.define(
         }
       }
 
-      const info = yield* background.start({
-        id: nextSession.id,
-        type: id,
-        title: params.description,
-        metadata,
-        onPromote: Effect.all([
-          ctx.metadata({
-            title: params.description,
-            metadata: { ...metadata, background: true, jobId: nextSession.id },
-          }),
-          notify(),
-        ]),
-        run: dispatched.pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
-      })
+      const info = scheduled.info
 
       // The child is still running: the work result says so and carries no worker fields yet.
       const backgroundResult = Effect.fn("TaskTool.backgroundResult")(function* () {
