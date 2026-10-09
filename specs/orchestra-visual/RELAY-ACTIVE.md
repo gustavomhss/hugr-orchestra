@@ -10,7 +10,166 @@ build or product smoke while combined implementation is incomplete. Prepare runn
 checks now; perform one integrated validation batch after combined source is ready.
 Reuse existing source-bound evidence; keep gates intact. Static cold review remains required.
 
-## Current ready pin and validation handoff
+## Current repair wave and qualification hold
+
+The final reviewed source set is A `9358d3833a8efc385ddaaeb501264c013859d5a0`
+(includes `fd0a7ed2e7`, `4b0b09b17a`, `84513c9ecd`, `66c0532e2d`), C `0c8bc60369`
+(includes `2c28b537f4` / `a3b767422a`), runtime `f73d92d083`, and neutralized failed
+Nix-request ancestry `7eb2bb766a`. Bounded source findings are closed within their
+reviewed scopes. Execution remains unqualified until runtime's affected batch.
+
+Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
+This is not a qualified runtime freeze. The measured source freeze was
+`1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
+
+| Run | Measured result | Follow-up |
+| --- | --- | --- |
+| Orchestra `37953895229` | 171 pass / 10 fail on each OS | Repair the five failed files only |
+| Core `37956127836` | 48 pass / 1 fail on each OS | Correct the after-signed-disposition fault fixture |
+| Relay `37953896008` | 33 pass / 0 fail on each OS | Reuse unchanged source-bound evidence |
+| Native products `37955682776` | Six consumer jobs failed | Runtime owns version formatting and shared real models.dev snapshot repair |
+| Nix measurement `37954180585` | Prepare succeeded; four native lanes and completion failed | Repair parser conformance, then measure the new source freeze |
+
+The integration checkpoint includes SDK activation fixture `87442e5384`, Core fault
+fixture `be5a5280fb`, private-port fixtures `de8191d564`, initial Task detail/hash repair
+`1347d53401`, upstream provenance fixture `99517ce5eb` (mapped to `236017530b`), and Nix
+parser repair `5f7e3b0c7c`. Those repairs are source-reviewed, not qualified by a new run.
+
+### Remaining Core / background seam
+
+Existing author A owns only Core `session/message-updater.ts`, `session/projector.ts`,
+and `test/upstream-settlement-preservation.test.ts`. A must publish a minimal immutable
+repair for receipt-free unfavorable host observation on an already completed original
+native Task. The existing adapter receives an internal validation callback backed by
+the projector's captured Database and real parent, child, project, directory, agent,
+original Task tuple, and returned-assistant rows. Ambient optional Database presence
+does not establish trust. An unbacked memory adapter refuses observation.
+A published `66c0532e2d58b84cdd35fdb4aadd7c576bab123b`. A bounded draft audit
+`ses_ede1c82cfffe66nn95toC1bBPo` found that available original legacy Message/TaskPart
+conflicts could not veto its native-owner callback. Same-author follow-up
+`84513c9ecda6d0dd4a42313e4629dfddd849b548` closes that gap and is composed in
+`00b8ebb71198e98b6408d9f52a5ed1d59ca6e25d`. Returned-author completion remains
+required because the strict private proposal reader requires it too.
+
+Independent bounded reviews of that exact composition are static FIX_FIRST:
+
+- Production `ses_ede10b10bffeZj7Sr8S8b57wwj`: child workspace must match parent;
+  replay reconstructs a payload without Location, causing live/replay divergence
+  for an otherwise eligible observation. A's source follow-up closes workspace
+  equality and supplies trusted internal projector origin. Missing or mismatched
+  live Location must still refuse.
+- Fixtures `ses_ede10b0f9ffe2GoE20KDmpgx3V`: malformed legacy owner lacks required
+  common `time` at the typed SQL boundary; preserve malformed assistant fields
+  while repairing that shape. Direct stored-author and first-interruption probes
+  are also required before claiming guard coverage. No compiler or test ran in
+  either static review.
+
+Lead explicitly assigned the same A exactly four total files: Core `event.ts`,
+`session/message-updater.ts`, `session/projector.ts`, and the preservation guard
+test. Internal projector callback origin is derived inside `commitDurableEvent`
+as `replay: input !== undefined`, never from caller payload. Only trusted replay
+may reconstruct exact parent Location from captured DB after all retained facts
+validate. Live publication and local-only `persist:false` remain non-replay and
+must refuse absent/mismatched Location. Subscriber/listener signatures, Payload,
+SerializedEvent, Schema, HTTP APIs, storage and ownership/sequence semantics stay
+unchanged. No fifth file or additional writer is assigned.
+
+A's immutable follow-up is `4b0b09b17a2bf8edaafce4d8ceb119e2fc011de4`, parent `84513c9ecd`.
+It changes exactly those four files. Origin is frozen and passed only to projector
+callbacks; listeners/subscribers and durable storage/envelopes are untouched. Real
+fixtures cover both available returned-author views, first interruption/workspace
+identity, missing live Location with spoofed replay metadata for durable and local-only
+publish, and actual recorded events replayed into a fresh isolated destination DB.
+The replay case uses real source rows/events and observes a replay-origin callback,
+not an already-applied-sequence retry. The malformed owner keeps required common
+`time` while omitting required assistant details. Production static APPROVE:
+`ses_ede10b10bffeZj7Sr8S8b57wwj/msg_122055f5b001QfnkGcwc0uI94q`, exact joint `54c644fc4e` against
+`a76306c684`, only the three Core production files. No author QA ran.
+
+The replay fixture initially compared two potentially unchanged projections. A's
+single-file six-line `fd0a7ed2e70916a2e2eef9f548b5c30757af74e3` adds explicit accepted
+live expected state, inequality against the original call, and the same expected
+state for the fresh destination. Independent oracle static APPROVE:
+`ses_ede09c550ffehFp17l17waWde3/msg_122078c6f001TrGz12quIRzc3I`.
+
+A's single-file 32-line `9358d3833a8efc385ddaaeb501264c013859d5a0` closes the final
+finite authority-fixture finding: malformed card/author/terminal and empty/non-string
+initial host detail leave the full eligible call unchanged in all author views;
+duplicate native same-call entries leave the full stored owner unchanged. Restored
+actual rows and valid results must produce explicit accepted work-result deltas.
+Independent final fixture static APPROVE:
+`ses_ede1c82cfffe66nn95toC1bBPo/msg_1220d1606001oIa1NeTHu7SbgI`.
+Neither fixture follow-up changes production or the already approved replay route.
+
+Provisional handoff of `817b243512` was superseded by HOLD for that last fixture
+finding. Runtime explicitly confirmed no affected typecheck, CI, native check or
+pilot had started, and no run/PID needed cancellation. Final handoff must include
+`9358d3833a`, not attribute results on the earlier source to these new probes.
+
+Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
+`2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
+reconciles the same tracker, publishes existing typed Task metadata events, and reads
+back the retained result before resolving the Deferred and admitting delivery. EventV2
+owns each commit and announcement; there is no outer rollback transaction. Sequential
+partial observation commits remain possible and fail closed. Completed native and dual
+view cases exercise the actual scheduler and private setter, without preseeded receipts.
+
+C has conditional static approval only:
+`ses_ede811595ffe8onazcY8NaqjdT/msg_121cda10a001AnodaWbWSLCjSm`.
+The initial Core blocker and reviewed follow-ups are composed. Runtime also confirmed
+that C's protected retained observation
+path must apply only to the existing host-derived `upstream-work-result-v1` schema.
+The established `backend-work-result-v1` contract has no author and must retain its
+generic unfavorable-detail/notice path. Same C owns that correction and an actual
+completed-native backend notice case; Core trust and private-port DTOs stay strict.
+C published that bounded follow-up as `0c8bc6036929d6b5533efb7afc4b5ae30d6e1432`:
+protected publication/capture is selected by `UpstreamResult.SCHEMA`; backend
+failure still resolves the scheduler and delivers the actual synthetic error notice
+without author or upstream receipt. It is composed as `f55c7dfdaa9cf02f4e900d1e1d1ecedd8b2c051c`.
+Bounded C follow-up static APPROVE: `ses_ede10b0f9ffe2GoE20KDmpgx3V`, exact `f55c7dfdaa`
+against `00b8ebb711`, only the two-file C delta. Backend host detail is checked in
+the live streamed result; durable Synthetic assertions prove error state/tag and
+returned text, not persisted host detail. Runtime execution remains pending.
+No new Session API, service, event, store, receipt before admission, Core-to-Orchestra
+dependency, permission waiver, or relaxed private-port terminal equality is authorized.
+
+After A publishes, the coordinator composes A and C and obtains bounded independent
+cross-caller review. Runtime alone then owns Core typecheck and the affected selectors:
+
+- Core: `test/relay-workflow-evaluator.test.ts`,
+  `test/upstream-settlement-preservation.test.ts`, and existing `test/event.test.ts`
+  because the internal Event projector callback wiring changed.
+- Orchestra: `test/maestro/upstream-provenance.test.ts`,
+  `test/maestro/upstream-settlement.test.ts`, `test/maestro/task-hash.test.ts`,
+  `test/maestro/arsenal-activation.test.ts`, and `test/tool/task-backend-result.test.ts`.
+
+The final clean post-check/generated source freeze is still pending. Runtime owns the
+approved CLI/version and native models.dev workflow changes, published as
+`f73d92d0838e6cb08fd76e1266851bcfd2b78a7a`. The exact approved blobs are retained
+in integration `93e46af105`; C's immutable source is composed in `69dd0bab15`.
+Neither composition releases the affected checks before corrected A and cross-caller
+review. Generated caps remain SDK **16718 LOC**, Client **6646**.
+
+### Nix and pilot qualification
+
+Relay is the sole Nix activation/hash writer. Request-only `7eb2bb766a80f130a8d0758f3337729237b9ea8a`
+had exact parent `1f4f2929b0`; upstream created no duplicate request or run. Integration
+preserves that request's ancestry with `ready: false`, allowing the next request-only
+child of the final freeze to fast-forward the existing branch without a force push.
+Actual Linux
+artifacts falsified the old parser assumptions: Nix 2.29.2 exits 1 on the expected fixed
+output mismatch, counts carry SGR decoration, and derivation fields are `sha256` / `nar`.
+The repaired parser replayed both Linux artifacts and rejected six defect classes per
+OS in offline conformance checks. This does not qualify the failed native run or authorize
+applying its hashes. Package changes require a fresh source fingerprint and four native
+measurements before an exact direct-child hash/request-only consumer verification.
+
+WSL still lacks an operational runner proof. The real-model pilot remains unexecuted
+and must collect linked actual Task return, author/logical Task, receipt/durable delivery,
+grounded V3/current context, publication/materialization/skills, WorkflowBound, same-Session
+ledger/cursor/retry, and distinct Maestro validation and Lucy artifacts. Exit 0 is insufficient.
+
+## Historical ready pin and validation handoff
 
 All known semantic repairs and source-growth extractions are composed in clean published
 `35c52d2c6716afb18e89cd3fa219da2f1bd55873`. Runtime received exact pin and three independent
@@ -38,7 +197,7 @@ APPROVE only, not compilation, runtime, budget-gate or acceptance results.
 | Prompt operations extraction | `ses_eded6319bffeD54cwmmW8s7mS8` | `msg_1212cbf3e001w3F8P9BvZWcIAp` |
 | Background Task extraction | `ses_eded6318fffevTIEIZGheWYg6T` | `msg_1212b2c36001g13xxJvzkDehF7` |
 
-Runtime owns one coalesced failed-package/Godfile/scoped QA pass after composition and local
+At that historical checkpoint, runtime owned one coalesced failed-package/Godfile/scoped QA pass after composition and local
 PTY setup. Official bun-pty 0.4.9 archive was inspected by runtime; empty installed dist is
 local cache/install corruption, not a new source dependency/version change. Relay does not
 duplicate those checks. Nix measurement activation waits for actual post-generation/checks

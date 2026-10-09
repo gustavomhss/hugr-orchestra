@@ -46,7 +46,10 @@ function assistant(sessionID: SessionID, agent: string): SessionV1.Assistant {
     time: { created: Date.now(), completed: Date.now() }, finish: "stop" }
 }
 
-const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "resumed" | "wrong") {
+const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
+  selection?: "resumed" | "wrong",
+  returned?: "failed" | "interrupted" | "host-failed",
+) {
   const sessions = yield* Session.Service
   const events = yield* EventV2Bridge.Service
   const database = yield* Database.Service
@@ -54,9 +57,15 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "res
   const child = yield* sessions.create({ parentID: parent.id, agent: "walt" })
   const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parent.id,
     projectID: parent.projectID, memberID: "walt", source: "host" })
-  const author = yield* sessions.updateMessage(assistant(child.id, "walt"))
+  const author = yield* sessions.updateMessage({ ...assistant(child.id, "walt"),
+    ...(returned === "failed" ? { error: new SessionV1.APIError({ message: "Stored author failure", isRetryable: false }).toObject() } : {}),
+    ...(returned === "interrupted" ? { finish: "tool-calls" } : {}),
+  })
   const proposal = yield* sessions.updatePart({ id: PartID.ascending(), messageID: author.id, sessionID: child.id, type: "text", text })
-  const workResult = { ...BackendResult.assemble({ info: author, parts: [proposal] }, [], Seats.all.walt), taskId: logical.taskId }
+  const message = { info: author, parts: [proposal] }
+  const workResult = { ...(returned === "host-failed"
+    ? BackendResult.hostEnded({ message, reason: "failed", detail: "Observed host failure after return" }, Seats.all.walt)
+    : BackendResult.assemble(message, [], Seats.all.walt)), taskId: logical.taskId }
   const owner = yield* sessions.updateMessage(assistant(parent.id, "maestro"))
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true, workResult, retained: "current" }
   const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt",
@@ -75,7 +84,8 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "res
     provider: { executed: false }, timestamp: yield* DateTime.now })
   const request = { sessionID: parent.id, messageID: MessageID.ascending(), agent: "maestro", model,
     parts: [{ type: "text" as const, text, synthetic: true,
-      metadata: { source: { type: "task-return", task_id: child.id, state: "completed" }, workResult } }] }
+      metadata: { source: { type: "task-return", task_id: child.id,
+        state: workResult.terminal.reason === "failed" || workResult.terminal.reason === "interrupted" ? "error" : "completed" }, workResult } }] }
   const admitted = yield* sessions.admitPrompt({ sessionID: parent.id, messageID: request.messageID, identityVersion: 1,
     identity: PromptIdentity.fromEncoded(Schema.encodeSync(SessionPrompt.PromptInput)(request)),
     info: { id: request.messageID, sessionID: parent.id, role: "user", agent: "maestro", model, time: { created: Date.now() } },
@@ -94,6 +104,28 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "res
     .where(eq(EventTable.aggregate_id, parent.id)).all().pipe(Effect.orDie,
       Effect.map((rows) => rows.filter((row) => row.type === EventV2.versionedType(SessionEvent.Tool.Progress.type, 1))))
   return { sessions, database, events, input, parent, child, task, owner, author, proposal, state, modern, legacy, progress }
+})
+
+;(["failed", "interrupted", "host-failed"] as const).forEach((returned) => {
+  it.instance(`actual stored or Task-observed ${returned} result retains exact failure and capture identity`, () => Effect.gen(function* () {
+    const f = yield* seed(undefined, returned)
+    const original = yield* f.progress()
+    expect((yield* Effect.flip(f.sessions.settleUpstreamTask({ ...f.input, workResult: { ...f.input.workResult,
+      terminal: { reason: returned === "interrupted" ? "interrupted" : "failed", hostDetail: "Unobserved replacement detail" },
+    } }))).reason).toBe("UPSTREAM_SETTLEMENT_TERMINAL_CONFLICT")
+    expect(yield* f.progress()).toEqual(original)
+    expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(true)
+    const part = yield* f.legacy()
+    if (part?.type !== "tool" || part.state.status === "pending") throw new Error("expected retained Task")
+    expect(part.state.metadata).toMatchObject({ workResult: f.input.workResult,
+      upstreamSettlement: { workResult: f.input.workResult, deliveryMessageID: f.input.deliveryMessageID } })
+    expect(f.input.workResult.author).toEqual({ memberId: "walt", executionSessionID: f.child.id, messageID: f.author.id })
+    expect(f.input.workResult.terminal).toEqual(returned === "host-failed"
+      ? { reason: "failed", hostDetail: "Observed host failure after return" } : { reason: returned })
+    const before = yield* f.progress()
+    expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(false)
+    expect(yield* f.progress()).toEqual(before)
+  }))
 })
 
 it.instance("resumed task_id names execution child while work result retains logical task identity", () => Effect.gen(function* () {

@@ -4,11 +4,12 @@
 The evidence replay uses measured_candidate directly, not a fake HEAD or a checkout.
 CLI capture freshness remains a separate control; compare validates checkpoint scope.
 """
+import hashlib
 import json
 from pathlib import Path
 import subprocess
 import sys
-from dependency_measurement import fingerprint, git, require
+from dependency_measurement import fingerprint, git, rendered_log, require
 
 
 def main():
@@ -63,7 +64,9 @@ def main():
         case("malformed-status-" + label, {label + ".exit": "unknown\n"}, "STATUS_MISMATCH:" + label)
         case("arbitrary-status-" + label, {label + ".exit": "42\n"}, "STATUS_MISMATCH:" + label)
     case("successful-updater", {"hash-build.exit": "0\n"}, "STATUS_MISMATCH:hash-build")
-    case("generic-error-exit", {"hash-build.exit": "1\n"}, "STATUS_MISMATCH:hash-build")
+    case("generic-error-exit", {"hash-build.exit": "1\n",
+                                "hash-build.stderr": edit_message("builder failed before install")}, "MISSING_OR_AMBIGUOUS_UPDATER_HASH_MISMATCH")
+    case("unsupported-keep-going-exit", {"hash-build.exit": "102\n"}, "STATUS_MISMATCH:hash-build")
     case("ordinary-builder-error-exit", {"hash-build.exit": "100\n"}, "STATUS_MISMATCH:hash-build")
     case("missing-raw-mismatch-message", {"hash-build.stderr": log([{key: value for key, value in event.items() if key != "raw_msg"} if index == mismatch else event for index, event in enumerate(events)])}, "MISMATCH_RAW_MESSAGE_MISSING")
     case("wrong-derivation", {"hash-drv.stdout": candidate["derivation"].replace("orchestra-node_modules", "wrong-package")}, "INVALID_UPDATER_DERIVATION")
@@ -74,6 +77,10 @@ def main():
         info = json.loads(original["hash-drv-info.stdout"])
         info[candidate["derivation"]][field] = value
         case("wrong-drv-" + field, {"hash-drv-info.stdout": json.dumps(info)}, expected)
+    for field, value in [("hashAlgo", "r:sha256"), ("method", "flat")]:
+        info = json.loads(original["hash-drv-info.stdout"])
+        info[candidate["derivation"]]["outputs"]["out"][field] = value
+        case("wrong-drv-output-" + field, {"hash-drv-info.stdout": json.dumps(info)}, "DERIVATION_METADATA_OUTPUT_INVALID")
     case("generic-failure", {"hash-build.stderr": log([{"action": "msg", "level": 0, "msg": "builder failed before install"}])}, "TARGET_BUILD_ACTIVITY_MISSING_OR_AMBIGUOUS")
     case("empty-log", {"hash-build.stderr": ""}, "STRUCTURED_LOG_EMPTY")
     case("unexpected-build-stdout", {"hash-build.stdout": "unrelated output\n"}, "HASH_BUILD_STDOUT_UNEXPECTED")
@@ -98,6 +105,23 @@ def main():
     case("unrelated-builder-receipts", {"hash-build.stderr": log([event | {"id": activity + 1000000} if event.get("action") == "result" and event.get("id") == activity else event for event in events])}, "NORMALIZATION_INCOMPLETE:canonicalize-node-modules")
     for label in ["canonicalize-node-modules", "normalize-bun-binaries"]:
         case("missing-" + label, {"hash-build.stderr": edit_lines(lambda line: line.replace("[" + label + "]", "[removed]"))}, "NORMALIZATION_INCOMPLETE:" + label)
+        for style, decorator, expected in [("colored", "\x1b[0m\x1b[33m", None),
+                                            ("uncolored", "", None),
+                                            ("malformed-style", "\x1b[33", "NORMALIZATION_RENDERING_INVALID:" + label),
+                                            ("unknown-style", "\x1b[999m", "NORMALIZATION_RENDERING_INVALID:" + label),
+                                            ("cursor-control", "\x1b[2J", "NORMALIZATION_RENDERING_INVALID:" + label)]:
+            def decorate_count(line):
+                prefix = "[" + label + "] rebuilt "
+                if not line.startswith(prefix):
+                    return line
+                plain = rendered_log(line, "HASH_PROBE_BASELINE_RENDERING_INVALID")
+                number = plain.removeprefix(prefix).removesuffix(" links")
+                return prefix + decorator + number + ("\x1b[0m" if decorator else "") + " links"
+            case(style + "-" + label, {"hash-build.stderr": edit_lines(decorate_count)}, expected)
+    case("exit-one-without-install-proof", {"hash-build.exit": "1\n",
+                                            "hash-build.stderr": edit_lines(lambda line: "removed" if '"phase":"install"' in line else line)}, "TARGET_RECEIPTS_INCOMPLETE")
+    case("malformed-mismatch-style", {"hash-build.stderr": edit_message(events[mismatch]["raw_msg"] + "\x1b[33")}, "MISMATCH_RENDERING_INVALID")
+    case("unknown-mismatch-style", {"hash-build.stderr": edit_message(events[mismatch]["raw_msg"] + "\x1b[999m")}, "MISMATCH_RENDERING_INVALID")
     case("missing-install-receipt", {"hash-build.stderr": edit_lines(lambda line: "removed" if '"phase":"install"' in line else line)}, "TARGET_RECEIPTS_INCOMPLETE")
     for field in ["name", "system", "out"]:
         def wrong_receipt(line):
@@ -154,7 +178,15 @@ def main():
         require(result.returncode == 0 if expected is None else result.returncode != 0
                 and "NIX_DISTRIBUTION_FAILURE:" + expected in result.stderr, "HASH_PROBE_VERDICT:" + control["name"])
         if expected is None:
-            require(json.loads((fixture / "candidate.json").read_text()) == candidate, "HASH_REPLAY_CHANGED_CANDIDATE:" + control["name"])
+            replay = json.loads((fixture / "candidate.json").read_text())
+            if control["name"].startswith(("colored-", "uncolored-")):
+                # Decorated fixtures have their own byte binding; all other identity stays exact.
+                digest = hashlib.sha256(json.dumps(original | control["changes"], sort_keys=True,
+                                                   separators=(",", ":")).encode()).hexdigest()
+                expected_candidate = candidate | {"evidence": candidate["evidence"] | {"sha256": digest}}
+                require(replay == expected_candidate, "HASH_REPLAY_CHANGED_CANDIDATE:" + control["name"])
+            if not control["name"].startswith(("colored-", "uncolored-")):
+                require(replay == candidate, "HASH_REPLAY_CHANGED_CANDIDATE:" + control["name"])
         if expected is not None:
             require((fixture / "candidate.json").read_bytes() == before if before is not None
                     else not (fixture / "candidate.json").exists(), "INVALID_HASH_CANDIDATE_PUBLISHED:" + control["name"])

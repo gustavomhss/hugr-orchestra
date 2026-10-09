@@ -1,5 +1,10 @@
 import { afterEach, describe, expect } from "bun:test"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { AgentV2 } from "@orchestra/core/agent"
+import { SessionEvent } from "@orchestra/core/session/event"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
+import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -9,13 +14,16 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
-import { Cause, Deferred, Effect, Exit } from "effect"
+import { Cause, DateTime, Deferred, Effect, Exit, Schema } from "effect"
+import { eq } from "drizzle-orm"
 import { Agent } from "../../src/agent/agent"
 import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Config } from "@/config/config"
 import { Session } from "@/session/session"
+import { SessionPrompt } from "@/session/prompt"
+import { PromptIdentity } from "@/session/prompt-identity"
 import { MessageID, PartID } from "../../src/session/schema"
 import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
@@ -27,7 +35,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Git } from "@/git"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { testEffect, awaitWithTimeout } from "../lib/effect"
 
 // F4 cl.5-6 and F4-CH: the Task path decodes the backend specialist's `backend-result` card into `metadata.workResult`.
 
@@ -198,58 +206,144 @@ const dispatch = Effect.fn("TaskBackendResultTest.dispatch")(function* (
 
 const workResult = (metadata: object) => ("workResult" in metadata ? metadata.workResult : undefined)
 
+function requireOriginalTask(message: SessionMessage.Message | undefined, callID: string) {
+  if (message?.type !== "assistant" || message.agent !== "maestro") throw new Error("actual native Task assistant missing")
+  const calls = message.content.filter((part) => part.type === "tool" && part.id === callID)
+  const call = calls[0]
+  if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed || !("structured" in call.state))
+    throw new Error("actual native original Task call missing")
+  return { call: { ...call, state: call.state },
+    metadata: Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata) }
+}
+
 // Runs a background backend specialist Task whose child durably writes `text` as its final message, and returns the parent's
 // completion notice: the existing background delivery (F4 cl.35) and the only place the final result can still land.
 const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(function* (
   text: string,
   error?: NonNullable<SessionV1.Assistant["error"]>,
   subagent = "backend",
+  projection: "legacy" | "native" | "dual" = "legacy",
 ) {
   const sessions = yield* Session.Service
   const jobs = yield* BackgroundJob.Service
   const notice = yield* Deferred.make<Parameters<TaskPromptOps["prompt"]>[0]>()
+  const release = yield* Deferred.make<void>()
+  const resumed = yield* Deferred.make<void>()
+  const database = yield* Database.Service
+  const events = yield* EventV2Bridge.Service
   const written: string[] = []
-  const result = yield* dispatch(text, {
-    background: true,
-    subagent,
-    prompt: (input) =>
-      input.agent !== subagent
-        ? Deferred.succeed(notice, input).pipe(Effect.andThen(Effect.never))
-        : Effect.gen(function* () {
-            const info = yield* sessions.updateMessage({
-              id: MessageID.ascending(),
-              role: "assistant",
-              parentID: MessageID.ascending(),
-              sessionID: input.sessionID,
-              mode: subagent,
-              agent: subagent,
-              cost: 0,
-              path: { cwd: "/tmp", root: "/tmp" },
-              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-              modelID: ref.modelID,
-              providerID: ref.providerID,
-              time: { created: Date.now() },
-              finish: "stop",
-              ...(error ? { error } : {}),
-            })
-            written.push(info.id)
-            const part = yield* sessions.updatePart({
-              id: PartID.ascending(),
-              messageID: info.id,
-              sessionID: input.sessionID,
-              type: "text",
-              text,
-            })
-            return { info, parts: [part] }
-          }),
+  const streamed: unknown[] = []
+  const parent = yield* seed()
+  const parameters = { description: "implement repo query", prompt: "packet", subagent_type: subagent, background: true }
+  const callID = "actual-background-return"
+  const original = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: parent.chat.id,
+    messageID: parent.assistant.id, type: "tool", tool: "task", callID,
+    state: { status: "running", input: parameters, time: { start: Date.now() }, metadata: {} } })
+  const promptOps: TaskPromptOps = {
+    cancel: () => Effect.void,
+    resumeNotice: (sessionID) => Effect.gen(function* () {
+      expect(sessionID).toBe(parent.chat.id)
+      const row = yield* database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(parent.assistant.id))).get().pipe(Effect.orDie)
+      if (!row) throw new Error("actual native Task missing before resume")
+      const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+      const metadata = requireOriginalTask(message, callID).metadata
+      if (subagent === "walt") expect(metadata).toHaveProperty("upstreamSettlement")
+      if (subagent !== "walt") expect(metadata).not.toHaveProperty("upstreamSettlement")
+      yield* Deferred.succeed(resumed, undefined)
+    }),
+    resolvePromptParts: (value) => Effect.succeed([{ type: "text", text: value }]),
+    prompt: (input) => Effect.gen(function* () {
+      if (input.sessionID === parent.chat.id) {
+        if (!input.messageID) throw new Error("actual notice identity missing")
+        const messageID = input.messageID
+        const identity = PromptIdentity.fromEncoded(Schema.encodeSync(SessionPrompt.PromptInput)(input))
+        const previous = yield* sessions.reconcilePrompt({ sessionID: input.sessionID, messageID, identity })
+        const user: SessionV1.User = { id: messageID, sessionID: input.sessionID, role: "user", agent: "maestro", model: ref,
+          time: { created: Date.now() } }
+        const admitted = previous ?? (yield* sessions.admitPrompt({ sessionID: input.sessionID, messageID,
+          identityVersion: 1, identity, info: user, parts: input.parts.flatMap((part) => part.type === "text"
+            ? [{ ...part, id: PartID.ascending(), messageID, sessionID: input.sessionID }] : []) })).message
+        if (!input.noReply) {
+          const stored = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+          if (subagent === "walt") expect(stored?.type === "tool" && "metadata" in stored.state && stored.state.metadata)
+            .toHaveProperty("upstreamSettlement")
+          yield* Deferred.succeed(notice, input)
+        }
+        return admitted
+      }
+      yield* Deferred.await(release)
+      const returned = yield* ops(text, written, error).prompt(input)
+      if (returned.info.role !== "assistant") throw new Error("actual background fixture assistant missing")
+      const info = yield* sessions.updateMessage({
+        ...returned.info,
+        time: { ...returned.info.time, completed: Date.now() },
+      })
+      const parts = yield* Effect.forEach(returned.parts, (part) => sessions.updatePart(part))
+      return { info, parts }
+    }).pipe(Effect.orDie),
+  }
+  const tool = yield* TaskTool
+  const definition = yield* tool.init()
+  const result = yield* definition.execute(parameters, {
+    sessionID: parent.chat.id, messageID: parent.assistant.id, callID, agent: "maestro", agentID: "maestro",
+    abort: new AbortController().signal, extra: { promptOps }, messages: [], ask: () => Effect.void,
+    // Match native callback: completion closes generic streaming metadata; private host observation must still persist.
+    metadata: (value) => Effect.gen(function* () {
+      if (value.metadata?.workResult !== undefined) streamed.push(value.metadata.workResult)
+      const part = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+      if (part?.type !== "tool" || part.state.status !== "running") return
+      yield* sessions.updatePart({ ...part, state: { ...part.state, ...value } })
+    }),
   })
-  if (!Exit.isSuccess(result.exit)) throw new Error("expected background start")
-  yield* jobs.wait({ id: result.exit.value.metadata.sessionId })
-  const delivered = (yield* Deferred.await(notice)).parts[0]
+  yield* sessions.updatePart({ ...original, state: { status: "completed", input: parameters,
+    title: result.title, output: result.output, metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
+  if (projection !== "legacy") {
+    const base = { sessionID: parent.chat.id, assistantMessageID: SessionMessage.ID.make(parent.assistant.id), callID }
+    yield* events.publish(SessionEvent.Step.Started, { ...base, agent: AgentV2.ID.make("maestro"),
+      model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Input.Started, { ...base, name: "task", timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Called, { ...base, tool: "task", input: parameters,
+      provider: { executed: false }, timestamp: yield* DateTime.now })
+    yield* events.publish(SessionEvent.Tool.Success, { ...base, structured: { title: result.title, output: result.output,
+      metadata: result.metadata }, content: [], provider: { executed: false }, timestamp: yield* DateTime.now })
+    if (projection === "native") {
+      // Seed's compatibility rows served initial TaskTool lookup; actual exit now has only the native original Task.
+      yield* database.db.delete(PartTable).where(eq(PartTable.id, original.id)).run().pipe(Effect.orDie)
+      yield* database.db.delete(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(parent.assistant.id))).run().pipe(Effect.orDie)
+    }
+  }
+  yield* Deferred.succeed(release, undefined)
+  yield* jobs.wait({ id: result.metadata.sessionId })
+  const delivered = projection === "legacy"
+    ? (yield* awaitWithTimeout(Deferred.await(notice), "actual background settlement did not resume parent")).parts[0]
+    : undefined
+  if (projection !== "legacy") yield* awaitWithTimeout(Deferred.await(resumed), "actual native private settlement did not resume parent")
+  const retained = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+  const native = projection !== "legacy" ? yield* Effect.gen(function* () {
+    const rows = yield* database.db.select().from(SessionMessageTable)
+      .where(eq(SessionMessageTable.session_id, parent.chat.id)).all().pipe(Effect.orDie)
+    const messages = rows.map((row) => Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }))
+    const originalTask = requireOriginalTask(messages.find((message) => message.id === SessionMessage.ID.make(parent.assistant.id)), callID)
+    const metadata = originalTask.metadata
+    const receipt = subagent === "walt"
+      ? Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
+      : undefined
+    const notices = messages.filter((message) => message.type === "synthetic")
+    if (!receipt) expect(notices).toHaveLength(1)
+    const notice = receipt ? messages.find((message) => message.id === receipt.deliveryMessageID) : notices[0]
+    if (notice?.type !== "synthetic") throw new Error("actual native synthetic projection missing")
+    if (receipt) expect(metadata.workResult).toEqual(receipt.workResult)
+    if (!receipt) expect(metadata).not.toHaveProperty("upstreamSettlement")
+    return { call: originalTask.call, receipt, notice }
+  }) : undefined
   return {
-    started: result.exit.value.metadata,
+    started: result.metadata,
     childMessageID: written[0],
-    workResult: delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+    workResult: native ? native.receipt?.workResult ?? streamed.at(-1)
+      : delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+    retained,
+    native,
   }
 })
 
@@ -383,6 +477,47 @@ describe("tool.task backend-result", () => {
         author: { memberId: "walt", executionSessionID: result.started.sessionId, messageID: result.childMessageID },
         terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") },
       })
+      expect(result.retained).toMatchObject({ type: "tool", callID: "actual-background-return",
+        state: { status: "completed", metadata: { workResult: result.workResult,
+          upstreamSettlement: { parentCallID: "actual-background-return", workResult: result.workResult } } } })
+    }),
+  )
+
+  ;(["native", "dual"] as const).forEach((projection) => {
+    background.instance(`failed background schedule observes completed ${projection} Task before native private settlement`, () =>
+      Effect.gen(function* () {
+        const proposal = { outcome: "done", artifacts: [], blockers: [], risks: [], nextActions: [] }
+        const result = yield* deliverBackground("```upstream-result\n" + JSON.stringify(proposal) + "\n```",
+          new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(), "walt", projection)
+        expect(result.workResult).toMatchObject({ schema: "upstream-work-result-v1",
+          card: { messageID: result.childMessageID },
+          author: { memberId: "walt", executionSessionID: result.started.sessionId, messageID: result.childMessageID },
+          terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") } })
+        expect(result.native).toMatchObject({
+          call: { name: "task", state: { status: "completed", structured: { title: "implement repo query" } } },
+          receipt: { parentCallID: "actual-background-return", workResult: result.workResult },
+          notice: { type: "synthetic" },
+        })
+        if (projection === "dual") expect(result.retained).toMatchObject({ state: { status: "completed",
+          metadata: { workResult: result.workResult, upstreamSettlement: { workResult: result.workResult } } } })
+      }),
+    )
+  })
+
+  background.instance("completed native backend Task delivers failed generic notice without upstream authorship or receipt", () =>
+    Effect.gen(function* () {
+      const result = yield* deliverBackground(final(card),
+        new SessionV1.APIError({ message: "Network connection lost", isRetryable: false }).toObject(), "backend", "native")
+      expect(result.workResult).toMatchObject({ schema: "backend-work-result-v1",
+        card: { parsed: true, messageID: result.childMessageID },
+        terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") } })
+      expect(result.workResult).not.toHaveProperty("author")
+      expect(result.native?.receipt).toBeUndefined()
+      expect(result.native).toMatchObject({ call: { state: { status: "completed" } }, notice: { type: "synthetic" } })
+      expect(result.native?.notice.text).toContain('<task id="')
+      expect(result.native?.notice.text).toContain('state="error"')
+      expect(result.native?.notice.text).toContain("<task_error>")
+      expect(result.native?.notice.text).toContain(final(card))
     }),
   )
 
