@@ -26,3 +26,25 @@ test("non-plain structured state and clone failure decline capture without alter
     expect(output.structured).toBe(structured)
   }
 })
+
+test("custom structured prototypes decline before clone normalization erases them", () => {
+  class Status { exit = 0 }
+  const owner = { sessionID: "session", callID: "call" }
+  const output = { structured: new Status(), content: [{ type: "text" as const, text: "capture" }] }
+  ToolModelCapture.record(output, { textIndex: 0, observation: { source: "shell", command: "go test .", output: "capture",
+    termination: { kind: "exited", code: 0 }, completeness: "complete", presentation: "unknown" } }, owner)
+  expect(ToolModelCapture.get(output)).toBeUndefined()
+  expect(output.structured).toBeInstanceOf(Status)
+})
+
+test("throwing baseline comparison metadata declines without changing native values", () => {
+  const owner = { sessionID: "session", callID: "call" }
+  const output = { structured: { exit: 0 }, content: [{ type: "text" as const, text: "capture" }] }
+  ToolModelCapture.record(output, { textIndex: 0, observation: { source: "shell", command: "go test .", output: "capture",
+    termination: { kind: "exited", code: 0 }, completeness: "complete", presentation: "unknown" } }, owner)
+  const structured = new Proxy({ exit: 0 }, { getPrototypeOf: () => { throw new Error("baseline comparison failed") } })
+  expect(ToolModelCapture.bind(output, { ...output, structured }, owner)).toBeUndefined()
+  expect(output.structured).toEqual({ exit: 0 })
+  const getter = { get exit() { throw new Error("baseline getter failed") } }
+  expect(ToolModelCapture.bind(output, { ...output, structured: getter }, owner)).toBeUndefined()
+})
