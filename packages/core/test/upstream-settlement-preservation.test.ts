@@ -1,4 +1,5 @@
 import { describe, expect } from "bun:test"
+import path from "node:path"
 import { DateTime, Effect, Exit, Layer, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "../src/database/database"
@@ -6,6 +7,7 @@ import { AgentV2 } from "../src/agent"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { LayerNode } from "../src/effect/layer-node"
 import { EventV2 } from "../src/event"
+import { EventTable } from "../src/event/sql"
 import { ModelV2 } from "../src/model"
 import { ProviderV2 } from "../src/provider"
 import { SessionEvent } from "../src/session/event"
@@ -15,11 +17,14 @@ import { SessionSchema } from "../src/session/schema"
 import { SessionProjector } from "../src/session/projector"
 import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "../src/session/sql"
 import { Location } from "../src/location"
+import { WorkspaceV2 } from "../src/workspace"
+import { WorkspaceTable } from "../src/control-plane/workspace.sql"
 import { SessionV1 } from "../src/v1/session"
 import { Project } from "../src/project"
 import { ProjectTable } from "../src/project/sql"
 import { AbsolutePath } from "../src/schema"
 import { testEffect } from "./lib/effect"
+import { tmpdir } from "./fixture/tmpdir"
 
 // Prepared source cases, not executed. These exercise the actual receipt helpers and production updater.
 const it = testEffect(Layer.empty)
@@ -258,7 +263,7 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
   if (!owner) throw new Error("Missing legacy original owner")
   const info = Schema.decodeUnknownSync(SessionV1.Info)({ ...owner.data, id: owner.id, sessionID: owner.session_id })
   if (info.role !== "assistant") throw new Error("Expected legacy original assistant")
-  const malformedOwner: Pick<SessionV1.Assistant, "role" | "agent"> = { role: "assistant", agent: "maestro" }
+  const malformedOwner: Pick<SessionV1.Assistant, "role" | "agent" | "time"> = { role: "assistant", agent: "maestro", time: { created: info.time.created } }
   yield* f.database.db.update(MessageTable).set({ data: malformedOwner }).where(eq(MessageTable.id, owner.id)).run()
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
@@ -287,6 +292,123 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
   const retained = yield* f.database.db.select().from(PartTable).where(eq(PartTable.id, original.id)).get()
   if (!retained) throw new Error("Compatible legacy original disappeared")
   expect(retained.data).toMatchObject({ type: "tool", callID: original.callID, state: { metadata: f.retainedMetadata } })
+}))
+
+dbIt.live("stored returned-author completion, agent and role conflicts veto either dual view", () => Effect.gen(function* () {
+  const f = yield* observationFixture("stored-author")
+  const before = yield* f.read()
+  const offered = { ...f.retainedMetadata, workResult: f.result }
+  const modern = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.authorMessageID)).get()
+  const legacy = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(f.authorMessageID))).get()
+  if (!modern || !legacy) throw new Error("Expected both stored returned-author views")
+  const author = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
+  const old = Schema.decodeUnknownSync(SessionV1.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
+  if (author.type !== "assistant" || old.role !== "assistant") throw new Error("Expected stored returned assistants")
+  for (const message of [
+    { ...author, time: { created: author.time.created } },
+    { ...author, agent: "maestro" },
+    SessionMessage.User.make({ id: author.id, type: "user", text: "Not a returned assistant", time: { created: author.time.created } }),
+  ]) {
+    const encoded = Schema.encodeSync(SessionMessage.Message)(message)
+    const { id: _, type, ...data } = encoded
+    yield* f.database.db.update(SessionMessageTable).set({ type, data }).where(eq(SessionMessageTable.id, modern.id)).run()
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(SessionMessageTable).set({ type: modern.type, data: modern.data }).where(eq(SessionMessageTable.id, modern.id)).run()
+  }
+  for (const message of [
+    { ...old, time: { created: old.time.created } },
+    { ...old, agent: "maestro" },
+    SessionV1.User.make({ id: old.id, sessionID: old.sessionID, role: "user", agent: "walt",
+      model: { providerID: old.providerID, modelID: old.modelID }, time: { created: old.time.created } }),
+  ]) {
+    const encoded = Schema.encodeSync(SessionV1.Info)(message)
+    const { id: _, sessionID: __, ...data } = encoded
+    yield* f.database.db.update(MessageTable).set({ data }).where(eq(MessageTable.id, legacy.id)).run()
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(MessageTable).set({ data: legacy.data }).where(eq(MessageTable.id, legacy.id)).run()
+  }
+  yield* f.database.db.update(MessageTable).set({ session_id: f.parentID }).where(eq(MessageTable.id, legacy.id)).run()
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.database.db.update(MessageTable).set({ session_id: legacy.session_id }).where(eq(MessageTable.id, legacy.id)).run()
+  yield* f.offer(offered)
+  expect((yield* f.read()).state.structured.metadata).toMatchObject({ workResult: f.result })
+}))
+
+dbIt.live("first interrupted observation requires matching actual parent and child workspace", () => Effect.gen(function* () {
+  const f = yield* observationFixture("first-interrupted")
+  const before = yield* f.read()
+  const parentWorkspace = WorkspaceV2.ID.make("wrk_observation_parent")
+  const childWorkspace = WorkspaceV2.ID.make("wrk_observation_child")
+  yield* f.database.db.insert(WorkspaceTable).values([
+    { id: parentWorkspace, type: "worktree", project_id: f.projectID, directory: "/project" },
+    { id: childWorkspace, type: "worktree", project_id: f.projectID, directory: "/project" },
+  ]).run()
+  yield* f.database.db.update(SessionTable).set({ workspace_id: parentWorkspace }).where(eq(SessionTable.id, f.parentID)).run()
+  yield* f.database.db.update(SessionTable).set({ workspace_id: childWorkspace }).where(eq(SessionTable.id, f.childID)).run()
+  const location = Location.Ref.make({ directory: AbsolutePath.make("/project"), workspaceID: parentWorkspace })
+  const interrupted = { ...f.result, terminal: { reason: "interrupted", hostDetail: "Host cancelled after returned assistant" } }
+  const offered = { ...f.retainedMetadata, workResult: interrupted }
+  yield* f.offer(offered, {}, location)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.database.db.update(SessionTable).set({ workspace_id: parentWorkspace }).where(eq(SessionTable.id, f.childID)).run()
+  yield* f.offer(offered, {}, location)
+  expect(yield* f.read()).toEqual({ ...before, state: { ...before.state,
+    structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: interrupted } } } })
+}))
+
+dbIt.live("live observation without Location refuses caller replay metadata for durable and local-only publish", () => Effect.gen(function* () {
+  const f = yield* observationFixture("missing-location")
+  const before = yield* f.read()
+  const origins: boolean[] = []
+  yield* f.events.project(SessionEvent.Tool.Progress, (_event, origin) => Effect.sync(() => { origins.push(origin.replay) }))
+  for (const persist of [true, false]) {
+    yield* f.events.publish(SessionEvent.Tool.Progress, { sessionID: f.parentID, assistantMessageID: f.parentMessageID,
+      callID: "original-task", timestamp, structured: { replay: true, metadata: { ...f.retainedMetadata, replay: true, workResult: f.result } }, content: [] },
+    { metadata: { replay: true }, persist })
+    expect(yield* f.read()).toEqual(before)
+  }
+  expect(origins).toEqual([false, false])
+}))
+
+dbIt.live("trusted serialized replay reconstructs the same eligible host-observation projection as live publish", () => Effect.gen(function* () {
+  const f = yield* observationFixture("replay-source")
+  const workspaceID = WorkspaceV2.ID.make("wrk_observation_replay")
+  yield* f.database.db.insert(WorkspaceTable).values({ id: workspaceID, type: "worktree", project_id: f.projectID, directory: "/project" }).run()
+  yield* f.database.db.update(SessionTable).set({ workspace_id: workspaceID }).where(eq(SessionTable.id, f.parentID)).run()
+  yield* f.database.db.update(SessionTable).set({ workspace_id: workspaceID }).where(eq(SessionTable.id, f.childID)).run()
+  yield* f.offer({ ...f.retainedMetadata, workResult: f.result }, {},
+    Location.Ref.make({ directory: AbsolutePath.make("/project"), workspaceID }))
+  const live = yield* f.read()
+  const project = yield* f.database.db.select().from(ProjectTable).where(eq(ProjectTable.id, f.projectID)).get()
+  const parent = yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.parentID)).get()
+  const child = yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.childID)).get()
+  const workspace = yield* f.database.db.select().from(WorkspaceTable).where(eq(WorkspaceTable.id, workspaceID)).get()
+  const history = yield* f.database.db.select().from(EventTable).all()
+  if (!project || !parent || !child || !workspace) throw new Error("Missing live replay source facts")
+  const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
+  const replayLayer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node]),
+    [[Database.node, Database.layerFromPath(path.join(tmp.path, "replay.sqlite"))]])
+  yield* Effect.gen(function* () {
+    const database = yield* Database.Service
+    const events = yield* EventV2.Service
+    yield* database.db.insert(ProjectTable).values(project).run()
+    yield* database.db.insert(WorkspaceTable).values(workspace).run()
+    yield* database.db.insert(SessionTable).values([parent, child]).run()
+    const origins: boolean[] = []
+    yield* events.project(SessionEvent.Tool.Progress, (_event, origin) => Effect.sync(() => { origins.push(origin.replay) }))
+    for (const aggregateID of [f.childID, f.parentID]) {
+      yield* events.replayAll(history.filter((row) => row.aggregate_id === aggregateID).sort((a, b) => a.seq - b.seq)
+        .map((row) => ({ id: row.id, type: row.type, seq: row.seq, aggregateID: row.aggregate_id, data: row.data })))
+    }
+    const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.parentMessageID)).get()
+    if (!row) throw new Error("Missing reconstructed native original Task")
+    const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+    expect(tool({ messages: [message] })).toEqual(live)
+    expect(origins).toEqual([true])
+  }).pipe(Effect.provide(Layer.fresh(replayLayer)))
 }))
 
 dbIt.effect("legacy durable projector preserves receipt, original input and terminal state against late metadata", () => Effect.gen(function* () {

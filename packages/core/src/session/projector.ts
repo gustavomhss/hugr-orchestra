@@ -13,6 +13,7 @@ import { WorkspaceTable } from "../control-plane/workspace.sql"
 import { ProjectTable } from "../project/sql"
 import { SessionMessage } from "./message"
 import { SessionMessageUpdater } from "./message-updater"
+import { fromRow } from "./info"
 import { SessionInput } from "./input"
 import { WorkspaceV2 } from "../workspace"
 import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
@@ -110,7 +111,7 @@ function applyUsage(
     .pipe(Effect.orDie)
 }
 
-function run(db: DatabaseService, event: SessionEvent.Event) {
+function run(db: DatabaseService, event: SessionEvent.Event, replay = false) {
   return Effect.gen(function* () {
     const decodeRow = (row: typeof SessionMessageTable.$inferSelect) =>
       decodeMessage({ ...row.data, id: row.id, type: row.type })
@@ -138,8 +139,8 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
           const child = yield* db.select().from(SessionTable).where(eq(SessionTable.id, input.childSessionID)).get().pipe(Effect.orDie)
           const owner = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, input.assistant.id)).get().pipe(Effect.orDie)
           if (!parent || !child || !owner || owner.session_id !== parent.id || child.parent_id !== parent.id ||
-            child.project_id !== parent.project_id || child.directory !== parent.directory || child.agent !== input.memberID ||
-            input.location?.directory !== parent.directory || (input.location?.workspaceID ?? null) !== parent.workspace_id) return false
+            child.project_id !== parent.project_id || child.directory !== parent.directory ||
+            child.workspace_id !== parent.workspace_id || child.agent !== input.memberID) return false
           const project = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, parent.project_id)).get().pipe(Effect.orDie)
           if (!project) return false
           const retained = decodeRow(owner)
@@ -189,7 +190,9 @@ function run(db: DatabaseService, event: SessionEvent.Event) {
             const author = Schema.decodeUnknownSync(SessionV1.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
             if (legacy.session_id !== child.id || author.role !== "assistant" || author.agent !== child.agent || author.time.completed === undefined) return false
           }
-          return true
+          // Replay origin is supplied only by EventV2's internal commit path, never event payload or metadata.
+          const location = replay ? fromRow(parent).location : input.location
+          return location?.directory === parent.directory && (location?.workspaceID ?? null) === parent.workspace_id
         })
       },
       getCurrentAssistant() {
@@ -497,7 +500,7 @@ const layer = Layer.effectDiscard(
     yield* events.project(SessionEvent.Tool.Input.Started, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Input.Ended, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Called, (event) => run(db, event))
-    yield* events.project(SessionEvent.Tool.Progress, (event) => run(db, event))
+    yield* events.project(SessionEvent.Tool.Progress, (event, origin) => run(db, event, origin.replay))
     yield* events.project(SessionEvent.Tool.Success, (event) => run(db, event))
     yield* events.project(SessionEvent.Tool.Failed, (event) => run(db, event))
     yield* events.project(SessionEvent.Reasoning.Started, (event) => run(db, event))
