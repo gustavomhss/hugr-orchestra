@@ -428,7 +428,40 @@ export function make(options: Options) {
         return Effect.succeed(Object.freeze({ provider: locator.provider, canonicalName: canonical.canonicalName, name: locator.name }))
       })
     })
-    return { find, describe, locate }
+    // Host-only current metadata check, not a grant or execution lease. Callers must already hold scope approval.
+    const validateCurrent = Effect.fn("CapabilityDiscovery.validateCurrent")(function* (
+      context: Tool.Context, ref: Capability.DescriptorRef, materialization: ToolRegistry.Materialization,
+      scope: Readonly<{ connectionGeneration: number; targetGeneration: number; catalogGeneration: number; schemaHash: string }>,
+    ): Effect.fn.Return<void, Capability.Failure> {
+      const supplied = { ...context }
+      const binding = yield* policy.binding(supplied)
+      const parsed = Schema.decodeUnknownOption(Capability.DescriptorRef)(ref)
+      if (Option.isNone(parsed)) return yield* failure("stale_descriptor")
+      const value = { ...parsed.value }
+      const currentScope = { ...scope }
+      const locator = locators.get(value.id)
+      const time = now()
+      if (!locator || !Number.isFinite(time) || locator.expiresAt <= time ||
+        !CapabilityCursors.sameOwner(locator.owner, binding.owner) || !sameRef(locator.ref, value))
+        return yield* failure("stale_descriptor")
+      const canonical = identity(locator.provider, materialization)
+      if (canonical instanceof Capability.Failure) return yield* canonical
+      if (canonical.canonicalIdentity !== locator.canonicalIdentity) return yield* failure("stale_descriptor")
+      const record = yield* descriptors.read(value, { ...currentScope, owner: binding.owner, canonicalIdentity: canonical.canonicalIdentity })
+      if (!sameRef(record.ref, value) || !CapabilityCursors.sameOwner(record.owner, binding.owner) ||
+        record.operationID !== locator.name || record.canonicalName !== canonical.canonicalName ||
+        record.canonicalIdentity !== canonical.canonicalIdentity) return yield* failure("stale_descriptor")
+      if ((yield* policy.binding(supplied)) !== binding) return yield* failure("invocation_binding_mismatch")
+      return yield* Effect.suspend(() => {
+        const current = identity(locator.provider, materialization)
+        if (current instanceof Capability.Failure) return Effect.fail(current)
+        const time = now()
+        return !Number.isFinite(time) || locator.expiresAt <= time || record.expiresAt <= time ||
+          locators.get(value.id) !== locator || current.canonicalIdentity !== canonical.canonicalIdentity
+          ? Effect.fail(failure("stale_descriptor")) : Effect.void
+      })
+    })
+    return { find, describe, locate, validateCurrent }
   })
 }
 
