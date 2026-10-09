@@ -130,11 +130,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
 
   const publish = Effect.fn("CapabilityArtifacts.publish")(function* (context: Tool.Context, input: Input, requirements: Requirements = []) {
+    const required = requirements.map((input) => ({ action: input.action, resources: [...input.resources] }))
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
     const ref = Capability.ArtifactRef.make({ id: Capability.ArtifactID.create(), revision: 0 })
     const permit = yield* authorize(context, "artifact.write", [resource(ref)])
-    const native = yield* Effect.forEach(requirements, (input) => policy.authorize(context, input))
+    const native = yield* Effect.forEach(required, (input) => policy.authorize(context, input))
     return yield* policy.commitMany([permit, ...native], (tx) => store(tx, context, ref, value))
       .pipe(storageErrors)
   })
@@ -142,11 +143,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   const update = Effect.fn("CapabilityArtifacts.update")(function* (
     context: Tool.Context, expectedRef: Capability.ArtifactRef, input: Input, requirements: Requirements = [],
   ) {
+    const required = requirements.map((input) => ({ action: input.action, resources: [...input.resources] }))
     const ref = yield* requireRef(expectedRef)
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
     const permit = yield* authorize(context, "artifact.write", [resource(ref)])
-    const native = yield* Effect.forEach(requirements, (input) => policy.authorize(context, input))
+    const native = yield* Effect.forEach(required, (input) => policy.authorize(context, input))
     return yield* policy.commitMany([permit, ...native], (tx) => Effect.gen(function* () {
       yield* resolve(tx, context, ref)
       const latest = yield* tx.select().from(CapabilityArtifactTable).where(eq(CapabilityArtifactTable.id, ref.id))

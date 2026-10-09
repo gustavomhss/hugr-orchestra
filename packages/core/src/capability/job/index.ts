@@ -188,7 +188,7 @@ export const make = Effect.gen(function* () {
 
   const admit = Effect.fn("CapabilityJobs.admit")(function* (supplied: Tool.Context, input: CreateInput) {
       const decoded = Schema.decodeUnknownOption(Create)(input)
-      if (Option.isNone(decoded)) return yield* failure("unsupported_schema")
+      if (Option.isNone(decoded) || !decoded.value.requestHash) return yield* failure("unsupported_schema")
       const fixed = Object.freeze({ ...decoded.value,
         ...(decoded.value.connection ? { connection: Object.freeze({ ...decoded.value.connection }) } : {}),
         ...(decoded.value.target ? { target: Object.freeze({ ...decoded.value.target }) } : {}),
@@ -238,7 +238,11 @@ export const make = Effect.gen(function* () {
     })
   return {
     admit,
-    create: (context: Tool.Context, input: CreateInput) => admit(context, input).pipe(Effect.map((result) => result.ref)),
+    create: (context: Tool.Context, input: CreateInput) => admit(context, { ...input,
+      requestHash: input.requestHash ?? createHash("sha256").update(JSON.stringify([
+        input.kind, input.operation, input.creationKey ?? "primary", input.connection ?? null, input.target ?? null,
+      ])).digest("hex"),
+    }).pipe(Effect.map((result) => result.ref)),
     read: Effect.fn("CapabilityJobs.read")(function* (supplied: Tool.Context, suppliedRef: Capability.JobRef) {
       const ref = fixedRef(suppliedRef)
       if (ref instanceof Capability.Failure) return yield* ref
