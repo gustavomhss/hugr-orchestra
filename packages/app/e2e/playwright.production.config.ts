@@ -4,7 +4,9 @@ import config from "../playwright.config"
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000)
 
-export default defineConfig(config, {
+// defineConfig(config, override) concatenates webServer entries, which starts dev and preview on one port.
+export default defineConfig({
+  ...config,
   testDir: ".",
   outputDir: "./test-results",
   reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"]],
@@ -15,6 +17,7 @@ export default defineConfig(config, {
     reuseExistingServer: false,
   },
   use: {
+    ...config.use,
     trace: "retain-on-failure",
   },
 })
