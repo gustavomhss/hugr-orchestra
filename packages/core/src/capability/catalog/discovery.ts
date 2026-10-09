@@ -124,22 +124,20 @@ export function make(options: Options) {
     const placement = { projectID: location.project.id,
       location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) }
 
-    const identity = Effect.fnUntraced(function* (
-      binding: CapabilityInvocation.Binding, provider: string, materialization: ToolRegistry.Materialization,
-    ) {
+    const identity = (provider: string, materialization: ToolRegistry.Materialization) => {
       const canonicalName = `platform_${provider}`
       const captured = materialization.registrationIdentity(canonicalName)
-      const current = yield* registry.materialize(binding.effectiveRules)
-      if (!captured || current.registrationIdentity(canonicalName) !== captured) return yield* failure("stale_descriptor")
+      if (!captured || registry.currentRegistrationIdentity(canonicalName) !== captured) return failure("stale_descriptor")
       return { canonicalName, canonicalIdentity: captured }
-    })
+    }
     const acquire = Effect.fn("CapabilityDiscovery.acquire")(function* (
       context: Tool.Context, input: Omit<FindInput, "query" | "cursor" | "limit">, materialization: ToolRegistry.Materialization,
     ) {
       // Missing frame and persisted-root failures precede selection, registry probing and acquisition.
       const binding = yield* CapabilityInvocation.require(context, placement)
       yield* policy.assert(context, { action: disclosureAction, resources: resources(input) })
-      const canonical = yield* identity(binding, input.provider, materialization)
+      const canonical = identity(input.provider, materialization)
+      if (canonical instanceof Capability.Failure) return yield* canonical
       const resolution = yield* connections.resolve(context, { ...input, action: disclosureAction })
       const credential = yield* connections.loadCredential(context, resolution, disclosureAction)
       const listed = yield* source.listTools(Object.freeze(structuredClone({ ...resolution, owner: binding.owner, credential }))).pipe(
@@ -149,7 +147,8 @@ export function make(options: Options) {
       if (catalog instanceof Capability.Failure) return yield* catalog
       // No cache can assert a current remote generation. Re-list each disclosure; cache only validators.
       yield* connections.loadCredential(context, resolution, disclosureAction)
-      yield* identity(binding, input.provider, materialization)
+      const current = identity(input.provider, materialization)
+      if (current instanceof Capability.Failure) return yield* current
       return { binding, canonical, resolution, catalog }
     })
     const visibility = Effect.fnUntraced(function* (
@@ -249,9 +248,17 @@ export function make(options: Options) {
         const validator = yield* compile(tool)
         return { tool, validator }
       }))
+      const plan = page.flatMap((item) => item.validator instanceof Capability.Failure ? [] : [{
+        owner: binding.owner, ...acquired.canonical,
+        connectionID: scope.connectionID, targetID: scope.targetID,
+        connectionGeneration: scope.connectionGeneration, targetGeneration: scope.targetGeneration,
+        catalogGeneration: scope.catalogGeneration, schemaHash: item.validator.schemaHash,
+        inputSchema: item.validator.inputSchema, outputSchema: item.validator.outputSchema, operationID: item.tool.name,
+      }])
       return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         // Reserve actual cursor capacity before descriptor issuance. Pending token remains host-only.
         const cursor = offset + page.length < matches.length ? yield* cursors.issue(scope, offset + page.length) : undefined
+        const pending: { records: readonly CapabilityDescriptors.DescriptorRecord[] } = { records: [] }
         return yield* restore(Effect.gen(function* () {
           const permit = yield* policy.authorize(supplied, { action: disclosureAction,
             resources: [...resources(scope), ...page.map((item) => operationResource(value.provider, item.tool.name))] })
@@ -259,36 +266,63 @@ export function make(options: Options) {
             yield* checkSelection(tx, supplied, binding.owner, acquired.resolution)
             const current = yield* visibility(supplied, binding, acquired.catalog, selection, false)
             if (visibilityHash(binding, current) !== scope.visibilityHash) return yield* failure("stale_descriptor")
-            yield* identity(binding, value.provider, materialization)
+            const canonical = identity(value.provider, materialization)
+            if (canonical instanceof Capability.Failure) return yield* canonical
             const time = now()
             Array.from(locators).forEach(([id, value]) => { if (value.expiresAt <= time) locators.delete(id) })
-            if (locators.size + page.filter((item) => !(item.validator instanceof Capability.Failure)).length > maxEntries)
+            if (locators.size + plan.length > maxEntries)
               return yield* failure("quota_exceeded")
-            return yield* Effect.forEach(page, (item) => Effect.gen(function* () {
-              // Final permit covers every disclosed operation; commit reassesses under actor/SQL gate.
+            // Mask only admission and capture: injected asynchronous stores must deliver their committed
+            // tuple before interruption can start rollback. Shared store owns actual batch capacity.
+            yield* descriptors.issueBatch(plan).pipe(Effect.tap((records) => Effect.sync(() => {
+              pending.records = records
+            })), Effect.uninterruptible)
+            const currentIdentity = identity(value.provider, materialization)
+            if (currentIdentity instanceof Capability.Failure) return yield* currentIdentity
+            if (pending.records.length !== plan.length || new Set(pending.records.map((record) => record.operationID)).size !== plan.length ||
+              pending.records.some((record) => !CapabilityCursors.sameOwner(record.owner, binding.owner) ||
+                record.canonicalIdentity !== acquired.canonical.canonicalIdentity || record.canonicalName !== acquired.canonical.canonicalName ||
+                record.connectionGeneration !== scope.connectionGeneration || record.targetGeneration !== scope.targetGeneration ||
+                record.ref.connectionID !== scope.connectionID || record.ref.targetID !== scope.targetID ||
+                record.ref.catalogGeneration !== scope.catalogGeneration ||
+                !plan.some((input) => input.operationID === record.operationID && input.schemaHash === record.ref.schemaHash)))
+              return yield* failure("stale_descriptor")
+            const operations = page.map((item): Operation | Capability.Failure => {
               if (item.validator instanceof Capability.Failure) return {
-                name: item.tool.name, summary: item.tool.summary, readiness: "unsupported" as const,
-                coverage: { input: "unsupported" as const, output: "unsupported" as const },
+                name: item.tool.name, summary: item.tool.summary, readiness: "unsupported",
+                coverage: { input: "unsupported", output: "unsupported" },
               }
-              const record = yield* descriptors.issue({
-                owner: binding.owner, ...acquired.canonical,
-                connectionID: scope.connectionID, targetID: scope.targetID,
-                connectionGeneration: scope.connectionGeneration, targetGeneration: scope.targetGeneration,
-                catalogGeneration: scope.catalogGeneration, schemaHash: item.validator.schemaHash,
-                inputSchema: item.validator.inputSchema, outputSchema: item.validator.outputSchema, operationID: item.tool.name,
-              })
-              yield* identity(binding, value.provider, materialization)
-              locators.set(record.ref.id, Object.freeze({ provider: value.provider, name: item.tool.name,
-                owner: Object.freeze({ ...binding.owner, location: Object.freeze({ ...binding.owner.location }) }),
-                ref: Object.freeze({ ...record.ref }), expiresAt: record.expiresAt }))
-              return { name: item.tool.name, summary: item.tool.summary, readiness: "ready" as const,
+              const record = pending.records.find((record) => record.operationID === item.tool.name)
+              if (!record) return failure("stale_descriptor")
+              return { name: record.operationID, summary: item.tool.summary, readiness: "ready",
                 coverage: item.validator.coverage, ref: record.ref }
-            }))
+            })
+            const error = operations.find((operation) => operation instanceof Capability.Failure)
+            if (error instanceof Capability.Failure) return yield* error
+            return operations.filter((operation): operation is Operation => !(operation instanceof Capability.Failure))
           })).pipe(Effect.catchTag("SqlError", () => Effect.fail(failure("connection_unavailable"))))
-          yield* identity(binding, value.provider, materialization)
-          return { operations, coverage: acquired.catalog.coverage, catalogGeneration: acquired.catalog.catalogGeneration,
-            ...(cursor === undefined ? {} : { cursor }) }
-        })).pipe(Effect.onExit((exit) => Exit.isFailure(exit) && cursor !== undefined ? cursors.remove(cursor) : Effect.void))
+          if (cursor !== undefined) yield* cursors.preflight(cursor, preflight)
+          // SQLite COMMIT and injected Store calls may yield. Check current token outside that boundary,
+          // then publish locators and return in one synchronous transition. This is not a liveness lease.
+          return yield* Effect.suspend(() => {
+            const currentIdentity = identity(value.provider, materialization)
+            if (currentIdentity instanceof Capability.Failure) return Effect.fail(currentIdentity)
+            const time = now()
+            if (!Number.isFinite(time) || pending.records.some((record) => record.expiresAt <= time))
+              return Effect.fail(failure("stale_descriptor"))
+            Array.from(locators).forEach(([id, value]) => { if (value.expiresAt <= time) locators.delete(id) })
+            if (locators.size + pending.records.length > maxEntries) return Effect.fail(failure("quota_exceeded"))
+            pending.records.forEach((record) => locators.set(record.ref.id, Object.freeze({
+              provider: value.provider, name: record.operationID, owner: record.owner, ref: record.ref, expiresAt: record.expiresAt,
+            })))
+            return Effect.succeed({ operations, coverage: acquired.catalog.coverage, catalogGeneration: acquired.catalog.catalogGeneration,
+              ...(cursor === undefined ? {} : { cursor }) })
+          })
+        })).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
+          if (cursor !== undefined) yield* cursors.remove(cursor)
+          yield* Effect.forEach(pending.records, (record) => descriptors.remove(record.ref), { discard: true })
+          pending.records.forEach((record) => locators.delete(record.ref.id))
+        }) : Effect.void))
       }))
     })
 
@@ -322,19 +356,25 @@ export function make(options: Options) {
       })
       const description = yield* policy.commit(permit, (tx) => Effect.gen(function* () {
         yield* checkSelection(tx, supplied, binding.owner, acquired.resolution)
-        yield* identity(binding, locator.provider, materialization)
+        const canonical = identity(locator.provider, materialization)
+        if (canonical instanceof Capability.Failure) return yield* canonical
         const record = yield* descriptors.read(value, {
           owner: binding.owner, connectionGeneration: acquired.resolution.connection.generation,
           targetGeneration: acquired.resolution.target.generation, canonicalIdentity: acquired.canonical.canonicalIdentity,
           catalogGeneration: acquired.catalog.catalogGeneration, schemaHash: validator.schemaHash,
         })
-        yield* identity(binding, locator.provider, materialization)
+        const currentIdentity = identity(locator.provider, materialization)
+        if (currentIdentity instanceof Capability.Failure) return yield* currentIdentity
         return { ref: record.ref, name: record.operationID, summary: tool.summary, readiness: "ready" as const,
           coverage: validator.coverage, inputSchema: record.inputSchema,
           ...(record.outputSchema === undefined ? {} : { outputSchema: record.outputSchema }) }
       })).pipe(Effect.catchTag("SqlError", () => Effect.fail(failure("connection_unavailable"))))
-      yield* identity(binding, locator.provider, materialization)
-      return description
+      return yield* Effect.suspend(() => {
+        const currentIdentity = identity(locator.provider, materialization)
+        if (currentIdentity instanceof Capability.Failure) return Effect.fail(currentIdentity)
+        const time = now()
+        return !Number.isFinite(time) || locator.expiresAt <= time ? Effect.fail(failure("stale_descriptor")) : Effect.succeed(description)
+      })
     })
     return { find, describe }
   })

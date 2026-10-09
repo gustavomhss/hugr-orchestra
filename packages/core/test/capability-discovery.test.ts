@@ -28,7 +28,8 @@ import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
-import { Cause, Deferred, Effect, Fiber, Layer, Ref, Schema, Scope, Tracer } from "effect"
+import { sql } from "drizzle-orm"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Ref, Schema, Scope, Tracer } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -117,6 +118,45 @@ function ref(page: CapabilityDiscovery.Page) {
 function cursor(page: CapabilityDiscovery.Page) {
   if (!page.cursor) throw new Error("DISCOVERY_DID_NOT_ISSUE_CURSOR")
   return page.cursor
+}
+
+function publicationFixture(options: { maxEntries?: number; storeEntries?: number } = {}) {
+  return Effect.gen(function* () {
+    const f = yield* fixture()
+    const real = yield* CapabilityDescriptors.make({ maxEntries: options.storeEntries ?? 8, ttlMillis: 100, now: () => f.clock.time })
+    const batches = yield* Ref.make(0)
+    const issued = yield* Ref.make<readonly CapabilityDescriptors.DescriptorRecord[]>([])
+    const removed = yield* Ref.make<readonly Capability.DescriptorRef[]>([])
+    const afterBatch = yield* Ref.make<Effect.Effect<void>>(Effect.void)
+    // Fault scheduling at the host Store boundary; admission/removal/read all use the real shared store.
+    const store: CapabilityDescriptors.Store = { ...real,
+      issueBatch: (inputs) => Effect.gen(function* () {
+        yield* Ref.update(batches, (n) => n + 1)
+        const records = yield* real.issueBatch(inputs)
+        yield* Ref.update(issued, (previous) => [...previous, ...records])
+        yield* Ref.get(afterBatch).pipe(Effect.flatten)
+        return records
+      }),
+      remove: (ref) => real.remove(ref).pipe(Effect.andThen(Ref.update(removed, (previous) => [...previous, ref]))),
+    }
+    const discovery = yield* CapabilityDiscovery.make({ source: f.source, descriptors: store,
+      maxEntries: options.maxEntries ?? 8, now: () => f.clock.time, ttlMillis: 100 })
+    const find = (input: CapabilityDiscovery.FindInput = { ...request, limit: 2 }, materialization = f.materialization) =>
+      f.run(discovery.find(f.context, input, materialization))
+    const canonicalIdentity = f.registry.currentRegistrationIdentity("platform_example")
+    if (!canonicalIdentity) return yield* Effect.die("PUBLICATION_CANONICAL_REGISTRATION_MISSING")
+    const validator = yield* CapabilityVendorSchema.compile(true)
+    const input: CapabilityDescriptors.IssueInput = { owner: f.binding.owner,
+      connectionID: f.connection.id, targetID: f.target.id, connectionGeneration: f.connection.generation,
+      targetGeneration: f.target.generation, canonicalName: "platform_example", canonicalIdentity,
+      inputSchema: true, schemaHash: validator.schemaHash, catalogGeneration: 1, operationID: "unrelated" }
+    return { ...f, real, store, discovery, find, batches, issued, removed, afterBatch, input }
+  })
+}
+
+function readScope(record: CapabilityDescriptors.DescriptorRecord): CapabilityDescriptors.ReadScope {
+  return { owner: record.owner, connectionGeneration: record.connectionGeneration, targetGeneration: record.targetGeneration,
+    canonicalIdentity: record.canonicalIdentity, catalogGeneration: record.ref.catalogGeneration, schemaHash: record.ref.schemaHash }
 }
 
 describe("CapabilityDiscovery host metadata backbone", () => {
@@ -513,5 +553,133 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     const fresh = yield* f.registry.materialize(allow)
     expect(fresh.definition("platform_example")).toEqual(f.materialization.definition("platform_example"))
     expect(fresh.registrationIdentity("platform_example")).not.toBe(f.materialization.registrationIdentity("platform_example"))
+  }))
+
+  it.live("shared-store batch quota publishes no phantom refs and preserves unrelated capacity", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 8, storeEntries: 2 })
+    yield* Ref.set(f.list, { tools: tools.map((tool) => ({ name: tool.name, summary: tool.summary, inputSchema: true })),
+      catalogGeneration: 1, coverage: "complete" })
+    const unrelated = yield* f.real.issue(f.input)
+    yield* expectCode(f.find(), "quota_exceeded")
+    expect(yield* Ref.get(f.batches)).toBe(1)
+    expect(yield* Ref.get(f.issued)).toEqual([])
+    expect(yield* Ref.get(f.removed)).toEqual([])
+    expect(yield* f.real.read(unrelated.ref, readScope(unrelated))).toBe(unrelated)
+    const next = yield* f.find({ ...request, query: "get_project" })
+    expect(next.operations[0]?.name).toBe("get_project")
+    expect((yield* Ref.get(f.issued)).map((record) => record.ref)).toEqual([ref(next)])
+    expect(yield* f.real.read(unrelated.ref, readScope(unrelated))).toBe(unrelated)
+  }))
+
+  it.live("cursor quota rejects before Store admission and retains previously published refs", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2 })
+    yield* Ref.set(f.list, { tools: tools.map((tool) => ({ name: tool.name, summary: tool.summary, inputSchema: true })),
+      catalogGeneration: 1, coverage: "complete" })
+    const first = yield* f.find(request)
+    const second = yield* f.find(request)
+    yield* expectCode(f.find(request), "quota_exceeded")
+    expect(yield* Ref.get(f.batches)).toBe(2)
+    const records = yield* Ref.get(f.issued)
+    expect(records.map((record) => record.ref)).toEqual([ref(first), ref(second)])
+    yield* Effect.forEach(records, (record) => f.real.read(record.ref, readScope(record)).pipe(Effect.map((saved) => {
+      expect(saved).toBe(record)
+    })))
+    expect(yield* Ref.get(f.removed)).toEqual([])
+  }))
+
+  it.live("asynchronous batch registration replacement removes every unreturned ref and permits fresh retry", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 3, storeEntries: 3 })
+    const scope = yield* Scope.Scope
+    const unrelated = yield* f.real.issue(f.input)
+    yield* Ref.set(f.afterBatch, Effect.yieldNow.pipe(Effect.andThen(f.registry.register({ platform_example: leaf() })),
+      Effect.orDie, Effect.provideService(Scope.Scope, scope)))
+    yield* expectCode(f.find(), "stale_descriptor")
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    expect(yield* f.real.read(unrelated.ref, readScope(unrelated))).toBe(unrelated)
+    yield* Ref.set(f.afterBatch, Effect.void)
+    const fresh = yield* f.registry.materialize(allow)
+    const retry = yield* f.find({ ...request, limit: 2 }, fresh)
+    expect(retry.operations.map((operation) => operation.name)).toEqual(["list_projects", "get_project"])
+    const returned = (yield* Ref.get(f.issued)).slice(2)
+    expect(returned.map((record) => record.ref)).toEqual(retry.operations.flatMap((operation) => operation.ref ? [operation.ref] : []))
+    yield* Effect.forEach(returned, (record) => f.real.read(record.ref, readScope(record)).pipe(Effect.map((saved) => {
+      expect(saved).toBe(record)
+    })))
+  }))
+
+  it.live("interruption after batch admission waits for tuple capture then reclaims refs and cursor", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    yield* Ref.set(f.afterBatch, Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(release))))
+    const pending = yield* f.find().pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    pending.interruptUnsafe()
+    yield* Deferred.succeed(release, undefined)
+    const exit = yield* Fiber.await(pending)
+    expect(exit._tag).toBe("Failure")
+    if (exit._tag === "Failure") expect(Cause.hasInterrupts(exit.cause)).toBe(true)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    yield* Ref.set(f.afterBatch, Effect.void)
+    expect((yield* f.find()).operations).toHaveLength(2)
+  }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("SQLite COMMIT failure reclaims admitted metadata and keeps retry capacity", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    yield* f.database.db.run(sql`CREATE TABLE discovery_commit_probe (
+      session_id TEXT REFERENCES session(id) DEFERRABLE INITIALLY DEFERRED
+    )`).pipe(Effect.orDie)
+    yield* Ref.set(f.afterBatch, f.database.db.run(sql`INSERT INTO discovery_commit_probe VALUES ('missing-session')`).pipe(Effect.orDie))
+    yield* expectCode(f.find(), "connection_unavailable")
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    // Real Drizzle transaction rolls back SQLite's failed deferred-constraint COMMIT.
+    expect(yield* f.database.db.all(sql`SELECT COUNT(*) AS n FROM discovery_commit_probe`).pipe(Effect.orDie)).toEqual([{ n: 0 }])
+    yield* Ref.set(f.afterBatch, Effect.void)
+    expect((yield* f.find()).operations).toHaveLength(2)
+  }))
+
+  it.live("registration replacement at actual SQLite COMMIT return is checked outside transaction", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    const scope = yield* Scope.Scope
+    const state = { armed: false, replaced: false }
+    yield* Ref.set(f.afterBatch, Effect.sync(() => { state.armed = true }))
+    // Trace-only adapter around the real transaction; queries and COMMIT/rollback remain unchanged.
+    const transaction: typeof f.database.db.transaction = (use, options) =>
+      f.database.db.transaction(use, options).pipe(Effect.withSpan("publication.transaction"))
+    const db = new Proxy(f.database.db, { get: (target, key) =>
+      key === "transaction" ? transaction : Reflect.get(target, key, target) })
+    const discovery = yield* CapabilityDiscovery.make({ source: f.source, descriptors: f.store,
+      maxEntries: 2, now: () => f.clock.time, ttlMillis: 100 }).pipe(
+      Effect.provideService(Database.Service, { ...f.database, db }),
+    )
+    const tracer = Tracer.make({ span: (options) => new class extends Tracer.NativeSpan {
+      override end(time: bigint, exit: Exit.Exit<unknown, unknown>) {
+        super.end(time, exit)
+        if (this.name !== "publication.transaction" || !state.armed || !Exit.isSuccess(exit)) return
+        state.armed = false
+        // Runs the real synchronous registration path exactly when the real COMMIT span ends.
+        Effect.runSync(f.registry.register({ platform_example: leaf() }).pipe(Effect.provideService(Scope.Scope, scope)))
+        state.replaced = true
+      }
+    }(options) })
+    yield* expectCode(f.run(discovery.find(f.context, { ...request, limit: 2 }, f.materialization)).pipe(
+      Effect.withTracer(tracer)), "stale_descriptor")
+    expect(state.replaced).toBe(true)
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    yield* Ref.set(f.afterBatch, Effect.void)
+    const fresh = yield* f.registry.materialize(allow)
+    expect((yield* f.run(discovery.find(f.context, { ...request, limit: 2 }, fresh))).operations).toHaveLength(2)
   }))
 })
