@@ -63,7 +63,6 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     tokens: { kind: "estimated", counter: "chars-per-token-4", before: 300, after: 150, saved: 150 },
     durationMs: 1.25,
   }
-  if (!LeanMetrics.decode(metric)) test.todo("WP-M dependency: valid completed metadata renders through real decoder", () => {})
 
   function mount(initial = metric, locale = "en") {
     const host = document.createElement("div")
@@ -162,7 +161,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     view.dispose()
   })
 
-  test("actual ToolPartDisplay preserves output and hides invalid or incomplete metadata", async () => {
+  test("actual ToolPartDisplay mounts real persisted decisions and preserves output across invalid and incomplete metadata", async () => {
     const { PART_MAPPING, ToolRegistry } = await import("./message-part")
     const { DataProvider } = await import("../context/data")
     ToolRegistry.register({ name: "lean-dom-test", render: (props) => {
@@ -175,6 +174,12 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
       state: { status: "completed", input: {}, output: "original output", title: "result", metadata: {}, time: { start: 0, end: 1 } } }
     const host = document.createElement("div")
     const [current, update] = createSignal(part)
+    const complete = (record: unknown) => {
+      const lean: unknown = record === undefined ? undefined : JSON.parse(JSON.stringify(record))
+      update({ ...part, state: { status: "completed", input: {}, output: "original output", title: "result", metadata: { lean }, time: { start: 0, end: 1 } } })
+    }
+    const panel = () => host.querySelector('[data-component="lean-tool-metrics"]')
+    const value = (slot: string) => panel()?.querySelector(`[data-slot="${slot}"]`)?.textContent
     const dispose = render(() => createComponent(DataProvider, {
       directory: "/workspace/alpha",
       data: { session: [], session_status: {}, session_diff: {}, message: {}, part: {} },
@@ -186,15 +191,72 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     }), host)
     expect(host.querySelector('[data-component="tool-part-wrapper"]')).not.toBeNull()
     expect(host.textContent).toContain("original output")
-    for (const lean of [undefined, null, { version: 99 }, { ...metric, bytes: { before: -1 } }]) {
-      update({ ...part, state: { ...part.state, status: "completed", input: {}, output: "original output", title: "result", metadata: { lean }, time: { start: 0, end: 1 } } })
-      expect(host.querySelector('[data-component="lean-tool-metrics"]')).toBeNull()
+    expect(panel()).toBeNull()
+    expect(LeanMetrics.decode(JSON.parse(JSON.stringify(metric)))).toEqual(metric)
+    complete(metric)
+    expect(panel()).not.toBeNull()
+    expect(panel()?.getAttribute("aria-label")).toBe("Lean · Repository/project: repo-alpha")
+    expect(value("bytes-before")).toBe("1,200")
+    expect(value("bytes-after")).toBe("600")
+    expect(value("bytes-saved")).toBe("600")
+    expect(value("percent-saved")).toBe("50%")
+    expect(value("tokens-before")).toBe("300")
+    expect(value("tokens-after")).toBe("150")
+    expect(value("tokens-saved")).toBe("150")
+    expect(value("token-counter")).toBe("chars-per-token-4")
+    expect(panel()?.textContent).toContain("UTF-8 bytes before")
+    expect(panel()?.textContent).toContain("Estimated tokens saved (signed)")
+    expect(panel()?.textContent).toContain("Lean filter profile")
+    expect(panel()?.textContent).not.toContain("original output")
+    expect(value("filter-profile")).toBe("git-status")
+    expect(value("duration")).toBe("1.25 ms")
+    for (const lean of [undefined, null, { version: 99 }, { ...metric, bytes: { before: -1 } },
+      { ...metric, tokens: null }, { ...metric, tokens: { kind: "unavailable", before: 0 } },
+      { ...metric, tokens: { kind: "estimated", counter: "unknown", before: 3, after: 2, saved: 1 } },
+      { ...metric, tokens: { kind: "estimated", counter: "chars-per-token-4", before: 3, after: 2, saved: 2 } }]) {
+      complete(lean)
+      expect(panel()).toBeNull()
+      expect(host.textContent).toContain("original output")
+      complete(metric)
+      expect(panel()).not.toBeNull()
     }
+    complete({ ...metric, tokens: { kind: "unavailable" } })
+    expect(panel()).not.toBeNull()
+    expect(value("tokens-unavailable")).toBe("Unavailable")
+    expect(value("tokens-before")).toBeUndefined()
+    expect(value("token-counter")).toBeUndefined()
+    complete({ ...metric, tokens: { kind: "estimated", counter: "chars-per-token-4", before: 2, after: 3, saved: -1 } })
+    expect(value("tokens-before")).toBe("2")
+    expect(value("tokens-after")).toBe("3")
+    expect(value("tokens-saved")).toBe("-1")
+    complete({ ...metric, owner: { ...metric.owner, projectID: "repo-beta" }, orchestraProfile: "orchestra-beta",
+      filterProfile: "pytest", status: "normalized", reason: "normalized" })
+    expect(panel()?.getAttribute("aria-label")).toBe("Lean · Repository/project: repo-beta")
+    expect(panel()?.firstElementChild?.textContent).toContain("repo-beta")
+    expect(value("filter-profile")).toBe("pytest")
+    expect(value("status")).toBe("Normalized")
+    expect(value("reason")).toBe("normalized")
+    expect(panel()?.textContent).not.toContain("repo-alpha")
+    expect(panel()?.textContent).not.toContain("orchestra-beta")
+    complete({ ...metric, status: "passthrough", reason: "disabled", filterProfile: undefined,
+      bytes: { before: 0, after: 0, saved: 0 },
+      tokens: { kind: "estimated", counter: "chars-per-token-4", before: 0, after: 0, saved: 0 } })
+    expect(value("tokens-before")).toBe("0")
+    expect(value("tokens-after")).toBe("0")
+    expect(value("tokens-saved")).toBe("0")
+    expect(value("tokens-unavailable")).toBeUndefined()
+    expect(value("percent-saved")).toBe("Not applicable (zero bytes before)")
+    expect(value("filter-profile")).toBe("Unavailable")
+    expect(value("status")).toBe("Passed through")
+    expect(value("reason")).toBe("disabled")
     update({ ...part, state: { status: "running", input: {}, metadata: { lean: metric }, time: { start: 0 } } })
-    expect(host.querySelector('[data-component="lean-tool-metrics"]')).toBeNull()
-    // Positive wrapper visibility is checked only with WP-M's real decoder; never substitute a stub.
-    update({ ...part, state: { status: "completed", input: {}, output: "original output", title: "result", metadata: { lean: metric }, time: { start: 0, end: 1 } } })
-    if (LeanMetrics.decode(metric)) expect(host.querySelector('[data-component="lean-tool-metrics"]')).not.toBeNull()
+    expect(panel()).toBeNull()
+    update({ ...part, state: { status: "pending", input: {}, raw: "" } })
+    expect(panel()).toBeNull()
+    update({ ...part, state: { status: "error", input: {}, metadata: { lean: metric }, error: "", time: { start: 0, end: 1 } } })
+    expect(panel()).toBeNull()
+    complete(metric)
+    expect(panel()).not.toBeNull()
     expect(host.textContent).toContain("original output")
     dispose()
   })
