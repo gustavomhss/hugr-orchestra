@@ -68,9 +68,26 @@ export function DirectoryDataProvider(
           sessionID={params.id}
           onNavigateToSession={(sessionID: string) => navigate(href(sessionID))}
           onSessionHref={href}
-          onReadResearchArtifact={(sessionID, artifact, cursor) => serverSDK().client.v2.research.artifact({
-            sessionID, artifactID: artifact.id, revision: String(artifact.revision), ...(cursor ? { cursor } : {}),
-          }, { throwOnError: true }).then((response) => response.data)}
+          onReadResearchArtifact={(
+            (sdk) => (sessionID: string, artifact: { id: string; revision: number }, cursor?: string) => {
+              // A retained callback must never continue an old document on a newly selected server.
+              if (serverSDK() !== sdk) return Promise.reject(new Error("Research artifact server changed"))
+              return sdk.client.v2.research
+                .artifact(
+                  {
+                    sessionID,
+                    artifactID: artifact.id,
+                    revision: String(artifact.revision),
+                    ...(cursor ? { cursor } : {}),
+                  },
+                  { throwOnError: true },
+                )
+                .then((response) => {
+                  if (serverSDK() !== sdk) throw new Error("Research artifact server changed")
+                  return response.data
+                })
+            }
+          )(serverSDK())}
         >
           <LocalProvider>{props.children}</LocalProvider>
         </DataProvider>
