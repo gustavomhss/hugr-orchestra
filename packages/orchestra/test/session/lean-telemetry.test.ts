@@ -18,14 +18,22 @@ import { testEffect } from "../lib/effect"
 import { makeHttp } from "./prompt.fixture"
 
 const it = testEffect(makeHttp())
-const modes = ["enabled", "disabled", "failure", "plugin", "plugin-error", "unknown", "truncated", "read", "denied"] as const
+const modes = ["enabled", "disabled", "failure", "plugin", "plugin-error", "unknown", "truncated", "read", "denied", "corrupt-image", "oversized-image"] as const
 type Mode = typeof modes[number]
 
-function native(mode: Mode, failMetadataWrite = false) {
+function native(mode: Mode, failMetadataWrite = false, budget?: "lines" | "bytes") {
   return Effect.gen(function* () {
     const instance = yield* InstanceRef
     if (!instance) throw new Error("NATIVE_KPI_INSTANCE_MISSING")
     const directory = instance.directory
+    const image = mode.endsWith("-image")
+    if (image) yield* Effect.promise(async () => {
+      const { PhotonImage } = await import("@silvia-odwyer/photon-node")
+      const picture = new PhotonImage(new Uint8Array(16).fill(255), 2, 2)
+      await Bun.write(path.join(directory, "image.png"), mode === "corrupt-image"
+        ? new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) : picture.get_bytes())
+      picture.free()
+    })
     const llm = yield* TestLLMServer
     const historyStart = (yield* llm.hits).length
     const approvedPath = path.join(directory, "approved.json")
@@ -38,6 +46,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
 } });`))
     yield* Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
       model: "test/test-model", plugin: [pluginPath],
+      ...(mode === "oversized-image" ? { attachment: { image: { auto_resize: false, max_base64_bytes: 1 } } } : {}),
       tool_output: { lean: { enabled: mode !== "disabled" }, ...(mode === "truncated" ? { max_bytes: 200 } : {}) },
       provider: { test: { name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
         models: { "test-model": { id: "test-model", name: "Test Model", attachment: false, reasoning: false,
@@ -56,8 +65,8 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
     yield* prompt.prompt({ sessionID: session.id, agent: "maestro", noReply: true,
       parts: [{ type: "text", text: "Run native tests once." }] })
     const command = mode === "unknown" ? "go test -v . -run TestPRIVATE_METRIC_PAYLOAD0" : "go test -v ."
-    const name = mode === "read" ? "read" : "bash"
-    yield* llm.tool(name, mode === "read" ? { filePath: path.join(directory, "go.mod") }
+    const name = mode === "read" || image ? "read" : "bash"
+    yield* llm.tool(name, name === "read" ? { filePath: path.join(directory, image ? "image.png" : "go.mod") }
       : { command, workdir: directory, timeout: 120000 })
     yield* llm.text("done")
     yield* prompt.loop({ sessionID: session.id })
@@ -76,10 +85,10 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       title: string; output: string; metadata: Record<string, unknown>; attachments?: unknown[]
     }>)
     expect(tool.state.title).toBe(approved.title)
-    expect(approved.attachments).toEqual(tool.state.attachments)
+    if (!image) expect(approved.attachments).toEqual(tool.state.attachments)
     const { lean, ...baselineMetadata } = tool.state.metadata
     expect(baselineMetadata).toEqual(approved.metadata)
-    if (mode !== "read") {
+    if (name !== "read") {
       expect(tool.state.metadata.exit).toBe(mode === "failure" ? 1 : 0)
       expect(tool.state.metadata.truncated).toBe(mode === "truncated")
       expect(tool.state.metadata.timeout).toBe(false)
@@ -91,7 +100,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       expect(stored).not.toContain("=== RUN")
       expect(stored).toContain("PASS\n")
       expect(stored).toMatch(/ok {2}\texample\.test\t/)
-    } else expect(stored).toBe(approved.output)
+    } else expect(stored).toBe(approved.output + (image ? "\n\n[1 image omitted: could not be resized below the image size limit.]" : ""))
     if (mode === "plugin") expect(stored).toContain("PRIVATE_POLICY_NOTE 😀")
     if (mode === "failure") expect(stored).toContain("FAILURE MUST_KEEP")
 
@@ -103,6 +112,13 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
     expect(messages).toHaveLength(1)
     expect(messages[0].content).toBe(stored)
     expect(JSON.stringify(hits.map((hit) => hit.body))).not.toContain('"chars-per-token-4"')
+    if (image) {
+      expect(approved.attachments).toHaveLength(1)
+      expect(tool.state.attachments).toBeUndefined()
+      expect(lean).toBeUndefined()
+      expect(yield* MessageV2.filterCompactedEffect(session.id)).toEqual(saved)
+      return undefined
+    }
 
     // Real measurement and decoder only: the original untouched scaffolds failed here.
     expect(lean).toBeDefined()
@@ -147,7 +163,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
         .flatMap((part) => part.type === "tool" && part.state.status === "completed" ? [part.state.metadata.lean] : [])
       expect(records).toEqual([lean])
     }
-    if (failMetadataWrite) {
+    if (failMetadataWrite || budget) {
       yield* Effect.promise(async () => {
         const source = Bun.file(path.join(directory, "native_test.go"))
         await Bun.write(source, `${await source.text()}\nfunc TestMetadataWriteFailure(t *testing.T) {}\n`)
@@ -163,6 +179,22 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
       const baseline = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
         limits: { maxLines: 10000, maxBytes: 1000000 } })
       expect(baseline.output).not.toContain("=== RUN")
+      if (budget) {
+        const approved = { ...raw, output: `${raw.output}\n\nPOLICY SUFFIX 😀` }
+        const telemetry = { owner: decision.owner, model: decision.model }
+        const selected = LegacyLeanOutput.project({ output: approved, binding, owner: decision.owner, enabled: true,
+          limits: { maxLines: 10000, maxBytes: 1000000 }, telemetry })
+        expect(selected.output).toBe(`${baseline.output}\n\nPOLICY SUFFIX 😀`)
+        expect(LeanMetrics.decode(Reflect.get(selected.metadata, "lean"))?.status).toBe("applied")
+        const limits = budget === "lines" ? { maxLines: 1, maxBytes: 1000000 } : { maxLines: 10000, maxBytes: 1 }
+        const input = { output: approved, binding, owner: decision.owner, enabled: true, limits }
+        expect(LegacyLeanOutput.project(input)).toBe(approved)
+        const declined = LegacyLeanOutput.project({ ...input, telemetry })
+        expect(declined.output).toBe(approved.output)
+        expect(LeanMetrics.decode(Reflect.get(declined.metadata, "lean"))).toMatchObject({ eligible: true,
+          status: "passthrough", reason: `projection_budget_max_${budget}`, bytes: { saved: 0 } })
+        return decision
+      }
       const originalMetadata = { ...raw.metadata }
       const fault = { writes: 0 }
       const selected = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
@@ -199,6 +231,9 @@ for (const mode of modes) it.instance(`native KPI ${mode}: HTTP, flags, durable 
 
 it.instance("native KPI metadata write failure preserves already selected native output and flags",
   () => native("enabled", true), { git: true }, 180_000)
+
+for (const budget of ["lines", "bytes"] as const) it.instance(`native KPI whole-view ${budget} budget preserves approved identity and policy suffix`,
+  () => native("enabled", false, budget), { git: true }, 180_000)
 
 it.live("native KPIs keep two actual repositories isolated", () => Effect.gen(function* () {
   const first = yield* provideTmpdirInstance(() => native("enabled"), { git: true })
