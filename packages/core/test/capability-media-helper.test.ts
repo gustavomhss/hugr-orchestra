@@ -1,6 +1,6 @@
 import { describe, expect } from "bun:test"
 import { Buffer } from "node:buffer"
-import { base64, dataURL, defaults, image, json, jsonBody, outbound, request } from "@orchestra/core/capability/media/http"
+import { base64, dataURL, defaults, image, json, jsonBody, multipart, outbound, readBody, request } from "@orchestra/core/capability/media/http"
 import { validateVideo, VideoInput } from "@orchestra/core/capability/media/schema"
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Effect, Exit, Option, Schema } from "effect"
@@ -48,7 +48,7 @@ describe("media helper bounds and exception semantics", () => {
       expect(Buffer.from(decoded)).toEqual(bytes)
       yield* code(base64(value, bytes.length - 1), "quota_exceeded")
     }))
-    yield* Effect.forEach(["", "A", "AA", "A===", "====", "=AAA", "AA=A", "AA==\n", "AA-_", "AAB=", "AB=="],
+    yield* Effect.forEach(["", "A", "AA", "A===", "====", "=AAA", "AA=A", "AA==\n", "AAA\n", "AAA\r", "AAA\u2028", "AAA\u2029", "AA-_", "AAB=", "AB=="],
       (value) => code(base64(value, 16), "acquisition_failed", "Media base64 decoding failed"))
   }))
 
@@ -168,5 +168,40 @@ describe("media helper bounds and exception semantics", () => {
       expect(validateVideo({ ...input, operation: "image-to-video", model: "gen4.5", options: { ...input.options, ratio } })).toBeUndefined()
       expect(Option.isSome(Schema.decodeUnknownOption(VideoInput)({ ...input, operation: "image-to-video", model: "gen4.5", options: { ...input.options, ratio } }))).toBe(true)
     })
+  }))
+
+  it.live("multipart counts lone LF/CR as CRLF before fetch and before materializing file copies", () => Effect.gen(function* () {
+    const fields = { prompt: "\n".repeat(2000) + "\r".repeat(2000) + "\r\n".repeat(20) + "✓" }
+    const files = [{ name: "image[]", filename: "input.png", mime: "image/png", data: new Uint8Array([1, 2, 3]) }]
+    const form = yield* multipart(fields, files)
+    const bound = yield* outbound(form)
+    const encoded = yield* Effect.promise(() => new Response(form).arrayBuffer())
+    const normalized = fields.prompt.replace(/\r\n|\r|\n/g, "\r\n")
+    expect(new TextDecoder().decode(encoded).includes(normalized)).toBe(true)
+    expect(encoded.byteLength).toBeLessThanOrEqual(bound)
+    yield* code(multipart(fields, files, encoded.byteLength - 1), "quota_exceeded")
+    const f = yield* fixture()
+    yield* code(request(`${f.origin}/ok`, { method: "POST", body: form }, 1024, 2000, encoded.byteLength - 1), "quota_exceeded")
+    expect(f.captured).toHaveLength(0)
+    yield* request(`${f.origin}/ok`, { method: "POST", body: form }, 1024, 2000, bound)
+    expect(f.captured).toHaveLength(1)
+    expect(f.captured[0].body.includes(normalized)).toBe(true)
+  }))
+
+  it.live("reader lock releases when cancellation unexpectedly rejects; original defect survives", () => Effect.gen(function* () {
+    const sentinel = new RangeError("fixture cancel defect")
+    const body = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new Uint8Array([1, 2])) },
+      cancel() { return Promise.reject(sentinel) } })
+    const exit = yield* Effect.promise(() => readBody(body, 1)).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) {
+      const die = Cause.findDie(exit.cause)
+      expect(die._tag).toBe("Success")
+      if (die._tag === "Success") expect(die.success.defect).toBe(sentinel)
+    }
+    expect(body.locked).toBe(false)
+    const healthy = new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(new Uint8Array([1, 2])); controller.close() } })
+    expect(yield* Effect.promise(() => readBody(healthy, 2))).toEqual(new Uint8Array([1, 2]))
+    expect(healthy.locked).toBe(false)
   }))
 })

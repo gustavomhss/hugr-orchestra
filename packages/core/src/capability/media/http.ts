@@ -4,10 +4,10 @@ import { Effect, Schema } from "effect"
 import { matchesMime } from "../artifact/mime"
 import { failure } from "./schema"
 
-export type Budgets = { responseBytes: number; downloadBytes: number; timeoutMillis: number; pixels: number }
-export const defaults: Budgets = { responseBytes: 48 * 1024 * 1024, downloadBytes: 16 * 1024 * 1024,
-  timeoutMillis: 180000, pixels: 8294400 }
 export const outboundBytes = 32 * 1024 * 1024
+export type Budgets = { responseBytes: number; downloadBytes: number; requestBytes: number; timeoutMillis: number; pixels: number }
+export const defaults: Budgets = { responseBytes: 48 * 1024 * 1024, downloadBytes: 16 * 1024 * 1024,
+  requestBytes: outboundBytes, timeoutMillis: 180000, pixels: 8294400 }
 
 /** Covers headers AND body. No redirects, retries, raw HTTP errors or URLs escape this boundary. */
 export function request(url: string, init: RequestInit, limit: number, timeoutMillis: number, requestLimit = outboundBytes) {
@@ -18,28 +18,13 @@ export function request(url: string, init: RequestInit, limit: number, timeoutMi
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), timeoutMillis)
         const combined = AbortSignal.any([signal, controller.signal])
-        const chunks: Uint8Array[] = []
-        const total = { bytes: 0 }
         // Cleanup must run on timeout, interruption and body budget rejection too.
         try {
           const response = await fetch(url, { ...init, redirect: "error", signal: combined })
           if (!response.ok || !response.body) throw failure("acquisition_failed")
           const declared = response.headers.get("content-length")
           if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > limit)) throw failure("quota_exceeded")
-          const reader = response.body.getReader()
-          try {
-            while (true) {
-              const next = await reader.read()
-              if (next.done) break
-              total.bytes += next.value.byteLength
-              if (total.bytes > limit) throw failure("quota_exceeded")
-              chunks.push(next.value)
-            }
-          } finally {
-            await reader.cancel().catch((error: unknown) => { transportFailure(error) })
-            reader.releaseLock()
-          }
-          return new Uint8Array(Buffer.concat(chunks, total.bytes))
+          return await readBody(response.body, limit)
         } finally {
           controller.abort()
           clearTimeout(timer)
@@ -49,6 +34,29 @@ export function request(url: string, init: RequestInit, limit: number, timeoutMi
       catch: (error): unknown => error,
     }).pipe(Effect.catch((error) => Effect.suspend(() => Effect.fail(transportFailure(error)))))
   })
+}
+
+/** Own the reader until cancellation and lock release finish, including unexpected cleanup rejection. */
+export async function readBody(body: ReadableStream<Uint8Array>, limit: number) {
+  const reader = body.getReader()
+  const chunks: Uint8Array[] = []
+  const total = { bytes: 0 }
+  try {
+    while (true) {
+      const next = await reader.read()
+      if (next.done) break
+      total.bytes += next.value.byteLength
+      if (total.bytes > limit) throw failure("quota_exceeded")
+      chunks.push(next.value)
+    }
+    return new Uint8Array(Buffer.concat(chunks, total.bytes))
+  } finally {
+    try {
+      await reader.cancel().catch((error: unknown) => { transportFailure(error) })
+    } finally {
+      reader.releaseLock()
+    }
+  }
 }
 
 export function json<A>(bytes: Uint8Array, schema: Schema.Codec<A>) {
@@ -69,7 +77,7 @@ export function json<A>(bytes: Uint8Array, schema: Schema.Codec<A>) {
 export function base64(value: string, limit: number) {
   return Effect.try({ try: () => {
     requireBudget(limit)
-    if (!value || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw decodeFailure("base64")
+    if (!value || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}(?![\s\S])/.test(value)) throw decodeFailure("base64")
     const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0
     const last = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(value[value.length - padding - 1])
     if ((padding === 2 && (last & 15) !== 0) || (padding === 1 && (last & 3) !== 0)) throw decodeFailure("base64")
@@ -175,12 +183,37 @@ export function outbound(body: RequestInit["body"], limit = outboundBytes) {
     if (body instanceof FormData) {
       // Native encoders choose a boundary. Account conservatively for framing and UTF-8 names, not only file bytes.
       add(256)
-      body.forEach((value, name) => add(512 + utf8Bytes(name) * 3 + (typeof value === "string" ? utf8Bytes(value)
-        : value.size + utf8Bytes(value.name) * 3 + utf8Bytes(value.type))))
+      body.forEach((value, name) => add(multipartEntryBytes(name, value)))
       return total.bytes
     }
     throw failure("unsupported_operation")
   }, catch: expectedFailure })
+}
+
+/** Count source bytes and normalized prompt text before copying files into Blobs/FormData. */
+export function multipart(fields: Readonly<Record<string, string | number>>, files: readonly {
+  name: string; filename: string; mime: string; data: Uint8Array
+}[], limit = outboundBytes) {
+  return Effect.try({ try: () => {
+    requireBudget(limit)
+    const total = { bytes: 256 }
+    const add = (bytes: number) => {
+      total.bytes += bytes
+      if (total.bytes > limit) throw failure("quota_exceeded")
+    }
+    Object.entries(fields).forEach(([name, value]) => add(multipartEntryBytes(name, String(value))))
+    files.forEach((file) => add(multipartEntryBytes(file.name, { name: file.filename, type: file.mime, size: file.data.byteLength })))
+    if (total.bytes > limit) throw failure("quota_exceeded")
+    const form = new FormData()
+    Object.entries(fields).forEach(([name, value]) => form.set(name, String(value).replace(/\r\n|\r|\n/g, "\r\n")))
+    files.forEach((file) => form.append(file.name, new Blob([new Uint8Array(file.data)], { type: file.mime }), file.filename))
+    return form
+  }, catch: expectedFailure })
+}
+
+function multipartEntryBytes(name: string, value: string | { size: number; name: string; type: string }) {
+  return 512 + utf8Bytes(name) * 3 + (typeof value === "string" ? utf8Bytes(value, false, true)
+    : value.size + utf8Bytes(value.name) * 3 + utf8Bytes(value.type))
 }
 
 /** Exact JSON byte count precedes JSON.stringify; producers must use this before constructing request bodies. */
@@ -249,10 +282,12 @@ export function dataURL(data: Uint8Array, mime: string, limit = outboundBytes) {
   }, catch: expectedFailure })
 }
 
-function utf8Bytes(value: string, quoted = false) {
+function utf8Bytes(value: string, quoted = false, crlf = false) {
   const total = { bytes: quoted ? 2 : 0 }
   for (let index = 0; index < value.length; index++) {
     const code = value.charCodeAt(index)
+    if (crlf && (code === 13 && value.charCodeAt(index + 1) !== 10 || code === 10 && value.charCodeAt(index - 1) !== 13))
+      total.bytes++
     if (quoted && (code === 34 || code === 92 || code === 8 || code === 9 || code === 10 || code === 12 || code === 13)) { total.bytes += 2; continue }
     if (quoted && code < 32) { total.bytes += 6; continue }
     if (code >= 0xd800 && code <= 0xdbff && index + 1 < value.length && value.charCodeAt(index + 1) >= 0xdc00 && value.charCodeAt(index + 1) <= 0xdfff) {

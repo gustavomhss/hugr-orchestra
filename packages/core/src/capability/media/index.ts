@@ -18,7 +18,7 @@ import { CapabilityInvocation } from "../invocation"
 import { CapabilityJobs } from "../job"
 import { CapabilityPolicy } from "../policy"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityJobTable, CapabilityTargetTable } from "../sql"
-import { base64, defaults, image, json, request, type Budgets } from "./http"
+import { base64, dataURL, defaults, image, json, jsonBody, multipart, request, type Budgets } from "./http"
 import { failure, ImageInput, ObserveInput, TargetResource, validateImage, validateVideo, VideoInput } from "./schema"
 
 export { ImageInput, VideoInput, TargetResource }
@@ -60,7 +60,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   const fixtureOrigin = options.fixtureOrigin
   if (Object.values(budgets).some((n) => !Number.isSafeInteger(n) || n <= 0) ||
     budgets.responseBytes > defaults.responseBytes || budgets.downloadBytes > defaults.downloadBytes ||
-    budgets.pixels > defaults.pixels || budgets.timeoutMillis > defaults.timeoutMillis) return yield* failure("unsupported_schema")
+    budgets.requestBytes > defaults.requestBytes || budgets.pixels > defaults.pixels || budgets.timeoutMillis > defaults.timeoutMillis)
+    return yield* failure("unsupported_schema")
   if (fixtureOrigin !== undefined && (!URL.canParse(fixtureOrigin) || new URL(fixtureOrigin).origin !== fixtureOrigin ||
     new URL(fixtureOrigin).protocol !== "http:" || new URL(fixtureOrigin).hostname !== "127.0.0.1"))
     return yield* failure("target_denied")
@@ -269,17 +270,15 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     }))
     const body = { model: input.model, prompt: input.prompt, n: input.options.count, size: input.options.size,
       quality: input.options.quality, output_format: input.options.format, background: input.options.background }
-    const form = input.operation === "edit" ? new FormData() : undefined
-    if (form) {
-      Object.entries(body).forEach(([key, value]) => form.set(key, String(value)))
-      inputs.forEach((source, index) => form.append("image[]", new Blob([new Uint8Array(source.data)], { type: source.metadata.mime }),
-        `input-${index}.${source.metadata.mime === "image/png" ? "png" : "jpeg"}`))
-    }
+    const payload = input.operation === "edit" ? yield* multipart(body, inputs.map((source, index) => ({
+      name: "image[]", filename: `input-${index}.${source.metadata.mime === "image/png" ? "png" : "jpeg"}`,
+      mime: source.metadata.mime, data: source.data,
+    })), budgets.requestBytes) : yield* jsonBody(body, budgets.requestBytes)
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
     const token = yield* submitToken(context, resolved, "image_create", input.purpose)
     const handoff = yield* acknowledge(proof, submitting, request(apiURL("openai", `/images/${input.operation === "edit" ? "edits" : "generations"}`),
-      { method: "POST", headers: { ...headers(token, "openai"), ...(form ? {} : { "Content-Type": "application/json" }) },
-        body: form ?? JSON.stringify(body) }, budgets.responseBytes, budgets.timeoutMillis), Images,
+      { method: "POST", headers: { ...headers(token, "openai"), ...(input.operation === "edit" ? {} : { "Content-Type": "application/json" }) },
+        body: payload }, budgets.responseBytes, budgets.timeoutMillis, budgets.requestBytes), Images,
       () => ({ state: "completed", observation: { remoteOutcome: "completed", materialization: "pending" } }))
     if (handoff.parsed._tag === "Failure") return project(handoff.receipt)
     const submitted = handoff.parsed.success
@@ -317,15 +316,19 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     if (source && input.operation === "image-to-video") yield* image(source.data, source.metadata.mime, budgets)
     if (source && input.operation === "edit" && source.metadata.mime !== "video/mp4") return yield* failure("unsupported_operation")
     if (source && source.data.byteLength > budgets.downloadBytes) return yield* failure("quota_exceeded")
-    const uri = source ? `data:${source.metadata.mime};base64,${Buffer.from(source.data).toString("base64")}` : undefined
     const body = { model: input.model, promptText: input.prompt, ratio: input.options.ratio,
-      ...(input.operation === "edit" ? { videoUri: uri } : { duration: input.options.duration }),
-      ...(input.operation === "image-to-video" ? { promptImage: uri } : {}) }
+      ...(input.operation === "edit" ? {} : { duration: input.options.duration }) }
+    const field = input.operation === "edit" ? "videoUri" : "promptImage"
+    const envelope = yield* jsonBody({ ...body, ...(source ? { [field]: "" } : {}) }, budgets.requestBytes)
+    const payload = source ? yield* Effect.gen(function* () {
+      const uri = yield* dataURL(source.data, source.metadata.mime, budgets.requestBytes - Buffer.byteLength(envelope))
+      return yield* jsonBody({ ...body, [field]: uri }, budgets.requestBytes)
+    }) : envelope
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
     const token = yield* submitToken(context, resolved, "video_create", input.purpose)
     const path = input.operation === "generate" ? "/v1/text_to_video" : input.operation === "edit" ? "/v1/video_to_video" : "/v1/image_to_video"
     const handoff = yield* acknowledge(proof, submitting, request(apiURL("runway", path), { method: "POST", headers: { ...headers(token, "runway"),
-      "Content-Type": "application/json" }, body: JSON.stringify(body) }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis),
+      "Content-Type": "application/json" }, body: payload }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis, budgets.requestBytes),
       Submitted, (value) => ({ state: "submitted", providerID: value.id, observation: {} }))
     return project(handoff.receipt)
   })

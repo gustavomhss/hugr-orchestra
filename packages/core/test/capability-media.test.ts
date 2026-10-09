@@ -566,4 +566,42 @@ describe("CapabilityMedia actual HTTP adapters", () => {
     expect(yield* f.database.db.select().from(CapabilityArtifactTable).pipe(Effect.orDie)).toHaveLength(0)
     expect(f.state.requests).toHaveLength(1)
   }).pipe(Effect.timeout("15 seconds")), 20000)
+
+  it.live("producer outbound budgets guard JSON prompts, multipart sources and video data envelopes before paid I/O", () => Effect.gen(function* () {
+    yield* Effect.forEach(["image-generate", "image-edit", "video-generate", "video-source"] as const, (mode) => Effect.gen(function* () {
+      const f = yield* fixture(mode.startsWith("image") ? "openai" : "runway", { budgets: { requestBytes: 64 } })
+      const source = mode === "image-edit" || mode === "video-source" ? yield* f.run(f.store.publish(f.context,
+        { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} })) : undefined
+      const input = mode === "image-generate" ? { ...f.input, prompt: "✓😀\n".repeat(40) }
+        : mode === "image-edit" ? { ...f.input, operation: "edit", inputArtifactRefs: [source] }
+        : mode === "video-generate" ? { ...f.video, prompt: "✓😀\n".repeat(40) }
+        : { ...f.video, operation: "image-to-video", inputArtifactRefs: [source] }
+      expect((yield* f.settle(input).pipe(Effect.flip)).message).toContain("quota_exceeded")
+      expect(f.state.requests).toHaveLength(0)
+      const rows = yield* f.database.db.select().from(CapabilityJobTable)
+        .where(sql`json_extract(${CapabilityJobTable.owner}, '$.sessionID') = ${f.context.sessionID}`).pipe(Effect.orDie)
+      expect(rows).toHaveLength(1)
+      expect(rows[0].state).toBe("intent")
+    }))
+    const f = yield* fixture("runway")
+    const source = yield* f.run(f.store.publish(f.context, { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} }))
+    const promptImage = `data:image/png;base64,${Buffer.from(f.png).toString("base64")}`
+    const input = { ...f.video, operation: "image-to-video", inputArtifactRefs: [source] }
+    const bytes = Buffer.byteLength(JSON.stringify({ model: f.video.model, promptText: f.video.prompt, ratio: f.video.options.ratio,
+      duration: f.video.options.duration, promptImage }))
+    const bounded = yield* CapabilityMedia.make({ fixtureOrigin: f.origin, budgets: { requestBytes: bytes - 1 } })
+    const call = { type: "tool-call" as const, name: "video_create", id: f.context.toolCallID, input }
+    expect((yield* f.run(Tool.settle(bounded.tools.video_create, call, f.context)).pipe(Effect.flip)).message).toContain("quota_exceeded")
+    expect(f.state.requests).toHaveLength(0)
+    // A new actual producer is needed: the bounded attempt owns an admit-only durable intent and cannot recharge.
+    yield* f.events.publish(SessionEvent.Tool.Input.Started, { sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
+      callID: "exact-body", name: "video_create", timestamp: CapabilityPolicyFixture.timestamp })
+    const context = { ...f.context, toolCallID: "exact-body" }
+    const frame = { ...f.binding, invocation: { ...f.binding.invocation, callID: context.toolCallID } }
+    const exact = yield* CapabilityMedia.make({ fixtureOrigin: f.origin, budgets: { requestBytes: bytes } })
+    const output = yield* CapabilityInvocation.withContext(frame, Tool.settle(exact.tools.video_create, { ...call, id: context.toolCallID }, context))
+    expect(output.structured).toMatchObject({ status: "submitted" })
+    expect(f.state.requests).toHaveLength(1)
+    expect(f.state.requests[0].body).toMatchObject({ promptImage })
+  }), 30000)
 })
