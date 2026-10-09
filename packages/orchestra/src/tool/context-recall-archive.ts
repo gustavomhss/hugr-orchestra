@@ -158,7 +158,14 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
           : undefined
       if (!rank) continue
       total++
-      const candidate = { ...ref, ...rank }
+      const candidate = {
+        id: chunk.id,
+        title: chunk.title,
+        first: chunk.first,
+        last: chunk.last,
+        bytes: chunk.bytes,
+        ...rank,
+      }
       if (!terms) {
         if (total > offset && selected.length < limit) selected.push(candidate)
         continue
