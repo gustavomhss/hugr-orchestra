@@ -324,7 +324,7 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
     const rows = yield* database.db.select().from(SessionMessageTable)
       .where(eq(SessionMessageTable.session_id, parent.chat.id)).all().pipe(Effect.orDie)
     const messages = rows.map((row) => Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }))
-    const originalTask = requireOriginalTask(messages.find((message) => message.id === parent.assistant.id), callID)
+    const originalTask = requireOriginalTask(messages.find((message) => message.id === SessionMessage.ID.make(parent.assistant.id)), callID)
     const metadata = originalTask.metadata
     const receipt = subagent === "walt"
       ? Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)(metadata.upstreamSettlement)
