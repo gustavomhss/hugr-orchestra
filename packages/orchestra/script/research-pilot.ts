@@ -18,10 +18,18 @@ const privateManifest = option("--manifest")
 const runRoot = option("--run-root")
 const revision = option("--source-revision")
 const timeoutMs = Number(option("--timeout-ms"))
+const resumeTimeoutMs = Number(option("--resume-timeout-ms"))
+const totalTimeoutMs = Number(option("--total-timeout-ms"))
+const setupPath = option("--setup")
+const milliseconds = (value: number) => Number.isSafeInteger(value) && value > 0 && value <= 2_147_483_647
+const flags = ["--case", "--inputs", "--manifest", "--run-root", "--source-revision", "--timeout-ms", "--resume-timeout-ms", "--total-timeout-ms", "--setup"]
+if (args.length % 2 || args.some((arg, index) => index % 2 === 0 && (!flags.includes(arg) || args.indexOf(arg) !== index)) ||
+  args.some((arg, index) => index % 2 === 1 && arg.startsWith("--"))) throw new Error("Pilot CLI has unknown, duplicate or valueless options")
 if (!inputs || !privateManifest || !runRoot || !revision || !/^[a-f0-9]{40}$/.test(revision) || !/^R(?:0[1-9]|1[0-4])$/.test(caseID) ||
   !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 2_147_483_647)
   throw new Error("Usage: research-pilot --case R01 --inputs <public-root> --manifest <private-manifest> --run-root <new-isolated-run-root> --source-revision <full-source-sha> --timeout-ms <declared-dispatch-deadline-ms>")
-if (caseID === "R14") throw new Error("R14 requires evaluator-owned real interruption/compaction and strict Task resume; fresh-dispatch pilot cannot execute it")
+if (caseID === "R14" && (!milliseconds(resumeTimeoutMs) || !milliseconds(totalTimeoutMs)))
+  throw new Error("R14 requires --timeout-ms <first-dispatch-ms> --resume-timeout-ms <second-dispatch-ms> --total-timeout-ms <whole-attempt-ms>")
 
 const preparedAt = Date.now()
 const fs = await import("node:fs/promises")
@@ -82,6 +90,45 @@ const config = { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
   enabled_providers: ["openai"], plugin: [], mcp: {}, lsp: false, formatter: false, compaction: { auto: false },
   agent: { jimmy: { model: "openai/gpt-6.1-sol" } },
 }
+// Trusted operational setup is separate from disclosed evidence and never executes fixture config.
+const Setup = Schema.Struct({
+  snapshotGit: Schema.Boolean,
+  scanner: Schema.optional(Schema.Struct({ command: Schema.String, sha256: Schema.String })),
+  lsp: Schema.optional(Schema.Record(Schema.String, Schema.Struct({
+    command: Schema.Array(Schema.String), sha256: Schema.String, extensions: Schema.Array(Schema.String),
+    initialization: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+  }))),
+  atlas: Schema.optional(Schema.Struct({ projectID: Schema.String, directory: Schema.String, sourceDirectory: Schema.optional(Schema.String) })),
+})
+const setupFile = setupPath ? await fs.realpath(setupPath) : undefined
+if (setupFile && (inside(publicRoot, setupFile) || inside(repository, setupFile) || inside(root, setupFile) ||
+  await fs.realpath(path.resolve(setupPath ?? "")) !== path.resolve(setupPath ?? "") || !(await fs.lstat(setupFile)).isFile()))
+  throw new Error("Trusted setup must be a regular non-symlink file outside disclosed inputs, checkout and run root")
+const setupBytes = setupFile ? new Uint8Array(await Bun.file(setupFile).arrayBuffer()) : undefined
+const setup = setupBytes ? Schema.decodeUnknownSync(Setup)(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(
+  new TextDecoder("utf-8", { fatal: true }).decode(setupBytes)), { onExcessProperty: "error" }) : undefined
+const binaries = await Promise.all([...(setup?.scanner ? [setup.scanner] : []), ...Object.values(setup?.lsp ?? {}).map((server) => ({ command: server.command[0], sha256: server.sha256 }))].map(async (binary) => {
+  if (!binary.command || !path.isAbsolute(binary.command) || await fs.realpath(binary.command) !== binary.command ||
+    !(await fs.lstat(binary.command)).isFile() || !/^[a-f0-9]{64}$/.test(binary.sha256) ||
+    createHash("sha256").update(new Uint8Array(await Bun.file(binary.command).arrayBuffer())).digest("hex") !== binary.sha256)
+    throw new Error("Trusted setup requires preprovisioned regular absolute executables matching their SHA-256")
+  await fs.access(binary.command, fs.constants.X_OK)
+  return binary
+}))
+if (setup?.scanner && path.basename(setup.scanner.command) !== (process.platform === "win32" ? "gitleaks.exe" : "gitleaks"))
+  throw new Error("Trusted scanner must be the preprovisioned native gitleaks executable")
+if (setup?.atlas && [setup.atlas.directory, setup.atlas.sourceDirectory ?? "."].some((file) => file !== "." &&
+  (path.isAbsolute(file) || /[\\\p{Cc}]/u.test(file) || file.split("/").some((part) => ["", ".", ".."].includes(part)))))
+  throw new Error("Trusted Atlas directories must stay inside the isolated disclosed source")
+const sourceGit = async (commands: string[]) => {
+  const child = Bun.spawn(["git", "-c", `core.hooksPath=${path.join(root, "config", "hooks-disabled")}`, ...commands], {
+    cwd: source, stdout: "pipe", stderr: "pipe", env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: path.join(root, "config", "git-empty") },
+  })
+  const text = await new Response(child.stdout).text()
+  const error = await new Response(child.stderr).text()
+  if (await child.exited !== 0) throw new Error(`Isolated snapshot Git setup failed: ${error}`)
+  return text.trim()
+}
 // Set module-level Global.Path/XDG consumers before importing any native runtime module.
 const credentialPath = path.join(os.homedir(), ".local/share/opencode/auth.json")
 Object.keys(process.env).filter((key) => key.toUpperCase().startsWith("ORCHESTRA_") || key.toUpperCase().startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
@@ -95,7 +142,26 @@ Object.assign(process.env, {
   ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "1", ORCHESTRA_DISABLE_CLAUDE_CODE: "1", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "1",
   ORCHESTRA_PURE: "1", ORCHESTRA_DISABLE_AUTOUPDATE: "1",
 })
+// Native Memory falls back to this actual scanner. The Effect toolkit target below refuses implicit installs.
+process.env.BACKEND_TOOLKIT_ROOT = path.join(root, "toolkit")
+process.env.ORCHESTRA_DB = path.join(data, "native.db")
+if (setup?.scanner) process.env.PATH = path.dirname(setup.scanner.command) + path.delimiter + process.env.PATH
+const lsp = setup?.lsp ? await (async () => {
+  const servers = await import("../src/lsp/server")
+  return { ...Object.fromEntries(Object.values(servers).filter((server) => typeof server === "object" && "id" in server).map((server) => [server.id, { disabled: true }])),
+    ...Object.fromEntries(Object.entries(setup.lsp ?? {}).map(([id, server]) => [id, { command: server.command, extensions: server.extensions, initialization: server.initialization }])) }
+})() : false
+const operationalConfig = { ...config, lsp, ...(setup?.atlas ? { maestro: { atlas: setup.atlas } } : {}) }
+process.env.ORCHESTRA_CONFIG_CONTENT = JSON.stringify(operationalConfig)
 await Promise.all(["home", "tmp", "config", "managed"].map((dir) => fs.mkdir(path.join(root, dir))))
+await fs.writeFile(path.join(root, "config", "git-empty"), "", { flag: "wx", mode: 0o600 })
+// This is a new snapshot commit, not supplied historical or deployed-build identity.
+const sourceSnapshotRevision = setup?.snapshotGit ? await (async () => {
+  await sourceGit(["init", "--template=", "--initial-branch=evaluation"])
+  await sourceGit(["add", "--", ...fixture.inputFiles])
+  await sourceGit(["-c", "user.name=Evaluation", "-c", "user.email=evaluation@invalid", "-c", "commit.gpgsign=false", "commit", "-m", "Disclosed evaluation snapshot"])
+  return sourceGit(["rev-parse", "HEAD"])
+})() : undefined
 // The native macOS preference reader has no isolation override; refuse inherited MDM config.
 if (process.platform === "darwin" && (await Promise.all([
   path.join("/Library/Managed Preferences", os.userInfo().username, "ai.hugr.orchestra.managed.plist"),
@@ -104,10 +170,10 @@ if (process.platform === "darwin" && (await Promise.all([
   if (error.code === "ENOENT") return false
   throw error
 })))).some(Boolean)) throw new Error("Pilot cannot isolate native macOS managed preferences on this host")
-process.env.ORCHESTRA_DB = path.join(data, "native.db")
 const skillFiles = (await git(["ls-files", "packages/jimmy-specialist/skills"])).split("\n").filter(Boolean)
 if (!["jimmy-discovery", "jimmy-research"].every((skill) => skillFiles.includes(`packages/jimmy-specialist/skills/${skill}/SKILL.md`)))
   throw new Error("Pilot cannot identify the declared source skill entries")
+const { Research } = await import("@orchestra/schema/research")
 const identity = {
   sourceRevision: revision, sourceClean: true, runtime: "source-bun", bun: Bun.version, platform: process.platform, arch: process.arch,
   executableSha256: createHash("sha256").update(new Uint8Array(await Bun.file(process.execPath).arrayBuffer())).digest("hex"),
@@ -119,10 +185,17 @@ const identity = {
   skillFiles: await Promise.all(skillFiles.map(async (file) => ({
     path: file, sha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(repository, file)).arrayBuffer())).digest("hex"),
   }))),
-  config, configSha256: createHash("sha256").update(JSON.stringify(config)).digest("hex"),
+  config: operationalConfig, configSha256: createHash("sha256").update(JSON.stringify(operationalConfig)).digest("hex"),
+  setupSha256: setupBytes ? createHash("sha256").update(setupBytes).digest("hex") : null, binaries, sourceSnapshotRevision,
+  continuationRunnerSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(import.meta.dir, "research-continuation.ts")).arrayBuffer())).digest("hex"),
+  retainedReaderSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(import.meta.dir, "research-retained.ts")).arrayBuffer())).digest("hex"),
 }
 await fs.writeFile(path.join(data, "preparation.json"), JSON.stringify({ caseID, preparedAt, timeoutMs, stage: "provisional-pilot", identity,
-  setup: { atlas: "unconfigured", lsp: "disabled", continuation: "unsupported", isolation: "state/config placement; not an OS sandbox" },
+  resumeTimeoutMs: caseID === "R14" ? resumeTimeoutMs : undefined, totalTimeoutMs: caseID === "R14" ? totalTimeoutMs : undefined,
+  dispatchCeilings: caseID === "R14" ? [{ dispatch: 1, timeoutMs, ...Research.Limits }, { dispatch: 2, timeoutMs: resumeTimeoutMs, ...Research.Limits }] : undefined,
+  setup: { atlas: setup?.atlas ? "configured-unqualified" : "unconfigured", lsp: lsp ? "configured-unqualified" : "disabled",
+    continuation: caseID === "R14" ? "native-interruption" : "not-requested", scanner: setup?.scanner ? "hashed-fallback-unqualified" : "unprovisioned",
+    isolation: "state/config placement; not an OS sandbox" },
   qualityGrade: "not-run" }), { flag: "wx", mode: 0o600 })
 const { Auth } = await import("../src/auth")
 const legacy = Schema.decodeUnknownSync(Schema.Struct({ openai: Auth.Oauth }))(await Bun.file(credentialPath).json())
@@ -151,9 +224,12 @@ const { ToolRegistry } = await import("../src/tool/registry")
 const { Permission } = await import("../src/permission")
 const { InstanceStore } = await import("../src/project/instance-store")
 const { MessageID, PartID } = await import("../src/session/schema")
-const { Research } = await import("@orchestra/schema/research")
+const { BackendToolkit } = await import("@orchestra/core/backend-toolkit")
+const { ResearchContinuation } = await import("./research-continuation")
+const observation = ResearchContinuation.observe()
 const layer = AppNodeBuilderV1.build(LayerNode.group([Agent.node, Provider.node, Session.node, SessionProjector.node, SessionPrompt.node,
-  ToolRegistry.node, Permission.node, InstanceStore.node]), [[Auth.node, Layer.succeed(Auth.Service, readonly)],
+  ToolRegistry.node, Permission.node, InstanceStore.node, ResearchContinuation.node]), [[Auth.node, Layer.succeed(Auth.Service, readonly)],
+  ...(caseID === "R14" ? [observation.replacement] : []),
   [Global.node, Global.layerWith({ data, log: path.join(data, "log"), repos: path.join(data, "repos") })]])
 const startedAt = Date.now()
 const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
@@ -177,35 +253,50 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
       cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, time: { created: Date.now() } })
     const task = (yield* registry.tools({ agent: maestro, providerID: model.providerID, modelID: model.id })).find((tool) => tool.id === "task")
     if (!task) throw new Error("Native Maestro Task is unavailable")
-    const callID = `pilot-${caseID}`
-    const input = { description: `${caseID} independent pilot`, prompt: `${question.prompt}\n\nSupplied source scope: ${fixture.inputFiles.join(", ")}. Use supplied retained source snapshots.`,
+    const input = { description: `${caseID} independent pilot`, prompt: `${question.prompt}\n\nSupplied source scope: ${fixture.inputFiles.join(", ")}. Use supplied retained source snapshots.${caseID === "R14" ? ResearchContinuation.protocol : ""}`,
       subagent_type: "jimmy", model: "openai/gpt-6.1-sol" }
-    yield* sessions.updatePart({ id: PartID.ascending(), sessionID: parent.id, messageID: assistant.id, type: "tool", tool: "task", callID,
-      state: { status: "running", input, time: { start: Date.now() } } })
-    const metadata: { value: Record<string, unknown> } = { value: {} }
-    const abort = AbortSignal.timeout(timeoutMs)
-    const output = yield* task.execute(input, { sessionID: parent.id, messageID: assistant.id, callID, agent: maestro.name, agentID: "maestro",
-      permission: maestro.permission, abort, messages: [],
-      extra: { model, promptOps: { prompt: prompt.prompt, cancel: prompt.cancel, resolvePromptParts: prompt.resolvePromptParts } },
-      ask: (request) => permissions.ask({ ...request, sessionID: parent.id, tool: { messageID: assistant.id, callID }, ruleset: maestro.permission }).pipe(Effect.orDie),
-      metadata: (value) => Effect.sync(() => { if (value.metadata) metadata.value = value.metadata }),
-    }).pipe(Effect.exit)
-    const deadlineSignaled = abort.aborted
+    const call = (input: Record<string, unknown>, callID: string, deadlineMs: number) => Effect.gen(function* () {
+      const part = { id: PartID.ascending(), sessionID: parent.id, messageID: assistant.id, type: "tool" as const, tool: "task", callID,
+        state: { status: "running" as const, input, time: { start: Date.now() } } }
+      yield* sessions.updatePart(part)
+      const metadata: { value: Record<string, unknown> } = { value: {} }
+      const dispatchStartedAt = Date.now()
+      const abort = AbortSignal.timeout(deadlineMs)
+      return { metadata, abort, part, startedAt: dispatchStartedAt, deadlineAt: dispatchStartedAt + deadlineMs,
+        run: task.execute(input, { sessionID: parent.id, messageID: assistant.id, callID, agent: maestro.name, agentID: "maestro",
+          permission: maestro.permission, abort, messages: [],
+          extra: { model, promptOps: { prompt: prompt.prompt, cancel: prompt.cancel, resolvePromptParts: prompt.resolvePromptParts } },
+          ask: (request) => permissions.ask({ ...request, sessionID: parent.id, tool: { messageID: assistant.id, callID }, ruleset: maestro.permission }).pipe(Effect.orDie),
+          metadata: (value) => Effect.gen(function* () {
+            if (!value.metadata) return
+            metadata.value = value.metadata
+            yield* sessions.updatePart({ ...part, state: { ...part.state, metadata: value.metadata } })
+          }),
+        }) }
+    })
+    if (caseID === "R14" && Date.now() >= preparedAt + totalTimeoutMs) throw new Error("total-wall-clock-exhausted before first native dispatch")
+    const first = yield* call(input, `pilot-${caseID}-first`, caseID === "R14" ? Math.max(1, Math.min(timeoutMs, preparedAt + totalTimeoutMs - Date.now())) : timeoutMs)
+    const continuation = caseID === "R14" ? yield* ResearchContinuation.run({ first, call, input, observation, parent,
+      preparedAt, totalTimeoutMs, resumeTimeoutMs, source, disclosedFiles: fixture.inputFiles, data, scannerConfigured: !!setup?.scanner }) : undefined
+    const output = continuation ? continuation.output : yield* first.run.pipe(Effect.exit)
+    const deadlineSignaled = continuation?.deadlineSignaled ?? first.abort.aborted
     const children = yield* sessions.children(parent.id)
     const histories = yield* Effect.forEach(children, (child) => sessions.messages({ sessionID: child.id }))
     return { caseID, stage: "provisional-pilot", model: "openai/gpt-6.1-sol", startedAt, endedAt: Date.now(),
-      limits: Research.Limits, timeoutMs, deadlineSignaled, parentSessionID: parent.id, output, metadata: metadata.value, histories, qualityGrade: "not-run",
+      limits: Research.Limits, timeoutMs, deadlineSignaled, parentSessionID: parent.id, output, metadata: continuation?.metadata ?? first.metadata.value, histories, qualityGrade: "not-run",
+      continuation,
       identity: { ...identity, effectivePromptSha256: createHash("sha256").update(specialist.prompt ?? "").digest("hex"),
         tools: tools.map((tool) => tool.id).toSorted(), temperature: specialist.temperature ?? null, topP: specialist.topP ?? null,
         variant: specialist.variant ?? null, agentOptions: specialist.options,
         modelLimits: model.limit, modelCostRates: model.cost } }
   }))
-}).pipe(Effect.provide(layer))))
+}).pipe(Effect.provide(layer), Effect.provideService(BackendToolkit.Target, { unsupported: "evaluation-no-implicit-install" }))))
 await fs.writeFile(path.join(data, "trial.json"), JSON.stringify(result), { flag: "wx", mode: 0o600 })
 const evaluation = {
   schema: "jimmy-pilot-evaluation-v2", caseID, stage: result.stage, model: result.model, preparedAt, startedAt, endedAt: result.endedAt,
   identity: result.identity, timeoutMs, deadlineSignaled: result.deadlineSignaled,
-  terminal: Exit.isSuccess(result.output) ? "task-returned" : "task-failed",
+  terminal: result.continuation?.blocker ?? (Exit.isSuccess(result.output) ? "task-returned" : "task-failed"),
+  continuation: result.continuation ? ResearchContinuation.project(result.continuation) : undefined,
   usage: { scope: "retained direct-child assistant step-finish records; native-normalized, not provider billing",
     missingProviderUsage: "unknown; native normalization can replace missing fields with zero",
     providerAggregate: null, totalTokens: null, totalCost: null, maintenanceUsage: null, repairUsage: null,

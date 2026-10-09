@@ -12,7 +12,7 @@ if (!process.argv[2]) throw new Error("Usage: research-documents <isolated-pilot
 const root = await fs.realpath(process.argv[2])
 if (path.basename(root) !== "state") throw new Error("Document export requires an isolated pilot state directory")
 const runRoot = path.dirname(root)
-await Promise.all(["home", "tmp", "config", "managed", "xdg-data", "xdg-cache", "xdg-config", "xdg-state"].map(async (dir) => {
+await Promise.all(["source", "home", "tmp", "config", "managed", "xdg-data", "xdg-cache", "xdg-config", "xdg-state"].map(async (dir) => {
   const target = path.join(runRoot, dir)
   if (!(await fs.lstat(target)).isDirectory() || await fs.realpath(target) !== target)
     throw new Error("Document export requires retained non-symlink isolated directories")
@@ -35,13 +35,19 @@ Object.assign(process.env, {
 })
 process.env.ORCHESTRA_DB = path.join(root, "native.db")
 const { Research } = await import("@orchestra/schema/research")
+const { ResearchRetained } = await import("./research-retained")
 const projection = Schema.decodeUnknownSync(Schema.Struct({
   schema: Schema.Literal("jimmy-pilot-evaluation-v2"), stage: Schema.Literal("provisional-pilot"),
   terminal: Schema.Literal("task-returned"), caseID: Schema.String, parentSessionID: Schema.String,
   timeoutMs: Schema.Number, deadlineSignaled: Schema.Boolean,
+  identity: Schema.Struct({ sources: Schema.Array(Schema.Struct({ path: Schema.String, sha256: Research.Digest })) }),
+  continuation: Schema.optional(Schema.Struct({ schema: Schema.Literal("jimmy-native-continuation-v1"),
+    checkpoint: Schema.optional(Schema.Struct({ binding: Research.Binding, sources: Schema.Array(Schema.Struct({ receipt: Research.SourceReceipt })) })) })),
   output: Schema.Struct({ metadata: Schema.Struct({ workResult: Schema.Struct({ documents: Schema.optional(Schema.Array(Research.DocumentReceipt)) }) }) }),
 }))(await Bun.file(path.join(root, "evaluation.json")).json())
 const declared = projection.output.metadata.workResult.documents ?? []
+if (projection.identity.sources.some((file) => !path.resolve(runRoot, "source", file.path).startsWith(path.join(runRoot, "source") + path.sep)))
+  throw new Error("Grader disclosed source paths must stay inside the isolated source")
 if (new Set(declared.map((receipt) => `${receipt.ref.id}:${receipt.ref.revision}`)).size !== declared.length ||
   declared.some((receipt) => receipt.binding.authoritySessionID !== projection.parentSessionID ||
     receipt.binding.directory !== path.join(runRoot, "source") || receipt.bytes > Research.Limits.documentBytes))
@@ -49,40 +55,30 @@ if (new Set(declared.map((receipt) => `${receipt.ref.id}:${receipt.ref.revision}
 const { ResearchArtifacts } = await import("@orchestra/core/research/artifacts")
 const { AppNodeBuilder } = await import("@orchestra/core/effect/app-node-builder")
 const { Global } = await import("@orchestra/core/global")
-const documents = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+const exported = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const artifacts = yield* ResearchArtifacts.Service
-  return yield* Effect.forEach(declared, (receipt) => Effect.gen(function* () {
-    const pages: string[] = []
-    const cursors = new Set<string>()
-    // Native UTF-8 paging can back up at most three bytes from pageBytes before the next code point.
-    const pageLimit = Math.max(1, Math.ceil(receipt.bytes / (Research.Limits.pageBytes - 3)))
-    const drain = (cursor?: string): Effect.Effect<void, InstanceType<typeof Research.Error>> => Effect.gen(function* () {
-      if (pages.length >= pageLimit)
-        return yield* new Research.Error({ code: "over_cap", message: "Evaluation document page request budget exhausted" })
-      if (cursor !== undefined && cursors.has(cursor))
-        return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document cursor did not advance" })
-      if (cursor !== undefined) cursors.add(cursor)
-      const page = yield* artifacts.read(receipt.binding, receipt.artifact, cursor, "task")
-      const bytes = Buffer.byteLength(page.text)
-      const total = pages.reduce((sum, text) => sum + Buffer.byteLength(text), bytes)
-      if (!isDeepStrictEqual(page.receipt, receipt) || !isDeepStrictEqual(page.ref, receipt.artifact) || page.representation !== "markdown" ||
-        bytes > Research.Limits.pageBytes || (receipt.bytes > 0 && bytes === 0) || total > receipt.bytes ||
-        page.complete !== (page.cursor === undefined) ||
-        (page.cursor !== undefined && (!page.cursor.length || cursors.has(page.cursor) || total >= receipt.bytes)) ||
-        (page.cursor === undefined && total !== receipt.bytes))
-        return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document page differs from admitted representation or did not advance" })
-      pages.push(page.text)
-      if (page.cursor !== undefined) yield* drain(page.cursor)
-    })
-    yield* drain()
-    const text = pages.join("")
-    if (Buffer.byteLength(text) !== receipt.bytes || createHash("sha256").update(text).digest("hex") !== receipt.digest)
-      return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document export differs from admitted bytes" })
-    return { receipt, text, verified: true }
+  const documents = yield* Effect.forEach(declared, ResearchRetained.read)
+  const checkpoint = projection.continuation?.checkpoint
+  const candidates = [...(checkpoint?.sources.map((source) => ({ binding: checkpoint.binding, ref: source.receipt.ref })) ?? []),
+    ...(projection.caseID === "R14" ? declared.flatMap((document) => Object.values(document.citations).map((evidence) => ({ binding: document.binding, ref: evidence.source }))) : [])]
+  if (candidates.some((item) => candidates.some((other) => item.ref.artifact.id === other.ref.artifact.id && item.ref.artifact.revision === other.ref.artifact.revision && !isDeepStrictEqual(item, other))))
+    return yield* new Research.Error({ code: "reference_invalid", message: "Grader evidence has conflicting bindings or source revisions" })
+  const sources = candidates
+    .filter((item, index, list) => list.findIndex((other) => other.ref.artifact.id === item.ref.artifact.id && other.ref.artifact.revision === item.ref.artifact.revision) === index)
+  const evidence = yield* Effect.forEach(sources, (source) => Effect.gen(function* () {
+    const page = yield* artifacts.read(source.binding, source.ref.artifact, undefined, "task")
+    if (!("origin" in page.receipt) || page.receipt.origin.kind !== "file" || page.receipt.ref.digest !== source.ref.digest ||
+      page.receipt.ref.representation !== source.ref.representation || page.receipt.binding.authoritySessionID !== projection.parentSessionID ||
+      page.receipt.binding.directory !== path.join(runRoot, "source") ||
+      !projection.identity.sources.some((file) => path.join(runRoot, "source", file.path) === page.receipt.origin.uri))
+      return yield* new Research.Error({ code: "reference_invalid", message: "Grader evidence must be admitted disclosed input; skill, prompt and outside-file bodies are excluded" })
+    return yield* ResearchRetained.read(page.receipt)
   }))
+  return { documents, evidence }
 }).pipe(Effect.provide(AppNodeBuilder.build(ResearchArtifacts.node, [[Global.node, Global.layerWith({ data: root })]])))))
 await fs.writeFile(path.join(root, "documents.json"), JSON.stringify({ schema: "jimmy-evaluation-documents-v2", caseID: projection.caseID,
   timeoutMs: projection.timeoutMs, deadlineSignaled: projection.deadlineSignaled,
   exporter: { bun: Bun.version, runnerSha256: createHash("sha256").update(new Uint8Array(await Bun.file(import.meta.path).arrayBuffer())).digest("hex") },
-  stage: "provisional-pilot", qualityGrade: "not-run", outcome: documents.length ? "exported" : "no-declared-documents", documents }), { flag: "wx", mode: 0o600 })
-console.log(JSON.stringify({ artifact: path.join(root, "documents.json"), documents: documents.length }))
+  stage: "provisional-pilot", qualityGrade: "not-run", outcome: exported.documents.length ? "exported" : "no-declared-documents",
+  ...exported }), { flag: "wx", mode: 0o600 })
+console.log(JSON.stringify({ artifact: path.join(root, "documents.json"), documents: exported.documents.length }))
