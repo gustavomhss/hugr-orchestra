@@ -1,4 +1,4 @@
-import { castDraft, produce, type WritableDraft } from "immer"
+import { castDraft, current, produce, type WritableDraft } from "immer"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Option, Schema } from "effect"
 import { SessionEvent } from "./event"
@@ -409,8 +409,10 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           return yield* updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
             const match = latestTool(draft, event.data.callID)
             if (match && "structured" in match.state) {
-              const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
-              const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
+              // Bun's strict comparator distinguishes draft proxies from the validated plain JSON snapshots.
+              const snapshot = current(match.state)
+              const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: snapshot.input }
+              const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(snapshot.structured.metadata)) ?? {}
               const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
               // The private host validates author/delivery before publishing Progress; also require retained Task anchors.
               const receipt = metadata && draft.agent === "maestro" && !match.provider?.executed &&
@@ -420,8 +422,8 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
               if (observation && match.name === "task" && !match.provider?.executed && draft.agent === "maestro" &&
                 match.state.status === "completed" && previous.upstreamSettlement === undefined &&
                 previous.parentSessionId === event.data.sessionID && previous.sessionId === observation.childSessionID &&
-                isDeepStrictEqual(match.state.input, observation.input) && isDeepStrictEqual(previous.workResult, observation.previous)) {
-                match.state.structured = castDraft({ ...match.state.structured,
+                isDeepStrictEqual(snapshot.input, observation.input) && isDeepStrictEqual(previous.workResult, observation.previous)) {
+                match.state.structured = castDraft({ ...snapshot.structured,
                   metadata: { ...previous, workResult: observation.workResult } })
                 return
               }
