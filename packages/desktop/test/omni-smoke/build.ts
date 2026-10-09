@@ -38,7 +38,7 @@ export async function build() {
   copyFileSync(addon, path.join(native, "hugr_omni.node"))
   copyFileSync(supervisor, path.join(native, path.basename(supervisor)))
   const at = new Date().toISOString()
-  const env = { ...process.env, ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: path.dirname(native) }
+  const env = { ...process.env, ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: native }
   await command([process.execPath, "scripts/prebuild.ts"], env)
   await command([process.execPath, "x", "electron-vite", "build"], env)
   await command([process.execPath, "x", "electron-builder", "--dir", process.platform === "darwin" ? "--mac" : win ? "--win" : "--linux", "--config", "test/omni-smoke/unsigned.config.ts"], env)
