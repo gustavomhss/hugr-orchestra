@@ -43,7 +43,7 @@ function copy(value: unknown, budget: { nodes: number; bytes: number }, depth: n
     if (typeof key !== "string") throw new Error("Invalid operator data")
     const descriptor = Object.getOwnPropertyDescriptor(value, key)
     if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) throw new Error("Invalid operator data")
-    budget.bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 2
+    if (!array) budget.bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 1
     if (budget.bytes > 65536) throw new Error("Invalid operator data")
     if (allowClock && depth === 0 && key === "now" && typeof descriptor.value === "function")
       return [key, descriptor.value] as const
