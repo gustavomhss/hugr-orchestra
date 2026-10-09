@@ -5,8 +5,12 @@ import { LLMEvent } from "@orchestra/llm"
 import type { LLM } from "@/session/llm"
 import { completeSnapshot, run } from "@/continuity/fork"
 import { validReview } from "@/continuity/review-seal"
+import { ContinuityReview } from "@/continuity/review"
+import { decode } from "@/continuity/memory"
+import { ClaudeCodeLLM } from "@/claude-code/llm"
+import { Token } from "@/util/token"
 import { it } from "../lib/effect"
-import { host, messages, model, provider } from "./memory-fixture"
+import { host, messages, model, provider, producerID } from "./memory-fixture"
 
 function scenario() {
   const history = messages(["user", "assistant", "user", "assistant"])
@@ -102,6 +106,26 @@ it.effect("review source budget fails explicitly without paying an unchecked aud
   expect(requests).toHaveLength(1)
   expect(result.artifact).toBeUndefined()
   expect(result).toMatchObject({ check: "C18", failure: "input-budget", retried: false })
+}))
+
+it.effect("near-limit SDK audit budgets compiled role framing and never constructs over-budget child query", () => Effect.gen(function* () {
+  const value = scenario()
+  const parsed = decode({ text: candidate(), snapshot: value.snapshot, host: value.host, producerID, budget: model.limit.context })
+  if (!("artifact" in parsed) || parsed.artifact.version !== 5) throw new Error("Expected v5 candidate")
+  const packet = ContinuityReview.request(value.snapshot, value.host, parsed.artifact)
+  const compiled = ClaudeCodeLLM.payload({ ...packet, agent: { name: "continuity-review", mode: "subagent", permission: [], options: {} } })
+  const budget = Token.estimate(compiled.system + compiled.prompt) + 10_000
+  const selected = { ...model, limit: { ...model.limit, input: budget } }
+  const opened = { calls: 0 }
+  const native = ClaudeCodeLLM.create({ query: () => { opened.calls++; throw new Error("Over-budget SDK must not spawn") } })
+  const requests: LLM.StreamInput[] = []
+  const result = yield* run(value.snapshot, { provider: provider(selected), llm: { estimateInput: native.estimateInput, stream: (input) => {
+    requests.push(input)
+    return input.agent.name === "continuity-review" ? native.stream(input) : response(candidate())
+  } } }, value.host, { reviewOverhead: 10_001 })
+  expect(opened.calls).toBe(0)
+  expect(requests).toHaveLength(1)
+  expect(result).toMatchObject({ check: "C18", failure: "input-budget" })
 }))
 
 it.effect("abort deadline includes review and joins held review transport cleanup before returning", () => Effect.gen(function* () {
