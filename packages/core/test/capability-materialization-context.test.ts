@@ -24,7 +24,8 @@ it.live("canonical parent and hidden child inherit the issuing materialization w
         yield* Ref.update(seen, (values) => [...values, materialization])
         const dispatcher = yield* f.children.dispatcher(context, materialization)
         const settled = yield* dispatcher.settle("hidden_leaf", input)
-        if (settled.result.type !== "text") return yield* new Tool.Failure({ message: "Child did not return text" })
+        if (settled.result.type !== "text" || typeof settled.result.value !== "string")
+          return yield* new Tool.Failure({ message: "Child did not return text" })
         return settled.result.value
       }).pipe(Effect.mapError((error) => error instanceof Tool.Failure ? error : new Tool.Failure({
         message: "Child settlement failed", error,
