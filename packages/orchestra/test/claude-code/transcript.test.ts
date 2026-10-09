@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCodeTranscript } from "@/claude-code/transcript"
+import { ClaudeCodeNative } from "@/claude-code/native"
 import { MessageID, SessionID } from "@/session/schema"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -91,7 +92,7 @@ test("v5 memory-only native swap never repairs covered calls, results, signed re
   const prepared = ClaudeCodeTranscript.prepare({ entries: native, history: visible, mapping,
     view: { system: view.system, messages: [], coverage: { version: 5, boundary: visible[3].info.id, coveredThrough: visible[3].info.id } } })
   expect(prepared.reason).toBe("swapped-complete")
-  expect(prepared.entries[0]).toMatchObject({ subtype: "compact_boundary", parentUuid: null })
+  expect(prepared.entries[0]).toMatchObject({ subtype: "compact_boundary", parentUuid: null, logicalParentUuid: "tail" })
   expect(prepared.entries[1]).toMatchObject({ isCompactSummary: true, message: { content: view.system[0] } })
   for (const uuid of ["opener", "old", "use", "result", "tail", "old-image"])
     expect(prepared.entries.some((entry) => entry.uuid === uuid)).toBe(false)
@@ -99,8 +100,52 @@ test("v5 memory-only native swap never repairs covered calls, results, signed re
     expect(JSON.stringify(prepared.entries)).not.toContain(noise)
   expect(prepared.entries.some((entry) => entry.uuid === "carrier-definition")).toBe(true)
   expect(native).toEqual(archived)
+  const reverted = ClaudeCodeNative.exclude([...native, ...prepared.entries], new Set(["tail"]))
+  expect(reverted.some((entry) => entry.uuid === prepared.entries[0].uuid)).toBe(false)
+  expect(reverted.some((entry) => entry.uuid === prepared.entries[1].uuid)).toBe(false)
   const invalid = ClaudeCodeTranscript.prepare({ entries: native, history: visible, mapping,
     view: { system: view.system, messages: [], coverage: { version: 5, boundary: visible[3].info.id, coveredThrough: visible[2].info.id } } })
   expect(invalid.reason).toBe("invalid-complete-coverage")
   expect(invalid.entries).toEqual(native)
+})
+
+const completeHistory = structuredClone(history)
+completeHistory[2].parts.push({ id: PartID.ascending(), sessionID, messageID: history[2].info.id, type: "tool", tool: "read", callID: "t",
+  state: { status: "completed", input: {}, output: "receipt", title: "read", metadata: {}, time: { start: 1, end: 2 } } })
+const completeView = { system: view.system, messages: [], coverage: { version: 5 as const,
+  boundary: history[3].info.id, coveredThrough: history[3].info.id } }
+
+test("unmapped ordinary native users fail closed instead of disappearing or matching an absent current user", () => {
+  for (const currentUserID of [undefined, history[0].info.id]) {
+    const native = [{ ...entries[0], uuid: "unmapped", message: { role: "user", content: "UNMAPPED_PROMPT" } },
+      ...entries.map((entry) => entry.uuid === "opener" ? { ...entry, parentUuid: "unmapped" } : entry)]
+    const prepared = ClaudeCodeTranscript.materialize({ entries: native, history: completeHistory, mapping,
+      view: { ...completeView, coverage: { ...completeView.coverage, currentUserID } } })
+    expect(prepared).toEqual({ kind: "fallback", reason: "unmapped-native-message", entries: native })
+  }
+})
+
+test("current covered request retains its media parent closure without restoring covered tool payload", () => {
+  const native = [...entries,
+    { ...base, type: "attachment", uuid: "request-image", parentUuid: "opener", attachment: { type: "image", data: "CURRENT_MEDIA" } },
+    { ...base, type: "attachment", uuid: "request-detail", parentUuid: "request-image", attachment: { type: "note", text: "CURRENT_DETAIL" } },
+    { ...base, type: "attachment", uuid: "covered-tool", parentUuid: "request-detail", attachment: { type: "image", toolUseID: "t", data: "COVERED_TOOL" } },
+    { ...base, type: "attachment", uuid: "covered-child", parentUuid: "covered-tool", attachment: { type: "note", text: "COVERED_CHILD" } },
+    { ...base, type: "attachment", uuid: "covered-carrier-child", parentUuid: "delta", attachment: { type: "image", data: "COVERED_CARRIER_MEDIA" } },
+  ]
+  const archived = structuredClone(native)
+  const prepared = ClaudeCodeTranscript.prepare({ entries: native, history: completeHistory, mapping,
+    view: { ...completeView, coverage: { ...completeView.coverage, currentUserID: history[0].info.id } } })
+  expect(prepared.reason).toBe("swapped-complete")
+  expect(prepared.entries.slice(2).map((entry) => entry.uuid)).toEqual([
+    "opener", ...discovery.map((entry) => entry.uuid), "delta", "request-image", "request-detail",
+  ])
+  expect(JSON.stringify(prepared.entries)).not.toContain("COVERED_TOOL")
+  expect(JSON.stringify(prepared.entries)).not.toContain("COVERED_CHILD")
+  expect(JSON.stringify(prepared.entries)).not.toContain("COVERED_CARRIER_MEDIA")
+  expect(native).toEqual(archived)
+  const memoryOnly = ClaudeCodeTranscript.prepare({ entries: native, history: completeHistory, mapping, view: completeView })
+  expect(memoryOnly.reason).toBe("swapped-complete")
+  for (const uuid of ["opener", "request-image", "request-detail"])
+    expect(memoryOnly.entries.some((entry) => entry.uuid === uuid)).toBe(false)
 })
