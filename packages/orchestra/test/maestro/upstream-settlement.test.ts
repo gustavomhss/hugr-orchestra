@@ -16,6 +16,7 @@ import { SessionEvent } from "@orchestra/schema/session-event"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Exit, Schema } from "effect"
+import { omit } from "remeda"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -253,13 +254,15 @@ it.instance("native Synthetic and Task progress use actual parent Location inste
   const f = yield* seed(true)
   const directory = "/tmp/upstream-settlement-parent-location"
   yield* f.database.db.update(SessionTable).set({ directory }).where(eq(SessionTable.id, f.parent.id)).run().pipe(Effect.orDie)
+  yield* f.database.db.update(SessionTable).set({ directory }).where(eq(SessionTable.id, f.child.id)).run().pipe(Effect.orDie)
   const locations: EventV2.PublishOptions["location"][] = []
-  const events = EventV2Bridge.Service.of({ ...f.events, publish: (definition, data, options) => {
-    if (definition.type === SessionEvent.Synthetic.type || definition.type === SessionEvent.Tool.Progress.type)
-      locations.push(options?.location)
-    return f.events.publish(definition, data, options)
-  } })
-  yield* f.deliver()().pipe(Effect.provideService(EventV2Bridge.Service, events))
+  const events = yield* EventV2.Service
+  const unsubscribe = yield* events.listen((event) => Effect.sync(() => {
+    if (event.durable?.aggregateID === f.parent.id &&
+      (event.type === SessionEvent.Synthetic.type || event.type === SessionEvent.Tool.Progress.type))
+      locations.push(event.location)
+  }))
+  yield* f.deliver()().pipe(Effect.ensuring(unsubscribe))
   expect(locations).toHaveLength(2)
   locations.forEach((location) => expect(location).toMatchObject({ directory }))
   expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
@@ -348,4 +351,80 @@ it.instance("wake failure cannot cause second execution on delivery retry", () =
   expect(Exit.isFailure(yield* Effect.exit(deliver()))).toBe(true)
   yield* deliver()
   expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("compatible native and retained parent views settle through private all-view port", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  yield* f.sessions.updateMessage(f.owner)
+  const part = yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.parent.id,
+    messageID: f.owner.id, type: "tool", tool: "task", callID: f.callID, state: f.state })
+  yield* f.deliver()()
+  expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+  const stored = yield* f.sessions.getPart({ sessionID: f.parent.id, messageID: f.owner.id, partID: part.id })
+  if (stored?.type !== "tool" || stored.state.status === "pending") throw new Error("retained Task missing")
+  expect(stored.state.metadata).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+  expect(f.counters.wake).toBe(1)
+}))
+
+it.instance("conflicting retained original child anchor prevents native Task receipt and wake", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  yield* f.sessions.updateMessage(f.owner)
+  yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.parent.id, messageID: f.owner.id,
+    type: "tool", tool: "task", callID: f.callID,
+    state: { ...f.state, metadata: { ...f.state.metadata, sessionId: f.parent.id } } })
+  expect(Exit.isFailure(yield* Effect.exit(f.deliver()()))).toBe(true)
+  expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
+  expect(f.counters.wake).toBe(0)
+}))
+
+it.instance("native Task projection missing receipt after progress cannot wake parent", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const sessions = Session.Service.of({ ...f.sessions, settleUpstreamTask: (input) =>
+    f.sessions.settleUpstreamTask(input).pipe(Effect.tap(() => Effect.gen(function* () {
+      const row = yield* f.database.db.select().from(SessionMessageTable)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(f.owner.id))).get().pipe(Effect.orDie)
+      if (!row) throw new Error("native parent missing")
+      const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+      if (message.type !== "assistant") throw new Error("native parent not assistant")
+      const encoded = Schema.encodeSync(SessionMessage.Assistant)({ ...message,
+        content: message.content.filter((item) => item.type !== "tool" || item.id !== f.callID) })
+      yield* f.database.db.update(SessionMessageTable).set({ data: omit(encoded, ["id", "type"]) })
+        .where(eq(SessionMessageTable.id, row.id)).run().pipe(Effect.orDie)
+    }))) })
+  expect(Exit.isFailure(yield* Effect.exit(f.deliver()().pipe(Effect.provideService(Session.Service, sessions))))).toBe(true)
+  expect(f.counters.wake).toBe(0)
+}))
+
+it.instance("native-only producer uses actual private settlement port after Synthetic readback and retries without republish", () => Effect.gen(function* () {
+  const f = yield* seed(true)
+  const created: boolean[] = []
+  const sessions = Session.Service.of({ ...f.sessions, settleUpstreamTask: (input) => Effect.gen(function* () {
+    const delivery = yield* f.database.db.select().from(SessionMessageTable)
+      .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.deliveryMessageID))).get().pipe(Effect.orDie)
+    expect(delivery).toMatchObject({ type: "synthetic", session_id: f.parent.id })
+    expect(input).toMatchObject({ sessionID: f.parent.id, parentMessageID: f.owner.id,
+      parentCallID: f.callID, childSessionID: f.child.id, authorMessageID: f.author.id,
+      logicalTaskID: f.capture.workResult?.taskId, workResult: f.capture.workResult })
+    expect(input.deliveryPartID).toBeUndefined()
+    const value = yield* f.sessions.settleUpstreamTask(input)
+    created.push(value)
+    return value
+  }) })
+  const ops: TaskPromptOps = { ...f.ops, resumeNotice: (sessionID) => Effect.gen(function* () {
+    expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID } })
+    if (!f.ops.resumeNotice) throw new Error("native resume adapter missing")
+    yield* f.ops.resumeNotice(sessionID)
+  }) }
+  const before = yield* f.database.db.select().from(EventTable)
+    .where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
+  const deliver = f.deliver(f.capture, ops)
+  yield* deliver().pipe(Effect.provideService(Session.Service, sessions))
+  yield* deliver().pipe(Effect.provideService(Session.Service, sessions))
+  expect(created).toEqual([true, false])
+  expect(f.counters.admit).toBe(0)
+  expect(f.counters.wake).toBe(1)
+  const after = yield* f.database.db.select().from(EventTable)
+    .where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
+  expect(after.filter((event) => !before.some((previous) => previous.id === event.id) &&
+    event.type === EventV2.versionedType(SessionEvent.Tool.Progress.type, 1))).toHaveLength(1)
 }))
