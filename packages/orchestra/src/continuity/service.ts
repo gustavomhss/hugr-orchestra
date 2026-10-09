@@ -522,6 +522,13 @@ const layer = Layer.effect(
                 llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
               }, { history, delegations, member }, { parent: request })
+              // A review pull may observe ownership loss after the producer finished.
+              // That is a stale result, not a provider failure or a breaker strike.
+              if (!live()) {
+                yield* diagnostic(sessionID, active.boundary, "stale-or-backend-change", pass)
+                yield* result("discarded")
+                return "discarded"
+              }
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.failure ?? (pass.skip ? `skipped-${pass.skip}` : "invalid-schema"), pass)

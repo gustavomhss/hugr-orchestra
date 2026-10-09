@@ -106,16 +106,28 @@ export function decode(input: { text: string; snapshot: MemorySnapshot; host: Ho
 function capture(snapshot: MemorySnapshot, host: Host, artifact: CompleteArtifact) {
   const prior = snapshot.previous
   const reviewed = prior?.version === 5 && prior.review !== undefined && validReview(prior)
-  // An invalid receipt cannot authorize incremental review. Validate source coverage independently.
-  const captured = prior?.version === 5 && !reviewed ? { ...snapshot, previous: { ...prior, review: undefined } } : snapshot
-  if (!snapshot.complete || !validSnapshot(captured) || !ownedHistory(snapshot.sessionID, host.history) ||
-    !snapshot.covered || snapshot.covered.some((message, index) => !host.history[index] || fingerprint(message) !== fingerprint(host.history[index])) ||
+  const positions = new Map(host.history.map((message, index) => [message.info.id, index]))
+  // An absent old receipt permits full-source migration; a corrupt receipt fails closed.
+  if (!snapshot.complete || !validSnapshot(snapshot) || !ownedHistory(snapshot.sessionID, host.history) ||
+    !snapshot.covered || snapshot.covered.some((message, index) => {
+      const position = positions.get(message.info.id)
+      return position === undefined || fingerprint(message) !== fingerprint(host.history[position]) ||
+        index > 0 && position <= (positions.get(snapshot.covered![index - 1].info.id) ?? Infinity)
+    }) ||
     artifact.parentID !== snapshot.sessionID || !nonempty(artifact.producerID) || artifact.producerID === snapshot.sessionID ||
     artifact.version !== 5 || artifact.boundary !== snapshot.boundary || artifact.coveredThrough !== snapshot.boundary ||
     artifact.covered.length !== snapshot.covered.length || artifact.covered.some((source, index) => source.id !== snapshot.covered![index].info.id ||
       source.digest !== fingerprint(snapshot.covered![index])) || !nonempty(artifact.text) || !singleLine(artifact.now.doing) || !singleLine(artifact.now.next))
     return fail("Review snapshot, host prefix and candidate must have matching owned complete coverage.")
-  const ctx = scope(captured, host)
+  const all = scope(snapshot, host)
+  // Legacy native compaction may retain displaced history in storage. Only the
+  // declared active prefix is review evidence; full-history aliases remain stable.
+  const ids = new Set(snapshot.covered.map((message) => message.info.id))
+  const covered = all.covered.filter((source) => ids.has(source.message.info.id))
+  const ctx = { ...all, covered, sources: new Map(covered.map((source) => [source.alias, source])),
+    span: all.span.filter((source) => ids.has(source.message.info.id)),
+    changes: prior?.version === 5 ? all.span.filter((source) => ids.has(source.message.info.id)) : all.changes,
+    changeProven: prior?.version === 5 ? true : all.changeProven }
   const boundary = new Set(ctx.span.filter((source) => source.message.info.id === snapshot.boundary &&
     (source.alias.startsWith("a") || source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status))).map((source) => source.alias))
   if (!boundary.size || !artifact.now.src.length || !artifact.now.src.some((alias) => boundary.has(alias)) ||

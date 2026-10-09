@@ -34,7 +34,7 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-/** `dropped` counts ops whose exact value, error or user quote was not found; the rest of the pass still applies. */
+/** Partial v4 may drop unlocated exact data; complete v5 requires correction instead. */
 export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
@@ -144,7 +144,11 @@ export function decode(input: {
       } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
         // Revoking words that are not found drop the retire: the user's item stays.
-        if ("check" in quote(op.quote, ctx, op.src ?? [], true)) continue
+        const found = quote(op.quote, ctx, op.src ?? [], true)
+        if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Retirement ${op.id} needs a corrected user revocation quote: ${found.detail}`)
+          continue
+        }
       }
       items.delete(op.id)
       applied.push(op)
@@ -163,6 +167,7 @@ export function decode(input: {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
         // A wrong exact value, error or user quote costs only its own op; nothing unverified is stored.
         if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Correct ${section}.${name} before complete coverage: ${found.detail}`)
           if (op.op === "add" && op.key) lost.add(op.key)
           continue each
         }

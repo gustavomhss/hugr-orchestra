@@ -18,6 +18,8 @@ import PROMPT from "./prompt.txt"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
 import { DryRequestCaptured } from "./dry-transport"
+import { ContinuityReview } from "./review"
+import { seal } from "./review-seal"
 
 const TAIL_SIZE = 8
 
@@ -221,7 +223,7 @@ export function request(captured: MemorySnapshot, host: Host, appended: string) 
 /**
  * One maintenance pass. A skip makes no model call and never counts toward the breaker; a
  * rejection is a check that failed again on the one retry, or failed when no retry could fit.
- * The summary is structural only.
+ * Reported check labels describe validation outcomes, not a guarantee of semantic truth.
  */
 export type Pass = {
   artifact?: MemoryArtifact
@@ -301,9 +303,29 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   const check = (reply: { text: string; finished: boolean; invalid: boolean }): Decoded | Failure => reply.finished && !reply.invalid
     ? decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, budget })
     : { check: "C1", detail: "the reply must finish with stop and call no tools" }
+  const assess = (decoded: Decoded) => Effect.gen(function* () {
+    if (decoded.artifact.version !== 5) return decoded
+    const packet = ContinuityReview.request(captured, host, decoded.artifact)
+    const review: LLM.StreamInput = {
+      user: { ...user, id: MessageID.ascending(), agent: "continuity-review" },
+      agent: { ...agent, name: "continuity-review", prompt: packet.system.join("\n") },
+      permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
+      purpose: "context-maintenance", model, ...packet, tools: {}, retries: 0,
+    }
+    if (Token.estimate(packet.system.join("\n") + JSON.stringify(packet.messages)) > inputLimit)
+      return { check: "C18", detail: "Semantic review source exceeds selected model input budget.", failure: "input-budget" as const }
+    if (options.onRequest) yield* options.onRequest(review)
+    const response = yield* ask(review)
+    if (!response.finished || response.invalid) return { check: "C18", detail: "Semantic review must finish with stop and call no tools." }
+    const decision = ContinuityReview.decode({ text: response.text, snapshot: captured, host, artifact: decoded.artifact })
+    if ("check" in decision) return decision
+    return { ...decoded, artifact: { ...decoded.artifact, review: seal(decoded.artifact, decision) } }
+  })
   const reply = yield* ask(first)
-  let outcome = check(reply)
+  const parsed = check(reply)
+  const outcome = "check" in parsed ? parsed : yield* assess(parsed)
   if ("check" in outcome) {
+    if ("failure" in outcome && outcome.failure === "input-budget") return pass({ check: outcome.check, failure: "input-budget" })
     // One cache-hot retry: the same request, the rejected reply and the failed check.
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
       (captured.complete ? "Reply with one complete, corrected JSON object containing now and ops for the same new span. Now.src must include a completed boundary alias listed in the host index. Return nothing else." :
@@ -313,12 +335,16 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     const retry = { ...first, messages: [...first.messages,
       { role: "assistant" as const, content: reply.text || "(empty reply)" }, { role: "user" as const, content: note }] }
     if (options.onRequest) yield* options.onRequest(retry)
-    outcome = check(yield* ask(retry))
-    if ("check" in outcome) return pass({ check: outcome.check, retried: true, failure: "invalid-schema" })
-    return accepted(outcome, true)
+    const corrected = check(yield* ask(retry))
+    if ("check" in corrected) return pass({ check: corrected.check, retried: true, failure: "invalid-schema" })
+    const reviewed = yield* assess(corrected)
+    if ("check" in reviewed) return pass({ check: reviewed.check, retried: true,
+      failure: "failure" in reviewed && reviewed.failure === "input-budget" ? "input-budget" : "invalid-schema" })
+    return accepted(reviewed, true)
   }
   return accepted(outcome, false)
-// Abort deadline includes lookup and retries. Uninterruptible transport cleanup is joined before returning.
+// One abort deadline covers lookup, production, semantic review and the shared correction allowance.
+// Uninterruptible transport cleanup is joined before returning.
 }, Effect.timeout("600 seconds"), Effect.catchCause((cause) => {
   if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt
   const error = Cause.squash(cause)
