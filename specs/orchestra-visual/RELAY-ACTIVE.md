@@ -49,14 +49,35 @@ Independent bounded reviews of that exact composition are static FIX_FIRST:
 
 - Production `ses_ede10b10bffeZj7Sr8S8b57wwj`: child workspace must match parent;
   replay reconstructs a payload without Location, causing live/replay divergence
-  for an otherwise eligible observation. A is repairing workspace equality;
-  trusted existing projector-origin wiring is being coordinated before any
-  additional file claim. Missing or mismatched live Location must still refuse.
+  for an otherwise eligible observation. A's source follow-up closes workspace
+  equality and supplies trusted internal projector origin. Missing or mismatched
+  live Location must still refuse.
 - Fixtures `ses_ede10b0f9ffe2GoE20KDmpgx3V`: malformed legacy owner lacks required
   common `time` at the typed SQL boundary; preserve malformed assistant fields
   while repairing that shape. Direct stored-author and first-interruption probes
   are also required before claiming guard coverage. No compiler or test ran in
   either static review.
+
+Lead explicitly assigned the same A exactly four total files: Core `event.ts`,
+`session/message-updater.ts`, `session/projector.ts`, and the preservation guard
+test. Internal projector callback origin is derived inside `commitDurableEvent`
+as `replay: input !== undefined`, never from caller payload. Only trusted replay
+may reconstruct exact parent Location from captured DB after all retained facts
+validate. Live publication and local-only `persist:false` remain non-replay and
+must refuse absent/mismatched Location. Subscriber/listener signatures, Payload,
+SerializedEvent, Schema, HTTP APIs, storage and ownership/sequence semantics stay
+unchanged. No fifth file or additional writer is assigned.
+
+A's immutable follow-up is `4b0b09b17a2bf8edaafce4d8ceb119e2fc011de4`, parent `84513c9ecd`.
+It changes exactly those four files. Origin is frozen and passed only to projector
+callbacks; listeners/subscribers and durable storage/envelopes are untouched. Real
+fixtures cover both available returned-author views, first interruption/workspace
+identity, missing live Location with spoofed replay metadata for durable and local-only
+publish, and actual recorded events replayed into a fresh isolated destination DB.
+The replay case uses real source rows/events and observes a replay-origin callback,
+not an already-applied-sequence retry. The malformed owner keeps required common
+`time` while omitting required assistant details. Source and fixture follow-up review
+remain pending; no author QA ran.
 
 Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
 `2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
@@ -77,16 +98,20 @@ completed-native backend notice case; Core trust and private-port DTOs stay stri
 C published that bounded follow-up as `0c8bc6036929d6b5533efb7afc4b5ae30d6e1432`:
 protected publication/capture is selected by `UpstreamResult.SCHEMA`; backend
 failure still resolves the scheduler and delivers the actual synthetic error notice
-without author or upstream receipt. Static follow-up review and runtime execution
-remain pending.
+without author or upstream receipt. It is composed as `f55c7dfdaa9cf02f4e900d1e1d1ecedd8b2c051c`.
+Bounded C follow-up static APPROVE: `ses_ede10b0f9ffe2GoE20KDmpgx3V`, exact `f55c7dfdaa`
+against `00b8ebb711`, only the two-file C delta. Backend host detail is checked in
+the live streamed result; durable Synthetic assertions prove error state/tag and
+returned text, not persisted host detail. Runtime execution remains pending.
 No new Session API, service, event, store, receipt before admission, Core-to-Orchestra
 dependency, permission waiver, or relaxed private-port terminal equality is authorized.
 
 After A publishes, the coordinator composes A and C and obtains bounded independent
 cross-caller review. Runtime alone then owns Core typecheck and the affected selectors:
 
-- Core: `test/relay-workflow-evaluator.test.ts` and
-  `test/upstream-settlement-preservation.test.ts`.
+- Core: `test/relay-workflow-evaluator.test.ts`,
+  `test/upstream-settlement-preservation.test.ts`, and existing `test/event.test.ts`
+  because the internal Event projector callback wiring changed.
 - Orchestra: `test/maestro/upstream-provenance.test.ts`,
   `test/maestro/upstream-settlement.test.ts`, `test/maestro/task-hash.test.ts`,
   `test/maestro/arsenal-activation.test.ts`, and `test/tool/task-backend-result.test.ts`.
