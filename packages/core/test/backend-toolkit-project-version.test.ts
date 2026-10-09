@@ -137,3 +137,24 @@ it.live("YAML aliases cannot substitute an old output behind matching generated 
   }
   expect(yield* Effect.promise(() => readFile(path.join(f.project, "old/.openapi-generator/VERSION"), "utf8"))).toBe("7.10.0\n")
 }))
+
+it.live("cwd binding rejects symlink traversal and external placement but allows canonical in-project aliases", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const outside = path.join(f.directory, "outside")
+  const escaped = path.join(f.project, "escape")
+  const local = path.join(f.project, "local")
+  const alias = path.join(f.project, "alias")
+  yield* Effect.promise(async () => {
+    await mkdir(path.join(outside, "child"), { recursive: true })
+    await mkdir(local)
+    await symlink(path.join(outside, "child"), escaped, process.platform === "win32" ? "junction" : "dir")
+    await symlink(local, alias, process.platform === "win32" ? "junction" : "dir")
+    await writeFile(path.join(outside, "sentinel"), "PRIVATE_CONTENT")
+  })
+  expect(yield* f.check(["generate", "-o", "generated"], `${escaped}${path.sep}..`)).toBe("engine-project-version:unbound-cwd")
+  expect(yield* f.check(["generate", "-o", "generated"], escaped)).toBe("engine-project-version:escaping-cwd")
+  expect(yield* f.check(["generate", "-o", "generated"], outside)).toBe("engine-project-version:escaping-cwd")
+  expect(yield* f.check(["generate", "-o", "generated"], alias)).toBe("allowed")
+  expect(yield* f.check(["generate", "-o", "generated"], local)).toBe("allowed")
+  expect(yield* Effect.promise(() => readFile(path.join(outside, "sentinel"), "utf8"))).toBe("PRIVATE_CONTENT")
+}))

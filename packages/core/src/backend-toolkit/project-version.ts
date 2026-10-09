@@ -44,8 +44,9 @@ export const checkProjectVersion = Effect.fn("BackendToolkitProject.checkProject
     try: () => realpath(input.projectDirectory),
     catch: () => blocked("unreadable-project"),
   })
-  const cwd = yield* physical(root, input.cwd, "cwd")
-  if (!cwd) return yield* blocked("unbound-cwd")
+  if (input.cwd.split(/[\\/]/).includes("..")) return yield* blocked("unbound-cwd")
+  const cwd = yield* Effect.tryPromise({ try: () => realpath(input.cwd), catch: () => blocked("unreadable-cwd") })
+  yield* physical(root, cwd, "cwd")
   if (options.config !== undefined && !boundPath(options.config)) return yield* blocked("unbound-config")
   const config = options.config === undefined ? undefined : yield* readMetadata(root, path.resolve(cwd, options.config), "config", true)
   const fields = config === undefined ? undefined : yield* document(config, "config", options.config?.endsWith(".json"))
