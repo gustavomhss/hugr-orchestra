@@ -15,8 +15,14 @@ type Block = { type: string; tool_use_id?: string; content?: string | Block[]; t
 type Request = { stream?: boolean; messages: { role: string; content: string | Block[] }[] }
 
 test("pinned native Bash replacement reaches the next provider request and survives SDK resume", async () => {
-  await using run = await probe("replace", 0)
+  await using baseline = await probe("baseline", 0)
+  await using run = await probe("replace", 0, { dir: baseline.dir })
   verify(run, "reduced")
+  const prefix = `${noise}\n`.repeat(64)
+  expect(baseline.modelText.startsWith(prefix)).toBe(true)
+  expect(run.modelText).toBe(baseline.modelText.slice(prefix.length))
+  expect(results(run.requests[1], run.id)[0].is_error).not.toBe(true)
+  expect(JSON.stringify(run.requests[1].messages)).not.toContain(noise)
   const original = success(run.hooks)
   expect(original.tool_use_id).toBe(run.id)
   expect(original.tool_response).toMatchObject({ interrupted: false })
@@ -30,7 +36,9 @@ test("pinned native Bash replacement reaches the next provider request and survi
   expect(after).not.toContain(noise)
   expect(Buffer.byteLength(String(after))).toBeLessThan(Buffer.byteLength(String(before)))
   const count = run.requests.length
-  const resumed = query({ prompt: "Continue without executing another tool.", options: { ...run.options, resume: run.session } })
+  const abortController = new AbortController()
+  const deadline = setTimeout(() => abortController.abort(new Error("SDK_NATIVE_RESUME_DEADLINE")), 30_000)
+  const resumed = query({ prompt: "Continue without executing another tool.", options: { ...run.options, resume: run.session, abortController } })
   let finished = false
   try {
     for await (const message of resumed) if (message.type === "result") {
@@ -38,13 +46,14 @@ test("pinned native Bash replacement reaches the next provider request and survi
       finished = true
     }
   } finally {
+    clearTimeout(deadline)
     resumed.close()
   }
   expect(finished).toBe(true)
   expect(run.requests.length).toBeGreaterThan(count)
   expect(results(run.requests[count], run.id)).toHaveLength(1)
   expect(text(results(run.requests[count], run.id)[0])).toBe(run.modelText)
-  // Both callbacks saw the ORIGINAL; only the accepted proposal is eligible for savings accounting.
+  expect(JSON.stringify(run.requests[count].messages)).not.toContain(noise)
   console.log("SDK_NATIVE_SUCCESS", JSON.stringify({ hooks: run.hooks, modelText: run.modelText, resumed: true }))
 }, 120_000)
 
@@ -81,6 +90,7 @@ test("a competing rewrite can supersede the proposed reduction", async () => {
   verify(competing, "original")
   expect(competing.modelText).toBe(baseline.modelText)
   expect(competing.hooks).toHaveLength(2)
+  // Both callbacks saw the ORIGINAL; proposal alone does not prove accepted savings.
   expect(competing.hooks[0]).toEqual(competing.hooks[1])
   expect(competing.replacement).not.toEqual(success(competing.hooks).tool_response)
 }, 120_000)
@@ -93,12 +103,12 @@ test("PostToolUse alone does not certify numeric exit zero", async () => {
   const hook = success(run.hooks)
   expect(hook.tool_use_id).toBe(run.id)
   expect(hook.tool_response).toMatchObject({ interrupted: false })
-  expect(record(hook.tool_response).returnCodeInterpretation).toBeString()
+  expect(record(hook.tool_response).returnCodeInterpretation).toBe("No matches found")
   expect(results(run.requests[1], run.id)[0].is_error).not.toBe(true)
   console.log("SDK_NATIVE_SEMANTIC_EXIT_ONE", JSON.stringify({ referenceExit: run.referenceExit, hooks: run.hooks }))
 }, 90_000)
 
-test("oversized native output exposes persisted capture metadata and remains unmodified", async () => {
+test("oversized native output exposes persisted capture metadata without a hook rewrite", async () => {
   await using run = await probe("baseline", 0, { rows: 10_000 })
   expect(run.completed).toBe(true)
   expect(run.referenceExit).toBe(0)
@@ -161,10 +171,9 @@ async function probe(mode: Mode, code: number, fixture: { rows?: number; command
   const errors: string[] = []
   const id = `toolu_${crypto.randomUUID().replaceAll("-", "")}`
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(new Error("SDK_NATIVE_QUERY_DEADLINE")), 75_000)
   const command = fixture.command ?? "node probe.cjs"
   const state = { session: "", replacement: undefined as unknown, completed: false }
-  const server = Bun.serve({
+  const server = await Promise.resolve().then(() => Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
     async fetch(req) {
@@ -201,7 +210,13 @@ async function probe(mode: Mode, code: number, fixture: { rows?: number; command
         headers: { "content-type": "text/event-stream" },
       })
     },
+  })).catch(async (error) => {
+    if (!fixture.dir) await rm(dir, { recursive: true, force: true }).catch((failure) => {
+      throw new AggregateError([error, failure], "SDK server acquisition and cleanup failed")
+    })
+    throw error
   })
+  const timer = setTimeout(() => controller.abort(new Error("SDK_NATIVE_QUERY_DEADLINE")), 75_000)
   const callback = async (input: HookInput): Promise<HookJSONOutput> => {
     hooks.push(structuredClone(input))
     if (input.hook_event_name !== "PostToolUse" || mode === "baseline") return {}
