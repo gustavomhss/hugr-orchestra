@@ -93,7 +93,7 @@ function requireTraffic(value: Schema.JsonObject) {
     !["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"].some((level) => level === params.level) ||
     !Object.hasOwn(params, "data") || (params.logger !== undefined && typeof params.logger !== "string")))
     throw failure("acquisition_failed", "logging notification")
-  if (value.method === "notifications/tools/list_changed" && (request || params && Object.keys(params).some((key) => key !== "_meta")))
+  if (value.method === "notifications/tools/list_changed" && request)
     throw failure("acquisition_failed", "list notification")
 }
 
@@ -146,7 +146,8 @@ function schema(value: Schema.Json | undefined): value is Schema.Json {
   // Boolean roots are a native extension, not conforming MCP object-form schemas.
   return value !== undefined && (typeof value === "boolean" || object(value) && value.type === "object" &&
     (value.$schema === undefined || typeof value.$schema === "string") &&
-    (value.properties === undefined || object(value.properties)) &&
+    (value.properties === undefined || object(value.properties) &&
+      Object.values(value.properties).every((child) => object(child) || typeof child === "boolean")) &&
     (value.required === undefined || Array.isArray(value.required) && value.required.every((key) => typeof key === "string")))
 }
 

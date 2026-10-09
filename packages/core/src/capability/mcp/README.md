@@ -37,6 +37,8 @@ server methods receive `-32601`; ping receives an empty result. No server reques
 executes a model, approval, filesystem access, or tool.
 Known ping, progress, log and tools-list-changed traffic validates its standard params
 before acknowledgement or discard; common params `_meta` must be an object.
+Tools-list-changed params retain arbitrary JSON extension fields, as allowed by
+NotificationParams; an `id` still makes that known notification invalid.
 
 ## Bounds and lifecycle
 
@@ -79,6 +81,12 @@ Terminal operation failure/interruption closes its dead child immediately, even 
 the caller catches the cause inside a live parent scope. Healthy sessions stay scoped.
 Permits are released after task settlement and bounded DELETE. The explicit async
 interruption finalizer joins JS `finally`; beta83 `tryPromise` alone does not.
+Disposal is masked and single-flight. All failed operations and the parent finalizer
+join the same completion latch, which includes cleanup defects. A separate removable
+parent attachment stays open while the resource scope's finalizers run: beta83 marks
+that resource scope `Closed` before finalization finishes. Owner detachment skips its
+own disposal callback, avoiding a self-join; completion is published only after resource
+cleanup and the detachment phase.
 Call arguments are descriptor-checked, byte-bounded detached JSON captured at each
 Effect execution before serial permit wait. Inert `toJSON` data survives; callable
 serializers, accessors, cycles and custom object/array prototypes are not executed.
@@ -100,7 +108,9 @@ serializers, accessors, cycles and custom object/array prototypes are not execut
   for the existing local validator, despite the 2025-11-25 tools specification's
   object-only input-schema wording. Schemas are not compiled or default dialects
   rewritten. Object-form schemas require root `type: "object"`, with string `$schema`,
-  object `properties` and string-array `required` when present. Unknown JSON keywords
+  object `properties` and string-array `required` when present. Immediate property-map
+  values must be schema objects or the documented native boolean-schema extension;
+  these values are not recursively compiled or rewritten. Unknown JSON keywords
   stay exact. Call arguments must be objects; structured content must be an object.
 - Discovery fails `unsupported_operation` for task-required tools because this
   synchronous interface cannot invoke them correctly. Task-optional tools can be
@@ -150,3 +160,15 @@ fixture's expected-failure assertion. These are local fixture observations, not 
 or live-provider qualification. The close-order fixture includes a controlled
 pending JS-cleanup barrier alongside real native fetch; the interruption fixture
 checks the actual native reader task's settlement.
+
+Further recheck fixtures first reproduced early second-call return during held DELETE,
+rejection of valid list-changed extensions, and acceptance of malformed property-map
+values against the prior implementation. Four restored-after-red mutation probes
+then independently removed the disposal completion join, replaced the parent's join
+with bare `Scope.close`, restored the extension-key whitelist, and removed immediate
+property-value checks. The held-DELETE fixture caught second/parent return before
+release (`Expected: false; Received: true`); extension acceptance failed with
+`MCP list notification failed`; property rejection failed with
+`Expected: true; Received: false`. A second held-DELETE fixture interrupts the cleanup
+owner's active call and checks that cleanup still completes once, all waiters join,
+and a new healthy scope reuses the released permit.

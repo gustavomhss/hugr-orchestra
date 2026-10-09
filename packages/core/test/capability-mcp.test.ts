@@ -884,7 +884,7 @@ describe("native MCP Streamable HTTP", () => {
       { jsonrpc: "2.0", method: "notifications/message" },
       { jsonrpc: "2.0", method: "notifications/message", params: { level: "verbose", data: "bad" } },
       { jsonrpc: "2.0", method: "notifications/message", params: { level: "info", logger: 3, data: null } },
-      { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { tools: [] } },
+      { jsonrpc: "2.0", id: "bad-notification", method: "notifications/tools/list_changed", params: {} },
       { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { _meta: [] } },
     ]
     for (const traffic of malformed) {
@@ -897,6 +897,7 @@ describe("native MCP Streamable HTTP", () => {
     f.traffic = []
     const session = yield* f.transport().open(selected)
     f.traffic = [{ jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { _meta: { opaque: [1] } } },
+      { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { tools: [], vendorExtension: true } },
       { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: "x", progress: 0.5 } },
       { jsonrpc: "2.0", method: "notifications/message", params: { level: "debug", data: [1, null] } },
       { jsonrpc: "2.0", id: "valid-ping", method: "ping", params: { _meta: { progressToken: 0 } } }]
@@ -979,4 +980,108 @@ describe("native MCP Streamable HTTP", () => {
     expect(c.sessionID).toBe(captured)
     expect(f.requests.filter((r) => r.method === "DELETE")).toHaveLength(captured === undefined ? 0 : 1)
   }))
+
+  it.live("list-changed notification extensions stay valid through real SSE discovery", () => Effect.gen(function* () {
+    const f = yield* fixture("sse")
+    const session = yield* f.transport().open(selected)
+    f.traffic = [{ jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { vendorExtension: true } },
+      { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { tools: [], _meta: { vendor: "opaque" } } }]
+    expect((yield* session.listTools).tools[0]?.inputSchema).toEqual(tool.inputSchema)
+    expect(f.closed).toBe(0)
+  }))
+
+  it.live("input and output property-map values reject malformed wire shapes, preserve schema objects and boolean extensions", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    for (const field of ["inputSchema", "outputSchema"] as const) {
+      for (const value of [7, null, []]) {
+        f.tools = [{ ...tool, [field]: { type: "object", properties: { value } } }]
+        yield* fails(f.transport().listTools(selected), "acquisition_failed", "tool entry")
+      }
+    }
+    const inputSchema = { type: "object", properties: { value: { type: "string", vendorKeyword: [1, null] }, yes: true, no: false } }
+    const outputSchema = { type: "object", properties: { changed: { type: "boolean" }, impossible: false } }
+    f.tools = [{ ...tool, inputSchema, outputSchema }]
+    const listed = yield* f.transport().listTools(selected)
+    expect(listed.tools[0]?.inputSchema).toEqual(inputSchema)
+    expect(listed.tools[0]?.outputSchema).toEqual(outputSchema)
+  }))
+
+  for (const mode of ["failure", "interrupt-first"] as const) {
+    it.live(`joinable disposal ${mode}: second failure and parent close wait for the single held DELETE`, () => Effect.gen(function* () {
+      const f = yield* fixture()
+      const transport = f.transport({ maxConcurrentSessions: 1 })
+      const parent = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+      const session = yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, parent))
+      const callEntered = yield* Deferred.make<void>()
+      const deleteEntered = yield* Deferred.make<void>()
+      const secondStarted = yield* Deferred.make<void>()
+      const parentStarted = yield* Deferred.make<void>()
+      const firstReturned = yield* Deferred.make<boolean>()
+      const secondReturned = yield* Deferred.make<boolean>()
+      const parentReturned = yield* Deferred.make<boolean>()
+      const release = Promise.withResolvers<void>()
+      const state = { deleted: false }
+      yield* Scope.addFinalizer(parent, Deferred.succeed(parentStarted, undefined))
+      f.override = (r) => {
+        if (r.body.method === "tools/call") {
+          f.commits++
+          if (mode === "failure") return new Response(null, { status: 503 })
+          return new Response(new ReadableStream({ start(controller) {
+            controller.enqueue(new TextEncoder().encode('data: {"jsonrpc":"2.0","id":"active-call-ping","method":"ping"}\n\n'))
+          } }), { headers: { "content-type": "text/event-stream" } })
+        }
+        if (r.body.id === "active-call-ping") {
+          Effect.runSync(Deferred.succeed(callEntered, undefined))
+          return new Response(null, { status: 202 })
+        }
+        if (r.method !== "DELETE" || r.headers.get("mcp-session-id") !== "session-1") return undefined
+        Effect.runSync(Deferred.succeed(deleteEntered, undefined))
+        return release.promise.then(() => { state.deleted = true; f.closed++; return new Response(null, { status: 204 }) })
+      }
+      const first = yield* session.callTool("mutate", {}).pipe(
+        Effect.onExit(() => Deferred.succeed(firstReturned, state.deleted)), Effect.forkChild)
+      const interrupting = mode === "interrupt-first" ? yield* Effect.gen(function* () {
+        yield* Deferred.await(callEntered)
+        return yield* Fiber.interrupt(first).pipe(Effect.forkChild)
+      }) : undefined
+      yield* Deferred.await(deleteEntered)
+      const second = yield* Effect.gen(function* () {
+        yield* Deferred.succeed(secondStarted, undefined)
+        return yield* session.callTool("mutate", {})
+      }).pipe(Effect.onExit(() => Deferred.succeed(secondReturned, state.deleted)), Effect.forkChild)
+      const closing = yield* Scope.close(parent, Exit.void).pipe(
+        Effect.onExit(() => Deferred.succeed(parentReturned, state.deleted)), Effect.forkChild)
+      // Registered after the closing fibers so a failed assertion releases DELETE before joining their cleanup.
+      yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
+      yield* Deferred.await(secondStarted)
+      yield* Deferred.await(parentStarted)
+      yield* Effect.yieldNow
+      yield* Effect.promise(() => Bun.sleep(0)) // Drain already-started native rejection microtasks, not a network delay.
+      expect(yield* Deferred.isDone(secondReturned)).toBe(false)
+      expect(yield* Deferred.isDone(parentReturned)).toBe(false)
+      expect(yield* Deferred.isDone(firstReturned)).toBe(false)
+      expect(f.requests.filter((r) => r.method === "DELETE")).toHaveLength(1)
+      release.resolve()
+      if (interrupting) {
+        yield* Fiber.join(interrupting)
+        expect(Exit.hasInterrupts(yield* Fiber.join(first).pipe(Effect.exit))).toBe(true)
+      }
+      if (!interrupting) yield* fails(Fiber.join(first), "outcome_unknown")
+      yield* fails(Fiber.join(second), "connection_unavailable")
+      yield* Fiber.join(closing)
+      expect(yield* Deferred.await(firstReturned)).toBe(true)
+      expect(yield* Deferred.await(secondReturned)).toBe(true)
+      expect(yield* Deferred.await(parentReturned)).toBe(true)
+      expect(f.commits).toBe(1)
+      f.override = undefined
+      const next = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+      const healthy = yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, next))
+      yield* healthy.listTools
+      expect(next.state._tag === "Open" ? next.state.finalizers.size : 0).toBe(1)
+      yield* Scope.close(next, Exit.void)
+      yield* Scope.close(next, Exit.void)
+      expect(f.requests.filter((r) => r.method === "DELETE")).toHaveLength(2)
+      expect(f.closed).toBe(2)
+    }), 10000)
+  }
 })

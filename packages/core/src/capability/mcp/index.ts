@@ -2,7 +2,7 @@ export * as CapabilityMcp from "./index"
 
 import { Capability } from "@orchestra/schema/capability"
 import { Credential } from "@orchestra/schema/credential"
-import { Effect, Exit, Option, Schema, Scope, Semaphore } from "effect"
+import { Deferred, Effect, Exit, Option, Schema, Scope, Semaphore } from "effect"
 import type { CapabilityDiscovery } from "../catalog/discovery"
 import { CapabilityVendorSchema } from "../catalog/schema"
 import { close, request } from "./http"
@@ -77,7 +77,8 @@ export function make(options: Options = {}): Interface {
     generations.set(key, { hash, generation: sequence.generation })
     return sequence.generation
   }
-  const connect = Effect.fnUntraced(function* (selection: CapabilityDiscovery.Selection, scope: Scope.Closeable) {
+  const connect = Effect.fnUntraced(function* (selection: CapabilityDiscovery.Selection,
+    dispose: (exit: Exit.Exit<unknown, unknown>) => Effect.Effect<void>) {
     const started = Date.now()
     const selected = yield* Effect.try({ try: () => requireSelection(selection, fixture), catch: expected })
     yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
@@ -104,7 +105,7 @@ export function make(options: Options = {}): Interface {
           Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
             connection.dead = true
             // The request's interruption finalizer has joined its JS task before child close releases permits.
-            yield* Scope.close(scope, exit)
+            yield* dispose(exit)
           }) : Effect.void))
       })
     yield* bounded(Effect.gen(function* () {
@@ -162,10 +163,30 @@ export function make(options: Options = {}): Interface {
   })
   const open = Effect.fn("CapabilityMcp.open")(function* (selection: CapabilityDiscovery.Selection) {
     const parent = yield* Scope.Scope
-    const scope = yield* Scope.fork(parent)
-    // Closing a failed child also detaches its finalizer from a long-lived parent.
-    return yield* connect(selection, scope).pipe(Effect.provideService(Scope.Scope, scope),
-      Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
+    return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const attachment = yield* Scope.fork(parent)
+      const scope = yield* Scope.make()
+      const completion = yield* Deferred.make<void>()
+      const state = { closing: false, detaching: false }
+      const dispose = (exit: Exit.Exit<unknown, unknown>) => Effect.uninterruptible(Effect.suspend(() => {
+        if (state.closing) return Deferred.await(completion)
+        state.closing = true
+        return Effect.gen(function* () {
+          // Scope becomes Closed before its finalizers finish. All callers join our completion instead.
+          const closed = yield* Effect.exit(Scope.close(scope, exit).pipe(Effect.ensuring(Effect.suspend(() => {
+            state.detaching = true
+            return Scope.close(attachment, exit)
+          }))))
+          yield* Deferred.done(completion, closed)
+          return yield* closed
+        })
+      }))
+      // This removable parent attachment stays open while resource cleanup is running. Parent close
+      // joins dispose; owner detachment skips its own callback so it cannot await itself.
+      yield* Scope.addFinalizerExit(attachment, (exit) => state.detaching ? Effect.void : dispose(exit))
+      return yield* restore(connect(selection, dispose).pipe(Effect.provideService(Scope.Scope, scope))).pipe(
+        Effect.onExit((exit) => Exit.isFailure(exit) ? dispose(exit) : Effect.void))
+    }))
   })
   return { open, listTools: (selection) => Effect.scoped(Effect.gen(function* () {
     const session = yield* open(selection)
