@@ -4,6 +4,10 @@ Baseline: Orchestra dev `ad40b080e9b77fe8f2ff9a36fb0b2cecfa33d3d8`.
 
 This is an internal capability/projection foundation, not activated Lean filtering.
 The processor dependency will be pinned after the independent Lean expansion.
+The compiling projector scaffold and deliberately RED future-projection test are
+retained at commit `0daf04815cf3a707e42ab9cb092c0f1080ed7c69`; the projection author
+owns their implementation in a separate small PR. This capture-only baseline does
+not ship a dormant processor or a failing future-feature test.
 
 ## Frozen interfaces
 
@@ -12,6 +16,34 @@ The processor dependency will be pinned after the independent Lean expansion.
 for this wave. Authors may implement bodies but not change signatures.
 `ToolModelCapture.Output` is structurally identical to native ToolOutput and
 references the actual Schema ToolContent contract by type-only import.
+
+Projection author's exact type anchor (`src/tool/model-projection.ts`):
+
+```ts
+export * as ToolModelProjection from "./model-projection"
+import { ToolModelCapture } from "./model-capture"
+export type FilterResult = {
+  readonly inputBytes: number
+  readonly outputBytes: number
+  readonly reason: string
+} & (
+  | { readonly status: "reduced" | "normalized"; readonly replacement: string; readonly profile?: string }
+  | { readonly status: "passthrough" | "failed_open" }
+)
+export interface Input {
+  readonly enabled: boolean
+  readonly owner: ToolModelCapture.Owner
+  readonly binding?: ToolModelCapture.Binding
+  readonly approved: ToolModelCapture.Output
+  readonly limits: { readonly maxLines: number; readonly maxBytes: number }
+  readonly filter: (observation: ToolModelCapture.Observation) => FilterResult
+}
+export interface Projection {
+  readonly output: ToolModelCapture.Output
+  readonly decision?: FilterResult
+}
+export const project: (input: Input) => Projection = /* author implementation */
+```
 
 Native producers provide execution facts after validated execution, through an
 opaque object capability; serialized tool name/arguments/output fields do not
