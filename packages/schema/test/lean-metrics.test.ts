@@ -34,6 +34,19 @@ test("zero passthrough and unavailable tokens remain honest", () => {
   expect(LeanMetrics.decode({ ...decision, status: "normalized" })?.status).toBe("normalized")
 })
 
+test("contradictory passthrough eligibility requires native-shell for every token kind", () => {
+  for (const tokens of [
+    { kind: "unavailable" as const },
+    { kind: "estimated" as const, counter: "chars-per-token-4" as const, before: 1, after: 1, saved: 0 },
+  ]) {
+    const value: LeanMetrics.Decision = { ...decision, producer: "unverified", status: "passthrough",
+      bytes: { before: 4, after: 4, saved: 0 }, tokens }
+    expect(LeanMetrics.decode(value)).toBeUndefined()
+    expect(LeanMetrics.decode({ ...value, eligible: false })?.eligible).toBe(false)
+    expect(LeanMetrics.decode({ ...value, producer: "native-shell" })?.eligible).toBe(true)
+  }
+})
+
 test("inclusive owner/string and safe integer limits accept valid boundary records", () => {
   const value = { ...decision, owner: { projectID: "p".repeat(256), location: "l".repeat(4096), sessionID: "s".repeat(256), callID: "c".repeat(256) },
     model: { provider: "p".repeat(256), id: "m".repeat(256) }, reason: "r".repeat(256), filterProfile: "f".repeat(256), orchestraProfile: "o".repeat(256),
