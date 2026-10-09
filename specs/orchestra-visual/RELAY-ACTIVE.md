@@ -15,12 +15,15 @@ Reuse existing source-bound evidence; keep gates intact. Static cold review rema
 | Front | Source checkpoint | State |
 | --- | --- | --- |
 | Shared runtime | `b1cad41dc515eec9dcf474c413da853061894ac1` | Consumed into `relay-next`, `nix-closure`, W6 base |
-| Nix consumers | `2796d6311efd373bfd36f5f394bf417a6eec9aaa` | Published, unvalidated; four dependency hashes stale, measurements pending |
+| Nix consumers | `8b812438bc` | Composed initial consumers, provenance/control/PTY source fixes and strict measurement helper; unvalidated, four hashes stale |
 | W6 definition/current step | `d438ef8eab` | Source checkpoint; not closure |
 | W6 lifecycle | `b72bfccf25` | Preserved committed lifecycle/Task/provider boundaries; production host wiring unfinished |
+| W6 production ports / hashes | `992b4c58ec`, `ee502646c7` | Concrete publication/provenance/approval/completion ports, canonical V3/hash path and scoped durable resume implemented |
+| W6 host extraction | `b36b725c10ee16ab04771c63b49132b82d92881b` | Named `maestro/workflow-host.ts` boundary; existing composition preserved, no new layer or waiver |
+| Complete upstream base | `ed078a033432ef948a813472b888a9245a244166` | Consumes exact b1-based `01a48f6a22`; registration/result/proposal/seat helpers now present |
 | Same-lock settlement adapter | `d2cc5b16bf8bc4c64ce5949021d57d282170d506` | Published, unvalidated; consumed as `2e3c15cd89` in W6 |
 | Upstream attribution/V3 | `8f73c045307f06da311ee6f8b1bb6ba378bf265c` | Upstream source-reviewed; consumed as `30ac511984` |
-| Upstream verifier | `cc6f5a8f755bb7d765c5d918ecd23180244be006` | Upstream source-reviewed; consumed as `4385c5847d`; earlier registration/result helpers still needed |
+| Upstream verifier | `cc6f5a8f755bb7d765c5d918ecd23180244be006` | Upstream source-reviewed; consumed as `4385c5847d`; background observer extension in progress |
 | V1 pilot launcher | `fe3760f621` | Runtime draft, unvalidated, not consumed; prepare-only default, `--run` only after combined readiness |
 | Native-product / WSL harness | `f1a4d8c747` / `80f3ebecfc` | Runtime drafts, not integrated or validated |
 
@@ -29,16 +32,18 @@ Nix working branch/worktree: `nix-closure`. Integrator: `relay-next`.
 
 ## Exact remaining code blockers
 
-- Concrete trusted publication/verifier/current revision/approved scope/global completion
-  host composition; default undefined ports are not implementation closure.
-- V3 producer/reader/hash integration using upstream's canonical DTO and verifier.
-- Existing Task hash/presentation/reservation must cover workflow binding, parameters and
-  actual write paths. Narrow adjacent sites: `task-hash.ts`, `tool/maestro-plan.ts`,
-  `tool/maestro-approval.ts`, `governed-task-reservation.ts`.
-- Consume reviewed upstream registration, `UpstreamResult`, `UpstreamProposal`, Seats and
-  result assembly base; do not invent substitutes for missing verifier dependencies.
-- Reconcile bound Session resume/delivery and exact assistant settlement in existing
-  serialized ownership. No second loop, evaluator, coordinator, inbox or drain identity.
+- Background producer and canonical observer extension: final work result captured from
+  the actual returned assistant, then referenced durable parent delivery on the exact
+  original Task. Preserve settlement through initial-completion and late metadata races.
+- Frozen private host-only existing Task metadata contract (upstream ACK
+  `msg_11f3590e7001Z4VlhB0nt14OBe`):
+  `upstreamSettlement: { parentMessageID, parentCallID, workResult, deliveryMessageID,
+  deliveryPartID? }`. Multipart V1 requires the actual part reference. Canonical
+  `UpstreamAttribution.V1` does not change. Caller notices, process-local job status,
+  timestamps and later `lastAssistant()` reads cannot establish these facts.
+- Relay owns producer and narrow existing Task/Session settlement; upstream owns observer.
+  Missing/failed/undelivered evidence remains named HOLD until actual closure. No new
+  store/event/approval/loop/coordinator/drain identity. Foreground source is not full closure.
 - Nix native four-system dependency measurements, consumer builds, output proof and hashes.
 - Final native/WSL qualification and read-only V1 credential compatibility/model pilot.
 
@@ -54,6 +59,15 @@ fix is part of the valid producer source. Nix toolchain proof `37824668435` is i
 Initial Nix source push triggered existing toolchain run `37880278652`; cancelled after
 prepare/Linux jobs had run. This is not consumer/distribution acceptance. Later source
 checkpoints use `[skip ci]`; no further deliberate validation before combined readiness.
+
+Initial Nix static reviews identified unbound measurement provenance, incomplete control
+collection and insufficient PTY consumer evidence. Source corrections are composed in
+`8b812438bc`; actual controls/native qualification are still deferred. Controlled premerge
+bootstrap is restricted to `nix-validation` plus the explicit request in
+`nix/distribution.md`; current `ready:false` remains intact.
+
+Unvalidated foreground W6/upstream plus Nix source composition: `dd6c5f367f1a0d8dddd6909cee6fbf0fd1ab13a4`.
+No product readiness, test pass, measurement or pilot acceptance follows from this composition.
 
 ## Coordination and recovery
 
