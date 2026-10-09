@@ -9,13 +9,15 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
-import { Cause, Deferred, Effect, Exit } from "effect"
+import { Cause, Deferred, Effect, Exit, Schema } from "effect"
 import { Agent } from "../../src/agent/agent"
 import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
 import { BackgroundJob } from "@/background/job"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Config } from "@/config/config"
 import { Session } from "@/session/session"
+import { SessionPrompt } from "@/session/prompt"
+import { PromptIdentity } from "@/session/prompt-identity"
 import { MessageID, PartID } from "../../src/session/schema"
 import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
@@ -27,7 +29,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Git } from "@/git"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { testEffect, awaitWithTimeout } from "../lib/effect"
 
 // F4 cl.5-6 and F4-CH: the Task path decodes the backend specialist's `backend-result` card into `metadata.workResult`.
 
@@ -208,48 +210,87 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
   const sessions = yield* Session.Service
   const jobs = yield* BackgroundJob.Service
   const notice = yield* Deferred.make<Parameters<TaskPromptOps["prompt"]>[0]>()
+  const release = yield* Deferred.make<void>()
   const written: string[] = []
-  const result = yield* dispatch(text, {
-    background: true,
-    subagent,
-    prompt: (input) =>
-      input.agent !== subagent
-        ? Deferred.succeed(notice, input).pipe(Effect.andThen(Effect.never))
-        : Effect.gen(function* () {
-            const info = yield* sessions.updateMessage({
-              id: MessageID.ascending(),
-              role: "assistant",
-              parentID: MessageID.ascending(),
-              sessionID: input.sessionID,
-              mode: subagent,
-              agent: subagent,
-              cost: 0,
-              path: { cwd: "/tmp", root: "/tmp" },
-              tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-              modelID: ref.modelID,
-              providerID: ref.providerID,
-              time: { created: Date.now() },
-              finish: "stop",
-              ...(error ? { error } : {}),
-            })
-            written.push(info.id)
-            const part = yield* sessions.updatePart({
-              id: PartID.ascending(),
-              messageID: info.id,
-              sessionID: input.sessionID,
-              type: "text",
-              text,
-            })
-            return { info, parts: [part] }
-          }),
+  const parent = yield* seed()
+  const parameters = { description: "implement repo query", prompt: "packet", subagent_type: subagent, background: true }
+  const callID = "actual-background-return"
+  const original = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: parent.chat.id,
+    messageID: parent.assistant.id, type: "tool", tool: "task", callID,
+    state: { status: "running", input: parameters, time: { start: Date.now() }, metadata: {} } })
+  const promptOps: TaskPromptOps = {
+    cancel: () => Effect.void,
+    resolvePromptParts: (value) => Effect.succeed([{ type: "text", text: value }]),
+    prompt: (input) => Effect.gen(function* () {
+      if (input.sessionID === parent.chat.id) {
+        if (!input.messageID) throw new Error("actual notice identity missing")
+        const messageID = input.messageID
+        const identity = PromptIdentity.fromEncoded(Schema.encodeSync(SessionPrompt.PromptInput)(input))
+        const previous = yield* sessions.reconcilePrompt({ sessionID: input.sessionID, messageID, identity })
+        const user: SessionV1.User = { id: messageID, sessionID: input.sessionID, role: "user", agent: "maestro", model: ref,
+          time: { created: Date.now() } }
+        const admitted = previous ?? (yield* sessions.admitPrompt({ sessionID: input.sessionID, messageID,
+          identityVersion: 1, identity, info: user, parts: input.parts.flatMap((part) => part.type === "text"
+            ? [{ ...part, id: PartID.ascending(), messageID, sessionID: input.sessionID }] : []) })).message
+        if (!input.noReply) {
+          const stored = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+          if (subagent === "walt") expect(stored?.type === "tool" && "metadata" in stored.state && stored.state.metadata)
+            .toHaveProperty("upstreamSettlement")
+          yield* Deferred.succeed(notice, input)
+        }
+        return admitted
+      }
+      yield* Deferred.await(release)
+      const info = yield* sessions.updateMessage({
+        id: MessageID.ascending(),
+        role: "assistant",
+        parentID: input.messageID ?? MessageID.ascending(),
+        sessionID: input.sessionID,
+        mode: subagent,
+        agent: subagent,
+        cost: 0,
+        path: { cwd: "/tmp", root: "/tmp" },
+        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+        modelID: ref.modelID,
+        providerID: ref.providerID,
+        time: { created: Date.now(), completed: Date.now() },
+        finish: "stop",
+        ...(error ? { error } : {}),
+      })
+      written.push(info.id)
+      const part = yield* sessions.updatePart({
+        id: PartID.ascending(),
+        messageID: info.id,
+        sessionID: input.sessionID,
+        type: "text",
+        text,
+      })
+      return { info, parts: [part] }
+    }).pipe(Effect.orDie),
+  }
+  const tool = yield* TaskTool
+  const definition = yield* tool.init()
+  const result = yield* definition.execute(parameters, {
+    sessionID: parent.chat.id, messageID: parent.assistant.id, callID, agent: "maestro", agentID: "maestro",
+    abort: new AbortController().signal, extra: { promptOps }, messages: [], ask: () => Effect.void,
+    // Match native callback: completion closes generic streaming metadata; private host observation must still persist.
+    metadata: (value) => Effect.gen(function* () {
+      const part = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
+      if (part?.type !== "tool" || part.state.status !== "running") return
+      yield* sessions.updatePart({ ...part, state: { ...part.state, ...value } })
+    }),
   })
-  if (!Exit.isSuccess(result.exit)) throw new Error("expected background start")
-  yield* jobs.wait({ id: result.exit.value.metadata.sessionId })
-  const delivered = (yield* Deferred.await(notice)).parts[0]
+  yield* sessions.updatePart({ ...original, state: { status: "completed", input: parameters,
+    title: result.title, output: result.output, metadata: result.metadata, time: { start: Date.now(), end: Date.now() } } })
+  yield* Deferred.succeed(release, undefined)
+  yield* jobs.wait({ id: result.metadata.sessionId })
+  const delivered = (yield* awaitWithTimeout(Deferred.await(notice), "actual background settlement did not resume parent")).parts[0]
+  const retained = yield* sessions.getPart({ sessionID: parent.chat.id, messageID: parent.assistant.id, partID: original.id })
   return {
-    started: result.exit.value.metadata,
+    started: result.metadata,
     childMessageID: written[0],
     workResult: delivered?.type === "text" ? delivered.metadata?.workResult : undefined,
+    retained,
   }
 })
 
@@ -383,6 +424,9 @@ describe("tool.task backend-result", () => {
         author: { memberId: "walt", executionSessionID: result.started.sessionId, messageID: result.childMessageID },
         terminal: { reason: "failed", hostDetail: expect.stringContaining("Network connection lost") },
       })
+      expect(result.retained).toMatchObject({ type: "tool", callID: "actual-background-return",
+        state: { status: "completed", metadata: { workResult: result.workResult,
+          upstreamSettlement: { parentCallID: "actual-background-return", workResult: result.workResult } } } })
     }),
   )
 
