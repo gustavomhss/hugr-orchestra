@@ -4,6 +4,8 @@ export const dict = {
   "lean.settings.title": "Lean tool output",
   "lean.settings.description": "Reduce supported tool output using the server's Lean setting.",
   "lean.settings.failed": "Could not save the Lean setting",
+  "lean.settings.saving": "Saving Lean setting…",
+  "lean.settings.unavailable": "Lean setting unavailable · read-only until a supported v1 server is ready.",
   "lean.project.title": "Repository Lean metrics",
   "lean.project.scope": "Native project/repository ID: {{projectID}}",
   "lean.loadedHistory": "Loaded history only · saved, visible tool results for this repository. Not complete repository history.",

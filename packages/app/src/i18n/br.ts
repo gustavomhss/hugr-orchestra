@@ -2,6 +2,8 @@ export const dict = {
   "lean.settings.title": "Saída de ferramentas Lean",
   "lean.settings.description": "Reduza a saída de ferramentas compatíveis usando a configuração Lean do servidor.",
   "lean.settings.failed": "Não foi possível salvar a configuração Lean",
+  "lean.settings.saving": "Salvando a configuração Lean…",
+  "lean.settings.unavailable": "Configuração Lean indisponível · somente leitura até que um servidor v1 compatível esteja pronto.",
   "lean.project.title": "Métricas Lean do repositório",
   "lean.project.scope": "ID nativo do projeto/repositório: {{projectID}}",
   "lean.loadedHistory": "Somente histórico carregado · resultados salvos e visíveis de ferramentas deste repositório. Não é o histórico completo do repositório.",
