@@ -31,7 +31,9 @@ Esta seção substitui os pontos de retomada históricos abaixo. A fonte da inte
   real de 5 ms foi rejeitado. Recusas/execuções ARM incompletas permanecem unrun; KPI inalterado.
 - Owner autorizou adiar Developer ID/notarização para uso local sem Apple Developer: **"go on"**. Waiver com alcance
   e remediação no relatório WP10. Não autoriza distribuição notarizada nem publicação npm.
-- **Gate pendente:** assinatura do relatório pelo owner; rerun V2/V7 no Mac do owner no boundary de default-on;
+- Owner aceitou o relatório para o escopo local em 2026-10-09: **"eai, pode seguir"**, respondendo à pergunta de
+  assinatura. WP9a autorizado; npm/distribuição pública continuam fora desse aceite.
+- **Gate pendente:** rerun V2/V7 no Mac do owner no boundary de default-on;
   provisionamento CI e epic suite do WP9a. Default continua off. `omni-default-ci` existe, ainda sem flip ou patch CI.
   WP9b continua depois de uma release limpa. Artefatos dos oito alvos não habilitam sozinhos as rows CLI desativadas.
 - Provas brutas locais anteriores foram preservadas nas worktrees `omni-campaign`, `omni-protocol-qa` e

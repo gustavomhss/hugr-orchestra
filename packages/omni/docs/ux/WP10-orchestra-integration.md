@@ -1,6 +1,6 @@
 # WP10 — Orchestra integration validation
 
-Status: **hosted lifecycle closeout verified; owner acceptance pending**. Source integration: `omni-native`, PR
+Status: **hosted lifecycle report accepted by the owner for local use; WP9a validation pending**. Source integration: `omni-native`, PR
 [gustavomhss/hugr-orchestra#73](https://github.com/gustavomhss/hugr-orchestra/pull/73).
 Closeout branch: `omni-closeout`; reconciled product revision: `50df6ac76a01a00762b22c62d6e053a78f658164`.
 
@@ -114,7 +114,8 @@ No KPI waiver was granted. Busy timing refusals are preserved. npm publication r
 
 ## Remaining acceptance and WP9a entry
 
-- Owner signature on this report remains pending; distribution deferral is not that signature.
+- Owner accepted this technical report for the documented local scope on 2026-10-09: **"eai, pode seguir"**, in
+  response to the explicit report-signature question. This authorizes WP9a work, not npm/public distribution.
 - The plan's owner-Mac V2/V7 rerun at the default-on boundary remains outstanding. Hosted Intel V7 has the reach
   stated above; it is not a new owner-machine measurement.
 - The default-on epic suite and current default-on packaged smokes have not run: the flag still defaults off.
@@ -124,4 +125,4 @@ No KPI waiver was granted. Busy timing refusals are preserved. npm publication r
   musl/Windows arm64 rows in the CLI build table.
 - WP9b stays after one clean release; npm publication requires separate owner authorization.
 
-Owner signature: **pending**.
+Owner signature: **accepted, 2026-10-09 — "eai, pode seguir"**. Default-on gates above remain mandatory.
