@@ -148,7 +148,7 @@ def check(directory, phase, expected_context=None):
             require(candidate["dependencyInputs"] == document(worker / "dependency-inputs.json"), "CANDIDATE_CAPTURE_IDENTITY")
             require(candidate == measured_candidate(worker, system, run["head_sha"]), "CANDIDATE_LOG_MISMATCH:" + system)
         if phase == "verify":
-            phases += ["measurement-provenance", "matching-measurement", "hash-capture-negative-controls", "applied-hash", "toolchain", "consumers", "outputs",
+            phases += ["measurement-provenance", "provenance-controls", "matching-measurement", "hash-capture-negative-controls", "applied-hash", "toolchain", "consumers", "outputs",
                        "native-outputs", "output-negative-controls", "references-cli", "references-desktop", "closure"]
             if system.endswith("-darwin"):
                 phases.append("app-identity")
@@ -214,13 +214,18 @@ def request():
     start, end = "<!-- NIX_BATCH_REQUEST_BEGIN -->\n", "\n<!-- NIX_BATCH_REQUEST_END -->"
     require(source.count(start) == source.count(end) == 1, "BATCH_REQUEST_DELIMITERS")
     value = json.loads(source.split(start)[1].split(end)[0])
+    require(set(value) == {"ready", "phase", "sourceParent", "measurementRun", "measurementAttempt"}, "BATCH_REQUEST_SHAPE")
     require(value["ready"] is True and value["phase"] in ("measure", "verify"), "BATCH_NOT_READY")
     require(os.environ["GITHUB_REF"] == "refs/heads/" + BATCH_BRANCH, "BATCH_BRANCH_MISMATCH")
     require(value["sourceParent"] == subprocess.check_output(["git", "rev-parse", "HEAD^"], text=True).strip(), "BATCH_SOURCE_PARENT")
     changes = set(subprocess.check_output(["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], text=True).splitlines())
     require("nix/distribution.md" in changes and changes <= {"nix/distribution.md", "nix/hashes.json"}, "BATCH_REQUEST_COMMIT_SCOPE")
     if value["phase"] == "verify":
+        require(changes == {"nix/distribution.md", "nix/hashes.json"}, "BATCH_HASH_REQUEST_SCOPE")
         require(all(isinstance(value[key], int) and not isinstance(value[key], bool) and value[key] > 0 for key in ("measurementRun", "measurementAttempt")), "BATCH_MEASUREMENT_IDENTITY")
+    if value["phase"] == "measure":
+        require(changes == {"nix/distribution.md"} and value["measurementRun"] is None
+                and value["measurementAttempt"] is None, "BATCH_MEASURE_REQUEST_SCOPE")
     return value
 
 

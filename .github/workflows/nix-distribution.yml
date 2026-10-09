@@ -1,8 +1,11 @@
 name: nix-distribution
 
-# Gate extension, manual-only preparation. Dispatch once W6 + Nix are ready.
+# Gate strengthening: only an explicit final-batch request can start this graph.
 # Measurement success is candidate capture, never consumer-build qualification.
 on:
+  push:
+    branches: [nix-validation]
+    paths: [nix/distribution.md]
   workflow_dispatch:
     inputs:
       phase:
@@ -35,17 +38,42 @@ jobs:
     timeout-minutes: 15
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      phase: ${{ steps.request.outputs.phase }}
+      measurement_run: ${{ steps.request.outputs.measurement_run }}
+      measurement_attempt: ${{ steps.request.outputs.measurement_attempt }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          fetch-depth: 2
+      - id: request
+        name: Require owner-held final-batch request before installing Nix
+        shell: bash
+        env:
+          DISPATCH_PHASE: ${{ inputs.phase }}
+          DISPATCH_RUN: ${{ inputs.measurement_run }}
+          DISPATCH_ATTEMPT: ${{ inputs.measurement_attempt }}
+        run: |
+          set -euo pipefail
+          python3 nix/scripts/complete-distribution.py request >"$RUNNER_TEMP/nix-request.json"
+          python3 - "$RUNNER_TEMP/nix-request.json" <<'PY'
+          import json, os, sys
+          value = json.load(open(sys.argv[1]))
+          if os.environ["GITHUB_EVENT_NAME"] == "workflow_dispatch":
+              if value["phase"] != os.environ["DISPATCH_PHASE"] or (value["phase"] == "verify" and
+                  (str(value["measurementRun"]) != os.environ["DISPATCH_RUN"] or str(value["measurementAttempt"]) != os.environ["DISPATCH_ATTEMPT"])):
+                  raise SystemExit("NIX_DISTRIBUTION_FAILURE:DISPATCH_REQUEST_MISMATCH")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("phase=" + value["phase"] + "\nmeasurement_run=" + str(value["measurementRun"] or "") +
+                           "\nmeasurement_attempt=" + str(value["measurementAttempt"] or "") + "\n")
+          PY
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
       - id: matrix
         shell: bash
         env:
-          PHASE: ${{ inputs.phase }}
-          MEASUREMENT_RUN: ${{ inputs.measurement_run }}
-          MEASUREMENT_ATTEMPT: ${{ inputs.measurement_attempt }}
+          PHASE: ${{ steps.request.outputs.phase }}
+          MEASUREMENT_RUN: ${{ steps.request.outputs.measurement_run }}
+          MEASUREMENT_ATTEMPT: ${{ steps.request.outputs.measurement_attempt }}
         run: |
           set -euo pipefail
           [[ $PHASE == measure || $PHASE == verify ]] || {
@@ -77,10 +105,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PHASE: ${{ inputs.phase }}
+          PHASE: ${{ needs.prepare.outputs.phase }}
           SYSTEM: ${{ matrix.system }}
-          MEASUREMENT_RUN: ${{ inputs.measurement_run }}
-          MEASUREMENT_ATTEMPT: ${{ inputs.measurement_attempt }}
+          MEASUREMENT_RUN: ${{ needs.prepare.outputs.measurement_run }}
+          MEASUREMENT_ATTEMPT: ${{ needs.prepare.outputs.measurement_attempt }}
         run: |
           set -euo pipefail
           dir="$RUNNER_TEMP/nix-distribution-$SYSTEM"
@@ -88,15 +116,34 @@ jobs:
             bash nix/check-distribution.sh measure "$SYSTEM" "$GITHUB_SHA" "$dir"
             exit 0
           fi
-          measurement="$RUNNER_TEMP/measurement-$SYSTEM"
-          gh run download "$MEASUREMENT_RUN" --repo "$GITHUB_REPOSITORY" \
-            --name "nix-distribution-measure-$MEASUREMENT_RUN-$MEASUREMENT_ATTEMPT-$SYSTEM" --dir "$measurement"
-          bash nix/check-distribution.sh verify "$SYSTEM" "$GITHUB_SHA" "$dir" "$measurement"
+          provenance="$RUNNER_TEMP/measurement-provenance-$SYSTEM"
+          mkdir "$provenance"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN/attempts/$MEASUREMENT_ATTEMPT" >"$provenance/run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN" >"$provenance/latest-run.json"
+          workflow=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["workflow_id"])' "$provenance/run.json")
+          head=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$provenance/run.json")
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow" >"$provenance/workflow.json"
+          gh api "repos/$GITHUB_REPOSITORY" >"$provenance/repository.json"
+          gh api "repos/$GITHUB_REPOSITORY/git/commits/$head" >"$provenance/commit.json"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$head...$GITHUB_SHA" >"$provenance/compare.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN/attempts/$MEASUREMENT_ATTEMPT/jobs?per_page=100" >"$provenance/jobs.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN/artifacts?per_page=100" >"$provenance/artifacts.json"
+          python3 nix/scripts/dependency_measurement.py inputs "$provenance"
+          python3 nix/scripts/complete-distribution.py downloads "$provenance" "$MEASUREMENT_RUN" "$MEASUREMENT_ATTEMPT" >"$provenance/downloads.txt"
+          while IFS= read -r name; do
+            destination="$provenance/workers/$name"
+            if [[ $name == "nix-distribution-completion-$MEASUREMENT_RUN-$MEASUREMENT_ATTEMPT" ]]; then destination="$provenance/completion"; fi
+            gh run download "$MEASUREMENT_RUN" --repo "$GITHUB_REPOSITORY" --name "$name" --dir "$destination"
+          done <"$provenance/downloads.txt"
+          python3 nix/scripts/complete-distribution.py provenance "$provenance" "$MEASUREMENT_RUN" "$MEASUREMENT_ATTEMPT" "$SYSTEM" >"$provenance/provenance.json"
+          export MEASUREMENT_PROVENANCE_DIR="$provenance" MEASUREMENT_RUN_ID="$MEASUREMENT_RUN" MEASUREMENT_RUN_ATTEMPT="$MEASUREMENT_ATTEMPT"
+          bash nix/check-distribution.sh verify "$SYSTEM" "$GITHUB_SHA" "$dir" \
+            "$provenance/workers/nix-distribution-measure-$MEASUREMENT_RUN-$MEASUREMENT_ATTEMPT-$SYSTEM"
       - name: Preserve exact native evidence, including failures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: nix-distribution-${{ inputs.phase }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
+          name: nix-distribution-${{ needs.prepare.outputs.phase }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
           path: ${{ runner.temp }}/nix-distribution-${{ matrix.system }}
           if-no-files-found: error
           retention-days: 14
@@ -113,7 +160,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PHASE: ${{ inputs.phase }}
+          PHASE: ${{ needs.prepare.outputs.phase }}
           PREPARE_RESULT: ${{ needs.prepare.result }}
           NATIVE_RESULT: ${{ needs.native.result }}
         run: |
@@ -123,8 +170,12 @@ jobs:
           [[ $PREPARE_RESULT == success && $NATIVE_RESULT == success ]] || {
             printf 'NIX_DISTRIBUTION_FAILURE:INCOMPLETE_NATIVE_JOBS\n' >&2; exit 1;
           }
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >"$dir/run.json"
-          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=latest&per_page=100" >"$dir/jobs.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT" >"$dir/run.json"
+          workflow=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["workflow_id"])' "$dir/run.json")
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow" >"$dir/workflow.json"
+          gh api "repos/$GITHUB_REPOSITORY" >"$dir/repository.json"
+          gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" >"$dir/commit.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" >"$dir/jobs.json"
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" >"$dir/artifacts.json"
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
             --pattern "nix-distribution-$PHASE-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-*" --dir "$dir/workers"

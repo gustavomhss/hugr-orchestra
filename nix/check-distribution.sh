@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Gate extension, prepared only: native Nix CLI/Desktop output and hash capture.
-# Explicitly invoked by the lead's W6+Nix batch; never auto-runs on source push.
+# Invoked only by the lead's explicitly requested W6+Nix validation checkpoint.
 set -euo pipefail
 export PYTHONDONTWRITEBYTECODE=1
 fail() { printf 'NIX_DISTRIBUTION_FAILURE:%s\n' "$*" >&2; exit 1; }
@@ -9,6 +9,8 @@ mode=$1; export DISTRIBUTION_SYSTEM=$2; revision=$3; dir=$4
 [[ $mode == measure || $mode == verify ]] || fail UNKNOWN_MODE
 [[ $mode != verify || $# == 5 ]] || fail MISSING_MEASUREMENT_DIRECTORY
 [[ $mode != verify || ${GITHUB_ACTIONS:-} == true ]] || fail VERIFY_REQUIRES_REAL_ACTIONS_CONTEXT
+[[ $mode != verify || ( -d ${MEASUREMENT_PROVENANCE_DIR:-/nonexistent} \
+  && ${MEASUREMENT_RUN_ID:-} =~ ^[1-9][0-9]*$ && ${MEASUREMENT_RUN_ATTEMPT:-} =~ ^[1-9][0-9]*$ ) ]] || fail MISSING_MEASUREMENT_API_PROVENANCE
 [[ $(git rev-parse HEAD) == "$revision" ]] || fail SOURCE_REVISION_MISMATCH
 [[ -z $(git status --porcelain --untracked-files=all) ]] || fail DIRTY_SOURCE_TREE
 [[ ! -e $dir && -d $(dirname "$dir") ]] || fail LOG_DIRECTORY_NOT_FRESH_OR_PARENT_MISSING
@@ -74,6 +76,11 @@ if [[ $mode == measure ]]; then
   exit 0
 fi
 measurement=$5
+run measurement-provenance python3 nix/scripts/complete-distribution.py provenance \
+  "$MEASUREMENT_PROVENANCE_DIR" "$MEASUREMENT_RUN_ID" "$MEASUREMENT_RUN_ATTEMPT" "$DISTRIBUTION_SYSTEM"
+[[ $measurement == "$MEASUREMENT_PROVENANCE_DIR/workers/nix-distribution-measure-$MEASUREMENT_RUN_ID-$MEASUREMENT_RUN_ATTEMPT-$DISTRIBUTION_SYSTEM" ]] || fail MEASUREMENT_WORKER_PATH_MISMATCH
+run provenance-controls python3 nix/scripts/probe-distribution-completion.py \
+  "$MEASUREMENT_PROVENANCE_DIR" "$dir/provenance-controls" provenance
 run matching-measurement python3 nix/scripts/dependency_measurement.py compare "$measurement"
 run hash-capture-negative-controls python3 nix/scripts/probe-dependency-measurement.py "$measurement" "$dir/hash-probes"
 run applied-hash python3 - "$measurement" "$DISTRIBUTION_SYSTEM" <<'PY'
@@ -97,7 +104,7 @@ run outputs nix eval --impure --no-write-lock-file --no-update-lock-file --json 
     packages = flake.packages.${builtins.getEnv "DISTRIBUTION_SYSTEM"};
   in { cli = toString packages.orchestra; desktop = toString packages.orchestra-desktop;
     bun = toString packages.bun; version = packages.orchestra.version; electronVersion = packages.electron.version;
-    source = toString packages.node_modules.src;
+    source = toString packages.node_modules.src; modules = toString packages.node_modules;
   }
 '
 cli=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["cli"])' "$dir/outputs.stdout")
@@ -105,6 +112,7 @@ desktop=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["deskt
 bun=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["bun"])' "$dir/outputs.stdout")
 version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$dir/outputs.stdout")
 electronVersion=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["electronVersion"])' "$dir/outputs.stdout")
+modules=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["modules"])' "$dir/outputs.stdout")
 export HOME="$dir/home" XDG_CONFIG_HOME="$dir/home/config" XDG_DATA_HOME="$dir/home/data" XDG_CACHE_HOME="$dir/home/cache"
 mkdir -p "$HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
 run native-outputs "$bun/bin/bun" --bun nix/scripts/verify-distribution.ts \
@@ -112,7 +120,7 @@ run native-outputs "$bun/bin/bun" --bun nix/scripts/verify-distribution.ts \
   --version "$version" --electron-version "$electronVersion"
 run output-negative-controls "$bun/bin/bun" --bun nix/scripts/probe-distribution.ts \
   --source "$PWD" --cli "$cli" --desktop "$desktop" --system "$DISTRIBUTION_SYSTEM" \
-  --version "$version" --electron-version "$electronVersion" --directory "$dir/probes"
+  --version "$version" --electron-version "$electronVersion" --directory "$dir/probes" --modules "$modules"
 run references-cli nix-store --query --references "$cli"
 run references-desktop nix-store --query --references "$desktop"
 run closure nix path-info --recursive --json "$cli" "$desktop"
