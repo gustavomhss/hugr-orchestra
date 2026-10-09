@@ -87,7 +87,8 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
   if (!plan || plan.sessionID !== sessionID) return yield* new ContextConflictError({ sessionID, planRevisionID })
   const sessions = yield* Session.Service
   const session = yield* sessions.get(SessionID.make(sessionID))
-  if (requireGrounded && plan.revision !== "v2")
+  const grounding = plan.revision === "v2" || plan.revision === "v3" ? plan.grounding : undefined
+  if (requireGrounded && grounding === undefined)
     return yield* new AtlasContextHeld({ reason: "grounded-plan-required", evidence: [plan.id] })
   const evidence = yield* currentEvidence(session.directory)
   if (!evidence) return yield* new ContextConflictError({ sessionID, planRevisionID })
@@ -107,16 +108,16 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
     createdAt: Date.now(),
   }
   const next: ContextData =
-    plan.revision === "v2"
+    grounding !== undefined
       ? yield* Effect.gen(function* () {
           if (evidence.changedPaths.length)
             return yield* new AtlasContextHeld({ reason: "context-dirty", evidence: evidence.changedPaths })
           const source = yield* readAtlasSource(session)
           if (
-            source.identityHash !== plan.grounding.sourceIdentityHash ||
-            source.context.catalogVersion !== plan.grounding.catalogVersion ||
-            source.context.snapshot !== plan.grounding.snapshot ||
-            source.context.sourceRevision !== plan.grounding.sourceRevision
+            source.identityHash !== grounding.sourceIdentityHash ||
+            source.context.catalogVersion !== grounding.catalogVersion ||
+            source.context.snapshot !== grounding.snapshot ||
+            source.context.sourceRevision !== grounding.sourceRevision
           )
             return yield* new AtlasContextHeld({
               reason: "plan-grounding-stale",
@@ -126,7 +127,7 @@ export const recordContext = Effect.fn("MaestroContext.record")(function* (
             actor: { projectId: session.projectID, sessionId: session.id, memberId: "maestro" },
             revision: { id: plan.id, hash: plan.revisionHash, projectId: session.projectID, sessionId: session.id },
             territories: plan.scope.map((field) => field.value),
-            units: plan.grounding.units,
+            units: grounding.units,
             context: source.context,
           })
           if (compiled.status === "HOLD")
@@ -179,15 +180,17 @@ export const contextIsCurrent = Effect.fn("MaestroContext.isCurrent")(
     const session = yield* sessions.get(SessionID.make(context.sessionID))
     if (session.projectID !== context.projectID || session.directory !== context.directory) return false
     const plan = yield* readPlanRevision(context.planRevisionID)
-    if (!plan || plan.revision !== "v2" || plan.revisionHash !== context.planRevisionHash) return false
+    if (!plan || plan.revisionHash !== context.planRevisionHash) return false
+    const grounding = plan.revision === "v2" || plan.revision === "v3" ? plan.grounding : undefined
+    if (grounding === undefined) return false
     const source = yield* readAtlasSource(session)
-    if (source.identityHash !== context.sourceIdentityHash || source.identityHash !== plan.grounding.sourceIdentityHash)
+    if (source.identityHash !== context.sourceIdentityHash || source.identityHash !== grounding.sourceIdentityHash)
       return false
     const compiled = compileContextToolPlan({
       actor: { projectId: session.projectID, sessionId: session.id, memberId: "maestro" },
       revision: { id: plan.id, hash: plan.revisionHash, projectId: session.projectID, sessionId: session.id },
       territories: plan.scope.map((field) => field.value),
-      units: plan.grounding.units,
+      units: grounding.units,
       context: source.context,
     })
     if (
