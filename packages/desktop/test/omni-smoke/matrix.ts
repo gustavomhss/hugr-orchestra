@@ -7,17 +7,18 @@ import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
 import { digest, logs, provenance } from "./build"
 import { activate, controls, events, fixtures, type Report } from "./fixtures"
 import { emergency, observe, owned } from "./inventory"
+import { keychain } from "./keychain"
 
 type Cell = "main-kill" | "utility-kill" | "quit"
 type Mutation = "legacy" | "forced-kill" | "empty"
-type Diagnostic = "stop-main" | "no-main-native" | "load-only" | "completed-run"
+type Diagnostic = "stop-main" | "no-main-native" | "load-only" | "completed-run" | "private-keychain"
 
 export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnostic) {
   const manifest = provenance()
   try { requiredFixtures(mutation === "empty" ? [] : ["main", "shell", "terminal"]) }
   catch (error) { return { cell, diagnostic, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
   const scratch = await fixtures()
-  const withoutMain = diagnostic !== undefined && diagnostic !== "stop-main"
+  const withoutMain = diagnostic === "no-main-native" || diagnostic === "load-only" || diagnostic === "completed-run"
   if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC: diagnostic,
     ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC_ARGV: JSON.stringify([scratch.trees.main.command, "-e", "process.stdout.write('SHORT_RUN_READY')"]) })
   if (diagnostic === "stop-main") Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN: "1" })
@@ -28,6 +29,8 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   }
   const destination = path.join(logs, `${cell}-${diagnostic ? `diagnostic-${diagnostic}` : mutation ?? "restored"}`)
   mkdirSync(destination, { recursive: true })
+  const store = await Promise.resolve().then(() => diagnostic === "private-keychain" && process.platform === "darwin" ? keychain(scratch.home, scratch.env) : undefined)
+    .catch((error: unknown) => { scratch.llm.stop(); throw error })
   const launcher = process.platform === "linux" ? ["xvfb-run", "-a", manifest.executable] : [manifest.executable]
   const app = spawn(launcher[0]!, [...launcher.slice(1), "--no-sandbox"], { cwd: scratch.project, env: scratch.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: false })
   const state = { output: "", error: "", exitedAt: 0, closed: false }
@@ -39,6 +42,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   const roots: Identity[] = []
   const retained: Identity[] = []
   const evidence: Record<string, unknown> = {}
+  evidence.keychain = store?.evidence
   const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
     scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown", pass: false, error: "", cleanup: false }
   const legacy = { proc: undefined as ReturnType<typeof spawn> | undefined }
@@ -144,6 +148,8 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     } catch (error) { result.pass = false; result.error += `; cleanup capture: ${error}` }
     try { await emergency(app, roots, retained, scratch.specs.map((spec) => spec.nonce)); result.cleanup = true }
     catch (error) { result.pass = false; result.error += `; emergency cleanup: ${error}` }
+    try { store?.dispose() }
+    catch (error) { result.pass = false; result.cleanup = false; result.error += `; keychain fixture cleanup: ${error}` }
     try {
       if (legacy.proc?.exitCode === null && legacy.proc.signalCode === null) legacy.proc.kill("SIGKILL")
       if (legacy.proc) await until(5000, "legacy mutation handle exit", () => legacy.proc!.exitCode !== null || legacy.proc!.signalCode !== null ? true : undefined)
@@ -169,7 +175,7 @@ export async function matrix() {
   const mutations = [await execute("main-kill", "legacy"), await execute("quit", "forced-kill"), await execute("quit", "empty")]
   const restored = [await execute("main-kill"), await execute("utility-kill"), await execute("quit")]
   const diagnostic = process.argv.includes("--diagnose-main") ? [await execute("quit", undefined, "stop-main"), await execute("quit", undefined, "no-main-native"),
-    await execute("quit", undefined, "load-only"), await execute("quit", undefined, "completed-run")] : []
+    await execute("quit", undefined, "load-only"), await execute("quit", undefined, "completed-run"), await execute("quit", undefined, "private-keychain")] : []
   const expected = ["legacy unowned tree positive control rejected", "actual app.quit did not prove orderly code-zero exit", "empty required fixtures rejected"]
   const pass = mutations.every((cell, index) => !cell.pass && cell.cleanup && cell.error.includes(expected[index]!)) && restored.every((cell) => cell.pass && cell.cleanup)
   const summary = { pass, sourceSHA: provenance().sourceSHA, os: process.platform, arch: process.arch, at: new Date().toISOString(), mutations: mutations.map(({ cell, mutation, pass, error, cleanup }) => ({ cell, mutation, pass, error, cleanup })),
