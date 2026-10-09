@@ -1,6 +1,6 @@
 export * as TaskBackground from "./task-background"
 
-import { Deferred, Effect, Exit, FileSystem, Scope } from "effect"
+import { Cause, Deferred, Effect, Exit, FileSystem, Scope } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import type { EventV2 } from "@orchestra/core/event"
 import type { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
@@ -138,15 +138,24 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
       Effect.provideService(FileSystem.FileSystem, input.fs),
       Effect.onExit((exit) => {
         const captured = dispatch.capture
+        const observed = captured?.workResult?.terminal
+        const unfavorable = observed?.reason === "failed" || observed?.reason === "interrupted"
+        const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
         const settled: UpstreamSettlement.Capture | undefined = captured && Exit.isFailure(exit) ? {
           ...captured,
           state: "error",
           ...(captured.workResult ? {
             workResult: {
               ...captured.workResult,
-              terminal: {
+              // Preserve the returned failure/interruption; a later host exit cannot replace its root cause.
+              terminal: unfavorable ? {
+                ...captured.workResult.terminal,
+                ...(captured.workResult.terminal.hostDetail === undefined && failure instanceof Error
+                  ? { hostDetail: failure.message }
+                  : {}),
+              } : {
                 reason: Exit.hasInterrupts(exit) ? "interrupted" : "failed",
-                hostDetail: "Task host ended after returned assistant",
+                hostDetail: failure instanceof Error ? failure.message : "Task host ended after returned assistant",
               },
             },
           } : {}),

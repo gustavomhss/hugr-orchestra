@@ -34,7 +34,8 @@ describe("Maestro task hash", () => {
       publication: { projectID: "project", documentID: "packet", activeVersionID: "version-1",
         immutableVersionBodyChecksum: "1".repeat(64), livePublicationChecksum: "2".repeat(64) },
       materialization: { schemaIdentifier: "RelaySprint.Sprint", digest: "3".repeat(64), byteLength: 128 },
-      resolvedSkills: [{ id: "implementation", content: "Approved skill", sha256: "4".repeat(64) }],
+      resolvedSkills: [{ wp: "implementation-step", skill: "implementation", mode: "combine",
+        content: "Approved skill", sha256: "4".repeat(64) }],
       parameters: { target: "src", mode: "product" }, writePaths: ["src"],
     })
     const approved = { ...binding, workflowBinding, writePaths: ["src"] }
@@ -47,6 +48,9 @@ describe("Maestro task hash", () => {
       { ...workflowBinding, materialization: { ...workflowBinding.materialization, byteLength: 129 } },
       { ...workflowBinding, resolvedSkills: workflowBinding.resolvedSkills.map((skill) => ({ ...skill, content: "Changed skill" })) },
       { ...workflowBinding, resolvedSkills: workflowBinding.resolvedSkills.map((skill) => ({ ...skill, sha256: "6".repeat(64) })) },
+      { ...workflowBinding, resolvedSkills: workflowBinding.resolvedSkills.map((skill) => ({ ...skill, wp: "other-step" })) },
+      { ...workflowBinding, resolvedSkills: workflowBinding.resolvedSkills.map((skill) => ({ ...skill, skill: "other-skill" })) },
+      { ...workflowBinding, resolvedSkills: workflowBinding.resolvedSkills.map((skill) => ({ ...skill, mode: "replace" as const })) },
       { ...workflowBinding, parameters: { target: "test", mode: "product" } },
       { ...workflowBinding, writePaths: ["test"] },
     ]
