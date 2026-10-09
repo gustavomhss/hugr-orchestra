@@ -36,7 +36,12 @@ declare unavailable metrics; they do not claim successful collection or totals.
 - Percentiles use measured projection durations only and nearest-rank method;
   no samples returns null. Zero eligible denominator must not display 100%.
 - Metric/counter/serialization error must preserve execution/policy/output; return
-  unavailable data. UI decodes persisted values and never recalculates tokens.
+   unavailable data. UI decodes persisted values and never recalculates tokens.
+- `Summary` is an available/unavailable union. Overflow of any exact total or group
+  returns only `{ coverage, unavailable: "overflow" }`; invalid caller scope returns
+  `{ coverage, unavailable: "invalid-scope" }`. Never throw, round, clamp, skip valid
+  records, or return numeric placeholders. Consumers narrow this union before
+  rendering totals. BigInt accumulation permits signed intermediate cancellation.
 
 ## Disjoint implementation slices
 
