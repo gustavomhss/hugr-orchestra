@@ -152,6 +152,14 @@ def check(directory, phase, expected_context=None):
                        "native-outputs", "output-negative-controls", "references-cli", "references-desktop", "closure"]
             if system.endswith("-darwin"):
                 phases.append("app-identity")
+            provenance = document(worker / "measurement-provenance.stdout")
+            candidate = document(worker / "measurement-candidate.json")
+            require(provenance["status"] == "MEASUREMENT_API_PROVENANCE_OK" and provenance["selectedSystem"] == system
+                    and provenance["workflowID"] == run["workflow_id"] and provenance["repositoryID"] == repository["id"]
+                    and provenance["sourceRevision"] == candidate["sourceRevision"]
+                    and provenance["sourceTree"] == candidate.get("sourceTree", provenance["sourceTree"])
+                    and set(provenance["systems"]) == set(systems())
+                    and len(provenance["artifactIDs"]) == len(set(provenance["artifactIDs"])) == len(systems()), "VERIFICATION_PROVENANCE_CAPTURE")
             output = document(worker / "native-outputs.stdout")
             pty = output["pty"]
             package = "@lydell/node-pty-" + ("darwin" if system.endswith("-darwin") else "linux") + "-" + ("arm64" if system.startswith("aarch64-") else "x64")

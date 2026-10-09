@@ -46,7 +46,8 @@ CONTROL_LEDGER_JSON = """CONTROL_LEDGER_BEGIN
     "unknown-output-control": "OUTPUT_CONTROL_SET",
     "duplicate-output-control": "OUTPUT_CONTROL_SET",
     "negative-setup-failure": "OUTPUT_CONTROL_VERDICT",
-    "missing-pty-capture": "NATIVE_OUTPUT_CAPTURE"
+    "missing-pty-capture": "NATIVE_OUTPUT_CAPTURE",
+    "unqualified-provenance-capture": "VERIFICATION_PROVENANCE_CAPTURE"
   },
   "provenance": {
     "cancelled-measurement-run": "MEASUREMENT_RUN_NOT_SUCCESSFUL",
@@ -147,8 +148,8 @@ def main():
             file, content = edits[name]
             private_directory(original / "workers" / names[0], workers / names[0], file)
             (workers / names[0] / file).write_text(content)
-        if name in ("candidate-relabelled", "capture-dependency-mismatch", "positive-only-output-controls", "unknown-output-control", "duplicate-output-control", "missing-pty-capture", "negative-setup-failure"):
-            file = "candidate.json" if name == "candidate-relabelled" else "dependency-inputs.json" if name == "capture-dependency-mismatch" else "native-outputs.stdout" if name == "missing-pty-capture" else "probes" if name == "negative-setup-failure" else "output-negative-controls.stdout"
+        if name in ("candidate-relabelled", "capture-dependency-mismatch", "positive-only-output-controls", "unknown-output-control", "duplicate-output-control", "missing-pty-capture", "negative-setup-failure", "unqualified-provenance-capture"):
+            file = "candidate.json" if name == "candidate-relabelled" else "dependency-inputs.json" if name == "capture-dependency-mismatch" else "native-outputs.stdout" if name == "missing-pty-capture" else "probes" if name == "negative-setup-failure" else "measurement-provenance.stdout" if name == "unqualified-provenance-capture" else "output-negative-controls.stdout"
             private_directory(original / "workers" / names[0], workers / names[0], file)
             if name == "negative-setup-failure":
                 output_cases = gate.ledger(Path("nix/scripts/probe-distribution.ts"))
@@ -167,6 +168,7 @@ def main():
                 if name == "candidate-relabelled": value["sourceRevision"] = "relabelled-source"
                 if name == "capture-dependency-mismatch": value.clear()
                 if name == "missing-pty-capture": value["pty"]["bindings"] = []
+                if name == "unqualified-provenance-capture": value["status"] = "UNQUALIFIED"
                 if name == "positive-only-output-controls":
                     output_cases = gate.ledger(Path("nix/scripts/probe-distribution.ts"))
                     value["completed"] = [key for key, code in output_cases.items() if code is None]

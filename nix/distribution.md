@@ -1,5 +1,13 @@
 # Native distribution checkpoint — UNVALIDATED
 
+<!-- NIX_BATCH_REQUEST_BEGIN -->
+{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
+<!-- NIX_BATCH_REQUEST_END -->
+
+The request above is deliberately inactive. Only the lead, after W6 + Nix are
+ready, publishes a request-only commit on `nix-validation` without `[skip ci]`.
+No request is activated or validation dispatched by this source-fix checkpoint.
+
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
 evidence is not rerun here and does not certify Nix builds.
@@ -87,18 +95,47 @@ the same integrated batch's verification half on the new exact revision:
 
 ```bash
 revision=$(git rev-parse HEAD)
+# Inside the prepared native Actions worker, after its real API fetch/download:
+export MEASUREMENT_RUN_ID="$MEASUREMENT_RUN"
+export MEASUREMENT_RUN_ATTEMPT="$MEASUREMENT_ATTEMPT"
+export MEASUREMENT_PROVENANCE_DIR="$RUNNER_TEMP/measurement-provenance-$system"
 bash nix/check-distribution.sh verify "$system" "$revision" \
-  "$RUNNER_TEMP/nix-verify-$system" "$RUNNER_TEMP/nix-measure-$system"
+  "$RUNNER_TEMP/nix-verify-$system" \
+  "$MEASUREMENT_PROVENANCE_DIR/workers/nix-distribution-measure-$MEASUREMENT_RUN_ID-$MEASUREMENT_RUN_ATTEMPT-$system"
 ```
 
-Verification requires real Actions context because existing toolchain gate binds
-evidence to actual run/attempt/SHA; do not fabricate GITHUB_* identities. The
-prepared manual-only `nix-distribution.yml` supplies that context and downloads
-measurement evidence from the selected real run/attempt. Do not dispatch yet.
-For pre-merge qualification, the lead must invoke these scripts from a real
-native Actions harness, or make the new dispatch workflow available where GitHub
-accepts it. A branch-only workflow file is not dispatch/runner evidence; GitHub's
-`workflow_dispatch` registration requires the workflow on the default branch.
+Verification requires real Actions context because the unchanged toolchain gate
+binds evidence to actual run/attempt/SHA; do not fabricate GITHUB_* identities.
+`nix-distribution.yml` now has a concrete premerge bootstrap: a push to exactly
+`nix-validation`, changing exactly the request-bearing `nix/distribution.md`.
+The prepare job rejects an inactive request before installing Nix. The request
+must name its actual commit parent, and its commit may change only this document
+(measurement) or this document plus `nix/hashes.json` (verification).
+
+After readiness, the lead creates `nix-validation` at the final integrated source
+SHA. Set the marked JSON to `ready: true`, `phase: "measure"`, `sourceParent` equal
+to that known parent SHA, and null measurement IDs; commit only this document
+without `[skip ci]`, then push `fork nix-validation`. This registers/runs the new
+workflow from the pushed branch, without a separate workflow PR/default-branch
+merge. Ordinary `nix-closure` source pushes cannot trigger it. A branch-only
+`gh workflow run` is still not a bootstrap route.
+
+After the selected measurement attempt and independent completion both succeed,
+the lead applies the four measured hashes and updates the request to
+`phase: "verify"`, its exact real `measurementRun`/`measurementAttempt`, and
+`sourceParent` equal to the measurement source SHA. Commit both owned files in
+one direct-child checkpoint without `[skip ci]`; push the same branch. One final
+milestone PR remains lead-owned. Later manual dispatch is usable only after
+default-branch registration, and must match the committed ready request.
+
+Verification first fetches the selected attempt, latest run, actual workflow
+identity, repository, Git commit/tree, attempt-specific jobs, artifact metadata
+and compare API from GitHub. It requires completed/success, exact workflow
+ID/path, repository/head/attempt and successful independent completion receipt
+plus its full control records. All native worker artifacts are metadata-bound to
+that run/head. Candidate revision/tree/system and dependency identity must agree
+with those API facts, captured inputs and current inputs; relabelling cannot
+qualify. Only one direct-child hash/request change is accepted after measurement.
 Dependency fingerprints must match measurement; hashes alone cannot mask changed
 package source/data, lock/manifests, patches, toolchain, normalization or filter
 recipes. Exact consumer command is:
@@ -112,7 +149,9 @@ nix build --no-write-lock-file --no-update-lock-file --option sandbox true \
 The same verification invocation runs the unchanged toolchain gate and its native
 reach/hash/source controls, then real CLI/Desktop checks: manifest admission,
 raw and wrapped version, ELF/Mach-O CPU, schema/completions, packaged Electron
-version, actual Electron loading of a nonempty native-addon list, Linux desktop
+version, packaged Electron `createRequire` resolution of the actual platform
+node-pty package from `app.asar/out/main/index.js`, its real `spawn` export and
+loaded native binding, supplemental native-addon loading, Linux desktop
 identity/resources and Darwin app identity. It captures direct and recursive
 runtime references, per-command exit/log/wall time and source revision/tree.
 
@@ -122,10 +161,19 @@ recomputed digests, then restoration. Real production consumer and output checke
 named defect. Positive/restored real copies must pass. No production output is
 mutated. These controls have not run.
 
-Completion teeth replay real current-run evidence, then separately remove job /
-artifact lists, skip a native job, alter run/worker SHA or native system, and mark
-a worker failed. The unchanged replay must pass; each defect must fail with its
-named evidence error. The manual workflow invokes these controls after collection.
+Completion requires exact native job/artifact sets, explicitly named prepare /
+completion roles, and the full immutable output ledger declared in
+`probe-distribution.ts`. Structured verdicts must match each declared failure;
+generic setup errors and positive-only subsets do not qualify. PTY controls repack
+one real archive in a private fixture, separately removing the required binding
+and breaking its actual package entrypoint, with unchanged/restored positives.
+
+Completion/provenance teeth are declared in `probe-distribution-completion.py`:
+empty/extra/duplicate/unknown lanes and artifacts, wrong workflow/head/attempt,
+failed or cancelled measurement, failed independent completion, relabelled
+candidate/capture, positive-only control subsets, negative setup failures and
+non-hash checkpoint changes. They invoke the actual parser on copies of real
+captured evidence. All controls remain unexecuted until the combined batch.
 
 `probe-dependency-measurement.py`, wired into that same verification batch,
 prepares hash-capture negative controls: replay real updater evidence
