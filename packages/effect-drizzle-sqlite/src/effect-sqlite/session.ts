@@ -1,4 +1,5 @@
 /* oxlint-disable */
+import { Cause } from "effect"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
@@ -129,9 +130,14 @@ export class EffectSQLiteSession<TRelations extends AnyRelations> extends SQLite
             : Scope.make().pipe(
                 Effect.flatMap((scope) =>
                   Scope.provide(this.client.reserve, scope).pipe(
-                    Effect.map((connection) => [scope, connection] as const),
-                    Effect.catch((error) =>
-                      Scope.close(scope, Exit.fail(error)).pipe(Effect.andThen(Effect.fail(error))),
+                    Effect.exit,
+                    Effect.flatMap((exit) =>
+                      Exit.isSuccess(exit)
+                        ? Effect.succeed([scope, exit.value] as const)
+                        : Scope.close(scope, exit).pipe(
+                            Effect.exit,
+                            Effect.flatMap((closed) => finalizedExit(exit, closed)),
+                          ),
                     ),
                   ),
                 ),
@@ -151,27 +157,44 @@ export class EffectSQLiteSession<TRelations extends AnyRelations> extends SQLite
                 ).pipe(
                   Effect.exit,
                   Effect.flatMap((exit) => {
-                    const finalize = Exit.isSuccess(exit)
-                      ? id === 0
-                        ? this.executeTransactionStatement(connection, "commit").pipe(
-                            // SQLite keeps the transaction open after deferred constraint commit failures.
-                            Effect.catch((error) =>
-                              this.executeTransactionStatement(connection, "rollback").pipe(
-                                Effect.catch(() => Effect.void),
-                                Effect.andThen(Effect.fail(error)),
-                              ),
-                            ),
-                          )
-                        : this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`)
-                      : id === 0
-                        ? this.executeTransactionStatement(connection, "rollback")
-                        : this.executeTransactionStatement(connection, `rollback to savepoint effect_sql_${id}`).pipe(
-                            Effect.andThen(
-                              this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`),
-                            ),
-                          )
+                    return Effect.gen({ self: this }, function* () {
+                      if (Exit.isSuccess(exit)) {
+                        const committed = yield* Effect.exit(
+                          this.executeTransactionStatement(
+                            connection,
+                            id === 0 ? "commit" : `release savepoint effect_sql_${id}`,
+                          ),
+                        )
+                        if (Exit.isSuccess(committed)) return yield* exit
+                        // Failed commits can leave SQLite transactions open, including fatal exits.
+                        const rolledBack = yield* Effect.exit(
+                          this.executeTransactionStatement(
+                            connection,
+                            id === 0 ? "rollback" : `rollback to savepoint effect_sql_${id}`,
+                          ),
+                        )
+                        const failed = finalizedExit(committed, rolledBack)
+                        if (id === 0) return yield* failed
+                        const released = yield* Effect.exit(
+                          this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`),
+                        )
+                        return yield* finalizedExit(failed, released)
+                      }
 
-                    return finalize.pipe(Effect.flatMap(() => exit))
+                      const rolledBack = yield* Effect.exit(
+                        this.executeTransactionStatement(
+                          connection,
+                          id === 0 ? "rollback" : `rollback to savepoint effect_sql_${id}`,
+                        ),
+                      )
+                      const failed = finalizedExit(exit, rolledBack)
+                      if (id === 0) return yield* failed
+                      // A failed ROLLBACK TO must not prevent best-effort savepoint release.
+                      const released = yield* Effect.exit(
+                        this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`),
+                      )
+                      return yield* finalizedExit(failed, released)
+                    })
                   }),
                 ),
               ),
@@ -179,7 +202,15 @@ export class EffectSQLiteSession<TRelations extends AnyRelations> extends SQLite
 
             return scope === undefined
               ? transaction
-              : transaction.pipe(Effect.onExit((exit) => Scope.close(scope, exit)))
+              : transaction.pipe(
+                  Effect.exit,
+                  Effect.flatMap((exit) =>
+                    Scope.close(scope, exit).pipe(
+                      Effect.exit,
+                      Effect.flatMap((closed) => finalizedExit(exit, closed)),
+                    ),
+                  ),
+                )
           }),
         )
       }),
@@ -201,6 +232,13 @@ export class EffectSQLiteSession<TRelations extends AnyRelations> extends SQLite
       config,
     )
   }
+}
+
+function finalizedExit<A, E, E2>(original: Exit.Failure<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<never, E | E2>
+function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2>
+function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2> {
+  if (Exit.isSuccess(cleanup)) return original
+  return Exit.failCause(Exit.isFailure(original) ? Cause.combine(original.cause, cleanup.cause) : cleanup.cause)
 }
 
 export class EffectSQLiteTransaction<TRelations extends AnyRelations> extends SQLiteEffectTransaction<
