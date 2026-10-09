@@ -1,7 +1,7 @@
 export * as CapabilityServiceExecution from "./execute"
 
 import { Capability } from "@orchestra/schema/capability"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Context, Effect, Exit } from "effect"
 import { and, eq } from "drizzle-orm"
 import { Credential } from "../../credential"
 import { Location } from "../../location"
@@ -78,7 +78,14 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
         CapabilityServiceData.credentialFailure(fresh.value) ||
         CapabilityServiceData.credentialIdentity(fresh.value) !== CapabilityServiceData.credentialIdentity(credential))
         return yield* CapabilityServiceData.failure("authentication_revoked")
-    })).pipe(Effect.mapError((error) => error instanceof Capability.Failure ? error : CapabilityServiceData.failure("connection_unavailable")),
+    })).pipe(Effect.exit, Effect.flatMap((exit) => {
+      if (Exit.isSuccess(exit)) return Effect.void
+      if (!exit.cause.reasons.length || !exit.cause.reasons.every((reason) => reason._tag === "Fail"))
+        return CapabilityServiceProjection.fatal(exit.cause)
+      return Effect.failCause(Cause.fromReasons<Capability.Failure>(exit.cause.reasons.map((reason) =>
+        Cause.makeFailReason(reason.error instanceof Capability.Failure ? reason.error : CapabilityServiceData.failure("connection_unavailable"))
+          .annotate(Context.makeUnsafe(new Map(reason.annotations))))))
+    }),
       Effect.andThen(Effect.suspend(() => current() ? Effect.void : Effect.fail(CapabilityServiceData.failure("stale_descriptor")))))
     const revalidate = Effect.gen(function* () {
       const permit = yield* policy.authorize(context, { action: "service_call", resources })
@@ -140,7 +147,7 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
     const acknowledged = acquired.acknowledged
     if (!acknowledged.response) return CapabilityServiceProjection.replay(acknowledged.receipt)
     return yield* CapabilityServiceProjection.project({ options, context, proof, receipt: acknowledged.receipt,
-      response: acknowledged.response, validator, credential, endpoint: resolution.endpoint, resources,
+      response: acknowledged.response, validator, credential, resolution, endpoint: resolution.endpoint, resources,
       revalidate: revalidate.pipe(Effect.asVoid), disclose: revalidate.pipe(Effect.asVoid) })
   })
   return execute

@@ -264,6 +264,7 @@ it.live("known RPC ACK survives interruption while SQLite writer is held", () =>
     expect(f.state.calls).toHaveLength(1)
     const artifacts = yield* f.artifactRows()
     expect(artifacts).toHaveLength(mode === "publish" ? 1 : 0)
+    expect(yield* f.fs.exists(f.artifactRoot)).toBe(mode === "publish")
     if (mode === "publish") {
       const record = artifacts[0]
       if (!record) return yield* Effect.die("Missing actual service artifact")
@@ -393,3 +394,9 @@ it.live("snapshot preserves nested quota failures and inert serializer data with
   expect(f.output(yield* f.call()).result.status).toBe("completed")
   expect(f.state.calls).toHaveLength(1)
 }), 60000)
+
+;(["retarget", "rotate", "disconnect"] as const).forEach((mode) => it.live(`artifact approval ${mode} rejects selected publication before blobs`, () =>
+  CapabilityServiceCallFixture.publicationRace(mode).pipe(Effect.timeout("45 seconds")), 60000))
+
+;(["defect", "interrupt"] as const).forEach((mode) => it.live(`mixed artifact SQL Fail plus ${mode} preserves complete fatal Cause`, () =>
+  CapabilityServiceCallFixture.mixedPublication(mode).pipe(Effect.timeout("45 seconds")), 60000))
