@@ -48,7 +48,8 @@ const rules: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allo
 const token = "fixture-selected-secret"
 const newerToken = "fixture-newer-secret"
 type Name = "channel_read" | "channel_send" | "channel_update"
-type StoredMessage = { id: string; text: string; threadID?: string; replyTo?: string; ownEmoji: string[] }
+type StoredMessage = { id: string; text: string; threadID?: string; replyTo?: string; ownEmoji: string[];
+  type?: number; reference?: { type?: number; messageID?: string; channelID?: string; guildID?: string } }
 const Body = Schema.Struct({ text: Schema.optionalKey(Schema.String), content: Schema.optionalKey(Schema.String),
   channel: Schema.optionalKey(Schema.String), ts: Schema.optionalKey(Schema.String), timestamp: Schema.optionalKey(Schema.String),
   name: Schema.optionalKey(Schema.String), thread_ts: Schema.optionalKey(Schema.String),
@@ -106,7 +107,12 @@ function fixture(provider: "slack" | "discord", options: {
       reactions: message.ownEmoji.map((name) => ({ name, users: ["U1"] })),
       files: [{ url_private: `https://files.slack.com/private?token=${token}` }],
     } : { id: message.id, channel_id: state.wrongChannel ? "999" : routeChannel, content: state.textOverride ?? message.text,
-      ...(message.replyTo ? { message_reference: { message_id: message.replyTo, channel_id: routeChannel } } : {}),
+      type: message.type ?? (message.replyTo ? 19 : 0),
+      ...(message.reference ? { message_reference: { type: message.reference.type ?? 0,
+        ...(message.reference.messageID ? { message_id: message.reference.messageID } : {}),
+        ...(message.reference.channelID ? { channel_id: message.reference.channelID } : {}),
+        ...(message.reference.guildID ? { guild_id: message.reference.guildID } : {}),
+      } } : message.replyTo ? { message_reference: { type: 0, message_id: message.replyTo, channel_id: routeChannel } } : {}),
       reactions: message.ownEmoji.map((name) => ({ me: true, emoji: { name, id: null } })),
       attachments: [{ url: `https://cdn.discord.com/private?token=${token}` }],
     }
@@ -233,6 +239,28 @@ function fixture(provider: "slack" | "discord", options: {
 }
 
 describe("CapabilityChannels real REST leaves", () => {
+  it.live("Discord references distinguish actual replies from thread starters, crossposts and forwards", () => Effect.gen(function* () {
+    const f = yield* fixture("discord", { root: "channel_read" })
+    const cases = [
+      { id: "301", type: 21, reference: { type: 0, messageID: "999", channelID: "888", guildID: "777" } },
+      { id: "302", type: 0, reference: { type: 0, messageID: "999", channelID: "888", guildID: "777" } },
+      { id: "303", type: 19, reference: { type: 1, messageID: "999", channelID: "888", guildID: "777" } },
+      { id: "304", type: 19, reference: { type: 0, messageID: "101", channelID: "10", guildID: "1" } },
+    ]
+    cases.forEach((message) => f.messages.set(message.id, { ...message, text: "reference", ownEmoji: [] }))
+    const page = yield* f.output({ provider: "discord", action: "history" })
+    expect(page.result.status).toBe("completed")
+    cases.forEach((message) => expect(page.acquisition?.messages.find((item) => item.id === message.id)?.replyTo)
+      .toBe(message.id === "304" ? "101" : undefined))
+    expect(f.requests.some((request) => /888|999|777/.test(request.path))).toBe(false)
+    f.messages.set("305", { id: "305", text: "wrong reply", ownEmoji: [], type: 19,
+      reference: { type: 0, messageID: "999", channelID: "888" } })
+    expect((yield* f.call({ provider: "discord", action: "message", messageID: "305" }).pipe(Effect.flip)).message).toBe("target_denied")
+    f.messages.delete("305")
+    f.state.wrongChannel = true
+    expect((yield* f.call({ provider: "discord", action: "message", messageID: "301" }).pipe(Effect.flip)).message).toBe("target_denied")
+  }))
+
   it.live("Slack send and thread send persist intent before HTTP; verify independent readback and retained JSON", () => Effect.gen(function* () {
     const f = yield* fixture("slack")
     const output = yield* f.output({ provider: "slack", text: "hello", threadID: f.threadID })

@@ -13,9 +13,9 @@ export const Resource = Schema.Struct({ channelID: Snowflake, guildID: Snowflake
 const Channel = Schema.Struct({ id: Snowflake, guild_id: Snowflake, type: Schema.Int,
   parent_id: Schema.optionalKey(Schema.NullOr(Snowflake)),
 })
-const RemoteMessage = Schema.Struct({ id: Snowflake, channel_id: Snowflake, content: Schema.String,
-  message_reference: Schema.optionalKey(Schema.Struct({ message_id: Schema.optionalKey(Snowflake),
-    channel_id: Schema.optionalKey(Snowflake) })),
+const RemoteMessage = Schema.Struct({ id: Snowflake, channel_id: Snowflake, content: Schema.String, type: Schema.Int,
+  message_reference: Schema.optionalKey(Schema.Struct({ type: Schema.optionalKey(Schema.Int), message_id: Schema.optionalKey(Snowflake),
+    channel_id: Schema.optionalKey(Snowflake), guild_id: Schema.optionalKey(Snowflake) })),
   reactions: Schema.optionalKey(Schema.Array(Schema.Struct({ me: Schema.Boolean,
     emoji: Schema.Struct({ name: Schema.NullOr(Schema.String), id: Schema.NullOr(Snowflake) }) }))),
 })
@@ -41,10 +41,15 @@ export const make = Effect.fn("CapabilityDiscord.make")(function* (rpc: RPC, res
   const channelID = threadID ?? target.channelID
   const project = Effect.fn("CapabilityDiscord.project")(function* (value: unknown) {
     const message = yield* decode(RemoteMessage, value)
-    if (message.channel_id !== channelID || (message.message_reference?.channel_id && message.message_reference.channel_id !== channelID))
-      return yield* denied()
+    if (message.channel_id !== channelID) return yield* denied()
+    // Discord references also attribute forwards, crossposts and thread starters; never follow them remotely.
+    const reply = message.type === 19 && (message.message_reference?.type ?? 0) === 0
+    if (reply && (!message.message_reference?.message_id || !message.message_reference.channel_id))
+      return yield* new Failure({ reason: "invalid_response" })
+    if (reply && (message.message_reference?.channel_id !== channelID ||
+      (message.message_reference.guild_id && message.message_reference.guild_id !== target.guildID))) return yield* denied()
     return { id: message.id, text: message.content, ...(threadID ? { threadID } : {}),
-      ...(message.message_reference?.message_id ? { replyTo: message.message_reference.message_id } : {}),
+      ...(reply && message.message_reference?.message_id ? { replyTo: message.message_reference.message_id } : {}),
       reactions: (message.reactions ?? []).map((reaction) => ({
         emoji: reaction.emoji.id ? `${reaction.emoji.name}:${reaction.emoji.id}` : reaction.emoji.name ?? "",
         own: reaction.me,
