@@ -11,7 +11,7 @@ export async function artifactLinux() {
 export async function artifactLinuxOperations(): Promise<ArtifactPosixInput> {
   requireArtifactHost(process.platform, process.arch)
   if (process.platform !== "linux") throw new Error("Unsupported artifact Linux producer host")
-  const { dlopen, ptr, read, toArrayBuffer, toBuffer } = await import("bun:ffi")
+  const { dlopen, ptr, read, toArrayBuffer } = await import("bun:ffi")
   const runtime = await artifactLinuxRuntime()
   const library = dlopen(runtime.library, {
     openat: { args: ["i32", "ptr", "i32", "u32"], returns: "i32" },
@@ -71,7 +71,8 @@ export async function artifactLinuxOperations(): Promise<ArtifactPosixInput> {
           }
           const size = read.u16(entry, 16)
           if (size < 20) throw new Error("Invalid artifact Linux directory record")
-          const bytes = toBuffer(entry, 19, size - 19)
+          // libc owns dirent storage; decode this non-owning view before readdir/closedir invalidates it.
+          const bytes = new Uint8Array(toArrayBuffer(entry, 19, size - 19))
           const end = bytes.indexOf(0)
           if (end < 0) throw new Error("Unterminated artifact Linux directory record")
           const name = artifactDirectoryName(bytes.subarray(0, end))
