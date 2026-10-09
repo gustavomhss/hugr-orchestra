@@ -100,8 +100,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          # Verification is the direct child of the measured source; keep its Git objects for evidence replay.
-          fetch-depth: 2
+          # Hash controls also replay the measured commit's real parent, so retain all three commits.
+          fetch-depth: 3
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
       - name: Capture the selected integrated-batch phase
         shell: bash
