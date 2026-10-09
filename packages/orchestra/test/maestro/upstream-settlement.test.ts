@@ -336,11 +336,17 @@ it.instance("V1 generic receipt injection is stripped; private setter stores dur
 
 it.instance("failed returned result persists failure instead of successful attribution", () => Effect.gen(function* () {
   const f = yield* seed()
-  if (!f.capture.workResult) throw new Error("expected work result")
-  const failed: UpstreamSettlement.Capture = { ...f.capture, state: "error", workResult: { ...f.capture.workResult,
-    terminal: { reason: "failed", hostDetail: "Task host failed" } } }
+  const error = new SessionV1.APIError({ message: "Returned assistant failed", isRetryable: false }).toObject()
+  yield* f.sessions.updateMessage({ ...f.author, error })
+  const returned = yield* MessageV2.get({ sessionID: f.child.id, messageID: f.author.id })
+  const workResult = yield* f.work.record(returned)
+  if (!workResult) throw new Error("expected captured failed work result")
+  expect(workResult.terminal).toEqual({ reason: "failed" })
+  const failed: UpstreamSettlement.Capture = { ...f.capture, state: "error", workResult }
   yield* f.deliver(failed)()
-  expect(yield* f.read()).toMatchObject({ upstreamSettlement: { workResult: { terminal: { reason: "failed" } } } })
+  expect(yield* f.read()).toMatchObject({ upstreamSettlement: { workResult,
+    parentMessageID: f.owner.id, deliveryMessageID: f.request.messageID } })
+  expect((yield* MessageV2.get({ sessionID: f.child.id, messageID: f.author.id })).info).toMatchObject({ error })
 }))
 
 it.instance("wake failure cannot cause second execution on delivery retry", () => Effect.gen(function* () {
