@@ -37,6 +37,7 @@ import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { TaskBackground } from "./task-background"
+import { TaskWorkObservation } from "./task-work-observation"
 
 export interface TaskPromptOps {
   cancel(sessionID: SessionID): Effect.Effect<void>
@@ -472,6 +473,8 @@ export const TaskTool = Tool.define(
         ...(runInBackground ? { background: true } : {}),
       }
       const completionEvidence: { value?: TaskBackground.Metadata["completion"] } = {}
+      const observation = TaskWorkObservation.make({ database, events, ctx,
+        childSessionID: nextSession.id, taskID: shownID, metadata })
       const work = SeatWork.track({
         enabled: seat?.workResult !== undefined,
         seat,
@@ -545,6 +548,8 @@ export const TaskTool = Tool.define(
         description: params.description,
         metadata,
         work,
+        observe: observation.capture,
+        publishObservation: observation.publish,
         variant,
         renderOutput,
       })
