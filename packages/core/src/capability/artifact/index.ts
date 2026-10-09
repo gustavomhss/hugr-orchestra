@@ -4,11 +4,12 @@ import { randomUUID } from "node:crypto"
 import { isAbsolute, join } from "node:path"
 import { and, desc, eq, lt, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Effect, Option, Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
 import { Database } from "../../database/database"
+import { Credential } from "../../credential"
 import { FSUtil } from "../../fs-util"
 import { Global } from "../../global"
 import { SessionStore } from "../../session/store"
@@ -18,8 +19,14 @@ import { CapabilityArtifactPinTable, CapabilityArtifactReferenceTable, Capabilit
 import { ArtifactBlobs } from "./blob"
 import { Failure, failure } from "./error"
 import { matchesMime, validMime } from "./mime"
+import { checkSelection, snapshotRequirements } from "./selection"
+import type { Requirements } from "./selection"
 
 export { Failure }
+export { selectionCredentialHash } from "./selection"
+export type { Requirements } from "./selection"
+// Mixed SQL Causes retain their typed failures alongside defects or interruption.
+export type Error = Failure | Capability.Failure | SqlError | EffectDrizzleQueryError
 
 // Fixture adapters may omit storageID. Persistent DB providers must supply it: object identity cannot survive reopening.
 const identities = new WeakMap<Database.Interface["db"], string>()
@@ -31,9 +38,6 @@ export type Input = {
   readonly verification: Capability.Verification
   readonly metadata: Schema.Json
 }
-
-/** Additional native actions supplied only by trusted canonical producers, never model data. */
-export type Requirements = readonly { action: string; resources: readonly string[] }[]
 
 export type Options = {
   readonly boundedBytes?: number
@@ -54,6 +58,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const global = yield* Global.Service
   const policy = yield* CapabilityPolicy.make
+  const credentials = yield* Effect.serviceOption(Credential.Service)
   const boundedBytes = options.boundedBytes ?? 16 * 1024 * 1024
   const quota = options.quota ?? 256 * 1024 * 1024
   const scratchTTL = options.scratchTTL ?? 24 * 60 * 60 * 1000
@@ -85,13 +90,14 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
 
   const store = Effect.fn("CapabilityArtifacts.store")(function* (
-    tx: Transaction, context: Tool.Context, ref: Capability.ArtifactRef, input: Input,
+    tx: Transaction, context: Tool.Context, ref: Capability.ArtifactRef, input: Input, required: Requirements,
   ) {
     const issued = yield* binding(context)
     const rows = yield* tx.select().from(CapabilityArtifactTable)
     const used = rows.filter((row) => samePlacement(row.owner, issued.owner))
       .reduce((n, row) => n + row.bytes + jsonBytes(row.metadata), 0)
     if (used + input.data.byteLength + jsonBytes(input.metadata) > quota) return yield* quotaFailure()
+    yield* Effect.forEach(required, (requirement) => checkSelection(tx, context, issued.owner, requirement, credentials))
     // Policy holds actor state before the SQLite writer; GC cannot remove publication before insertion.
     const hash = yield* blobs.publish(input.data, input.mime)
     const record: Record = {
@@ -107,20 +113,22 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   })
 
   const publish = Effect.fn("CapabilityArtifacts.publish")(function* (context: Tool.Context, input: Input, requirements: Requirements = []) {
-    const required = requirements.map((input) => ({ action: input.action, resources: [...input.resources] }))
+    const required = snapshotRequirements(requirements)
+    if (required instanceof Capability.Failure) return yield* required
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
     const ref = Capability.ArtifactRef.make({ id: Capability.ArtifactID.create(), revision: 0 })
     const permit = yield* authorize(context, "artifact.write", [resource(ref)])
     const native = yield* Effect.forEach(required, (input) => policy.authorize(context, input))
-    return yield* policy.commitMany([permit, ...native], (tx) => store(tx, context, ref, value))
+    return yield* policy.commitMany([permit, ...native], (tx) => store(tx, context, ref, value, required))
       .pipe(storageErrors)
   })
 
   const update = Effect.fn("CapabilityArtifacts.update")(function* (
     context: Tool.Context, expectedRef: Capability.ArtifactRef, input: Input, requirements: Requirements = [],
   ) {
-    const required = requirements.map((input) => ({ action: input.action, resources: [...input.resources] }))
+    const required = snapshotRequirements(requirements)
+    if (required instanceof Capability.Failure) return yield* required
     const ref = yield* requireRef(expectedRef)
     yield* binding(context)
     const value = yield* snapshot(input, boundedBytes)
@@ -132,7 +140,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
         .orderBy(desc(CapabilityArtifactTable.revision)).get()
       if (!latest || latest.revision !== ref.revision || !Number.isSafeInteger(ref.revision + 1))
         return yield* failure("revision_conflict", "Artifact revision no longer matches")
-      return yield* store(tx, context, Capability.ArtifactRef.make({ id: ref.id, revision: ref.revision + 1 }), value)
+      return yield* store(tx, context, Capability.ArtifactRef.make({ id: ref.id, revision: ref.revision + 1 }), value, required)
     })).pipe(storageErrors)
   })
 
@@ -231,11 +239,12 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
 })
 
 function storageErrors<A, E, R>(effect: Effect.Effect<A, E, R>) {
-  return effect.pipe(Effect.catchIf(
-    (error): error is Extract<E, SqlError | EffectDrizzleQueryError> =>
-      error instanceof SqlError || error instanceof EffectDrizzleQueryError,
+  // Mixed Causes retain their SQL Fail reasons, so their original E must also remain in the inferred error channel.
+  return Effect.catchCauseIf(effect,
+    (cause: Cause.Cause<E>) => cause.reasons.length > 0 && cause.reasons.every((reason) => reason._tag === "Fail" &&
+      (reason.error instanceof SqlError || reason.error instanceof EffectDrizzleQueryError)),
     () => Effect.fail(failure("artifact_storage_failed", "Artifact storage transaction failed")),
-  ))
+  )
 }
 
 function denied() {

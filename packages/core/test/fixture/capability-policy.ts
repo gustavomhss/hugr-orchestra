@@ -114,7 +114,7 @@ export function observeAsked(context: Tool.Context) {
   })
 }
 
-export function queued(context: Tool.Context, effect: Effect.Effect<void, Capability.Failure>) {
+export function queued<E>(context: Tool.Context, effect: Effect.Effect<void, E>) {
   return Effect.gen(function* () {
     const observation = yield* observeAsked(context)
     const fiber = yield* effect.pipe(Effect.result, Effect.forkChild)
