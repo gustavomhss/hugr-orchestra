@@ -5,6 +5,7 @@ import { AgentV2 } from "@orchestra/core/agent"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { Global } from "@orchestra/core/global"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { ModelV2 } from "@orchestra/core/model"
@@ -571,7 +572,7 @@ it.live(
               )
               expect((yield* fs.readDirectory(tokenDirectory)).length).toBe(3)
             }).pipe(Effect.provideService(InstanceRef, instance))
-          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([AppProcess.node, Global.node])))),
+          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([filesystem, AppProcess.node, Global.node])))),
         ),
       )
     }),

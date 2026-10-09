@@ -93,13 +93,14 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
     prompt: (input) => Effect.gen(function* () {
       if (modern) throw new Error("V2 notice must not enter V1 prompt transport")
       if (!input.messageID) throw new Error("expected exact notice identity")
+      const messageID = MessageID.make(input.messageID)
       counters.admit++
       const identity = PromptIdentity.fromEncoded(Schema.encodeSync(SessionPrompt.PromptInput)(input))
-      const previous = yield* sessions.reconcilePrompt({ sessionID: input.sessionID, messageID: input.messageID, identity })
-      const user: SessionV1.User = { id: input.messageID, sessionID: input.sessionID, role: "user", agent: "maestro", model, time: { created: Date.now() } }
-      const admitted = previous ?? (yield* sessions.admitPrompt({ sessionID: input.sessionID, messageID: input.messageID,
+      const previous = yield* sessions.reconcilePrompt({ sessionID: input.sessionID, messageID, identity })
+      const user: SessionV1.User = { id: messageID, sessionID: input.sessionID, role: "user", agent: "maestro", model, time: { created: Date.now() } }
+      const admitted = previous ?? (yield* sessions.admitPrompt({ sessionID: input.sessionID, messageID,
         identityVersion: 1, identity, info: user, parts: input.parts.flatMap((item) => item.type === "text" ?
-          [{ ...item, id: PartID.ascending(), messageID: input.messageID, sessionID: input.sessionID }] : []) })).message
+          [{ ...item, id: PartID.ascending(), messageID, sessionID: input.sessionID }] : []) })).message
       if (!input.noReply) counters.wake++
       return admitted
     }).pipe(Effect.orDie),

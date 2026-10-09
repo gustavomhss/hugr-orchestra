@@ -163,10 +163,11 @@ const settled = Effect.fn("UpstreamProvenanceTest.settled")(function* () {
 })
 
 const modernAssistant = Effect.fn("UpstreamProvenanceTest.modernAssistant")(function* (
-  sessionID: SessionID, id: SessionMessage.ID, agent: string, text: string,
+  sessionID: SessionID, reference: string, agent: string, text: string,
   task?: { callID: string; metadata: Record<string, unknown>; providerExecuted?: boolean; providerOnly?: boolean },
 ) {
   const events = yield* EventV2Bridge.Service
+  const id = SessionMessage.ID.make(reference)
   yield* events.publish(SessionEvent.Step.Started, { sessionID, assistantMessageID: id, agent: AgentV2.ID.make(agent),
     model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now,
   })
@@ -349,11 +350,11 @@ describe("UpstreamProvenance.observe", () => {
     }))
   }))
 
-  it.instance("V2 delivery rejects foreign owner, embedded owner, ordinary user, and conflicting same-ID legacy projection", () => Effect.gen(function* () {
+  it.instance("V2 delivery rejects foreign event owner, changed stored owner, ordinary user, and conflicting same-ID legacy projection", () => Effect.gen(function* () {
     const sessions = yield* Session.Service
     const events = yield* EventV2Bridge.Service
     const database = yield* Database.Service
-    yield* Effect.forEach(["foreign", "embedded", "ordinary", "conflict"] as const, (variant) => Effect.gen(function* () {
+    yield* Effect.forEach(["foreign", "stored-owner", "ordinary", "conflict"] as const, (variant) => Effect.gen(function* () {
       const fixture = yield* settled()
       const id = variant === "conflict" ? fixture.upstreamSettlement.deliveryMessageID : SessionMessage.ID.create()
       if (variant === "ordinary") yield* events.publish(SessionEvent.Prompted, {
@@ -363,10 +364,10 @@ describe("UpstreamProvenance.observe", () => {
         sessionID: variant === "foreign" ? fixture.child.id : fixture.parent.id, messageID: id,
         text: variant === "conflict" ? "Different delivery" : fixture.delivery.text, timestamp: yield* DateTime.now,
       })
-      if (variant === "embedded") {
+      if (variant === "stored-owner") {
         const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, id)).get().pipe(Effect.orDie)
         if (!row) throw new Error("expected projected synthetic")
-        yield* database.db.update(SessionMessageTable).set({ data: { ...row.data, sessionID: fixture.child.id } })
+        yield* database.db.update(SessionMessageTable).set({ session_id: fixture.child.id })
           .where(eq(SessionMessageTable.id, id)).run().pipe(Effect.orDie)
       }
       yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {

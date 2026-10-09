@@ -596,7 +596,9 @@ export const TaskTool = Tool.define(
             agent: nextID,
             parts: [...parts, ...own, ...resume],
           },
-          { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }) },
+          { beforeModel: Effect.all([beforeModel ?? Effect.void, completion.revalidateWorkflow(completionReceipt)], { discard: true }).pipe(
+            Effect.provideService(FileSystem.FileSystem, fs),
+          ) },
         ))
         const returned = result.info.role === "assistant" ? {
           assistantMessageID: result.info.id,
@@ -673,7 +675,12 @@ export const TaskTool = Tool.define(
           },
         })
         // One bounded exact-admission reconciliation; wake errors never repeat provider execution.
-        yield* deliver().pipe(Effect.catchCause(() => deliver()))
+        yield* deliver().pipe(
+          Effect.catchCause(() => deliver()),
+          Effect.provideService(Database.Service, database),
+          Effect.provideService(EventV2Bridge.Service, events),
+          Effect.provideService(Session.Service, sessions),
+        )
       })
 
       const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* () {
