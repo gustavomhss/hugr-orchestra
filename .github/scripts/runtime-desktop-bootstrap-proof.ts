@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 // Prepared dev Desktop only: default v1 utilityProcess, not the opt-in V2 daemon.
-// CDP observes the shipped preload API; no replacement main, server, or readiness hook.
+// Builtin-only shell gate captures ownership before exec; CDP observes the shipped preload API.
 import { createHash } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
 import { access, lstat, mkdir, mkdtemp, readFile, readdir, readlink, realpath, rm, writeFile } from "node:fs/promises"
@@ -87,7 +87,7 @@ async function main() {
     SHELL: "/usr/bin/false", NO_PROXY: "127.0.0.1,localhost,::1",
   }
   const owned: { child?: ReturnType<typeof spawn>; exited?: Promise<void>; startTime?: string; version?: ReturnType<typeof Bun.spawn>; failed?: boolean; cancelled?: boolean; socket?: WebSocket; debugger?: string; tail: string; cleaning?: Promise<void> } = { tail: "" }
-  const running = () => owned.child?.pid && owned.child.exitCode === null && owned.child.signalCode === null && !owned.failed
+  const running = () => owned.child?.pid && owned.child.exitCode === null && owned.child.signalCode === null
   const cleanup = () => (owned.cleaning ??= (async () => {
     const failures: string[] = []
     await Promise.resolve().then(() => owned.socket?.close()).catch(() => failures.push("OWNED_CDP_CLOSE_FAILED"))
@@ -100,6 +100,12 @@ async function main() {
     await (async () => {
       const pid = owned.child?.pid
       if (!pid) return
+      if (!owned.startTime) {
+        owned.child?.stdin?.destroy() // No GO was released: this shell cannot have forked descendants.
+        if (running()) owned.child?.kill("SIGKILL")
+        await Promise.race([owned.exited, Bun.sleep(5_000)])
+        requireProof(!running(), "OWNED_GATE_CLEANUP_FAILED")
+      }
       const groupAlive = async () => {
         const exists = await Promise.resolve().then(() => process.kill(-pid, 0)).then(() => true, (error: NodeJS.ErrnoException) => {
           requireProof(error.code === "ESRCH", "OWNED_PROCESS_GROUP_INSPECTION_FAILED"); return false
@@ -107,8 +113,7 @@ async function main() {
         if (!exists) return false
         const leader = await processIdentity(pid, true)
         if (leader) {
-          requireProof(leader.parent === process.pid && leader.group === pid && leader.session === pid && (!owned.startTime || leader.startTime === owned.startTime), "OWNED_GROUP_IDENTITY_CHANGED")
-          owned.startTime ??= leader.startTime
+          requireProof(owned.startTime && leader.parent === process.pid && leader.group === pid && leader.session === pid && leader.startTime === owned.startTime, "OWNED_GROUP_IDENTITY_CHANGED")
         }
         requireProof(owned.startTime, "OWNED_GROUP_IDENTITY_UNAVAILABLE")
         return true
@@ -153,17 +158,22 @@ async function main() {
     // Unpackaged main selects v1 without ORCHESTRA_SIDECAR_V2. No CLI service start here.
     await build.verify()
     requireProof(!owned.cleaning, "DESKTOP_BOOTSTRAP_INTERRUPTED")
-    const child = spawn(electron, [desktop, `--user-data-dir=${join(sandbox, "desktop")}`, "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0"],
-      { env, cwd: sandbox, detached: true, stdio: ["ignore", "ignore", "pipe"] })
+    const gate = 'IFS= read -r token || exit 125; case "$token" in GO) exec "$@" ;; *) exit 125 ;; esac'
+    const child = spawn("/bin/sh", ["-c", gate, "orchestra-bootstrap-gate", electron, desktop, `--user-data-dir=${join(sandbox, "desktop")}`, "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0"],
+      { env, cwd: sandbox, detached: true, stdio: ["pipe", "ignore", "pipe"] })
     owned.child = child
     owned.exited = new Promise<void>((resolve) => child.once("close", () => resolve()))
     child.once("error", () => { owned.failed = true })
-    requireProof(child.pid, "DESKTOP_PROCESS_PID_MISSING")
-    const leader = await processIdentity(child.pid)
+    child.stdin.once("error", () => { owned.failed = true })
+    requireProof(child.pid, "DESKTOP_GATE_PID_MISSING")
+    const gateDeadline = setTimeout(() => { owned.failed = true; child.stdin.destroy(); child.kill("SIGKILL") }, 5_000)
+    const leader = await processIdentity(child.pid).finally(() => clearTimeout(gateDeadline))
     requireProof(leader && leader.parent === process.pid && leader.group === child.pid && leader.session === child.pid, "DESKTOP_GROUP_NOT_OWNED")
     owned.startTime = leader.startTime
+    requireProof(!owned.cleaning && !owned.failed && running(), "DESKTOP_GATE_RELEASE_FAILED")
+    child.stdin.end("GO\n")
     const deadline = Date.now() + 60_000
-    const alive = () => requireProof(running(), "DESKTOP_EXITED_BEFORE_PROOF")
+    const alive = () => requireProof(running() && !owned.failed, "DESKTOP_EXITED_BEFORE_PROOF")
     void (async () => {
       for await (const chunk of child.stderr) {
         if (owned.debugger) continue
@@ -178,6 +188,8 @@ async function main() {
     owned.socket = socket
     const cdp = await connect(socket)
     const processes = async () => {
+      const current = await processIdentity(child.pid!)
+      requireProof(current && current.startTime === owned.startTime && current.parent === process.pid && current.group === child.pid && current.session === child.pid && await realpath(`/proc/${child.pid}/exe`) === electron, "DESKTOP_GATE_EXEC_IDENTITY_MISMATCH")
       const value = object(await cdp("SystemInfo.getProcessInfo"), "PROCESS_EVIDENCE_INVALID")
       requireProof(Array.isArray(value.processInfo) && value.processInfo.length > 0 && value.processInfo.length <= 128, "PROCESS_EVIDENCE_EMPTY_OR_OVERSIZED")
       const list = value.processInfo.map((item: unknown) => object(item, "PROCESS_EVIDENCE_INVALID"))
