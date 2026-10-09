@@ -176,11 +176,18 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         session_status: {}, session_diff: {}, current: enabled.tool }))
       const owned = createRoot((dispose) => ({ dispose, records: createMemo(() => collectLeanProjectRecords(data, (id) => data.session.find((session) => session.id === id))) }))
       disposers.push(owned.dispose)
-      const [settings, setSettings] = createStore<{ config: Config }>({ config: await request<Config>("global/config") })
-      const controller = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController(() => ({ data: settings, ready: true,
+      const [settings, setSettings] = createStore<{ config: Config; configReady: boolean }>({ config: {}, configReady: false })
+      const patches: Config[] = []
+      async function readConfig(route = "global/config") {
+        setSettings("configReady", false)
+        const config = await request<Config>(route)
+        setSettings({ config, configReady: true })
+      }
+      const controller = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController(() => ({ data: settings, ready: true, configReady: settings.configReady,
         async updateConfig(patch) {
+          patches.push(patch)
           await request("global/config", "PATCH", patch)
-          setSettings("config", await request<Config>("global/config"))
+          await readConfig()
         },
       }), () => true) }))
       disposers.push(controller.dispose)
@@ -201,6 +208,25 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         } }) },
       }), host))
       await Bun.sleep(20)
+      const input = () => host.querySelector<HTMLInputElement>('[data-action="settings-lean"] input[type="checkbox"]')
+      const unavailable = () => {
+        expect(controller.lean.editable()).toBe(false)
+        expect(controller.lean.enabled()).toBeUndefined()
+        expect(input()).toBeNull()
+        expect(host.querySelector('[data-action="settings-lean"]')?.textContent).toBe(dict["lean.settings.unavailable"])
+      }
+      // Missing GET and real rejected missing-endpoint GET cannot turn bootstrap defaults into permission to write.
+      unavailable()
+      await controller.lean.set(false)
+      expect(patches).toHaveLength(0)
+      await expect(readConfig("global/config-not-found")).rejects.toThrow("GET global/config-not-found: 404")
+      unavailable()
+      await controller.lean.set(false)
+      expect(patches).toHaveLength(0)
+      expect((await Bun.file(configFile).json()).tool_output.lean.enabled).toBe(true)
+      await readConfig()
+      expect(settings.configReady).toBe(true)
+      expect(controller.lean.editable()).toBe(true)
       const toolPanel = () => host.querySelector('[data-component="lean-tool-metrics"]')
       const toolValue = (slot: string) => toolPanel()?.querySelector(`[data-slot="${slot}"]`)?.textContent
       const projectValue = (key: keyof typeof dict) => [...host.querySelectorAll('[data-component="lean-project-metrics"] dt')].find((dt) => dt.textContent === dict[key])?.nextElementSibling?.textContent
@@ -252,7 +278,6 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       expect(host.textContent).not.toContain("PRIVATE MUST_NOT_RENDER")
       reject(undefined)
       expect(controller.lean.enabled()).toBe(true)
-      const input = () => host.querySelector<HTMLInputElement>('[data-action="settings-lean"] input[type="checkbox"]')
       expect(input()?.checked).toBe(true)
       input()!.click()
       const configDeadline = Date.now() + 30000
@@ -263,6 +288,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       expect(controller.lean.failed()).toBe(false)
       expect(controller.lean.enabled()).toBe(false)
       expect(input()?.checked).toBe(false)
+      expect(patches).toEqual([{ tool_output: { max_lines: 2000, max_bytes: 50000, lean: { enabled: false } } }])
       expect((await request<Config>("global/config")).tool_output).toEqual({ max_lines: 2000, max_bytes: 50000, lean: { enabled: false } })
       expect((await Bun.file(configFile).json()).tool_output).toEqual({ max_lines: 2000, max_bytes: 50000, lean: { enabled: false } })
       const disabled = await execute("call_disabled")
@@ -278,7 +304,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       expect(projectValue("lean.bytesSaved")).toBe(fmt(enabled.metric.bytes.saved))
       expect(toolValue("reason")).toBe("disabled")
       expect(body()).toBe(`$ go test -v .\n\n${disabled.tool.state.output}`)
-      console.log(`native calls=2 Go cases=30/call privacy controls=10 foreign owners=4 replay=1 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
+      console.log(`native calls=2 Go cases=30/call privacy controls=10 foreign owners=4 replay=1 config unavailable controls=2 PATCH=1 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
     } catch (error) { errors.push(error) }
     for (const dispose of disposers.reverse()) { try { dispose() } catch (error) { errors.push(error) } }
     if (server && server.proc.exitCode === null) server.proc.kill("SIGTERM")
