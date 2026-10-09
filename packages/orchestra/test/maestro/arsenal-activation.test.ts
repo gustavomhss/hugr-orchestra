@@ -10,6 +10,7 @@ import { Global } from "@orchestra/core/global"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { PluginSdkPackage } from "@orchestra/core/plugin/sdk-package"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionStore } from "@orchestra/core/session/store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
@@ -38,7 +39,6 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { Truncate } from "@/tool/truncate"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
-import { prepareArsenalSDK } from "./arsenal-fixture"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable } from "@orchestra/core/event/sql"
 import { EventV2 } from "@orchestra/core/event"
@@ -64,7 +64,7 @@ it.live(
           },
         },
       })
-      await prepareArsenalSDK(tmp.path, Global.Path.config)
+      await PluginSdkPackage.write(path.join(tmp.path, ".orchestra", "node_modules", PluginSdkPackage.manifest.name))
       await AppRuntime.runPromise(
         Effect.scoped(
           Effect.gen(function* () {
@@ -347,17 +347,19 @@ it.live(
   () =>
     Effect.promise(async () => {
       await using tmp = await tmpdir({ git: true })
-      await prepareArsenalSDK(tmp.path, Global.Path.config)
+      // The real external-tool loader admits this owned closed bridge before installing SDK runtime exports.
+      await PluginSdkPackage.write(path.join(tmp.path, ".orchestra", "node_modules", PluginSdkPackage.manifest.name))
       await Bun.write(
         path.join(tmp.path, ".orchestra/tools/probe.ts"),
-        `export default {
+        `import { tool } from "@orchestra/plugin/tool"
+     export default tool({
       description: "Native boundary fixture",
-      args: { command: { type: "string" } },
+      args: { command: tool.schema.string() },
       async execute(args, context) {
         await Bun.write(context.directory + "/producer-ran", args.command)
         return { output: "benign\\n".repeat(10000), metadata: args.command === "raw" ? { token: "ghp_" + "J".repeat(36) } : { exit: args.command === "failed" ? 9 : 0 } }
       },
-    }`,
+    })`,
       )
       await AppRuntime.runPromise(
         Effect.gen(function* () {
