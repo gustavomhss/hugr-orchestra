@@ -45,5 +45,6 @@ The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` only for its declared loopback en
 
 - An unreachable cluster is `project-prerequisite-missing:cluster`; `fetch keyspace metadata` on a missing keyspace is `project-prerequisite-missing:keyspace`. Any other nonzero exit is `engine-failure:gocqlx-schemagen:<exit>`.
 - Put that recipe identifier in the typed blocker's `code` field and the observed stderr in `reason`, even when the CLI emits only plain text. A prose diagnosis without the code does not identify the prerequisite for the caller.
+- For `unable to create session: unable to connect to the cluster`, including protocol-discovery `EOF`, return `{"kind":"check-unavailable","code":"project-prerequisite-missing:cluster","reason":"<observed cluster diagnostic>"}`. `gocqlx-schemagen` is the engine's name, not this blocker code. Stop generation and ask the caller to restore the supplied cluster.
 - The models mirror the cluster's live schema, not the project's CQL files: generation proves they match the cluster it reached.
 - Checks: `go build` and `go vet` on the touched packages, the diff stays inside the generated file, and the packet's tests run one query per touched table against the disposable cluster.
