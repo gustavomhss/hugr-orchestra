@@ -171,6 +171,49 @@ request inactive. Direct comparison against the declared fingerprint input paths
 found exactly the updater blob change above. This is a concrete invalidation,
 even if a later normalization happens to produce the same NAR value.
 
+### Qualified freeze, fresh capture and direct-child consumer verification
+
+Runtime's authoritative qualified freeze is clean published
+`791d7e1846588df03b64c3981fe105cea805d036`, tree
+`b16334236f040f42df555ede89a4bd90e18b1d55`, codebase `905facae55` plus two evidence
+documents. Core typecheck exited 0; uninstrumented Core guard `37988755149` measured
+**24 pass / 0 fail** per OS, and Orchestra Task `37988830299` measured **35 / 0** per
+OS, retaining the original two-second timeout and native/dual delivery cases.
+Each CI head adds only `.ci-run.json` to `905facae55`. Unchanged source-bound passing
+files and generated SDK **16718** / Client **6646** are reused.
+
+Explicit Windows-x64-only native dispatch `37988853607` succeeded on `905facae55`:
+official baseline SHA checked, actual build/exporter/native consumer/report passed;
+healthy, wrong-password-rejected and unauthenticated-rejected checks were true.
+This is exact lane evidence, not a full-matrix run on that head. Artifact
+`11644950455` is head-bound and its archive SHA is
+`d15c3726ea51f08f0d74c8898547a08354dc1aad2e5e76fc4d5fdc2141d1e245`.
+Persistent runtime card: `specs/runtime-closure/SNAPSHOT-QUALIFICATION.md`.
+
+Relay activated fresh request-only `d69abdf4834265f8b23fa6770907f98e2a7dc9d8`,
+direct parent `791d7e1846`, with one request JSON line changed. Actual measurement
+**`37989995766` succeeded** on prepare, all four natives and independent completion.
+Source tree `b867c62f234da4c579ab247d0b997831f0a1874a`, run attempt 1, repository
+`1405035578`, workflow `379775833`, exact five non-expired API-bound artifacts.
+Completion reports `MEASUREMENT_ONLY_NOT_DISTRIBUTION` and named positive/no-op/
+negative controls report `COMPLETION_CONTROLS_OK`. All current input copies pin
+the corrected updater blob `9a863008a73a6f54ef8b67c5f69e48f19342f1d2`.
+External and completion candidate copies are byte-identical for each system.
+
+The fresh candidates produced the same four NAR SRI values as the stale 9c capture,
+but their current source/derivation/fingerprint provenance is independently bound.
+Only after this fresh success did Relay apply exactly the four matching
+`nodeModules.<system>` fields plus the verify request, in direct child
+`b208e93c6d7348aaf0f5224617a93c3f359034f8`, parent `d69abdf483`.
+The commit changes only `nix/hashes.json` and `nix/distribution.md`; package, lock,
+toolchain/filter and normalization inputs are unchanged. Request names actual
+measurement run `37989995766`, attempt 1, and exact source parent `d69abdf483`.
+
+Consumer verification **`37991613494`** is registered on exact `b208e93c6d` and
+remains in progress. This is not a consumer/product pass. Relay is sole writer and
+monitor; source gates, API provenance, direct-child ancestry and all controls remain
+intact. No model/auth/launcher/pilot work is inferred from these qualification runs.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
