@@ -1,0 +1,140 @@
+name: nix-distribution
+
+# Gate extension, manual-only preparation. Dispatch once W6 + Nix are ready.
+# Measurement success is candidate capture, never consumer-build qualification.
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        type: choice
+        options: [measure, verify]
+        required: true
+        default: measure
+      measurement_run:
+        description: Actual measurement run ID (required for verify)
+        type: string
+      measurement_attempt:
+        description: Actual measurement run attempt (required for verify)
+        type: string
+        default: "1"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+concurrency:
+  group: nix-distribution-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - id: matrix
+        shell: bash
+        env:
+          PHASE: ${{ inputs.phase }}
+          MEASUREMENT_RUN: ${{ inputs.measurement_run }}
+          MEASUREMENT_ATTEMPT: ${{ inputs.measurement_attempt }}
+        run: |
+          set -euo pipefail
+          [[ $PHASE == measure || $PHASE == verify ]] || {
+            printf 'NIX_DISTRIBUTION_FAILURE:UNKNOWN_PHASE\n' >&2; exit 1;
+          }
+          if [[ $PHASE == verify ]]; then
+            [[ $MEASUREMENT_RUN =~ ^[1-9][0-9]*$ && $MEASUREMENT_ATTEMPT =~ ^[1-9][0-9]*$ ]] || {
+              printf 'NIX_DISTRIBUTION_FAILURE:MISSING_REAL_MEASUREMENT_IDENTITY\n' >&2; exit 1;
+            }
+          fi
+          nix eval --impure --no-write-lock-file --no-update-lock-file --json --expr \
+            'builtins.attrNames (builtins.getFlake (toString ./.)).packages' >"$RUNNER_TEMP/distribution-systems.json"
+          matrix=$(python3 nix/toolchain_metadata.py matrix "$RUNNER_TEMP/distribution-systems.json")
+          printf 'matrix=%s\n' "$matrix" >>"$GITHUB_OUTPUT"
+  native:
+    name: native distribution (${{ matrix.system }})
+    needs: prepare
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+      - name: Capture the selected integrated-batch phase
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PHASE: ${{ inputs.phase }}
+          SYSTEM: ${{ matrix.system }}
+          MEASUREMENT_RUN: ${{ inputs.measurement_run }}
+          MEASUREMENT_ATTEMPT: ${{ inputs.measurement_attempt }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/nix-distribution-$SYSTEM"
+          if [[ $PHASE == measure ]]; then
+            bash nix/check-distribution.sh measure "$SYSTEM" "$GITHUB_SHA" "$dir"
+            exit 0
+          fi
+          measurement="$RUNNER_TEMP/measurement-$SYSTEM"
+          gh run download "$MEASUREMENT_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name "nix-distribution-measure-$MEASUREMENT_RUN-$MEASUREMENT_ATTEMPT-$SYSTEM" --dir "$measurement"
+          bash nix/check-distribution.sh verify "$SYSTEM" "$GITHUB_SHA" "$dir" "$measurement"
+      - name: Preserve exact native evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nix-distribution-${{ inputs.phase }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
+          path: ${{ runner.temp }}/nix-distribution-${{ matrix.system }}
+          if-no-files-found: error
+          retention-days: 14
+  completion:
+    if: always()
+    needs: [prepare, native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Require current-run native evidence for every manifest system
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PHASE: ${{ inputs.phase }}
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/distribution-completion"
+          mkdir "$dir"
+          [[ $PREPARE_RESULT == success && $NATIVE_RESULT == success ]] || {
+            printf 'NIX_DISTRIBUTION_FAILURE:INCOMPLETE_NATIVE_JOBS\n' >&2; exit 1;
+          }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" >"$dir/run.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=latest&per_page=100" >"$dir/jobs.json"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" >"$dir/artifacts.json"
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --pattern "nix-distribution-$PHASE-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-*" --dir "$dir/workers"
+          python3 nix/scripts/complete-distribution.py "$dir" "$PHASE" | tee "$dir/result.json"
+          python3 nix/scripts/probe-distribution-completion.py "$dir" "$dir/teeth" "$PHASE" | tee "$dir/teeth.json"
+      - name: Preserve independent completion capture
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: nix-distribution-completion-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/distribution-completion
+          if-no-files-found: error
+          retention-days: 14
