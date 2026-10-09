@@ -1,8 +1,26 @@
 import { z } from "zod"
 
+/** Host-owned invocation identity. Labels, model arguments and plugin metadata cannot grant authority. */
+export type InvocationBinding = Readonly<{
+  projectId: string
+  directory: string
+  worktree: string
+  workspaceID?: string
+  memberId: string
+  executionSessionId: string
+  authoritySessionId: string
+  assistantMessageID: string
+  callID: string
+  taskId?: string
+  resumeRef?: string
+}>
+
 export type ToolContext = {
   sessionID: string
   messageID: string
+  /** Optional for legacy/non-V1 hosts; native V1 backend calls always carry both fields. */
+  readonly callID?: string
+  readonly binding?: InvocationBinding
   /** Display label of the executing agent. Users can rename it, so never route or authorize on it. */
   agent: string
   /** Stable id of the executing agent: the identity that routes, owns memory and holds permissions. */
@@ -18,7 +36,7 @@ export type ToolContext = {
    */
   worktree: string
   abort: AbortSignal
-  metadata(input: { title?: string; metadata?: { [key: string]: any } }): void
+  metadata(input: { title?: string; metadata?: { [key: string]: any } }): Promise<void> | void
   ask(input: AskInput): Promise<void>
 }
 
