@@ -8,9 +8,10 @@ import java from "./runtimes/java"
 import node from "./runtimes/node"
 import python from "./runtimes/python"
 import rust from "./runtimes/rust"
+import { ENTRY_SKILLS } from "./entry-skills.gen"
 
 // Ruling M6-1: every engine is one pack file under `packs/`, listed once in `packs/index.ts`; its id is the key.
-export { ENGINES }
+export { ENGINES, ENTRY_SKILLS }
 
 export type EngineId = keyof typeof ENGINES
 
@@ -19,13 +20,7 @@ export type RuntimeId = "node" | "java" | "python" | "go" | "rust"
 export const RUNTIMES: Readonly<Record<RuntimeId, Runtime>> = { node, java, python, go, rust }
 
 /** The entry skills a pack's recipe serves. */
-export type EntrySkill =
-  | "backend-implement"
-  | "backend-api"
-  | "backend-data"
-  | "backend-concurrency"
-  | "backend-refactor"
-  | "backend-check"
+export type EntrySkill = (typeof ENTRY_SKILLS)[number]
 
 /** One engine file: its pinned engine data plus where it fits in the backend specialist's work (ruling M6-1). */
 export type Pack = Engine<string> & {

@@ -25,6 +25,7 @@ import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BackgroundProcess } from "@/background/process"
 import { Agent } from "@/agent/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { Seats } from "@/maestro/seats"
 
 export { Parameters } from "./shell/prompt"
 
@@ -350,7 +351,7 @@ export const ShellTool = Tool.define(
               yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
 
               // Only the native backend seat gets its toolkit engines fetched; a blocked engine is the tool's output.
-              const seat = ctx.agentID === "backend" ? yield* agents.get(ctx.agentID) : undefined
+              const seat = Seats.find(ctx.agentID)?.toolkit ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
               const toolkit = seat?.native === true ? yield* BackendToolkit.prepare(params.command) : undefined
               if (toolkit?.blocked)
                 return { title: params.command, output: toolkit.blocked, metadata: { output: toolkit.blocked, exit: null, timeout: false, aborted: false, truncated: false } }

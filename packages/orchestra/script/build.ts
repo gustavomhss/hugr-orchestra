@@ -16,7 +16,7 @@ const generated = await import("./generate.ts")
 
 import { Script } from "@orchestra/script"
 import pkg from "../package.json"
-import { backendSkillsModule } from "./backend-skills"
+import { seatSkillsFiles } from "./seat-skills"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -54,7 +54,7 @@ const createEmbeddedFileMap = async (root: string, include: (file: string) => bo
 }
 
 const embeddedFileMap = skipEmbedWebUi ? null : await createEmbeddedWebUIBundle()
-const backendSkillsFileMap = await backendSkillsModule(path.join(dir, "../backend-specialist/skills"))
+const seatSkillsFileMap = await seatSkillsFiles()
 const treeSitterWorker = await Bun.file(fileURLToPath(import.meta.resolve("@opentui/core/parser.worker"))).text()
 
 const allTargets: {
@@ -245,16 +245,17 @@ for (const { item, name, omni, omniFiles } of builds) {
     files: {
       [treeSitterWorkerPath]: treeSitterWorker,
       ...(embeddedFileMap ? { "orchestra-web-ui.gen.ts": embeddedFileMap } : {}),
-      "orchestra-backend-skills.gen.ts": backendSkillsFileMap,
+      ...seatSkillsFileMap,
     },
     entrypoints: [
       "./src/cli/omni-entry.ts",
       workerPath,
       treeSitterWorkerPath,
-      "orchestra-backend-skills.gen.ts",
+      "orchestra-seat-skills.gen.ts",
       ...(embeddedFileMap ? ["orchestra-web-ui.gen.ts"] : []),
     ],
     define: {
+      ORCHESTRA_COMPILED: "true",
       FFF_LIBC: JSON.stringify(item.abi === "musl" ? "musl" : "gnu"),
       ORCHESTRA_VERSION: `'${Script.version}'`,
       ORCHESTRA_MODELS_DEV: generated.modelsData,

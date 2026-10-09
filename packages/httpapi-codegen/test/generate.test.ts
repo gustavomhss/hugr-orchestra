@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { Effect, FileSystem, Schema, SchemaAST, SchemaGetter } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
@@ -606,9 +607,7 @@ describe("HttpApiCodegen.generate", () => {
   it.effect("keeps the strict generated-consumer fixture current", () =>
     Effect.gen(function* () {
       const output = compile(FixtureApi)
-      const actual = yield* Effect.promise(() =>
-        Array.fromAsync(new Bun.Glob("*.ts").scan(new URL("generated", import.meta.url).pathname)),
-      )
+      const actual = [...new Bun.Glob("*.ts").scanSync(fileURLToPath(new URL("generated", import.meta.url)))]
       expect(actual.sort((a, b) => a.localeCompare(b))).toEqual(
         output.files.map((file) => file.path).sort((a, b) => a.localeCompare(b)),
       )

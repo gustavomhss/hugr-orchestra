@@ -3,6 +3,7 @@ import { Effect, FileSystem, PlatformError, Schema, SchemaAST, SchemaRepresentat
 import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
+import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
 
 export type InputField = {
   readonly name: string
@@ -30,13 +31,7 @@ export type Contract = {
   readonly groups: ReadonlyArray<Group>
 }
 
-export class GenerationError extends Schema.TaggedErrorClass<GenerationError>()("GenerationError", {
-  reason: Schema.String,
-}) {
-  override get message() {
-    return this.reason
-  }
-}
+export { GenerationError } from "./error-symbol"
 
 export type Endpoint = {
   readonly group: string
@@ -431,21 +426,21 @@ function renderPromiseTypes(
     types.set(projected.ast, type)
     return type
   }
-  const errors = new Map(
+  const errors = errorSymbols(
     groups.flatMap((group) =>
       group.endpoints.flatMap((endpoint) =>
         endpoint.errors.flatMap((error) => {
           const tagged = declaredErrorFields(error.schema)
-          return tagged === undefined ? [] : [[tagged.tag, tagged] as const]
+          return tagged === undefined ? [] : [tagged]
         }),
       ),
     ),
   )
-  const errorTypes = Array.from(errors.values()).map((error) => {
+  const errorTypes = Array.from(errors, ([identifier, error]) => {
     const fields = error.fields
       .map(([name, schema, optional]) => `readonly ${JSON.stringify(name)}${optional ? "?" : ""}: ${typeOf(schema)}`)
       .join("; ")
-    return `export type ${error.identifier} = { readonly ${JSON.stringify(error.key)}: ${JSON.stringify(error.tag)}; ${fields} }\nexport const is${error.identifier} = (value: unknown): value is ${error.identifier} => typeof value === "object" && value !== null && ${JSON.stringify(error.key)} in value && value[${JSON.stringify(error.key)}] === ${JSON.stringify(error.tag)}`
+    return `export type ${identifier} = { readonly ${JSON.stringify(error.key)}: ${JSON.stringify(error.tag)}; ${fields} }\nexport const is${identifier} = (value: unknown): value is ${identifier} => typeof value === "object" && value !== null && ${JSON.stringify(error.key)} in value && value[${JSON.stringify(error.key)}] === ${JSON.stringify(error.tag)}`
   })
   const operations = groups
     .flatMap((group) =>
@@ -482,10 +477,15 @@ function renderPromiseTypes(
       }),
     )
     .join("\n\n")
-  const json = operations.includes("JsonValue")
+  const json = Array.from(types.values()).some((type) => type.includes("JsonValue"))
     ? "export type JsonValue = null | boolean | number | string | ReadonlyArray<JsonValue> | { readonly [key: string]: JsonValue }"
     : ""
   const imports = [...new Set(Object.values(outputTypes ?? {}).map((override) => override.import))]
+  assertErrorSymbols(
+    errors.keys(),
+    [...imports, json, operations].filter(Boolean).join("\n\n"),
+    errorTypes.join("\n\n"),
+  )
   return [...imports, json, ...errorTypes, operations].filter(Boolean).join("\n\n")
 }
 
@@ -543,14 +543,6 @@ function promiseTypePrefix(group: string, endpoint: string) {
 
 function clientEndpointName(name: string) {
   return name.slice(name.lastIndexOf(".") + 1)
-}
-
-function identifierPart(value: string) {
-  return value
-    .split(/[^A-Za-z0-9]+/)
-    .filter(Boolean)
-    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-    .join("")
 }
 
 function structuralType(schema: Schema.Top) {
@@ -953,6 +945,9 @@ function declaredErrorFields(schema: Schema.Top) {
   const tag = fields.propertySignatures.find((field) => field.name === key)?.type
   if (tag === undefined || !SchemaAST.isLiteral(tag) || typeof tag.literal !== "string") return undefined
   return {
+    ast: fields,
+    // The class-bound factory is canonical across transport/status AST copies, unlike the shared fields Struct.
+    declaration: schema.ast.annotations["~effect/Schema/Class"],
     key,
     tag: tag.literal,
     identifier: SchemaAST.resolveIdentifier(schema.ast) ?? tag.literal,

@@ -83,14 +83,16 @@ await naturalHost({
   },
 })
 `)
-  const { backendSkillsModule } = await import("../../orchestra/script/backend-skills.ts")
+  const { seatSkillsFiles } = await import("../../orchestra/script/seat-skills.ts")
+  const skills = await seatSkillsFiles()
   const inputs: Record<string, string> = {}
+  Object.entries(skills).forEach(([file, text]) => { inputs[file] = createHash("sha256").update(text).digest("hex") })
   const models = path.join(ORCHESTRA, "test/tool/fixtures/models-api.json")
   const results = await Promise.all((["bun", "node"] as const).map(async (target) => {
     const result = await Bun.build({
       target, entrypoints: [entry], outdir: dir, naming: `${target}.mjs`, format: "esm", sourcemap: "linked",
       external: ["jsonc-parser", "@lydell/node-pty"],
-      define: { ORCHESTRA_MODELS_DEV: readFileSync(models, "utf8"), ORCHESTRA_VERSION: "'natural-proof'", ORCHESTRA_CHANNEL: "'dev'" },
+      define: { ORCHESTRA_COMPILED: "true", ORCHESTRA_MODELS_DEV: readFileSync(models, "utf8"), ORCHESTRA_VERSION: "'natural-proof'", ORCHESTRA_CHANNEL: "'dev'" },
       plugins: [{ name: "node-import-meta-dir-and-source-provenance", setup(build) {
         build.onLoad({ filter: /\.[cm]?[jt]sx?$/ }, async (args) => {
           if (!args.path.includes(`${path.sep}packages${path.sep}`) || args.path.includes(`${path.sep}node_modules${path.sep}`)) return undefined
@@ -100,7 +102,7 @@ await naturalHost({
           return { contents: text.replace(/\bimport\.meta\.dir\b(?!name)/g, "import.meta.dirname"), loader: "ts" }
         })
       } }],
-      files: { "orchestra-web-ui.gen.ts": "", "orchestra-backend-skills.gen.ts": await backendSkillsModule(path.join(ROOT, "packages/backend-specialist/skills")) },
+      files: { "orchestra-web-ui.gen.ts": "", ...skills },
     })
     if (!result.success) throw new Error(`Natural ${target} build failed: ${result.logs.join("\n")}`)
     const bundle = result.outputs.find((output) => output.path.endsWith(".mjs"))
@@ -110,7 +112,7 @@ await naturalHost({
     if (/["'][\w./-]+\.gen\.ts["']/.test(text)) throw new Error("Unresolved generated module in natural bundle")
     return { target, file: bundle.path, sha256: createHash("sha256").update(text).digest("hex") }
   }))
-  const boundary = ["packages/orchestra/script/build-node.ts", "packages/orchestra/src/node.ts", "packages/omni/campaign/natural-host.ts"]
+  const boundary = ["packages/orchestra/script/build-node.ts", "packages/orchestra/script/seat-skills.ts", "packages/orchestra/src/node.ts", "packages/omni/campaign/natural-host.ts"]
   boundary.forEach((file) => { inputs[file] = createHash("sha256").update(readFileSync(path.join(ROOT, file))).digest("hex") })
   const publicEntry = readFileSync(path.join(ORCHESTRA, "src/node.ts"), "utf8")
   if (/export.*AppRuntime/.test(publicEntry)) throw new Error("Public Node exports changed: reassess fixture necessity")

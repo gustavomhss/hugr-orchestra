@@ -4,6 +4,7 @@
 //     --version <v> [--asset '<target>=<glob>' ...] [--role generator|check] [--input <text>] [--skill <entry-skill> ...]
 //   bun script/toolkit-pack.ts bump <id> <version>
 //   bun script/toolkit-pack.ts index          (regenerate the recipe index only, e.g. after merging pack branches)
+//   bun script/toolkit-pack.ts skills         (derive the closed entry-skill type from packaged skill directories)
 // `add` writes packs/<id>.ts, a recipe stub with the card headings, the barrel import and entry. `binary` pins each
 // target to the GitHub release asset matching its --asset glob (sha256 from the release API's digest); `npm` reads
 // license, bin and dist.integrity from the registry and writes the lock with `npm install --package-lock-only`.
@@ -12,11 +13,12 @@
 // Then: check the entry layout against a downloaded sample, finish the recipe, run bun typecheck and the toolkit tests.
 
 import { $ } from "bun"
-import { mkdtemp, readFile, rm, writeFile } from "fs/promises"
+import { mkdtemp, readFile, readdir, rm, writeFile } from "fs/promises"
 import os from "os"
 import path from "path"
 import { parseArgs } from "util"
-import type { EntrySkill, Pack } from "../src/backend-toolkit/manifest"
+import matter from "gray-matter"
+import type { Pack } from "../src/backend-toolkit/manifest"
 import { TARGETS } from "../src/backend-toolkit/target"
 
 const PACKS = path.join(import.meta.dir, "../src/backend-toolkit/packs")
@@ -24,14 +26,14 @@ const RECIPES = path.join(
   import.meta.dir,
   "../../backend-specialist/skills/backend-implement/references/recipes/external",
 )
-const SKILLS: ReadonlyArray<EntrySkill> = [
-  "backend-implement",
-  "backend-api",
-  "backend-data",
-  "backend-concurrency",
-  "backend-refactor",
-  "backend-check",
-]
+const SKILLS = (await readdir(path.resolve(import.meta.dir, "../../backend-specialist/skills"), { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
+if (SKILLS.length === 0) throw new Error("No packaged backend entry skills")
+await Promise.all(SKILLS.map(async (name) => {
+  if (!/^backend-[a-z]+(?:-[a-z]+)*$/.test(name)) throw new Error(`Invalid backend entry skill directory: ${name}`)
+  const skill = matter(await readFile(path.resolve(import.meta.dir, "../../backend-specialist/skills", name, "SKILL.md"), "utf8"))
+  if (skill.data.name !== name) throw new Error(`Backend entry skill name mismatch: ${name}`)
+}))
 
 const args = parseArgs({
   args: process.argv.slice(2),
@@ -49,13 +51,24 @@ const args = parseArgs({
 const [command, id, bumped] = args.positionals
 
 const valid =
-  command === "index" ||
+  command === "skills" || command === "index" ||
   (id && command === "add" && args.values.kind && args.values.upstream && args.values.version) ||
   (id && command === "bump" && bumped)
 if (!valid) {
   console.error("usage: see the header of script/toolkit-pack.ts")
   process.exit(1)
 }
+(args.values.skill ?? []).forEach((skill) => {
+  if (!SKILLS.includes(skill)) throw new Error(`Unknown backend entry skill: ${skill}`)
+})
+await writeFile(path.resolve(import.meta.dir, "../src/backend-toolkit/entry-skills.gen.ts"), [
+  "// Generated from packages/backend-specialist/skills by script/toolkit-pack.ts skills.",
+  "export const ENTRY_SKILLS = [",
+  ...SKILLS.map((skill) => `  ${JSON.stringify(skill)},`),
+  "] as const",
+  "",
+].join("\n"))
+if (command === "skills") process.exit(0)
 if (command === "add") await add(id)
 if (command === "bump") await bump(id, bumped!)
 await writeIndex()
@@ -320,7 +333,7 @@ async function writeIndex() {
   const { ENGINES } = await import(path.join(PACKS, "index.ts"))
   const packs: ReadonlyArray<Pack> = Object.values(ENGINES)
   const groups = SKILLS.flatMap((skill) => {
-    const members = packs.filter((pack) => pack.fit.skills.includes(skill)).toSorted((a, b) => a.id.localeCompare(b.id))
+    const members = packs.filter((pack) => pack.fit.skills.some((name) => name === skill)).toSorted((a, b) => a.id.localeCompare(b.id))
     if (!members.length) return []
     return [
       "",
