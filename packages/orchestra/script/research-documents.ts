@@ -56,7 +56,7 @@ const documents = await Effect.runPromise(Effect.scoped(Effect.gen(function* () 
     const cursors = new Set<string>()
     // Native UTF-8 paging can back up at most three bytes from pageBytes before the next code point.
     const pageLimit = Math.max(1, Math.ceil(receipt.bytes / (Research.Limits.pageBytes - 3)))
-    const drain = (cursor?: string): Effect.Effect<void, Research.Error> => Effect.gen(function* () {
+    const drain = (cursor?: string): Effect.Effect<void, InstanceType<typeof Research.Error>> => Effect.gen(function* () {
       if (pages.length >= pageLimit)
         return yield* new Research.Error({ code: "over_cap", message: "Evaluation document page request budget exhausted" })
       if (cursor !== undefined && cursors.has(cursor))

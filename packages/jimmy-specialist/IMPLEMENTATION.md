@@ -1,8 +1,8 @@
 # Discovery integration evidence
 
-Status: mechanical integration checkpoint, 2026-10-08. This is not release acceptance or evidence of research quality. The final charter, independent audition and complete target-runtime qualification remain open.
+Status: committed integration checkpoint, 2026-10-09. This is not release acceptance or evidence of research quality. The final charter, independent audition and complete target-runtime qualification remain open. Current closure ownership and verification cadence are in [DELIVERY.md](DELIVERY.md).
 
-Implementation baseline: `73651a0e69a2912d9244dbb73e985c5828c03058`, branch `jimmy-discovery`. The implementation remains uncommitted. Planning contracts live in the owner's planning checkout at `specs/jimmy-specialist/`.
+Implementation baseline: `73651a0e69a2912d9244dbb73e985c5828c03058`, branch `jimmy-discovery`. Initial implementation checkpoint: `6b5a831c0cbd915f8855f438fce39150a85fdf32`. Follow-up runtime, consumer and evaluation-preparation commits are integrated on that branch. Planning contracts live in the owner's planning checkout at `specs/jimmy-specialist/`.
 
 ## Native vertical slice
 
@@ -44,7 +44,20 @@ The joined HTTP fixture initially built separate native runtimes and returned 40
 
 The generic seat fixture previously copied only the backend skill tree. It now snapshots resident specialist trees without importing the registry before its loader is installed. The compiled skill tests check both backend and discovery, compare actual extracted bytes and assert that the compiled process's authored source root is unavailable.
 
-Local `bun typecheck` completed from the affected package directories: Schema, Core, Orchestra, Protocol, Server, Client, legacy JavaScript SDK, session-ui, UI and app. `git diff --check` completed. Client generation and `./packages/sdk/js/script/build.ts` regenerated the public consumers; generated files were not hand-edited.
+Earlier local `bun typecheck` completed from the affected package directories: Schema, Core, Orchestra, Protocol, Server, Client, legacy JavaScript SDK, session-ui, UI and app. Those earlier checks do not qualify later edits. Client generation and `./packages/sdk/js/script/build.ts` regenerated the public consumers; generated files were not hand-edited.
+
+## Consolidated closure wave
+
+The owner authorized commits and parallel work, moving heavy tests to final closure and removing repeated per-edit typechecks. Three isolated implementation packages returned committed changes; separate cold reviewers inspected their deltas. Final test and mutation execution was explicitly deferred, so reviewed code below is not a new runtime green.
+
+- Packaged proof now follows actual Bun executable settings and the Node desktop CommonJS shim/external dependencies. It loads embedded skills, performs native capture/finding/document/view operations, deletes the original evidence file before reopening retained bytes, and verifies a persisted final card. Build and proof subprocesses have deadlines and reader/process cleanup. This does not yet qualify the actual desktop sidecar/provider/HTTP path.
+- Document reading now compares the full admitted receipt and assembled UTF-8 SHA-256, bounds continuation requests, and cancels continuation/stale writes on replacement or disposal. Generated-client callbacks bind one server. Shared UI buttons, selected-document headings and live status preserve direction/i18n patterns. Browser-safe hashing also works without secure-context Web Crypto; actual browser/RTL/a11y qualification remains pending.
+- Evaluation preparation now records frozen source/prompt/skill/runner identity, refuses reused state and redirected Git environments, isolates native config paths, and exports exact scoped document bytes. Provider aggregates remain unknown. The driver is still provisional and explicitly rejects unsupported R14; [EVALUATION.md](EVALUATION.md) gives paired scheduling, setup prerequisites and grader-packet rules.
+- Cold review found subprocess lifetime, HTTP/LAN hashing, Git identity redirection and Windows environment-case defects. Each returned correction was reviewed before integration. The consolidated compiler run additionally detected a dynamic-import type annotation and a missing explicit EventV2Bridge service in the packaged fixture; both were corrected.
+- One consolidated typecheck batch completed for Orchestra, session-ui, app and Client. Only the failed Orchestra check was repeated after those two fixes. Client and mandatory legacy SDK generation completed from their prescribed scripts, producing unchanged generated outputs relative to the committed checkpoint. The new hash dependency reused installed packages; its lockfile workspace entry is updated.
+- Temporary writer worktrees were removed after their committed changes were integrated and their status inspected. Historical evaluation/review artifacts were preserved. No feature branch push, PR or release occurred.
+
+No new heavy suite or model trial ran during this wave. The CI table above remains historical evidence for its exact tested revisions; final suite, mutation controls and model qualification must run against the frozen integrated candidate.
 
 ## Independent review and provisional real-model pilots
 

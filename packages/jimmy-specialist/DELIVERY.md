@@ -35,4 +35,30 @@ All three execution packages are independent under the frozen contract. The lead
 - Full named native/Atlas matrix, desktop runtime reach, UI accessibility/direction/locale checks and production timeline benchmark must be reconciled against the governing delivery plan.
 - Final generated consumers, cold integration review and consolidated gates remain pending.
 
-`IMPLEMENTATION.md` holds historical evidence. Local `SESSION-CHECKPOINT.md` is a compaction aid, not a shipped artifact or acceptance report.
+`IMPLEMENTATION.md` holds historical evidence. The compaction checkpoint stays outside the checkout; it is not a shipped artifact or acceptance report.
+
+## Current execution state
+
+All three implementation packages returned separate commits and were integrated after diff review. Cold review corrections are included. One consolidated typecheck batch and both prescribed generators completed; only the failed Orchestra check was repeated after its actual compiler fixes. Heavy tests and mutation probes remain deferred to final closure. Temporary writer worktrees are removed; recovery branches retain their commits.
+
+| Remaining block | Owner | Required exit |
+| --- | --- | --- |
+| Mechanical completeness | Lead + runtime qualification | Reconcile named N/A cases and actual desktop/HTTP/macOS reach; implement remaining detecting controls before launching the final suite |
+| UI closure | UI qualification | Real navigation/disposal/server-switch, keyboard, RTL/mixed-text, locale fallback and production timeline baseline/current evidence |
+| Evaluation infrastructure | Independent evaluator, lead fixes native adapters | Declare the actual comparator; provision pinned semantic/history/Atlas lanes and R14 exact logical Task continuation; no oracle content returns to candidate authors |
+| Final charter freeze | Lead, after mechanical capability review | Capability-accurate prompt and preserved historical behavior hashes; freeze candidate identity once |
+| Final acceptance | Qualification + independent graders | Consolidated CI/mutation controls followed by paired R01–R14 repetitions; retain all failures and unknown telemetry |
+
+Preparation is parallel; prompt freeze and acceptance are downstream integration points. A script, authored test or static review does not close an execution requirement.
+
+### Queued change-scoped tests
+
+These are final-stage commands, not results from this wave. Run from the implementation root after the remaining detecting controls are ready. Extend the exact file list when closing a named uncovered requirement, rather than repeatedly rerunning already-passing suites during implementation.
+
+```sh
+bun run test:ci orchestra test/maestro/seat-skills-build.test.ts test/research/packaged-runtime.test.ts test/research/corpus-integration.test.ts test/research/task-continuation.test.ts test/research/atlas-context.test.ts test/research/atlas-owners.test.ts test/research/allowance.test.ts --os both
+bun run test:ci core test/research-binding.test.ts test/research-artifacts.test.ts test/research-records.test.ts test/research-allowance.test.ts --os both
+bun run test:ci session-ui src/components/research-document.test.ts --os both
+```
+
+These scoped commands alone are not the complete epic acceptance matrix. The actual desktop/browser, named uncovered native/Atlas cases, epic lane and independent audition still need their declared execution evidence.

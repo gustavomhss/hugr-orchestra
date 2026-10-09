@@ -25,6 +25,7 @@ import { SeatSkillContent } from "@/maestro/seat-skill-content"
 import { DiscoveryResult } from "@/maestro/discovery-result"
 import { Database } from "@orchestra/core/database/database"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { EventV2Bridge } from "@/event-v2-bridge"
 
 const directory = process.argv[2]
 if (!directory) throw new Error("Missing isolated packaged proof root")
@@ -47,7 +48,7 @@ const sourceRoots = await Promise.all(Object.values(Seats.all).filter((seat) => 
 const skillFiles = await SeatSkillContent.read("jimmy", skillRoot, Seats.all.jimmy.skills)
 const layer = AppNodeBuilderV1.build(LayerNode.group([
   Agent.node, InstanceStore.node, Session.node, SessionProjector.node, Permission.node, Skill.node,
-  ToolRegistry.node, ResearchExecution.node, ResearchRecords.node, Database.node, FSUtil.node,
+  ToolRegistry.node, ResearchExecution.node, ResearchRecords.node, Database.node, FSUtil.node, EventV2Bridge.node,
 ]))
 const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const instances = yield* InstanceStore.Service
