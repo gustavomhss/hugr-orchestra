@@ -238,11 +238,18 @@ export const make = Effect.gen(function* () {
     })
   return {
     admit,
-    create: (context: Tool.Context, input: CreateInput) => admit(context, { ...input,
-      requestHash: input.requestHash ?? createHash("sha256").update(JSON.stringify([
-        input.kind, input.operation, input.creationKey ?? "primary", input.connection ?? null, input.target ?? null,
-      ])).digest("hex"),
-    }).pipe(Effect.map((result) => result.ref)),
+    create: (context: Tool.Context, input: CreateInput) => Effect.suspend(() => {
+      const decoded = Schema.decodeUnknownOption(Create)(input)
+      if (Option.isNone(decoded)) return Effect.fail(failure("unsupported_schema"))
+      const fixed = structuredClone(decoded.value)
+      return admit({ ...context }, { ...fixed,
+        requestHash: fixed.requestHash ?? createHash("sha256").update(JSON.stringify([
+          fixed.kind, fixed.operation, fixed.creationKey ?? "primary",
+          fixed.connection ? [fixed.connection.id, fixed.connection.provider, fixed.connection.generation] : null,
+          fixed.target ? [fixed.target.id, fixed.target.connectionID, fixed.target.generation, fixed.target.environment] : null,
+        ])).digest("hex"),
+      }).pipe(Effect.map((result) => result.ref))
+    }),
     read: Effect.fn("CapabilityJobs.read")(function* (supplied: Tool.Context, suppliedRef: Capability.JobRef) {
       const ref = fixedRef(suppliedRef)
       if (ref instanceof Capability.Failure) return yield* ref
