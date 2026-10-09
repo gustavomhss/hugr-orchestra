@@ -8,7 +8,6 @@ import { MessageTable, SessionMessageTable, SessionTable } from "@orchestra/core
 import { SessionStore } from "@orchestra/core/session/store"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { fromRow } from "@orchestra/core/session/info"
-import { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Option, Schema } from "effect"
@@ -154,24 +153,19 @@ export function make(binding: {
           { location: parentLocation })
       }
       if (!modern) {
+        yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,
+          childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: input.capture.assistantMessageID })
+        // The generic updatePart boundary strips new receipts. Only the private validated setter may install one.
         const parent = yield* MessageV2.get({ sessionID: input.sessionID, messageID: input.messageID })
         const matches = parent.parts.filter((part) => part.type === "tool" && part.callID === input.callID)
         const part = matches[0]
         if (parent.info.role !== "assistant" || matches.length !== 1 || part?.type !== "tool" || part.tool !== "task" ||
           part.sessionID !== input.sessionID || part.messageID !== input.messageID || part.metadata?.providerExecuted ||
           part.state.status === "pending") return yield* new Hold({ message: "HOLD: original Task part missing" })
-        const metadata = { ...part.state.metadata, parentSessionId: input.sessionID, sessionId: input.childSessionID,
-          workResult: result, upstreamSettlement: settlement }
-        const before = SessionMessageUpdater.upstreamSettlement(part.state.metadata ?? {}, { sessionID: input.sessionID,
+        const stored = SessionMessageUpdater.upstreamSettlement(part.state.metadata ?? {}, { sessionID: input.sessionID,
           messageID: input.messageID, callID: input.callID, tool: part.tool, input: part.state.input })
-        if (before && !isDeepStrictEqual(before, settlement))
-          return yield* new Hold({ message: "HOLD: original Task part settlement conflicts" })
-        if (part.state.metadata?.parentSessionId !== input.sessionID || part.state.metadata?.sessionId !== input.childSessionID ||
-          !SessionMessageUpdater.upstreamSettlement(metadata, { sessionID: input.sessionID, messageID: input.messageID,
-            callID: input.callID, tool: part.tool, input: part.state.input }))
-          return yield* new Hold({ message: "HOLD: original Task part binding mismatch" })
-        if (!before) yield* sessions.updatePart(Schema.decodeUnknownSync(SessionV1.ToolPart)({ ...part, state: { ...part.state, metadata } },
-          { onExcessProperty: "error" }))
+        if (!stored || !isDeepStrictEqual(stored, settlement))
+          return yield* new Hold({ message: "HOLD: private Task settlement readback mismatch" })
       }
     }
     if (progress.wakeStarted) return

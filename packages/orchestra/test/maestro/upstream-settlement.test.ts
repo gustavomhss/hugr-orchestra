@@ -106,7 +106,8 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
   const deliver = (selected = capture, transport = ops) => UpstreamSettlement.make({ sessionID: parent.id, messageID: owner.id,
     callID, childSessionID: child.id, taskID: logical.taskId, ops: transport,
     request: { ...request, parts: request.parts.map((part) => ({ ...part,
-      metadata: { ...part.metadata, source: { ...part.metadata.source, state: selected.state } } })) }, capture: selected })
+      metadata: { ...part.metadata, workResult: selected.workResult,
+        source: { ...part.metadata.source, state: selected.state } } })) }, capture: selected })
   const read = () => Effect.gen(function* () {
     if (modern) {
       const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, owner.id)).get().pipe(Effect.orDie)
@@ -158,7 +159,8 @@ it.instance("two resumed dispatches retain separate assistant and delivery ident
   if (!result || !f.task) throw new Error("expected second captured result")
   const callID = `${f.callID}-resume`
   const second = yield* f.sessions.updatePart({ ...f.task, id: PartID.ascending(), callID })
-  const request = { ...f.request, messageID: MessageID.ascending() }
+  const request = { ...f.request, messageID: MessageID.ascending(),
+    parts: f.request.parts.map((part) => ({ ...part, metadata: { ...part.metadata, workResult: result } })) }
   const deliver = UpstreamSettlement.make({ sessionID: f.parent.id, messageID: f.owner.id, callID,
     childSessionID: f.child.id, taskID: result.taskId ?? "", ops: f.ops, request,
     capture: { assistantMessageID: later.id, workResult: result, text, state: "completed" } })
@@ -298,6 +300,33 @@ it.instance("legacy completion preservation uses shared native receipt helper", 
   yield* f.sessions.updatePart({ ...f.task, state: { ...f.state, metadata } })
   expect(yield* f.read()).toMatchObject({ upstreamSettlement: { deliveryMessageID: f.request.messageID },
     workResult: f.capture.workResult })
+}))
+
+it.instance("V1 generic receipt injection is stripped; private setter stores durable receipt before wake", () => Effect.gen(function* () {
+  const f = yield* seed()
+  if (!f.task || !f.capture.workResult) throw new Error("expected legacy Task and captured result")
+  yield* f.sessions.updatePart({ ...f.task, state: { ...f.state, metadata: { ...f.state.metadata,
+    upstreamSettlement: { parentMessageID: f.owner.id, parentCallID: f.callID, workResult: f.capture.workResult,
+      deliveryMessageID: f.request.messageID, deliveryPartID: PartID.ascending() } } } })
+  expect(yield* f.read()).not.toHaveProperty("upstreamSettlement")
+  const created: boolean[] = []
+  const sessions = Session.Service.of({ ...f.sessions, settleUpstreamTask: (input) =>
+    f.sessions.settleUpstreamTask(input).pipe(Effect.tap((value) => Effect.sync(() => { created.push(value) }))) })
+  const ops: TaskPromptOps = { ...f.ops, prompt: (input) => Effect.gen(function* () {
+    if (!input.noReply) expect(yield* f.read()).toMatchObject({ upstreamSettlement: {
+      parentMessageID: f.owner.id, parentCallID: f.callID, deliveryMessageID: f.request.messageID,
+      workResult: f.capture.workResult } })
+    return yield* f.ops.prompt(input)
+  }) }
+  const deliver = f.deliver(f.capture, ops)
+  yield* deliver().pipe(Effect.provideService(Session.Service, sessions))
+  yield* deliver().pipe(Effect.provideService(Session.Service, sessions))
+  expect(created).toEqual([true, false])
+  expect(f.counters.wake).toBe(1)
+  const events = yield* f.database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, f.parent.id)).all().pipe(Effect.orDie)
+  expect(events.some((event) => event.type === EventV2.versionedType(SessionV1.Event.PartUpdated.type, 1) &&
+    event.data.part && typeof event.data.part === "object" && "callID" in event.data.part &&
+    event.data.part.callID === f.callID)).toBe(true)
 }))
 
 it.instance("failed returned result persists failure instead of successful attribution", () => Effect.gen(function* () {
