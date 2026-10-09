@@ -20,11 +20,14 @@ const Envelope = Schema.Struct({
     hostDetail: Schema.optional(Schema.String),
   }),
 })
+const decodeEnvelope = Schema.decodeUnknownOption(Schema.fromJsonString(Envelope))
 
 export function ResearchResult(props: { value: unknown; sessionID?: string }) {
   const data = useData()
   const i18n = useI18n()
-  const result = createMemo(() => Option.getOrUndefined(Schema.decodeUnknownOption(Envelope)(props.value)))
+  // Solid stores attach non-enumerable symbols that strict Research schemas reject.
+  // Decode the JSON wire shape while tracking nested metadata updates through the proxy.
+  const result = createMemo(() => Option.getOrUndefined(decodeEnvelope(JSON.stringify(props.value))))
   const card = createMemo(() =>
     result()?.card.parsed && result()?.referencesChecked ? result()?.discovery : undefined,
   )
@@ -79,8 +82,14 @@ export function ResearchResult(props: { value: unknown; sessionID?: string }) {
   return (
     <Show when={result()}>
       {(value) => (
-        <section data-component="research-result" style={{ "padding-block": "0.75rem", "text-align": "start" }}>
-          <p dir="auto">{i18n.t(`ui.research.terminal.${value().terminal.reason}`)}</p>
+        <section
+          data-component="research-result"
+          aria-labelledby={`${documentID}-terminal`}
+          style={{ "padding-block": "0.75rem", "text-align": "start" }}
+        >
+          <p id={`${documentID}-terminal`} dir="auto">
+            {i18n.t(`ui.research.terminal.${value().terminal.reason}`)}
+          </p>
           <Show when={card()} fallback={<p dir="auto">{i18n.t("ui.research.unverified")}</p>}>
             {(answer) => (
               <>
@@ -119,17 +128,22 @@ export function ResearchResult(props: { value: unknown; sessionID?: string }) {
             <Show when={selected() && state.pending}>{i18n.t("ui.research.documentLoading")}</Show>
             <Show when={selected() && state.failed}>{i18n.t("ui.research.documentUnavailable")}</Show>
           </p>
-          <div id={documentID} aria-busy={!!selected() && state.pending}>
+          <div
+            id={documentID}
+            role={selected() ? "region" : undefined}
+            aria-labelledby={selected() ? `${documentID}-title` : undefined}
+            aria-busy={!!selected() && state.pending}
+          >
             <Show when={selected()}>
               {(receipt) => (
-                <section aria-labelledby={`${documentID}-title`}>
+                <>
                   <h3 id={`${documentID}-title`} dir="auto">
                     {receipt().title}
                   </h3>
                   <Show when={state.document !== undefined}>
                     <Markdown text={state.document ?? ""} />
                   </Show>
-                </section>
+                </>
               )}
             </Show>
           </div>

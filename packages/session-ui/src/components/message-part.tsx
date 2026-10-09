@@ -1625,6 +1625,10 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             />
           </Match>
         </Switch>
+        {/* Terminal evidence survives tool errors; only native child IDs authorize artifact reads. */}
+        <Show when={part().tool === "task"}>
+          <ResearchResult value={partMetadata().workResult} sessionID={taskId()} />
+        </Show>
       </div>
     </Show>
   )
@@ -2065,7 +2069,6 @@ ToolRegistry.register({
     )
 
     return (
-      <>
       <BasicTool
         icon="task"
         status={props.status}
@@ -2077,8 +2080,6 @@ ToolRegistry.register({
         onTriggerClick={navigate}
         onTriggerKeyDown={navigateKey}
       />
-      <ResearchResult value={props.metadata.workResult} sessionID={childSessionId()} />
-      </>
     )
   },
 })
