@@ -657,7 +657,36 @@ describe("tool.task", () => {
       expect(yield* Effect.promise(() => cancelled.promise)).toBe(input.sessionID)
 
       const exit = yield* Fiber.await(fiber)
-      expect(Exit.isSuccess(exit)).toBe(true)
+      expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain("Task cancelled")
+    }),
+  )
+
+  it.instance("execute cancels the real owned job when abort fires after start but before listener registration", () =>
+    Effect.gen(function* () {
+      const seeded = yield* seed()
+      const jobs = yield* BackgroundJob.Service
+      const abort = new AbortController()
+      const cancelled: SessionID[] = []
+      // Observe the actual registry start, then fire the signal at the precise missed-listener boundary.
+      const tool = yield* TaskTool.pipe(Effect.provideService(BackgroundJob.Service, {
+        ...jobs,
+        start: (input) => jobs.start(input).pipe(Effect.tap(() => Effect.sync(() => abort.abort()))),
+      }))
+      const def = yield* tool.init()
+      const promptOps: TaskPromptOps = {
+        cancel: (sessionID) => Effect.sync(() => { cancelled.push(sessionID) }),
+        resolvePromptParts: (template) => Effect.succeed([{ type: "text" as const, text: template }]),
+        prompt: () => Effect.never,
+      }
+      const exit = yield* def.execute({ description: "Missed signal boundary", prompt: "Wait until cancelled", subagent_type: "general" }, {
+        sessionID: seeded.chat.id, messageID: seeded.assistant.id, agent: "maestro", abort: abort.signal,
+        extra: { promptOps }, messages: [], metadata: () => Effect.void, ask: () => Effect.void,
+      }).pipe(Effect.exit, Effect.timeout("15 seconds"))
+      expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain("Task cancelled")
+      const owned = (yield* jobs.list()).filter((job) => job.type === "task")
+      expect(owned).toHaveLength(1)
+      expect(owned[0].status).toBe("cancelled")
+      expect(cancelled).toContain(SessionID.make(owned[0].id))
     }),
   )
 

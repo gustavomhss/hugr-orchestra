@@ -7,7 +7,7 @@ import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
-import { Effect, FileSystem } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
 import { Agent } from "@/agent/agent"
 import { Git } from "@/git"
 import { AtlasHeader } from "@/maestro/atlas-header"
@@ -304,5 +304,39 @@ it.instance("native receipt selection uses latest jimmy checkpoint; reconciled o
     expect(fold).toHaveLength(1)
     expect(fold[0].metadata.atlasResume.verdict).toEqual({ ok: true, ref: results[1].ref })
     expect(fold[0].text).toContain(newer.lesson)
+  }), { git: true },
+)
+
+it.instance("overlapping same-process native tasks preserve owner isolation and identical retry admissions", () =>
+  Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
+    const recall = yield* Tool.init(yield* AtlasMemoryRecallTool)
+    const callers = yield* Effect.forEach(["backend", "jimmy", "backend", "jimmy"] as const, (member, index) =>
+      Effect.gen(function* () {
+        const child = yield* sessions.create({ agent: member })
+        const ctx = { ...context(member), sessionID: child.id, callID: `overlap-${index}`, messageID: MessageID.ascending() }
+        const entry = { ...task, taskId: `overlap-${Math.floor(index / 2)}`, lesson: `${member} retains its own conditional evidence` }
+        return { member, ctx, entry }
+      }),
+    )
+    const admitted = yield* Effect.forEach(callers, (caller) => emit.execute({ entry: caller.entry }, caller.ctx), { concurrency: "unbounded" })
+    admitted.forEach((result, index) => {
+      expect(receipt(result)).toMatchObject({ outcome: "admitted", binding: { memoryOwner: callers[index].member, sessionID: callers[index].ctx.sessionID } })
+      expect(receipt(result).ref).toBeDefined()
+    })
+    const fs = yield* FileSystem.FileSystem
+    const log = path.join((yield* TestInstance).directory, ".atlas/memory.jsonl")
+    const beforeRetry = yield* fs.readFileString(log)
+    expect(beforeRetry.trim().split("\n")).toHaveLength(callers.length)
+    const retried = yield* Effect.forEach(callers, (caller) => emit.execute({ entry: caller.entry }, caller.ctx), { concurrency: "unbounded" })
+    retried.forEach((result, index) => expect(receipt(result)).toMatchObject({ outcome: "admitted", reconciled: true, ref: receipt(admitted[index]).ref }))
+    expect(yield* fs.readFileString(log)).toBe(beforeRetry)
+    yield* Effect.forEach(callers, (caller, index) => Effect.gen(function* () {
+      const result = yield* recall.execute({ kind: "task", taskId: caller.entry.taskId }, caller.ctx)
+      const own = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ store: Schema.Literal("complete"), records: Schema.Array(Schema.Struct({ entry: Schema.Unknown })) })))(result.output)
+      expect(own.records.map((record) => record.entry)).toEqual([caller.entry])
+      expect(receipt(result)).toMatchObject({ outcome: "read", binding: { memoryOwner: caller.member }, refs: [receipt(admitted[index]).ref] })
+    }), { discard: true })
   }), { git: true },
 )

@@ -69,12 +69,13 @@ const exported = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     .filter((item, index, list) => list.findIndex((other) => other.ref.artifact.id === item.ref.artifact.id && other.ref.artifact.revision === item.ref.artifact.revision) === index)
   const evidence = yield* Effect.forEach(sources, (source) => Effect.gen(function* () {
     const page = yield* artifacts.read(source.binding, source.ref.artifact, undefined, "task")
-    if (!("origin" in page.receipt) || page.receipt.origin.kind !== "file" || page.receipt.ref.digest !== source.ref.digest ||
-      page.receipt.ref.representation !== source.ref.representation || page.receipt.binding.authoritySessionID !== projection.parentSessionID ||
-      page.receipt.binding.directory !== path.join(runRoot, "source") ||
-      !projection.identity.sources.some((file) => path.join(runRoot, "source", file.path) === page.receipt.origin.uri))
+    const receipt = page.receipt
+    if (!("origin" in receipt) || receipt.origin.kind !== "file" || receipt.ref.digest !== source.ref.digest ||
+      receipt.ref.representation !== source.ref.representation || receipt.binding.authoritySessionID !== projection.parentSessionID ||
+      receipt.binding.directory !== path.join(runRoot, "source") ||
+      !projection.identity.sources.some((file) => path.join(runRoot, "source", file.path) === receipt.origin.uri))
       return yield* new Research.Error({ code: "reference_invalid", message: "Grader evidence must be admitted disclosed input; skill, prompt and outside-file bodies are excluded" })
-    return yield* ResearchRetained.authenticate(page.receipt, { source: path.join(runRoot, "source"), data: root, sources: frozen.identity.sources })
+    return yield* ResearchRetained.authenticate(receipt, { source: path.join(runRoot, "source"), data: root, sources: frozen.identity.sources })
   }))
   return { documents, evidence }
 }).pipe(Effect.provide(AppNodeBuilder.build(ResearchArtifacts.node, [[Global.node, Global.layerWith({ data: root })]])))))

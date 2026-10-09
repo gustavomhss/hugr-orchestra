@@ -113,19 +113,37 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
     yield* Deferred.succeed(checkpoint, undefined)
   }))
   yield* Effect.addFinalizer(() => unsubscribe)
-  const call = (args: Record<string, unknown>, callID: string) => Effect.gen(function* () {
+  const call = (args: Record<string, unknown>, callID: string, cancellation?: { signal: AbortSignal; onMetadata?: () => void }) => Effect.gen(function* () {
     const part = { id: PartID.ascending(), sessionID: parent.id, messageID: assistant.id, type: "tool" as const, tool: "task", callID,
       state: { status: "running" as const, input: args, time: { start: Date.now() } } }
     yield* sessions.updatePart(part)
     const ctx: Tool.Context = { sessionID: parent.id, messageID: assistant.id, callID, agent: maestro.name, agentID: "maestro",
-      permission: maestro.permission, abort: AbortSignal.any([]), messages: [],
+      permission: maestro.permission, abort: cancellation?.signal ?? AbortSignal.any([]), messages: [],
       extra: { model, promptOps: { prompt: prompt.prompt, cancel: prompt.cancel, resolvePromptParts: prompt.resolvePromptParts } },
       ask: (request) => permission.ask({ ...request, sessionID: parent.id, tool: { messageID: assistant.id, callID }, ruleset: maestro.permission }).pipe(Effect.orDie),
-      metadata: (value) => Effect.sync(() => { if (value.metadata) state.metadata = value.metadata }),
+      metadata: (value) => Effect.sync(() => {
+        if (value.metadata) state.metadata = value.metadata
+        cancellation?.onMetadata?.()
+      }),
     }
     // The public caller need not expose the research service captured by the native Task definition.
     return yield* task.execute(args, ctx).pipe(Effect.updateContext<never, never>(Context.omit(ResearchRecords.Service)))
   })
+  const cancelled = new AbortController()
+  cancelled.abort()
+  const beforeCancelled = yield* sessions.children(parent.id)
+  const args = { description: "Cancelled discovery", prompt: "Do not run after cancellation", subagent_type: "jimmy" }
+  const preaborted = yield* call(args, "discovery-preaborted", { signal: cancelled.signal }).pipe(Effect.exit)
+  expect(Exit.isFailure(preaborted) && Cause.pretty(preaborted.cause)).toContain("Task cancelled")
+  expect(yield* sessions.children(parent.id)).toHaveLength(beforeCancelled.length)
+  expect(yield* remote.calls).toBe(0)
+  const startup = new AbortController()
+  const abortedDuringStartup = yield* call(args, "discovery-startup-abort", {
+    signal: startup.signal, onMetadata: () => startup.abort(),
+  }).pipe(Effect.exit)
+  expect(Exit.isFailure(abortedDuringStartup) && Cause.pretty(abortedDuringStartup.cause)).toContain("Task cancelled")
+  expect(state.metadata).toMatchObject({ workResult: { terminal: { reason: "interrupted" } } })
+  expect(yield* remote.calls).toBe(0)
   yield* remote.tool("read", { filePath: "conditions.txt" })
   const worker = yield* call({ description: "Inspect conditional behavior", prompt: "Investigate conditions and preserve contrary evidence", subagent_type: "jimmy" }, "discovery-first").pipe(Effect.forkScoped)
   yield* Effect.raceFirst(Deferred.await(checkpoint), Fiber.join(worker).pipe(

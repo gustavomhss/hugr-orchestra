@@ -67,7 +67,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/L
 
 export const use = serviceUse(Service)
 
-const live: Layer.Layer<
+export const live: Layer.Layer<
   Service,
   never,
   | Auth.Service

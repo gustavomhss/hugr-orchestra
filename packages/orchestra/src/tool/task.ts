@@ -153,6 +153,7 @@ export const TaskTool = Tool.define(
       params: Schema.Schema.Type<typeof Parameters>,
       ctx: Tool.Context,
     ) {
+      if (ctx.abort.aborted) return yield* Effect.fail(new Error("Task cancelled"))
       const cfg = yield* config.get()
       // The caller resolves by stable id only (F1.10): a display label never identifies an agent, and an unresolved
       // caller fails closed (F1.13) rather than skipping the native-seat deny below.
@@ -660,6 +661,12 @@ export const TaskTool = Tool.define(
         )
       })
 
+      const cancel = Effect.all([ops.cancel(nextSession.id), background.cancel(nextSession.id)], { discard: true })
+      if (ctx.abort.aborted) {
+        yield* work.hostEnded("interrupted", "Task cancelled during startup")
+        yield* cancel
+        return yield* Effect.fail(new Error("Task cancelled"))
+      }
       if (yield* background.extend({ id: nextSession.id, run: runTask() })) {
         yield* work.hostEnded("running", "Background task updated")
         return {
@@ -710,7 +717,6 @@ export const TaskTool = Tool.define(
       }
 
       const runCancel = yield* EffectBridge.make()
-      const cancel = ops.cancel(nextSession.id)
 
       function onAbort() {
         runCancel.fork(cancel)
@@ -719,6 +725,8 @@ export const TaskTool = Tool.define(
       return yield* Effect.acquireUseRelease(
         Effect.sync(() => {
           ctx.abort.addEventListener("abort", onAbort)
+          // Startup can yield before the listener exists; an already-fired signal must cancel the owned job too.
+          if (ctx.abort.aborted) onAbort()
         }),
         () =>
           Effect.gen(function* () {
@@ -749,7 +757,7 @@ export const TaskTool = Tool.define(
           Effect.gen(function* () {
             if (!Exit.hasInterrupts(exit)) return
             yield* work.hostEnded("interrupted", "Task cancelled").pipe(Effect.catchCause(() => Effect.void))
-            yield* Effect.all([cancel, background.cancel(nextSession.id)], { discard: true })
+            yield* cancel
           }).pipe(
             Effect.ensuring(
               Effect.sync(() => {

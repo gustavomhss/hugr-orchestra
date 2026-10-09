@@ -267,9 +267,9 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
   })
   const artifact = metadata.workResult.documents[0]
   if (!artifact) throw new Error("Parent Task result omitted admitted document")
-  const fetched = yield* Effect.promise(() => client.sessions.research.artifact({ sessionID: child.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }))
+  const fetched = yield* Effect.promise(() => client.research.artifact({ sessionID: child.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }))
   const generated = Schema.decodeUnknownSync(Research.ArtifactPage)(fetched)
-  const siblingError = yield* Effect.promise(() => client.sessions.research.artifact({ sessionID: sibling.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }).then(
+  const siblingError = yield* Effect.promise(() => client.research.artifact({ sessionID: sibling.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }).then(
     () => { throw new Error("Sibling native placement unexpectedly read Task document") },
     (error: unknown) => Schema.decodeUnknownSync(Schema.Struct({ _tag: Schema.Literal("ResearchArtifactNotFoundError"), message: Schema.String }))(error),
   ))

@@ -135,6 +135,18 @@ describe("native research vertical slice", () => {
     const invalid = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text: "Missing final card" }] }, [])
     expect(invalid.card.parsed).toBe(false)
     expect(invalid.corpus?.documents).toEqual([mutation.document])
+    yield* Effect.forEach([
+      `${message.parts[0].text}\n${message.parts[0].text}`,
+      message.parts[0].text.replace("jimmy-result", "backend-result"),
+      `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ ...card, accepted: true, authoritySessionID: fixture.authority.id })}\n\u0060\u0060\u0060`,
+    ], (text) => Effect.gen(function* () {
+      const rejected = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text }] }, [])
+      expect(rejected.card.parsed).toBe(false)
+      expect(rejected.referencesChecked).toBe(false)
+      expect(rejected.discovery).toBeUndefined()
+      expect(rejected.corpus?.documents).toEqual([mutation.document])
+      expect(rejected.terminal.reason).toBe("ended")
+    }), { discard: true })
     const artifacts = yield* ResearchArtifacts.Service
     yield* artifacts.remove(binding)
     expect((yield* Effect.promise(() => request(fixture.child.id))).status).toBe(503)

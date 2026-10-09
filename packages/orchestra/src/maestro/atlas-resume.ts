@@ -72,7 +72,7 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
 // F3 clause 16: the latest admitted emit receipt for the unit in this Session's own tool evidence names the checkpoint.
 // Refused, unavailable and uncertain writes never advance it, and neither does an identical resubmission of a record an
 // earlier receipt already admitted. Without a receipt Atlas selects (one own record) or refuses (none, or several).
-function selectedRef(history: readonly SessionV1.WithParts[], key: AtlasMemory.AdmissionKey) {
+export function selectedRef(history: readonly SessionV1.WithParts[], key: AtlasMemory.AdmissionKey) {
   const admitted = history
     .flatMap((msg) => msg.parts)
     .flatMap((part) => {

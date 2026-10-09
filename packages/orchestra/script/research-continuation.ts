@@ -31,8 +31,7 @@ type EmitBoundary = { sequence: number; partID: string; sessionID: string; callI
 export function observe() {
   const state: { sequence: number; armed?: { sessionID: string; after: number; ready: Deferred.Deferred<ProviderWitness> };
     streams: ProviderWitness[]; emits: Map<string, EmitBoundary> } = { sequence: 0, streams: [], emits: new Map() }
-  const implementation = LLM.node.implementation
-  if (!implementation) throw new Error("Native LLM observer implementation unavailable")
+  const implementation = LLM.live
   const replacement = [LLM.node, { ...LLM.node, implementation: Layer.effect(LLM.Service, Effect.gen(function* () {
     const native = yield* LLM.Service
     return LLM.Service.of({ stream: (input) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
@@ -150,8 +149,12 @@ export const run = Effect.fn("ResearchContinuation.run")(function* (input: {
   const interrupted = running && witness?.interrupted === true && Exit.hasInterrupts(firstOutput) && Option.isSome(host) &&
     host.value.sessionId === selected?.binding.executionSessionID && host.value.workResult.taskId === selected?.binding.taskId &&
     host.value.workResult.terminal.reason === "interrupted"
-  const blocker = !selected || !interrupted ? "checkpoint-not-reached" : remaining() <= 0 ? "total-wall-clock-exhausted" : undefined
-  const detail = !selected ? !input.scannerConfigured ? "trusted scanner setup missing; no eligible checkpoint"
+  const blocker = remaining() <= 0 ? "total-wall-clock-exhausted"
+    : input.first.abort.aborted || interruptedAt >= input.first.deadlineAt ? "first-dispatch-deadline-exhausted"
+    : !selected || !interrupted ? "checkpoint-not-reached" : undefined
+  const detail = blocker === "total-wall-clock-exhausted" ? "whole-attempt deadline reached before resume"
+    : blocker === "first-dispatch-deadline-exhausted" ? "first dispatch deadline reached before a witnessed checkpoint interruption"
+    : !selected ? !input.scannerConfigured ? "trusted scanner setup missing; no eligible checkpoint"
     : Exit.isFailure(checkpoint) ? "checkpoint observation failed; exact cause retained in raw trial" : "first Task ended or deadline reached without eligible own admitted checkpoint"
     : !interrupted ? "actual running provider interruption and native interrupted host metadata were not both witnessed" : undefined
   const base = { schema: "jimmy-native-continuation-v1", phases, interruptedAt, providerAtInterrupt, providerWitness: witness, runningAtInterrupt: running,
@@ -160,8 +163,8 @@ export const run = Effect.fn("ResearchContinuation.run")(function* (input: {
     checkpointFailure: Exit.isFailure(checkpoint) ? checkpoint.cause : undefined,
     dispatchCeilings: [Research.Limits, Research.Limits], maximumDispatches: 2,
     totalAllowance: { providerCalls: Research.Limits.providerCalls * 2, toolCalls: Research.Limits.toolCalls * 2, capturedBytes: Research.Limits.capturedBytes * 2 },
-    deadlineContainment: "cooperative; native abort startup race and resource cleanup require an external process deadline",
-    startupAbort: "native-abort-startup-race-unqualified",
+    deadlineContainment: "cooperative; native startup cancellation controls and resource cleanup still require final execution and an external process deadline",
+    startupAbort: "native-startup-cancellation-controls-unrun",
     deadlineSignaled: phases.some((phase) => phase.deadlineSignaled) || remaining() <= 0,
     output: firstOutput, metadata: input.first.metadata.value }
   if (blocker || !selected) return base
@@ -169,8 +172,16 @@ export const run = Effect.fn("ResearchContinuation.run")(function* (input: {
   const revalidation = yield* selectCheckpoint(input, "checkpoint.json").pipe(Effect.exit)
   const retained = Exit.isSuccess(revalidation) ? revalidation.value : undefined
   const resumable = { ...base, checkpoint: retained }
-  if (!retained) return { ...resumable, blocker: "checkpoint-changed-not-eligible",
-    revalidationFailure: Exit.isFailure(revalidation) ? revalidation.cause : undefined }
+  if (!retained) {
+    const currentRef = AtlasResume.selectedRef(yield* sessions.messages({ sessionID: selected.binding.executionSessionID }), {
+      projectID: selected.logical.projectID, memoryOwner: "jimmy", logicalResumeID: `${input.parent.id}/pilot-R14-resume`, kind: "task", id: selected.logical.taskId,
+    })
+    return { ...resumable,
+      blocker: !currentRef ? "checkpoint-reference-unavailable" : !isDeepStrictEqual(currentRef, selected.receipt.ref)
+        ? "checkpoint-changed-not-eligible" : "checkpoint-revalidation-failed",
+      detail: "Post-interruption checkpoint eligibility/store/source validation failed; reference comparison and available cause are retained.",
+      revalidatedRef: currentRef, revalidationFailure: Exit.isFailure(revalidation) ? revalidation.cause : undefined }
+  }
   // Verify exact authority/project/owner/child again, never allocate a substitute on a mismatch.
   const logical = yield* LogicalTask.read(retained.binding.executionSessionID)
   const children = yield* sessions.children(input.parent.id)
