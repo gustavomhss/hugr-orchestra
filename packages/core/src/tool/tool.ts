@@ -5,6 +5,7 @@ import { Effect, JsonSchema, Schema } from "effect"
 import type { AgentV2 } from "../agent"
 import type { SessionMessage } from "../session/message"
 import type { SessionSchema } from "../session/schema"
+import { ToolModelCapture } from "./model-capture"
 
 export interface Context {
   readonly sessionID: SessionSchema.ID
@@ -58,6 +59,11 @@ type Config<
     readonly input: Schema.Schema.Type<Input>
     readonly output: Output["Encoded"]
   }) => ReadonlyArray<Content>
+  /** Host-only execution provenance; failure declines metadata, never execution. */
+  readonly modelCapture?: (input: {
+    readonly input: Schema.Schema.Type<Input>
+    readonly output: Output["Encoded"]
+  }) => ToolModelCapture.Input | undefined
 }
 
 type Runtime = {
@@ -110,20 +116,31 @@ export function make<
                 ),
               ),
             ),
-            Effect.map(({ output, structured }) => ({
-              structured,
-              content:
-                config.toModelOutput?.({ input, output }).map((part) =>
-                  part.type === "text"
-                    ? { type: "text" as const, text: part.text }
-                    : {
-                        type: "file" as const,
-                        uri: `data:${part.mime};base64,${part.data}`,
-                        mime: part.mime,
-                        name: part.name,
-                      },
-                ) ?? (typeof output === "string" ? [{ type: "text" as const, text: output }] : []),
-            })),
+            Effect.map(({ output, structured }) => {
+              const result = {
+                structured,
+                content:
+                  config.toModelOutput?.({ input, output }).map((part) =>
+                    part.type === "text"
+                      ? { type: "text" as const, text: part.text }
+                      : {
+                          type: "file" as const,
+                          uri: `data:${part.mime};base64,${part.data}`,
+                          mime: part.mime,
+                          name: part.name,
+                        },
+                  ) ?? (typeof output === "string" ? [{ type: "text" as const, text: output }] : []),
+              }
+              try {
+                if (config.modelCapture) {
+                  const capture = config.modelCapture(freezeMetadata(structuredClone({ input, output })))
+                  if (capture) ToolModelCapture.record(result, capture, { sessionID: context.sessionID, callID: context.toolCallID })
+                }
+              } catch {
+                // Optional metadata cannot change the successful native result.
+              }
+              return result
+            }),
           ),
         ),
       ),
@@ -148,6 +165,14 @@ export const withPermission = <Input extends SchemaType<any>, Output extends Sch
 export const permission = (tool: AnyTool, name: string) => runtimeOf(tool).permission ?? name
 export const definition = (name: string, tool: AnyTool) => runtimeOf(tool).definition(name)
 export const settle = (tool: AnyTool, call: ToolCall, context: Context) => runtimeOf(tool).settle(call, context)
+
+// Metadata callbacks receive detached data; never freeze or expose the native payload.
+function freezeMetadata<T>(value: T, seen = new WeakSet<object>()): T {
+  if (value === null || typeof value !== "object" || seen.has(value)) return value
+  seen.add(value)
+  for (const child of Object.values(value)) freezeMetadata(child, seen)
+  return Object.freeze(value)
+}
 
 function runtimeOf(tool: AnyTool) {
   const runtime = runtimes.get(tool)
