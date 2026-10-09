@@ -15,6 +15,9 @@
 #include <poll.h>
 #include <netinet/tcp.h>
 #include <time.h>
+#include <signal.h>
+#include <stdatomic.h>
+#include <sys/resource.h>
 
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "FAIL line %d errno %d\n", __LINE__, errno); exit(9); } } while (0)
 static int port;
@@ -280,6 +283,78 @@ static void raw_alias_race(void) {
     count_eventually(before, "RAW_ALIAS_KEEPERS");
     puts("RAW dup/close race 8x100 with live source anchor OK");
 }
+static _Atomic int cancel_entered, cancel_release;
+struct pending_cancel { int fd, native, closing; };
+static void *queued_operation(void *input) {
+    struct pending_cancel *p = input;
+    struct sockaddr_in in = target();
+    struct sockaddr_un un = {0}; un.sun_family = AF_UNIX; strcpy(un.sun_path, path);
+    un.sun_len = (unsigned char)(offsetof(struct sockaddr_un, sun_path) + strlen(path) + 1);
+    atomic_store(&cancel_entered, 1);
+    while (!atomic_load(&cancel_release)) {}
+    if (p->closing) close(p->fd);
+    else if (p->native) connect(p->fd, (struct sockaddr *)&un, un.sun_len);
+    else connect(p->fd, (struct sockaddr *)&in, sizeof(in));
+    return NULL;
+}
+static void cancel_timeout(int signal) {
+    (void)signal;
+    const char text[] = "CANCEL ALARM: progress blocked\n";
+    write(STDERR_FILENO, text, sizeof(text) - 1); _exit(88);
+}
+static void queued_cancel(int native, int closing, int reuse) {
+    int before = fd_count();
+    struct pending_cancel p = {.fd = socket(native ? AF_UNIX : AF_INET, SOCK_STREAM, 0), .native = native, .closing = closing};
+    CHECK(p.fd >= 0);
+    atomic_store(&cancel_entered, 0); atomic_store(&cancel_release, 0);
+    pthread_t worker; CHECK(pthread_create(&worker, NULL, queued_operation, &p) == 0);
+    while (!atomic_load(&cancel_entered)) {}
+    CHECK(pthread_cancel(worker) == 0);
+    if (reuse) {
+        int file = open("/dev/null", O_RDONLY); CHECK(file >= 0);
+        CHECK(kernel_call(SYS_dup2, file, p.fd) == p.fd); CHECK(close(file) == 0);
+    }
+    atomic_store(&cancel_release, 1);
+    void *status; CHECK(pthread_join(worker, &status) == 0 && status == PTHREAD_CANCELED);
+    fprintf(stderr, "pending cancel join status=PTHREAD_CANCELED; closing fd next\n");
+    signal(SIGALRM, cancel_timeout); alarm(3);
+    if (reuse) {
+        char pathname[1024]; CHECK(fcntl(p.fd, F_GETPATH, pathname) == 0 && strcmp(pathname, "/dev/null") == 0);
+    }
+    if (!closing && !native && !reuse) {
+        // Queued cancellation ran before the kernel connect: the same socket
+        // and aliases remain caller-owned and the route must be retryable.
+        unconnected(p.fd);
+        struct sockaddr_in addr = target(); CHECK(connect(p.fd, (struct sockaddr *)&addr, sizeof(addr)) == 0);
+        family(p.fd, AF_INET); echo(p.fd, "cancel-retry");
+    }
+    close(p.fd);
+    int next = dial(0); echo(next, "cancel-maintenance-progress"); close(next);
+    count_eventually(before, "CANCEL_KEEPERS");
+    alarm(0);
+    puts("QUEUED_CANCEL delivered; close/retry/maintenance/destructor progress OK");
+}
+static void duplicate_minimum(void) {
+    struct rlimit limit; CHECK(getrlimit(RLIMIT_NOFILE, &limit) == 0);
+    if (limit.rlim_cur < 8192) { CHECK(limit.rlim_max >= 8192); limit.rlim_cur = 8192; CHECK(setrlimit(RLIMIT_NOFILE, &limit) == 0); }
+    int before = fd_count(), fd = dial(0);
+    int copy = fcntl(fd, F_DUPFD, 4096); CHECK(copy >= 4096); family(copy, AF_INET); CHECK(close(copy) == 0);
+    copy = fcntl(fd, F_DUPFD_CLOEXEC, 4096); CHECK(copy >= 4096 && fcntl(copy, F_GETFD) == FD_CLOEXEC);
+    family(copy, AF_INET); echo(copy, "fcntl-minimum-4096"); close(copy); close(fd);
+    count_eventually(before, "MINIMUM_KEEPERS");
+    puts("FCNTL dup requested minimum 4096 preserved OK");
+}
+static void established_cancel(void) {
+    int before = fd_count();
+    struct pending_cancel p = {.fd = socket(AF_INET, SOCK_STREAM, 0)}; CHECK(p.fd >= 0);
+    atomic_store(&cancel_release, 1);
+    pthread_t worker; CHECK(pthread_create(&worker, NULL, queued_operation, &p) == 0);
+    void *status; CHECK(pthread_join(worker, &status) == 0 && status == PTHREAD_CANCELED);
+    signal(SIGALRM, cancel_timeout); alarm(3);
+    family(p.fd, AF_INET); echo(p.fd, "established-cancel-real-peer"); close(p.fd);
+    count_eventually(before, "ESTABLISHED_CANCEL_KEEPERS"); alarm(0);
+    puts("ESTABLISHED_CANCEL actual kernel peer/selected port preserved OK");
+}
 int main(int argc, char **argv) {
     CHECK(argc == 3 || argc == 4); port = atoi(argv[1]); path = argv[2];
     if (argc == 4) {
@@ -289,6 +364,13 @@ int main(int argc, char **argv) {
         if (strcmp(argv[3], "unix-control") == 0) { concurrent_connect(1); return 0; }
         if (strcmp(argv[3], "fork-eof") == 0) { fork_eof(); return 0; }
         if (strcmp(argv[3], "raw-race") == 0) { raw_alias_race(); return 0; }
+        if (strcmp(argv[3], "cancel-connect") == 0) { queued_cancel(0, 0, 0); return 0; }
+        if (strcmp(argv[3], "cancel-close") == 0) { queued_cancel(0, 1, 0); return 0; }
+        if (strcmp(argv[3], "cancel-close-reuse") == 0) { queued_cancel(0, 1, 1); return 0; }
+        if (strcmp(argv[3], "cancel-unix-control") == 0) { queued_cancel(1, 0, 0); return 0; }
+        if (strcmp(argv[3], "cancel-unix-close-control") == 0) { queued_cancel(1, 1, 0); return 0; }
+        if (strcmp(argv[3], "dup-minimum") == 0) { duplicate_minimum(); return 0; }
+        if (strcmp(argv[3], "cancel-established") == 0) { established_cancel(); return 0; }
         CHECK(0);
     }
     int before = fd_count();

@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import select
 import shlex
 import shutil
@@ -287,6 +288,38 @@ def main():
             subprocess.run(["go", "build", "-o", str(root / "go-client"), str(SCRIPT / "tcp-proxy-native-client.go")], env={**env, "GOCACHE": str(root / "go-build"), "GOPATH": str(root / "go-path")}, check=True)
         evidence["go_client_hash_before"] = hashlib.sha256((root / "go-client").read_bytes()).hexdigest()
         evidence["compile"] = {"flags": flags, "warnings_fatal": True}
+        # Independent real C caller: Darwin arm64 puts the unnamed fcntl
+        # minimum on the stack, whereas a fixed three-argument callee uses w2.
+        (root / "abi.c").write_text("""#include <fcntl.h>
+int requested_minimum(int fd) { return fcntl(fd, F_DUPFD_CLOEXEC, 4096); }
+int duplicate(int fd, int minimum) { return fcntl(fd, F_DUPFD_CLOEXEC, minimum); }
+int fixed_helper(int fd, int command, int minimum) { return fd + command + minimum; }
+""")
+        subprocess.run(flags + ["-target", "arm64-apple-macos11", "-O1", "-S", str(root / "abi.c"), "-o", str(root / "abi-arm64.s")], check=True)
+        subprocess.run(flags + ["-target", "arm64-apple-macos11", "-O1", "-S", str(root / "adapter.c"), "-o", str(root / "adapter-arm64.s")], check=True)
+        abi = (root / "abi-arm64.s").read_text()
+        assembly = (root / "adapter-arm64.s").read_text()
+
+        def body(text, symbol):
+            assert text.count("_" + symbol + ":") == 1, "missing/ambiguous compiler symbol " + symbol
+            return text.split("_" + symbol + ":", 1)[1].split(".cfi_endproc", 1)[0]
+
+        caller = body(abi, "requested_minimum")
+        dynamic_caller = body(abi, "duplicate")
+        fixed = body(abi, "fixed_helper")
+        entry = " ".join(body(assembly, "tracked_fcntl").split())
+        register = re.search(r"mov\s+(w\d+), #4096", caller)
+        assert register and re.search(r"str\s+" + register[1].replace("w", "x") + r", \[sp\]", caller) and "bl\t_fcntl" in caller, "real 4096 caller not stored at entry sp"
+        assert re.search(r"str\s+x1, \[sp\]", dynamic_caller) and "w2" in fixed, "real variadic/fixed argument control missing"
+        marshal = "ldr w2, [sp]"
+        assert entry.count(marshal) == 1 and entry.index("b _fcntl") < entry.index(marshal) < entry.index("b _dup_fcntl"), "ARM64 dup entry does not marshal stack min while preserving passthrough"
+        bad_arm = source.replace("1: ldr w2, [sp]", "1:")
+        assert bad_arm != source
+        (root / "bad-arm.c").write_text(bad_arm)
+        subprocess.run(flags + ["-target", "arm64-apple-macos11", "-O1", "-S", str(root / "bad-arm.c"), "-o", str(root / "bad-arm64.s")], check=True)
+        assert marshal not in " ".join(body((root / "bad-arm64.s").read_text(), "tracked_fcntl").split()), "ABI mutation did not remove real entry marshal"
+        evidence["arm64_abi"] = {"compiler_control": True, "requested_minimum": 4096, "variadic_argument": "[entry sp]", "fixed_argument": "w2", "mutation_red": True, "restored_green": True, "runtime_verified": False}
+        evidence["pending"] = ["ARM64 runtime execution", "POSIX pre-exec fork-child keeper ownership redesign", "lead repeat of Cassandra positive through changed SOURCE"]
 
         port = listener("loop", "127.0.0.1")
         listener("lan", args.lan, port)
@@ -342,6 +375,20 @@ def main():
             if mode == "fork-eof":
                 assert any(e["listener"] == "broker" and e["event"] == "eof" and e.get("alive") == [True, True] for e in row["events"]), "no broker EOF while both processes alive"
                 assert "FORK EOF both alive; retained-client control; local pins gone OK" in row["out"], row
+        for mode in ["cancel-unix-control", "cancel-unix-close-control", "cancel-connect", "cancel-close", "cancel-close-reuse", "dup-minimum"]:
+            row = run("critical-" + mode, critical + [mode])
+            assert row["code"] == 0, (mode, row["code"], row["out"], row["err"])
+            if mode.startswith("cancel-"):
+                assert "PTHREAD_CANCELED" in row["err"] and "QUEUED_CANCEL delivered" in row["out"], row
+        connect_checkpoint = "int result = connect(fd, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);"
+        assert source.count(connect_checkpoint) == 1
+        established = source.replace(connect_checkpoint, connect_checkpoint + "\n    if (result == 0) { pthread_cancel(pthread_self()); pthread_testcancel(); }")
+        (root / "cancel-established.c").write_text(established)
+        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "cancel-established.dylib"), str(root / "cancel-established.c")], check=True)
+        selected_map = primary + ";1:" + sock.encode().hex()
+        connected = run("cancel-established-real-peer", [critical[0], "1", sock, "cancel-established"], routes=selected_map, helper="cancel-established.dylib")
+        assert connected["code"] == 0 and "ESTABLISHED_CANCEL actual kernel peer/selected port preserved" in connected["out"], (connected["code"], connected["err"])
+        assert any(e.get("hex") == b"established-cancel-real-peer".hex() for e in connected["events"]), "cancellation must not invent a connection"
         shared_route = run("critical-fork-shared-route", [critical[0], "1", sock, "preconnect-fork"], routes=primary + ";1:" + sock.encode().hex())
         assert shared_route["code"] == 0, (shared_route["out"], shared_route["err"])
         positive(run("go-production-acquisition", go, "production"))
@@ -390,15 +437,15 @@ def main():
         state_guard = """    struct sockaddr_un peer = {0};
     socklen_t size = sizeof(peer);
     if (getpeername(fd, (struct sockaddr *)&peer, &size) == 0) {
-        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+        errno = EISCONN; return -1;
     }
-    if (errno != ENOTCONN) { int error = errno; pthread_mutex_unlock(&lock); errno = error; return -1; }
+    if (errno != ENOTCONN) return -1;
     // Publish the route before the kernel makes the shared socket connected:
     // another process can query its peer before this connect call returns.
     // The claim also serializes competing parent/child connects after fork.
     unsigned unclaimed = 0;
     if (!atomic_compare_exchange_strong(p->port, &unclaimed, routes[route].port)) {
-        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+        errno = EISCONN; return -1;
     }
 """
         assert source.count(state_guard) == 1
@@ -406,11 +453,11 @@ def main():
             "if (result == 0) dup2(replacement, fd);",
             "if (result == 0) { dup2(replacement, fd); dup2(replacement, p->keeper); p->handle = identity(fd); }"))
         prune_start = source.index("static int prune(void)")
-        prune_end = source.index("static void *maintain", prune_start)
+        prune_end = source.index("static void cancelled", prune_start)
         pin_close = "if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);"
         assert source[prune_start:prune_end].count(pin_close) == 1
         retain = source[:prune_start] + source[prune_start:prune_end].replace(pin_close, """struct socket_fdinfo refs = {0};
-        if (proc_pidfdinfo(getpid(), records[i].keeper, PROC_PIDFDSOCKETINFO, &refs, sizeof(refs)) == sizeof(refs) && (refs.pfi.fi_status & PROC_FP_SHARED)) continue;
+        if (proc_pidfdinfo(getpid(), records[i].keeper, PROC_PIDFDSOCKETINFO, &refs, sizeof(refs)) == sizeof(refs) && (refs.pfi.fi_status & PROC_FP_SHARED)) { pthread_setcancelstate(cancel_state, NULL); continue; }
         """ + pin_close) + source[prune_end:]
         evidence["blocker_mutations"] = []
         for bug, mutant_source, mode, diagnostic in [
@@ -428,10 +475,40 @@ def main():
                 assert any(e["event"] == "eof" and e.get("alive") == [True, True] for e in restored["events"])
             evidence["blocker_mutations"].append({"bug": bug, "red": True, "restored_green": True, "diagnostic": diagnostic})
             save()
+        evidence["cancellation_mutations"] = []
+        for mode, function, end in [("cancel-close", "tracked_close", "create_socket"), ("cancel-connect", "redirected_connect", "#define ENTRY")]:
+            section = source.index("static int " + function)
+            finish = source.index("static int " + end, section) if not end.startswith("#") else source.index(end, section)
+            region = source[section:finish]
+            assert region.count("pthread_cleanup_push(cancelled, &owned);") == 1 and region.count("pthread_cleanup_pop(0);") == 1
+            mutant = source[:section] + region.replace("pthread_cleanup_push(cancelled, &owned);", "").replace("pthread_cleanup_pop(0);", "") + source[finish:]
+            (root / (mode + ".c")).write_text(mutant)
+            subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / (mode + ".dylib")), str(root / (mode + ".c"))], check=True)
+            broken = run("mutation-" + mode, critical + [mode], helper=mode + ".dylib")
+            assert broken["code"] == 88 and "PTHREAD_CANCELED" in broken["err"] and "CANCEL ALARM: progress blocked" in broken["err"], (mode, broken["code"], broken["err"])
+            restored = run("restored-" + mode, critical + [mode])
+            assert restored["code"] == 0 and "PTHREAD_CANCELED" in restored["err"], (mode, restored["code"], restored["err"])
+            evidence["cancellation_mutations"].append({"mode": mode, "red_watchdog": 88, "restored_green": True})
+            save()
+        # Measure the unresolved ownership constraint rather than claim a
+        # portable post-fork fix: removing all child thread acquisition leaves
+        # no observer for a raw last-close while the child stays alive.
+        scoped = source.replace("static int maintenance_started, stopping;", "static int maintenance_started, stopping, fork_scope;")
+        scoped = scoped.replace("maintenance_started = 0;", "maintenance_started = 0; fork_scope = 1;")
+        scoped = scoped.replace("if (maintenance_started) return 1;", "if (fork_scope || maintenance_started) return 1;")
+        assert scoped != source
+        (root / "no-child-worker.c").write_text(scoped)
+        subprocess.run(flags + ["-dynamiclib", "-pthread", "-o", str(root / "no-child-worker.dylib"), str(root / "no-child-worker.c")], check=True)
+        hooked = run("fork-scope-hooked-positive", critical + ["preconnect-fork"], helper="no-child-worker.dylib")
+        assert hooked["code"] == 0, (hooked["code"], hooked["err"])
+        raw_last = run("fork-scope-raw-last-close-blocker", critical + ["fork-eof"], helper="no-child-worker.dylib")
+        assert raw_last["code"] != 0 and "FORK_KEEPER_COUNT child" in raw_last["err"], (raw_last["code"], raw_last["err"])
+        evidence["fork_scope_control"] = {"child_threads_removed": True, "hooked_child_positive": True, "raw_last_close": "blocked: child identity keeper has no executor", "integration_blocked": True}
         baseline(run("baseline-after", matrix, "baseline"))
         evidence["generated_files"] = [str(p.relative_to(root)) for p in (root / "output").rglob("*") if p.is_file()]
         assert not evidence["generated_files"], evidence["generated_files"]
         evidence["passed"] = True
+        evidence["acceptance_complete"] = False
     except BaseException as error:
         evidence["failure"] = repr(error)
         raise

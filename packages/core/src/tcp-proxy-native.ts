@@ -116,6 +116,27 @@ static uint64_t identity(int fd) {
     return info.psi.soi_so;
 }
 
+// POSIX asynchronous cancellation is not generally safe inside libc APIs.
+// Defer it while the adapter owns its mutex; restore the caller's mode only
+// after unlocking. Blocking close/connect remain real cancellation points.
+struct ownership {
+    int cancel_type;
+    int created;
+    struct record *record;
+    uint64_t handle;
+    unsigned claim;
+};
+static struct ownership acquire(void) {
+    struct ownership owned = { .created = -1 };
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &owned.cancel_type);
+    pthread_mutex_lock(&lock);
+    return owned;
+}
+static void release(struct ownership *owned) {
+    pthread_mutex_unlock(&lock);
+    pthread_setcanceltype(owned->cancel_type, NULL);
+}
+
 static struct record *lookup(int fd) {
     uint64_t handle = identity(fd);
     if (!handle) return NULL;
@@ -154,15 +175,46 @@ static int prune(void) {
     }
     for (unsigned i = 0; i < RECORD_LIMIT; i++) {
         if (!records[i].handle || live[i]) continue;
+        // Internal pin disposal is finite bookkeeping, not the caller's
+        // blocking operation. Commit removal before restoring cancellation.
+        int cancel_state;
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
         if (identity(records[i].keeper) == records[i].handle) close(records[i].keeper);
         munmap(records[i].port, sizeof(*records[i].port));
         records[i].handle = 0;
+        pthread_setcancelstate(cancel_state, NULL);
     }
     return 1;
 }
 
+static void cancelled(void *input) {
+    struct ownership *owned = input;
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    if (owned->claim && owned->record->handle == owned->handle) {
+        // Cancellation can arrive before the syscall or after it connected.
+        // Inspect the pinned socket, never an fd another caller may have reused.
+        struct socket_fdinfo info = {0};
+        int keeper = owned->record->keeper;
+        if (proc_pidfdinfo(getpid(), keeper, PROC_PIDFDSOCKETINFO, &info, sizeof(info)) == sizeof(info) &&
+            info.psi.soi_so == owned->handle && !(info.psi.soi_state & (SOI_S_ISCONNECTED | SOI_S_ISCONNECTING))) {
+            struct sockaddr_un peer = {0}; socklen_t size = sizeof(peer);
+            if (getpeername(keeper, (struct sockaddr *)&peer, &size) < 0 && errno == ENOTCONN) {
+                unsigned claim = owned->claim;
+                atomic_compare_exchange_strong(owned->record->port, &claim, 0);
+            }
+        }
+    }
+    // Only socket() owns a newly allocated client fd. A canceled close/connect
+    // does not transfer caller ownership or justify deleting a foreign fd.
+    if (owned->created >= 0 && identity(owned->created) == owned->handle) close(owned->created);
+    prune();
+    pthread_mutex_unlock(&lock);
+}
+
 static void *maintain(void *unused) {
     (void)unused;
+    // Private worker is stopped and joined by the destructor, never canceled.
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
     pthread_mutex_lock(&lock);
     while (!stopping) {
         prune();
@@ -198,6 +250,8 @@ __attribute__((constructor)) static void loaded(void) {
 }
 __attribute__((destructor)) static void unloaded(void) {
     if (!route_count) return;
+    int cancel_state;
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
     pthread_mutex_lock(&lock);
     stopping = 1;
     pthread_cond_signal(&changed);
@@ -212,6 +266,7 @@ __attribute__((destructor)) static void unloaded(void) {
         records[i].handle = 0;
     }
     pthread_mutex_unlock(&lock);
+    pthread_setcancelstate(cancel_state, NULL);
 }
 static pid_t tracked_fork(void) {
     pid_t result = fork();
@@ -251,19 +306,19 @@ static int connected_route(int fd, struct record *p) {
 static int address(int fd, struct sockaddr *out, socklen_t *size, int remote) {
     if (!route_count) return remote ? getpeername(fd, out, size) : getsockname(fd, out, size);
     int saved = errno;
-    pthread_mutex_lock(&lock);
+    struct ownership owned = acquire();
     struct record *p = lookup(fd);
     if (!p) {
-        pthread_mutex_unlock(&lock);
+        release(&owned);
         errno = saved;
         return remote ? getpeername(fd, out, size) : getsockname(fd, out, size);
     }
     int route = connected_route(fd, p);
     int error = errno;
     if (route < 0 && (remote || error != ENOTCONN)) {
-        pthread_mutex_unlock(&lock); errno = error; return -1;
+        release(&owned); errno = error; return -1;
     }
-    if (!size || (!out && *size)) { pthread_mutex_unlock(&lock); errno = EFAULT; return -1; }
+    if (!size || (!out && *size)) { release(&owned); errno = EFAULT; return -1; }
     struct sockaddr_in value = {0};
     value.sin_len = sizeof(value);
     value.sin_family = AF_INET;
@@ -272,7 +327,7 @@ static int address(int fd, struct sockaddr *out, socklen_t *size, int remote) {
     socklen_t copied = *size < sizeof(value) ? *size : sizeof(value);
     if (copied) memcpy(out, &value, copied);
     *size = sizeof(value);
-    pthread_mutex_unlock(&lock);
+    release(&owned);
     errno = saved;
     return 0;
 }
@@ -283,24 +338,24 @@ static int tracked_close(int fd) {
     // dyld can interpose close during libSystem's own malloc initializer,
     // before our constructor. No locks or allocation at that boundary.
     if (!route_count) return close(fd);
-    pthread_mutex_lock(&lock);
-    int result = close(fd);
-    int saved = errno;
+    struct ownership owned = acquire();
+    int result, saved;
+    pthread_cleanup_push(cancelled, &owned);
+    result = close(fd);
+    saved = errno;
     prune();
-    pthread_mutex_unlock(&lock);
+    pthread_cleanup_pop(0);
+    release(&owned);
     errno = saved;
     return result;
 }
 
-static int tracked_socket(int family, int type, int protocol) {
-    if (!route_count || family != AF_INET || type != SOCK_STREAM || (protocol != 0 && protocol != IPPROTO_TCP))
-        return socket(family, type, protocol);
+static int create_socket(struct ownership *owned) {
     int saved = errno;
-    pthread_mutex_lock(&lock);
-    if (!start_maintenance() || !prune()) { pthread_mutex_unlock(&lock); errno = EPERM; return -1; }
+    if (!start_maintenance() || !prune()) { errno = EPERM; return -1; }
     unsigned slot = 0;
     while (slot < RECORD_LIMIT && records[slot].handle) slot++;
-    if (slot == RECORD_LIMIT) { pthread_mutex_unlock(&lock); errno = ENOBUFS; return -1; }
+    if (slot == RECORD_LIMIT) { errno = ENOBUFS; return -1; }
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     int keeper = -1;
     uint64_t handle = 0;
@@ -314,7 +369,8 @@ static int tracked_socket(int family, int type, int protocol) {
     if (port == MAP_FAILED) goto fail;
     atomic_init(port, 0);
     records[slot] = (struct record){ .handle = handle, .keeper = keeper, .port = port };
-    pthread_mutex_unlock(&lock);
+    owned->created = fd;
+    owned->handle = handle;
     errno = saved;
     return fd;
 fail:
@@ -323,16 +379,34 @@ fail:
         if (fd >= 0) close(fd);
         if (keeper >= 0) close(keeper);
         if (port != MAP_FAILED) munmap(port, sizeof(*port));
-        pthread_mutex_unlock(&lock); errno = error; return -1;
+        errno = error; return -1;
     }
+}
+
+static int tracked_socket(int family, int type, int protocol) {
+    if (!route_count || family != AF_INET || type != SOCK_STREAM || (protocol != 0 && protocol != IPPROTO_TCP))
+        return socket(family, type, protocol);
+    struct ownership owned = acquire();
+    int result, saved, cancel_state;
+    pthread_cleanup_push(cancelled, &owned);
+    // Protect fd/keeper/mapping publication and allocation-failure cleanup.
+    // This bounded section contains no connect, accept or blocking I/O.
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cancel_state);
+    result = create_socket(&owned);
+    saved = errno;
+    pthread_setcancelstate(cancel_state, NULL);
+    pthread_cleanup_pop(0);
+    release(&owned);
+    errno = saved;
+    return result;
 }
 
 static int tracked_bind(int fd, const struct sockaddr *addr, socklen_t len) {
     if (!route_count) return bind(fd, addr, len);
     int saved = errno;
-    pthread_mutex_lock(&lock);
+    struct ownership owned = acquire();
     int virtual = lookup(fd) != NULL;
-    pthread_mutex_unlock(&lock);
+    release(&owned);
     if (virtual) { errno = EPERM; return -1; }
     errno = saved;
     return bind(fd, addr, len);
@@ -340,26 +414,35 @@ static int tracked_bind(int fd, const struct sockaddr *addr, socklen_t len) {
 
 static int tracked_dup(int fd) {
     if (!route_count) return dup(fd);
-    pthread_mutex_lock(&lock);
-    int result = dup(fd), saved = errno;
-    pthread_mutex_unlock(&lock);
+    struct ownership owned = acquire();
+    int result, saved;
+    pthread_cleanup_push(cancelled, &owned);
+    result = dup(fd); saved = errno;
+    pthread_cleanup_pop(0);
+    release(&owned);
     errno = saved;
     return result;
 }
 static int tracked_dup2(int fd, int dest) {
     if (!route_count) return dup2(fd, dest);
-    pthread_mutex_lock(&lock);
-    int result = dup2(fd, dest), saved = errno;
+    struct ownership owned = acquire();
+    int result, saved;
+    pthread_cleanup_push(cancelled, &owned);
+    result = dup2(fd, dest); saved = errno;
     prune();
-    pthread_mutex_unlock(&lock);
+    pthread_cleanup_pop(0);
+    release(&owned);
     errno = saved;
     return result;
 }
 __attribute__((used, noinline)) static int dup_fcntl(int fd, int command, int minimum) {
     if (!route_count) return fcntl(fd, command, minimum);
-    pthread_mutex_lock(&lock);
-    int result = fcntl(fd, command, minimum), saved = errno;
-    pthread_mutex_unlock(&lock);
+    struct ownership owned = acquire();
+    int result, saved;
+    pthread_cleanup_push(cancelled, &owned);
+    result = fcntl(fd, command, minimum); saved = errno;
+    pthread_cleanup_pop(0);
+    release(&owned);
     errno = saved;
     return result;
 }
@@ -371,18 +454,18 @@ __attribute__((naked)) static int tracked_fcntl(int fd __attribute__((unused)), 
 #if defined(__x86_64__)
     __asm__("cmpl $0, %esi\n je 1f\n cmpl $67, %esi\n je 1f\n jmp _fcntl\n 1: jmp _dup_fcntl");
 #elif defined(__aarch64__)
-    __asm__("cmp w1, #0\n b.eq 1f\n cmp w1, #67\n b.eq 1f\n b _fcntl\n 1: b _dup_fcntl");
+    // Darwin arm64 variadic arguments start at the caller's stack pointer;
+    // dup_fcntl has a fixed signature and consumes its third argument in w2.
+    __asm__("cmp w1, #0\n b.eq 1f\n cmp w1, #67\n b.eq 1f\n b _fcntl\n 1: ldr w2, [sp]\n b _dup_fcntl");
 #else
 #error Unsupported Darwin fcntl ABI
 #endif
 }
 
-static int redirected_connect(int fd, const struct sockaddr *addr, socklen_t len) {
+static int connect_socket(int fd, const struct sockaddr *addr, socklen_t len, struct ownership *owned) {
     int saved = errno;
-    if (!route_count) return connect(fd, addr, len);
-    pthread_mutex_lock(&lock);
     struct record *p = lookup(fd);
-    if (!p) { pthread_mutex_unlock(&lock); errno = saved; return connect(fd, addr, len); }
+    if (!p) { errno = ENOTSOCK; return -1; }
     if (!addr || len < sizeof(struct sockaddr_in) || addr->sa_family != AF_INET) goto denied;
     const struct sockaddr_in *in = (const struct sockaddr_in *)addr;
     if (in->sin_addr.s_addr != htonl(INADDR_LOOPBACK)) goto denied;
@@ -392,25 +475,41 @@ static int redirected_connect(int fd, const struct sockaddr *addr, socklen_t len
     struct sockaddr_un peer = {0};
     socklen_t size = sizeof(peer);
     if (getpeername(fd, (struct sockaddr *)&peer, &size) == 0) {
-        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+        errno = EISCONN; return -1;
     }
-    if (errno != ENOTCONN) { int error = errno; pthread_mutex_unlock(&lock); errno = error; return -1; }
+    if (errno != ENOTCONN) return -1;
     // Publish the route before the kernel makes the shared socket connected:
     // another process can query its peer before this connect call returns.
     // The claim also serializes competing parent/child connects after fork.
     unsigned unclaimed = 0;
     if (!atomic_compare_exchange_strong(p->port, &unclaimed, routes[route].port)) {
-        pthread_mutex_unlock(&lock); errno = EISCONN; return -1;
+        errno = EISCONN; return -1;
     }
+    owned->record = p;
+    owned->handle = p->handle;
+    owned->claim = routes[route].port;
     // Connect the socket created at socket(), never replace a single alias.
     int result = connect(fd, (const struct sockaddr *)&routes[route].peer, routes[route].peer.sun_len);
     int error = result < 0 ? errno : saved;
     if (result < 0 && error != EINPROGRESS) atomic_store(p->port, 0);
-    pthread_mutex_unlock(&lock);
     errno = error;
     return result;
 denied:
-    pthread_mutex_unlock(&lock); errno = EPERM; return -1;
+    errno = EPERM; return -1;
+}
+static int redirected_connect(int fd, const struct sockaddr *addr, socklen_t len) {
+    if (!route_count) return connect(fd, addr, len);
+    int saved = errno;
+    struct ownership owned = acquire();
+    if (!lookup(fd)) { release(&owned); errno = saved; return connect(fd, addr, len); }
+    int result;
+    pthread_cleanup_push(cancelled, &owned);
+    result = connect_socket(fd, addr, len, &owned);
+    saved = errno;
+    pthread_cleanup_pop(0);
+    release(&owned);
+    errno = saved;
+    return result;
 }
 
 #define ENTRY(replacement, original) { (const void *)(replacement), (const void *)(original) }
