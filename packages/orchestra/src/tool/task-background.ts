@@ -11,6 +11,7 @@ import type { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import type { BackendResult } from "@/maestro/backend-result"
 import type { SeatWork } from "@/maestro/backend-work"
 import { UpstreamSettlement } from "@/maestro/upstream-settlement"
+import { UpstreamResult } from "@/maestro/upstream-result"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { TaskPromptOps } from "./task"
@@ -140,9 +141,10 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
       Effect.provideService(FileSystem.FileSystem, input.fs),
       Effect.onExit((exit) => Effect.gen(function* () {
         const captured = dispatch.capture
+        const protectedObservation = captured?.workResult?.schema === UpstreamResult.SCHEMA
         const failure = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
         const detail = failure instanceof Error ? failure.message.slice(0, 4096) : "Task host ended after returned assistant"
-        const canonical = captured?.workResult && Exit.isFailure(exit)
+        const canonical = protectedObservation && captured?.workResult && Exit.isFailure(exit)
           ? yield* input.observe(captured.workResult) : captured?.workResult
         const unfavorable = canonical?.terminal.reason === "failed" || canonical?.terminal.reason === "interrupted"
         const settled: UpstreamSettlement.Capture | undefined = captured && Exit.isFailure(exit) ? {
@@ -172,8 +174,9 @@ export const make = Effect.fn("TaskBackground.make")(function* (input: Input) {
           const tracked = input.work.attach({}).workResult
           if (!tracked) return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation tracker missing" })
           const snapshot = structuredClone(tracked)
-          yield* input.publishObservation(snapshot)
-          const retained = yield* input.observe(snapshot)
+          // Only upstream returns carry protected authorship/receipts; other seats retain generic notice delivery.
+          if (protectedObservation) yield* input.publishObservation(snapshot)
+          const retained = protectedObservation ? yield* input.observe(snapshot) : snapshot
           yield* Deferred.succeed(dispatchDone, { ...settled, workResult: retained })
           return
         }
