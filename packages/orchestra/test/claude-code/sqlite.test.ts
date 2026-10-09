@@ -6,9 +6,23 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ClaudeCodeStorage } from "@/claude-code/storage"
 import { testEffect } from "../lib/effect"
-import { TestInstance } from "../fixture/fixture"
+import { TestInstance, tmpdir } from "../fixture/fixture"
+import { verify } from "../fixture/lean-package/sqlite"
 
 const it = testEffect(LayerNode.compile(FSUtil.node))
+it.instance("private SQLite Bun transaction rollback, locks, migration and path checks", () => Effect.gen(function* () {
+  const instance = yield* TestInstance
+  yield* Effect.promise(() => verify(instance.directory))
+}))
+test("private SQLite Node transaction rollback, locks, migration and path checks with Bun global", async () => {
+  await using tmp = await tmpdir()
+  const built = await Bun.build({ target: "node", format: "esm", entrypoints: [path.join(import.meta.dir, "../fixture/lean-package/sqlite.ts")], outdir: tmp.path, naming: "probe.mjs" })
+  if (!built.success) throw new AggregateError(built.logs, "Private Node SQLite probe build failed")
+  const child = Bun.spawn(["node", path.join(tmp.path, "probe.mjs"), tmp.path], { stdout: "pipe", stderr: "pipe", timeout: 60000, killSignal: "SIGKILL" })
+  const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+  if (code !== 0 || child.signalCode) throw new Error(`Private Node SQLite probe ${code}/${child.signalCode}: ${stdout}\n${stderr}`)
+  expect(stdout).toContain("NODE_PRIVATE_SQLITE_OK")
+}, 120000)
 const stateSchema = Schema.Struct({ owner: Schema.Literal("child-process-test"), updates: Schema.mutable(Schema.Array(Schema.String)) })
 const decode = (text: string) => Schema.decodeUnknownSync(stateSchema)(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(text))
 it.instance("SQLite retains both acknowledged child-process writes when A resumes after B commits", () => Effect.gen(function* () {
