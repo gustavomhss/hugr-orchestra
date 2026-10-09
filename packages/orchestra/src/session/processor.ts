@@ -176,10 +176,10 @@ const layer = Layer.effect(
             status: "completed",
             input: match.part.state.input,
             output: output.output,
-             metadata: SessionMessageUpdater.taskMetadata(match.part.state.metadata ?? {}, output.metadata, {
-               sessionID: match.part.sessionID, messageID: match.part.messageID, callID: match.part.callID,
-               tool: match.part.tool, input: match.part.state.input,
-             }),
+            metadata: SessionMessageUpdater.taskMetadata(match.part.state.metadata ?? {}, output.metadata, {
+              sessionID: match.part.sessionID, messageID: match.part.messageID, callID: match.part.callID,
+              tool: match.part.tool, input: match.part.state.input,
+            }),
             title: output.title,
             time: { start: match.part.state.time.start, end: Date.now() },
             attachments: output.attachments,
