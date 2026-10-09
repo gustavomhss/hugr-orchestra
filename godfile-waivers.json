@@ -439,10 +439,10 @@
       "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 16592,
-      "reason": "@hey-api/OpenAPI generated V2 schema output; splitting requires generator redesign. Regenerated for the combined Relay, behavior, pull request, schedule routes and relay.hook.decided event.",
-      "authorizedBy": "owner (gustavomhss): generated-code waiver raises authorized 2026-10-06; regenerated for the Relay HttpApi and the relay.hook.decided event",
-      "authorizedAt": "2026-10-06"
+      "maximumLines": 16598,
+      "reason": "@hey-api/OpenAPI generated SDK schema output. Shared V1 admission/transition components reduce duplicate envelopes; owner approved 6 additional LOC for the regenerated V1 prompt-context contracts.",
+      "authorizedBy": "owner (gustavomhss), explicit approval: Autorizar 16598 LOC",
+      "authorizedAt": "2026-10-08"
     }
   }
 }
