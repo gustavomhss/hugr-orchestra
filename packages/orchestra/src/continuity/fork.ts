@@ -279,7 +279,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   }
   const user: SessionV1.User = {
     id: MessageID.ascending(), sessionID, role: "user", agent: agent.name,
-    model: { ...parent.model }, time: { created: Date.now() },
+    model: { ...parent.model, providerID: model.providerID, modelID: model.id }, time: { created: Date.now() },
   }
   const first: LLM.StreamInput = replayed ?? {
     user, agent, permission: agent.permission, sessionID, parentSessionID: captured.sessionID,

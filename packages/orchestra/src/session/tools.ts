@@ -57,6 +57,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   bypassAgentCheck: boolean
   messages: SessionV1.WithParts[]
   promptOps: TaskPromptOps
+  canRecall?: () => boolean
 }) {
   const tools: Record<string, AITool> = {}
   const run = yield* EffectBridge.make()
@@ -97,7 +98,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     abort: options.abortSignal!,
     messageID: input.processor.message.id,
     callID: options.toolCallId,
-    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps },
+    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps, canRecall: input.canRecall?.() === true },
     agent: input.agent.name,
     agentID: input.agent.id,
     messages: input.messages,
