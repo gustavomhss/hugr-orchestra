@@ -4,6 +4,8 @@ import { Event } from "./event"
 import { Schema } from "effect"
 import { NonNegativeInt, PositiveInt } from "./schema"
 import { MaestroContext } from "./maestro-context"
+import { RelayArm } from "./relay-arm"
+import { optional } from "./schema"
 
 export namespace Approval {
   export const Presented = Event.define({
@@ -184,6 +186,9 @@ export namespace Admission {
 }
 
 export namespace PlanRevision {
+  // The upstream-owned RecordedV3 producer spreads these fields. Keep legacy durable versions byte-compatible.
+  export const WorkflowFields = { workflowBinding: optional(RelayArm.WorkflowDefinition) }
+
   const Field = Schema.Struct({
     value: Schema.String,
     source: Schema.Literals(["stakeholder", "maestro", "orientation"]),
@@ -540,6 +545,17 @@ export namespace Dispatch {
 }
 
 export namespace Task {
+  export const WorkflowBound = Event.define({
+    type: "maestro.task.workflow_bound",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      binding: RelayArm.WorkflowBinding,
+    },
+  })
+  export type WorkflowBound = typeof WorkflowBound.Type
+
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
   export const Bound = Event.define({
@@ -581,4 +597,5 @@ export const Definitions = Event.inventory(
   Dispatch.Reserved,
   Dispatch.ReservedV2,
   Task.Bound,
+  Task.WorkflowBound,
 )
