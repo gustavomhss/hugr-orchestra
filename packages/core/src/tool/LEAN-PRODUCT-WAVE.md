@@ -12,7 +12,7 @@ declare unavailable metrics; they do not claim successful collection or totals.
 - Persist one namespaced `ToolPart.state.metadata.lean` Decision only after final
   selected output. Metadata flows through existing SessionProcessor and SDK's
   unknown metadata map; no hand-edit generated DTO or Core runtime import in UI.
-- Owner includes actual placement directory/Session/call; model identity is actual
+- Owner includes actual native project/repository ID and placement directory/Session/call; model identity is actual
   selected provider/model, not parsed command or user-claimed evidence. Metrics
   must contain no raw command, output, credentials or transcript.
 - Whole selected text UTF-8 byte delta exact. Tokens initially use existing
@@ -22,8 +22,13 @@ declare unavailable metrics; they do not claim successful collection or totals.
   exit-zero shell capture; unverified calls cannot imply native source facts.
 - Scope is standard registry calls, not missing MCP/SDK/hosted calls. Disabled,
   missing capability, unsafe mapping, processor/budget refusal get honest labels.
-- Aggregate unique persisted location/session/call identity; reject invalid records
-  and foreign caller location/session. Identical duplicates count once; conflicting duplicates
+- Primary aggregate scope is actual caller project/repository ID, not a reducer profile.
+  Orchestra profile and filter profile are separately named dimensions; missing
+  Orchestra profile evidence stays absent, never guessed from unrelated App Dock profile.
+  Optional Session/location filters narrow a project view; project-only aggregate
+  includes that project's worktrees/Sessions without mixing another repository.
+- Aggregate unique persisted project/location/session/call identity; reject invalid records
+  and foreign caller project or requested profile/Session/location. Identical duplicates count once; conflicting duplicates
   are not summed into savings. Replay/retry must not increase a total.
 - Loaded browser history summaries are explicitly `loaded-history`, not falsely
   whole-Session totals. Complete-history applies only to an actually complete
