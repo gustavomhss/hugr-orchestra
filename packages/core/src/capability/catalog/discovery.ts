@@ -96,7 +96,13 @@ type Envelope = Readonly<{
   catalogGeneration: number
   coverage: "complete" | "partial"
 }>
-type Visibility = readonly Readonly<{ tool: Envelope["tools"][number]; effect: "allow" | "ask" }>[]
+type DisclosureDecision = Readonly<{ tool: Envelope["tools"][number]; approved: boolean }>
+type Visibility = readonly Readonly<{
+  tool: Envelope["tools"][number]
+  allowed: boolean
+  effect: "allow" | "ask" | "deny"
+  configured: "allow" | "ask" | "deny"
+}>[]
 
 export function make(options: Options) {
   return Effect.gen(function* () {
@@ -152,18 +158,11 @@ export function make(options: Options) {
       return { binding, canonical, resolution, catalog }
     })
     const visibility = Effect.fnUntraced(function* (
-      context: Tool.Context, binding: CapabilityInvocation.Binding, envelope: Envelope,
-      selection: { provider: string; connectionID: Capability.ConnectionID; targetID: Capability.TargetID }, authorize: boolean,
+      context: Tool.Context, binding: CapabilityInvocation.Binding, decisions: readonly DisclosureDecision[],
+      selection: { provider: string; connectionID: Capability.ConnectionID; targetID: Capability.TargetID },
     ) {
-      return (yield* Effect.forEach(envelope.tools, (tool) => Effect.gen(function* () {
-        const selected = [...resources(selection), operationResource(selection.provider, tool.name)]
-        if (authorize) {
-          const allowed = yield* policy.assert(context, { action: disclosureAction, resources: selected }).pipe(
-            Effect.as(true), Effect.catchTag("Capability.Failure", (error) =>
-              error.code === "target_denied" ? Effect.succeed(false) : Effect.fail(error)),
-          )
-          if (!allowed) return undefined
-        }
+      return yield* Effect.forEach(decisions, (decision) => Effect.gen(function* () {
+        const selected = [...resources(selection), operationResource(selection.provider, decision.tool.name)]
         const captured = selected.map((resource) => PermissionV2.evaluate(disclosureAction, resource,
           binding.nativeDenyFloor.filter((rule) => rule.effect === "deny")).effect === "deny" ? "deny"
           : PermissionV2.evaluate(disclosureAction, resource, binding.effectiveRules).effect)
@@ -171,31 +170,46 @@ export function make(options: Options) {
           action: disclosureAction, resources: selected }).pipe(
           Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("invocation_binding_mismatch"))),
         )
-        if (captured.includes("deny") || current === "deny") return undefined
-        return { tool, effect: current === "ask" || captured.includes("ask") ? "ask" as const : "allow" as const }
-      }))).filter((item) => item !== undefined)
+        const effect = captured.includes("deny") || current === "deny" ? "deny" as const
+          : current === "ask" || captured.includes("ask") ? "ask" as const : "allow" as const
+        return { tool: decision.tool, allowed: decision.approved && effect !== "deny", effect, configured: current }
+      }))
     })
     const visibleCatalog = Effect.fnUntraced(function* (
       context: Tool.Context, binding: CapabilityInvocation.Binding, envelope: Envelope,
-      selection: { provider: string; connectionID: Capability.ConnectionID; targetID: Capability.TargetID },
+      resolution: CapabilityConnections.Resolution,
     ) {
-      const permitted = yield* visibility(context, binding, envelope, selection, true)
-      // Individual schema shape, bounds and hashes are consulted only after operation disclosure policy.
-      const tools = permitted.map((item): VendorTool | Capability.Failure => {
-        const inputSchema = CapabilityVendorSchema.snapshot(item.tool.source.inputSchema)
-        const outputSchema = item.tool.source.outputSchema === undefined ? undefined : CapabilityVendorSchema.snapshot(item.tool.source.outputSchema)
-        if (inputSchema instanceof Capability.Failure || outputSchema instanceof Capability.Failure) return failure("unsupported_schema")
-        return Object.freeze({ name: item.tool.name, summary: item.tool.summary, inputSchema,
-          ...(outputSchema === undefined ? {} : { outputSchema }) })
-      })
-      const error = tools.find((tool) => tool instanceof Capability.Failure)
-      if (error instanceof Capability.Failure) return yield* error
-      const visible = tools.filter((tool): tool is VendorTool => !(tool instanceof Capability.Failure))
-      return { tools: visible, visibilityHash: visibilityHash(binding, permitted), catalogHash: CapabilityVendorSchema.hash({
-        generation: envelope.catalogGeneration, coverage: envelope.coverage,
-        tools: visible.map((tool) => ({ name: tool.name, summary: tool.summary, inputSchema: tool.inputSchema,
-          ...(tool.outputSchema === undefined ? {} : { outputSchema: tool.outputSchema }) })),
-      }) }
+      const selection = { provider: resolution.connection.provider, connectionID: resolution.connection.id, targetID: resolution.target.id }
+      const permit = yield* policy.authorize(context, { action: disclosureAction, resources: [disclosureAction, ...resources(selection)] })
+      // Finish every approval before consulting any individual schema. A declined ask is a per-call
+      // decision, not a configured deny, and must never be resurrected by read-only reassessment.
+      const decisions = yield* Effect.forEach(envelope.tools, (tool) => policy.assert(context, {
+        action: disclosureAction, resources: [...resources(selection), operationResource(selection.provider, tool.name)],
+      }).pipe(Effect.as(true), Effect.catchTag("Capability.Failure", (error) =>
+        error.code === "target_denied" ? Effect.succeed(false) : Effect.fail(error)),
+        Effect.map((approved) => ({ tool, approved })),
+      ))
+      return yield* policy.commit(permit, (tx) => Effect.gen(function* () {
+        yield* checkSelection(tx, context, binding.owner, resolution)
+        const current = yield* visibility(context, binding, decisions, selection)
+        // Actor/private-root gate holds reassessment and schema copying in one stable transition.
+        // Revocation while another operation waited for approval cannot become a schema oracle.
+        const tools = current.filter((item) => item.allowed).map((item): VendorTool | Capability.Failure => {
+          const inputSchema = CapabilityVendorSchema.snapshot(item.tool.source.inputSchema)
+          const outputSchema = item.tool.source.outputSchema === undefined ? undefined : CapabilityVendorSchema.snapshot(item.tool.source.outputSchema)
+          if (inputSchema instanceof Capability.Failure || outputSchema instanceof Capability.Failure) return failure("unsupported_schema")
+          return Object.freeze({ name: item.tool.name, summary: item.tool.summary, inputSchema,
+            ...(outputSchema === undefined ? {} : { outputSchema }) })
+        })
+        const error = tools.find((tool) => tool instanceof Capability.Failure)
+        if (error instanceof Capability.Failure) return yield* error
+        const visible = tools.filter((tool): tool is VendorTool => !(tool instanceof Capability.Failure))
+        return { permit, decisions, tools: visible, visibilityHash: visibilityHash(binding, current), catalogHash: CapabilityVendorSchema.hash({
+          generation: envelope.catalogGeneration, coverage: envelope.coverage,
+          tools: visible.map((tool) => ({ name: tool.name, summary: tool.summary, inputSchema: tool.inputSchema,
+            ...(tool.outputSchema === undefined ? {} : { outputSchema: tool.outputSchema }) })),
+        }) }
+      })).pipe(Effect.catchTag("SqlError", () => Effect.fail(failure("connection_unavailable"))))
     })
     const compile = Effect.fnUntraced(function* (tool: VendorTool) {
       const time = now()
@@ -235,7 +249,7 @@ export function make(options: Options) {
       const acquired = yield* acquire(supplied, value, materialization)
       const selection = { provider: value.provider, connectionID: acquired.resolution.connection.id,
         targetID: acquired.resolution.target.id }
-      const visible = yield* visibleCatalog(supplied, binding, acquired.catalog, selection)
+      const visible = yield* visibleCatalog(supplied, binding, acquired.catalog, acquired.resolution)
       const scope: CapabilityCursors.Scope = {
         ...preflight, ...selection,
         connectionGeneration: acquired.resolution.connection.generation, targetGeneration: acquired.resolution.target.generation,
@@ -255,16 +269,15 @@ export function make(options: Options) {
         catalogGeneration: scope.catalogGeneration, schemaHash: item.validator.schemaHash,
         inputSchema: item.validator.inputSchema, outputSchema: item.validator.outputSchema, operationID: item.tool.name,
       }])
+      const pending: { records: readonly CapabilityDescriptors.DescriptorRecord[]; cursor?: string } = { records: [] }
       return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         // Reserve actual cursor capacity before descriptor issuance. Pending token remains host-only.
         const cursor = offset + page.length < matches.length ? yield* cursors.issue(scope, offset + page.length) : undefined
-        const pending: { records: readonly CapabilityDescriptors.DescriptorRecord[] } = { records: [] }
+        pending.cursor = cursor
         return yield* restore(Effect.gen(function* () {
-          const permit = yield* policy.authorize(supplied, { action: disclosureAction,
-            resources: [...resources(scope), ...page.map((item) => operationResource(value.provider, item.tool.name))] })
-          const operations = yield* policy.commit(permit, (tx) => Effect.gen(function* () {
+          const operations = yield* policy.commit(visible.permit, (tx) => Effect.gen(function* () {
             yield* checkSelection(tx, supplied, binding.owner, acquired.resolution)
-            const current = yield* visibility(supplied, binding, acquired.catalog, selection, false)
+            const current = yield* visibility(supplied, binding, visible.decisions, selection)
             if (visibilityHash(binding, current) !== scope.visibilityHash) return yield* failure("stale_descriptor")
             const canonical = identity(value.provider, materialization)
             if (canonical instanceof Capability.Failure) return yield* canonical
@@ -318,12 +331,13 @@ export function make(options: Options) {
             return Effect.succeed({ operations, coverage: acquired.catalog.coverage, catalogGeneration: acquired.catalog.catalogGeneration,
               ...(cursor === undefined ? {} : { cursor }) })
           })
-        })).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
-          if (cursor !== undefined) yield* cursors.remove(cursor)
-          yield* Effect.forEach(pending.records, (record) => descriptors.remove(record.ref), { discard: true })
-          pending.records.forEach((record) => locators.delete(record.ref.id))
-        }) : Effect.void))
-      }))
+        }))
+      })).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
+        // This observer encloses the mask itself, including interruption delivered at restoration.
+        if (pending.cursor !== undefined) yield* cursors.remove(pending.cursor)
+        yield* Effect.forEach(pending.records, (record) => descriptors.remove(record.ref), { discard: true })
+        pending.records.forEach((record) => locators.delete(record.ref.id))
+      }) : Effect.void))
     })
 
     const describe = Effect.fn("CapabilityDiscovery.describe")(function* (
@@ -331,6 +345,7 @@ export function make(options: Options) {
     ): Effect.fn.Return<Description, Capability.Failure> {
       const supplied = { ...context }
       const binding = yield* CapabilityInvocation.require(supplied, placement)
+      yield* policy.assert(supplied, { action: disclosureAction, resources: [disclosureAction] })
       const parsed = Schema.decodeUnknownOption(Capability.DescriptorRef)(ref)
       if (Option.isNone(parsed)) return yield* failure("stale_descriptor")
       const value = { ...parsed.value }
@@ -344,8 +359,7 @@ export function make(options: Options) {
       const acquired = yield* acquire(supplied, { provider: locator.provider, connectionID: value.connectionID,
         targetID: value.targetID }, materialization)
       const visible = yield* visibleCatalog(supplied, binding,
-        { ...acquired.catalog, tools: acquired.catalog.tools.filter((tool) => tool.name === locator.name) }, { provider: locator.provider,
-        connectionID: value.connectionID, targetID: value.targetID })
+        { ...acquired.catalog, tools: acquired.catalog.tools.filter((tool) => tool.name === locator.name) }, acquired.resolution)
       const tool = visible.tools.find((tool) => tool.name === locator.name)
       if (!tool) return yield* failure("stale_descriptor")
       const validator = yield* compile(tool)
@@ -422,7 +436,8 @@ function sameRef(left: Capability.DescriptorRef, right: Capability.DescriptorRef
 function visibilityHash(binding: CapabilityInvocation.Binding, visible: Visibility) {
   const rules = (rules: PermissionV2.Ruleset) => rules.map((rule) => ({ action: rule.action, resource: rule.resource, effect: rule.effect }))
   return CapabilityVendorSchema.hash({ captured: rules(binding.effectiveRules), nativeFloor: rules(binding.nativeDenyFloor),
-    visible: visible.map((item) => ({ name: item.tool.name, effect: item.effect })) })
+    configured: visible.map((item) => ({ name: item.tool.name, effect: item.configured })),
+    visible: visible.filter((item) => item.allowed).map((item) => ({ name: item.tool.name, effect: item.effect })) })
 }
 
 // Recheck authoritative selection in the disclosure commit, closing retarget/binding races after transport.

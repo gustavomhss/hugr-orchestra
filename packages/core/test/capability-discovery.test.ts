@@ -212,7 +212,7 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(yield* Ref.get(f.calls)).toHaveLength(after)
     yield* CapabilityPolicyFixture.setRules([{ action: CapabilityDiscovery.disclosureAction, resource: "*", effect: "deny" }])
     yield* expectCode(f.find(), "target_denied")
-    yield* expectCode(f.describe({ ...ref(first), id: Capability.DescriptorID.create() }), "stale_descriptor")
+    yield* expectCode(f.describe({ ...ref(first), id: Capability.DescriptorID.create() }), "target_denied")
     expect(yield* Ref.get(f.calls)).toHaveLength(after)
   }))
 
@@ -697,4 +697,123 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(retry.operations).toHaveLength(2)
     expect(retry.cursor).toBeUndefined()
   }))
+
+  it.live("describe validates persisted root before parsing or probing existing and guessed refs", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const reads = { credentials: 0 }
+    const tracer = Tracer.make({ span: (options) => {
+      if (options.name === "Credential.get") reads.credentials++
+      return new Tracer.NativeSpan(options)
+    } })
+    const first = yield* f.find().pipe(Effect.withTracer(tracer))
+    expect(reads.credentials).toBeGreaterThan(0)
+    reads.credentials = 0
+    const refs = [ref(first), { ...ref(first), id: Capability.DescriptorID.create() }, { ...ref(first), schemaHash: "malformed" }]
+    yield* Effect.forEach([{ message: false }, { part: false }], (options) => Effect.gen(function* () {
+      const missing = yield* CapabilityPolicyFixture.fixture(options)
+      yield* CapabilityPolicyFixture.setRules(allow)
+      yield* Effect.forEach(refs, (value) => expectCode(CapabilityInvocation.withContext({ ...missing.binding, effectiveRules: allow },
+        f.discovery.describe(missing.context, value, f.materialization)).pipe(Effect.withTracer(tracer)), "invocation_binding_mismatch"))
+    }))
+    yield* f.events.publish(SessionEvent.Tool.Called, { sessionID: f.context.sessionID,
+      assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID, tool: "service_call",
+      input: {}, provider: { executed: false }, timestamp: CapabilityPolicyFixture.timestamp })
+    yield* f.events.publish(SessionEvent.Tool.Success, { sessionID: f.context.sessionID,
+      assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID,
+      structured: {}, content: [], provider: { executed: false }, timestamp: CapabilityPolicyFixture.timestamp })
+    yield* Effect.forEach(refs, (value) => expectCode(f.describe(value).pipe(Effect.withTracer(tracer)), "invocation_binding_mismatch"))
+    expect(reads.credentials).toBe(0)
+    expect(yield* Ref.get(f.calls)).toHaveLength(1)
+    expect(yield* f.permissions.list()).toEqual([])
+  }))
+
+  it.live("declined operation ask stays absent while allowed pages and cursor continuation succeed", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* CapabilityPolicyFixture.setRules([...allow,
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:get_project", effect: "ask" },
+    ])
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const first = yield* f.find().pipe(Effect.result, Effect.forkChild)
+    const asked = yield* Deferred.await(observation.first)
+    expect(asked.resources).toContain("example:get_project")
+    yield* f.permissions.reply({ requestID: asked.id, reply: "reject" })
+    const result = yield* Fiber.join(first)
+    expect(result._tag).toBe("Success")
+    if (result._tag !== "Success") return yield* result.failure
+    expect(result.success.operations.map((operation) => operation.name)).toEqual(["list_projects"])
+    const nextObservation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const next = yield* f.find({ ...request, cursor: cursor(result.success) }).pipe(Effect.result, Effect.forkChild)
+    const nextAsked = yield* Deferred.await(nextObservation.first)
+    yield* f.permissions.reply({ requestID: nextAsked.id, reply: "reject" })
+    const continued = yield* Fiber.join(next)
+    expect(continued._tag).toBe("Success")
+    if (continued._tag !== "Success") return yield* continued.failure
+    expect(continued.success.operations.map((operation) => operation.name)).toEqual(["create_project"])
+    expect(continued.success.cursor).toBeUndefined()
+    expect(continued.success.coverage).toBe("complete")
+    expect(yield* Ref.get(observation.count)).toBe(2)
+    expect(yield* f.permissions.list()).toEqual([])
+  }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("revocation during later approval excludes malformed schema before gated schema consultation", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const consulted = { schemaReads: 0 }
+    const first: CapabilityDiscovery.VendorTool = { name: "list_projects", summary: "Previously allowed",
+      inputSchema: { enum: Array.from({ length: 5000 }, (_, n) => n) } }
+    const malformed = first.inputSchema
+    Object.defineProperty(first, "inputSchema", { enumerable: true, get: () => {
+      consulted.schemaReads++
+      return malformed
+    } })
+    yield* Ref.set(f.list, { tools: [first, tools[1]], catalogGeneration: 1, coverage: "complete" })
+    yield* CapabilityPolicyFixture.setRules([...allow,
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:get_project", effect: "ask" },
+    ])
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const pending = yield* f.find().pipe(Effect.result, Effect.forkChild)
+    const asked = yield* Deferred.await(observation.first)
+    expect(asked.resources).toContain("example:get_project")
+    // Approved transport necessarily serialized its complete envelope; individual schema copying has not begun.
+    expect(consulted.schemaReads).toBe(1)
+    yield* CapabilityPolicyFixture.setRules([...allow,
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:list_projects", effect: "deny" },
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:get_project", effect: "ask" },
+    ])
+    yield* f.permissions.reply({ requestID: asked.id, reply: "once" })
+    const result = yield* Fiber.join(pending)
+    expect(result._tag).toBe("Success")
+    if (result._tag !== "Success") return yield* result.failure
+    expect(result.success.operations.map((operation) => operation.name)).toEqual(["get_project"])
+    expect(result.success.operations[0]?.readiness).toBe("ready")
+    expect(consulted.schemaReads).toBe(1)
+    expect(yield* Ref.get(observation.count)).toBe(1)
+    expect(yield* f.permissions.list()).toEqual([])
+  }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("pending interruption at outer publication restoration removes returned-tuple refs, locators and cursor", () => Effect.gen(function* () {
+    const f = yield* publicationFixture({ maxEntries: 2, storeEntries: 2 })
+    const state: { fiber?: Fiber.Fiber<CapabilityDiscovery.Page, Capability.Failure>; injected: boolean } = { injected: false }
+    // Inject interruption at final synchronous publication, after the real batch tuple has arrived.
+    yield* Ref.set(f.afterBatch, Effect.sync(() => {
+      Object.defineProperty(f.clock, "time", { configurable: true, get: () => {
+        if (!state.injected) {
+          state.injected = true
+          state.fiber?.interruptUnsafe()
+        }
+        return 1000
+      } })
+    }))
+    const pending = yield* f.find().pipe(Effect.forkChild)
+    state.fiber = pending
+    const exit = yield* Fiber.await(pending)
+    expect(state.injected).toBe(true)
+    expect(exit._tag).toBe("Failure")
+    if (exit._tag === "Failure") expect(Cause.hasInterrupts(exit.cause)).toBe(true)
+    const issued = yield* Ref.get(f.issued)
+    expect(issued).toHaveLength(2)
+    expect(yield* Ref.get(f.removed)).toEqual(issued.map((record) => record.ref))
+    yield* Effect.forEach(issued, (record) => expectCode(f.real.read(record.ref, readScope(record)), "stale_descriptor"))
+    yield* Ref.set(f.afterBatch, Effect.void)
+    expect((yield* f.find()).operations).toHaveLength(2)
+  }).pipe(Effect.timeout("15 seconds")))
 })
