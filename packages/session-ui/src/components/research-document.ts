@@ -1,6 +1,7 @@
 import { Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import type { Capability } from "@orchestra/schema/capability"
+import { sha256 } from "@noble/hashes/sha256"
 
 const sameReceipt = Schema.toEquivalence(Research.DocumentReceipt)
 
@@ -41,7 +42,7 @@ export async function loadResearchDocument(
   } while (state.cursor)
   if (state.bytes !== receipt.bytes) throw new Error("Research document is incomplete")
   const text = pages.join("")
-  const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))))
+  const digest = Array.from(sha256(new TextEncoder().encode(text)))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("")
   signal?.throwIfAborted()
