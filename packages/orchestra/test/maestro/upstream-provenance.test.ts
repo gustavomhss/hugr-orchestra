@@ -7,7 +7,7 @@ import { EventTable } from "@orchestra/core/event/sql"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
-import { PartTable } from "@orchestra/core/session/sql"
+import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { ProjectID } from "@orchestra/schema/project-id"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -44,12 +44,8 @@ const card: UpstreamResult.Card = {
 }
 const fenced = (value: unknown) => "```upstream-result\n" + JSON.stringify(value) + "\n```"
 
-// TODO(Relay exact settlement handoff): background adoption stays HOLD until the parent Task persists the actual
-// returned author Session/message, final workResult, and a referenced durable delivery ID for that exact parent call.
-// Pending integration cases (documentation only, not skipped tests): native background adoption and exact retry;
-// completed-but-undelivered job plus forged notice; same-child resumed calls with old/late and conflicting notices;
-// V1/V2 delivery projection, replay, and restart without synthesized ownership. Wire those cases only after the
-// concrete Relay-owned host facts exist; job status, time windows, and equal proposal bytes are not substitutes.
+// These fixtures write the agreed private host port on real Task records. Relay owns the production writer,
+// captured-return identity, durable delivery ordering, and preservation against stale Task completion writes.
 
 function assistant(sessionID: SessionID, agent: string, parentID: MessageID): SessionV1.Assistant {
   return {
@@ -138,14 +134,31 @@ const notice = Effect.fn("UpstreamProvenanceTest.notice")(function* (
 ) {
   const sessions = yield* Session.Service
   const delivered = yield* fixture.work.notice("completed", fixture.text.text)
+  if (!delivered) throw new Error("expected actual SeatWork result")
   const message = yield* sessions.updateMessage({
     id: MessageID.ascending(), role: "user", sessionID: fixture.parent.id, agent: "maestro", model: ref, time: { created: Date.now() },
   })
-  return yield* sessions.updatePart({
+  const part = yield* sessions.updatePart({
     id: PartID.ascending(), messageID: message.id, sessionID: fixture.parent.id, type: "text", synthetic: true,
     metadata: { source: { type: "task-return", task_id: fixture.child.id, state: "completed" }, workResult: delivered },
     text: `<task id="${fixture.input.logicalTaskID}" state="completed">\n<task_result>\n${fixture.text.text}\n</task_result>\n</task>`,
   })
+  return { part, workResult: delivered }
+})
+
+const settled = Effect.fn("UpstreamProvenanceTest.settled")(function* () {
+  const fixture = yield* seed({ background: true })
+  const delivery = yield* notice(fixture)
+  const upstreamSettlement = {
+    parentMessageID: fixture.input.parentMessageID, parentCallID: fixture.task.callID,
+    workResult: delivery.workResult, deliveryMessageID: SessionMessage.ID.make(delivery.part.messageID),
+    deliveryPartID: delivery.part.id,
+  }
+  const sessions = yield* Session.Service
+  yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
+    ...fixture.task.state.metadata, upstreamSettlement,
+  } } })
+  return { ...fixture, delivery: delivery.part, upstreamSettlement }
 })
 
 const modernAssistant = Effect.fn("UpstreamProvenanceTest.modernAssistant")(function* (
@@ -174,6 +187,198 @@ const modernAssistant = Effect.fn("UpstreamProvenanceTest.modernAssistant")(func
 })
 
 describe("UpstreamProvenance.observe", () => {
+  it.instance("observes exact V1 host receipt and referenced delivery with read-only retry despite initial running result", () => Effect.gen(function* () {
+    const fixture = yield* settled()
+    const sessions = yield* Session.Service
+    const before = {
+      parent: yield* sessions.messages({ sessionID: fixture.parent.id }),
+      child: yield* sessions.messages({ sessionID: fixture.child.id }),
+      binding: yield* LogicalTask.read(fixture.child.id),
+    }
+    expect(fixture.task.state.metadata.workResult.terminal.reason).toBe("running")
+    expect(fixture.upstreamSettlement.workResult.author?.messageID).toBe(fixture.author.info.id)
+    const first = yield* UpstreamProvenance.observe(fixture.input)
+    expect(first).toEqual({ ...fixture.input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+    expect(yield* UpstreamProvenance.observe(fixture.input)).toEqual(first)
+    expect({
+      parent: yield* sessions.messages({ sessionID: fixture.parent.id }),
+      child: yield* sessions.messages({ sessionID: fixture.child.id }),
+      binding: yield* LogicalTask.read(fixture.child.id),
+    }).toEqual(before)
+  }))
+
+  it.instance("observes V2 projected synthetic delivery through Task-held receipt without synthetic metadata", () => Effect.gen(function* () {
+    const fixture = yield* settled()
+    const events = yield* EventV2Bridge.Service
+    const database = yield* Database.Service
+    const deliveryID = SessionMessage.ID.create()
+    yield* events.publish(SessionEvent.Synthetic, {
+      sessionID: fixture.parent.id, messageID: deliveryID, text: fixture.delivery.text, timestamp: yield* DateTime.now,
+    })
+    const parentID = SessionMessage.ID.create()
+    const callID = `call-${parentID}`
+    yield* modernAssistant(fixture.parent.id, parentID, "maestro", "", { callID, metadata: {
+      ...fixture.task.state.metadata, upstreamSettlement: {
+        parentMessageID: parentID, parentCallID: callID, workResult: fixture.upstreamSettlement.workResult,
+        deliveryMessageID: deliveryID,
+      },
+    } })
+    const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, deliveryID)).get().pipe(Effect.orDie)
+    expect(row?.type).toBe("synthetic")
+    expect(row?.data).not.toHaveProperty("metadata")
+    const input = { ...fixture.input, parentMessageID: parentID, parentCallID: callID }
+    expect(yield* UpstreamProvenance.observe(input)).toEqual({ ...input, schema: "maestro-upstream-attribution-v1", memberID: "walt", profile: "upstream" })
+  }))
+
+  it.instance("reconciles matching same-ID V1 and V2 deliveries and running-only Task settlement", () => Effect.gen(function* () {
+    const fixture = yield* settled()
+    const events = yield* EventV2Bridge.Service
+    const sessions = yield* Session.Service
+    yield* events.publish(SessionEvent.Synthetic, {
+      sessionID: fixture.parent.id, messageID: fixture.upstreamSettlement.deliveryMessageID,
+      text: fixture.delivery.text, timestamp: yield* DateTime.now,
+    })
+    yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
+      ...fixture.task.state.metadata, background: false, upstreamSettlement: fixture.upstreamSettlement,
+    } } })
+    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(fixture.author.info.id)
+  }))
+
+  it.instance("rejects malformed receipts, wrong anchors, captured authors, and mismatched canonical work results", () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    yield* Effect.forEach(["message", "call", "extra", "empty-call", "card-author", "author", "artifact", "task", "failed", "interrupted"] as const, (variant) => Effect.gen(function* () {
+      const fixture = yield* settled()
+      const receipt = fixture.upstreamSettlement
+      const changed = {
+        ...receipt,
+        ...(variant === "message" ? { parentMessageID: fixture.input.authorMessageID } : {}),
+        ...(variant === "call" ? { parentCallID: "other-call" } : {}),
+        ...(variant === "extra" ? { schema: "invented-discriminator" } : {}),
+        ...(variant === "empty-call" ? { parentCallID: "" } : {}),
+        workResult: {
+          ...receipt.workResult,
+          ...(variant === "card-author" ? { card: { parsed: true, messageID: fixture.parentMessage.id } } : {}),
+          ...(variant === "author" ? { author: { memberId: "walt", executionSessionID: fixture.child.id, messageID: fixture.parentMessage.id } } : {}),
+          ...(variant === "artifact" ? { artifacts: [{ kind: "plan", path: "other.md" }] } : {}),
+          ...(variant === "task" ? { taskId: "tsk_other" } : {}),
+          ...(variant === "failed" || variant === "interrupted" ? { terminal: { reason: variant } } : {}),
+        },
+      }
+      yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
+        ...fixture.task.state.metadata, upstreamSettlement: changed,
+      } } })
+      yield* refusal(fixture.input, variant === "task" ? "UPSTREAM_ATTRIBUTION_TASK_MISMATCH" : "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
+    }))
+  }))
+
+  it.instance("rejects missing, foreign, wrong-part, nonsynthetic, ignored, incomplete, erroneous, or wrong-child V1 delivery", () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const database = yield* Database.Service
+    yield* Effect.forEach(["missing", "foreign", "foreign-part", "wrong-part", "no-part", "nonsynthetic", "ignored", "incomplete", "user-error", "part-error", "wrong-child", "delivery-error", "result"] as const, (variant) => Effect.gen(function* () {
+      const fixture = yield* settled()
+      if (variant === "foreign") yield* database.db.update(MessageTable).set({ session_id: fixture.child.id })
+        .where(eq(MessageTable.id, fixture.delivery.messageID)).run().pipe(Effect.orDie)
+      if (variant === "foreign-part") yield* database.db.update(PartTable).set({ session_id: fixture.child.id })
+        .where(eq(PartTable.id, fixture.delivery.id)).run().pipe(Effect.orDie)
+      if (variant === "user-error") yield* sessions.updateMessage({
+        ...assistant(fixture.parent.id, "maestro", fixture.parentMessage.parentID), id: fixture.delivery.messageID,
+        error: new SessionV1.APIError({ message: "Delivery failed", isRetryable: false }).toObject(),
+      })
+      if (variant === "part-error") yield* sessions.updatePart({
+        id: PartID.ascending(), messageID: fixture.delivery.messageID, sessionID: fixture.parent.id, type: "tool", tool: "task", callID: "failed-delivery",
+        state: { status: "error", input: {}, error: "Delivery failed", time: { start: Date.now(), end: Date.now() } },
+      })
+      if (["nonsynthetic", "ignored", "incomplete", "wrong-child", "delivery-error", "result"].includes(variant)) yield* sessions.updatePart({
+        ...fixture.delivery,
+        ...(variant === "nonsynthetic" ? { synthetic: false } : {}),
+        ...(variant === "ignored" ? { ignored: true } : {}),
+        ...(variant === "incomplete" ? { time: { start: Date.now() } } : {}),
+        metadata: { ...fixture.delivery.metadata,
+          ...(variant === "wrong-child" ? { source: { type: "task-return", task_id: fixture.parent.id, state: "completed" } } : {}),
+          ...(variant === "delivery-error" ? { source: { type: "task-return", task_id: fixture.child.id, state: "error" } } : {}),
+          ...(variant === "result" ? { workResult: { ...fixture.upstreamSettlement.workResult, risks: ["forged"] } } : {}),
+        },
+      })
+      yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
+        ...fixture.task.state.metadata, upstreamSettlement: {
+          ...fixture.upstreamSettlement,
+          ...(variant === "missing" ? { deliveryMessageID: "msg_missing_delivery" } : {}),
+          ...(variant === "wrong-part" ? { deliveryPartID: fixture.text.id } : {}),
+          ...(variant === "no-part" ? { deliveryPartID: undefined } : {}),
+        },
+      } } })
+      yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
+    }))
+  }))
+
+  it.instance("captured receipt remains tied to original author when later assistant returns identical bytes", () => Effect.gen(function* () {
+    const fixture = yield* settled()
+    const sessions = yield* Session.Service
+    const next = yield* sessions.updateMessage(assistant(fixture.child.id, "walt", fixture.author.info.parentID))
+    const text = yield* sessions.updatePart({ ...fixture.text, id: PartID.ascending(), messageID: next.id })
+    // New host work evidence cannot retroactively select a new author for the captured delivery.
+    yield* fixture.work.record({ info: next, parts: [text] })
+    const stored = yield* sessions.getPart({ sessionID: fixture.parent.id, messageID: fixture.parentMessage.id, partID: fixture.task.id })
+    if (!stored || stored.type !== "tool" || stored.state.status !== "completed") throw new Error("expected stored completed Task part")
+    expect(stored.state.metadata.workResult.card.messageID).toBe(next.id)
+    expect(stored.state.metadata.workResult.author.messageID).toBe(next.id)
+    yield* sessions.updatePart({ ...stored, state: { ...stored.state, metadata: {
+      ...stored.state.metadata, upstreamSettlement: fixture.upstreamSettlement,
+    } } })
+    expect((yield* UpstreamProvenance.observe(fixture.input)).authorMessageID).toBe(fixture.author.info.id)
+    yield* refusal({ ...fixture.input, authorMessageID: SessionMessage.ID.make(next.id) }, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
+  }))
+
+  it.instance("parent Task failure and interruption override valid captured final receipt", () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    yield* Effect.forEach(["parent", "task", "interrupted", "outer-failed"] as const, (variant) => Effect.gen(function* () {
+      const fixture = yield* settled()
+      if (variant === "parent") yield* sessions.updateMessage({ ...fixture.parentMessage,
+        error: new SessionV1.AbortedError({ message: "Parent interrupted" }).toObject(),
+      })
+      yield* sessions.updatePart({ ...fixture.task, state: variant === "task" ? {
+        status: "error", input: fixture.task.state.input, time: fixture.task.state.time, error: "Task failed",
+        metadata: { ...fixture.task.state.metadata, upstreamSettlement: fixture.upstreamSettlement },
+      } : { ...fixture.task.state, metadata: {
+        ...fixture.task.state.metadata, upstreamSettlement: fixture.upstreamSettlement,
+        ...(variant === "interrupted" ? { interrupted: true } : {}),
+        ...(variant === "outer-failed" ? { workResult: { ...fixture.upstreamSettlement.workResult, terminal: { reason: "failed" } } } : {}),
+      } } })
+      yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
+    }))
+  }))
+
+  it.instance("V2 delivery rejects foreign owner, embedded owner, ordinary user, and conflicting same-ID legacy projection", () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const events = yield* EventV2Bridge.Service
+    const database = yield* Database.Service
+    yield* Effect.forEach(["foreign", "embedded", "ordinary", "conflict"] as const, (variant) => Effect.gen(function* () {
+      const fixture = yield* settled()
+      const id = variant === "conflict" ? fixture.upstreamSettlement.deliveryMessageID : SessionMessage.ID.create()
+      if (variant === "ordinary") yield* events.publish(SessionEvent.Prompted, {
+        sessionID: fixture.parent.id, messageID: id, prompt: { text: fixture.delivery.text }, delivery: "steer", timestamp: yield* DateTime.now,
+      })
+      if (variant !== "ordinary") yield* events.publish(SessionEvent.Synthetic, {
+        sessionID: variant === "foreign" ? fixture.child.id : fixture.parent.id, messageID: id,
+        text: variant === "conflict" ? "Different delivery" : fixture.delivery.text, timestamp: yield* DateTime.now,
+      })
+      if (variant === "embedded") {
+        const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, id)).get().pipe(Effect.orDie)
+        if (!row) throw new Error("expected projected synthetic")
+        yield* database.db.update(SessionMessageTable).set({ data: { ...row.data, sessionID: fixture.child.id } })
+          .where(eq(SessionMessageTable.id, id)).run().pipe(Effect.orDie)
+      }
+      yield* sessions.updatePart({ ...fixture.task, state: { ...fixture.task.state, metadata: {
+        ...fixture.task.state.metadata, upstreamSettlement: {
+          parentMessageID: fixture.input.parentMessageID, parentCallID: fixture.task.callID,
+          workResult: fixture.upstreamSettlement.workResult, deliveryMessageID: id,
+          ...(variant === "conflict" ? { deliveryPartID: fixture.delivery.id } : {}),
+        },
+      } } })
+      yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")
+    }))
+  }))
+
   it.instance("observes native synchronous proposal and exact retry without changing retained evidence", () => Effect.gen(function* () {
     const fixture = yield* seed()
     const sessions = yield* Session.Service
