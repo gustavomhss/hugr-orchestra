@@ -15,7 +15,7 @@ import { CapabilityInvocation } from "../invocation"
 import { CapabilityPolicy } from "../policy"
 import {
   CapabilityArtifactReferenceTable, CapabilityArtifactTable, CapabilityBindingTable,
-  CapabilityConnectionTable, CapabilityJobTable, CapabilityTargetTable,
+  CapabilityChildTable, CapabilityConnectionTable, CapabilityJobTable, CapabilityTargetTable,
 } from "../sql"
 
 const Create = Schema.Struct({
@@ -59,7 +59,16 @@ export type ProducerProof = {
 }
 const Proof = Schema.Struct({ owner: Schema.toType(Capability.Owner), producer: Capability.InvocationRef,
   rootToolName: Schema.NonEmptyString })
-const Stored = Schema.Struct({ rootToolName: Schema.NonEmptyString, effectiveRules: Permission.Ruleset,
+const ChildProof = Schema.Struct({
+  callID: Schema.String.check(Schema.isPattern(/^child_[0-9a-f]{64}(?![\s\S])/)),
+  parentCallID: Schema.NonEmptyString,
+  ordinal: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 64 })),
+  toolName: Schema.String.check(Schema.isPattern(/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/)),
+  requestHash: Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}(?![\s\S])/)),
+}).annotate({ parseOptions: { onExcessProperty: "error" } })
+const Stored = Schema.Struct({ rootToolName: Schema.NonEmptyString,
+  rootInvocation: Schema.optional(Capability.InvocationRef),
+  lineage: Schema.optional(Schema.Array(ChildProof).check(Schema.isMaxLength(8))), effectiveRules: Permission.Ruleset,
   nativeDenyFloor: Permission.Ruleset, data: Observation })
 type Row = typeof CapabilityJobTable.$inferSelect
 type Writer = Pick<Database.Interface["db"], "select" | "insert" | "update">
@@ -115,20 +124,43 @@ export const make = Effect.gen(function* () {
     return yield* policy.authorize(context, { action, resources: resources(row) })
   })
 
-  const host = Effect.fn("CapabilityJobs.host")(function* (proof: ProducerProof, row: Row, read: boolean) {
+  const host = Effect.fn("CapabilityJobs.host")(function* (writer: Writer, proof: ProducerProof, row: Row, read: boolean) {
     const stored = yield* Schema.decodeUnknownEffect(Stored)(row.observation).pipe(Effect.orDie)
     if (!sameOwner(proof.owner, row.owner) || !sameInvocation(proof.producer, row.invocation) ||
       proof.rootToolName !== stored.rootToolName || row.owner.projectID !== placement.projectID ||
       row.owner.location.directory !== placement.location.directory ||
       row.owner.location.workspaceID !== placement.location.workspaceID) return yield* failure("target_denied")
-    const session = yield* sessions.get(row.owner.sessionID)
-    const message = yield* sessions.message(row.invocation.assistantMessageID)
-    if (!session || session.projectID !== row.owner.projectID ||
+    // Legacy direct producers have no lineage. Missing provenance never adopts a child as a root.
+    const root = stored.rootInvocation ?? row.invocation
+    const lineage = stored.lineage ?? []
+    if (root.sessionID !== row.owner.sessionID || root.agentID !== row.owner.agentID ||
+      row.invocation.sessionID !== row.owner.sessionID || row.invocation.agentID !== row.owner.agentID ||
+      root.assistantMessageID !== row.invocation.assistantMessageID ||
+      (lineage.length === 0 ? !sameInvocation(root, row.invocation) : !stored.rootInvocation ||
+        lineage.at(-1)?.callID !== row.invocation.callID)) return yield* failure("target_denied")
+    const session = yield* sessions.get(root.sessionID)
+    const message = yield* sessions.message(root.assistantMessageID)
+    if (!session || session.id !== row.owner.sessionID || session.projectID !== row.owner.projectID ||
       session.location.directory !== row.owner.location.directory || session.location.workspaceID !== row.owner.location.workspaceID ||
-      !message || message.sessionID !== row.owner.sessionID || message.message.type !== "assistant" ||
+      !message || message.sessionID !== row.owner.sessionID || message.message.id !== root.assistantMessageID ||
+      message.message.type !== "assistant" ||
       message.message.agent !== row.owner.agentID || !message.message.content.some((part) =>
-        part.type === "tool" && part.id === row.invocation.callID && part.name === stored.rootToolName))
+        part.type === "tool" && part.id === root.callID && part.name === stored.rootToolName))
       return yield* failure("target_denied")
+    yield* Effect.forEach(lineage, (proof, index) => Effect.gen(function* () {
+      const parentCallID = index === 0 ? root.callID : lineage[index - 1]?.callID
+      if (proof.parentCallID !== parentCallID ||
+        proof.callID !== CapabilityInvocation.childID({ ...root, callID: proof.parentCallID }, proof.ordinal))
+        return yield* failure("target_denied")
+      const child = yield* writer.select().from(CapabilityChildTable)
+        .where(eq(CapabilityChildTable.id, proof.callID)).get().pipe(Effect.orDie)
+      if (!child || child.id !== proof.callID || child.session_id !== row.owner.sessionID ||
+        child.agent_id !== row.owner.agentID || child.assistant_message_id !== root.assistantMessageID ||
+        child.root_call_id !== root.callID || child.root_tool_name !== stored.rootToolName ||
+        child.parent_call_id !== proof.parentCallID || child.ordinal !== proof.ordinal || child.depth !== index + 1 ||
+        child.tool_name !== proof.toolName || child.request_hash !== proof.requestHash ||
+        !["running", "completed", "failed", "interrupted"].includes(child.state)) return yield* failure("target_denied")
+    }), { discard: true })
     // Already-acquired facts need provenance, not fresh permission to perform external effects.
     if (!read) return
     if (resources(row).some((resource) =>
@@ -195,8 +227,10 @@ export const make = Effect.gen(function* () {
       })
       const context = Object.freeze({ ...supplied })
       const binding = yield* CapabilityInvocation.require(context, placement)
-      const observation = { rootToolName: binding.rootToolName, effectiveRules: binding.effectiveRules,
-        nativeDenyFloor: binding.nativeDenyFloor, data: {} }
+      const observation = Object.freeze({ rootToolName: binding.rootToolName,
+        rootInvocation: Object.freeze({ ...binding.rootInvocation }),
+        lineage: Object.freeze(binding.lineage.map((proof) => Object.freeze({ ...proof }))),
+        effectiveRules: binding.effectiveRules, nativeDenyFloor: binding.nativeDenyFloor, data: Object.freeze({}) })
       // Policy/provenance has its own 16 KiB budget; model observation retains an independent 4 KiB budget.
       if (!boundedJson(observation, 16384, 1024)) return yield* failure("quota_exceeded")
       const creationKey = createHash("sha256").update(JSON.stringify([
@@ -221,7 +255,9 @@ export const make = Effect.gen(function* () {
           const stored = yield* Schema.decodeUnknownEffect(Stored)(existing.observation).pipe(Effect.orDie)
           if (!sameOwner(existing.owner, binding.owner) || !sameInvocation(existing.invocation, binding.invocation) ||
             existing.kind !== fixed.kind || existing.operation !== fixed.operation || !sameRefs(existing, fixed) ||
-            stored.rootToolName !== binding.rootToolName || existing.request_hash !== (fixed.requestHash ?? null))
+            stored.rootToolName !== binding.rootToolName || existing.request_hash !== (fixed.requestHash ?? null) ||
+            !sameInvocation(stored.rootInvocation ?? existing.invocation, observation.rootInvocation) ||
+            !sameLineage(stored.lineage ?? [], observation.lineage))
             return yield* failure("outcome_unknown")
           if (existing.creation_key === null) yield* tx.update(CapabilityJobTable).set({ creation_key: creationKey })
             .where(eq(CapabilityJobTable.id, existing.id)).run().pipe(Effect.orDie)
@@ -296,7 +332,7 @@ export const make = Effect.gen(function* () {
       // No poll, network, cancel or dispatch. Callers separately authorize acquiring external facts.
       return yield* agents.withPermissions(proof.owner.agentID, () => database.db.transaction((tx) => Effect.gen(function* () {
         const current = yield* load(tx, ref)
-        yield* host(proof, current, false)
+        yield* host(tx, proof, current, false)
         if (current.state === "intent" || fixed.state === "submitting") return yield* failure("unsupported_operation")
         return yield* update(tx, current, fixed)
       }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die))
@@ -308,7 +344,7 @@ export const make = Effect.gen(function* () {
       if (ref instanceof Capability.Failure) return yield* ref
       return yield* agents.withPermissions(proof.owner.agentID, () => database.db.transaction((tx) => Effect.gen(function* () {
         const current = yield* load(tx, ref)
-        yield* host(proof, current, true)
+        yield* host(tx, proof, current, true)
         return { receipt: yield* receipt(current), providerID: current.provider_id ?? undefined }
       }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die))
     }),
@@ -326,7 +362,7 @@ export const make = Effect.gen(function* () {
       if (ref instanceof Capability.Failure) return yield* ref
       return yield* agents.withPermissions(proof.owner.agentID, () => database.db.transaction((tx) => Effect.gen(function* () {
         const current = yield* load(tx, ref)
-        yield* host(proof, current, false)
+        yield* host(tx, proof, current, false)
         if (current.kind !== "local-process" || evidence !== "startup-owner-absent") return yield* failure("unsupported_operation")
         return yield* update(tx, current, fixed, true)
       }), { behavior: "immediate" })).pipe(Effect.catchTag("SqlError", Effect.die))
@@ -383,6 +419,14 @@ function sameOwner(left: Capability.Owner, right: Capability.Owner) {
 function sameInvocation(left: Capability.InvocationRef, right: Capability.InvocationRef) {
   return left.sessionID === right.sessionID && left.agentID === right.agentID &&
     left.assistantMessageID === right.assistantMessageID && left.callID === right.callID
+}
+
+function sameLineage(left: readonly CapabilityInvocation.ChildProof[], right: readonly CapabilityInvocation.ChildProof[]) {
+  return left.length === right.length && left.every((proof, index) => {
+    const other = right[index]
+    return other !== undefined && proof.callID === other.callID && proof.parentCallID === other.parentCallID &&
+      proof.ordinal === other.ordinal && proof.toolName === other.toolName && proof.requestHash === other.requestHash
+  })
 }
 
 function sameRefs(left: { connection?: Capability.ConnectionRef | null; target?: Capability.TargetRef | null },
