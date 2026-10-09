@@ -48,7 +48,7 @@ const rules: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allo
 const token = "fixture-selected-secret"
 const newerToken = "fixture-newer-secret"
 type Name = "channel_read" | "channel_send" | "channel_update"
-type StoredMessage = { id: string; text: string; threadID?: string; replyTo?: string; ownEmoji: string[];
+type StoredMessage = { id: string; text: string; threadID?: string; replyTo?: string; ownEmoji: string[]; broadcast?: boolean;
   type?: number; reference?: { type?: number; messageID?: string; channelID?: string; guildID?: string } }
 const Body = Schema.Struct({ text: Schema.optionalKey(Schema.String), content: Schema.optionalKey(Schema.String),
   channel: Schema.optionalKey(Schema.String), ts: Schema.optionalKey(Schema.String), timestamp: Schema.optionalKey(Schema.String),
@@ -92,11 +92,17 @@ function fixture(provider: "slack" | "discord", options: {
     const submittedStates: string[] = []
     const submittingIDs: (string | null)[] = []
     const acknowledgedIDs: (string | null)[] = []
+    const overwrites: { id: string; type: 0 | 1; allow: string; deny: string }[] = []
+    const remotePermissions = { ownerID: "98", roles: [{ id: "1", permissions: "66560" }, { id: "2", permissions: "0" }, { id: "3", permissions: "0" }],
+      memberRoles: ["2"], overwrites, threadType: 11, privateMember: true, omitOverwrites: false,
+      timeoutUntil: undefined as string | undefined }
     const state = { mode: "normal", mutations: 0, wrongGuild: false, wrongChannel: false, wrongThread: false,
       readError: false, readbackError: false, malformed: false, oversized: false, redirect: false,
       textOverride: undefined as string | undefined, cursorOverride: undefined as string | undefined,
       firstPage: false, permissionRevoke: false, ambiguousMissing: false,
-      cas: "none", casStage: "final", casDone: false, gatePreflight: false }
+      cas: "none", casStage: "final", casDone: false, gatePreflight: false, emptyHistory: false,
+      limitedHistory: false, limitedAfterMutation: false, slackReadMissingError: false, slackMutationMissingError: false,
+      slackMutationError: "" }
     const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const received = yield* Deferred.make<void>()
     const preflightEntered = yield* Deferred.make<void>()
@@ -106,7 +112,8 @@ function fixture(provider: "slack" | "discord", options: {
       ts: message.id, text: state.textOverride ?? message.text, ...(message.threadID ? { thread_ts: message.threadID } : {}),
       reactions: message.ownEmoji.map((name) => ({ name, users: ["U1"] })),
       files: [{ url_private: `https://files.slack.com/private?token=${token}` }],
-    } : { id: message.id, channel_id: state.wrongChannel ? "999" : routeChannel, content: state.textOverride ?? message.text,
+    } : { id: message.id, channel_id: state.wrongChannel ? "999" : routeChannel,
+      ...(message.type === 21 ? {} : { content: state.textOverride ?? message.text }),
       type: message.type ?? (message.replyTo ? 19 : 0),
       ...(message.reference ? { message_reference: { type: message.reference.type ?? 0,
         ...(message.reference.messageID ? { message_id: message.reference.messageID } : {}),
@@ -124,16 +131,22 @@ function fixture(provider: "slack" | "discord", options: {
         requests.push({ method: request.method, path: url.pathname, query: url.searchParams, body,
           authorization: request.headers.get("authorization") })
         const json = (value: unknown, status = 200) => Response.json(value, { status })
-        const preflightPath = provider === "slack" ? "/api/auth.test" : "/api/v10/guilds/1"
+        const preflightPath = provider === "slack" ? "/api/auth.test" : "/api/v10/users/@me"
         if (state.gatePreflight && url.pathname === preflightPath && requests.filter((entry) => entry.path === preflightPath).length === 1) {
           Deferred.doneUnsafe(preflightEntered, Effect.void)
           await Effect.runPromise(Deferred.await(releasePreflight))
         }
         if (provider === "slack" && url.pathname === "/api/auth.test") return json({ ok: true, team_id: state.wrongGuild ? "T9" : "T1", user_id: "U1" })
-        if (provider === "slack" && url.pathname === "/api/conversations.info") return json({ ok: true, channel: { id: state.wrongChannel ? "C9" : "C1" } })
-        if (provider === "discord" && url.pathname === "/api/v10/guilds/1") return json({ id: state.wrongGuild ? "9" : "1" })
-        if (provider === "discord" && url.pathname === "/api/v10/channels/10") return json({ id: "10", guild_id: state.wrongGuild ? "9" : "1", type: 0 })
-        if (provider === "discord" && url.pathname === "/api/v10/channels/20") return json({ id: "20", guild_id: "1", parent_id: state.wrongThread ? "999" : "10", type: 11 })
+        if (provider === "slack" && url.pathname === "/api/conversations.info") return json({ ok: true, channel: { id: state.wrongChannel ? "C9" : "C1", is_member: false } })
+        if (provider === "discord" && url.pathname === "/api/v10/users/@me") return json({ id: "99" })
+        if (provider === "discord" && url.pathname === "/api/v10/guilds/1") return json({ id: state.wrongGuild ? "9" : "1", owner_id: remotePermissions.ownerID, roles: remotePermissions.roles })
+        if (provider === "discord" && url.pathname === "/api/v10/guilds/1/members/99") return json({ user: { id: "99" }, roles: remotePermissions.memberRoles,
+          communication_disabled_until: remotePermissions.timeoutUntil ?? null })
+        if (provider === "discord" && url.pathname === "/api/v10/channels/10") return json({ id: "10", guild_id: state.wrongGuild ? "9" : "1", type: 0,
+          ...(remotePermissions.omitOverwrites ? {} : { permission_overwrites: remotePermissions.overwrites }) })
+        if (provider === "discord" && url.pathname === "/api/v10/channels/20") return json({ id: "20", guild_id: "1", parent_id: state.wrongThread ? "999" : "10", type: remotePermissions.threadType })
+        if (provider === "discord" && url.pathname === "/api/v10/channels/20/thread-members/99") return remotePermissions.privateMember
+          ? json({ id: "20", user_id: "99" }) : json({ code: 10007 }, 404)
         const mutation = provider === "slack" ? url.pathname.includes("/chat.") || /\/reactions\.(add|remove)/.test(url.pathname)
           : request.method !== "GET"
         if (mutation) {
@@ -146,6 +159,7 @@ function fixture(provider: "slack" | "discord", options: {
           if (state.mode === "500") return json({ error: token }, 500)
           if (state.mode === "400") return json({ error: token }, 400)
           if (state.mode === "provider_unknown") return json({ ok: false, error: "internal_error" })
+          if (provider === "slack" && state.slackMutationError === "no_text") return json({ ok: false, error: "no_text" })
           const send = provider === "slack" ? url.pathname.endsWith("chat.postMessage") : request.method === "POST"
           const id = send ? options.acceptedID ?? (provider === "slack" ? `${200 + state.mutations}.000001` : String(200 + state.mutations))
             : provider === "slack" ? body.ts ?? body.timestamp ?? "" : url.pathname.split("/")[6] ?? ""
@@ -172,6 +186,8 @@ function fixture(provider: "slack" | "discord", options: {
               state: state.cas === "running" ? "running" : "failed", providerID: id,
               observation: state.cas === "running" ? { progress: 0.5 } : { remoteOutcome: "failed" } }))
           }
+          if (provider === "slack" && state.slackMutationMissingError) return json({ ok: false })
+          if (provider === "slack" && state.slackMutationError) return json({ ok: false, error: state.slackMutationError })
           return provider === "slack" ? json({ ok: true, ts: id, channel: channelID })
             : send ? json({ id }) : new Response(null, { status: 204 })
         }
@@ -194,6 +210,7 @@ function fixture(provider: "slack" | "discord", options: {
           }
         }
         if (provider === "slack") {
+          if (state.slackReadMissingError) return json({ ok: false })
           if (url.pathname === "/api/reactions.get") {
             const message = messages.get(url.searchParams.get("timestamp") ?? "")
             return message ? json({ ok: true, channel: channelID, message: wire(message) }) : json({ ok: false, error: "message_not_found" })
@@ -201,15 +218,16 @@ function fixture(provider: "slack" | "discord", options: {
           if (!["/api/conversations.history", "/api/conversations.replies"].includes(url.pathname)) return json({ ok: false, error: "unexpected_fixture_route" }, 400)
           const exact = url.searchParams.has("latest") ? url.searchParams.get("oldest") : null
           const thread = url.searchParams.get("ts")
-          const candidates = exact ? [...messages.values()].filter((message) => message.id === exact)
-            : [...messages.values()].filter((message) => (!thread || message.threadID === thread) &&
-              (!thread || url.searchParams.get("inclusive") !== "false" || message.id !== thread))
+          const candidates = (state.emptyHistory ? [] : [...messages.values()]).filter((message) =>
+            (thread ? message.threadID === thread : !message.threadID || message.threadID === message.id || message.broadcast) &&
+            (exact ? message.id === exact : !thread || url.searchParams.get("inclusive") !== "false" || message.id !== thread))
           const offset = Number(url.searchParams.get("cursor")?.replace("offset-", "") ?? 0)
           const limit = Number(url.searchParams.get("limit") ?? 20)
           const selectedMessages = candidates.slice(offset, offset + limit)
           const hasMore = !exact && state.firstPage && offset + selectedMessages.length < candidates.length
           if (thread && state.wrongThread) return json({ ok: true, messages: [{ ts: "999.000001", text: "foreign" }], has_more: false })
           return json({ ok: true, messages: selectedMessages.map((message) => wire(message)), has_more: hasMore,
+            is_limited: state.limitedHistory || (state.limitedAfterMutation && state.mutations > 0),
             response_metadata: { next_cursor: state.cursorOverride ?? (hasMore ? `offset-${offset + limit}` : "") } })
         }
         const parts = url.pathname.split("/")
@@ -219,7 +237,7 @@ function fixture(provider: "slack" | "discord", options: {
           const message = messages.get(exact)
           return message ? json(wire(message, routeChannel)) : json({ code: state.ambiguousMissing ? 10003 : 10008, message: "Unknown Message" }, 404)
         }
-        const page = [...messages.values()].filter((message) => !url.searchParams.has("before") || BigInt(message.id) < BigInt(url.searchParams.get("before") ?? "0"))
+        const page = (state.emptyHistory ? [] : [...messages.values()]).filter((message) => !url.searchParams.has("before") || BigInt(message.id) < BigInt(url.searchParams.get("before") ?? "0"))
           .sort((left, right) => Number(BigInt(right.id) - BigInt(left.id))).slice(0, Number(url.searchParams.get("limit") ?? 20))
         return json(page.map((message) => wire(message, routeChannel)))
       },
@@ -233,7 +251,7 @@ function fixture(provider: "slack" | "discord", options: {
       { type: "tool-call", id: f.context.toolCallID, name, input }, f.context))
     const output = (input: Schema.Json, name?: Name) => call(input, name).pipe(Effect.flatMap((output) => Schema.decodeUnknownEffect(Output)(output.structured)))
     return { ...f, binding, provider, channels, credentials, selected, connections, jobs, artifacts, connection, target, bind,
-      channelID, threadID, messageID, messages, requests, state, submittedStates, submittingIDs, acknowledgedIDs,
+      channelID, threadID, messageID, messages, requests, state, remotePermissions, submittedStates, submittingIDs, acknowledgedIDs,
       received, preflightEntered, releasePreflight, makeOptions, run, call, output }
   })
 }
@@ -252,6 +270,7 @@ describe("CapabilityChannels real REST leaves", () => {
     expect(page.result.status).toBe("completed")
     cases.forEach((message) => expect(page.acquisition?.messages.find((item) => item.id === message.id)?.replyTo)
       .toBe(message.id === "304" ? "101" : undefined))
+    expect(page.acquisition?.messages.find((item) => item.id === "301")?.text).toBe("")
     expect(f.requests.some((request) => /888|999|777/.test(request.path))).toBe(false)
     f.messages.set("305", { id: "305", text: "wrong reply", ownEmoji: [], type: 19,
       reference: { type: 0, messageID: "999", channelID: "888" } })
@@ -259,7 +278,154 @@ describe("CapabilityChannels real REST leaves", () => {
     f.messages.delete("305")
     f.state.wrongChannel = true
     expect((yield* f.call({ provider: "discord", action: "message", messageID: "301" }).pipe(Effect.flip)).message).toBe("target_denied")
+    const thread = yield* fixture("discord", { root: "channel_read", boundThread: true })
+    thread.messages.clear()
+    thread.messages.set("20", { id: "20", text: "", ownEmoji: [], type: 21,
+      reference: { type: 0, messageID: "20", channelID: "10", guildID: "1" } })
+    const starter = yield* thread.output({ provider: "discord", action: "history" })
+    expect(starter.acquisition?.messages).toEqual([{ id: "20", text: "", threadID: "20", reactions: [] }])
+    expect(thread.requests.some((request) => request.path === "/api/v10/channels/10/messages/20")).toBe(false)
   }))
+
+  it.live("Discord history requires effective VIEW_CHANNEL and READ_MESSAGE_HISTORY before empty HTTP acquisition", () => Effect.gen(function* () {
+    yield* Effect.forEach(["1024", "65536"], (permissions) => Effect.gen(function* () {
+      const f = yield* fixture("discord", { root: "channel_read" })
+      f.remotePermissions.roles[0].permissions = permissions
+      f.state.emptyHistory = true
+      expect((yield* f.call({ provider: "discord", action: "history" }).pipe(Effect.flip)).message).toBe("target_denied")
+      expect(f.requests.some((request) => request.path.endsWith("/messages"))).toBe(false)
+      expect((yield* f.database.db.select().from(CapabilityArtifactTable).all().pipe(Effect.orDie))).toHaveLength(0)
+    }))
+    const positive = yield* fixture("discord", { root: "channel_read" })
+    positive.messages.clear()
+    const output = yield* positive.output({ provider: "discord", action: "history" })
+    expect(output.result).toMatchObject({ status: "completed", verification: "observed" })
+    expect(output.acquisition?.messages).toEqual([])
+    expect(positive.requests.some((request) => request.path === "/api/v10/guilds/1/members/99")).toBe(true)
+    const malformed = yield* fixture("discord", { root: "channel_read" })
+    malformed.remotePermissions.memberRoles = ["404"]
+    expect((yield* malformed.call({ provider: "discord", action: "history" }).pipe(Effect.flip)).message).toBe("acquisition_failed")
+    malformed.remotePermissions.memberRoles = ["2"]
+    malformed.remotePermissions.omitOverwrites = true
+    expect((yield* malformed.call({ provider: "discord", action: "history" }).pipe(Effect.flip)).message).toBe("acquisition_failed")
+  }), 30000)
+
+  it.live("Discord everyone, aggregate role and member overwrites respect hierarchy and administrator/owner bypass", () => Effect.gen(function* () {
+    yield* Effect.forEach(["everyone-deny", "role-aggregate", "member-deny", "member-allow", "administrator", "owner"], (mode) => Effect.gen(function* () {
+      const f = yield* fixture("discord", { root: "channel_read" })
+      f.messages.clear()
+      f.remotePermissions.overwrites.push({ id: "1", type: 0, deny: "65536", allow: "0" })
+      if (mode === "role-aggregate" || mode === "member-deny") {
+        f.remotePermissions.memberRoles = ["2", "3"]
+        f.remotePermissions.overwrites.push({ id: "2", type: 0, deny: "65536", allow: "0" }, { id: "3", type: 0, deny: "0", allow: "65536" })
+      }
+      if (mode === "member-deny") f.remotePermissions.overwrites.push({ id: "99", type: 1, deny: "1024", allow: "0" })
+      if (mode === "member-allow") {
+        f.remotePermissions.overwrites[0].deny = "66560"
+        f.remotePermissions.overwrites.push({ id: "2", type: 0, deny: "66560", allow: "0" }, { id: "99", type: 1, deny: "0", allow: "66560" })
+      }
+      if (mode === "administrator" || mode === "owner") {
+        f.remotePermissions.roles[0].permissions = "0"
+        f.remotePermissions.roles[1].permissions = mode === "administrator" ? "8" : "0"
+        f.remotePermissions.ownerID = mode === "owner" ? "99" : "98"
+        f.remotePermissions.overwrites.push({ id: "99", type: 1, deny: "66560", allow: "0" })
+      }
+      if (mode === "everyone-deny" || mode === "member-deny") {
+        expect((yield* f.call({ provider: "discord", action: "history" }).pipe(Effect.flip)).message).toBe("target_denied")
+        return
+      }
+      expect((yield* f.output({ provider: "discord", action: "history" })).result.status).toBe("completed")
+      if (mode === "role-aggregate") {
+        f.remotePermissions.overwrites.reverse()
+        expect((yield* f.output({ provider: "discord", action: "history" })).result.status).toBe("completed")
+      }
+    }))
+  }), 30000)
+
+  it.live("Discord thread history inherits parent permissions and private membership or MANAGE_THREADS", () => Effect.gen(function* () {
+    yield* Effect.forEach(["parent-deny", "not-member", "member", "moderator", "timed-out-moderator"], (mode) => Effect.gen(function* () {
+      const f = yield* fixture("discord", { root: "channel_read", boundThread: true })
+      f.remotePermissions.threadType = 12
+      f.remotePermissions.privateMember = mode === "member" || mode === "parent-deny"
+      f.messages.clear()
+      if (mode === "parent-deny") f.remotePermissions.overwrites.push({ id: "1", type: 0, deny: "65536", allow: "0" })
+      if (mode === "moderator" || mode === "timed-out-moderator") f.remotePermissions.roles[1].permissions = (1n << 34n).toString()
+      if (mode === "timed-out-moderator") f.remotePermissions.timeoutUntil = new Date(Date.now() + 60000).toISOString()
+      if (mode === "parent-deny" || mode === "not-member" || mode === "timed-out-moderator") {
+        expect((yield* f.call({ provider: "discord", action: "history" }).pipe(Effect.flip)).message).toBe("target_denied")
+        expect(f.requests.some((request) => request.path.endsWith("/messages"))).toBe(false)
+        return
+      }
+      const output = yield* f.output({ provider: "discord", action: "history" })
+      expect(output.result.status).toBe("completed")
+      expect(output.acquisition?.channelID).toBe("20")
+      expect(f.requests.some((request) => request.path.endsWith("/thread-members/99"))).toBe(mode === "member")
+    }))
+  }), 30000)
+
+  it.live("Slack limited history cannot prove absence or verified deletion; ordinary root deletion remains verified", () => Effect.gen(function* () {
+    const limited = yield* fixture("slack", { root: "channel_read" })
+    limited.state.limitedHistory = true
+    expect((yield* limited.call({ provider: "slack", action: "message", messageID: limited.messageID }).pipe(Effect.flip)).message).toBe("acquisition_failed")
+    limited.state.emptyHistory = true
+    expect((yield* limited.call({ provider: "slack", action: "history" }).pipe(Effect.flip)).message).toBe("acquisition_failed")
+    yield* Effect.forEach([true, false], (isLimited) => Effect.gen(function* () {
+      const f = yield* fixture("slack", { root: "channel_update" })
+      f.state.limitedAfterMutation = isLimited
+      const output = yield* f.output({ provider: "slack", action: "delete", messageID: f.messageID })
+      expect(output.result.status).toBe(isLimited ? "partial" : "completed")
+      if (output.result.status === "partial") expect(output.result.unresolvedEffects).toContain("postcondition_readback")
+      expect(f.messages.has(f.messageID)).toBe(false)
+      expect(f.state.mutations).toBe(1)
+      const rows = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.owner.sessionID === f.context.sessionID)[0]?.state).toBe(isLimited ? "submitted" : "completed")
+    }))
+  }), 30000)
+
+  it.live("Slack exact reply lookup without thread is unsupported unless bounded history actually contains it", () => Effect.gen(function* () {
+    const f = yield* fixture("slack", { root: "channel_read" })
+    expect((yield* f.call({ provider: "slack", action: "message", messageID: "102.000001" }).pipe(Effect.flip)).message).toBe("unsupported_operation")
+    const reply = f.messages.get("102.000001")
+    if (!reply) return yield* Effect.die("SLACK_FIXTURE_REPLY_MISSING")
+    reply.broadcast = true
+    const visible = yield* f.output({ provider: "slack", action: "message", messageID: reply.id })
+    expect(visible.acquisition?.messages[0]?.id).toBe(reply.id)
+    const targeted = yield* fixture("slack", { root: "channel_update", boundThread: true })
+    const deleted = yield* targeted.output({ provider: "slack", action: "delete", messageID: targeted.messageID })
+    expect(deleted.result).toMatchObject({ status: "completed", verification: "verified" })
+    expect(targeted.messages.has(targeted.messageID)).toBe(false)
+    const unsupported = yield* fixture("slack", { root: "channel_update" })
+    expect((yield* unsupported.call({ provider: "slack", action: "delete", messageID: "102.000001" }).pipe(Effect.flip)).message).toBe("unsupported_operation")
+    expect(unsupported.messages.has("102.000001")).toBe(true)
+    expect(unsupported.state.mutations).toBe(0)
+  }), 30000)
+
+  it.live("Slack requires error on ok:false and unknown charged mutation errors remain unknown without retry", () => Effect.gen(function* () {
+    const malformed = yield* fixture("slack", { root: "channel_read" })
+    malformed.state.slackReadMissingError = true
+    expect((yield* malformed.call({ provider: "slack", action: "history" }).pipe(Effect.flip)).message).toBe("channel_invalid_response")
+    yield* Effect.forEach(["unknown", "malformed", "definitive"], (mode) => Effect.gen(function* () {
+      const f = yield* fixture("slack")
+      f.state.slackMutationError = mode === "unknown" ? "unrecognized_private_feedback" : mode === "definitive" ? "no_text" : ""
+      f.state.slackMutationMissingError = mode === "malformed"
+      if (mode === "definitive") {
+        expect((yield* f.call({ provider: "slack", text: "attempt" }).pipe(Effect.flip)).message).toBe("channel_provider")
+        expect(f.messages.has("201.000001")).toBe(false)
+      }
+      if (mode !== "definitive") {
+        const first = yield* f.output({ provider: "slack", text: "attempt" })
+        expect(first.result.status).toBe("unknown")
+        expect(f.messages.get("201.000001")?.text).toBe("attempt")
+        expect(JSON.stringify(first)).not.toContain("unrecognized_private_feedback")
+        const before = f.requests.length
+        expect((yield* f.output({ provider: "slack", text: "attempt" })).jobRef).toEqual(first.jobRef)
+        expect(f.requests).toHaveLength(before)
+      }
+      expect(f.state.mutations).toBe(1)
+      const rows = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.owner.sessionID === f.context.sessionID)[0]?.state).toBe(mode === "definitive" ? "failed" : "unknown")
+    }))
+  }), 30000)
 
   it.live("Slack send and thread send persist intent before HTTP; verify independent readback and retained JSON", () => Effect.gen(function* () {
     const f = yield* fixture("slack")
@@ -293,7 +459,9 @@ describe("CapabilityChannels real REST leaves", () => {
     const send = f.requests.find((request) => request.method === "POST")
     expect(send?.path).toBe("/api/v10/channels/20/messages")
     expect(send?.body.message_reference).toEqual({ message_id: f.messageID, channel_id: "20", fail_if_not_exists: true })
-    expect(f.requests.slice(0, 3).map((request) => request.path)).toEqual(["/api/v10/guilds/1", "/api/v10/channels/10", "/api/v10/channels/20"])
+    expect(f.requests.slice(0, 3).map((request) => request.path)).toEqual(["/api/v10/users/@me", "/api/v10/guilds/1", "/api/v10/guilds/1/members/99"])
+    expect(f.requests.some((request) => request.path === "/api/v10/channels/10")).toBe(true)
+    expect(f.requests.some((request) => request.path === "/api/v10/channels/20")).toBe(true)
     expect(f.requests.every((request) => request.authorization === `Bot ${token}`)).toBe(true)
   }))
 
@@ -564,7 +732,7 @@ describe("CapabilityChannels real REST leaves", () => {
       yield* Effect.raceFirst(Deferred.await(reused), Fiber.join(pending).pipe(
         Effect.andThen(Effect.die("CHANNEL_REUSED_ADMISSIONS_DID_NOT_COMPLETE"))))
       expect(f.requests.map((request) => request.path)).toEqual([
-        provider === "slack" ? "/api/auth.test" : "/api/v10/guilds/1",
+        provider === "slack" ? "/api/auth.test" : "/api/v10/users/@me",
       ])
       expect(f.state.mutations).toBe(0)
       const admitted = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
