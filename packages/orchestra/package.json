@@ -23,6 +23,11 @@
     "./*": "./src/*.ts"
   },
   "imports": {
+    "#claude-code-sqlite": {
+      "bun": "./src/claude-code/sqlite.bun.ts",
+      "node": "./src/claude-code/sqlite.node.ts",
+      "default": "./src/claude-code/sqlite.bun.ts"
+    },
     "#db": {
       "bun": "./src/storage/db.bun.ts",
       "node": "./src/storage/db.node.ts",

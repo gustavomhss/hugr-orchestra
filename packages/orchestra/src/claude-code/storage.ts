@@ -2,7 +2,7 @@ export * as ClaudeCodeStorage from "./storage"
 
 import path from "node:path"
 import { closeSync, fchmodSync, fsyncSync, lstatSync, openSync, writeFileSync } from "node:fs"
-import { Database } from "bun:sqlite"
+import { open } from "#claude-code-sqlite"
 import { Effect } from "effect"
 import type { FSUtil } from "@orchestra/core/fs-util"
 
@@ -16,7 +16,7 @@ export function create<A>(input: {
   empty: () => A
   decode: (text: string) => A
 }) {
-  const open = Effect.gen(function* () {
+  const acquire = Effect.gen(function* () {
     const dir = yield* input.directory
     if ((yield* input.fs.realPath(dir)) !== dir || (yield* input.fs.stat(dir)).type !== "Directory")
       return yield* Effect.fail(new Error("claude-code-unsafe-path"))
@@ -51,34 +51,34 @@ export function create<A>(input: {
       return yield* Effect.fail(new Error("claude-code-unsafe-path"))
     // File creation is not migration completion: every contender supplies the legacy candidate until COMMIT.
     const backup = legacy ? yield* input.fs.readFileString(legacyPath) : undefined
-    return yield* Effect.acquireRelease(Effect.try({ try: () => new Database(file, { create: true, strict: true }), catch: (cause) => cause }),
+    return yield* Effect.acquireRelease(Effect.try({ try: () => open(file), catch: (cause) => cause }),
       (db) => Effect.sync(() => db.close())).pipe(Effect.map((db) => ({ db, backup, dir, evidence })))
   })
   const modify = <B>(transform: (state: A) => B, write = true) => Effect.scoped(Effect.gen(function* () {
-    const { db, backup, dir, evidence } = yield* open
+    const { db, backup, dir, evidence } = yield* acquire
     return yield* Effect.try({ try: () => {
       db.exec("PRAGMA busy_timeout=30000; PRAGMA synchronous=FULL;")
-      return db.transaction(() => {
-        const tables = db.query<{ name: string; type: string }, []>("SELECT name,type FROM sqlite_master WHERE name NOT GLOB 'sqlite_*'").all()
-        const application = db.query<{ application_id: number }, []>("PRAGMA application_id").get()?.application_id
-        const version = db.query<{ user_version: number }, []>("PRAGMA user_version").get()?.user_version
+      return db.immediate(() => {
+        const tables = db.all<{ name: string; type: string }>("SELECT name,type FROM sqlite_master WHERE name NOT GLOB 'sqlite_*'")
+        const application = db.get<{ application_id: number }>("PRAGMA application_id")?.application_id
+        const version = db.get<{ user_version: number }>("PRAGMA user_version")?.user_version
         const initializing = tables.length === 0 && application === 0 && version === 0
         // Check under the same lock as schema admission: a contender may have initialized after open.
         if (initializing && lstatSync(evidence, { throwIfNoEntry: false })) throw new Error("claude-code-corrupt-storage")
         if (!initializing && (application !== APPLICATION_ID || version !== VERSION || tables.length !== 1 ||
           tables[0].name !== "native_state" || tables[0].type !== "table")) throw new Error("claude-code-corrupt-storage")
         if (initializing) db.exec("CREATE TABLE native_state (id INTEGER PRIMARY KEY CHECK (id = 1), payload TEXT NOT NULL)")
-        const rows = db.query<{ id: number; payload: string }, []>("SELECT id,payload FROM native_state").all()
+        const rows = db.all<{ id: number; payload: string }>("SELECT id,payload FROM native_state")
         if (!initializing && (rows.length !== 1 || rows[0].id !== 1)) throw new Error("claude-code-corrupt-storage")
         const row = rows[0]
         // Decode ownership and read CURRENT state under the kernel-protected SQLite transaction.
         const state = row ? input.decode(row.payload) : backup !== undefined ? input.decode(backup) : input.empty()
         const result = transform(state)
-        if (write || !row) db.query("INSERT INTO native_state(id,payload) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload").run(JSON.stringify(state))
+        if (write || !row) db.run("INSERT INTO native_state(id,payload) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload", JSON.stringify(state))
         if (initializing) db.exec(`PRAGMA application_id=${APPLICATION_ID}; PRAGMA user_version=${VERSION};`)
         sealInitialization(evidence, dir)
         return result
-      }).immediate()
+      })
     }, catch: (cause) => cause })
   }))
   return { modify, read: modify((state) => state, false) }
