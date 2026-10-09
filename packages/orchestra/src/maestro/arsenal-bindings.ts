@@ -2,14 +2,13 @@ export * as ArsenalBindings from "./arsenal-bindings"
 
 import path from "node:path"
 import { Effect, FileSystem, Layer, Option, Schema } from "effect"
-import { and, asc, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 import { ChildProcess } from "effect/unstable/process"
-import { isDeepStrictEqual } from "node:util"
 import { type Tool } from "ai"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
-import { MessageTable, PartTable } from "@orchestra/core/session/sql"
+import { PartTable } from "@orchestra/core/session/sql"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -24,8 +23,6 @@ import { Permission } from "@/permission"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { readAtlasSource } from "./atlas-source"
-import { readAuthorization } from "./authorization"
-import { readValidation } from "./validation-record"
 import { readPlanRevision } from "./plan-revision"
 import { compileContextToolPlan } from "./context-tool-plan"
 import { ToolFailure } from "@orchestra/llm"
@@ -50,7 +47,6 @@ import { EffectBridge } from "@/effect/bridge"
 import { ArsenalVerification } from "@/maestro/arsenal-verification"
 import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
-import { canonicalMemberId } from "./roster"
 import { WriteRoots } from "./write-roots"
 import { WorkflowBinding } from "./workflow-binding"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
@@ -192,8 +188,9 @@ export const node = makeGlobalNode({
     Database.node,
     Permission.node,
     Config.node,
-     Git.node,
-     RelayWorkflowSession.node,
+    Git.node,
+    EventV2Bridge.node,
+    RelayWorkflowSession.node,
   ],
 })
 
@@ -289,105 +286,8 @@ export const make = Effect.gen(function* () {
           : Effect.succeed(session),
       ),
     )
-  const approved = Effect.fn("ArsenalBindings.approvedTask")(
-    function* (input: ArsenalCompletion.Dispatch) {
-      const session = yield* parent(input)
-      const child = yield* sessions
-        .get(SessionID.make(input.taskID))
-        .pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-native-child-missing" })))
-      if (
-        child.parentID !== session.id ||
-        child.projectID !== session.projectID ||
-        child.directory !== session.directory
-      )
-        return yield* new ToolSafety.Denied({ reason: "completion-native-child-mismatch" })
-       const calls = input.workflow ? [] : yield* database.db
-        .select({ data: PartTable.data })
-        .from(PartTable)
-        .innerJoin(
-          MessageTable,
-          and(eq(MessageTable.id, PartTable.message_id), eq(MessageTable.session_id, PartTable.session_id)),
-        )
-        .where(
-          and(
-            eq(PartTable.session_id, session.id),
-            sql`json_extract(${PartTable.data}, '$.callID') = ${input.callID}`,
-            sql`json_extract(${MessageTable.data}, '$.role') = 'assistant'`,
-          ),
-        )
-        .limit(2)
-        .all()
-        .pipe(Effect.orDie)
-       if (!input.workflow && calls.length !== 1)
-        return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-missing-or-ambiguous" })
-       const call = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String }))(
-         input.workflow ? (yield* WorkflowBinding.taskCall(session.id, input.workflow.assistantMessageID, input.callID)).input
-           : Schema.decodeUnknownSync(Schema.Struct({ type: Schema.Literal("tool"), tool: Schema.Literal("task"),
-             state: Schema.Struct({ input: Schema.Unknown }) }))(calls[0].data).state.input,
-       )
-      if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
-       const actor = yield* agents.get(call.value.subagent_type)
-      if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
-        return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
-      const rows = yield* database.db
-        .select()
-        .from(EventTable)
-        .where(eq(EventTable.aggregate_id, session.id))
-        .orderBy(asc(EventTable.seq))
-        .limit(4097)
-        .all()
-        .pipe(Effect.orDie)
-      if (rows.length > 4096) return yield* new ToolSafety.Denied({ reason: "completion-authority-history-overflow" })
-      const direct = rows.findLast(
-        (row) =>
-          row.type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2) &&
-          row.data.childSessionID === child.id,
-      )
-      if (direct) {
-        const reserved = Schema.decodeUnknownSync(MaestroEvent.Approval.ReservedV2.data)(direct.data)
-        if (
-          reserved.callID !== input.callID ||
-          reserved.sessionID !== session.id ||
-          reserved.parentSessionID !== session.id ||
-          reserved.projectID !== session.projectID ||
-          canonicalMemberId(reserved.agent) !== canonicalMemberId(child.agent) ||
-          (input.planID !== undefined && reserved.planRevisionID !== input.planID) ||
-          !isDeepStrictEqual(reserved.permission, child.permission)
-        )
-          return yield* new ToolSafety.Denied({ reason: "completion-approved-task-mismatch" })
-        return { session, child, planID: reserved.planRevisionID, permission: reserved.permission }
-      }
-      const dispatch = rows.findLast(
-        (row) =>
-          row.type === EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2) &&
-          row.data.childSessionID === child.id,
-      )
-      if (dispatch) {
-        const reserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)(dispatch.data)
-        const authorization = yield* readAuthorization(reserved.authorizationID)
-        const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
-        if (
-          !authorization ||
-          !validation ||
-          validation.outcome !== "VALID" ||
-          validation.sessionID !== session.id ||
-          validation.projectID !== session.projectID ||
-          reserved.sessionID !== session.id ||
-          reserved.projectID !== session.projectID ||
-          canonicalMemberId(reserved.routedMemberID) !== canonicalMemberId(child.agent) ||
-          authorization.sessionID !== session.id ||
-          authorization.projectID !== session.projectID ||
-          (input.planID !== undefined && validation.planRevisionID !== input.planID) ||
-          !isDeepStrictEqual(reserved.permission, child.permission)
-        )
-          return yield* new ToolSafety.Denied({ reason: "completion-authorization-mismatch" })
-        return { session, child, planID: validation.planRevisionID, permission: reserved.permission }
-      }
-      if (input.planID) return yield* new ToolSafety.Denied({ reason: "completion-plan-authority-missing" })
-      return { session, child, planID: undefined, permission: child.permission }
-    },
-    Effect.provideService(Database.Service, database),
-  )
+  const approved = (input: ArsenalCompletion.Dispatch) =>
+    WorkflowBinding.approvedTask(input, { database, sessions, agents, parent })
   // The session's own completion-arm facts, newest first: the native record of what Maestro armed.
   const arms = (sessionID: string) => Effect.gen(function* () {
     const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, sessionID),
@@ -409,7 +309,9 @@ export const make = Effect.gen(function* () {
         const arm = (yield* arms(input.sessionID)).find((entry) => entry.fact.token)
         if (!arm) return
         const authority = yield* approved(input)
-        const native = yield* agents.get("maestro")
+        const native = yield* agents.get("maestro").pipe(
+          Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-native-owner-missing" })),
+        )
         if (native?.id !== "maestro" || native.native !== true)
           return yield* new ToolSafety.Denied({ reason: "completion-native-owner-missing" })
         const placement = Schema.decodeUnknownSync(
@@ -736,7 +638,8 @@ export const make = Effect.gen(function* () {
           Effect.mapError(() => new ToolFailure({ message: "ARSENAL_INPUT_DENIED" })),
         )
         if (name !== "relay-arm") return
-        if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database)))
+        if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database),
+          Effect.mapError((error) => new ToolFailure({ message: error.reason }))))
           return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED" })
         const input = Schema.decodeUnknownOption(
           Schema.Struct({
