@@ -83,6 +83,12 @@ for (const runtime of ["node", "bun"] as const) for (const mode of ["enabled", "
     const home = path.join(scratch, `${runtime}-${mode}`)
     const project = path.join(home, "project")
     await mkdir(project, { recursive: true })
+    const baseline = path.join(home, "upstream.json")
+    const observer = path.join(home, "observe.mjs")
+    if (mode === "failure") await Bun.write(observer, `import { writeFile } from "node:fs/promises";
+export default async () => ({ "tool.execute.after": async (input, output) => {
+  if (input.tool === "bash") await writeFile(${JSON.stringify(baseline)}, JSON.stringify({ callID: input.callID, raw: output.metadata.output, exit: output.metadata.exit, output: output.output }));
+} });`)
     const hits: { messages: { role: string; tool_call_id?: string; content: string }[] }[] = []
     const callID = `call_${runtime}_${mode}`
     const provider = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(req) {
@@ -106,7 +112,7 @@ for (const runtime of ["node", "bun"] as const) for (const mode of ["enabled", "
         GOCACHE: path.join(home, "go-cache"), GOPATH: path.join(home, "go"), TMPDIR: path.join(home, "tmp"), TMP: path.join(home, "tmp"), TEMP: path.join(home, "tmp"),
         ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
         ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}),
-        ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ model: "test/test-model", autoupdate: false, tool_output: { lean: { enabled: mode !== "disabled" } },
+        ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ model: "test/test-model", autoupdate: false, tool_output: { lean: { enabled: mode !== "disabled" } }, ...(mode === "failure" ? { plugin: [observer] } : {}),
           provider: { test: { id: "test", name: "Test", env: [], npm: "@ai-sdk/openai-compatible", options: { apiKey: "synthetic-key", baseURL: provider.url.href + "v1" },
             models: { "test-model": { id: "test-model", name: "Test", tool_call: true, limit: { context: 100000, output: 10000 }, cost: { input: 0, output: 0 } } } } } }) }
       await mkdir(path.join(home, "tmp"))
@@ -155,7 +161,16 @@ for (const runtime of ["node", "bun"] as const) for (const mode of ["enabled", "
         for (let i = 0; i < 30; i++) expect(tool.state.output).toContain(`=== RUN   TestCase${i}\n`)
         expect(tool.state.output.match(/=== RUN/g)).toHaveLength(30)
         expect(tool.state.output).toContain(mode === "failure" ? "FAILURE MUST_KEEP" : "PASS\n")
-        if (mode === "failure") expect(tool.state.output).toContain("exit code: 1")
+        if (mode === "failure") {
+          const upstream = await Bun.file(baseline).json()
+          expect(upstream.callID).toBe(callID)
+          expect(upstream.exit).toBe(1)
+          expect(upstream.raw.length).toBeLessThanOrEqual(30000)
+          expect(upstream.raw.startsWith("=== RUN   TestCase0\n")).toBe(true)
+          const expected = `<shell_metadata>\nexit code: 1\n</shell_metadata>\n\n${upstream.raw}`
+          expect(upstream.output).toBe(expected)
+          expect(Buffer.from(tool.state.output)).toEqual(Buffer.from(expected))
+        }
       }
     } catch (error) { errors.push(error) }
     if (server && server.proc.exitCode === null) server.proc.kill("SIGTERM")

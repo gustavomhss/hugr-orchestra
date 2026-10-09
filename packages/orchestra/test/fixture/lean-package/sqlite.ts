@@ -7,12 +7,28 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ClaudeCodeStorage } from "../../../src/claude-code/storage"
 import { openDatabase } from "../../../src/claude-code/sqlite"
 
+function closeAll(resources: { close(): void }[], errors: unknown[] = []) {
+  for (const resource of resources.toReversed()) {
+    try { resource.close() } catch (error) { errors.push(error) }
+  }
+  if (errors.length) throw new AggregateError(errors, "Private SQLite probe primary and cleanup errors")
+}
+
 export async function verify(root: string) {
   const file = path.join(root, "driver.sqlite")
-  const db = await openDatabase(file)
-  const contender = await openDatabase(file)
+  const resources: { close(): void }[] = []
+  const errors: unknown[] = []
   const primary = new Error("ROLLBACK MUST_KEEP")
+  const cleanup = [new Error("db close"), new Error("contender close")]
+  const closed: number[] = []
+  assert.throws(() => closeAll(cleanup.map((error, index) => ({ close() { closed.push(index); throw error } })), [primary]), (error) =>
+    error instanceof AggregateError && error.errors[0] === primary && error.errors[1] === cleanup[1] && error.errors[2] === cleanup[0])
+  assert.deepEqual(closed, [1, 0])
   try {
+    const db = await openDatabase(file)
+    resources.push(db)
+    const contender = await openDatabase(file)
+    resources.push(contender)
     db.exec("CREATE TABLE probe (value TEXT); PRAGMA busy_timeout=1")
     contender.exec("PRAGMA busy_timeout=1")
     db.transaction(() => assert.throws(() => contender.transaction(() => {}).immediate(), /locked|busy/i)).immediate()
@@ -22,7 +38,7 @@ export async function verify(root: string) {
     assert.equal(db.query<{ value: string }>("SELECT value FROM probe").get()?.value, "kept")
     assert.throws(() => db.transaction(() => { db.exec("ROLLBACK"); throw primary }).immediate(), (error) =>
       error instanceof AggregateError && error.errors[0] === primary && error.errors[1] instanceof Error)
-  } finally { contender.close(); db.close() }
+  } catch (error) { errors.push(error) } finally { closeAll(resources, errors) }
   await unlink(file) // Windows refuses this when a retained Bun statement keeps the connection open.
   await Effect.runPromise(Effect.gen(function* () {
     const fs = yield* FSUtil.Service
@@ -41,11 +57,12 @@ export async function verify(root: string) {
       assert.equal((yield* fs.stat(path.join(directory, "archive.sqlite"))).mode & 0o777, 0o600)
     }
     const raw = yield* Effect.promise(() => openDatabase(path.join(directory, "archive.sqlite")))
+    const failures: unknown[] = []
     try {
       assert.equal(raw.query<{ application_id: number }>("PRAGMA application_id").get()?.application_id, 0x4f434343)
       assert.equal(raw.query<{ user_version: number }>("PRAGMA user_version").get()?.user_version, 1)
       raw.exec("DELETE FROM native_state")
-    } finally { raw.close() }
+    } catch (error) { failures.push(error) } finally { closeAll([raw], failures) }
     assert.equal((yield* storage.read.pipe(Effect.result))._tag, "Failure")
     yield* fs.remove(path.join(directory, "archive.sqlite.initialized"))
     yield* fs.makeDirectory(path.join(directory, "archive.sqlite.initialized"))
