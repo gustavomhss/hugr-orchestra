@@ -2,7 +2,7 @@ export * as ClaudeCodeStore from "./store"
 
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Effect, Option, Schema } from "effect"
 import type { SessionKey, SessionStore, SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
@@ -76,7 +76,7 @@ export function create(input: {
   } })
   const read = storage.read
   const serialized = <A, E>(effect: Effect.Effect<A, E>) => effect.pipe(
-    Effect.tapCause(() => input.onFailure?.() ?? Effect.void))
+    Effect.tapCause((cause) => Cause.hasInterruptsOnly(cause) ? Effect.void : input.onFailure?.() ?? Effect.void))
   const record = (value: { apiID?: string; uuid?: string; messageID: MessageID }) => serialized(storage.modify((stored) => {
     for (const id of [value.apiID, value.uuid].filter((id) => id !== undefined)) {
       if (stored.mapping[id] && stored.mapping[id] !== value.messageID) throw new Error("claude-code-mapping-conflict")
@@ -93,6 +93,12 @@ export function create(input: {
   const store: SessionStore = {
     append: (key, entries) => input.run(serialized(Effect.gen(function* () {
       yield* validate(key)
+      const ids = input.userIDs ?? (input.userID ? [input.userID] : [])
+      const history = ids.length ? yield* input.sessions.messages({ sessionID: input.sessionID }) : []
+      const users = ids.flatMap((id) => history.filter((message) => message.info.id === id && message.info.role === "user"))
+      const prompt = input.userID && ids.includes(input.userID) && users.length && users.length === ids.length
+        ? users.flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : [])).join("\n\n").trim()
+        : undefined
       return yield* storage.modify((stored) => {
       if (stored.keys.some((item) => item.key.projectKey !== key.projectKey || item.key.sessionId !== key.sessionId))
         throw new Error("claude-code-session-key-mismatch")
@@ -116,10 +122,13 @@ export function create(input: {
         if (key.subpath || !ClaudeCodeTranscript.main(entry)) continue
         const api = ClaudeCodeTranscript.apiID(entry)
         const id = api ? stored.mapping[api] : undefined
-        if (entry.uuid && id) stored.mapping[entry.uuid] = id
-        if (!existing && entry.uuid && input.userID && !stored.mapping[entry.uuid] && ClaudeCodeTranscript.prompt(entry)) {
+        if (entry.type === "assistant" && entry.uuid && id) stored.mapping[entry.uuid] = id
+        // A native user row is a receipt only for the exact host prompt admitted to this query.
+        const receipt = prompt && ClaudeCodeTranscript.prompt(entry) && ClaudeCodeTranscript.record(entry.message) && entry.message.role === "user" &&
+          (entry.message.content === prompt || isDeepStrictEqual(entry.message.content, [{ type: "text", text: prompt }]))
+        if (!existing && entry.uuid && input.userID && !stored.mapping[entry.uuid] && receipt) {
           stored.mapping[entry.uuid] = input.userID
-          stored.members[entry.uuid] = [...input.userIDs ?? [input.userID]]
+          stored.members[entry.uuid] = [...ids]
           stored.delivered = [...new Set([...stored.delivered, ...stored.members[entry.uuid]])]
         }
       }
@@ -176,7 +185,7 @@ export function create(input: {
         yield* diagnostic("history-resynchronized")
       }
       const nativeTokens = estimate(entries)
-      if (!input.rewrite() || active.reason) return { key, entries: structuredClone(active.reason && active.reason !== "cleared" ? retained : entries), reason: active.reason ?? "native",
+      if (!input.rewrite() || active.reason) return { key, entries: structuredClone(entries), reason: active.reason ?? "native",
         kind: active.reason && active.reason !== "cleared" ? "fallback" as const : "ready" as const, ready: true, tokens: nativeTokens, nativeTokens }
       const view = yield* (options.admit ? input.continuity.admit : input.continuity.prepare)({ sessionID: input.sessionID, messages: history,
         expectedUserID: options.admit ? input.userID : undefined, model: options.model, canRecall: input.canRecall })

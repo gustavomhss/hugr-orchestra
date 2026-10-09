@@ -22,9 +22,6 @@ export function replay(input: { messages: SessionV1.WithParts[]; boundary?: Mess
     const sessionID = input.messages[0]?.info.sessionID
     if (!sessionID) throw new Error("complete-replay-empty-source")
     if (!input.model) throw new Error("complete-replay-model-required")
-    const user = RequestSource.latest(input.messages)?.info
-    if (!user || user.role !== "user" || user.model.providerID !== input.model.providerID || user.model.modelID !== input.model.id)
-      throw new Error("complete-replay-source-model-mismatch")
     const captured = completeSnapshot(sessionID, input.messages, input.previous, true, input.boundary)
     if (!captured) {
       const unsafe = input.messages.filter((message) => message.info.role === "assistant" && (message.info.time.completed === undefined || !message.info.error &&
@@ -33,8 +30,11 @@ export function replay(input: { messages: SessionV1.WithParts[]; boundary?: Mess
           error: message.info.role === "assistant" && !!message.info.error }))
       throw new Error(`complete-replay-unmet-completed-prefix:${JSON.stringify({ unsafe })}`)
     }
+    const user = RequestSource.latest(captured.covered ?? captured.head)?.info
+    if (!user || user.role !== "user" || user.model.providerID !== input.model.providerID || user.model.modelID !== input.model.id)
+      throw new Error("complete-replay-source-model-mismatch")
     const requests: LLM.StreamInput[] = []
-    const pass = yield* run(captured, { provider: { getModel: () => Effect.succeed(input.model) },
+    const pass = yield* run(captured, { provider: replayProvider(input.model),
       llm: input.llm ?? { stream: (request) => {
         if (!requests.includes(request)) return Stream.fail(new Error("complete-replay-construction-order"))
         return input.response ? Stream.make(LLMEvent.textDelta({ id: "saved-output", text: input.response }), LLMEvent.finish({ reason: "stop" })) :
@@ -53,6 +53,12 @@ export function replay(input: { messages: SessionV1.WithParts[]; boundary?: Mess
       artifact, system: view.system,
       retainedNativeIDs: view.messages.map((message) => message.info.id), coverage: view.coverage }
   })
+}
+
+/** Replay may resolve only the approved provider/model pair, never substitute it for another request. */
+export function replayProvider(model: Provider.Model): Pick<Provider.Interface, "getModel"> {
+  return { getModel: (providerID, modelID) => providerID === model.providerID && modelID === model.id ? Effect.succeed(model) :
+    Effect.fail(new Provider.ModelNotFoundError({ providerID, modelID })) }
 }
 
 if (import.meta.main) {
