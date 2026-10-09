@@ -35,18 +35,19 @@ export function snapshot(value: unknown): Schema.Json | Capability.Failure {
       (keys.length !== value.length || keys.some((key, index) => key !== String(index)))) return failure("quota_exceeded")
     seen.add(value)
     const result: Schema.Json = Array.isArray(value) ? [] : {}
+    const rejected: { failure?: Capability.Failure } = {}
     const invalid = keys.some((key) => {
       const property = Object.getOwnPropertyDescriptor(value, key)
       if (!property || !("value" in property)) return true
       budget.bytes += Buffer.byteLength(key)
-      if (budget.bytes > 262144) return true
+      if (budget.bytes > 262144) { rejected.failure = failure("quota_exceeded"); return true }
       const child = copy(property.value, depth + 1)
-      if (child instanceof Capability.Failure) return true
+      if (child instanceof Capability.Failure) { rejected.failure = child; return true }
       Object.defineProperty(result, key, { value: child, enumerable: true })
       return false
     })
     seen.delete(value)
-    return invalid ? failure("unsupported_schema") : Object.freeze(result)
+    return rejected.failure ?? (invalid ? failure("unsupported_schema") : Object.freeze(result))
   }
   const copied = copy(value, 0)
   return copied instanceof Capability.Failure ? copied : CapabilityVendorSchema.snapshot(copied)

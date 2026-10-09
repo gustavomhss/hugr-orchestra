@@ -380,3 +380,16 @@ function endRoot(f: Effect.Success<ReturnType<typeof CapabilityServiceCallFixtur
   return f.events.publish(SessionEvent.Tool.Success, { sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
     callID: f.context.toolCallID, timestamp: CapabilityPolicyFixture.timestamp, structured: {}, content: [], provider: { executed: false } })
 }
+
+it.live("snapshot preserves nested quota failures and inert serializer data without executing hidden hooks", () => Effect.gen(function* () {
+  const f = yield* CapabilityServiceCallFixture.fixture()
+  f.state.supplied = { descriptor: f.descriptor, input: { value: "x".repeat(262145) } }
+  expect((yield* f.call()).result.type).toBe("error")
+  expect(f.state.errors.at(-1)).toMatchObject({ code: "quota_exceeded" })
+  expect(f.state.calls).toHaveLength(0)
+  const input = { value: "requested" }
+  Object.defineProperty(input, "toJSON", { value: "inert", enumerable: false })
+  f.state.supplied = { descriptor: f.descriptor, input }
+  expect(f.output(yield* f.call()).result.status).toBe("completed")
+  expect(f.state.calls).toHaveLength(1)
+}), 60000)
