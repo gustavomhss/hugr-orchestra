@@ -16,6 +16,7 @@ const generated = await import("./generate.ts")
 import { Script } from "@orchestra/script"
 import pkg from "../package.json"
 import { seatSkillsFiles } from "./seat-skills"
+import { leanNotices } from "./lean-notices"
 
 const singleFlag = process.argv.includes("--single")
 const baselineFlag = process.argv.includes("--baseline")
@@ -239,6 +240,7 @@ for (const item of targets) {
     ),
   )
   binaries[name] = Script.version
+  await leanNotices(`dist/${name}`)
 }
 
 export { binaries }

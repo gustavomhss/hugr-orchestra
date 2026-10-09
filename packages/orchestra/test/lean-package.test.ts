@@ -1,0 +1,142 @@
+import { afterAll, beforeAll, expect, test } from "bun:test"
+import path from "node:path"
+import { mkdtemp, mkdir, rm } from "node:fs/promises"
+import os from "node:os"
+import { leanPin, sha256 } from "../script/lean-notices"
+
+const dir = path.resolve(import.meta.dirname, "..")
+const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-package-"))
+const binary = path.join(dir, `dist/orchestra-${process.platform === "win32" ? "windows" : process.platform}-${process.arch}/bin/orchestra${process.platform === "win32" ? ".exe" : ""}`)
+const node = path.join(dir, "dist/node/node.js")
+const buildEnv = { ...process.env, MODELS_DEV_API_JSON: path.join(dir, "test/tool/fixtures/models-api.json"), ORCHESTRA_CHANNEL: "dev", ORCHESTRA_VERSION: "1.18.27" }
+
+function child(cmd: string[], env: Record<string, string | undefined>, cwd = dir) {
+  const proc = Bun.spawn(cmd, { cwd, env, stdout: "pipe", stderr: "pipe", timeout: 240000, killSignal: "SIGKILL" })
+  const output = Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
+  return { proc, async finish(stopping = false) {
+    const [stdout, stderr, code] = await output
+    if (proc.signalCode === "SIGKILL" || (code !== 0 && !(stopping && proc.signalCode === "SIGTERM")))
+      throw new Error(`${cmd.join(" ")} exited ${code}/${proc.signalCode}\n${stdout}\n${stderr}`)
+    return stdout
+  } }
+}
+
+beforeAll(async () => {
+  if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Package builds require CI")
+  await child(["bun", "run", "script/build.ts", "--single", "--skip-install", "--skip-embed-web-ui", "--sourcemaps"], buildEnv).finish()
+  await child(["bun", "run", "script/build-node.ts"], buildEnv).finish()
+  await mkdir(path.join(scratch, "archive"))
+  await child(["tar", "-xzf", path.join(dir, "../core/vendor/hugr-lean-0.2.0.tgz"), "-C", path.join(scratch, "archive")], buildEnv).finish()
+}, 600000)
+afterAll(() => rm(scratch, { recursive: true, force: true }))
+
+test("orchestra package typecheck in CI", async () => {
+  await child(["bun", "typecheck"], buildEnv).finish()
+}, 240000)
+
+test("actual Node and Bun artifacts retain exact pinned notices", async () => {
+  const archive = new Uint8Array(await Bun.file(path.join(dir, "../core/vendor/hugr-lean-0.2.0.tgz")).arrayBuffer())
+  expect(sha256(archive)).toBe(leanPin.sha256)
+  for (const root of [path.dirname(node), path.dirname(path.dirname(binary))]) {
+    const manifest = await Bun.file(path.join(root, "licenses/hugr-lean/manifest.json")).json()
+    expect(manifest).toMatchObject(leanPin)
+    expect(manifest.materials.map((entry: { path: string }) => entry.path)).toEqual(["LICENSE", "NOTICE", "licenses/TRS-MIT.txt"])
+    for (const file of ["LICENSE", "NOTICE", "licenses/TRS-MIT.txt"]) {
+      const original = new Uint8Array(await Bun.file(path.join(scratch, "archive/package", file)).arrayBuffer())
+      const shipped = new Uint8Array(await Bun.file(path.join(root, "licenses/hugr-lean", file)).arrayBuffer())
+      expect(shipped).toEqual(original)
+      expect(manifest.materials.find((entry: { path: string }) => entry.path === file)?.sha256).toBe(sha256(original))
+      console.log(`notice ${path.basename(root)} ${file} ${sha256(shipped)}`)
+    }
+  }
+})
+
+test("production Node bundle has no source TypeScript imports; Bun CLI version smoke", async () => {
+  const imports = (text: string) => [...text.matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+\.ts)["']/g)].map((match) => match[1])
+  expect(imports('import("../../core/src/tool.ts"); export { x } from "./counterfeit.ts"')).toHaveLength(2)
+  const files = await Array.fromAsync(new Bun.Glob("**/*.js").scan({ cwd: path.dirname(node) }))
+  expect(files).toContain("node.js")
+  for (const file of files) expect(imports(await Bun.file(path.join(path.dirname(node), file)).text())).toEqual([])
+  expect((await child([binary, "--version"], buildEnv).finish()).trim()).toBe("1.18.27")
+})
+
+for (const runtime of ["node", "bun"] as const) for (const mode of ["enabled", "disabled", "failure"] as const) {
+  test(`packaged ${runtime} native Go ${mode}: next provider text equals durable tool text`, async () => {
+    const home = path.join(scratch, `${runtime}-${mode}`)
+    await mkdir(home, { recursive: true })
+    const hits: { messages: { role: string; tool_call_id?: string; content: string }[] }[] = []
+    const callID = `call_${runtime}_${mode}`
+    const provider = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(req) {
+      if (!new URL(req.url).pathname.endsWith("/chat/completions")) return new Response("unexpected provider route", { status: 400 })
+      expect(req.headers.get("authorization")).toBe("Bearer synthetic-key")
+      const body = await req.json()
+      hits.push(body)
+      const complete = body.messages.some((message: { role: string }) => message.role === "tool")
+      const delta = complete ? { content: "done" } : { tool_calls: [{ index: 0, id: callID, type: "function", function: { name: "bash", arguments: JSON.stringify({ command: "go test -v .", workdir: home, timeout: 120000 }) } }] }
+      const chunks = [{ role: "assistant", ...delta }, {}].map((delta, index) => `data: ${JSON.stringify({ id: "completion", object: "chat.completion.chunk", created: 1, model: "test-model", choices: [{ index: 0, delta, finish_reason: index ? (complete ? "stop" : "tool_calls") : null }] })}\n\n`)
+      return new Response(chunks.join("") + "data: [DONE]\n\n", { headers: { "content-type": "text/event-stream" } })
+    } })
+    const env: Record<string, string> = { PATH: process.env.PATH!, HOME: home, USERPROFILE: home, ORCHESTRA_TEST_HOME: home,
+      XDG_DATA_HOME: path.join(home, "data"), XDG_CACHE_HOME: path.join(home, "cache"), XDG_CONFIG_HOME: path.join(home, "config"), XDG_STATE_HOME: path.join(home, "state"),
+      ORCHESTRA_TEST_MANAGED_CONFIG_DIR: path.join(home, "managed"), ORCHESTRA_DB: path.join(home, "proof.sqlite"), ORCHESTRA_INHERIT_CREDENTIALS: "0",
+      ORCHESTRA_DISABLE_DEFAULT_PLUGINS: "true", ORCHESTRA_DISABLE_MODELS_FETCH: "true", ORCHESTRA_DISABLE_AUTOUPDATE: "true", ORCHESTRA_DISABLE_EXTERNAL_SKILLS: "true", ORCHESTRA_DISABLE_CLAUDE_CODE: "true",
+      ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_DISABLE_LSP_DOWNLOAD: "true", GOTOOLCHAIN: "local", GOPROXY: "off", GOSUMDB: "off", CGO_ENABLED: "0",
+      ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
+      ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ model: "test/test-model", autoupdate: false, tool_output: { lean: { enabled: mode !== "disabled" } },
+        provider: { test: { id: "test", name: "Test", env: [], npm: "@ai-sdk/openai-compatible", options: { apiKey: "synthetic-key", baseURL: provider.url.href + "v1" },
+          models: { "test-model": { id: "test-model", name: "Test", tool_call: true, limit: { context: 100000, output: 10000 }, cost: { input: 0, output: 0 } } } } } }) }
+    await Bun.write(path.join(home, "go.mod"), "module example.test\n\ngo 1.20\n")
+    await Bun.write(path.join(home, "native_test.go"), `package example\nimport "testing"\n${Array.from({ length: 30 }, (_, i) => `func TestCase${i}(t *testing.T) { ${mode === "failure" && i === 0 ? 't.Fatal("FAILURE MUST_KEEP")' : ""} }`).join("\n")}\n`)
+    const ready = path.join(home, "ready")
+    const reservation = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response() })
+    const url = reservation.url.href
+    const port = reservation.port!
+    await reservation.stop(true)
+    const server = child(runtime === "node" ? ["node", path.join(dir, "test/fixture/lean-package/node.mjs"), node, ready] : [binary, "serve", "--hostname", "127.0.0.1", "--port", String(port)], env, home)
+    const errors: unknown[] = []
+    try {
+      const deadline = Date.now() + 120000
+      const request = async (route: string, body?: unknown) => {
+        const base = runtime === "node" ? await Bun.file(ready).text() : url
+        const response = await fetch(new URL(`${route}?directory=${encodeURIComponent(home)}`, base), { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(120000) })
+        const text = await response.text()
+        if (!response.ok) throw new Error(`${route}: ${response.status} ${text}`)
+        return JSON.parse(text)
+      }
+      while (true) {
+        if (server.proc.exitCode !== null) { await server.finish(); throw new Error("Server exited before readiness") }
+        const available = runtime === "node" ? await Bun.file(ready).exists() : await fetch(new URL("global/health", url), { signal: AbortSignal.timeout(1000) }).then((r) => r.ok, () => false)
+        if (available) break
+        if (Date.now() >= deadline) throw new Error("Packaged server readiness timed out")
+        await Bun.sleep(100)
+      }
+      const session = await request("session", { title: "Packaged Lean", permission: [{ permission: "*", pattern: "*", action: "allow" }] })
+      await request(`session/${session.id}/message`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Run native tests once." }] })
+      const messages = await request(`session/${session.id}/message`)
+      const tools = messages.flatMap((message: { parts: { type: string; callID: string; state: { status: string; output: string; input: { command: string }; metadata: { exit: number; truncated: boolean } } }[] }) => message.parts).filter((part: { type: string; callID: string }) => part.type === "tool" && part.callID === callID)
+      expect(tools).toHaveLength(1)
+      const tool = tools[0]
+      expect(tool.state.status).toBe("completed")
+      expect(tool.state.input.command).toBe("go test -v .")
+      expect(tool.state.metadata.exit).toBe(mode === "failure" ? 1 : 0)
+      expect(tool.state.metadata.truncated).toBe(false)
+      const next = hits.flatMap((hit) => hit.messages).filter((message) => message.role === "tool" && message.tool_call_id === callID)
+      expect(next).toHaveLength(1)
+      expect(next[0].content).toBe(tool.state.output)
+      if (mode === "enabled") {
+        expect(tool.state.output).not.toContain("=== RUN")
+        expect(tool.state.output).toContain("PASS\n")
+        expect(tool.state.output).toMatch(/ok {2}\texample\.test\t/)
+      } else {
+        expect(tool.state.output).toContain("=== RUN   TestCase0")
+        expect(tool.state.output).toContain("=== RUN   TestCase29")
+        expect(tool.state.output).toContain(mode === "failure" ? "FAILURE MUST_KEEP" : "PASS\n")
+        if (mode === "failure") expect(tool.state.output).toContain("exit code: 1")
+      }
+    } catch (error) { errors.push(error) }
+    server.proc.kill("SIGTERM")
+    await server.finish(true).catch((error) => errors.push(error))
+    await provider.stop(true).catch((error) => errors.push(error))
+    if (errors.length) throw new AggregateError(errors, `Packaged ${runtime}/${mode} primary and cleanup errors`)
+  }, 240000)
+}
