@@ -2,6 +2,7 @@ import { describe, expect } from "bun:test"
 import path from "node:path"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityDiscovery } from "@orchestra/core/capability/catalog/discovery"
+import { CapabilityDescriptors } from "@orchestra/core/capability/catalog/descriptors"
 import { CapabilityVendorSchema } from "@orchestra/core/capability/catalog/schema"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
@@ -27,7 +28,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
-import { Cause, Deferred, Effect, Fiber, Layer, Ref, Schema } from "effect"
+import { Cause, Deferred, Effect, Fiber, Layer, Ref, Schema, Scope, Tracer } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -78,14 +79,15 @@ function fixture(options: Omit<CapabilityDiscovery.Options, "source"> = {}) {
     const target = yield* connections.createTarget(connection, { environment: "test", resource: { project: "selected" } })
     const bind = { target, sessionID: f.context.sessionID, agentID: f.context.agent, actions: [CapabilityDiscovery.disclosureAction] }
     yield* connections.bind(bind)
-    const list = yield* Ref.make<CapabilityDiscovery.VendorList>({ tools, catalogGeneration: 1, coverage: "complete" })
+    const list = yield* Ref.make<Omit<CapabilityDiscovery.VendorList, "byteLength">>({ tools, catalogGeneration: 1, coverage: "complete" })
     const calls = yield* Ref.make<CapabilityDiscovery.Selection[]>([])
     const transport = yield* Ref.make<Effect.Effect<void, Capability.Failure>>(Effect.void)
     // Deterministic host transport boundary only. Real policy, Connection, root and registry remain live.
     const source: CapabilityDiscovery.CatalogSource = { listTools: (selection) => Effect.gen(function* () {
       yield* Ref.update(calls, (calls) => [...calls, selection])
       yield* Ref.get(transport).pipe(Effect.flatten)
-      return yield* Ref.get(list)
+      const value = yield* Ref.get(list)
+      return { ...value, byteLength: Buffer.byteLength(JSON.stringify(value)) }
     }) }
     const clock = { time: 1000 }
     const discovery = yield* CapabilityDiscovery.make({ source, now: () => clock.time, ttlMillis: 100, ...options })
@@ -170,7 +172,7 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(yield* Ref.get(f.calls)).toHaveLength(after)
     yield* CapabilityPolicyFixture.setRules([{ action: CapabilityDiscovery.disclosureAction, resource: "*", effect: "deny" }])
     yield* expectCode(f.find(), "target_denied")
-    yield* expectCode(f.describe({ ...ref(first), id: Capability.DescriptorID.create() }), "target_denied")
+    yield* expectCode(f.describe({ ...ref(first), id: Capability.DescriptorID.create() }), "stale_descriptor")
     expect(yield* Ref.get(f.calls)).toHaveLength(after)
   }))
 
@@ -195,7 +197,7 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     yield* expectCode(CapabilityInvocation.withContext({ ...other.binding, effectiveRules: allow },
       f.discovery.find(other.context, next, f.materialization)), "stale_descriptor")
     yield* expectCode(CapabilityInvocation.withContext({ ...other.binding, effectiveRules: allow },
-      f.discovery.describe(other.context, ref(first), f.materialization)), "target_denied")
+      f.discovery.describe(other.context, ref(first), f.materialization)), "stale_descriptor")
     const actor = AgentV2.ID.make("other")
     yield* CapabilityPolicyFixture.setRules(allow, actor)
     const context = { ...f.context, agent: actor, assistantMessageID: SessionMessage.ID.create() }
@@ -374,5 +376,142 @@ describe("CapabilityDiscovery host metadata backbone", () => {
     expect(valid.output?.structured).toMatchObject({ status: "completed", summary: "2" })
     expect(yield* Ref.get(dispatches)).toBe(2)
     expect(yield* Ref.get(projections)).toBe(1)
+  }))
+
+  it.live("forged refs and cross-owner descriptors/cursors fail with zero credential and source acquisition", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const reads = { credentials: 0 }
+    const tracer = Tracer.make({ span: (options) => {
+      if (options.name === "Credential.get") reads.credentials++
+      return new Tracer.NativeSpan(options)
+    } })
+    const first = yield* f.find().pipe(Effect.withTracer(tracer))
+    expect(reads.credentials).toBeGreaterThan(0)
+    expect(yield* Ref.get(f.calls)).toHaveLength(1)
+    reads.credentials = 0
+    const issued = ref(first)
+    const forged = [
+      { ...issued, id: Capability.DescriptorID.create() }, { ...issued, schemaHash: "b".repeat(64) },
+      { ...issued, catalogGeneration: issued.catalogGeneration + 1 },
+      { ...issued, connectionID: Capability.ConnectionID.create() }, { ...issued, targetID: Capability.TargetID.create() },
+      { ...issued, schemaHash: "invalid" }, { ...issued, unexpected: true },
+    ]
+    yield* Effect.forEach(forged, (value) => expectCode(f.describe(value).pipe(Effect.withTracer(tracer)), "stale_descriptor"))
+    const next = { ...request, cursor: cursor(first) }
+    yield* Effect.forEach([
+      { ...next, cursor: next.cursor + "x" }, { ...next, query: "changed" }, { ...next, provider: "other" },
+      { ...next, limit: 2 }, { ...next, connectionID: f.connection.id }, { ...next, targetID: f.target.id },
+    ], (value) => expectCode(f.find(value).pipe(Effect.withTracer(tracer)), "stale_descriptor"))
+    const other = yield* CapabilityPolicyFixture.fixture()
+    yield* CapabilityPolicyFixture.setRules(allow)
+    const owner = { ...other.binding, effectiveRules: allow }
+    yield* expectCode(CapabilityInvocation.withContext(owner,
+      f.discovery.find(other.context, next, f.materialization)).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    yield* expectCode(CapabilityInvocation.withContext(owner,
+      f.discovery.describe(other.context, issued, f.materialization)).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    const actor = AgentV2.ID.make("cross_actor")
+    yield* CapabilityPolicyFixture.setRules(allow, actor)
+    const context = { ...f.context, agent: actor, assistantMessageID: SessionMessage.ID.create() }
+    yield* f.events.publish(SessionEvent.Step.Started, { ...context, timestamp: CapabilityPolicyFixture.timestamp,
+      model: { id: Model.ID.make("model"), providerID: Provider.ID.make("provider") } })
+    yield* f.events.publish(SessionEvent.Tool.Input.Started, { sessionID: context.sessionID,
+      assistantMessageID: context.assistantMessageID, callID: context.toolCallID, name: "service_call", timestamp: CapabilityPolicyFixture.timestamp })
+    const host = { ...f.binding, owner: { ...f.binding.owner, agentID: actor },
+      invocation: { ...f.binding.invocation, agentID: actor, assistantMessageID: context.assistantMessageID } }
+    yield* expectCode(CapabilityInvocation.withContext(host,
+      f.discovery.find(context, next, f.materialization)).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    yield* expectCode(CapabilityInvocation.withContext(host,
+      f.discovery.describe(context, issued, f.materialization)).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    f.clock.time += 100
+    yield* expectCode(f.find(next).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    yield* expectCode(f.describe(issued).pipe(Effect.withTracer(tracer)), "stale_descriptor")
+    expect(reads.credentials).toBe(0)
+    expect(yield* Ref.get(f.calls)).toHaveLength(1)
+  }))
+
+  it.live("ordered visibility and captured/current policy bind cursors before old offsets can skip or return false complete", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* Ref.set(f.list, { tools: tools.slice(0, 2), catalogGeneration: 1, coverage: "complete" })
+    const first = yield* f.find()
+    const next = { ...request, cursor: cursor(first) }
+    const denyA = [...allow, { action: CapabilityDiscovery.disclosureAction, resource: "example:list_projects", effect: "deny" as const }]
+    yield* CapabilityPolicyFixture.setRules(denyA)
+    yield* expectCode(f.find(next), "stale_descriptor")
+    const restart = yield* f.find()
+    expect(restart.operations.map((operation) => operation.name)).toEqual(["get_project"])
+    expect(restart.cursor).toBeUndefined()
+    expect(restart.coverage).toBe("complete")
+    yield* CapabilityPolicyFixture.setRules(allow)
+    yield* expectCode(CapabilityInvocation.withContext({ ...f.binding, effectiveRules: denyA },
+      f.discovery.find(f.context, next, f.materialization)), "stale_descriptor")
+    yield* expectCode(CapabilityInvocation.withContext({ ...f.binding, nativeDenyFloor: denyA },
+      f.discovery.find(f.context, next, f.materialization)), "stale_descriptor")
+    yield* CapabilityPolicyFixture.setRules([...allow,
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:get_project", effect: "ask" },
+    ])
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const pending = yield* f.find(next).pipe(Effect.result, Effect.forkChild)
+    const asked = yield* Deferred.await(observation.first)
+    expect(asked.resources).toContain("example:get_project")
+    yield* f.permissions.reply({ requestID: asked.id, reply: "once" })
+    const result = yield* Fiber.join(pending)
+    expect(result._tag).toBe("Failure")
+    if (result._tag === "Failure") expect(result.failure.code).toBe("stale_descriptor")
+  }).pipe(Effect.timeout("15 seconds")))
+
+  it.live("denied malformed/deep/oversize schemas cannot fail permitted pages or alter visible catalog hashes", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* CapabilityPolicyFixture.setRules([...allow,
+      { action: CapabilityDiscovery.disclosureAction, resource: "example:hidden", effect: "deny" },
+    ])
+    const hidden = { name: "hidden", summary: "Hidden schema", inputSchema: 17 }
+    yield* Ref.set(f.list, { tools: [hidden, ...tools.slice(1)], catalogGeneration: 1, coverage: "complete" })
+    const first = yield* f.find()
+    expect(first.operations.map((operation) => operation.name)).toEqual(["get_project"])
+    yield* Effect.forEach([
+      { description: "x".repeat(CapabilityVendorSchema.bounds.maxBytes + 1) },
+      { enum: Array.from({ length: 5000 }, (_, n) => n) },
+      Array.from({ length: 70 }).reduce<Schema.Json>((child) => ({ allOf: [child] }), true),
+    ], (inputSchema) => Effect.gen(function* () {
+      yield* Ref.set(f.list, { tools: [{ ...hidden, inputSchema }, ...tools.slice(1)], catalogGeneration: 1, coverage: "complete" })
+      const next = yield* f.find({ ...request, cursor: cursor(first) })
+      expect(next.operations.map((operation) => operation.name)).toEqual(["create_project"])
+      expect(next.operations[0]?.readiness).toBe("ready")
+    }))
+    yield* CapabilityPolicyFixture.setRules(allow)
+    yield* expectCode(f.find({ ...request, query: "hidden" }), "unsupported_schema")
+    yield* Ref.set(f.list, { tools: [hidden], catalogGeneration: 1, coverage: "complete" })
+    expect((yield* f.find()).operations[0]?.readiness).toBe("unsupported")
+    const bounded = yield* CapabilityDiscovery.make({ source: f.source, maxCatalogBytes: 200 })
+    yield* Ref.set(f.list, { tools: [{ ...hidden, inputSchema: { description: "x".repeat(1000) } }], catalogGeneration: 1, coverage: "complete" })
+    yield* expectCode(f.run(bounded.find(f.context, request, f.materialization)), "quota_exceeded")
+  }))
+
+  it.live("page local capacity check precedes issuance and preserves remaining descriptor capacity", () => Effect.gen(function* () {
+    const f = yield* fixture({ maxEntries: 2 })
+    const sameSchema = tools.map((tool) => ({ name: tool.name, summary: tool.summary, inputSchema: true }))
+    yield* Ref.set(f.list, { tools: sameSchema, catalogGeneration: 1, coverage: "complete" })
+    const first = yield* f.find()
+    yield* expectCode(f.find({ ...request, limit: 2 }), "quota_exceeded")
+    const second = yield* f.find({ ...request, query: "get_project" })
+    expect(second.operations[0]?.name).toBe("get_project")
+    expect((yield* f.describe(ref(first))).name).toBe("list_projects")
+    expect((yield* f.describe(ref(second))).name).toBe("get_project")
+  }))
+
+  it.live("asynchronous descriptor read replacement cannot return stale schema metadata", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const scope = yield* Scope.Scope
+    const store = yield* CapabilityDescriptors.make({ maxEntries: 4, ttlMillis: 100, now: () => f.clock.time })
+    const injected: CapabilityDescriptors.Store = { ...store, read: (ref, owner) => store.read(ref, owner).pipe(
+      Effect.tap(() => f.registry.register({ platform_example: leaf() }).pipe(
+        Effect.orDie, Effect.provideService(Scope.Scope, scope), Effect.andThen(Effect.yieldNow))),
+    ) }
+    const discovery = yield* CapabilityDiscovery.make({ source: f.source, descriptors: injected, now: () => f.clock.time, ttlMillis: 100 })
+    const first = yield* f.run(discovery.find(f.context, request, f.materialization))
+    yield* expectCode(f.run(discovery.describe(f.context, ref(first), f.materialization)), "stale_descriptor")
+    const fresh = yield* f.registry.materialize(allow)
+    expect(fresh.definition("platform_example")).toEqual(f.materialization.definition("platform_example"))
+    expect(fresh.registrationIdentity("platform_example")).not.toBe(f.materialization.registrationIdentity("platform_example"))
   }))
 })

@@ -13,7 +13,7 @@ const scope: CapabilityCursors.Scope = {
   owner: { projectID: Project.ID.global, location: { directory: AbsolutePath.make("/project") },
     sessionID: SessionSchema.ID.create(), agentID: AgentV2.ID.make("test") },
   query: "exact query", provider: "example", connectionID: Capability.ConnectionID.create(), targetID: Capability.TargetID.create(),
-  connectionGeneration: 1, targetGeneration: 2, catalogGeneration: 3, catalogHash: "a".repeat(64),
+  connectionGeneration: 1, targetGeneration: 2, catalogGeneration: 3, catalogHash: "a".repeat(64), visibilityHash: "a".repeat(64),
   canonicalIdentity: {}, limit: 1,
 }
 
@@ -22,13 +22,15 @@ describe("CapabilityCursors opaque bounded scope", () => {
     const store = yield* CapabilityCursors.make({ maxEntries: 2, ttlMillis: 100, now: () => 1 })
     const token = yield* store.issue(scope, 2)
     expect(yield* store.read(token, scope)).toBe(2)
+    yield* store.preflight(token, scope)
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/)
     expect(token).not.toContain("query")
     const altered: CapabilityCursors.Scope[] = [
       { ...scope, query: "exact Query" }, { ...scope, provider: "other" }, { ...scope, limit: 2 },
+      { ...scope, requestedConnectionID: scope.connectionID }, { ...scope, requestedTargetID: scope.targetID },
       { ...scope, connectionID: Capability.ConnectionID.create() }, { ...scope, targetID: Capability.TargetID.create() },
       { ...scope, connectionGeneration: 2 }, { ...scope, targetGeneration: 3 }, { ...scope, catalogGeneration: 4 },
-      { ...scope, catalogHash: "b".repeat(64) }, { ...scope, canonicalIdentity: {} },
+      { ...scope, catalogHash: "b".repeat(64) }, { ...scope, visibilityHash: "b".repeat(64) }, { ...scope, canonicalIdentity: {} },
       ...[
         { ...scope.owner, projectID: Project.ID.make("other") },
         { ...scope.owner, sessionID: SessionSchema.ID.create() },
@@ -42,6 +44,15 @@ describe("CapabilityCursors opaque bounded scope", () => {
     })))
     expect((yield* store.read(token + "x", scope).pipe(Effect.flip)).code).toBe("stale_descriptor")
     expect(yield* store.read(token, scope)).toBe(2)
+    yield* Effect.forEach([
+      { ...scope, query: "changed" }, { ...scope, provider: "changed" }, { ...scope, limit: 2 },
+      { ...scope, requestedConnectionID: scope.connectionID }, { ...scope, requestedTargetID: scope.targetID },
+      ...altered.filter((current) => current.owner !== scope.owner),
+    ], (current) => store.preflight(token, current).pipe(Effect.flip, Effect.map((failure) => {
+      expect(failure.code).toBe("stale_descriptor")
+    })))
+    const changedGeneration = { ...scope, catalogGeneration: 100, visibilityHash: "changed", canonicalIdentity: {} }
+    yield* store.preflight(token, changedGeneration)
   }))
 
   it.live("quota/expiry/invalid clock fail closed; caller mutations cannot rewrite retained scope", () => Effect.gen(function* () {
