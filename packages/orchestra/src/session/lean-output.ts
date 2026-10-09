@@ -33,6 +33,9 @@ export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A 
   const end = now()
   if (!input.telemetry || start === undefined || end === undefined) return selected.output
   try {
+    // SessionProcessor may still change text when an image fails normalization.
+    if (selected.output.attachments?.some((part) => typeof part === "object" && part !== null
+      && "mime" in part && typeof part.mime === "string" && part.mime.startsWith("image/"))) return selected.output
     const candidate = input.binding?.candidate
     const trusted = input.binding && ToolModelCapture.bound(input.binding) && candidate
       && ToolModelCapture.authentic(candidate) && candidate.owner.sessionID === input.owner.sessionID
@@ -79,10 +82,12 @@ function select<A extends LegacyLeanCapture.Output>(input: Input<A>): {
     const approved = LegacyLeanCapture.model(input.output)
     if (!isDeepStrictEqual(approved.structured, input.binding.baseline.structured)) return declined("policy_mapping_changed")
     const observed: { result?: ToolModelProjection.FilterResult; failed?: boolean } = {}
-    const selected = ToolModelProjection.project({
+    const projection = {
       enabled: true, owner: input.owner, binding: input.binding,
       approved: { ...approved, content: [...input.binding.baseline.content, ...(suffix ? [{ type: "text" as const, text: suffix }] : [])] },
-      limits: input.limits, filter: (observation) => {
+      limits: input.limits,
+    }
+    const selected = ToolModelProjection.project({ ...projection, filter: (observation) => {
         try {
           return observed.result = LeanProcessor.process(observation)
         } catch (error) {
@@ -91,9 +96,17 @@ function select<A extends LegacyLeanCapture.Output>(input: Input<A>): {
         }
       },
     })
+    // Reuse the observed result, never re-run the processor. Acceptance without the budget proves the refusal seam.
+    const unlimited = !selected.decision && observed.result
+      ? ToolModelProjection.project({ ...projection, limits: { maxLines: Number.MAX_SAFE_INTEGER, maxBytes: Number.MAX_SAFE_INTEGER },
+        filter: () => observed.result! }) : undefined
+    const view = unlimited?.decision
+      ? unlimited.output.content.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n") : undefined
+    const budget = view === undefined ? undefined : view.split("\n").length > input.limits.maxLines
+      ? "projection_budget_max_lines" : Buffer.byteLength(view, "utf8") > input.limits.maxBytes ? "projection_budget_max_bytes" : undefined
     if (!selected.decision) return declined(observed.failed ? "processorfailed"
       : observed.result?.status === "passthrough" || observed.result?.status === "failed_open"
-        ? observed.result.reason : "projection_declined")
+        ? observed.result.reason : budget ?? "projection_declined")
     const output = selected.output.content.map((part) => part.type === "text" ? part.text : "").join("")
     return { output: { ...input.output, output }, decision: selected.decision, reason: selected.decision.reason }
   } catch {
