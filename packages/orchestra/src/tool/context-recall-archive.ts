@@ -13,7 +13,7 @@ export const Lookup = Schema.Struct({
   limit: Schema.optional(Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(8000))),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 export const Search = Schema.Struct({
-  archive_query: Schema.String.check(Schema.isMaxLength(256)),
+  archive_query: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
   limit: Schema.optional(Count),
   match: Schema.optional(Schema.Literals(["literal", "terms"])),
   offset: Schema.optional(Offset.check(Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER))),
