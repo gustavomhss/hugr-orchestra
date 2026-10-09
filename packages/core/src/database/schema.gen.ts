@@ -109,6 +109,25 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`capability_child\` (
+          \`id\` text PRIMARY KEY,
+          \`session_id\` text NOT NULL,
+          \`agent_id\` text NOT NULL,
+          \`assistant_message_id\` text NOT NULL,
+          \`root_call_id\` text NOT NULL,
+          \`root_tool_name\` text NOT NULL,
+          \`parent_call_id\` text NOT NULL,
+          \`ordinal\` integer NOT NULL,
+          \`depth\` integer NOT NULL,
+          \`tool_name\` text NOT NULL,
+          \`request_hash\` text NOT NULL,
+          \`state\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          CONSTRAINT \`fk_capability_child_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`capability_connection\` (
           \`id\` text PRIMARY KEY,
           \`project_id\` text NOT NULL,
@@ -375,6 +394,9 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`capability_child_parent_ordinal\` ON \`capability_child\` (\`session_id\`,\`assistant_message_id\`,\`parent_call_id\`,\`ordinal\`);`,
+      )
       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
       yield* tx.run(`CREATE INDEX \`event_aggregate_type_seq_idx\` ON \`event\` (\`aggregate_id\`,\`type\`,\`seq\`);`)
       yield* tx.run(

@@ -1,4 +1,4 @@
-import { foreignKey, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { foreignKey, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 import type { Schema } from "effect"
 import type { Agent } from "@orchestra/schema/agent"
 import type { Capability } from "@orchestra/schema/capability"
@@ -102,3 +102,22 @@ export const CapabilityJobTable = sqliteTable("capability_job", {
   generation: integer().notNull().default(0),
   ...Timestamps,
 })
+
+// Child calls are execution evidence, not provider replay grants or extra model tool parts.
+export const CapabilityChildTable = sqliteTable("capability_child", {
+  id: text().primaryKey(),
+  session_id: text().$type<SessionID>().references(() => SessionTable.id, { onDelete: "cascade" }).notNull(),
+  agent_id: text().$type<Agent.ID>().notNull(),
+  assistant_message_id: text().notNull(),
+  root_call_id: text().notNull(),
+  root_tool_name: text().notNull(),
+  parent_call_id: text().notNull(),
+  ordinal: integer().notNull(),
+  depth: integer().notNull(),
+  tool_name: text().notNull(),
+  request_hash: text().notNull(),
+  state: text().$type<"running" | "completed" | "failed" | "interrupted">().notNull(),
+  ...Timestamps,
+}, (table) => [uniqueIndex("capability_child_parent_ordinal").on(
+  table.session_id, table.assistant_message_id, table.parent_call_id, table.ordinal,
+)])
