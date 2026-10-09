@@ -58,6 +58,7 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
       "eligible", "status", "reason", "filterProfile", "bytes", "tokens", "durationMs"])
     if (!root || root.version !== 1 || root.scope !== "standard-registry" || root.engine !== "hugr-lean@0.2.0:4e46ae0534937bdf"
       || (root.producer !== "native-shell" && root.producer !== "unverified") || typeof root.eligible !== "boolean"
+      || (root.eligible && root.producer !== "native-shell")
       || (root.status !== "applied" && root.status !== "normalized" && root.status !== "passthrough")
       || !text(root.reason) || typeof root.durationMs !== "number" || !Number.isFinite(root.durationMs) || root.durationMs < 0
       || (root.orchestraProfile !== undefined && !text(root.orchestraProfile))
