@@ -1,7 +1,9 @@
 // Whole native registry/corpus proof executed as a Bun executable and a production-shaped Node bundle.
 import path from "node:path"
 import fs from "node:fs/promises"
-import { Effect, Schema } from "effect"
+import { createHash } from "node:crypto"
+import { isDeepStrictEqual } from "node:util"
+import { Effect, Layer, Schema } from "effect"
 import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -25,7 +27,18 @@ import { SeatSkillContent } from "@/maestro/seat-skill-content"
 import { DiscoveryResult } from "@/maestro/discovery-result"
 import { Database } from "@orchestra/core/database/database"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
+import { EventV2 } from "@orchestra/core/event"
+import { SessionV1 } from "@orchestra/core/v1/session"
+import { memoMap } from "@orchestra/core/effect/memo-map"
+import { ResearchEvent } from "@orchestra/schema/research-event"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { Provider } from "@/provider/provider"
+import { SessionPrompt } from "@/session/prompt"
+import { HttpApiApp } from "@/server/routes/instance/httpapi/server"
+import { TestLLMServer } from "../../lib/llm-server"
+import { testProviderConfig } from "../../lib/test-provider"
+import { Orchestra } from "../../../../client/src/index"
 
 const directory = process.argv[2]
 if (!directory) throw new Error("Missing isolated packaged proof root")
@@ -49,8 +62,16 @@ const skillFiles = await SeatSkillContent.read("jimmy", skillRoot, Seats.all.jim
 const layer = AppNodeBuilderV1.build(LayerNode.group([
   Agent.node, InstanceStore.node, Session.node, SessionProjector.node, Permission.node, Skill.node,
   ToolRegistry.node, ResearchExecution.node, ResearchRecords.node, Database.node, FSUtil.node, EventV2Bridge.node,
+  ResearchArtifacts.node, EventV2.node, Provider.node, SessionPrompt.node,
+  LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] }),
 ]))
-const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+const proof = Effect.gen(function* () {
+  const remote = yield* TestLLMServer
+  const fsys = yield* FSUtil.Service
+  yield* fsys.writeFileString(path.join(directory, "orchestra.json"), JSON.stringify({
+    ...testProviderConfig(remote.url), model: "test/test-model", small_model: "test/test-model", plugin: [], mcp: {},
+    compaction: { auto: false },
+  }))
   const instances = yield* InstanceStore.Service
   return yield* instances.provide({ directory }, Effect.gen(function* () {
     const fsys = yield* FSUtil.Service
@@ -130,9 +151,152 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const message = history.find((entry) => entry.info.id === assistant.id)
     if (!message) throw new Error("Packaged final assistant message was not persisted")
     const report = yield* DiscoveryResult.assemble(message, history)
+    const task = yield* taskProof(directory)
     return { runtime: typeof Bun === "undefined" ? "node" : "bun", sourceRoots, skillRoot, skillFiles, skills: loaded, companion: companionText,
       source, received, retained, finding: reopenedFinding, document: publication.document, page, card, report,
-      calls: message.parts.flatMap((part) => part.type === "tool" ? [{ tool: part.tool, status: part.state.status }] : []) }
+      calls: message.parts.flatMap((part) => part.type === "tool" ? [{ tool: part.tool, status: part.state.status }] : []), task }
   }))
-}).pipe(Effect.provide(layer))))
+})
+
+// Scripted localhost responses prove native mechanics, not real-model research quality.
+const TaskMetadata = Schema.Struct({
+  parentSessionId: Schema.String, sessionId: Schema.String,
+  workResult: Schema.Struct({
+    schema: Schema.Literal("discovery-work-result-v1"), taskId: Schema.String,
+    card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.String }),
+    referencesChecked: Schema.Literal(true), terminal: Schema.Struct({ reason: Schema.Literal("ended") }),
+    discovery: Research.Card, documents: Schema.Array(Research.DocumentReceipt), corpus: Research.Corpus,
+  }),
+})
+
+const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) {
+  const remote = yield* TestLLMServer
+  const fsys = yield* FSUtil.Service
+  const sessions = yield* Session.Service
+  const prompt = yield* SessionPrompt.Service
+  const provider = yield* Provider.Service
+  const events = yield* EventV2.Service
+  const model = yield* provider.getModel(ProviderV2.ID.make("test"), ModelV2.ID.make("test-model"))
+  const parent = yield* sessions.create({ agent: "maestro", title: "Packaged native Task authority" })
+  yield* fsys.writeFileString(path.join(directory, "task-evidence.txt"), "Version 1 only.\nDisabled rejects operation.\n")
+  const body = "Résumé: Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n"
+  const state: { source?: Research.SourceReceipt; finding?: typeof Research.FindingRecord.Type; document?: Research.DocumentReceipt;
+    page?: Research.ArtifactPage; card?: Research.Card; returned?: boolean } = {}
+  const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
+    if (event.type === ResearchEvent.SourceAdmitted.type) {
+      const admitted = Schema.decodeUnknownSync(ResearchEvent.SourceAdmitted.data)(event.data)
+      if (admitted.binding.authoritySessionID !== parent.id || admitted.receipt.ref.representation !== "text" || state.source) return
+      state.source = admitted.receipt
+      yield* remote.tool("research_record", { action: "finding", proposition: "Version 1 is supported only when enabled", nature: "extraction",
+        conditions: ["version 1", "enabled"],
+        evidence: [{ source: state.source.ref, locator: { kind: "quote", exact: "Version 1 only." } }],
+        contrary: [{ source: state.source.ref, locator: { kind: "quote", exact: "Disabled rejects operation." } }],
+      })
+      return
+    }
+    if (event.type === ResearchEvent.RecordCommitted.type) {
+      const committed = Schema.decodeUnknownSync(ResearchEvent.RecordCommitted.data)(event.data)
+      if (committed.binding.authoritySessionID !== parent.id || committed.record.kind !== "finding" || state.finding) return
+      state.finding = committed.record
+      yield* remote.tool("research_record", { action: "document", document: {
+        title: "Native Task conditional answer", genre: "answer", body,
+        findingRefs: [{ id: committed.record.id, revision: committed.record.revision }],
+        citations: { supported: committed.record.evidence[0], disabled: committed.record.contrary[0] },
+      } })
+      return
+    }
+    if (event.type === ResearchEvent.DocumentPublished.type) {
+      const published = Schema.decodeUnknownSync(ResearchEvent.DocumentPublished.data)(event.data)
+      if (published.binding.authoritySessionID !== parent.id || state.document) return
+      state.document = published.receipt
+      yield* remote.tool("research_view", { action: "document", ref: published.receipt.ref })
+      return
+    }
+    if (event.type !== SessionV1.Event.PartUpdated.type) return
+    const part = Schema.decodeUnknownSync(SessionV1.Event.PartUpdated.data)(event.data).part
+    if (part.type !== "tool" || part.state.status !== "completed") return
+    if (part.tool === "research_view" && part.sessionID === state.source?.binding.executionSessionID && !state.card) {
+      const page = Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))(part.state.output)
+      const document = Schema.decodeUnknownSync(Research.DocumentReceipt)(page.receipt)
+      if (!state.finding || !state.source || !state.document || !isDeepStrictEqual(document, state.document) || page.text !== body)
+        throw new Error("Native Task reopened document differs from admitted publication")
+      state.page = page
+      state.card = { answer: "Version 1 only; disabled rejects operation.", profile: "understand", depth: "quick", sufficiency: "answered",
+        findingRefs: document.findingRefs, evidenceRefs: [document.citations.supported, document.citations.disabled], documentRefs: [document.ref],
+        coverage: { examined: ["task-evidence.txt"], excluded: ["runtime behavior"], failures: [] },
+        limitations: ["Scripted static-source mechanics only"], nextActions: [] }
+      yield* remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`)
+      return
+    }
+    if (part.tool !== "task" || part.sessionID !== parent.id || state.returned) return
+    Schema.decodeUnknownSync(TaskMetadata)(part.state.metadata)
+    state.returned = true
+    yield* remote.text("Native discovery returned with verified admitted references.")
+  }))
+  yield* Effect.addFinalizer(() => unsubscribe)
+  yield* remote.tool("task", { description: "Inspect conditional behavior", prompt: "Read task-evidence.txt; retain both branches, publish qualified answer, return jimmy-result.", subagent_type: "jimmy" })
+  yield* remote.tool("read", { filePath: "task-evidence.txt" })
+  const final = yield* prompt.prompt({ sessionID: parent.id, agent: "maestro", model: { providerID: model.providerID, modelID: model.id },
+    parts: [{ type: "text", text: "Delegate conditional source research to jimmy and receive verified document references." }] }).pipe(
+    Effect.timeoutOrElse({ duration: "25 seconds", orElse: () => Effect.gen(function* () {
+      const children = yield* sessions.children(parent.id)
+      const histories = yield* Effect.forEach([parent, ...children], (session) => sessions.messages({ sessionID: session.id }))
+      return yield* Effect.die(new Error(`Packaged native Task deadline: ${JSON.stringify({ state, inputs: yield* remote.inputs, histories })}`))
+    }) }),
+  )
+  const parentHistory = yield* sessions.messages({ sessionID: parent.id })
+  const task = parentHistory.flatMap((message) => message.parts).find((part) => part.type === "tool" && part.tool === "task")
+  if (!task || task.type !== "tool" || task.state.status !== "completed" || !state.returned || !state.source || !state.finding || !state.document || !state.page || !state.card)
+    throw new Error(`Packaged native Task omitted completed corpus/result: ${JSON.stringify({ state, parentHistory })}`)
+  const metadata = Schema.decodeUnknownSync(TaskMetadata)(task.state.metadata)
+  const child = yield* sessions.get(state.source.binding.executionSessionID)
+  const childHistory = yield* sessions.messages({ sessionID: child.id })
+  const sibling = yield* sessions.create({ agent: "jimmy", parentID: parent.id })
+  const siblingTask = yield* LogicalTask.ensure({ memberID: "jimmy", executionSessionID: sibling.id, authoritySessionID: parent.id, projectID: sibling.projectID, source: "host" })
+  // Reopening retained publication must not depend on the original file still existing.
+  yield* fsys.remove(path.join(directory, "task-evidence.txt"))
+  const requests: { url: string; directory: string | null; status: number }[] = []
+  const handler = yield* Effect.acquireRelease(Effect.sync(() => HttpApiApp.webHandler()), (handler) => Effect.promise(() => handler.dispose()))
+  const client = Orchestra.make({ baseUrl: "http://localhost", headers: { "x-orchestra-directory": directory },
+    fetch: Object.assign(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const request = new Request(input, init)
+      const response = await handler.handler(request, HttpApiApp.context)
+      requests.push({ url: request.url, directory: request.headers.get("x-orchestra-directory"), status: response.status })
+      return response
+    }, { preconnect: fetch.preconnect }),
+  })
+  const artifact = metadata.workResult.documents[0]
+  if (!artifact) throw new Error("Parent Task result omitted admitted document")
+  const fetched = yield* Effect.promise(() => client.sessions.research.artifact({ sessionID: child.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }))
+  const generated = Schema.decodeUnknownSync(Research.ArtifactPage)(fetched)
+  const siblingError = yield* Effect.promise(() => client.sessions.research.artifact({ sessionID: sibling.id, artifactID: artifact.artifact.id, revision: artifact.artifact.revision }).then(
+    () => { throw new Error("Sibling native placement unexpectedly read Task document") },
+    (error: unknown) => Schema.decodeUnknownSync(Schema.Struct({ _tag: Schema.Literal("ResearchArtifactNotFoundError"), message: Schema.String }))(error),
+  ))
+  const providerRequests = (yield* remote.hits).map((hit) => {
+    const request = Schema.decodeUnknownSync(Schema.Struct({ model: Schema.String, stream: Schema.Boolean,
+      messages: Schema.Array(Schema.Struct({ role: Schema.String, content: Schema.Unknown })),
+      tools: Schema.Array(Schema.Struct({ function: Schema.Struct({ name: Schema.String }) })),
+    }))(hit.body)
+    return { path: hit.url.pathname, model: request.model, stream: request.stream, tools: request.tools.map((tool) => tool.function.name),
+      toolResponses: request.messages.flatMap((message) => message.role === "tool" && typeof message.content === "string" ? [message.content] : []) }
+  })
+  const childFinal = childHistory.find((message) => message.info.id === metadata.workResult.card.messageID)
+  if (!childFinal) throw new Error("Parent Task result does not identify a persisted child final message")
+  return { parentID: parent.id, childID: child.id, siblingID: sibling.id, childParentID: child.parentID, siblingTaskID: siblingTask.taskId, metadata,
+    source: state.source, finding: state.finding, document: state.document, page: state.page, card: state.card,
+    generated, generatedDigest: createHash("sha256").update(generated.text, "utf8").digest("hex"), siblingError, requests, providerURL: remote.url, providerRequests,
+    pending: yield* remote.pending,
+    childFinal: childFinal.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join(""),
+    parentFinal: final.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join(""),
+    calls: childHistory.flatMap((message) => message.parts).flatMap((part) => part.type === "tool" ? [{ tool: part.tool, status: part.state.status }] : []),
+  }
+})
+
+const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+  // Match the native handler's memoMap, including database/projector and event identity.
+  const scope = yield* Effect.scope
+  const services = yield* Layer.buildWithMemoMap(layer, memoMap, scope)
+  return yield* proof.pipe(Effect.provide(services))
+})))
 console.log(`PACKAGED_RESEARCH=${JSON.stringify(result)}`)

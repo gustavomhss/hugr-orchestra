@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import fs from "node:fs/promises"
+import { createHash } from "node:crypto"
 import { Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { Seats } from "@/maestro/seats"
@@ -9,6 +10,16 @@ import { ConfigMarkdown } from "@/config/markdown"
 import { seatSkillsFiles } from "../../script/seat-skills"
 import { tmpdir } from "../fixture/fixture"
 
+const Report = Schema.Struct({
+  schema: Schema.String,
+  card: Schema.Struct({ parsed: Schema.Boolean, messageID: Schema.String }),
+  referencesChecked: Schema.Boolean,
+  terminal: Schema.Struct({ reason: Schema.String }),
+  discovery: Research.Card,
+  documents: Schema.Array(Research.DocumentReceipt),
+  corpus: Research.Corpus,
+})
+const Calls = Schema.Array(Schema.Struct({ tool: Schema.String, status: Schema.String }))
 const Evidence = Schema.Struct({
   runtime: Schema.Literals(["bun", "node"]),
   sourceRoots: Schema.Array(Schema.Struct({ id: Schema.String, path: Schema.String, available: Schema.Boolean })),
@@ -23,19 +34,26 @@ const Evidence = Schema.Struct({
   document: Research.DocumentReceipt,
   page: Research.ArtifactPage,
   card: Research.Card,
-  calls: Schema.Array(Schema.Struct({ tool: Schema.String, status: Schema.String })),
-  report: Schema.Struct({
-    schema: Schema.String,
-    card: Schema.Struct({ parsed: Schema.Boolean }),
-    referencesChecked: Schema.Boolean,
-    terminal: Schema.Struct({ reason: Schema.String }),
-    discovery: Research.Card,
-    documents: Schema.Array(Research.DocumentReceipt),
-    corpus: Research.Corpus,
+  calls: Calls,
+  report: Report,
+  task: Schema.Struct({
+    parentID: Schema.String, childID: Schema.String, siblingID: Schema.String, childParentID: Schema.String, siblingTaskID: Schema.String,
+    metadata: Schema.Struct({ parentSessionId: Schema.String, sessionId: Schema.String,
+      workResult: Schema.Struct({ ...Report.fields, taskId: Schema.String }),
+    }),
+    source: Research.SourceReceipt, finding: Research.FindingRecord, document: Research.DocumentReceipt,
+    page: Research.ArtifactPage, card: Research.Card, generated: Research.ArtifactPage, generatedDigest: Research.Digest,
+    siblingError: Schema.Struct({ _tag: Schema.Literal("ResearchArtifactNotFoundError"), message: Schema.String }),
+    requests: Schema.Array(Schema.Struct({ url: Schema.String, directory: Schema.NullOr(Schema.String), status: Schema.Number })),
+    providerURL: Schema.String,
+    providerRequests: Schema.Array(Schema.Struct({ path: Schema.String, model: Schema.String, stream: Schema.Boolean,
+      tools: Schema.Array(Schema.String), toolResponses: Schema.Array(Schema.String),
+    })),
+    pending: Schema.Number, childFinal: Schema.String, parentFinal: Schema.String, calls: Calls,
   }),
 })
 
-test.each(["bun", "node"] as const)("%s whole native registry captures/publishes/reopens/decodes with authored source unavailable", async (target) => {
+test.each(["bun", "node"] as const)("%s whole native registry and Maestro Task/provider/client proof with authored source unavailable", async (target) => {
   const deadline = performance.now() + 110000
   await using tmp = await tmpdir()
   const packageRoot = path.resolve(import.meta.dir, "../..")
@@ -165,6 +183,71 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(evidence.report.corpus.documents).toEqual([evidence.document])
   expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "skill", "read", "read", "research_view", "research_view", "research_record", "research_view", "research_record", "research_view"])
   expect(evidence.calls.every((call) => call.status === "completed")).toBe(true)
+
+  const task = evidence.task
+  expect(task.childParentID).toBe(task.parentID)
+  expect(task.childID).not.toBe(task.siblingID)
+  expect(task.metadata).toMatchObject({ parentSessionId: task.parentID, sessionId: task.childID })
+  expect(task.source.binding).toMatchObject({ memberID: "jimmy", executionSessionID: task.childID, authoritySessionID: task.parentID,
+    taskId: task.metadata.workResult.taskId, directory: project, worktree: project })
+  expect(task.siblingTaskID).not.toBe(task.metadata.workResult.taskId)
+  expect(task.source.ref).not.toEqual(evidence.source.ref)
+  expect(task.source).toMatchObject({ complete: true, transformation: "read-line-projection-v1", ref: { representation: "text" } })
+  expect(task.finding).toMatchObject({ proposition: "Version 1 is supported only when enabled", nature: "extraction", conditions: ["version 1", "enabled"] })
+  expect(task.finding.evidence).toEqual([{ source: task.source.ref, locator: { kind: "quote", exact: "Version 1 only." } }])
+  expect(task.finding.contrary).toEqual([{ source: task.source.ref, locator: { kind: "quote", exact: "Disabled rejects operation." } }])
+  expect(task.card.findingRefs).toEqual([{ id: task.finding.id, revision: task.finding.revision }])
+  expect(task.card.evidenceRefs).toEqual([...task.finding.evidence, ...task.finding.contrary])
+  expect(task.card.documentRefs).toEqual([task.document.ref])
+  expect(task.document.binding).toEqual(task.source.binding)
+  expect(task.document.findingRefs).toEqual(task.card.findingRefs)
+  expect(task.document.citations).toEqual({ supported: task.finding.evidence[0], disabled: task.finding.contrary[0] })
+  expect(task.metadata.workResult).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true },
+    referencesChecked: true, terminal: { reason: "ended" }, discovery: task.card })
+  expect(task.metadata.workResult.documents).toEqual([task.document])
+  expect(task.metadata.workResult.corpus.documents).toEqual([task.document])
+  expect(task.metadata.workResult.corpus.sources).toContainEqual(task.source)
+  expect(task.childFinal).toBe(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(task.card)}\n\u0060\u0060\u0060`)
+  expect(task.parentFinal).toBe("Native discovery returned with verified admitted references.")
+  expect(task.calls).toEqual(["read", "research_record", "research_record", "research_view"].map((tool) => ({ tool, status: "completed" })))
+
+  // Compare native tool response and generated-client response against the same admitted bytes and digest.
+  expect(task.page).toMatchObject({ representation: "markdown", complete: true, ref: task.document.artifact, receipt: task.document })
+  expect(task.page.text).toBe("Résumé: Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n")
+  expect(task.generated).toEqual(task.page)
+  expect(task.document.bytes).toBe(Buffer.byteLength(task.generated.text, "utf8"))
+  expect(task.generatedDigest).toBe(task.document.digest)
+  expect(createHash("sha256").update(task.generated.text, "utf8").digest("hex")).toBe(task.document.digest)
+  expect(task.requests).toEqual([task.childID, task.siblingID].map((sessionID, index) => ({
+    url: `http://localhost/api/session/${sessionID}/research/${task.document.artifact.id}?revision=${task.document.artifact.revision}`,
+    directory: project, status: index === 0 ? 200 : 404,
+  })))
+  expect(task.siblingError).toEqual({ _tag: "ResearchArtifactNotFoundError", message: "Research artifact not found" })
+
+  expect(task.pending).toBe(0)
+  expect(new URL(task.providerURL).hostname).toBe("127.0.0.1")
+  expect(new URL(task.providerURL).port).not.toBe("")
+  expect(new URL(task.providerURL).pathname).toBe("/v1")
+  expect(task.providerRequests).toHaveLength(7)
+  task.providerRequests.forEach((request) => {
+    expect(request.path).toBe("/v1/chat/completions")
+    expect(request.model).toBe("test-model")
+    expect(request.stream).toBe(true)
+  })
+  expect(task.providerRequests[0].tools).toContain("task")
+  task.providerRequests.slice(1, 6).forEach((request) => {
+    expect(request.tools).toContain("read")
+    expect(request.tools).toContain("research_record")
+    expect(request.tools).toContain("research_view")
+    expect(request.tools).not.toContain("task")
+    expect(request.tools).not.toContain("bash")
+    expect(request.tools).not.toContain("edit")
+  })
+  expect(task.providerRequests[2].toolResponses.join("\n")).toContain(task.source.ref.digest)
+  expect(task.providerRequests[3].toolResponses.join("\n")).toContain(task.finding.id)
+  expect(task.providerRequests[4].toolResponses.join("\n")).toContain(task.document.digest)
+  expect(task.providerRequests[5].toolResponses.join("\n")).toContain(task.page.text.replace(/\n$/, ""))
+  expect(task.providerRequests[6].toolResponses.join("\n")).toContain(task.childFinal)
 }, 120000)
 
 async function subprocess(label: string, timeout: number, cmd: string[], options: { cwd: string; env?: Record<string, string | undefined> }) {
