@@ -15,6 +15,8 @@
   autoPatchelfHook,
   copyDesktopItems,
   makeDesktopItem,
+  ripgrep,
+  sysctl,
   orchestra,
 }:
 assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
@@ -41,6 +43,7 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     # Ad-hoc sign the .app: --config.mac.identity=null below skips signing.
     darwin.autoSignDarwinBinariesHook
+    sysctl
   ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
@@ -102,7 +105,8 @@ stdenv.mkDerivation (finalAttrs: {
   + lib.optionalString stdenv.hostPlatform.isDarwin ''
     mkdir -p $out/Applications
     mv dist/mac*/*.app $out/Applications
-    makeWrapper "$out/Applications/HuGR Orchestra.app/Contents/MacOS/HuGR Orchestra" $out/bin/orchestra-desktop
+    makeWrapper "$out/Applications/HuGR Orchestra.app/Contents/MacOS/HuGR Orchestra" $out/bin/orchestra-desktop \
+      --prefix PATH : ${lib.makeBinPath [ orchestra ripgrep sysctl ]}
   ''
   + lib.optionalString stdenv.hostPlatform.isLinux ''
     mkdir -p $out/opt/orchestra-desktop
@@ -121,11 +125,6 @@ stdenv.mkDerivation (finalAttrs: {
       "$out/share/icons/hicolor/512x512/apps/ai.hugr.orchestra.png"
     install -Dm644 resources/ai.hugr.orchestra.metainfo.xml \
       "$out/share/metainfo/ai.hugr.orchestra.metainfo.xml"
-    makeWrapper $out/opt/orchestra-desktop/ai.hugr.orchestra $out/bin/orchestra-desktop \
-      --inherit-argv0 \
-      "''${gappsWrapperArgs[@]}" \
-      --prefix PATH : ${lib.makeBinPath [ orchestra ]} \
-     --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
   ''
   + ''
     runHook postInstall
@@ -140,6 +139,22 @@ stdenv.mkDerivation (finalAttrs: {
   preFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
     addAutoPatchelfSearchPath ${electron.dist}
     autoPatchelf $out/opt/orchestra-desktop/resources/app.asar.unpacked
+    makeWrapper $out/opt/orchestra-desktop/ai.hugr.orchestra $out/bin/orchestra-desktop \
+      --inherit-argv0 \
+      "''${gappsWrapperArgs[@]}" \
+      --prefix PATH : ${lib.makeBinPath [ orchestra ripgrep ]} \
+      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
+  '';
+
+  nativeInstallCheckInputs = [ bun writableTmpDirAsHomeHook ];
+  doInstallCheck = true;
+  installCheckPhase = ''
+    runHook preInstallCheck
+    bun --bun --eval '
+      const { verifyPackagedCli } = await import("./scripts/cli-packaging.ts")
+      await verifyPackagedCli(process.env.out + "${if stdenv.hostPlatform.isDarwin then "/Applications/HuGR Orchestra.app/Contents/Resources/cli" else "/opt/orchestra-desktop/resources/cli"}", "${if stdenv.hostPlatform.isDarwin then "darwin" else "linux"}", "${if stdenv.hostPlatform.isAarch64 then "arm64" else "x64"}", "${finalAttrs.version}")
+    '
+    runHook postInstallCheck
   '';
 
   passthru = {

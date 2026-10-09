@@ -61,6 +61,9 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
+    # Native compiler normally reuses itself. Also provide Bun's exact fallback
+    # filename, so target lookup has the same measured/patched binary offline.
+    ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
     bun --bun packages/cli/script/build.ts --target ${target} --skip-install
     bun --bun packages/cli/script/schema.ts schema.json
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
@@ -93,15 +96,27 @@ stdenv.mkDerivation (finalAttrs: {
   dontPatchELF = true;
 
   postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    $out/bin/orchestra --completions bash > orchestra.bash
+    $out/bin/orchestra --completions zsh > _orchestra
+    test -s orchestra.bash
+    test -s _orchestra
     installShellCompletion --cmd orchestra \
-      --bash <($out/bin/orchestra completion) \
-      --zsh <(SHELL=/bin/zsh $out/bin/orchestra completion)
+      --bash orchestra.bash --zsh _orchestra
   '';
 
   nativeInstallCheckInputs = [ versionCheckHook writableTmpDirAsHomeHook ];
   doInstallCheck = true;
   versionCheckKeepEnvironment = [ "HOME" "ORCHESTRA_DISABLE_MODELS_FETCH" ];
   versionCheckProgramArg = "--version";
+  postInstallCheck = ''
+    bun --bun packages/cli/script/schema.ts schema-installcheck.json
+    cmp schema-installcheck.json $out/share/orchestra/schema.json
+    bun --bun --eval '
+      const { verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
+      const artifact = await verifyCliArtifact(process.env.out + "/share/orchestra/cli", "${target}")
+      if (artifact.version !== "${finalAttrs.version}") throw new Error("NIX_CLI_ARTIFACT_VERSION_MISMATCH")
+    '
+  '';
 
   passthru = {
     jsonschema = "${finalAttrs.finalPackage}/share/orchestra/schema.json";
