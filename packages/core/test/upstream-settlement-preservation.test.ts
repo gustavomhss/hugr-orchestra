@@ -151,6 +151,7 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
   dbIt.live(`completed native Task records receipt-free host failure against stored ${view} returned author`, () => Effect.gen(function* () {
     const f = yield* observationFixture(view)
     const before = yield* f.read()
+    expect(before.state.status).toBe("completed")
     const offered = { ...f.retainedMetadata, concurrent: "stale caller value", workResult: f.result }
     for (const metadata of [
       { ...offered, parentSessionId: "ses_forged" },
@@ -161,10 +162,17 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
       { ...offered, workResult: { ...f.result, card: { messageID: f.parentMessageID },
         author: { ...f.result.author, messageID: f.parentMessageID } } },
       { ...offered, workResult: { ...f.result, author: { ...f.result.author, memberId: "maestro" } } },
+      { ...offered, workResult: { ...f.result, card: null } },
+      { ...offered, workResult: { ...f.result, author: "caller-authored" } },
+      { ...offered, workResult: { ...f.result, terminal: null } },
       { ...offered, workResult: { ...f.result, terminal: { reason: "ended" } } },
       { ...offered, upstreamSettlement: { forged: true } },
     ]) {
       yield* f.offer(metadata)
+      expect(yield* f.read()).toEqual(before)
+    }
+    for (const hostDetail of ["", 0, false, null, {}, []]) {
+      yield* f.offer({ ...offered, workResult: { ...f.result, terminal: { reason: "failed", hostDetail } } })
       expect(yield* f.read()).toEqual(before)
     }
     yield* f.offer(offered, { callID: "forged-call" })
@@ -205,6 +213,30 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
     expect(yield* f.read()).toEqual(observed)
   }))
 })
+
+dbIt.live("duplicate native same-call tools veto observation, then restored unique Task accepts it", () => Effect.gen(function* () {
+  const f = yield* observationFixture("duplicate-native")
+  const before = yield* f.read()
+  expect(before.state.status).toBe("completed")
+  const row = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.parentMessageID)).get()
+  if (!row) throw new Error("Missing native original Task owner")
+  const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+  if (message.type !== "assistant") throw new Error("Expected native original assistant")
+  const duplicated = { ...message, content: [...message.content, before] }
+  const encoded = Schema.encodeSync(SessionMessage.Assistant)(duplicated)
+  const { id: _, type: __, ...data } = encoded
+  yield* f.database.db.update(SessionMessageTable).set({ data }).where(eq(SessionMessageTable.id, row.id)).run()
+  yield* f.offer({ ...f.retainedMetadata, workResult: f.result })
+  const stored = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, row.id)).get()
+  if (!stored) throw new Error("Duplicated native owner disappeared")
+  expect(Schema.decodeUnknownSync(SessionMessage.Message)({ ...stored.data, id: stored.id, type: stored.type })).toEqual(duplicated)
+  yield* f.database.db.update(SessionMessageTable).set({ data: row.data }).where(eq(SessionMessageTable.id, row.id)).run()
+  yield* f.offer({ ...f.retainedMetadata, workResult: f.result })
+  const accepted = yield* f.read()
+  expect(accepted).toEqual({ ...before, state: { ...before.state,
+    structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: f.result } } } })
+  expect(accepted).not.toEqual(before)
+}))
 
 dbIt.live("host observation refuses provider-executed and non-Task calls despite real lineage", () => Effect.gen(function* () {
   const f = yield* observationFixture("untrusted")
