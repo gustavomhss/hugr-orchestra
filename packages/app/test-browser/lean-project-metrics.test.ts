@@ -2,8 +2,8 @@ import { expect, test } from "bun:test"
 import { createComponent, createRoot, createMemo, createStore, decision, render, savedLeanPart } from "./lean-project-metrics.test-helper"
 import type { Config, Part } from "@orchestra/sdk/v2/client"
 
-const panel = await import("./lean-project-metrics")
-const { createLeanSettingsController } = await import("../settings-v2/general-controllers")
+const panel = await import("@/components/session/lean-project-metrics")
+const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
 const { LanguageProvider, useLanguage } = await import("@/context/language")
 const { PlatformProvider } = await import("@/context/platform")
 const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
@@ -19,7 +19,7 @@ test("Lean reads backend false and preserves sibling limits in one awaited patch
       updateConfig: async (patch) => {
         calls.push(patch)
       },
-    })),
+    }), () => true),
   }))
   try {
     expect(owned.lean.enabled()).toBe(false)
@@ -65,6 +65,22 @@ test("loaded repository selection excludes foreign, unknown, unfinished, orphan 
   }
   expect(panel.collectLeanProjectRecords(data, owner).map((record) => LeanMetrics.decode(record)?.owner.callID)).toEqual(["m1", "m3"])
   expect(panel.collectLeanProjectRecords({ ...data, project: "" }, owner)).toEqual([])
+})
+
+test("revert visibility uses loaded message/part order and fails closed on missing boundaries", () => {
+  const message = (id: string) => ({ id, sessionID: "one" })
+  const part = (messageID: string, id: string) => ({ ...savedLeanPart(messageID, "one", id, decision(id)), id })
+  const data = {
+    project: "native-repo", message: { one: [message("z-before"), message("a-boundary"), message("0-after")] },
+    part: { "z-before": [part("z-before", "before")], "a-boundary": [part("a-boundary", "z-prefix"), part("a-boundary", "a-cut"), part("a-boundary", "0-later")], "0-after": [part("0-after", "after")] },
+  }
+  const collect = (revert?: { messageID: string; partID?: string }) => panel.collectLeanProjectRecords(data,
+    () => ({ id: "one", directory: "/repo", projectID: "native-repo", revert })).map((record) => record.owner.callID)
+  expect(collect()).toEqual(["before", "z-prefix", "a-cut", "0-later", "after"])
+  expect(collect({ messageID: "a-boundary" })).toEqual(["before"])
+  expect(collect({ messageID: "a-boundary", partID: "a-cut" })).toEqual(["before", "z-prefix"])
+  expect(collect({ messageID: "absent" })).toEqual([])
+  expect(collect({ messageID: "a-boundary", partID: "absent" })).toEqual(["before"])
 })
 
 test("saved metric owners bind native session/part placement and nested Solid changes reach repository DOM", () => {
@@ -185,7 +201,7 @@ test("Lean backend rejection remains visible, does not fake enabled state or ret
         calls.push(patch)
         throw failure
       },
-    })),
+    }), () => true),
   }))
   try {
     await expect(owned.lean.set(true)).rejects.toBe(failure)

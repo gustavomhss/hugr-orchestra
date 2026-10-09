@@ -2,7 +2,7 @@ import { createRequire } from "node:module"
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import type { ToolPart } from "@orchestra/sdk/v2/client"
 
-// Run this DOM test with --conditions=browser. Compile JSX using the app's own Solid preset.
+// Browser-lane only: compile JSX using the app's own Solid preset.
 const compiler = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "lean-solid-dom",
