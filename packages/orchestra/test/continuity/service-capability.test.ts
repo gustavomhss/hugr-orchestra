@@ -136,7 +136,7 @@ it.instance("foreign-owner archive IDs cannot enter memory or bypass real tool o
     const hit = yield* entered(rejected)
     const before = yield* prepare(own)
     yield* Deferred.succeed(rejected.release, undefined)
-    yield* terminal(hit.jobID, "completed", "discarded")
+    yield* terminal(hit.jobID, "completed", "invalid-schema")
     expect(yield* prepare(own)).toEqual(before)
     expect(before.system[0]).not.toContain(selected.id)
   }).pipe(Effect.provide(environment([first, other, rejected])))
