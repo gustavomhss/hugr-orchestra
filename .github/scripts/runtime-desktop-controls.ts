@@ -52,7 +52,7 @@ async function main() {
   })
   requireControl(!git.error && git.status === 0 && /^[a-f0-9]{40}$/.test(git.stdout.trim()), "CONTROL_HEAD_UNAVAILABLE")
   const scripts = [join(desktop, "../../.github/scripts/runtime-desktop-package-proof.ts"), join(desktop, "../../.github/scripts/runtime-desktop-bootstrap-proof.ts")].map((file) => resolve(file))
-  const blobs = ["ede583f270cacf8c70e53619bffc1e9e75843cd7", "2ec3aeefd6b1f486bf66784dc2ac2273bb74efe6"]
+  const blobs = ["ede583f270cacf8c70e53619bffc1e9e75843cd7", "550187609efe2fc89f7d5e0dcac0b566bfb4345f"]
   await Promise.all(scripts.map(async (file, index) => {
     await hash(file)
     const bytes = await readFile(file)
