@@ -147,6 +147,11 @@ jobs:
           requireValue(git(["rev-parse", "HEAD"]).trim() === process.env.GITHUB_SHA, "PREPARED_CURRENT_HEAD_MISMATCH");
           const available = spawnSync("git", ["cat-file", "-e", `${producer.head_sha}^{commit}`], { timeout: 10000 });
           if (available.error || available.status !== 0) git(["fetch", "--no-tags", "--depth=1", `https://github.com/${repo}.git`, producer.head_sha], 90000);
+          // Reuse admits only this independently reviewed old producer recipe; alternatives need reviewed repinning.
+          const recipe = spawnSync("git", ["rev-parse", `${producer.head_sha}:.github/workflows/runtime-desktop.yml`], { encoding: "utf8", timeout: 10000 });
+          requireValue(!recipe.error && recipe.status === 0 && /^[a-f0-9]{40}$/.test(recipe.stdout.trim()), "PREPARED_PRODUCER_RECIPE_MISSING_OR_UNAVAILABLE");
+          const producerWorkflowBlob = recipe.stdout.trim();
+          requireValue(producerWorkflowBlob === "d77f1c7aea89ecbd4172a0fc35b218764ccdcfa8", "PREPARED_PRODUCER_RECIPE_UNSUPPORTED");
           const producerTree = git(["rev-parse", `${producer.head_sha}^{tree}`]).trim(), currentTree = git(["rev-parse", "HEAD^{tree}"]).trim();
           requireValue([producerTree, currentTree].every(t => /^[a-f0-9]{40}$/.test(t)), "PREPARED_TREE_ID_INVALID");
           const changed = git(["diff", "--no-ext-diff", "--no-textconv", "--ignore-submodules=none", "--name-only", "-z", producer.head_sha, process.env.GITHUB_SHA, "--"]).split("\0").filter(Boolean);
@@ -165,7 +170,7 @@ jobs:
           requireValue(!(await Bun.file(zip).exists()), "PREPARED_ARCHIVE_NOT_FRESH");
           await Bun.write(zip, new Response(archive.body.pipeThrough(new TransformStream({ transform(chunk, controller) { size.bytes += chunk.byteLength; requireValue(size.bytes <= artifact.size_in_bytes, "PREPARED_ARCHIVE_SIZE_EXCEEDED"); digest.update(chunk); controller.enqueue(chunk); } })))).catch(() => fail("PREPARED_ARCHIVE_CAPTURE_FAILED"));
           requireValue(size.bytes === artifact.size_in_bytes && `sha256:${digest.digest("hex")}` === artifact.digest, "PREPARED_ARCHIVE_DIGEST_MISMATCH");
-          const admission = { run: producer.id, prepareJob: job.id, artifact: artifact.id, archiveDigest: artifact.digest, producerHead: producer.head_sha, producerTree, currentHead: process.env.GITHUB_SHA, currentTree, sourceByteFingerprint: before.sourceBytes, packageFingerprint: before.packages };
+          const admission = { run: producer.id, prepareJob: job.id, artifact: artifact.id, archiveDigest: artifact.digest, producerHead: producer.head_sha, producerWorkflowBlob, producerTree, currentHead: process.env.GITHUB_SHA, currentTree, sourceByteFingerprint: before.sourceBytes, packageFingerprint: before.packages };
           await Bun.write(`${process.env.RUNNER_TEMP}/prepared-admission.json`, JSON.stringify(admission) + "\n");
           console.log("PREPARED_SOURCE_EQUIVALENT_PRODUCER_ADMITTED", JSON.stringify(admission));
           await Bun.write(Bun.file(process.env.GITHUB_OUTPUT), `run_id=${id}\nartifact_id=${artifact.id}\n`);'
