@@ -2,8 +2,8 @@ export * as WorkflowBinding from "./workflow-binding"
 
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
-import { Context, Effect, Schema } from "effect"
-import { eq } from "drizzle-orm"
+import { Context, Effect, FileSystem, Option, Schema } from "effect"
+import { and, asc, eq, sql } from "drizzle-orm"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Event } from "@orchestra/schema/event"
@@ -13,7 +13,7 @@ import { Relay } from "@orchestra/core/relay"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
-import { SessionMessageTable } from "@orchestra/core/session/sql"
+import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
@@ -22,6 +22,12 @@ import { MessageV2 } from "@/session/message-v2"
 import { LogicalTask } from "./logical-task"
 import { WriteRoots } from "./write-roots"
 import { readWorkflowRevision } from "./plan-revision"
+import { ToolSafety } from "@orchestra/core/tool-safety"
+import type { Agent } from "@/agent/agent"
+import type { ArsenalCompletion } from "./arsenal-completion"
+import { canonicalMemberId } from "./roster"
+import { readAuthorization } from "./authorization"
+import { readValidation } from "./validation-record"
 
 // Selection is a reference, never model-supplied binding/attribution/approval. The host acquires every bound byte.
 export const Selection = Schema.Struct({ documentID: Schema.NonEmptyString, planRevisionID: Event.ID,
@@ -150,7 +156,7 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
 }) {
    const existing = yield* read(input.dispatch.taskID)
    const ready = yield* prepare(input.dispatch, existing ? "continuation" : "dispatch")
-  const context = yield* Effect.context<Database.Service | Session.Service | EventV2Bridge.Service>()
+  const context = yield* Effect.context<Database.Service | Session.Service | EventV2Bridge.Service | FileSystem.FileSystem>()
   const controls = ready.materialized.sprint.work_packages.flatMap((wp) => wp.checklist ?? [])
    if (!input.globalChecks.length || !["package-verification", "cold-review"].every((name) =>
      ready.materialized.sprint.work_packages.at(-1)?.checklist?.some((control) => control.host_check === name)) ||
@@ -221,6 +227,67 @@ export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessio
     Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })),
   )
 })
+
+/** Native reservation acquisition shared by dispatch and durable workflow reconstruction. */
+export const approvedTask = Effect.fn("WorkflowBinding.approvedTask")(function* (input: ArsenalCompletion.Dispatch,
+  deps: { database: Database.Interface; sessions: Session.Interface; agents: Agent.Interface;
+    parent: (input: ArsenalCompletion.Dispatch) => Effect.Effect<Session.Info, ToolSafety.Denied> }) {
+  const session = yield* deps.parent(input)
+  const child = yield* deps.sessions.get(SessionID.make(input.taskID)).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-native-child-missing" })),
+  )
+  if (child.parentID !== session.id || child.projectID !== session.projectID || child.directory !== session.directory)
+    return yield* new ToolSafety.Denied({ reason: "completion-native-child-mismatch" })
+  const calls = input.workflow ? [] : yield* deps.database.db.select({ data: PartTable.data }).from(PartTable)
+    .innerJoin(MessageTable, and(eq(MessageTable.id, PartTable.message_id), eq(MessageTable.session_id, PartTable.session_id)))
+    .where(and(eq(PartTable.session_id, session.id), sql`json_extract(${PartTable.data}, '$.callID') = ${input.callID}`,
+      sql`json_extract(${MessageTable.data}, '$.role') = 'assistant'`)).limit(2).all().pipe(Effect.orDie)
+  if (!input.workflow && calls.length !== 1)
+    return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-missing-or-ambiguous" })
+  const call = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String }))(
+    input.workflow ? (yield* taskCall(session.id, input.workflow.assistantMessageID, input.callID)).input
+      : Schema.decodeUnknownSync(Schema.Struct({ type: Schema.Literal("tool"), tool: Schema.Literal("task"),
+        state: Schema.Struct({ input: Schema.Unknown }) }))(calls[0].data).state.input,
+  )
+  if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
+  const actor = yield* deps.agents.get(call.value.subagent_type).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-native-task-agent-missing" })),
+  )
+  if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
+    return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
+  const rows = yield* deps.database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, session.id))
+    .orderBy(asc(EventTable.seq)).limit(4097).all().pipe(Effect.orDie)
+  if (rows.length > 4096) return yield* new ToolSafety.Denied({ reason: "completion-authority-history-overflow" })
+  const direct = rows.findLast((row) => row.type === EventV2.versionedType(MaestroEvent.Approval.ReservedV2.type, 2) &&
+    row.data.childSessionID === child.id)
+  if (direct) {
+    const reserved = Schema.decodeUnknownSync(MaestroEvent.Approval.ReservedV2.data)(direct.data)
+    if (reserved.callID !== input.callID || reserved.sessionID !== session.id || reserved.parentSessionID !== session.id ||
+      reserved.projectID !== session.projectID || canonicalMemberId(reserved.agent) !== canonicalMemberId(child.agent) ||
+      (input.planID !== undefined && reserved.planRevisionID !== input.planID) || !isDeepStrictEqual(reserved.permission, child.permission))
+      return yield* new ToolSafety.Denied({ reason: "completion-approved-task-mismatch" })
+    return { session, child, planID: reserved.planRevisionID, permission: reserved.permission }
+  }
+  const dispatch = rows.findLast((row) => row.type === EventV2.versionedType(MaestroEvent.Dispatch.ReservedV2.type, 2) &&
+    row.data.childSessionID === child.id)
+  if (dispatch) {
+    const reserved = Schema.decodeUnknownSync(MaestroEvent.Dispatch.ReservedV2.data)(dispatch.data)
+    const authorization = yield* readAuthorization(reserved.authorizationID)
+    const validation = authorization ? yield* readValidation(authorization.validationRecordID) : undefined
+    if (!authorization || !validation || validation.outcome !== "VALID" || validation.sessionID !== session.id ||
+      validation.projectID !== session.projectID || reserved.sessionID !== session.id || reserved.projectID !== session.projectID ||
+      canonicalMemberId(reserved.routedMemberID) !== canonicalMemberId(child.agent) || authorization.sessionID !== session.id ||
+      authorization.projectID !== session.projectID || (input.planID !== undefined && validation.planRevisionID !== input.planID) ||
+      !isDeepStrictEqual(reserved.permission, child.permission))
+      return yield* new ToolSafety.Denied({ reason: "completion-authorization-mismatch" })
+    return { session, child, planID: validation.planRevisionID, permission: reserved.permission }
+  }
+  if (input.planID) return yield* new ToolSafety.Denied({ reason: "completion-plan-authority-missing" })
+  return { session, child, planID: undefined, permission: child.permission }
+}, (effect, _input, deps) => effect.pipe(Effect.provideService(Database.Service, deps.database),
+  Effect.mapError((error) => error instanceof ToolSafety.Denied ? error : new ToolSafety.Denied({
+    reason: error instanceof RelayWorkflowBinding.Held ? error.reason : "completion-native-task-call-missing",
+  }))))
 
 function eventID(executionSessionID: string) {
   return EventV2.ID.make(`evt_maestro_workflow_bound_${createHash("sha256").update(executionSessionID).digest("hex")}`)

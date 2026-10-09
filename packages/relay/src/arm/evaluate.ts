@@ -80,7 +80,7 @@ export function evaluate<E>(input: RelayArm.EvaluateInput, boundary?: Boundary<E
         Effect.map((step): RelayArm.Evaluation => ({ ...step, ledgerSeq: lastSeq(ledger) })),
       ),
     ).pipe(
-      Effect.catchTag("ArmState.Busy", () =>
+      Effect.catchIf((error) => error instanceof ArmState.Busy, () =>
         Effect.succeed<RelayArm.Evaluation>({ outcome: "busy", failing: [], ledgerSeq: lastSeq(ledger) }),
       ),
     )

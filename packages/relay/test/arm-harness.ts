@@ -72,8 +72,8 @@ export async function git(cwd: string, home: string, ...args: string[]) {
     stdout: "pipe",
     stderr: "ignore",
   })
-  const [stdout, exitCode] = await Promise.all([proc.stdout.bytes(), proc.exited])
-  return { exitCode, stdout }
+  const [stdout, exitCode] = await Promise.all([new Response(proc.stdout).arrayBuffer(), proc.exited])
+  return { exitCode, stdout: new Uint8Array(stdout) }
 }
 
 // Commits like the generator; the message is part of the SHA a golden records.

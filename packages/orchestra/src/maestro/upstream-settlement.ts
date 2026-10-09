@@ -9,6 +9,7 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { fromRow } from "@orchestra/core/session/info"
 import { SessionMessage } from "@orchestra/schema/session-message"
+import { SessionV1 } from "@orchestra/core/v1/session"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Option, Schema } from "effect"
 import { isDeepStrictEqual } from "node:util"
@@ -73,9 +74,9 @@ export function make(binding: {
       return yield* new Hold({ message: "HOLD: captured assistant binding mismatch" })
 
     const modern = yield* database.db.select().from(SessionMessageTable)
-      .where(eq(SessionMessageTable.id, input.messageID)).get().pipe(Effect.orDie)
+      .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.messageID))).get().pipe(Effect.orDie)
     const legacy = yield* database.db.select().from(MessageTable)
-      .where(eq(MessageTable.id, input.messageID)).get().pipe(Effect.orDie)
+      .where(eq(MessageTable.id, SessionV1.MessageID.make(input.messageID))).get().pipe(Effect.orDie)
     if ((modern && modern.session_id !== input.sessionID) || (legacy && legacy.session_id !== input.sessionID))
       return yield* new Hold({ message: "HOLD: settlement parent projection owner mismatch" })
     const parentLocation = modern ? yield* Effect.gen(function* () {
@@ -87,7 +88,7 @@ export function make(binding: {
       }
       // Legacy-host contexts may omit the global Store binding. Use its exact canonical row decoder, no new layer.
       const row = yield* database.db.select().from(SessionTable)
-        .where(eq(SessionTable.id, input.sessionID)).get().pipe(Effect.orDie)
+        .where(eq(SessionTable.id, SessionSchema.ID.make(input.sessionID))).get().pipe(Effect.orDie)
       if (!row) return yield* new Hold({ message: "HOLD: native parent Session missing" })
       return fromRow(row).location
     }) : undefined
@@ -95,19 +96,19 @@ export function make(binding: {
       if (modern.type !== "assistant") return yield* new Hold({ message: "HOLD: original parent not assistant" })
       if (!input.ops.resumeNotice) return yield* new Hold({ message: "HOLD: native notice resume adapter missing" })
       const existing = yield* database.db.select().from(SessionMessageTable)
-        .where(eq(SessionMessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.request.messageID))).get().pipe(Effect.orDie)
       const retained = yield* database.db.select().from(MessageTable)
-        .where(eq(MessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+        .where(eq(MessageTable.id, SessionV1.MessageID.make(input.request.messageID))).get().pipe(Effect.orDie)
       if (retained) return yield* new Hold({ message: "HOLD: native notice identity already belongs to a legacy message" })
       if (!existing) {
         // Native host delivery, not a V1 prompt or a fabricated projection. Keep event ID/data stable across faults.
-        const data = admission.data ?? { sessionID: input.sessionID, messageID: input.request.messageID,
+        const data = admission.data ?? { sessionID: SessionSchema.ID.make(input.sessionID), messageID: SessionMessage.ID.make(input.request.messageID),
           timestamp: yield* DateTime.now, text: text.text }
         admission.data = data
         yield* events.publish(SessionEvent.Synthetic, data, { id: eventID, location: parentLocation })
       }
       const delivered = yield* database.db.select().from(SessionMessageTable)
-        .where(eq(SessionMessageTable.id, input.request.messageID)).get().pipe(Effect.orDie)
+        .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.request.messageID))).get().pipe(Effect.orDie)
       if (!delivered || delivered.session_id !== input.sessionID)
         return yield* new Hold({ message: "HOLD: synthetic delivery not projected" })
       const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...delivered.data, id: delivered.id, type: delivered.type })
@@ -148,7 +149,7 @@ export function make(binding: {
         if (previous.parentSessionId !== input.sessionID || previous.sessionId !== input.childSessionID ||
           !SessionMessageUpdater.upstreamSettlement(metadata, owner))
           return yield* new Hold({ message: "HOLD: original Task binding mismatch" })
-        if (!before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: input.sessionID, assistantMessageID: input.messageID,
+        if (!before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: SessionSchema.ID.make(input.sessionID), assistantMessageID: SessionMessage.ID.make(input.messageID),
           callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content },
           { location: parentLocation })
       }
