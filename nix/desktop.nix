@@ -1,10 +1,15 @@
 {
   lib,
   stdenv,
-  bun,
+  callPackage,
+  bun ? callPackage ./bun.nix { },
   nodejs,
   darwin,
-  electron_41,
+  electron ? callPackage ./electron.nix { },
+  wrapGAppsHook3,
+  glib,
+  gtk3,
+  gtk4,
   makeWrapper,
   writableTmpDirAsHomeHook,
   autoPatchelfHook,
@@ -12,16 +17,14 @@
   makeDesktopItem,
   orchestra,
 }:
-let
-  electron = electron_41;
-in
+assert lib.assertMsg (stdenv.buildPlatform.system == stdenv.hostPlatform.system)
+  "Orchestra Desktop requires a matching native build platform";
 stdenv.mkDerivation (finalAttrs: {
   pname = "orchestra-desktop";
   inherit (orchestra)
     version
     src
     node_modules
-    patches
     ;
 
   nativeBuildInputs = [
@@ -33,6 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals stdenv.hostPlatform.isLinux [
     autoPatchelfHook
     copyDesktopItems
+    wrapGAppsHook3
   ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     # Ad-hoc sign the .app: --config.mac.identity=null below skips signing.
@@ -41,6 +45,9 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [
     (lib.getLib stdenv.cc.cc)
+    glib
+    gtk3
+    gtk4
   ];
 
   desktopItems = lib.optional stdenv.hostPlatform.isLinux (makeDesktopItem {
@@ -48,38 +55,22 @@ stdenv.mkDerivation (finalAttrs: {
     desktopName = "HuGR Orchestra";
     exec = "orchestra-desktop %U";
     icon = "ai.hugr.orchestra";
-    # Electron 41 derives X11 WM_CLASS from app.name.
-    startupWMClass = "HuGR Orchestra";
+    startupWMClass = "ai.hugr.orchestra";
     categories = [ "Development" ];
   });
 
   env = orchestra.env // {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+    ORCHESTRA_CLI_PREBUILT_DIR = orchestra.cliArtifacts;
+    CSC_IDENTITY_AUTO_DISCOVERY = "false";
   };
-
-  postPatch =
-    # NOTE: Relax Bun version check to be a warning instead of an error
-    ''
-      substituteInPlace packages/script/src/index.ts \
-        --replace-fail 'throw new Error(`This script requires bun@''${expectedBunVersionRange}' \
-                       'console.warn(`Warning: This script requires bun@''${expectedBunVersionRange}'
-    ''
-    # https://github.com/electron/electron/issues/31121
-    # mac builds use a .app bundle which doesnt have this issue
-    + lib.optionalString stdenv.isLinux ''
-      BASE_PATH=packages/desktop
-      FILES=(src/main/windows.ts)
-      for file in "''${FILES[@]}"; do
-        substituteInPlace $BASE_PATH/$file \
-          --replace-fail "process.resourcesPath" "'$out/opt/orchestra-desktop/resources'"
-      done
-    '';
 
   preBuild = ''
     cp -r "${electron.dist}" $HOME/.electron-dist
     chmod -R u+w $HOME/.electron-dist
 
     cp -R ${finalAttrs.node_modules}/. .
+    chmod -R u+w node_modules packages/*/node_modules
     patchShebangs node_modules
     patchShebangs packages/*/node_modules
   '';
@@ -90,9 +81,16 @@ stdenv.mkDerivation (finalAttrs: {
     cd packages/desktop
 
     bun run build
-    npx electron-builder --dir \
+    ./node_modules/.bin/electron-builder --dir \
+      --${if stdenv.hostPlatform.isAarch64 then "arm64" else "x64"} \
+      --publish never \
       --config electron-builder.config.ts \
       --config.mac.identity=null \
+      --config.mac.notarize=false \
+      --config.npmRebuild=false \
+      --config.nodeGypRebuild=false \
+      --config.buildDependenciesFromSource=false \
+      --config.electronVersion=${electron.version} \
       --config.electronDist="$HOME/.electron-dist"
 
     runHook postBuild
@@ -108,7 +106,9 @@ stdenv.mkDerivation (finalAttrs: {
   ''
   + lib.optionalString stdenv.hostPlatform.isLinux ''
     mkdir -p $out/opt/orchestra-desktop
-    cp -r dist/linux*-unpacked/{resources,LICENSE*} $out/opt/orchestra-desktop
+    # Launch this packaged Electron, so process.resourcesPath resolves every
+    # extraResource (CLI/icons/playbooks/helpers), not the toolchain's resources.
+    cp -r dist/linux*-unpacked/. $out/opt/orchestra-desktop/
     install -Dm644 resources/icons/32x32.png \
       "$out/share/icons/hicolor/32x32/apps/ai.hugr.orchestra.png"
     install -Dm644 resources/icons/64x64.png \
@@ -121,19 +121,32 @@ stdenv.mkDerivation (finalAttrs: {
       "$out/share/icons/hicolor/512x512/apps/ai.hugr.orchestra.png"
     install -Dm644 resources/ai.hugr.orchestra.metainfo.xml \
       "$out/share/metainfo/ai.hugr.orchestra.metainfo.xml"
-    makeWrapper ${lib.getExe electron} $out/bin/orchestra-desktop \
-     --inherit-argv0 \
-     --set ELECTRON_FORCE_IS_PACKAGED 1 \
-     --add-flags $out/opt/orchestra-desktop/resources/app.asar \
+    makeWrapper $out/opt/orchestra-desktop/ai.hugr.orchestra $out/bin/orchestra-desktop \
+      --inherit-argv0 \
+      "''${gappsWrapperArgs[@]}" \
+      --prefix PATH : ${lib.makeBinPath [ orchestra ]} \
      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
   ''
   + ''
     runHook postInstall
   '';
 
-  autoPatchelfIgnoreMissingDeps = [
-    "libc.musl-x86_64.so.1"
-  ];
+  # electron.dist and the admitted CLI are already patched. Restrict subsequent
+  # native dependency repair to unpacked addons; never rewrite hashed CLI bytes.
+  dontAutoPatchelf = true;
+  dontWrapGApps = true;
+  dontStrip = true;
+  dontPatchELF = true;
+  preFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
+    addAutoPatchelfSearchPath ${electron.dist}
+    autoPatchelf $out/opt/orchestra-desktop/resources/app.asar.unpacked
+  '';
+
+  passthru = {
+    inherit electron;
+    cliArtifacts = orchestra.cliArtifacts;
+    validationStatus = "UNVALIDATED: native package and Electron/addon ABI checks pending";
+  };
 
   meta = {
     description = "Orchestra Desktop App";
