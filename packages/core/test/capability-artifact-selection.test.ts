@@ -10,6 +10,8 @@ import { CredentialTable } from "../src/credential/sql"
 import { FSUtil } from "../src/fs-util"
 import { Global } from "../src/global"
 import { PermissionV2 } from "../src/permission"
+import { Project } from "../src/project"
+import { ProjectTable } from "../src/project/sql"
 import { AbsolutePath } from "../src/schema"
 import { Tool } from "../src/tool/tool"
 import { Capability } from "@orchestra/schema/capability"
@@ -201,7 +203,9 @@ describe("selected artifact publication", () => {
       requirement.selection.credentialHash === "0".repeat(64) ? "authentication_revoked" : "target_denied")
     const connection = yield* f.database.db.select().from(CapabilityConnectionTable).where(eq(CapabilityConnectionTable.id, f.connection.id)).get()
     if (!connection) throw new Error("Missing real connection")
-    for (const change of [{ directory: AbsolutePath.make("/foreign") }, { workspace_id: WorkspaceID.make("wrk_foreign") },
+    const foreignProject = Project.ID.make("artifact-foreign-project")
+    yield* f.database.db.insert(ProjectTable).values({ id: foreignProject, worktree: AbsolutePath.make("/foreign"), sandboxes: [] }).run()
+    for (const change of [{ project_id: foreignProject }, { directory: AbsolutePath.make("/foreign") }, { workspace_id: WorkspaceID.make("wrk_foreign") },
       { provider: "other" }, { integration_id: Integration.ID.make("foreign-integration") }, { state: "revoked" as const }]) {
       yield* f.database.db.update(CapabilityConnectionTable).set({ ...connection, ...change }).where(eq(CapabilityConnectionTable.id, f.connection.id)).run()
       yield* expectCode(f.run(f.artifacts.publish(f.context, input, [f.requirement])),
@@ -211,6 +215,30 @@ describe("selected artifact publication", () => {
     yield* f.database.db.update(CredentialTable).set({ integration_id: Integration.ID.make("foreign-integration") })
       .where(eq(CredentialTable.id, f.selected.id)).run()
     yield* expectCode(f.run(f.artifacts.publish(f.context, input, [f.requirement])), "authentication_revoked")
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
+    expect(yield* f.fs.exists(f.root)).toBe(false)
+  }))
+
+  it.live("unknown or rebound references and same-generation resource drift cannot publish; removed exact credential never falls back to newer", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const unknown = { ...f.connection, id: Capability.ConnectionID.create() }
+    const missingConnection = { ...f.resolution, connection: unknown, target: { ...f.target, connectionID: unknown.id } }
+    const missingTarget = { ...f.resolution, target: { ...f.target, id: Capability.TargetID.create() } }
+    for (const resolution of [missingConnection, missingTarget]) yield* expectCode(f.run(f.artifacts.publish(f.context, input,
+      [{ ...f.requirement, resources: [resolution.connection.provider, resolution.connection.id, resolution.target.id],
+        selection: { ...f.requirement.selection, resolution } }])), "connection_unavailable")
+    const other = yield* f.connections.create({ provider: "fixture", integrationID: f.selected.integrationID, credentialID: f.newer.id,
+      subjectID: "other-account", endpoint: f.resolution.endpoint, scopeHash: "b".repeat(64) })
+    const target = yield* f.database.db.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, f.target.id)).get()
+    if (!target) throw new Error("Missing actual target")
+    for (const change of [{ resource: { account: "two" } }, { connection_id: other.id }, { environment: "changed" }]) {
+      yield* f.database.db.update(CapabilityTargetTable).set({ ...target, ...change }).where(eq(CapabilityTargetTable.id, f.target.id)).run()
+      yield* expectCode(f.run(f.artifacts.publish(f.context, input, [f.requirement])), "environment" in change ? "stale_descriptor" : "target_denied")
+    }
+    yield* f.database.db.update(CapabilityTargetTable).set(target).where(eq(CapabilityTargetTable.id, f.target.id)).run()
+    yield* f.credentials.remove(f.selected.id)
+    expect(yield* f.credentials.get(f.newer.id)).toBeDefined()
+    yield* expectCode(f.run(f.artifacts.publish(f.context, input, [f.requirement])), "authentication_required")
     expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
     expect(yield* f.fs.exists(f.root)).toBe(false)
   }))

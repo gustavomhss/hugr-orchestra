@@ -12,6 +12,7 @@ import type { Tool } from "../../tool/tool"
 import type { CapabilityConnections } from "../connection/index"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 
+/** Trusted producer data only. Selection is an ephemeral condition, never a grant or artifact metadata. */
 export type Requirements = readonly Readonly<{
   action: string
   resources: readonly string[]
