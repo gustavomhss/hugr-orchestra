@@ -1,0 +1,120 @@
+name: runtime-products
+
+# Native CLI/resource/service proof only; Desktop channels, packaging and WSL remain unproved.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { host: macos-15-intel, target: darwin-x64-baseline }
+          - { host: macos-15, target: darwin-arm64 }
+          - { host: ubuntu-24.04, target: linux-x64-baseline }
+          - { host: ubuntu-24.04-arm, target: linux-arm64 }
+          - { host: windows-2022, target: windows-x64-baseline }
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+      - name: Require matching native host and exact Bun
+        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --host
+      - name: Install once without lifecycle scripts
+        run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Build the owned CLI with its package version
+        run: |
+          set -euo pipefail
+          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          export ORCHESTRA_VERSION
+          bun packages/cli/script/build.ts --skip-install --target "$TARGET"
+      - name: Execute isolated native product proof
+        run: |
+          set -euo pipefail
+          if [[ "$RUNNER_OS" == macOS ]]; then
+            ORCHESTRA_ARTIFACT_DARWIN_SDK="$(xcrun --sdk macosx --show-sdk-path)"
+            export ORCHESTRA_ARTIFACT_DARWIN_SDK
+          fi
+          bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json
+      - name: Require the actual proof report
+        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json --check-report
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: runtime-proof-${{ matrix.target }}
+          path: runtime-proof.json
+          if-no-files-found: error
+
+  windows-arm64-producer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+      - name: Require native Linux producer
+        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+      - name: Install once without lifecycle scripts
+        run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
+      - name: Build and export the actual Windows ARM64 CLI
+        run: |
+          set -euo pipefail
+          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          export ORCHESTRA_VERSION
+          bun packages/cli/script/build.ts --skip-install --target windows-arm64
+          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out windows-arm64-resources --version "$ORCHESTRA_VERSION" --target windows-arm64
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-arm64-resources
+          path: windows-arm64-resources/
+          if-no-files-found: error
+
+  windows-arm64:
+    needs: windows-arm64-producer
+    runs-on: windows-11-arm
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: "1.3.14"
+          bun-download-url: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-windows-aarch64.zip
+      - name: Require native Windows ARM64 Bun
+        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --host
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-arm64-resources
+          path: windows-arm64-resources
+      - name: Execute isolated handed-off native product proof
+        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json
+      - name: Require the actual proof report and producer digest
+        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json --check-report
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: runtime-proof-windows-arm64
+          path: runtime-proof.json
+          if-no-files-found: error
