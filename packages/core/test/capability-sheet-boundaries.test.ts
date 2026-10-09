@@ -4,7 +4,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { eq } from "drizzle-orm"
 import { Effect, Layer, Schema } from "effect"
 import { join } from "node:path"
-import { inflateRawSync } from "node:zlib"
+import { deflateRawSync, inflateRawSync } from "node:zlib"
 import { Workbook } from "exceljs"
 import { AgentV2 } from "../src/agent"
 import { CapabilityArtifacts } from "../src/capability/artifact"
@@ -13,6 +13,8 @@ import { CapabilityInvocation } from "../src/capability/invocation"
 import { CapabilitySheets } from "../src/capability/sheet"
 import { mime } from "../src/capability/sheet/schema"
 import { requirePackage } from "../src/capability/sheet/zip"
+import { entries } from "../src/capability/sheet/archive"
+import { columnName } from "../src/capability/sheet/formula"
 import { CapabilityArtifactTable } from "../src/capability/sql"
 import { Database } from "../src/database/database"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
@@ -76,7 +78,8 @@ async function reopen(data: Uint8Array) {
 }
 
 // Tiny fixture-only ZIP writer. Parts originate from real ExcelJS; decoder readback checks generated ZIP/CRC correctness.
-async function xmlFixture(sheetData: string, names = "", dateFormat = false, date1904?: "true" | "1") {
+async function xmlFixture(sheetData: string, names = "", dateFormat = false, date1904?: "true" | "1",
+  options: { suffix?: string; sharedStrings?: string | null } = {}) {
   const workbook = new Workbook()
   const sheet = workbook.addWorksheet("Data")
   sheet.getCell("A1").value = 1
@@ -96,34 +99,64 @@ async function xmlFixture(sheetData: string, names = "", dateFormat = false, dat
     const content = view.getUint16(offset + 10, true) === 8 ? inflateRawSync(raw) : raw
     const xml = new TextDecoder().decode(content)
     const replacement = name === "xl/worksheets/sheet1.xml"
-      ? xml.slice(0, xml.indexOf("<sheetData>")) + `<sheetData>${sheetData}</sheetData>` + xml.slice(xml.indexOf("</sheetData>") + 12)
+      ? (xml.slice(0, xml.indexOf("<sheetData>")) + `<sheetData>${sheetData}</sheetData>` + xml.slice(xml.indexOf("</sheetData>") + 12))
+        .replace("</worksheet>", `${options.suffix ?? ""}</worksheet>`)
       : name === "xl/workbook.xml" ? (names ? xml.replace("</workbook>", `<definedNames>${names}</definedNames></workbook>`) : xml)
         .replace("<workbookPr ", date1904 ? `<workbookPr date1904="${date1904}" ` : "<workbookPr ") : undefined
-    parts.push({ name, data: replacement === undefined ? new Uint8Array(content) : new TextEncoder().encode(replacement) })
+    if (name !== "xl/sharedStrings.xml" || options.sharedStrings === undefined)
+      parts.push({ name, data: replacement === undefined ? new Uint8Array(content) : new TextEncoder().encode(replacement) })
     state.offset += 46 + length + view.getUint16(offset + 30, true) + view.getUint16(offset + 32, true)
   })
+  if (typeof options.sharedStrings === "string") parts.push({ name: "xl/sharedStrings.xml", data: new TextEncoder().encode(options.sharedStrings) })
+  return zipFixture(parts)
+}
+
+type ZipPart = { name: string; data: Uint8Array; localName?: string; flags?: number; localFlags?: number;
+  method?: number; localMethod?: number; crc?: number; localCRC?: number; localOffset?: number;
+  localExtra?: Uint8Array; centralExtra?: Uint8Array; externalAttributes?: number; deflate?: boolean; descriptor?: { signed: boolean; crc?: number } }
+
+function zipFixture(parts: readonly ZipPart[]) {
   const chunks: Uint8Array[] = []
   const central: Uint8Array[] = []
   const size = { offset: 0 }
   parts.forEach((part) => {
     const name = new TextEncoder().encode(part.name)
+    const localName = new TextEncoder().encode(part.localName ?? part.name)
+    const localExtra = part.localExtra ?? new Uint8Array()
+    const centralExtra = part.centralExtra ?? new Uint8Array()
+    const payload = part.deflate ? deflateRawSync(part.data) : part.data
+    const flags = part.flags ?? (part.descriptor ? 8 : 0)
+    const method = part.method ?? (part.deflate ? 8 : 0)
     const checksum = { value: 0xffffffff }
     part.data.forEach((byte) => {
       checksum.value ^= byte
       Array.from({ length: 8 }, () => { checksum.value = checksum.value >>> 1 ^ (checksum.value & 1 ? 0xedb88320 : 0) })
     })
     const crc = (checksum.value ^ 0xffffffff) >>> 0
-    const local = new Uint8Array(30 + name.length)
+    const local = new Uint8Array(30 + localName.length + localExtra.length)
     const header = new DataView(local.buffer)
     header.setUint32(0, 0x04034b50, true); header.setUint16(4, 20, true)
-    header.setUint32(14, crc, true); header.setUint32(18, part.data.length, true); header.setUint32(22, part.data.length, true)
-    header.setUint16(26, name.length, true); local.set(name, 30)
-    const directory = new Uint8Array(46 + name.length)
+    header.setUint16(6, part.localFlags ?? flags, true); header.setUint16(8, part.localMethod ?? method, true)
+    header.setUint32(14, part.localCRC ?? (part.descriptor ? 0 : part.crc ?? crc), true)
+    header.setUint32(18, part.descriptor ? 0 : payload.length, true); header.setUint32(22, part.descriptor ? 0 : part.data.length, true)
+    header.setUint16(26, localName.length, true); header.setUint16(28, localExtra.length, true)
+    local.set(localName, 30); local.set(localExtra, 30 + localName.length)
+    const descriptor = new Uint8Array(part.descriptor ? part.descriptor.signed ? 16 : 12 : 0)
+    if (part.descriptor) {
+      const d = new DataView(descriptor.buffer)
+      const offset = part.descriptor.signed ? 4 : 0
+      if (offset) d.setUint32(0, 0x08074b50, true)
+      d.setUint32(offset, part.descriptor.crc ?? crc, true); d.setUint32(offset + 4, payload.length, true); d.setUint32(offset + 8, part.data.length, true)
+    }
+    const directory = new Uint8Array(46 + name.length + centralExtra.length)
     const record = new DataView(directory.buffer)
     record.setUint32(0, 0x02014b50, true); record.setUint16(4, 20, true); record.setUint16(6, 20, true)
-    record.setUint32(16, crc, true); record.setUint32(20, part.data.length, true); record.setUint32(24, part.data.length, true)
-    record.setUint16(28, name.length, true); record.setUint32(42, size.offset, true); directory.set(name, 46)
-    chunks.push(local, part.data); central.push(directory); size.offset += local.length + part.data.length
+    record.setUint16(8, flags, true); record.setUint16(10, method, true)
+    record.setUint32(16, part.crc ?? crc, true); record.setUint32(20, payload.length, true); record.setUint32(24, part.data.length, true)
+    record.setUint16(28, name.length, true); record.setUint16(30, centralExtra.length, true)
+    record.setUint32(38, part.externalAttributes ?? 0, true)
+    record.setUint32(42, part.localOffset ?? size.offset, true); directory.set(name, 46); directory.set(centralExtra, 46 + name.length)
+    chunks.push(local, payload, descriptor); central.push(directory); size.offset += local.length + payload.length + descriptor.length
   })
   const footer = new Uint8Array(22)
   const record = new DataView(footer.buffer)
@@ -137,6 +170,133 @@ async function xmlFixture(sheetData: string, names = "", dateFormat = false, dat
 }
 
 describe("cold sheet byte/library boundaries", () => {
+  it.live("ZIP entry identity rejects local/central disagreement, name overrides and noncanonical duplicates", () => Effect.gen(function* () {
+    const data = new TextEncoder().encode("123456789")
+    expect(Bun.hash.crc32(data)).toBe(0xcbf43926)
+    const positive = zipFixture([{ name: "aa.xml", data }])
+    expect([...entries(positive)]).toEqual([{ name: "aa.xml", data }])
+    const override = new Uint8Array([0x75, 0x70, 0, 0])
+    const cases: readonly ZipPart[][] = [
+      [{ name: "aa.xml", localName: "bb.xml", data }],
+      [{ name: "aa.xml", localFlags: 0x800, data }],
+      [{ name: "aa.xml", localMethod: 8, data }],
+      [{ name: "aa.xml", flags: 1, data }],
+      [{ name: "aa.xml", flags: 4, data }],
+      [{ name: "aa.xml", localExtra: override, data }],
+      [{ name: "aa.xml", centralExtra: override, data }],
+      [{ name: "xl/../aa.xml", data }],
+      [{ name: "xl\\aa.xml", data }],
+      [{ name: "xl//aa.xml", data }],
+      [{ name: "/aa.xml", data }],
+      [{ name: "aa.xml", data }, { name: "aa.xml", data }],
+      [{ name: "folder", externalAttributes: 0x10, data: new Uint8Array() }, { name: "folder/", data: new Uint8Array() }],
+    ]
+    cases.forEach((parts) => expect(() => [...entries(zipFixture(parts))]).toThrow())
+  }))
+
+  it.live("ZIP CRC covers decoded bytes, local headers and signed/unsigned data descriptors", () => Effect.gen(function* () {
+    const data = new TextEncoder().encode("descriptor and deflate fixture")
+    Array.from([false, true]).forEach((signed) => {
+      const positive = zipFixture([{ name: "aa.xml", data, deflate: true, descriptor: { signed } }])
+      expect([...entries(positive)]).toEqual([{ name: "aa.xml", data }])
+      expect(() => [...entries(zipFixture([{ name: "aa.xml", data, deflate: true, descriptor: { signed, crc: 0 } }]))]).toThrow()
+    })
+    expect(() => [...entries(zipFixture([{ name: "aa.xml", data, crc: 0 }]))]).toThrow()
+    expect(() => [...entries(zipFixture([{ name: "aa.xml", data, localCRC: 0 }]))]).toThrow()
+    expect(() => [...entries(zipFixture([{ name: "aa.xml", data, deflate: true, crc: 0 }]))]).toThrow()
+  }))
+
+  it.live("ZIP overlapping local spans reject even when names, sizes and individual CRCs are valid", () => Effect.gen(function* () {
+    const inner = new TextEncoder().encode("nested entry")
+    const nested = zipFixture([{ name: "inner.xml", data: inner }])
+    const overlapping = zipFixture([{ name: "outer.xml", data: nested },
+      { name: "inner.xml", data: inner, localOffset: 30 + new TextEncoder().encode("outer.xml").length }])
+    expect(() => [...entries(overlapping)]).toThrow()
+    const positive = zipFixture([{ name: "outer.xml", data: inner }, { name: "inner.xml", data: inner }])
+    expect([...entries(positive)]).toHaveLength(2)
+  }))
+
+  it.live("aggregate merged-cell expansion and overlap reject before load; existing cells are counted once", () => Effect.gen(function* () {
+    const f = yield* fixture("sheet_read")
+    const one = '<row r="1"><c r="A1"><v>1</v></c></row>'
+    const oversized = yield* Effect.promise(() => xmlFixture(one, "", false, undefined, {
+      suffix: '<mergeCells count="2"><mergeCell ref="A1:C2000"/><mergeCell ref="D1:F2000"/></mergeCells>',
+    }))
+    const admission = yield* Effect.tryPromise({ try: () => requirePackage(oversized, false), catch: (error) => error }).pipe(Effect.result)
+    expect(admission._tag).toBe("Failure")
+    if (admission._tag !== "Failure" || !(admission.failure instanceof Capability.Failure)) throw new Error("Expected pre-load merge-budget failure")
+    expect(admission.failure.code).toBe("quota_exceeded")
+    const oversizedRef = yield* f.publish(oversized)
+    expect((yield* f.invoke({ format: "xlsx", artifact: oversizedRef }).pipe(Effect.flip)).message).toContain("quota_exceeded")
+    const overlapping = yield* Effect.promise(() => xmlFixture(one, "", false, undefined, {
+      suffix: '<mergeCells count="2"><mergeCell ref="A1:C2"/><mergeCell ref="B2:D3"/></mergeCells>',
+    }))
+    expect((yield* f.invoke({ format: "xlsx", artifact: yield* f.publish(overlapping) }).pipe(Effect.flip)).message).toContain("unsupported_schema")
+    // A full 10,000-cell source remains admissible when merges cover cells already present.
+    const rows = Array.from({ length: 40 }, (_, i) => `<row r="${i + 1}">` + Array.from({ length: 250 }, (_, j) =>
+      `<c r="${columnName(j + 1)}${i + 1}"><v>1</v></c>`).join("") + "</row>").join("")
+    const positive = yield* Effect.promise(() => xmlFixture(rows, "", false, undefined, {
+      suffix: '<mergeCells count="2"><mergeCell ref="A1:C40"/><mergeCell ref="D1:F40"/></mergeCells>',
+    }))
+    const raw = yield* Effect.promise(() => requirePackage(positive, false))
+    expect(raw.sheets.get("Data")?.cells.size).toBe(10000)
+    const loaded = yield* Effect.promise(() => reopen(positive))
+    expect(loaded.getWorksheet("Data")?.getCell("C40").isMerged).toBe(true)
+    const output = yield* f.invoke({ format: "xlsx", artifact: yield* f.publish(positive), range: { startRow: 1, endRow: 1, startColumn: 1, endColumn: 1 } })
+    expect(output.metadata).toMatchObject({ cells: [{ value: "1" }] })
+  }), 60000)
+
+  it.live("ordinary edits reject pagebreaks and legacy protection before model load without claiming roundtrip", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const one = '<row r="1"><c r="A1"><v>1</v></c></row>'
+    yield* Effect.forEach([
+      '<rowBreaks count="1" manualBreakCount="1"><brk id="1" min="0" max="16383" man="1"/></rowBreaks>',
+      '<colBreaks count="1" manualBreakCount="1"><brk id="1" min="0" max="1048575" man="1"/></colBreaks>',
+      '<sheetProtection sheet="1" password="CF07"/>',
+    ], (suffix) => Effect.gen(function* () {
+      const data = yield* Effect.promise(() => xmlFixture(one, "", false, undefined, { suffix }))
+      // Check integrity separately: rejection must come from editable preflight, not the fixture's CRC.
+      yield* Effect.promise(() => requirePackage(data, false))
+      const admission = yield* Effect.tryPromise({ try: () => requirePackage(data, true), catch: (error) => error }).pipe(Effect.result)
+      expect(admission._tag).toBe("Failure")
+      if (admission._tag !== "Failure" || !(admission.failure instanceof Capability.Failure)) throw new Error("Expected editable pre-load failure")
+      expect(admission.failure.code).toBe("unsupported_operation")
+      if (suffix.startsWith("<sheetProtection")) {
+        const loaded = yield* Effect.promise(() => reopen(data))
+        const resaved = new Uint8Array(yield* Effect.promise(() => loaded.xlsx.writeBuffer()))
+        const sheet = [...entries(resaved)].find((entry) => entry.name === "xl/worksheets/sheet1.xml")
+        if (!sheet) throw new Error("Missing legacy-protection fixture worksheet")
+        expect(new TextDecoder().decode(sheet.data)).not.toContain('password="CF07"')
+      }
+      const artifact = yield* f.publish(data)
+      const before = yield* f.database.db.select().from(CapabilityArtifactTable)
+      expect((yield* f.invoke({ format: "xlsx", operation: "edit", artifact, expectedRevision: 0, sheet: "Data", cells: [{ address: "A1", value: { kind: "literal", value: 2 } }] }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(before)
+      expect((yield* f.read(artifact)).data).toEqual(data)
+    }))
+    const plain = yield* Effect.promise(() => xmlFixture(one))
+    const edited = yield* f.invoke({ format: "xlsx", operation: "edit", artifact: yield* f.publish(plain), expectedRevision: 0,
+      sheet: "Data", cells: [{ address: "A1", value: { kind: "literal", value: 2 } }] })
+    const saved = yield* f.read(ref(edited))
+    expect((yield* Effect.promise(() => reopen(saved.data))).getWorksheet("Data")?.getCell("A1").value).toBe(2)
+  }), 30000)
+
+  it.live("shared-string indices are lexical nonnegative integers bounded by actual si count, not parseInt or advertised count", () => Effect.gen(function* () {
+    const f = yield* fixture("sheet_read")
+    const strings = '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" uniqueCount="999999"><si><t>known</t></si><si><t>other</t></si></sst>'
+    yield* Effect.forEach([undefined, "", "-1", "0.5", "1e0", "2", "999", " 0"], (index) => Effect.gen(function* () {
+      const cell = `<row r="1"><c r="A1" t="s">${index === undefined ? "" : `<v>${index}</v>`}</c></row>`
+      const data = yield* Effect.promise(() => xmlFixture(cell, "", false, undefined, { sharedStrings: strings }))
+      const artifact = yield* f.publish(data)
+      expect((yield* f.invoke({ format: "xlsx", artifact }).pipe(Effect.flip)).message).toContain("unsupported_schema")
+    }))
+    const missing = yield* Effect.promise(() => xmlFixture('<row r="1"><c r="A1" t="s"><v>0</v></c></row>', "", false, undefined, { sharedStrings: null }))
+    expect((yield* f.invoke({ format: "xlsx", artifact: yield* f.publish(missing) }).pipe(Effect.flip)).message).toContain("unsupported_schema")
+    const positive = yield* Effect.promise(() => xmlFixture('<row r="1"><c r="A1" t="s"><v>1</v></c></row>', "", false, undefined, { sharedStrings: strings }))
+    expect((yield* Effect.promise(() => reopen(positive))).getWorksheet("Data")?.getCell("A1").value).toBe("other")
+    expect((yield* f.invoke({ format: "xlsx", artifact: yield* f.publish(positive) })).metadata).toMatchObject({ cells: [{ value: "other", valueType: "string" }] })
+  }), 60000)
+
   it.live("protected workbook rejects restructuring before mutation, including protection on an untouched sheet", () => Effect.gen(function* () {
     const f = yield* fixture()
     yield* Effect.forEach(["Data", "Other"], (name) => Effect.gen(function* () {
