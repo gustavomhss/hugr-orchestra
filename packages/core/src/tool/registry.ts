@@ -1,7 +1,7 @@
 export * as ToolRegistry from "./registry"
 
-import { ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
-import { Context, DateTime, Effect, Layer, Option, Scope } from "effect"
+import { ToolFailure, ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { Cause, Context, DateTime, Effect, Exit, Layer, Option, Scope } from "effect"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
@@ -83,6 +83,10 @@ const registryLayer = Layer.effect(
     const profileLoader = yield* ToolSafety.RuntimeProfileLoader
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
+    const fatalToolCause = (cause: Cause.Cause<ToolFailure>) => Effect.failCause(Cause.fromReasons<never>(
+      cause.reasons.flatMap((reason) => reason._tag === "Fail"
+        ? Cause.die(reason.error).reasons.map((next) => next.annotate(Context.makeUnsafe(new Map(reason.annotations)))) : [reason]),
+    ))
 
     const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
       const registration =
@@ -116,21 +120,23 @@ const registryLayer = Layer.effect(
       return yield* safety.run(
         invocation,
         Effect.gen(function* () {
-          const pending = yield* settle(registration.tool, input.call, {
+          const attempted = yield* settle(registration.tool, input.call, {
             sessionID: input.sessionID,
             agent: input.agent,
             assistantMessageID: input.assistantMessageID,
             toolCallID: input.call.id,
-          }).pipe(
-            Effect.map((output) => ({ output })),
-            Effect.catchTag("LLM.ToolFailure", (failure) => failure.error instanceof ToolSafety.Denied
-              ? Effect.fail(failure.error) : safety.inspect(failure).pipe(
-                Effect.as({ result: { type: "error" as const, value: failure.message } }),
-              ),
-            ),
-          )
-          if ("result" in pending) return pending
-          const output = pending.output
+          }).pipe(Effect.exit)
+          if (Exit.isFailure(attempted)) {
+            // A declared tool failure may be projected; a mixed Cause must retain its defects/interruption.
+            if (!attempted.cause.reasons.every((reason) => reason._tag === "Fail" && reason.error instanceof ToolFailure))
+              return yield* fatalToolCause(attempted.cause)
+            const reason = attempted.cause.reasons[0]
+            if (!reason || reason._tag !== "Fail") return yield* fatalToolCause(attempted.cause)
+            if (reason.error.error instanceof ToolSafety.Denied) return yield* reason.error.error
+            yield* safety.inspect(reason.error)
+            return { result: { type: "error" as const, value: reason.error.message } }
+          }
+          const output = attempted.value
           yield* safety.inspect(output)
           const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id, output })
           const projected = bounded.outputPaths.length
@@ -229,13 +235,19 @@ const registryLayer = Layer.effect(
           ),
           definition: (name) => definitions.get(name),
           registrationIdentity: (name) => registrations.get(name)?.identity,
-          settle: (input) => {
+          settle: (input) => Effect.gen(function* () {
             const registration = registrations.get(input.call.name)
-            if (registration) return settleWith(input, registration.identity).pipe(
-              Effect.provideService(CapturedMaterialization, materialization),
-            )
-            return Effect.succeed({ result: { type: "error", value: `Unknown tool: ${input.call.name}` } })
-          },
+            const settlement: Settlement = registration ? yield* settleWith(input, registration.identity)
+              : { result: { type: "error", value: `Unknown tool: ${input.call.name}` } }
+            if (settlement.result.type !== "error") return settlement
+            // Failure text uses the same dynamic output budget and retention boundary as successful text.
+            const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id,
+              output: { structured: {}, content: [{ type: "text", text: String(settlement.result.value) }] } })
+            const paths = [...new Set([...(settlement.outputPaths ?? []), ...bounded.outputPaths])]
+            return { result: { type: "error" as const, value: bounded.output.content
+              .flatMap((part) => part.type === "text" ? [part.text] : []).join("") },
+              ...(paths.length ? { outputPaths: paths } : {}) }
+          }).pipe(Effect.provideService(CapturedMaterialization, materialization)),
         }
         return materialization
       }),
