@@ -23,6 +23,14 @@
     "./regression/new-session-panel-corner.spec.ts",
     "./regression/orchestra-accessibility.spec.ts",
     "./regression/session-timeline-context-resize.spec.ts",
+    "./regression/session-research-result.spec.ts",
+    "./regression/session-research-result.fixture.ts",
+    "./performance/timeline/session-research-benchmark.spec.ts",
+    "./performance/benchmark.ts",
+    "./performance/chrome-trace.ts",
+    "./performance/timeline/session-timeline-benchmark.fixture.ts",
+    "./performance/timeline/session-timeline-profile.ts",
+    "./performance/timeline/session-timeline-stream-probe.ts",
     "./utils/**/*.ts"
   ]
 }
