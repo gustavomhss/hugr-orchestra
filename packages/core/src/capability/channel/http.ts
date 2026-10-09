@@ -106,5 +106,5 @@ export function decode<A>(schema: Schema.Decoder<A, never>, value: unknown): Eff
 
 /** Evidence projects typed text only: private file URLs and arbitrary provider fields have no slot. */
 export function safeText(text: string, secret: string) {
-  return text.split(secret).join("[redacted]").replace(/https?:\/\/[^\s<>]+/g, "[url]")
+  return text.split(secret).join("[redacted]").replace(/https?:\/\/[^\s<>]+/gi, "[url]")
 }

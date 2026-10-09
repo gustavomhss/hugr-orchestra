@@ -89,10 +89,14 @@ function fixture(provider: "slack" | "discord", options: {
     ])
     const requests: { method: string; path: string; query: URLSearchParams; body: typeof Body.Type; authorization: string | null }[] = []
     const submittedStates: string[] = []
+    const submittingIDs: (string | null)[] = []
+    const acknowledgedIDs: (string | null)[] = []
     const state = { mode: "normal", mutations: 0, wrongGuild: false, wrongChannel: false, wrongThread: false,
       readError: false, readbackError: false, malformed: false, oversized: false, redirect: false,
       textOverride: undefined as string | undefined, cursorOverride: undefined as string | undefined,
-      firstPage: false, permissionRevoke: false, ambiguousMissing: false }
+      firstPage: false, permissionRevoke: false, ambiguousMissing: false,
+      cas: "none", casStage: "final", casDone: false }
+    const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const received = yield* Deferred.make<void>()
     const scope = yield* Scope.Scope
     const wire = (message: StoredMessage, routeChannel = channelID) => provider === "slack" ? {
@@ -123,6 +127,7 @@ function fixture(provider: "slack" | "discord", options: {
           state.mutations++
           const rows = await Effect.runPromise(f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie))
           submittedStates.push(...rows.filter((row) => row.owner.sessionID === f.context.sessionID).map((row) => row.state))
+          submittingIDs.push(...rows.filter((row) => row.owner.sessionID === f.context.sessionID).map((row) => row.provider_id))
           Deferred.doneUnsafe(received, Effect.void)
           if (state.mode === "timeout") return new Response(new ReadableStream({ start(controller) { controller.enqueue(new TextEncoder().encode("{")) } }))
           if (state.mode === "500") return json({ error: token }, 500)
@@ -146,6 +151,14 @@ function fixture(provider: "slack" | "discord", options: {
           }
           if (state.permissionRevoke) await Effect.runPromise(CapabilityPolicyFixture.setRules([...rules, { action: "read", resource: "*", effect: "deny" }]).pipe(
             Effect.provideService(AgentV2.Service, agents), Effect.provideService(Scope.Scope, scope)))
+          if (state.cas !== "none" && state.casStage === "ack" && !state.casDone) {
+            const row = rows.find((row) => row.owner.sessionID === f.context.sessionID)
+            if (!row) throw new Error("FIXTURE_JOB_MISSING_AT_ACK")
+            state.casDone = true
+            await Effect.runPromise(jobs.observeHost(proof, { id: row.id }, { expectedGeneration: row.generation,
+              state: state.cas === "running" ? "running" : "failed", providerID: id,
+              observation: state.cas === "running" ? { progress: 0.5 } : { remoteOutcome: "failed" } }))
+          }
           return provider === "slack" ? json({ ok: true, ts: id, channel: channelID })
             : send ? json({ id }) : new Response(null, { status: 204 })
         }
@@ -155,6 +168,18 @@ function fixture(provider: "slack" | "discord", options: {
           controller.enqueue(new TextEncoder().encode("x".repeat(4096))); controller.close()
         } }))
         if (state.readError || (state.readbackError && state.mutations > 0)) return json({ error: token }, 500)
+        if (state.mutations > 0) {
+          const rows = await Effect.runPromise(f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie))
+          const row = rows.find((row) => row.owner.sessionID === f.context.sessionID)
+          if (!row) throw new Error("FIXTURE_JOB_MISSING_AT_READBACK")
+          acknowledgedIDs.push(row.provider_id)
+          if (state.cas !== "none" && state.casStage === "final" && !state.casDone) {
+            state.casDone = true
+            await Effect.runPromise(jobs.observeHost(proof, { id: row.id }, { expectedGeneration: row.generation,
+              state: state.cas === "running" ? "running" : "failed", providerID: row.provider_id ?? undefined,
+              observation: state.cas === "running" ? { progress: 0.5 } : { remoteOutcome: "failed" } }))
+          }
+        }
         if (provider === "slack") {
           if (url.pathname === "/api/reactions.get") {
             const message = messages.get(url.searchParams.get("timestamp") ?? "")
@@ -195,7 +220,8 @@ function fixture(provider: "slack" | "discord", options: {
       { type: "tool-call", id: f.context.toolCallID, name, input }, f.context))
     const output = (input: Schema.Json, name?: Name) => call(input, name).pipe(Effect.flatMap((output) => Schema.decodeUnknownEffect(Output)(output.structured)))
     return { ...f, binding, provider, channels, credentials, selected, connections, jobs, artifacts, connection, target, bind,
-      channelID, threadID, messageID, messages, requests, state, submittedStates, received, makeOptions, run, call, output }
+      channelID, threadID, messageID, messages, requests, state, submittedStates, submittingIDs, acknowledgedIDs,
+      received, makeOptions, run, call, output }
   })
 }
 
@@ -269,6 +295,7 @@ describe("CapabilityChannels real REST leaves", () => {
           ...(action === "edit" ? { text: "edited" } : action.startsWith("reaction") ? { emoji } : {}) })
         expect(output.result).toMatchObject({ status: "completed", verification: "verified" })
         expect(f.submittedStates).toEqual(["submitting"])
+        expect(f.submittingIDs).toEqual([f.messageID])
         if (action === "edit") expect(f.messages.get(f.messageID)?.text).toBe("edited")
         if (action === "delete") expect(f.messages.has(f.messageID)).toBe(false)
         if (action === "reaction_add") expect(f.messages.get(f.messageID)?.ownEmoji).toEqual([emoji])
@@ -348,7 +375,7 @@ describe("CapabilityChannels real REST leaves", () => {
 
   it.live("Provider payload/token URLs are redacted in normal output and retained evidence; credential selection is exact", () => Effect.gen(function* () {
     const f = yield* fixture("slack", { root: "channel_read" })
-    f.state.textOverride = `${token} https://private.test/file?token=${token}`
+    f.state.textOverride = `${token} HTTPS://private.test/file?token=${token}`
     const output = yield* f.output({ provider: "slack", action: "history" })
     expect(output.acquisition?.messages[0]?.text).toBe("[redacted] [url]")
     expect(JSON.stringify(output)).not.toContain(token)
@@ -444,4 +471,125 @@ describe("CapabilityChannels real REST leaves", () => {
     expect(defect._tag).toBe("Failure")
     if (defect._tag === "Failure") expect(Cause.hasDies(defect.cause)).toBe(true)
   }))
+
+  it.live("Stable admission rejects conflicting intent and submitted payloads; reused intent never dispatches", () => Effect.gen(function* () {
+    const intent = yield* fixture("discord")
+    const payload = { provider: "discord", text: "admitted", replyTo: "999" }
+    expect((yield* intent.call(payload).pipe(Effect.flip)).message).toBe("target_denied")
+    const rows = yield* intent.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+    expect(rows[0]).toMatchObject({ state: "intent", provider_id: null })
+    expect(rows[0]?.request_hash).toMatch(/^[0-9a-f]{64}$/)
+    const requests = intent.requests.length
+    intent.messages.set("999", { id: "999", text: "now present", ownEmoji: [] })
+    const retry = yield* intent.output(payload)
+    expect(retry.jobRef?.id).toBe(rows[0]?.id)
+    expect(intent.state.mutations).toBe(0)
+    expect(intent.requests).toHaveLength(requests)
+    const conflicts: Schema.Json[] = [
+      { ...payload, text: "changed" }, { ...payload, replyTo: "998" }, { ...payload, threadID: "20" },
+    ]
+    yield* Effect.forEach(conflicts, (input) => intent.call(input).pipe(Effect.flip,
+      Effect.tap((error) => Effect.sync(() => expect(error.message).toBe("outcome_unknown")))))
+    expect(intent.requests).toHaveLength(requests)
+    expect((yield* intent.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie))).toHaveLength(1)
+    const submitted = yield* fixture("discord")
+    submitted.state.readbackError = true
+    const first = yield* submitted.output({ provider: "discord", text: "accepted" })
+    expect(first.result.status).toBe("partial")
+    const before = submitted.requests.length
+    expect((yield* submitted.call({ provider: "discord", text: "conflict" }).pipe(Effect.flip)).message).toBe("outcome_unknown")
+    const second = yield* submitted.output({ provider: "discord", text: "accepted" })
+    expect(second.result).toEqual(first.result)
+    expect(second.messageID).toBe(first.messageID)
+    expect(submitted.requests).toHaveLength(before)
+    expect(submitted.state.mutations).toBe(1)
+  }), 30000)
+
+  it.live("Update action, message and emoji belong to payload identity even when first intent remains pending", () => Effect.gen(function* () {
+    const f = yield* fixture("discord", { root: "channel_update" })
+    f.messages.delete(f.messageID)
+    const original = { provider: "discord", action: "reaction_add", messageID: f.messageID, emoji: "👍" }
+    expect((yield* f.call(original).pipe(Effect.flip)).message).toBe("target_denied")
+    const before = f.requests.length
+    const conflicts: Schema.Json[] = [
+      { ...original, action: "reaction_remove" }, { ...original, messageID: "102" }, { ...original, emoji: "👎" },
+    ]
+    yield* Effect.forEach(conflicts, (input) => f.call(input).pipe(Effect.flip,
+      Effect.tap((error) => Effect.sync(() => expect(error.message).toBe("outcome_unknown")))))
+    expect(f.requests).toHaveLength(before)
+    expect(f.state.mutations).toBe(0)
+    expect((yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie))).toHaveLength(1)
+  }))
+
+  it.live("Exact completed delete retries reconcile after message is gone without HTTP or new evidence", () => Effect.gen(function* () {
+    yield* Effect.forEach(["slack", "discord"] as const, (provider) => Effect.gen(function* () {
+      const f = yield* fixture(provider, { root: "channel_update" })
+      const input = { provider, action: "delete", messageID: f.messageID }
+      const first = yield* f.output(input)
+      expect(first.result.status).toBe("completed")
+      expect(f.messages.has(f.messageID)).toBe(false)
+      const before = f.requests.length
+      const second = yield* f.output({ ...input, connectionID: f.connection.id, targetID: f.target.id })
+      expect(second).toEqual(first)
+      expect(f.requests).toHaveLength(before)
+      expect(f.state.mutations).toBe(1)
+      expect((yield* f.database.db.select().from(CapabilityArtifactTable).all().pipe(Effect.orDie))
+        .filter((row) => row.owner.sessionID === f.context.sessionID)).toHaveLength(1)
+    }))
+    const thread = yield* fixture("discord", { boundThread: true })
+    const first = yield* thread.output({ provider: "discord", text: "bound thread" })
+    const second = yield* thread.output({ provider: "discord", text: "bound thread", threadID: thread.threadID,
+      targetID: thread.target.id, connectionID: thread.connection.id })
+    expect(second).toEqual(first)
+    expect(thread.state.mutations).toBe(1)
+  }), 30000)
+
+  it.live("ACK ID containing credential stays durable host metadata; model and evidence omit it as partial", () => Effect.gen(function* () {
+    const f = yield* fixture("discord", { credential: { type: "key", key: "20" } })
+    const output = yield* f.output({ provider: "discord", text: "accepted" })
+    expect(output.result).toMatchObject({ status: "partial", unresolvedEffects: ["provider_id_projection"] })
+    expect(output.messageID).toBeUndefined()
+    expect(output.acquisition).toBeUndefined()
+    expect(f.acknowledgedIDs).toEqual(["201"])
+    const rows = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+    expect(rows[0]).toMatchObject({ state: "completed", provider_id: "201" })
+    if (output.result.status !== "partial") return yield* Effect.die("EXPECTED_PARTIAL_PROJECTION")
+    const retained = yield* f.run(f.artifacts.read(f.context, output.result.artifactRefs[0]))
+    expect(new TextDecoder().decode(retained.data)).not.toContain("201")
+    expect(JSON.parse(new TextDecoder().decode(retained.data))).toMatchObject({ acknowledgment: { providerIDProjection: "omitted" } })
+    const retry = yield* f.output({ provider: "discord", text: "accepted" })
+    expect(retry.result).toEqual(output.result)
+    expect(retry.messageID).toBeUndefined()
+    expect(f.state.mutations).toBe(1)
+  }))
+
+  it.live("Real post-ACK CAS races reconcile current generation or return retained partial, never ToolFailure", () => Effect.gen(function* () {
+    yield* Effect.forEach(["ack", "final"] as const, (stage) => Effect.gen(function* () {
+      const f = yield* fixture("discord")
+      f.state.cas = "running"
+      f.state.casStage = stage
+      const output = yield* f.output({ provider: "discord", text: "CAS success" })
+      expect(f.state.casDone).toBe(true)
+      expect(output.result.status).toBe("completed")
+      expect(output.messageID).toBe("201")
+      const rows = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.owner.sessionID === f.context.sessionID)[0]).toMatchObject({ state: "completed", provider_id: "201" })
+      expect(f.state.mutations).toBe(1)
+    }))
+    const failed = yield* fixture("discord")
+    failed.state.cas = "failed"
+    const output = yield* failed.output({ provider: "discord", text: "CAS conflict" })
+    expect(output.result).toMatchObject({ status: "partial", unresolvedEffects: ["job-observation"] })
+    expect(output.messageID).toBe("201")
+    expect(output.jobRef).toBeDefined()
+    if (output.result.status !== "partial") return yield* Effect.die("EXPECTED_PARTIAL_OBSERVATION")
+    expect(output.result.artifactRefs).toHaveLength(1)
+    const evidence = yield* failed.run(failed.artifacts.read(failed.context, output.result.artifactRefs[0]))
+    expect(JSON.parse(new TextDecoder().decode(evidence.data))).toMatchObject({ acquisition: { messages: [{ id: "201", text: "CAS conflict" }] } })
+    const before = failed.requests.length
+    const retry = yield* failed.output({ provider: "discord", text: "CAS conflict" })
+    expect(retry).toEqual(output)
+    expect(failed.requests).toHaveLength(before)
+    expect(failed.state.mutations).toBe(1)
+  }), 30000)
 })

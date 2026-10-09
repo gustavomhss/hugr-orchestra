@@ -39,6 +39,13 @@ export const Acquisition = Schema.Struct({ channelID: ID, messages: Schema.Array
   hasMore: Schema.Boolean, cursor: Schema.optionalKey(Schema.String),
 })
 export type Acquisition = typeof Acquisition.Type
+export const Evidence = Schema.Struct({
+  acknowledgment: Schema.Struct({ operation: Schema.String, postcondition: Schema.Literals(["verified", "unresolved"]),
+    readback: Schema.Literals(["acquired", "failed"]), providerIDProjection: Schema.Literals(["visible", "omitted"]),
+    messageID: Schema.optionalKey(ID),
+  }),
+  acquisition: Schema.optionalKey(Acquisition),
+})
 export const Output = Schema.Struct({
   result: Capability.Result,
   provider: Schema.Literals(["slack", "discord"]),

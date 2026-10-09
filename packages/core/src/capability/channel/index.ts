@@ -1,7 +1,9 @@
 export * as CapabilityChannels from "./index"
 
 import { Capability } from "@orchestra/schema/capability"
+import { and, sql } from "drizzle-orm"
 import { Effect, Schema } from "effect"
+import { Database } from "../../database/database"
 import { Location } from "../../location"
 import { Tool } from "../../tool/tool"
 import { CapabilityArtifacts } from "../artifact"
@@ -9,10 +11,12 @@ import { CapabilityConnections } from "../connection"
 import { CapabilityInvocation } from "../invocation"
 import { CapabilityJobs } from "../job"
 import { CapabilityPolicy } from "../policy"
+import { CapabilityArtifactTable, CapabilityJobTable } from "../sql"
 import { CapabilityDiscord } from "../providers/discord"
 import { CapabilitySlack } from "../providers/slack"
 import { Failure, request, safeText, validateOptions, type Options, type RPC } from "./http"
-import { Output, Read, Send, Update, type Acquisition, type Message } from "./schema"
+import { Evidence, Output, Read, Send, Update, type Acquisition, type Message } from "./schema"
+import { requestHash } from "./request"
 
 export type MakeOptions = Options & {
   connections: CapabilityConnections.Interface
@@ -23,6 +27,7 @@ export type MakeOptions = Options & {
 /** Location producer only. The lead registers these canonical leaves through producedTools. */
 export const make = (options: MakeOptions) => Effect.gen(function* () {
   const location = yield* Location.Service
+  const database = yield* Database.Service
   const policy = yield* CapabilityPolicy.make
   const connections = options.connections
   const jobs = options.jobs
@@ -40,11 +45,15 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     if (binding.rootToolName !== root) return yield* failure("invocation_binding_mismatch")
     const resolved = yield* connections.resolve(context, { provider: input.provider,
       ...(input.connectionID ? { connectionID: input.connectionID } : {}),
-      ...(input.targetID ? { targetID: input.targetID } : {}), action: operation }).pipe(
-        Effect.catchTag("Session.NotFoundError", () => Effect.fail(failure("invocation_binding_mismatch"))),
-      )
+      ...(input.targetID ? { targetID: input.targetID } : {}), action: operation })
     const endpoint = input.provider === "slack" ? CapabilitySlack.endpoint : CapabilityDiscord.endpoint
     if (resolved.endpoint !== endpoint) return yield* failure("target_denied")
+    const resource = input.provider === "slack" ? Schema.decodeUnknownOption(CapabilitySlack.Resource)(resolved.resource)
+      : Schema.decodeUnknownOption(CapabilityDiscord.Resource)(resolved.resource)
+    if (resource._tag === "None") return yield* failure("target_denied")
+    const selectedThread = "threadID" in input ? input.threadID : undefined
+    if (resource.value.threadID && selectedThread && selectedThread !== resource.value.threadID) return yield* failure("target_denied")
+    const threadID = selectedThread ?? resource.value.threadID
     const credential = yield* connections.loadCredential(context, resolved, operation)
     if (credential.type === "oauth" && credential.expires <= Date.now()) return yield* failure("authentication_required")
     const secret = credential.type === "key" ? credential.key : credential.access
@@ -59,39 +68,107 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         resources: [input.provider, resolved.connection.id, resolved.target.id] })
       return yield* request(endpoint, authorization, http, transport)
     })
-    const selectedThread = "threadID" in input ? input.threadID : undefined
-    const adapter = yield* input.provider === "slack" ? CapabilitySlack.make(rpc, resolved.resource, selectedThread)
+    // Vendor membership reads are fresh-dispatch preflight, never durable-retry admission.
+    const adapter = input.provider === "slack" ? CapabilitySlack.make(rpc, resolved.resource, selectedThread)
       : CapabilityDiscord.make(rpc, resolved.resource, selectedThread)
     const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const clean = (message: Message): Message => ({ ...message, text: safeText(message.text, secret),
       reactions: message.reactions.map((reaction) => ({ ...reaction, emoji: safeText(reaction.emoji, secret) })) })
     const safeMetadata = (value: unknown) => !JSON.stringify(value).includes(secret)
-    if (!safeMetadata({ channelID: adapter.channelID })) return yield* failure("target_denied")
-    return { adapter, resolved, proof, clean, safeMetadata }
+    const channelID = input.provider === "discord" ? threadID ?? resource.value.channelID : resource.value.channelID
+    if (!safeMetadata({ channelID })) return yield* failure("target_denied")
+    return { adapter, resolved, proof, clean, safeMetadata, channelID, threadID }
   })
 
   const retain = Effect.fn("CapabilityChannels.retain")(function* (
-    context: Tool.Context, provider: "slack" | "discord", acquisition: Acquisition, verification: Capability.Verification,
-    acknowledgment?: Schema.Json,
+    context: Tool.Context, provider: "slack" | "discord", channelID: string, verification: Capability.Verification,
+    acquisition?: Acquisition, acknowledgment?: Schema.Json, jobRef?: Capability.JobRef,
   ) {
     return yield* artifacts.publish(context, { data: new TextEncoder().encode(JSON.stringify(
-      acknowledgment === undefined ? acquisition : { acknowledgment, acquisition },
+      acknowledgment === undefined ? acquisition : { acknowledgment, ...(acquisition ? { acquisition } : {}) },
     )),
       mime: "application/json", kind: "channel-evidence", verification,
-      metadata: { provider, channelID: acquisition.channelID },
+      metadata: { provider, channelID, ...(jobRef ? { jobID: jobRef.id } : {}) },
     })
   })
 
   const read = Effect.fn("CapabilityChannels.read")(function* (input: Read, context: Tool.Context): Effect.fn.Return<Output,
     Capability.Failure | Failure | CapabilityArtifacts.Failure> {
     const prepared = yield* prepare(context, input, "read", "channel_read")
-    const acquired = yield* prepared.adapter.read(input)
+    const adapter = yield* prepared.adapter
+    const acquired = yield* adapter.read(input)
     const acquisition = { ...acquired, messages: acquired.messages.map(prepared.clean) }
     if (!prepared.safeMetadata(acquisition)) return yield* failure("acquisition_failed")
-    const ref = yield* retain(context, input.provider, acquisition, "observed")
+    const ref = yield* retain(context, input.provider, acquisition.channelID, "observed", acquisition)
     return { provider: input.provider, channelID: acquisition.channelID, acquisition,
       result: { status: "completed", receipt: ref.id, summary: "Bounded channel page acquired and retained",
         artifactRefs: [ref], verification: "observed" } }
+  })
+
+  const replay = Effect.fn("CapabilityChannels.replay")(function* (
+    input: Send | Update, context: Tool.Context, prepared: Effect.Success<ReturnType<typeof prepare>>, ref: Capability.JobRef,
+  ): Effect.fn.Return<Output, Capability.Failure> {
+    const saved = yield* jobs.readHost(prepared.proof, ref)
+    const receipt = saved.receipt
+    // Read-only recovery of this exact producer's published evidence when a job CAS could not attach its refs.
+    const refs = receipt.observation.artifactRefs?.length ? receipt.observation.artifactRefs
+      : yield* database.db.select({ id: CapabilityArtifactTable.id, revision: CapabilityArtifactTable.revision })
+        .from(CapabilityArtifactTable).where(and(
+          sql`json_extract(${CapabilityArtifactTable.metadata}, '$.jobID') = ${ref.id}`,
+          sql`json_extract(${CapabilityArtifactTable.producer}, '$.sessionID') = ${prepared.proof.producer.sessionID}`,
+          sql`json_extract(${CapabilityArtifactTable.producer}, '$.agentID') = ${prepared.proof.producer.agentID}`,
+          sql`json_extract(${CapabilityArtifactTable.producer}, '$.assistantMessageID') = ${prepared.proof.producer.assistantMessageID}`,
+          sql`json_extract(${CapabilityArtifactTable.producer}, '$.callID') = ${prepared.proof.producer.callID}`,
+        )).limit(2).all().pipe(Effect.orDie)
+    const retained = yield* Effect.forEach(refs, (artifact) =>
+      artifacts.read(context, artifact).pipe(Effect.result))
+    const records = retained.flatMap((record) => record._tag === "Success" ? [record.success] : [])
+    const evidence = records.flatMap((record) => {
+      const parsed = Schema.decodeUnknownOption(Schema.fromJsonString(Evidence))(new TextDecoder().decode(record.data))
+      return parsed._tag === "Some" ? [parsed.value] : []
+    })
+    const unsafeID = !!saved.providerID && (!prepared.safeMetadata({ messageID: saved.providerID }) ||
+      evidence.some((item) => item.acknowledgment.providerIDProjection === "omitted"))
+    const messageID = saved.providerID && !unsafeID ? saved.providerID : undefined
+    const common = { provider: input.provider, channelID: prepared.channelID, jobRef: ref,
+      ...(messageID ? { messageID } : {}) }
+    const verified = receipt.state === "completed" && receipt.observation.remoteOutcome === "completed"
+    const artifactRefs = records.map((record) => ({ id: record.metadata.id, revision: record.metadata.revision }))
+    const acquisition = evidence.find((item) => item.acquisition && prepared.safeMetadata(item.acquisition))?.acquisition
+    const retainedVerified = records.length > 0 && records.length === retained.length && evidence.length === records.length &&
+      records.every((record) => record.metadata.verification === "verified") &&
+      evidence.every((item) => item.acknowledgment.postcondition === "verified")
+    const unsafeEvidence = evidence.some((item) => !item.acquisition || !prepared.safeMetadata(item.acquisition))
+    if (verified && receipt.observation.materialization === "complete" && retainedVerified && !unsafeID && !unsafeEvidence)
+      return { ...common, ...(acquisition ? { acquisition } : {}), result: { status: "completed", receipt: ref.id,
+        summary: "Provider mutation independently verified and retained", verification: "verified", artifactRefs } }
+    const acknowledged = ["submitted", "running", "completed"].includes(receipt.state) || evidence.length > 0
+    if (acknowledged) return { ...common, result: { status: "partial", receipt: ref.id,
+      summary: "Provider acknowledged mutation; verification or evidence retention unresolved",
+      completedEffects: ["provider_acknowledged"], unresolvedEffects: [
+        ...(!verified && !retainedVerified ? ["postcondition_readback"] : []),
+        ...(receipt.observation.materialization === "failed" || records.length === 0 ? ["evidence_retention"] : []),
+        ...(records.length !== retained.length || evidence.length !== records.length ? ["evidence_access"] : []),
+        ...(unsafeID ? ["provider_id_projection"] : []),
+        ...(!unsafeID && unsafeEvidence ? ["evidence_metadata"] : []),
+        ...(!verified && retainedVerified ? ["job-observation"] : []),
+      ], artifactRefs } }
+    return { ...common, result: { status: "unknown", receipt: ref.id,
+      summary: "Existing durable operation requires reconciliation; no retry dispatched", reconciliationRef: ref.id } }
+  })
+
+  // Compatibility checkpoint until the shared atomic admit facade is committed.
+  const admit = Effect.fn("CapabilityChannels.admit")(function* (context: Tool.Context, input: CapabilityJobs.CreateInput) {
+    const existing = yield* database.db.select({ id: CapabilityJobTable.id }).from(CapabilityJobTable).where(and(
+      sql`${CapabilityJobTable.operation} = ${input.operation}`,
+      sql`json_extract(${CapabilityJobTable.invocation}, '$.sessionID') = ${context.sessionID}`,
+      sql`json_extract(${CapabilityJobTable.invocation}, '$.agentID') = ${context.agent}`,
+      sql`json_extract(${CapabilityJobTable.invocation}, '$.assistantMessageID') = ${context.assistantMessageID}`,
+      sql`json_extract(${CapabilityJobTable.invocation}, '$.callID') = ${context.toolCallID}`,
+    )).limit(2).all().pipe(Effect.orDie)
+    if (existing.length > 1) return yield* failure("outcome_unknown")
+    const ref = yield* jobs.create(context, input)
+    return { ref, reused: existing.some((row) => row.id === ref.id) }
   })
 
   const mutate = Effect.fn("CapabilityChannels.mutate")(function* (
@@ -103,20 +180,33 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       return yield* failure("unsupported_schema")
     const operation = `channel.${kind}`
     const prepared = yield* prepare(context, input, operation, `channel_${kind}`)
-    if ("messageID" in input && !(yield* prepared.adapter.get(input.messageID))) return yield* failure("target_denied")
-    if ("replyTo" in input && input.replyTo && !(yield* prepared.adapter.get(input.replyTo))) return yield* failure("target_denied")
-    const ref = yield* jobs.create(context, { kind: "provider", operation,
+    const admission = yield* admit(context, { kind: "provider", operation,
+      requestHash: requestHash(input, prepared.resolved, prepared.threadID),
       connection: prepared.resolved.connection, target: prepared.resolved.target })
-    const existing = yield* jobs.read(context, ref)
-    if (existing.state !== "intent") return { provider: input.provider, channelID: prepared.adapter.channelID, jobRef: ref,
-      result: { status: "unknown", receipt: ref.id, summary: "Existing durable operation requires reconciliation; no retry dispatched",
-        reconciliationRef: ref.id } }
-    yield* jobs.transition(context, ref, { expectedGeneration: existing.generation, state: "submitting", observation: {} })
+    const ref = admission.ref
+    if (admission.reused) return yield* replay(input, context, prepared, ref)
+    const adapter = yield* prepared.adapter
+    if ("messageID" in input && !(yield* adapter.get(input.messageID))) return yield* failure("target_denied")
+    if ("replyTo" in input && input.replyTo && !(yield* adapter.get(input.replyTo))) return yield* failure("target_denied")
+    yield* jobs.transition(context, ref, { expectedGeneration: 0, state: "submitting", observation: {},
+      ...("messageID" in input ? { providerID: input.messageID } : {}),
+    })
     const observe = (generation: number, state: Capability.JobState, providerID?: string, observation: CapabilityJobs.Observation = {}) =>
-      jobs.observeHost(prepared.proof, ref, { expectedGeneration: generation, state, providerID, observation })
+      jobs.observeHost(prepared.proof, ref, { expectedGeneration: generation, state, providerID, observation }).pipe(
+        Effect.catchTag("Capability.Failure", () => Effect.gen(function* () {
+          // One current-state reconciliation attempt; expected CAS/policy failures cannot erase known effects.
+          const current = yield* jobs.readHost(prepared.proof, ref).pipe(Effect.result)
+          if (current._tag === "Failure" || (current.success.providerID && providerID && current.success.providerID !== providerID))
+            return undefined
+          if (state === "submitted" && current.success.providerID === providerID &&
+            ["submitted", "running", "completed"].includes(current.success.receipt.state)) return current.success.receipt
+          return yield* jobs.observeHost(prepared.proof, ref, { expectedGeneration: current.success.receipt.generation,
+            state, providerID, observation }).pipe(Effect.catchTag("Capability.Failure", () => Effect.succeed(undefined)))
+        })),
+      )
     // Acceptance and ID persistence are indivisible locally; the HTTP wait itself remains interruptible.
     const submitted = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-      const result = yield* restore("action" in input ? prepared.adapter.update(input) : prepared.adapter.send(input)).pipe(
+      const result = yield* restore("action" in input ? adapter.update(input) : adapter.send(input)).pipe(
         Effect.onInterrupt(() => observe(1, "unknown").pipe(Effect.orDie)), Effect.result,
       )
       if (result._tag === "Failure") {
@@ -127,17 +217,14 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         if (rejected) return yield* error
         return undefined
       }
-      if (!prepared.safeMetadata({ messageID: result.success })) {
-        yield* observe(1, "unknown")
-        return undefined
-      }
-      yield* observe(1, "submitted", result.success)
-      return result.success
+      // Provider-valid IDs are host facts even when a token happens to be their substring.
+      const receipt = yield* observe(1, "submitted", result.success)
+      return { id: result.success, receipt }
     }))
-    if (!submitted) return { provider: input.provider, channelID: prepared.adapter.channelID, jobRef: ref,
+    if (!submitted) return { provider: input.provider, channelID: adapter.channelID, jobRef: ref,
       result: { status: "unknown", receipt: ref.id, summary: "Provider mutation outcome unknown; automatic retry prohibited",
         reconciliationRef: ref.id } }
-    const observed = yield* ("action" in input ? prepared.adapter.observe(input) : prepared.adapter.get(submitted)).pipe(Effect.result)
+    const observed = yield* ("action" in input ? adapter.observe(input) : adapter.get(submitted.id)).pipe(Effect.result)
     const message = observed._tag === "Success" ? observed.success : undefined
     const verified = observed._tag === "Success" && (
       "action" in input && input.action === "delete" ? !message
@@ -146,25 +233,30 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
           (!("replyTo" in input) || !input.replyTo || message.replyTo === input.replyTo) &&
           (!("threadID" in input) || !input.threadID || message.threadID === input.threadID)
     )
-    const acquisition: Acquisition = { channelID: prepared.adapter.channelID,
+    const acquisition: Acquisition = { channelID: adapter.channelID,
       messages: message ? [prepared.clean(message)] : [], hasMore: false }
-    if (!prepared.safeMetadata(acquisition)) return { provider: input.provider, messageID: submitted, jobRef: ref,
-      result: { status: "partial", receipt: ref.id, summary: "Provider acknowledged mutation; evidence metadata rejected",
-        completedEffects: ["provider_acknowledged"], unresolvedEffects: ["evidence_metadata"], artifactRefs: [] } }
-    const retained = yield* retain(context, input.provider, acquisition, verified ? "verified" : "acknowledged",
-      { messageID: submitted, operation, postcondition: verified ? "verified" : "unresolved",
-        readback: observed._tag === "Success" ? "acquired" : "failed" },
+    const safeID = prepared.safeMetadata({ messageID: submitted.id })
+    const safeAcquisition = prepared.safeMetadata(acquisition)
+    const retained = yield* retain(context, input.provider, adapter.channelID, verified ? "verified" : "acknowledged",
+      safeAcquisition ? acquisition : undefined,
+      { ...(safeID ? { messageID: submitted.id } : {}), operation, postcondition: verified ? "verified" : "unresolved",
+        readback: observed._tag === "Success" ? "acquired" : "failed", providerIDProjection: safeID ? "visible" : "omitted" },
+      ref,
     ).pipe(Effect.result)
     const artifactRefs = retained._tag === "Success" ? [retained.success] : []
-    if (verified) yield* observe(2, "completed", submitted, { remoteOutcome: "completed",
-      materialization: retained._tag === "Success" ? "complete" : "failed", artifactRefs })
-    if (!verified || retained._tag === "Failure") return { provider: input.provider, channelID: prepared.adapter.channelID,
-      messageID: submitted, jobRef: ref, result: { status: "partial", receipt: ref.id,
+    const settled = yield* observe(submitted.receipt?.generation ?? 2, verified ? "completed" : "submitted", submitted.id,
+      verified ? { remoteOutcome: "completed", materialization: retained._tag === "Success" ? "complete" : "failed", artifactRefs }
+        : { artifactRefs })
+    const common = { provider: input.provider, channelID: adapter.channelID, jobRef: ref,
+      ...(safeID ? { messageID: submitted.id } : {}) }
+    if (!verified || retained._tag === "Failure" || !settled || !safeID || !safeAcquisition) return { ...common, result: { status: "partial", receipt: ref.id,
         summary: "Provider acknowledged mutation; verification or evidence retention unresolved",
         completedEffects: ["provider_acknowledged"], unresolvedEffects: [
           ...(!verified ? ["postcondition_readback"] : []), ...(retained._tag === "Failure" ? ["evidence_retention"] : []),
+          ...(!settled ? ["job-observation"] : []), ...(!safeID ? ["provider_id_projection"] : []),
+          ...(!safeAcquisition && safeID ? ["evidence_metadata"] : []),
         ], artifactRefs } }
-    return { provider: input.provider, channelID: prepared.adapter.channelID, messageID: submitted, jobRef: ref,
+    return { ...common,
       acquisition, result: { status: "completed", receipt: ref.id, summary: "Provider mutation independently verified and retained",
         verification: "verified", artifactRefs } }
   })
