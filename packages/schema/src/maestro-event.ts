@@ -2,10 +2,10 @@ export * as MaestroEvent from "./maestro-event"
 
 import { Event } from "./event"
 import { Schema } from "effect"
-import { NonNegativeInt, PositiveInt } from "./schema"
+import { NonNegativeInt, PositiveInt, optional, statics } from "./schema"
 import { MaestroContext } from "./maestro-context"
 import { RelayArm } from "./relay-arm"
-import { optional } from "./schema"
+import { UpstreamAttribution } from "./upstream-attribution"
 
 export namespace Approval {
   export const Presented = Event.define({
@@ -228,6 +228,53 @@ export namespace PlanRevision {
     },
   })
   export type RecordedV2 = typeof RecordedV2.Type
+
+  const FieldV3 = Schema.Struct({
+    value: Schema.String,
+    source: Schema.Literals(["stakeholder", "maestro", "orientation", "upstream"]),
+  })
+
+  const RecordedV3Data = Schema.Struct({
+    ...Recorded.data.fields,
+    ...WorkflowFields,
+    revision: Schema.Literal("v3"),
+    goal: FieldV3,
+    acceptance: Schema.Array(FieldV3),
+    scope: Schema.Array(FieldV3),
+    constraints: Schema.Array(FieldV3),
+    reviewRequirement: FieldV3,
+    assumptions: Schema.Array(FieldV3),
+    risks: Schema.Array(FieldV3),
+    upstreamAttribution: optional(UpstreamAttribution.V1),
+    grounding: optional(MaestroContext.Grounding),
+  }).check(
+    Schema.makeFilter((data) =>
+      data.upstreamAttribution === undefined &&
+      [
+        data.goal,
+        data.reviewRequirement,
+        ...data.acceptance,
+        ...data.scope,
+        ...data.constraints,
+        ...data.assumptions,
+        ...data.risks,
+      ].some((field) => field.source === "upstream")
+        ? { path: ["upstreamAttribution"], issue: "UPSTREAM_ATTRIBUTION_MISSING" }
+        : undefined,
+    ),
+  )
+
+  // Event.define accepts fields only. Embed the checked data schema itself so envelope decoding shares its checks.
+  export const RecordedV3 = Schema.Struct({ ...Recorded.fields, data: RecordedV3Data })
+    .annotate({ identifier: Recorded.type })
+    .pipe(
+      statics(() => ({
+        type: Recorded.type,
+        durable: { version: 3, aggregate: "sessionID" },
+        data: RecordedV3Data,
+      })),
+    ) satisfies Event.Definition<typeof Recorded.type, typeof RecordedV3Data>
+  export type RecordedV3 = typeof RecordedV3.Type
 }
 
 export namespace Context {
