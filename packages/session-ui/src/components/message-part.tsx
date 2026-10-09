@@ -67,6 +67,8 @@ import { attached, inline, kind, typeLabel } from "./message-file"
 import { readPartText } from "./message-part-text"
 import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
+import { LeanMetrics } from "../../../schema/src/lean-metrics"
+import { LeanToolMetrics } from "./lean-tool-metrics"
 
 async function writeClipboard(text: string): Promise<boolean> {
   const body = typeof document === "undefined" ? undefined : document.body
@@ -1624,6 +1626,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             />
           </Match>
         </Switch>
+        <Show when={part().state.status === "completed" && LeanMetrics.decode(partMetadata().lean)}>{(metric) => <LeanToolMetrics metric={metric()} />}</Show>
       </div>
     </Show>
   )
