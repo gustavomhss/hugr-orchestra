@@ -9,6 +9,8 @@ import { EventTable } from "@orchestra/core/event/sql"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { AppProcess } from "@orchestra/core/process"
+import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -121,6 +123,8 @@ cases.forEach((variant) => {
         }
         expect(yield* check.pipe(Effect.flip)).toMatchObject({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
       }).pipe(Effect.provideService(InstanceRef, instance))
-    }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(filesystem))))
+    }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(LayerNode.group([
+      filesystem, AppProcess.node, CrossSpawnSpawner.node,
+    ])))))
   }), 90000)
 })
