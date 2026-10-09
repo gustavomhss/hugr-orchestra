@@ -41,7 +41,10 @@ export function track(input: {
   const hostEnded = (message: SessionV1.WithParts | undefined, session: readonly SessionV1.WithParts[], reason: "failed" | "interrupted" | "running", detail: string) =>
     message && input.seat?.id === "jimmy" && input.seat.workResult === "discovery-work-result-v1"
       ? assemble(message, session).pipe(Effect.map((result) => ({ ...result, terminal: { reason, hostDetail: detail } })))
-      : Effect.succeed(BackendResult.hostEnded({ message, session, reason, detail }, input.seat))
+      : Effect.succeed({
+          ...BackendResult.hostEnded({ message, session, reason, detail }, input.seat),
+          ...(input.seat?.id === "jimmy" && input.seat.workResult === "discovery-work-result-v1" ? { referencesChecked: false } : {}),
+        })
 
   return {
     attach: <T extends object>(metadata: T) => ({
@@ -77,7 +80,7 @@ export function track(input: {
         return yield* bound(yield* hostEnded(last, session, "failed", text))
       if (last) return yield* bound(yield* assemble(last, session))
       return yield* bound(
-        BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
+        yield* hostEnded(undefined, session, "interrupted", "No completed child message"),
       )
     }),
   }
