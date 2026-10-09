@@ -5,6 +5,9 @@ import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Schema } from "effect"
 
+if (Object.keys(process.env).some((key) => key.toUpperCase().startsWith("GIT_")))
+  throw new Error("Document export requires an unredirected Git environment; inherited GIT_* variables are not allowed")
+
 if (!process.argv[2]) throw new Error("Usage: research-documents <isolated-pilot-state-root>")
 const root = await fs.realpath(process.argv[2])
 if (path.basename(root) !== "state") throw new Error("Document export requires an isolated pilot state directory")
@@ -22,7 +25,7 @@ if (await fs.lstat(path.join(root, "documents.json")).then(() => true, (error: N
   if (error.code === "ENOENT") return false
   throw error
 })) throw new Error("Document export cannot overwrite an earlier export")
-Object.keys(process.env).filter((key) => key.startsWith("ORCHESTRA_") || key.startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
+Object.keys(process.env).filter((key) => key.toUpperCase().startsWith("ORCHESTRA_") || key.toUpperCase().startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
 Object.assign(process.env, {
   HOME: path.join(runRoot, "home"), USERPROFILE: path.join(runRoot, "home"), ORCHESTRA_TEST_HOME: path.join(runRoot, "home"),
   XDG_DATA_HOME: path.join(runRoot, "xdg-data"), XDG_CACHE_HOME: path.join(runRoot, "xdg-cache"),
@@ -50,22 +53,28 @@ const documents = await Effect.runPromise(Effect.scoped(Effect.gen(function* () 
   const artifacts = yield* ResearchArtifacts.Service
   return yield* Effect.forEach(declared, (receipt) => Effect.gen(function* () {
     const pages: string[] = []
-    const first = yield* artifacts.read(receipt.binding, receipt.artifact, undefined, "task")
-    if (!isDeepStrictEqual(first.receipt, receipt) || (!first.cursor && !first.complete))
-      return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document differs from declared admitted receipt" })
-    pages.push(first.text)
     const cursors = new Set<string>()
-    const drain = (cursor: string): Effect.Effect<void, Research.Error> => artifacts.read(receipt.binding, receipt.artifact, cursor, "task").pipe(
-      Effect.flatMap((page) => {
-        if (cursors.has(cursor) || !isDeepStrictEqual(page.receipt, receipt) || (!page.cursor && !page.complete) ||
-          (page.cursor && !page.text.length) || pages.reduce((sum, text) => sum + Buffer.byteLength(text), Buffer.byteLength(page.text)) > receipt.bytes)
-          return Effect.fail(new Research.Error({ code: "reference_invalid", message: "Evaluation document paging changed or did not advance" }))
-        cursors.add(cursor)
-        pages.push(page.text)
-        return page.cursor ? drain(page.cursor) : Effect.void
-      }),
-    )
-    if (first.cursor) yield* drain(first.cursor)
+    // Native UTF-8 paging can back up at most three bytes from pageBytes before the next code point.
+    const pageLimit = Math.max(1, Math.ceil(receipt.bytes / (Research.Limits.pageBytes - 3)))
+    const drain = (cursor?: string): Effect.Effect<void, Research.Error> => Effect.gen(function* () {
+      if (pages.length >= pageLimit)
+        return yield* new Research.Error({ code: "over_cap", message: "Evaluation document page request budget exhausted" })
+      if (cursor !== undefined && cursors.has(cursor))
+        return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document cursor did not advance" })
+      if (cursor !== undefined) cursors.add(cursor)
+      const page = yield* artifacts.read(receipt.binding, receipt.artifact, cursor, "task")
+      const bytes = Buffer.byteLength(page.text)
+      const total = pages.reduce((sum, text) => sum + Buffer.byteLength(text), bytes)
+      if (!isDeepStrictEqual(page.receipt, receipt) || !isDeepStrictEqual(page.ref, receipt.artifact) || page.representation !== "markdown" ||
+        bytes > Research.Limits.pageBytes || (receipt.bytes > 0 && bytes === 0) || total > receipt.bytes ||
+        page.complete !== (page.cursor === undefined) ||
+        (page.cursor !== undefined && (!page.cursor.length || cursors.has(page.cursor) || total >= receipt.bytes)) ||
+        (page.cursor === undefined && total !== receipt.bytes))
+        return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document page differs from admitted representation or did not advance" })
+      pages.push(page.text)
+      if (page.cursor !== undefined) yield* drain(page.cursor)
+    })
+    yield* drain()
     const text = pages.join("")
     if (Buffer.byteLength(text) !== receipt.bytes || createHash("sha256").update(text).digest("hex") !== receipt.digest)
       return yield* new Research.Error({ code: "reference_invalid", message: "Evaluation document export differs from admitted bytes" })

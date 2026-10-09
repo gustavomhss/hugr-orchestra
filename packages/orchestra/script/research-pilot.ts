@@ -4,6 +4,9 @@ import os from "node:os"
 import { createHash } from "node:crypto"
 import { Effect, Exit, Layer, Option, Schema } from "effect"
 
+if (Object.keys(process.env).some((key) => key.toUpperCase().startsWith("GIT_")))
+  throw new Error("Pilot requires an unredirected Git environment; inherited GIT_* variables are not allowed")
+
 const args = process.argv.slice(2)
 const option = (name: string) => {
   const index = args.indexOf(name)
@@ -81,7 +84,7 @@ const config = { model: "openai/gpt-6.1-sol", small_model: "openai/gpt-6.1-sol",
 }
 // Set module-level Global.Path/XDG consumers before importing any native runtime module.
 const credentialPath = path.join(os.homedir(), ".local/share/opencode/auth.json")
-Object.keys(process.env).filter((key) => key.startsWith("ORCHESTRA_") || key.startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
+Object.keys(process.env).filter((key) => key.toUpperCase().startsWith("ORCHESTRA_") || key.toUpperCase().startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
 Object.assign(process.env, {
   HOME: path.join(root, "home"), USERPROFILE: path.join(root, "home"), ORCHESTRA_TEST_HOME: path.join(root, "home"),
   XDG_DATA_HOME: path.join(root, "xdg-data"), XDG_CACHE_HOME: path.join(root, "xdg-cache"),
