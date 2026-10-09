@@ -26,6 +26,7 @@ const system = args.system
 const version = args.version
 const electronVersion = args["electron-version"]
 if (!source || !cli || !desktop || !system || !version || !electronVersion) fail("MISSING_OUTPUT_ARGUMENT")
+async function verify() {
 const manifest = await Bun.file(join(source, "nix/toolchain-sources.json")).json()
 if (!(system in manifest.bun.sources)) fail(`UNSUPPORTED_SYSTEM:${system}`)
 const platform = system.endsWith("-darwin") ? "darwin" : "linux"
@@ -63,6 +64,7 @@ if (schema.$schema !== "https://json-schema.org/draft/2020-12/schema") fail("SCH
 await image(executable)
 const runtime = JSON.parse(execute(executable, ["-p", "JSON.stringify(process.versions)"], true))
 if (runtime.electron !== electronVersion) fail(`PACKAGED_ELECTRON_VERSION:${runtime.electron}`)
+const pty = packagedPty(executable, resources)
 // Ask Electron's loader, not a duplicated ABI table. This proves addon loading;
 // PTY operations and full desktop startup still belong to the product batch.
 const addons = await nativeAddons(join(resources, "app.asar.unpacked"))
@@ -78,7 +80,28 @@ if (platform === "linux") {
   })
   if (!(await Bun.file(join(desktop, "share/metainfo/ai.hugr.orchestra.metainfo.xml")).size)) fail("MISSING_METAINFO")
 }
-console.log(JSON.stringify({ system, version, target, artifacts, executable, runtime, addons, status: "NATIVE_OUTPUT_CHECK_OK" }, null, 2))
+return { system, version, target, artifacts, executable, runtime, pty, addons, status: "NATIVE_OUTPUT_CHECK_OK" }
+
+async function image(file: string) {
+  const header = Buffer.from(await Bun.file(file).slice(0, 64).arrayBuffer())
+  if (header.length < 64) fail(`SHORT_NATIVE_IMAGE:${file}`)
+  const valid = platform === "linux"
+    ? header.subarray(0, 6).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1]))
+      && header.readUInt16LE(18) === (arch === "x64" ? 62 : 183)
+    : header.readUInt32LE(0) === 0xfeedfacf && header.readUInt32LE(4) === (arch === "x64" ? 0x1000007 : 0x100000c)
+  if (!valid) fail(`NATIVE_IMAGE_MISMATCH:${file}:${system}`)
+}
+}
+
+verify().then((result) => console.log(JSON.stringify(result, null, 2)), (error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error)
+  const code = message.startsWith("NIX_DISTRIBUTION_FAILURE:") ? message.split(":")[1]
+    : message === "Invalid CLI manifest schema/version/artifacts" ? "INVALID_ARTIFACT_LIST"
+    : message.startsWith("CLI artifact digest mismatch:") ? "ARTIFACT_DIGEST_MISMATCH"
+    : "SETUP_OR_UNEXPECTED_FAILURE"
+  console.log(JSON.stringify({ status: "NATIVE_OUTPUT_CHECK_FAILED", failureCode: code, detail: message }))
+  process.exitCode = 1
+})
 
 function fail(label: string): never {
   throw new Error(`NIX_DISTRIBUTION_FAILURE:${label}`)
@@ -93,14 +116,59 @@ function execute(file: string, argv: string[], electron = false) {
   return result.stdout
 }
 
-async function image(file: string) {
-  const header = Buffer.from(await Bun.file(file).slice(0, 64).arrayBuffer())
-  if (header.length < 64) fail(`SHORT_NATIVE_IMAGE:${file}`)
-  const valid = platform === "linux"
-    ? header.subarray(0, 6).equals(Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1]))
-      && header.readUInt16LE(18) === (arch === "x64" ? 62 : 183)
-    : header.readUInt32LE(0) === 0xfeedfacf && header.readUInt32LE(4) === (arch === "x64" ? 0x1000007 : 0x100000c)
-  if (!valid) fail(`NATIVE_IMAGE_MISMATCH:${file}:${system}`)
+function packagedPty(executable: string, resources: string) {
+  // electron-vite rewrites @lydell/node-pty to this platform package. Use the
+  // same createRequire context as its packaged main bundle, not a .node shortcut.
+  const result = spawnSync(executable, ["-e", String.raw`
+    const { createRequire } = require("node:module")
+    const fs = require("node:fs")
+    const path = require("node:path")
+    const resources = process.argv[1]
+    const anchor = path.join(resources, "app.asar/out/main/index.js")
+    const scoped = createRequire(anchor)
+    const specifier = "@lydell/node-pty-" + process.platform + "-" + process.arch
+    const stop = (failureCode, detail) => {
+      console.log(JSON.stringify({ status: "PACKAGED_PTY_FAILED", failureCode, detail }))
+      process.exit(1)
+    }
+    let resolved
+    try { resolved = scoped.resolve(specifier) } catch (error) {
+      stop(fs.existsSync(path.join(resources, "app.asar/node_modules", specifier, "package.json"))
+        ? "PTY_ENTRYPOINT_BROKEN" : "PTY_PACKAGE_MISSING", String(error))
+    }
+    if (!["app.asar", "app.asar.unpacked"].some((dir) => resolved.startsWith(path.join(resources, dir) + path.sep)))
+      stop("PTY_PACKAGE_ESCAPE", resolved)
+    let root = path.dirname(resolved)
+    while (!fs.existsSync(path.join(root, "package.json")) && root !== path.dirname(root)) root = path.dirname(root)
+    const metadata = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"))
+    if (metadata.name !== specifier) stop("PTY_ENTRYPOINT_BROKEN", "package identity mismatch")
+    const native = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const file = path.join(dir, entry.name)
+      return entry.isDirectory() ? native(file) : entry.name.endsWith(".node") ? [file] : []
+    })
+    const declared = native(root)
+    const physical = (file) => file.replace(path.join(resources, "app.asar") + path.sep,
+      path.join(resources, "app.asar.unpacked") + path.sep)
+    if (!declared.length || declared.some((file) => !fs.existsSync(physical(file)))) stop("PTY_BINDING_MISSING", root)
+    let api
+    try { api = scoped(specifier) } catch (error) { stop("PTY_ENTRYPOINT_BROKEN", String(error)) }
+    if (typeof api.spawn !== "function") stop("PTY_ENTRYPOINT_BROKEN", "spawn export missing")
+    const bindings = Object.values(require.cache).map((entry) => entry.filename)
+      .filter((file) => file.startsWith(root + path.sep) && file.endsWith(".node"))
+    if (!bindings.length) stop("PTY_BINDING_MISSING", "entrypoint loaded no native binding")
+    console.log(JSON.stringify({ status: "PACKAGED_PTY_OK", package: specifier, anchor, resolved, bindings,
+      exports: { spawn: typeof api.spawn }, electron: process.versions.electron }))
+  `, resources], { env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" }, encoding: "utf8", timeout: 60_000 })
+  if (result.error || result.status === null) fail("PTY_ORACLE_EXECUTION")
+  const value: unknown = JSON.parse(result.stdout)
+  if (!value || typeof value !== "object" || !("status" in value)) fail("PTY_ORACLE_PROTOCOL")
+  if (result.status !== 0 && value.status === "PACKAGED_PTY_FAILED" && "failureCode" in value
+    && typeof value.failureCode === "string"
+    && ["PTY_PACKAGE_MISSING", "PTY_BINDING_MISSING", "PTY_ENTRYPOINT_BROKEN", "PTY_PACKAGE_ESCAPE"].includes(value.failureCode))
+    fail(value.failureCode)
+  if (result.status !== 0 || value.status !== "PACKAGED_PTY_OK" || !("bindings" in value)
+    || !Array.isArray(value.bindings) || !value.bindings.length) fail("PTY_ORACLE_PROTOCOL")
+  return value
 }
 
 async function nativeAddons(directory: string): Promise<string[]> {
