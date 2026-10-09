@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-14, windows-2022]
+        os: [ubuntu-24.04, macos-15-intel, windows-2022]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -69,11 +69,11 @@ jobs:
         run: |
           node --input-type=module -e '
             import os from "node:os";
-            const deadline = Date.now() + 300000;
-            const limit = os.availableParallelism() * 0.5;
+            const deadline = Date.now() + (process.platform === "darwin" ? 600000 : 300000);
+            const limit = os.availableParallelism() * (process.platform === "darwin" ? 0.25 : 0.5);
             while (os.loadavg()[0] > limit) {
               console.log(JSON.stringify({ load1: os.loadavg()[0], limit }));
-              if (Date.now() >= deadline) throw new Error("No quiet host within five minutes; timing acceptance is unrun");
+              if (Date.now() >= deadline) throw new Error("No quiet host within bounded startup window; timing acceptance is unrun");
               await new Promise(resolve => setTimeout(resolve, 10000));
             }
           '
@@ -91,7 +91,7 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         env:
           ORCHESTRA_LOCAL_TESTS: "1"
-        run: bun packages/omni/campaign/v7-overhead.ts --quiet ${{ runner.os == 'macOS' && '--idle-ms=5' || '' }}
+        run: bun packages/omni/campaign/v7-overhead.ts --quiet ${{ runner.os == 'macOS' && '--idle-ms=20' || '' }}
       - name: Record exact scope
         if: always()
         env:
