@@ -4,6 +4,7 @@ name: runtime-desktop
 # Not full native Desktop, packaged startup, WSL, UI, model execution or consent proof.
 # Frozen gates must land unchanged after independent review; missing prerequisites fail.
 # Default bootstrap initializes fresh isolated state through production startup.
+# Dev controls cover two pre-launch digest falsifications, not every failure class.
 on:
   push:
     branches: [runtime-desktop-validation]
@@ -31,9 +32,11 @@ jobs:
           for tool in node tar; do command -v "$tool" >/dev/null || { echo "DESKTOP_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
           test -s .github/scripts/runtime-desktop-package-proof.ts || { echo DESKTOP_PACKAGE_GATE_MISSING >&2; exit 1; }
           test -s .github/scripts/runtime-desktop-bootstrap-proof.ts || { echo DESKTOP_BOOTSTRAP_GATE_MISSING >&2; exit 1; }
+          test -s .github/scripts/runtime-desktop-controls.ts || { echo DESKTOP_CONTROLS_GATE_MISSING >&2; exit 1; }
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH >&2; exit 1; }
           test "$(git hash-object .github/scripts/runtime-desktop-package-proof.ts)" = ede583f270cacf8c70e53619bffc1e9e75843cd7 || { echo DESKTOP_PACKAGE_GATE_CHANGED >&2; exit 1; }
           test "$(git hash-object .github/scripts/runtime-desktop-bootstrap-proof.ts)" = 2ec3aeefd6b1f486bf66784dc2ac2273bb74efe6 || { echo DESKTOP_BOOTSTRAP_GATE_CHANGED >&2; exit 1; }
+          test "$(git hash-object .github/scripts/runtime-desktop-controls.ts)" = e0d9eae45eec8bb00535c09531f0b78260f5fa65 || { echo DESKTOP_CONTROLS_GATE_CHANGED >&2; exit 1; }
           bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
           bun -e 'const versions = await Promise.all(["cli", "desktop", "orchestra"].map(async p => (await Bun.file(`packages/${p}/package.json`).json()).version)); if (!versions[0] || versions.some(v => v !== versions[0])) throw Error("DESKTOP_SOURCE_VERSION_MISMATCH");'
       - name: Install once without lifecycle scripts
@@ -167,6 +170,29 @@ jobs:
           const p = await read(`package-${channel}`);
           if (p.schema !== 1 || p.channel !== channel || p.version !== version || p.platform !== "linux" || p.arch !== "x64" || p.target !== "linux-x64-baseline" || p.expectedAppId !== config.appId || p.desktopName !== config.extraMetadata.desktopName || p.resources !== `${process.env.RUNNER_TEMP}/package-${channel}/linux-unpacked/resources` || !Array.isArray(p.artifacts) || !p.artifacts.length || !p.artifacts.some(a => a.target === p.target) || ![p.hostCPUVerified, p.packagedMetadataVerified, p.outsideAsar, p.artifactDigestsVerified, p.nativeCompiledVersionVerified].every(v => v === true)) fail("DESKTOP_PACKAGE_REPORT_MISMATCH");
           if (channel === "dev") { const b = await read("bootstrap-dev"), m = await read("build-manifest-dev"); const { createHash } = await import("node:crypto"); if (b.schema !== 1 || b.sourceCommit !== process.env.GITHUB_SHA || b.buildManifestSha256 !== createHash("sha256").update(await Bun.file(`${process.env.RUNNER_TEMP}/build-manifest-dev.json`).bytes()).digest("hex") || JSON.stringify(b.outputDigests) !== JSON.stringify(m.files.toSorted((l, r) => l.file.localeCompare(r.file))) || b.serviceIdentity?.subtype !== "node.mojom.NodeService" || !Number.isSafeInteger(b.serviceIdentity.pid) || !/^[1-9][0-9]*$/.test(b.serviceIdentity.listenerInode) || b.desktopVersion !== version || b.electronVersion !== (await Bun.file("package.json").json()).devDependencies.electron || b.platform !== "linux" || b.arch !== "x64" || b.startup !== "default-v1-utilityProcess" || b.readyEvidence !== "production-preload-awaitInitialization-via-owned-CDP" || ![b.healthy, b.wrongCredentialRejected, b.noCredentialRejected, b.desktopAlive, b.utilityAlive].every(v => v === true)) fail("DESKTOP_BOOTSTRAP_REPORT_MISMATCH"); }'
+      - name: Falsify two pre-launch digests using clones after positive report readback
+        if: matrix.channel == 'dev'
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
+        run: |
+          set -euo pipefail
+          # Bootstrap mutant checks DISPLAY before build digests; neither mutant launches Desktop.
+          xvfb-run --auto-servernum --server-args='-ac -screen 0 1280x800x24 -nolisten tcp' bash -c 'xdpyinfo >/dev/null || { echo DESKTOP_CONTROL_DISPLAY_UNAVAILABLE >&2; exit 1; }; bun ../../.github/scripts/runtime-desktop-controls.ts --desktop "$PWD" --resources "$RUNNER_TEMP/package-dev/linux-unpacked/resources" --build-manifest "$RUNNER_TEMP/build-manifest-dev.json" --package-report "$RUNNER_TEMP/package-dev.json" --bootstrap-report "$RUNNER_TEMP/bootstrap-dev.json" --report "$RUNNER_TEMP/controls-dev.json"' || { echo DESKTOP_CONTROLS_OR_DISPLAY_FAILED >&2; exit 1; }
+          bun -e '
+          const { createHash } = await import("node:crypto");
+          const digest = async file => createHash("sha256").update(await Bun.file(file).bytes()).digest("hex");
+          const file = Bun.file(`${process.env.RUNNER_TEMP}/controls-dev.json`);
+          if (!(await file.exists()) || !file.size) throw Error("DESKTOP_CONTROLS_REPORT_MISSING_OR_EMPTY");
+          const c = await file.json(), p = await Bun.file(`${process.env.RUNNER_TEMP}/package-dev.json`).json();
+          const version = (await import("./electron-builder.config.ts")).default.extraMetadata.version;
+          if (c.schema !== 1 || c.scope !== "two-pre-launch-digest-falsifications" || c.sourceCommit !== process.env.GITHUB_SHA || c.version !== version || c.channel !== "dev" || c.target !== "linux-x64-baseline" || c.desktop !== process.cwd() || c.resources !== p.resources || JSON.stringify(c.proofBlobs) !== JSON.stringify(["ede583f270cacf8c70e53619bffc1e9e75843cd7", "2ec3aeefd6b1f486bf66784dc2ac2273bb74efe6"]) || !Array.isArray(c.results) || c.results.length !== 2 || c.results.some((r, i) => r.matcher !== ["CLI_ARTIFACT_DIGEST_MISMATCH", "BUILD_OUTPUT_DIGEST_MISMATCH"][i] || !Number.isInteger(r.exitCode) || r.exitCode === 0 || r.successReportAbsent !== true) || c.originalsPreserved !== true || c.ownedCleanupCompleted !== true || !Array.isArray(c.preserved) || !c.preserved.length) throw Error("DESKTOP_CONTROLS_REPORT_MISMATCH");
+          if (JSON.stringify(c.positiveReportDigests) !== JSON.stringify(await Promise.all(["package-dev", "bootstrap-dev"].map(name => digest(`${process.env.RUNNER_TEMP}/${name}.json`))))) throw Error("DESKTOP_CONTROLS_POSITIVE_REPORT_BINDING_MISMATCH");
+          await Promise.all(c.preserved.map(async item => { if (typeof item.file !== "string" || !item.file.startsWith("/") || !/^[a-f0-9]{64}$/.test(item.sha256) || await digest(item.file) !== item.sha256) throw Error("DESKTOP_CONTROLS_PRESERVATION_MISMATCH"); }));'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: matrix.channel == 'dev'
+        with:
+          name: desktop-linux-x64-controls-dev
+          path: ${{ runner.temp }}/controls-dev.json
+          if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-linux-x64-package-${{ matrix.channel }}
