@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
 import { Effect } from "effect"
 import path from "node:path"
 import { LeanMetrics } from "@orchestra/schema/lean-metrics"
@@ -9,6 +9,9 @@ import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { MessageV2 } from "../../src/session/message-v2"
 import { Provider } from "../../src/provider/provider"
+import { ShellTool } from "../../src/tool/shell"
+import { LegacyLeanCapture } from "../../src/tool/lean-capture"
+import { LegacyLeanOutput } from "../../src/session/lean-output"
 import { provideTmpdirInstance } from "../fixture/fixture"
 import { TestLLMServer } from "../lib/llm-server"
 import { testEffect } from "../lib/effect"
@@ -18,12 +21,13 @@ const it = testEffect(makeHttp())
 const modes = ["enabled", "disabled", "failure", "plugin", "plugin-error", "unknown", "truncated", "read", "denied"] as const
 type Mode = typeof modes[number]
 
-function native(mode: Mode) {
+function native(mode: Mode, failMetadataWrite = false) {
   return Effect.gen(function* () {
     const instance = yield* InstanceRef
     if (!instance) throw new Error("NATIVE_KPI_INSTANCE_MISSING")
     const directory = instance.directory
     const llm = yield* TestLLMServer
+    const historyStart = (yield* llm.hits).length
     const approvedPath = path.join(directory, "approved.json")
     const pluginPath = path.join(directory, "capture-plugin.ts")
     yield* Effect.promise(() => Bun.write(pluginPath,
@@ -91,7 +95,7 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
     if (mode === "plugin") expect(stored).toContain("PRIVATE_POLICY_NOTE 😀")
     if (mode === "failure") expect(stored).toContain("FAILURE MUST_KEEP")
 
-    const hits = yield* llm.hits
+    const hits = (yield* llm.hits).slice(historyStart)
     const messages = hits.flatMap((hit) => Array.isArray(hit.body.messages) ? hit.body.messages : [])
       .filter((message): message is { role: string; tool_call_id: string; content: string } =>
         typeof message === "object" && message !== null && "role" in message && message.role === "tool"
@@ -100,11 +104,12 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
     expect(messages[0].content).toBe(stored)
     expect(JSON.stringify(hits.map((hit) => hit.body))).not.toContain('"chars-per-token-4"')
 
-    // Untouched measurement/decoder scaffolds must fail here, never be mocked into green.
+    // Real measurement and decoder only: the original untouched scaffolds failed here.
     expect(lean).toBeDefined()
     const decision = LeanMetrics.decode(lean)
     if (!decision) throw new Error("NATIVE_KPI_REAL_MEASUREMENT_OR_DECODER_MISSING")
     expect(decision.scope).toBe("standard-registry")
+    expect(decision.engine).toBe("hugr-lean@0.2.0:4e46ae0534937bdf")
     expect(decision.owner).toEqual({ projectID: instance.project.id, location: directory,
       sessionID: session.id, callID: tool.callID })
     expect(decision.model).toEqual({ provider: "test", id: "test-model" })
@@ -142,12 +147,58 @@ export default async () => ({ "tool.execute.after": async (_input, output) => {
         .flatMap((part) => part.type === "tool" && part.state.status === "completed" ? [part.state.metadata.lean] : [])
       expect(records).toEqual([lean])
     }
+    if (failMetadataWrite) {
+      yield* Effect.promise(async () => {
+        const source = Bun.file(path.join(directory, "native_test.go"))
+        await Bun.write(source, `${await source.text()}\nfunc TestMetadataWriteFailure(t *testing.T) {}\n`)
+      })
+      const info = yield* ShellTool
+      const shell = yield* info.init()
+      const raw = yield* shell.execute({ command, workdir: directory, timeout: 120000 }, {
+        sessionID: session.id, messageID: tool.messageID, callID: tool.callID, agent: "maestro",
+        abort: AbortSignal.any([]), messages: saved, metadata: () => Effect.void, ask: () => Effect.void,
+      })
+      const binding = LegacyLeanCapture.bind(raw, raw, decision.owner)
+      expect(binding).toBeDefined()
+      const baseline = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
+        limits: { maxLines: 10000, maxBytes: 1000000 } })
+      expect(baseline.output).not.toContain("=== RUN")
+      const originalMetadata = { ...raw.metadata }
+      const fault = { writes: 0 }
+      const selected = LegacyLeanOutput.project({ output: raw, binding, owner: decision.owner, enabled: true,
+        limits: { maxLines: 10000, maxBytes: 1000000 }, telemetry: {
+          get owner() {
+            // Inject a one-shot copy fault only after genuine native selection has settled.
+            Object.defineProperty(raw.metadata, "kpiFault", { enumerable: true, configurable: true, get() {
+              fault.writes++
+              Reflect.deleteProperty(raw.metadata, "kpiFault")
+              throw new Error("NATIVE_KPI_METADATA_COPY_FAILURE")
+            } })
+            return decision.owner
+          }, model: decision.model,
+        } })
+      expect(fault.writes).toBe(1)
+      expect(selected.output).toBe(baseline.output)
+      expect(selected.output).not.toContain("=== RUN")
+      expect(selected.output).toContain("PASS\n")
+      expect(Buffer.byteLength(selected.output)).toBeLessThan(Buffer.byteLength(raw.output))
+      expect(selected.metadata).toBe(raw.metadata)
+      expect(selected.metadata).toEqual(originalMetadata)
+      expect(Reflect.get(selected.metadata, "lean")).toBeUndefined()
+      expect(selected.title).toBe(raw.title)
+      expect(selected.attachments).toEqual(raw.attachments)
+      expect([selected.metadata.exit, selected.metadata.truncated, selected.metadata.timeout, selected.metadata.aborted])
+        .toEqual([0, false, false, false])
+    }
     return decision
   })
 }
 
 for (const mode of modes) it.instance(`native KPI ${mode}: HTTP, flags, durable metadata and replay`,
   () => native(mode), { git: true }, 180_000)
+
+it.instance("native KPI metadata write failure preserves already selected native output and flags",
+  () => native("enabled", true), { git: true }, 180_000)
 
 it.live("native KPIs keep two actual repositories isolated", () => Effect.gen(function* () {
   const first = yield* provideTmpdirInstance(() => native("enabled"), { git: true })
@@ -156,6 +207,18 @@ it.live("native KPIs keep two actual repositories isolated", () => Effect.gen(fu
   expect(first.owner.projectID).not.toBe(second.owner.projectID)
   expect(first.owner.location).not.toBe(second.owner.location)
   expect(first.owner.sessionID).not.toBe(second.owner.sessionID)
+  expect(first.owner.callID).toBe(second.owner.callID)
   expect(first.owner.projectID).not.toBe(path.basename(first.owner.location))
   expect(second.owner.projectID).not.toBe(path.basename(second.owner.location))
 }), 180_000)
+
+test("native KPI full orchestra typecheck", async () => {
+  const compiler = Bun.spawn([process.execPath, "run", "typecheck"], {
+    cwd: path.join(import.meta.dir, "../.."), stdout: "pipe", stderr: "pipe",
+  })
+  const [code, stdout, stderr] = await Promise.all([
+    compiler.exited, new Response(compiler.stdout).text(), new Response(compiler.stderr).text(),
+  ])
+  if (code !== 0) throw new Error(`NATIVE_KPI_ORCHESTRA_TYPECHECK_FAILED (${code})\n${stdout}${stderr}`)
+  expect(code).toBe(0)
+}, 180_000)
