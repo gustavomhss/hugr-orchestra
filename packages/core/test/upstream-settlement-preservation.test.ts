@@ -379,9 +379,14 @@ dbIt.live("trusted serialized replay reconstructs the same eligible host-observa
   yield* f.database.db.insert(WorkspaceTable).values({ id: workspaceID, type: "worktree", project_id: f.projectID, directory: "/project" }).run()
   yield* f.database.db.update(SessionTable).set({ workspace_id: workspaceID }).where(eq(SessionTable.id, f.parentID)).run()
   yield* f.database.db.update(SessionTable).set({ workspace_id: workspaceID }).where(eq(SessionTable.id, f.childID)).run()
+  const before = yield* f.read()
+  const expected = { ...before, state: { ...before.state,
+    structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: f.result } } } }
   yield* f.offer({ ...f.retainedMetadata, workResult: f.result }, {},
     Location.Ref.make({ directory: AbsolutePath.make("/project"), workspaceID }))
   const live = yield* f.read()
+  expect(live).toEqual(expected)
+  expect(live).not.toEqual(before)
   const project = yield* f.database.db.select().from(ProjectTable).where(eq(ProjectTable.id, f.projectID)).get()
   const parent = yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.parentID)).get()
   const child = yield* f.database.db.select().from(SessionTable).where(eq(SessionTable.id, f.childID)).get()
@@ -406,6 +411,7 @@ dbIt.live("trusted serialized replay reconstructs the same eligible host-observa
     const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.parentMessageID)).get()
     if (!row) throw new Error("Missing reconstructed native original Task")
     const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+    expect(tool({ messages: [message] })).toEqual(expected)
     expect(tool({ messages: [message] })).toEqual(live)
     expect(origins).toEqual([true])
   }).pipe(Effect.provide(Layer.fresh(replayLayer)))
