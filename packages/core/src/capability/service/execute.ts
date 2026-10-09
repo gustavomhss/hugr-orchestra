@@ -2,10 +2,13 @@ export * as CapabilityServiceExecution from "./execute"
 
 import { Capability } from "@orchestra/schema/capability"
 import { Cause, Effect, Exit } from "effect"
+import { and, eq } from "drizzle-orm"
+import { Credential } from "../../credential"
 import { Location } from "../../location"
 import { ToolRegistry } from "../../tool/registry"
 import { CapabilityVendorSchema } from "../catalog/schema"
 import { CapabilityPolicy } from "../policy"
+import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 import type { CapabilityServiceContract } from "./contract"
 import { CapabilityServiceData } from "./execution/data"
 import { CapabilityServiceProjection } from "./execution/projection"
@@ -15,6 +18,7 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
   const location = yield* Location.Service
   const policy = yield* CapabilityPolicy.make
   const registry = yield* ToolRegistry.Service
+  const credentials = yield* Credential.Service
 
   const execute: CapabilityServiceContract.Execute = (provider, supplied, suppliedContext) => Effect.gen(function* () {
     // Includes descriptor and actual Tool.Context. No caller accessor executes before the first yield.
@@ -50,26 +54,49 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
     const invalidCredential = CapabilityServiceData.credentialFailure(credential)
     if (invalidCredential) return yield* invalidCredential
     const proof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
+    // Consume an approved permit with the exact selected rows in the same writer. No approval or network here.
+    const gate = (permit: CapabilityPolicy.Permit) => policy.commit(permit, (tx) => Effect.gen(function* () {
+      if (permit.binding !== binding) return yield* CapabilityServiceData.failure("invocation_binding_mismatch")
+      const connection = yield* tx.select().from(CapabilityConnectionTable).where(eq(CapabilityConnectionTable.id, resolution.connection.id)).get()
+      const target = yield* tx.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, resolution.target.id)).get()
+      const selected = yield* tx.select().from(CapabilityBindingTable).where(and(
+        eq(CapabilityBindingTable.target_id, resolution.target.id), eq(CapabilityBindingTable.session_id, context.sessionID),
+        eq(CapabilityBindingTable.agent_id, context.agent),
+      )).get()
+      if (!connection || !target || !selected || connection.state !== "active" ||
+        connection.project_id !== binding.owner.projectID || connection.directory !== binding.owner.location.directory ||
+        (connection.workspace_id ?? undefined) !== binding.owner.location.workspaceID ||
+        connection.provider !== fixed.provider || connection.generation !== resolution.connection.generation ||
+        connection.endpoint !== resolution.endpoint || connection.credential_id !== resolution.credentialID ||
+        target.connection_id !== connection.id || target.generation !== resolution.target.generation ||
+        target.environment !== resolution.target.environment ||
+        CapabilityVendorSchema.hash(target.resource) !== CapabilityVendorSchema.hash(resolution.resource) ||
+        (!selected.actions.includes("service_call") && !selected.actions.includes("*")))
+        return yield* CapabilityServiceData.failure("stale_descriptor")
+      const fresh = yield* credentials.get(resolution.credentialID)
+      if (!fresh || fresh.id !== resolution.credentialID || fresh.integrationID !== connection.integration_id ||
+        CapabilityServiceData.credentialFailure(fresh.value) ||
+        CapabilityServiceData.credentialIdentity(fresh.value) !== CapabilityServiceData.credentialIdentity(credential))
+        return yield* CapabilityServiceData.failure("authentication_revoked")
+    })).pipe(Effect.mapError((error) => error instanceof Capability.Failure ? error : CapabilityServiceData.failure("connection_unavailable")),
+      Effect.andThen(Effect.suspend(() => current() ? Effect.void : Effect.fail(CapabilityServiceData.failure("stale_descriptor")))))
     const revalidate = Effect.gen(function* () {
       const permit = yield* policy.authorize(context, { action: "service_call", resources })
-      const fresh = yield* options.connections.loadCredential(context, resolution, "service_call")
-      const invalid = CapabilityServiceData.credentialFailure(fresh)
-      if (invalid) return yield* invalid
-      if (CapabilityServiceData.credentialIdentity(fresh) !== CapabilityServiceData.credentialIdentity(credential))
-        return yield* CapabilityServiceData.failure("authentication_revoked")
-      if ((yield* policy.binding(context)) !== binding) return yield* CapabilityServiceData.failure("invocation_binding_mismatch")
-      yield* policy.commit(permit, () => Effect.void)
-      if (!current()) return yield* CapabilityServiceData.failure("stale_descriptor")
-    }).pipe(Effect.catchTag("SqlError", () => Effect.fail(CapabilityServiceData.failure("connection_unavailable"))))
-    return yield* Effect.scoped(Effect.gen(function* () {
+      yield* gate(permit)
+      return permit
+    })
+    const acquired = yield* Effect.scoped(Effect.gen(function* () {
       const session = yield* options.transport.open({ ...resolution, owner: binding.owner, credential })
-      const catalog = options.filterCatalog(fixed.provider, yield* session.listTools)
-      const tools = catalog.tools.filter((tool) => tool.name === description.name)
-      const tool = tools[0]
-      if (catalog.catalogGeneration !== ref.catalogGeneration || tools.length !== 1 || !tool ||
-        tool.summary !== description.summary) return yield* CapabilityServiceData.failure("stale_descriptor")
-      const fresh = yield* CapabilityVendorSchema.compile(tool.inputSchema, tool.outputSchema)
-      if (fresh.schemaHash !== ref.schemaHash) return yield* CapabilityServiceData.failure("stale_descriptor")
+      const checkCatalog = Effect.gen(function* () {
+        const catalog = options.filterCatalog(fixed.provider, yield* session.listTools)
+        const tools = catalog.tools.filter((tool) => tool.name === description.name)
+        const tool = tools[0]
+        if (catalog.catalogGeneration !== ref.catalogGeneration || tools.length !== 1 || !tool ||
+          tool.summary !== description.summary) return yield* CapabilityServiceData.failure("stale_descriptor")
+        const fresh = yield* CapabilityVendorSchema.compile(tool.inputSchema, tool.outputSchema)
+        if (fresh.schemaHash !== ref.schemaHash) return yield* CapabilityServiceData.failure("stale_descriptor")
+      })
+      yield* checkCatalog
       const admitted = yield* options.jobs.admit(context, { kind: "worker", operation: "service_call",
         connection: resolution.connection, target: resolution.target,
         requestHash: CapabilityVendorSchema.hash({ provider: fixed.provider, operation: description.name, descriptor: ref,
@@ -78,14 +105,16 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
             credentialID: resolution.credentialID, endpoint: resolution.endpoint,
           } }),
       })
-      if (admitted.reused) return CapabilityServiceProjection.replay(yield* options.jobs.read(context, admitted.ref))
+      if (admitted.reused) return { kind: "replay" as const, output: CapabilityServiceProjection.replay(yield* options.jobs.read(context, admitted.ref)) }
       const submitting = yield* options.jobs.transition(context, admitted.ref, {
         expectedGeneration: 0, state: "submitting", observation: {},
       })
       // Approval/admission can wait. Refresh the allocator's expiry, generation and schema proof again.
       yield* options.discovery.describe(context, ref, captured)
-      yield* revalidate
-      if (!current()) return yield* CapabilityServiceData.failure("stale_descriptor")
+      const permit = yield* revalidate
+      // Last network read uses the very session that will call the operation, after every approval.
+      yield* checkCatalog
+      yield* gate(permit)
       const acknowledged = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         const exit = yield* restore(Effect.suspend(() => current()
           ? session.callTool(description.name, validated.value)
@@ -104,10 +133,15 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
         }
         return { receipt: receipt.value, response: exit.value }
       }))
-      if (!acknowledged.response) return CapabilityServiceProjection.replay(acknowledged.receipt)
-      return yield* CapabilityServiceProjection.project({ options, context, proof, receipt: acknowledged.receipt,
-        response: acknowledged.response, validator, credential, endpoint: resolution.endpoint, resources, revalidate })
+      return { kind: "acknowledged" as const, acknowledged }
     }))
+    // Session disposal may wait. It must finish before the final release of provider data.
+    if (acquired.kind === "replay") return acquired.output
+    const acknowledged = acquired.acknowledged
+    if (!acknowledged.response) return CapabilityServiceProjection.replay(acknowledged.receipt)
+    return yield* CapabilityServiceProjection.project({ options, context, proof, receipt: acknowledged.receipt,
+      response: acknowledged.response, validator, credential, endpoint: resolution.endpoint, resources,
+      revalidate: revalidate.pipe(Effect.asVoid), disclose: revalidate.pipe(Effect.asVoid) })
   })
   return execute
 })

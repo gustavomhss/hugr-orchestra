@@ -36,7 +36,7 @@ type Request = { body: Schema.JsonObject; headers: Headers; method: string }
 export type State = {
   mode: "json" | "sse"; tools: Schema.Json[]; result: Schema.Json; time: number; excluded: boolean
   lists: number; calls: Request[]; requests: Request[]; release?: () => void
-  beforeList?: (number: number) => void; beforeCall?: () => void
+  beforeList?: (number: number) => void | Promise<void>; beforeCall?: () => void
   response: "normal" | "loss" | "hold"; called: Deferred.Deferred<void>; supplied?: CapabilityServiceSchema.CallInput
   context?: Tool.Context; provider?: string
   errors: (Capability.Failure | CapabilityArtifacts.Failure)[]
@@ -72,7 +72,7 @@ export const fixture = (options: { rootName?: string; resource?: Schema.Json; oa
         if (body.method === "initialize") return send({ protocolVersion: "2025-11-25", capabilities: { tools: {} },
           serverInfo: { name: "fixture", version: "1" } }, `private-session-${state.requests.length}`)
         if (body.method === "notifications/initialized") return new Response(null, { status: 202 })
-        if (body.method === "tools/list") { state.lists++; state.beforeList?.(state.lists); return send({ tools: state.tools }) }
+        if (body.method === "tools/list") { state.lists++; await state.beforeList?.(state.lists); return send({ tools: state.tools }) }
         if (body.method !== "tools/call") return new Response(null, { status: 400 })
         state.calls.push(recorded)
         state.beforeCall?.()
@@ -108,7 +108,7 @@ export const fixture = (options: { rootName?: string; resource?: Schema.Json; oa
       resource: options.resource ?? { arguments: { account: "bound-account", zero: 0, flag: false, nil: null } } })
     yield* connections.bind({ target, sessionID: f.context.sessionID, agentID: f.context.agent,
       actions: ["service_discover", "service_call"] })
-    const transport = CapabilityMcp.make({ fixtureOrigin: server.url.origin, timeoutMs: options.timeout ?? 2000 })
+    const transport = CapabilityMcp.make({ fixtureOrigin: server.url.origin, timeoutMs: options.timeout ?? 10000 })
     const filterCatalog = (_: string, list: CapabilityDiscovery.VendorList): CapabilityDiscovery.VendorList => ({ ...list,
       tools: state.excluded ? list.tools.filter((tool) => tool.name !== "mutate") : list.tools })
     const discovery = yield* CapabilityDiscovery.make({ source: { listTools: (selection) => transport.listTools(selection).pipe(

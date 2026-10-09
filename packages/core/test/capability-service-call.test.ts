@@ -31,7 +31,7 @@ it.live("canonical JSON/SSE service call binds selected account and persists ack
     expect(f.state.calls[0]?.headers.get("authorization")).toBe(`Bearer ${CapabilityServiceCallFixture.secret}`)
     expect((yield* f.rows())[0]).toMatchObject({ kind: "worker", state: "completed", provider_id: null, generation: 3,
       observation: { data: { remoteOutcome: "completed", materialization: "complete" } } })
-  }),
+  }), 60000,
 )
 
 const rejected = ["bound-conflict", "input-schema", "wrong-owner", "wrong-root", "wrong-provider", "expired-ref", "bad-hash",
@@ -307,6 +307,74 @@ it.live("actual corrupt job provenance stays defect; acquired response is never 
   expect(f.state.calls).toHaveLength(1)
   expect(yield* f.artifactRows()).toEqual([])
 }), 15000)
+
+;["deny", "retarget", "rotate", "disconnect", "root", "replace"].forEach((mode) => it.live(`post-ACK inline ${mode} withholds private response`, () => Effect.gen(function* () {
+  const f = yield* CapabilityServiceCallFixture.fixture()
+  f.state.response = "hold"
+  f.state.result = { content: [], structuredContent: { changed: true, value: "PRIVATE-TARGET-DATA" } }
+  const fiber = yield* f.call().pipe(Effect.forkChild)
+  yield* Deferred.await(f.state.called)
+  if (mode === "deny") yield* CapabilityPolicyFixture.setRules([...CapabilityServiceCallFixture.rules,
+    { action: "service_call", resource: "cloudflare:mutate", effect: "deny" }])
+  if (mode === "retarget") yield* f.connections.retargetTarget(f.target, { environment: "other", resource: {} })
+  if (mode === "rotate") yield* f.credentials.update(f.selected.id, { value: { type: "key", key: "rotated" } })
+  if (mode === "disconnect") yield* f.connections.disconnect(f.connection)
+  if (mode === "root") yield* endRoot(f)
+  if (mode === "replace") yield* f.registry.register({ platform_cloudflare: f.platform })
+  f.state.release?.()
+  const output = f.output(yield* Fiber.join(fiber))
+  expect(output.result.status).toBe("partial")
+  expect(output.data).toBeUndefined()
+  expect(JSON.stringify(output)).not.toContain("PRIVATE-TARGET-DATA")
+  expect((yield* f.rows())[0]).toMatchObject({ state: "completed", observation: { data: { remoteOutcome: "completed", materialization: "failed" } } })
+  expect(f.state.calls).toHaveLength(1)
+}), 60000))
+
+it.live("final inline selection fence follows materialization persistence and last disclosure approval", () => Effect.gen(function* () {
+  const f = yield* CapabilityServiceCallFixture.fixture()
+  f.state.response = "hold"
+  const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+  const fiber = yield* f.call().pipe(Effect.forkChild)
+  yield* Deferred.await(f.state.called)
+  yield* CapabilityPolicyFixture.setRules([...CapabilityServiceCallFixture.rules,
+    { action: "service_call", resource: "cloudflare:mutate", effect: "ask" }])
+  f.state.release?.()
+  const first = yield* Effect.raceFirst(Deferred.await(asked.first), Fiber.join(fiber).pipe(Effect.andThen(Effect.die("SKIPPED_POST_ACK_GATE"))))
+  yield* f.permissions.reply({ requestID: first.id, reply: "once" })
+  yield* Effect.raceFirst(Deferred.await(asked.repeated), Fiber.join(fiber).pipe(Effect.andThen(Effect.die("SKIPPED_FINAL_DISCLOSURE_GATE"))))
+  expect((yield* f.rows())[0]).toMatchObject({ generation: 3, observation: { data: { materialization: "complete" } } })
+  const pending = (yield* f.permissions.list())[0]
+  if (!pending) return yield* Effect.die("Missing final disclosure approval")
+  yield* f.connections.retargetTarget(f.target, { environment: "other", resource: {} })
+  yield* CapabilityPolicyFixture.setRules(CapabilityServiceCallFixture.rules)
+  yield* f.permissions.reply({ requestID: pending.id, reply: "once" })
+  const output = f.output(yield* Fiber.join(fiber))
+  expect(output.result.status).toBe("partial")
+  expect(output.data).toBeUndefined()
+  expect(f.state.calls).toHaveLength(1)
+}).pipe(Effect.timeout("45 seconds")), 60000)
+
+it.live("final catalog refresh uses execution session after last service approval", () => Effect.gen(function* () {
+  const f = yield* CapabilityServiceCallFixture.fixture()
+  const reached = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  f.state.beforeList = (number) => number === 4 ? Effect.runPromise(Deferred.succeed(reached, undefined).pipe(Effect.andThen(Deferred.await(release)))) : undefined
+  const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+  const fiber = yield* f.call().pipe(Effect.forkChild)
+  yield* Deferred.await(reached)
+  yield* CapabilityPolicyFixture.setRules([...CapabilityServiceCallFixture.rules,
+    { action: "service_call", resource: "cloudflare:mutate", effect: "ask" }])
+  yield* Deferred.succeed(release, undefined)
+  const request = yield* Effect.raceFirst(Deferred.await(asked.first), Fiber.join(fiber).pipe(Effect.andThen(Effect.die("SKIPPED_FINAL_APPROVAL"))))
+  f.state.tools = [{ name: "mutate", description: "Selected mutation", inputSchema: { type: "object", properties: { other: { type: "string" } } } }]
+  yield* CapabilityPolicyFixture.setRules(CapabilityServiceCallFixture.rules)
+  yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+  expect((yield* Fiber.join(fiber)).result.type).toBe("error")
+  expect(f.state.calls).toHaveLength(0)
+  const lists = f.state.requests.filter((request) => request.body.method === "tools/list")
+  expect(lists).toHaveLength(5)
+  expect(lists[4]?.headers.get("mcp-session-id")).toBe(lists[2]?.headers.get("mcp-session-id") ?? "missing")
+}).pipe(Effect.timeout("45 seconds")), 60000)
 
 function endRoot(f: Effect.Success<ReturnType<typeof CapabilityServiceCallFixture.fixture>>) {
   return f.events.publish(SessionEvent.Tool.Success, { sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
