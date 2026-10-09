@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { OpenApi } from "effect/unstable/httpapi"
+import { Schema } from "effect"
+import { SessionV1 } from "@orchestra/schema/v1/session"
 import { PublicApi } from "../../src/server/routes/instance/httpapi/public"
 
 type Method = "get" | "post" | "put" | "delete" | "patch"
@@ -70,6 +72,30 @@ function isBuiltInEndpointError(name: string) {
 }
 
 describe("PublicApi OpenAPI v2 errors", () => {
+  test("V1 prompt transition preserves actual nullable CAS expectations in generated OpenAPI", () => {
+    const value = Schema.decodeUnknownSync(SessionV1.PromptTransition)({
+      expectedRevert: null,
+      expectedPermission: null,
+      removeMessageIDs: [],
+      removePartIDs: [],
+      timeUpdated: 1,
+    })
+    const spec = OpenApi.fromApi(PublicApi) as OpenApiSpec
+    const ref = spec.components.schemas.SessionV1PromptAdmission.properties?.transition.$ref
+    expect(ref).toBe("#/components/schemas/SessionV1PromptTransition")
+    const transition = spec.components.schemas[componentName(ref ?? "")]
+    expect(transition).toBeDefined()
+    expect(value.expectedRevert).toBeNull()
+    expect(value.expectedPermission).toBeNull()
+    expect(transition.required).toContain("expectedRevert")
+    expect(transition.required).not.toContain("expectedPermission")
+    expect(transition.properties?.expectedRevert.anyOf).toContainEqual({ type: "null" })
+    expect(transition.properties?.expectedPermission.anyOf).toContainEqual({ type: "null" })
+    const revert = transition.properties?.expectedRevert.anyOf?.find((item) => item.type !== "null")
+    expect(revert?.properties?.messageID.type).toBe("string")
+    expect(revert?.properties?.partID.type).toBe("string")
+  })
+
   test("includes plugin-facing core schemas", () => {
     const spec = OpenApi.fromApi(PublicApi) as OpenApiSpec
 

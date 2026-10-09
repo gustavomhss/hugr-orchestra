@@ -420,22 +420,27 @@ structured JSON. Handle absent/unparseable output as an execution failure, not a
 
 ## 7. Authoring service and host boundary
 
-`python3 bin/relay-api serve` runs the authoring service for one workspace on loopback. It owns
-workspace-scoped documents, versions, scopes, skill bindings and uploads, and execution receipts in
-SQLite, and exposes them through the versioned `<base>api/v1/` API that Orchestra consumes. It ships no UI.
+Orchestra's installed Workflows and Hooks screens use the native Server `HttpApi` through
+`packages/app/src/orchestra/relay/client.ts` and the generated Client. The Protocol groups in
+`packages/protocol/src/groups/relay-document.ts` and `relay-hook.ts` define `/api/relay/document`,
+`/api/relay/scope`, `/api/relay/node-types` and `/api/relay/hook` routes. Server registers
+`RelayDocumentHandler`, `RelayPublishHandler` and `RelayHookHandler` in `packages/server/src/handlers.ts`.
+`RelayDocuments` uses native `AuthoringStore`, `AuthoringGraph`, `AuthoringHook` and Location-scoped
+`SkillV2`; the project store is `<Global.data>/relay/<projectID>/authoring.sqlite3`.
 
 Workflow graphs compile to ordered flat WPs; phases map to macros and must be contiguous stretches of
 the chain. A start node carries the objective and per-WP retry budget, stays outside phases and is not a
 WP. Incomplete drafts save with diagnostics but cannot publish or evaluate; malformed shapes are refused
-before persistence. Saves carry a checksum and version guard. Publishing marks a definition available; it
-does not arm or schedule anything. Hook export is `relay.hook.v1` with `installed:false`; event binding
-is not implemented here.
+before persistence. Native updates require `versionId` or `expectedChecksum` unless `force` is set;
+stale guards return 409. Publishing compiles first and records the principal; it does not arm or
+schedule anything. Hook export is `relay.hook.v1` with `installed:false`; explicit native hook install
+pins the published version through `RelayHookInstall`, independently of later document edits.
 
-Evaluation delegates to the original daemon and CLI. A destination evaluates a prefix, not an isolated
-WP. Retry keeps the original sprint, skill snapshot, state directory and counters; only the latest failed
-attempt can retry, and any escalation in the run refuses retry without resetting its budget. A restart
-marks in-flight receipts crashed without rerunning them. The service does not cancel evaluations,
-dispatch agents, deliver ARM kinds, release arms or authenticate callers.
+Public `POST /api/relay/document/:documentID/check` returns 403 `maestro-execution-required`.
+Executable workflow checks belong to Maestro's approved native binding. The old Python `api/v1`
+authoring host and its daemon-backed execution receipts are regression references, not installed UI
+routes. Retained `lib/relay_authoring/` modules support Python tests and frozen parity evidence;
+the Python authoring launcher is retired. Standalone gate/tool contracts in §§1–6 remain separately owned.
 
 See the [authoring API](docs/authoring-api.md) and the [authoring skill](docs/skills/relay-authoring/SKILL.md).
 

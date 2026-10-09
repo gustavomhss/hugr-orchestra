@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "0caea81b-e0be-4710-abff-35d73cc6c92a",
+  "id": "4e0f9b56-600e-45e5-b7bd-cf7b50f9f89d",
   "prevIds": [
-    "01c44789-486e-45cd-80d2-d40cd25d9c03"
+    "0caea81b-e0be-4710-abff-35d73cc6c92a"
   ],
   "ddl": [
     {
@@ -12,6 +12,10 @@
     },
     {
       "name": "data_migration",
+      "entityType": "tables"
+    },
+    {
+      "name": "session_v1_prompt_admission",
       "entityType": "tables"
     },
     {
@@ -189,6 +193,56 @@
       "name": "time_completed",
       "entityType": "columns",
       "table": "data_migration"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "id",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "session_id",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "1",
+      "generated": null,
+      "name": "identity_version",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "identity",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot",
+      "entityType": "columns",
+      "table": "session_v1_prompt_admission"
     },
     {
       "type": "integer",
@@ -1787,6 +1841,21 @@
     },
     {
       "columns": [
+        "session_id"
+      ],
+      "tableTo": "session",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "nameExplicit": false,
+      "name": "fk_session_v1_prompt_admission_session_id_session_id_fk",
+      "entityType": "fks",
+      "table": "session_v1_prompt_admission"
+    },
+    {
+      "columns": [
         "active_account_id"
       ],
       "tableTo": "account",
@@ -2026,6 +2095,15 @@
       "nameExplicit": false,
       "name": "data_migration_pk",
       "table": "data_migration",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "session_v1_prompt_admission_pk",
+      "table": "session_v1_prompt_admission",
       "entityType": "pks"
     },
     {

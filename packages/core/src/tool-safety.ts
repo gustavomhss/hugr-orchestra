@@ -109,6 +109,8 @@ export type Approval = {
   readonly message?: string
   /** A Session event's hook asks with no tool call to bind: its event, such as `prompt.before`. */
   readonly trigger?: string
+  /** Final prompt identity captured by the Session host, never hook parameters. */
+  readonly messageID?: string
 }
 export const NativeHost = Context.Reference<
   | {

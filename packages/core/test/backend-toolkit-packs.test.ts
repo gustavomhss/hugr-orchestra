@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import path from "path"
+import fs from "node:fs/promises"
 import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 
@@ -18,14 +19,8 @@ const HOSTS = [
   "static.rust-lang.org",
   "static.crates.io",
 ]
-const SKILLS = [
-  "backend-implement",
-  "backend-api",
-  "backend-data",
-  "backend-concurrency",
-  "backend-refactor",
-  "backend-check",
-]
+const SKILLS = (await fs.readdir(path.resolve(import.meta.dirname, "../../backend-specialist/skills"), { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
 const packs = Object.values<BackendToolkitManifest.Pack>(BackendToolkitManifest.ENGINES)
 const runtimes = Object.values(BackendToolkitManifest.RUNTIMES)
 const artifacts = [
@@ -56,6 +51,10 @@ const locked = packs.flatMap((pack) => {
 })
 
 describe("backend toolkit packs", () => {
+  test("generated closed entry-skill names match packaged directories", () => {
+    expect(SKILLS.length).toBeGreaterThan(0)
+    expect(SKILLS).toEqual(BackendToolkitManifest.ENTRY_SKILLS.toSorted())
+  })
   test("every pack and runtime covers each target or names why it cannot", () => {
     const gaps = [...runtimes, ...packs].flatMap((item) =>
       BackendToolkitTarget.TARGETS.filter((target) => {

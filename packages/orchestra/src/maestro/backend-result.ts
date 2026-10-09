@@ -5,6 +5,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { ToolSafety } from "@orchestra/core/tool-safety"
 import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
+import { Seats, type Seat } from "./seats"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
@@ -54,7 +55,7 @@ export type Memory = {
 }
 
 export type WorkResult = {
-  schema: "backend-work-result-v1"
+  schema: string
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
   taskId?: string
   card: { parsed: boolean; messageID?: string }
@@ -80,12 +81,12 @@ export type WorkResult = {
  * and the card can only lower `ended` to `blocked` (F4 cl.11). Memory outcomes come from the receipts in `session`
  * (the execution Session's stored history) and the final message, and never touch any other field (F4 cl.30).
  */
-export function assemble(message: SessionV1.WithParts, session: readonly SessionV1.WithParts[] = []): WorkResult {
+export function assemble(message: SessionV1.WithParts, session: readonly SessionV1.WithParts[] = [], seat: Seat = Seats.all.backend): WorkResult {
   const text = message.parts.findLast((part) => part.type === "text")
-  const card = text?.type === "text" ? parse(text.text) : undefined
+  const card = text?.type === "text" ? parse(text.text, seat.returnCard) : undefined
   const host = terminal(message)
   return {
-    schema: "backend-work-result-v1",
+    schema: requireSchema(seat),
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(card ? { outcome: card.outcome } : {}),
     changes: card?.changes ?? [],
@@ -94,7 +95,7 @@ export function assemble(message: SessionV1.WithParts, session: readonly Session
     risks: card?.risks ?? [],
     nextActions: card?.nextActions ?? [],
     terminal: { reason: host === "ended" && card?.outcome === "blocked" ? "blocked" : host },
-    memory: memory([...session.filter((stored) => stored.info.id !== message.info.id), message]),
+    memory: seat.atlasMemory ? memory([...session.filter((stored) => stored.info.id !== message.info.id), message]) : { reads: [], writes: [] },
   }
 }
 
@@ -108,18 +109,18 @@ export function hostEnded(input: {
   session?: readonly SessionV1.WithParts[]
   reason: "failed" | "interrupted" | "running"
   detail: string
-}): WorkResult {
+}, seat: Seat = Seats.all.backend): WorkResult {
   const base = input.message
-    ? assemble(input.message, input.session)
+    ? assemble(input.message, input.session, seat)
     : {
-        schema: "backend-work-result-v1" as const,
+        schema: requireSchema(seat),
         card: { parsed: false },
         changes: [],
         checks: [],
         blockers: [],
         risks: [],
         nextActions: [],
-        memory: memory(input.session ?? []),
+        memory: seat.atlasMemory ? memory(input.session ?? []) : { reads: [], writes: [] },
       }
   return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
 }
@@ -167,13 +168,19 @@ function isReceipt(value: unknown): value is AtlasMemory.Receipt {
   )
 }
 
-function parse(text: string): Card | undefined {
-  if (text.split("```backend-result").length !== 2) return
-  const block = /```backend-result[ \t]*\r?\n([\s\S]*?)\r?\n```/.exec(text)?.[1]
+function parse(text: string, tag: string): Card | undefined {
+  if (text.split("```" + tag).length !== 2) return
+  // Definition validation restricts tags to lowercase words and hyphens, so interpolation cannot change the regex.
+  const block = new RegExp("```" + tag + "[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n```").exec(text)?.[1]
   if (block === undefined) return
   return Option.getOrUndefined(
     Option.flatMap(decodeJson(block), (json) => decodeCard(json, { onExcessProperty: "error" })),
   )
+}
+
+function requireSchema(seat: Seat) {
+  if (!seat.workResult) throw new Error(`Seat has no work-result contract: ${seat.id}`)
+  return seat.workResult
 }
 
 // The Task finish predicate (task.ts): errors fail the Task; a missing or tool-call finish never reached a terminal.

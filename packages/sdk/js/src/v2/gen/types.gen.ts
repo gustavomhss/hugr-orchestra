@@ -12,6 +12,7 @@ export type Event =
   | EventSessionCreated
   | EventSessionUpdated
   | EventSessionDeleted
+  | EventSessionV1PromptAdmitted
   | EventMessageUpdated
   | EventMessageRemoved
   | EventMessagePartUpdated
@@ -275,121 +276,8 @@ export type UserMessage = {
   tools?: {
     [key: string]: boolean
   }
+  promptContext?: PromptContextInfo
 }
-
-export type ProviderAuthError = {
-  name: "ProviderAuthError"
-  data: {
-    providerID: string
-    message: string
-  }
-}
-
-export type UnknownError = {
-  name: "UnknownError"
-  data: {
-    message: string
-    ref?: string
-  }
-}
-
-export type MessageOutputLengthError = {
-  name: "MessageOutputLengthError"
-  data: {
-    [key: string]: unknown
-  }
-}
-
-export type MessageAbortedError = {
-  name: "MessageAbortedError"
-  data: {
-    message: string
-  }
-}
-
-export type StructuredOutputError = {
-  name: "StructuredOutputError"
-  data: {
-    message: string
-    retries: number
-  }
-}
-
-export type ContextOverflowError = {
-  name: "ContextOverflowError"
-  data: {
-    message: string
-    responseBody?: string
-  }
-}
-
-export type ContentFilterError = {
-  name: "ContentFilterError"
-  data: {
-    message: string
-  }
-}
-
-export type ApiError = {
-  name: "APIError"
-  data: {
-    message: string
-    statusCode?: number
-    isRetryable: boolean
-    responseHeaders?: {
-      [key: string]: string
-    }
-    responseBody?: string
-    metadata?: {
-      [key: string]: string
-    }
-  }
-}
-
-export type AssistantMessage = {
-  id: string
-  sessionID: string
-  role: "assistant"
-  time: {
-    created: number
-    completed?: number
-  }
-  error?:
-    | ProviderAuthError
-    | UnknownError
-    | MessageOutputLengthError
-    | MessageAbortedError
-    | StructuredOutputError
-    | ContextOverflowError
-    | ContentFilterError
-    | ApiError
-  parentID: string
-  modelID: string
-  providerID: string
-  mode: string
-  agent: string
-  path: {
-    cwd: string
-    root: string
-  }
-  summary?: boolean
-  cost: number
-  tokens: {
-    total?: number
-    input: number
-    output: number
-    reasoning: number
-    cache: {
-      read: number
-      write: number
-    }
-  }
-  structured?: unknown
-  variant?: string
-  finish?: string
-}
-
-export type Message = UserMessage | AssistantMessage
 
 export type TextPart = {
   id: string
@@ -618,6 +506,22 @@ export type AgentPart = {
   }
 }
 
+export type ApiError = {
+  name: "APIError"
+  data: {
+    message: string
+    statusCode?: number
+    isRetryable: boolean
+    responseHeaders?: {
+      [key: string]: string
+    }
+    responseBody?: string
+    metadata?: {
+      [key: string]: string
+    }
+  }
+}
+
 export type RetryPart = {
   id: string
   sessionID: string
@@ -653,6 +557,128 @@ export type Part =
   | AgentPart
   | RetryPart
   | CompactionPart
+
+export type SessionV1PromptTransition = {
+  expectedRevert: {
+    messageID: string
+    partID?: string
+    snapshot?: string
+    diff?: string
+  } | null
+  removeMessageIDs: Array<string>
+  removePartIDs: Array<string>
+  permission?: PermissionRuleset
+  expectedPermission?: PermissionRuleset | null
+  timeUpdated: number
+}
+
+export type SessionV1PromptAdmission = {
+  sessionID: string
+  messageID: string
+  identityVersion: 1
+  identity: string
+  info: UserMessage
+  parts: Array<Part>
+  transition?: SessionV1PromptTransition
+}
+
+export type ProviderAuthError = {
+  name: "ProviderAuthError"
+  data: {
+    providerID: string
+    message: string
+  }
+}
+
+export type UnknownError = {
+  name: "UnknownError"
+  data: {
+    message: string
+    ref?: string
+  }
+}
+
+export type MessageOutputLengthError = {
+  name: "MessageOutputLengthError"
+  data: {
+    [key: string]: unknown
+  }
+}
+
+export type MessageAbortedError = {
+  name: "MessageAbortedError"
+  data: {
+    message: string
+  }
+}
+
+export type StructuredOutputError = {
+  name: "StructuredOutputError"
+  data: {
+    message: string
+    retries: number
+  }
+}
+
+export type ContextOverflowError = {
+  name: "ContextOverflowError"
+  data: {
+    message: string
+    responseBody?: string
+  }
+}
+
+export type ContentFilterError = {
+  name: "ContentFilterError"
+  data: {
+    message: string
+  }
+}
+
+export type AssistantMessage = {
+  id: string
+  sessionID: string
+  role: "assistant"
+  time: {
+    created: number
+    completed?: number
+  }
+  error?:
+    | ProviderAuthError
+    | UnknownError
+    | MessageOutputLengthError
+    | MessageAbortedError
+    | StructuredOutputError
+    | ContextOverflowError
+    | ContentFilterError
+    | ApiError
+  parentID: string
+  modelID: string
+  providerID: string
+  mode: string
+  agent: string
+  path: {
+    cwd: string
+    root: string
+  }
+  summary?: boolean
+  cost: number
+  tokens: {
+    total?: number
+    input: number
+    output: number
+    reasoning: number
+    cache: {
+      read: number
+      write: number
+    }
+  }
+  structured?: unknown
+  variant?: string
+  finish?: string
+}
+
+export type Message = UserMessage | AssistantMessage
 
 export type Prompt = {
   text: string
@@ -809,6 +835,11 @@ export type GlobalEvent = {
           sessionID: string
           info: Session
         }
+      }
+    | {
+        id: string
+        type: "session.v1.prompt.admitted"
+        properties: SessionV1PromptAdmission
       }
     | {
         id: string
@@ -1999,6 +2030,7 @@ export type GlobalEvent = {
     | SyncEventSessionCreated
     | SyncEventSessionUpdated
     | SyncEventSessionDeleted
+    | SyncEventSessionV1PromptAdmitted
     | SyncEventMessageUpdated
     | SyncEventMessageRemoved
     | SyncEventMessagePartUpdated
@@ -3401,6 +3433,7 @@ export type V2Event =
   | SessionCreated
   | SessionUpdated
   | SessionDeleted
+  | SessionV1PromptAdmitted
   | MessageUpdated
   | MessageRemoved
   | MessagePartUpdated
@@ -3804,6 +3837,10 @@ export type MoveSessionDestination = {
   directory: string
 }
 
+export type PromptContextInfo = {
+  reminders: Array<string>
+}
+
 export type ModelRef = {
   id: string
   providerID: string
@@ -3832,10 +3869,6 @@ export type PromptFileAttachment = {
 export type PromptAgentAttachment = {
   name: string
   source?: PromptSource
-}
-
-export type PromptContextInfo = {
-  reminders: Array<string>
 }
 
 export type SessionErrorUnknown = {
@@ -4061,6 +4094,18 @@ export type SyncEventSessionDeleted = {
       sessionID: string
       info: Session
     }
+  }
+}
+
+export type SyncEventSessionV1PromptAdmitted = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "session.v1.prompt.admitted.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: SessionV1PromptAdmission
   }
 }
 
@@ -6531,6 +6576,21 @@ export type SessionDeleted = {
   }
 }
 
+export type SessionV1PromptAdmitted = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "session.v1.prompt.admitted"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: SessionV1PromptAdmission
+}
+
 export type MessageUpdated = {
   id: string
   metadata?: {
@@ -8536,6 +8596,12 @@ export type EventSessionDeleted = {
     sessionID: string
     info: Session
   }
+}
+
+export type EventSessionV1PromptAdmitted = {
+  id: string
+  type: "session.v1.prompt.admitted"
+  properties: SessionV1PromptAdmission
 }
 
 export type EventMessageUpdated = {

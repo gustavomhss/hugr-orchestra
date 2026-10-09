@@ -119,7 +119,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     ask: (req) =>
       Effect.gen(function* () {
         if (nativeSeat?.nativeProfile) {
-          const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.nativeProfile])
+          const nativePermission = Permission.fromConfig(nativeProfiles[nativeSeat.memberId])
           for (const pattern of req.patterns) {
             if (Permission.evaluate(req.permission, pattern, nativePermission).action !== "deny") continue
             return yield* new PermissionV1.DeniedError({

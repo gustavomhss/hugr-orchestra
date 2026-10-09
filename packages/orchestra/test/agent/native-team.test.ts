@@ -33,7 +33,7 @@ const nativeTeam = [
     id: "backend",
     profile: "backend",
     prompt: "You are the backend implementation specialist on the Orchestra native team.",
-    description: `Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. ${execution} Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.`,
+    description: "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. Edits only dispatch writePaths; read-only without them. Runs shell commands. Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.",
   },
   {
     id: "patty",

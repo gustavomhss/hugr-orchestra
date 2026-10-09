@@ -33,12 +33,13 @@ import {
   nativeProfiles,
   envRead,
   publishRules,
-  backendSkills,
   canonicalMemberId,
   LEGACY_BACKEND_ID,
   renderPrompt,
   type RosterMember,
 } from "@/maestro/roster"
+import { Seats } from "@/maestro/seats"
+import { SeatSkillRoot } from "@/maestro/seat-skill-root"
 import { containsPath } from "@/project/instance-context"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -70,13 +71,6 @@ export const Info = Schema.Struct({
   engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])),
 }).annotate({ identifier: "Agent" })
 export type Info = DeepMutable<Schema.Schema.Type<typeof Info>>
-
-// What each roster native profile lets a teammate do, as the task tool lists it.
-const nativeAccess = {
-  execution: "Edits files and runs shell commands.",
-  backend: "Edits files and runs shell commands.",
-  review: "Read-only: reads and searches files; cannot edit or run commands.",
-} satisfies Record<keyof typeof nativeProfiles, string>
 
 const GeneratedAgent = Schema.Struct({
   identifier: Schema.String,
@@ -165,13 +159,13 @@ const layer = Layer.effect(
         })
 
         const user = Permission.fromConfig(cfg.permission ?? {})
-        // The backend specialist's profile grants external access to its packaged skill root; edit patterns are worktree-relative,
-        // so the deny that keeps that root read-only is rendered here. Inside the project it is ordinary source.
-        const backendReadOnly = containsPath(backendSkills.root, ctx)
-          ? []
-          : Permission.fromConfig({
-              edit: { [path.join(path.relative(ctx.worktree, backendSkills.root), "*")]: "deny" },
-            })
+        // External skill roots are readable, never writable. Inside the project they remain ordinary source.
+        const skillReadOnly = Object.fromEntries(Object.entries(SeatSkillRoot.roots).map(([id, root]) => [
+          id,
+          containsPath(root, ctx) ? [] : Permission.fromConfig({
+            edit: { [path.join(path.relative(ctx.worktree, root), "*")]: "deny" },
+          }),
+        ]))
 
         const agents: Record<string, Info> = {
           maestro: {
@@ -286,8 +280,8 @@ const layer = Layer.effect(
                   ...present(member, member.displayName),
                   options: {},
                   permission: Permission.merge(
-                    Permission.fromConfig(nativeProfiles[member.nativeProfile!]),
-                    member.nativeProfile === "backend" ? backendReadOnly : [],
+                    Permission.fromConfig(nativeProfiles[member.memberId]),
+                    skillReadOnly[member.memberId] ?? [],
                   ),
                   // The user talks only to Maestro, so every seat, the backend specialist included, works only as
                   // Maestro's teammate and never as a primary agent.
@@ -368,9 +362,11 @@ const layer = Layer.effect(
         // A native seat's label is presentation only (F1.2): it never changes the seat's id, permissions, skills or
         // routing. Config `agent.<id>.name` sets it, HUGR_BACKEND_NAME overrides it for the backend seat (F1-D2), and an
         // invalid label keeps the default and surfaces a configuration error instead of failing startup (F1-D1).
-        const overrides: Record<string, { path: string; value: string } | undefined> = {
-          backend: flags.backendName === undefined ? undefined : { path: "HUGR_BACKEND_NAME", value: flags.backendName },
-        }
+        const overrides = Object.fromEntries(Object.values(Seats.all).map((seat) => [seat.id,
+          seat.labelEnv && flags.seatLabels[seat.id] !== undefined
+            ? { path: seat.labelEnv, value: flags.seatLabels[seat.id] }
+            : undefined,
+        ]))
         for (const member of roster.filter((member) => member.nativeProfile && member.prompt)) {
           const configured = agentConfig[member.memberId]?.name
           const key = member.memberId === "backend" ? backendKey : member.memberId
@@ -540,13 +536,9 @@ const layer = Layer.effect(
 // Renders a native seat's presentation from its label. The description is how the task tool lists the seat, so it
 // gives the role, access and return and never the label.
 function present(member: RosterMember, label: string) {
-  const access = nativeAccess[member.nativeProfile!]
   return {
     name: label,
-    description:
-      member.memberId === "backend"
-        ? `Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. ${access} Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.`
-        : `${member.role.charAt(0).toUpperCase()}${member.role.slice(1)}. ${access} Returns ${member.returnCard}.`,
+    description: Seats.find(member.memberId)?.description,
     prompt: renderPrompt(member, label),
   }
 }

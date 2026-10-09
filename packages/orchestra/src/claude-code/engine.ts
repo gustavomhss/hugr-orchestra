@@ -66,8 +66,13 @@ const layer = Layer.effect(
 
       // Everything the user sent since the last reply, in order: prompts queued while a turn ran are one prompt here.
       const after = history.findLastIndex((message) => message.info.role === "assistant")
-      const prompt = history.slice(after + 1).filter((message) => message.info.role === "user")
-        .flatMap((message) => message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : []))
+      const prompt = history.slice(after + 1).flatMap((message) => {
+        if (message.info.role !== "user") return []
+        return [
+          ...message.parts.flatMap((part) => part.type === "text" && !part.ignored ? [part.text] : []),
+          ...(message.info.promptContext?.reminders ?? []).map((note) => `Hook reminder:\n${note}`),
+        ]
+      })
         .join("\n\n").trim()
       const ruleset = Permission.merge(agent.permission, session.permission ?? [])
       const view = mirror({ sessionID, user: input.user, agent, path: { cwd: instance.directory, root: instance.worktree },
