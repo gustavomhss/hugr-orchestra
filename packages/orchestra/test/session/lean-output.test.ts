@@ -51,3 +51,13 @@ test("same-name or serialized metadata cannot issue a native standard carrier", 
   expect(LegacyLeanCapture.bind(fake, fake, owner)).toBeUndefined()
   expect(LegacyLeanOutput.project({ output: fake, owner, enabled: true, limits: { maxLines: 100, maxBytes: 1000 } })).toBe(fake)
 })
+
+test("plugin root outcomes and unknown extensions invalidate the complete native mapping", () => {
+  const f = fixture()
+  for (const patch of [{ isError: true }, { type: "error" }, { state: "cancelled" }, { unknownExtension: "changed" }]) {
+    const changed = { ...f.approved, ...patch }
+    expect(LegacyLeanOutput.unchanged(f.binding!, changed)).toBe(false)
+    expect(LegacyLeanOutput.project({ output: changed, binding: f.binding, owner, enabled: true,
+      limits: { maxLines: 100, maxBytes: 1000 } })).toBe(changed)
+  }
+})

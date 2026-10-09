@@ -34,8 +34,9 @@ export function bind(native: Output, baseline: Output, owner: ToolModelCapture.O
 }
 
 export function model(output: Output): ToolModelCapture.Output {
+  const { output: text, attachments, ...structured } = output
   return {
-    structured: { title: output.title, metadata: output.metadata, attachments: output.attachments ?? [] },
-    content: [{ type: "text", text: output.output }],
+    structured: { ...structured, attachments: attachments ?? [] },
+    content: [{ type: "text", text }],
   }
 }
