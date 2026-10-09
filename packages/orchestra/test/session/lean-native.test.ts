@@ -14,17 +14,17 @@ import { makeHttp } from "./prompt.fixture"
 
 const it = testEffect(makeHttp())
 
-for (const mode of ["enabled", "disabled", "failure", "plugin", "unknown", "truncated"] as const) it.instance(`native Lean ${mode} next model result and saved replay view`, () =>
+for (const mode of ["enabled", "disabled", "failure", "plugin", "plugin-error", "unknown", "truncated"] as const) it.instance(`native Lean ${mode} next model result and saved replay view`, () =>
   Effect.gen(function* () {
     const enabled = mode !== "disabled"
     const changed = mode === "enabled"
     const { directory } = yield* TestInstance
     const llm = yield* TestLLMServer
-    if (mode === "plugin") yield* Effect.promise(() => Bun.write(path.join(directory, "native-plugin.ts"),
-      `export default async () => ({ "tool.execute.after": async (_input, output) => { output.output += "\\n\\nPLUGIN MUST_KEEP" } })`))
+    if (mode === "plugin" || mode === "plugin-error") yield* Effect.promise(() => Bun.write(path.join(directory, "native-plugin.ts"),
+      `export default async () => ({ "tool.execute.after": async (_input, output) => { ${mode === "plugin" ? `output.output += "\\n\\nPLUGIN MUST_KEEP"` : "output.isError = true"} } })`))
     yield* Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
       model: "test/test-model", tool_output: { lean: { enabled }, ...(mode === "truncated" ? { max_bytes: 200 } : {}) },
-      ...(mode === "plugin" ? { plugin: [path.join(directory, "native-plugin.ts")] } : {}),
+      ...(mode === "plugin" || mode === "plugin-error" ? { plugin: [path.join(directory, "native-plugin.ts")] } : {}),
       provider: { test: { name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
         models: { "test-model": { id: "test-model", name: "Test Model", attachment: false, reasoning: false,
           temperature: false, tool_call: true, release_date: "2025-01-01", limit: { context: 100000, output: 10000 },
@@ -72,6 +72,11 @@ for (const mode of ["enabled", "disabled", "failure", "plugin", "unknown", "trun
     const provider = yield* Provider.Service
     const model = yield* provider.getModel(ProviderV2.ID.make("test"), ModelV2.ID.make("test-model"))
     const lowered = yield* MessageV2.toModelMessagesEffect(saved, model)
+    const replay = lowered.flatMap((message) => message.role === "tool" ? message.content : [])
+      .filter((part) => part.type === "tool-result" && part.toolCallId === tool.callID)
+    expect(replay).toHaveLength(1)
+    if (replay[0].type !== "tool-result" || replay[0].output.type !== "text") throw new Error("NATIVE_LEAN_REPLAY_TEXT_MISSING")
+    expect(replay[0].output.value).toBe(stored)
     const serialized = JSON.stringify(lowered)
     expect(serialized).toContain("example.test")
     if (changed) expect(serialized).not.toContain("=== RUN")
