@@ -34,6 +34,10 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
+import { Config } from "@/config/config"
+import { LegacyLeanCapture } from "@/tool/lean-capture"
+import { LegacyLeanOutput } from "./lean-output"
+import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 
 const MCP_RESOURCE_TOOLS = {
   list: "list_mcp_resources",
@@ -67,6 +71,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const mcp = yield* MCP.Service
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
+  const config = yield* Effect.serviceOption(Config.Service)
   const safety = yield* ToolSafety.make.pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
   const binding = yield* InstanceRef
   const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
@@ -167,8 +172,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       description: item.description,
       inputSchema: jsonSchema(schema),
       execute(args, options) {
-        return run.promise(
-          guard(item.id, args, options, Effect.gen(function* () {
+        const selected: { binding?: ToolModelCapture.Binding } = {}
+        const owner = { sessionID: input.session.id, callID: options.toolCallId }
+        return run.promise(Effect.gen(function* () {
+          const output = yield* guard(item.id, args, options, Effect.gen(function* () {
             const ctx = context(args, options)
             yield* plugin.trigger(
               "tool.execute.before",
@@ -188,17 +195,26 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
                 messageID: input.processor.message.id,
               })),
             }
+            selected.binding = LegacyLeanCapture.bind(result, output, owner)
             yield* plugin.trigger(
               "tool.execute.after",
               { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID, args },
               output,
             )
+            if (selected.binding && !LegacyLeanOutput.unchanged(selected.binding, output)) selected.binding = undefined
             if (options.abortSignal?.aborted) {
               yield* input.processor.completeToolCall(options.toolCallId, output)
             }
             return output
-          })),
-        )
+          }))
+          if (options.abortSignal?.aborted || !selected.binding) return output
+          if (Option.isNone(config)) return output
+          const cfg = yield* config.value.get().pipe(Effect.orElseSucceed(() => undefined))
+          if (!cfg) return output
+          const limits = yield* truncate.limits()
+          return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
+            enabled: cfg.tool_output?.lean?.enabled !== false, limits })
+        }))
       },
     })
   }
