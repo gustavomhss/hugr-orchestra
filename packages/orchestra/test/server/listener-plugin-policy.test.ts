@@ -271,7 +271,10 @@ it.live(
         yield* f.fs.writeFileString(
           path.join(f.directory, "grant-probe.cjs"),
           `
-const c = require("net").connect(${kind === "unix-socket" ? JSON.stringify(socket) : JSON.stringify({ host: "127.0.0.1", port })})
+const route = process.env.ORCHESTRA_TCP_PROXY_ROUTES?.split(";").find(value => value.startsWith("${port}:"))
+const destination = ${kind === "unix-socket" ? JSON.stringify(socket) : `route && Buffer.from(route.slice("${port}:".length), "hex").toString("utf8")`}
+if (!destination) throw new Error("fixture-loopback-route-missing")
+const c = require("net").connect(destination)
 c.on("data", (data) => console.log(data.toString()))
 c.on("error", () => { process.exitCode = 3 })
 c.setTimeout(1000, () => { c.destroy(); process.exitCode = 4 })
@@ -295,9 +298,10 @@ c.setTimeout(1000, () => { c.destroy(); process.exitCode = 4 })
         yield* f.prompt(listener, child.id, "Run grant probe once.")
         const calls = yield* f.tools(listener, child.id)
         expect(calls).toHaveLength(1)
-        if (process.platform === "darwin" && kind === "unix-socket") {
+        if (process.platform === "darwin") {
           expect(calls[0].state.status).toBe("completed")
           expect(calls[0].state.status === "completed" && calls[0].state.output).toBe("nested-grant-response\n")
+          expect(calls[0].state.status === "completed" && calls[0].state.metadata.exit).toBe(0)
           return
         }
         const suffix = kind === "loopback-endpoint" || process.platform === "linux"
