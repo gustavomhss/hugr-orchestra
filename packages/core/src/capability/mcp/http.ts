@@ -10,6 +10,8 @@ export type Connection = {
   authorization: string
   version?: string
   sessionID?: string
+  expiresAt?: number
+  lifetime: AbortController
   closed: boolean
   dead: boolean
 }
@@ -20,17 +22,19 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
   return Effect.tryPromise({
     try: async (signal) => {
       if (connection.closed || connection.dead) throw failure("connection_unavailable", "closed session")
+      if (connection.expiresAt !== undefined && connection.expiresAt <= Date.now())
+        throw failure("authentication_required", "credential expiry")
       const budgetStart = budget.bytes
       const encoded = encode(body, limits.requestBytes)
       const controller = new AbortController()
       try {
         const response = await fetch(connection.endpoint, { method: "POST", headers: headers(connection),
-          body: encoded, redirect: "manual", signal: AbortSignal.any([signal, controller.signal]) })
+          body: encoded, redirect: "manual", signal: AbortSignal.any([signal, controller.signal, connection.lifetime.signal]) })
         checkStatus(response, connection)
         if (id !== undefined && !connection.version) {
           const sessionID = response.headers.get("mcp-session-id")
           if (sessionID !== null) {
-            if (!/^[\x21-\x7e]{1,256}$/.test(sessionID)) throw failure("acquisition_failed", "session header")
+            if (!/^[\x21-\x7e]{1,256}(?![\s\S])/.test(sessionID)) throw failure("acquisition_failed", "session header")
             connection.sessionID = sessionID
           }
         }
@@ -50,8 +54,10 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
         }
         if (type !== "text/event-stream") throw failure("acquisition_failed", "content type")
         return await stream(response, id, budget, limits, async (body) => {
+          if (connection.expiresAt !== undefined && connection.expiresAt <= Date.now())
+            throw failure("authentication_required", "credential expiry")
           const reply = await fetch(connection.endpoint, { method: "POST", headers: headers(connection),
-            body: encode(body, limits.requestBytes), redirect: "manual", signal: AbortSignal.any([signal, controller.signal]) })
+            body: encode(body, limits.requestBytes), redirect: "manual", signal: AbortSignal.any([signal, controller.signal, connection.lifetime.signal]) })
           checkStatus(reply, connection)
           const before = budget.bytes
           await read(reply, budget)
@@ -66,7 +72,8 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
 export function close(connection: Connection, limits: Limits, timeoutMs: number) {
   return Effect.suspend(() => {
     connection.closed = true
-    if (!connection.sessionID) return Effect.void
+    connection.lifetime.abort()
+    if (!connection.sessionID || connection.expiresAt !== undefined && connection.expiresAt <= Date.now()) return Effect.void
     return Effect.tryPromise({
       try: async (signal) => {
         const controller = new AbortController()

@@ -38,6 +38,11 @@ export function parse(text: string): Schema.Json {
       throw error
     }
   })()
+  requireJson(value)
+  return value
+}
+
+function requireJson(value: unknown): asserts value is Schema.Json {
   const pending: { value: unknown; depth: number }[] = [{ value, depth: 0 }]
   while (pending.length) {
     const item = pending.pop()
@@ -48,8 +53,6 @@ export function parse(text: string): Schema.Json {
     if (typeof item.value !== "object") throw failure("acquisition_failed", "JSON value")
     Object.values(item.value).forEach((child) => pending.push({ value: child, depth: item.depth + 1 }))
   }
-  // JSON.parse produced only JSON values; the traversal above also rejected non-finite numbers.
-  return value as Schema.Json
 }
 
 export function message(value: Schema.Json, id: number): Message {
@@ -73,14 +76,15 @@ export function message(value: Schema.Json, id: number): Message {
 }
 
 export function initialize(value: Schema.Json): Version {
-  if (!object(value) || typeof value.protocolVersion !== "string" ||
-    !versions.some((version) => version === value.protocolVersion)) throw failure("unsupported_operation", "version")
+  if (!object(value)) throw failure("acquisition_failed", "initialization")
+  const version = versions.find((version) => version === value.protocolVersion)
+  if (!version) throw failure("unsupported_operation", "version")
   if (!object(value.capabilities) || !object(value.capabilities.tools)) throw failure("unsupported_operation", "tools capability")
   if (value.capabilities.tools.listChanged !== undefined && typeof value.capabilities.tools.listChanged !== "boolean")
     throw failure("acquisition_failed", "capabilities")
   if (!object(value.serverInfo) || typeof value.serverInfo.name !== "string" || typeof value.serverInfo.version !== "string" ||
     (value.instructions !== undefined && typeof value.instructions !== "string")) throw failure("acquisition_failed", "initialization")
-  return value.protocolVersion as Version
+  return version
 }
 
 export function page(value: Schema.Json) {
@@ -92,14 +96,20 @@ export function page(value: Schema.Json) {
       (tool.description !== undefined && (typeof tool.description !== "string" || tool.description.length > 2048)) ||
       (tool.title !== undefined && typeof tool.title !== "string") || !schema(tool.inputSchema) ||
       (tool.outputSchema !== undefined && !schema(tool.outputSchema)) ||
-      (tool.annotations !== undefined && !object(tool.annotations)) ||
+      (tool.annotations !== undefined && (!object(tool.annotations) ||
+        ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"].some((key) =>
+          object(tool.annotations) && tool.annotations[key] !== undefined && typeof tool.annotations[key] !== "boolean") ||
+        (tool.annotations.title !== undefined && typeof tool.annotations.title !== "string"))) ||
+      (tool.icons !== undefined && (!Array.isArray(tool.icons) || !tool.icons.every((icon) => object(icon) && typeof icon.src === "string" &&
+        (icon.mimeType === undefined || typeof icon.mimeType === "string") &&
+        (icon.sizes === undefined || Array.isArray(icon.sizes) && icon.sizes.every((size) => typeof size === "string"))))) ||
       (tool.execution !== undefined && (!object(tool.execution) ||
         (tool.execution.taskSupport !== undefined && !["forbidden", "optional", "required"].includes(String(tool.execution.taskSupport))))))
       throw failure("acquisition_failed", "tool entry")
     return { name: tool.name, summary: tool.description ?? "", inputSchema: tool.inputSchema,
       ...(tool.outputSchema === undefined ? {} : { outputSchema: tool.outputSchema }) }
   })
-  return { tools, raw: value.tools, nextCursor: value.nextCursor as string | undefined }
+  return { tools, raw: value.tools, nextCursor: typeof value.nextCursor === "string" ? value.nextCursor : undefined }
 }
 
 function schema(value: Schema.Json | undefined): value is Schema.Json {

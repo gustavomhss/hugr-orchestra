@@ -38,7 +38,8 @@ export type Interface = Readonly<{
 const hosts: Readonly<Record<string, string>> = {
   cloudflare: "mcp.cloudflare.com", supabase: "mcp.supabase.com", vercel: "mcp.vercel.com", neon: "mcp.neon.tech",
   railway: "mcp.railway.com", sentry: "mcp.sentry.dev", grafana: "mcp.grafana.com", globalping: "mcp.globalping.dev",
-  linear: "mcp.linear.app", stripe: "mcp.stripe.com", netlify: "netlify-mcp.netlify.app", "prisma-postgres": "mcp.prisma.io",
+  linear: "mcp.linear.app", stripe: "mcp.stripe.com", netlify: "netlify-mcp.netlify.app",
+  prisma_postgres: "mcp.prisma.io", "prisma-postgres": "mcp.prisma.io",
 }
 const Selection = Schema.Struct({
   connection: Capability.ConnectionRef, target: Capability.TargetRef, owner: Capability.Owner,
@@ -47,6 +48,7 @@ const Selection = Schema.Struct({
 
 /** Host-only factory: policy, schema validation and durable call intent belong to the caller. */
 export function make(options: Options = {}): Interface {
+  const fixture = options.fixtureOrigin
   const limits = {
     maxCatalogBytes: options.maxCatalogBytes ?? 4 * 1024 * 1024, maxTools: options.maxTools ?? 256,
     maxPages: options.maxPages ?? 16, maxResultBytes: options.maxResultBytes ?? 4 * 1024 * 1024,
@@ -54,7 +56,8 @@ export function make(options: Options = {}): Interface {
     maxConcurrentSessions: options.maxConcurrentSessions ?? 4, maxGenerations: options.maxGenerations ?? 512,
     maxMessages: options.maxMessages ?? 64,
   }
-  if (Object.values(limits).some((value) => !Number.isSafeInteger(value) || value <= 0) || !fixtureOrigin(options.fixtureOrigin))
+  if (Object.values(limits).some((value) => !Number.isSafeInteger(value) || value <= 0) || limits.timeoutMs > 2147483647 ||
+    !fixtureOrigin(fixture))
     throw new RangeError("Invalid MCP transport options")
   const permits = Semaphore.makeUnsafe(limits.maxConcurrentSessions)
   const generations = new Map<string, { hash: string; generation: number }>()
@@ -74,15 +77,16 @@ export function make(options: Options = {}): Interface {
     generations.set(key, { hash, generation: sequence.generation })
     return sequence.generation
   }
-  const open = Effect.fn("CapabilityMcp.open")(function* (selection: CapabilityDiscovery.Selection) {
+  const connect = Effect.fnUntraced(function* (selection: CapabilityDiscovery.Selection) {
     const started = Date.now()
-    const selected = yield* Effect.try({ try: () => requireSelection(selection, options.fixtureOrigin), catch: expected })
+    const selected = yield* Effect.try({ try: () => requireSelection(selection, fixture), catch: expected })
     yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-      yield* restore(permits.take(1)).pipe(Effect.timeoutOrElse({ duration: limits.timeoutMs,
-        orElse: () => Effect.fail(failure("acquisition_failed", "timeout")) }))
+      yield* restore(permits.take(1).pipe(Effect.timeoutOrElse({ duration: limits.timeoutMs,
+        orElse: () => Effect.fail(failure("acquisition_failed", "timeout")) })))
       yield* Effect.addFinalizer(() => permits.release(1))
     }))
-    const connection: Connection = { endpoint: selected.endpoint, authorization: selected.authorization, closed: false, dead: false }
+    const connection: Connection = { endpoint: selected.endpoint, authorization: selected.authorization, closed: false, dead: false,
+      lifetime: new AbortController(), ...(selected.credential.type === "oauth" ? { expiresAt: selected.credential.expires } : {}) }
     yield* Effect.acquireRelease(Effect.succeed(connection), (connection) => close(connection, limits, limits.timeoutMs))
     const initial: Budget = { bytes: 0, limit: limits.maxCatalogBytes, messages: 0 }
     const counter = { id: 0, firstList: true }
@@ -107,7 +111,7 @@ export function make(options: Options = {}): Interface {
       counter.firstList = false
       return bounded(serial.withPermit(Effect.gen(function* () {
         yield* Effect.try({ try: () => credential(selected.credential), catch: expected })
-        const budget: Budget = { ...initial, messages: 0 }
+        const budget: Budget = { ...initial }
         const tools: CapabilityDiscovery.VendorTool[] = []
         const raw: Schema.Json[] = []
         const names = new Set<string>()
@@ -145,6 +149,12 @@ export function make(options: Options = {}): Interface {
     })
     return { listTools, callTool } satisfies Session
   })
+  const open = Effect.fn("CapabilityMcp.open")(function* (selection: CapabilityDiscovery.Selection) {
+    const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+    // Failed acquisition releases its partial session and permit immediately, even in a long-lived caller scope.
+    return yield* connect(selection).pipe(Effect.provideService(Scope.Scope, scope),
+      Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
+  })
   return { open, listTools: (selection) => Effect.scoped(Effect.gen(function* () {
     const session = yield* open(selection)
     return yield* session.listTools
@@ -164,12 +174,13 @@ function requireSelection(selection: CapabilityDiscovery.Selection, fixture: str
   const value = decoded.value
   const host = Object.hasOwn(hosts, value.connection.provider) ? hosts[value.connection.provider] : undefined
   if (!host) throw failure("unsupported_operation", "provider")
-  if (value.target.connectionID !== value.connection.id || !/^[\x21-\x7e]+$/.test(value.endpoint) ||
+  if (value.target.connectionID !== value.connection.id || !/^[\x21-\x7e]+(?![\s\S])/.test(value.endpoint) ||
     value.endpoint.includes("#") || !value.endpoint.startsWith("https://") || !URL.canParse(value.endpoint))
     throw failure("target_denied", "endpoint")
   const endpoint = new URL(value.endpoint)
+  const authority = value.endpoint.slice(8).split(/[/?]/)[0]
   if (endpoint.protocol !== "https:" || endpoint.host !== host || endpoint.username || endpoint.password || endpoint.hash ||
-    value.endpoint.includes("\\")) throw failure("target_denied", "endpoint")
+    !authority || authority.includes("@") || value.endpoint.includes("\\")) throw failure("target_denied", "endpoint")
   const captured = { ...value.credential }
   const authorization = credential(captured)
   const key = CapabilityVendorSchema.hash({ connection: value.connection, target: value.target, endpoint: endpoint.href, owner: value.owner })
@@ -185,7 +196,7 @@ function credential(value: Credential.Value) {
   if (value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now()))
     throw failure("authentication_required", "credential expiry")
   const token = value.type === "key" ? value.key : value.access
-  if (!token || token !== token.trim() || !/^[\x21-\x7e]+$/.test(token) || token.length > 16384)
+  if (!token || token !== token.trim() || !/^[\x21-\x7e]+(?![\s\S])/.test(token) || token.length > 16384)
     throw failure("authentication_required", "credential header")
   return `Bearer ${token}`
 }
