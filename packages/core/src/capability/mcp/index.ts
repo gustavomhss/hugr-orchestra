@@ -7,7 +7,7 @@ import type { CapabilityDiscovery } from "../catalog/discovery"
 import { CapabilityVendorSchema } from "../catalog/schema"
 import { close, request } from "./http"
 import type { Budget, Connection } from "./http"
-import { callResult, expected, failure, initialize, object, page } from "./protocol"
+import { callResult, expected, failure, initialize, object, page, snapshot } from "./protocol"
 import type { CallResult } from "./protocol"
 
 export type { CallResult } from "./protocol"
@@ -77,7 +77,7 @@ export function make(options: Options = {}): Interface {
     generations.set(key, { hash, generation: sequence.generation })
     return sequence.generation
   }
-  const connect = Effect.fnUntraced(function* (selection: CapabilityDiscovery.Selection) {
+  const connect = Effect.fnUntraced(function* (selection: CapabilityDiscovery.Selection, scope: Scope.Closeable) {
     const started = Date.now()
     const selected = yield* Effect.try({ try: () => requireSelection(selection, fixture), catch: expected })
     yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
@@ -86,7 +86,7 @@ export function make(options: Options = {}): Interface {
       yield* Effect.addFinalizer(() => permits.release(1))
     }))
     const connection: Connection = { endpoint: selected.endpoint, authorization: selected.authorization, closed: false, dead: false,
-      lifetime: new AbortController(), ...(selected.credential.type === "oauth" ? { expiresAt: selected.credential.expires } : {}) }
+      lifetime: new AbortController(), tasks: new Set(), ...(selected.credential.type === "oauth" ? { expiresAt: selected.credential.expires } : {}) }
     yield* Effect.acquireRelease(Effect.succeed(connection), (connection) => close(connection, limits, limits.timeoutMs))
     const initial: Budget = { bytes: 0, limit: limits.maxCatalogBytes, messages: 0 }
     const counter = { id: 0, firstList: true }
@@ -94,14 +94,18 @@ export function make(options: Options = {}): Interface {
     const rpc = (method: string, params: Schema.Json, budget: Budget) => Effect.suspend(() => {
       if (counter.id === Number.MAX_SAFE_INTEGER) return Effect.fail(failure("quota_exceeded", "request IDs"))
       counter.id++
-      return request(connection, { jsonrpc: "2.0", id: counter.id, method, params }, counter.id, budget, limits)
+      return request(connection, { jsonrpc: "2.0", id: counter.id, method, params }, counter.id, budget, limits, method === "tools/call")
     })
     const bounded = <A>(effect: Effect.Effect<A, Capability.Failure>, start: number, mutating = false) =>
       Effect.suspend(() => {
         const remaining = limits.timeoutMs - (Date.now() - start)
         const timeout = () => Effect.fail(failure(mutating ? "outcome_unknown" : "acquisition_failed", "timeout"))
         return (remaining <= 0 ? timeout() : effect.pipe(Effect.timeoutOrElse({ duration: remaining, orElse: timeout }))).pipe(
-          Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.sync(() => { connection.dead = true }) : Effect.void))
+          Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.gen(function* () {
+            connection.dead = true
+            // The request's interruption finalizer has joined its JS task before child close releases permits.
+            yield* Scope.close(scope, exit)
+          }) : Effect.void))
       })
     yield* bounded(Effect.gen(function* () {
       const result = yield* rpc("initialize", { protocolVersion: "2025-11-25", capabilities: {},
@@ -142,11 +146,15 @@ export function make(options: Options = {}): Interface {
     })
     const callTool = Effect.fn("CapabilityMcp.callTool")(function* (name: string, input: Schema.Json) {
       const start = Date.now()
+      // Snapshot on every execution, before waiting for another operation's serial permit.
+      const argumentsSnapshot = yield* Effect.try({ try: () => {
+        if (typeof name !== "string" || !name.trim() || name.length > 256 || !object(input))
+          throw failure("unsupported_operation", "call arguments")
+        return snapshot(input, limits.requestBytes)
+      }, catch: expected })
       return yield* bounded(serial.withPermit(Effect.gen(function* () {
         yield* Effect.try({ try: () => credential(selected.credential), catch: expected })
-        if (typeof name !== "string" || !name.trim() || name.length > 256 || !object(input))
-          return yield* failure("unsupported_operation", "call arguments")
-        const result = yield* rpc("tools/call", { name, arguments: input }, { bytes: 0, limit: limits.maxResultBytes, messages: 0 })
+        const result = yield* rpc("tools/call", { name, arguments: argumentsSnapshot }, { bytes: 0, limit: limits.maxResultBytes, messages: 0 })
         return yield* Effect.try({ try: () => callResult(result), catch: expected })
       })), start, true)
     })
@@ -156,7 +164,7 @@ export function make(options: Options = {}): Interface {
     const parent = yield* Scope.Scope
     const scope = yield* Scope.fork(parent)
     // Closing a failed child also detaches its finalizer from a long-lived parent.
-    return yield* connect(selection).pipe(Effect.provideService(Scope.Scope, scope),
+    return yield* connect(selection, scope).pipe(Effect.provideService(Scope.Scope, scope),
       Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
   })
   return { open, listTools: (selection) => Effect.scoped(Effect.gen(function* () {

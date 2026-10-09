@@ -12,6 +12,7 @@ export type CallResult = Readonly<{
 }>
 export type Message =
   | { kind: "response"; result: Schema.Json }
+  | { kind: "error" }
   | { kind: "notification" }
   | { kind: "request"; id: string | number; method: string }
 
@@ -59,7 +60,8 @@ export function message(value: Schema.Json, id: number): Message {
   if (!object(value) || value.jsonrpc !== "2.0") throw failure("acquisition_failed", "envelope")
   if (Object.hasOwn(value, "method")) {
     if (typeof value.method !== "string" || !value.method || Object.hasOwn(value, "result") || Object.hasOwn(value, "error") ||
-      (value.params !== undefined && !object(value.params))) throw failure("acquisition_failed", "envelope")
+      (value.params !== undefined && (!object(value.params) || !metadata(value.params)))) throw failure("acquisition_failed", "envelope")
+    requireTraffic(value)
     if (!Object.hasOwn(value, "id")) return { kind: "notification" }
     if (typeof value.id !== "string" && (typeof value.id !== "number" || !Number.isSafeInteger(value.id)))
       throw failure("acquisition_failed", "request ID")
@@ -70,10 +72,33 @@ export function message(value: Schema.Json, id: number): Message {
   if (Object.hasOwn(value, "error")) {
     if (!object(value.error) || !Number.isSafeInteger(value.error.code) || typeof value.error.message !== "string")
       throw failure("acquisition_failed", "error envelope")
-    throw failure("acquisition_failed", "remote error")
+    return { kind: "error" }
   }
   if (!object(value.result) || !metadata(value.result)) throw failure("acquisition_failed", "result envelope")
   return { kind: "response", result: value.result }
+}
+
+function requireTraffic(value: Schema.JsonObject) {
+  const params = object(value.params) ? value.params : undefined
+  const request = Object.hasOwn(value, "id")
+  if (request && params && object(params._meta) && params._meta.progressToken !== undefined &&
+    typeof params._meta.progressToken !== "string" && !finite(params._meta.progressToken))
+    throw failure("acquisition_failed", "request metadata")
+  if (value.method === "ping" && !request) throw failure("acquisition_failed", "ping")
+  if (value.method === "notifications/progress" && (request || !params ||
+    (typeof params.progressToken !== "string" && !finite(params.progressToken)) || !finite(params.progress) ||
+    (params.total !== undefined && !finite(params.total)) || (params.message !== undefined && typeof params.message !== "string")))
+    throw failure("acquisition_failed", "progress notification")
+  if (value.method === "notifications/message" && (request || !params ||
+    !["debug", "info", "notice", "warning", "error", "critical", "alert", "emergency"].some((level) => level === params.level) ||
+    !Object.hasOwn(params, "data") || (params.logger !== undefined && typeof params.logger !== "string")))
+    throw failure("acquisition_failed", "logging notification")
+  if (value.method === "notifications/tools/list_changed" && (request || params && Object.keys(params).some((key) => key !== "_meta")))
+    throw failure("acquisition_failed", "list notification")
+}
+
+function finite(value: Schema.Json | undefined) {
+  return typeof value === "number" && Number.isFinite(value)
 }
 
 export function initialize(value: Schema.Json): Version {
@@ -109,6 +134,8 @@ export function page(value: Schema.Json) {
         (tool.execution.taskSupport !== undefined && tool.execution.taskSupport !== "forbidden" &&
           tool.execution.taskSupport !== "optional" && tool.execution.taskSupport !== "required"))))
       throw failure("acquisition_failed", "tool entry")
+    if (object(tool.execution) && tool.execution.taskSupport === "required")
+      throw failure("unsupported_operation", "task-required tool")
     return { name: tool.name, summary: tool.description ?? "", inputSchema: tool.inputSchema,
       ...(tool.outputSchema === undefined ? {} : { outputSchema: tool.outputSchema }) }
   })
@@ -116,8 +143,11 @@ export function page(value: Schema.Json) {
 }
 
 function schema(value: Schema.Json | undefined): value is Schema.Json {
-  // Boolean schemas are intentionally preserved for the local vendor-schema validator.
-  return value !== undefined && (typeof value === "boolean" || object(value))
+  // Boolean roots are a native extension, not conforming MCP object-form schemas.
+  return value !== undefined && (typeof value === "boolean" || object(value) && value.type === "object" &&
+    (value.$schema === undefined || typeof value.$schema === "string") &&
+    (value.properties === undefined || object(value.properties)) &&
+    (value.required === undefined || Array.isArray(value.required) && value.required.every((key) => typeof key === "string")))
 }
 
 export function callResult(value: Schema.Json): CallResult {
@@ -137,8 +167,7 @@ function content(value: Schema.Json) {
     ["title", "description", "mimeType"].every((key) => value[key] === undefined || typeof value[key] === "string") &&
     (value.size === undefined || typeof value.size === "number") && icons(value.icons)
   if (value.type === "resource") return object(value.resource) && typeof value.resource.uri === "string" &&
-    ((typeof value.resource.text === "string" && value.resource.blob === undefined) ||
-      (typeof value.resource.blob === "string" && value.resource.text === undefined)) &&
+    (typeof value.resource.text === "string" || typeof value.resource.blob === "string") &&
     (value.resource.mimeType === undefined || typeof value.resource.mimeType === "string") && metadata(value.resource)
   return false
 }
@@ -161,8 +190,8 @@ function icons(value: Schema.Json | undefined) {
     (icon.theme === undefined || icon.theme === "light" || icon.theme === "dark"))
 }
 
-/** Counts exact encoded bytes before allocating a serialized request; no custom serializers/accessors. */
-export function encode(value: Schema.Json, limit: number) {
+/** Descriptor-checked detached JSON, bounded before copying or serializing; never execute accessors/toJSON. */
+export function snapshot(value: Schema.Json, limit: number) {
   const budget = { bytes: 0 }
   const seen = new Set<object>()
   const add = (count: number) => {
@@ -181,28 +210,37 @@ export function encode(value: Schema.Json, limit: number) {
       add(code >= 0xd800 && code <= 0xdfff ? 6 : code < 128 ? 1 : code < 2048 ? 2 : 3)
     }
   }
-  const visit = (value: Schema.Json, depth: number): void => {
+  const copy = (value: Schema.Json, depth: number): Schema.Json => {
     if (depth > 64) throw failure("quota_exceeded", "request depth")
-    if (value === null) { add(4); return }
-    if (typeof value === "string") { string(value); return }
-    if (typeof value === "boolean") { add(value ? 4 : 5); return }
-    if (typeof value === "number" && Number.isFinite(value)) { add(String(value).length); return }
-    if (typeof value !== "object" || seen.has(value) || "toJSON" in value ||
+    if (value === null) { add(4); return value }
+    if (typeof value === "string") { string(value); return value }
+    if (typeof value === "boolean") { add(value ? 4 : 5); return value }
+    if (typeof value === "number" && Number.isFinite(value)) { add(String(value).length); return value }
+    if (typeof value !== "object" || seen.has(value) ||
+      (Array.isArray(value) && Object.getPrototypeOf(value) !== Array.prototype) ||
       (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null))
       throw failure("unsupported_operation", "request JSON")
+    const serializer = Object.getOwnPropertyDescriptor(value, "toJSON")
+    if (serializer && (!("value" in serializer) || typeof serializer.value === "function"))
+      throw failure("unsupported_operation", "request serializer")
     seen.add(value)
     const keys = Object.keys(value)
     if (Array.isArray(value) && (keys.length !== value.length || keys.some((key, index) => key !== String(index))))
       throw failure("unsupported_operation", "request array")
     add(2 + Math.max(0, keys.length - 1))
+    const result: Schema.Json = Array.isArray(value) ? [] : Object.create(null)
     keys.forEach((key) => {
       const property = Object.getOwnPropertyDescriptor(value, key)
       if (!property || !("value" in property)) throw failure("unsupported_operation", "request property")
       if (!Array.isArray(value)) { string(key); add(1) }
-      visit(property.value, depth + 1)
+      Object.defineProperty(result, key, { value: copy(property.value, depth + 1), enumerable: true })
     })
     seen.delete(value)
+    return Object.freeze(result)
   }
-  visit(value, 0)
-  return JSON.stringify(value)
+  return copy(value, 0)
+}
+
+export function encode(value: Schema.Json, limit: number) {
+  return JSON.stringify(snapshot(value, limit))
 }

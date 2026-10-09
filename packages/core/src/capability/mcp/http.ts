@@ -2,7 +2,8 @@ import { Buffer } from "node:buffer"
 import { Capability } from "@orchestra/schema/capability"
 import { Effect } from "effect"
 import type { Schema } from "effect"
-import { encode, failure, message, parse } from "./protocol"
+import { callResult, encode, failure, message, parse } from "./protocol"
+import type { Message } from "./protocol"
 
 export type Budget = { bytes: number; limit: number; messages: number }
 export type Connection = {
@@ -12,15 +13,27 @@ export type Connection = {
   sessionID?: string
   expiresAt?: number
   lifetime: AbortController
+  tasks: Set<Promise<void>>
   closed: boolean
   dead: boolean
 }
 export type Limits = { requestBytes: number; maxMessages: number }
 
 /** One POST, no redirects/retries. The caller owns the total deadline across all POSTs/pages. */
-export function request(connection: Connection, body: Schema.Json, id: number | undefined, budget: Budget, limits: Limits) {
-  return Effect.tryPromise({
-    try: async (signal) => {
+export function request(connection: Connection, body: Schema.Json, id: number | undefined, budget: Budget, limits: Limits, mutating = false) {
+  return Effect.suspend(() => {
+    const state = { dispatched: false, definitive: false }
+    const accept = (decoded: Message) => {
+      if (decoded.kind === "error") {
+        state.definitive = true
+        throw failure("acquisition_failed", "remote error")
+      }
+      if (decoded.kind !== "response") throw failure("acquisition_failed", "response required")
+      if (mutating) callResult(decoded.result)
+      state.definitive = true
+      return decoded.result
+    }
+    return tracked(connection, async (signal) => {
       if (connection.closed || connection.dead) throw failure("connection_unavailable", "closed session")
       if (connection.expiresAt !== undefined && connection.expiresAt <= Date.now())
         throw failure("authentication_required", "credential expiry")
@@ -28,8 +41,10 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
       const encoded = encode(body, limits.requestBytes)
       const controller = new AbortController()
       try {
+        state.dispatched = true // Conservative dispatch boundary: fetch may have delivered before failing.
         const response = await fetch(connection.endpoint, { method: "POST", headers: headers(connection),
           body: encoded, redirect: "manual", signal: AbortSignal.any([signal, controller.signal, connection.lifetime.signal]) })
+        if ([401, 403, 404].includes(response.status)) state.definitive = true
         checkStatus(response, connection)
         if (id !== undefined && !connection.version) {
           const sessionID = response.headers.get("mcp-session-id")
@@ -46,9 +61,7 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
         }
         const type = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase()
         if (type === "application/json") {
-          const decoded = message(parse(await read(response, budget)), id)
-          if (decoded.kind !== "response") throw failure("acquisition_failed", "response required")
-          return decoded.result
+          return accept(message(parse(await read(response, budget)), id))
         }
         if (type !== "text/event-stream") throw failure("acquisition_failed", "content type")
         return await stream(response, id, budget, limits, async (body) => {
@@ -61,29 +74,47 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
           const before = budget.bytes
           await read(reply, budget)
           if (reply.status !== 202 || before !== budget.bytes) throw failure("acquisition_failed", "response acknowledgement")
-        })
+        }, accept)
       } finally { controller.abort() }
-    },
-    catch: (error): unknown => error,
-  }).pipe(Effect.catch((error) => Effect.suspend(() => Effect.fail(transportFailure(error)))))
+    }, (error) => {
+      const known = transportFailure(error)
+      return mutating && state.dispatched && !state.definitive ? new Capability.Failure({ code: "outcome_unknown", message: known.message }) : known
+    })
+  })
 }
 
 export function close(connection: Connection, limits: Limits, timeoutMs: number) {
-  return Effect.suspend(() => {
+  return Effect.gen(function* () {
     connection.closed = true
     connection.lifetime.abort()
-    if (!connection.sessionID || connection.expiresAt !== undefined && connection.expiresAt <= Date.now()) return Effect.void
-    return Effect.tryPromise({
-      try: async (signal) => {
-        const controller = new AbortController()
-        const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 1000))
-        try {
-          const response = await fetch(connection.endpoint, { method: "DELETE", headers: headers(connection),
-            redirect: "manual", signal: AbortSignal.any([signal, controller.signal]) })
-          await read(response, { bytes: 0, limit: limits.requestBytes, messages: 0 })
-        } finally { controller.abort(); clearTimeout(timer) }
-      }, catch: (error): unknown => error,
-    }).pipe(Effect.catch((error) => Effect.sync(() => { transportFailure(error) })))
+    // Headers and JS reader finally blocks can settle after native fetch was aborted.
+    yield* Effect.promise(() => Promise.all(Array.from(connection.tasks)))
+    if (!connection.sessionID || connection.expiresAt !== undefined && connection.expiresAt <= Date.now()) return
+    yield* tracked(connection, async (signal) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), Math.min(timeoutMs, 1000))
+      try {
+        const response = await fetch(connection.endpoint, { method: "DELETE", headers: headers(connection),
+          redirect: "manual", signal: AbortSignal.any([signal, controller.signal]) })
+        await read(response, { bytes: 0, limit: limits.requestBytes, messages: 0 })
+      } finally { controller.abort(); clearTimeout(timer) }
+    }, transportFailure).pipe(Effect.catch(() => Effect.void))
+  })
+}
+
+/** beta83 tryPromise aborts but does not join JS finally. Cancellation must await the tracked task. */
+function tracked<A>(connection: Connection, run: (signal: AbortSignal) => Promise<A>, classify: (error: unknown) => Capability.Failure) {
+  return Effect.callback<A, Capability.Failure>((resume) => {
+    const controller = new AbortController()
+    const task = run(controller.signal)
+    // This settlement promise is only a join; the original result/error resumes the Effect below.
+    const settled = task.then(() => undefined, () => undefined).then(() => { connection.tasks.delete(settled) })
+    connection.tasks.add(settled)
+    void task.then(
+      (value) => settled.then(() => resume(Effect.succeed(value))),
+      (error: unknown) => settled.then(() => resume(Effect.suspend(() => Effect.fail(classify(error))))),
+    )
+    return Effect.promise(() => { controller.abort(); return settled })
   })
 }
 
@@ -140,7 +171,7 @@ async function read(response: Response, budget: Budget) {
 
 /** Incremental SSE line parser: CR, LF, CRLF, split UTF-8, BOM, comments and multiline data. */
 async function stream(response: Response, id: number, budget: Budget, limits: Limits,
-  respond: (body: Schema.Json) => Promise<void>) {
+  respond: (body: Schema.Json) => Promise<void>, accept: (decoded: Message) => Schema.Json) {
   declared(response, budget)
   if (!response.body) throw failure("acquisition_failed", "disconnected")
   const reader = response.body.getReader()
@@ -164,7 +195,7 @@ async function stream(response: Response, id: number, budget: Budget, limits: Li
         return
       }
       if (state.complete) throw failure("acquisition_failed", "duplicate response")
-      state.result = decoded.result
+      state.result = accept(decoded)
       state.complete = true
       return
     }

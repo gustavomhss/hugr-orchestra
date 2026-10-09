@@ -2,6 +2,9 @@ import { describe, expect } from "bun:test"
 import { Capability } from "@orchestra/schema/capability"
 import { Credential } from "@orchestra/schema/credential"
 import { CapabilityMcp } from "../src/capability/mcp/index"
+import { close, request } from "../src/capability/mcp/http"
+import type { Connection } from "../src/capability/mcp/http"
+import { encode } from "../src/capability/mcp/protocol"
 import type { CapabilityDiscovery } from "../src/capability/catalog/discovery"
 import { Cause, Deferred, Effect, Exit, Fiber, Schema, Scope } from "effect"
 import { it } from "./lib/effect"
@@ -23,20 +26,22 @@ const tool = { name: "mutate", description: "Preserve description €", inputSch
 const result = { content: [{ type: "text", text: "done €" }], structuredContent: { changed: true } } satisfies Schema.JsonObject
 type RecordRequest = { method: string; url: string; headers: Headers; body: Schema.JsonObject }
 type Fixture = {
-  requests: RecordRequest[]; bytes: number; initializeCount: number; closed: number; cancelled: number
+  requests: RecordRequest[]; bytes: number; initializeCount: number; closed: number; cancelled: number; commits: number
   mode: "json" | "sse"; chunks: boolean; version: string; tools: Schema.Json[]; paginate: boolean; traffic: Schema.Json[]
   override?: (request: RecordRequest) => Response | undefined | Promise<Response | undefined>
   origin: string
   transport: (options?: CapabilityMcp.Options) => CapabilityMcp.Interface
   send: (body: unknown, session?: string) => Response
+  disconnect: () => Promise<void>
 }
 
 /** Real loopback server: requests pass through native fetch, never a mocked transport. */
 function fixture(mode: "json" | "sse" = "json") {
   return Effect.acquireRelease(Effect.sync(() => {
-    const state: Fixture = { requests: [], bytes: 0, initializeCount: 0, closed: 0, cancelled: 0,
+    const state: Fixture = { requests: [], bytes: 0, initializeCount: 0, closed: 0, cancelled: 0, commits: 0,
       mode, chunks: false, version: "2025-11-25", tools: [tool], paginate: false, traffic: [], origin: "",
       transport: (options = {}) => CapabilityMcp.make({ fixtureOrigin: state.origin, ...options }),
+      disconnect: () => server.stop(true),
       send: (body, session) => {
         const text = state.mode === "json" ? JSON.stringify(body) : "\uFEFF: keepalive\r\nid: prime\r\ndata:\r\n\r\n" +
           [...state.traffic, body].map((value) => "event: message\r\n" + JSON.stringify(value, null, 2)
@@ -78,12 +83,17 @@ function fixture(mode: "json" | "sse" = "json") {
         return state.send({ jsonrpc: "2.0", id: body.id, result: { tools: state.paginate ? state.tools.slice(next ? 1 : 0, next ? undefined : 1) : state.tools,
           ...(state.paginate && !next ? { nextCursor: "opaque +/?=cursor" } : {}) } })
       }
-      if (body.method === "tools/call") return state.send({ jsonrpc: "2.0", id: body.id, result })
+      if (body.method === "tools/call") { state.commits++; return state.send({ jsonrpc: "2.0", id: body.id, result }) }
       return new Response(null, { status: 400 })
     } })
     state.origin = server.url.origin
     return { state, server }
   }), (value) => Effect.promise(() => value.server.stop(true))).pipe(Effect.map((value) => value.state))
+}
+
+function connection(f: Fixture): Connection {
+  return { endpoint: f.origin + "/approved/mcp?account=one&codemode=false", authorization: `Bearer ${token}`,
+    lifetime: new AbortController(), tasks: new Set(), closed: false, dead: false }
 }
 
 function fails<A, R>(effect: Effect.Effect<A, Capability.Failure, R>, code: Capability.ErrorCode, reason?: string) {
@@ -149,6 +159,8 @@ describe("native MCP Streamable HTTP", () => {
     const f = yield* fixture("sse")
     const session = yield* f.transport().open(selected)
     f.traffic = [{ jsonrpc: "2.0", method: "notifications/tools/list_changed" },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: 1.25, progress: 0, total: 2, message: "working" } },
+      { jsonrpc: "2.0", method: "notifications/message", params: { level: "info", logger: "fixture", data: null, _meta: {} } },
       { jsonrpc: "2.0", id: "sampling-id", method: "sampling/createMessage", params: {} },
       { jsonrpc: "2.0", id: "elicitation-id", method: "elicitation/create", params: {} },
       { jsonrpc: "2.0", id: "ping-id", method: "ping" }]
@@ -228,7 +240,7 @@ describe("native MCP Streamable HTTP", () => {
       const f = yield* fixture()
       f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: value }) : undefined
       const session = yield* f.transport().open(selected)
-      yield* fails(session.callTool("mutate", {}), "acquisition_failed", value === null ? "result envelope" : "call result")
+      yield* fails(session.callTool("mutate", {}), "outcome_unknown", value === null ? "result envelope" : "call result")
     }))
   }
 
@@ -239,6 +251,8 @@ describe("native MCP Streamable HTTP", () => {
       { type: "audio", data: "AA==", mimeType: "audio/wav" }, { type: "resource_link", name: "file", uri: "file:///fixture" },
       { type: "resource", resource: { uri: "file:///fixture", text: "text" } },
       { type: "resource", resource: { uri: "file:///blob", blob: "AA==", mimeType: "application/octet-stream", _meta: {} } },
+      { type: "resource", resource: { uri: "file:///both", text: "text", blob: "AA==" } },
+      { type: "resource", resource: { uri: "file:///extension", text: "text", blob: 7 } },
       { type: "resource_link", name: "rich", title: "Rich", description: "Read only", uri: "file:///rich", size: 10,
         icons: [{ src: "https://untrusted.invalid/icon.svg", sizes: ["any"], theme: "dark" }], annotations: { priority: 1 } }]
     f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id,
@@ -272,13 +286,13 @@ describe("native MCP Streamable HTTP", () => {
       f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: { content: [content] } }) : undefined
       yield* Effect.scoped(Effect.gen(function* () {
         const session = yield* f.transport().open(selected)
-        yield* fails(session.callTool("mutate", {}), "acquisition_failed", "call result")
+        yield* fails(session.callTool("mutate", {}), "outcome_unknown", "call result")
       }))
     }
     f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id,
       result: { content: [], _meta: "bad" } }) : undefined
     const session = yield* f.transport().open(selected)
-    yield* fails(session.callTool("mutate", {}), "acquisition_failed", "result envelope")
+    yield* fails(session.callTool("mutate", {}), "outcome_unknown", "result envelope")
   }))
 
   for (const status of [401, 403, 302, 307]) {
@@ -327,13 +341,15 @@ describe("native MCP Streamable HTTP", () => {
     const transport = f.transport()
     const first = yield* transport.open(selected)
     const other = { ...selected, credential: { type: "key" as const, key: "fixture-second-secret" }, credentialID: Credential.ID.create(),
-      connection: { ...selected.connection, id: Capability.ConnectionID.create() } }
+      connection: { ...selected.connection, id: Capability.ConnectionID.create() },
+      endpoint: "https://mcp.cloudflare.com/approved/mcp?account=two&codemode=false" }
     const second = yield* transport.open({ ...other, target: { ...other.target, connectionID: other.connection.id } })
     yield* first.callTool("mutate", {})
     yield* second.callTool("mutate", {})
     const calls = f.requests.filter((r) => r.body.method === "tools/call")
-    expect(calls.map((r) => [r.headers.get("authorization"), r.headers.get("mcp-session-id")])).toEqual([
-      [`Bearer ${token}`, "session-1"], ["Bearer fixture-second-secret", "session-2"],
+    expect(calls.map((r) => [r.headers.get("authorization"), r.headers.get("mcp-session-id"), r.url])).toEqual([
+      [`Bearer ${token}`, "session-1", f.origin + "/approved/mcp?account=one&codemode=false"],
+      ["Bearer fixture-second-secret", "session-2", f.origin + "/approved/mcp?account=two&codemode=false"],
     ])
     yield* transport.listTools({ ...selected, credential: { type: "key", key: "rotated-secret" } })
     expect(f.initializeCount).toBe(3)
@@ -381,7 +397,7 @@ describe("native MCP Streamable HTTP", () => {
     f.override = (r) => r.body.method === "tools/call" ? new Response(new ReadableStream({ start(controller) {
       controller.enqueue(new Uint8Array(256).fill(255)); controller.close()
     } }), { headers: { "content-type": "text/event-stream" } }) : undefined
-    yield* fails(session.callTool("mutate", {}), "quota_exceeded", "response bytes")
+    yield* fails(session.callTool("mutate", {}), "outcome_unknown", "response bytes")
     f.override = (r) => r.body.method === "tools/list" ? new Response(": " + "comment".repeat(200), { headers: { "content-type": "text/event-stream" } }) : undefined
     yield* fails(f.transport({ maxCatalogBytes: 1024 }).listTools(selected), "quota_exceeded", "response bytes")
     f.override = (r) => r.body.method === "tools/list" ? new Response(new ReadableStream({ start(controller) {
@@ -398,7 +414,7 @@ describe("native MCP Streamable HTTP", () => {
     expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(0)
     const next = yield* f.transport({ maxResultBytes: 128 }).open(selected)
     f.override = (r) => r.body.method === "tools/call" ? new Response("bad".repeat(256), { headers: { "content-type": "application/json" } }) : undefined
-    yield* fails(next.callTool("mutate", {}), "quota_exceeded", "response bytes")
+    yield* fails(next.callTool("mutate", {}), "outcome_unknown", "response bytes")
   }))
 
   it.live("cursor cycles, duplicate names, page/tool/message bounds fail rather than return partial catalogs", () => Effect.gen(function* () {
@@ -414,7 +430,7 @@ describe("native MCP Streamable HTTP", () => {
     yield* fails(f.transport({ maxTools: 1 }).listTools(selected), "quota_exceeded", "tools")
     f.tools = [tool]
     f.mode = "sse"
-    f.traffic = Array.from({ length: 3 }, () => ({ jsonrpc: "2.0", method: "notifications/message" }))
+    f.traffic = Array.from({ length: 3 }, () => ({ jsonrpc: "2.0", method: "notifications/message", params: { level: "info", data: "bounded" } }))
     yield* fails(f.transport({ maxMessages: 2 }).listTools(selected), "quota_exceeded", "messages")
   }))
 
@@ -425,6 +441,7 @@ describe("native MCP Streamable HTTP", () => {
       const transport = f.transport({ maxConcurrentSessions: 1, timeoutMs: mode === "timeout" ? 2000 : 10000 })
       f.override = (r) => {
         if (r.body.method !== "tools/call") return undefined
+        f.commits++ // The server applied the mutation before losing its response.
         Effect.runSync(Deferred.succeed(entered, undefined))
         return new Response(new ReadableStream({ start(controller) {
           controller.enqueue(new TextEncoder().encode(": received\n\n"))
@@ -442,7 +459,8 @@ describe("native MCP Streamable HTTP", () => {
         const exit = yield* Fiber.join(fiber).pipe(Effect.exit)
         expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
       }
-      if (mode !== "interrupt") yield* fails(operation, mode === "timeout" ? "outcome_unknown" : "acquisition_failed")
+      if (mode !== "interrupt") yield* fails(operation, "outcome_unknown")
+      expect(f.commits).toBe(1)
       expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
       expect(f.closed).toBe(1)
       f.override = undefined
@@ -521,8 +539,8 @@ describe("native MCP Streamable HTTP", () => {
     }
     // A valid schema container with unsupported keywords remains unchanged for the caller's validator.
     f.override = undefined
-    f.tools = [{ ...tool, inputSchema: { externalKeyword: "preserved", $ref: "https://example.invalid/schema" } }]
-    expect((yield* f.transport().listTools(selected)).tools[0]?.inputSchema).toEqual({ externalKeyword: "preserved", $ref: "https://example.invalid/schema" })
+    f.tools = [{ ...tool, inputSchema: { type: "object", externalKeyword: "preserved", $ref: "https://example.invalid/schema" } }]
+    expect((yield* f.transport().listTools(selected)).tools[0]?.inputSchema).toEqual({ type: "object", externalKeyword: "preserved", $ref: "https://example.invalid/schema" })
   }))
 
   it.live("invalid session headers fail; changed sessions cannot replace the initialized connection", () => Effect.gen(function* () {
@@ -561,7 +579,7 @@ describe("native MCP Streamable HTTP", () => {
     const f = yield* fixture()
     for (const entry of [
       { text: "{bad", type: "application/json", reason: "JSON" },
-      { text: JSON.stringify({ jsonrpc: "2.0", method: "notifications/message" }), type: "application/json", reason: "response required" },
+      { text: JSON.stringify({ jsonrpc: "2.0", method: "notifications/message", params: { level: "info", data: null } }), type: "application/json", reason: "response required" },
       { text: "data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[]}}\n", type: "text/event-stream", reason: "disconnected" },
       { text: "data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[]}}\n\n".repeat(2), type: "text/event-stream", reason: "duplicate response" },
       { text: "{}", type: "text/html", reason: "content type" },
@@ -633,7 +651,7 @@ describe("native MCP Streamable HTTP", () => {
     f.override = (r) => r.body.method === "tools/call" ? new Response(
       `: comment\r\rdata: ${JSON.stringify({ jsonrpc: "2.0", id: String(r.body.id), result })}\r\r`,
       { headers: { "content-type": "text/event-stream" } }) : undefined
-    yield* fails(session.callTool("mutate", {}), "acquisition_failed", "correlation")
+    yield* fails(session.callTool("mutate", {}), "outcome_unknown", "correlation")
     expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
   }))
 
@@ -684,7 +702,7 @@ describe("native MCP Streamable HTTP", () => {
     const call = yield* session.callTool("mutate", {}).pipe(Effect.forkChild)
     yield* Deferred.await(entered)
     yield* Scope.close(scope, Exit.void)
-    yield* fails(Fiber.join(call), "acquisition_failed")
+    yield* fails(Fiber.join(call), "outcome_unknown")
     expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
     f.override = undefined
     yield* transport.listTools(selected)
@@ -697,5 +715,268 @@ describe("native MCP Streamable HTTP", () => {
       { fixtureOrigin: "https://localhost:1234" }, { fixtureOrigin: "http://example.com" }, { fixtureOrigin: "http://localhost:1234?x" }]) {
       expect(() => CapabilityMcp.make(options)).toThrow("Invalid MCP transport options")
     }
+  }))
+
+  it.live("committed mutations with 5xx, malformed JSON, wrong correlation or body loss report unknown without repost", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    for (const loss of ["5xx", "JSON", "correlation", "body"] as const) {
+      f.override = (r) => {
+        if (r.body.method !== "tools/call") return undefined
+        f.commits++
+        if (loss === "5xx") return new Response("vendor-private", { status: 503 })
+        if (loss === "JSON") return new Response("{bad", { headers: { "content-type": "application/json" } })
+        if (loss === "correlation") return f.send({ jsonrpc: "2.0", id: 999, result })
+        return new Response(new ReadableStream({ start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"jsonrpc":"2.0","id":'))
+          controller.close()
+        } }), { headers: { "content-type": "application/json" } })
+      }
+      const session = yield* f.transport().open(selected)
+      yield* fails(session.callTool("mutate", {}), "outcome_unknown")
+      yield* fails(session.callTool("mutate", {}), "connection_unavailable")
+    }
+    expect(f.commits).toBe(4)
+    expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(4)
+    f.override = (r) => r.body.method === "tools/call" ? new Response(null, { status: 401 }) : undefined
+    const session = yield* f.transport().open(selected)
+    yield* fails(session.callTool("mutate", {}), "authentication_required")
+    expect(f.commits).toBe(4)
+    f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id,
+      error: { code: -32602, message: "vendor-private" } }) : undefined
+    const rejected = yield* f.transport().open(selected)
+    yield* fails(rejected.callTool("mutate", {}), "acquisition_failed", "remote error")
+  }))
+
+  it.live("queued call arguments snapshot per execution, before serial wait; inert toJSON survives", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined))
+    f.override = async (r) => {
+      if (r.body.method !== "tools/call" || !r.body.params || typeof r.body.params !== "object" ||
+        !("arguments" in r.body.params) || JSON.stringify(r.body.params.arguments) !== '{"hold":true}') return undefined
+      Effect.runSync(Deferred.succeed(entered, undefined))
+      await Effect.runPromise(Deferred.await(release))
+      return f.send({ jsonrpc: "2.0", id: r.body.id, result })
+    }
+    const session = yield* f.transport().open(selected)
+    const held = yield* session.callTool("mutate", { hold: true }).pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    const input = { nested: { value: "construction" }, toJSON: "data" }
+    const operation = session.callTool("mutate", input)
+    input.nested.value = "first execution"
+    const queued = yield* operation.pipe(Effect.forkChild)
+    yield* Effect.sleep(20)
+    expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
+    input.nested.value = "changed while queued"
+    yield* Deferred.succeed(release, undefined)
+    yield* Fiber.join(held)
+    yield* Fiber.join(queued)
+    input.nested.value = "second execution"
+    yield* operation
+    expect(f.requests.filter((r) => r.body.method === "tools/call").slice(1).map((r) => r.body.params)).toEqual([
+      { name: "mutate", arguments: { nested: { value: "first execution" }, toJSON: "data" } },
+      { name: "mutate", arguments: { nested: { value: "second execution" }, toJSON: "data" } },
+    ])
+    expect(f.closed).toBe(0)
+    expect(encode({ toJSON: "data" }, 100)).toBe('{"toJSON":"data"}')
+  }))
+
+  it.live("native connection loss after server commit stays outcome_unknown and never reposts", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const session = yield* f.transport().open(selected)
+    f.override = (r) => {
+      if (r.body.method !== "tools/call") return undefined
+      f.commits++
+      void f.disconnect() // End only this loopback fixture, after committing, before returning a response.
+      return new Response(null, { status: 202 })
+    }
+    yield* fails(session.callTool("mutate", {}), "outcome_unknown")
+    yield* fails(session.callTool("mutate", {}), "connection_unavailable")
+    expect(f.commits).toBe(1)
+    expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
+  }))
+
+  it.live("callable serializers and accessors never execute; prevalidation leaves the healthy session usable", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const session = yield* f.transport().open(selected)
+    const state = { executions: 0 }
+    for (const descriptor of [
+      { value: () => { state.executions++; return {} } },
+      { get: () => { state.executions++; return "data" } },
+    ]) {
+      const input = Object.defineProperty({}, "toJSON", descriptor)
+      expect(() => encode(input, 100)).toThrow(Capability.Failure)
+      yield* fails(session.callTool("mutate", input), "unsupported_operation", "serializer")
+    }
+    const input = Object.defineProperty({}, "value", { enumerable: true, get: () => { state.executions++; return "data" } })
+    yield* fails(session.callTool("mutate", input), "unsupported_operation", "property")
+    expect(state.executions).toBe(0)
+    expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(0)
+    expect(f.closed).toBe(0)
+    yield* session.callTool("mutate", { valid: true })
+    expect(f.commits).toBe(1)
+  }))
+
+  it.live("a timed-out session closes and detaches before failure returns, freeing permits in a live parent scope", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const transport = f.transport({ timeoutMs: 1000, maxConcurrentSessions: 1 })
+    const parent = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+    const session = yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, parent))
+    expect(parent.state._tag === "Open" ? parent.state.finalizers.size : 0).toBe(1)
+    f.override = (r) => r.body.method === "tools/call" ? new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode(": pending\n\n"))
+    } }), { headers: { "content-type": "text/event-stream" } }) : undefined
+    yield* fails(session.callTool("mutate", {}), "outcome_unknown", "timeout")
+    expect(f.closed).toBe(1)
+    expect(parent.state._tag === "Open" ? parent.state.finalizers.size : 0).toBe(0)
+    f.override = undefined
+    const healthy = yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, parent))
+    yield* healthy.callTool("mutate", {})
+    expect(f.closed).toBe(1)
+    expect(parent.state._tag === "Open" ? parent.state.finalizers.size : 0).toBe(1)
+    yield* Scope.close(parent, Exit.void)
+    expect(f.closed).toBe(2)
+  }))
+
+  it.live("object-form schemas require MCP root and standard field shapes; task-required tools fail discovery", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const schemas: Schema.Json[] = [{}, { type: "array" }, { type: "object", $schema: 7 }, { type: "object", properties: 7 },
+      { type: "object", required: "value" }, { type: "object", required: [7] }]
+    for (const schema of schemas) {
+      f.tools = [{ ...tool, inputSchema: schema }]
+      yield* fails(f.transport().listTools(selected), "acquisition_failed", "tool entry")
+    }
+    f.tools = [{ ...tool, outputSchema: { type: "array" } }]
+    yield* fails(f.transport().listTools(selected), "acquisition_failed", "tool entry")
+    f.override = (r) => r.body.method === "initialize" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: {
+      protocolVersion: "2025-11-25", serverInfo: { name: "tasks", version: "1" },
+      capabilities: { tools: {}, tasks: { requests: { tools: { call: {} } } } },
+    } }, "tasks-session") : undefined
+    const transport = f.transport()
+    f.tools = [{ ...tool, execution: { taskSupport: "forbidden" } }]
+    const ordinary = yield* transport.listTools(selected)
+    f.tools = [{ ...tool, execution: { taskSupport: "optional" } }]
+    const optional = yield* transport.listTools(selected)
+    expect(optional.catalogGeneration).toBeGreaterThan(ordinary.catalogGeneration)
+    yield* Effect.scoped(Effect.gen(function* () {
+      const session = yield* transport.open(selected)
+      yield* session.callTool("mutate", {})
+      expect(f.requests.find((r) => r.body.method === "tools/call")?.body.params).toEqual({ name: "mutate", arguments: {} })
+    }))
+    f.tools = [{ ...tool, execution: { taskSupport: "required" } }]
+    yield* fails(transport.listTools(selected), "unsupported_operation", "task-required tool")
+    f.tools = [{ ...tool, execution: { taskSupport: ["optional"] } }]
+    yield* fails(transport.listTools(selected), "acquisition_failed", "tool entry")
+    expect(f.requests.filter((r) => r.body.method === "tools/call")).toHaveLength(1)
+  }))
+
+  it.live("known server traffic rejects malformed params without acknowledging bad ping or accepting bad notifications", () => Effect.gen(function* () {
+    const f = yield* fixture("sse")
+    const malformed: Schema.Json[] = [
+      { jsonrpc: "2.0", id: "bad-ping", method: "ping", params: { _meta: "bad" } },
+      { jsonrpc: "2.0", id: "bad-ping", method: "ping", params: [] },
+      { jsonrpc: "2.0", id: "bad-ping", method: "ping", params: { _meta: { progressToken: {} } } },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: [], progress: 0 } },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: "x" } },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: 0, progress: 1, total: "2" } },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: 0, progress: 1, message: 2 } },
+      { jsonrpc: "2.0", method: "notifications/message" },
+      { jsonrpc: "2.0", method: "notifications/message", params: { level: "verbose", data: "bad" } },
+      { jsonrpc: "2.0", method: "notifications/message", params: { level: "info", logger: 3, data: null } },
+      { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { tools: [] } },
+      { jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { _meta: [] } },
+    ]
+    for (const traffic of malformed) {
+      f.traffic = []
+      const session = yield* f.transport().open(selected)
+      f.traffic = [traffic]
+      yield* fails(session.listTools, "acquisition_failed")
+    }
+    expect(f.requests.some((r) => r.body.id === "bad-ping")).toBe(false)
+    f.traffic = []
+    const session = yield* f.transport().open(selected)
+    f.traffic = [{ jsonrpc: "2.0", method: "notifications/tools/list_changed", params: { _meta: { opaque: [1] } } },
+      { jsonrpc: "2.0", method: "notifications/progress", params: { progressToken: "x", progress: 0.5 } },
+      { jsonrpc: "2.0", method: "notifications/message", params: { level: "debug", data: [1, null] } },
+      { jsonrpc: "2.0", id: "valid-ping", method: "ping", params: { _meta: { progressToken: 0 } } }]
+    yield* session.listTools
+    expect(f.requests.find((r) => r.body.id === "valid-ping")?.body.result).toEqual({})
+  }))
+
+  it.live("HTTP interruption joins native reader finally before returning and before DELETE", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const c = connection(f)
+    const entered = yield* Deferred.make<void>()
+    f.override = (r) => {
+      if (r.body.method === "initialize") return new Response(new ReadableStream({ start(controller) {
+        controller.enqueue(new TextEncoder().encode('data: {"jsonrpc":"2.0","id":"reader-ping","method":"ping"}\n\n'))
+      } }), { headers: { "content-type": "text/event-stream", "mcp-session-id": "reader-session" } })
+      if (r.body.id === "reader-ping") { Effect.runSync(Deferred.succeed(entered, undefined)); return new Response(null, { status: 202 }) }
+      if (r.method === "DELETE") expect(c.tasks.size).toBe(1) // Only DELETE's own tracked task remains.
+      return undefined
+    }
+    const fiber = yield* request(c, { jsonrpc: "2.0", id: 1, method: "initialize", params: {} }, 1,
+      { bytes: 0, limit: 4096, messages: 0 }, { requestBytes: 4096, maxMessages: 10 }).pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    expect(c.tasks.size).toBe(1)
+    yield* Fiber.interrupt(fiber)
+    expect(Exit.hasInterrupts(yield* Fiber.join(fiber).pipe(Effect.exit))).toBe(true)
+    expect(c.tasks.size).toBe(0)
+    yield* close(c, { requestBytes: 4096, maxMessages: 10 }, 1000)
+    expect(f.requests.find((r) => r.method === "DELETE")?.headers.get("mcp-session-id")).toBe("reader-session")
+    expect(c.tasks.size).toBe(0)
+  }))
+
+  it.live("close waits pending async cleanup before late session-ID inspection, DELETE and scoped permit release", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const c = connection(f)
+    const cleanup = Promise.withResolvers<void>()
+    const events: string[] = []
+    // Controlled pending JS-finally boundary; network requests below still use native fetch.
+    const settled = cleanup.promise.then(() => { c.sessionID = "late-session"; c.tasks.delete(settled); events.push("cleanup") })
+    c.tasks.add(settled)
+    const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+    yield* Scope.addFinalizer(scope, Effect.sync(() => { events.push("release") }))
+    yield* Scope.addFinalizer(scope, close(c, { requestBytes: 4096, maxMessages: 10 }, 1000))
+    f.override = (r) => {
+      if (r.method === "DELETE") { expect(c.tasks.has(settled)).toBe(false); events.push("DELETE") }
+      return undefined
+    }
+    const closing = yield* Scope.close(scope, Exit.void).pipe(Effect.forkChild)
+    yield* Effect.addFinalizer(() => Effect.sync(() => cleanup.resolve()))
+    yield* Effect.sleep(20)
+    expect(c.closed).toBe(true)
+    expect(events).toEqual([])
+    cleanup.resolve()
+    yield* Fiber.join(closing)
+    expect(events).toEqual(["cleanup", "DELETE", "release"])
+    expect(f.requests[0]?.headers.get("mcp-session-id")).toBe("late-session")
+  }))
+
+  it.live("initialization response races scope close without late header capture or pending reader tasks", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const c = connection(f)
+    const entered = yield* Deferred.make<void>()
+    const response = Promise.withResolvers<Response>()
+    f.override = (r) => {
+      if (r.body.method !== "initialize") return undefined
+      Effect.runSync(Deferred.succeed(entered, undefined))
+      return response.promise
+    }
+    const opening = yield* request(c, { jsonrpc: "2.0", id: 1, method: "initialize", params: {} }, 1,
+      { bytes: 0, limit: 4096, messages: 0 }, { requestBytes: 4096, maxMessages: 10 }).pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    expect(c.tasks.size).toBe(1)
+    response.resolve(new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode(": initialization pending\n\n"))
+    } }), { headers: { "content-type": "text/event-stream", "mcp-session-id": "racing-session" } }))
+    yield* close(c, { requestBytes: 4096, maxMessages: 10 }, 1000)
+    expect(Exit.isFailure(yield* Fiber.join(opening).pipe(Effect.exit))).toBe(true)
+    expect(c.tasks.size).toBe(0)
+    const captured = c.sessionID
+    yield* Effect.sleep(20)
+    expect(c.sessionID).toBe(captured)
+    expect(f.requests.filter((r) => r.method === "DELETE")).toHaveLength(captured === undefined ? 0 : 1)
   }))
 })

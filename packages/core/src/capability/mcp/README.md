@@ -16,6 +16,7 @@ Written against the MCP 2025-11-25 specification, consulted 2026-10-09:
 - https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle
 - https://modelcontextprotocol.io/specification/2025-11-25/server/tools
 - https://modelcontextprotocol.io/specification/2025-11-25/schema
+- https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks
 
 The provider host table is transcribed from
 `packages/capability-assets/src/providers.ts` and provider names in `catalog.ts`
@@ -28,11 +29,14 @@ trusted test construction, never model arguments.
 Initialization offers 2025-11-25; 2025-03-26 and 2025-06-18 are also accepted.
 Tools capability is required. Each POST accepts JSON and SSE and uses one exact
 JSON-RPC ID; batches fail. SSE needs a blank-line event delimiter: EOF does not
-dispatch a truncated event. Duplicate correlated responses in acquired chunks fail.
+dispatch a truncated event. Duplicate correlated responses completed within the same
+acquired chunk fail; arbitrary later-chunk duplicates are not detected after reader cancellation.
 Initialized notifications and replies to server requests
 require empty HTTP 202 acknowledgements. Sampling, elicitation and other unsupported
 server methods receive `-32601`; ping receives an empty result. No server request
 executes a model, approval, filesystem access, or tool.
+Known ping, progress, log and tools-list-changed traffic validates its standard params
+before acknowledgement or discard; common params `_meta` must be an object.
 
 ## Bounds and lifecycle
 
@@ -44,6 +48,8 @@ or call. UTF-8 bytes are counted before decoding/buffering/parsing. JSON nesting
 is bounded at 64, cursor bytes at 4096, session IDs at 256 visible ASCII characters,
 tool names at 256 characters, descriptions at 2048, and credential headers at 16384.
 Positive integer options are required; timeout must fit a native timer.
+Incoming HTTP headers are subject to native fetch's bounds, not a custom aggregate
+header-byte quota. Only the assigned session-ID value has the transport's explicit header bound.
 
 Catalog acquisition returns complete coverage only after the terminal page.
 Duplicates, cursor cycles and all exhausted budgets fail. `byteLength` measures
@@ -57,17 +63,25 @@ references and generations, owner and approved endpoint; values hash all sorted 
 tools, including schemas, descriptions and metadata. Identical catalogs reuse their
 generation. A full identity map fails closed rather than evicting and reusing history.
 Create one host factory for the required generation lifetime; generations are not
-persisted across host restarts. Credential rotation always requires an explicit new
+persisted or deterministic across host restarts: numeric generations depend on each
+factory's acquisition order. Credential rotation always requires an explicit new
 open; sessions are never shared or pooled.
 
 Sessions retain headers only in their own scoped connection. Failed opens immediately
 close their child scope and release permits; closing a successful scope invalidates
-the session, aborts active readers and attempts DELETE when assigned and credentials
+the session, aborts and joins active native fetch/reader tasks, then attempts DELETE when assigned and credentials
 remain unexpired. Expiry is checked again before every outbound POST. DELETE is best effort, byte bounded,
 and limited to the lesser of one second and the configured timeout. Interruption and
 unexpected defects remain Effect causes. Expected errors contain only fixed transport
 reasons, never endpoint, credentials, session ID or vendor body. Failed child scopes
 detach from their parent rather than retaining cleanup entries until parent close.
+Terminal operation failure/interruption closes its dead child immediately, even if
+the caller catches the cause inside a live parent scope. Healthy sessions stay scoped.
+Permits are released after task settlement and bounded DELETE. The explicit async
+interruption finalizer joins JS `finally`; beta83 `tryPromise` alone does not.
+Call arguments are descriptor-checked, byte-bounded detached JSON captured at each
+Effect execution before serial permit wait. Inert `toJSON` data survives; callable
+serializers, accessors, cycles and custom object/array prototypes are not executed.
 
 ## Deliberate limits and caller responsibilities
 
@@ -77,18 +91,28 @@ detach from their parent rather than retaining cleanup entries until parent clos
   a later explicit host operation can open a new one. A call is never reposted.
 - Aborting local fetch or deleting a session does not prove a remote mutation was
   cancelled. Callers must retain durable intent and reconcile ambiguous failures;
-  timeout on a call reports `outcome_unknown`.
+  post-dispatch loss without a definitive correlated result/error reports
+  `outcome_unknown`, including disconnect, body loss, malformed results, ambiguous
+  HTTP errors and timeout. Definitive HTTP 401/403/404 and correlated protocol
+  errors retain typed failures. Interruption retains its Effect cause and still
+  requires reconciliation; neither abort nor DELETE proves remote nonexecution.
 - Input/output schemas and descriptions are preserved. Boolean schemas are accepted
   for the existing local validator, despite the 2025-11-25 tools specification's
   object-only input-schema wording. Schemas are not compiled or default dialects
-  rewritten. Call arguments must be objects; structured content must be an object.
+  rewritten. Object-form schemas require root `type: "object"`, with string `$schema`,
+  object `properties` and string-array `required` when present. Unknown JSON keywords
+  stay exact. Call arguments must be objects; structured content must be an object.
+- Discovery fails `unsupported_operation` for task-required tools because this
+  synchronous interface cannot invoke them correctly. Task-optional tools can be
+  called normally; execution metadata still participates in the generation hash.
 - Returned content remains untrusted vendor data. Callers enforce captured registry,
   permission policy, input/output validation, disclosure and durable replay.
 - Wire checks validate required fields and optional metadata, annotations and icon
   field shapes. They do not validate URI syntax, ISO timestamps, MIME registries or
   base64 payloads, fetch referenced resources/icons, or validate vendor JSON Schemas.
-  Unknown JSON extension fields remain opaque. Embedded resource content accepts
-  one text or blob representation, not both.
+  Unknown JSON extension fields remain opaque. Embedded resource content follows
+  the official anyOf: at least one string text/blob representation, including both
+  strings. The opposite field is an allowed extension, not an invented XOR constraint.
 - Tests use real localhost HTTP through fetch. They do not qualify live providers.
 
 ## Verification
@@ -113,3 +137,16 @@ it is not a claim of exhaustive protocol or live-provider qualification.
 The failed-open child-scope fixture also reproduced a retained parent cleanup entry
 (`Expected: 0; Received: 1`) before replacing manual child attachment with the installed
 Effect 4.0.0-beta.83 `Scope.fork`. Successful opens still attach one cleanup entry.
+
+Cold-review follow-up mutation probes each failed their focused fixture before
+restoration: disabling ambiguous-outcome mapping (`outcome_unknown` became
+`acquisition_failed`), removing the per-execution snapshot (queued nested value
+changed), skipping dead-child close (DELETE count stayed zero), skipping close's
+active-task join (release preceded cleanup), dropping the interruption join (one
+native task remained after Fiber interruption), bypassing known traffic validation,
+allowing task-required discovery, and dropping object-schema root validation.
+The latter three accepted malformed/unsupported traffic or catalogs and failed the
+fixture's expected-failure assertion. These are local fixture observations, not CI
+or live-provider qualification. The close-order fixture includes a controlled
+pending JS-cleanup barrier alongside real native fetch; the interruption fixture
+checks the actual native reader task's settlement.
