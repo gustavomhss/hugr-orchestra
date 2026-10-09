@@ -2414,6 +2414,9 @@ export type Config = {
   tool_output?: {
     max_lines?: number
     max_bytes?: number
+    lean?: {
+      enabled?: boolean
+    }
   }
   compaction?: {
     auto?: boolean
