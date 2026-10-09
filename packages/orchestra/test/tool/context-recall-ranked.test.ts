@@ -202,6 +202,14 @@ describe("context_recall ranked archive", () => {
       expect(page(yield* recall(f, { archive_query: "[zx.*]" })).total).toBe(1)
       expect(page(yield* recall(f, { archive_query: "[ZX.+]" })).total).toBe(0)
       expect(page(yield* recall(f, { archive_query: "cafe ação" })).total).toBe(0)
+      const text = "😀 préface cafe\u0301 ".repeat(40) + "únicoCafe\u0301 alvoFinal"
+      const [indexed] = yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "unicode_long", text)] })
+      const expected = Math.max(0, indexed.markdown.indexOf("únicoCafe\u0301 alvoFinal") - 40)
+      expect(expected).toBeGreaterThan(300)
+      const exact = page(yield* recall(f, { archive_query: "UNICOCafe ALVOFINAL", match: "terms" })).references[0]
+      expect(exact.snippet_offset).toBe(expected)
+      expect(exact.snippet).toBe(indexed.markdown.slice(expected, expected + 300))
+      expect(exact.snippet).toContain("únicoCafe\u0301 alvoFinal")
       for (const archive_query of ["", "   "])
         expect(yield* recall(f, { archive_query, match: "terms" })).toEqual({
           status: "unavailable",
@@ -235,6 +243,10 @@ describe("context_recall ranked archive", () => {
       expect(assistant.references.map((ref) => ref.first)).toEqual(["msg_20assistant"])
       expect(page(yield* recall(f, { archive_query: "needle evidence", role: "assistant" })).total).toBe(1)
       expect(page(yield* recall(f, { ...params, role: "user" })).total).toBe(2)
+      expect(page(yield* recall(f, { ...params, from_message: MessageID.make("msg_20assistant") })).references.map((ref) => ref.first))
+        .toEqual(["msg_30user", "msg_20assistant"])
+      expect(page(yield* recall(f, { ...params, from_message: MessageID.make("msg_20assistant"), through_message: MessageID.make("msg_20assistant") }))
+        .references.map((ref) => ref.first)).toEqual(["msg_20assistant"])
       expect(
         page(
           yield* recall(f, {
@@ -460,6 +472,17 @@ describe("context_recall ranked archive", () => {
     }),
   )
 
+  it.live("forged descriptor bounds cannot hide an in-range source behind a complete zero-result response", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    yield* f.archive.publish({ sessionID: f.sessionID, messages: [user(f.sessionID, "20", "range ownership fact")] })
+    const index = JSON.parse(yield* f.fs.readFileString(f.index))
+    index.references[0].first = "msg_90"
+    index.references[0].last = "msg_90"
+    yield* f.fs.writeFileString(f.index, JSON.stringify(index))
+    expect(yield* recall(f, { archive_query: "range ownership", match: "terms", through_message: MessageID.make("msg_30") }))
+      .toEqual({ status: "unavailable", reason: "archive-corrupt-content" })
+  }))
+
   it.live("preserves literal ascending order, escaped text, reference UTF-16 pages and list offsets", () =>
     Effect.gen(function* () {
       const f = yield* fixture()
@@ -489,7 +512,10 @@ describe("context_recall ranked archive", () => {
       expect(index).toBeGreaterThan(0)
       const left = yield* recall(f, { reference: chunks[0].id, offset: index, limit: 1 })
       const right = yield* recall(f, { reference: chunks[0].id, offset: index + 1, limit: 1 })
+      expect(left.content).toBe(chunks[0].markdown.slice(index, index + 1))
+      expect(right.content).toBe(chunks[0].markdown.slice(index + 1, index + 2))
       expect(left).toMatchObject({ status: "found", offset_unit: "utf16_code_units", next_offset: index + 1 })
+      expect(right).toMatchObject({ status: "found", offset_unit: "utf16_code_units", offset: index + 1, next_offset: index + 2 })
       expect(String(left.content) + String(right.content)).toBe("😀")
     }),
   )

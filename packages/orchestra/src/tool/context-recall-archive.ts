@@ -139,10 +139,11 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
     // Retain rank metadata only, bounded by actual refs. Read every eligible chunk,
     // including those beyond the requested page, before reporting any total.
     for (const ref of retained) {
-      if (params.from_message && ref.last < params.from_message) continue
-      if (params.through_message && ref.first > params.through_message) continue
       const chunk = yield* archive.read({ sessionID, id: ref.id })
       if (!chunk) return { status: "unavailable", reason: "missing" }
+      // Unverified manifest descriptors must never hide a corrupt in-range source.
+      if (params.from_message && chunk.last < params.from_message) continue
+      if (params.through_message && chunk.first > params.through_message) continue
       // Archive.read verified the closed envelope, including this fixed header line.
       if (params.role && chunk.markdown.split("\n", 6)[5] !== `Role: ${params.role}`) continue
       const content = literal?.exec(chunk.markdown)

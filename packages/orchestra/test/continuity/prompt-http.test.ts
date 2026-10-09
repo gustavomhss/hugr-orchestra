@@ -75,7 +75,7 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const review: Match = (hit) => wireMessages(hit.body).some((message) => message.role === "system" &&
-  message.content.startsWith("You independently review a complete working-memory candidate"))
+  message.content.includes("You independently review a complete working-memory candidate"))
 const maintenance: Match = (hit) => {
   if (review(hit)) return false
   const wire = wireMessages(hit.body)
