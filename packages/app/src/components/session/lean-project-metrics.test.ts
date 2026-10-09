@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createComponent, createRoot, createStore, decision, render } from "./lean-project-metrics.test-helper"
+import { createComponent, createRoot, createMemo, createStore, decision, render, savedLeanPart } from "./lean-project-metrics.test-helper"
 import type { Config, Part } from "@orchestra/sdk/v2/client"
 
 const panel = await import("./lean-project-metrics")
@@ -43,7 +43,7 @@ test("loaded repository selection excludes foreign, unknown, unfinished, orphan 
     id: `part-${messageID}`, messageID, sessionID, type: "tool", callID: messageID, tool: "bash",
     state: {
       status: "completed", input: {}, output: "", title: "",
-      metadata: { lean: messageID }, time: { start: 1, end: 2 },
+      metadata: { lean: decision(messageID, { owner: { projectID: "native-repo", location: "/repo", sessionID, callID: messageID } }) }, time: { start: 1, end: 2 },
     },
   })
   const data = {
@@ -59,11 +59,62 @@ test("loaded repository selection excludes foreign, unknown, unfinished, orphan 
     },
   }
   const owner = (id: string) => id === "unknown" ? undefined : {
+    id, directory: "/repo",
     projectID: id === "foreign" ? "other-repo" : "native-repo",
     ...(id === "one" ? { revert: { messageID: "m2" } } : {}),
   }
-  expect(panel.collectLeanProjectRecords(data, owner)).toEqual(["m1", "m3"])
+  expect(panel.collectLeanProjectRecords(data, owner).map((record) => LeanMetrics.decode(record)?.owner.callID)).toEqual(["m1", "m3"])
   expect(panel.collectLeanProjectRecords({ ...data, project: "" }, owner)).toEqual([])
+})
+
+test("saved metric owners bind native session/part placement and nested Solid changes reach repository DOM", () => {
+  const good = decision("good")
+  const worktree = decision("worktree", { owner: { ...good.owner, sessionID: "two", location: "/repo-worktree", callID: "worktree" } })
+  const forged = Object.entries({
+    project: { projectID: "foreign-repo" }, session: { sessionID: "foreign-session" },
+    call: { callID: "foreign-call" }, location: { location: "/foreign-directory" },
+  }).map(([id, patch]) => [id, decision(id, { owner: { ...good.owner, callID: id, ...patch } })] as const)
+  const invalid = [...forged, ["missing-owner", { ...good, owner: undefined }], ["missing-metric", undefined]] as const
+  for (const [, metric] of forged) expect(LeanMetrics.decode(metric)).toBeDefined()
+  const [data, setData] = createStore({
+    project: "native-repo",
+    session: { one: { id: "one", projectID: "native-repo", directory: "/repo" }, two: { id: "two", projectID: "native-repo", directory: "/repo-worktree" } },
+    message: { one: [{ id: "good", sessionID: "one" }, ...invalid.map(([id]) => ({ id, sessionID: "one" }))], two: [{ id: "worktree", sessionID: "two" }] },
+    part: { good: [savedLeanPart("good", "one", "good", good)], worktree: [savedLeanPart("worktree", "two", "worktree", worktree)],
+      ...Object.fromEntries(invalid.map(([id, metric]) => [id, [savedLeanPart(id, "one", id, metric)]])) },
+  })
+  const owned = createRoot((dispose) => ({ dispose, records: createMemo(() => panel.collectLeanProjectRecords(data, (id) => data.session[id as "one" | "two"])) }))
+  const host = document.createElement("div")
+  const dispose = render(() => createComponent(PlatformProvider, {
+    value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
+    get children() { return createComponent(LanguageProvider, {
+      locale: "en",
+      get children() {
+        useLanguage().setLocale("en")
+        return createComponent(panel.LeanProjectMetrics, { projectID: "native-repo", coverage: "loaded-history", get records() { return owned.records() } })
+      },
+    }) },
+  }), host)
+  const value = (label: string) => [...host.querySelectorAll("dt")].find((dt) => dt.textContent === label)?.nextElementSibling?.textContent
+  try {
+    expect(value("Observed calls")).toBe("2")
+    expect(owned.records().map((record) => LeanMetrics.decode(record)?.owner.callID)).toEqual(["good", "worktree"])
+    expect(value("Bytes saved (UTF-8)")).toBe("16")
+    setData("part", "good", 0, "state", "metadata", "lean", "owner", "callID", "invented")
+    expect(value("Observed calls")).toBe("1")
+    setData("part", "good", 0, "state", "metadata", "lean", "owner", "callID", "good")
+    expect(value("Observed calls")).toBe("2")
+    setData("part", "good", 0, "state", "metadata", "lean", "bytes", "saved", 9)
+    expect(value("Observed calls")).toBe("1")
+    setData("part", "good", 0, "state", "metadata", "lean", "bytes", "before", 13)
+    expect(value("Bytes saved (UTF-8)")).toBe("17")
+    setData("session", "two", "directory", "/moved-worktree")
+    expect(value("Observed calls")).toBe("1")
+    setData("part", "worktree", 0, "state", "metadata", "lean", "owner", "location", "/moved-worktree")
+    expect(value("Observed calls")).toBe("2")
+    setData("session", "one", "id", "wrong-session")
+    expect(value("Observed calls")).toBe("1")
+  } finally { dispose(); owned.dispose() }
 })
 
 for (const locale of ["en", "br"] as const) test(`real repository KPI DOM: scope, retries, signed estimates and unavailable summaries (${locale})`, async () => {
