@@ -18,9 +18,14 @@ export function collectLeanProjectRecords(
   return Object.entries(data.message).flatMap(([id, messages]) => {
     const info = session(id)
     if (!info || info.id !== id || info.projectID !== data.project) return []
-    return messages.flatMap((message) => {
-      if (message.sessionID !== id || (info.revert && message.id >= info.revert.messageID)) return []
-      return (data.part[message.id] ?? []).flatMap((part) => {
+    const boundary = info.revert ? messages.findIndex((message) => message.id === info.revert?.messageID) : messages.length
+    if (boundary < 0) return []
+    return messages.flatMap((message, index) => {
+      if (message.sessionID !== id || index > boundary || (index === boundary && !info.revert?.partID)) return []
+      const parts = data.part[message.id] ?? []
+      const partBoundary = index === boundary ? parts.findIndex((part) => part.id === info.revert?.partID) : parts.length
+      // A missing part boundary excludes only that message; its known earlier prefix remains visible.
+      return (partBoundary < 0 ? [] : parts.slice(0, partBoundary)).flatMap((part) => {
         if (part.type !== "tool" || part.sessionID !== id || part.messageID !== message.id || part.state.status !== "completed") return []
         const metric = LeanMetrics.decode(snapshotLeanRecord(part.state.metadata.lean))
         if (!metric || metric.owner.projectID !== info.projectID || metric.owner.sessionID !== id
