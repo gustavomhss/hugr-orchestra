@@ -4,6 +4,7 @@ import { identity, inventoryScope, kill9, matches, members, sleep, table, until,
 import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
 
 export function owned(rows: ReturnType<typeof table>, roots: Identity[]) {
+  if (!roots.length) throw new Error("Electron inventory requires explicit captured owner roots")
   return inventoryScope(rows, roots).filter((row) => row.pid !== process.pid)
 }
 

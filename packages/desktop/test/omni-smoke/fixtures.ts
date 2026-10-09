@@ -17,7 +17,8 @@ export async function fixtures() {
     permission: { "*": "allow", bash: "allow", edit: "allow", external_directory: "allow" }, provider: provider(llm.url),
     lsp: { ...Object.fromEntries(["typescript", "deno", "eslint", "oxlint", "biome"].map((id) => [id, { disabled: true }])),
       campaign: { command: [BUN, path.join(ORCHESTRA, "test/fixture/lsp/fake-lsp-server.js"), lspNonce], extensions: [".ts"] } },
-    mcp: { campaign: { type: "local", command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
+    // Renderer boots its own default Location. Explicit project-scoped connect prevents duplicate fixture peers.
+    mcp: { campaign: { type: "local", enabled: false, command: [BUN, path.join(ORCHESTRA, "test/fixture/mcp-omni-stdio.ts"), mcpNonce],
       environment: { MCP_OMNI_TREE: JSON.stringify({ command: trees.mcpTree.command, args: trees.mcpTree.args }) }, timeout: 30_000 } } }
   const report = path.join(scratch.home, "smoke.json")
   const env = { ...scratch.env, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config), ORCHESTRA_TEST_ONBOARDING: "1", ORCHESTRA_SIDECAR_V2: "0",
@@ -44,6 +45,7 @@ export async function activate(scratch: Awaited<ReturnType<typeof fixtures>>, se
     return (text ? JSON.parse(text) : undefined) as T
   }
   const session = await call<{ id: string }>("POST", "/session", {})
+  if (!await call<boolean>("POST", "/mcp/campaign/connect", {})) throw new Error("actual project MCP connect failed")
   await call("POST", `/session/${session.id}/prompt_async`, { agent: "campaign", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Write b.ts and hold bash tree." }] })
   const terminals = await Promise.all([scratch.trees.terminal, ...(skipTerminal2 ? [] : [scratch.trees.terminal2])].map((tree) => call<{ id: string; pid: number }>("POST", "/pty", { command: tree.command, args: tree.args, cols: 100, rows: 30 })))
   const protocols = await until(90_000, "actual bash running, LSP/MCP connected, write persisted", async () => {

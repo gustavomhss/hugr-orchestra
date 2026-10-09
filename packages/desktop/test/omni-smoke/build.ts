@@ -24,7 +24,8 @@ export async function build() {
   if (!process.env.CI || !process.env.GITHUB_SHA) throw new Error("desktop matrix requires hosted CI; owner app execution forbidden")
   mkdirSync(logs, { recursive: true })
   const sourceSHA = git("rev-parse", "HEAD")
-  if (sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || git("status", "--porcelain", "--untracked-files=no")) throw new Error("desktop source pin/clean checkout mismatch")
+  const dirty = git("status", "--porcelain", "--untracked-files=no")
+  if (sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || dirty) throw new Error(`desktop source pin/clean checkout mismatch: ${sourceSHA}; ${dirty}`)
   if (git("merge-base", base, sourceSHA) !== base) throw new Error("desktop baseline not ancestor of exact checkout")
   const files = git("ls-files", "-z").split("\0").filter((file) => /^(packages\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
   if (!files.includes("packages/orchestra/script/build-node.ts") || !files.includes("packages/omni/Cargo.lock")) throw new Error("source manifest incomplete")
@@ -40,7 +41,9 @@ export async function build() {
   const at = new Date().toISOString()
   writeFileSync(path.join(logs, "inputs.json"), JSON.stringify({ base, sourceSHA, sourceTree: git("rev-parse", "HEAD^{tree}"), prBase: process.env.DESKTOP_PR_BASE, prHead: process.env.DESKTOP_PR_HEAD,
     at, sourceHashes, addonSha256: digest(addon), supervisorSha256: digest(supervisor) }, null, 2))
-  const env = { ...process.env, ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: native }
+  // Hosted ARM Mac's default 2 GiB V8 limit cannot transform this actual server bundle (measured OOM).
+  // Builder only: none of these options reach the app fixture's isolated environment.
+  const env = { ...process.env, NODE_OPTIONS: "--max-old-space-size=4096", ORCHESTRA_CHANNEL: "beta", ORCHESTRA_FAST_BUILD: "1", CSC_IDENTITY_AUTO_DISCOVERY: "false", OMNI_ARTIFACTS: native }
   await command([process.execPath, "scripts/prebuild.ts"], env)
   await command([process.execPath, "x", "electron-vite", "build"], env)
   await command([process.execPath, "x", "electron-builder", "--dir", process.platform === "darwin" ? "--mac" : win ? "--win" : "--linux", "--config", "test/omni-smoke/unsigned.config.ts"], env)
