@@ -11,7 +11,8 @@ import { dirname, isAbsolute, join, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { parseArgs } from "node:util"
 
-function requireControl(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
+class ControlFailure extends Error {}
+function requireControl(value: unknown, code: string): asserts value { if (!value) throw new ControlFailure(code) }
 function object(value: unknown) {
   requireControl(value && typeof value === "object" && !Array.isArray(value), "CONTROL_JSON_OBJECT_REQUIRED")
   return value as Record<string, unknown>
@@ -27,7 +28,10 @@ async function absent(file: string) {
   }), "CONTROL_REPORT_NOT_FRESH")
 }
 
-await main().catch(() => { console.error("DESKTOP_CONTROLS_FAILED"); process.exitCode = 1 })
+await main().catch((error: unknown) => {
+  console.error(error instanceof ControlFailure ? error.message : "DESKTOP_CONTROLS_FAILED")
+  process.exitCode = 1
+})
 async function main() {
   const args = parseArgs({ options: Object.fromEntries(["desktop", "resources", "build-manifest", "report", "package-report", "bootstrap-report"]
     .map((key) => [key, { type: "string" as const }])), strict: true, allowPositionals: false }).values
