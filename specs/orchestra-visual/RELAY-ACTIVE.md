@@ -40,9 +40,23 @@ original Task tuple, and returned-assistant rows. Ambient optional Database pres
 does not establish trust. An unbacked memory adapter refuses observation.
 A published `66c0532e2d58b84cdd35fdb4aadd7c576bab123b`. A bounded draft audit
 `ses_ede1c82cfffe66nn95toC1bBPo` found that available original legacy Message/TaskPart
-conflicts could not veto its native-owner callback. The same author is repairing
-that concrete gap; final composition/review remains held. Returned-author completion
-must stay required because the strict private proposal reader requires it too.
+conflicts could not veto its native-owner callback. Same-author follow-up
+`84513c9ecda6d0dd4a42313e4629dfddd849b548` closes that gap and is composed in
+`00b8ebb71198e98b6408d9f52a5ed1d59ca6e25d`. Returned-author completion remains
+required because the strict private proposal reader requires it too.
+
+Independent bounded reviews of that exact composition are static FIX_FIRST:
+
+- Production `ses_ede10b10bffeZj7Sr8S8b57wwj`: child workspace must match parent;
+  replay reconstructs a payload without Location, causing live/replay divergence
+  for an otherwise eligible observation. A is repairing workspace equality;
+  trusted existing projector-origin wiring is being coordinated before any
+  additional file claim. Missing or mismatched live Location must still refuse.
+- Fixtures `ses_ede10b0f9ffe2GoE20KDmpgx3V`: malformed legacy owner lacks required
+  common `time` at the typed SQL boundary; preserve malformed assistant fields
+  while repairing that shape. Direct stored-author and first-interruption probes
+  are also required before claiming guard coverage. No compiler or test ran in
+  either static review.
 
 Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
 `2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
@@ -54,7 +68,17 @@ view cases exercise the actual scheduler and private setter, without preseeded r
 
 C has conditional static approval only:
 `ses_ede811595ffe8onazcY8NaqjdT/msg_121cda10a001AnodaWbWSLCjSm`.
-The Core completed-Task guard still blocks that path until corrected A is composed.
+The initial Core blocker is composed, but the new concrete review findings still
+hold qualification. Runtime also confirmed that C's protected retained observation
+path must apply only to the existing host-derived `upstream-work-result-v1` schema.
+The established `backend-work-result-v1` contract has no author and must retain its
+generic unfavorable-detail/notice path. Same C owns that correction and an actual
+completed-native backend notice case; Core trust and private-port DTOs stay strict.
+C published that bounded follow-up as `0c8bc6036929d6b5533efb7afc4b5ae30d6e1432`:
+protected publication/capture is selected by `UpstreamResult.SCHEMA`; backend
+failure still resolves the scheduler and delivers the actual synthetic error notice
+without author or upstream receipt. Static follow-up review and runtime execution
+remain pending.
 No new Session API, service, event, store, receipt before admission, Core-to-Orchestra
 dependency, permission waiver, or relaxed private-port terminal equality is authorized.
 
