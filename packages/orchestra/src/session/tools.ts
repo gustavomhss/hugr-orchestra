@@ -151,7 +151,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           directory: binding?.directory,
           projectID: binding?.project.id,
           projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-        }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+        }, effect, (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
+          input.processor.updateToolCall(options.toolCallId, (match) => ({
+            ...match,
+            state: match.state.status === "pending"
+              ? {
+                  status: "running",
+                  input: toRecord(args),
+                  time: { start: Date.now() },
+                  metadata: { toolSafety: observation },
+                }
+              : {
+                  ...match.state,
+                  // Preserve streamed progress and terminal state; only the host owns this observation.
+                  metadata: { ...match.state.metadata, toolSafety: observation },
+                },
+          })),
+        ), Effect.asVoid) : Effect.void,
         () => !!options.abortSignal?.aborted).pipe(Effect.provideService(ToolSafetyHooks.Placement, placement(scope))),
       ),
     ).pipe(Effect.orDie)
