@@ -1,92 +1,101 @@
 ---
 name: maestro-pack
-description: Prepare bounded dispatch briefs, compact evidence returns, and context-pressure recovery. Use before delegation or when repeated reads, transcripts, catalogs, or tool output crowd the working context.
+description: Coordinate upstream-authored briefs, bind actual dispatch facts and inspect compact returns. Use before delegation or when evidence/context pressure needs bounded recovery.
 ---
 
 # Maestro Pack
 
 ## Trigger and rationale
 
-Use before an actual delegation or to trim a bloated working set. No workers means no dispatch ceremony.
-Lead resolves scope/interface forks and gives a precise target; workers report newly discovered forks.
-Bounded briefs reduce rediscovery and drift, not eliminate judgment or guarantee zero decisions.
-Use existing Orchestra truncation, output/resource pointers, Session evidence, and whole-context pressure
-handling. Do not add a context assembler, copy transcripts, or invent fixed model-brand budgets.
+Use before actual delegation or to trim a bloated working set. No workers means no dispatch ceremony.
+Upstream authors briefs/context requirements from supplied facts. Maestro gathers host facts, coordinates
+review/adoption and binds actual execution placement, permissions, model and dispatch authority. Missing
+planning content returns to upstream. Use existing truncation, resource pointers, Session evidence and
+whole-context handling; no new assembler, copied transcripts or fixed model-brand budgets.
 
 ## Inputs
 
-Goal and acceptance IDs; current baseline/worktree; owned paths; consumers and dependencies; exact
-shared anchors; native permission/governance state; actual model window/usage/pricing when available.
-Current static `own_*` facts dominate reconnaissance; pass fresh explicit Own drill pointers, not guessed names.
-Missing/stale/held canonical ownership evidence stays HOLD; Composer does not replace Own.
+Current upstream proposal/brief; owner decisions; baseline/worktree; proposed owned paths and dependencies;
+adopted anchors; actual permission/governance state; available model window/usage/pricing. Current static
+`own_*` facts dominate reconnaissance: pass fresh explicit drill pointers, not guessed names. Missing,
+stale or held canonical ownership evidence stays HOLD; Composer does not replace Own.
 
 ## Procedure
 
-1. Pin baseline and placement. Gather target paths, relevant size/complexity, consumer sites, pattern
-   excerpts, and actual check status. Use dedicated search/read tools; do not ask workers to rediscover
-   scope or choose shared architecture. Mark unknown acquisition and partial maps explicitly.
-2. Select `repo-mapper` or `move-in` only for missing scoped reconnaissance. Use `context-packer`
-   or `plan-to-briefs` for structured dispatch packets, with `enrich-plan` for accountable metadata.
-   The input symbol plan is `partitionPlan`, not durable prompt `PlanRevision`.
-   Use `brief-usage-check` to detect over-specified compiler/Plan briefs rather than duplicating plan facts.
-3. Include exact targets, writes/reads, acceptance IDs, smallest useful verbatim patterns/anchors,
-   forbidden scope, unresolved assumptions, check commands with cwd, and a compact return card.
-   State the slice's five criteria in one to three lines each, as deltas from the parent unit.
-   Commands must be resolved, copy-pasteable, and available in that checkout; not generic placeholders.
-   A worker may choose local implementation within its contract; it must return new architectural forks.
-4. Carry project knowledge yourself. Seats cannot load project skills (the backend specialist loads only its own
-   backend skills): only governed Task and the cold review (`lucy`) receive GROUNDED Own content automatically, so
-   any other brief must quote the governing facts, gotchas and drill facts the slice needs, with fact IDs.
-   Governing (T0/T1) facts are binding; advisory (T2) facts are unratified proposals, labelled as such and placed
-   last. Send the smallest set that carries the load and name what you left out instead of dropping it silently.
-   Go deeper only through the exact `own_*` names in catalog `drillUnits` or a Drill section, never through path
-   search or guessed names. Atlas Memory (task, pr, project, logbook) is not wired into Orchestra, so never claim
-   or invent it.
-5. Budget packet + working-set reads + reasoning + output + safety headroom against actual model limits.
-   Consider lead's whole-context pressure too. Trim repeated material or re-slice before escalating models.
-   Use actual provider metadata and Session usage; unknown limits/prices stay unknown, not hardcoded.
-   Label predicted spend separately from observed usage; do not claim estimates are charges.
-6. If completion checks need lifecycle binding, inspect `relay-arm` and actual native dispatch support.
-   Generated checks are proposals until the host binds and executes them. Arming alone is not enforcement.
-   An armed contract binds the next native Task in this session and runs on the host's Relay arm; size
-   `retryBudget` per gate, since a spent budget parks the arm until the owner releases it.
-   Require actual dispatch/completion receipts before claiming interception; plugin presence proves nothing
-   about custom/MCP tools or V2 coverage. No Relay token line or external Claude hook installation.
-7. Dispatch only through available native Task under its permissions. In explicit governed mode, use the
-   exact current authorizationID from existing approved/grounded lifecycle; a packet/policy cannot mint it.
-   Tool unavailability is UNKNOWN, not a simulated worker or fabricated dispatch receipt.
-8. Read compact return first, then only specific evidence excerpts needed to verify it. Keep large outputs
-   in existing stores with pointers; do not read whole worker transcripts. Avoid repeating unchanged results.
-   Source pointers must match current identities; refresh stale excerpts rather than treating them as facts.
+0. Before any authoring assignment or revision, inspect existing arm/completion bindings and governed
+   state through available actual host inspection; do not guess tool/method names or assume no binding.
+   Authoring precedes execution arming. Native Task calls `completion.beforeDispatch` for ordinary and
+   governed dispatch, without an authoring exemption. Do not let authoring consume or inherit execution
+   gates. If an active binding prevents authoring or required inspection is unavailable, HOLD through the
+   existing owner process. No ordinary Task enters the active governed chain; do not invent disarm,
+   fresh-Session escape or downgrade to normal. Repeat this inspection before later authoring revisions.
+1. Observe baseline/placement, actual source and consumer identities, checks, permissions and provider
+   facts. Use dedicated read/search and existing host `repo-mapper`/`move-in` only for missing scoped
+   reconnaissance. Partial maps and unknown acquisition stay explicit. Supply facts, not a new plan.
+2. Request native `walt` to author/revise the bounded brief: exact targets, proposed writes/reads,
+   acceptance, smallest useful anchors, forbidden scope, assumptions, resolved check commands/cwd,
+   criterion deltas, local implementation latitude and compact return shape. The actually exposed pure
+   `context-packer`, `plan-to-briefs` and `enrich-plan` may assist upstream; missing tools do not justify
+   claiming they ran or moving authorship back to Maestro. `partitionPlan` is not durable PlanRevision.
+3. Inspect and coordinate required review/adoption of the current brief. Send scope/coverage/interface gaps to
+   upstream for revision. Bind observed worktree, authorized `writePaths`, actual model under existing
+   Task policy and permission/dispatch state without rewriting accepted planning content. A changed
+   dependency, acceptance item or scope requires upstream revision and applicable renewed authority.
+   When compiler/Plan brief symbol usage needs checking, Maestro runs available `brief-usage-check`
+   after describe, using its exact schema and observed acquisition facts. It is a read/process check,
+   outside upstream's pure authoring subset. Acquisition omissions/compiler errors are failures, not
+   empty over-spec success. Return findings to `walt` for brief revision; do not trim or rewrite authored
+   content yourself. Verification is not authorship, and the check does not prove semantic completeness.
+4. Supply the needed project facts. Native seats load only their own permitted packaged skills; backend
+   keeps its own backend kit and upstream its authoring skills. Only governed Task and the cold reviewer
+   (`lucy`) receive GROUNDED Own content automatically under the current contract; other briefs quote
+   governing facts, gotchas and drill facts with fact IDs. T0/T1 facts are ratified/binding, T2 advisory
+   proposals are labelled and last. Go deeper only through exact catalog/Drill `own_*` names. Runtime
+   Atlas Memory is backend-only: do not claim upstream, Maestro or every seat has task/pr/project/logbook
+   memory. Briefs grant no memory ownership or new skill permission.
+5. Use actual provider metadata and Session usage to inspect packet + reads + reasoning + output +
+   headroom. Unknown limits/prices stay unknown; estimates are not observed charges. For authored-content
+   trimming or re-slicing, return bounded revision requests to upstream rather than silently dropping
+   acceptance/context. Maestro still manages its own context pressure and existing evidence pointers.
+6. Only after authoring and required review/adoption, where the existing execution contract genuinely
+   needs completion binding, inspect `relay-arm` and actual native dispatch support under Maestro/host
+   authority. Re-inspect current bindings before execution dispatch; no authoring assignment is inserted
+   after execution arming. Proposed checks are not bound/executed
+   until host evidence says so; arming alone is not enforcement. Current armed contracts bind the next
+   native Task in this Session on the host Relay arm; spent retry budgets park the arm until owner
+   release. Require actual dispatch/completion receipts, not plugin-presence claims, external hooks or
+   Relay token lines. Small Tasks need no automatic arm, WP or progressive steps; a WP step is not a
+   Task and introduces no per-step human approval ceremony. W6 proposal publication/approved scope is
+   pending integration, not supplied by structural inspection, a card/path or these instructions.
+7. Dispatch through available native `task` under actual permissions. In explicit governed mode retain
+   exact current authorizationID and byte-identical approved subagent_type, prompt and model. No packet,
+   policy, structural result or worker card mints authority; current upstream PlanRevision provenance is
+   an adoption blocker, not a reason to relabel it. Unavailable tools stay UNKNOWN, never fake dispatch.
+8. Read compact return first, then specific evidence needed to verify. Large outputs stay in existing
+   stores with pointers; refresh stale source identity. Host-observed upstream authorship and terminal
+   card validity prove neither artifact acquisition/publication nor product completion. Verify actual
+   implementation returns, request required cold review and coordinate integration; planning findings
+   go back to upstream for revision.
 
 ## Exact tool sequence and baseline check
 
-Use `maestro_arsenal_catalog` only when narrow capability discovery is needed.
-For each selected operation, call `maestro_arsenal_describe` for exact inputSchema/effects before
-`maestro_arsenal_execute`. Host supplies placement, isolated state directory, and effect authorization.
-Do not guess schemas or claim retired `context-budget`/`model-router` tools exist.
-
-Worker Step 0, in assigned worktree (replace baseline with observed SHA):
-
-```sh
-git rev-parse HEAD
-git status --short
-git merge-base --is-ancestor <baseline-sha> HEAD
-```
-
-At initial dispatch, HEAD must equal assigned baseline unless lead explicitly declared an existing delta.
-At return, verify ancestry and complete baseline-to-working-tree diff; multi-commit work need not have
-HEAD's immediate parent equal baseline. Nonzero Git exit is a failed check, not an empty clean result.
-For this repository, tests run on Actions: `bun run test:ci orchestra <resolved-suite>` from the repository
-root, and `bun typecheck` from `packages/orchestra`. Never run `bun test` locally.
+Use `maestro_arsenal_catalog` only for narrow discovery. Call `maestro_arsenal_describe` for selected operation
+inputSchema/effects before `maestro_arsenal_execute`; host owns placement/state/authority.
+Do not claim retired `context-budget`/`model-router` tools exist.
+Worker Step 0 in assigned worktree: `git rev-parse HEAD`, `git status --short` and
+`git merge-base --is-ancestor <assigned-baseline-sha> HEAD`, with the SHA resolved before dispatch.
+Initial HEAD equals assigned baseline unless a delta was explicitly assigned; verify complete
+baseline-to-working-tree diff on return. Nonzero Git exit is failure, not empty clean output.
+Tests here run on Actions via `bun run test:ci orchestra <resolved-suite>` from repository root;
+typecheck is `bun typecheck` in `packages/orchestra`, never local `bun test`.
 
 ## Success / fail
 
-Success: bounded packet has exact target/contract, current baseline, runnable checks, explicit latitude,
-compact evidence return, and actual permission/dispatch state. Relevant context fits measured host limits.
-FAIL: wrong baseline, scope ambiguity, unavailable required checks, or overflow unresolved before dispatch.
-HOLD: stale Own/governed authority. UNKNOWN: unavailable metadata, lifecycle binding, tool, or acquisition.
-Trim/re-slice or report blocker; do not solve pressure by silently dropping acceptance or verification.
+Success: current adopted upstream brief has exact contract, observed baseline, resolved checks, explicit
+latitude and compact return; actual host permissions/dispatch and relevant measured context limits are
+recorded. FAIL: wrong baseline, ambiguous scope, unavailable required checks or unresolved overflow.
+HOLD: stale Own or required authority/provenance. UNKNOWN: metadata, lifecycle, tool or acquisition missing.
+Request upstream revision or report the blocker; never silently drop requirements to fit a packet.
 
 ## Output schema
 
@@ -98,4 +107,5 @@ Trim/re-slice or report blocker; do not solve pressure by silently dropping acce
  returnShape: {status, baseline, changedPaths, evidencePointers, blockers, newDecisions}}
 ```
 
-Keep durable decisions in existing Session/artifact records; do not commit runtime telemetry into source.
+Keep proposal authorship/version and decisions in existing Session/artifact evidence pointers, not new
+workflow envelopes or committed runtime telemetry. Operational binding does not make Maestro the author.

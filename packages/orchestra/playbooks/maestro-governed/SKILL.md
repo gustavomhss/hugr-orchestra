@@ -33,10 +33,7 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 3. `maestro_catalog_context`. Note `projectID`. Choose territories by exact name and units with complete briefings:
    `truncated: false`, empty `pullReachable`, `advisoryDropped: 0`, `tokenEstimate` at most 1500, every drill unit
    present. No covering unit means HOLD; never take a nearest match.
-4. `maestro_record_plan_revision`. `goal` and `reviewRequirement` are single `{value, source}` fields; `acceptance`,
-   `scope` (exact territory names), `constraints`, `assumptions` and `risks` are arrays of them; `units` is an array of
-   plain unit-ID strings. `source` is `stakeholder` (the owner said it), `orientation` (observed) or `maestro` (your
-   proposal); never upgrade inference to stakeholder. Any changed field is a new revision.
+4. `maestro_record_plan_revision`. `goal` and `reviewRequirement` are single `{value, source}` fields; `acceptance`, `scope` (exact territory names), `constraints`, `assumptions` and `risks` are arrays of them; `units` is an array of plain unit-ID strings. `source` currently accepts only `stakeholder` (the owner said it), `orientation` (observed) or `maestro` (a Maestro-authored proposal). These values do not represent upstream-authored proposals. Do not invent `upstream` as a current enum value or relabel upstream content to fit the schema. Report HOLD at that adoption boundary until the host/schema owner supports truthful upstream provenance. Never upgrade inference to stakeholder. Any changed field is a new revision.
 5. Run the checks you will record (baseline tests, typecheck), then confirm the tree is still clean.
 6. `maestro_record_context` with `planRevisionID`. From here until the governed task returns, change nothing in the
    working tree and run only read-only commands.

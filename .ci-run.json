@@ -1,0 +1,1 @@
+{"package":"orchestra","runner":"bun","args":["./test/maestro/upstream-v2-binding.test.ts","./test/maestro/arsenal-bindings.test.ts","./test/maestro/arsenal-skills.test.ts","--timeout","120000"]}

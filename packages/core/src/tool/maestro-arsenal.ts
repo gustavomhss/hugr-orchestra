@@ -1,4 +1,5 @@
 export * as MaestroArsenal from "./maestro-arsenal"
+export { UPSTREAM_AUTHORING_OPERATIONS } from "./upstream-arsenal"
 
 import path from "node:path"
 import { createHash } from "node:crypto"
@@ -19,6 +20,7 @@ import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { UpstreamArsenal } from "./upstream-arsenal"
 
 export const names = {
   catalog: "maestro_arsenal_catalog",
@@ -28,11 +30,11 @@ export const names = {
 
 export const descriptions = {
   catalog:
-    "Discover a bounded page of Maestro Arsenal capabilities by effect group. No input schemas are included. Native Maestro only.",
+    "Discover a bounded page of Maestro Arsenal capabilities by effect group. No input schemas are included. Native Maestro or native upstream; upstream is limited to pure authoring operations.",
   describe:
-    "Describe one selected Maestro Arsenal capability, including its exact input schema and declared effects. Call this before execute. Native Maestro only.",
+    "Describe one selected Maestro Arsenal capability, including its exact input schema and declared effects. Call this before execute. Native Maestro or native upstream; upstream is limited to pure authoring operations.",
   execute:
-    "Execute one previously described Maestro Arsenal capability. arguments must satisfy the exact schema returned by maestro_arsenal_describe. Governance audit/usage/status observations and pricing come only from the host. Results are advice, not approval or execution receipts. Host permissions apply. Native Maestro only.",
+    "Execute one previously described Maestro Arsenal capability. arguments must satisfy the exact schema returned by maestro_arsenal_describe. Governance audit/usage/status observations and pricing come only from the host. Results are advice, not approval or execution receipts. Host permissions apply. Native Maestro or native upstream; upstream is limited to pure authoring operations.",
 } as const
 
 export const CatalogInput = Schema.Struct({
@@ -60,6 +62,7 @@ export interface Host {
   readonly stateDirectory: string
   readonly projectID: string
   readonly nativeMaestro: boolean
+  readonly nativeUpstream?: boolean
   readonly ask: (action: string, resources: readonly string[]) => Effect.Effect<void, Tool.Failure>
   readonly authorize: (input: Authorization) => Effect.Effect<void, Tool.Failure>
   readonly outputBudget: () => Effect.Effect<{ readonly maxLines: number; readonly maxBytes: number }, Tool.Failure>
@@ -116,8 +119,8 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
   const receipts = new Map<string, string>()
   const key = (context: C, host: Host, name: string) =>
     JSON.stringify([host.projectID, host.directory, context.sessionID, context.agent, name])
-  const requireMaestro = (host: Host) =>
-    host.nativeMaestro
+  const requireNative = (host: Host) =>
+    host.nativeMaestro || host.nativeUpstream === true
       ? Effect.void
       : Effect.fail(new Tool.Failure({ message: "Maestro Arsenal requires native Maestro identity." }))
   const load = () =>
@@ -125,14 +128,19 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
       try: () => import("@orchestra/maestro-arsenal"),
       catch: () => new Tool.Failure({ message: "Maestro Arsenal package is unavailable." }),
     })
-  const selected = (name: string) =>
+  const selected = (name: string, host: Host) =>
     Effect.gen(function* () {
+      if (!host.nativeMaestro) yield* Effect.fromResult(UpstreamArsenal.operation(name))
       const { Arsenal } = yield* load()
       // The registry throws only for names it does not know.
       const descriptor = yield* Effect.tryPromise({
         try: () => Arsenal.describe(name),
-        catch: () => new Tool.Failure({ message: unknownCapability }),
+        catch: () =>
+          new Tool.Failure({
+            message: host.nativeMaestro ? unknownCapability : `UPSTREAM_AUTHORING_DESCRIPTOR_MISSING: ${name}`,
+          }),
       })
+      if (!host.nativeMaestro) yield* Effect.fromResult(UpstreamArsenal.selected(name, descriptor))
       if (!descriptor || descriptor.name !== name) return yield* new Tool.Failure({ message: unknownCapability })
       const contract = JSON.stringify(descriptor)
       // Never turn an incomplete/truncated schema into a usable execution contract.
@@ -145,14 +153,15 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     catalog: (input: typeof CatalogInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireMaestro(host)
+        yield* requireNative(host)
         yield* host.ask(names.catalog, [input.group ?? "*"])
         const { Arsenal } = yield* load()
         const descriptors = yield* Effect.tryPromise({
           try: () => Arsenal.list(),
           catch: () => new Tool.Failure({ message: "Unable to list Arsenal capabilities." }),
         })
-        const filtered = descriptors.filter(
+        const surface = host.nativeMaestro ? descriptors : yield* Effect.fromResult(UpstreamArsenal.catalog(descriptors))
+        const filtered = surface.filter(
           (item) =>
             !input.group || (input.group === "pure" ? item.effects.length === 0 : item.effects.includes(input.group)),
         )
@@ -173,9 +182,9 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     describe: (input: typeof DescribeInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireMaestro(host)
+        yield* requireNative(host)
         yield* host.ask(names.describe, [input.name])
-        const result = yield* selected(input.name)
+        const result = yield* selected(input.name, host)
         const receipt = key(context, host, input.name)
         receipts.delete(receipt)
         const budget = yield* host.outputBudget()
@@ -191,9 +200,9 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     execute: (input: typeof ExecuteInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireMaestro(host)
+        yield* requireNative(host)
         yield* host.ask(names.execute, [input.name])
-        const result = yield* selected(input.name)
+        const result = yield* selected(input.name, host)
         if (receipts.get(key(context, host, input.name)) !== createHash("sha256").update(result.contract).digest("hex"))
           return yield* new Tool.Failure({
             message: `Describe this Arsenal capability in the current Session and agent before executing it: call ${names.describe} with name ${JSON.stringify(input.name)} first, then pass arguments that match its inputSchema.`,
@@ -525,6 +534,8 @@ export const authorize = Effect.fn("MaestroArsenal.authorize")(function* (
 export interface Options {
   /** V2 has no native identity field. The application must attest from its actual roster. */
   readonly nativeMaestro: (agent: AgentV2.ID) => Effect.Effect<boolean, Tool.Failure>
+  /** Actual upstream roster attestation, also restricted to the resolved V2 agent ID `walt`. */
+  readonly nativeUpstream?: (agent: AgentV2.ID) => Effect.Effect<boolean, Tool.Failure>
   readonly observeGovernance?: (
     context: Tool.Context,
     operation: "audit" | "usage" | "status",
@@ -590,6 +601,10 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
           agent?.id === "maestro" &&
           typeof options.nativeMaestro === "function" &&
           (yield* options.nativeMaestro(context.agent))
+        const nativeUpstream =
+          agent?.id === "walt" &&
+          typeof options.nativeUpstream === "function" &&
+          (yield* options.nativeUpstream(context.agent))
         const ask = (action: string, resources: readonly string[]) =>
           permission
             .assert({
@@ -600,7 +615,7 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
               source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
             })
             .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal permission denied." })))
-        const host = { directory, stateDirectory: state, projectID: location.project.id, nativeMaestro, ask }
+        const host = { directory, stateDirectory: state, projectID: location.project.id, nativeMaestro, nativeUpstream, ask }
         const observe = options.observeGovernance
         return {
           ...host,
