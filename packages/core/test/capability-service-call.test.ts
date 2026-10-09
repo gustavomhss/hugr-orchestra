@@ -400,3 +400,12 @@ it.live("snapshot preserves nested quota failures and inert serializer data with
 
 ;(["defect", "interrupt"] as const).forEach((mode) => it.live(`mixed artifact SQL Fail plus ${mode} preserves complete fatal Cause`, () =>
   CapabilityServiceCallFixture.mixedPublication(mode).pipe(Effect.timeout("45 seconds")), 60000))
+
+;(["approval", "HTTP", "artifact"] as const).forEach((phase) => it.live(`late generic deny at ${phase} closes all service gates`, () =>
+  CapabilityServiceCallFixture.genericDeny(phase).pipe(Effect.timeout("45 seconds")), 60000))
+
+it.live("mixed malformed RPC Fail and corrupt ACK Die survives canonical settlement", () =>
+  CapabilityServiceCallFixture.mixedRpcAck().pipe(Effect.timeout("45 seconds")), 60000)
+
+;(["defect", "interrupt"] as const).forEach((mode) => [false, true].forEach((reverse) => it.live(`SQL Die with ${mode}, reverse=${reverse} redacts SQL only`, () =>
+  CapabilityServiceCallFixture.sqlDiePublication(mode, reverse).pipe(Effect.timeout("45 seconds")), 60000)))

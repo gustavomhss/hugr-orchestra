@@ -106,8 +106,12 @@ function expected(cause: Cause.Cause<unknown>) {
 
 /** beta83 typed-error combinators extract one Fail. Promote per reason before leaving the business contract. */
 export function fatal(cause: Cause.Cause<unknown>) {
-  return Effect.failCause(Cause.fromReasons<never>(cause.reasons.map((reason) => reason._tag === "Fail"
-    ? Cause.makeDieReason(reason.error instanceof SqlError || reason.error instanceof EffectDrizzleQueryError
-      ? CapabilityServiceData.failure("connection_unavailable") : reason.error)
-      .annotate(Context.makeUnsafe(new Map(reason.annotations))) : reason)))
+  return Effect.failCause(Cause.fromReasons<never>(cause.reasons.map((reason) => {
+    if (reason._tag === "Interrupt") return reason
+    const error = reason._tag === "Fail" ? reason.error : reason.defect
+    const sql = error instanceof SqlError || error instanceof EffectDrizzleQueryError
+    if (reason._tag === "Die" && !sql) return reason
+    return Cause.makeDieReason(sql ? CapabilityServiceData.failure("connection_unavailable") : error)
+      .annotate(Context.makeUnsafe(new Map(reason.annotations)))
+  })))
 }

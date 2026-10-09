@@ -42,7 +42,7 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
     if (resolution.connection.provider !== fixed.provider || resolution.connection.id !== ref.connectionID ||
       resolution.target.id !== ref.targetID || resolution.target.connectionID !== ref.connectionID)
       return yield* CapabilityServiceData.failure("target_denied")
-    const resources = [fixed.provider, ref.connectionID, ref.targetID, `${fixed.provider}:${description.name}`]
+    const resources = ["service_call", fixed.provider, ref.connectionID, ref.targetID, `${fixed.provider}:${description.name}`]
     yield* policy.assert(context, { action: "service_call", resources })
     const args = CapabilityServiceData.argumentsFor(fixed.input.input, resolution.resource)
     if (args instanceof Capability.Failure) return yield* args
@@ -132,10 +132,13 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
           observation: Exit.isSuccess(exit) ? exit.value.isError ? { remoteOutcome: "failed" }
             : { remoteOutcome: "completed", materialization: "pending" } : {},
         }).pipe(Effect.exit)
-        if (Exit.isFailure(receipt)) return yield* Effect.failCause(Exit.isFailure(exit)
-          ? Cause.combine(exit.cause, receipt.cause) : receipt.cause)
+        if (Exit.isFailure(receipt)) {
+          const cause = Exit.isFailure(exit) ? Cause.combine(exit.cause, receipt.cause) : receipt.cause
+          if (Cause.hasDies(cause) || Cause.hasInterrupts(cause)) return yield* CapabilityServiceProjection.fatal(cause)
+          return yield* Effect.failCause(cause)
+        }
         if (Exit.isFailure(exit)) {
-          if (Cause.hasDies(exit.cause) || Cause.hasInterrupts(exit.cause)) return yield* Effect.failCause(exit.cause)
+          if (Cause.hasDies(exit.cause) || Cause.hasInterrupts(exit.cause)) return yield* CapabilityServiceProjection.fatal(exit.cause)
           return { receipt: receipt.value }
         }
         return { receipt: receipt.value, response: exit.value }

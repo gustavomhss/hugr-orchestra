@@ -25,7 +25,7 @@ import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Option, Schema } from "effect"
 import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError"
-import { sql } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { join } from "node:path"
 import { CapabilityChildrenFixture } from "./capability-children"
 import { CapabilityPolicyFixture } from "./capability-policy"
@@ -235,6 +235,103 @@ export function mixedPublication(mode: "defect" | "interrupt") {
     expect(f.writerProof.completed).toBe(1)
     expect((yield* f.rows())[0]).toMatchObject({ state: "completed", observation: { data: { remoteOutcome: "completed", materialization: "pending" } } })
     expect(yield* f.artifactRows()).toEqual([])
+    expect(yield* f.fs.exists(f.artifactRoot)).toBe(false)
+    expect(f.state.calls).toHaveLength(1)
+  })
+}
+
+export function genericDeny(phase: "approval" | "HTTP" | "artifact") {
+  return Effect.gen(function* () {
+    const f = yield* fixture()
+    const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const reached = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    if (phase === "approval") f.state.beforeList = (number) => number === 4
+      ? Effect.runPromise(Deferred.succeed(reached, undefined).pipe(Effect.andThen(Deferred.await(release)))) : undefined
+    if (phase === "HTTP") f.state.response = "hold"
+    if (phase === "artifact") {
+      f.state.result = { content: [], structuredContent: { changed: true, value: "x".repeat(10000) } }
+      yield* CapabilityPolicyFixture.setRules([...rules, { action: "artifact.write", resource: "*", effect: "ask" }])
+    }
+    const fiber = yield* f.call().pipe(Effect.forkChild)
+    if (phase === "approval") {
+      yield* Deferred.await(reached)
+      yield* CapabilityPolicyFixture.setRules([...rules, { action: "service_call", resource: "cloudflare:mutate", effect: "ask" }])
+      yield* Deferred.succeed(release, undefined)
+    }
+    const request = phase === "HTTP" ? undefined : yield* Effect.raceFirst(Deferred.await(asked.first), Fiber.join(fiber).pipe(
+      Effect.andThen(Effect.die("SKIPPED_EXPECTED_APPROVAL"))))
+    if (phase === "HTTP") yield* Deferred.await(f.state.called)
+    yield* CapabilityPolicyFixture.setRules([...rules, { action: "service_call", resource: "service_call", effect: "deny" }])
+    if (request) yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+    if (phase === "HTTP") f.state.release?.()
+    const settlement = yield* Fiber.join(fiber)
+    if (phase === "approval") {
+      expect(settlement.result.type).toBe("error")
+      expect(f.state.calls).toHaveLength(0)
+      return
+    }
+    const output = f.output(settlement)
+    expect(output.result.status).toBe("partial")
+    expect(output.data).toBeUndefined()
+    expect((yield* f.rows())[0]).toMatchObject({ state: "completed", observation: { data: { remoteOutcome: "completed" } } })
+    expect(yield* f.artifactRows()).toEqual([])
+    expect(yield* f.fs.exists(f.artifactRoot)).toBe(false)
+    expect(f.state.calls).toHaveLength(1)
+  })
+}
+
+export function mixedRpcAck() {
+  return Effect.gen(function* () {
+    const f = yield* fixture()
+    f.state.response = "hold"
+    f.state.result = null
+    const fiber = yield* f.call().pipe(Effect.forkChild)
+    yield* Deferred.await(f.state.called)
+    const row = (yield* f.rows())[0]
+    if (!row) return yield* Effect.die("Missing admitted RPC")
+    yield* f.database.db.update(CapabilityJobTable).set({ observation: "corrupt" }).where(eq(CapabilityJobTable.id, row.id)).run()
+    f.state.release?.()
+    const exit = yield* Fiber.await(fiber)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (!Exit.isFailure(exit)) return yield* Effect.die("MIXED_RPC_ACK_PROJECTED_AS_SUCCESSFUL_TOOL_ERROR")
+    expect(Cause.hasDies(exit.cause)).toBe(true)
+    expect(exit.cause.reasons).toHaveLength(2)
+    expect(f.state.errors).toEqual([])
+    expect(f.state.calls).toHaveLength(1)
+    expect(yield* f.artifactRows()).toEqual([])
+  })
+}
+
+export function sqlDiePublication(mode: "defect" | "interrupt", reverse: boolean) {
+  return Effect.gen(function* () {
+    const sql = new SqlError({ reason: new ConnectionError({ cause: new Error("PRIVATE-SQL-DIE"), message: "PRIVATE-SQL-DIE" }) })
+    const sentinel = new Error("SQL Die companion sentinel")
+    const marker = Context.Service<never, string>("service-call/SQL-Die-marker")
+    const other = mode === "defect" ? Cause.die(sentinel) : Cause.interrupt(129)
+    const fault = Cause.annotate(reverse ? Cause.combine(other, Cause.die(sql)) : Cause.combine(Cause.die(sql), other),
+      Context.make(marker, "retained"))
+    const f = yield* fixture({ artifactFault: fault })
+    f.state.result = { content: [], structuredContent: { changed: true, value: "x".repeat(10000) } }
+    const exit = yield* f.call().pipe(Effect.exit)
+    if (!Exit.isFailure(exit)) return yield* Effect.die("SQL_DIE_PROJECTED_AS_PARTIAL")
+    expect(exit.cause.reasons).toHaveLength(2)
+    const redacted = exit.cause.reasons[reverse ? 1 : 0]
+    expect(redacted?._tag).toBe("Die")
+    if (redacted?._tag === "Die") expect(redacted.defect).toBeInstanceOf(Capability.Failure)
+    expect(JSON.stringify(exit.cause)).not.toContain("PRIVATE-SQL-DIE")
+    const retained = exit.cause.reasons[reverse ? 0 : 1]
+    if (mode === "defect") {
+      expect(retained?._tag).toBe("Die")
+      if (retained?._tag === "Die") expect(retained.defect).toBe(sentinel)
+    }
+    if (mode === "interrupt") {
+      expect(retained?._tag).toBe("Interrupt")
+      if (retained?._tag === "Interrupt") expect(retained.fiberId).toBe(129)
+    }
+    exit.cause.reasons.forEach((reason) => expect(reason.annotations.get(marker.key)).toBe("retained"))
+    expect(f.writerProof.completed).toBe(1)
+    expect((yield* f.rows())[0]?.state).toBe("completed")
     expect(yield* f.fs.exists(f.artifactRoot)).toBe(false)
     expect(f.state.calls).toHaveLength(1)
   })
