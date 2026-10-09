@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { BACKEND_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
 
 describe("Maestro roster", () => {
   test("declares exact nine contract seats in deterministic order", () => {
@@ -40,6 +40,24 @@ describe("Maestro roster", () => {
         ],
       },
       {
+        displayName: UPSTREAM_DEFAULT_LABEL,
+        memberId: "walt",
+        role: "product, architecture, specification and planning",
+        abilityClass: "scoped proposal authoring",
+        returnCard: "upstream-result",
+        forbiddenActions: [
+          "inventing owner facts or approval",
+          "product implementation",
+          "dispatch or workflow execution",
+          "delegation",
+          "self-approval or acceptance claims",
+          "commit, push, branch, merge or pull request",
+          "installing tools",
+          "working around permission denials or safety holds",
+          "editing Atlas memory files",
+        ],
+      },
+      {
         displayName: "Patty",
         memberId: "patty",
         role: "frontend execution",
@@ -54,14 +72,6 @@ describe("Maestro roster", () => {
         abilityClass: "read-only artifact review",
         returnCard: "cited APPROVE/FIX_FIRST/REJECT card",
         forbiddenActions: ["edit implementation", "receive author transcript", "merge"],
-      },
-      {
-        displayName: "Bobby",
-        memberId: "bobby",
-        role: "architecture review",
-        abilityClass: "read-only contract review",
-        returnCard: "seam/contract verdict",
-        forbiddenActions: ["implement product", "merge"],
       },
       {
         displayName: "Billy",

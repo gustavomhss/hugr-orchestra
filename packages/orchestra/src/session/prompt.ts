@@ -73,6 +73,9 @@ import { SessionTable } from "@orchestra/core/session/sql"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
 import { LLMEvent } from "@orchestra/llm"
+import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
+import { SessionMessage } from "@orchestra/schema/session-message"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -1080,6 +1083,15 @@ const layer = Layer.effect(
           )
 
           const { user: lastUser, assistant: lastAssistant, finished: lastFinished, tasks } = MessageV2.latest(msgs)
+          const workflow = yield* RelayWorkflowSession.current(sessionID).pipe(
+            Effect.provideService(Database.Service, database), Effect.orDie,
+          )
+          if (workflow?.view.pending) {
+            const next = yield* RelayWorkflowSession.reconcile(workflow).pipe(Effect.orDie)
+            if (!next) break
+            continue
+          }
+          if (workflow?.view.state === "complete") break
 
           if (!lastUser) throw new Error("No user message found in stream. This should never happen.")
 
@@ -1095,6 +1107,7 @@ const layer = Layer.effect(
             ) ?? false
 
           if (
+            !workflow &&
             lastAssistant?.finish &&
             !["tool-calls", "unknown"].includes(lastAssistant.finish) &&
             !hasToolCalls &&
@@ -1116,7 +1129,9 @@ const layer = Layer.effect(
             break
           }
 
-          if (yield* claudeCode.turn({ sessionID, user: lastUser })) continue
+          if (workflow && (yield* agents.get(lastUser.agent))?.engine === "claude-code")
+            return yield* Effect.die(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED" }))
+          if (!workflow && (yield* claudeCode.turn({ sessionID, user: lastUser }))) continue
           step++
           if (step === 1)
             yield* title({
@@ -1244,6 +1259,7 @@ const layer = Layer.effect(
               ...(mcpInstructions ? [mcpInstructions] : []),
               ...(skills ? [skills] : []),
               ...prepared.system,
+              ...(workflow?.view.instructions ? [workflow.view.instructions] : []),
             ]
             const format = lastUser.format ?? { type: "text" as const }
             if (format.type === "json_schema") system.push(STRUCTURED_OUTPUT_SYSTEM_PROMPT)
@@ -1269,6 +1285,21 @@ const layer = Layer.effect(
               messageIDs: prepared.messages.map((message) => message.info.id),
             })
             const result = yield* handle.process(streamInput)
+
+            // The existing serialized loop owns this provider/tool-settle boundary. Continuation reloads history at
+            // the top of that loop; a pure resume never grades a historical assistant again.
+            if (workflow) {
+              const settled = yield* MessageV2.get({ sessionID, messageID: handle.message.id }).pipe(
+                Effect.provideService(Database.Service, database), Effect.orDie,
+              )
+              const next = yield* RelayWorkflowSession.settle({ current: workflow,
+                assistantMessageID: SessionMessage.ID.make(handle.message.id),
+                succeeded: !handle.message.error && !!handle.message.finish &&
+                  !["unknown", "error", "content-filter"].includes(handle.message.finish) &&
+                  settled.parts.every((part) => part.type !== "tool" || part.state.status === "completed"),
+              }).pipe(Effect.orDie)
+              return next ? "continue" as const : "break" as const
+            }
 
             if (structured !== undefined) {
               handle.message.structured = structured

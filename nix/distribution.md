@@ -1,0 +1,213 @@
+# Native distribution checkpoint — UNVALIDATED
+
+<!-- NIX_BATCH_REQUEST_BEGIN -->
+{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
+<!-- NIX_BATCH_REQUEST_END -->
+
+The request above is deliberately inactive. Only the lead, after W6 + Nix are
+ready, publishes a request-only commit on `nix-validation` without `[skip ci]`.
+No request is activated or validation dispatched by this source-fix checkpoint.
+
+Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
+producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
+evidence is not rerun here and does not certify Nix builds.
+
+Human-authorized deferral: “NO tests/typechecks/mutations/CI/smoke/builds now;
+prepare runnable validation and measurement capture only, single integrated batch
+after W6+Nix ready.” No local Nix, installer, daemon or global software was used.
+All new commands, output checks and controls below are **unexecuted**.
+
+## Implemented contract
+
+- Locked Nixpkgs is unchanged. `flake.nix` explicitly supplies local Bun 1.3.14
+  and Electron 42.3.3 to consumers and exports both for capture. Node 24 supports
+  Desktop's current build toolchain. The overlay follows the same wiring.
+- Dependency filters are the transitive workspace dependency/dev/optional graph
+  rooted at modern CLI, Orchestra's Node server, Desktop and App. All package
+  trees (including Core, Schema, Protocol, Client, Server, Relay, SDK, TUI,
+  toolkit/specialist skill data) remain in the clean-source fileset. Root
+  `bunfig.toml`, `tsconfig.json`, lock, catalog/patch manifests and TEAM_MEMBERS
+  are explicit inputs. The new producer `.c` is included through `packages/`.
+- Every existing `nix/hashes.json` value is retained and **stale / measurement
+  pending**. No hash is invented. Only `node_modules_updater` uses `fakeHash`.
+  Toolchain ZIP hashes retain their prior independent measurement records.
+- CLI calls the modern builder with one explicit native target and
+  `--skip-install`. It preseeds Bun's exact native target/version fallback name
+  with the already provisioned executable. No target ZIP download is needed.
+- Linux patches emitted interpreter/RPATH before export. Darwin supplies
+  `stdenv` compiler, `apple-sdk.sdkroot` headers/libSystem stubs, SDKROOT,
+  LIBRARY_PATH and codesign. Bun 1.3.14 FFI source explicitly consumes SDKROOT
+  and LIBRARY_PATH. Darwin shim's fixed-signature C entry remains unchanged.
+- Reviewed exporter creates a fresh schema-1 raw tree at
+  `$out/share/orchestra/cli`. `$out/bin/orchestra` is a separate binary wrapper.
+  Strip/ELF fixups do not rewrite published bytes. Authoritative schema comes
+  from `packages/cli/script/schema.ts` / Core `Config.Info`; install check
+  regenerates and compares it. Modern completions use `--completions bash|zsh`.
+- Desktop sets `ORCHESTRA_CLI_PREBUILT_DIR` to that raw tree. Production prebuild
+  admits/version-checks/signs resources through existing consumer code; no CLI
+  compiler fallback. Local electron-builder uses custom `.dist`, explicit native
+  arch and Electron version, with rebuilds, notarization and publishing disabled.
+  Ordinary derivations run sandboxed, not as network-capable dependency fetchers.
+- Linux installs and launches the packaged Electron copy, preserving native
+  `process.resourcesPath` for **all** extraResources. Darwin preserves
+  `Applications/HuGR Orchestra.app/Contents/Resources`. Desktop wrapper supplies
+  ripgrep and native sysctl where needed. Linux addon repair targets only
+  `app.asar.unpacked`; post-fixup install check re-admits packaged CLI digests.
+
+| System | Target | Native runner label |
+| --- | --- | --- |
+| x86_64-linux | linux-x64-baseline | ubuntu-24.04 |
+| aarch64-linux | linux-arm64 | ubuntu-24.04-arm |
+| x86_64-darwin | darwin-x64-baseline | macos-15-intel |
+| aarch64-darwin | darwin-arm64 | macos-15 |
+
+These are declared lanes, not build evidence. Intel Darwin remains explicit;
+baseline does not certify arbitrary x64 CPUs or Rosetta.
+
+## One lead-owned integrated batch, after W6 + Nix are ready
+
+Freeze one committed source revision including final manifests. On each matching
+native runner, the measurement half is:
+
+```bash
+system=x86_64-linux # use that runner's exact system from the table
+revision=$(git rev-parse HEAD)
+bash nix/check-distribution.sh measure "$system" "$revision" \
+  "$RUNNER_TEMP/nix-measure-$system"
+```
+
+The script evaluates all declared consumers and the CLI default dependency
+argument, captures workspace/source/toolchain inputs, then runs exactly:
+
+```bash
+nix build --no-write-lock-file --no-update-lock-file --option sandbox true \
+  --no-link --print-build-logs ".#packages.$system.node_modules_updater"
+```
+
+Expected nonzero result must name the exact updater derivation and recursive
+SHA-256 `got:` SRI **after** frozen install, both nonempty normalization receipts
+and final dependency-install receipt. Generic failures/empty outputs are blockers.
+`candidate.json` is measurement data, never an automatic source rewrite.
+
+Collect all native candidates. Lead reviews and applies only each matching
+`nodeModules.<system>` field, commits that measurement checkpoint, then continues
+the same integrated batch's verification half on the new exact revision:
+
+```bash
+revision=$(git rev-parse HEAD)
+# Inside the prepared native Actions worker, after its real API fetch/download:
+export MEASUREMENT_RUN_ID="$MEASUREMENT_RUN"
+export MEASUREMENT_RUN_ATTEMPT="$MEASUREMENT_ATTEMPT"
+export MEASUREMENT_PROVENANCE_DIR="$RUNNER_TEMP/measurement-provenance-$system"
+bash nix/check-distribution.sh verify "$system" "$revision" \
+  "$RUNNER_TEMP/nix-verify-$system" \
+  "$MEASUREMENT_PROVENANCE_DIR/workers/nix-distribution-measure-$MEASUREMENT_RUN_ID-$MEASUREMENT_RUN_ATTEMPT-$system"
+```
+
+Verification requires real Actions context because the unchanged toolchain gate
+binds evidence to actual run/attempt/SHA; do not fabricate GITHUB_* identities.
+`nix-distribution.yml` now has a concrete premerge bootstrap: a push to exactly
+`nix-validation`, changing exactly the request-bearing `nix/distribution.md`.
+The prepare job rejects an inactive request before installing Nix. The request
+must name its actual commit parent, and its commit may change only this document
+(measurement) or this document plus `nix/hashes.json` (verification).
+
+After readiness, the lead creates `nix-validation` at the final integrated source
+SHA. Set the marked JSON to `ready: true`, `phase: "measure"`, `sourceParent` equal
+to that known parent SHA, and null measurement IDs; commit only this document
+without `[skip ci]`, then push `fork nix-validation`. This registers/runs the new
+workflow from the pushed branch, without a separate workflow PR/default-branch
+merge. Ordinary `nix-closure` source pushes cannot trigger it. A branch-only
+`gh workflow run` is still not a bootstrap route.
+
+After the selected measurement attempt and independent completion both succeed,
+the lead applies the four measured hashes and updates the request to
+`phase: "verify"`, its exact real `measurementRun`/`measurementAttempt`, and
+`sourceParent` equal to the measurement source SHA. Commit both owned files in
+one direct-child checkpoint without `[skip ci]`; push the same branch. One final
+milestone PR remains lead-owned. Later manual dispatch is usable only after
+default-branch registration, and must match the committed ready request.
+
+Verification first fetches the selected attempt, latest run, actual workflow
+identity, repository, Git commit/tree, attempt-specific jobs, artifact metadata
+and compare API from GitHub. It requires completed/success, exact workflow
+ID/path, repository/head/attempt and successful independent completion receipt
+plus its full control records. All native worker artifacts are metadata-bound to
+that run/head. Candidate revision/tree/system and dependency identity must agree
+with those API facts, captured inputs and current inputs; relabelling cannot
+qualify. Only one direct-child hash/request change is accepted after measurement.
+Dependency fingerprints must match measurement; hashes alone cannot mask changed
+package source/data, lock/manifests, patches, toolchain, normalization or filter
+recipes. Exact consumer command is:
+
+```bash
+nix build --no-write-lock-file --no-update-lock-file --option sandbox true \
+  --no-link --print-out-paths --print-build-logs \
+  ".#packages.$system.orchestra" ".#packages.$system.orchestra-desktop"
+```
+
+The same verification invocation runs the unchanged toolchain gate and its native
+reach/hash/source controls, then real CLI/Desktop checks: manifest admission,
+raw and wrapped version, ELF/Mach-O CPU, schema/completions, packaged Electron
+version, packaged Electron `createRequire` resolution of the actual platform
+node-pty package from `app.asar/out/main/index.js`, its real `spawn` export and
+loaded native binding, supplemental native-addon loading, Linux desktop
+identity/resources and Darwin app identity. It captures direct and recursive
+runtime references, per-command exit/log/wall time and source revision/tree.
+
+Output teeth mutate one **copy of the real produced CLI**: empty artifacts,
+wrong version/target, changed bytes, invalid image header and wrong CPU with valid
+recomputed digests, then restoration. Real production consumer and output checker must reject each
+named defect. Positive/restored real copies must pass. No production output is
+mutated. These controls have not run.
+
+Completion requires exact native job/artifact sets, explicitly named prepare /
+completion roles, and the full immutable output ledger declared in
+`probe-distribution.ts`. Structured verdicts must match each declared failure;
+generic setup errors and positive-only subsets do not qualify. PTY controls repack
+one real archive in a private fixture, separately removing the required binding
+and breaking its actual package entrypoint, with unchanged/restored positives.
+
+Completion/provenance teeth are declared in `probe-distribution-completion.py`:
+empty/extra/duplicate/unknown lanes and artifacts, wrong workflow/head/attempt,
+failed or cancelled measurement, failed independent completion, relabelled
+candidate/capture, positive-only control subsets, negative setup failures and
+non-hash checkpoint changes. They invoke the actual parser on copies of real
+captured evidence. All controls remain unexecuted until the combined batch.
+
+`probe-dependency-measurement.py`, wired into that same verification batch,
+prepares hash-capture negative controls: replay real updater evidence
+unchanged; replace stderr with a generic failure; remove each normalization or
+install receipt; set exit to zero; name another derivation. Invoke the actual
+`dependency_measurement.py capture` on separate evidence copies. Only unchanged
+real evidence may produce a candidate. No hash probe edits committed hash fields.
+
+## Remaining closure evidence / blockers
+
+- Four dependency measurements and approved hash checkpoint remain missing.
+- Native sandbox builds, emitted CLI interpreter/library closure, desktop
+  resource inclusion and Electron/addon ABI loading remain unproved. A missing
+  native dependency or incompatible prebuilt addon is a build blocker to fix at
+  its actual source; no blanket missing-library ignore or rebuild/download escape.
+- Native producer semantics are already reviewed within a controlled build-owned
+  namespace. Arbitrary malicious same-UID namespace mutation is excluded by
+  `PRODUCER-BOUNDARY.md`; packaging does not invent stronger guarantees.
+- Full GUI startup, PTY operations, provider consent/authenticated health, native
+  platform product harnesses and final exact-head epic qualification remain W6 /
+  lead-owned. Loader checks are not those product proofs. Cold review is pending.
+
+## Framing corrections and scheduling incident
+
+The earlier W5 document correctly reported its old baseline, but waiting for a
+future artifact API/schema is now wrong: the reviewed producer and Core schema
+generator are present. Old legacy build paths, Electron 41, yargs completions and
+the Electron-toolchain Linux resource root are not current consumer contracts.
+Evaluation on one host cannot replace native four-lane builds.
+
+First source checkpoint `7b30fa6ac8` unintentionally triggered the existing
+push-triggered `nix-toolchain` workflow, Actions `37880278652`. Cancellation was
+requested; final run is cancelled, but prepare and Linux toolchain jobs completed
+first. This violated the deferred scheduling order. It is **not accepted Nix
+distribution evidence**; no new hash measurement or consumer-build result is
+claimed from it. Later prep commits carry `[skip ci]`, preserving workflow/gate
+code while honoring the owner's no-CI order. No manual validation is run here.

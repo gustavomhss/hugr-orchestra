@@ -67,6 +67,8 @@ export const make = (options: Options = {}) =>
               stateDirectory,
               projectID: instance.project.id,
               nativeMaestro: agent?.id === "maestro" && agent.native === true,
+              // Display labels may collide with routing ids in direct/legacy contexts; upstream needs the host id.
+              nativeUpstream: context.agentID === "walt" && agent?.id === "walt" && agent.native === true,
               ask,
             }
             const observe = options.observeGovernance
