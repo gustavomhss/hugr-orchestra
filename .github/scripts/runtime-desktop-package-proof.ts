@@ -86,17 +86,27 @@ async function main() {
     /[\x00-\x1f]/.test(expectedVersion)) fail("PRODUCTION_PACKAGE_VERSION_INVALID")
   const archive = join(resources, "app.asar")
   await regular(archive, "PACKAGED_APP_ARCHIVE_MISSING_OR_NOT_REGULAR")
+  const archiveSize = (await lstat(archive)).size
   const asar: unknown = await Promise.resolve().then(() => {
     const require = createRequire(join(desktop, "package.json"))
     const builder = createRequire(require.resolve("electron-builder"))
     return createRequire(builder.resolve("app-builder-lib"))("@electron/asar")
   }).catch(() => fail("PACKAGED_ASAR_READER_UNAVAILABLE"))
   if (!asar || typeof asar !== "object" || !("statFile" in asar) || typeof asar.statFile !== "function" ||
-    !("extractFile" in asar) || typeof asar.extractFile !== "function") fail("PACKAGED_ASAR_READER_API_INVALID")
+    !("extractFile" in asar) || typeof asar.extractFile !== "function" ||
+    !("getRawHeader" in asar) || typeof asar.getRawHeader !== "function") fail("PACKAGED_ASAR_READER_API_INVALID")
   const statFile = asar.statFile
   const extractFile = asar.extractFile
+  const getRawHeader = asar.getRawHeader
+  const header: unknown = await Promise.resolve().then(() => getRawHeader(archive))
+    .catch(() => fail("PACKAGED_ASAR_HEADER_UNREADABLE"))
+  if (!Number.isSafeInteger(archiveSize) || archiveSize < 0 || !header || typeof header !== "object" ||
+    !("headerSize" in header) || typeof header.headerSize !== "number" || !Number.isSafeInteger(header.headerSize) ||
+    header.headerSize < 0) fail("PACKAGED_ASAR_HEADER_EXTENT_INVALID")
+  const payloadBase = 8 + header.headerSize
+  if (!Number.isSafeInteger(payloadBase) || payloadBase > archiveSize) fail("PACKAGED_ASAR_HEADER_EXTENT_INVALID")
   const metadataEntry = requirePackedEntry(await Promise.resolve().then(() => statFile(archive, "package.json", false))
-    .catch(() => fail("PACKAGED_METADATA_MISSING_OR_ARCHIVE_INVALID")), "PACKAGED_METADATA_NOT_OWNED_REGULAR")
+    .catch(() => fail("PACKAGED_METADATA_MISSING_OR_ARCHIVE_INVALID")), "PACKAGED_METADATA_NOT_OWNED_REGULAR", payloadBase, archiveSize)
   const metadataBytes: unknown = await Promise.resolve().then(() => extractFile(archive, "package.json", false))
     .catch(() => fail("PACKAGED_METADATA_UNREADABLE"))
   if (!Buffer.isBuffer(metadataBytes) || metadataBytes.length !== metadataEntry.size) fail("PACKAGED_METADATA_BYTES_INVALID")
@@ -110,7 +120,7 @@ async function main() {
   if (!("main" in metadata) || metadata.main !== source.main) fail("PACKAGED_MAIN_IDENTITY_MISMATCH")
   const main = source.main.replace(/^\.\//, "")
   requirePackedEntry(await Promise.resolve().then(() => statFile(archive, main, false))
-    .catch(() => fail("PACKAGED_MAIN_OUTPUT_MISSING")), "PACKAGED_MAIN_OUTPUT_MISSING_OR_NOT_REGULAR")
+    .catch(() => fail("PACKAGED_MAIN_OUTPUT_MISSING")), "PACKAGED_MAIN_OUTPUT_MISSING_OR_NOT_REGULAR", payloadBase, archiveSize)
   const archiveSha256 = digest(await readFile(archive))
   const directory = join(resources, "cli")
   await regular(join(directory, "manifest.json"), "CLI_MANIFEST_MISSING_OR_NOT_REGULAR")
@@ -185,12 +195,16 @@ async function main() {
 
 // @electron/asar v3.4.1 src/asar.ts and src/filesystem.ts: false disables link following;
 // packed files have size/offset, omit unpacked or set it false; directories/links are separate variants.
-function requirePackedEntry(entry: unknown, name: string) {
+// src/disk.ts reads at 8 + headerSize + offset, but ignores read count: stat/Buffer length is not payload evidence.
+function requirePackedEntry(entry: unknown, name: string, payloadBase: number, archiveSize: number) {
   if (!entry || typeof entry !== "object" || "link" in entry || "files" in entry ||
     ("unpacked" in entry && entry.unpacked !== false) || !("size" in entry) || typeof entry.size !== "number" ||
     !Number.isSafeInteger(entry.size) || entry.size <= 0 || entry.size > 0xffffffff ||
     !("offset" in entry) || typeof entry.offset !== "string" || !/^(0|[1-9]\d*)$/.test(entry.offset) ||
     !Number.isSafeInteger(Number(entry.offset))) fail(name)
+  const start = payloadBase + Number(entry.offset)
+  const end = start + entry.size
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || end > archiveSize) fail(`${name}_PAYLOAD_EXTENT_INVALID`)
   return entry
 }
 
