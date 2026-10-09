@@ -13,7 +13,6 @@ import { Global } from "@orchestra/core/global"
 import { InstanceStore } from "@/project/instance-store"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Git } from "@/git"
-import os from "os"
 import { SessionID, MessageID, PartID } from "./schema"
 import { MessageV2 } from "./message-v2"
 import { SessionRevert } from "./revert"
@@ -40,7 +39,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import * as Stream from "effect/Stream"
 import { Command } from "../command"
-import { pathToFileURL, fileURLToPath } from "url"
+import { fileURLToPath } from "url"
 import { Config } from "@/config/config"
 import { ConfigMarkdown } from "@/config/markdown"
 import { SessionSummary } from "./summary"
@@ -58,9 +57,9 @@ import { Truncate } from "@/tool/truncate"
 import { Image } from "@/image/image"
 import { decodeDataUrl } from "@/util/data-url"
 import { Process } from "@/util/process"
-import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
+import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
-import { TaskTool, type TaskPromptOps } from "@/tool/task"
+import { TaskTool } from "@/tool/task"
 import { PromptGuard } from "./prompt-guard"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -76,8 +75,7 @@ import { LLMEvent } from "@orchestra/llm"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { SessionMessage } from "@orchestra/schema/session-message"
-import { SessionExecution } from "@orchestra/core/session/execution"
-import { SessionSchema } from "@orchestra/core/session/schema"
+import { TaskPromptOperations } from "./task-prompt-ops"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -157,59 +155,12 @@ const layer = Layer.effect(
     const flags = yield* RuntimeFlags.Service
     const database = yield* Database.Service
     const nativeHost = yield* ArsenalBindings.make
-    const ops = Effect.fn("SessionPrompt.ops")(function* () {
-      const execution = yield* Effect.serviceOption(SessionExecution.Service)
-      const result = {
-        cancel: (sessionID: SessionID) => cancel(sessionID),
-        resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input: Parameters<TaskPromptOps["prompt"]>[0], options?: Parameters<TaskPromptOps["prompt"]>[1]) =>
-          nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
-        resumeNotice: (sessionID: SessionID) => Option.isSome(execution)
-          ? execution.value.resume(SessionSchema.ID.make(sessionID)).pipe(Effect.orDie)
-          : Effect.die(new Error("UPSTREAM_NOTICE_RESUME_UNAVAILABLE")),
-      }
-      return result satisfies TaskPromptOps
-    })
-
-    const cancel = Effect.fn("SessionPrompt.cancel")(function* (sessionID: SessionID) {
-      yield* Effect.logInfo("cancel", { "session.id": sessionID })
-      yield* state.cancel(sessionID)
-    })
-
-    const resolvePromptParts = Effect.fn("SessionPrompt.resolvePromptParts")(function* (template: string) {
-      const ctx = yield* InstanceState.context
-      const parts: Types.DeepMutable<PromptInput["parts"]> = [{ type: "text", text: template }]
-      const files = ConfigMarkdown.files(template)
-      const seen = new Set<string>()
-      yield* Effect.forEach(
-        files,
-        Effect.fnUntraced(function* (match) {
-          const name = match[1]
-          if (!name) return
-          if (seen.has(name)) return
-          seen.add(name)
-
-          const filepath = name.startsWith("~/")
-            ? path.join(os.homedir(), name.slice(2))
-            : path.resolve(ctx.worktree, name)
-
-          const info = yield* fsys.stat(filepath).pipe(Effect.option)
-          if (Option.isNone(info)) {
-            const found = yield* agents.get(name)
-            if (found) parts.push({ type: "agent", name: found.name })
-            return
-          }
-          const stat = info.value
-          parts.push({
-            type: "file",
-            url: pathToFileURL(filepath).href,
-            filename: name,
-            mime: stat.type === "Directory" ? "application/x-directory" : "text/plain",
-          })
-        }),
-        { concurrency: "unbounded", discard: true },
-      )
-      return parts
+    const taskPrompts = TaskPromptOperations.make({
+      fs: fsys,
+      agents,
+      state,
+      nativeHost,
+      prompt: (input) => prompt(input),
     })
 
     const title = Effect.fn("SessionPrompt.ensureTitle")(function* (input: {
@@ -285,7 +236,7 @@ const layer = Layer.effect(
     }) {
       const { task, model, lastUser, sessionID, session, msgs } = input
       const ctx = yield* InstanceState.context
-      const promptOps = yield* ops()
+      const promptOps = yield* taskPrompts.ops()
       const { task: taskTool } = yield* registry.named()
       const taskModel = task.model ? yield* getModel(task.model.providerID, task.model.modelID, sessionID) : model
       const assistantMessage: SessionV1.Assistant = yield* sessions.updateMessage({
@@ -1230,7 +1181,7 @@ const layer = Layer.effect(
               model,
               processor: handle,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: taskPrompts.ops })
 
             canRecall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
@@ -1482,7 +1433,7 @@ const layer = Layer.effect(
       }
 
       const { invocation, source } = commandSource(input.command, input.arguments)
-      const templateParts = (yield* resolvePromptParts(template)).map((part) =>
+      const templateParts = (yield* taskPrompts.resolvePromptParts(template)).map((part) =>
         part.type === "text" ? { ...part, metadata: { ...part.metadata, source } } : part)
       const inputFiles = new Set(
         input.parts?.filter((part) => new URL(part.url).protocol === "file:").map((part) => fileURLToPath(part.url)),
@@ -1537,12 +1488,12 @@ const layer = Layer.effect(
     })
 
     return Service.of({
-      cancel,
+      cancel: taskPrompts.cancel,
       prompt: (input) => nativeHost.withSession(input.sessionID, prompt(input)),
       loop: (input) => nativeHost.withSession(input.sessionID, loop(input)),
       shell: (input) => nativeHost.withSession(input.sessionID, shell(input)),
       command: (input) => nativeHost.withSession(input.sessionID, command(input)),
-      resolvePromptParts,
+      resolvePromptParts: taskPrompts.resolvePromptParts,
     })
   }),
 )
