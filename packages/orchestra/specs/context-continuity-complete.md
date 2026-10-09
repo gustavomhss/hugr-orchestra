@@ -1,6 +1,6 @@
 # Complete-prefix context continuity
 
-Status: implemented and locally verified, 2026-10-08. Two frozen-source cases evaluated with one exploratory seed; unpublished.
+Status: implemented; original feature bundle merged into `dev` on 2026-10-09. Validation below separates frozen-source evaluation, live GPT smoke, and scoped CI.
 
 ## Reason
 
@@ -53,3 +53,49 @@ WAIVER (human-authorized) — strict 600-second total elapsed-time guarantee, in
 - Separately supplying bounded archive spans yielded 28/28 and 27 correct plus one partial answer. This is a host-selected archive-assisted condition, not autonomous recall-tool verification.
 - Some frozen questions concern opaque call identifiers, duplicated planning queries or long raw snippets. These counts are exploratory probe results, not a universal measure of information retention. No matched OLD reader calls were made, and historical wire bodies were not captured. Neither global superiority nor a SOTA claim is established.
 - Evidence is retained externally under `warhammer-sol-20261007T120000/complete-eval-actual-20261008T191115/`: source/code hashes, accepted artifacts, consumer proofs, replies, source-grounded scores and lean actual-usage telemetry. Theme-building agents were not rerun.
+
+## Live GPT 6 Luna smoke — 2026-10-09
+
+The owner selected `openai/gpt-6-luna`. This run used Orchestra's OpenAI/ChatGPT OAuth transport,
+not the Claude Code SDK adapter. Session: `ses_edeb7dd80ffey9ezDarZwSQwhD`.
+
+- Eight real calls used the exact model: six parent turns, one continuity producer, one continuation.
+- Compaction returned `applied`; the accepted artifact was version 5 with 12 covered sources,
+  `coveredThrough === boundary`, and `now.src = ["a6"]`.
+- The original raw prompt contained `ORCHID-GPT-9E37`. Actual continuation messages did not contain it;
+  the working-memory system block did, with `contextMemory: true`. Continuation recalled the exact value.
+- Covered assistant records were absent from the continuation projection. Compaction preserved durable
+  history, and continuation preserved the full prior durable prefix.
+
+### C15 instruction correction
+
+The first live attempt failed C15 after its corrective retry, so no artifact was applied. The host
+requires a completed assistant/tool alias from the exact boundary in `now.src`; the producer instructions
+did not make that requirement explicit. Commit `3ba62b13f98c5f427a47349d6b1750ba5d52c298` aligns the
+prompt, host index and failure diagnostic with that predicate. Complete-prefix retries request both `now`
+and `ops`; partial v4 retries retain the ops-only instruction. The validation predicate is unchanged.
+The successful live attempt used this patch and required no producer retry.
+
+The regression verifies that the index advertises boundary aliases `a2` and `t1`, that each can satisfy
+C15, and that earlier-only `u2` or `a1` cannot. Removing the alias instruction made its assertion fail;
+restoring it passed. That mutation run also had an unrelated teardown timeout, excluded from the evidence.
+
+Scoped CI [37954559865](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37954559865) tested
+`contract-regressions.test.ts`, `complete.test.ts`, and `fork-replay.test.ts` against the patch snapshot:
+**27 passed, zero failed, 289 assertions on each of Linux and Windows**. Package `bun typecheck` passed.
+An independent read-only review found no blocking issues; it did not execute tests or approve a merge.
+
+### Reproduction evidence and limits
+
+Receipts, requests, producer replies, usage, harness and launcher are retained externally in
+`continuity-gpt-live-20261009/{result.json,verification.json,events.jsonl,run.log,smoke.ts,launch.ts}`.
+Receipts, harness, catalog, isolated model configuration and commit-verification record were also backed
+up to the durable external archive `_worktrees/continuity-gpt-live-20261009.tgz`.
+The isolated OAuth copy was removed after the run; raw logs and credentials are not part of this document.
+The harness included `SessionProjector.node`, isolated HOME/XDG storage, and the real ModelsDev catalog.
+OAuth auto-list filtering omitted the integer-major model name; isolated configuration declared the
+catalog's exact GPT 6 Luna definition and limits. That production filter remains a separate issue.
+
+This is a forced functional smoke. A one-step allowance constrained parent output; it is not a
+near-context-limit stress test, matched benchmark, or global quality claim. GPT success does not validate
+Claude Code native session-store materialization; that adapter's live smoke remained quota-blocked.
