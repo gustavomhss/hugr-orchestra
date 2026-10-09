@@ -2,11 +2,12 @@ import { Flag } from "@orchestra/core/flag/flag"
 import { Effect } from "effect"
 import { mkdirSync } from "fs"
 import path from "path"
+import os from "node:os"
 
 const preserveExerciseGlobalRoot = !!process.env.ORCHESTRA_HTTPAPI_EXERCISE_GLOBAL
 export const exerciseGlobalRoot =
   process.env.ORCHESTRA_HTTPAPI_EXERCISE_GLOBAL ??
-  path.join(process.env.TMPDIR ?? "/tmp", `orchestra-httpapi-global-${process.pid}`)
+  path.join(os.tmpdir(), `orchestra-httpapi-global-${process.pid}`)
 process.env.XDG_DATA_HOME = path.join(exerciseGlobalRoot, "data")
 process.env.XDG_CONFIG_HOME = path.join(exerciseGlobalRoot, "config")
 process.env.XDG_STATE_HOME = path.join(exerciseGlobalRoot, "state")
@@ -16,13 +17,13 @@ export const exerciseConfigDirectory = path.join(exerciseGlobalRoot, "config", "
 export const exerciseDataDirectory = path.join(exerciseGlobalRoot, "data", "orchestra")
 // Always in the system temp directory: auth probes create git worktrees wherever git root discovery lands, so
 // the probe directory must not follow ORCHESTRA_HTTPAPI_EXERCISE_GLOBAL into a checkout.
-export const exerciseProbeDirectory = path.join(process.env.TMPDIR ?? "/tmp", `orchestra-httpapi-probe-${process.pid}`)
+export const exerciseProbeDirectory = path.join(os.tmpdir(), `orchestra-httpapi-probe-${process.pid}`)
 mkdirSync(exerciseProbeDirectory, { recursive: true })
 
 const preserveExerciseDatabase = !!process.env.ORCHESTRA_HTTPAPI_EXERCISE_DB
 export const exerciseDatabasePath =
   process.env.ORCHESTRA_HTTPAPI_EXERCISE_DB ??
-  path.join(process.env.TMPDIR ?? "/tmp", `orchestra-httpapi-exercise-${process.pid}.db`)
+  path.join(os.tmpdir(), `orchestra-httpapi-exercise-${process.pid}.db`)
 process.env.ORCHESTRA_DB = exerciseDatabasePath
 Flag.ORCHESTRA_DB = exerciseDatabasePath
 

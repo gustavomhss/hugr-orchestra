@@ -13,7 +13,7 @@ test.each(["coverage", "auth", "effect"])("pull-request routes have executable %
       "--fail-on-missing",
       "--fail-on-skip",
     ],
-    { stdout: "pipe", stderr: "pipe", timeout: 90_000 },
+    { stdout: "pipe", stderr: "pipe", timeout: 90_000, env: { ...process.env, ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "ERROR" } },
   )
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(child.stdout).text(),
