@@ -3,22 +3,24 @@ name: runtime-desktop
 # Linux x64 A03 slice: actual dev/beta/prod packages and prepared dev default-v1 bootstrap.
 # Not full native Desktop, packaged startup, WSL, UI, model execution or consent proof.
 # Frozen gates must land unchanged after independent review; missing prerequisites fail.
+# Default bootstrap initializes fresh isolated state through production startup.
 on:
+  push:
+    branches: [runtime-desktop-validation]
+    paths: [.github/workflows/runtime-desktop.yml]
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: { contents: read }
 
 jobs:
   prepare:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
+    defaults: { run: { shell: bash } }
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
@@ -29,8 +31,9 @@ jobs:
           for tool in node tar; do command -v "$tool" >/dev/null || { echo "DESKTOP_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
           test -s .github/scripts/runtime-desktop-package-proof.ts || { echo DESKTOP_PACKAGE_GATE_MISSING >&2; exit 1; }
           test -s .github/scripts/runtime-desktop-bootstrap-proof.ts || { echo DESKTOP_BOOTSTRAP_GATE_MISSING >&2; exit 1; }
-          test "$(git hash-object .github/scripts/runtime-desktop-package-proof.ts)" = 841c228a1c23dd9edb6e5d3f2a18583ad2e247ae || { echo DESKTOP_PACKAGE_GATE_CHANGED >&2; exit 1; }
-          test "$(git hash-object .github/scripts/runtime-desktop-bootstrap-proof.ts)" = 72d5dfc4249592a6c361ca184c7e55f892101fd7 || { echo DESKTOP_BOOTSTRAP_GATE_CHANGED >&2; exit 1; }
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH >&2; exit 1; }
+          test "$(git hash-object .github/scripts/runtime-desktop-package-proof.ts)" = a0281172a892927fbc790e33f3fd13b2eb32bf4d || { echo DESKTOP_PACKAGE_GATE_CHANGED >&2; exit 1; }
+          test "$(git hash-object .github/scripts/runtime-desktop-bootstrap-proof.ts)" = bd3a7de1d146694c54b28fecb3c2a7700a3f9140 || { echo DESKTOP_BOOTSTRAP_GATE_CHANGED >&2; exit 1; }
           bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
           bun -e 'const versions = await Promise.all(["cli", "desktop", "orchestra"].map(async p => (await Bun.file(`packages/${p}/package.json`).json()).version)); if (!versions[0] || versions.some(v => v !== versions[0])) throw Error("DESKTOP_SOURCE_VERSION_MISMATCH");'
       - name: Install once without lifecycle scripts
@@ -56,13 +59,15 @@ jobs:
           export ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
           bun packages/cli/script/build.ts --skip-install --target linux-x64-baseline
           bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out .runtime-cli --version "$ORCHESTRA_VERSION" --target linux-x64-baseline
-      - name: Preserve prepared source, dependency symlinks, modes and Electron for channel lanes
-        run: tar --exclude=./.git --exclude=./packages/cli/dist -czf "$RUNNER_TEMP/desktop-candidate.tar.gz" .
+      - name: Hand off only dependencies with Electron and compiled owned CLI export
+        run: |
+          set -euo pipefail
+          find . -name .git -prune -o -type d -name node_modules -prune -print0 | tar --null -T - -czf "$RUNNER_TEMP/desktop-dependencies.tar.gz" .runtime-cli
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-linux-x64-prepared
           path: |
-            ${{ runner.temp }}/desktop-candidate.tar.gz
+            ${{ runner.temp }}/desktop-dependencies.tar.gz
             ${{ runner.temp }}/models-api.json
           if-no-files-found: error
 
@@ -72,14 +77,16 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        channel: [dev, beta, prod]
-    defaults:
-      run:
-        shell: bash
+      matrix: { channel: [dev, beta, prod] }
+    defaults: { run: { shell: bash } }
     env:
       ORCHESTRA_CHANNEL: ${{ matrix.channel }}
     steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ github.sha }}
+          path: candidate
+          persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: "1.3.14"
@@ -87,38 +94,60 @@ jobs:
         with:
           name: desktop-linux-x64-prepared
           path: ${{ runner.temp }}/prepared
-      - name: Restore prepared candidate and require native host
+      - name: Restore dependencies into exact source checkout and require native host
         working-directory: ${{ runner.temp }}
         run: |
           set -euo pipefail
-          test -s prepared/desktop-candidate.tar.gz && test -s prepared/models-api.json || { echo DESKTOP_PREPARED_PRODUCT_MISSING >&2; exit 1; }
-          mkdir candidate
-          tar -xzf prepared/desktop-candidate.tar.gz -C candidate
-          bun candidate/packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+          test -s prepared/desktop-dependencies.tar.gz && test -s prepared/models-api.json || { echo DESKTOP_PREPARED_PRODUCT_MISSING >&2; exit 1; }
+          test "$(git -C "$GITHUB_WORKSPACE/candidate" rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH >&2; exit 1; }
+          tar -xzf prepared/desktop-dependencies.tar.gz -C "$GITHUB_WORKSPACE/candidate"
+          bun "$GITHUB_WORKSPACE/candidate/packages/cli/script/runtime-proof.ts" --target linux-x64-baseline --host
       - name: Build actual Node sidecar and Electron Vite through package build lifecycle
-        working-directory: ${{ runner.temp }}/candidate/packages/desktop
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
         env:
           MODELS_DEV_API_JSON: ${{ runner.temp }}/prepared/models-api.json
         run: |
           set -euo pipefail
-          export ORCHESTRA_VERSION="$(bun -p 'require("./package.json").version')"
-          export ORCHESTRA_CLI_PREBUILT_DIR="$RUNNER_TEMP/candidate/.runtime-cli"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH_BEFORE_BUILD >&2; exit 1; }
+          export ORCHESTRA_VERSION="$(bun -p 'require("../orchestra/package.json").version')"
+          export ORCHESTRA_CLI_PREBUILT_DIR="$GITHUB_WORKSPACE/candidate/.runtime-cli"
           bun run build
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH_AFTER_BUILD >&2; exit 1; }
+          bun -e '
+          const { createHash } = await import("node:crypto"), { lstat, readdir, readFile, realpath, writeFile } = await import("node:fs/promises");
+          const { resolve, join } = await import("node:path");
+          const walk = async (directory, prefix = "") => {
+            const stat = await lstat(directory);
+            if (!stat.isDirectory() || await realpath(directory) !== directory) throw Error("DESKTOP_OUTPUT_DIRECTORY_NOT_CONFINED");
+            const names = (await readdir(directory)).sort(); if (!names.length) throw Error("DESKTOP_OUTPUT_DIRECTORY_EMPTY");
+            return (await Promise.all(names.map(async name => {
+              if (/[\\\x00-\x1f]/.test(name)) throw Error("DESKTOP_OUTPUT_PATH_INVALID");
+              const path = join(directory, name), item = await lstat(path);
+              if (item.isSymbolicLink()) throw Error("DESKTOP_OUTPUT_SYMLINK_REJECTED");
+              if (item.isDirectory()) return walk(path, `${prefix}${name}/`);
+              if (!item.isFile() || !item.size || await realpath(path) !== path) throw Error("DESKTOP_OUTPUT_EMPTY_OR_NONREGULAR");
+              return [{ file: `${prefix}${name}`, sha256: createHash("sha256").update(await readFile(path)).digest("hex") }];
+            }))).flat();
+          };
+          if (!/^[a-f0-9]{40}$/.test(process.env.GITHUB_SHA ?? "")) throw Error("DESKTOP_SOURCE_COMMIT_INVALID");
+          const files = await walk(resolve("out")); if (!files.length) throw Error("DESKTOP_OUTPUT_NAMESPACE_EMPTY");
+          await writeFile(`${process.env.RUNNER_TEMP}/build-manifest-${process.env.ORCHESTRA_CHANNEL}.json`, JSON.stringify({ schema: 1, sourceCommit: process.env.GITHUB_SHA, files }) + "\n", { flag: "wx", mode: 0o600 });'
       - name: Package actual channel with production beforePack and afterPack checks
-        working-directory: ${{ runner.temp }}/candidate/packages/desktop
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
         run: |
           set -euo pipefail
-          export ORCHESTRA_VERSION="$(bun -p 'require("./package.json").version')"
+          export ORCHESTRA_VERSION="$(bun -p 'require("../orchestra/package.json").version')"
           bun run package:linux --dir --x64 --publish never --config.directories.output="$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL"
           test -s "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources/app.asar" || { echo DESKTOP_PACKAGED_RESOURCES_MISSING >&2; exit 1; }
           bun ../../.github/scripts/runtime-desktop-package-proof.ts --resources "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources" --channel "$ORCHESTRA_CHANNEL" --report "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL.json"
       - name: Prove prepared dev default bootstrap under isolated nonroot Xvfb
         if: matrix.channel == 'dev'
-        working-directory: ${{ runner.temp }}/candidate/packages/desktop
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
         run: |
           set -euo pipefail
           test "$(id -u)" != 0 || { echo ELECTRON_SANDBOX_NONROOT_REQUIRED >&2; exit 1; }
-          for tool in Xvfb xvfb-run xauth xdpyinfo ldd sudo; do command -v "$tool" >/dev/null || { echo "DESKTOP_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
+          for tool in git Xvfb xvfb-run xauth xdpyinfo ldd sudo; do command -v "$tool" >/dev/null || { echo "DESKTOP_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
+          bun -e 'const { readFile, readdir, readlink, realpath } = await import("node:fs/promises"); await Promise.all([readFile("/proc/self/stat"), readFile("/proc/self/cmdline"), readFile("/proc/self/net/tcp"), readdir("/proc/self/fd"), readlink("/proc/self/ns/net"), realpath("/proc/self/exe")]).catch(() => { throw Error("DESKTOP_PROCFS_NODE_LISTENER_ORACLE_UNAVAILABLE"); });'
           electron="$(bun -p 'require.resolve("electron/package.json").replace(/package.json$/, "dist/electron")')"
           test -x "$electron" && test -f "$(dirname "$electron")/chrome-sandbox" || { echo DESKTOP_ELECTRON_INSTALL_MISSING >&2; exit 1; }
           ldd "$electron" > "$RUNNER_TEMP/electron-libraries.txt" || { echo DESKTOP_ELECTRON_DEPENDENCIES_UNAVAILABLE >&2; exit 1; }
@@ -126,19 +155,18 @@ jobs:
           sudo chown root:root "$(dirname "$electron")/chrome-sandbox"
           sudo chmod 4755 "$(dirname "$electron")/chrome-sandbox"
           # Frozen bootstrap env carries DISPLAY, not XAUTHORITY; local-only Xvfb needs -ac.
-          xvfb-run --auto-servernum --server-args='-ac -screen 0 1280x800x24 -nolisten tcp' bash -c 'xdpyinfo >/dev/null || { echo DESKTOP_DISPLAY_UNAVAILABLE >&2; exit 1; }; bun ../../.github/scripts/runtime-desktop-bootstrap-proof.ts --desktop "$PWD" --report "$RUNNER_TEMP/bootstrap-dev.json"' || { echo DESKTOP_BOOTSTRAP_OR_DISPLAY_FAILED >&2; exit 1; }
+          xvfb-run --auto-servernum --server-args='-ac -screen 0 1280x800x24 -nolisten tcp' bash -c 'xdpyinfo >/dev/null || { echo DESKTOP_DISPLAY_UNAVAILABLE >&2; exit 1; }; bun ../../.github/scripts/runtime-desktop-bootstrap-proof.ts --desktop "$PWD" --build-manifest "$RUNNER_TEMP/build-manifest-dev.json" --report "$RUNNER_TEMP/bootstrap-dev.json"' || { echo DESKTOP_BOOTSTRAP_OR_DISPLAY_FAILED >&2; exit 1; }
       - name: Read back required nonempty matching native reports
-        working-directory: ${{ runner.temp }}/candidate/packages/desktop
+        working-directory: ${{ github.workspace }}/candidate/packages/desktop
         run: |
           bun -e '
           const fail = name => { throw Error(name); };
           const read = async name => { const file = Bun.file(`${process.env.RUNNER_TEMP}/${name}.json`); if (!(await file.exists()) || !file.size) fail(`DESKTOP_REPORT_MISSING_OR_EMPTY:${name}`); return file.json(); };
-          const version = (await Bun.file("package.json").json()).version;
           const channel = process.env.ORCHESTRA_CHANNEL;
-          const config = (await import("./electron-builder.config.ts")).default;
+          const config = (await import("./electron-builder.config.ts")).default, version = config.extraMetadata.version;
           const p = await read(`package-${channel}`);
-          if (p.schema !== 1 || p.channel !== channel || p.version !== version || p.platform !== "linux" || p.arch !== "x64" || p.target !== "linux-x64-baseline" || p.appId !== config.appId || p.desktopName !== config.extraMetadata.desktopName || p.resources !== `${process.env.RUNNER_TEMP}/package-${channel}/linux-unpacked/resources` || !Array.isArray(p.artifacts) || !p.artifacts.length || !p.artifacts.some(a => a.target === p.target) || ![p.hostCPUVerified, p.packagedMetadataVerified, p.outsideAsar, p.artifactDigestsVerified, p.nativeCompiledVersionVerified].every(v => v === true)) fail("DESKTOP_PACKAGE_REPORT_MISMATCH");
-          if (channel === "dev") { const b = await read("bootstrap-dev"); if (b.schema !== 1 || b.desktopVersion !== version || b.electronVersion !== (await Bun.file("package.json").json()).devDependencies.electron || b.platform !== "linux" || b.arch !== "x64" || b.startup !== "default-v1-utilityProcess" || b.readyEvidence !== "production-preload-awaitInitialization-via-owned-CDP" || ![b.healthy, b.wrongCredentialRejected, b.noCredentialRejected, b.desktopAlive, b.utilityAlive].every(v => v === true)) fail("DESKTOP_BOOTSTRAP_REPORT_MISMATCH"); }'
+          if (p.schema !== 1 || p.channel !== channel || p.version !== version || p.platform !== "linux" || p.arch !== "x64" || p.target !== "linux-x64-baseline" || p.expectedAppId !== config.appId || p.desktopName !== config.extraMetadata.desktopName || p.resources !== `${process.env.RUNNER_TEMP}/package-${channel}/linux-unpacked/resources` || !Array.isArray(p.artifacts) || !p.artifacts.length || !p.artifacts.some(a => a.target === p.target) || ![p.hostCPUVerified, p.packagedMetadataVerified, p.outsideAsar, p.artifactDigestsVerified, p.nativeCompiledVersionVerified].every(v => v === true)) fail("DESKTOP_PACKAGE_REPORT_MISMATCH");
+          if (channel === "dev") { const b = await read("bootstrap-dev"), m = await read("build-manifest-dev"); const { createHash } = await import("node:crypto"); if (b.schema !== 1 || b.sourceCommit !== process.env.GITHUB_SHA || b.buildManifestSha256 !== createHash("sha256").update(await Bun.file(`${process.env.RUNNER_TEMP}/build-manifest-dev.json`).bytes()).digest("hex") || JSON.stringify(b.outputDigests) !== JSON.stringify(m.files.toSorted((l, r) => l.file.localeCompare(r.file))) || b.serviceIdentity?.subtype !== "node.mojom.NodeService" || !Number.isSafeInteger(b.serviceIdentity.pid) || !/^[1-9][0-9]*$/.test(b.serviceIdentity.listenerInode) || b.desktopVersion !== version || b.electronVersion !== (await Bun.file("package.json").json()).devDependencies.electron || b.platform !== "linux" || b.arch !== "x64" || b.startup !== "default-v1-utilityProcess" || b.readyEvidence !== "production-preload-awaitInitialization-via-owned-CDP" || ![b.healthy, b.wrongCredentialRejected, b.noCredentialRejected, b.desktopAlive, b.utilityAlive].every(v => v === true)) fail("DESKTOP_BOOTSTRAP_REPORT_MISMATCH"); }'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-linux-x64-package-${{ matrix.channel }}
@@ -148,5 +176,7 @@ jobs:
         if: matrix.channel == 'dev'
         with:
           name: desktop-linux-x64-bootstrap-dev
-          path: ${{ runner.temp }}/bootstrap-dev.json
+          path: |
+            ${{ runner.temp }}/bootstrap-dev.json
+            ${{ runner.temp }}/build-manifest-dev.json
           if-no-files-found: error
