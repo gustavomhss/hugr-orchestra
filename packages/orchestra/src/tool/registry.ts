@@ -450,10 +450,12 @@ const layer = Layer.effect(
     })
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
+      const upstream = input.agent.id === "walt" && input.agent.native === true ? yield* agents.get("walt") : undefined
       const filtered = (yield* definitions(input.durableSafety !== false)).filter((tool) => {
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
-          (input.agent.id !== "maestro" || input.agent.native !== true)
+          (input.agent.id !== "maestro" || input.agent.native !== true) &&
+          !(upstream?.id === "walt" && upstream.native === true)
         )
           return false
         if (

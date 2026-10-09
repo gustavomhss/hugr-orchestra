@@ -9,7 +9,8 @@ import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import path from "path"
 import { Global } from "@orchestra/core/global"
 import { InstanceState } from "../../src/effect/instance-state"
-import { backendSkills, nativeProfiles, roster } from "../../src/maestro/roster"
+import { backendSkills, nativeProfiles, roster, UPSTREAM_DEFAULT_LABEL } from "../../src/maestro/roster"
+import { Seats } from "../../src/maestro/seats"
 import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
@@ -36,6 +37,12 @@ const nativeTeam = [
     description: "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. Edits only dispatch writePaths; read-only without them. Runs shell commands. Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.",
   },
   {
+    id: "walt",
+    profile: "upstream",
+    prompt: `You are ${UPSTREAM_DEFAULT_LABEL}, the upstream product, architecture, specification and planning specialist`,
+    description: "Upstream product, architecture, specification and planning specialist. Use it to author or revise requirements, technical proposals, roadmaps, decomposition, tasks, work packages and briefs. Edits only dispatch writePaths; read-only without them. Returns attributed proposals, source references, blockers and next actions. Does not implement products, approve scope, dispatch work or execute workflows.",
+  },
+  {
     id: "patty",
     profile: "execution",
     prompt: "You are Patty, frontend execution specialist.",
@@ -46,12 +53,6 @@ const nativeTeam = [
     profile: "review",
     prompt: "You are Lucy, cold code reviewer.",
     description: `Cold code review; records governed reviews. ${review} Returns cited APPROVE/FIX_FIRST/REJECT card.`,
-  },
-  {
-    id: "bobby",
-    profile: "review",
-    prompt: "You are Bobby, architecture reviewer.",
-    description: `Architecture review. ${review} Returns seam/contract verdict.`,
   },
   {
     id: "billy",
@@ -118,12 +119,12 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
       expect(agent.permission.slice(0, profile.length)).toEqual(profile)
-      if (seat.id !== "backend") expect(agent.permission).toEqual(profile)
+      if (seat.id !== "backend" && seat.id !== "walt") expect(agent.permission).toEqual(profile)
     }
   }),
 )
 
-it.instance("backend alone gets its entry skills and read-only skill root", () =>
+it.instance("backend alone gets backend skills and Atlas grants", () =>
   Effect.gen(function* () {
     const backend = yield* load((service) => service.get("backend"))
     const check = (permission: string, pattern: string) =>
@@ -194,6 +195,53 @@ it.instance("backend alone gets its entry skills and read-only skill root", () =
       ).toBe("deny")
     }
   }),
+)
+
+it.instance("upstream registration retains native scope and isolates its authoring skills", () =>
+  Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    const skills = yield* Skill.Service
+    const upstream = yield* agents.get("walt")
+    expect(upstream).toMatchObject({ id: "walt", name: UPSTREAM_DEFAULT_LABEL, native: true, mode: "subagent" })
+    expect(roster.find((member) => member.memberId === "walt")?.nativeProfile).toBe("upstream")
+    expect(nativeProfiles.upstream).toBe(nativeProfiles.walt)
+    expect((yield* skills.available(upstream)).map((skill) => skill.name).toSorted()).toEqual(Seats.all.walt.skills.toSorted())
+    expect((yield* skills.require("walt-work-package", "walt")).content).toContain("RelaySprint.Sprint")
+    const backend = yield* agents.get("backend")
+    expect((yield* skills.available(backend)).map((skill) => skill.name)).not.toContain("walt-plan")
+    expect((yield* skills.all()).map((skill) => skill.name)).not.toContain("walt-plan")
+    expect(yield* agents.get("bobby")).toBeUndefined()
+    for (const tool of ["task", "question", "atlas_memory_recall", "atlas_memory_emit", "maestro_record_review", "maestro_record_approval"])
+      expect(evaluate(upstream, tool)).toBe("deny")
+  }),
+)
+
+it.instance("upstream name config cannot widen its native charter or permissions", () =>
+  Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    const upstream = yield* agents.get("walt")
+    expect(upstream).toMatchObject({ id: "walt", name: "Configured Planner", native: true, mode: "subagent" })
+    expect(upstream.prompt).toStartWith("You are Configured Planner, the upstream product")
+    expect(evaluate(upstream, "task")).toBe("deny")
+    expect(evaluate(upstream, "maestro_record_approval")).toBe("deny")
+  }),
+  { config: { permission: { task: "allow" }, agent: { walt: {
+    name: "Configured Planner", mode: "primary", disable: true, prompt: "replacement", permission: { task: "allow" },
+  } } } },
+)
+
+testEffect(LayerNode.compile(
+  LayerNode.group([Agent.node, Plugin.node, Provider.node, Auth.node, Config.node, Skill.node, RuntimeFlags.node]),
+  [[RuntimeFlags.node, RuntimeFlags.layer({ seatLabels: { walt: "Environment Planner" } })]],
+)).instance("upstream environment label overrides config without changing routing", () =>
+  Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    const upstream = yield* agents.get("walt")
+    expect(upstream).toMatchObject({ id: "walt", name: "Environment Planner", native: true, mode: "subagent" })
+    expect(upstream.prompt).toStartWith("You are Environment Planner, the upstream product")
+    expect(yield* agents.get("Environment Planner")).toBeUndefined()
+  }),
+  { config: { agent: { walt: { name: "Configured Planner" } } } },
 )
 
 it.instance("native team seats cannot read .env files but can read .env.example", () =>

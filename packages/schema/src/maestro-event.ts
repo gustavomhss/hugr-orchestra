@@ -2,8 +2,10 @@ export * as MaestroEvent from "./maestro-event"
 
 import { Event } from "./event"
 import { Schema } from "effect"
-import { NonNegativeInt, PositiveInt } from "./schema"
+import { NonNegativeInt, PositiveInt, optional, statics } from "./schema"
 import { MaestroContext } from "./maestro-context"
+import { RelayArm } from "./relay-arm"
+import { UpstreamAttribution } from "./upstream-attribution"
 
 export namespace Approval {
   export const Presented = Event.define({
@@ -184,6 +186,9 @@ export namespace Admission {
 }
 
 export namespace PlanRevision {
+  // The upstream-owned RecordedV3 producer spreads these fields. Keep legacy durable versions byte-compatible.
+  export const WorkflowFields = { workflowBinding: optional(RelayArm.WorkflowDefinition) }
+
   const Field = Schema.Struct({
     value: Schema.String,
     source: Schema.Literals(["stakeholder", "maestro", "orientation"]),
@@ -223,6 +228,53 @@ export namespace PlanRevision {
     },
   })
   export type RecordedV2 = typeof RecordedV2.Type
+
+  const FieldV3 = Schema.Struct({
+    value: Schema.String,
+    source: Schema.Literals(["stakeholder", "maestro", "orientation", "upstream"]),
+  })
+
+  const RecordedV3Data = Schema.Struct({
+    ...Recorded.data.fields,
+    ...WorkflowFields,
+    revision: Schema.Literal("v3"),
+    goal: FieldV3,
+    acceptance: Schema.Array(FieldV3),
+    scope: Schema.Array(FieldV3),
+    constraints: Schema.Array(FieldV3),
+    reviewRequirement: FieldV3,
+    assumptions: Schema.Array(FieldV3),
+    risks: Schema.Array(FieldV3),
+    upstreamAttribution: optional(UpstreamAttribution.V1),
+    grounding: optional(MaestroContext.Grounding),
+  }).check(
+    Schema.makeFilter((data) =>
+      data.upstreamAttribution === undefined &&
+      [
+        data.goal,
+        data.reviewRequirement,
+        ...data.acceptance,
+        ...data.scope,
+        ...data.constraints,
+        ...data.assumptions,
+        ...data.risks,
+      ].some((field) => field.source === "upstream")
+        ? { path: ["upstreamAttribution"], issue: "UPSTREAM_ATTRIBUTION_MISSING" }
+        : undefined,
+    ),
+  )
+
+  // Event.define accepts fields only. Embed the checked data schema itself so envelope decoding shares its checks.
+  export const RecordedV3 = Schema.Struct({ ...Recorded.fields, data: RecordedV3Data })
+    .annotate({ identifier: Recorded.type })
+    .pipe(
+      statics(() => ({
+        type: Recorded.type,
+        durable: { version: 3, aggregate: "sessionID" },
+        data: RecordedV3Data,
+      })),
+    ) satisfies Event.Definition<typeof Recorded.type, typeof RecordedV3Data>
+  export type RecordedV3 = typeof RecordedV3.Type
 }
 
 export namespace Context {
@@ -540,6 +592,19 @@ export namespace Dispatch {
 }
 
 export namespace Task {
+  export const WorkflowBound = Event.define({
+    type: "maestro.task.workflow_bound",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      authorityCallID: Schema.NonEmptyString,
+      token: RelayArm.Token,
+      binding: RelayArm.WorkflowBinding,
+    },
+  })
+  export type WorkflowBound = typeof WorkflowBound.Type
+
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
   export const Bound = Event.define({
@@ -567,6 +632,7 @@ export const Definitions = Event.inventory(
   Admission.Decided,
   PlanRevision.Recorded,
   PlanRevision.RecordedV2,
+  PlanRevision.RecordedV3,
   Context.Recorded,
   Context.RecordedV2,
   Clarification.Decided,
@@ -581,4 +647,5 @@ export const Definitions = Event.inventory(
   Dispatch.Reserved,
   Dispatch.ReservedV2,
   Task.Bound,
+  Task.WorkflowBound,
 )

@@ -52,6 +52,12 @@ import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
 import { canonicalMemberId } from "./roster"
 import { WriteRoots } from "./write-roots"
+import { WorkflowBinding } from "./workflow-binding"
+import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
+import { SkillV2 } from "@orchestra/core/skill"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { WorkflowHost } from "./workflow-host"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -64,7 +70,9 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const observations = yield* ArsenalObservations.Service
     const registrations = yield* ApplicationTools.Service
-    const runtime = yield* make
+     const runtime = yield* make
+     const workflowSessions = yield* RelayWorkflowSession.Service
+     yield* workflowSessions.register(runtime.workflowSessionHost)
     yield* registrations
       .register(
         MaestroArsenal.applicationTools((context) =>
@@ -93,6 +101,7 @@ const layer = Layer.effectDiscard(
               const native = yield* nativeAgents.get(context.agent).pipe(Effect.provideService(InstanceRef, instance))
               const agent = yield* agents.get(context.agent)
               const nativeMaestro = agent?.id === "maestro" && native?.id === "maestro" && native.native === true
+              const nativeUpstream = agent?.id === "walt" && native?.id === "walt" && native.native === true
               const data = yield* fs
                 .realPath(global.data)
                 .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new ToolFailure({ message: "ARSENAL_DATA_UNAVAILABLE" })))
@@ -111,7 +120,7 @@ const layer = Layer.effectDiscard(
                     source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
                   })
                   .pipe(Effect.mapError(() => new ToolFailure({ message: "Arsenal permission denied." })))
-              const host = { directory, stateDirectory, projectID: session.projectID, nativeMaestro, ask }
+              const host = { directory, stateDirectory, projectID: session.projectID, nativeMaestro, nativeUpstream, ask }
               return {
                 ...host,
                 outputBudget: outputs.limits,
@@ -183,7 +192,8 @@ export const node = makeGlobalNode({
     Database.node,
     Permission.node,
     Config.node,
-    Git.node,
+     Git.node,
+     RelayWorkflowSession.node,
   ],
 })
 
@@ -246,6 +256,7 @@ export const make = Effect.gen(function* () {
   const observations = yield* ArsenalObservations.Service
   const locations = yield* LocationServiceMap.Service
   const safety = yield* ToolSafety.make
+   const events = yield* EventV2Bridge.Service
   const runnerReports = new WeakMap<ArsenalCompletion.Binding, Effect.Success<ReturnType<typeof ArsenalVerification.run>>>()
   const approvalHost = yield* makeApprovalHost
   const state = yield* InstanceState.make((instance) =>
@@ -290,7 +301,7 @@ export const make = Effect.gen(function* () {
         child.directory !== session.directory
       )
         return yield* new ToolSafety.Denied({ reason: "completion-native-child-mismatch" })
-      const calls = yield* database.db
+       const calls = input.workflow ? [] : yield* database.db
         .select({ data: PartTable.data })
         .from(PartTable)
         .innerJoin(
@@ -307,17 +318,15 @@ export const make = Effect.gen(function* () {
         .limit(2)
         .all()
         .pipe(Effect.orDie)
-      if (calls.length !== 1)
+       if (!input.workflow && calls.length !== 1)
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-missing-or-ambiguous" })
-      const call = Schema.decodeUnknownOption(
-        Schema.Struct({
-          type: Schema.Literal("tool"),
-          tool: Schema.Literal("task"),
-          state: Schema.Struct({ input: Schema.Struct({ subagent_type: Schema.String }) }),
-        }),
-      )(calls[0].data)
+       const call = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String }))(
+         input.workflow ? (yield* WorkflowBinding.taskCall(session.id, input.workflow.assistantMessageID, input.callID)).input
+           : Schema.decodeUnknownSync(Schema.Struct({ type: Schema.Literal("tool"), tool: Schema.Literal("task"),
+             state: Schema.Struct({ input: Schema.Unknown }) }))(calls[0].data).state.input,
+       )
       if (Option.isNone(call)) return yield* new ToolSafety.Denied({ reason: "completion-native-task-call-invalid" })
-      const actor = yield* agents.get(call.value.state.input.subagent_type)
+       const actor = yield* agents.get(call.value.subagent_type)
       if ((actor.id ?? actor.name) !== canonicalMemberId(child.agent))
         return yield* new ToolSafety.Denied({ reason: "completion-native-task-agent-mismatch" })
       const rows = yield* database.db
@@ -513,11 +522,12 @@ export const make = Effect.gen(function* () {
           Effect.gen(function* () {
             const authority = yield* approved({ ...binding, planID: undefined })
             if (!authority.planID) return { status: "missing" as const }
-            const plan = yield* readPlanRevision(authority.planID)
-            if (!plan || plan.sessionID !== binding.sessionID || plan.revision !== "v2")
+             const plan = yield* readPlanRevision(authority.planID)
+             const grounding = plan && plan.revision !== "v1" ? plan.grounding : undefined
+             if (!plan || plan.sessionID !== binding.sessionID || !grounding)
               return { status: "missing" as const }
             const source = yield* readAtlasSource(authority.session)
-            if (source.identityHash !== plan.grounding.sourceIdentityHash) return outcome(false)
+             if (source.identityHash !== grounding.sourceIdentityHash) return outcome(false)
             const compiled = compileContextToolPlan({
               actor: { projectId: binding.projectID, sessionId: binding.sessionID, memberId: "maestro" },
               revision: {
@@ -527,7 +537,7 @@ export const make = Effect.gen(function* () {
                 sessionId: binding.sessionID,
               },
               territories: plan.scope.map((field) => field.value),
-              units: plan.grounding.units,
+               units: grounding.units,
               context: source.context,
             })
             return outcome(compiled.status === "READY" && compiled.plan.actions.length > 0)
@@ -548,7 +558,7 @@ export const make = Effect.gen(function* () {
       return acquired.outcome
     }))],
   ])
-  const host: ArsenalCompletion.Host = {
+   const host: ArsenalCompletion.Host = {
     resolve,
     checks,
     relay: ArsenalCompletion.locationRelay((ref) => locations.get(ref)),
@@ -583,7 +593,29 @@ export const make = Effect.gen(function* () {
           },
         })
       }).pipe(Effect.orDie),
-  }
+   }
+  const workflowContext = yield* Effect.context<WorkflowHost.Requirements>().pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(EventV2Bridge.Service, events),
+  )
+  const workflow = WorkflowHost.make({
+    database,
+    sessions,
+    agents,
+    fs,
+    git,
+    processes,
+    under,
+    approved,
+    completion: host,
+    context: workflowContext,
+    catalog: (directory) => SkillV2.Service.pipe(Effect.provide(locations.get(Location.Ref.make({
+      directory: AbsolutePath.make(directory),
+    })))),
+  })
+  checks.set("cold-review", (binding) => workflow.coldReview(binding).pipe(Effect.as(outcome(true))))
+  const workflowHost = workflow.host
+  const workflowSessionHost = workflow.sessionHost
   // A release request (Maestro condition 2) names an arm this session armed natively; the owner's answer decides.
   const release = Effect.fn("ArsenalBindings.release")(function* (context: { sessionID: string; assistantMessageID: string; callID: string }, args: unknown) {
     const request = Schema.decodeUnknownOption(Schema.Struct({ token: Schema.NonEmptyString, reason: Schema.NonEmptyString }))(args)
@@ -610,6 +642,8 @@ export const make = Effect.gen(function* () {
           return yield* effect.pipe(
             Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, () => sessions.get(session.id).pipe(Effect.orDie))),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
+             Effect.provideService(WorkflowBinding.NativeHost, workflowHost),
+             Effect.provideService(RelayWorkflowSession.NativeHost, workflowSessionHost),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),
           )
@@ -644,7 +678,8 @@ export const make = Effect.gen(function* () {
   return {
     withSession,
     run,
-    approvalHost,
+     approvalHost,
+     workflowSessionHost,
     wrapTools: Effect.fn("ArsenalBindings.wrapTools")(function* (
       input: { sessionID: string; assistantMessageID: string; agent?: string; directory: string; projectID: string },
       tools: Record<string, Tool>,
@@ -672,8 +707,9 @@ export const make = Effect.gen(function* () {
         }),
       )
     }),
-    construct: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-      effect.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host)),
+     construct: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+       effect.pipe(Effect.provideService(ArsenalCompletion.NativeHost, host),
+         Effect.provideService(WorkflowBinding.NativeHost, workflowHost)),
     observe: (
       input: { sessionID: string; assistantMessageID: string; callID: string; directory: string; projectID: string },
       value: ToolSafety.Observation,
@@ -700,6 +736,8 @@ export const make = Effect.gen(function* () {
           Effect.mapError(() => new ToolFailure({ message: "ARSENAL_INPUT_DENIED" })),
         )
         if (name !== "relay-arm") return
+        if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database)))
+          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED" })
         const input = Schema.decodeUnknownOption(
           Schema.Struct({
             action: Schema.String,
