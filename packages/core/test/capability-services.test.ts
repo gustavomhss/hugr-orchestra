@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityDiscovery } from "@orchestra/core/capability/catalog/discovery"
+import { CapabilityDescriptors } from "@orchestra/core/capability/catalog/descriptors"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { CapabilityServiceProviders } from "@orchestra/core/capability/service/providers"
 import { CapabilityServiceSchema } from "@orchestra/core/capability/service/schema"
@@ -444,6 +445,100 @@ it.live("mixed Capability/Artifact failures preserve exact defects, interruptors
     expect(yield* Ref.get(f.effects)).toBe(0)
   }))))
 }).pipe(Effect.timeout("20 seconds")))
+
+it.live("validateCurrent checks actual descriptor store without transport, credentials or another approval", () => Effect.gen(function* () {
+  const f = yield* currentValidationFixture()
+  const transport = (yield* Ref.get(f.calls)).length
+  const credentials = yield* Ref.get(f.credentialReads)
+  expect(transport).toBeGreaterThan(0)
+  expect(credentials).toBeGreaterThan(0)
+  const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+  yield* CapabilityPolicyFixture.setRules([{ action: "service_discover", resource: "*", effect: "ask" }])
+  const approval = yield* f.run(f.policy.assert(f.context, { action: "service_discover", resources: ["service_discover"] })).pipe(Effect.forkChild)
+  yield* f.permissions.reply({ requestID: (yield* Deferred.await(asked.first)).id, reply: "once" })
+  yield* Fiber.join(approval)
+  expect(yield* Ref.get(asked.count)).toBe(1)
+  expect(yield* f.validate()).toBeUndefined()
+  yield* Effect.forEach([{ ...f.scope, connectionGeneration: 1 }, { ...f.scope, targetGeneration: 1 },
+    { ...f.scope, catalogGeneration: 2 }, { ...f.scope, schemaHash: "b".repeat(64) }], (scope) =>
+    expectCode(f.validate(f.descriptor, f.materialization, scope), "stale_descriptor"))
+  yield* expectCode(f.validate({ ...f.descriptor, id: Capability.DescriptorID.create() }), "stale_descriptor")
+  const reads = { count: 0 }
+  const poisoned = { ...f.descriptor }
+  Object.defineProperty(poisoned, "id", { get: () => { reads.count++; throw new Error("VALIDATION_REF_READ_EARLY") } })
+  yield* expectCode(f.discovery.validateCurrent(f.context, poisoned, f.materialization, f.scope), "invocation_binding_missing")
+  const missing = yield* CapabilityPolicyFixture.fixture({ part: false })
+  yield* expectCode(CapabilityInvocation.withContext(missing.binding,
+    f.discovery.validateCurrent(missing.context, poisoned, f.materialization, f.scope)), "invocation_binding_mismatch")
+  const foreign = yield* CapabilityPolicyFixture.fixture()
+  yield* expectCode(CapabilityInvocation.withContext(foreign.binding,
+    f.discovery.validateCurrent(foreign.context, f.descriptor, f.materialization, f.scope)), "stale_descriptor")
+  expect(reads.count).toBe(0)
+  yield* f.store.remove(f.descriptor)
+  yield* expectCode(f.validate(), "stale_descriptor")
+  const otherScope = { ...f.scope, schemaHash: f.other.schemaHash }
+  expect(yield* f.validate(f.other, f.materialization, otherScope)).toBeUndefined()
+  f.clock.time += 100
+  yield* expectCode(f.validate(f.other, f.materialization, otherScope), "stale_descriptor")
+  expect(yield* Ref.get(f.calls)).toHaveLength(transport)
+  expect(yield* Ref.get(f.credentialReads)).toBe(credentials)
+  expect(yield* Ref.get(asked.count)).toBe(1)
+  expect(yield* f.permissions.list()).toEqual([])
+}).pipe(Effect.timeout("5 seconds")))
+
+it.live("validateCurrent rechecks TTL, persisted root and registration after asynchronous real descriptor read", () => Effect.gen(function* () {
+  yield* Effect.forEach(["expiry", "root", "registration"] as const, (change) => Effect.gen(function* () {
+    const f = yield* currentValidationFixture()
+    expect(yield* f.validate()).toBeUndefined()
+    const transport = (yield* Ref.get(f.calls)).length
+    const credentials = yield* Ref.get(f.credentialReads)
+    const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    yield* Ref.set(f.afterRead, Deferred.succeed(entered, undefined).pipe(Effect.andThen(Deferred.await(release))))
+    const fiber = yield* f.validate().pipe(Effect.exit, Effect.forkChild)
+    yield* Deferred.await(entered)
+    if (change === "expiry") f.clock.time += 100
+    if (change === "root") yield* f.events.publish(SessionEvent.Tool.Success, { sessionID: f.context.sessionID,
+      assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID, structured: {}, content: [],
+      timestamp: CapabilityPolicyFixture.timestamp, provider: { executed: false } })
+    if (change === "registration") yield* f.registry.register(Object.fromEntries(Object.entries(f.services.tools)
+      .filter(([name]) => name === "platform_supabase")))
+    yield* Deferred.succeed(release, undefined)
+    const exit = yield* Fiber.join(fiber)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) expect(exit.cause.reasons.some((reason) => reason._tag === "Fail" &&
+      reason.error.code === (change === "root" ? "invocation_binding_mismatch" : "stale_descriptor"))).toBe(true)
+    yield* Ref.set(f.afterRead, Effect.void)
+    if (change === "registration") yield* expectCode(f.validate(f.descriptor, yield* f.registry.materialize()), "stale_descriptor")
+    expect(yield* Ref.get(f.calls)).toHaveLength(transport)
+    expect(yield* Ref.get(f.credentialReads)).toBe(credentials)
+    expect(yield* Ref.get(asked.count)).toBe(0)
+    expect(yield* f.permissions.list()).toEqual([])
+  }))
+}).pipe(Effect.timeout("10 seconds")))
+
+function currentValidationFixture() {
+  return Effect.gen(function* () {
+    const clock = { time: 1000 }
+    const store = yield* CapabilityDescriptors.make({ maxEntries: 8, ttlMillis: 100, now: () => clock.time })
+    const afterRead = yield* Ref.make<Effect.Effect<void>>(Effect.void)
+    const f = yield* CapabilityServicesFixture.fixture({ clock, descriptors: { ...store,
+      read: (ref, scope) => store.read(ref, scope).pipe(Effect.tap(() => Ref.get(afterRead).pipe(Effect.flatten))),
+    } })
+    const page = yield* f.find()
+    const descriptor = ref(page)
+    const other = page.operations[1]?.ref
+    if (!other) return yield* Effect.die("VALIDATION_UNRELATED_DESCRIPTOR_MISSING")
+    const resolution = yield* f.run(f.connections.resolve(f.context, { provider: request.provider, action: "service_call" }))
+    const fresh = yield* f.run(f.discovery.describe(f.context, descriptor, f.materialization))
+    const scope = { connectionGeneration: resolution.connection.generation, targetGeneration: resolution.target.generation,
+      catalogGeneration: fresh.ref.catalogGeneration, schemaHash: fresh.ref.schemaHash }
+    const validate = (value = descriptor, materialization = f.materialization, current = scope) =>
+      f.run(f.discovery.validateCurrent(f.context, value, materialization, current))
+    return { ...f, store, afterRead, descriptor, other, scope, validate }
+  })
+}
 
 function expectCode<A, R>(effect: Effect.Effect<A, Capability.Failure, R>, code: Capability.ErrorCode) {
   return effect.pipe(Effect.flip, Effect.map((error) => {

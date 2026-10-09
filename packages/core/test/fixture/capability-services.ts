@@ -2,6 +2,7 @@ export * as CapabilityServicesFixture from "./capability-services"
 
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityDiscovery } from "@orchestra/core/capability/catalog/discovery"
+import type { CapabilityDescriptors } from "@orchestra/core/capability/catalog/descriptors"
 import { CapabilityVendorSchema } from "@orchestra/core/capability/catalog/schema"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
@@ -75,7 +76,7 @@ export const output: CapabilityServiceSchema.CallOutput = {
   validation: { input: "validated", output: "validated" }, data: ["project"], redacted: false,
 }
 
-export function fixture(options: { name?: string } = {}) {
+export function fixture(options: { name?: string; clock?: { time: number }; descriptors?: CapabilityDescriptors.Store } = {}) {
   return Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture(options)
     yield* CapabilityPolicyFixture.setRules(allow)
@@ -95,14 +96,17 @@ export function fixture(options: { name?: string } = {}) {
     const target = yield* connections.createTarget(connection, { environment: "test", resource: { project: "selected" } })
     yield* connections.bind({ target, sessionID: f.context.sessionID, agentID: f.context.agent, actions: ["service_discover", "service_call"] })
     const calls = yield* Ref.make<CapabilityDiscovery.Selection[]>([])
+    const credentialReads = yield* Ref.make(0)
     const list = yield* Ref.make<CapabilityDiscovery.VendorList>({ tools, catalogGeneration: 1, coverage: "complete", byteLength: 1024 })
-    const clock = { time: 1000 }
-    const discovery = yield* CapabilityDiscovery.make({ ttlMillis: 100, now: () => clock.time,
+    const clock = options.clock ?? { time: 1000 }
+    const discovery = yield* CapabilityDiscovery.make({ ttlMillis: 100, now: () => clock.time, descriptors: options.descriptors,
       source: { listTools: (selection) => Effect.gen(function* () {
         yield* Ref.update(calls, (calls) => [...calls, selection])
         return CapabilityServiceProviders.filterCatalog(selection.connection.provider, yield* Ref.get(list))
       }) },
-    })
+    }).pipe(Effect.provideService(Credential.Service, Credential.Service.of({ ...credentials,
+      get: (id) => Ref.update(credentialReads, (n) => n + 1).pipe(Effect.andThen(credentials.get(id))),
+    })))
     const seen = yield* Ref.make<readonly Readonly<{
       provider: string; context: Tool.Context; binding: CapabilityInvocation.Binding; hook?: string; captured?: ToolRegistry.Materialization
     }>[]>([])
@@ -137,7 +141,7 @@ export function fixture(options: { name?: string } = {}) {
     }), host)
     const rows = () => f.database.db.select().from(CapabilityChildTable)
       .where(eq(CapabilityChildTable.session_id, f.context.sessionID)).all().pipe(Effect.orDie)
-    return { ...f, binding, registry, connections, credentials, credential, connection, target, calls, list, clock,
+    return { ...f, binding, registry, connections, credentials, credential, connection, target, calls, credentialReads, list, clock,
       discovery, seen, response, behavior, services, materialization, run, find, locate, settle, rows }
   })
 }
