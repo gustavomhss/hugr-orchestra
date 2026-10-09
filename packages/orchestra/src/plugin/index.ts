@@ -36,6 +36,7 @@ import { InstallationChannel } from "@orchestra/core/installation/version"
 import { HuGRComposerPlugin } from "./hugr-composer"
 import { AppDockPlugin } from "./app-dock"
 import { LinuxWorkspacePlugin } from "./linux-workspace"
+import { ListenerContext } from "@/server/listener-context"
 
 type State = {
   hooks: Hooks[]
@@ -134,6 +135,7 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const config = yield* Config.Service
     const flags = yield* RuntimeFlags.Service
+    const listenerBinding = yield* ListenerContext.Current
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("Plugin.state")(function* (ctx) {
@@ -146,7 +148,7 @@ const layer = Layer.effect(
 
         const { Server } = yield* Effect.promise(() => import("../server/server"))
 
-        const serverUrl = Server.url
+        const serverUrl = listenerBinding ? ListenerContext.requireURL(listenerBinding) : Server.url
         const client = createOrchestraClient({
           baseUrl: serverUrl?.toString() ?? "http://localhost:4096",
           directory: ctx.directory,
@@ -165,7 +167,9 @@ const layer = Layer.effect(
             },
           },
           get serverUrl(): URL {
-            return Server.url ?? new URL("http://localhost:4096")
+            return listenerBinding
+              ? ListenerContext.requireURL(listenerBinding)
+              : (Server.url ?? new URL("http://localhost:4096"))
           },
           // @ts-expect-error
           $: typeof Bun === "undefined" ? undefined : Bun.$,
