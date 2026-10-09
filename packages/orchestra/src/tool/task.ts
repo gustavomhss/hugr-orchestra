@@ -471,7 +471,7 @@ export const TaskTool = Tool.define(
         model,
         ...(runInBackground ? { background: true } : {}),
       }
-      const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
+      const completionEvidence: { value?: TaskBackground.Metadata["completion"] } = {}
       const work = SeatWork.track({
         enabled: seat?.workResult !== undefined,
         seat,
@@ -716,7 +716,10 @@ export const TaskTool = Tool.define(
         : DESCRIPTION,
       parameters: Parameters,
       jsonSchema: flags.experimentalBackgroundSubagents ? undefined : ToolJsonSchema.fromSchema(BaseParameters),
-      execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
+      execute: (
+        params: Schema.Schema.Type<typeof Parameters>,
+        ctx: Tool.Context,
+      ): Effect.Effect<TaskBackground.ExecuteResult> =>
         (params.authorizationID
           ? dispatchLock.withLock(params.authorizationID)(run(params, ctx))
           : run(params, ctx)
