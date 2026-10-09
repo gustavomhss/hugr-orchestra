@@ -1,6 +1,7 @@
 export * as CapabilityMedia from "./index"
 
 import { Buffer } from "node:buffer"
+import { createHash } from "node:crypto"
 import { Capability } from "@orchestra/schema/capability"
 import { Permission } from "@orchestra/schema/permission"
 import { and, eq } from "drizzle-orm"
@@ -42,6 +43,7 @@ const Images = Schema.Struct({ data: Schema.Array(Schema.Struct({ b64_json: Sche
 const Task = Schema.Struct({ id: Schema.String, status: Schema.Literals(["PENDING", "RUNNING", "THROTTLED", "SUCCEEDED", "FAILED", "CANCELLED"]),
   output: Schema.optionalKey(Schema.Array(Schema.String).check(Schema.isMaxLength(1))) })
 const StoredPolicy = Schema.Struct({ effectiveRules: Permission.Ruleset, nativeDenyFloor: Permission.Ruleset })
+const observationRoots = Object.freeze(["image_create", "video_create"])
 
 /** Captures existing Location services; registration belongs to host/lead. Construction performs no vendor I/O. */
 export const make = (options: Options = {}) => Effect.gen(function* () {
@@ -86,8 +88,10 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     return resolved
   })
 
-  const producer = Effect.fn("CapabilityMedia.producer")(function* (context: Tool.Context) {
+  const producer = Effect.fn("CapabilityMedia.producer")(function* (context: Tool.Context, expected?: string) {
     const binding = yield* CapabilityInvocation.require(context, placement)
+    if (!observationRoots.includes(binding.rootToolName) || (expected !== undefined && binding.rootToolName !== expected))
+      return yield* failure("invocation_binding_mismatch")
     return { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName } satisfies CapabilityJobs.ProducerProof
   })
   const record = (ref: Capability.JobRef) => database.db.select().from(CapabilityJobTable)
@@ -101,10 +105,25 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     return yield* accessToken(credential)
   })
 
+  // HTTP stays interruptible. Once bytes arrive, parsing and durable ACK form one protected handoff.
+  const acknowledge = <A>(proof: CapabilityJobs.ProducerProof, submitting: CapabilityJobs.Receipt,
+    io: Effect.Effect<Uint8Array, Capability.Failure>, schema: Schema.Codec<A>,
+    completed: (value: A) => Pick<CapabilityJobs.TransitionInput, "state" | "providerID" | "observation">,
+  ) => Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+    const response = yield* restore(io).pipe(Effect.result,
+      Effect.onInterrupt(() => jobs.observeHost(proof, submitting.ref,
+        { expectedGeneration: submitting.generation, state: "unknown", observation: {} }).pipe(Effect.asVoid)))
+    const parsed = response._tag === "Success" ? yield* json(response.success, schema).pipe(Effect.result) : response
+    const receipt = yield* jobs.observeHost(proof, submitting.ref, { expectedGeneration: submitting.generation,
+      ...(parsed._tag === "Success" ? completed(parsed.success) : { state: "unknown" as const, observation: {} }) })
+    return { parsed, receipt }
+  }))
+
   // Separate trusted-host authorization. Proof establishes provenance, never grants polling/download authority.
   const hostCredential = Effect.fn("CapabilityMedia.hostCredential")(function* (
     proof: CapabilityJobs.ProducerProof, ref: Capability.JobRef, action: string,
   ) {
+    if (proof.rootToolName !== "video_create") return yield* failure("target_denied")
     yield* jobs.readHost(proof, ref)
     return yield* agents.withPermissions(proof.owner.agentID, () => database.db.transaction((tx) => Effect.gen(function* () {
       const row = yield* tx.select().from(CapabilityJobTable).where(eq(CapabilityJobTable.id, ref.id)).get().pipe(Effect.orDie)
@@ -148,6 +167,7 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     Capability.Failure | CapabilityArtifacts.Failure> {
     // Snapshot caller-owned proof before waits; host inputs never contain a credential or claim URL.
     const proof = structuredClone(supplied.proof)
+    if (proof.rootToolName !== "video_create") return yield* failure("target_denied")
     const ref = { ...supplied.jobRef }
     const operation = supplied.operation
     const liveRoot = supplied.liveRoot ? { ...supplied.liveRoot } : undefined
@@ -169,6 +189,8 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const authorized = yield* hostCredential(proof, ref, action)
     if (liveRoot) yield* policy.assert(liveRoot, { action, resources: ["runway", ...(row.connection ? [row.connection.id] : []),
       ...(row.target ? [row.target.id] : []), `purpose:${authorized.purpose}`] })
+    const current = yield* hostCredential(proof, ref, action)
+    if (current.purpose !== authorized.purpose) return yield* failure("target_denied")
     if (operation === "cancel") {
       // Pinned provider declares no cancel endpoint: no DELETE guess and no fabricated confirmation.
       const next = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
@@ -176,26 +198,32 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       return { status: "partial", receipt: ref.id, summary: "Provider cancellation unsupported",
         completedEffects: [], unresolvedEffects: ["provider-cancellation-unsupported"], artifactRefs: next.observation.artifactRefs ?? [] }
     }
-    const response = yield* request(apiURL("runway", `/v1/tasks/${read.providerID}`),
-      { headers: headers(authorized.token, "runway") }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis)
-    const task = yield* json(response, Task)
-    if (task.id !== read.providerID) return yield* failure("outcome_unknown")
-    if (task.status === "FAILED" || task.status === "CANCELLED") {
-      // Unsolicited remote cancellation ends generation; do not fabricate a local cancel request/ack.
-      const ended = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
-        state: "failed", observation: { remoteOutcome: "failed" } })
-      return task.status === "CANCELLED" ? { status: "partial" as const, receipt: ref.id, summary: "Remote cancellation observed",
-        completedEffects: ["remote-cancellation-observed"], unresolvedEffects: [], artifactRefs: [] } : project(ended)
-    }
-    if (task.status !== "SUCCEEDED") {
-      if (read.receipt.state === "completed") return yield* failure("outcome_unknown")
-      const next = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
-        state: task.status === "RUNNING" ? "running" : read.receipt.state, observation: read.receipt.observation })
-      return project(next)
-    }
-    // Persist remote completion before fetching claim URLs or attempting publication.
-    const completed = read.receipt.state === "completed" ? read.receipt : yield* jobs.observeHost(proof, ref,
-      { expectedGeneration: read.receipt.generation, state: "completed", observation: { remoteOutcome: "completed", materialization: "pending" } })
+    const observed = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const response = yield* restore(request(apiURL("runway", `/v1/tasks/${read.providerID}`),
+        { headers: headers(current.token, "runway") }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis))
+      const task = yield* json(response, Task)
+      if (task.id !== read.providerID) return yield* failure("outcome_unknown")
+      if (task.status === "FAILED" || task.status === "CANCELLED") {
+        // Remote cancellation ends generation; never invent a local cancellation request or acknowledgement.
+        const receipt = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
+          state: "failed", observation: { remoteOutcome: "failed" } })
+        return { task, receipt }
+      }
+      if (task.status !== "SUCCEEDED") {
+        if (read.receipt.state === "completed") return yield* failure("outcome_unknown")
+        const receipt = yield* jobs.observeHost(proof, ref, { expectedGeneration: read.receipt.generation,
+          state: task.status === "RUNNING" ? "running" : read.receipt.state, observation: read.receipt.observation })
+        return { task, receipt }
+      }
+      const receipt = read.receipt.state === "completed" ? read.receipt : yield* jobs.observeHost(proof, ref,
+        { expectedGeneration: read.receipt.generation, state: "completed", observation: { remoteOutcome: "completed", materialization: "pending" } })
+      return { task, receipt }
+    }))
+    const task = observed.task
+    const completed = observed.receipt
+    if (task.status === "CANCELLED") return { status: "partial", receipt: ref.id, summary: "Remote cancellation observed",
+      completedEffects: ["remote-cancellation-observed"], unresolvedEffects: [], artifactRefs: [] }
+    if (task.status !== "SUCCEEDED") return project(completed)
     if (operation !== "materialize" || !liveRoot) return project(completed)
     const materialized = yield* Effect.gen(function* () {
       if (!task.output || task.output.length !== 1) return yield* failure("acquisition_failed")
@@ -203,11 +231,14 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
       const download = yield* hostCredential(proof, ref, "video_create.download")
       yield* policy.assert(liveRoot, { action: "video_create.download", resources: ["runway", ...(row.connection ? [row.connection.id] : []),
         ...(row.target ? [row.target.id] : []), `purpose:${download.purpose}`] })
+      const current = yield* hostCredential(proof, ref, "video_create.download")
+      if (current.purpose !== download.purpose) return yield* failure("target_denied")
       const data = yield* request(url, { headers: new URL(url).origin === new URL(endpoints.runway).origin
-        ? headers(download.token, "runway") : {} }, budgets.downloadBytes, budgets.timeoutMillis)
+        ? headers(current.token, "runway") : {} }, budgets.downloadBytes, budgets.timeoutMillis)
       // Artifact store is authoritative. Until lead adds structural MP4 support this fails explicitly.
       return yield* artifacts.publish(liveRoot, { data, mime: "video/mp4", kind: "video", verification: "observed",
-        metadata: { provider: "runway" } })
+        metadata: { provider: "runway" } }, [{ action: "video_create.download", resources: ["runway", ...(row.connection ? [row.connection.id] : []),
+          ...(row.target ? [row.target.id] : []), `purpose:${current.purpose}`] }])
     }).pipe(Effect.result, Effect.onInterrupt(() => jobs.observeHost(proof, ref,
       { expectedGeneration: completed.generation, state: "completed", observation: { remoteOutcome: "completed", materialization: "failed" } }).pipe(Effect.asVoid)))
     const published = yield* jobs.observeHost(proof, ref, { expectedGeneration: completed.generation, state: "completed",
@@ -216,14 +247,17 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     return project(published)
   })
 
-  const createImage = Effect.fn("CapabilityMedia.createImage")(function* (input: ImageInput, context: Tool.Context) {
+  const createImage = Effect.fn("CapabilityMedia.createImage")(function* (supplied: ImageInput, context: Tool.Context) {
+    const input = snapshotRequest(supplied)
+    const proof = yield* producer(context, "image_create")
     const invalid = validateImage(input)
     if (invalid) return yield* invalid
     const resolved = yield* select(context, input, "image_create")
-    const proof = yield* producer(context)
-    const ref = yield* jobs.create(context, { kind: "worker", operation: "image_create", connection: resolved.connection, target: resolved.target })
+    const admitted = yield* jobs.admit(context, { kind: "worker", operation: "image_create", requestHash: requestHash(input, proof),
+      connection: resolved.connection, target: resolved.target })
+    const ref = admitted.ref
     const current = yield* jobs.read(context, ref)
-    if (current.state !== "intent") return project(current)
+    if (admitted.reused || current.state !== "intent") return project(current)
     const mime = input.options.format === "png" ? "image/png" : "image/jpeg"
     const captured = { bytes: 0 }
     const inputs = yield* Effect.forEach(input.inputArtifactRefs, (ref) => Effect.gen(function* () {
@@ -243,27 +277,22 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     }
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
     const token = yield* submitToken(context, resolved, "image_create", input.purpose)
-    const submitted = yield* request(apiURL("openai", `/images/${input.operation === "edit" ? "edits" : "generations"}`),
+    const handoff = yield* acknowledge(proof, submitting, request(apiURL("openai", `/images/${input.operation === "edit" ? "edits" : "generations"}`),
       { method: "POST", headers: { ...headers(token, "openai"), ...(form ? {} : { "Content-Type": "application/json" }) },
-        body: form ?? JSON.stringify(body) }, budgets.responseBytes, budgets.timeoutMillis).pipe(
-        Effect.flatMap((bytes) => json(bytes, Images)), Effect.result,
-        Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "unknown", observation: {} }).pipe(Effect.asVoid)),
-      )
-    if (submitted._tag === "Failure") {
-      const unknown = yield* jobs.observeHost(proof, ref,
-        { expectedGeneration: submitting.generation, state: "unknown", observation: {} })
-      return project(unknown)
-    }
-    const completed = yield* jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "completed",
-      observation: { remoteOutcome: "completed", materialization: "pending" } })
+        body: form ?? JSON.stringify(body) }, budgets.responseBytes, budgets.timeoutMillis), Images,
+      () => ({ state: "completed", observation: { remoteOutcome: "completed", materialization: "pending" } }))
+    if (handoff.parsed._tag === "Failure") return project(handoff.receipt)
+    const submitted = handoff.parsed.success
+    const completed = handoff.receipt
     const retained: Capability.ArtifactRef[] = []
     const publication = yield* Effect.gen(function* () {
-      if (submitted.success.data.length !== input.options.count) return yield* failure("acquisition_failed")
-      yield* Effect.forEach(submitted.success.data, (value) => Effect.gen(function* () {
+      if (submitted.data.length !== input.options.count) return yield* failure("acquisition_failed")
+      yield* Effect.forEach(submitted.data, (value) => Effect.gen(function* () {
         const data = yield* base64(value.b64_json, budgets.downloadBytes)
         const dimensions = yield* image(data, mime, budgets)
         const ref = yield* artifacts.publish(context, { data, mime, kind: "image", verification: "observed",
-          metadata: { provider: "openai", model: input.model, ...dimensions } })
+          metadata: { provider: "openai", model: input.model, ...dimensions } }, [{ action: "image_create",
+            resources: ["openai", resolved.connection.id, resolved.target.id, `purpose:${input.purpose}`] }])
         retained.push(ref)
       }))
     }).pipe(Effect.result, Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: completed.generation,
@@ -273,14 +302,17 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     return project(published)
   })
 
-  const createVideo = Effect.fn("CapabilityMedia.createVideo")(function* (input: VideoInput, context: Tool.Context) {
+  const createVideo = Effect.fn("CapabilityMedia.createVideo")(function* (supplied: VideoInput, context: Tool.Context) {
+    const input = snapshotRequest(supplied)
+    const proof = yield* producer(context, "video_create")
     const invalid = validateVideo(input)
     if (invalid) return yield* invalid
     const resolved = yield* select(context, input, "video_create")
-    const proof = yield* producer(context)
-    const ref = yield* jobs.create(context, { kind: "provider", operation: "video_create", connection: resolved.connection, target: resolved.target })
+    const admitted = yield* jobs.admit(context, { kind: "provider", operation: "video_create", requestHash: requestHash(input, proof),
+      connection: resolved.connection, target: resolved.target })
+    const ref = admitted.ref
     const current = yield* jobs.read(context, ref)
-    if (current.state !== "intent") return project(current)
+    if (admitted.reused || current.state !== "intent") return project(current)
     const source = input.inputArtifactRefs[0] ? yield* artifacts.read(context, input.inputArtifactRefs[0]) : undefined
     if (source && input.operation === "image-to-video") yield* image(source.data, source.metadata.mime, budgets)
     if (source && input.operation === "edit" && source.metadata.mime !== "video/mp4") return yield* failure("unsupported_operation")
@@ -292,20 +324,16 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
     const submitting = yield* jobs.transition(context, ref, { expectedGeneration: current.generation, state: "submitting", observation: {} })
     const token = yield* submitToken(context, resolved, "video_create", input.purpose)
     const path = input.operation === "generate" ? "/v1/text_to_video" : input.operation === "edit" ? "/v1/video_to_video" : "/v1/image_to_video"
-    const submitted = yield* request(apiURL("runway", path), { method: "POST", headers: { ...headers(token, "runway"),
-      "Content-Type": "application/json" }, body: JSON.stringify(body) }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis).pipe(
-        Effect.flatMap((bytes) => json(bytes, Submitted)), Effect.result,
-        Effect.onInterrupt(() => jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation, state: "unknown", observation: {} }).pipe(Effect.asVoid)),
-      )
-    const acknowledged = yield* jobs.observeHost(proof, ref, { expectedGeneration: submitting.generation,
-      state: submitted._tag === "Success" ? "submitted" : "unknown",
-      ...(submitted._tag === "Success" ? { providerID: submitted.success.id } : {}), observation: {} })
-    return project(acknowledged)
+    const handoff = yield* acknowledge(proof, submitting, request(apiURL("runway", path), { method: "POST", headers: { ...headers(token, "runway"),
+      "Content-Type": "application/json" }, body: JSON.stringify(body) }, Math.min(budgets.responseBytes, 64 * 1024), budgets.timeoutMillis),
+      Submitted, (value) => ({ state: "submitted", providerID: value.id, observation: {} }))
+    return project(handoff.receipt)
   })
 
   const liveObserve = Effect.fn("CapabilityMedia.liveObserve")(function* (
     input: typeof ObserveInput.Type, context: Tool.Context,
   ) {
+    yield* producer(context, "video_create")
     yield* jobs.read(context, input.jobRef)
     const row = yield* record(input.jobRef)
     if (!row) return yield* failure("stale_descriptor")
@@ -325,6 +353,29 @@ export const make = (options: Options = {}) => Effect.gen(function* () {
   return { tools, observeHost }
 })
 export type Interface = Effect.Success<ReturnType<typeof make>>
+
+function snapshotRequest<A extends ImageInput | VideoInput>(supplied: A) {
+  const input = structuredClone(supplied)
+  Object.freeze(input.connection)
+  Object.freeze(input.target)
+  Object.freeze(input.options)
+  input.inputArtifactRefs.forEach((ref) => Object.freeze(ref))
+  Object.freeze(input.inputArtifactRefs)
+  return Object.freeze(input)
+}
+
+/** Fixed-position canonical payload: property insertion order cannot alter identity; Artifact revisions stay exact. */
+function requestHash(input: ImageInput | VideoInput, proof: CapabilityJobs.ProducerProof) {
+  return createHash("sha256").update(JSON.stringify([
+    "media-request-v1", proof.rootToolName, input.provider, input.model, input.operation, input.prompt,
+    input.provider === "openai" ? [input.options.size, input.options.quality, input.options.format, input.options.background, input.options.count]
+      : [input.options.ratio, input.options.duration],
+    input.inputArtifactRefs.map((ref) => [ref.id, ref.revision]), input.purpose,
+    [input.connection.id, input.connection.provider, input.connection.generation],
+    [input.target.id, input.target.connectionID, input.target.generation, input.target.environment],
+    [proof.owner.projectID, proof.owner.location.directory, proof.owner.location.workspaceID ?? null, proof.owner.sessionID, proof.owner.agentID],
+  ])).digest("hex")
+}
 
 function accessToken(value: Credential.Value) {
   if (value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now())) return Effect.fail(failure("authentication_required"))

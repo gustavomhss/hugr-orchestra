@@ -25,8 +25,8 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { Capability } from "@orchestra/schema/capability"
 import { Integration } from "@orchestra/schema/integration"
 import { IntegrationMethodID } from "@orchestra/schema/integration-id"
-import { eq } from "drizzle-orm"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
+import { eq, sql } from "drizzle-orm"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema, Tracer } from "effect"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -64,11 +64,11 @@ const mp4 = new Uint8Array(Buffer.from([
 ].join(""), "base64"))
 type Captured = { path: string; method: string; authorization: string | null; body: unknown }
 
-function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMedia.Options = {}) {
+function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMedia.Options = {}, root = provider === "openai" ? "image_create" : "video_create") {
   return Effect.gen(function* () {
-    const f = yield* CapabilityPolicyFixture.fixture({ name: `${provider === "openai" ? "image" : "video"}_create` })
+    const f = yield* CapabilityPolicyFixture.fixture({ name: root })
     yield* CapabilityPolicyFixture.setRules(rules)
-    const binding = { ...f.binding, rootToolName: provider === "openai" ? "image_create" : "video_create", effectiveRules: rules }
+    const binding = { ...f.binding, rootToolName: root, effectiveRules: rules }
     const credentials = yield* Credential.Service
     const integrationID = Integration.ID.make(provider)
     const selected = yield* credentials.create({ integrationID, value: { type: "key", key: secret } })
@@ -85,8 +85,9 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
     image.free()
     const state = { requests: [] as Captured[], response: "ok", format: "png", imageBytes: png, count: 1,
       status: "RUNNING", output: "", submitID: "remote-task-1", download: mp4, downloadFail: false,
-      pollWrongID: false, pollFail: false, redirect: false, delayed: false }
+      pollWrongID: false, pollFail: false, redirect: false, delayed: false, gated: false }
     const reached = yield* Deferred.make<void>()
+    const reply = yield* Deferred.make<void>()
     const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
       async fetch(req) {
         const path = new URL(req.url).pathname
@@ -94,6 +95,7 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
           ? await req.formData() : await req.json() : undefined
         state.requests.push({ path, method: req.method, authorization: req.headers.get("authorization"), body })
         if (req.method === "POST") Deferred.doneUnsafe(reached, Effect.void)
+        if (state.gated && req.method === "POST") await Effect.runPromise(Deferred.await(reply))
         if (state.delayed && req.method === "POST") await new Promise((resolve) => setTimeout(resolve, 500))
         if (state.redirect) return Response.redirect(`${req.url}/redirected`, 302)
         if (state.response === "unknown" && req.method === "POST") return new Response("secret-provider-detail", { status: 500 })
@@ -112,6 +114,7 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
         return new Response(state.download, { status: state.downloadFail ? 500 : 200, headers: { "Content-Type": "video/mp4" } })
       },
     })), (server) => Effect.sync(() => server.stop(true)))
+    yield* Effect.addFinalizer(() => Deferred.succeed(reply, undefined))
     const origin = `http://127.0.0.1:${server.port}`
     state.output = `${origin}/asset.mp4?claim=host-only-signed-secret`
     const media = yield* CapabilityMedia.make({ ...options, fixtureOrigin: origin })
@@ -126,7 +129,7 @@ function fixture(provider: "openai" | "runway" = "openai", options: CapabilityMe
     const result = (value: unknown = provider === "openai" ? input : video) => settle(value).pipe(Effect.map((out) => Schema.decodeUnknownSync(Capability.Result)(out.structured)))
     const proof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     return { ...f, binding, connections, connection, target, credentials, selected, media, store, state, png, jpeg, origin,
-      input, video, run, settle, result, proof, reached }
+      input, video, run, settle, result, proof, reached, reply }
   })
 }
 
@@ -420,4 +423,147 @@ describe("CapabilityMedia actual HTTP adapters", () => {
     expect(blocked.message).toContain("target_denied")
     expect(f.state.requests).toHaveLength(1)
   }))
+
+  it.live("payload conflicts preserve stable producer key; canonical order retries keep exact Artifact revisions", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const source = yield* f.run(f.store.publish(f.context, { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} }))
+    const input = { ...f.input, operation: "edit" as const, inputArtifactRefs: [source] }
+    const output = yield* f.result(input)
+    const rows = yield* f.database.db.select().from(CapabilityJobTable).pipe(Effect.orDie)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].request_hash).toMatch(/^[0-9a-f]{64}$/)
+    const options = { count: 1, background: "opaque", format: "png", quality: "low", size: "1024x1024" }
+    expect(yield* f.result({ ...input, options, inputArtifactRefs: [{ revision: 0, id: source.id }] })).toEqual(output)
+    const revision = yield* f.run(f.store.update(f.context, source, { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} }))
+    yield* Effect.forEach([
+      { ...input, prompt: "Different paid prompt" }, { ...input, model: "gpt-image-1-mini" },
+      { ...input, options: { ...input.options, quality: "medium" } }, { ...input, inputArtifactRefs: [revision] },
+      { ...input, operation: "generate", inputArtifactRefs: [] },
+    ], (value) => f.settle(value).pipe(Effect.flip, Effect.tap((error) => Effect.sync(() => expect(error.message).toContain("outcome_unknown")))))
+    const final = yield* f.database.db.select().from(CapabilityJobTable).pipe(Effect.orDie)
+    expect(final).toHaveLength(1)
+    expect(final[0].creation_key).toBe(rows[0].creation_key)
+    expect(final[0].request_hash).toBe(rows[0].request_hash)
+    expect(f.state.requests).toHaveLength(1)
+  }))
+
+  it.live("reused intent never charges even after original preflight denial clears", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const source = yield* f.run(f.store.publish(f.context, { data: f.png, mime: "image/png", kind: "image", verification: "observed", metadata: {} }))
+    const input = { ...f.input, operation: "edit", inputArtifactRefs: [source] }
+    yield* CapabilityPolicyFixture.setRules([...rules, { action: "artifact.read", resource: "*", effect: "deny" }])
+    expect((yield* f.settle(input).pipe(Effect.flip)).message).toContain("target_denied")
+    const initial = yield* f.database.db.select().from(CapabilityJobTable).pipe(Effect.orDie)
+    expect(initial[0].state).toBe("intent")
+    yield* CapabilityPolicyFixture.setRules(rules)
+    const replay = yield* f.result(input)
+    expect(replay).toMatchObject({ status: "unknown", receipt: initial[0].id })
+    expect(f.state.requests).toHaveLength(0)
+  }))
+
+  it.live("actual canonical producer and explicit observer root allowlist reject arbitrary names", () => Effect.gen(function* () {
+    yield* Effect.forEach(["openai", "runway"] as const, (provider) => Effect.gen(function* () {
+      const f = yield* fixture(provider, {}, "service_call")
+      expect((yield* f.settle().pipe(Effect.flip)).message).toContain("invocation_binding_mismatch")
+      expect(f.state.requests).toHaveLength(0)
+      expect(yield* f.database.db.select().from(CapabilityJobTable).pipe(Effect.orDie)).toHaveLength(0)
+    }))
+    const f = yield* fixture("runway")
+    const submitted = yield* f.result()
+    const ref = job(submitted)
+    yield* f.events.publish(SessionEvent.Tool.Input.Started, { sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
+      callID: "observer-call", name: "service_call", timestamp: CapabilityPolicyFixture.timestamp })
+    const context = { ...f.context, toolCallID: "observer-call" }
+    const frame = { ...f.binding, rootToolName: "service_call", invocation: { ...f.binding.invocation, callID: context.toolCallID } }
+    const denied = yield* CapabilityInvocation.withContext(frame, f.media.observeHost({ proof: f.proof, jobRef: ref,
+      operation: "observe", liveRoot: context })).pipe(Effect.flip)
+    expect(denied.code).toBe("invocation_binding_mismatch")
+    expect(f.state.requests).toHaveLength(1)
+  }))
+
+  it.live("post-approval retarget/token drift is rechecked before actual poll/download", () => Effect.gen(function* () {
+    yield* Effect.forEach(["observe", "download", "token"] as const, (mode) => Effect.gen(function* () {
+      const f = yield* fixture("runway")
+      const submitted = yield* f.result()
+      const ref = job(submitted)
+      f.state.status = "SUCCEEDED"
+      const action = mode === "observe" ? "video_create.observe" : "video_create.download"
+      const frame = { ...f.binding, effectiveRules: [...rules, { action, resource: "*", effect: "ask" as const }] }
+      const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+      const fiber = yield* CapabilityInvocation.withContext(frame, f.media.observeHost({ proof: f.proof, jobRef: ref,
+        operation: mode === "observe" ? "observe" : "materialize", liveRoot: f.context })).pipe(Effect.result, Effect.forkChild)
+      const request = yield* Deferred.await(asked.first)
+      if (mode === "token") yield* f.credentials.update(f.selected.id, { value: { type: "oauth", methodID: IntegrationMethodID.make("fixture-oauth"),
+        refresh: "host-only-refresh", access: secret, expires: Date.now() - 1 } })
+      if (mode !== "token") yield* f.connections.retargetTarget(f.target, { environment: "retargeted", resource: { purpose: "other-purpose" } })
+      yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+      const output = yield* Fiber.join(fiber)
+      if (mode === "observe") {
+        expect(output._tag).toBe("Failure")
+        if (output._tag === "Failure") expect(output.failure.code).toBe("target_denied")
+      }
+      if (mode !== "observe") {
+        expect(output._tag).toBe("Success")
+        if (output._tag === "Success") expect(output.success).toMatchObject({ status: "partial", unresolvedEffects: ["materialization-failed"] })
+      }
+      expect(f.state.requests.filter((entry) => entry.path.startsWith("/v1/tasks/"))).toHaveLength(mode === "observe" ? 0 : 1)
+      expect(f.state.requests.filter((entry) => entry.path === "/asset.mp4")).toHaveLength(0)
+      expect(f.state.requests.filter((entry) => entry.method === "POST")).toHaveLength(1)
+    }))
+  }).pipe(Effect.timeout("15 seconds")), 20000)
+
+  it.live("successful HTTP ACK survives SQL-lock interruption before metadata; replay never resubmits", () => Effect.gen(function* () {
+    yield* Effect.forEach(["openai", "runway"] as const, (provider) => Effect.gen(function* () {
+      const f = yield* fixture(provider)
+      f.state.gated = true
+      const ack = yield* Deferred.make<void>()
+      const tracer = Tracer.make({ span: (options) => {
+        if (options.name === "CapabilityJobs.observeHost") Deferred.doneUnsafe(ack, Effect.void)
+        return new Tracer.NativeSpan(options)
+      } })
+      const fiber = yield* f.result().pipe(Effect.withTracer(tracer), Effect.forkChild)
+      yield* Deferred.await(f.reached)
+      const locked = yield* Deferred.make<void>()
+      const release = yield* Deferred.make<void>()
+      const writer = yield* f.database.db.transaction(() => Effect.gen(function* () {
+        yield* Deferred.succeed(locked, undefined)
+        yield* Deferred.await(release)
+      }), { behavior: "immediate" }).pipe(Effect.forkChild)
+      yield* Deferred.await(locked)
+      yield* Deferred.succeed(f.reply, undefined)
+      yield* Deferred.await(ack)
+      fiber.interruptUnsafe()
+      expect(fiber.pollUnsafe()).toBeUndefined()
+      yield* Deferred.succeed(release, undefined)
+      yield* Fiber.join(writer)
+      const exit = yield* Fiber.await(fiber)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true)
+      const rows = yield* f.database.db.select().from(CapabilityJobTable)
+        .where(sql`json_extract(${CapabilityJobTable.owner}, '$.sessionID') = ${f.context.sessionID}`).pipe(Effect.orDie)
+      expect(rows).toHaveLength(1)
+      expect(rows[0].state).toBe(provider === "runway" ? "submitted" : "completed")
+      if (provider === "runway") expect(rows[0].provider_id).toBe("remote-task-1")
+      if (provider === "openai") expect(rows[0].observation).toMatchObject({ data: { remoteOutcome: "completed", materialization: "pending" } })
+      const replay = yield* f.result()
+      expect(replay.receipt).toBe(rows[0].id)
+      expect(replay.status).toBe(provider === "runway" ? "submitted" : "partial")
+      expect(f.state.requests).toHaveLength(1)
+    }))
+  }).pipe(Effect.timeout("15 seconds")), 20000)
+
+  it.live("composed image publication rechecks native action after artifact-write approval", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const frame = { ...f.binding, effectiveRules: [...rules, { action: "artifact.write", resource: "*", effect: "ask" as const }] }
+    const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const fiber = yield* CapabilityInvocation.withContext(frame, Tool.settle(f.media.tools.image_create,
+      { type: "tool-call", name: "image_create", id: f.context.toolCallID, input: f.input }, f.context)).pipe(Effect.forkChild)
+    const request = yield* Deferred.await(asked.first)
+    yield* CapabilityPolicyFixture.setRules([...rules, { action: "image_create", resource: "*", effect: "deny" }])
+    yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+    const output = yield* Fiber.join(fiber)
+    expect(output.structured).toMatchObject({ status: "partial", unresolvedEffects: ["materialization-failed"], artifactRefs: [] })
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable).pipe(Effect.orDie)).toHaveLength(0)
+    expect(f.state.requests).toHaveLength(1)
+  }).pipe(Effect.timeout("15 seconds")), 20000)
 })
