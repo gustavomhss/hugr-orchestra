@@ -209,10 +209,37 @@ The commit changes only `nix/hashes.json` and `nix/distribution.md`; package, lo
 toolchain/filter and normalization inputs are unchanged. Request names actual
 measurement run `37989995766`, attempt 1, and exact source parent `d69abdf483`.
 
-Consumer verification **`37991613494`** is registered on exact `b208e93c6d` and
-remains in progress. This is not a consumer/product pass. Relay is sole writer and
-monitor; source gates, API provenance, direct-child ancestry and all controls remain
-intact. No model/auth/launcher/pilot work is inferred from these qualification runs.
+Consumer verification **`37991613494`** failed on exact `b208e93c6d` before consumer
+builds. Matching measurement succeeded, but the unchanged hash-control probe needed
+the measured commit's real parent `791d7e1846`; native checkout depth 2 hid it.
+Repair `391c1c8520` retains depth 3 only for native jobs. Independent static review
+approved that two-line change. Actual shallow reproduction failed before deepening,
+then resolved the exact parent; clean depth-3 replay with bytecode disabled measured
+`HASH_CAPTURE_CONTROLS_OK` for the full unchanged control list. Own temporary Python
+bytecode was removed before that replay; no production source or gate was weakened.
+
+Fresh source root `d83194327f93fbbf6247b58729be928336a5698a` preserves failed ancestry,
+the depth repair, and the exact pre-application hash blob. Its declared dependency
+inputs match qualified `791d7e1846`. Request-only direct child
+`d8095e1409e301308b3df66653e6925432124a0f` completed measurement **`38003061574`**:
+prepare, all four natives and independent completion succeeded, attempt 1, tree
+`265739c799e1ea10dc14520f7c484b179249bdc2`. Fresh worker artifacts are `11649269159`
+(x86_64-linux), `11649879949` (aarch64-linux), `11650018002` (x86_64-darwin), and
+`11650137501` (aarch64-darwin); completion is `11649274832`. API identity, original
+candidate parsing, current dependency fingerprint, completion worker copies and
+the named finite control records were checked. Status remains
+`MEASUREMENT_ONLY_NOT_DISTRIBUTION`; controls report `COMPLETION_CONTROLS_OK`.
+
+Cold-reviewed direct child `e4da7810da2ef5e13afab0bcfb5c77d5b5bfafb3` applies exactly
+the four freshly captured values and the verify request for run `38003061574`,
+attempt 1. Only `nix/hashes.json` and one request JSON line change (5 additions /
+5 deletions). Reviewer `ses_ede10b10bffeZj7Sr8S8b57wwj` approved exact working blobs
+`c39ceca878b892b17c47d6581cbecb42e2630b06` and
+`efc376e0913482a8eeb183f7460123ac7897cc72`. Actual consumer verification
+**`38004225748`** is registered on that exact head and remains in progress.
+Relay is sole Nix writer and monitor; all four prior Nix children are idle after
+root closure. No consumer/product pass or model/auth/launcher/pilot execution is
+inferred from measurement success or static approval.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
