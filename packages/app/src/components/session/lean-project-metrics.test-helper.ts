@@ -1,5 +1,6 @@
 import { createRequire } from "node:module"
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
+import type { ToolPart } from "@orchestra/sdk/v2/client"
 
 // Run this DOM test with --conditions=browser. Compile JSX using the app's own Solid preset.
 const compiler = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
@@ -19,10 +20,12 @@ Bun.plugin({
   },
 })
 
-export const { createRoot, createComponent }: typeof import("solid-js") = await import("solid-js")
+export const { createRoot, createComponent, createMemo }: typeof import("solid-js") = await import("solid-js")
 export const { createStore }: typeof import("solid-js/store") = await import("solid-js/store")
 export const { render }: typeof import("solid-js/web") = await import("solid-js/web")
-export function decision(callID: string, patch: Partial<LeanMetrics.Decision> = {}): LeanMetrics.Decision {
+// Saved wire objects are mutable Solid state even though decoded Decisions are readonly.
+type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> }
+export function decision(callID: string, patch: Partial<LeanMetrics.Decision> = {}): Mutable<LeanMetrics.Decision> {
   return {
     version: 1, scope: "standard-registry", engine: "hugr-lean@0.2.0:4e46ae0534937bdf",
     owner: { projectID: "native-repo", location: "/repo", sessionID: "one", callID },
@@ -32,4 +35,14 @@ export function decision(callID: string, patch: Partial<LeanMetrics.Decision> = 
     tokens: { kind: "estimated", counter: "chars-per-token-4", before: 3, after: 1, saved: 2 },
     durationMs: 1, ...patch,
   }
+}
+
+export function savedLeanPart<T>(messageID: string, sessionID: string, callID: string, lean: T) {
+  return {
+    id: `part-${messageID}-${callID}`, messageID, sessionID, callID, type: "tool" as const, tool: "bash",
+    state: {
+      status: "completed" as const, input: {}, output: "", title: "",
+      metadata: { lean }, time: { start: 1, end: 2 },
+    },
+  } satisfies ToolPart
 }
