@@ -36,6 +36,7 @@ const Evidence = Schema.Struct({
 })
 
 test.each(["bun", "node"] as const)("%s whole native registry captures/publishes/reopens/decodes with authored source unavailable", async (target) => {
+  const deadline = performance.now() + 110000
   await using tmp = await tmpdir()
   const packageRoot = path.resolve(import.meta.dir, "../..")
   // Keep relocation inside the fixture: Seats.skillSource walks four parents from the packaged module.
@@ -88,9 +89,8 @@ const require = __cjs_mod__.createRequire(import.meta.url);`,
   await Bun.write(builder, `${target === "bun" ? `import { createSolidTransformPlugin } from ${JSON.stringify(Bun.resolveSync("@opentui/solid/bun-plugin", packageRoot))};` : ""}
 const result = await Bun.build({ ...${JSON.stringify(config)}${target === "bun" ? ", plugins: [createSolidTransformPlugin()]" : ""} });
 if (!result.success) throw new Error(result.logs.join("\\n"));`)
-  const build = Bun.spawn([process.execPath, builder], { cwd: packageRoot, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
-  const built = await Promise.all([new Response(build.stdout).text(), new Response(build.stderr).text(), build.exited])
-  if (built[2] !== 0) throw new Error(`Whole native ${target} proof build failed (${built[2]}):\n${built[0]}\n${built[1]}`)
+  // Build/proof caps total 105s; the shared deadline reserves cleanup time even when setup is slow.
+  await subprocess(`Whole native ${target} proof build`, Math.min(60000, Math.floor(deadline - performance.now())), [process.execPath, builder], { cwd: packageRoot })
   expect((await fs.stat(bundle)).isFile()).toBe(true)
 
   if (target === "node") {
@@ -114,8 +114,8 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   await Bun.write(path.join(project, "orchestra.json"), JSON.stringify({ plugin: [], mcp: {}, lsp: false, formatter: false }))
   const node = target === "node" ? Bun.which("node") : undefined
   if (target === "node" && !node) throw new Error("node is not on PATH; packaged research proof cannot run")
-  const child = Bun.spawn(target === "bun" ? [bundle, project] : [node ?? "node", bundle, project], {
-    cwd: project, stdin: "ignore", stdout: "pipe", stderr: "pipe",
+  const output = await subprocess(`Whole native ${target} proof`, Math.min(45000, Math.floor(deadline - performance.now())), target === "bun" ? [bundle, project] : [node ?? "node", bundle, project], {
+    cwd: project,
     env: {
       ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TEMP", "TMP", "TMPDIR"].includes(key.toUpperCase()))),
       HOME: home, USERPROFILE: home, APPDATA: path.join(home, "AppData/Roaming"), LOCALAPPDATA: path.join(home, "AppData/Local"),
@@ -128,9 +128,7 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
       ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true",
     },
   })
-  const output = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
-  if (output[2] !== 0) throw new Error(`Whole native ${target} proof failed (${output[2]}):\n${output[0]}\n${output[1]}`)
-  const marker = output[0].split(/\r?\n/).filter((line) => line.startsWith("PACKAGED_RESEARCH="))
+  const marker = output.stdout.split(/\r?\n/).filter((line) => line.startsWith("PACKAGED_RESEARCH="))
   expect(marker).toHaveLength(1)
   const evidence = Schema.decodeUnknownSync(Schema.fromJsonString(Evidence))(marker[0].slice("PACKAGED_RESEARCH=".length))
   expect(evidence.runtime).toBe(target)
@@ -168,6 +166,44 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "skill", "read", "read", "research_view", "research_view", "research_record", "research_view", "research_record", "research_view"])
   expect(evidence.calls.every((call) => call.status === "completed")).toBe(true)
 }, 120000)
+
+async function subprocess(label: string, timeout: number, cmd: string[], options: { cwd: string; env?: Record<string, string | undefined> }) {
+  if (timeout <= 0) throw new Error(`${label} cannot start: per-runtime subprocess budget exhausted`)
+  const child = Bun.spawn(cmd, { ...options, stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout, killSignal: "SIGKILL" })
+  const readers = [child.stdout.getReader(), child.stderr.getReader()]
+  const captured = [{ text: "" }, { text: "" }]
+  const read = async (reader: ReadableStreamDefaultReader<Uint8Array>, output: { text: string }) => {
+    const decoder = new TextDecoder()
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) {
+        output.text += decoder.decode()
+        return output.text
+      }
+      output.text += decoder.decode(chunk.value, { stream: true })
+    }
+  }
+  const pending = [read(readers[0], captured[0]), read(readers[1], captured[1]), child.exited.then((exit) => {
+    if (exit !== 0) throw new Error(`${label} failed (${exit}):\n${captured[0].text}\n${captured[1].text}`)
+    return exit
+  })] as const
+  // Bun's timeout bounds process exit. This deadline also bounds EOF if a descendant inherited a pipe.
+  const deadline = Promise.withResolvers<never>()
+  const timer = setTimeout(() => deadline.reject(new Error(`${label} timed out after ${timeout}ms:\n${captured[0].text}\n${captured[1].text}`)), timeout)
+  try {
+    const [stdout, stderr] = await Promise.race([Promise.all(pending), deadline.promise])
+    return { stdout, stderr }
+  } finally {
+    clearTimeout(timer)
+    try {
+      if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL")
+    } finally {
+      // Reader cancellation releases inherited pipes; await every reader and the child before tmpdir disposal.
+      await Promise.allSettled([child.exited, ...readers.map((reader) => reader.cancel()), ...pending])
+      readers.forEach((reader) => reader.releaseLock())
+    }
+  }
+}
 
 async function packageDirectory(name: string, directory: string): Promise<string> {
   const manifest = await fs.readFile(path.join(directory, "package.json"), "utf8").then(
