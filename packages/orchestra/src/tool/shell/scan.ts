@@ -444,7 +444,7 @@ function ownedExecutable(value: string | undefined, ps: boolean, toolkitBin: str
 }
 
 function literalArg(node: Node, ps: boolean, executable = false): string | undefined {
-  if (executable && ["$BACKEND_TOOLKIT_BIN", "${BACKEND_TOOLKIT_BIN}", "$env:BACKEND_TOOLKIT_BIN", "${env:BACKEND_TOOLKIT_BIN}"].includes(node.text))
+  if (executable && (ps ? ["$env:BACKEND_TOOLKIT_BIN", "${env:BACKEND_TOOLKIT_BIN}"] : ["$BACKEND_TOOLKIT_BIN", "${BACKEND_TOOLKIT_BIN}"]).includes(node.text))
     return "\0toolkit"
   if (["raw_string", "verbatim_string_characters"].includes(node.type))
     return ps ? unquote(node.text).replaceAll("''", "'") : unquote(node.text)

@@ -179,6 +179,12 @@ describe("owned OpenAPI argv extraction", () => {
     })
     expect(yield* extract(`${executable} generate --config=openapi-generator.yaml --output=$out --strict-spec=false`, "pwsh")).toEqual({ blocked: "engine-project-version:unbound-args" })
   }))
+  it.live("toolkit executable expansions bind only their own shell's environment syntax", () => Effect.gen(function* () {
+    for (const executable of ['& "$BACKEND_TOOLKIT_BIN\\openapi-generator.cmd"', '& "${BACKEND_TOOLKIT_BIN}\\openapi-generator.cmd"']) {
+      expect(yield* extract(`${executable} generate -o out`, "pwsh")).toEqual({ blocked: "engine-project-version:unsupported-owned-call" })
+    }
+    expect(yield* extract('"${env:BACKEND_TOOLKIT_BIN}/openapi-generator" generate -o out', "bash")).toEqual({ blocked: "engine-project-version:unsupported-owned-call" })
+  }))
   for (const command of [
     `${forms[0]} generate -o "$OUT"`, `${forms[0]} generate $ARGS`,
     `${forms[0]} generate -c $(printf config.yaml)`, `${forms[0]} generate -o generated/*`,
