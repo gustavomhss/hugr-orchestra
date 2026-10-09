@@ -1,8 +1,10 @@
-import { artifactNativeError, requireArtifactLeaf } from "./artifact-native"
-import { parse } from "node:path"
+import { artifactNativeError, artifactOwnedHandle, requireArtifactLeaf, requireArtifactHost } from "./artifact-native"
+import { artifactWindowsRoots } from "./artifact-windows-root"
 import type { ArtifactDirectory, ArtifactNative } from "./artifact-native"
 
 export async function artifactWindows(): Promise<ArtifactNative> {
+  requireArtifactHost("win32", process.arch)
+  if (process.platform !== "win32") throw new Error("Unsupported artifact Windows producer host")
   const { dlopen, ptr } = await import("bun:ffi")
   // HANDLE is an integer token, not a pointer. All three supported hosts use
   // 64-bit ABI; the layouts below are Windows SDK OBJECT_ATTRIBUTES (48 bytes),
@@ -102,8 +104,28 @@ export async function artifactWindows(): Promise<ArtifactNative> {
   }
   const child = (parent: ArtifactDirectory, name: string, directory: boolean, options = {}) => {
     requireArtifactLeaf(name)
+    if (name.includes(":")) throw new Error("Unsupported artifact Windows stream component")
     return open(parent.handle, name, directory, options)
   }
+  const directory = (handle: bigint): ArtifactDirectory => {
+    return artifactOwnedHandle(
+      handle,
+      (handle) => ({ handle, identity: identity(handle) }),
+      (handle) => {
+        check(library.symbols.NtClose(handle), "close failed directory inspection")
+      },
+    )
+  }
+  const roots = await artifactWindowsRoots({
+    open: (name) => open(0n, name, true),
+    identity,
+    close: (handle) => {
+      check(library.symbols.NtClose(handle), "close root")
+    },
+  }).catch((error) => {
+    library.close()
+    throw error
+  })
   const dispose = (handle: bigint) => {
     check(
       library.symbols.NtSetInformationFile(handle, ptr(Buffer.alloc(16)), ptr(Buffer.from([1])), 1, 13),
@@ -111,16 +133,8 @@ export async function artifactWindows(): Promise<ArtifactNative> {
     )
   }
   return {
-    root: (path) => {
-      if (parse(path).root !== path) throw new Error("Artifact Windows root acquisition requires volume root")
-      const native = path.startsWith("\\\\") ? `\\??\\UNC\\${path.slice(2)}` : `\\??\\${path}`
-      const handle = open(0n, native, true)
-      return { handle, identity: identity(handle) }
-    },
-    directory: (parent, name, options = {}) => {
-      const handle = child(parent, name, true, options)
-      return { handle, identity: identity(handle) }
-    },
+    root: roots.acquire,
+    directory: (parent, name, options = {}) => directory(child(parent, name, true, options)),
     read: (parent, name) => {
       const handle = child(parent, name, false)
       try {
@@ -262,6 +276,9 @@ export async function artifactWindows(): Promise<ArtifactNative> {
     closeDirectory: (directory) => {
       check(library.symbols.NtClose(directory.handle), "close directory")
     },
-    close: () => library.close(),
+    close: () => {
+      roots.close()
+      library.close()
+    },
   }
 }

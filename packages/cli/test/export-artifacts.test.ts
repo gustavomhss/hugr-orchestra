@@ -24,7 +24,9 @@ const version = "1.18.27-export-test"
 const script = resolve(import.meta.dirname, "../script/export-artifacts.ts")
 
 async function fixture(run: (input: { root: string; dist: string; out: string }) => Promise<void>, existing = true) {
-  const root = await realpath(await mkdtemp(join(tmpdir(), "cli-export-test-")))
+  const root = await realpath(
+    await mkdtemp(join(process.env.ORCHESTRA_ARTIFACT_TEST_ROOT ?? tmpdir(), "cli-export-test-")),
+  )
   const input = { root, dist: join(root, "dist"), out: join(root, "artifacts") }
   if (existing) {
     await mkdir(input.out)

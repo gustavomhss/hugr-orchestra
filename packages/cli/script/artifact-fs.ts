@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto"
 import { basename, dirname, parse, resolve, sep } from "node:path"
 import type { ArtifactDirectory, ArtifactNative } from "./artifact-native"
 import { namedTargets } from "./targets"
+import { requireArtifactHost } from "./artifact-native"
 
 export type ArtifactManifest = {
   schema: 1
@@ -10,7 +11,7 @@ export type ArtifactManifest = {
 }
 
 export async function artifactNative(): Promise<ArtifactNative> {
-  if (!["x64", "arm64"].includes(process.arch)) throw new Error(`Unsupported artifact host CPU: ${process.arch}`)
+  requireArtifactHost(process.platform, process.arch)
   if (process.platform === "linux") {
     const { artifactLinux } = await import("./artifact-linux")
     return artifactLinux()
@@ -26,9 +27,17 @@ export async function artifactNative(): Promise<ArtifactNative> {
   throw new Error(`Unsupported artifact host OS: ${process.platform}`)
 }
 
-// Scoped to owned builder outputs. Handles defeat path-component redirection;
-// this is not a sandbox against hostile mounts or arbitrary in-place mutation.
+// Requires a stable, exclusively build-owned namespace and cooperating producers.
+// Nofollow handles anchor objects/reads, not immutable pathnames. No guarantee
+// against a hostile actor already authorized to mutate the namespace or bytes.
+// Owner decision and declared exception: specs/runtime-closure/PRODUCER-BOUNDARY.md.
 export async function admitArtifacts(input: { dist: string; out: string; targets: string[] }) {
+  requireArtifactHost(process.platform, process.arch)
+  if (process.platform === "win32") {
+    const { requireOrdinaryWindowsPath } = await import("./artifact-windows-root")
+    requireOrdinaryWindowsPath(input.dist)
+    requireOrdinaryWindowsPath(input.out)
+  }
   if ([input.dist, input.out].some((path) => !path || path.includes("\0") || path.split(/[\\/]/).includes("..")))
     throw new Error("Ambiguous artifact path traversal")
   if (
@@ -76,6 +85,7 @@ export async function admitArtifacts(input: { dist: string; out: string; targets
   }
   const validate = () => {
     pins.forEach((entry) => {
+      entry.directory.validateRoot?.()
       if (!entry.parent || !entry.name) return
       const current = native.directory(entry.parent, entry.name)
       try {
