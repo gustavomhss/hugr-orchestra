@@ -1,7 +1,56 @@
 import { castDraft, produce, type WritableDraft } from "immer"
-import { Effect } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
+
+// Private host receipt on the existing Task tool metadata, not an attribution DTO or a worker claim.
+export const UpstreamSettlement = Schema.Struct({
+  parentMessageID: Schema.NonEmptyString,
+  parentCallID: Schema.NonEmptyString,
+  workResult: Schema.Record(Schema.String, Schema.Unknown),
+  deliveryMessageID: Schema.NonEmptyString,
+  deliveryPartID: Schema.optional(Schema.NonEmptyString),
+})
+export type UpstreamSettlement = typeof UpstreamSettlement.Type
+export interface TaskOwner {
+  readonly sessionID: string
+  readonly messageID: string
+  readonly callID: string
+  readonly tool: string
+  readonly input: unknown
+}
+
+export function upstreamSettlement(metadata: Record<string, unknown>, owner: TaskOwner) {
+  const receipt = Schema.decodeUnknownOption(UpstreamSettlement)(metadata.upstreamSettlement, { onExcessProperty: "error" })
+  const input = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String, task_id: Schema.optional(Schema.String) }))(owner.input)
+  if (Option.isNone(receipt) || Option.isNone(input) || owner.tool !== "task" || input.value.subagent_type !== "walt" ||
+    receipt.value.parentMessageID !== owner.messageID || receipt.value.parentCallID !== owner.callID ||
+    metadata.parentSessionId !== owner.sessionID) return
+  const result = Schema.decodeUnknownOption(Schema.Struct({
+    taskId: Schema.NonEmptyString,
+    card: Schema.Struct({ messageID: Schema.NonEmptyString }),
+    author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
+  }))(receipt.value.workResult)
+  if (Option.isNone(result) || result.value.author.executionSessionID !== metadata.sessionId ||
+    result.value.card.messageID !== result.value.author.messageID ||
+    (input.value.task_id !== undefined && input.value.task_id !== result.value.taskId)) return
+  return receipt.value
+}
+
+export function taskMetadata(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
+  const { upstreamSettlement: ignored, ...metadata } = next
+  const receipt = upstreamSettlement(previous, owner)
+  return receipt ? { ...metadata, parentSessionId: previous.parentSessionId, sessionId: previous.sessionId,
+    workResult: receipt.workResult, upstreamSettlement: receipt,
+    ...(previous.background === true ? { background: true } : {}) } : metadata
+}
+
+function taskStructured(previous: Record<string, unknown>, next: Record<string, unknown>, owner: TaskOwner) {
+  const before = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(previous.metadata))
+  const after = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(next.metadata))
+  if (!before && !after) return next
+  return { ...next, metadata: taskMetadata(before ?? {}, after ?? {}, owner) }
+}
 
 export type MemoryState = {
   messages: SessionMessage.Message[]
@@ -289,9 +338,17 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
       "session.next.tool.progress": (event) => {
         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
           const match = latestTool(draft, event.data.callID)
-          if (match && match.state.status === "running") {
-            match.state.structured = event.data.structured
-            match.state.content = [...event.data.content]
+          if (match && "structured" in match.state) {
+            const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
+            const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
+            const receipt = metadata ? upstreamSettlement(metadata, owner) : undefined
+            if (match.state.status !== "running" && !receipt) return
+            const structured = taskStructured(match.state.structured, event.data.structured, owner)
+            const carriedMetadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(structured.metadata)) ?? {}
+            const carried = upstreamSettlement(carriedMetadata, owner)
+            match.state.structured = castDraft(carried ? structured : receipt ? { ...structured, metadata: { ...carriedMetadata, upstreamSettlement: receipt,
+              workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId } } : structured)
+            if (match.state.status === "running") match.state.content = [...event.data.content]
           }
         })
       },
@@ -309,7 +366,9 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
               SessionMessage.ToolStateCompleted.make({
                 status: "completed",
                 input: match.state.input,
-                structured: event.data.structured,
+                structured: taskStructured(match.state.structured, event.data.structured, {
+                  sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input,
+                }),
                 content: [...event.data.content],
                 outputPaths: event.data.outputPaths ? [...event.data.outputPaths] : [],
                 result: event.data.result,

@@ -29,7 +29,7 @@ import { inArray } from "drizzle-orm"
 import { lt } from "drizzle-orm"
 import { or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { PartTable, SessionTable } from "@orchestra/core/session/sql"
+import { PartTable, SessionTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { MessageV2 } from "./message-v2"
 import { InstanceState } from "@/effect/instance-state"
@@ -45,6 +45,22 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { SessionMessage } from "@orchestra/schema/session-message"
+import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
+import { SessionEvent } from "@orchestra/core/session/event"
+import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
+import { isDeepStrictEqual } from "node:util"
+import { DateTime } from "effect"
+
+export class TaskSettlementHeld extends Schema.TaggedErrorClass<TaskSettlementHeld>()("TaskSettlementHeld", {
+  reason: Schema.String,
+}) {}
+
+export type TaskSettlementInput = SessionMessageUpdater.UpstreamSettlement & {
+  readonly sessionID: SessionID
+  readonly childSessionID: SessionID
+  readonly logicalTaskID: string
+  readonly authorMessageID: MessageID
+}
 
 const parentTitlePrefix = "New session - "
 const childTitlePrefix = "Child session - "
@@ -452,6 +468,8 @@ export interface Interface {
     partID: PartID
   }) => Effect.Effect<SessionV1.Part | undefined>
   readonly updatePart: <T extends SessionV1.Part>(part: T) => Effect.Effect<T>
+  /** Private native Task boundary; never a generic metadata callback or a public prompt input. */
+  readonly settleUpstreamTask: (input: TaskSettlementInput) => Effect.Effect<boolean, TaskSettlementHeld>
   readonly updatePartDelta: (input: {
     sessionID: SessionID
     messageID: MessageID
@@ -490,6 +508,7 @@ const layer: Layer.Layer<
     const events = yield* EventV2Bridge.Service
     const flags = yield* RuntimeFlags.Service
     const plugin = yield* Plugin.Service
+    const taskSettlementLock = KeyedMutex.makeUnsafe<string>()
 
     const createNext = Effect.fn("Session.createNext")(function* (input: {
       id?: SessionID
@@ -671,17 +690,119 @@ const layer: Layer.Layer<
 
     const updatePart = <T extends SessionV1.Part>(part: T): Effect.Effect<T> =>
       Effect.gen(function* () {
+        const clean = part.type === "tool" && "metadata" in part.state ? { ...part, state: { ...part.state,
+          metadata: SessionMessageUpdater.taskMetadata({}, part.state.metadata ?? {}, { sessionID: part.sessionID,
+            messageID: part.messageID, callID: part.callID, tool: part.tool, input: part.state.input }) } } : part
         yield* events.publish(
           SessionV1.Event.PartUpdated,
           {
             sessionID: part.sessionID,
-            part: structuredClone(part),
+            part: structuredClone(clean),
             time: Date.now(),
           },
           { persist: flags.experimentalWorkspaces },
         )
         return part
       }).pipe(Effect.withSpan("Session.updatePart"))
+
+    const settleUpstreamTask: Interface["settleUpstreamTask"] = (input) => taskSettlementLock.withLock(
+      `${input.sessionID}\0${input.parentMessageID}\0${input.parentCallID}`,
+    )(Effect.gen(function* () {
+      const refuse = (reason: string) => Effect.fail(new TaskSettlementHeld({ reason }))
+      const { LogicalTask } = yield* Effect.promise(() => import("@/maestro/logical-task"))
+      const logical = yield* LogicalTask.read(input.childSessionID).pipe(Effect.provideService(Database.Service, database))
+      const parent = yield* db.select().from(SessionTable).where(eq(SessionTable.id, input.sessionID)).get().pipe(Effect.orDie)
+      const child = yield* db.select().from(SessionTable).where(eq(SessionTable.id, input.childSessionID)).get().pipe(Effect.orDie)
+      if (!parent || !child || child.parent_id !== parent.id || child.project_id !== parent.project_id || child.agent !== "walt" ||
+        !logical || logical.taskId !== input.logicalTaskID || logical.authoritySessionID !== parent.id || logical.memberID !== "walt" ||
+        logical.executionSessionID !== child.id || logical.projectID !== parent.project_id || child.directory !== parent.directory)
+        return yield* refuse("UPSTREAM_SETTLEMENT_LINEAGE_MISMATCH")
+      const author = Schema.decodeUnknownOption(Schema.Struct({ taskId: Schema.String,
+        card: Schema.Struct({ messageID: Schema.String }), author: Schema.Struct({ memberId: Schema.Literal("walt"),
+          executionSessionID: Schema.String, messageID: Schema.String }) }))(input.workResult)
+      if (Option.isNone(author) || author.value.taskId !== logical.taskId || author.value.author.executionSessionID !== child.id ||
+        author.value.author.messageID !== input.authorMessageID || author.value.card.messageID !== input.authorMessageID)
+        return yield* refuse("UPSTREAM_SETTLEMENT_RESULT_MISMATCH")
+      const modernAuthor = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id,
+        SessionMessage.ID.make(input.authorMessageID))).get().pipe(Effect.orDie)
+      if (modernAuthor) {
+        const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modernAuthor.data,
+          id: modernAuthor.id, type: modernAuthor.type })
+        if (modernAuthor.session_id !== child.id || message.type !== "assistant" || message.agent !== "walt")
+          return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
+      } else {
+        const message = yield* MessageV2.get({ sessionID: input.childSessionID, messageID: input.authorMessageID }).pipe(Effect.orDie)
+        if (message.info.role !== "assistant" || message.info.agent !== "walt")
+          return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
+      }
+      const receipt = Schema.decodeUnknownSync(SessionMessageUpdater.UpstreamSettlement)({ parentMessageID: input.parentMessageID,
+        parentCallID: input.parentCallID, workResult: input.workResult, deliveryMessageID: input.deliveryMessageID,
+        ...(input.deliveryPartID ? { deliveryPartID: input.deliveryPartID } : {}) }, { onExcessProperty: "error" })
+      const delivery = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id,
+        SessionMessage.ID.make(input.deliveryMessageID))).get().pipe(Effect.orDie)
+      if (delivery) {
+        if (delivery.session_id !== parent.id || delivery.type !== "synthetic" || input.deliveryPartID)
+          return yield* refuse("UPSTREAM_SETTLEMENT_DELIVERY_MISMATCH")
+      } else {
+        if (!input.deliveryPartID) return yield* refuse("UPSTREAM_SETTLEMENT_DELIVERY_MISSING")
+        const message = yield* MessageV2.get({ sessionID: input.sessionID, messageID: MessageID.make(input.deliveryMessageID) }).pipe(Effect.orDie)
+        const part = message.parts.find((part) => part.id === input.deliveryPartID)
+        const source = part?.type === "text" ? Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("task-return"),
+          task_id: Schema.String, state: Schema.Literals(["completed", "error"]) }))(part.metadata?.source) : Option.none()
+        if (message.info.role !== "user" || part?.type !== "text" || !part.synthetic ||
+          Option.isNone(source) || source.value.task_id !== child.id || !isDeepStrictEqual(part.metadata?.workResult, input.workResult))
+          return yield* refuse("UPSTREAM_SETTLEMENT_DELIVERY_MISMATCH")
+      }
+      const modern = yield* db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id,
+        SessionMessage.ID.make(input.parentMessageID))).get().pipe(Effect.orDie)
+      const legacy = yield* db.select().from(PartTable).where(and(eq(PartTable.session_id, input.sessionID),
+        eq(PartTable.message_id, MessageID.make(input.parentMessageID)),
+        sql`json_extract(${PartTable.data}, '$.callID') = ${input.parentCallID}`)).limit(2).all().pipe(Effect.orDie)
+      if (!modern && legacy.length !== 1) return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISSING")
+      const owner = { sessionID: input.sessionID, messageID: input.parentMessageID, callID: input.parentCallID, tool: "task" }
+      const meta = { parentSessionId: parent.id, sessionId: child.id, workResult: input.workResult, upstreamSettlement: receipt }
+      const stored = { existing: false }
+      if (modern) {
+        const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
+        if (modern.session_id !== parent.id || message.type !== "assistant" || message.agent !== "maestro")
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        const calls = message.content.filter((part) => part.type === "tool" && part.id === input.parentCallID)
+        const call = calls[0]
+        if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed || !("structured" in call.state))
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        const before = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(call.state.structured.metadata)) ?? {}
+        const existing = SessionMessageUpdater.upstreamSettlement(before, { ...owner, input: call.state.input })
+        if (existing && !isDeepStrictEqual(existing, receipt)) return yield* refuse("UPSTREAM_SETTLEMENT_CONFLICT")
+        stored.existing = existing !== undefined
+        if (!SessionMessageUpdater.upstreamSettlement({ ...before, ...meta }, { ...owner, input: call.state.input }))
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        yield* events.publish(SessionEvent.Tool.Progress, { sessionID: input.sessionID,
+          assistantMessageID: SessionMessage.ID.make(input.parentMessageID), callID: input.parentCallID, timestamp: yield* DateTime.now,
+          structured: { ...call.state.structured, metadata: { ...before, ...meta } }, content: call.state.content })
+      }
+      if (legacy.length) {
+        if (legacy.length !== 1) return yield* refuse("UPSTREAM_SETTLEMENT_TASK_AMBIGUOUS")
+        const authority = yield* MessageV2.get({ sessionID: input.sessionID,
+          messageID: MessageID.make(input.parentMessageID) }).pipe(Effect.orDie)
+        if (authority.info.role !== "assistant" || authority.info.agent !== "maestro")
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        const row = legacy[0]
+        const part = Schema.decodeUnknownSync(SessionV1.Part)({ ...row.data, id: row.id, messageID: row.message_id, sessionID: row.session_id })
+        if (part.type !== "tool" || part.tool !== "task" || part.metadata?.providerExecuted || !("metadata" in part.state))
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        const before = part.state.metadata ?? {}
+        const existing = SessionMessageUpdater.upstreamSettlement(before, { ...owner, input: part.state.input })
+        if (existing && !isDeepStrictEqual(existing, receipt)) return yield* refuse("UPSTREAM_SETTLEMENT_CONFLICT")
+        stored.existing = stored.existing || existing !== undefined
+        if (!SessionMessageUpdater.upstreamSettlement({ ...before, ...meta }, { ...owner, input: part.state.input }))
+          return yield* refuse("UPSTREAM_SETTLEMENT_TASK_MISMATCH")
+        yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: input.sessionID, time: Date.now(),
+          part: { ...part, state: { ...part.state, metadata: { ...before, ...meta } } } }, { persist: true })
+      }
+      return !stored.existing
+    }).pipe(Effect.provideService(Database.Service, database), Effect.mapError((error) => error instanceof TaskSettlementHeld ? error
+      : new TaskSettlementHeld({ reason: "UPSTREAM_SETTLEMENT_ACQUISITION" })),
+      Effect.catchDefect(() => Effect.fail(new TaskSettlementHeld({ reason: "UPSTREAM_SETTLEMENT_ACQUISITION" })))))
 
     const getPart: Interface["getPart"] = Effect.fn("Session.getPart")(function* (input) {
       const row = yield* db
@@ -967,6 +1088,7 @@ const layer: Layer.Layer<
       removeMessage,
       removePart,
       updatePart,
+      settleUpstreamTask,
       getPart,
       updatePartDelta,
       findMessage,
