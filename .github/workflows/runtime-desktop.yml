@@ -5,16 +5,27 @@ name: runtime-desktop
 # Frozen gates must land unchanged after independent review; missing prerequisites fail.
 # Default bootstrap initializes fresh isolated state through production startup.
 # Dev controls cover two pre-launch digest falsifications, not every failure class.
+# dev_only is a limited dev rerun, not full-matrix green; reuse admits source-equivalent producers only.
 on:
   push:
     branches: [runtime-desktop-validation]
     paths: [.github/workflows/runtime-desktop.yml]
   workflow_dispatch:
+    inputs:
+      dev_only:
+        description: Run only dev packaging/bootstrap/controls; does not qualify beta or prod
+        type: boolean
+        default: false
+      prepared_run:
+        description: Reuse a verified successful prepare artifact from a source-equivalent validation run
+        type: string
+        default: ""
 
 permissions: { contents: read }
 
 jobs:
   prepare:
+    if: ${{ !inputs.prepared_run }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults: { run: { shell: bash } }
@@ -76,11 +87,14 @@ jobs:
 
   channels:
     needs: prepare
+    if: ${{ !cancelled() && (needs.prepare.result == 'success' || (inputs.prepared_run && needs.prepare.result == 'skipped')) }}
+    permissions: { contents: read, actions: read }
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix: { channel: [dev, beta, prod] }
+      matrix:
+        channel: ${{ fromJSON(inputs.dev_only && '["dev"]' || '["dev","beta","prod"]') }}
     defaults: { run: { shell: bash } }
     env:
       ORCHESTRA_CHANNEL: ${{ matrix.channel }}
@@ -93,17 +107,106 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: "1.3.14"
+      - name: Admit explicit producer reuse through live API, Git objects and archive digest
+        id: reuse
+        if: inputs.prepared_run != ''
+        working-directory: ${{ github.workspace }}/candidate
+        env:
+          PREPARED_RUN: ${{ inputs.prepared_run }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          bun -e '
+          const { createHash } = await import("node:crypto"), { spawnSync } = await import("node:child_process");
+          const fail = name => { throw Error(name); }, requireValue = (value, name) => { if (!value) fail(name); };
+          const id = process.env.PREPARED_RUN, repo = process.env.GITHUB_REPOSITORY, base = `https://api.github.com/repos/${repo}`;
+          requireValue(/^[1-9][0-9]{0,15}$/.test(id ?? "") && Number.isSafeInteger(Number(id)), "PREPARED_RUN_ID_INVALID");
+          requireValue(process.env.GITHUB_REPOSITORY_ID === "1405035578" && /^[^/]+\/[^/]+$/.test(repo ?? "") && process.env.GH_TOKEN, "PREPARED_REPOSITORY_CONTEXT_INVALID");
+          const request = async path => fetch(`${base}${path}`, { headers: { Authorization: `Bearer ${process.env.GH_TOKEN}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }, redirect: "manual", signal: AbortSignal.timeout(30000) }).catch(() => fail("PREPARED_API_REQUEST_FAILED"));
+          const api = async path => { const r = await request(path); requireValue(r.ok, `PREPARED_API_HTTP_FAILURE:${r.status}`); const data = await r.json().catch(() => fail("PREPARED_API_JSON_INVALID")); requireValue(data && typeof data === "object" && !Array.isArray(data), "PREPARED_API_JSON_OBJECT_REQUIRED"); return data; };
+          const repository = await api(""), current = await api(`/actions/runs/${process.env.GITHUB_RUN_ID}`), producer = await api(`/actions/runs/${id}`);
+          requireValue(repository.id === 1405035578 && repository.full_name === repo && current.repository?.id === repository.id && current.head_sha === process.env.GITHUB_SHA && current.path === ".github/workflows/runtime-desktop.yml" && Number.isSafeInteger(current.workflow_id) && current.workflow_id > 0, "PREPARED_CURRENT_WORKFLOW_BINDING_FAILED");
+          requireValue(producer.id === Number(id) && producer.repository?.id === repository.id && producer.head_repository?.id === repository.id && producer.workflow_id === current.workflow_id && producer.path === current.path && producer.head_branch === "runtime-desktop-validation" && /^[a-f0-9]{40}$/.test(producer.head_sha ?? ""), "PREPARED_PRODUCER_BINDING_FAILED");
+          const pages = async (path, key) => {
+            const items = []; const counts = [];
+            for (const page of Array.from({ length: 10 }, (_, i) => i + 1)) {
+              const data = await api(`${path}${path.includes("?") ? "&" : "?"}per_page=100&page=${page}`);
+              requireValue(Number.isSafeInteger(data.total_count) && data.total_count > 0 && Array.isArray(data[key]) && data[key].length > 0 && data[key].length <= 100 && data[key].every(item => item && typeof item === "object" && !Array.isArray(item)), "PREPARED_API_INVENTORY_INVALID_OR_EMPTY");
+              counts.push(data.total_count); items.push(...data[key]);
+              requireValue(counts.every(n => n === counts[0]) && items.length <= counts[0], "PREPARED_API_INVENTORY_CHANGED");
+              if (items.length === counts[0]) return items;
+            }
+            fail("PREPARED_API_INVENTORY_BOUND_EXCEEDED");
+          };
+          const jobs = (await pages(`/actions/runs/${id}/jobs?filter=latest`, "jobs")).filter(j => j.name === "prepare");
+          requireValue(jobs.length === 1 && Number.isSafeInteger(jobs[0].id) && jobs[0].id > 0 && jobs[0].run_id === Number(id) && jobs[0].run_attempt === producer.run_attempt && jobs[0].head_sha === producer.head_sha && jobs[0].status === "completed" && jobs[0].conclusion === "success", "PREPARED_SUCCESSFUL_JOB_REQUIRED");
+          const artifacts = (await pages(`/actions/runs/${id}/artifacts`, "artifacts")).filter(a => a.name === "desktop-linux-x64-prepared");
+          requireValue(artifacts.length === 1, "PREPARED_ARTIFACT_MISSING_OR_AMBIGUOUS");
+          const artifact = artifacts[0], job = jobs[0];
+          requireValue(artifact.expired === false && Date.parse(artifact.expires_at) > Date.now() && Number.isSafeInteger(artifact.id) && artifact.id > 0 && Number.isSafeInteger(artifact.size_in_bytes) && artifact.size_in_bytes > 0 && artifact.size_in_bytes <= 4294967296 && /^sha256:[a-f0-9]{64}$/.test(artifact.digest ?? "") && artifact.workflow_run?.id === Number(id) && artifact.workflow_run.head_sha === producer.head_sha && artifact.workflow_run.repository_id === repository.id && artifact.workflow_run.head_repository_id === repository.id && Date.parse(artifact.created_at) >= Date.parse(job.started_at) && Date.parse(artifact.created_at) <= Date.parse(job.completed_at), "PREPARED_ARTIFACT_BINDING_FAILED");
+          const git = (args, timeout = 30000) => { const r = spawnSync("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", ...args], { encoding: "utf8", timeout, maxBuffer: 33554432, env: { ...process.env, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0" } }); requireValue(!r.error && r.status === 0, "PREPARED_GIT_ORACLE_FAILED"); return r.stdout; };
+          requireValue(git(["rev-parse", "HEAD"]).trim() === process.env.GITHUB_SHA, "PREPARED_CURRENT_HEAD_MISMATCH");
+          const available = spawnSync("git", ["cat-file", "-e", `${producer.head_sha}^{commit}`], { timeout: 10000 });
+          if (available.error || available.status !== 0) git(["fetch", "--no-tags", "--depth=1", `https://github.com/${repo}.git`, producer.head_sha], 90000);
+          const producerTree = git(["rev-parse", `${producer.head_sha}^{tree}`]).trim(), currentTree = git(["rev-parse", "HEAD^{tree}"]).trim();
+          requireValue([producerTree, currentTree].every(t => /^[a-f0-9]{40}$/.test(t)), "PREPARED_TREE_ID_INVALID");
+          const changed = git(["diff", "--no-ext-diff", "--no-textconv", "--ignore-submodules=none", "--name-only", "-z", producer.head_sha, process.env.GITHUB_SHA, "--"]).split("\0").filter(Boolean);
+          requireValue(changed.every(p => p === ".github/workflows/runtime-desktop.yml"), "PREPARED_SOURCE_BYTES_DIFFER");
+          const inventory = head => git(["ls-tree", "-r", "-z", "--full-tree", head]).split("\0").filter(Boolean).map(row => { const tab = row.indexOf("\t"); requireValue(tab > 0 && /^[0-7]{6} (blob|commit) [a-f0-9]{40}$/.test(row.slice(0, tab)), "PREPARED_TREE_INVENTORY_INVALID"); return { row, path: row.slice(tab + 1) }; });
+          const hash = rows => createHash("sha256").update(rows.map(r => r.row + "\0").join("")).digest("hex");
+          const fingerprints = head => { const rows = inventory(head); requireValue(["package.json", "bun.lock", "packages/desktop/package.json", "packages/cli/package.json", ".github/scripts/runtime-desktop-package-proof.ts", ".github/scripts/runtime-desktop-bootstrap-proof.ts", ".github/scripts/runtime-desktop-controls.ts"].every(p => rows.some(r => r.path === p)), "PREPARED_SOURCE_INVENTORY_INCOMPLETE"); return { sourceBytes: hash(rows.filter(r => r.path !== ".github/workflows/runtime-desktop.yml")), packages: hash(rows.filter(r => r.path.startsWith("packages/") || ["package.json", "bun.lock"].includes(r.path))) }; };
+          const before = fingerprints(producer.head_sha), after = fingerprints(process.env.GITHUB_SHA);
+          requireValue(before.sourceBytes === after.sourceBytes && before.packages === after.packages, "PREPARED_SOURCE_FINGERPRINT_MISMATCH");
+          const redirect = await request(`/actions/artifacts/${artifact.id}/zip`);
+          requireValue(redirect.status === 302 && redirect.headers.get("location"), "PREPARED_ARCHIVE_REDIRECT_UNAVAILABLE");
+          const location = await Promise.resolve().then(() => new URL(redirect.headers.get("location"))).catch(() => fail("PREPARED_ARCHIVE_REDIRECT_INVALID")); requireValue(location.protocol === "https:" && !location.username && !location.password, "PREPARED_ARCHIVE_REDIRECT_INVALID");
+          const archive = await fetch(location, { redirect: "error", signal: AbortSignal.timeout(180000) }).catch(() => fail("PREPARED_ARCHIVE_REQUEST_FAILED"));
+          requireValue(archive.ok && archive.body, `PREPARED_ARCHIVE_HTTP_FAILURE:${archive.status}`);
+          const digest = createHash("sha256"), size = { bytes: 0 }, zip = `${process.env.RUNNER_TEMP}/prepared-reuse.zip`;
+          requireValue(!(await Bun.file(zip).exists()), "PREPARED_ARCHIVE_NOT_FRESH");
+          await Bun.write(zip, new Response(archive.body.pipeThrough(new TransformStream({ transform(chunk, controller) { size.bytes += chunk.byteLength; requireValue(size.bytes <= artifact.size_in_bytes, "PREPARED_ARCHIVE_SIZE_EXCEEDED"); digest.update(chunk); controller.enqueue(chunk); } })))).catch(() => fail("PREPARED_ARCHIVE_CAPTURE_FAILED"));
+          requireValue(size.bytes === artifact.size_in_bytes && `sha256:${digest.digest("hex")}` === artifact.digest, "PREPARED_ARCHIVE_DIGEST_MISMATCH");
+          const admission = { run: producer.id, prepareJob: job.id, artifact: artifact.id, archiveDigest: artifact.digest, producerHead: producer.head_sha, producerTree, currentHead: process.env.GITHUB_SHA, currentTree, sourceByteFingerprint: before.sourceBytes, packageFingerprint: before.packages };
+          await Bun.write(`${process.env.RUNNER_TEMP}/prepared-admission.json`, JSON.stringify(admission) + "\n");
+          console.log("PREPARED_SOURCE_EQUIVALENT_PRODUCER_ADMITTED", JSON.stringify(admission));
+          await Bun.write(Bun.file(process.env.GITHUB_OUTPUT), `run_id=${id}\nartifact_id=${artifact.id}\n`);'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: ${{ !inputs.prepared_run }}
         with:
           name: desktop-linux-x64-prepared
           path: ${{ runner.temp }}/prepared
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.run_id }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: inputs.prepared_run != ''
+        with:
+          artifact-ids: ${{ steps.reuse.outputs.artifact_id }}
+          merge-multiple: true
+          path: ${{ runner.temp }}/prepared
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.reuse.outputs.run_id }}
+      - name: Bind action-downloaded payload to independently digest-verified producer ZIP
+        if: inputs.prepared_run != ''
+        working-directory: ${{ runner.temp }}
+        run: |
+          set -euo pipefail
+          for tool in unzip cmp; do command -v "$tool" >/dev/null || { echo "PREPARED_VERIFY_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
+          unzip -q prepared-reuse.zip -d prepared-verified || { echo PREPARED_VERIFIED_ARCHIVE_INVALID >&2; exit 1; }
+          for file in desktop-dependencies.tar.gz models-api.json; do
+            test -s "prepared/$file" && test -s "prepared-verified/$file" || { echo PREPARED_VERIFIED_PAYLOAD_MISSING >&2; exit 1; }
+            cmp -- "prepared/$file" "prepared-verified/$file" || { echo PREPARED_ACTION_PAYLOAD_DIGEST_MISMATCH >&2; exit 1; }
+          done
       - name: Restore dependencies into exact source checkout and require native host
         working-directory: ${{ runner.temp }}
         run: |
           set -euo pipefail
           test -s prepared/desktop-dependencies.tar.gz && test -s prepared/models-api.json || { echo DESKTOP_PREPARED_PRODUCT_MISSING >&2; exit 1; }
           test "$(git -C "$GITHUB_WORKSPACE/candidate" rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH >&2; exit 1; }
-          tar -xzf prepared/desktop-dependencies.tar.gz -C "$GITHUB_WORKSPACE/candidate"
+          bun -e 'const { spawnSync } = await import("node:child_process"); const r = spawnSync("tar", ["-tzf", "prepared/desktop-dependencies.tar.gz"], { encoding: "utf8", timeout: 60000, maxBuffer: 33554432 }); if (r.error || r.status !== 0) throw Error("PREPARED_TAR_INVENTORY_UNAVAILABLE"); const paths = r.stdout.trim().split("\n").map(p => p.replace(/^\.\//, "")); if (!r.stdout.trim() || paths.some(p => p.split("/").includes("..") || !/^(node_modules(?:\/|$)|packages\/[^/]+\/node_modules(?:\/|$)|packages\/sdk\/js\/node_modules(?:\/|$)|\.runtime-cli(?:\/|$))/.test(p))) throw Error("PREPARED_TAR_SOURCE_OR_FOREIGN_NAMESPACE_REJECTED");'
+          tar -xzf prepared/desktop-dependencies.tar.gz -C "$GITHUB_WORKSPACE/candidate" || { echo PREPARED_DEPENDENCY_EXTRACTION_FAILED >&2; exit 1; }
+          git -C "$GITHUB_WORKSPACE/candidate" diff --quiet HEAD -- || { echo PREPARED_TRACKED_SOURCE_CHANGED >&2; exit 1; }
+          bun -e 'const { spawnSync } = await import("node:child_process"); const root = `${process.env.GITHUB_WORKSPACE}/candidate`, files = [["package-proof", "ede583f270cacf8c70e53619bffc1e9e75843cd7"], ["bootstrap-proof", "2ec3aeefd6b1f486bf66784dc2ac2273bb74efe6"], ["controls", "e0d9eae45eec8bb00535c09531f0b78260f5fa65"]]; files.forEach(([name, blob]) => { const r = spawnSync("git", ["hash-object", `${root}/.github/scripts/runtime-desktop-${name}.ts`], { encoding: "utf8", timeout: 10000 }); if (r.error || r.status !== 0 || r.stdout.trim() !== blob) throw Error(`DESKTOP_CONSUMER_GATE_MISSING_OR_CHANGED:${name}`); });'
           bun "$GITHUB_WORKSPACE/candidate/packages/cli/script/runtime-proof.ts" --target linux-x64-baseline --host
       - name: Build actual Node sidecar and Electron Vite through package build lifecycle
         working-directory: ${{ github.workspace }}/candidate/packages/desktop
@@ -143,6 +246,15 @@ jobs:
           bun run package:linux --dir --x64 --publish never --config.directories.output="$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL"
           test -s "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources/app.asar" || { echo DESKTOP_PACKAGED_RESOURCES_MISSING >&2; exit 1; }
           bun ../../.github/scripts/runtime-desktop-package-proof.ts --resources "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL/linux-unpacked/resources" --channel "$ORCHESTRA_CHANNEL" --report "$RUNNER_TEMP/package-$ORCHESTRA_CHANNEL.json"
+      - name: Provision dev-only X11 inspection prerequisite
+        if: matrix.channel == 'dev'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -euo pipefail
+          for tool in sudo apt-get; do command -v "$tool" >/dev/null || { echo "DESKTOP_PROVISION_DEPENDENCY_MISSING:$tool" >&2; exit 1; }; done
+          sudo apt-get update || { echo DESKTOP_X11_PREREQUISITE_UPDATE_FAILED >&2; exit 1; }
+          sudo apt-get install -y --no-install-recommends x11-utils || { echo DESKTOP_X11_PREREQUISITE_INSTALL_FAILED >&2; exit 1; }
       - name: Prove prepared dev default bootstrap under isolated nonroot Xvfb
         if: matrix.channel == 'dev'
         working-directory: ${{ github.workspace }}/candidate/packages/desktop
