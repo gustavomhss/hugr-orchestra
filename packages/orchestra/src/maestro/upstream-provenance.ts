@@ -1,6 +1,6 @@
 import { Database } from "@orchestra/core/database/database"
-import { MessageTable, SessionMessageTable } from "@orchestra/core/session/sql"
-import type { SessionV1 } from "@orchestra/core/v1/session"
+import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
+import { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { eq } from "drizzle-orm"
@@ -30,6 +30,17 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("UpstreamAttributi
 const decodeRecord = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
 const decodeMessage = Schema.decodeUnknownSync(SessionMessage.Message)
 const decodeAttribution = Schema.decodeUnknownSync(UpstreamAttribution.V1)
+// Private host port, not a worker DTO: Relay must write this on the exact native Task only after durable
+// delivery, capturing the returned assistant before async work, and preserve it against stale Task completion.
+// WorkResult is compared with BackendResult's actual stored-source assembly below, not redefined here.
+const Settlement = Schema.Struct({
+  parentMessageID: SessionMessage.ID,
+  parentCallID: Schema.NonEmptyString,
+  workResult: Schema.Record(Schema.String, Schema.Unknown),
+  deliveryMessageID: SessionMessage.ID,
+  deliveryPartID: Schema.optional(Schema.NonEmptyString),
+})
+const decodeSettlement = Schema.decodeUnknownOption(Settlement)
 
 type Call = {
   id: string
@@ -53,7 +64,7 @@ type Evidence = {
   legacy?: SessionV1.WithParts
 }
 
-/** Observe synchronous stored proposals. Background attribution requires Relay-owned exact host settlement. */
+/** Observe stored proposals; background delivery requires Relay's private exact Task settlement port. */
 export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   input: Pick<UpstreamAttribution.V1, "projectID" | "parentSessionID" | "parentMessageID" | "parentCallID" | "authorSessionID" | "authorMessageID" | "logicalTaskID">,
 ) {
@@ -84,16 +95,24 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   const call = calls[0]
   if (calls.length !== 1 || !call || call.name !== "task" || call.input?.subagent_type !== agent.id || call.providerExecuted)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Authority must contain one exact native Task dispatch to walt" })
-  const snapshot = record(call.metadata?.workResult)
+  const initial = record(call.metadata?.workResult)
+  const background = call.metadata?.background === true || record(initial?.terminal)?.reason === "running"
+  if (authority.error || authority.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true ||
+    ["failed", "error", "interrupted"].includes(String(record(initial?.terminal)?.reason)))
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Parent or Task failed, was interrupted, or has not completed" })
   // Caller-settable synthetic notices, process-local job status, timestamps, and matching bytes cannot establish
   // the returned assistant identity or host delivery. Do not infer a settlement from any of those facts.
-  if (call.metadata?.background === true || record(snapshot?.terminal)?.reason === "running")
+  const settlement = background
+    ? Option.getOrUndefined(decodeSettlement(call.metadata?.upstreamSettlement, { onExcessProperty: "error" }))
+    : undefined
+  if (background && (!settlement || settlement.parentMessageID !== authority.id || settlement.parentCallID !== call.id))
     return yield* new Denied({
       code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE",
       message: "HOLD: background attribution requires exact host Task settlement and a referenced durable delivery",
     })
-  if (authority.error || authority.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Parent or Task failed, was interrupted, or has not completed" })
+  const snapshot = settlement?.workResult ?? initial
+  if (settlement && record(snapshot?.terminal)?.reason !== "ended")
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "HOLD: captured host Task did not end successfully" })
   if (!call.metadata || call.metadata.parentSessionId !== parent.id || call.metadata.sessionId !== child.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Host Task placement does not match the parent and author Sessions" })
 
@@ -110,7 +129,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   if (!author.owned || author.role !== "assistant" || author.agent !== agent.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Proposal must be an actual owned walt assistant" })
   const proposal = author.legacy ? BackendResult.assemble(author.legacy, [], seat) : modernProposal(author)
-  if (!proposal || !proposal.card.parsed || proposal.outcome !== "done" || proposal.terminal.reason !== "ended" || proposal.blockers.length)
+  if (!proposal || (background && (!author.completed || author.finish === "error")) || !proposal.card.parsed || proposal.outcome !== "done" || proposal.terminal.reason !== "ended" || proposal.blockers.length)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Author has no unique parsed successful terminal upstream proposal" })
   if (!snapshot || snapshot.schema !== UpstreamResult.SCHEMA)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Host Task work result is missing or incompatible" })
@@ -119,6 +138,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
 
   if (!matchesWorkResult(snapshot, proposal, logical.taskId))
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Host Task completion does not select this exact successful proposal" })
+  if (settlement) yield* readDelivery(parent.id, child.id, settlement)
 
   return decodeAttribution({
     schema: "maestro-upstream-attribution-v1", projectID: parent.projectID, memberID: agent.id, profile: seat.profileKey,
@@ -130,6 +150,48 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
 function missing(error: NotFoundError) {
   return new Denied({ code: "UPSTREAM_ATTRIBUTION_MISSING", message: error.message })
 }
+
+const readDelivery = Effect.fn("UpstreamProvenance.readDelivery")(function* (
+  parentID: SessionID, childID: SessionID, settlement: typeof Settlement.Type,
+) {
+  const database = yield* Database.Service
+  const current = yield* database.db.select().from(SessionMessageTable)
+    .where(eq(SessionMessageTable.id, settlement.deliveryMessageID)).get().pipe(Effect.orDie)
+  const retained = yield* database.db.select().from(MessageTable)
+    .where(eq(MessageTable.id, MessageID.make(settlement.deliveryMessageID))).get().pipe(Effect.orDie)
+  const denied = new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "HOLD: referenced host delivery is missing, invalid, conflicting, or belongs to another Session" })
+  if ((!current && !retained) || (current && current.session_id !== parentID) || (retained && retained.session_id !== parentID))
+    return yield* denied
+  const modern = current ? Option.getOrUndefined(Schema.decodeUnknownOption(SessionMessage.Message)({
+    ...current.data, id: current.id, type: current.type,
+  })) : undefined
+  if (current && (!modern || modern.type !== "synthetic" || modern.sessionID !== parentID || !modern.text || record(current.data)?.error))
+    return yield* denied
+  if (!retained) {
+    if (settlement.deliveryPartID !== undefined) return yield* denied
+    return
+  }
+  if (!settlement.deliveryPartID || record(retained.data)?.error) return yield* denied
+  const parts = yield* database.db.select().from(PartTable)
+    .where(eq(PartTable.message_id, retained.id)).all().pipe(Effect.orDie)
+  const legacy = Option.getOrUndefined(Schema.decodeUnknownOption(SessionV1.WithParts)({
+    info: { ...retained.data, id: retained.id, sessionID: retained.session_id },
+    parts: parts.map((part) => ({ ...part.data, id: part.id, sessionID: part.session_id, messageID: part.message_id })),
+  }))
+  if (!legacy || legacy.info.role !== "user" || legacy.parts.some((part) =>
+    part.sessionID !== parentID || part.messageID !== retained.id || (part.type === "tool" && part.state.status === "error")))
+    return yield* denied
+  const selected = legacy.parts.filter((part) => part.id === settlement.deliveryPartID)
+  const part = selected[0]
+  if (selected.length !== 1 || !part || part.type !== "text" || part.synthetic !== true || part.ignored === true ||
+    !part.text || (part.time && part.time.end === undefined)) return yield* denied
+  const source = record(part.metadata?.source)
+  if (source?.type !== "task-return" || source.task_id !== childID || source.state !== "completed" ||
+    !isDeepStrictEqual(part.metadata?.workResult, settlement.workResult)) return yield* denied
+  // V2 projection drops arbitrary synthetic metadata. Authority is the Task receipt, never the synthetic flag.
+  // If both stores retain this identity, require the same delivered text and reject either unfavorable view.
+  if (modern && (modern.type !== "synthetic" || modern.text !== part.text)) return yield* denied
+})
 
 const readMessage = Effect.fn("UpstreamProvenance.readMessage")(function* (
   sessionID: SessionID, selectedID: SessionMessage.ID, code: Denied["code"],
