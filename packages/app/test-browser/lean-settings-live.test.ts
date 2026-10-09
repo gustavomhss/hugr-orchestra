@@ -12,6 +12,7 @@ const transport = { reject: true }
 const sync = {
   data: state,
   get ready() { return state.ready },
+  configReady: true,
   get error() { return state.error },
   session: { lineage: { peek: () => undefined } },
   async updateConfig(config: Config) {
