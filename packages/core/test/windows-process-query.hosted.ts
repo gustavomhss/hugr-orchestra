@@ -77,7 +77,10 @@ setTimeout(() => console.log('LATE SUCCESS'), 20000);
     expect(proof.error).toBe("")
     expect(JSON.parse(proof.stdout)).toEqual({ ...pinned, exited: true })
     expect(existsSync(path.dirname(recorded.file))).toBe(false)
-  } finally { await Promise.all([held, observer]); rmSync(dir, { recursive: true, force: true }) }
+  } finally {
+    console.log("WINDOWS_QUERY_CLEANUP_PROOF " + JSON.stringify(await Promise.all([held, observer])))
+    rmSync(dir, { recursive: true, force: true })
+  }
 }, 45000)
 
 async function until(check: () => boolean, timeoutMs: number) {
@@ -96,7 +99,7 @@ const record = JSON.parse(fs.readFileSync(nonce,'utf8')); const live = path.join
 if (process.platform === 'win32') {
   const quote = text => "'" + text.replaceAll("'", "''") + "'";
   const script = "$ErrorActionPreference='Stop'; $p=[Diagnostics.Process]::GetProcessById(" + record.pid + "); $h=$p.Handle; try {" +
-    "$row=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.Id); if (!$row.CommandLine.Contains(" + quote(nonce) + ") -or !$row.CommandLine.Contains(" + quote(record.file) + ")) {throw 'identity mismatch'}; " +
+    "$row=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.Id); if (!$row.CommandLine.Contains(" + quote(JSON.stringify(nonce).slice(1,-1)) + ") -or !$row.CommandLine.Contains(" + quote(record.file) + ")) {throw 'identity mismatch'}; " +
     "$proof=@{pid=$p.Id;startTime=$p.StartTime.ToFileTimeUtc().ToString();nonce=" + quote(nonce) + "}; " +
     "[IO.File]::WriteAllText(" + quote(live) + ",(ConvertTo-Json -Compress $proof)); " +
     "if (!$p.WaitForExit(25000)) {throw 'pinned OS handle still live'}; $proof.exited=$true; ConvertTo-Json -Compress $proof} finally {$p.Dispose()}";
