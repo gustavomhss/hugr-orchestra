@@ -38,7 +38,8 @@ export async function emergency(app: ChildProcess, roots: Identity[], retained: 
     })]
     const ids = [...new Map(targets.map((row) => [`${row.pid}:${row.startTime}`, identity(row.pid, rows)])).values()]
     if (win && ids.length) {
-      const result = WindowsInventory.query(`$ErrorActionPreference='Stop'; $ids=ConvertFrom-Json '${JSON.stringify(ids)}'; foreach ($id in $ids) {$p=$null; try {$p=[Diagnostics.Process]::GetProcessById([int]$id.pid); $h=$p.Handle; if ($p.StartTime.ToFileTimeUtc().ToString() -eq $id.startTime) {$p.Kill(); if (!$p.WaitForExit(1000)) {throw 'owned Electron process exit unconfirmed'}}} catch [ArgumentException] {} finally {if ($p) {$p.Dispose()}}}; 'CLEANED'`, 20_000)
+      // Match the SAME CIM birth clock used by table()/kill9(), while retaining the exact OS handle.
+      const result = WindowsInventory.query(`$ErrorActionPreference='Stop'; $ids=ConvertFrom-Json '${JSON.stringify(ids)}'; foreach ($id in $ids) {$p=$null; try {$p=[Diagnostics.Process]::GetProcessById([int]$id.pid); $h=$p.Handle; $r=Get-CimInstance Win32_Process -Filter ('ProcessId='+[int]$id.pid); if (!$p.HasExited -and $r -and $r.CreationDate -and $r.CreationDate.ToFileTimeUtc().ToString() -eq $id.startTime) {$p.Kill(); if (!$p.WaitForExit(1000)) {throw 'owned Electron process exit unconfirmed'}}} catch [ArgumentException] {} finally {if ($p) {$p.Dispose()}}}; 'CLEANED'`, 20_000)
       if (result.status !== 0 || result.stdout.trim() !== "CLEANED") throw new Error(`desktop emergency cleanup: ${result.stderr}`)
     }
     if (!win) ids.forEach((id) => kill9(id))
