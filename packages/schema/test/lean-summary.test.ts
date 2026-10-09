@@ -15,7 +15,15 @@ function decision(callID = "call", patch: Partial<LeanMetrics.Decision> = {}): L
 }
 
 function summary(records: readonly unknown[], patch: Partial<LeanSummary.Input> = {}) {
-  return LeanSummary.summarize({ projectID: "repo", coverage: "loaded-history", records, ...patch })
+  const result = LeanSummary.summarize({ projectID: "repo", coverage: "loaded-history", records, ...patch })
+  if (result.unavailable !== undefined) throw new Error(`Expected available summary: ${result.unavailable}`)
+  return result
+}
+
+function tokenRecord(callID: string, saved: number, patch: Partial<LeanMetrics.Decision> = {}) {
+  return decision(callID, { bytes: { before: 1, after: 0, saved: 1 },
+    tokens: { kind: "estimated", counter: "chars-per-token-4", before: Math.max(saved, 0), after: Math.max(-saved, 0), saved },
+    ...patch })
 }
 
 describe("persisted Lean project summary", () => {
@@ -75,6 +83,12 @@ describe("persisted Lean project summary", () => {
     expect(summary(records, { location: "/wrong" }).observedCalls).toBe(0)
     expect(summary(records, { sessionID: "absent" }).observedCalls).toBe(0)
     expect(summary(records, { sessionID: "session", location: "/repo" }).observedCalls).toBe(1)
+  })
+
+  test("owner identity is a JSON tuple, not a joined string", () => {
+    const owner = decision().owner
+    expect(summary([decision("c", { owner: { ...owner, location: "a/b", sessionID: "c" } }),
+      decision("c", { owner: { ...owner, location: "a", sessionID: "b/c" } })]).observedCalls).toBe(2)
   })
 
   test("narrows explicit profile and keeps missing profile absent", () => {
@@ -166,10 +180,73 @@ describe("persisted Lean project summary", () => {
     expect(Object.hasOwn(result.reasons, "__proto__")).toBe(true)
   })
 
-  test("never silently rounds or clamps unrepresentable aggregate savings", () => {
+  test("total byte and signed token overflow return only coverage and unavailable", () => {
     const huge = decision("huge", { bytes: { before: Number.MAX_SAFE_INTEGER, after: 0, saved: Number.MAX_SAFE_INTEGER },
       tokens: { kind: "unavailable" } })
     expect(summary([huge]).bytesSaved).toBe(Number.MAX_SAFE_INTEGER)
-    expect(() => summary([huge, decision("one")])).toThrow("Lean summary exceeds safe integer range")
+    expect(LeanMetrics.decode(huge)).toEqual(huge)
+    for (const records of [[huge, decision("one")],
+      [tokenRecord("max", Number.MAX_SAFE_INTEGER), tokenRecord("one", 1)],
+      [tokenRecord("min", -Number.MAX_SAFE_INTEGER), tokenRecord("minus-one", -1)]]) {
+      for (const coverage of ["loaded-history", "complete-history"] as const) {
+        expect(LeanSummary.summarize({ projectID: "repo", coverage, records })).toEqual({ coverage, unavailable: "overflow" })
+      }
+    }
+    expect(summary([huge, huge]).bytesSaved).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  test("any final profile or model group overflow makes the whole summary unavailable", () => {
+    for (const dimension of ["orchestraProfile", "filterProfile", "model"] as const) {
+      for (const sign of [1, -1]) {
+        const A = dimension === "model" ? { model: { provider: "p", id: "A" } } : { [dimension]: "A" }
+        const B = dimension === "model" ? { model: { provider: "p", id: "B" } } : { [dimension]: "B" }
+        const records = [tokenRecord("max", sign * Number.MAX_SAFE_INTEGER, A), tokenRecord("one", sign, A),
+          tokenRecord("cancel", -sign, B)]
+        for (const record of records) expect(LeanMetrics.decode(record)).toEqual(record)
+        expect(LeanSummary.summarize({ projectID: "repo", coverage: "loaded-history", records }))
+          .toEqual({ coverage: "loaded-history", unavailable: "overflow" })
+      }
+    }
+  })
+
+  test("signed intermediate overflow can cancel into exact totals and every group", () => {
+    for (const sign of [1, -1]) {
+      const patch = { orchestraProfile: "A", filterProfile: "A" }
+      const records = [tokenRecord("max", sign * Number.MAX_SAFE_INTEGER, patch), tokenRecord("one", sign, patch),
+        tokenRecord("cancel", -sign, patch)]
+      const result = summary(records)
+      expect(result.estimatedTokensSaved).toBe(sign * Number.MAX_SAFE_INTEGER)
+      expect(result.estimatedTokenCalls).toBe(3)
+      expect(result.bytesSaved).toBe(3)
+      for (const groups of [result.orchestraProfiles, result.filterProfiles, result.models]) {
+        for (const value of Object.values(groups)) expect(value).toEqual({ calls: 3, bytesSaved: 3,
+          estimatedTokensSaved: sign * Number.MAX_SAFE_INTEGER, estimatedTokenCalls: 3 })
+      }
+      expect(summary([...records].reverse())).toEqual(result)
+    }
+  })
+
+  test("invalid native caller scope returns no numeric placeholders", () => {
+    for (const field of ["projectID", "orchestraProfile", "sessionID", "location"] as const) {
+      const max = field === "location" ? 4096 : 256
+      for (const value of ["", null, 1, {}, "x".repeat(max + 1), "\ud800", "\udc00", "a\ud800b"]) {
+        for (const coverage of ["loaded-history", "complete-history"] as const) {
+          const input = { projectID: "repo", coverage, records: [decision()], [field]: value } as unknown as LeanSummary.Input
+          expect(LeanSummary.summarize(input)).toEqual({ coverage, unavailable: "invalid-scope" })
+        }
+      }
+    }
+    expect(LeanSummary.summarize({ coverage: "loaded-history", records: [] } as unknown as LeanSummary.Input))
+      .toEqual({ coverage: "loaded-history", unavailable: "invalid-scope" })
+  })
+
+  test("valid caller scope accepts inclusive decoder bounds and well-formed surrogate pairs", () => {
+    const projectID = "p".repeat(256)
+    const owner = { projectID, location: "l".repeat(4096), sessionID: "s".repeat(256), callID: "call" }
+    const record = decision("call", { owner, orchestraProfile: "o".repeat(256) })
+    expect(LeanMetrics.decode(record)).toEqual(record)
+    expect(summary([record], { projectID, location: owner.location, sessionID: owner.sessionID,
+      orchestraProfile: record.orchestraProfile }).observedCalls).toBe(1)
+    expect(summary([decision("emoji", { owner: { ...owner, projectID: "😀" } })], { projectID: "😀" }).observedCalls).toBe(1)
   })
 })
