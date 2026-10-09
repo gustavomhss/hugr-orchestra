@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
 import { createRequire } from "node:module"
+import { chmod, mkdir } from "node:fs/promises"
+import { join } from "node:path"
 import { query } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { tmpdir } from "../fixture/fixture"
@@ -9,6 +11,95 @@ const login = { claudeAiOauth: {
   accessToken: "local-test-not-a-real-token", refreshToken: "local-test-not-a-real-refresh",
   expiresAt: 4102444800000, scopes: ["user:inference"],
 } }
+
+test("native credential storage locations honor secure override, empty override, and NFC keychain naming", () => {
+  expect(ClaudeCodeSDK.credentialStorage({ CLAUDE_CONFIG_DIR: "/session" }, "/home")).toEqual({
+    file: join("/session", ".credentials.json"), service: "Claude Code-credentials-854347c6",
+  })
+  expect(ClaudeCodeSDK.credentialStorage({ CLAUDE_CONFIG_DIR: "/session", CLAUDE_SECURESTORAGE_CONFIG_DIR: "/credentials" }, "/home")).toEqual({
+    file: join("/credentials", ".credentials.json"), service: "Claude Code-credentials-073a57ca",
+  })
+  expect(ClaudeCodeSDK.credentialStorage({ CLAUDE_CONFIG_DIR: "/session", CLAUDE_SECURESTORAGE_CONFIG_DIR: "" }, "/home")).toEqual({
+    file: join("/home", ".claude", ".credentials.json"), service: "Claude Code-credentials",
+  })
+  expect(ClaudeCodeSDK.credentialStorage({}, "/home")).toEqual({
+    file: join("/home", ".claude", ".credentials.json"), service: "Claude Code-credentials",
+  })
+  expect(ClaudeCodeSDK.credentialStorage({ CLAUDE_SECURESTORAGE_CONFIG_DIR: "/cafe\u0301" }, "/home")).toEqual({
+    file: join("/café", ".credentials.json"), service: "Claude Code-credentials-a434c8fb",
+  })
+})
+
+for (const location of ["session", "secure", "empty", "default"]) {
+  test(`synthetic plaintext credentials use native ${location} storage location`, async () => {
+    await using dir = await tmpdir()
+    await syntheticKeychain(dir.path, "")
+    const home = join(dir.path, "home")
+    const session = join(dir.path, "session")
+    const secure = join(dir.path, "secure")
+    const selected = location === "session" ? session : location === "secure" ? secure : join(home, ".claude")
+    await mkdir(selected, { recursive: true })
+    await mkdir(session, { recursive: true })
+    await Bun.write(join(session, ".credentials.json"), JSON.stringify({ claudeAiOauth: { ...login.claudeAiOauth, accessToken: "synthetic-decoy" } }))
+    await Bun.write(join(selected, ".credentials.json"), JSON.stringify(login))
+    const env = { HOME: home, PATH: dir.path,
+      ...(location !== "default" ? { CLAUDE_CONFIG_DIR: session } : {}),
+      ...(location === "secure" ? { CLAUDE_SECURESTORAGE_CONFIG_DIR: secure } : {}),
+      ...(location === "empty" ? { CLAUDE_SECURESTORAGE_CONFIG_DIR: "" } : {}),
+    }
+    const lifetime = ClaudeCodeSDK.processLifetime({ env, spawnClaudeCodeProcess: (options) => {
+      expect(options.env.CLAUDE_CODE_OAUTH_TOKEN).toBe(login.claudeAiOauth.accessToken)
+      return spawn(process.execPath, ["-e", "process.exit(0)"], { env: options.env, stdio: ["pipe", "pipe", "pipe"] })
+    } })
+    const child = lifetime.options.spawnClaudeCodeProcess({ command: "unused", args: [], env: lifetime.options.env,
+      signal: new AbortController().signal })
+    await lifetime.join()
+    expect(child.exitCode).toBe(0)
+    if (process.platform === "darwin") {
+      expect(await Bun.file(join(dir.path, "keychain-call.json")).json()).toContain("find-generic-password")
+    }
+  })
+}
+
+test.skipIf(process.platform !== "darwin")("native keychain stays authoritative over an existing explicit plaintext file", async () => {
+  await using dir = await tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify(login)) })
+  const keychain = { claudeAiOauth: { ...login.claudeAiOauth, accessToken: "synthetic-keychain-token" } }
+  const tokens: string[] = []
+  const lifetime = ClaudeCodeSDK.processLifetime({ env: { HOME: dir.path, PATH: dir.path, CLAUDE_CONFIG_DIR: dir.path },
+    spawnClaudeCodeProcess: (options) => {
+      tokens.push(options.env.CLAUDE_CODE_OAUTH_TOKEN ?? "")
+      return spawn(process.execPath, ["-e", "process.exit(0)"], { env: options.env, stdio: ["pipe", "pipe", "pipe"] })
+    } })
+  const run = () => lifetime.options.spawnClaudeCodeProcess({ command: "unused", args: [], env: lifetime.options.env,
+    signal: new AbortController().signal })
+  await syntheticKeychain(dir.path, JSON.stringify(keychain))
+  run()
+  await lifetime.join()
+  expect(tokens).toEqual([keychain.claudeAiOauth.accessToken])
+  expect(await Bun.file(join(dir.path, "keychain-call.json")).json()).toContain("-s")
+  for (const contents of ["{}", JSON.stringify({ claudeAiOauth: { ...keychain.claudeAiOauth, expiresAt: 0 } })]) {
+    await syntheticKeychain(dir.path, contents)
+    expect(run).toThrow("Claude Code machine login unavailable")
+  }
+  for (const contents of ["", "not-json", "null"]) {
+    await syntheticKeychain(dir.path, contents)
+    run()
+    await lifetime.join()
+    expect(tokens.at(-1)).toBe(login.claudeAiOauth.accessToken)
+  }
+  await syntheticKeychain(dir.path, JSON.stringify(keychain), 44)
+  run()
+  await lifetime.join()
+  expect(tokens.at(-1)).toBe(login.claudeAiOauth.accessToken)
+})
+
+async function syntheticKeychain(directory: string, contents: string, status = 0) {
+  // Native CLI resolves `security` through PATH. This executable never invokes the real keychain.
+  await Bun.write(join(directory, "security"), "#!/bin/sh\n" +
+    `printf '["%s","%s","%s","%s","%s","%s"]' "$1" "$2" "$3" "$4" "$5" "$6" > '${join(directory, "keychain-call.json").replaceAll("'", "'\\''")}'\n` +
+    `printf '%s' '${contents.replaceAll("'", "'\\''")}'; exit ${status}\n`)
+  await chmod(join(directory, "security"), 0o700)
+}
 
 test("API-only bare mode fails before credential lookup or spawn", async () => {
   const lifetime = ClaudeCodeSDK.processLifetime({ env: {}, extraArgs: { bare: null }, spawnClaudeCodeProcess: () => {
