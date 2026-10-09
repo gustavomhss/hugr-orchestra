@@ -34,17 +34,19 @@ if (lane.startsWith("darwin-")) {
   const info: unknown = JSON.parse(json.stdout.toString())
   // diskutil supplies the actual mountpoint, not a caller's lexical path model.
   // A nested path, symlink spelling, or unmounted volume does not satisfy this.
+  // Mounted APFS volumes need not include a `Mounted` key; the current nonempty
+  // MountPoint, matched exactly to this path, is the live mount qualification.
   if (
     !info ||
     typeof info !== "object" ||
     !("FilesystemType" in info) ||
     info.FilesystemType !== "apfs" ||
     !("MountPoint" in info) ||
-    info.MountPoint !== root ||
-    !("Mounted" in info) ||
-    info.Mounted !== true
+    typeof info.MountPoint !== "string" ||
+    !info.MountPoint ||
+    info.MountPoint !== root
   )
-    throw new Error("Native Darwin artifact test root must be the actual mounted APFS root")
+    throw new Error("Native Darwin artifact test root must be the actual mounted APFS root", { cause: info })
   const sdk = process.env.ORCHESTRA_ARTIFACT_DARWIN_SDK
   if (!sdk) throw new Error("Native Darwin artifact lane requires ORCHESTRA_ARTIFACT_DARWIN_SDK")
   await Promise.all(
