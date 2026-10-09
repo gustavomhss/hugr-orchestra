@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { lstat, mkdir, mkdtemp, open, readFile, realpath, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { machine, tmpdir } from "node:os"
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path"
 import { parseArgs } from "node:util"
 import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../packages/desktop/src/main/cli-artifacts"
 
@@ -119,7 +119,7 @@ async function main() {
   if (!("version" in metadata) || metadata.version !== expectedVersion) fail("PACKAGED_DESKTOP_VERSION_MISMATCH")
   if (!("main" in metadata) || metadata.main !== source.main) fail("PACKAGED_MAIN_IDENTITY_MISMATCH")
   const main = source.main.replace(/^\.\//, "")
-  requirePackedEntry(await Promise.resolve().then(() => statFile(archive, main, false))
+  requirePackedEntry(await Promise.resolve().then(() => statFile(archive, normalize(main), false))
     .catch(() => fail("PACKAGED_MAIN_OUTPUT_MISSING")), "PACKAGED_MAIN_OUTPUT_MISSING_OR_NOT_REGULAR", payloadBase, archiveSize)
   const archiveSha256 = digest(await readFile(archive))
   const directory = join(resources, "cli")
