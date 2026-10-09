@@ -411,6 +411,84 @@ describe("operator grant and request parsing", () => {
     expect(calls.count).toBe(0)
   }))
 
+  it.effect("root clock serialization methods never run while real facade clock and scope controls remain active", () => Effect.gen(function* () {
+    const calls = { clock: 0, serializer: 0, now: 1000 }
+    const now = Object.assign(() => { calls.clock += 1; return calls.now }, {
+      toJSON: () => { calls.serializer += 1; throw new Error("Clock serialization must not execute") },
+    })
+    const pending = CapabilityOperator.make({ ...options(), now, ttlMillis: 10, maxCapabilities: 1 })
+    expect(calls.clock).toBe(0)
+    expect(calls.serializer).toBe(0)
+    const facade = yield* pending
+    expect(calls.clock).toBe(1)
+    const issued = yield* facade.issue({ origin: "sdk" })
+    yield* denied(facade.issue({ origin: "sdk" }), "quota_exceeded")
+    expect(yield* facade.authenticate(issued.bearer)).toBe(issued.authority)
+    const effects = yield* Ref.make(0)
+    yield* facade.withRequest(issued.authority, { requestID: "clock-method" }, Effect.gen(function* () {
+      const binding = yield* facade.require(target)
+      expect(binding.principal).toBe(options().principal)
+      expect(binding.origin).toBe("sdk")
+      yield* facade.validate(binding, target)
+      yield* Ref.update(effects, (value) => value + 1)
+      yield* denied(facade.require({ ...target, action: "connection.write" }), "target_denied")
+      yield* denied(facade.require({ action: target.action, placement }), "target_denied")
+    }))
+    yield* denied(facade.issue({ origin: "sdk", scope: { ...root, actions: ["*"] } }), "target_denied")
+    calls.now = 1010
+    yield* denied(facade.authenticate(issued.bearer), "authentication_required")
+    yield* facade.issue({ origin: "sdk" })
+    expect(yield* Ref.get(effects)).toBe(1)
+    expect(calls.clock).toBeGreaterThan(1)
+    expect(calls.serializer).toBe(0)
+  }))
+
+  it.effect("root clock metadata getters stay opaque and function exemption never reaches nested data", () => Effect.gen(function* () {
+    const calls = { clock: 0, getter: 0 }
+    const now = () => { calls.clock += 1; return 1000 }
+    Object.defineProperty(now, "toJSON", { get: () => {
+      calls.getter += 1
+      throw new Error("Clock serialization getter must not execute")
+    } })
+    Object.defineProperty(now, "metadata", { enumerable: true, get: () => {
+      calls.getter += 1
+      throw new Error("Clock metadata getter must not execute")
+    } })
+    const pending = CapabilityOperator.make({ ...options(), now })
+    expect(calls).toEqual({ clock: 0, getter: 0 })
+    const facade = yield* pending
+    yield* facade.withRequest(facade.configured, { requestID: "clock-getter" }, facade.require(target))
+    const nested = { ...options(), scope: { ...root } }
+    Reflect.set(nested.scope, "now", now)
+    yield* denied(CapabilityOperator.make({ ...nested, now }), "target_denied")
+    const unknown = { ...options(), now, clock: now }
+    yield* denied(CapabilityOperator.make(unknown), "target_denied")
+    const getter = { ...options(), now }
+    Object.defineProperty(getter, "now", { enumerable: true, get: () => {
+      calls.getter += 1
+      throw new Error("Options clock accessor must not execute")
+    } })
+    yield* denied(CapabilityOperator.make(getter), "target_denied")
+    const request = { requestID: "nested-clock", now }
+    yield* denied(facade.withRequest(facade.configured, request, facade.require(target)), "invocation_binding_mismatch")
+    expect(calls.clock).toBeGreaterThan(0)
+    expect(calls.getter).toBe(0)
+  }))
+
+  it.effect("excluding root clock preserves full nonclock UTF-8 and escaped JSON byte budgets", () => Effect.gen(function* () {
+    const calls = { serializer: 0 }
+    const now = Object.assign(() => 1000, { toJSON: () => { calls.serializer += 1; return "x".repeat(65536) } })
+    yield* Effect.forEach(["x".repeat(65000), "\u0000".repeat(10800)], (id) => Effect.gen(function* () {
+      const allowed = { ...resource, id }
+      const facade = yield* CapabilityOperator.make({ ...options(), now, scope: { ...root, resources: [allowed] } })
+      const issued = yield* facade.issue({ origin: "sdk" })
+      yield* facade.withRequest(issued.authority, { requestID: "clock-budget" }, facade.require({ ...target, resource: allowed }))
+    }))
+    yield* Effect.forEach(["x".repeat(65536), "\u0000".repeat(11000), "é".repeat(32768)], (id) =>
+      denied(CapabilityOperator.make({ ...options(), now, scope: { ...root, resources: [{ ...resource, id }] } }), "target_denied"))
+    expect(calls.serializer).toBe(0)
+  }))
+
   it.effect("positive finite options, safe expiry sums and invalid clocks fail closed", () => Effect.gen(function* () {
     yield* Effect.forEach([0, -1, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1], (value) => Effect.gen(function* () {
       yield* denied(CapabilityOperator.make({ ...options(), ttlMillis: value }), "target_denied")

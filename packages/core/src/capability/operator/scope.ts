@@ -15,7 +15,11 @@ export function capture<A>(input: unknown, parse: (value: unknown) => A, allowCl
   try {
     const budget = { nodes: 0, bytes: 0 }
     const value = copy(input, budget, 0, allowClock)
-    if (Buffer.byteLength(JSON.stringify(value), "utf8") > 65536) throw new Error("Invalid operator data")
+    // Only the copied root clock is metadata. Its serialization hooks must never run.
+    const data = allowClock && value !== null && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).filter(([key, value]) => key !== "now" || typeof value !== "function"))
+      : value
+    if (Buffer.byteLength(JSON.stringify(data), "utf8") > 65536) throw new Error("Invalid operator data")
     return { ok: true, value: parse(value) }
   } catch {
     // Reflection can throw for hostile proxies. No caller data escapes this parsing boundary.
@@ -43,10 +47,10 @@ function copy(value: unknown, budget: { nodes: number; bytes: number }, depth: n
     if (typeof key !== "string") throw new Error("Invalid operator data")
     const descriptor = Object.getOwnPropertyDescriptor(value, key)
     if (!descriptor || !("value" in descriptor) || !descriptor.enumerable) throw new Error("Invalid operator data")
+    if (allowClock && !array && depth === 0 && key === "now" && typeof descriptor.value === "function")
+      return [key, descriptor.value] as const
     if (!array) budget.bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 1
     if (budget.bytes > 65536) throw new Error("Invalid operator data")
-    if (allowClock && depth === 0 && key === "now" && typeof descriptor.value === "function")
-      return [key, descriptor.value] as const
     return [key, copy(descriptor.value, budget, depth + 1, allowClock)] as const
   })
   if (!array) return Object.freeze(Object.fromEntries(entries))
