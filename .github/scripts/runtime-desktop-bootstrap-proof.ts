@@ -194,7 +194,9 @@ async function main() {
       requireProof(Array.isArray(value.processInfo) && value.processInfo.length > 0 && value.processInfo.length <= 128, "PROCESS_EVIDENCE_EMPTY_OR_OVERSIZED")
       const list = value.processInfo.map((item: unknown) => object(item, "PROCESS_EVIDENCE_INVALID"))
       requireProof(list.some((item) => item.type === "browser" && item.id === child.pid), "DESKTOP_PROCESS_OWNERSHIP_FAILED")
-      return list.filter((item) => item.type === "utility" && typeof item.id === "number").map((item) => Number(item.id))
+      const types = list.map((item) => typeof item.type === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,95}$/.test(item.type) ? item.type : "invalid")
+      console.error(JSON.stringify({ diagnostic: "desktop-process-inventory", typeCounts: [...new Set(types)].sort().map((type) => ({ type, count: types.filter((item) => item === type).length })), literalUtilityCount: types.filter((type) => type === "utility").length, nodeServiceCount: types.filter((type) => type === "node.mojom.NodeService").length }))
+      return list.filter((item) => item.type === "node.mojom.NodeService" && typeof item.id === "number").map((item) => Number(item.id))
     }
     const ready: { value?: Record<string, unknown> } = {}
     while (!ready.value && Date.now() < deadline) {
@@ -370,10 +372,9 @@ async function nodeListener(pids: number[], parent: number, electron: string, po
   const listeners = rows.filter((row) => row[3] === "0A" && row[1] === `0100007F:${Number(port).toString(16).toUpperCase().padStart(4, "0")}`)
   requireProof(listeners.length === 1 && listeners[0][9] !== "0", "DESKTOP_LISTENER_MISSING_OR_AMBIGUOUS")
   const listenerInode = listeners[0][9]
-  // Electron 42's node.mojom.NodeService is the OS subtype. "Orchestra server"
-  // is production's app.getAppMetrics display name, not an observed argv token.
-  // Authorities: electron/v42.3.3 shell/services/node/public/mojom/node_service.mojom;
-  // chromium/148.0.7778.218 content/browser/service_host/utility_process_host.cc.
+  // Electron 42's node.mojom.NodeService is the OS subtype and CDP child metrics name.
+  // "Orchestra server" is app.getAppMetrics display name, not an observed argv/CDP type.
+  // Authorities: electron/v42.3.3 shell/services/node/public/mojom/node_service.mojom; chromium/148.0.7778.218 content/browser/{service_host/utility_process_host,devtools/protocol/system_info_handler}.cc.
   const candidates = (await Promise.all(pids.map(async (pid) => {
     const cmdline = await readFile(`/proc/${pid}/cmdline`, "utf8").catch(() => { throw new ProofFailure("PROC_CMDLINE_ORACLE_UNAVAILABLE") })
     requireProof(cmdline.endsWith("\0"), "PROC_CMDLINE_ORACLE_INVALID")
