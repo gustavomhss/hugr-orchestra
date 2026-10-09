@@ -100,6 +100,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          # Verification is the direct child of the measured source; keep its Git objects for evidence replay.
+          fetch-depth: 2
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
       - name: Capture the selected integrated-batch phase
         shell: bash
@@ -128,6 +130,9 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/compare/$head...$GITHUB_SHA" >"$provenance/compare.json"
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN/attempts/$MEASUREMENT_ATTEMPT/jobs?per_page=100" >"$provenance/jobs.json"
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$MEASUREMENT_RUN/artifacts?per_page=100" >"$provenance/artifacts.json"
+          git rev-parse HEAD >"$provenance/source-revision.txt"
+          git rev-parse 'HEAD^{tree}' >"$provenance/source-tree.txt"
+          git status --porcelain --untracked-files=all >"$provenance/source-status.txt"
           python3 nix/scripts/dependency_measurement.py inputs "$provenance"
           python3 nix/scripts/complete-distribution.py downloads "$provenance" "$MEASUREMENT_RUN" "$MEASUREMENT_ATTEMPT" >"$provenance/downloads.txt"
           while IFS= read -r name; do
@@ -156,6 +161,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          fetch-depth: 2
       - name: Require current-run native evidence for every manifest system
         shell: bash
         env:
