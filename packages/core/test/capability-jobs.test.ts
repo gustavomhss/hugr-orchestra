@@ -69,6 +69,20 @@ function settle(f: Effect.Success<ReturnType<typeof fixture>>) {
 }
 
 describe("CapabilityJobs durable receipts", () => {
+  it.live("admit rejects unhashed reuse and reconciles only exact captured request hashes", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const input: CapabilityJobs.CreateInput = { kind: "provider", operation: "render", requestHash: "a".repeat(64) }
+    const first = yield* f.run(f.jobs.admit(f.context, input))
+    expect(first.reused).toBe(false)
+    expect(yield* f.run(f.jobs.admit(f.context, input))).toEqual({ ref: first.ref, reused: true })
+    yield* rejected(f.run(f.jobs.admit(f.context, { ...input, requestHash: "b".repeat(64) })), "outcome_unknown")
+    yield* rejected(f.run(f.jobs.admit(f.context, { kind: "provider", operation: "render" })), "unsupported_schema")
+    yield* f.database.db.update(CapabilityJobTable).set({ request_hash: null })
+      .where(eq(CapabilityJobTable.id, first.ref.id)).run().pipe(Effect.orDie)
+    yield* rejected(f.run(f.jobs.admit(f.context, input)), "outcome_unknown")
+    expect(yield* f.database.db.select().from(CapabilityJobTable)).toHaveLength(1)
+  }))
+
   it.live("persists intent and exact producer before dispatch; receipt is opaque bounded data", () => Effect.gen(function* () {
     const f = yield* fixture()
     const ref = yield* f.create()

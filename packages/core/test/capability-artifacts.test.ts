@@ -80,6 +80,29 @@ function expectCode(error: unknown, code: CapabilityArtifacts.Failure["code"] | 
 }
 
 describe("CapabilityArtifacts durable lifecycle", () => {
+  it.live("native publication requirements survive mutation during artifact approval", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const native: PermissionV2.Ruleset = [...allow, { action: "document_edit", resource: "*", effect: "allow" }]
+    yield* CapabilityPolicyFixture.setRules([])
+    const store = yield* CapabilityArtifacts.make({ root: f.root })
+    const requirements = [{ action: "document_edit", resources: ["original"] }]
+    const queued = yield* CapabilityPolicyFixture.queued(f.context, CapabilityInvocation.withContext(
+      { ...f.binding, effectiveRules: native }, store.publish(f.context, input, requirements).pipe(
+        Effect.asVoid, Effect.catchTag("CapabilityArtifacts.Failure", Effect.die),
+      ),
+    ))
+    requirements[0].resources[0] = "mutated"
+    requirements.splice(0)
+    yield* CapabilityPolicyFixture.setRules([...allow, { action: "document_edit", resource: "*", effect: "deny" }])
+    yield* f.permissions.reply({ requestID: queued.request.id, reply: "once" })
+    expect((yield* queued.join)._tag).toBe("Failure")
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(0)
+    yield* CapabilityPolicyFixture.setRules(native)
+    yield* CapabilityInvocation.withContext({ ...f.binding, effectiveRules: native },
+      store.publish(f.context, input, [{ action: "document_edit", resources: ["original"] }]))
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+  }).pipe(Effect.timeout("10 seconds")))
+
   it.live("verified bytes, host-owned record, safe description and recreated store readback", () => Effect.gen(function* () {
     const f = yield* fixture()
     const fs = yield* FSUtil.Service
