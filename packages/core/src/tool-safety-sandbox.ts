@@ -2,18 +2,21 @@ export * as ToolSafetySandbox from "./tool-safety-sandbox"
 
 import path from "path"
 import which from "which"
+import { lstat } from "node:fs/promises"
 import { Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { ToolSafety } from "./tool-safety"
 import { ToolSafetySandboxRuntime } from "./tool-safety-sandbox-runtime"
+import { SandboxParents } from "./sandbox-parents"
+import { TcpProxy } from "./tcp-proxy"
 
 /** Tool-child environment only. Never applied to provider adapters or the server process. */
 export function environment(input: NodeJS.ProcessEnv = process.env) {
   return Object.fromEntries(Object.entries(input).filter(([name, value]) =>
     value !== undefined && !/(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|ACCESS_KEY|CREDENTIAL)/i.test(name) &&
-    !["SSH_AUTH_SOCK", "SSH_ASKPASS", "GIT_ASKPASS"].includes(name) &&
+    !["SSH_AUTH_SOCK", "SSH_ASKPASS", "GIT_ASKPASS", "ORCHESTRA_AUTH_CONTENT"].includes(name) &&
     !/\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9]{36,}\b|\bsk_live_[A-Za-z0-9]{20,}\b/.test(value)))
 }
 
@@ -43,10 +46,12 @@ export const status = Effect.fn("ToolSafetySandbox.status")(function* () {
 /** Caller keeps this Scope open through child exit; policy file is removed on success/failure/cancellation. */
 export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   command: ChildProcess.Command,
+  /** Native host only, after the shell's permission approval; prehooks must leave this absent. */
+  options?: { readonly prepareParents?: boolean },
 ): Effect.fn.Return<ChildProcess.Command, ToolSafety.Denied, FSUtil.Service | Scope.Scope> {
   const profile = yield* ToolSafety.RuntimeProfile
   if (command._tag !== "StandardCommand") {
-    if (profile?.requireSandbox || profile?.sandbox?.enabled)
+    if (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.allowedUnixSockets?.length || profile?.sandbox?.allowedLoopbackEndpoints?.length)
       return yield* new ToolSafety.Denied({ reason: "sandbox-pipeline-unbound" })
     return ChildProcess.pipeTo(yield* wrap(command.left), yield* wrap(command.right), command.options)
   }
@@ -54,19 +59,51 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     ? command.options.env ?? {}
     : { ...process.env, ...command.options.env })
   const ordinary = ChildProcess.make(command.command, command.args, { ...command.options, env, extendEnv: false })
-  if (!profile?.requireSandbox && !profile?.sandbox?.enabled) return ordinary
-  const sandbox = yield* pick(true)
-  if (sandbox.kind === "none") {
-    if (!profile.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
+  const requestedSockets = profile?.sandbox?.allowedUnixSockets
+  if (requestedSockets !== undefined && !Array.isArray(requestedSockets))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-grants" })
+  const grants = yield* Effect.forEach(requestedSockets ?? [], (entry) => Effect.gen(function* () {
+    if (entry === null || typeof entry !== "object" || Array.isArray(entry) ||
+      typeof entry.directory !== "string" || typeof entry.path !== "string")
+      return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-entry" })
+    if (!path.isAbsolute(entry.directory) || !path.isAbsolute(entry.path) || /[*?\[\]\0]/.test(entry.directory + entry.path))
+      return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-invalid-path" })
+    return { directory: entry.directory, path: entry.path }
+  }))
+  const requestedEndpoints = profile?.sandbox?.allowedLoopbackEndpoints
+  if (requestedEndpoints !== undefined && !Array.isArray(requestedEndpoints))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-grants" })
+  if (requestedEndpoints && requestedEndpoints.length > 32)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-resource-limit" })
+  const endpointGrants = Array.from(requestedEndpoints ?? [], (entry) => ({ ...entry }))
+  yield* Effect.forEach(endpointGrants, (entry) => Effect.gen(function* () {
+    if (typeof entry.directory !== "string" || !path.isAbsolute(entry.directory) || /[*?\[\]\0]/.test(entry.directory))
+      return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-directory" })
+    if (entry.host !== "127.0.0.1") return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-host" })
+    if (!Number.isSafeInteger(entry.port) || entry.port < 1 || entry.port > 65535)
+      return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-invalid-port" })
+  }), { discard: true })
+  if (!profile?.requireSandbox && !profile?.sandbox?.enabled && grants.length === 0 && endpointGrants.length === 0) return ordinary
+  // Exact endpoint/socket capabilities never permit unconfined fallback, including during runtime acquisition.
+  if (endpointGrants.length && process.platform !== "darwin" && process.platform !== "linux")
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
+  if (grants.length && process.platform !== "darwin" && process.platform !== "linux")
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-platform-unsupported" })
+  if (endpointGrants.length && profile?.sandbox?.allowedDomains?.length)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-domain-policy-unenforceable" })
+  if (grants.length && profile?.sandbox?.allowedDomains?.length)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-domain-policy-unenforceable" })
+  const discovered = grants.length || endpointGrants.length ? undefined : yield* pick(true)
+  if (discovered?.kind === "none") {
+    if (!profile?.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
       reason: process.platform === "darwin" || process.platform === "linux"
         ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable",
     })
-    // Owner decision 2026-10-06: without a sandbox the command runs without the write jail, and the host fact says so.
-    yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: sandbox.reason } })
+    // Owner fallback remains available only without an exact network capability.
+    yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: discovered.reason } })
     return ordinary
   }
-  const seatbelt = sandbox.kind === "seatbelt"
-  if (seatbelt && profile.sandbox?.allowedDomains?.length)
+  if (discovered?.kind === "seatbelt" && profile?.sandbox?.allowedDomains?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-seatbelt-domain-policy-unenforceable" })
   const fs = yield* FSUtil.Service
   const native = yield* ToolSafety.NativeContext
@@ -74,14 +111,79 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const directory = yield* fs.realPath(native.directory).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-native-placement-acquisition" })),
   )
+  const endpoints = yield* Effect.forEach(endpointGrants, (entry) => Effect.gen(function* () {
+    const placement = yield* fs.realPath(entry.directory).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-directory-acquisition" })),
+    )
+    return placement === directory ? [entry.port] : []
+  })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
+  // SRT domain proxies cannot enforce exact raw endpoints. Darwin uses fixed-target Unix brokers below.
+  if (endpointGrants.length && process.platform === "linux")
+    return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
+  const sockets = yield* Effect.forEach(grants, (entry) => Effect.gen(function* () {
+    const placement = yield* fs.realPath(entry.directory).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-unix-socket-directory-acquisition" })),
+    )
+    if (placement !== directory) return []
+    // Bun's realpath rejects Unix socket leaves on macOS (EOPNOTSUPP). Resolve the parent, then lstat the exact leaf.
+    const parent = yield* fs.realPath(path.dirname(entry.path)).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-unix-socket-path-acquisition" })),
+    )
+    const socket = path.join(parent, path.basename(entry.path))
+    const info = yield* Effect.tryPromise({
+      try: () => lstat(socket),
+      catch: () => new ToolSafety.Denied({ reason: "sandbox-unix-socket-stat-acquisition" }),
+    })
+    if (!info.isSocket()) return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-not-socket" })
+    return [socket]
+  })).pipe(Effect.map((entries) => [...new Set(entries.flat())]))
+  // SRT 0.0.78's allowUnixSockets is macOS-only; Linux only exposes allowAllUnixSockets.
+  // Never silently widen an exact-path grant to all AF_UNIX endpoints.
+  if (grants.length && process.platform === "linux")
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-exact-policy-unsupported" })
+  // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac.
+  const sandbox = discovered ?? (yield* available("/usr/bin/sandbox-exec").pipe(
+    Effect.map((binary) => binary
+      ? { kind: "seatbelt" as const, binary }
+      : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }),
+  ))
+  if (sandbox.kind === "none") {
+    return yield* new ToolSafety.Denied({ reason: endpointGrants.length
+      ? "sandbox-loopback-endpoint-backend-unavailable" : "sandbox-unix-socket-backend-unavailable" })
+  }
+  const seatbelt = sandbox.kind === "seatbelt"
+  if (seatbelt && profile?.sandbox?.allowedDomains?.length)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-seatbelt-domain-policy-unenforceable" })
+  if (profile?.sandbox?.scratch && readonlyGoCache(env.GOFLAGS ?? ""))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-go-readonly-cache-unsupported" })
   const cwd = yield* fs.realPath(command.options.cwd ?? process.cwd()).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-cwd-acquisition" })),
   )
   // Roots follow ToolSafety.before: a file or a path not created yet resolves through its nearest existing ancestor.
-  const declared = yield* Effect.forEach(profile.writeRoots ?? [directory], (root) => canonical(fs, path.resolve(directory, root)).pipe(
+  const requested = (profile?.writeRoots ?? [directory]).map((root) => path.resolve(directory, root))
+  const declared = yield* Effect.forEach(requested, (root) => canonical(fs, root).pipe(
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-write-root-acquisition" })),
   ))
-  const scratch = profile.sandbox?.scratch
+  const entries = [...new Set([
+    Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
+    path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
+    ...(profile?.managedPaths ?? []), ...(profile?.sandbox?.denyPaths ?? []), ...(profile?.neverTouch ?? []),
+  ])]
+  const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
+  const protectedWrites = yield* Effect.forEach(profile?.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
+  if (protectedWrites.length && profile?.allowedConfigEdits?.length)
+    return yield* new ToolSafety.Denied({ reason: "sandbox-config-write-exception-unenforceable" })
+  if (sockets.some((socket) => deny.some((entry) => FSUtil.contains(entry, socket))))
+    return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-denied-path" })
+  const parents = options?.prepareParents === true
+    ? yield* SandboxParents.plan(fs, directory, requested, [...deny, ...protectedWrites])
+    : []
+  const invocation = command.options.shell
+    ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
+    : [command.command, ...command.args]
+  // Only owned route-adapted clients consume these host services; kernel TCP remains denied.
+  const proxy = endpoints.length ? yield* TcpProxy.open(endpoints, deny) : undefined
+  const scratch = profile?.sandbox?.scratch
     ? yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-scratch-" }).pipe(
         Effect.flatMap((created) => fs.realPath(created)),
         Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-acquisition" })),
@@ -91,34 +193,30 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Toolchain caches move into the scratch dir: the real ones lie outside the roots and are not writable in the jail.
   const confined = scratch ? {
     ...env, TMPDIR: scratch, TMP: scratch, TEMP: scratch,
-    GOCACHE: path.join(scratch, "go-build"), XDG_CACHE_HOME: path.join(scratch, "cache"),
+    GOCACHE: path.join(scratch, "go-build"), GOMODCACHE: path.join(scratch, "go-mod"), XDG_CACHE_HOME: path.join(scratch, "cache"),
+    // Go's default read-only module directories prevent scoped scratch cleanup; keep only this child's cache writable.
+    GOFLAGS: [env.GOFLAGS, "-modcacherw"].filter(Boolean).join(" "),
     npm_config_cache: path.join(scratch, "npm"), BUN_INSTALL_CACHE_DIR: path.join(scratch, "bun"),
     PIP_CACHE_DIR: path.join(scratch, "pip"), UV_CACHE_DIR: path.join(scratch, "uv"),
   } : env
-  const entries = [...new Set([
-    Global.Path.data, Global.Path.state, path.join(Global.Path.home, ".ssh"), path.join(Global.Path.home, ".aws"),
-    path.join(Global.Path.home, ".git-credentials"), path.join(Global.Path.home, ".npmrc"),
-    ...(profile.managedPaths ?? []), ...(profile.sandbox?.denyPaths ?? []), ...(profile.neverTouch ?? []),
-  ])]
-  const deny = yield* Effect.forEach(entries, (entry) => policyPath(fs, directory, entry, seatbelt))
-  const protectedWrites = yield* Effect.forEach(profile.protectedWrites ?? [], (entry) => policyPath(fs, directory, entry, seatbelt))
-  if (protectedWrites.length && profile.allowedConfigEdits?.length)
-    return yield* new ToolSafety.Denied({ reason: "sandbox-config-write-exception-unenforceable" })
-  yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
-  const invocation = command.options.shell
-    ? [typeof command.options.shell === "string" ? command.options.shell : "/bin/sh", "-c", [command.command, ...command.args].join(" ")]
-    : [command.command, ...command.args]
+  if (scratch) yield* Effect.forEach(["go-build", "go-mod", "cache", "npm", "bun", "pip", "uv"], (name) =>
+    fs.makeDirectory(path.join(scratch, name)).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-scratch-cache-acquisition" })),
+    ), { discard: true })
   if (seatbelt) {
     // Denials override allow-default. Dependency reads remain available, but writes outside physical roots do not.
     // file-write* also covers mode, flag, owner and xattr changes (chmod, chflags), so those stay inside the roots.
     // /dev/null stays writable so ordinary redirections work.
     const outside = `(require-all (require-not (literal "/dev/null")) ${roots.map((root) => `(require-not (subpath ${JSON.stringify(root)}))`).join(" ")})`
     const policy = ["(version 1)", "(allow default)", "(deny network*)", "(deny appleevent-send)", `(deny file-write* ${outside})`,
+      ...[...sockets, ...(proxy?.sockets ?? [])].map((socket) => `(allow network-outbound (remote unix-socket (literal ${JSON.stringify(socket)})))`),
       ...deny.map((entry) => `(deny file-read* file-write* (subpath ${JSON.stringify(entry)}))`),
       ...protectedWrites.map((entry) => `(deny file-write* (subpath ${JSON.stringify(entry)}))`),
     ].join("\n")
+    if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
+    yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
     return ChildProcess.make(sandbox.binary, ["-p", policy, ...invocation], {
-      ...command.options, cwd, shell: false, env: confined, extendEnv: false,
+      ...command.options, cwd, shell: false, env: { ...confined, ...proxy?.env }, extendEnv: false,
     })
   }
   const temp = yield* fs.makeTempDirectoryScoped({ prefix: "orchestra-tool-sandbox-" }).pipe(
@@ -127,10 +225,12 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   const policy = path.join(temp, "settings.json")
   yield* fs.writeFileString(policy, JSON.stringify({
     filesystem: { allowRead: [], denyRead: deny, allowWrite: roots, denyWrite: [...deny, ...protectedWrites] },
-    network: { allowedDomains: profile.sandbox?.allowedDomains ?? [], deniedDomains: [], allowUnixSockets: [], allowLocalBinding: false },
+    network: { allowedDomains: profile?.sandbox?.allowedDomains ?? [], deniedDomains: [], allowUnixSockets: sockets, allowLocalBinding: false },
     enableWeakerNestedSandbox: false, enableWeakerNetworkIsolation: false, allowAppleEvents: false,
     ...(sandbox.ripgrep ? { ripgrep: { command: sandbox.ripgrep } } : {}),
   }), { mode: 0o600 }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-policy-write" })))
+  if (options?.prepareParents === true) yield* SandboxParents.prepare(fs, directory, parents)
+  yield* ToolSafety.reportShell({ shellWrites: "enforced", shellSandbox: { kind: sandbox.kind } })
   // srt quotes the words after `--` itself; a pre-quoted single word would run as one program name.
   return ChildProcess.make(sandbox.command, [...sandbox.args, "--settings", policy, "--", ...invocation], {
     ...command.options, cwd, shell: false, env: { ...confined, ...sandbox.env }, extendEnv: false,
@@ -158,6 +258,26 @@ const pick = Effect.fnUntraced(function* (start: boolean) {
     ripgrep: ToolSafetySandboxRuntime.ripgrep(runtime.directory),
   }
 })
+
+// Go cmd/internal/quoted.Split: ASCII whitespace, quotes only at field start, no unescaping or concatenation.
+// Malformed quotes/boolean values stay Go errors. SetFromGOFLAGS applies matching flags in order, last wins.
+// An absent setting is not an explicit read-only request; confined scratch may supply its writable default.
+export function readonlyGoCache(input: string) {
+  const tokens: string[] = []
+  let rest = input
+  while (rest.length) {
+    rest = rest.replace(/^[ \t\n\r]+/, "")
+    if (!rest.length) break
+    const quote = rest[0] === "'" || rest[0] === '"'
+    const end = quote ? rest.indexOf(rest[0], 1) : rest.search(/[ \t\n\r]/)
+    if (quote && end === -1) return false
+    tokens.push(quote ? rest.slice(1, end) : end === -1 ? rest : rest.slice(0, end))
+    rest = end === -1 ? "" : rest.slice(end + (quote ? 1 : 0))
+  }
+  const settings = tokens.filter((token) => /^--?modcacherw(?:=|$)/.test(token))
+  if (settings.some((token) => !/^--?modcacherw(?:=(?:1|t|T|true|TRUE|True|0|f|F|false|FALSE|False))?$/.test(token))) return false
+  return /^--?modcacherw=(?:0|f|F|false|FALSE|False)$/.test(settings.at(-1) ?? "")
+}
 
 /** Resolve existing symlinks and missing leaves before handing paths to an OS policy. */
 const canonical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, ToolSafety.Denied> {
