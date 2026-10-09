@@ -313,17 +313,31 @@ const layer = Layer.effectDiscard(
         const id = event.data.part.id
         const messageID = event.data.part.messageID
         const sessionID = event.data.part.sessionID
-        const data = partData(event.data.part)
         const row = yield* db.select().from(PartTable).where(eq(PartTable.id, id)).get().pipe(Effect.orDie)
+        const incoming = event.data.part
+        const previousPart = row ? Schema.decodeUnknownOption(SessionV1.Part)({ ...row.data,
+          id: row.id, messageID: row.message_id, sessionID: row.session_id }) : undefined
+        const previous = previousPart?.valueOrUndefined
+        const owner = incoming.type === "tool" ? { sessionID, messageID, callID: incoming.callID,
+          tool: incoming.tool, input: incoming.state.input } : undefined
+        const receipt = owner && previous?.type === "tool" && "metadata" in previous.state
+          ? SessionMessageUpdater.upstreamSettlement(previous.state.metadata ?? {}, owner) : undefined
+        const part = receipt && owner && incoming.type === "tool" && previous?.type === "tool" &&
+          "metadata" in previous.state && "metadata" in incoming.state
+          ? { ...incoming, state: { ...(previous.state.status === "completed" && ["pending", "running"].includes(incoming.state.status)
+              ? previous.state : incoming.state), input: previous.state.input,
+                metadata: SessionMessageUpdater.taskMetadata(previous.state.metadata ?? {},
+                incoming.state.metadata ?? {}, owner) } } : incoming
+        const data = partData(Schema.decodeUnknownSync(SessionV1.Part)(part))
         yield* db
           .insert(PartTable)
           .values({ id, message_id: messageID, session_id: sessionID, time_created: event.data.time, data })
           .onConflictDoUpdate({ target: PartTable.id, set: { data } })
           .run()
           .pipe(Effect.orDie)
-        const previous = row && usage(row.data)
+        const previousUsage = row && usage(row.data)
         const next = usage(event.data.part)
-        if (previous) yield* applyUsage(db, row.session_id, previous, -1)
+        if (previousUsage && row) yield* applyUsage(db, row.session_id, previousUsage, -1)
         if (next) yield* applyUsage(db, sessionID, next)
       }),
     )
