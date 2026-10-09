@@ -3,6 +3,7 @@ export * as LeanSummary from "./lean-summary"
 import type { LeanMetrics } from "./lean-metrics"
 
 export interface Input {
+  readonly location: string
   readonly sessionID: string
   readonly coverage: LeanMetrics.Summary["coverage"]
   readonly records: ReadonlyArray<unknown>
