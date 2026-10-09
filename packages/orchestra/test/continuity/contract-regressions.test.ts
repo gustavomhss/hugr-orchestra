@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { aliases } from "@/continuity/alias"
 import { create } from "@/continuity/context"
 import { completeSnapshot } from "@/continuity/fork"
-import { decode } from "@/continuity/memory"
+import { decode, index } from "@/continuity/memory"
 import { fingerprint } from "@/continuity/model"
 import { RawPayload } from "@/continuity/raw-payload"
 import { MessageID, PartID, SessionID } from "@/session/schema"
@@ -159,4 +159,21 @@ test("explicit delivered steer cannot absorb earlier unacknowledged queue into c
   const snapshot = completeSnapshot(history[0].info.sessionID, history, undefined, false, undefined,
     [history[0].info.id, history[3].info.id])
   expect(snapshot?.covered?.map((message) => message.info.id)).toEqual(history.slice(0, 2).map((message) => message.info.id))
+})
+
+test("complete producer index names eligible Now boundary aliases and earlier sources still fail C15", () => {
+  const history = messages(["user", "assistant", "user", "assistant"])
+  const boundary = history[3]
+  boundary.parts.push({ id: PartID.ascending(), sessionID: boundary.info.sessionID, messageID: boundary.info.id,
+    type: "tool", tool: "read", callID: "boundary-read", state: { status: "completed", input: {}, output: "observed result",
+      title: "Boundary", metadata: {}, time: { start: 3, end: 4 } } })
+  const snapshot = completeSnapshot(boundary.info.sessionID, history)
+  if (!snapshot) throw new Error("Expected complete snapshot")
+  expect(index(snapshot, host(history), 0)).toContain("exact completed boundary aliases: a2, t1. Earlier user aliases alone are insufficient.")
+  for (const src of [["u2"], ["a1"], ["a2"], ["t1"]]) {
+    const result = decode({ text: JSON.stringify({ now: { doing: "Current checkpoint", next: "Await user request", src }, ops: [] }),
+      snapshot, producerID, host: host(history), budget: model.limit.context })
+    expect("artifact" in result).toBe(src[0] === "a2" || src[0] === "t1")
+    if ("check" in result) expect(result.check).toBe("C15")
+  }
 })

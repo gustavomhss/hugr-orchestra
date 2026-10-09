@@ -105,7 +105,7 @@ export function decode(input: {
     !cursor.src.every((alias) => typeof alias === "string" && ctx.sources.has(alias)) ||
     !cursor.src.some((alias) => ctx.span.some((source) => source.alias === alias && source.message.info.id === snapshot.boundary &&
       (source.alias.startsWith("a") || source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status))))))
-    return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases at or before its boundary")
+    return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases, including a completed assistant/tool source from the exact boundary message listed in the host index")
   const prohibited = RawPayload.inventory(snapshot.complete ? snapshot.covered ?? snapshot.head :
     host.history.filter((message) => ctx.covered.some((source) => source.message.info.id === message.info.id)))
   if (snapshot.complete && [cursor, ...body.ops].some((value) => {
@@ -674,6 +674,10 @@ export function index(snapshot: MemorySnapshot, host: Host, size: number) {
     `${ranges.join(", ") || "No aliased sources"} (through ${ctx.end?.alias ?? "the start of this session"}). ` +
       (snapshot.complete ? "Every declared completed source through the boundary is covered; no protected tail. Return required Now doing/next/src." :
         `The native tail starts at ${ctx.tail?.alias ?? "the next message"} and is not covered.`),
+    ...(snapshot.complete ? [`Now.src MUST include at least one of these exact completed boundary aliases: ${ctx.span
+      .filter((source) => source.message.info.id === snapshot.boundary && (source.alias.startsWith("a") ||
+        source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status)))
+      .map((source) => source.alias).join(", ")}. Earlier user aliases alone are insufficient.`] : []),
     "## Index of the new span",
     ...lines,
     "## Size",
