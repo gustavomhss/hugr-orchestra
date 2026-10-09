@@ -13,7 +13,7 @@ import {
   type JSX,
   type ComponentProps,
 } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store"
 import stripAnsi from "strip-ansi"
 import { Dynamic } from "solid-js/web"
 import {
@@ -1546,6 +1546,38 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const input = () => part().state?.input ?? emptyInput
   // @ts-expect-error
   const partMetadata = () => part().state?.metadata ?? emptyMetadata
+  const leanMetric = createMemo(() => {
+    const current = part()
+    const state = current.state
+    if (state.status !== "completed") return
+    // Snapshot JSON-shaped store data through tracked reads, excluding store's hidden symbols.
+    const snapshot = (value: unknown, depth = 1): unknown => {
+      if (value === null || typeof value !== "object") return value
+      const raw = unwrap(value)
+      const prototype = Object.getPrototypeOf(raw)
+      if (prototype !== Object.prototype && prototype !== null) return raw
+      const keys = Reflect.ownKeys(value).filter(
+        (key) => typeof key === "string" || raw === value || Object.getOwnPropertyDescriptor(raw, key)?.enumerable,
+      )
+      return Object.fromEntries(
+        keys.map((key) => [key, depth ? snapshot(Reflect.get(value, key), 0) : Reflect.get(value, key)]),
+      )
+    }
+    const metric = (() => {
+      try {
+        return LeanMetrics.decode(snapshot(state.metadata.lean))
+      } catch {
+        return undefined
+      }
+    })()
+    const session = data.store.session.find((session) => session.id === current.sessionID)
+    if (
+      !metric || !session || session.directory !== data.directory
+      || metric.owner.projectID !== session.projectID || metric.owner.location !== session.directory
+      || metric.owner.sessionID !== current.sessionID || metric.owner.callID !== current.callID
+    ) return
+    return metric
+  })
   const taskId = createMemo(() => {
     if (part().tool !== "task") return
     const value = partMetadata().sessionId
@@ -1626,7 +1658,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
             />
           </Match>
         </Switch>
-        <Show when={part().state.status === "completed" && LeanMetrics.decode(partMetadata().lean)}>{(metric) => <LeanToolMetrics metric={metric()} />}</Show>
+        <Show when={leanMetric()}>{(metric) => <LeanToolMetrics metric={metric()} />}</Show>
       </div>
     </Show>
   )

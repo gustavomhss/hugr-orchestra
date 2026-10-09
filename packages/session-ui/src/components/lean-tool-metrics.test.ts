@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { createRequire } from "node:module"
 import type { LeanMetrics } from "../../../schema/src/lean-metrics"
-import type { ToolPart } from "@orchestra/sdk/v2"
+import type { Session, ToolPart } from "@orchestra/sdk/v2"
 
 // Keep browser conditions and HappyDOM isolated from the package's non-DOM tests.
 if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
@@ -48,6 +48,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     },
   })
   const { createSignal, createComponent } = await import("solid-js")
+  const { createStore } = await import("solid-js/store")
   const { render } = await import("solid-js/web")
   const { I18nProvider } = await import("@orchestra/ui/context/i18n")
   const { LeanToolMetrics } = await import("./lean-tool-metrics")
@@ -174,6 +175,10 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
       state: { status: "completed", input: {}, output: "original output", title: "result", metadata: {}, time: { start: 0, end: 1 } } }
     const host = document.createElement("div")
     const [current, update] = createSignal(part)
+    const session: Session = { id: "ses_alpha", slug: "alpha", projectID: "repo-alpha", directory: "/workspace/alpha",
+      title: "Alpha", version: "1", time: { created: 0, updated: 0 } }
+    const [native, setNative] = createStore({ session: [{ ...session }] })
+    const [directory, setDirectory] = createSignal(session.directory)
     const complete = (record: unknown) => {
       const lean: unknown = record === undefined ? undefined : JSON.parse(JSON.stringify(record))
       update({ ...part, state: { status: "completed", input: {}, output: "original output", title: "result", metadata: { lean }, time: { start: 0, end: 1 } } })
@@ -181,8 +186,8 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     const panel = () => host.querySelector('[data-component="lean-tool-metrics"]')
     const value = (slot: string) => panel()?.querySelector(`[data-slot="${slot}"]`)?.textContent
     const dispose = render(() => createComponent(DataProvider, {
-      directory: "/workspace/alpha",
-      data: { session: [], session_status: {}, session_diff: {}, message: {}, part: {} },
+      get directory() { return directory() },
+      data: { get session() { return native.session }, session_status: {}, session_diff: {}, message: {}, part: {} },
       get children() { return createComponent(PART_MAPPING.tool!, {
         get part() { return current() },
         message: { id: "msg_alpha", sessionID: "ses_alpha", role: "user", time: { created: 0 },
@@ -229,6 +234,36 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     expect(value("tokens-before")).toBe("2")
     expect(value("tokens-after")).toBe("3")
     expect(value("tokens-saved")).toBe("-1")
+    complete(metric)
+    for (const owner of [
+      { ...metric.owner, projectID: "repo-beta" }, { ...metric.owner, location: "/workspace/beta" },
+      { ...metric.owner, sessionID: "ses_beta" }, { ...metric.owner, callID: "call_beta" },
+    ]) {
+      complete({ ...metric, owner })
+      expect(panel()).toBeNull()
+      expect(host.textContent).toContain("original output")
+      complete(metric)
+      expect(panel()).not.toBeNull()
+    }
+    // Native ownership changes must invalidate a fixed valid metric without a metadata update.
+    for (const change of [{ projectID: "repo-beta" }, { directory: "/workspace/beta" }, { id: "ses_beta" }]) {
+      setNative("session", 0, change)
+      expect(panel()).toBeNull()
+      expect(host.textContent).toContain("original output")
+      setNative("session", [{ ...session }])
+      expect(panel()).not.toBeNull()
+    }
+    setNative("session", [])
+    expect(panel()).toBeNull()
+    expect(host.textContent).toContain("original output")
+    setNative("session", [{ ...session }])
+    expect(panel()).not.toBeNull()
+    setDirectory("/workspace/beta")
+    expect(panel()).toBeNull()
+    expect(host.textContent).toContain("original output")
+    setDirectory(session.directory)
+    expect(panel()).not.toBeNull()
+    setNative("session", 0, "projectID", "repo-beta")
     complete({ ...metric, owner: { ...metric.owner, projectID: "repo-beta" }, orchestraProfile: "orchestra-beta",
       filterProfile: "pytest", status: "normalized", reason: "normalized" })
     expect(panel()?.getAttribute("aria-label")).toBe("Lean · Repository/project: repo-beta")
@@ -238,6 +273,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     expect(value("reason")).toBe("normalized")
     expect(panel()?.textContent).not.toContain("repo-alpha")
     expect(panel()?.textContent).not.toContain("orchestra-beta")
+    setNative("session", [{ ...session }])
     complete({ ...metric, status: "passthrough", reason: "disabled", filterProfile: undefined,
       bytes: { before: 0, after: 0, saved: 0 },
       tokens: { kind: "estimated", counter: "chars-per-token-4", before: 0, after: 0, saved: 0 } })
@@ -258,6 +294,29 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     complete(metric)
     expect(panel()).not.toBeNull()
     expect(host.textContent).toContain("original output")
+    // Use an actual Solid ToolPart store: private symbols must not reject a valid persisted record.
+    const [stored, setStored] = createStore({ part: { ...part, state: { status: "completed" as const,
+      input: {}, output: "original output", title: "result", metadata: { lean: JSON.parse(JSON.stringify(metric)) as {
+        owner: { projectID: string }; durationMs: number
+      } },
+      time: { start: 0, end: 1 } } } })
+    update(stored.part)
+    expect(panel()).not.toBeNull()
+    setStored("part", "state", "metadata", "lean", "owner", "projectID", "repo-beta")
+    expect(panel()).toBeNull()
+    expect(host.textContent).toContain("original output")
+    setStored("part", "state", "metadata", "lean", "owner", "projectID", "repo-alpha")
+    expect(panel()).not.toBeNull()
+    setStored("part", "state", "metadata", "lean", "durationMs", 7.5)
+    expect(value("duration")).toBe("7.5 ms")
+    setStored("part", "callID", "call_beta")
+    expect(panel()).toBeNull()
+    setStored("part", "callID", "call_alpha")
+    expect(panel()).not.toBeNull()
+    setStored("part", "sessionID", "ses_beta")
+    expect(panel()).toBeNull()
+    setStored("part", "sessionID", "ses_alpha")
+    expect(panel()).not.toBeNull()
     dispose()
   })
 }
