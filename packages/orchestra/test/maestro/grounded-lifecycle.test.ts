@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto"
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, FileSystem } from "effect"
+import { Effect, FileSystem, Schema } from "effect"
+import { eq } from "drizzle-orm"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable } from "@orchestra/core/event/sql"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -16,6 +17,7 @@ import { publishTerritoryCatalog } from "@orchestra/atlas-boundary"
 import { materializeStaticOwnSnapshot, parseOwnSnapshot } from "@orchestra/atlas-boundary/materialize"
 import { EventV2 } from "@orchestra/core/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { Config } from "../../src/config/config"
 import { Git } from "../../src/git"
 import { Session } from "../../src/session/session"
@@ -36,7 +38,10 @@ import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import { Truncate } from "../../src/tool/truncate"
 import { TaskTool } from "../../src/tool/task"
 import { MessageID, PartID } from "../../src/session/schema"
-import { AtlasContextHeld } from "../../src/maestro/atlas-source"
+import { AtlasContextHeld, readAtlasSource } from "../../src/maestro/atlas-source"
+import { SeatWork } from "../../src/maestro/backend-work"
+import { LogicalTask } from "../../src/maestro/logical-task"
+import { Seats } from "../../src/maestro/seats"
 import { requireInstance, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
@@ -186,6 +191,237 @@ const prepare = Effect.fn("GroundedLifecycleTest.prepare")(function* () {
       contextRequirement: "PENDING" as const,
     },
   }
+})
+
+// Reuse the retained foreground Task fixture from upstream-provenance.test.ts. This exercises the public V3
+// producer/reader with stored Walt references; it does not prove live Task dispatch or upstream artifact adoption.
+const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
+  data: Effect.Success<ReturnType<typeof prepare>>,
+  grounded = true,
+) {
+  const sessions = yield* Session.Service
+  const child = yield* sessions.create({ parentID: data.session.id, agent: "walt", title: "context proposal" })
+  const binding = yield* LogicalTask.ensure({
+    executionSessionID: child.id,
+    authoritySessionID: data.session.id,
+    projectID: data.session.projectID,
+    memberID: "walt",
+    source: "host",
+  })
+  const owner: SessionV1.Assistant = {
+    id: MessageID.ascending(),
+    parentID: MessageID.make(data.input.admissionMessageID),
+    role: "assistant",
+    sessionID: data.session.id,
+    agent: "maestro",
+    mode: "maestro",
+    path: { cwd: data.test.directory, root: data.test.directory },
+    cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+    providerID: ProviderV2.ID.make("test"),
+    modelID: ModelV2.ID.make("test"),
+    time: { created: Date.now(), completed: Date.now() },
+    finish: "tool-calls",
+  }
+  yield* sessions.updateMessage(owner)
+  const prompt = yield* sessions.updateMessage({
+    id: MessageID.ascending(),
+    role: "user",
+    sessionID: child.id,
+    agent: "walt",
+    model: { providerID: owner.providerID, modelID: owner.modelID },
+    time: { created: Date.now() },
+  })
+  const author = yield* sessions.updateMessage({
+    ...owner,
+    id: MessageID.ascending(),
+    parentID: prompt.id,
+    sessionID: child.id,
+    agent: "walt",
+    mode: "walt",
+    finish: "stop",
+  })
+  const text = yield* sessions.updatePart({
+    id: PartID.ascending(),
+    messageID: author.id,
+    sessionID: child.id,
+    type: "text",
+    text: '```upstream-result\n{"outcome":"done","artifacts":[{"kind":"plan","path":"proposal.md"}],"blockers":[],"risks":[],"nextActions":[]}\n```',
+  })
+  const state: SessionV1.ToolStateCompleted = {
+    status: "completed",
+    input: { description: "context proposal", prompt: "bounded proposal", subagent_type: "walt" },
+    output: text.text,
+    title: "context proposal",
+    time: { start: owner.time.created, end: Date.now() },
+    metadata: { parentSessionId: data.session.id, sessionId: child.id },
+  }
+  const task = yield* sessions.updatePart({
+    id: PartID.ascending(),
+    messageID: owner.id,
+    sessionID: data.session.id,
+    type: "tool",
+    tool: "task",
+    callID: `call-${owner.id}`,
+    state,
+  })
+  yield* SeatWork.track({
+    enabled: true,
+    seat: Seats.all.walt,
+    sessionID: child.id,
+    taskId: binding.taskId,
+    publish: (workResult) =>
+      sessions.updatePart({ ...task, state: { ...state, metadata: { ...state.metadata, workResult } } }).pipe(Effect.asVoid),
+  }).record({ info: author, parts: [text] })
+  const plan = yield* recordPlanRevision({
+    ...data.input,
+    units: grounded ? data.input.units : undefined,
+    goal: { ...data.input.goal, source: "upstream" },
+    upstream: {
+      parentMessageID: SessionMessage.ID.make(owner.id),
+      parentCallID: task.callID,
+      authorSessionID: child.id,
+      authorMessageID: SessionMessage.ID.make(author.id),
+      logicalTaskID: binding.taskId,
+    },
+  })
+  if (plan.revision !== "v3") throw new Error("expected canonical V3 plan")
+  expect(plan.upstreamAttribution?.authorMessageID).toBe(author.id)
+  // The actual V3 reader validates both canonical body hash and hash-derived event ID.
+  expect(yield* readPlanRevision(plan.id)).toEqual(plan)
+  return plan
+})
+
+const heldV3Context = Effect.fn("GroundedLifecycleTest.heldV3Context")(function* (
+  plan: Effect.Success<ReturnType<typeof prepareV3>>,
+  reason: string,
+) {
+  const database = yield* Database.Service
+  const before = yield* database.db
+    .select()
+    .from(EventTable)
+    .where(eq(EventTable.aggregate_id, plan.sessionID))
+    .orderBy(EventTable.id)
+    .all()
+    .pipe(Effect.orDie)
+  expect(before.find((row) => row.id === plan.id)?.type).toBe(
+    EventV2.versionedType(MaestroEvent.PlanRevision.RecordedV3.type, 3),
+  )
+  expect(before.filter((row) => row.type.startsWith(MaestroEvent.Context.Recorded.type))).toEqual([])
+  const held = yield* recordContext(plan.id, plan.sessionID, true).pipe(Effect.flip)
+  expect(held).toBeInstanceOf(AtlasContextHeld)
+  if (!(held instanceof AtlasContextHeld)) throw held
+  expect(held.reason).toBe(reason)
+  const after = yield* database.db
+    .select()
+    .from(EventTable)
+    .where(eq(EventTable.aggregate_id, plan.sessionID))
+    .orderBy(EventTable.id)
+    .all()
+    .pipe(Effect.orDie)
+  expect(after).toEqual(before)
+})
+
+it.instance(
+  "records grounded V3 as Context.RecordedV2 with currentness and exact retry",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const plan = yield* prepareV3(data)
+      expect(plan.grounding?.units).toEqual(["module/backend"])
+      const context = yield* recordContext(plan.id, data.session.id, true)
+      expect(context.mode).toBe("GROUNDED")
+      if (context.mode !== "GROUNDED") throw new Error("missing V3 grounding")
+      expect(context.planRevisionHash).toBe(plan.revisionHash)
+      expect(context.sourceIdentityHash).toBe(plan.grounding?.sourceIdentityHash)
+      expect(context.toolPlan.planRevision).toEqual({ id: plan.id, hash: plan.revisionHash })
+      expect(context.toolPlan.actions.map((action) => action.operation)).toEqual(["load-skill"])
+      const skills = yield* Skill.Service
+      expect(context.skills[0].content).toBe((yield* skills.require(context.skills[0].name)).content)
+      expect(context.skills[0].content).toContain("owned:contract")
+      expect(yield* contextIsCurrent(context)).toBe(true)
+      expect(yield* readContext(context.id)).toEqual(context)
+      expect(yield* recordContext(plan.id, data.session.id, true)).toEqual(context)
+      const database = yield* Database.Service
+      const rows = yield* database.db
+        .select()
+        .from(EventTable)
+        .where(eq(EventTable.aggregate_id, data.session.id))
+        .all()
+        .pipe(Effect.orDie)
+      const contexts = rows.filter((row) => row.type.startsWith(MaestroEvent.Context.Recorded.type))
+      expect(contexts.map((row) => row.id)).toEqual([context.id])
+      expect(contexts[0].type).toBe(EventV2.versionedType(MaestroEvent.Context.RecordedV2.type, 2))
+      expect(Schema.decodeUnknownSync(MaestroEvent.Context.RecordedV2.data)(contexts[0].data)).toEqual(context)
+    }),
+  { git: true },
+  30000,
+)
+
+it.instance(
+  "holds ungrounded V3 with grounded-plan-required without persisting context",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const plan = yield* prepareV3(data, false)
+      expect(plan.grounding).toBeUndefined()
+      yield* heldV3Context(plan, "grounded-plan-required")
+    }),
+  { git: true },
+  30000,
+)
+
+it.instance(
+  "holds V3 grounding mismatched against refreshed Own source with plan-grounding-stale",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const plan = yield* prepareV3(data)
+      const fs = yield* FileSystem.FileSystem
+      const git = yield* Git.Service
+      const snapshot = parseOwnSnapshot(JSON.stringify({ ...data.snapshot, snapshot: "grounded-test-v2" }))
+      if (!snapshot) throw new Error("refreshed fixture rejected by canonical parser")
+      const materialized = materializeStaticOwnSnapshot(snapshot)
+      yield* fs.writeFileString(path.join(data.test.directory, ".atlas/OWN-SNAPSHOT.json"), JSON.stringify(snapshot))
+      yield* Effect.forEach([...materialized.skills, materialized.coverage], (file) =>
+        fs.writeFileString(path.join(data.test.directory, ".atlas", file.path), file.content),
+      )
+      expect((yield* git.run(["add", ".atlas"], { cwd: data.test.directory })).exitCode).toBe(0)
+      expect((yield* git.run(["commit", "-m", "refresh Own snapshot"], { cwd: data.test.directory })).exitCode).toBe(0)
+      const source = yield* readAtlasSource(data.session)
+      expect(source.context.snapshot).toBe("grounded-test-v2")
+      expect(source.identityHash).not.toBe(plan.grounding?.sourceIdentityHash)
+      yield* heldV3Context(plan, "plan-grounding-stale")
+    }),
+  { git: true },
+  30000,
+)
+
+Array.of("source", "skill", "Git").forEach((drift) => {
+  it.instance(
+    `V3 context currentness becomes false after ${drift} drift`,
+    () =>
+      Effect.gen(function* () {
+        const data = yield* prepare()
+        const plan = yield* prepareV3(data)
+        const context = yield* recordContext(plan.id, data.session.id, true)
+        if (context.mode !== "GROUNDED") throw new Error("missing V3 grounding")
+        expect(yield* contextIsCurrent(context)).toBe(true)
+        const fs = yield* FileSystem.FileSystem
+        const git = yield* Git.Service
+        if (drift === "source")
+          yield* fs.writeFileString(path.join(data.test.directory, "src/owned.ts"), "export const owned = 2\n")
+        if (drift === "skill") {
+          const file = path.join(data.test.directory, ".atlas", context.toolPlan.actions[0].path)
+          yield* fs.writeFileString(file, (yield* fs.readFileString(file)) + "\nChanged skill bytes.\n")
+        }
+        if (drift === "Git")
+          expect((yield* git.run(["checkout", "-b", "context-drift"], { cwd: data.test.directory })).exitCode).toBe(0)
+        expect(yield* contextIsCurrent(context)).toBe(false)
+      }),
+    { git: true },
+    30000,
+  )
 })
 
 it.instance(
