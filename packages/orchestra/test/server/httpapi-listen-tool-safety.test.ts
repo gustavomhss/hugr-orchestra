@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import { NodeServices } from "@effect/platform-node"
 import path from "node:path"
-import { createServer } from "node:net"
+import { createConnection, createServer } from "node:net"
 import { Effect, Fiber, Layer, Schema } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -179,12 +179,16 @@ prepared("approved native shell prepares missing parents only after permission r
   }), 60_000,
 )
 
-it.live("listener loopback request objects snapshot into actual V1 child shell; unsupported exact policy HOLDs", () =>
+it.live("listener loopback snapshots preserve broker grants while raw TCP stays denied; unsupported hosts HOLD", () =>
   Effect.gen(function* () {
     const f = yield* fixture()
+    const connections = { accepted: 0 }
     const server = yield* Effect.acquireRelease(
       Effect.promise(() => new Promise<ReturnType<typeof createServer>>((resolve, reject) => {
-        const server = createServer((connection) => connection.end("listener-loopback-response"))
+        const server = createServer((connection) => {
+          connections.accepted++
+          connection.end("listener-loopback-response")
+        })
         server.once("error", reject)
         server.listen(0, "127.0.0.1", () => resolve(server))
       })),
@@ -192,7 +196,30 @@ it.live("listener loopback request objects snapshot into actual V1 child shell; 
     )
     const address = server.address()
     if (!address || typeof address === "string") throw new Error("loopback address unavailable")
-    yield* f.fs.writeFileString(path.join(f.directory, "probe.cjs"), `let denied=false;try{require('fs').writeFileSync('sibling','bad')}catch(e){denied=['EPERM','EACCES'].includes(e.code)};console.log('siblingDenied:'+denied);const c=require('net').connect({host:'127.0.0.1',port:${address.port}});c.on('data',d=>console.log(d.toString()));c.on('error',e=>{console.log(e.code);process.exitCode=3});c.setTimeout(1000,()=>{c.destroy();process.exitCode=4})`)
+    const control = yield* Effect.promise(() => new Promise<string>((resolve, reject) => {
+      const connection = createConnection({ host: "127.0.0.1", port: address.port })
+      const chunks: Buffer[] = []
+      connection.on("data", (chunk) => chunks.push(chunk))
+      connection.on("end", () => { connection.destroy(); resolve(Buffer.concat(chunks).toString()) })
+      connection.on("error", reject)
+      connection.setTimeout(5000, () => { connection.destroy(); reject(new Error("loopback positive control timed out")) })
+    }))
+    expect(control).toBe("listener-loopback-response")
+    expect(connections.accepted).toBe(1)
+    yield* f.fs.writeFileString(path.join(f.directory, "probe.cjs"), `
+      let siblingDenied=false;
+      try{require('fs').writeFileSync('sibling','bad')}catch(e){siblingDenied=['EPERM','EACCES'].includes(e.code)};
+      const read=options=>new Promise(resolve=>{const c=require('net').connect(options);let data='';
+        c.on('data',chunk=>data+=chunk);c.on('end',()=>{c.destroy();resolve(data)});
+        c.on('error',e=>{c.destroy();resolve(e.code)});c.setTimeout(1000,()=>{c.destroy();resolve('TIMEOUT')})});
+      (async()=>{const raw=await read({host:'127.0.0.1',port:${address.port}});
+        const prefix='${address.port}:';
+        const route=process.env.ORCHESTRA_TCP_PROXY_ROUTES?.split(';').find(value=>value.startsWith(prefix));
+        const broker=route?await read({path:Buffer.from(route.slice(prefix.length),'hex').toString('utf8')}):'NO_ROUTES';
+        console.log(JSON.stringify({siblingDenied,raw,broker}));
+        if(!siblingDenied||raw!=='EPERM'||broker!=='listener-loopback-response')process.exitCode=3;
+      })().catch(error=>{console.error(error);process.exitCode=4});
+    `)
     const grants = [{ directory: f.directory, host: "127.0.0.1" as const, port: address.port }]
     const roots = ["nested/out.ts"]
     const profile = { requireSandbox: true, writeRoots: roots, sandbox: { enabled: true, scratch: true, unconfinedFallback: true, allowedLoopbackEndpoints: grants } }
@@ -203,10 +230,19 @@ it.live("listener loopback request objects snapshot into actual V1 child shell; 
     })))
     const child = yield* f.child(listener)
     const tools = yield* f.invoke(listener, child, "bash", { command: "node probe.cjs", description: "listener loopback endpoint probe", timeout: 5000 })
+    if (process.platform === "darwin") {
+      expect(tools.some((part) => part.state.status === "completed" && part.state.metadata.exit === 0 &&
+        part.state.output === `${JSON.stringify({ siblingDenied: true, raw: "EPERM", broker: "listener-loopback-response" })}\n`)).toBe(true)
+      expect(connections.accepted).toBe(2)
+      expect(yield* f.fs.isDir(path.join(f.directory, "nested"))).toBe(true)
+      expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
+      return
+    }
     const reason = "sandbox-loopback-endpoint-exact-policy-unsupported"
     expect(tools.some((part) => part.state.status === "error" && part.state.error.includes(`Tool safety HOLD: ${reason}`))).toBe(true)
     expect(yield* f.fs.exists(path.join(f.directory, "nested"))).toBe(false)
     expect(yield* f.fs.exists(path.join(f.directory, "sibling"))).toBe(false)
+    expect(connections.accepted).toBe(1)
     console.info(`${process.platform}: real V1 child loopback grant propagated; unsupported endpoint policy HOLD measured`)
   }), 60_000,
 )
