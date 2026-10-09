@@ -29,9 +29,7 @@ const receipt = JSON.parse(original.toString())
 if (!Array.isArray(receipt.artifacts) || receipt.artifacts.length !== 1) throw new Error("NIX_DISTRIBUTION_FAILURE:PROBE_SOURCE_TUPLE")
 const file = join(raw, receipt.artifacts[0].file)
 await chmod(file, 0o755)
-const handle = await open(file, "r+")
-const header = Buffer.alloc(64)
-await handle.read(header, 0, header.length, 0)
+const header = Buffer.from(await Bun.file(file).slice(0, 64).arrayBuffer())
 const params = Object.entries(values).filter(([key]) => key !== "directory" && key !== "cli").flatMap(
   ([key, value]) => [`--${key}`, value!],
 )
@@ -60,7 +58,7 @@ await writeFile(join(raw, "manifest.json"), JSON.stringify({
 }))
 await probe("wrong-native-target", "ARTIFACT_TUPLE_MISMATCH")
 await writeFile(join(raw, "manifest.json"), original)
-await handle.write(Buffer.from([header[0] ^ 0xff]), 0, 1, 0)
+await replaceHeader(Buffer.from([header[0] ^ 0xff]))
 await probe("mutated-bytes", "CLI artifact digest mismatch:")
 const digest = createHash("sha256").update(await readFile(file)).digest("hex")
 await writeFile(join(raw, "manifest.json"), JSON.stringify({
@@ -70,14 +68,20 @@ await probe("wrong-image-with-valid-digest", "NATIVE_IMAGE_MISMATCH")
 const wrongCPU = Buffer.from(header)
 if (values.system?.endsWith("-linux")) wrongCPU.writeUInt16LE(header.readUInt16LE(18) === 62 ? 183 : 62, 18)
 if (values.system?.endsWith("-darwin")) wrongCPU.writeUInt32LE(header.readUInt32LE(4) === 0x1000007 ? 0x100000c : 0x1000007, 4)
-await handle.write(wrongCPU, 0, wrongCPU.length, 0)
+await replaceHeader(wrongCPU)
 const cpuDigest = createHash("sha256").update(await readFile(file)).digest("hex")
 await writeFile(join(raw, "manifest.json"), JSON.stringify({
   ...receipt, artifacts: [{ ...receipt.artifacts[0], sha256: cpuDigest }],
 }))
 await probe("wrong-cpu-with-valid-digest", "NATIVE_IMAGE_MISMATCH")
-await handle.write(header, 0, header.length, 0)
-await handle.close()
+await replaceHeader(header)
 await writeFile(join(raw, "manifest.json"), original)
 await probe("restored-real-copy")
 console.log(JSON.stringify({ status: "OUTPUT_NEGATIVE_CONTROLS_OK", completed }, null, 2))
+
+async function replaceHeader(bytes: Buffer) {
+  const handle = await open(file, "r+")
+  // Linux rejects exec of a file held open for writing (ETXTBSY). Close before
+  // invoking the real checker, including the unchanged/restored positive cases.
+  await handle.write(bytes, 0, bytes.length, 0).finally(() => handle.close())
+}
