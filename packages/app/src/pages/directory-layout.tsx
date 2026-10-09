@@ -69,7 +69,7 @@ export function DirectoryDataProvider(
           onNavigateToSession={(sessionID: string) => navigate(href(sessionID))}
           onSessionHref={href}
           onReadResearchArtifact={(
-            (sdk) => (sessionID: string, artifact: { id: string; revision: number }, cursor?: string) => {
+            (sdk) => (sessionID: string, artifact: { id: string; revision: number }, cursor?: string, signal?: AbortSignal) => {
               // A retained callback must never continue an old document on a newly selected server.
               if (serverSDK() !== sdk) return Promise.reject(new Error("Research artifact server changed"))
               return sdk.client.v2.research
@@ -80,7 +80,7 @@ export function DirectoryDataProvider(
                     revision: String(artifact.revision),
                     ...(cursor ? { cursor } : {}),
                   },
-                  { throwOnError: true },
+                  { throwOnError: true, signal },
                 )
                 .then((response) => {
                   if (serverSDK() !== sdk) throw new Error("Research artifact server changed")

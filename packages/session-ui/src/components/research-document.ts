@@ -7,7 +7,7 @@ const sameReceipt = Schema.toEquivalence(Research.DocumentReceipt)
 
 export async function loadResearchDocument(
   receipt: Research.DocumentReceipt,
-  read: (sessionID: string, artifact: Capability.ArtifactRef, cursor?: string) => Promise<unknown>,
+  read: (sessionID: string, artifact: Capability.ArtifactRef, cursor?: string, signal?: AbortSignal) => Promise<unknown>,
   signal?: AbortSignal,
 ) {
   const pages: string[] = []
@@ -19,7 +19,7 @@ export async function loadResearchDocument(
     // Retained pages fill pageBytes, retreating at most three bytes to a UTF-8 boundary.
     if (pages.length >= Math.ceil(Research.Limits.documentBytes / (Research.Limits.pageBytes - 3)))
       throw new Error("Research document exceeds supported page bounds")
-    const response = await read(receipt.binding.executionSessionID, receipt.artifact, state.cursor)
+    const response = await read(receipt.binding.executionSessionID, receipt.artifact, state.cursor, signal)
     signal?.throwIfAborted()
     const page = Schema.decodeUnknownSync(Research.ArtifactPage)(response)
     const size = new TextEncoder().encode(page.text).byteLength

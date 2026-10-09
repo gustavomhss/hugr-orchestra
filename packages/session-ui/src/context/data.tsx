@@ -56,7 +56,12 @@ export const { use: useData, provider: DataProvider } = createSimpleContext({
     sessionID?: string
     onNavigateToSession?: NavigateToSessionFn
     onSessionHref?: SessionHrefFn
-    onReadResearchArtifact?: (sessionID: string, artifact: Capability.ArtifactRef, cursor?: string) => Promise<unknown>
+    onReadResearchArtifact?: (
+      sessionID: string,
+      artifact: Capability.ArtifactRef,
+      cursor?: string,
+      signal?: AbortSignal,
+    ) => Promise<unknown>
   }) => {
     return {
       get store() {

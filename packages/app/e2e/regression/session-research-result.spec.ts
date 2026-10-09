@@ -10,12 +10,14 @@ import {
 import { expectSessionTitle } from "../utils/waits"
 import {
   mockResearchArtifacts,
+  nativeResearchSuccess,
   researchDescription,
   researchDocument,
   researchEnvelope,
   researchPartID,
   researchSessionID,
   researchTask,
+  setupResearchTimeline,
 } from "./session-research-result.fixture"
 
 for (const profile of [
@@ -165,29 +167,70 @@ for (const bytes of [16 * 1024, 16 * 1024 + 1]) {
   })
 }
 
-for (const replacement of ["selection", "envelope"] as const) {
-  test(`pending ${replacement} replacement stops old cursor and stale display`, async ({ page }) => {
+test("V2 initial native structured result opens exact retained document", async ({ page }) => {
+  const document = researchDocument()
+  await setupResearchTimeline(page, {
+    protocol: "v2",
+    value: researchEnvelope({ documents: [document.receipt] }),
+  })
+  const requests = await mockResearchArtifacts(page, [document])
+  const result = page.locator('[data-component="research-result"]')
+  await expect(result.getByRole("heading", { name: "Qualified answer", exact: true })).toBeVisible()
+  await expect(result.getByText("Partial answer", { exact: true })).toBeVisible()
+  await result.getByRole("button", { name: document.receipt.title, exact: true }).click()
+  await expect(result.getByRole("region", { name: document.receipt.title, exact: true })).toContainText("Exact retained body.")
+  await expect(result.getByRole("status")).toBeEmpty()
+  expect(requests.map((request) => request.cursor)).toEqual([null, "research-page-1"])
+})
+
+for (const profile of [
+  { protocol: "v1", replacement: "selection" },
+  { protocol: "v1", replacement: "envelope" },
+  { protocol: "v2", replacement: "selection" },
+  { protocol: "v2", replacement: "envelope" },
+] as const) {
+  test(`pending ${profile.protocol} ${profile.replacement} replacement aborts native request and stops stale display`, async ({ page }) => {
     const old = researchDocument(["# Stale document\n\n", "Old body must never display."], { title: "Old report" })
     const fresh = researchDocument(["# Fresh document\n\nFresh body."], { index: 2, title: "Fresh report" })
     const held = Promise.withResolvers<void>()
-    const timeline = await setupTimeline(page, { messages: [userMessage(), assistantMessage([researchTask(researchEnvelope({ documents: [old.receipt, fresh.receipt] }))])] })
+    const timeline = await setupResearchTimeline(page, {
+      protocol: profile.protocol,
+      status: profile.protocol === "v2" && profile.replacement === "envelope" ? "running" : "completed",
+      value: researchEnvelope({ documents: [old.receipt, fresh.receipt] }),
+    })
     const requests = await mockResearchArtifacts(page, [old, fresh], {
       beforeReply: (request) => request.artifactID === old.receipt.artifact.id ? held.promise : Promise.resolve(),
     })
     const result = page.locator('[data-component="research-result"]')
     const oldRequest = page.waitForRequest((request) => request.url().includes(`/research/${old.receipt.artifact.id}`))
     await result.getByRole("button", { name: old.receipt.title, exact: true }).click()
-    await oldRequest
+    const pending = await oldRequest
     await expect(result.getByRole("status")).toHaveText("Loading research document")
-    if (replacement === "envelope") {
-      await timeline.send(partUpdated(researchTask(researchEnvelope({ answer: "## Replacement answer", documents: [fresh.receipt] }))))
+    const oldFailed = page.waitForEvent("requestfailed", { predicate: (request) => request === pending })
+    if (profile.replacement === "envelope") {
+      const replacement = researchEnvelope({ answer: "## Replacement answer", documents: [fresh.receipt] })
+      if (profile.protocol === "v1") await timeline.send(partUpdated(researchTask(replacement)))
+      if (profile.protocol === "v2") {
+        const connection = await timeline.transport.waitForConnection()
+        expect(connection.path).toBe("/api/event")
+        await timeline.transport.writeRaw(`data: ${JSON.stringify(nativeResearchSuccess(replacement))}\n\n`)
+      }
       await expect(result.getByRole("heading", { name: "Replacement answer", exact: true })).toBeVisible()
       await expect(result.getByRole("region", { name: old.receipt.title, exact: true })).toHaveCount(0)
+      expect((await oldFailed).failure()?.errorText).toBe("net::ERR_ABORTED")
+      held.resolve()
+      // A later selection must not rescue a missing envelope cleanup.
+      await expect(result.getByRole("status")).toBeEmpty()
+      await expect(result.locator("[aria-busy]")).toHaveAttribute("aria-busy", "false")
+      await expect(result.getByRole("button", { name: fresh.receipt.title, exact: true })).toHaveAttribute("aria-pressed", "false")
+      expect(requests.filter((request) => request.artifactID === old.receipt.artifact.id).map((request) => request.cursor)).toEqual([null])
+      await result.getByRole("button", { name: fresh.receipt.title, exact: true }).click()
     }
-    const oldFinished = page.waitForEvent("requestfinished", { predicate: (request) => request.url().includes(`/research/${old.receipt.artifact.id}`) })
-    await result.getByRole("button", { name: fresh.receipt.title, exact: true }).click()
-    held.resolve()
-    await oldFinished
+    if (profile.replacement === "selection") {
+      await result.getByRole("button", { name: fresh.receipt.title, exact: true }).click()
+      expect((await oldFailed).failure()?.errorText).toBe("net::ERR_ABORTED")
+      held.resolve()
+    }
     await expect(result.getByRole("heading", { name: "Fresh document", exact: true })).toBeVisible()
     await expect(result.getByRole("status")).toBeEmpty()
     await expect(result.getByRole("button", { name: fresh.receipt.title, exact: true })).toHaveAttribute("aria-pressed", "true")
@@ -220,8 +263,9 @@ test("SPA navigation disposes pending document and return cannot restore stale d
   const result = page.locator('[data-component="research-result"]')
   const request = page.waitForRequest((request) => request.url().includes(`/research/${document.receipt.artifact.id}`))
   await result.getByRole("button", { name: document.receipt.title, exact: true }).click()
-  await request
+  const pending = await request
   await expect(result.getByRole("status")).toHaveText("Loading research document")
+  const failed = page.waitForEvent("requestfailed", { predicate: (request) => request === pending })
   await page
     .locator(`[data-timeline-part-id="${researchPartID}"]`)
     .getByRole("link", { name: new RegExp(researchDescription) })
@@ -229,9 +273,8 @@ test("SPA navigation disposes pending document and return cannot restore stale d
   await expectSessionTitle(page, "Research child destination")
   await expect(page.getByText("Navigation destination ready", { exact: true })).toBeVisible()
   await expect(result).toHaveCount(0)
-  const finished = page.waitForEvent("requestfinished", { predicate: (request) => request.url().includes(`/research/${document.receipt.artifact.id}`) })
+  expect((await failed).failure()?.errorText).toBe("net::ERR_ABORTED")
   held.resolve()
-  await finished
   await page.goBack()
   await expect(result.getByRole("heading", { name: "Qualified answer", exact: true })).toBeVisible()
   await expect(result.getByRole("button", { name: document.receipt.title, exact: true })).toHaveAttribute("aria-pressed", "false")
@@ -253,6 +296,13 @@ for (const profile of [{ locale: "en", dir: "ltr" }, { locale: "en", dir: "rtl" 
     await expect(result).toHaveCSS("text-align", "start")
     await expect(result.getByText("Research task ended", { exact: true })).toBeVisible()
     await expect(result.getByText("Partial answer", { exact: true })).toBeVisible()
+    const answer = result.locator('[data-component="markdown"]').filter({ has: page.getByRole("heading", { name: "תשובה إجابة", exact: true }) })
+    await expect(answer).toHaveAttribute("dir", "auto")
+    await expect(answer).toHaveCSS("direction", "rtl")
+    await expect(answer.locator("p")).toHaveText("עברית العربية src/answer.ts")
+    await expect(answer.locator("p code")).toHaveCSS("direction", "ltr")
+    await expect(answer.locator("p code")).toHaveCSS("unicode-bidi", "isolate")
+    await expect(answer.locator("p code")).toHaveText("src/answer.ts")
     const button = result.getByRole("button", { name: title, exact: true })
     await expect(button.locator("bdi")).toHaveAttribute("dir", "auto")
     await button.focus()

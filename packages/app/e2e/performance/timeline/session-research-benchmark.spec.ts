@@ -27,16 +27,18 @@ benchmark("performance: common streaming then retained research result", async (
   if (renderer !== "current" && renderer !== "legacy")
     throw new Error("Set RESEARCH_BENCH_RENDERER=current or legacy explicitly")
   const revision = process.env.RESEARCH_BENCH_REVISION
-  if (!revision) throw new Error("Set RESEARCH_BENCH_REVISION to the exact production checkout SHA")
-  const completionTimeoutMs = Number(process.env.TIMELINE_COMPLETION_TIMEOUT_MS ?? 420_000)
+  if (!revision || revision.length !== 40 || !/^[0-9a-f]{40}$/.test(revision))
+    throw new Error("Set RESEARCH_BENCH_REVISION to the full lowercase 40-hex production checkout SHA")
+  const completionTimeoutMs = benchmarkNumber("TIMELINE_COMPLETION_TIMEOUT_MS", 420_000, { minimum: 1, integer: true })
+  const historyTurns = benchmarkNumber("TIMELINE_HISTORY_TURNS", 320, { minimum: 0, integer: true })
+  const deltaCount = benchmarkNumber("TIMELINE_DELTA_COUNT", 160, { minimum: 1, integer: true })
+  const eventBatch = benchmarkNumber("TIMELINE_EVENT_BATCH", 1, { minimum: 1, integer: true })
+  const cpuThrottle = benchmarkNumber("TIMELINE_CPU_THROTTLE", 30, { minimum: 1, integer: false })
+  const profileCPU = benchmarkFlag("TIMELINE_CPU_PROFILE", "0")
+  const minimal = benchmarkFlag("TIMELINE_MINIMAL", "0")
+  const visualProfile = benchmarkFlag("TIMELINE_VISUAL_PROFILE", "1")
+  const profileVisual = !minimal && profileCPU && visualProfile
   benchmark.setTimeout(completionTimeoutMs + 60_000)
-  const historyTurns = Number(process.env.TIMELINE_HISTORY_TURNS ?? 320)
-  const deltaCount = Number(process.env.TIMELINE_DELTA_COUNT ?? 160)
-  const eventBatch = Number(process.env.TIMELINE_EVENT_BATCH ?? 1)
-  const cpuThrottle = Number(process.env.TIMELINE_CPU_THROTTLE ?? 30)
-  const profileCPU = process.env.TIMELINE_CPU_PROFILE === "1"
-  const minimal = process.env.TIMELINE_MINIMAL === "1"
-  const profileVisual = !minimal && profileCPU && process.env.TIMELINE_VISUAL_PROFILE !== "0"
   const fixture = await setupTimelineBenchmark(page, { historyTurns, eventBatch, newLayoutDesigns: true })
   fixture.transport.enqueue(buildInitialStreamEvent(deltaCount))
   await expect(fixture.text).toContainText("Implementation plan")
@@ -139,3 +141,17 @@ benchmark("performance: common streaming then retained research result", async (
     },
   )
 })
+
+function benchmarkNumber(name: string, fallback: number, options: { minimum: number; integer: boolean }) {
+  const raw = process.env[name] ?? String(fallback)
+  const value = Number(raw)
+  if (!raw.trim() || !Number.isFinite(value) || value < options.minimum || (options.integer && !Number.isSafeInteger(value)))
+    throw new Error(`${name} must be a nonblank finite ${options.integer ? "safe integer" : "number"} >= ${options.minimum}`)
+  return value
+}
+
+function benchmarkFlag(name: string, fallback: "0" | "1") {
+  const value = process.env[name] ?? fallback
+  if (value !== "0" && value !== "1") throw new Error(`${name} must be exactly 0 or 1`)
+  return value === "1"
+}

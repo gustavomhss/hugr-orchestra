@@ -1,6 +1,20 @@
 import { createHash } from "node:crypto"
 import type { Page } from "@playwright/test"
-import { directory, projectID, sessionID, toolPart } from "../performance/timeline-stability/fixture"
+import { SessionEvent } from "@orchestra/schema/session-event"
+import { SessionMessage } from "@orchestra/schema/session-message"
+import { Schema } from "effect"
+import {
+  assistantID,
+  assistantMessage,
+  directory,
+  model,
+  projectID,
+  sessionID,
+  setupTimeline,
+  toolPart,
+  userID,
+  userMessage,
+} from "../performance/timeline-stability/fixture"
 
 export const researchPartID = "prt_research_result"
 export const researchSessionID = "ses_research_child"
@@ -82,7 +96,15 @@ export function researchEnvelope(
   }
 }
 
-export function researchTask(value: ReturnType<typeof researchEnvelope>) {
+export function researchTask(value: ReturnType<typeof researchEnvelope>, status: "running" | "completed" = "completed") {
+  if (status === "running")
+    return toolPart(
+      researchPartID,
+      "task",
+      "running",
+      { description: researchDescription, subagent_type: "jimmy" },
+      { metadata: { sessionId: researchSessionID, workResult: value } },
+    )
   return toolPart(
     researchPartID,
     "task",
@@ -90,6 +112,77 @@ export function researchTask(value: ReturnType<typeof researchEnvelope>) {
     { description: researchDescription, subagent_type: "jimmy" },
     { metadata: { sessionId: researchSessionID, workResult: value }, output: "Research dispatch completed" },
   )
+}
+
+export function nativeResearchSuccess(value: ReturnType<typeof researchEnvelope>) {
+  const event = Schema.decodeUnknownSync(SessionEvent.Tool.Success)({
+    id: "evt_research_native_success",
+    type: SessionEvent.Tool.Success.type,
+    location: { directory },
+    data: {
+      timestamp: 1700000003000,
+      sessionID,
+      assistantMessageID: assistantID,
+      callID: researchPartID,
+      structured: { sessionId: researchSessionID, workResult: value },
+      content: [{ type: "text", text: "Native research dispatch completed" }],
+      provider: { executed: false },
+    },
+  }, { errors: "all", onExcessProperty: "error" })
+  // Preserve the native event name and encoded timestamp; the app must own any compatibility mapping.
+  return Schema.encodeSync(SessionEvent.Tool.Success)(event)
+}
+
+export async function setupResearchTimeline(
+  page: Page,
+  input: {
+    value: ReturnType<typeof researchEnvelope>
+    protocol: "v1" | "v2"
+    status?: "running" | "completed"
+  },
+) {
+  const status = input.status ?? "completed"
+  const timeline = await setupTimeline(page, {
+    protocol: input.protocol,
+    messages: [
+      userMessage(),
+      assistantMessage(input.protocol === "v2" ? [] : [researchTask(input.value, status)], { completed: status === "completed" }),
+    ],
+  })
+  if (input.protocol === "v1") return timeline
+  const messages = [
+    { id: userID, type: "user", text: "Inspect native retained research", time: { created: 1700000000000 } },
+    {
+      id: assistantID,
+      type: "assistant",
+      agent: "build",
+      model: { id: model.modelID, providerID: model.providerID },
+      time: { created: 1700000001000, ...(status === "completed" ? { completed: 1700000002000 } : {}) },
+      content: [{
+        type: "tool",
+        id: researchPartID,
+        name: "task",
+        time: { created: 1700000001000, ran: 1700000001000, ...(status === "completed" ? { completed: 1700000002000 } : {}) },
+        state: {
+          status,
+          input: { description: researchDescription, subagent_type: "jimmy" },
+          structured: { sessionId: researchSessionID, workResult: input.value },
+          content: [{ type: "text", text: "Native retained research" }],
+        },
+      }],
+    },
+  ].map((value) => Schema.encodeSync(SessionMessage.Message)(
+    Schema.decodeUnknownSync(SessionMessage.Message)(value, { errors: "all", onExcessProperty: "error" }),
+  ))
+  await page.route(new RegExp(`/api/session/${sessionID}/message(?:\\?|$)`), (route) => route.fulfill({
+    contentType: "application/json",
+    headers: { "access-control-allow-origin": "*" },
+    body: JSON.stringify({ data: messages.toReversed(), cursor: {} }),
+  }))
+  // The frozen shared mock registers its catch-all during setup; reload after installing canonical native REST data.
+  await page.reload()
+  await timeline.transport.waitForConnection()
+  return timeline
 }
 
 export async function mockResearchArtifacts(
@@ -125,6 +218,7 @@ export async function mockResearchArtifacts(
     )
       throw new Error(`Unexpected research artifact request: ${url.href}`)
     await input.beforeReply?.(request)
+    if (route.request().failure()?.errorText === "net::ERR_ABORTED") return
     const reply = input.reply?.(body) ?? { status: 200, body }
     await route.fulfill({
       status: reply.status,

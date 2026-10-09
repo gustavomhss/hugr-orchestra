@@ -9,7 +9,8 @@
 - Candidate for final execution: the lead's frozen integrated checkout SHA, recorded before building. Do not substitute this preparation baseline for the original comparator.
 - Data: deterministic synthetic public fixture strings; no evaluator/private oracle content.
 - Production path targeted by authored controls: app session timeline → task tool projection → `ResearchResult` → `DirectoryDataProvider` callback → generated `client.v2.research.artifact` → HTTP page decoding/integrity → production `Markdown`. The tests do not mount a copied component or duplicate HTML.
-- Shared mock transport, SSE transport, benchmark fixture/config/probes and production sources are unchanged by this package. Static `git diff` between original comparator and preparation baseline returned identical shared harness files; the positive control (`research-result.tsx`) returned an added renderer. This establishes source comparability, not runtime performance.
+- Shared mock transport, SSE transport and benchmark fixture/config/probes stay frozen. Static `git diff` between original comparator and preparation baseline returned identical shared harness files; the positive control (`research-result.tsx`) returned an added renderer. This establishes source comparability, not runtime performance.
+- Cold-review scope adds only the optional fourth `AbortSignal` callback parameter in `session-ui/src/context/data.tsx`, forwards it through `components/research-document.ts`, and supplies it to the generated SDK request in `app/src/pages/directory-layout.tsx`. Existing component controllers now reach the native fetch. These are local callback/RequestInit changes, not Protocol or Server HttpApi changes.
 
 ## Authored detecting controls — all UNRUN
 
@@ -20,17 +21,18 @@
 | Terminal versus answer qualification | All five terminal reasons display exact terminal copy alongside independently chosen `answered`, `partial` or `blocked` qualifier, rendered answer heading and limitation. Host-only detail is not projected. |
 | Verification admission | `referencesChecked=false` and `card.parsed=false` withhold answer heading and show exact unverified fallback; retained document still opens successfully. |
 | Generated-client paging | Exact child Session ID, artifact ID, `revision=1`, initial absent cursor and next cursor; complete Markdown heading/body renders only after both pages. |
+| V2 initial load / native replacement | `protocol: v2` bootstrap followed by canonical `SessionMessage.Message`-validated native REST data. Native envelope replacement sends schema-validated and re-encoded `SessionEvent.Tool.Success` (`session.next.tool.success`) directly through `/api/event`, without a test-owned compatibility rename. |
 | Keyboard and accessibility | Task link → Tab reaches named document button; Space opens it. Pending button disabled and pressed; `aria-controls` names real busy target; exact loading status becomes empty; selected document is a region named by its heading. |
 | Integrity and unavailable data | Wrong digest, foreign receipt binding, changed revision, truncation, repeated cursor, malformed response, HTTP 404 and 503 produce exact unavailable status, bounded request sequence, no retained/altered partial text. Successful paging is the positive control. |
 | Supported page bound | A digest-correct 16,384-byte page renders; digest-correct 16,385-byte page fails. This isolates page size from digest/receipt-size rejection. |
 | Foreign offered document | Foreign execution receipt's named button is disabled beside usable document; usable document completes through the expected artifact requests. |
-| Pending selection / envelope replacement | Hold old first HTTP page, select fresh document or deliver replacement result through SSE, then release old response. Fresh heading/pressed state completes; old cursor never starts and stale heading/body stays absent at completion checkpoint. Envelope replacement also removes old selected region. |
-| SPA navigation / disposal | Hold document request, navigate using real task link to child Session, assert destination title/content and removed result, release response, return through history. Original answer is present, selection reset, status empty, old document/cursor absent. |
-| Direction / locale fallback | English LTR, English forced RTL, Arabic RTL retain selected locale. Hebrew/Arabic titles use `bdi dir=auto`; headings/Markdown use `dir=auto`; inline paths and fenced code are LTR/isolate with exact content. Named button opens through Enter; title geometry stays within button. Research copy falls back to exact English in Arabic. |
+| Pending selection / envelope replacement | V1 and V2 hold the old first HTTP page. Register failure wait before the action, require that exact request to emit native `requestfailed` with `net::ERR_ABORTED`, then release the held route. Envelope replacement must reach abort, empty status, non-busy target and unselected fresh button before any fresh selection, so selection cannot mask missing cleanup. Fresh content completes with no old cursor or stale display. |
+| SPA navigation / disposal | Hold document request, register failure wait, navigate using real task link to child Session, assert destination title/content and removed result, require exact native request abort, then release route and return through history. Original answer is present, selection reset, status empty, old document/cursor absent. |
+| Direction / locale fallback | English LTR, English forced RTL, Arabic RTL retain selected locale. Answer Markdown itself has `dir=auto`, computed RTL direction and exact mixed-script paragraph with isolated LTR inline path; document headings/Markdown/titles and fenced code receive corresponding assertions. Named button opens through Enter; title geometry stays within button. Research copy falls back to exact English in Arabic. |
 
-The narrow `session-research-result.fixture.ts` supplies payloads, SHA-256 receipts and HTTP pages only. Unknown artifact/session/revision/cursor requests fail explicitly. Production code owns rendering, loading, validation and cancellation.
+The narrow `session-research-result.fixture.ts` supplies payloads, SHA-256 receipts, native schema encoding and HTTP pages. Unknown artifact/session/revision/cursor requests fail explicitly. Its V2 helper reloads after registering canonical native REST data because the frozen shared setup registers its catch-all during navigation. Production code owns rendering, loading, validation, compatibility routing and cancellation.
 
-Cancellation assertions are bounded to old request completion plus fresh document/destination/return readiness. They do not claim indefinite absence or cancellation of the underlying HTTP fetch: current callback has no fetch AbortSignal. Required property is stopping subsequent cursor work and stale presentation.
+Cancellation is observed at the native browser request boundary, not inferred from HTTP completion or sleeps. The tests require `net::ERR_ABORTED` on the exact captured request while its response remains held, then assert settled UI before continuing. Cursor/stale-display absence assertions remain bounded to those explicit abort and UI completion checkpoints. No test mocks `loadResearchDocument`, the generated client or component state.
 
 ## Production benchmark and comparison limits
 
@@ -46,6 +48,8 @@ Workload `research-ui-v1`, same file bytes in both checkouts:
 6. Original renderer: assert positive task-link presentation and absent result; report `research: null`, `renderer: legacy`. No document open control exists. This is explicit unsupported product functionality, not a skipped test.
 
 Both runs report checkout SHA, workload digest, workload parameters and diagnostics through shared `BENCHMARK` / `BENCHMARK_PAGE` records. SHA labels are caller-supplied; the final runner must verify them against the actual checkout. Timing describes Playwright-observed DOM readiness, not compositor presentation, INP or user-perceived latency. No machine-dependent threshold is asserted.
+
+Before scenario setup, the benchmark requires a full lowercase 40-hex revision, a declared `current`/`legacy` renderer, nonblank finite safe-integer timeout/count/batch values (history may be zero; timeout, deltas and batch must be positive), finite CPU throttle >= 1, and exactly `0`/`1` for CPU, minimal and visual flags. Visual flags are validated even when CPU profiling is disabled. Invalid configuration fails explicitly; it does not become a different workload silently. These checks are scenario input validation, not new CI guard logic.
 
 **Only `commonStream` is an apples-to-apples rendering workload.** Task publication has identical input but different rendered output. Research render/open metrics are candidate-only; there is no baseline ratio, speedup claim or acceptance budget for them. Original baseline's lack of result renderer must remain visible in the final report. Optional traces span page lifetime; common stream diagnostics use their existing narrower observation window.
 
@@ -103,10 +107,31 @@ Unsetting `CI` is intentional only for this local final production check: normal
 
 `.github/workflows/test.yml` E2E jobs install Chromium, compute files with `bun script/e2e-shard.ts <shard> 3`, then run `bun run test:e2e:local $files` from `packages/app` with `CI=true`. The new regression spec enters normal discovery/sharding; the manual performance spec stays outside it. That CI lane uses the normal **Vite dev** web server, not the production benchmark config. Linux runs by default; Windows E2E requires `windows_e2e=true` on workflow dispatch.
 
-Final authorized dispatch from repository root, after candidate is available remotely:
+Final authorized dispatch from repository root, after candidate is available remotely. Explicitly set `CANDIDATE_REF` to the remote branch name and `CANDIDATE_SHA` to the frozen expected SHA; both are required. Verify the remote head before dispatch, then bind the observed workflow run ID and verify its `headSha` before accepting its evidence. A missing/empty ref must never dispatch the default branch:
 
 ```sh
-gh workflow run test.yml --ref "$CANDIDATE_REF" -f windows_e2e=true
+: "${CANDIDATE_REF:?Set the explicit remote candidate branch name}"
+: "${CANDIDATE_SHA:?Set the full expected candidate SHA}"
+test "${#CANDIDATE_SHA}" -eq 40 || exit 1
+case "$CANDIDATE_SHA" in *[!0-9a-f]*) exit 1 ;; esac
+REMOTE_SHA=$(gh api "repos/{owner}/{repo}/git/ref/heads/$CANDIDATE_REF" --jq '.object.sha') || exit 1
+test "$REMOTE_SHA" = "$CANDIDATE_SHA" || exit 1
+gh workflow run test.yml --ref "$CANDIDATE_REF" -f windows_e2e=true || exit 1
+gh run list --workflow test.yml --branch "$CANDIDATE_REF" --event workflow_dispatch --limit 5 --json databaseId,headSha,url,status || exit 1
+```
+
+Select the exact dispatch from its run URL/list; set `RUN_ID` explicitly. Do not infer the run from an unfiltered latest result:
+
+```sh
+: "${RUN_ID:?Set the exact candidate workflow dispatch run ID}"
+RUN_SHA=$(gh run view "$RUN_ID" --json headSha --jq '.headSha') || exit 1
+test "$RUN_SHA" = "$CANDIDATE_SHA" || exit 1
+RUN_WORKFLOW=$(gh run view "$RUN_ID" --json workflowName --jq '.workflowName') || exit 1
+test "$RUN_WORKFLOW" = test || exit 1
+WATCH_STATUS=0
+gh run watch "$RUN_ID" --exit-status || WATCH_STATUS=$?
+gh run view "$RUN_ID" --json headSha,url,status,conclusion,jobs || exit 1
+exit "$WATCH_STATUS"
 ```
 
 Record actual workflow run URL and E2E shard results. This command was not executed and uploading/pushing is not authorized in this preparation. Root `bun run test:ci app ...` invokes Bun tests and is **not** the Playwright lane.
@@ -124,16 +149,20 @@ Run each mutation separately only at final qualification; restore production sou
 | Bypass digest, receipt equivalence or revision validation | Corresponding invalid page exposes content instead of unavailable status. |
 | Remove supported page-byte bound | 16,385-byte digest-correct page renders instead of unavailable status. |
 | Remove repeated-cursor rejection | Cursor-loop request sequence or unavailable completion fails. |
-| Remove cancellation checks/abort on context cleanup | Old continuation cursor appears at replacement/navigation completion checkpoint; stale display assertions may also fail. Confirm actual failed checkpoint, not timeout alone. |
+| Drop the callback/loader/SDK RequestInit signal propagation | Exact pending request never emits the required native abort; the `requestfailed` wait fails while the response remains held. |
+| Remove abort on context cleanup | Envelope-only case fails its abort/settled-state checks before fresh selection can mask the missing cleanup; navigation abort also fails. |
+| Remove post-read cancellation checks | Preserve native abort assertion; inspect cursor/stale-state completion assertions and existing loader unit controls separately. Native fetch abort may already reject before the removed check, so do not claim this mutation is detected without observed failure. |
+| Drop native `task.state.structured` projection | Canonical V2 initial result or native replacement heading/receipt assertion fails. |
 | Remove execution-binding check in `canOpen` | Foreign button becomes enabled. |
 | Use non-focusable document control / remove accessible name | Tab focus or named button/region assertion fails. |
-| Remove bidi isolation for code | Computed LTR/isolate assertion fails in mixed RTL test. |
+| Remove bidi isolation for code / answer auto direction | Computed LTR/isolate or answer RTL/auto assertions fail in mixed RTL test. |
 | Remove English research fallback | Exact terminal/qualifier copy fails in Arabic. |
 
 ## Remaining evidence gaps
 
 - Every execution, mutation result, browser report, timing, trace and CI URL is **UNRUN**. Authored assertions are not demonstrated detecting assertions until the corresponding mutation is observed failing.
-- `packages/app/e2e/tsconfig.json` currently enumerates selected specs; it does not include these new regression/benchmark files. Shared config was frozen. Final integration must add their explicit include paths before claiming an E2E compiler check. Then run `bun typecheck` and `bun run typecheck:e2e` from `packages/app` once; the latter alone in the current config would miss this package.
+- `packages/app/e2e/tsconfig.json` currently enumerates selected specs; it does not include these new regression/benchmark files in this worktree. The lead owns the include update. After integration run `bun typecheck` and `bun run typecheck:e2e` from `packages/app`, and `bun typecheck` from `packages/session-ui` once. The current E2E config alone would miss these controls.
 - Direct live-server storage/admission/authorization, actual server-switch during a pending request, desktop Electron multi-process behavior, native screen reader review, zoom/resize/full RTL scrolling, other locales/browsers and maximum document/page-count bounds remain outside these browser controls. Their existing native/unit/manual qualification remains separate; no skipped test represents them here.
-- Regression timeline transport uses existing V1 message fixtures with the actual generated V2 research-artifact client. Full V2 message projection/stream equivalence needs separate execution evidence.
+- The lead owns the native task `state.structured` metadata merge in `app/src/utils/session-message.ts`; this worktree intentionally does not edit it. The authored V2 controls depend on its integration.
+- Static routing mismatch remains for lead reconciliation: `SessionEvent.Tool.Success.type` is `session.next.tool.success`, while `app/src/context/server-session-v2-reducer.ts` switches on `session.tool.success`. The V2 replacement control preserves the native event rather than manufacturing a test adapter. Native event routing must be reconciled before final qualification; no execution evidence yet establishes that an existing client boundary maps it.
 - Original comparator cannot measure research render/open work. This limitation cannot be removed by copying the candidate renderer into it.
