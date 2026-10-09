@@ -1,7 +1,7 @@
 import { createMemo, For, Show, type JSX } from "solid-js"
 import { unwrap } from "solid-js/store"
 import { LeanSummary } from "@orchestra/schema/lean-summary"
-import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
+import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import type { Message, Part, Session } from "@orchestra/sdk/v2/client"
 import { useLanguage } from "@/context/language"
 
@@ -12,21 +12,33 @@ export function collectLeanProjectRecords(
     message: Readonly<Record<string, readonly Pick<Message, "id" | "sessionID">[]>>
     part: Readonly<Record<string, readonly Part[] | undefined>>
   },
-  session: (id: string) => Pick<Session, "projectID" | "revert"> | undefined,
-): unknown[] {
+  session: (id: string) => Pick<Session, "id" | "projectID" | "directory" | "revert"> | undefined,
+): LeanMetrics.Decision[] {
   if (!data.project) return []
   return Object.entries(data.message).flatMap(([id, messages]) => {
     const info = session(id)
-    if (!info || info.projectID !== data.project) return []
+    if (!info || info.id !== id || info.projectID !== data.project) return []
     return messages.flatMap((message) => {
       if (message.sessionID !== id || (info.revert && message.id >= info.revert.messageID)) return []
-      return (data.part[message.id] ?? []).flatMap((part) =>
-        part.type === "tool" && part.sessionID === id && part.messageID === message.id && part.state.status === "completed"
-          ? [part.state.metadata.lean]
-          : [],
-      )
+      return (data.part[message.id] ?? []).flatMap((part) => {
+        if (part.type !== "tool" || part.sessionID !== id || part.messageID !== message.id || part.state.status !== "completed") return []
+        const metric = LeanMetrics.decode(snapshotLeanRecord(part.state.metadata.lean))
+        if (!metric || metric.owner.projectID !== info.projectID || metric.owner.sessionID !== id
+          || metric.owner.callID !== part.callID || metric.owner.location !== info.directory) return []
+        return [metric]
+      })
     })
   })
+}
+
+function snapshotLeanRecord(value: unknown): unknown {
+  try {
+    // Read through proxies to track nested updates; clone the wire data without Solid's own symbols.
+    JSON.stringify(value)
+    return structuredClone(unwrap(value))
+  } catch {
+    return value
+  }
 }
 
 export function LeanProjectMetrics(props: {
@@ -36,10 +48,7 @@ export function LeanProjectMetrics(props: {
   orchestraProfile?: string
 }): JSX.Element {
   const language = useLanguage()
-  // Saved metadata is JSON; Solid's non-wire symbols must not reach the strict decoder.
-  const records = createMemo(() => props.records.map((record) => {
-    try { return structuredClone(unwrap(record)) } catch { return record }
-  }))
+  const records = createMemo(() => props.records.map(snapshotLeanRecord))
   const summary = createMemo(() => LeanSummary.summarize({ ...props, records: records() }))
   const available = createMemo(() => {
     const value = summary()
