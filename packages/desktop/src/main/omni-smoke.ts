@@ -8,15 +8,52 @@ export * as OmniSmoke from "./omni-smoke"
 // supervisor and reads its first line as bytes: the text:false path under Electron, and a main-process tree for the
 // kill -9 oracle.
 
+import { randomUUID } from "node:crypto"
+import { appendFileSync, existsSync, readFileSync } from "node:fs"
 import { rename, writeFile } from "node:fs/promises"
+import { app, BrowserWindow, screen } from "electron"
 import { DesktopOmni } from "./omni-process"
+
+const utility = { pid: undefined as number | undefined }
+
+/** Smoke-only lifecycle witnesses. No new runtime IPC or HTTP surface. */
+export function event(name: string, data: Record<string, unknown> = {}) {
+  const file = process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE
+  if (!file || !DesktopOmni.enabled()) return
+  appendFileSync(`${file}.events`, JSON.stringify({ name, pid: process.pid, at: Date.now(), ...data }) + "\n", { mode: 0o600 })
+}
+
+export function utilityStarted(pid: number | undefined) {
+  if (!process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE || !DesktopOmni.enabled()) return
+  utility.pid = pid
+  event("utility-started", { utilityPID: pid })
+}
 
 export async function report(server: { url: string; username: string; password: string }) {
   const file = process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE
   if (!file || !DesktopOmni.enabled()) return
   const argv = JSON.parse(process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV ?? "[]") as string[]
   const main = argv.length > 0 ? await firstLine(argv) : undefined
-  await writeFile(`${file}.tmp`, JSON.stringify({ ...server, pid: process.pid, main }))
+  const token = randomUUID()
+  const quit = `${file}.quit`
+  const gui = () => {
+    const windows = BrowserWindow.getAllWindows().map((window) => ({ id: window.id, visible: window.isVisible(), url: window.webContents.getURL() }))
+    if (windows.some((window) => window.visible)) event("gui-visible", { windows, displays: screen.getAllDisplays().map((display) => ({ id: display.id, size: display.size })) })
+  }
+  const timer = setInterval(() => {
+    gui()
+    if (!existsSync(quit) || readFileSync(quit, "utf8") !== token) return
+    clearInterval(timer)
+    event("quit-requested")
+    app.quit()
+  }, 200)
+  timer.unref()
+  app.on("before-quit", () => event("before-quit"))
+  app.once("will-quit", () => { clearInterval(timer); event("will-quit") })
+  app.once("quit", (_event, code) => event("quit", { code }))
+  await writeFile(`${file}.tmp`, JSON.stringify({ ...server, pid: process.pid, utilityPID: utility.pid, main, quit, token,
+    packaged: app.isPackaged, resources: process.resourcesPath, versions: process.versions, userData: app.getPath("userData"),
+    home: process.env.HOME, db: process.env.ORCHESTRA_DB, nonce: process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE }), { mode: 0o600 })
   await rename(`${file}.tmp`, file)
 }
 
