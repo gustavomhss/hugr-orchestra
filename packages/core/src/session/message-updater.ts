@@ -1,7 +1,9 @@
 import { castDraft, produce, type WritableDraft } from "immer"
+import { isDeepStrictEqual } from "node:util"
 import { Effect, Option, Schema } from "effect"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
+import { SessionSchema } from "./schema"
 
 // Private host receipt on the existing Task tool metadata, not an attribution DTO or a worker claim.
 export const UpstreamSettlement = Schema.Struct({
@@ -55,11 +57,67 @@ function taskStructured(previous: Record<string, unknown>, next: Record<string, 
     ...next, metadata: taskMetadata(before ?? {}, after ?? {}, owner) }
 }
 
+// A completed background Task cannot use generic streaming progress. This narrow host observation records only an
+// unfavorable returned result, before admission; author and placement come from stored rows, never caller metadata.
+const taskObservation = (adapter: Adapter, assistant: SessionMessage.Assistant, event: SessionEvent.Tool.Progress) => Effect.gen(function* () {
+  const calls = assistant.content.filter((part) => part.type === "tool" && part.id === event.data.callID)
+  const call = calls[0]
+  if (assistant.id !== event.data.assistantMessageID || calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed ||
+    call.state.status !== "completed" || assistant.agent !== "maestro") return
+  const record = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
+  const previous = Option.getOrUndefined(record(call.state.structured.metadata))
+  const metadata = Option.getOrUndefined(record(event.data.structured.metadata))
+  const value = metadata ? Option.getOrUndefined(record(metadata.workResult)) : undefined
+  const before = previous ? Option.getOrUndefined(record(previous.workResult)) : undefined
+  if (!previous || !metadata || !value || !before || previous.upstreamSettlement !== undefined ||
+    metadata.upstreamSettlement !== undefined || previous.parentSessionId !== event.data.sessionID ||
+    metadata.parentSessionId !== previous.parentSessionId || metadata.sessionId !== previous.sessionId ||
+    value.taskId !== before.taskId || typeof value.taskId !== "string" || value.taskId === "" ||
+    typeof value.schema !== "string" || value.schema === "" || value.schema !== before.schema) return
+  const result = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
+    card: Schema.Struct({ messageID: SessionMessage.ID }),
+    author: Schema.Struct({ memberId: Schema.NonEmptyString, executionSessionID: SessionSchema.ID, messageID: SessionMessage.ID }),
+    terminal: Schema.Struct({ reason: Schema.Literals(["failed", "interrupted"]), hostDetail: Schema.optional(Schema.NonEmptyString) }),
+  }))(value))
+  const selection = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
+    subagent_type: Schema.NonEmptyString, task_id: Schema.optional(SessionSchema.ID),
+  }))(call.state.input))
+  if (!result || !selection || result.card.messageID !== result.author.messageID ||
+    result.author.executionSessionID !== previous.sessionId || selection.subagent_type !== result.author.memberId ||
+    selection.task_id !== undefined && selection.task_id !== result.author.executionSessionID) return
+  const oldAuthor = before.author === undefined ? undefined : Option.getOrUndefined(record(before.author))
+  const oldCard = Option.getOrUndefined(record(before.card))
+  const oldTerminal = Option.getOrUndefined(record(before.terminal))
+  if (!oldCard || !oldTerminal || before.author !== undefined && (!oldAuthor || !isDeepStrictEqual(oldAuthor, value.author)) ||
+    oldCard.messageID !== undefined && oldCard.messageID !== result.author.messageID) return
+  if ((oldCard.messageID !== undefined || ["failed", "interrupted"].includes(String(oldTerminal.reason))) && !isDeepStrictEqual(
+    Object.fromEntries(Object.entries(before).filter(([key]) => key !== "terminal")),
+    Object.fromEntries(Object.entries(value).filter(([key]) => key !== "terminal")),
+  )) return
+  if (["failed", "interrupted"].includes(String(oldTerminal.reason)) && !isDeepStrictEqual({
+    ...oldTerminal,
+    ...(oldTerminal.hostDetail === undefined && result.terminal.hostDetail !== undefined ? { hostDetail: result.terminal.hostDetail } : {}),
+  }, value.terminal)) return
+  if (!adapter.validateTaskObservation || !(yield* adapter.validateTaskObservation({ sessionID: event.data.sessionID,
+    assistant, call, childSessionID: result.author.executionSessionID, authorMessageID: result.author.messageID,
+    memberID: result.author.memberId, location: event.location }))) return
+  return { input: call.state.input, previous: previous.workResult, workResult: value, childSessionID: result.author.executionSessionID }
+})
+
 export type MemoryState = {
   messages: SessionMessage.Message[]
 }
 
 export interface Adapter {
+  readonly validateTaskObservation?: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly assistant: SessionMessage.Assistant
+    readonly call: SessionMessage.AssistantTool
+    readonly childSessionID: SessionSchema.ID
+    readonly authorMessageID: SessionMessage.ID
+    readonly memberID: string
+    readonly location: SessionEvent.Tool.Progress["location"]
+  }) => Effect.Effect<boolean>
   readonly getCurrentAssistant: () => Effect.Effect<SessionMessage.Assistant | undefined>
   readonly getAssistant: (messageID: SessionMessage.ID) => Effect.Effect<SessionMessage.Assistant | undefined>
   readonly getCurrentShell: (callID: string) => Effect.Effect<SessionMessage.Shell | undefined>
@@ -344,27 +402,43 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
         })
       },
       "session.next.tool.progress": (event) => {
-        return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
-          const match = latestTool(draft, event.data.callID)
-          if (match && "structured" in match.state) {
-            const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
-            const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
-            const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
-            // The private host validates author/delivery before publishing Progress; also require retained Task anchors.
-            const receipt = metadata && draft.agent === "maestro" && !match.provider?.executed &&
-              previous.parentSessionId === event.data.sessionID && previous.sessionId === metadata.sessionId
-              ? upstreamSettlement(metadata, owner) : undefined
-            const stored = upstreamSettlement(previous, owner)
-            if (match.state.status !== "running" && !receipt && !stored) return
-            const structured = taskStructured(match.state.structured, event.data.structured, owner)
-            const carriedMetadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(structured.metadata)) ?? {}
-            const carried = upstreamSettlement(carriedMetadata, owner)
-            match.state.structured = castDraft(carried ? structured : receipt ? { ...match.state.structured, ...structured,
-              metadata: { ...previous, ...carriedMetadata, upstreamSettlement: receipt,
-                workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId,
-                ...(previous.interrupted === true ? { interrupted: true } : {}) } } : structured)
-            if (match.state.status === "running" && !stored) match.state.content = [...event.data.content]
-          }
+        return Effect.gen(function* () {
+          const assistant = yield* adapter.getAssistant(event.data.assistantMessageID)
+          const observation = assistant ? yield* taskObservation(adapter, assistant, event) : undefined
+          return yield* updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+            const match = latestTool(draft, event.data.callID)
+            if (match && "structured" in match.state) {
+              const owner = { sessionID: event.data.sessionID, messageID: draft.id, callID: match.id, tool: match.name, input: match.state.input }
+              const previous = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(match.state.structured.metadata)) ?? {}
+              const metadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(event.data.structured.metadata))
+              // The private host validates author/delivery before publishing Progress; also require retained Task anchors.
+              const receipt = metadata && draft.agent === "maestro" && !match.provider?.executed &&
+                previous.parentSessionId === event.data.sessionID && previous.sessionId === metadata.sessionId
+                ? upstreamSettlement(metadata, owner) : undefined
+              const stored = upstreamSettlement(previous, owner)
+              if (observation && match.name === "task" && !match.provider?.executed && draft.agent === "maestro" &&
+                match.state.status === "completed" && previous.upstreamSettlement === undefined &&
+                previous.parentSessionId === event.data.sessionID && previous.sessionId === observation.childSessionID &&
+                isDeepStrictEqual(match.state.input, observation.input) && isDeepStrictEqual(previous.workResult, observation.previous)) {
+                match.state.structured = castDraft({ ...match.state.structured,
+                  metadata: { ...previous, workResult: observation.workResult } })
+                return
+              }
+              const priorResult = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(previous.workResult))
+              const terminal = priorResult ? Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(priorResult.terminal)) : undefined
+              if (receipt && !stored && terminal && ["failed", "interrupted"].includes(String(terminal.reason)) &&
+                !isDeepStrictEqual(receipt.workResult, previous.workResult)) return
+              if (match.state.status !== "running" && !receipt && !stored) return
+              const structured = taskStructured(match.state.structured, event.data.structured, owner)
+              const carriedMetadata = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(structured.metadata)) ?? {}
+              const carried = upstreamSettlement(carriedMetadata, owner)
+              match.state.structured = castDraft(carried ? structured : receipt ? { ...match.state.structured, ...structured,
+                metadata: { ...previous, ...carriedMetadata, upstreamSettlement: receipt,
+                  workResult: receipt.workResult, parentSessionId: event.data.sessionID, sessionId: metadata?.sessionId,
+                  ...(previous.interrupted === true ? { interrupted: true } : {}) } } : structured)
+              if (match.state.status === "running" && !stored) match.state.content = [...event.data.content]
+            }
+          })
         })
       },
       "session.next.tool.success": (event) => {

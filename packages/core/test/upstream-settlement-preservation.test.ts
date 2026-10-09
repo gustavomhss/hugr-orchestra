@@ -2,6 +2,7 @@ import { describe, expect } from "bun:test"
 import { DateTime, Effect, Exit, Layer, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "../src/database/database"
+import { AgentV2 } from "../src/agent"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { LayerNode } from "../src/effect/layer-node"
 import { EventV2 } from "../src/event"
@@ -12,7 +13,8 @@ import { SessionMessage } from "../src/session/message"
 import { SessionMessageUpdater } from "../src/session/message-updater"
 import { SessionSchema } from "../src/session/schema"
 import { SessionProjector } from "../src/session/projector"
-import { PartTable, SessionTable } from "../src/session/sql"
+import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "../src/session/sql"
+import { Location } from "../src/location"
 import { SessionV1 } from "../src/v1/session"
 import { Project } from "../src/project"
 import { ProjectTable } from "../src/project/sql"
@@ -73,6 +75,220 @@ const progress = (value: Record<string, unknown>) => SessionEvent.Tool.Progress.
 })
 
 const dbIt = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node])))
+
+const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (view: string, legacyOriginal = false) {
+  const database = yield* Database.Service
+  const events = yield* EventV2.Service
+  const parentID = SessionSchema.ID.make(`ses_observation_parent_${view}`)
+  const childID = SessionSchema.ID.make(`ses_observation_child_${view}`)
+  const parentMessageID = SessionMessage.ID.make(`msg_observation_parent_${view}`)
+  const authorMessageID = SessionMessage.ID.make(`msg_observation_author_${view}`)
+  const projectID = Project.ID.make(`observation-project-${view}`)
+  yield* database.db.insert(ProjectTable).values({ id: projectID, worktree: AbsolutePath.make("/project"), sandboxes: [] }).run()
+  yield* database.db.insert(SessionTable).values([
+    { id: parentID, project_id: projectID, slug: "parent", directory: "/project", title: "parent", version: "test" },
+    { id: childID, parent_id: parentID, project_id: projectID, slug: "child", directory: "/project", agent: "walt", title: "child", version: "test" },
+  ]).run()
+  const selectedInput = { subagent_type: "walt", task_id: childID, prompt: input.prompt }
+  const result = { ...workResult, taskId: `tsk_observation_${view}`, card: { parsed: true, messageID: authorMessageID },
+    author: { memberId: "walt", executionSessionID: childID, messageID: authorMessageID },
+    terminal: { reason: "failed", hostDetail: "Actual host failure after returned assistant" } }
+  const retainedMetadata = { parentSessionId: parentID, sessionId: childID, background: true, concurrent: "keep",
+    workResult: { schema: result.schema, taskId: result.taskId, card: { parsed: false }, terminal: { reason: "running" } } }
+  const base = { sessionID: parentID, assistantMessageID: parentMessageID, callID: "original-task", timestamp }
+  const model = { id: ModelV2.ID.make("model"), providerID: ProviderV2.ID.make("provider") }
+  yield* events.publish(SessionEvent.Step.Started, { ...base, agent: AgentV2.ID.make("maestro"), model })
+  yield* events.publish(SessionEvent.Tool.Input.Started, { ...base, name: "task" })
+  yield* events.publish(SessionEvent.Tool.Called, { ...base, tool: "task", input: selectedInput, provider: { executed: false } })
+  yield* events.publish(SessionEvent.Tool.Success, { ...base,
+    structured: { title: "Original Task", output: "Background task started", retained: "current", metadata: retainedMetadata },
+    content: [{ type: "text", text: "Original Task output" }], result: { original: true }, provider: { executed: false } })
+  const original = legacyOriginal ? yield* Effect.gen(function* () {
+    yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: parentID,
+      info: SessionV1.Assistant.make({ id: SessionV1.MessageID.make(parentMessageID), sessionID: parentID,
+        role: "assistant", agent: "maestro", mode: "maestro", parentID: SessionV1.MessageID.make("msg_user"),
+        modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
+        time: { created: 1 }, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }) })
+    const part = SessionV1.ToolPart.make({ id: SessionV1.PartID.make(`prt_observation_original_${view}`),
+      messageID: SessionV1.MessageID.make(parentMessageID), sessionID: parentID, type: "tool", tool: "task", callID: base.callID,
+      state: { status: "completed", input: selectedInput, title: "Original Task", output: "Background task started",
+        metadata: retainedMetadata, time: { start: 1, end: 1 } } })
+    yield* events.publish(SessionV1.Event.PartUpdated, { sessionID: parentID, time: 1, part })
+    return part
+  }) : undefined
+  if (view !== "legacy") {
+    const author = { sessionID: childID, assistantMessageID: authorMessageID, timestamp }
+    yield* events.publish(SessionEvent.Step.Started, { ...author, agent: AgentV2.ID.make("walt"), model })
+    yield* events.publish(SessionEvent.Text.Started, { ...author, textID: "returned-text" })
+    yield* events.publish(SessionEvent.Text.Ended, { ...author, textID: "returned-text", text: "Returned proposal" })
+    yield* events.publish(SessionEvent.Step.Ended, { ...author, finish: "stop", cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } })
+  }
+  if (view !== "native") yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: childID,
+    info: SessionV1.Assistant.make({ id: SessionV1.MessageID.make(authorMessageID), sessionID: childID,
+      role: "assistant", agent: "walt", mode: "walt", parentID: SessionV1.MessageID.make("msg_user"),
+      modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
+      time: { created: 1, completed: 2 }, finish: "stop", cost: 0,
+      tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }) })
+  const location = Location.Ref.make({ directory: AbsolutePath.make("/project") })
+  const offer = (metadata: Record<string, unknown>, patch: Partial<SessionEvent.Tool.Progress["data"]> = {}, placement = location) =>
+    events.publish(SessionEvent.Tool.Progress, { ...base, structured: { metadata }, content: [], ...patch }, { location: placement })
+  const read = () => Effect.gen(function* () {
+    const row = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, parentMessageID)).get()
+    if (!row) throw new Error("Missing native original Task owner")
+    const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+    return tool({ messages: [message] })
+  })
+  return { database, events, parentID, childID, parentMessageID, authorMessageID, projectID, result, retainedMetadata, selectedInput, original, offer, read }
+})
+
+;["native", "legacy", "dual"].forEach((view) => {
+  dbIt.live(`completed native Task records receipt-free host failure against stored ${view} returned author`, () => Effect.gen(function* () {
+    const f = yield* observationFixture(view)
+    const before = yield* f.read()
+    const offered = { ...f.retainedMetadata, concurrent: "stale caller value", workResult: f.result }
+    for (const metadata of [
+      { ...offered, parentSessionId: "ses_forged" },
+      { ...offered, sessionId: "ses_forged" },
+      { ...offered, workResult: { ...f.result, taskId: "tsk_forged" } },
+      { ...offered, workResult: { ...f.result, card: { messageID: "msg_missing" },
+        author: { ...f.result.author, messageID: "msg_missing" } } },
+      { ...offered, workResult: { ...f.result, card: { messageID: f.parentMessageID },
+        author: { ...f.result.author, messageID: f.parentMessageID } } },
+      { ...offered, workResult: { ...f.result, author: { ...f.result.author, memberId: "maestro" } } },
+      { ...offered, workResult: { ...f.result, terminal: { reason: "ended" } } },
+      { ...offered, upstreamSettlement: { forged: true } },
+    ]) {
+      yield* f.offer(metadata)
+      expect(yield* f.read()).toEqual(before)
+    }
+    yield* f.offer(offered, { callID: "forged-call" })
+    expect(yield* f.read()).toEqual(before)
+    yield* f.offer(offered, {}, Location.Ref.make({ directory: AbsolutePath.make("/other-project") }))
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(SessionTable).set({ parent_id: null }).where(eq(SessionTable.id, f.childID)).run()
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(SessionTable).set({ parent_id: f.parentID }).where(eq(SessionTable.id, f.childID)).run()
+    const foreignProjectID = Project.ID.make(`foreign-observation-${view}`)
+    yield* f.database.db.insert(ProjectTable).values({ id: foreignProjectID, worktree: AbsolutePath.make("/other-project"), sandboxes: [] }).run()
+    for (const patch of [{ project_id: foreignProjectID }, { directory: "/other-project" }, { agent: "maestro" }]) {
+      yield* f.database.db.update(SessionTable).set(patch).where(eq(SessionTable.id, f.childID)).run()
+      yield* f.offer(offered)
+      expect(yield* f.read()).toEqual(before)
+      yield* f.database.db.update(SessionTable).set({ project_id: f.projectID, directory: "/project", agent: "walt" })
+        .where(eq(SessionTable.id, f.childID)).run()
+    }
+    const reasonOnly = { ...f.result, terminal: { reason: "failed" } }
+    yield* f.offer({ ...offered, workResult: reasonOnly })
+    expect((yield* f.read()).state.structured.metadata).toMatchObject({ workResult: reasonOnly })
+    yield* f.offer(offered)
+    const observed = yield* f.read()
+    expect(observed).toEqual({ ...before, state: { ...before.state,
+      structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: f.result } } } })
+    expect(observed.state.status).toBe("completed")
+    expect(observed.state.input).toEqual(f.selectedInput)
+    expect(observed.state.structured.metadata).not.toHaveProperty("upstreamSettlement")
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(observed)
+    yield* f.offer({ ...offered, workResult: { ...f.result, terminal: { reason: "failed", hostDetail: "Forged later failure detail" } } })
+    expect(yield* f.read()).toEqual(observed)
+    yield* f.offer({ ...offered, workResult: { ...f.result, terminal: { reason: "interrupted", hostDetail: f.result.terminal.hostDetail } } })
+    expect(yield* f.read()).toEqual(observed)
+    yield* f.offer({ ...offered, upstreamSettlement: { parentMessageID: f.parentMessageID, parentCallID: "original-task",
+      workResult: { ...f.result, terminal: { reason: "ended" } }, deliveryMessageID: "msg_forged" } })
+    expect(yield* f.read()).toEqual(observed)
+  }))
+})
+
+dbIt.live("host observation refuses provider-executed and non-Task calls despite real lineage", () => Effect.gen(function* () {
+  const f = yield* observationFixture("untrusted")
+  const before = yield* f.read()
+  const row = yield* f.database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id, f.parentMessageID)).get()
+  if (!row) throw new Error("Missing native original Task owner")
+  const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+  if (message.type !== "assistant") throw new Error("Expected native assistant")
+  for (const call of [{ ...before, provider: { executed: true } }, { ...before, name: "unrelated" },
+    { ...before, state: { ...before.state, input: { ...before.state.input, task_id: "ses_wrong_child" } } }]) {
+    const encoded = Schema.encodeSync(SessionMessage.Assistant)({ ...message, content: [call] })
+    const { id: _, type: __, ...data } = encoded
+    yield* f.database.db.update(SessionMessageTable).set({ data }).where(eq(SessionMessageTable.id, f.parentMessageID)).run()
+    yield* f.offer({ ...f.retainedMetadata, workResult: f.result })
+    expect(yield* f.read()).toEqual(call)
+  }
+}))
+
+dbIt.live("available legacy original Task conflicts veto native observation before trust", () => Effect.gen(function* () {
+  const f = yield* observationFixture("original-dual", true)
+  if (!f.original || f.original.state.status !== "completed") throw new Error("Missing completed legacy original Task")
+  const original = f.original
+  const state = f.original.state
+  const before = yield* f.read()
+  const offered = { ...f.retainedMetadata, workResult: f.result }
+  const write = (part: Schema.Schema.Type<typeof SessionV1.ToolPart>) => {
+    const encoded = Schema.encodeSync(SessionV1.ToolPart)(part)
+    const { id: _, messageID: __, sessionID: ___, ...data } = encoded
+    return f.database.db.update(PartTable).set({ data }).where(eq(PartTable.id, original.id)).run()
+  }
+  for (const part of [
+    { ...original, state: { ...state, input: { ...state.input, task_id: "ses_other_child" } } },
+    { ...original, state: { ...state, input: { ...state.input, subagent_type: "maestro" } } },
+    { ...original, state: { ...state, metadata: { ...state.metadata, parentSessionId: f.childID } } },
+    { ...original, state: { ...state, metadata: { ...state.metadata, sessionId: f.parentID } } },
+    { ...original, metadata: { providerExecuted: true } },
+    { ...original, tool: "read" },
+    { ...original, callID: "other-call" },
+    { ...original, state: { ...state, metadata: { ...state.metadata, workResult: { ...f.result,
+      terminal: { reason: "interrupted", hostDetail: "Earlier retained interruption" } } } } },
+    { ...original, state: { ...state, metadata: { ...state.metadata, interrupted: true } } },
+    { ...original, state: { ...state, metadata: { ...state.metadata, upstreamSettlement: { conflicting: true } } } },
+    { ...original, state: SessionV1.ToolStateError.make({ status: "error", input: state.input,
+      error: "Actual retained Task error", metadata: state.metadata, time: { start: 1, end: 2 } }) },
+  ]) {
+    yield* write(part)
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(before)
+  }
+  const malformed: Pick<SessionV1.ToolPart, "type" | "callID"> = { type: "tool", callID: original.callID }
+  yield* f.database.db.update(PartTable).set({ data: malformed }).where(eq(PartTable.id, original.id)).run()
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* write(original)
+  const owner = yield* f.database.db.select().from(MessageTable).where(eq(MessageTable.id, original.messageID)).get()
+  if (!owner) throw new Error("Missing legacy original owner")
+  const info = Schema.decodeUnknownSync(SessionV1.Info)({ ...owner.data, id: owner.id, sessionID: owner.session_id })
+  if (info.role !== "assistant") throw new Error("Expected legacy original assistant")
+  const malformedOwner: Pick<SessionV1.Assistant, "role" | "agent"> = { role: "assistant", agent: "maestro" }
+  yield* f.database.db.update(MessageTable).set({ data: malformedOwner }).where(eq(MessageTable.id, owner.id)).run()
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  const encoded = Schema.encodeSync(SessionV1.Assistant)({ ...info, agent: "walt" })
+  const { id: _, sessionID: __, ...data } = encoded
+  yield* f.database.db.update(MessageTable).set({ data }).where(eq(MessageTable.id, owner.id)).run()
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.database.db.update(MessageTable).set({ data: owner.data, session_id: f.childID }).where(eq(MessageTable.id, owner.id)).run()
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.database.db.update(MessageTable).set({ session_id: owner.session_id }).where(eq(MessageTable.id, owner.id)).run()
+  const duplicate = { ...original, id: SessionV1.PartID.make("prt_observation_duplicate") }
+  yield* f.events.publish(SessionV1.Event.PartUpdated, { sessionID: f.parentID, time: 1, part: duplicate })
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.events.publish(SessionV1.Event.PartRemoved, { sessionID: f.parentID, messageID: original.messageID, partID: duplicate.id })
+  yield* f.events.publish(SessionV1.Event.PartRemoved, { sessionID: f.parentID, messageID: original.messageID, partID: original.id })
+  yield* f.offer(offered)
+  expect(yield* f.read()).toEqual(before)
+  yield* f.events.publish(SessionV1.Event.PartUpdated, { sessionID: f.parentID, time: 1, part: original })
+  yield* f.offer(offered)
+  const accepted = yield* f.read()
+  expect(accepted).toEqual({ ...before, state: { ...before.state,
+    structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: f.result } } } })
+  const retained = yield* f.database.db.select().from(PartTable).where(eq(PartTable.id, original.id)).get()
+  if (!retained) throw new Error("Compatible legacy original disappeared")
+  expect(retained.data).toMatchObject({ type: "tool", callID: original.callID, state: { metadata: f.retainedMetadata } })
+}))
+
 dbIt.effect("legacy durable projector preserves receipt, original input and terminal state against late metadata", () => Effect.gen(function* () {
   const database = yield* Database.Service
   const events = yield* EventV2.Service
@@ -195,6 +411,18 @@ const called = () => SessionEvent.Tool.Called.make({
 })
 
 describe("private upstream settlement preservation", () => {
+  it.effect("unbacked memory adapter cannot authorize receipt-free completed Task observation", () => Effect.gen(function* () {
+    const current = fixture()
+    const metadata = { parentSessionId: sessionID, sessionId: "ses_child", background: true,
+      workResult: { schema: workResult.schema, taskId: workResult.taskId, card: { parsed: false }, terminal: { reason: "running" } } }
+    yield* SessionMessageUpdater.update(current.adapter, success({ metadata }))
+    const before = structuredClone(tool(current.state))
+    yield* SessionMessageUpdater.update(current.adapter, progress({ metadata: { ...metadata,
+      workResult: { ...workResult, terminal: { reason: "failed", hostDetail: "Caller-only failure claim" } } } }))
+    expect(tool(current.state)).toEqual(before)
+    expect(tool(current.state).state.structured.metadata).not.toHaveProperty("upstreamSettlement")
+  }))
+
   it.effect("generic metadata cannot create a receipt or replace a matching stored receipt", () => Effect.sync(() => {
     expect(SessionMessageUpdater.taskMetadata({}, metadata, owner)).not.toHaveProperty("upstreamSettlement")
     const changed = { ...metadata, sessionId: "ses_another", workResult: { terminal: { reason: "running" } },
