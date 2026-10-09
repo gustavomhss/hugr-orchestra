@@ -94,6 +94,13 @@ Runtime published that exact workflow-only repair as
 `be485928d5cb9111fc50fc4dfb9be12447ee71c5`, parent AEC. Controlled native branch
 `e2ec5a868f983da025e5eb3611589e1b39b2f986` has the identical repaired tree and
 actual run `37984603006` registered. Consumer execution/results remain pending.
+That run subsequently completed **failure**: real shared model acquisition, both
+Linux consumers, both Darwin consumers, Windows ARM producer and Windows ARM
+consumer succeeded. The sole Windows x64 native job failed during CLI build with
+`Failed to extract executable for 'bun-windows-x64-baseline-v1.3.14'. The download may be incomplete.`
+The real model snapshot loaded before this compiler fallback extraction failure.
+Runtime owns the exact failed-lane/vendor-artifact diagnosis; passed lanes are not
+silently rerun or promoted into an overall green.
 
 A published minimal candidate `5c6426d8f5bb0a473d15447dece6e205be7cc32c`, parent
 `fca89fc1d4`, changing only the updater. It snapshots current Immer state before
@@ -102,6 +109,17 @@ comparison as the suspected refusal boundary; source-only inspection is not an
 observed first-false predicate. Runtime owns the actual eligible-fixture diagnosis
 and failed-selector verification before causal/runtime closure is claimed. Strict
 stored facts, equality constraints, original fields and positive assertions remain.
+The candidate is composed in `c1581317cb`, with bounded independent static APPROVE
+`ses_ede10b10bffeZj7Sr8S8b57wwj` on the one-file delta. Its updater blob is
+`9a863008a73a6f54ef8b67c5f69e48f19342f1d2`; the measured AEC/9c blob was
+`3f4db93e7a69374d5764a84258ed7b7502abcc22`.
+
+Runtime's generation later stalled without tool actions. The user explicitly
+answered `Retomar sessão (Recommended)` to interrupt only that generation and
+resume the same Runtime Session. The coordinator confirmed clean `be485928d5`,
+HTTP abort 200/true and idle status, then persisted compact recovery handoff
+`msg_1225fcfdd001kvvyAG5aQZIlIP`. No server was restarted, no source work discarded,
+and no new author or qualification result was invented.
 
 Relay's sole request-only `9c76824c5ce27849f42685dc3579e3201e6103af` has exact parent
 AEC and changes only the ready/source-parent JSON line in `nix/distribution.md`.
@@ -126,6 +144,10 @@ Orchestra failures. The input fingerprint pins all package sources and tests.
 An actual A repair must be compared against that fingerprint before any hash-only
 consumer checkpoint; changed package inputs require fresh capture. Native-workflow
 only changes are outside that declared input set and must be assessed separately.
+Integrator `f48ed761aa` preserves the successful 9c request ancestry with the next
+request inactive. Direct comparison against the declared fingerprint input paths
+found exactly the updater blob change above. This is a concrete invalidation,
+even if a later normalization happens to produce the same NAR value.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
