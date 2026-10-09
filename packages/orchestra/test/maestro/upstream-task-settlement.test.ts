@@ -45,7 +45,7 @@ function assistant(sessionID: SessionID, agent: string): SessionV1.Assistant {
     time: { created: Date.now(), completed: Date.now() }, finish: "stop" }
 }
 
-const seed = Effect.fn("PrivateSettlementTest.seed")(function* () {
+const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "resumed" | "wrong") {
   const sessions = yield* Session.Service
   const events = yield* EventV2Bridge.Service
   const database = yield* Database.Service
@@ -58,7 +58,8 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* () {
   const workResult = { ...BackendResult.assemble({ info: author, parts: [proposal] }, [], Seats.all.walt), taskId: logical.taskId }
   const owner = yield* sessions.updateMessage(assistant(parent.id, "maestro"))
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true, workResult, retained: "current" }
-  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt" }, title: "proposal",
+  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt",
+    ...(selection ? { task_id: selection === "resumed" ? child.id : SessionID.ascending() } : {}) }, title: "proposal",
     output: "started", time: { start: Date.now(), end: Date.now() }, metadata }
   const task = yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id, sessionID: parent.id,
     type: "tool", tool: "task", callID: `call-${owner.id}`, state })
@@ -93,6 +94,20 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* () {
       Effect.map((rows) => rows.filter((row) => row.type === EventV2.versionedType(SessionEvent.Tool.Progress.type, 1))))
   return { sessions, database, events, input, parent, child, task, owner, author, proposal, state, modern, legacy, progress }
 })
+
+it.instance("resumed task_id names execution child while work result retains logical task identity", () => Effect.gen(function* () {
+  const f = yield* seed("resumed")
+  expect(f.input.logicalTaskID).not.toBe(f.input.childSessionID)
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(true)
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(false)
+}))
+
+it.instance("resumed task_id naming another execution child holds before publication", () => Effect.gen(function* () {
+  const f = yield* seed("wrong")
+  const before = yield* f.modern()
+  expect((yield* Effect.flip(f.sessions.settleUpstreamTask(f.input))).reason).toBe("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
+  expect(yield* f.modern()).toEqual(before)
+}))
 
 it.instance("original Task A anchors cannot be repaired by Task B caller claims", () => Effect.gen(function* () {
   const f = yield* seed()
