@@ -238,7 +238,12 @@ function finalizedExit<A, E, E2>(original: Exit.Failure<A, E>, cleanup: Exit.Exi
 function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2>
 function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2> {
   if (Exit.isSuccess(cleanup)) return original
-  return Exit.failCause(Exit.isFailure(original) ? Cause.combine(original.cause, cleanup.cause) : cleanup.cause)
+  // Cause.combine deduplicates equal reasons; distinct cleanup attempts must all survive.
+  return Exit.failCause<E | E2>(
+    Exit.isFailure(original)
+      ? Cause.fromReasons<E | E2>([...original.cause.reasons, ...cleanup.cause.reasons])
+      : cleanup.cause,
+  )
 }
 
 export class EffectSQLiteTransaction<TRelations extends AnyRelations> extends SQLiteEffectTransaction<
