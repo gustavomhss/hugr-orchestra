@@ -61,7 +61,8 @@ and its immutable Session/call owner. Projectors must reject crossed owners and
 forged bindings; arbitrary caller-supplied candidate/baseline pairs are not accepted.
 Both snapshots are detached/deep-frozen, so in-place policy mutations are visible.
 Snapshot domain is plain objects/arrays, finite scalar values and undefined
-optional fields. Map/Set/Date, functions, cycles, nonfinite numbers and clone failures
+optional fields. Source domain is checked before cloning can normalize prototypes.
+Custom prototypes/accessors, Map/Set/Date, functions, cycles, nonfinite numbers and clone failures
 decline capture/binding; no generic immutability guarantee for exotic values.
 The host, not arguments/metadata, owns carrier→bounded-baseline association inside
 one invocation; `bind` requires the producer's exact immutable Session/call owner
