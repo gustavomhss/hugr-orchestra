@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { parseOptions, playwrightArgs, validateRequest, validateSelection } from "../../../script/test-ci-request"
+import { benchmarkEnvironment, parseOptions, playwrightArgs, reportLines, requireTestJobs, validateRequest, validateSelection } from "../../../script/test-ci-request"
 
 const config = "e2e/playwright.production.config.ts"
 const spec = "e2e/regression/session-research-result.spec.ts"
@@ -21,7 +21,7 @@ test("explicit production and benchmark requests select exact paths on both sepa
   expect(filter.test(`/repo/packages/app/${spec}`)).toBe(true)
   expect(filter.test(`C:\\repo\\packages\\app\\${spec.replaceAll("/", "\\")}`)).toBe(true)
   expect(filter.test(`/repo/packages/app/${spec}.other.spec.ts`)).toBe(false)
-  expect(playwrightArgs(validateRequest({ ...valid, config: performance, args: [benchmark] }, isFile))[7]).toBe("3")
+  expect(playwrightArgs(validateRequest({ ...valid, config: performance, benchmarkRenderer: "current", args: [benchmark] }, isFile))[7]).toBe("3")
 })
 
 test("legacy runner inference, explicit pytest, defaults and added OS choices stay valid", () => {
@@ -41,7 +41,7 @@ test("selection rejects empty, partially ignored and extra files; accepts exact 
   expect(() => validateSelection([spec], [spec, benchmark])).toThrow(`unexpected selection: ${benchmark}`)
 })
 
-for (const flag of ["--os", "--runner", "--config"])
+for (const flag of ["--os", "--runner", "--config", "--benchmark-renderer"])
   test(`${flag} rejects missing and repeated values`, () => {
     expect(() => parseOptions(["app", flag])).toThrow(`${flag} needs a value`)
     expect(() => parseOptions(["app", flag, "--help"])).toThrow(`${flag} needs a value`)
@@ -69,4 +69,56 @@ test("missing config, malformed request and missing runner dependency fail by na
   expect(() => validateRequest(valid, (file) => file !== `packages/app/${config}` && isFile(file))).toThrow(`config missing: ${config}`)
   expect(() => validateRequest(null, isFile)).toThrow("must be an object")
   expect(() => validateRequest({ package: "missing", args: [] }, isFile)).toThrow("cannot run")
+})
+
+test("benchmark transport freezes renderer and tested snapshot revision", () => {
+  for (const renderer of ["current", "legacy"]) {
+    const options = parseOptions(["app", benchmark, "--runner", "playwright", "--config", performance, "--benchmark-renderer", renderer]).options
+    expect(validateRequest({ ...valid, config: options.config, benchmarkRenderer: options.benchmarkRenderer, args: [benchmark] }, isFile))
+      .toMatchObject({ benchmarkRenderer: renderer })
+    expect(benchmarkEnvironment(renderer, "a".repeat(40))).toEqual({ RESEARCH_BENCH_RENDERER: renderer, RESEARCH_BENCH_REVISION: "a".repeat(40) })
+  }
+  expect(() => benchmarkEnvironment("current", undefined)).toThrow("actual GITHUB_SHA")
+  expect(() => benchmarkEnvironment("legacy", "")).toThrow("actual GITHUB_SHA")
+  expect(() => benchmarkEnvironment("current", "not-a-commit")).toThrow("actual GITHUB_SHA")
+})
+
+test("benchmark transport rejects missing, empty, unknown and regression renderer conditions", () => {
+  for (const renderer of [undefined, "", "unknown"])
+    expect(() => validateRequest({ ...valid, config: performance, benchmarkRenderer: renderer, args: [benchmark] }, isFile)).toThrow("current or legacy")
+  expect(() => parseOptions(["app", "--runner", "playwright", "--config", performance])).toThrow("current or legacy")
+  expect(() => parseOptions(["app", "--runner", "playwright", "--config", performance, "--benchmark-renderer", "unknown"])).toThrow("current or legacy")
+  expect(() => parseOptions(["app", "--benchmark-renderer", "current"])).toThrow("requires Playwright performance config")
+  expect(() => validateRequest({ ...valid, benchmarkRenderer: "current" }, isFile)).toThrow("requires Playwright performance config")
+  expect(() => validateRequest({ ...valid, config: performance, benchmarkRenderer: "current", args: [] }, isFile)).toThrow("nonempty")
+})
+
+test("report requires exact OS matrix jobs; missing, repeated and extra hosts fail", () => {
+  const jobs = ["ubuntu-latest", "windows-latest", "macos-15"].map((host) => ({ name: `test (${host})` }))
+  expect(requireTestJobs("all", [...jobs, { name: "cleanup" }])).toEqual(jobs)
+  for (const [os, indices] of [["linux", [0]], ["windows", [1]], ["macos", [2]], ["both", [0, 1]]] as const)
+    expect(requireTestJobs(os, indices.map((index) => jobs[index]!))).toHaveLength(indices.length)
+  expect(() => requireTestJobs("linux", [])).toThrow("test (ubuntu-latest): missing or repeated")
+  expect(() => requireTestJobs("linux", undefined as unknown as { name: string }[])).toThrow("missing matrix jobs")
+  expect(() => requireTestJobs("all", jobs.slice(0, 2))).toThrow("test (macos-15): missing or repeated")
+  expect(() => requireTestJobs("linux", [jobs[0]!, jobs[0]!])).toThrow("repeated")
+  expect(() => requireTestJobs("linux", jobs)).toThrow("test (windows-latest): unexpected")
+})
+
+test("successful report requires step metadata, step log, endgroup and nonempty output", () => {
+  const job = { name: "test (ubuntu-latest)", conclusion: "success", steps: [{ name: "Run tests", conclusion: "success" }] }
+  const log = (text: string) => `test (ubuntu-latest)\tRun tests\t2026-10-09T00:00:00Z ${text}`
+  expect(reportLines(job, [log("##[endgroup]"), log("\u001b[32m1 pass\u001b[0m")].join("\n"))).toEqual(["1 pass"])
+  expect(reportLines(job, [log("##[endgroup]"), log("1 pass")].join("\r\n"))).toEqual(["1 pass"])
+  expect(() => reportLines(job, " \n")).toThrow(`${job.name}: empty job log`)
+  expect(() => reportLines({ ...job, steps: [] }, log("1 pass"))).toThrow("missing successful Run tests step")
+  expect(() => reportLines({ ...job, steps: [{ name: "Run tests", conclusion: "skipped" }] }, log("1 pass"))).toThrow("missing successful Run tests step")
+  expect(() => reportLines(job, "test\tSetup Bun\tinstall failed")).toThrow("missing Run tests log")
+  expect(() => reportLines(job, log("1 pass"))).toThrow("missing Run tests endgroup marker")
+  expect(() => reportLines(job, log("##[endgroup]"))).toThrow("empty Run tests output")
+})
+
+test("failed setup report retains setup diagnostics without requiring Run tests", () => {
+  expect(reportLines({ name: "test (macos-15)", conclusion: "failure", steps: [{ name: "Setup Bun", conclusion: "failure" }] },
+    "test (macos-15)\tSetup Bun\tinstallation failed")).toEqual(["installation failed"])
 })

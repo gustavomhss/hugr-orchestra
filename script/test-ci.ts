@@ -12,6 +12,7 @@
 // Playwright requires package app, existing .spec.ts files and one of the two explicit app configs.
 // Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms]
 //        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
+// Performance config also requires --benchmark-renderer current|legacy.
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
 // --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
 // only when every named test file is a .py file, and bun test otherwise.
@@ -22,9 +23,9 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, testPaths } from "./test-ci-upload"
-import { parseOptions, validateRequest } from "./test-ci-request"
+import { parseOptions, reportLines, requireTestJobs, validateRequest } from "./test-ci-request"
 
-const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms] [--runner playwright --config <config>]"
+const USAGE = "Usage: bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both|macos|all] [--timeout ms] [--runner playwright --config <config> [--benchmark-renderer current|legacy]]"
 const repo = process.env.ORCHESTRA_CI_REPO ?? "gustavomhss/hugr-orchestra"
 // Set when GitHub first rate-limits this run; waiting for the limit to lift must end by then.
 let rateLimitDeadline = 0
@@ -83,7 +84,7 @@ function parse(argv: string[]) {
   if (options.runner === "playwright")
     return {
       ...validateRequest(
-        { package: name, runner: options.runner, config: options.config, args: positional.slice(1) },
+        { package: name, runner: options.runner, config: options.config, benchmarkRenderer: options.benchmarkRenderer, args: positional.slice(1) },
         (file) => {
           const full = path.join(root, file)
           return (statSync(full, { throwIfNoEntry: false })?.isFile() ?? false) &&
@@ -158,6 +159,7 @@ async function snapshot() {
   const body = JSON.stringify({
     package: request.package, runner: request.runner, args: request.args,
     ...("config" in request && request.config ? { config: request.config } : {}),
+    ...("benchmarkRenderer" in request && request.benchmarkRenderer ? { benchmarkRenderer: request.benchmarkRenderer } : {}),
   })
   const blob = (await $`git hash-object -w --stdin < ${Buffer.from(body)}`.cwd(root).text()).trim()
   await $`git update-index --add --cacheinfo ${`100644,${blob},.ci-run.json`}`.cwd(root).env(env).quiet()
@@ -238,6 +240,7 @@ async function follow(id: number) {
     60 * 60_000,
     async () => {
       const view = await $`gh run view ${id} --repo ${repo} --json status,conclusion,jobs`.quiet().json()
+      if (!Array.isArray(view.jobs)) fail("test-ci: missing matrix jobs")
       for (const job of view.jobs as { name: string; status: string; conclusion: string }[]) {
         const state = job.conclusion || job.status
         if (seen.get(job.name) !== state) console.log(`test-ci: ${job.name} ${state}`)
@@ -251,35 +254,23 @@ async function follow(id: number) {
 
 type RunView = {
   conclusion: string
-  jobs: { databaseId: number; name: string; conclusion: string }[]
+  jobs: { databaseId: number; name: string; conclusion: string; steps?: { name: string; conclusion: string }[] }[]
 }
 
 async function report(view: RunView) {
-  const tests = view.jobs.filter((job) => job.name.startsWith("test "))
+  const tests = requireTestJobs(request.os, view.jobs)
   for (const job of tests) {
-    const log = await waitFor("the job log", 120_000, async () => {
+    const log = await waitFor(`${job.name}: nonempty job log`, 120_000, async () => {
       const result = await $`gh run view --repo ${repo} --job ${job.databaseId} --log`.quiet().nothrow()
-      return result.exitCode === 0 && result.stdout.length > 0 ? result.text() : undefined
+      return result.exitCode === 0 && result.text().trim() ? result.text() : undefined
     })
-    const step = log
-      .split("\n")
-      .filter((line) => line.split("\t")[1] === "Run tests")
-      .map((line) =>
-        line
-          .split("\t")
-          .slice(2)
-          .join("\t")
-          .replace(/^\uFEFF?\S+Z /, "")
-          .replace(/\x1b\[[0-9;]*m/g, ""),
-      )
-    // Drop the echoed step script that GitHub prints before the command output.
-    const lines = step.slice(step.findIndex((line) => line.startsWith("##[endgroup]")) + 1)
-    // A passing run needs only its summary; a failing one needs the errors printed above each (fail) line.
+    const lines = reportLines(job, log)
+    // Keep setup diagnostics for failed jobs; only summaries for successful jobs.
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
   }
   console.log(`\ntest-ci: ${view.conclusion}`)
-  return view.conclusion !== "success"
+  return view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
 }
 
 async function api(method: string, route: string, body?: unknown): Promise<any> {

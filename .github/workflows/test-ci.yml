@@ -1,7 +1,7 @@
 name: test-ci
 
 # `bun run test:ci` (script/test-ci.ts) uploads a snapshot of the caller's working tree to a ci-run-* branch together
-# with a .ci-run.json request ({ package, runner, args, config? }). This workflow runs those tests, then deletes the branch.
+# with a .ci-run.json request ({ package, runner, args, config?, benchmarkRenderer? }). This workflow runs those tests, then deletes the branch.
 # The request names its runner (`bun`, `pytest` or `playwright`). A request without one falls back to the files: a package.json means
 # `bun test`, otherwise requirements-dev.txt means pytest.
 on:
@@ -106,13 +106,16 @@ jobs:
           import { readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
           import path from 'node:path'
           import { spawnSync } from 'node:child_process'
-          import { playwrightArgs, validateRequest, validateSelection } from './script/test-ci-request.ts'
+          import { benchmarkEnvironment, playwrightArgs, validateRequest, validateSelection } from './script/test-ci-request.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
               realpathSync(file).startsWith(realpathSync('.') + path.sep))
           const cwd = path.resolve('packages/app')
+          const benchmark = benchmarkEnvironment(request.benchmarkRenderer, process.env.GITHUB_SHA)
+          writeFileSync('test-ci-evidence/benchmark-runtime.json', JSON.stringify(benchmark))
+          const env = { ...process.env, ...benchmark }
           const args = ['run', 'test:e2e:local', ...playwrightArgs(request), '--trace', 'retain-on-failure']
-          const listed = spawnSync('bun', [...args, '--list', '--reporter=json'], { cwd, encoding: 'utf8' })
+          const listed = spawnSync('bun', [...args, '--list', '--reporter=json'], { cwd, env, encoding: 'utf8' })
           if (listed.error || listed.status !== 0) throw new Error(`playwright selection failed: ${listed.error ?? listed.stderr}`)
           writeFileSync('test-ci-evidence/playwright-selection.json', listed.stdout)
           const report = JSON.parse(listed.stdout)
@@ -120,7 +123,7 @@ jobs:
           validateSelection(request.args.map((file) => path.resolve(cwd, file)),
             report.suites.filter(hasTests).map((suite) => path.resolve(report.config.rootDir, suite.file)))
           const run = spawnSync('bun', [...args, '--reporter=html,line,json'], { cwd, stdio: 'inherit',
-            env: { ...process.env, PLAYWRIGHT_HTML_OUTPUT_DIR: path.resolve(cwd, 'e2e/playwright-report'),
+            env: { ...env, PLAYWRIGHT_HTML_OUTPUT_DIR: path.resolve(cwd, 'e2e/playwright-report'),
               PLAYWRIGHT_JSON_OUTPUT_NAME: path.resolve('test-ci-evidence/playwright-runtime.json') } })
           if (run.error || run.status === null) throw new Error(`playwright execution failed: ${run.error ?? run.signal}`)
           process.exit(run.status)

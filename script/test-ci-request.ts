@@ -1,5 +1,8 @@
-// Pure request rules shared by the uploader and the snapshot runner (Node's TypeScript stripping).
-const systems = ["linux", "windows", "both", "macos", "all"]
+// Pure request/report rules shared by the uploader, snapshot runner and cache-scoped controls.
+const systems = {
+  linux: ["ubuntu-latest"], windows: ["windows-latest"], both: ["ubuntu-latest", "windows-latest"],
+  macos: ["macos-15"], all: ["ubuntu-latest", "windows-latest", "macos-15"],
+}
 const configs = {
   "e2e/playwright.production.config.ts": { prefix: "e2e/", repeat: 1 },
   "e2e/performance/playwright.config.ts": { prefix: "e2e/performance/", repeat: 3 },
@@ -10,10 +13,12 @@ export function parseOptions(argv: string[]) {
   const options = {
     os: "linux", timeout: "120000", pattern: undefined as string | undefined,
     runner: undefined as string | undefined, config: undefined as string | undefined,
+    benchmarkRenderer: undefined as string | undefined,
   }
   const flags = {
     "--os": "os", "--timeout": "timeout", "-t": "pattern", "--test-name-pattern": "pattern",
     "--runner": "runner", "--config": "config",
+    "--benchmark-renderer": "benchmarkRenderer",
   } as const
   const seen = new Set<string>()
   for (let index = 0; index < argv.length; index++) {
@@ -23,19 +28,22 @@ export function parseOptions(argv: string[]) {
       continue
     }
     const key = flags[arg as keyof typeof flags]
-    if (seen.has(key) && ["os", "runner", "config"].includes(key)) throw new Error(`${arg} repeated`)
+    if (seen.has(key) && ["os", "runner", "config", "benchmarkRenderer"].includes(key)) throw new Error(`${arg} repeated`)
     seen.add(key)
     const value = argv[++index]
     if (value === undefined || (key !== "pattern" && (!value || value.startsWith("-"))))
       throw new Error(`${arg} needs a value`)
     options[key] = value
   }
-  if (!systems.includes(options.os)) throw new Error("--os must be linux, windows, both, macos or all")
+  if (!Object.hasOwn(systems, options.os)) throw new Error("--os must be linux, windows, both, macos or all")
   if (!/^\d+$/.test(options.timeout)) throw new Error("--timeout must be milliseconds")
   if (options.runner !== undefined && options.runner !== "playwright") throw new Error("--runner must be playwright")
   if (options.config !== undefined && options.runner !== "playwright") throw new Error("--config requires --runner playwright")
+  if (options.benchmarkRenderer !== undefined && options.runner !== "playwright")
+    throw new Error("--benchmark-renderer requires Playwright performance config")
+  requireBenchmarkRenderer(options.config, options.benchmarkRenderer)
   if (options.runner === "playwright" && (options.pattern !== undefined || seen.has("timeout")))
-    throw new Error("playwright accepts only named spec files, --config and --os")
+    throw new Error("playwright accepts only named spec files, --config, --os and --benchmark-renderer")
   return { positional, options }
 }
 
@@ -54,6 +62,7 @@ export function validateRequest(input: unknown, isFile: (file: string) => boolea
     throw new Error(`packages/${request.package} cannot run ${String(runner)} tests`)
   if (runner !== "playwright") {
     if (request.config !== undefined) throw new Error("config requires runner playwright")
+    if (request.benchmarkRenderer !== undefined) throw new Error("--benchmark-renderer requires Playwright performance config")
     return { package: request.package, runner: String(runner), args: request.args, config: undefined }
   }
   if (request.package !== "app") throw new Error("playwright requires package app")
@@ -62,6 +71,7 @@ export function validateRequest(input: unknown, isFile: (file: string) => boolea
   if (!isFile(dir + request.config)) throw new Error(`playwright config missing: ${request.config}`)
   if (request.args.length === 0) throw new Error("playwright requires a nonempty spec file list")
   const config = configs[request.config as keyof typeof configs]
+  const benchmarkRenderer = requireBenchmarkRenderer(request.config, request.benchmarkRenderer)
   const args = request.args.map((arg) => {
     const file = arg.replaceAll("\\", "/").replace(/^(\.\/)?packages\/app\//, "").replace(/^\.\//, "")
     if (
@@ -73,7 +83,21 @@ export function validateRequest(input: unknown, isFile: (file: string) => boolea
     return file
   })
   if (new Set(args).size !== args.length) throw new Error("playwright spec files repeated")
-  return { package: request.package, runner: "playwright", args, config: request.config }
+  return { package: request.package, runner: "playwright", args, config: request.config, benchmarkRenderer }
+}
+
+function requireBenchmarkRenderer(config: string | undefined, renderer: unknown) {
+  const performance = config !== undefined && Object.hasOwn(configs, config) && configs[config as keyof typeof configs].repeat === 3
+  if (!performance && renderer !== undefined) throw new Error("--benchmark-renderer requires Playwright performance config")
+  if (performance && renderer !== "current" && renderer !== "legacy") throw new Error("--benchmark-renderer must be current or legacy")
+  return performance ? renderer as "current" | "legacy" : undefined
+}
+
+export function benchmarkEnvironment(renderer: string | undefined, sha: string | undefined) {
+  if (renderer === undefined) return {}
+  if (renderer !== "current" && renderer !== "legacy") throw new Error("--benchmark-renderer must be current or legacy")
+  if (!sha || !/^[a-f0-9]{40}$/.test(sha)) throw new Error("benchmark requires actual GITHUB_SHA")
+  return { RESEARCH_BENCH_RENDERER: renderer, RESEARCH_BENCH_REVISION: sha }
 }
 
 export function playwrightArgs(request: ReturnType<typeof validateRequest>) {
@@ -94,4 +118,41 @@ export function validateSelection(expected: string[], selected: string[]) {
   selected.forEach((file) => {
     if (!expected.includes(file)) throw new Error(`playwright unexpected selection: ${file}`)
   })
+}
+
+export function requireTestJobs<T extends { name: string }>(os: string, jobs: T[]) {
+  if (!Object.hasOwn(systems, os)) throw new Error(`test-ci: unknown OS ${os}`)
+  if (!Array.isArray(jobs)) throw new Error("test-ci: missing matrix jobs")
+  const expected = systems[os as keyof typeof systems].map((host) => `test (${host})`)
+  const tests = jobs.filter((job) => job.name.startsWith("test "))
+  expected.forEach((name) => {
+    if (tests.filter((job) => job.name === name).length !== 1) throw new Error(`${name}: missing or repeated matrix job`)
+  })
+  tests.forEach((job) => {
+    if (!expected.includes(job.name)) throw new Error(`${job.name}: unexpected matrix job for ${os}`)
+  })
+  return tests
+}
+
+export function reportLines(job: { name: string; conclusion: string; steps?: { name: string; conclusion: string }[] }, log: string) {
+  if (!log.trim()) throw new Error(`${job.name}: empty job log`)
+  const rows = log.split(/\r?\n/).map((line) => {
+    const fields = line.split("\t")
+    return { step: fields[1], text: (fields.length > 2 ? fields.slice(2).join("\t") : line)
+      .replace(/^\uFEFF?\S+Z /, "").replace(/\x1b\[[0-9;]*m/g, "") }
+  })
+  if (job.conclusion !== "success") {
+    const failed = job.steps?.filter((step) => step.conclusion === "failure").map((step) => step.name) ?? []
+    const diagnostics = rows.filter((row) => failed.length === 0 || failed.includes(row.step ?? ""))
+    return (diagnostics.length ? diagnostics : rows).map((row) => row.text)
+  }
+  const steps = job.steps?.filter((step) => step.name === "Run tests") ?? []
+  if (steps.length !== 1 || steps[0]?.conclusion !== "success") throw new Error(`${job.name}: missing successful Run tests step`)
+  const lines = rows.filter((row) => row.step === "Run tests").map((row) => row.text)
+  if (lines.length === 0) throw new Error(`${job.name}: missing Run tests log`)
+  const end = lines.indexOf("##[endgroup]")
+  if (end < 0) throw new Error(`${job.name}: missing Run tests endgroup marker`)
+  const output = lines.slice(end + 1).filter((line) => line.trim())
+  if (output.length === 0) throw new Error(`${job.name}: empty Run tests output`)
+  return output
 }
