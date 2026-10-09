@@ -11,6 +11,7 @@ import { ClaudeCodeStore } from "@/claude-code/store"
 import { Session } from "@/session/session"
 import { SessionContinuity } from "@/continuity/service"
 import { ContinuityAdmission } from "@/continuity/admission"
+import { estimate } from "@/continuity/masking"
 import { Archive } from "@/continuity/archive"
 import { MessageID, PartID } from "@/session/schema"
 import { testEffect } from "../lib/effect"
@@ -62,6 +63,84 @@ const fixture = Effect.gen(function* () {
   ]
   return { sessions, continuity, fs, archive, chat, user, assistant, part, create, entries }
 })
+
+it.instance("native delivery receipts require exact joined admitted user text, not malformed or unrelated users", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const next = { ...f.user, id: MessageID.ascending() }
+  yield* f.sessions.updateMessage(next)
+  yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: next.id, type: "text", text: "second prompt" })
+  yield* f.sessions.updatePart({ id: PartID.ascending(), sessionID: f.chat.id, messageID: next.id, type: "text", text: "ignored", ignored: true })
+  const context = yield* Effect.context<never>()
+  const deliveries: (readonly MessageID[])[] = []
+  const store = ClaudeCodeStore.create({ sessionID: f.chat.id, fs: f.fs, sessions: f.sessions, continuity: f.continuity,
+    run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: true, rewrite: () => true, userID: next.id, userIDs: [f.user.id, next.id],
+    onDelivery: (ids) => Effect.sync(() => { deliveries.push(ids) }) })
+  const prompt = "native prompt\n\nsecond prompt"
+  yield* store.record({ apiID: "assistant-api", messageID: f.assistant.id })
+  const invalid = [undefined, null, 123, {}, [], [null], [{ type: "text" }], [{ type: "text", text: "unrelated" }],
+    [{ type: "text", text: prompt }, { type: "image", source: {} }], "native prompt", "unrelated"]
+  yield* Effect.promise(() => store.store.append(key, invalid.map((content, index) => ({ ...base, type: "user", uuid: `invalid-${index}`,
+    parentUuid: null, message: { id: "assistant-api", role: "user", ...(content === undefined ? {} : { content }) } }))))
+  yield* Effect.promise(() => store.store.append(key, [{ ...base, type: "user", uuid: "wrong-role", parentUuid: null,
+    message: { role: "assistant", content: prompt } }]))
+  const unacknowledged = yield* store.read
+  expect(unacknowledged.mapping).toEqual({ "assistant-api": f.assistant.id })
+  expect(unacknowledged.members).toEqual({})
+  expect(unacknowledged.delivered).toEqual([])
+  expect(deliveries).toEqual([])
+  yield* Effect.promise(() => store.store.append(key, [{ ...base, type: "user", uuid: "receipt", parentUuid: null,
+    message: { role: "user", content: [{ type: "text", text: prompt }] } }]))
+  const delivered = yield* store.read
+  expect(delivered.mapping.receipt).toBe(next.id)
+  expect(delivered.members.receipt).toEqual([f.user.id, next.id])
+  expect(delivered.delivered).toEqual([f.user.id, next.id])
+  expect(deliveries).toEqual([[f.user.id, next.id]])
+}), 60_000)
+
+it.instance("native receipt cannot acknowledge absent or non-user admitted Session message IDs", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const context = yield* Effect.context<never>()
+  for (const id of [MessageID.ascending(), f.assistant.id]) {
+    const store = ClaudeCodeStore.create({ sessionID: f.chat.id, fs: f.fs, sessions: f.sessions, continuity: f.continuity,
+      run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: true, rewrite: () => true, userID: id, userIDs: [f.user.id, id] })
+    yield* Effect.promise(() => store.store.append(key, [{ ...f.entries[0], uuid: `receipt-${id}` }]))
+    expect((yield* store.read).mapping).toEqual({})
+    expect((yield* store.read).members).toEqual({})
+    expect((yield* store.read).delivered).toEqual([])
+  }
+}), 60_000)
+
+it.instance("interruption-only store causes do not call onFailure; real failures still do", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const context = yield* Effect.context<never>()
+  const failures: string[] = []
+  const create = (get: Session.Interface["get"]) => ClaudeCodeStore.create({ sessionID: f.chat.id, fs: f.fs, sessions: { ...f.sessions, get },
+    continuity: f.continuity, run: (effect) => Effect.runPromiseWith(context)(effect), canRecall: true, rewrite: () => true,
+    onFailure: () => Effect.sync(() => { failures.push("failed") }) })
+  const interrupted = yield* create(() => Effect.interrupt).prepare(key).pipe(Effect.exit)
+  expect(Exit.isFailure(interrupted) && Cause.hasInterruptsOnly(interrupted.cause)).toBe(true)
+  expect(failures).toEqual([])
+  const failed = yield* create(() => Effect.die(new Error("archive-failure"))).prepare(key).pipe(Effect.exit)
+  expect(Exit.isFailure(failed)).toBe(true)
+  expect(failures).toEqual(["failed"])
+}), 60_000)
+
+it.instance("unsupported native fallback after explicit clear excludes huge preclear payload and counts exactly returned entries", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const store = f.create()
+  const later = [{ ...base, type: "user", uuid: "later", parentUuid: null, message: { role: "user", content: "after clear" } },
+    { type: "tombstone", uuid: "unsupported", payload: "unsupported payload" }]
+  yield* Effect.promise(() => store.store.append(key, [{ ...f.entries[0], message: { role: "user", content: "HUGE_PRECLEAR_PAYLOAD ".repeat(10_000) } },
+    { type: "last-prompt", leafUuid: null, explicit: true }, ...later]))
+  const result = yield* f.create().prepare(key)
+  expect(result?.kind).toBe("fallback")
+  expect(result?.reason).toBe("unsupported-native-suppression")
+  expect(result?.entries.map((entry) => entry.uuid)).toEqual(later.map((entry) => entry.uuid))
+  expect(result?.entries).toEqual(later)
+  expect(JSON.stringify(result?.entries)).not.toContain("HUGE_PRECLEAR_PAYLOAD")
+  expect(result?.tokens).toBe(estimate(later))
+  expect(result?.nativeTokens).toBe(estimate(later))
+}), 60_000)
 
 it.instance("healthy native archive does not become sticky-failed after typed admission failure; authoritative followup load succeeds", () => Effect.gen(function* () {
   const f = yield* fixture
@@ -163,18 +242,16 @@ it.instance("a masked short failure preserves its full text but still removes on
   expect((yield* f.create().read).keys[0].entries).toEqual(entries)
 }), 60_000)
 
-it.instance("corrupt or foreign storage fails explicitly instead of becoming empty context", () => Effect.gen(function* () {
+for (const failure of ["corrupt", "foreign"] as const) it.instance(`${failure} storage fails explicitly instead of becoming empty context`, () => Effect.gen(function* () {
   const f = yield* fixture
   const store = f.create()
   yield* Effect.promise(() => store.store.append(key, f.entries))
-  yield* f.fs.writeFileString(path.join(store.directory, "archive.sqlite"), "{broken")
-  const corrupt = yield* Effect.tryPromise(() => f.create().store.load(key)).pipe(Effect.exit)
-  expect(Exit.isFailure(corrupt)).toBe(true)
-  yield* f.fs.remove(path.join(store.directory, "archive.sqlite"))
-  yield* Effect.promise(() => f.create().store.append(key, f.entries))
-  const db = new Database(path.join(store.directory, "archive.sqlite"))
-  db.query("UPDATE native_state SET payload=? WHERE id=1").run(JSON.stringify({ version: 1, sessionID: "foreign", mapping: {}, keys: [] }))
-  db.close()
+  if (failure === "corrupt") yield* f.fs.writeFileString(path.join(store.directory, "archive.sqlite"), "{broken")
+  if (failure === "foreign") {
+    const db = new Database(path.join(store.directory, "archive.sqlite"))
+    db.query("UPDATE native_state SET payload=? WHERE id=1").run(JSON.stringify({ version: 1, sessionID: "foreign", mapping: {}, keys: [] }))
+    db.close()
+  }
   expect(Exit.isFailure(yield* Effect.tryPromise(() => f.create().store.load(key)).pipe(Effect.exit))).toBe(true)
 }), 60_000)
 
