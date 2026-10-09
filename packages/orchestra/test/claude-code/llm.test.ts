@@ -1,14 +1,15 @@
 import { expect } from "bun:test"
 import { Deferred, Effect, Exit, Fiber, Stream } from "effect"
-import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import type { SDKMessage, SpawnedProcess } from "@anthropic-ai/claude-agent-sdk"
 import { ClaudeCodeLLM } from "@/claude-code/llm"
-import type { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import type { LLM } from "@/session/llm"
 import { SessionID, MessageID } from "@/session/schema"
 import { ProviderTest } from "../fake/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { it } from "../lib/effect"
+import { tmpdir } from "../fixture/fixture"
 
 const input: LLM.StreamInput = {
   sessionID: SessionID.descending(), model: ProviderTest.model({ id: ModelV2.ID.make("claude-haiku-4-5-20251001") }),
@@ -106,3 +107,63 @@ it.live("producer cancellation joins asynchronous query.return disposal before r
   yield* Fiber.join(interrupt)
   expect(yield* Deferred.isDone(disposed)).toBe(true)
 }))
+
+for (const abort of [false, true]) {
+  it.live(`producer scope joins real child past SDK disposal deadline (abort and return rejection=${abort})`, Effect.gen(function* () {
+    const dir = yield* Effect.acquireRelease(Effect.promise(() => tmpdir({ init: (dir) => Bun.write(`${dir}/.credentials.json`, JSON.stringify({ claudeAiOauth: {
+      accessToken: "local-test-token", refreshToken: "local-test-refresh", expiresAt: 4102444800000, scopes: ["user:inference"],
+    } })) })), (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()))
+    const ready = yield* Deferred.make<void>()
+    const returned = yield* Deferred.make<void>()
+    const stopped = yield* Deferred.make<void>()
+    const context = yield* Effect.context<never>()
+    const children: SpawnedProcess[] = []
+    const calls: Parameters<ClaudeCodeSDK.Interface["query"]>[0][] = []
+    const sdk: ClaudeCodeSDK.Interface = { query: (params) => {
+      calls.push(params)
+      if (!params.options?.spawnClaudeCodeProcess || !params.options.env) throw new Error("missing lifetime options")
+      const child = params.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
+        process.stdin.resume();
+        process.stdin.on("end", () => setTimeout(() => process.exit(0), 2600));
+        process.stdout.write("ready");
+      `], env: params.options.env, signal: new AbortController().signal })
+      children.push(child)
+      return Object.assign((async function* () {
+        const interrupted = new Promise<void>((resolve) => params.options?.abortController?.signal.addEventListener("abort", () => resolve(), { once: true }))
+        await new Promise<void>((resolve) => child.stdout.once("data", () => resolve()))
+        await Effect.runPromiseWith(context)(Deferred.succeed(ready, undefined))
+        if (abort) {
+          await interrupted
+          return
+        }
+        yield* [assistant([{ type: "text", text: "memory" }]), result] as unknown as SDKMessage[]
+      })(), {
+        close: () => { child.stdin.end() },
+        return: async () => {
+          // Same deadline as pinned SDK, while the real child remains alive for another 600ms.
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+          await Effect.runPromiseWith(context)(Deferred.succeed(returned, undefined))
+          if (abort) throw new Error("query.return rejected")
+          return { done: true as const, value: undefined }
+        },
+      }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
+    } }
+    const worker = yield* Stream.runCollect(ClaudeCodeLLM.create(sdk).stream(input)).pipe(
+      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path,
+        ANTHROPIC_API_KEY: "paid", ANTHROPIC_AUTH_TOKEN: "paid", ANTHROPIC_BASE_URL: "https://wrong.invalid",
+        CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "override" }),
+      Effect.onExit(() => Deferred.succeed(stopped, undefined)), Effect.forkChild,
+    )
+    yield* Deferred.await(ready)
+    const interrupt = abort ? yield* Fiber.interrupt(worker).pipe(Effect.forkChild) : undefined
+    yield* Deferred.await(returned)
+    yield* Effect.yieldNow
+    expect(children[0].exitCode).toBeNull()
+    expect(yield* Deferred.isDone(stopped)).toBe(false)
+    expect(calls[0].options?.env).toEqual({ HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path })
+    if (interrupt) yield* Fiber.join(interrupt)
+    if (!abort) yield* Fiber.join(worker)
+    expect(children[0].exitCode).toBe(0)
+    expect(yield* Deferred.isDone(stopped)).toBe(true)
+  }))
+}
