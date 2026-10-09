@@ -11,6 +11,7 @@ import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
+import { AtlasHeader } from "@/maestro/atlas-header"
 import { AtlasMemory } from "@/maestro/atlas-memory"
 import { AtlasResumeRestore } from "@/maestro/atlas-resume-restore"
 import { LogicalTask } from "@/maestro/logical-task"
@@ -30,15 +31,34 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
   const events = yield* EventV2.Service
   const rules = { backend: "Backend checks its own execution boundary", jimmy: "Discovery checks source version before inference" }
-  const roots = yield* Effect.forEach(["backend", "jimmy"] as const, (member) => Effect.gen(function* () {
+  const seeds = yield* Effect.forEach(["backend", "jimmy"] as const, (member) => Effect.gen(function* () {
     const memory = yield* AtlasMemory.open({ sessionID: fixture.parent.id, callID: `seed-${member}`, assistantMessageID: fixture.assistant.id }, { id: member, native: true })
     if ("unavailable" in memory) throw new Error(memory.unavailable)
-    const rule = memory.write({ rule: rules[member], scope: "source" })
+    expect(memory.binding.memoryOwner).toBe(member)
+    expect(memory.binding.storage.projectID).toBe(fixture.parent.projectID)
+    expect(FSUtil.resolve(memory.binding.storage.root)).toBe(FSUtil.resolve(fixture.instance.directory))
+    expect(memory.binding.source.worktree).toBe(memory.binding.storage.root)
     const task = memory.write({ taskId: "header-excluded-task", attempted: ["HEADER_TASK_MUST_NOT_LOAD"], failedWith: [], stoppedAt: "Header exclusion control", lesson: "Task history is not a running header" })
     const pr = memory.write({ prId: "header-excluded-pr", decisions: ["HEADER_PR_MUST_NOT_LOAD"], reviewOutcomes: [], knowledgeDelta: [] })
-    if (!rule.ok || !task.ok || !pr.ok) throw new Error("Real Atlas scanner/provider did not admit harmless header controls")
-    return memory.binding.storage.root
+    if (!task.ok || !pr.ok) throw new Error("Real Atlas scanner/provider did not admit harmless header controls")
+    return { member, memory }
   }))
+  // Atlas ages rules over every owner's folded log positions, not wall time or scope. Seeding the backend
+  // rule before all five other records evicts it (1 * 0.5 ** 5 < 0.1). Write both rules after the checkpoints.
+  seeds.forEach((seed) => {
+    const rule = seed.memory.write({ rule: rules[seed.member], scope: "source" })
+    if (!rule.ok) throw new Error("Real Atlas scanner/provider did not admit harmless header rule")
+  })
+  // Positive control at the final seed state: distinguish a bad fixture from lost provider InstanceRef/root.
+  yield* Effect.forEach(seeds, (seed) => Effect.gen(function* () {
+    const header = yield* AtlasHeader.render({ id: seed.member, native: true })
+    expect(header).toContain(`member="${seed.member}" rules="1"`)
+    expect(header).toContain(`- [source] ${rules[seed.member]}`)
+    expect(header).not.toContain(rules[seed.member === "backend" ? "jimmy" : "backend"])
+    expect(header).not.toContain("HEADER_TASK_MUST_NOT_LOAD")
+    expect(header).not.toContain("HEADER_PR_MUST_NOT_LOAD")
+  }))
+  const roots = seeds.map((seed) => seed.memory.binding.storage.root)
   expect(roots[1]).toBe(roots[0])
   const backendCard = { outcome: "done", changes: [], checks: [], blockers: [], risks: [], nextActions: [] }
   yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes("Return bounded header observation"), `\u0060\u0060\u0060backend-result\n${JSON.stringify(backendCard)}\n\u0060\u0060\u0060`)
@@ -83,6 +103,7 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
   expect(headers[1]).not.toContain(rules.backend)
   expect(headers[1]).toContain('rules="1"')
   headers.slice(0, 2).forEach((header) => {
+    expect(header).toContain("- [source] ")
     expect(header).toContain("Awareness:")
     expect(header).toContain("Orientation:")
     expect(header).not.toContain("HEADER_TASK_MUST_NOT_LOAD")
