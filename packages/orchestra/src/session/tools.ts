@@ -188,7 +188,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       description: item.description,
       inputSchema: jsonSchema(schema),
       execute(args, options) {
-        const selected: { binding?: ToolModelCapture.Binding } = {}
+        const selected: { binding?: ToolModelCapture.Binding; policyMappingChanged?: boolean } = {}
         const owner = { sessionID: input.session.id, callID: options.toolCallId }
         return run.promise(Effect.gen(function* () {
           const output = yield* guard(item.id, args, options, Effect.gen(function* () {
@@ -217,19 +217,25 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
               { tool: item.id, sessionID: ctx.sessionID, callID: ctx.callID, args },
               output,
             )
-            if (selected.binding && !LegacyLeanOutput.unchanged(selected.binding, output)) selected.binding = undefined
+            if (selected.binding && !LegacyLeanOutput.unchanged(selected.binding, output)) selected.policyMappingChanged = true
             if (options.abortSignal?.aborted) {
               yield* input.processor.completeToolCall(options.toolCallId, output)
             }
             return output
           }))
-          if (options.abortSignal?.aborted || !selected.binding) return output
-          if (Option.isNone(config)) return output
-          const cfg = yield* config.value.get().pipe(Effect.orElseSucceed(() => undefined))
-          if (!cfg) return output
-          const limits = yield* truncate.limits()
+          if (options.abortSignal?.aborted) return output
+          const cfg = Option.isSome(config)
+            ? yield* config.value.get().pipe(Effect.orElseSucceed(() => undefined)) : undefined
+          const enabled = !!cfg && cfg.tool_output?.lean?.enabled !== false
+          const limits = enabled && selected.binding && !selected.policyMappingChanged
+            ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
           return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
-            enabled: cfg.tool_output?.lean?.enabled !== false, limits })
+            enabled, limits, policyMappingChanged: selected.policyMappingChanged,
+            telemetry: binding ? {
+              owner: { projectID: binding.project.id, location: binding.directory, ...owner },
+              model: { provider: input.model.providerID, id: input.model.api.id },
+              ...(nativeSeat?.nativeProfile ? { orchestraProfile: nativeSeat.nativeProfile } : {}),
+            } : undefined })
         }))
       },
     })
