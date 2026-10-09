@@ -11,12 +11,15 @@ export const conversational = (entry: SessionStoreEntry) => !entry.isSidechain &
 export const linked = (entry: SessionStoreEntry) => !entry.isSidechain && typeof entry.uuid === "string" &&
   ["user", "assistant", "attachment", "system"].includes(entry.type)
 
+/** CLI 2.1.289 darwin-x64: LEn/N1/KGn/Fan at byte 194352667; snapshot contains real system/tools. */
 export function overhead(entries: SessionStoreEntry[]) {
   const at = entries.findLastIndex((entry) => record(entry.attachment) && entry.attachment.type === "prompt_snapshot")
   if (at < 0 || entries.slice(at + 1).some((entry) => record(entry.attachment) && entry.attachment.type === "prompt_render_point")) return undefined
   const snapshot = entries[at].attachment
   return record(snapshot) && Array.isArray(snapshot.systemPrompt) && snapshot.systemPrompt.every((item) => typeof item === "string") &&
-    (snapshot.tools === undefined || Array.isArray(snapshot.tools)) ? snapshot : undefined
+    (snapshot.tools === undefined || Array.isArray(snapshot.tools) && snapshot.tools.every((tool) => record(tool) &&
+      typeof tool.name === "string" && typeof tool.description === "string" &&
+      (tool.schema === undefined || record(tool.schema)) && (tool.server === undefined || typeof tool.server === "string"))) ? snapshot : undefined
 }
 
 /** CLI 2.1.289 JSONL replay is UUID last-write-wins. The append log itself remains immutable. */
@@ -27,7 +30,9 @@ export function fold(entries: SessionStoreEntry[], retracted: readonly string[] 
 
 /** Dependencies include compaction provenance, not just the restarted parent chain. */
 export function dependencies(entry: SessionStoreEntry, rows: readonly SessionStoreEntry[]) {
-  const result = [entry.parentUuid, entry.logicalParentUuid].filter((id): id is string => typeof id === "string")
+  const result = [entry.parentUuid, entry.logicalParentUuid, entry.sourceToolAssistantUUID].filter((id): id is string => typeof id === "string")
+  if (record(entry.attachment) && entry.attachment.type === "deferred_tools_delta" && Array.isArray(entry.attachment.surfacedDefinitions))
+    result.push(...entry.attachment.surfacedDefinitions.flatMap((item) => record(item) && typeof item.sameAs === "string" ? [item.sameAs] : []))
   if (!record(entry.compactMetadata)) return result
   const list = entry.compactMetadata.preservedMessages
   if (record(list)) {
@@ -64,7 +69,6 @@ export function exclude(entries: SessionStoreEntry[], removed: Set<string>) {
 
 /** Source: pinned CLI spt/rAr/Zxr. Walk one parent chain, retain full API siblings and attached metadata. */
 export function active(entries: SessionStoreEntry[], selected?: string): { entries: SessionStoreEntry[]; reason?: string; leaf?: string } {
-  const authoritative = entries
   const clear = entries.findLastIndex((entry) => entry.type === "last-prompt" && entry.leafUuid === null && entry.explicit === true)
   if (clear >= 0) {
     entries = entries.slice(clear + 1)
@@ -103,6 +107,8 @@ export function active(entries: SessionStoreEntry[], selected?: string): { entri
   const boundaryIndex = boundary ? entries.indexOf(boundary) : -1
   // Pinned reader resets last-prompt state at a compact boundary; archived head checkpoints are obsolete.
   const marker = entries.slice(boundaryIndex + 1).findLast((entry) => entry.type === "last-prompt")
+  if (typeof marker?.leafUuid === "string" && !rows.has(marker.leafUuid))
+    return { entries, reason: "missing-active-leaf", leaf: marker.leafUuid }
   const candidates = entries.filter(conversational)
   const latest = candidates.at(-1)
   const checkpoint = typeof marker?.leafUuid === "string" && rows.has(marker.leafUuid) ? marker.leafUuid : undefined
@@ -162,7 +168,7 @@ export function active(entries: SessionStoreEntry[], selected?: string): { entri
   }
   const attached = entries.filter((row) => row.uuid && included.has(row.uuid) && !completed.some((item) => item.uuid === row.uuid))
   const replay = [...completed, ...attached, ...entries.filter((entry) => !linked(entry) && entry.type !== "last-prompt")]
-  if (!validTools(replay)) return { entries: authoritative, reason: "unsafe-tool-dependencies", leaf }
+  if (!validTools(replay)) return { entries, reason: "unsafe-tool-dependencies", leaf }
   return { entries: replay, leaf }
 }
 
@@ -170,9 +176,13 @@ export function validTools(entries: SessionStoreEntry[]) {
   const calls = new Set<string>()
   const results = new Set<string>()
   for (const entry of entries) for (const block of blocks(entry)) {
-    if (block.type === "tool_use") calls.add(String(block.id))
+    if (block.type === "tool_use") {
+      if (typeof block.id !== "string" || !block.id.length || calls.has(block.id)) return false
+      calls.add(block.id)
+    }
     if (block.type !== "tool_result") continue
-    const id = String(block.tool_use_id)
+    const id = block.tool_use_id
+    if (typeof id !== "string" || !id.length) return false
     if (!calls.has(id) || results.has(id)) return false
     results.add(id)
   }

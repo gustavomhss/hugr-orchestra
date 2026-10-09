@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ClaudeCodeNative } from "@/claude-code/native"
-import { base, definition, discovery, parallel } from "./native-fixture"
+import { base, definition, discovery, parallel, promptSnapshot } from "./native-fixture"
 
 const user = { ...base, type: "user", uuid: "u", parentUuid: null, message: { role: "user", content: "source" } }
 const old = { ...base, type: "assistant", uuid: "old", parentUuid: "u", message: { id: "old-api", role: "assistant", content: [{ type: "text", text: "old branch" }] } }
@@ -99,4 +99,51 @@ test("host resynchronization cursor cannot resurrect pre-clear history", () => {
   expect(ClaudeCodeNative.active(log, "old")).toMatchObject({ entries: [], reason: "cleared" })
   const later = { ...user, uuid: "later", message: { role: "user", content: "new admission" } }
   expect(ClaudeCodeNative.active([...log, later], "old").entries).toEqual([later])
+})
+
+test("missing authoritative last-prompt leaf fails closed even with a host cursor", () => {
+  const log = [user, old, current, { type: "last-prompt", leafUuid: "missing", explicit: true }]
+  for (const selected of [undefined, "new"])
+    expect(ClaudeCodeNative.active(log, selected)).toEqual({ entries: log, reason: "missing-active-leaf", leaf: "missing" })
+})
+
+test("revert closure follows tool ownership and deferred sameAs across different parent branches", () => {
+  const result = { ...parallel[2], parentUuid: "u", sourceToolAssistantUUID: "old" }
+  const copy = { ...discovery[1], parentUuid: "u" }
+  const child = { ...user, uuid: "child", parentUuid: result.uuid }
+  const log = [user, old, result, child, discovery[0], copy]
+  expect(ClaudeCodeNative.exclude(log, new Set(["old"])).map((entry) => entry.uuid)).toEqual(["u"])
+  expect(ClaudeCodeNative.exclude([user, copy], new Set(["carrier-definition"]))).toEqual([user])
+})
+
+test("tool validation rejects absent, empty, coerced and duplicate IDs", () => {
+  const call = { type: "tool_use", id: "t", name: "Read", input: {} }
+  const result = { type: "tool_result", tool_use_id: "t", content: "done" }
+  const pair = (calls: Record<string, unknown>[], results: Record<string, unknown>[]) => [
+    { ...old, message: { ...old.message, content: calls } },
+    { ...user, message: { role: "user", content: results } },
+  ]
+  expect(ClaudeCodeNative.validTools(pair([call], [result]))).toBe(true)
+  for (const id of [undefined, null, "", 17, {}])
+    expect(ClaudeCodeNative.validTools(pair([{ ...call, id }], [{ ...result, tool_use_id: id }]))).toBe(false)
+  expect(ClaudeCodeNative.validTools(pair([call, call], [result]))).toBe(false)
+  expect(ClaudeCodeNative.validTools(pair([call], [result, result]))).toBe(false)
+  expect(ClaudeCodeNative.validTools(pair([], [result]))).toBe(false)
+  expect(ClaudeCodeNative.validTools(pair([call], []))).toBe(false)
+})
+
+test("unsafe post-clear replay fallback cannot resurrect cleared payload", () => {
+  const later = { ...old, uuid: "later", parentUuid: null, message: { content: [{ type: "tool_use", id: "t" }] } }
+  expect(ClaudeCodeNative.active([user, old, { type: "last-prompt", leafUuid: null, explicit: true }, later]))
+    .toMatchObject({ entries: [later], reason: "unsafe-tool-dependencies" })
+})
+
+test("pinned prompt snapshot exposes actual overhead and fails closed on malformed tools or render invalidation", () => {
+  const snapshot = promptSnapshot.attachment as Record<string, unknown>
+  expect(ClaudeCodeNative.overhead([promptSnapshot])).toEqual(snapshot)
+  for (const tools of [[{}], [{ name: "Read", description: 1 }], [{ name: "Read", description: "read", schema: [] }],
+    [{ name: "Read", description: "read", server: 1 }]])
+    expect(ClaudeCodeNative.overhead([{ ...promptSnapshot, attachment: { ...snapshot, tools } }])).toBeUndefined()
+  expect(ClaudeCodeNative.overhead([promptSnapshot, { ...base, type: "attachment", attachment: { type: "prompt_render_point" } }])).toBeUndefined()
+  expect(ClaudeCodeNative.overhead([{ ...base, type: "attachment", attachment: { type: "prompt_render_point" } }, promptSnapshot])).toEqual(snapshot)
 })
