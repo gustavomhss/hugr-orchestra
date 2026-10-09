@@ -14,6 +14,30 @@ export function columnName(column: number): string {
     : String.fromCharCode(64 + column)
 }
 
+export function requireName(name: string) {
+  if (/^[RC]$/i.test(name) || /^[A-Z]{1,3}[0-9]+$/i.test(name) || /^R(?:[0-9]+)?C(?:[0-9]+)?$/i.test(name))
+    throw DocumentWork.failure("unsupported_schema")
+}
+
+/** Shared-formula expansion is qualified only for the same closed token grammar as edits. */
+export function translate(value: string, master: string, target: string) {
+  const from = coordinate(master)
+  const to = coordinate(target)
+  return formula(value).map((token) => {
+    if (!/^\$?[A-Z]{1,3}\$?[1-9][0-9]*$/.test(token)) return token
+    const point = coordinate(token)
+    const row = point.row + (point.rowAbsolute ? 0 : to.row - from.row)
+    const column = point.column + (point.columnAbsolute ? 0 : to.column - from.column)
+    if (row < 1 || row > 10000 || column < 1 || column > 256) throw DocumentWork.failure("quota_exceeded")
+    return `${point.columnAbsolute}${columnName(column)}${point.rowAbsolute}${row}`
+  }).join("")
+}
+
+export function shiftedIndex(value: number, index: number, count: number, action: "insert" | "delete") {
+  return action === "insert" ? value >= index ? value + count : value
+    : value < index ? value : value >= index + count ? value - count : undefined
+}
+
 /** Closed grammar: local A1 refs/ranges, decimal numbers, arithmetic and SUM/AVERAGE/MIN/MAX/COUNT.
  * No strings, names, sheet qualifiers, DDE, external refs, dynamic arrays or external-action functions.
  */
@@ -69,8 +93,7 @@ export function formula(value: string) {
 
 export function shift(value: string, axis: "rows" | "columns", index: number, count: number, action: "insert" | "delete") {
   const tokens = formula(value)
-  const point = (n: number) => action === "insert" ? n >= index ? n + count : n
-    : n < index ? n : n >= index + count ? n - count : undefined
+  const point = (n: number) => shiftedIndex(n, index, count, action)
   const render = (original: string, n: number | undefined) => {
     if (n === undefined) return "#REF!"
     const old = coordinate(original)
