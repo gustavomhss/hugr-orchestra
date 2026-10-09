@@ -96,24 +96,35 @@ const credentials = Schema.Struct({ claudeAiOauth: Schema.Struct({
   subscriptionType: Schema.optional(Schema.NullOr(Schema.String)),
   rateLimitTier: Schema.optional(Schema.NullOr(Schema.String)),
 }) })
-const decodeCredentials = Schema.decodeUnknownOption(Schema.fromJsonString(credentials))
+const decodeCredentials = Schema.decodeUnknownOption(credentials)
+const decodeJSON = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
 
-function requireMachineLogin(env: NonNullable<QueryOptions["env"]>) {
-  const directory = env.CLAUDE_CONFIG_DIR ?? join(env.HOME ?? env.USERPROFILE ?? homedir(), ".claude")
-  const file = join(directory, ".credentials.json")
-  // Match pinned SDK z2/JBe keychain naming, including isolated config directories. No model/API probe.
+/** Native CLI 2.1.289 Nb/x$: secure storage may differ from the session config directory. */
+export function credentialStorage(env: NonNullable<QueryOptions["env"]>, home: string) {
+  const directory = (env.CLAUDE_CONFIG_DIR ?? join(home, ".claude")).normalize("NFC")
   const secure = env.CLAUDE_SECURESTORAGE_CONFIG_DIR
   const suffix = (secure !== undefined ? !secure : !env.CLAUDE_CONFIG_DIR)
-    ? "" : "-" + createHash("sha256").update((secure ?? directory).normalize("NFC")).digest("hex").slice(0, 8)
+    ? "" : "-" + createHash("sha256").update(secure !== undefined ? secure.normalize("NFC") : directory).digest("hex").slice(0, 8)
+  return {
+    file: join(secure !== undefined ? (secure || join(home, ".claude")).normalize("NFC") : directory, ".credentials.json"),
+    service: "Claude Code-credentials" + suffix,
+  }
+}
+
+function requireMachineLogin(env: NonNullable<QueryOptions["env"]>) {
+  const storage = credentialStorage(env, env.HOME ?? env.USERPROFILE ?? homedir())
   const account = (() => {
     try { return env.USER || userInfo().username } catch { return "claude-code-user" }
   })()
-  const keychain = process.platform === "darwin" && (!env.CLAUDE_CONFIG_DIR || !existsSync(file)) ? spawnSync("/usr/bin/security", [
+  // Native Gn/x(P,T) always reads keychain first, even when an explicit plaintext credential file exists.
+  const keychain = process.platform === "darwin" ? spawnSync("security", [
     "find-generic-password", "-a", /^[a-zA-Z0-9._-]+$/.test(account) ? account : "claude-code-user",
-    "-w", "-s", "Claude Code-credentials" + suffix,
-  ], { env, encoding: "utf8", timeout: 5000, windowsHide: true }) : undefined
-  const parsed = decodeCredentials(keychain?.status === 0 && keychain.stdout.trim()
-    ? keychain.stdout : existsSync(file) ? readFileSync(file, "utf8") : "")
+    "-w", "-s", storage.service,
+  ], { env, encoding: "utf8", timeout: 2000, windowsHide: true }) : undefined
+  const primary = decodeJSON(keychain?.status === 0 ? keychain.stdout : "")
+  // A present keychain object without usable OAuth is authoritative; only absent/unparseable primary data falls back.
+  const parsed = decodeCredentials(Option.isSome(primary) && primary.value != null
+    ? primary.value : existsSync(storage.file) ? Option.getOrUndefined(decodeJSON(readFileSync(storage.file, "utf8"))) : undefined)
   // Explicit env OAuth has no refresh token in pinned CLI yK/EK: expired local access tokens must fail closed.
   if (Option.isSome(parsed) && parsed.value.claudeAiOauth.scopes.includes("user:inference") &&
     parsed.value.claudeAiOauth.expiresAt > Date.now()) return parsed.value.claudeAiOauth
