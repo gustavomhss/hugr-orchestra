@@ -4,8 +4,10 @@
 `bin/bunx`, `.src`, `.sources` and `.compileTarget`.
 `pkgs.callPackage ./nix/electron.nix {}` returns Electron **42.3.3**, with
 `bin/electron`, `.src` and `.dist`. Both use normal `callPackage` arguments.
-The consuming derivations must receive these packages explicitly. This checkpoint
-does not wire the flake, dependency install, CLI or desktop derivations.
+The consuming derivations receive these packages explicitly from `flake.nix`:
+dependency installation and modern CLI use this Bun; Desktop uses this Bun and
+Electron distribution. This consumer wiring is **UNVALIDATED**. See
+`distribution.md` for the deferred integrated measurement/native-build batch.
 
 ## Packaging evidence
 
@@ -266,5 +268,6 @@ done
 Compare each `got:` against the manifest's measured SRI for that exact archive;
 retain command, exit code and log. Build the real sources/packages again after
 the negative controls. Evaluation on one host is not four-system native coverage.
-Desktop native-addon headers/ABI compatibility, final consumer wiring, emitted
-CLI closure and native package builds remain lead-owned validation work.
+Desktop native-addon ABI compatibility, emitted CLI closure and native package
+builds remain lead-owned validation work. Consumer wiring is now authored, not
+proved. No native producer regression rerun is required for this Nix handoff.
