@@ -28,7 +28,8 @@ import {
 import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { SettingsList } from "./settings-list"
-import { createShellOptions, createShellSettingsController } from "./settings-v2/general-controllers"
+import { createLeanSettingsController, createShellOptions, createShellSettingsController } from "./settings-v2/general-controllers"
+import { showToast } from "@/utils/toast"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -103,6 +104,7 @@ export const SettingsGeneral: Component = () => {
   const desktop = createMemo(() => platform.platform === "desktop")
 
   const shell = createShellSettingsController()
+  const lean = createLeanSettingsController()
   const shellOptions = createMemo(() => createShellOptions({ shells: shell.shells(), current: shell.current() }))
 
   const [displayBackend, { refetch: refetchDisplayBackend }] = createResource(
@@ -228,6 +230,21 @@ export const SettingsGeneral: Component = () => {
   const GeneralSection = () => (
     <div class="flex flex-col gap-1">
       <SettingsList>
+        <SettingsRow title={language.t("lean.settings.title")} description={language.t("lean.settings.description")}>
+          <div class="flex items-center gap-3" data-action="settings-lean">
+            <Show when={lean.failed()}><span role="alert">{language.t("lean.settings.failed")}</span></Show>
+            <Switch
+              aria-label={language.t("lean.settings.title")}
+              checked={lean.enabled()}
+              disabled={lean.pending()}
+              onChange={(checked) => void lean.set(checked).catch((error) => showToast({
+                variant: "error",
+                title: language.t("lean.settings.failed"),
+                description: error instanceof Error ? error.message : language.t("lean.settings.failed"),
+              }))}
+            />
+          </div>
+        </SettingsRow>
         <SettingsRow
           title={language.t("settings.general.row.language.title")}
           description={language.t("settings.general.row.language.description")}

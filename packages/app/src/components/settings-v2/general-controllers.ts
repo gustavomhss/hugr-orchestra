@@ -1,4 +1,6 @@
 import { createMemo, createResource, type Accessor } from "solid-js"
+import { createStore } from "solid-js/store"
+import type { Config } from "@orchestra/sdk/v2/client"
 import { usePermission } from "@/context/permission"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -104,6 +106,30 @@ export function createAppearanceSettingsController() {
 const noneSound = { id: "none", label: "sound.option.none" } as const
 export const soundOptions = [noneSound, ...SOUND_OPTIONS]
 export type SoundSelectOption = (typeof soundOptions)[number]
+
+export function createLeanSettingsController(
+  serverSync: Accessor<{ data: { config: Config }; updateConfig: (config: Config) => Promise<unknown> }> = useServerSync(),
+) {
+  const [state, setState] = createStore({ pending: false, failed: false })
+  return {
+    enabled: createMemo(() => serverSync().data.config.tool_output?.lean?.enabled !== false),
+    pending: () => state.pending,
+    failed: () => state.failed,
+    set: async (checked: boolean) => {
+      if (state.pending) return
+      setState({ pending: true, failed: false })
+      const current = serverSync().data.config.tool_output
+      try {
+        await serverSync().updateConfig({ tool_output: { ...current, lean: { ...current?.lean, enabled: checked } } })
+      } catch (error) {
+        setState("failed", true)
+        throw error
+      } finally {
+        setState("pending", false)
+      }
+    },
+  }
+}
 
 export function createSoundSettingsController() {
   const settings = useSettings()
