@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto"
 import { appendFileSync, existsSync, readFileSync } from "node:fs"
 import { rename, writeFile } from "node:fs/promises"
 import { app, BrowserWindow, screen } from "electron"
+import { Omni } from "@orchestra/core/omni"
 import { DesktopOmni } from "./omni-process"
 
 const utility = { pid: undefined as number | undefined }
@@ -40,7 +41,7 @@ export function resources(stage: string) {
     return { type: handle.constructor?.name ?? "unknown", uv: handle._handle?.constructor?.name,
       ref: handle.hasRef?.() ?? handle._handle?.hasRef?.(), fd: handle.fd, childPID: handle.pid }
   }
-  event("resources", { stage, active: process.getActiveResourcesInfo(), handles: node._getActiveHandles?.().map(summarize),
+  event("resources", { stage, nativeCalls: Omni.snapshot(), active: process.getActiveResourcesInfo(), handles: node._getActiveHandles?.().map(summarize),
     requests: node._getActiveRequests?.().map(summarize) })
 }
 
@@ -49,6 +50,17 @@ export async function report(server: { url: string; username: string; password: 
   if (!file || !DesktopOmni.enabled()) return
   const argv = JSON.parse(process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV ?? "[]") as string[]
   const main = argv.length > 0 ? await firstLine(argv) : undefined
+  if (process.env.ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC === "load-only") {
+    await Omni.load()
+    resources("diagnostic-addon-load-only")
+  }
+  if (process.env.ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC === "completed-run") {
+    const argv = JSON.parse(process.env.ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC_ARGV ?? "[]") as string[]
+    const result = await DesktopOmni.execFile(argv[0]!, argv.slice(1))
+    if (result.stdout !== "SHORT_RUN_READY" || result.stderr !== "") throw new Error("diagnostic completed native run control failed")
+    event("diagnostic-completed-run", { result })
+    resources("diagnostic-completed-run")
+  }
   const token = randomUUID()
   const quit = `${file}.quit`
   const gui = () => {

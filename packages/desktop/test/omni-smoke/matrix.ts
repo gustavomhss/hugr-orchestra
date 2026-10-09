@@ -1,5 +1,5 @@
 // Actual packaged Electron only. Crash/quit assertions precede every emergency signal.
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "../../../omni/campaign/lib"
@@ -10,14 +10,23 @@ import { emergency, observe, owned } from "./inventory"
 
 type Cell = "main-kill" | "utility-kill" | "quit"
 type Mutation = "legacy" | "forced-kill" | "empty"
+type Diagnostic = "stop-main" | "no-main-native" | "load-only" | "completed-run"
 
-export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
+export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnostic) {
   const manifest = provenance()
   try { requiredFixtures(mutation === "empty" ? [] : ["main", "shell", "terminal"]) }
-  catch (error) { return { cell, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
+  catch (error) { return { cell, diagnostic, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
   const scratch = await fixtures()
-  if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN: "1" })
-  const destination = path.join(logs, `${cell}-${diagnostic ? "diagnostic-main" : mutation ?? "restored"}`)
+  const withoutMain = diagnostic !== undefined && diagnostic !== "stop-main"
+  if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC: diagnostic,
+    ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC_ARGV: JSON.stringify([scratch.trees.main.command, "-e", "process.stdout.write('SHORT_RUN_READY')"]) })
+  if (diagnostic === "stop-main") Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN: "1" })
+  if (withoutMain) {
+    // Isolate addon initialization from an active child; utility keeps every original fixture.
+    scratch.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_ARGV = "[]"
+    scratch.specs = scratch.specs.filter((spec) => spec.name !== "main")
+  }
+  const destination = path.join(logs, `${cell}-${diagnostic ? `diagnostic-${diagnostic}` : mutation ?? "restored"}`)
   mkdirSync(destination, { recursive: true })
   const launcher = process.platform === "linux" ? ["xvfb-run", "-a", manifest.executable] : [manifest.executable]
   const app = spawn(launcher[0]!, [...launcher.slice(1), "--no-sandbox"], { cwd: scratch.project, env: scratch.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: false })
@@ -31,7 +40,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
   const retained: Identity[] = []
   const evidence: Record<string, unknown> = {}
   const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
-    scope: diagnostic ? "diagnostic stop-main intervention; NOT production shutdown proof" : "actual production shutdown", pass: false, error: "", cleanup: false }
+    scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown", pass: false, error: "", cleanup: false }
   const legacy = { proc: undefined as ReturnType<typeof spawn> | undefined }
   try {
     if (win) await WindowsInventory.prepare()
@@ -41,7 +50,8 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
       return existsSync(scratch.report) ? JSON.parse(readFileSync(scratch.report, "utf8")) as Report : undefined
     })
     if (!server.packaged || !server.versions.electron || server.db !== ":memory:" || server.home !== scratch.home || server.nonce !== scratch.trees.main.nonce ||
-      path.resolve(server.resources) !== path.resolve(manifest.resources) || server.main.line !== scratch.trees.main.ready || !server.main.bytes || !Number.isSafeInteger(server.utilityPID) || server.pid === server.utilityPID) throw new Error("actual packaged Electron/isolation/bytes/utility PID control failed")
+      path.resolve(server.resources) !== path.resolve(manifest.resources) || !withoutMain && (server.main?.line !== scratch.trees.main.ready || !server.main.bytes) ||
+      !Number.isSafeInteger(server.utilityPID) || server.pid === server.utilityPID) throw new Error("actual packaged Electron/isolation/bytes/utility PID control failed")
     const rows = table()
     const main = identity(server.pid, rows)
     const utility = identity(server.utilityPID, rows)
@@ -67,13 +77,13 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
         spec.nonce.startsWith("omni-tree-") ? found[spec.name]!.fixtureIds.length === spec.size : found[spec.name]!.protectedMembers.length === spec.size) ? found : undefined
     })
     evidence.live = live
-    const mainSupervisors = live.main!.protectedMembers.flatMap((member) => member.supervisors)
+    const mainSupervisors = live.main?.protectedMembers.flatMap((member) => member.supervisors) ?? []
     const utilitySupervisors = Object.entries(live).filter(([name]) => name !== "main").flatMap(([, found]) => found.protectedMembers.flatMap((member) => member.supervisors))
     if (mutation === "legacy") {
       if (!live.terminal2!.pass && Object.entries(live).filter(([name]) => name !== "terminal2").every(([, found]) => found.pass)) throw new Error("legacy unowned tree positive control rejected")
       throw new Error("legacy mutation did not isolate intended ownership defect")
     }
-    if (!Object.values(live).every((found) => found.pass) || !mainSupervisors.length || !utilitySupervisors.length || mainSupervisors.some((id) => utilitySupervisors.some((other) => matches(id, other)))) throw new Error("fixture supervisor ancestry/main vs utility ownership control failed")
+    if (!Object.values(live).every((found) => found.pass) || !withoutMain && !mainSupervisors.length || !utilitySupervisors.length || mainSupervisors.some((id) => utilitySupervisors.some((other) => matches(id, other)))) throw new Error("fixture supervisor ancestry/main vs utility ownership control failed")
     evidence.allTrees3 = Object.fromEntries(["main", "shell", "terminal"].map((name) => [name, live[name]]))
     const before = table()
     evidence.ownerRows = owned(before, roots)
@@ -115,6 +125,14 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
     result.error = String(error)
     try { evidence.failureRows = table().filter((row) => retained.some((id) => matches(row, id))) }
     catch (error) { evidence.failureInventoryError = String(error) }
+    if (process.platform === "darwin" && cell === "quit") {
+      try {
+        const host = roots[1]
+        if (!host || !table().some((row) => matches(row, host) && !row.state.startsWith("Z"))) throw new Error("sample requires still-live exact owned Electron main")
+        const sample = spawnSync("sample", [String(host.pid), "1", "1", "-file", path.join(scratch.home, "main-stack.txt")], { encoding: "utf8", timeout: 7000, killSignal: "SIGKILL" })
+        evidence.nativeStack = { host, command: ["sample", String(host.pid), "1", "1"], status: sample.status, error: String(sample.error ?? ""), stdout: sample.stdout, stderr: sample.stderr }
+      } catch (error) { evidence.nativeStackError = String(error) }
+    }
   }
   finally {
     try { scratch.llm.stop() }
@@ -131,7 +149,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
       if (legacy.proc) await until(5000, "legacy mutation handle exit", () => legacy.proc!.exitCode !== null || legacy.proc!.signalCode !== null ? true : undefined)
     } catch (error) { result.pass = false; result.cleanup = false; result.error += `; legacy handle cleanup: ${error}` }
     try {
-      for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
+      for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events|txt)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
       writeFileSync(path.join(destination, "app.log"), state.output)
     } catch (error) { result.pass = false; result.error += `; evidence preservation: ${error}` }
   }
@@ -146,16 +164,17 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
 
 export async function matrix() {
   // A helper/preservation failure is red evidence, never permission to skip the remaining real cells.
-  const execute = (cell: Cell, mutation?: Mutation, diagnostic = false) => run(cell, mutation, diagnostic)
+  const execute = (cell: Cell, mutation?: Mutation, diagnostic?: Diagnostic) => run(cell, mutation, diagnostic)
     .catch((error: unknown) => ({ cell, mutation: mutation ?? "none", diagnostic, pass: false, error: String(error), cleanup: false }))
   const mutations = [await execute("main-kill", "legacy"), await execute("quit", "forced-kill"), await execute("quit", "empty")]
   const restored = [await execute("main-kill"), await execute("utility-kill"), await execute("quit")]
-  const diagnostic = process.argv.includes("--diagnose-main") ? await execute("quit", undefined, true) : undefined
+  const diagnostic = process.argv.includes("--diagnose-main") ? [await execute("quit", undefined, "stop-main"), await execute("quit", undefined, "no-main-native"),
+    await execute("quit", undefined, "load-only"), await execute("quit", undefined, "completed-run")] : []
   const expected = ["legacy unowned tree positive control rejected", "actual app.quit did not prove orderly code-zero exit", "empty required fixtures rejected"]
   const pass = mutations.every((cell, index) => !cell.pass && cell.cleanup && cell.error.includes(expected[index]!)) && restored.every((cell) => cell.pass && cell.cleanup)
   const summary = { pass, sourceSHA: provenance().sourceSHA, os: process.platform, arch: process.arch, at: new Date().toISOString(), mutations: mutations.map(({ cell, mutation, pass, error, cleanup }) => ({ cell, mutation, pass, error, cleanup })),
     restored: restored.map(({ cell, pass, error, cleanup }) => ({ cell, pass, error, cleanup })),
-    diagnostic: diagnostic && { pass: diagnostic.pass, error: diagnostic.error, cleanup: diagnostic.cleanup, scope: "stop-main diagnostic ONLY" } }
+    diagnostic: diagnostic.map((result) => ({ diagnostic: result.diagnostic, pass: result.pass, error: result.error, cleanup: result.cleanup, scope: "diagnostic ONLY" })) }
   writeFileSync(path.join(logs, "matrix.json"), JSON.stringify(summary, null, 2))
   console.log("DESKTOP_MATRIX " + JSON.stringify(summary))
   return summary
