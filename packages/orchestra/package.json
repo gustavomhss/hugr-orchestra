@@ -92,6 +92,7 @@
     "@orchestra/maestro-arsenal": "workspace:*",
     "@orchestra/plugin": "workspace:*",
     "@orchestra/protocol": "workspace:*",
+    "@orchestra/relay": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "@orchestra/script": "workspace:*",
     "@orchestra/sdk": "workspace:*",
