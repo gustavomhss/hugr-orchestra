@@ -93,15 +93,16 @@ function harness(value: LLM.StreamInput, options: {
       if (name === "chat.params") {
         if (options.lowerOutputParam) Object.assign(output, { maxOutputTokens: 1 })
         if (record(output.options) && ["instructions", "combined"].includes(bloat)) output.options.instructions = large("OPTIONS_BLOAT", size)
-        if (["description", "combined"].includes(bloat)) value.tools.lookup.description = large("DESCRIPTION_BLOAT", size)
-        if (["schema", "combined"].includes(bloat)) {
-          const converted = schema(large("SCHEMA_BLOAT", size))
-          value.tools.lookup.inputSchema = options.asyncSchema ? jsonSchema(async () => { conversion.count++; return converted }) : jsonSchema(converted)
-        }
       }
       return output
     }),
   }))
+  // Tool definitions belong to the request captured before hooks. External mutation during preparation cannot replace them.
+  if (["description", "combined"].includes(bloat)) value.tools.lookup.description = large("DESCRIPTION_BLOAT", size)
+  if (["schema", "combined"].includes(bloat)) {
+    const converted = schema(large("SCHEMA_BLOAT", size))
+    value.tools.lookup.inputSchema = options.asyncSchema ? jsonSchema(async () => { conversion.count++; return converted }) : jsonSchema(converted)
+  }
   if (["response", "combined"].includes(bloat)) value.responseSchema = response(large("RESPONSE_BLOAT", size))
   const blockedFetch: typeof fetch = Object.assign(async () => { throw new Error("Unexpected provider HTTP call") }, {
     preconnect: () => { throw new Error("Unexpected provider preconnect") },
@@ -164,13 +165,15 @@ for (const native of [false, true]) {
     expect(native ? check.nativeRequests[0].generation?.maxTokens : check.language.doStreamCalls[0].maxOutputTokens).toBe(1000)
     expect(native ? check.nativeRequests[0] : check.language.doStreamCalls[0]).not.toHaveProperty("contextMemory")
   }))
-  it.instance(`unmarked parent keeps existing ${native ? "native" : "SDK"} dispatch behavior`, () => Effect.gen(function* () {
+  it.instance(`unmarked parent cannot bypass ${native ? "native" : "SDK"} physical input capacity`, () => Effect.gen(function* () {
     const value = request()
     delete value.contextMemory
     const check = harness(value, { native, bloat: "system" })
-    yield* check.run
-    expect(check.language.doStreamCalls).toHaveLength(native ? 0 : 1)
-    expect(check.nativeRequests).toHaveLength(native ? 1 : 0)
+    const exit = yield* check.run.pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) overflow(exit.cause)
+    expect(check.language.doStreamCalls).toHaveLength(0)
+    expect(check.nativeRequests).toHaveLength(0)
   }))
   it.instance(`valid tool names contribute to ${native ? "native" : "SDK"} input capacity`, () => Effect.gen(function* () {
     const make = (contextMemory: boolean) => {
@@ -191,11 +194,14 @@ for (const native of [false, true]) {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) overflow(exit.cause)
     const ordinary = harness(make(false), { native })
-    yield* ordinary.run
-    expect(native ? ordinary.nativeRequests[0].tools : ordinary.language.doStreamCalls[0].tools).toHaveLength(100)
+    const rejected = yield* ordinary.run.pipe(Effect.exit)
+    expect(Exit.isFailure(rejected)).toBe(true)
+    if (Exit.isFailure(rejected)) overflow(rejected.cause)
+    expect(ordinary.language.doStreamCalls).toHaveLength(0)
+    expect(ordinary.nativeRequests).toHaveLength(0)
   }))
   for (const bloat of ["system", "description", "schema", "instructions", "response", "combined"] as const) {
-    it.instance(`assembled ${bloat} overflow blocks ${native ? "native" : "SDK"}; identical non-memory request still dispatches`, () => Effect.gen(function* () {
+    it.instance(`assembled ${bloat} overflow blocks ${native ? "native" : "SDK"} with and without working memory`, () => Effect.gen(function* () {
       const value = request()
       expect(Token.estimate(JSON.stringify({ messages: value.messages, system: value.system }))).toBeLessThan(value.model.limit.input!)
       const check = harness(value, { native, bloat })
@@ -208,14 +214,11 @@ for (const native of [false, true]) {
       expect(Exit.isFailure(exit)).toBe(true)
       if (Exit.isFailure(exit)) overflow(exit.cause)
       const ordinary = harness(request(false), { native, bloat })
-      const events = yield* ordinary.run
-      expect(events.some((event) => event.type === "finish" && event.reason === "stop")).toBe(true)
-      expect(ordinary.language.doStreamCalls).toHaveLength(native ? 0 : 1)
-      expect(ordinary.nativeRequests).toHaveLength(native ? 1 : 0)
-      const outgoing = JSON.stringify(native ? ordinary.nativeRequests[0] : ordinary.language.doStreamCalls[0])
-      const labels = { system: "SYSTEM_BLOAT", description: "DESCRIPTION_BLOAT", schema: "SCHEMA_BLOAT",
-        instructions: "OPTIONS_BLOAT", response: "RESPONSE_BLOAT", combined: "SCHEMA_BLOAT" }
-      expect(outgoing).toContain(labels[bloat])
+      const rejected = yield* ordinary.run.pipe(Effect.exit)
+      expect(Exit.isFailure(rejected)).toBe(true)
+      if (Exit.isFailure(rejected)) overflow(rejected.cause)
+      expect(ordinary.language.doStreamCalls).toHaveLength(0)
+      expect(ordinary.nativeRequests).toHaveLength(0)
     }))
   }
   it.instance(`real async schema conversion participates before ${native ? "native" : "SDK"} dispatch`, () => Effect.gen(function* () {
@@ -235,11 +238,11 @@ for (const native of [false, true]) {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) overflow(exit.cause)
     const ordinary = harness(request(false), { native, oauth: true, bloat: "system" })
-    yield* ordinary.run
-    const outgoing = native ? ordinary.nativeRequests[0] : ordinary.language.doStreamCalls[0]
-    expect(outgoing.providerOptions?.openai?.instructions).toContain("SYSTEM_BLOAT")
-    if (native) expect(ordinary.nativeRequests[0].system).toEqual([])
-    if (!native) expect(ordinary.language.doStreamCalls[0].prompt.some((entry) => entry.role === "system")).toBe(false)
+    const rejected = yield* ordinary.run.pipe(Effect.exit)
+    expect(Exit.isFailure(rejected)).toBe(true)
+    if (Exit.isFailure(rejected)) overflow(rejected.cause)
+    expect(ordinary.language.doStreamCalls).toHaveLength(0)
+    expect(ordinary.nativeRequests).toHaveLength(0)
   }))
   it.instance(`context minus model output remains the bound despite hook output-param changes; native=${native}`, () => Effect.gen(function* () {
     const value = request()
@@ -312,10 +315,11 @@ for (const native of [false, true]) for (const origin of ["model", "variant"] as
   expect(smallCall.providerOptions?.openai?.instructions).toBe("Configured maintenance instruction")
   expect(smallCall.tools ?? []).toEqual([])
   const parent = harness(make(false, text), { native })
-  yield* parent.run
-  expect(parent.language.doStreamCalls).toHaveLength(native ? 0 : 1)
-  expect(parent.nativeRequests).toHaveLength(native ? 1 : 0)
-  expect((native ? parent.nativeRequests[0] : parent.language.doStreamCalls[0]).providerOptions?.openai?.instructions).toBe(text)
+  const rejected = yield* parent.run.pipe(Effect.exit)
+  expect(Exit.isFailure(rejected)).toBe(true)
+  if (Exit.isFailure(rejected)) overflow(rejected.cause)
+  expect(parent.language.doStreamCalls).toHaveLength(0)
+  expect(parent.nativeRequests).toHaveLength(0)
 }))
 
 it.instance("workflow system outside messages participates in capacity before any workflow dispatch", () => Effect.gen(function* () {
@@ -334,11 +338,11 @@ it.instance("workflow system outside messages participates in capacity before an
   expect(Exit.isFailure(exit)).toBe(true)
   if (Exit.isFailure(exit)) overflow(exit.cause)
   const parent = harness(make(false), options)
-  yield* parent.run
-  expect(parent.language.doStreamCalls).toHaveLength(1)
-  expect(parent.language.doStreamCalls[0].prompt.some((entry) => entry.role === "system")).toBe(false)
-  expect(JSON.stringify(parent.language.doStreamCalls[0].prompt)).not.toContain("SYSTEM_BLOAT")
-  expect(parent.workflow?.systemPrompt).toContain("SYSTEM_BLOAT")
+  const rejected = yield* parent.run.pipe(Effect.exit)
+  expect(Exit.isFailure(rejected)).toBe(true)
+  if (Exit.isFailure(rejected)) overflow(rejected.cause)
+  expect(parent.language.doStreamCalls).toHaveLength(0)
+  expect(parent.nativeRequests).toHaveLength(0)
 }))
 
 for (const native of [false, true]) for (const oauth of [false, true]) it.instance(`near-bound non-workflow system is charged once; native=${native}, oauth=${oauth}`, () => Effect.gen(function* () {

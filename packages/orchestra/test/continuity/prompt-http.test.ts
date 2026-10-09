@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Deferred, Effect, Exit, Layer } from "effect"
+import { Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Archive } from "@/continuity/archive"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
@@ -22,6 +22,12 @@ import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { httpError, raw, reply, TestLLMServer } from "../lib/llm-server"
 import { testProviderConfig } from "../lib/test-provider"
 import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
+import { MessageID, PartID } from "@/session/schema"
+import { SessionV1 } from "@orchestra/core/v1/session"
+
+const transform: { plan?: { entered: Deferred.Deferred<void>; release: Deferred.Deferred<void>; append?: string } } = {}
+const preparation: { plan?: { systemCalls: number; paramCalls: number; system?: string; reserve?: number; once?: boolean;
+  entered?: Deferred.Deferred<void>; release?: Deferred.Deferred<void> } } = {}
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const llmNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
@@ -31,7 +37,36 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 ]), [
   [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
   [Plugin.node, Layer.mock(Plugin.Service, {
-    init: () => Effect.void, list: () => Effect.succeed([]), trigger: (_name, _input, output) => Effect.succeed(output),
+    init: () => Effect.void, list: () => Effect.succeed([]), trigger: (name, _input, output) => Effect.gen(function* () {
+      const payload: unknown = output
+      const preparing = preparation.plan
+      if (preparing && payload && typeof payload === "object") {
+        if (name === "experimental.chat.system.transform" && "system" in payload && Array.isArray(payload.system)) {
+          preparing.systemCalls++
+          payload.system.push(preparing.once && preparing.systemCalls > 1 ? "SECOND_PREP_OVERFLOW ".repeat(60_000) : preparing.system ?? "PREPARED_ONCE")
+          if (preparing.entered && preparing.release) {
+            const release = preparing.release
+            preparing.release = undefined
+            yield* Deferred.succeed(preparing.entered, undefined)
+            yield* Deferred.await(release)
+          }
+        }
+        if (name === "chat.params" && "maxOutputTokens" in payload) {
+          preparing.paramCalls++
+          if (preparing.reserve !== undefined) payload.maxOutputTokens = preparing.reserve
+        }
+      }
+      const plan = name === "experimental.chat.messages.transform" ? transform.plan : undefined
+      if (!plan || !payload || typeof payload !== "object" || !("messages" in payload) || !Array.isArray(payload.messages)) return output
+      transform.plan = undefined
+      const target: unknown[] = payload.messages
+      const decoded = Schema.decodeUnknownSync(Schema.Array(SessionV1.WithParts))(target)
+      target.splice(0, target.length, ...decoded.map((message) => message.info.role !== "user" || !plan.append ? message : { ...message,
+        parts: [...message.parts, { id: PartID.ascending(), sessionID: message.info.sessionID, messageID: message.info.id, type: "text", text: plan.append, synthetic: true }] }))
+      yield* Deferred.succeed(plan.entered, undefined)
+      yield* Deferred.await(plan.release)
+      return output
+    }),
   })],
   [SessionSummary.node, Layer.mock(SessionSummary.Service, {
     summarize: () => Effect.void, diff: () => Effect.succeed([]), computeDiff: () => Effect.succeed([]),
@@ -41,7 +76,7 @@ type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
 const maintenance: Match = (hit) => {
   const wire = wireMessages(hit.body)
-  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v4")) ||
+  return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v5")) ||
     (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
 }
 const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
@@ -97,7 +132,7 @@ const gate = Effect.gen(function* () {
   return { release, wait: Effect.runPromise(Deferred.await(release)) }
 })
 
-for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not block parent; stale result loses; next turn recovers archived nonce; cache=${cached}`, () => Effect.gen(function* () {
+for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held producer; stale result loses; next turn recovers archived nonce; cache=${cached}`, () => Effect.gen(function* () {
   const llm = yield* TestLLMServer
   const instance = yield* TestInstance
   const prompt = yield* SessionPrompt.Service
@@ -112,7 +147,7 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const b = yield* gate
   const capture = ledger()
   const control = (content: string, role: string): Hit => ({ url: new URL("/v1/chat/completions", llm.url), body: { messages: [{ role, content }] } })
-  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT · working memory v4", "system"))).toBe(true)
+  expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT · working memory v5", "system"))).toBe(true)
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
@@ -142,23 +177,28 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   expect((forkMessages as unknown[]).slice(0, -1)).toEqual(triggerMessages as unknown[])
   expect(hasRecall(capture.hits.at(-1)!.hit)).toBe(true)
   expect(packet(fork)).toContain("## New span")
-  expect(packet(fork)).not.toContain(tail)
-  expect((yield* send("ADVANCE_WHILE_HELD")).parts.some((part) => part.type === "text" && part.text === "PARENT_ADVANCED")).toBe(true)
+  expect(packet(fork)).toContain(tail)
+  expect(packet(fork)).toContain("TRIGGER_DONE")
+  const advancing = yield* send("ADVANCE_WHILE_HELD").pipe(Effect.forkChild)
+  yield* pollWithTimeout(sessions.messages({ sessionID: chat.id }).pipe(Effect.map((history) => history.some((message) =>
+    message.parts.some((part) => part.type === "text" && part.text === "ADVANCE_WHILE_HELD")) ? history : undefined)), "Concurrent prompt never admitted")
+  expect(advancing.pollUnsafe()).toBeUndefined()
   expect(yield* Deferred.isDone(a.release)).toBe(false)
   const rejected = yield* prompt.prompt({ sessionID: chat.id, agent: "missing-continuity-test-agent", model,
     parts: [{ type: "text", text: "REJECTED_PROMPT" }] }).pipe(Effect.exit)
   expect(Exit.isFailure(rejected)).toBe(true)
   yield* Deferred.succeed(a.release, undefined)
+  expect((yield* Fiber.join(advancing)).parts.some((part) => part.type === "text" && part.text === "PARENT_ADVANCED")).toBe(true)
   yield* awaitWithTimeout(llm.wait(10), "Replacement B never reached HTTP", "10 seconds")
   const history = yield* sessions.messages({ sessionID: chat.id })
   expect(yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })).toEqual({ messages: history, system: [] })
   yield* Deferred.succeed(b.release, undefined)
   const prepared = yield* pollWithTimeout(continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true }).pipe(
     Effect.map((value) => value.system[0]?.includes(FIRST) ? value : undefined)), "B never applied", "10 seconds")
-  expect(prepared.messages).toEqual(history.slice(-8))
+  expect(prepared.messages).toEqual([history.at(-2)!])
   expect(prepared.system[0]).not.toContain("STALE_HTTP_MEMORY")
-  // The nonce was written by the user, so the verbatim user ledger keeps it; alias recall serves the stored message.
-  expect(prepared.system[0]).toContain("## User messages (verbatim, host-collected)")
+  // No historical user ledger repairs the memory; real alias recall recovers the nonce.
+  expect(prepared.system[0]).not.toContain("## User messages (verbatim, host-collected)")
   expect(prepared.system[0]).not.toMatch(/continuity_handoff|"exact":|"provenance":|"reference_only":/)
   const providerB = capture.hits.find((entry) => entry.name === "B")!
   const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id
@@ -176,8 +216,8 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   const conversation = wire.filter((entry) => entry.role !== "system").map((entry) => entry.content).join("\n")
   expect(conversation).not.toContain(head)
   expect(conversation).not.toContain(NONCE)
-  for (const message of prepared.messages) for (const part of message.parts)
-    if (part.type === "text") expect(conversation).toContain(part.text)
+  expect(conversation).not.toContain("PARENT_ADVANCED")
+  expect(conversation).toContain("RECOVER_NONCE")
   const durable = yield* sessions.messages({ sessionID: chat.id })
   const recovered = durable.flatMap((message) => message.parts).find((part) => part.type === "tool" && part.tool === "context_recall")
   if (!recovered || recovered.type !== "tool" || recovered.state.status !== "completed") throw new Error("Real context_recall did not complete")
@@ -187,6 +227,175 @@ for (const cached of [0, 25_000]) it.instance(`held HTTP maintenance does not bl
   expect(capture.hits.map((entry) => entry.name)).toEqual([...seed.map((turn) => turn.user), "trigger", "A", "advance", "B", "next", "recovered"])
   expect(yield* llm.hits).toEqual(capture.hits.map((entry) => entry.hit))
   expect(yield* sessions.children(chat.id)).toEqual([])
+}), 120_000)
+
+it.instance("large outgoing plugin append on first request emits completed overflow error and sends zero provider requests", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Actual outgoing guard" })
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  yield* Deferred.succeed(release, undefined)
+  transform.plan = { entered, release, append: "LARGE_PLUGIN_APPEND ".repeat(60_000) }
+  yield* Effect.addFinalizer(() => Effect.sync(() => { transform.plan = undefined }))
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "FIRST_REQUEST" }] })
+  expect(result.info).toMatchObject({ role: "assistant", finish: "error", parentID: expect.any(String), error: { name: "ContextOverflowError" } })
+  expect(result.info.time).toHaveProperty("completed")
+  expect(yield* llm.hits).toEqual([])
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  expect(history.filter((message) => message.info.role === "assistant")).toHaveLength(1)
+  expect(history.at(-1)?.info.time).toHaveProperty("completed")
+}), 120_000)
+
+for (const phase of ["system", "reserve"] as const) it.instance(`real one-shot ${phase} preflight rejects before processor allocation with completed error event and zero HTTP calls`, () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const events = yield* EventV2Bridge.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Real preflight overflow" })
+  const plan = { systemCalls: 0, paramCalls: 0, ...(phase === "system" ? { system: "REAL_SYSTEM_OVERFLOW ".repeat(60_000) } : { reserve: 100_000 }) }
+  preparation.plan = plan
+  yield* Effect.addFinalizer(() => Effect.sync(() => { preparation.plan = undefined }))
+  const errors: unknown[] = []
+  const off = yield* events.listen((event) => Effect.sync(() => {
+    if (event.type === Session.Event.Error.type) errors.push(event.data)
+  }))
+  yield* Effect.addFinalizer(() => off)
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "PREFLIGHT_FIRST_REQUEST" }] })
+  expect(result.info).toMatchObject({ role: "assistant", finish: "error", error: { name: "ContextOverflowError" } })
+  expect(result.info.time).toHaveProperty("completed")
+  expect(plan.systemCalls).toBe(1)
+  expect(plan.paramCalls).toBe(1)
+  expect(yield* llm.hits).toEqual([])
+  expect(errors).toContainEqual({ sessionID: chat.id, error: result.info.role === "assistant" ? result.info.error : undefined })
+  const assistants = (yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")
+  expect(assistants).toHaveLength(1)
+  expect(assistants[0].info.time).toHaveProperty("completed")
+}), 120_000)
+
+it.instance("real prepared plan runs mutable system and params hooks once, then executes captured payload", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "One-shot hooks" })
+  const plan = { systemCalls: 0, paramCalls: 0, once: true, reserve: 4321 }
+  preparation.plan = plan
+  yield* Effect.addFinalizer(() => Effect.sync(() => { preparation.plan = undefined }))
+  yield* llm.pushMatch(parent("ONE_SHOT_REQUEST"), answer("ONE_SHOT_DONE"))
+  const result = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "ONE_SHOT_REQUEST" }] })
+  expect(result.parts.some((part) => part.type === "text" && part.text === "ONE_SHOT_DONE")).toBe(true)
+  expect(plan.systemCalls).toBe(1)
+  expect(plan.paramCalls).toBe(1)
+  const hits = yield* llm.hits
+  expect(hits).toHaveLength(1)
+  expect(wireMessages(hits[0].body).some((message) => message.role === "system" && message.content.includes("PREPARED_ONCE"))).toBe(true)
+  expect(hits[0].body.max_tokens).toBe(4321)
+}), 120_000)
+
+it.instance("queued caller during outgoing preparation rebinds agent/model/permissions/format before allocating assistant and delivers once", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const cfg = testProviderConfig(llm.url)
+  yield* Effect.promise(() => Bun.write(path.join(instance.directory, "orchestra.json"), JSON.stringify({ ...cfg,
+    provider: { ...cfg.provider, test: { ...cfg.provider.test, models: { ...cfg.provider.test.models,
+      "alternate-model": { ...cfg.provider.test.models["test-model"], id: "alternate-model", limit: { context: 200_000, output: 10_000 } } } } }, model: "test/test-model", plugin: [], mcp: {},
+    enabled_providers: ["test"], compaction: { auto: false }, agent: { build: { permission: { context_recall: "allow" } },
+      alternate: { model: "test/alternate-model", permission: { bash: "deny" } } } })))
+  const chat = yield* sessions.create({ title: "Queue caller binding" })
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  preparation.plan = { systemCalls: 0, paramCalls: 0, entered, release }
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Effect.sync(() => { preparation.plan = undefined }))))
+  yield* llm.pushMatch((hit) => hit.body.model === "alternate-model" && parent("NEW_BOUND_CALLER")(hit), reply().tool("StructuredOutput", { accepted: true }))
+  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_BOUND_CALLER" }] }).pipe(Effect.forkChild)
+  yield* awaitWithTimeout(Deferred.await(entered), "Caller preparation never reached plugin", "15 seconds").pipe(Effect.catch((error) =>
+    Effect.fail(new Error(`${error.message}; caller=${String(old.pollUnsafe())}`))))
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "alternate", model: { providerID: model.providerID, modelID: ModelV2.ID.make("alternate-model") },
+    tools: { bash: false }, format: { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+  yield* Deferred.succeed(release, undefined)
+  const result = yield* Fiber.join(old)
+  expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id, agent: "alternate", modelID: "alternate-model", structured: { accepted: true } })
+  const hits = yield* llm.hits
+  expect(hits).toHaveLength(1)
+  expect(JSON.stringify(hits[0].body.tools)).not.toContain('"name":"bash"')
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
+}), 120_000)
+
+it.instance("permission changes during real preflight rebind same caller before allocation and provider dispatch", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Permission snapshot binding", permission: [{ permission: "read", pattern: "*", action: "allow" }] })
+  const entered = yield* Deferred.make<void>()
+  const release = yield* Deferred.make<void>()
+  preparation.plan = { systemCalls: 0, paramCalls: 0, entered, release }
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Effect.sync(() => { preparation.plan = undefined }))))
+  yield* llm.pushMatch((hit) => parent("PERMISSION_BOUND_REQUEST")(hit) && !JSON.stringify(hit.body.tools).includes('"name":"read"'), answer("PERMISSION_BOUND_DONE"))
+  const running = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "PERMISSION_BOUND_REQUEST" }] }).pipe(Effect.forkChild)
+  yield* awaitWithTimeout(Deferred.await(entered), "Permission preflight never reached plugin", "15 seconds")
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  yield* sessions.setPermission({ sessionID: chat.id, permission: [{ permission: "read", pattern: "*", action: "deny" }] })
+  yield* Deferred.succeed(release, undefined)
+  const result = yield* Fiber.join(running)
+  expect(result.parts.some((part) => part.type === "text" && part.text === "PERMISSION_BOUND_DONE")).toBe(true)
+  expect((yield* llm.hits).length).toBe(1)
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
+}), 120_000)
+
+it.instance("different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const jobs = yield* BackgroundJob.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Held catch-up caller race" })
+  const seed = Array.from({ length: 6 }, (_, index) => `CATCHUP_SEED_${index}`)
+  for (const text of seed) yield* llm.pushMatch(parent(text), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
+  const first = forkAnswer(FIRST, maintenance)
+  yield* llm.pushMatch(first.match, first.response)
+  for (const text of seed) yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text }] })
+  const before = yield* sessions.messages({ sessionID: chat.id })
+  const latest = before.at(-1)!.info
+  if (latest.role !== "assistant") throw new Error("Expected initial completed boundary")
+  const job = yield* jobFor(chat.id, latest.id)
+  expect((yield* jobs.wait({ id: job.id, timeout: 10_000 })).info?.output).toBe("applied")
+  // Completed provider step arriving before first paying admission makes a real catch-up necessary.
+  const delta = { ...latest, id: MessageID.ascending(), tokens: { ...latest.tokens, input: 100 },
+    time: { created: Date.now(), completed: Date.now() } }
+  yield* sessions.updateMessage(delta)
+  yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: delta.id, type: "text", text: `NEW_COMPLETED_DELTA ${PAD}` })
+  const hold = yield* gate
+  const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
+  yield* llm.pushMatch(catchup.match, catchup.response)
+  const replacement = forkAnswer("FRESH_CATCHUP_RESULT", maintenance)
+  yield* llm.pushMatch(replacement.match, replacement.response)
+  yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
+  const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
+  yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
+  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
+  yield* Deferred.succeed(hold.release, undefined)
+  const result = yield* awaitWithTimeout(Fiber.join(old), "Queued caller stranded by catch-up", "30 seconds")
+  expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id })
+  expect(result.parts.some((part) => part.type === "text" && part.text === "U2_DELIVERED_ONCE")).toBe(true)
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  expect(history.filter((message) => message.info.role === "assistant" && message.info.error)).toEqual([])
+  expect(history.filter((message) => message.info.role === "assistant" && message.info.parentID === newer.info.id)).toHaveLength(1)
+  const hits = yield* llm.hits
+  expect(hits.filter(parent("QUEUED_U2_DURING_CATCHUP"))).toHaveLength(1)
 }), 120_000)
 
 for (const invalid of ['{"memory":"missing references"}', "I resumed work and implemented the changes."]) {
@@ -215,16 +424,17 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     const before = yield* pollWithTimeout(Effect.gen(function* () {
       const value = yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })
       return value.system[0]?.includes(FIRST) ? value : undefined
-    }), "Valid HTTP memory never applied", "10 seconds")
+    }), "Valid HTTP memory never applied", "10 seconds").pipe(Effect.catch((error) => jobs.list().pipe(Effect.flatMap((list) =>
+      Effect.fail(new Error(`${error.message}; jobs=${JSON.stringify(list.map((job) => ({ status: job.status, output: job.output, error: job.error })))}`))))))
     const refresh = yield* send("REFRESH_CLOSED")
     const job = yield* jobFor(chat.id, refresh.info.id)
     const result = yield* jobs.wait({ id: job.id, timeout: 10_000 })
     expect(result.timedOut).toBe(false)
-    expect(result.info?.output).toBe("discarded")
+    expect(result.info?.output).toBe("invalid-schema")
     const history = yield* sessions.messages({ sessionID: chat.id })
     const prepared = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
     expect(prepared.system).toEqual(before.system)
-    expect(prepared.messages).toEqual(history.slice(4))
+    expect(prepared.messages).toEqual(history.slice(-2))
     yield* send("AFTER_INVALID")
     const wire = wireMessages(capture.hits[0].hit.body)
     expect(wire.filter((entry) => entry.role === "system").map((entry) => entry.content).join("\n")).toContain(FIRST)
@@ -269,7 +479,8 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     expect(done.info?.output).toBe("applied")
     const saved = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
     expect(yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: false })).toEqual(saved)
-    expect(saved.messages).toEqual(history.slice(4))
+    expect(saved.messages).toEqual([history.at(-2)!])
+    expect(saved.coverage?.coveredThrough).toBe(history.at(-1)!.info.id)
     expect(saved.system.length > 0).toBe(true)
     if (condition === "revoked" || condition === "pattern-revoked") yield* sessions.setPermission({ sessionID: chat.id,
       permission: [{ permission: "context_recall", pattern: condition === "pattern-revoked" ? chat.id : "*", action: "deny" }] })
@@ -279,8 +490,7 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     const wire = wireMessages(hit.body)
     const system = wire.filter((entry) => entry.role === "system").map((entry) => entry.content).join("\n")
     const conversation = wire.filter((entry) => entry.role !== "system").map((entry) => entry.content).join("\n")
-    for (const message of history.slice(4)) for (const part of message.parts)
-      if (part.type === "text") expect(conversation).toContain(part.text)
+    for (const text of seed) expect(conversation).not.toContain(text)
     expect(system).toContain("# Working memory")
     expect(system).toContain(FIRST)
     expect(conversation).not.toContain(seed[0])

@@ -76,7 +76,8 @@ test("an inline file counts ATTACHMENT_TOKENS, and masking an old one frees them
   const shot = tool(value[1], "read", "Image read successfully", { input: { filePath: "shot.png" } })
   if (shot.state.status !== "completed") throw new Error("Expected completed tool")
   shot.state.attachments = [{ id: PartID.ascending(), sessionID, messageID: value[1].info.id, type: "file", mime: "image/png", url: image }]
-  expect(estimate({ url: image })).toBeLessThan(ATTACHMENT_TOKENS + 10)
+  expect(estimate({ type: "file", mime: "image/png", url: image })).toBeLessThan(ATTACHMENT_TOKENS + 20)
+  expect(estimate({ url: image })).toBeGreaterThan(500_000)
   expect(estimate({ text: "line of output\n".repeat(2_000) })).toBeGreaterThan(5_000)
   const found = candidates(value, new Map()).find((entry) => entry.part.id === shot.id)
   expect(found?.saved).toBeGreaterThan(ATTACHMENT_TOKENS - 100)
