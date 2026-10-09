@@ -62,6 +62,7 @@ type Config<
 
 type Runtime = {
   readonly permission?: string
+  readonly onDemand?: true
   readonly definition: (name: string) => ToolDefinition
   readonly settle: (call: ToolCall, context: Context) => Effect.Effect<ToolOutput, ToolFailure>
 }
@@ -146,6 +147,13 @@ export const withPermission = <Input extends SchemaType<any>, Output extends Sch
 }
 
 export const permission = (tool: AnyTool, name: string) => runtimeOf(tool).permission ?? name
+/** Built-in catalog metadata only. Explicit host advertisement never grants execution permission. */
+export function withOnDemand<Input extends SchemaType<unknown>, Output extends SchemaType<unknown>>(tool: Definition<Input, Output>) {
+  const decorated = Object.freeze({}) as Definition<Input, Output>
+  runtimes.set(decorated, { ...runtimeOf(tool), onDemand: true })
+  return decorated
+}
+export const isOnDemand = (tool: AnyTool) => runtimeOf(tool).onDemand === true
 export const definition = (name: string, tool: AnyTool) => runtimeOf(tool).definition(name)
 export const settle = (tool: AnyTool, call: ToolCall, context: Context) => runtimeOf(tool).settle(call, context)
 

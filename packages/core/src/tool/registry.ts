@@ -10,7 +10,7 @@ import { SessionSchema } from "../session/schema"
 import { ToolOutputStore } from "../tool-output-store"
 import { Wildcard } from "../util/wildcard"
 import { ApplicationTools } from "./application-tools"
-import { definition, permission, settle, validateName, type AnyTool, type RegistrationError } from "./tool"
+import { definition, isOnDemand, permission, settle, validateName, type AnyTool, type RegistrationError } from "./tool"
 import { Tools } from "./tools"
 import { makeLocationNode } from "../effect/app-node"
 import { ToolSafety } from "../tool-safety"
@@ -230,9 +230,9 @@ const registryLayer = Layer.effect(
         )
         const advertised = options?.advertisedNames === undefined ? undefined : new Set(options.advertisedNames)
         const materialization: Materialization = {
-          definitions: Array.from(definitions.values()).filter((definition) =>
-            advertised === undefined || advertised.has(definition.name),
-          ),
+          definitions: Array.from(registrations, ([name, registration]) =>
+            (advertised === undefined ? !isOnDemand(registration.tool) : advertised.has(name)) ? definitions.get(name) : undefined,
+          ).filter((definition): definition is ToolDefinition => definition !== undefined),
           definition: (name) => definitions.get(name),
           registrationIdentity: (name) => registrations.get(name)?.identity,
           settle: (input) => Effect.gen(function* () {

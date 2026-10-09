@@ -85,6 +85,26 @@ const make = () =>
   })
 
 describe("captured capability materialization", () => {
+  it.live("on-demand catalog metadata preserves canonical capture and explicit host projection without widening eligibility", () =>
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      yield* registry.register({ ordinary: make(), hidden: Tool.withOnDemand(make()),
+        restricted: Tool.withPermission(Tool.withOnDemand(make()), "read") })
+      const materialized = yield* registry.materialize()
+      expect(materialized.definitions.map((tool) => tool.name)).toEqual(["ordinary"])
+      expect(materialized.definition("hidden")?.name).toBe("hidden")
+      expect(materialized.registrationIdentity("hidden")).toBe(registry.currentRegistrationIdentity("hidden"))
+      expect((yield* materialized.settle(call("hidden"))).result).toEqual({ type: "text", value: "hidden" })
+      const explicit = yield* registry.materialize(undefined, { advertisedNames: ["hidden"] })
+      expect(explicit.definitions.map((tool) => tool.name)).toEqual(["hidden"])
+      const denied = yield* registry.materialize([{ action: "read", resource: "*", effect: "deny" }],
+        { advertisedNames: ["restricted"] })
+      expect(denied.definitions).toEqual([])
+      expect(denied.definition("restricted")).toBeUndefined()
+      expect((yield* denied.settle(call("restricted"))).result).toEqual({ type: "error", value: "Unknown tool: restricted" })
+    }),
+  )
+
   it.live("projects advertisement in registry order without widening whole-tool eligibility", () =>
     Effect.gen(function* () {
       const applications = yield* ApplicationTools.Service
