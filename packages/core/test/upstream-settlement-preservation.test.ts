@@ -91,6 +91,9 @@ dbIt.effect("legacy durable projector preserves receipt, original input and term
     state: { status: "completed", input, output: "Background task started", title: "upstream",
       metadata, time: { start: 1, end: 1 } },
   })
+  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part: { ...part,
+    state: { status: "completed", input, output: "Background task started", title: "upstream",
+      metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true }, time: { start: 1, end: 1 } } } }, { persist: true })
   yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part }, { persist: true })
   const read = () => Effect.gen(function* () {
     const row = yield* database.db.select().from(PartTable).where(eq(PartTable.id, part.id)).get()
@@ -146,6 +149,34 @@ dbIt.effect("legacy durable projector preserves receipt, original input and term
   const conflict = yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1,
     part: { ...part, callID: "another-dispatch" } }, { persist: true }).pipe(Effect.exit)
   expect(Exit.isFailure(conflict)).toBe(true)
+  // The private port acquired this completed snapshot before unrelated progress and interruption were projected.
+  const stale = SessionV1.ToolPart.make({ ...part, id: SessionV1.PartID.make("prt_first_install"), callID: "first-install-call",
+    metadata: { providerDetail: "stale snapshot" }, state: { status: "completed", input, output: "Background task started",
+      title: "stale title", metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true,
+      progressDetail: "stale snapshot" }, time: { start: 1, end: 1 } } })
+  if (stale.state.status !== "completed") throw new Error("First-install snapshot must be completed")
+  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 1, part: stale }, { persist: true })
+  const latest = SessionV1.ToolPart.make({ ...stale, metadata: { providerDetail: "concurrent latest", unrelated: true },
+    state: { status: "error", input, error: "Actual concurrent interruption", time: { start: 1, end: 3 },
+      metadata: { parentSessionId: sessionID, sessionId: "ses_child", background: true, interrupted: true,
+        progressDetail: "concurrent latest", otherDetail: "retain" } } })
+  if (latest.state.status !== "error") throw new Error("First-install current state must be error")
+  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 3, part: latest }, { persist: true })
+  const firstReceipt = { ...receipt, parentCallID: stale.callID }
+  for (const part of [{ ...stale, state: { ...stale.state,
+    metadata: { ...metadata, upstreamSettlement: { ...firstReceipt, parentCallID: "wrong-call" } } } },
+    { ...stale, state: { ...stale.state, input: { ...input, task_id: "ses_wrong" }, metadata: { ...metadata, upstreamSettlement: firstReceipt } } }]) {
+    const rejected = yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 4, part }, { persist: true }).pipe(Effect.exit)
+    expect(Exit.isFailure(rejected)).toBe(true)
+  }
+  yield* events.publish(SessionV1.Event.PartUpdated, { sessionID, time: 4, part: { ...stale,
+    state: { ...stale.state, metadata: { ...metadata, progressDetail: "stale snapshot", upstreamSettlement: firstReceipt } } } }, { persist: true })
+  const installedRow = yield* database.db.select().from(PartTable).where(eq(PartTable.id, stale.id)).get()
+  if (!installedRow) throw new Error("Missing first installed Task")
+  const installed = Schema.decodeUnknownSync(SessionV1.Part)({ ...installedRow.data, id: installedRow.id,
+    messageID: installedRow.message_id, sessionID: installedRow.session_id })
+  expect(installed).toEqual({ ...latest, state: { ...latest.state,
+    metadata: { ...latest.state.metadata, upstreamSettlement: firstReceipt, workResult } } })
 }))
 const success = (value: Record<string, unknown>) => SessionEvent.Tool.Success.make({
   id: EventV2.ID.make("evt_success"), type: SessionEvent.Tool.Success.type,
@@ -292,6 +323,23 @@ describe("private upstream settlement preservation", () => {
     expect(call.state.structured).toMatchObject({ extraDetail: "late", metadata: { upstreamSettlement: receipt, interrupted: true } })
     yield* SessionMessageUpdater.update(current.adapter, failure("Actual interruption failure"))
     expect(tool(current.state).state.status).toBe("error")
+  }))
+
+  it.effect("first private progress installs receipt on current error without overwriting interruption", () => Effect.gen(function* () {
+    const current = fixture()
+    yield* SessionMessageUpdater.update(current.adapter, progress({ latestField: "concurrent",
+      metadata: { parentSessionId: sessionID, sessionId: "ses_child", interrupted: true, detail: "latest" } }))
+    yield* SessionMessageUpdater.update(current.adapter, failure("Actual concurrent interruption"))
+    const before = structuredClone(tool(current.state))
+    yield* SessionMessageUpdater.update(current.adapter, progress({ metadata: { ...metadata, interrupted: false } }))
+    const call = tool(current.state)
+    expect(call.state.status).toBe("error")
+    if (call.state.status !== "error" || before.state.status !== "error") throw new Error("First receipt replaced current failure")
+    expect(call.state.error).toEqual(before.state.error)
+    expect(call.time).toEqual(before.time)
+    expect(call.state.content).toEqual(before.state.content)
+    expect(call.state.structured).toMatchObject({ latestField: "concurrent",
+      metadata: { upstreamSettlement: receipt, workResult, interrupted: true, detail: "latest" } })
   }))
 
   it.effect("new progress receipt cannot rebind stored child or grant provider ownership", () => Effect.gen(function* () {
