@@ -35,6 +35,7 @@ run() {
 trap 'status=$?; git status --porcelain --untracked-files=all >"$dir/final-status.txt"; if [[ -s "$dir/final-status.txt" ]]; then printf "NIX_DISTRIBUTION_FAILURE:SOURCE_CHANGED\n" >&2; status=1; fi; printf "%s\n" "$status" >"$dir/batch.exit"; exit "$status"' EXIT
 git rev-parse HEAD >"$dir/source-revision.txt"
 git rev-parse 'HEAD^{tree}' >"$dir/source-tree.txt"
+git status --porcelain --untracked-files=all >"$dir/source-status.txt"
 run nix-version nix --version
 run native-system nix eval --impure --raw --expr 'builtins.currentSystem'
 [[ $(<"$dir/native-system.stdout") == "$DISTRIBUTION_SYSTEM" ]] || fail NATIVE_SYSTEM_MISMATCH
@@ -67,8 +68,10 @@ run default-dependency nix eval --impure --no-write-lock-file --no-update-lock-f
 '
 if [[ $mode == measure ]]; then
   run hash-drv nix eval --no-write-lock-file --no-update-lock-file --raw ".#packages.$DISTRIBUTION_SYSTEM.node_modules_updater.drvPath"
+  run hash-drv-info nix derivation show "$(<"$dir/hash-drv.stdout")"
   if run hash-build nix build --no-write-lock-file --no-update-lock-file \
-    --option sandbox true --no-link --print-build-logs ".#packages.$DISTRIBUTION_SYSTEM.node_modules_updater"; then
+    --option sandbox true --no-link --print-build-logs --log-format internal-json \
+    ".#packages.$DISTRIBUTION_SYSTEM.node_modules_updater"; then
     fail UPDATER_UNEXPECTED_SUCCESS
   fi
   run hash-capture python3 nix/scripts/dependency_measurement.py capture "$dir" "$DISTRIBUTION_SYSTEM" "$revision"
