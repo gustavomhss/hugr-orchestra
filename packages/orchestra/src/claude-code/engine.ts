@@ -302,6 +302,8 @@ const layer = Layer.effect(
 
       const outcome = yield* Effect.gen(function* () {
            const materialized = yield* prepare
+           // New SDK sessions must never fall into the legacy assistant-based delivery inference.
+           if (!state.sessionId && state.delivered === undefined) yield* metadata({ delivered: [] })
            options.settings.autoCompactEnabled = !effective
            const env = yield* ClaudeCodeSDK.Environment
            const lifetime = ClaudeCodeSDK.processLifetime({ ...options, env,

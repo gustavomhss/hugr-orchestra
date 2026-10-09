@@ -630,7 +630,7 @@ it.instance("assistant with uncommitted exact receipt cannot hand off; Stop join
   const worker = yield* prompt.prompt({ sessionID: chat.id, ...say("held callback") }).pipe(Effect.forkChild)
   yield* Deferred.await(entered)
   yield* Deferred.await(mirrored)
-  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ delivered: [] })
   const stop = yield* prompt.cancel(chat.id).pipe(Effect.andThen(Deferred.succeed(stopped, undefined)), Effect.forkChild)
   yield* Deferred.await(returned)
   yield* Effect.yieldNow
@@ -638,7 +638,7 @@ it.instance("assistant with uncommitted exact receipt cannot hand off; Stop join
   yield* Deferred.succeed(release, undefined)
   yield* Fiber.join(stop)
   yield* Fiber.await(worker)
-  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ delivered: [] })
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toMatchObject({ nativeArchiveFailed: true })
 }), 60_000)
 
@@ -655,10 +655,32 @@ it.instance("assistant frames without an exact durable receipt cannot hand off h
     throw new Error("crash before exact native receipt")
   }, reply("retried", "retry-api"))
   yield* prompt.prompt({ sessionID: chat.id, ...say("original input") })
-  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ delivered: [] })
   yield* prompt.prompt({ sessionID: chat.id, ...say("retry input") })
   expect(queries).toHaveLength(2)
   expect(queries[1].prompt).toBe("original input\n\nretry input")
+}), 60_000)
+
+it.instance("successful assistant without exact native receipt leaves original input pending on followup", () => Effect.gen(function* () {
+  queries.length = 0
+  scripts.length = 0
+  const { sessions, prompt, chat } = yield* setup()
+  scripts.push(async function* (_signal, params) {
+    yield { type: "system", subtype: "init", ...frame }
+    await params.options?.sessionStore?.append({ projectKey: params.options.cwd ?? "fixture", sessionId: "sdk-1" }, [
+      { type: "user", uuid: "unrelated-success-input", parentUuid: null, message: { role: "user", content: "unrelated native input" } },
+    ])
+    yield { type: "assistant", ...frame, uuid: "unreceipted-success", message: { id: "unreceipted-success-api",
+      content: [{ type: "text", text: "successful but unreceipted" }], stop_reason: "end_turn", usage: {} } }
+    yield { type: "result", subtype: "success", is_error: false, total_cost_usd: 0, ...frame }
+  }, reply("followup done", "receipted-followup"))
+  const first = yield* prompt.prompt({ sessionID: chat.id, ...say("original input") })
+  expect(first.info.role === "assistant" && first.info.finish).toBe("stop")
+  const before = (yield* sessions.get(chat.id)).metadata?.claudeCode
+  yield* prompt.prompt({ sessionID: chat.id, ...say("followup input") })
+  expect(queries).toHaveLength(2)
+  expect(queries[1].prompt).toBe("original input\n\nfollowup input")
+  expect(before).toMatchObject({ delivered: [] })
 }), 60_000)
 
 it.instance("durable receipt survives crash before onDelivery metadata handoff and is never resent", () => Effect.gen(function* () {
@@ -681,7 +703,7 @@ it.instance("durable receipt survives crash before onDelivery metadata handoff a
   }, reply("next", "after-gap"))
   const first = yield* prompt.prompt({ sessionID: chat.id, ...say("committed once") })
   expect(first.info.role === "assistant" && first.info.error?.data).toMatchObject({ message: expect.stringContaining("crash between durable receipt") })
-  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).not.toHaveProperty("delivered")
+  expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ delivered: [] })
   yield* prompt.prompt({ sessionID: chat.id, ...say("after crash") })
   expect(queries).toHaveLength(2)
   expect(queries[1].prompt).toBe("after crash")
@@ -754,19 +776,27 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
     const done = yield* Deferred.make<void>()
     const context = yield* Effect.context<never>()
     const children: SpawnedProcess[] = []
+    const environments: Promise<string>[] = []
     yield* Effect.addFinalizer(() => Effect.sync(() => { construct = undefined; children.forEach((child) => child.kill("SIGKILL")) }))
     construct = (params) => {
       if (!params.options?.spawnClaudeCodeProcess || !params.options.env) throw new Error("missing lifetime options")
-      expect(params.options.env).toEqual({ HOME: directory, CLAUDE_CONFIG_DIR: directory })
-      expect(params.options.managedSettings).toMatchObject({ forceLoginMethod: "claudeai", allowedProviders: ["anthropic"] })
+      expect(params.options.env).toEqual({ HOME: directory, CLAUDE_CONFIG_DIR: directory, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1" })
+      expect(params.options.managedSettings).toBeUndefined()
       const child = params.options.spawnClaudeCodeProcess({ command: process.execPath, args: ["-e", `
         process.stdin.resume();
         process.stdin.on("end", () => setInterval(() => {
           if (require("node:fs").existsSync(${JSON.stringify(path.join(directory, "release-child"))})) process.exit(0);
         }, 10));
-        process.stdout.write("ready");
+        process.stdout.write(JSON.stringify(process.env));
       `], env: params.options.env, signal: new AbortController().signal })
       children.push(child)
+      const environment = new Promise<string>((resolve, reject) => {
+        child.stdout.once("data", (data: Buffer) => resolve(data.toString()))
+        child.once("error", reject)
+        child.once("exit", () => reject(new Error("child exited before environment receipt")))
+      })
+      environment.catch(() => {})
+      environments.push(environment)
       if (mode === "construct-error") {
         // No Query exists to dispose this child; only the pre-registered finalizer owns it.
         params.options.abortController?.signal.addEventListener("abort", () => child.stdin.end(), { once: true })
@@ -774,7 +804,7 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
         throw new Error("query constructor threw after spawn")
       }
       return Object.assign((async function* () {
-        await new Promise<void>((resolve) => child.stdout.once("data", () => resolve()))
+        await environment
         if (mode === "cancel") {
           const aborted = new Promise<void>((resolve) => params.options?.abortController?.signal.addEventListener("abort", () => resolve(), { once: true }))
           yield { type: "system", subtype: "init", ...frame }
@@ -793,14 +823,22 @@ for (const mode of ["success", "return-error", "construct-error", "cancel"]) {
       }) as unknown as ReturnType<ClaudeCodeSDK.Interface["query"]>
     }
     const worker = yield* prompt.prompt({ sessionID: chat.id, ...say("local child only") }).pipe(
-      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip", CLAUDE_CODE_USE_VERTEX: "1" }),
+      Effect.provideService(ClaudeCodeSDK.Environment, { HOME: directory, CLAUDE_CONFIG_DIR: directory, ANTHROPIC_API_KEY: "must-strip",
+        ANTHROPIC_BASE_URL: "https://must-strip.invalid", CLAUDE_CODE_USE_VERTEX: "1", CLAUDE_CODE_OAUTH_TOKEN: "must-strip-host-token" }),
       Effect.onExit(() => Deferred.succeed(done, undefined)), Effect.forkChild)
-    const stop = mode === "cancel" ? yield* Deferred.await(entered).pipe(Effect.andThen(prompt.cancel(chat.id)), Effect.forkChild) : undefined
-    yield* Deferred.await(returned)
+    const stop = mode === "cancel" ? yield* Effect.raceFirst(Deferred.await(entered), Deferred.await(done).pipe(
+      Effect.andThen(Effect.die(new Error("engine settled before cancellation readiness"))))).pipe(
+        Effect.andThen(prompt.cancel(chat.id)), Effect.forkChild) : undefined
+    yield* Effect.raceFirst(Deferred.await(returned), Deferred.await(done).pipe(
+      Effect.andThen(Effect.die(new Error("engine settled before query disposal")))))
     yield* Effect.yieldNow
     expect(children).toHaveLength(1)
     expect(children[0].exitCode).toBeNull()
     expect(yield* Deferred.isDone(done)).toBe(false)
+    expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(yield* Effect.promise(() => environments[0]))).toEqual({
+      HOME: directory, CLAUDE_CONFIG_DIR: directory, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1",
+      CLAUDE_CODE_OAUTH_TOKEN: "local-test-token", CLAUDE_CODE_OAUTH_SCOPES: "user:inference",
+    })
     writeFileSync(path.join(directory, "release-child"), "release")
     yield* Fiber.await(worker)
     if (stop) yield* Fiber.join(stop)
