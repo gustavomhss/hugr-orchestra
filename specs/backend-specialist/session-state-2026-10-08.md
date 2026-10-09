@@ -1,3 +1,7 @@
+# Historical snapshot — superseded by landing closure
+
+The current execution/publication state is the **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md). Pending work and blockers recorded below are historical; do not resume them as current tasks.
+
 # Backend failure repairs — compaction handoff
 
 Date: 2026-10-08. This snapshot supersedes the older `session-handoff.md` for current execution state.
@@ -209,6 +213,3 @@ Do not repeat successful probes unless changed code/new failure invalidates thei
    Reconcile stale #90. Publish bench fixes/evidence in independent bench repo with its own reviewed scope.
 
 The owner paused work for compaction. **Do not continue fixes until this save is reported and compaction occurs.**
-# Historical snapshot — superseded by landing closure
-
-The current execution/publication state is the **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md). Pending work and blockers recorded below are historical; do not resume them as current tasks.
