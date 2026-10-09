@@ -65,3 +65,9 @@ The new focused matrix uses one real loopback-registry `Npm.install` with canoni
 [37877015907](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37877015907) passed the one matrix test with 40 parent assertions on each of Linux and Windows. Each run includes a counted real Bun registration mutation: external identity comparison rejects a fresh registered `tool` function while expected bundled objects remain unchanged. The mutation is not a separate rerun or a changed oracle. Normal workers cover canonical/alias ESM and `require`; the registration control specifically calibrates the Bun comparison, not every runtime independently.
 
 Combined Core and Orchestra package typechecks passed, including the integration public-type field references. The earlier resolver and production-footprint suites were not rerun. Final exact-head milestone CI and full product/operational proofs remain separate acceptance items.
+
+## Owner-directed implementation-first cadence
+
+The owner now directs: **“Ja ta planejado o que falta fazer pra terminar? Se sim executa com o maximo de paralelizacao, deixa pra testar quando tiver tudo pronto, ok?”** This supersedes per-work-package typecheck/test/mutation/CI scheduling for the remaining wave. Authors implement disjoint slices and prepare runnable checks; validation runs once the combined implementation is ready. Existing source-bound evidence is reused. Required gates and operational requirements are unchanged.
+
+Active ownership: Archie upstream attribution/schema/V3 and host verifier; Relay Schema binding, Core workflow, Orchestra lifecycle; Nix `nix/**`, `flake.nix` and its existing workflow; runtime native-product workflows/proofs, WSL proof and credential placement. Relay remains the sole shared `maestro-event.ts` integrator. Native and WSL harness drafts are preparation, not passing product evidence; neither is dispatched during this phase.
