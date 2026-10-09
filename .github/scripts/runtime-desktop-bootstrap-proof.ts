@@ -3,8 +3,8 @@
 // Prepared dev Desktop only: default v1 utilityProcess, not the opt-in V2 daemon.
 // CDP observes the shipped preload API; no replacement main, server, or readiness hook.
 import { createHash } from "node:crypto"
-import { spawn } from "node:child_process"
-import { access, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises"
+import { spawn, spawnSync } from "node:child_process"
+import { access, lstat, mkdir, mkdtemp, readFile, readdir, readlink, realpath, rm, writeFile } from "node:fs/promises"
 import { constants } from "node:fs"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
@@ -30,8 +30,12 @@ await main().catch((error: unknown) => {
 })
 
 async function main() {
-  const args = parseArgs({ options: { desktop: { type: "string" }, report: { type: "string" } }, strict: true, allowPositionals: false }).values
+  const args = parseArgs({ options: { desktop: { type: "string" }, report: { type: "string" }, "build-manifest": { type: "string" } }, strict: true, allowPositionals: false }).values
   requireProof(args.desktop && isAbsolute(args.desktop) && args.report && isAbsolute(args.report), "ABSOLUTE_DESKTOP_AND_REPORT_REQUIRED")
+  requireProof(args["build-manifest"] && isAbsolute(args["build-manifest"]), "ABSOLUTE_BUILD_MANIFEST_REQUIRED")
+  const inherited = Object.fromEntries(Object.entries(process.env).filter(([key]) => ["path", "systemroot", "windir", "comspec", "pathext", "lang", "lc_all", "display"].includes(key.toLowerCase())))
+  Object.keys(process.env).forEach((key) => { delete process.env[key] })
+  Object.assign(process.env, inherited) // Scrub the proof process too: no inherited HTTP proxy or credential/debug environment.
   const desktop = await realpath(args.desktop).catch(() => { throw new ProofFailure("DESKTOP_ROOT_MISSING") })
   const report = join(await realpath(dirname(args.report)), args.report.split(/[\\/]/).at(-1)!)
   requireProof(await lstat(report).then(() => false, (error: NodeJS.ErrnoException) => error.code === "ENOENT"), "REPORT_NOT_FRESH")
@@ -47,7 +51,7 @@ async function main() {
   const entry = resolve(desktop, pkg.main)
   await Promise.all([entry, join(desktop, "out/main/sidecar.js"), join(desktop, "out/preload/index.js"), join(desktop, "out/renderer/index.html")]
     .map((path) => regular(path, "DESKTOP_BUILD_OUTPUT_MISSING")))
-  const mainSha256 = createHash("sha256").update(await readFile(entry)).digest("hex")
+  const build = await buildEvidence(desktop, args["build-manifest"])
   const electronRoot = await Promise.resolve().then(() => dirname(createRequire(join(desktop, "package.json")).resolve("electron/package.json")))
     .catch(() => { throw new ProofFailure("ELECTRON_DEPENDENCY_MISSING") })
   const electronPkg = object(await Bun.file(join(electronRoot, "package.json")).json(), "ELECTRON_METADATA_INVALID")
@@ -72,7 +76,7 @@ async function main() {
   await nativeExecutable(artifacts[0].path)
   const sandbox = await mkdtemp(join(await realpath(tmpdir()), "orchestra-desktop-proof-"))
   const env = {
-    ...Object.fromEntries(Object.entries(process.env).filter(([key]) => ["path", "systemroot", "windir", "comspec", "pathext", "lang", "lc_all", "display"].includes(key.toLowerCase()))),
+    ...inherited,
     HOME: sandbox, USERPROFILE: sandbox, ORCHESTRA_TEST_HOME: sandbox,
     APPDATA: join(sandbox, "config"), LOCALAPPDATA: join(sandbox, "cache"),
     XDG_CONFIG_HOME: join(sandbox, "config"), XDG_DATA_HOME: join(sandbox, "data"),
@@ -82,30 +86,53 @@ async function main() {
     // Prevent production shell-env probing from loading login scripts and restoring secrets.
     SHELL: "/usr/bin/false", NO_PROXY: "127.0.0.1,localhost,::1",
   }
-  const owned: { child?: ReturnType<typeof spawn>; exited?: Promise<void>; version?: ReturnType<typeof Bun.spawn>; failed?: boolean; socket?: WebSocket; debugger?: string; tail: string; cleaning?: Promise<void> } = { tail: "" }
+  const owned: { child?: ReturnType<typeof spawn>; exited?: Promise<void>; startTime?: string; version?: ReturnType<typeof Bun.spawn>; failed?: boolean; cancelled?: boolean; socket?: WebSocket; debugger?: string; tail: string; cleaning?: Promise<void> } = { tail: "" }
   const running = () => owned.child?.pid && owned.child.exitCode === null && owned.child.signalCode === null && !owned.failed
   const cleanup = () => (owned.cleaning ??= (async () => {
-    owned.socket?.close()
-    if (owned.version && owned.version.exitCode === null) { owned.version.kill("SIGKILL"); await owned.version.exited }
-    const child = owned.child
-    if (child?.pid && running()) {
-      await signalOwnedGroup(child.pid, "SIGTERM")
-      await Promise.race([owned.exited, Bun.sleep(6_000)])
-      if (running()) await signalOwnedGroup(child.pid, "SIGKILL")
-      await Promise.race([owned.exited, Bun.sleep(5_000)])
-      requireProof(!running(), "OWNED_DESKTOP_CLEANUP_FAILED")
-    }
-    if (child?.pid) {
-      const groupAlive = () => Promise.resolve().then(() => process.kill(-child.pid!, 0)).then(() => true, (error: NodeJS.ErrnoException) => {
-        requireProof(error.code === "ESRCH", "OWNED_PROCESS_GROUP_INSPECTION_FAILED"); return false
-      })
-      const deadline = Date.now() + 5_000
-      while (await groupAlive() && Date.now() < deadline) await Bun.sleep(100)
+    const failures: string[] = []
+    await Promise.resolve().then(() => owned.socket?.close()).catch(() => failures.push("OWNED_CDP_CLOSE_FAILED"))
+    await (async () => {
+      if (!owned.version || owned.version.exitCode !== null) return
+      owned.version.kill("SIGKILL")
+      await Promise.race([owned.version.exited, Bun.sleep(5_000)])
+      requireProof(owned.version.exitCode !== null, "OWNED_VERSION_PROCESS_CLEANUP_FAILED")
+    })().catch(() => failures.push("OWNED_VERSION_PROCESS_CLEANUP_FAILED"))
+    await (async () => {
+      const pid = owned.child?.pid
+      if (!pid) return
+      const groupAlive = async () => {
+        const exists = await Promise.resolve().then(() => process.kill(-pid, 0)).then(() => true, (error: NodeJS.ErrnoException) => {
+          requireProof(error.code === "ESRCH", "OWNED_PROCESS_GROUP_INSPECTION_FAILED"); return false
+        })
+        if (!exists) return false
+        const leader = await processIdentity(pid, true)
+        if (leader) {
+          requireProof(leader.parent === process.pid && leader.group === pid && leader.session === pid && (!owned.startTime || leader.startTime === owned.startTime), "OWNED_GROUP_IDENTITY_CHANGED")
+          owned.startTime ??= leader.startTime
+        }
+        requireProof(owned.startTime, "OWNED_GROUP_IDENTITY_UNAVAILABLE")
+        return true
+      }
+      const waitGroup = async (milliseconds: number) => {
+        const deadline = Date.now() + milliseconds
+        while (await groupAlive() && Date.now() < deadline) await Bun.sleep(100)
+      }
+      if (await groupAlive()) { await signalOwnedGroup(pid, "SIGTERM"); await waitGroup(6_000) }
+      if (await groupAlive()) { await signalOwnedGroup(pid, "SIGKILL"); await waitGroup(5_000) }
       requireProof(!(await groupAlive()), "OWNED_PROCESS_GROUP_STILL_ALIVE")
-    }
-    await rm(sandbox, { recursive: true, force: true })
+      await Promise.race([owned.exited, Bun.sleep(1_000)])
+      requireProof(!running(), "OWNED_DESKTOP_CLEANUP_FAILED")
+    })().catch((error: unknown) => failures.push(error instanceof ProofFailure ? error.message : "OWNED_DESKTOP_CLEANUP_FAILED"))
+    await rm(sandbox, { recursive: true, force: true }).catch(() => failures.push("OWNED_TEMP_CLEANUP_FAILED"))
+    requireProof(failures.length === 0, failures.join("; "))
   })())
-  const interrupt = () => { void cleanup().then(() => process.exit(1), () => process.exit(1)) }
+  const interrupt = () => {
+    if (owned.cancelled) return
+    owned.cancelled = true
+    void cleanup().then(() => process.exit(1), (error: unknown) => {
+      console.error(error instanceof ProofFailure ? error.message : "OWNED_DESKTOP_CLEANUP_FAILED"); process.exit(1)
+    })
+  }
   process.once("SIGINT", interrupt)
   process.once("SIGTERM", interrupt)
   const timeout = setTimeout(() => { console.error("DESKTOP_BOOTSTRAP_TIMEOUT"); interrupt() }, 90_000)
@@ -124,12 +151,17 @@ async function main() {
     requireProof(await version(electron) === `v${electronPkg.version}`, "ELECTRON_EXECUTABLE_VERSION_MISMATCH")
     requireProof([pkg.version, `orchestra v${pkg.version}`].includes(await version(artifacts[0].path)), "CLI_EXECUTABLE_VERSION_MISMATCH")
     // Unpackaged main selects v1 without ORCHESTRA_SIDECAR_V2. No CLI service start here.
+    await build.verify()
     requireProof(!owned.cleaning, "DESKTOP_BOOTSTRAP_INTERRUPTED")
     const child = spawn(electron, [desktop, `--user-data-dir=${join(sandbox, "desktop")}`, "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0"],
       { env, cwd: sandbox, detached: true, stdio: ["ignore", "ignore", "pipe"] })
     owned.child = child
     owned.exited = new Promise<void>((resolve) => child.once("close", () => resolve()))
     child.once("error", () => { owned.failed = true })
+    requireProof(child.pid, "DESKTOP_PROCESS_PID_MISSING")
+    const leader = await processIdentity(child.pid)
+    requireProof(leader && leader.parent === process.pid && leader.group === child.pid && leader.session === child.pid, "DESKTOP_GROUP_NOT_OWNED")
+    owned.startTime = leader.startTime
     const deadline = Date.now() + 60_000
     const alive = () => requireProof(running(), "DESKTOP_EXITED_BEFORE_PROOF")
     void (async () => {
@@ -147,10 +179,10 @@ async function main() {
     const cdp = await connect(socket)
     const processes = async () => {
       const value = object(await cdp("SystemInfo.getProcessInfo"), "PROCESS_EVIDENCE_INVALID")
-      requireProof(Array.isArray(value.processInfo) && value.processInfo.length, "PROCESS_EVIDENCE_EMPTY")
+      requireProof(Array.isArray(value.processInfo) && value.processInfo.length > 0 && value.processInfo.length <= 128, "PROCESS_EVIDENCE_EMPTY_OR_OVERSIZED")
       const list = value.processInfo.map((item: unknown) => object(item, "PROCESS_EVIDENCE_INVALID"))
       requireProof(list.some((item) => item.type === "browser" && item.id === child.pid), "DESKTOP_PROCESS_OWNERSHIP_FAILED")
-      return list.filter((item) => item.type === "utility" && typeof item.id === "number")
+      return list.filter((item) => item.type === "utility" && typeof item.id === "number").map((item) => Number(item.id))
     }
     const ready: { value?: Record<string, unknown> } = {}
     while (!ready.value && Date.now() < deadline) {
@@ -170,14 +202,13 @@ async function main() {
       if (!ready.value) await Bun.sleep(100)
     }
     requireProof(ready.value, "DESKTOP_READY_EVIDENCE_UNAVAILABLE: preload awaitInitialization not observed")
-    const utility = await processes()
-    requireProof(utility.length > 0, "DESKTOP_UTILITY_PROCESS_MISSING")
     requireProof(typeof ready.value.url === "string" && ready.value.username === "orchestra" && typeof ready.value.password === "string" && ready.value.password.length, "READY_CREDENTIAL_INVALID")
     const endpoint = new URL(ready.value.url)
     requireProof(endpoint.protocol === "http:" && endpoint.hostname === "127.0.0.1" && endpoint.port && endpoint.pathname === "/" && !endpoint.username && !endpoint.password && !endpoint.search && !endpoint.hash, "READY_ENDPOINT_NOT_LOOPBACK")
+    const service = await nodeListener(await processes(), child.pid, electron, endpoint.port)
     const request = (path: string, password?: string) => fetch(new URL(path, endpoint), {
       headers: password === undefined ? {} : { Authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}` },
-      signal: AbortSignal.timeout(3_000), redirect: "error",
+      signal: AbortSignal.timeout(3_000), redirect: "error", verbose: false,
     }).catch(() => { throw new ProofFailure("DESKTOP_HEALTH_REQUEST_FAILED") })
     const health: { path?: string } = {}
     for (const path of ["/api/health", "/global/health"]) {
@@ -189,12 +220,14 @@ async function main() {
     requireProof([401, 403].includes((await request(health.path, `${ready.value.password}-wrong`)).status), "WRONG_CREDENTIAL_ACCEPTED")
     requireProof([401, 403].includes((await request(health.path)).status), "NO_CREDENTIAL_ACCEPTED")
     ready.value = undefined
-    alive()
-    requireProof((await processes()).some((item) => utility.some((before) => before.id === item.id)), "DESKTOP_UTILITY_PROCESS_EXITED")
     await regular(env.ORCHESTRA_DB, "ISOLATED_DATABASE_MISSING")
-    requireProof(createHash("sha256").update(await readFile(entry)).digest("hex") === mainSha256, "DESKTOP_MAIN_CHANGED_DURING_PROOF")
+    await build.verify()
+    const after = await nodeListener(await processes(), child.pid, electron, endpoint.port)
+    requireProof(after.pid === service.pid && after.startTime === service.startTime && after.listenerInode === service.listenerInode, "OWNED_NODE_LISTENER_CHANGED")
+    alive()
     return { schema: 1, desktopVersion: pkg.version, electronVersion: electronPkg.version, platform: process.platform, arch: process.arch,
-      mainSha256, startup: "default-v1-utilityProcess",
+      sourceCommit: build.sourceCommit, buildManifestSha256: build.manifestSha256, outputDigests: build.files,
+      startup: "default-v1-utilityProcess", serviceIdentity: service,
       readyEvidence: "production-preload-awaitInitialization-via-owned-CDP", healthy: true, wrongCredentialRejected: true,
       noCredentialRejected: true, desktopAlive: true, utilityAlive: true, uiVerified: false, modelExecutionVerified: false }
   })().finally(async () => {
@@ -203,6 +236,7 @@ async function main() {
     process.removeListener("SIGINT", interrupt)
     process.removeListener("SIGTERM", interrupt)
   })
+  requireProof(!owned.cancelled, "DESKTOP_BOOTSTRAP_INTERRUPTED")
   await writeFile(report, JSON.stringify(result) + "\n", { flag: "wx", mode: 0o600 })
   console.log(JSON.stringify(result))
 }
@@ -243,4 +277,111 @@ async function nativeExecutable(file: string) {
 
 async function signalOwnedGroup(pid: number, signal: NodeJS.Signals) {
   await Promise.resolve().then(() => process.kill(-pid, signal)).catch((error: NodeJS.ErrnoException) => requireProof(error.code === "ESRCH", "OWNED_PROCESS_GROUP_SIGNAL_FAILED"))
+}
+
+async function sourceState(desktop: string) {
+  const git = (args: string[]) => {
+    const result = spawnSync("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", "-C", desktop, ...args], {
+      encoding: "utf8", timeout: 10_000, maxBuffer: 4_194_304, env: {
+        PATH: process.env.PATH, GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null", GIT_TERMINAL_PROMPT: "0",
+      },
+    })
+    requireProof(!result.error && result.status === 0, "BUILD_SOURCE_GIT_ORACLE_UNAVAILABLE")
+    return result.stdout
+  }
+  requireProof(desktop === join(await realpath(git(["rev-parse", "--show-toplevel"]).trim()), "packages/desktop"), "DESKTOP_SOURCE_ROOT_MISMATCH")
+  const head = git(["rev-parse", "HEAD"]).trim()
+  requireProof(/^[a-f0-9]{40}$/.test(head), "BUILD_SOURCE_HEAD_INVALID")
+  // These are build-owned outputs, including tracked channel icons; no source/config/lock exception.
+  const changed = git(["diff", "--no-ext-diff", "--no-textconv", "--ignore-submodules=none", "--name-only", "-z", "HEAD", "--"]).split("\0").filter(Boolean)
+  requireProof(changed.every((file) => ["packages/desktop/out/", "packages/desktop/resources/icons/", "packages/desktop/resources/cli/", "packages/orchestra/dist/node/"].some((prefix) => file.startsWith(prefix)) || /^packages\/desktop\/resources\/ai\.hugr\.orchestra(?:\.(?:dev|beta))?\.metainfo\.xml$/.test(file)), "TRACKED_SOURCE_INPUT_CHANGED")
+  return head
+}
+
+async function buildEvidence(desktop: string, manifestFile: string) {
+  await regular(manifestFile, "BUILD_MANIFEST_MISSING_OR_NOT_REGULAR")
+  requireProof(!(await realpath(manifestFile)).startsWith(`${join(desktop, "out")}/`), "BUILD_MANIFEST_MUST_BE_OUTSIDE_OUTPUT_NAMESPACE")
+  const bytes = await readFile(manifestFile)
+  const manifest = object(await Promise.resolve().then(() => JSON.parse(bytes.toString("utf8"))).catch(() => { throw new ProofFailure("BUILD_MANIFEST_INVALID_JSON") }), "BUILD_MANIFEST_INVALID")
+  requireProof(Object.keys(manifest).length === 3 && manifest.schema === 1 && typeof manifest.sourceCommit === "string" && /^[a-fA-F0-9]{40}$/.test(manifest.sourceCommit) && Array.isArray(manifest.files) && manifest.files.length, "BUILD_MANIFEST_SCHEMA_INVALID")
+  const sourceCommit = manifest.sourceCommit.toLowerCase()
+  const manifestSha256 = createHash("sha256").update(bytes).digest("hex")
+  const files = manifest.files.map((value: unknown) => {
+    const item = object(value, "BUILD_MANIFEST_FILE_INVALID")
+    requireProof(Object.keys(item).length === 2 && typeof item.file === "string" && !isAbsolute(item.file) && !/[\\\x00-\x1f]/.test(item.file) && item.file.split("/").every((part) => part && part !== "." && part !== "..") && typeof item.sha256 === "string" && /^[a-f0-9]{64}$/.test(item.sha256), "BUILD_MANIFEST_PATH_OR_DIGEST_INVALID")
+    return { file: item.file, sha256: item.sha256 }
+  }).sort((left, right) => left.file.localeCompare(right.file))
+  requireProof(new Set(files.map((item) => item.file)).size === files.length, "BUILD_MANIFEST_DUPLICATE_FILE")
+  requireProof(["main/index.js", "main/sidecar.js", "preload/index.js", "renderer/index.html"].every((file) => files.some((item) => item.file === file)), "BUILD_MANIFEST_ENTRYPOINT_MISSING")
+  const verify = async () => {
+    await regular(manifestFile, "BUILD_MANIFEST_MISSING_OR_NOT_REGULAR")
+    requireProof(await sourceState(desktop) === sourceCommit, "BUILD_MANIFEST_SOURCE_COMMIT_MISMATCH")
+    requireProof(createHash("sha256").update(await readFile(manifestFile)).digest("hex") === manifestSha256, "BUILD_MANIFEST_CHANGED")
+    const current = (await outputFiles(join(desktop, "out"))).sort((left, right) => left.localeCompare(right))
+    requireProof(current.length === files.length && current.every((file, index) => file === files[index].file), "BUILD_OUTPUT_NAMESPACE_MISMATCH")
+    await Promise.all(files.map(async (item) => requireProof(createHash("sha256").update(await readFile(join(desktop, "out", item.file))).digest("hex") === item.sha256, "BUILD_OUTPUT_DIGEST_MISMATCH")))
+  }
+  await verify()
+  // CI's post-build manifest is the provenance authority; arbitrary caller preparation is not certified.
+  return { sourceCommit, manifestSha256, files, verify }
+}
+
+async function outputFiles(directory: string, prefix = ""): Promise<string[]> {
+  requireProof((await lstat(directory)).isDirectory() && await realpath(directory) === directory, "BUILD_OUTPUT_DIRECTORY_NOT_CONFINED")
+  return (await Promise.all((await readdir(directory)).map(async (name) => {
+    const path = join(directory, name)
+    const item = await lstat(path)
+    requireProof(!item.isSymbolicLink(), "BUILD_OUTPUT_SYMLINK_REJECTED")
+    if (item.isDirectory()) return outputFiles(path, `${prefix}${name}/`)
+    requireProof(item.isFile() && await realpath(path) === path, "BUILD_OUTPUT_FOREIGN_OR_NONREGULAR")
+    return [`${prefix}${name}`]
+  }))).flat()
+}
+
+async function processIdentity(pid: number, missing = false) {
+  const stat = await readFile(`/proc/${pid}/stat`, "utf8").catch((error: NodeJS.ErrnoException) => {
+    if (missing && error.code === "ENOENT") return
+    throw new ProofFailure("PROC_PROCESS_IDENTITY_UNAVAILABLE")
+  })
+  if (stat === undefined) return
+  const fields = stat.slice(stat.lastIndexOf(")") + 2).trim().split(/\s+/)
+  requireProof(stat.startsWith(`${pid} (`) && fields.length >= 20 && /^[A-Za-z]$/.test(fields[0]) && [fields[1], fields[2], fields[3], fields[19]].every((field) => /^\d+$/.test(field)), "PROC_PROCESS_IDENTITY_INVALID")
+  return { pid, state: fields[0], parent: Number(fields[1]), group: Number(fields[2]), session: Number(fields[3]), startTime: fields[19] }
+}
+
+async function nodeListener(pids: number[], parent: number, electron: string, port: string) {
+  requireProof(pids.length > 0 && pids.length <= 128 && pids.every((pid) => Number.isSafeInteger(pid) && pid > 0) && new Set(pids).size === pids.length, "NODE_PROCESS_INVENTORY_MISSING_OR_AMBIGUOUS")
+  const table = (await readFile("/proc/self/net/tcp", "utf8").catch(() => { throw new ProofFailure("PROC_LISTENER_ORACLE_UNAVAILABLE") })).trim().split("\n")
+  requireProof(/^\s*sl\s+local_address\s+rem_address\s+st\s/.test(table[0]), "PROC_TCP_TABLE_FORMAT_UNSUPPORTED")
+  const rows = table.slice(1).map((line) => line.trim().split(/\s+/))
+  requireProof(rows.every((row) => row.length >= 10 && /^[0-9A-F]{8}:[0-9A-F]{4}$/.test(row[1]) && /^[0-9A-F]{2}$/.test(row[3]) && /^\d+$/.test(row[9])), "PROC_TCP_TABLE_INVALID")
+  const listeners = rows.filter((row) => row[3] === "0A" && row[1] === `0100007F:${Number(port).toString(16).toUpperCase().padStart(4, "0")}`)
+  requireProof(listeners.length === 1 && listeners[0][9] !== "0", "DESKTOP_LISTENER_MISSING_OR_AMBIGUOUS")
+  const listenerInode = listeners[0][9]
+  // Electron 42's node.mojom.NodeService is the OS subtype. "Orchestra server"
+  // is production's app.getAppMetrics display name, not an observed argv token.
+  // Authorities: electron/v42.3.3 shell/services/node/public/mojom/node_service.mojom;
+  // chromium/148.0.7778.218 content/browser/service_host/utility_process_host.cc.
+  const candidates = (await Promise.all(pids.map(async (pid) => {
+    const cmdline = await readFile(`/proc/${pid}/cmdline`, "utf8").catch(() => { throw new ProofFailure("PROC_CMDLINE_ORACLE_UNAVAILABLE") })
+    requireProof(cmdline.endsWith("\0"), "PROC_CMDLINE_ORACLE_INVALID")
+    const args = cmdline.split("\0")
+    if (!args.includes("--type=utility") || !args.includes("--utility-sub-type=node.mojom.NodeService")) return
+    const identity = await processIdentity(pid)
+    requireProof(identity && !["Z", "X", "x"].includes(identity.state) && identity.parent === parent && identity.group === parent && identity.session === parent, "NODE_PROCESS_NOT_OWNED_LIVE_CHILD")
+    const paths = await Promise.all([realpath(`/proc/${pid}/exe`), readlink(`/proc/${pid}/ns/net`), readlink("/proc/self/ns/net")]).catch(() => { throw new ProofFailure("PROC_EXECUTABLE_OR_NAMESPACE_ORACLE_UNAVAILABLE") })
+    requireProof(paths[0] === electron && paths[1] === paths[2], "NODE_EXECUTABLE_OR_NETWORK_NAMESPACE_MISMATCH")
+    const fds = await readdir(`/proc/${pid}/fd`).catch(() => { throw new ProofFailure("PROC_SOCKET_FD_ORACLE_UNAVAILABLE") })
+    requireProof(fds.length > 0 && fds.length <= 4096 && fds.every((fd) => /^\d+$/.test(fd)), "PROC_SOCKET_FD_ORACLE_INVALID")
+    const links = await Promise.all(fds.map((fd) => readlink(`/proc/${pid}/fd/${fd}`).catch((error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return "" // A closed FD is not evidence; the listener must still match.
+      throw new ProofFailure("PROC_SOCKET_FD_ORACLE_UNAVAILABLE")
+    })))
+    if (!links.includes(`socket:[${listenerInode}]`)) return
+    const current = await processIdentity(pid)
+    requireProof(current && !["Z", "X", "x"].includes(current.state) && current.parent === parent && current.group === parent && current.session === parent && current.startTime === identity.startTime, "NODE_PROCESS_IDENTITY_CHANGED")
+    return { pid, parent, startTime: identity.startTime, listenerInode, subtype: "node.mojom.NodeService" }
+  }))).filter((item) => item !== undefined)
+  requireProof(candidates.length === 1, "OWNED_NODE_LISTENER_MISSING_OR_AMBIGUOUS")
+  return candidates[0]
 }
