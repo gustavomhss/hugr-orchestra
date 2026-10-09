@@ -156,6 +156,8 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["d409ee796e265fb4f6ed0908bef20e2c5ac36b173231b7b86719ddd1d5e247f5", ROSTER_V2],
   // Before the native discovery seat gained its own profile, corpus tools, skills and Atlas owner path.
   ["e956abbc3f4ce9c67a6e453f14616de06bf20231bca302ee412355eb33610695", ROSTER_V2],
+  // Before the discovery seat's capability-accurate charter freeze.
+  ["18647c12823dcd3c1afbfd3efa5e65e34b662e11f7c5ca6b239c3898047931a4", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
