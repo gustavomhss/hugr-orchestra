@@ -236,10 +236,23 @@ attempt 1. Only `nix/hashes.json` and one request JSON line change (5 additions 
 5 deletions). Reviewer `ses_ede10b10bffeZj7Sr8S8b57wwj` approved exact working blobs
 `c39ceca878b892b17c47d6581cbecb42e2630b06` and
 `efc376e0913482a8eeb183f7460123ac7897cc72`. Actual consumer verification
-**`38004225748`** is registered on that exact head and remains in progress.
-Relay is sole Nix writer and monitor; all four prior Nix children are idle after
-root closure. No consumer/product pass or model/auth/launcher/pilot execution is
-inferred from measurement success or static approval.
+**`38004225748`** reached actual consumer builds on that exact head. Both Linux
+jobs passed measurement comparison, hash controls and toolchain checks, then failed
+CLI build with exit 134: postcompile `patchelf --set-interpreter --set-rpath` aborted
+at `rewriteSectionsExecutable()` with
+`Assertion 'startAddr % getPageSize() == startOffset % getPageSize()' failed`.
+Artifacts `11650743142` (ARM) and `11651231069` (x64) preserve the exact failures.
+The ARM Darwin consumer independently passed the same prerequisite phases and built
+CLI successfully, then Desktop prebuild failed with `bun: command not found: codesign`;
+artifact `11650847862` preserves that failure. Intel Darwin remains in progress.
+
+The next recipe candidate requires emitted Linux interpreter and nonempty RPATH to
+equal the native Nix compiler's paths without rewriting its compiled ELF sections.
+Mismatch still fails before publication; all runtime/install/output controls remain.
+Desktop Darwin adds the existing `darwin.sigtool` tool for its resource-signing phase.
+These are source candidates, not observed fixes. Relay retains sole Nix writer and
+monitor ownership. No consumer/product pass or model/auth/launcher/pilot execution
+is inferred from measurement success, source inspection or static approval.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was

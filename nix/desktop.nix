@@ -43,6 +43,8 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
     # Ad-hoc sign the .app: --config.mac.identity=null below skips signing.
     darwin.autoSignDarwinBinariesHook
+    # Desktop prebuild also signs admitted CLI resources before app packaging.
+    darwin.sigtool
     sysctl
   ];
 

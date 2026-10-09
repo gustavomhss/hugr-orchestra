@@ -67,11 +67,18 @@ stdenv.mkDerivation (finalAttrs: {
     bun --bun packages/cli/script/build.ts --target ${target} --skip-install
     bun --bun packages/cli/script/schema.ts schema.json
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
-    # Bun normalizes the emitted interpreter. Patch before publication, so the
-    # schema-1 digest describes runnable Nix bytes, not their unpatched ancestor.
-    patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --set-rpath "$(patchelf --print-rpath ${bun}/bin/bun)" \
-      packages/cli/dist/cli-${target}/bin/orchestra
+    # Bun's Nix-host path can preserve its loader metadata. Rewriting compiled
+    # sections aborts in patchelf; require the emitted native paths before publication.
+    cli="packages/cli/dist/cli-${target}/bin/orchestra"
+    interpreter="$(cat "$NIX_CC/nix-support/dynamic-linker")"
+    rpath="$(patchelf --print-rpath ${bun}/bin/bun)"
+    [[ -n "$interpreter" && -n "$rpath" &&
+      "$(patchelf --print-interpreter ${bun}/bin/bun)" == "$interpreter" &&
+      "$(patchelf --print-interpreter "$cli")" == "$interpreter" &&
+      "$(patchelf --print-rpath "$cli")" == "$rpath" ]] || {
+      printf 'NIX_DISTRIBUTION_FAILURE:CLI_NATIVE_LOADER_MISMATCH\n' >&2
+      exit 1
+    }
   '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
     codesign --force --sign - packages/cli/dist/cli-${target}/bin/orchestra
   '' + ''
