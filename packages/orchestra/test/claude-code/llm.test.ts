@@ -160,7 +160,7 @@ for (const abort of [false, true]) {
     yield* Effect.yieldNow
     expect(children[0].exitCode).toBeNull()
     expect(yield* Deferred.isDone(stopped)).toBe(false)
-    expect(calls[0].options?.env).toEqual({ HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path })
+    expect(calls[0].options?.env).toEqual({ HOME: dir.path, CLAUDE_CONFIG_DIR: dir.path, CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1" })
     if (interrupt) yield* Fiber.join(interrupt)
     if (!abort) yield* Fiber.join(worker)
     expect(children[0].exitCode).toBe(0)
