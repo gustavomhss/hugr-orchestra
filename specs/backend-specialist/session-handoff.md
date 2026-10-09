@@ -1,6 +1,7 @@
 # Session snapshot + handoff — the backend specialist
 
-**Current execution snapshot:** read [session-state-2026-10-08.md](session-state-2026-10-08.md) first.
+**Current execution snapshot:** read [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first,
+then [session-state-2026-10-08.md](session-state-2026-10-08.md) for the earlier compaction checkpoint.
 It records the merged seat framework, active failure-repair branches, cancelled-agent worktrees,
 verified follow-ups, partial rerun and the exact resume order. The phase status below is historical.
 

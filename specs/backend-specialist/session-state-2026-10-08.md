@@ -42,8 +42,8 @@ Canonical checkout is a different user/peer worktree; leave its unrelated change
 | `sandbox-repairs` | `sandbox-repairs`, `79acfdabcb` | Agent cancelled with uncommitted partial follow-up. Preserve/review before editing or committing. |
 | `backend-bench` | independent repo, `seat-runner`, `4f0ee9df45e874b720606a3c188e0c1300329c63` | Agent cancelled with uncommitted bootstrap/acquisition/CI follow-up. Original protocol edits also uncommitted. |
 
-Original recovered Claude session: `0e13edec-fdb1-4a51-b3c0-3db1f97753eb`, title "Charlie session handoff".
-Transcript: `/Users/gustavoschneiter/.claude/projects/-Users-gustavoschneiter-Documents-HuGR-orchestra-canonical--claude-worktrees-charlie-session-handoff-9f636b/0e13edec-fdb1-4a51-b3c0-3db1f97753eb.jsonl`.
+Original recovered Claude session: `0e13edec-fdb1-4a51-b3c0-3db1f97753eb`.
+Locate its transcript by that UUID under `/Users/gustavoschneiter/.claude/projects/`; historical display names are not reproduced here.
 
 ## Closed framework milestone
 
