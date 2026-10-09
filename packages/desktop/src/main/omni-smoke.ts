@@ -29,6 +29,21 @@ export function utilityStarted(pid: number | undefined) {
   event("utility-started", { utilityPID: pid })
 }
 
+/** Observability only: unknown native/UV handles stay named, never classified as harmless. */
+export function resources(stage: string) {
+  if (!process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE || !DesktopOmni.enabled()) return
+  const node = process as NodeJS.Process & { _getActiveHandles?: () => unknown[]; _getActiveRequests?: () => unknown[] }
+  const summarize = (value: unknown) => {
+    if (!value || typeof value !== "object") return { type: typeof value }
+    const handle = value as { constructor?: { name?: string }; hasRef?: () => boolean; fd?: number; pid?: number;
+      _handle?: { constructor?: { name?: string }; hasRef?: () => boolean } }
+    return { type: handle.constructor?.name ?? "unknown", uv: handle._handle?.constructor?.name,
+      ref: handle.hasRef?.() ?? handle._handle?.hasRef?.(), fd: handle.fd, childPID: handle.pid }
+  }
+  event("resources", { stage, active: process.getActiveResourcesInfo(), handles: node._getActiveHandles?.().map(summarize),
+    requests: node._getActiveRequests?.().map(summarize) })
+}
+
 export async function report(server: { url: string; username: string; password: string }) {
   const file = process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE
   if (!file || !DesktopOmni.enabled()) return
@@ -44,16 +59,31 @@ export async function report(server: { url: string; username: string; password: 
     gui()
     if (!existsSync(quit) || readFileSync(quit, "utf8") !== token) return
     clearInterval(timer)
-    event("quit-requested")
-    app.quit()
+    void (async () => {
+      resources("quit-trigger-active-fixtures")
+      if (process.env.ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN === "1") {
+        event("diagnostic-main-stop-start", { mainPID: main?.pid, scope: "diagnostic only; not production shutdown" })
+        if (!main) throw new Error("diagnostic main tree missing")
+        await main.stop()
+        event("diagnostic-main-stop-complete", { mainPID: main.pid })
+        resources("diagnostic-main-closed")
+      }
+      event("quit-requested")
+      app.quit()
+    })().catch((error: unknown) => event("diagnostic-error", { error: String(error) }))
   }, 200)
   timer.unref()
-  app.on("before-quit", () => event("before-quit"))
-  app.once("will-quit", () => { clearInterval(timer); event("will-quit") })
-  app.once("quit", (_event, code) => event("quit", { code }))
+  app.on("before-quit", () => { event("before-quit"); resources("before-quit") })
+  app.once("will-quit", () => { clearInterval(timer); event("will-quit"); resources("will-quit") })
+  app.once("quit", (_event, code) => {
+    event("quit", { code })
+    resources("quit")
+    ;[1000, 5000, 15000].forEach((ms) => setTimeout(() => resources(`after-quit-${ms}ms`), ms).unref())
+  })
   await writeFile(`${file}.tmp`, JSON.stringify({ ...server, pid: process.pid, utilityPID: utility.pid, main, quit, token,
     packaged: app.isPackaged, resources: process.resourcesPath, versions: process.versions, userData: app.getPath("userData"),
-    home: process.env.HOME, db: process.env.ORCHESTRA_DB, nonce: process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE }), { mode: 0o600 })
+    home: process.env.HOME, db: process.env.ORCHESTRA_DB, nonce: process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE_NONCE,
+    diagnostic: process.env.ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN === "1" }), { mode: 0o600 })
   await rename(`${file}.tmp`, file)
 }
 
@@ -72,5 +102,10 @@ async function firstLine([file, ...args]: string[]) {
       resolve(text.slice(0, text.indexOf("\n")))
     })
   })
-  return { pid: child.pid, line, bytes: chunks.every((chunk) => chunk instanceof Uint8Array) }
+  return { pid: child.pid, line, bytes: chunks.every((chunk) => chunk instanceof Uint8Array), stop: async () => {
+    const closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
+    if (!child.kill()) throw new Error("diagnostic main tree stop was not accepted")
+    let timer: NodeJS.Timeout | undefined
+    await Promise.race([closed, new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("diagnostic main tree close exceeded 7000 ms")), 7000) })]).finally(() => clearTimeout(timer))
+  } }
 }

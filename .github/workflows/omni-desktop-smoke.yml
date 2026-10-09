@@ -73,7 +73,7 @@ jobs:
         run: |
           # App must discover its own Resources/omni. Environment cannot rescue packaging.
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
-          bun test/omni-smoke/packaged.ts --require main,shell,terminal
+          bun test/omni-smoke/packaged.ts --require main,shell,terminal --diagnose-main
 
       - name: Preserve actual proof, red cells and source/artifact pins
         if: always()

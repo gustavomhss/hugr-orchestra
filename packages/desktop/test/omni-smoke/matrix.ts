@@ -11,12 +11,13 @@ import { emergency, observe, owned } from "./inventory"
 type Cell = "main-kill" | "utility-kill" | "quit"
 type Mutation = "legacy" | "forced-kill" | "empty"
 
-export async function run(cell: Cell, mutation?: Mutation) {
+export async function run(cell: Cell, mutation?: Mutation, diagnostic = false) {
   const manifest = provenance()
   try { requiredFixtures(mutation === "empty" ? [] : ["main", "shell", "terminal"]) }
   catch (error) { return { cell, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
   const scratch = await fixtures()
-  const destination = path.join(logs, `${cell}-${mutation ?? "restored"}`)
+  if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSE_MAIN: "1" })
+  const destination = path.join(logs, `${cell}-${diagnostic ? "diagnostic-main" : mutation ?? "restored"}`)
   mkdirSync(destination, { recursive: true })
   const launcher = process.platform === "linux" ? ["xvfb-run", "-a", manifest.executable] : [manifest.executable]
   const app = spawn(launcher[0]!, [...launcher.slice(1), "--no-sandbox"], { cwd: scratch.project, env: scratch.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: false })
@@ -29,7 +30,8 @@ export async function run(cell: Cell, mutation?: Mutation) {
   const roots: Identity[] = []
   const retained: Identity[] = []
   const evidence: Record<string, unknown> = {}
-  const result = { cell, mutation: mutation ?? "none", pass: false, error: "", cleanup: false }
+  const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
+    scope: diagnostic ? "diagnostic stop-main intervention; NOT production shutdown proof" : "actual production shutdown", pass: false, error: "", cleanup: false }
   const legacy = { proc: undefined as ReturnType<typeof spawn> | undefined }
   try {
     if (win) await WindowsInventory.prepare()
@@ -115,7 +117,8 @@ export async function run(cell: Cell, mutation?: Mutation) {
     catch (error) { evidence.failureInventoryError = String(error) }
   }
   finally {
-    scratch.llm.stop()
+    try { scratch.llm.stop() }
+    catch (error) { result.pass = false; result.error += `; LLM fixture cleanup: ${error}` }
     // Capture newly observed descendants even after partial startup; kill only exact owned identities.
     try {
       const rows = table()
@@ -123,9 +126,14 @@ export async function run(cell: Cell, mutation?: Mutation) {
     } catch (error) { result.pass = false; result.error += `; cleanup capture: ${error}` }
     try { await emergency(app, roots, retained, scratch.specs.map((spec) => spec.nonce)); result.cleanup = true }
     catch (error) { result.pass = false; result.error += `; emergency cleanup: ${error}` }
-    if (legacy.proc?.exitCode === null && legacy.proc.signalCode === null) legacy.proc.kill("SIGKILL")
-    for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
-    writeFileSync(path.join(destination, "app.log"), state.output)
+    try {
+      if (legacy.proc?.exitCode === null && legacy.proc.signalCode === null) legacy.proc.kill("SIGKILL")
+      if (legacy.proc) await until(5000, "legacy mutation handle exit", () => legacy.proc!.exitCode !== null || legacy.proc!.signalCode !== null ? true : undefined)
+    } catch (error) { result.pass = false; result.cleanup = false; result.error += `; legacy handle cleanup: ${error}` }
+    try {
+      for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
+      writeFileSync(path.join(destination, "app.log"), state.output)
+    } catch (error) { result.pass = false; result.error += `; evidence preservation: ${error}` }
   }
   const record = { ...result, at: new Date().toISOString(), os: process.platform, arch: process.arch, run: process.env.GITHUB_RUN_ID,
     sourceSHA: manifest.sourceSHA, sourceTree: manifest.sourceTree, buildManifestSha256: digest(path.join(logs, "build.json")),
@@ -137,12 +145,17 @@ export async function run(cell: Cell, mutation?: Mutation) {
 }
 
 export async function matrix() {
-  const mutations = [await run("main-kill", "legacy"), await run("quit", "forced-kill"), await run("quit", "empty")]
-  const restored = [await run("main-kill"), await run("utility-kill"), await run("quit")]
+  // A helper/preservation failure is red evidence, never permission to skip the remaining real cells.
+  const execute = (cell: Cell, mutation?: Mutation, diagnostic = false) => run(cell, mutation, diagnostic)
+    .catch((error: unknown) => ({ cell, mutation: mutation ?? "none", diagnostic, pass: false, error: String(error), cleanup: false }))
+  const mutations = [await execute("main-kill", "legacy"), await execute("quit", "forced-kill"), await execute("quit", "empty")]
+  const restored = [await execute("main-kill"), await execute("utility-kill"), await execute("quit")]
+  const diagnostic = process.argv.includes("--diagnose-main") ? await execute("quit", undefined, true) : undefined
   const expected = ["legacy unowned tree positive control rejected", "actual app.quit did not prove orderly code-zero exit", "empty required fixtures rejected"]
   const pass = mutations.every((cell, index) => !cell.pass && cell.cleanup && cell.error.includes(expected[index]!)) && restored.every((cell) => cell.pass && cell.cleanup)
   const summary = { pass, sourceSHA: provenance().sourceSHA, os: process.platform, arch: process.arch, at: new Date().toISOString(), mutations: mutations.map(({ cell, mutation, pass, error, cleanup }) => ({ cell, mutation, pass, error, cleanup })),
-    restored: restored.map(({ cell, pass, error, cleanup }) => ({ cell, pass, error, cleanup })) }
+    restored: restored.map(({ cell, pass, error, cleanup }) => ({ cell, pass, error, cleanup })),
+    diagnostic: diagnostic && { pass: diagnostic.pass, error: diagnostic.error, cleanup: diagnostic.cleanup, scope: "stop-main diagnostic ONLY" } }
   writeFileSync(path.join(logs, "matrix.json"), JSON.stringify(summary, null, 2))
   console.log("DESKTOP_MATRIX " + JSON.stringify(summary))
   return summary
