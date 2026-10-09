@@ -8,7 +8,8 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
   if ("operation" in input && input.operation === "encrypt") throw DocumentWork.failure()
   const { PDFDocument, StandardFonts, degrees, PDFTextField, PDFCheckBox, PDFDropdown, PDFOptionList, PDFRadioGroup } = await import("pdf-lib")
   const sources = await Promise.all(bytes.map((data) => PDFDocument.load(data, { updateMetadata: false })))
-  sources.forEach(requireBounded)
+  await Promise.all(sources.map(requireBounded))
+  const outputBudget = { bytes: 0 }
   const { createEngine } = await import("clawpdf")
   const engine = await createEngine({ maxRenderPixels: DocumentWork.limits.pixels })
   try {
@@ -39,6 +40,8 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
             const page = pdf.page(n)
             const edge = Math.max(1, Math.floor(Math.sqrt(DocumentWork.limits.pixels / rasterPages.length / 2)))
             const png = page.pngSync(page.width >= page.height ? { width: edge, forms: true } : { height: edge, forms: true })
+            outputBudget.bytes += png.byteLength
+            if (outputBudget.bytes > DocumentWork.limits.bytes) throw DocumentWork.failure("quota_exceeded")
             files.push({ data: png, mime: "image/png", metadata: { page: n, raster: true, ocr: false } })
           }
         }
@@ -142,16 +145,20 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
       })
       await flattenForm(target)
     }
-    requireBounded(target)
+    await requireBounded(target)
     const file = await saveVerified(target, flatten, expectedText, input.operation === "merge" ? originalText.flat() : originalText[0] ?? [])
     return { status: "ok", files: [file], metadata: file.metadata, incomplete: [] }
 
     async function saveVerified(doc: PDFDocument, flattened: boolean, text: readonly string[], preserved: readonly string[]) {
+      await requireBounded(doc)
       const geometry = doc.getPages().map((p) => ({ ...p.getSize(), rotation: p.getRotation().angle }))
       const fields = fieldValues(doc)
       const data = await doc.save()
-      if (data.byteLength > DocumentWork.limits.bytes) throw DocumentWork.failure("quota_exceeded")
+      outputBudget.bytes += data.byteLength
+      // Fail before retaining this output, constructing the next split, or sending any worker reply.
+      if (outputBudget.bytes > DocumentWork.limits.bytes) throw DocumentWork.failure("quota_exceeded")
       const reopened = await PDFDocument.load(data, { updateMetadata: false })
+      await requireBounded(reopened)
       if (JSON.stringify(reopened.getPages().map((p) => ({ ...p.getSize(), rotation: p.getRotation().angle }))) !== JSON.stringify(geometry) ||
         JSON.stringify(fieldValues(reopened)) !== JSON.stringify(fields)) throw DocumentWork.failure("outcome_unknown")
       if (flattened) await requireFlattened(reopened)
@@ -170,7 +177,11 @@ export async function operate(supplied: unknown, bytes: readonly Uint8Array[]): 
   } finally { await engine.destroy() }
 }
 
-function requireBounded(doc: PDFDocument) {
+async function requireBounded(doc: PDFDocument) {
+  const { PDFName, PDFDict } = await import("pdf-lib")
+  // getForm() deletes XFA in pdf-lib 1.17.1. Inspect the raw dictionary before ANY form access.
+  const form = doc.catalog.lookupMaybe(PDFName.of("AcroForm"), PDFDict)
+  if (form?.has(PDFName.of("XFA"))) throw DocumentWork.failure()
   if (doc.isEncrypted) throw DocumentWork.failure()
   if (doc.getPageCount() < 1 || doc.getPageCount() > DocumentWork.limits.pages || doc.getForm().getFields().length > 100)
     throw DocumentWork.failure("quota_exceeded")

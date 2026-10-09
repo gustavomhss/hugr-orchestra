@@ -2,14 +2,16 @@ import { describe, expect } from "bun:test"
 import { ToolCall } from "@orchestra/llm"
 import { Capability } from "@orchestra/schema/capability"
 import { eq } from "drizzle-orm"
-import { Effect, Layer, Schema } from "effect"
+import { Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { join } from "node:path"
+import { Worker } from "node:worker_threads"
 import { PDFArray, PDFDict, PDFDocument, PDFName } from "pdf-lib"
 import { AgentV2 } from "../src/agent"
 import { CapabilityArtifacts } from "../src/capability/artifact"
 import { CapabilityDocuments } from "../src/capability/document"
 import { Output } from "../src/capability/document/schema"
 import { DocumentWork } from "../src/capability/document/work"
+import { operate } from "../src/capability/document/pdf"
 import { CapabilityInvocation } from "../src/capability/invocation"
 import { CapabilityArtifactTable } from "../src/capability/sql"
 import { Database } from "../src/database/database"
@@ -56,11 +58,11 @@ function fixture(rootToolName = "document_edit") {
     const options = { root: join(placement.directory, "artifacts") }
     const tools = yield* CapabilityDocuments.make(options)
     const artifacts = yield* CapabilityArtifacts.make(options)
-    const invoke = (tool: Tool.AnyTool, input: unknown) => CapabilityInvocation.withContext(binding,
+    const invoke = (tool: Tool.AnyTool, input: unknown, host = binding) => CapabilityInvocation.withContext(host,
       Tool.settle(tool, ToolCall.make({ type: "tool-call", id: f.context.toolCallID, name: rootToolName, input }), f.context)
         .pipe(Effect.flatMap((out) => Schema.decodeUnknownEffect(Output)(out.structured))))
     const read = (ref: Capability.ArtifactRef) => CapabilityInvocation.withContext(binding, artifacts.read(f.context, ref))
-    return { ...f, binding, tools, artifacts, invoke, read }
+    return { ...f, binding, tools, artifacts, options, invoke, read }
   })
 }
 function ref(output: typeof Output.Type, index = 0) {
@@ -68,7 +70,170 @@ function ref(output: typeof Output.Type, index = 0) {
   return output.result.artifactRefs[index]
 }
 
+// Observe the actual private worker reply, before the parent's defensive decoder/budget can hide an egress regression.
+function workerReply(input: unknown, data: Uint8Array) {
+  return Effect.acquireUseRelease(Effect.sync(() => new Worker(new URL("../src/capability/document/worker.ts", import.meta.url),
+    { workerData: { kind: "pdf", input, data: [data] } })),
+  (worker) => Effect.callback<unknown, Error>((resume) => {
+    worker.once("message", (reply: unknown) => resume(Effect.succeed(reply)))
+    worker.once("error", (error: Error) => resume(Effect.fail(error)))
+    worker.once("exit", () => resume(Effect.fail(new Error("Worker exited without a reply"))))
+  }), (worker) => Effect.promise(() => worker.terminate()).pipe(Effect.asVoid))
+}
+
 describe("native local PDF canonical tools", () => {
+  it.live("raw XFA read and edit reject without stripping the source; ordinary PDF is a positive control", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const data = yield* Effect.promise(async () => {
+      const pdf = await PDFDocument.create()
+      pdf.addPage([100, 100])
+      pdf.getForm().createTextField("Name").setText("Original")
+      const form = pdf.catalog.lookup(PDFName.of("AcroForm"), PDFDict)
+      form.set(PDFName.of("XFA"), pdf.context.register(pdf.context.stream("<xdp><template>preserve me</template></xdp>")))
+      return pdf.save({ updateFieldAppearances: false })
+    })
+    const original = yield* Effect.promise(() => PDFDocument.load(data))
+    expect(original.catalog.lookup(PDFName.of("AcroForm"), PDFDict).has(PDFName.of("XFA"))).toBe(true)
+    const source = yield* CapabilityInvocation.withContext(f.binding, f.artifacts.publish(f.context,
+      { data, mime: "application/pdf", kind: "document", verification: "observed", metadata: {} }))
+    const before = yield* f.database.db.select().from(CapabilityArtifactTable)
+    yield* Effect.forEach([
+      { format: "localpdf", operation: "rotate", artifact: source, expectedRevision: 0, pages: [1], degrees: 90 },
+      { format: "localpdf", operation: "flatten", artifact: source, expectedRevision: 0 },
+      { format: "localpdf", operation: "fill", artifact: source, expectedRevision: 0, fields: [{ name: "Name", value: "Changed" }] },
+      { format: "localpdf", operation: "split", artifact: source, groups: [[1]] },
+    ], (input) => f.invoke(f.tools.document_edit, input).pipe(Effect.flip,
+      Effect.tap((error) => Effect.sync(() => expect(error.message).toContain("unsupported_operation")))))
+    const readHost = yield* fixture("document_read")
+    yield* CapabilityInvocation.withContext(f.binding, f.artifacts.share(f.context, source, readHost.context.sessionID))
+    expect((yield* readHost.invoke(readHost.tools.document_read, { format: "localpdf", artifact: source }).pipe(Effect.flip)).message).toContain("unsupported_operation")
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(before)
+    const retained = yield* f.read(source)
+    expect(retained.data).toEqual(data)
+    const reopened = yield* Effect.promise(() => PDFDocument.load(retained.data))
+    expect(reopened.catalog.lookup(PDFName.of("AcroForm"), PDFDict).has(PDFName.of("XFA"))).toBe(true)
+    const ordinary = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "create", pages: [{ width: 100, height: 100, text: [] }] })
+    expect(ordinary.result.status).toBe("completed")
+    expect((yield* f.read(ref(ordinary))).metadata.mime).toBe("application/pdf")
+  }), 60000)
+
+  it.live("split aggregate bytes fail during creation, before retention and publication", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const data = yield* Effect.promise(async () => {
+      const pdf = await PDFDocument.create()
+      const page = pdf.addPage([100, 100])
+      // A valid uncompressed PDF comment makes one small page large enough to exercise the aggregate bound through reuse.
+      page.node.set(PDFName.of("Contents"), pdf.context.register(pdf.context.stream(`%${"x".repeat(512 * 1024)}\n`)))
+      return pdf.save()
+    })
+    const source = yield* CapabilityInvocation.withContext(f.binding, f.artifacts.publish(f.context,
+      { data, mime: "application/pdf", kind: "document", verification: "observed", metadata: {} }))
+    const input = { format: "localpdf", operation: "split", artifact: source, groups: Array.from({ length: 20 }, () => [1]) }
+    // Direct operation readback distinguishes the incremental PDF bound from later worker/parent rejection.
+    const split = yield* Effect.tryPromise({ try: () => operate(input, [data]), catch: (error) => error }).pipe(Effect.result)
+    expect(split._tag).toBe("Failure")
+    if (split._tag !== "Failure" || !(split.failure instanceof Capability.Failure)) throw new Error("Expected split budget failure")
+    expect(split.failure.code).toBe("quota_exceeded")
+    expect((yield* f.invoke(f.tools.document_edit, input).pipe(Effect.flip)).message).toContain("quota_exceeded")
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(1)
+    expect((yield* f.read(source)).data).toEqual(data)
+  }), 60000)
+
+  it.live("worker metadata is bounded before egress, including per-file metadata and result strings", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const metadataPDF = yield* Effect.promise(async () => {
+      const pdf = await PDFDocument.create()
+      pdf.addPage([100, 100])
+      Array.from({ length: 15 }, (_, i) => pdf.getForm().createTextField(`Long${i}`).setText("x".repeat(3500)))
+      return pdf.save()
+    })
+    const metadataSource = yield* CapabilityInvocation.withContext(f.binding, f.artifacts.publish(f.context,
+      { data: metadataPDF, mime: "application/pdf", kind: "document", verification: "observed", metadata: {} }))
+    const reply = yield* workerReply({ format: "localpdf", artifact: metadataSource }, metadataPDF).pipe(
+      Effect.flatMap(Schema.decodeUnknownEffect(DocumentWork.Reply)),
+    )
+    expect(reply.status).toBe("error")
+    if (reply.status !== "error") throw new Error("Worker sent oversized metadata before its egress check")
+    expect(reply.code).toBe("quota_exceeded")
+    // Per-file metadata and result strings are part of the same aggregate envelope budget.
+    expect(() => DocumentWork.requireReply({ status: "ok", files: [{ data: metadataPDF, mime: "application/pdf",
+      metadata: "x".repeat(DocumentWork.limits.metadata) }], metadata: {}, incomplete: [] })).toThrow()
+  }), 60000)
+
+  it.live("native permission revoked while artifact approval waits fences both publish and update", () => Effect.gen(function* () {
+    yield* Effect.forEach(["publish", "update"], (mode) => Effect.gen(function* () {
+      const f = yield* fixture()
+      const create = { format: "localpdf", operation: "create", pages: [{ width: 100, height: 100, text: [] }] }
+      const existing = mode === "update" ? ref(yield* f.invoke(f.tools.document_edit, create)) : undefined
+      const before = yield* f.database.db.select().from(CapabilityArtifactTable)
+      const ask: PermissionV2.Ruleset = [...allow, { action: "artifact.write", resource: "*", effect: "ask" }]
+      yield* CapabilityPolicyFixture.setRules(ask)
+      const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+      const input = existing ? { format: "localpdf", operation: "rotate", artifact: existing, expectedRevision: 0, pages: [1], degrees: 90 } : create
+      const waiting = yield* f.invoke(f.tools.document_edit, input, { ...f.binding, effectiveRules: ask }).pipe(Effect.result, Effect.forkChild)
+      const request = yield* Effect.raceFirst(Deferred.await(observation.first), Fiber.join(waiting).pipe(
+        Effect.andThen(Effect.die("Native publication bypassed artifact approval")),
+      ))
+      expect(request.action).toBe("artifact.write")
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(before)
+      yield* CapabilityPolicyFixture.setRules([...ask, { action: "document_edit", resource: "*", effect: "deny" }])
+      yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+      const outcome = yield* Fiber.join(waiting)
+      expect(outcome._tag).toBe("Failure")
+      if (outcome._tag !== "Failure") throw new Error("Revoked native permission published an artifact")
+      expect(outcome.failure.message).toContain("target_denied")
+      expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(before)
+    }))
+  }).pipe(Effect.timeout("60 seconds")), 90000)
+
+  it.live("late typed split publication failure returns committed refs and unresolved outputs", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const created = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "create",
+      pages: [{ width: 100, height: 100, text: [{ text: "One", x: 10, y: 50 }] }, { width: 100, height: 100, text: [{ text: "Two", x: 10, y: 50 }] }] })
+    const original = yield* f.read(ref(created))
+    const input = { format: "localpdf", operation: "split", artifact: ref(created), groups: [[1], [2]] }
+    const staged = yield* DocumentWork.run("pdf", input, [original.data])
+    const sizes = staged.files.map((file) => file.data.byteLength + new TextEncoder().encode(JSON.stringify(file.metadata)).byteLength)
+    // Creation timestamps can change compressed PDF size between worker runs. Leave slack for one output, never two.
+    const quota = original.data.byteLength + new TextEncoder().encode(JSON.stringify(original.metadata.metadata)).byteLength
+      + sizes[0] + Math.floor(sizes[1] / 2)
+    const limited = yield* CapabilityDocuments.make({ ...f.options, quota })
+    const result = yield* f.invoke(limited.document_edit, input)
+    expect(result.result.status).toBe("partial")
+    if (result.result.status !== "partial") throw new Error("Expected partial publication receipt")
+    expect(result.result.artifactRefs).toHaveLength(1)
+    expect(result.result.completedEffects[0]).toContain(ref(result).id)
+    expect(result.result.unresolvedEffects).toEqual(["Publication stopped: quota_exceeded; 1 output artifacts not published"])
+    const committed = yield* f.read(ref(result))
+    expect((yield* Effect.promise(() => PDFDocument.load(committed.data))).getPageCount()).toBe(1)
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toHaveLength(2)
+    expect((yield* f.read(ref(created))).data).toEqual(original.data)
+  }), 60000)
+
+  it.live("interruption after an earlier publication stays interrupted, without a fabricated partial receipt", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const source = ref(yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "create",
+      pages: [{ width: 100, height: 100, text: [] }, { width: 100, height: 100, text: [] }] }))
+    const ask: PermissionV2.Ruleset = [...allow, { action: "artifact.write", resource: "*", effect: "ask" }]
+    yield* CapabilityPolicyFixture.setRules(ask)
+    const observation = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const waiting = yield* f.invoke(f.tools.document_edit, { format: "localpdf", operation: "split", artifact: source, groups: [[1], [2]] },
+      { ...f.binding, effectiveRules: ask }).pipe(Effect.result, Effect.forkChild)
+    const first = yield* Effect.raceFirst(Deferred.await(observation.first), Fiber.await(waiting).pipe(
+      Effect.andThen(Effect.die("Split bypassed its first artifact approval")),
+    ))
+    expect(first.action).toBe("artifact.write")
+    yield* f.permissions.reply({ requestID: first.id, reply: "once" })
+    yield* Effect.raceFirst(Deferred.await(observation.repeated), Fiber.await(waiting).pipe(
+      Effect.andThen(Effect.die("Split did not wait for its second artifact approval")),
+    ))
+    const committed = yield* f.database.db.select().from(CapabilityArtifactTable)
+    expect(committed).toHaveLength(2)
+    yield* Fiber.interrupt(waiting)
+    expect(Exit.hasInterrupts(yield* Fiber.await(waiting))).toBe(true)
+    expect(yield* f.database.db.select().from(CapabilityArtifactTable)).toEqual(committed)
+  }).pipe(Effect.timeout("60 seconds")), 90000)
+
   it.live("read canonical PDF text/geometry/fields and raster artifacts; blank page remains explicitly incomplete", () => Effect.gen(function* () {
     const f = yield* fixture("document_read")
     const data = yield* Effect.promise(async () => {

@@ -9,10 +9,10 @@ const run = async () => {
   const request = Schema.decodeUnknownSync(Request)(workerData)
   if (request.kind === "pdf") {
     const { operate } = await import("./pdf")
-    return operate(request.input, request.data)
+    return DocumentWork.requireReply(await operate(request.input, request.data))
   }
   const { operate } = await import("../sheet/workbook")
-  return operate(request.input, request.data)
+  return DocumentWork.requireReply(await operate(request.input, request.data))
 }
 // Only expected input/library failures are serialized. Parent termination handles timeout/interruption.
 void Effect.runPromise(Effect.tryPromise({ try: run, catch: (error) => error instanceof Capability.Failure

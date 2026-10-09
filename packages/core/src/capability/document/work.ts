@@ -19,6 +19,15 @@ export function failure(code: Capability.ErrorCode = "unsupported_operation") {
     : "Native document operation is unavailable or unsupported" })
 }
 
+/** Shared worker-egress and parent-defense budget, including every per-file metadata object and result string. */
+export function requireReply(result: Success) {
+  if (result.files.length > 20 || result.files.reduce((n, file) => n + file.data.byteLength, 0) > limits.bytes ||
+    new TextEncoder().encode(JSON.stringify({ ...result,
+      files: result.files.map((file) => ({ mime: file.mime, metadata: file.metadata })),
+    })).byteLength > limits.metadata) throw failure("quota_exceeded")
+  return result
+}
+
 /** Private byte-only worker boundary. No artifact storage, policy, paths, network inputs or tool contexts cross it. */
 export function run(kind: "pdf" | "sheet", input: unknown, data: readonly Uint8Array[]) {
   if (data.reduce((n, bytes) => n + bytes.byteLength, 0) > limits.bytes) return Effect.fail(failure("quota_exceeded"))
@@ -33,10 +42,7 @@ export function run(kind: "pdf" | "sheet", input: unknown, data: readonly Uint8A
         if (Option.isNone(reply)) return resume(Effect.fail(failure("outcome_unknown")))
         if (reply.value.status === "error") return resume(Effect.fail(failure(reply.value.code)))
         const result = reply.value
-        if (result.files.reduce((n, file) => n + file.data.byteLength, 0) > limits.bytes ||
-          new TextEncoder().encode(JSON.stringify(result.metadata)).byteLength > limits.metadata)
-          return resume(Effect.fail(failure("quota_exceeded")))
-        resume(Effect.succeed(result))
+        resume(Effect.try({ try: () => requireReply(result), catch: () => failure("quota_exceeded") }))
       })
       worker.once("error", () => resume(Effect.fail(failure("acquisition_failed"))))
       worker.once("exit", () => resume(Effect.fail(failure("outcome_unknown"))))
