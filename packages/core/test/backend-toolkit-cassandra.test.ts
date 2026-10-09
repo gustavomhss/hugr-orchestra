@@ -51,6 +51,14 @@ it.live("verified upstream source gets exactly one catalog guard and a private d
   expect(digest(generator)).toBe(BackendToolkitCassandraDialer.BEFORE)
   expect(digest(overlaid)).toBe(BackendToolkitCassandraDialer.AFTER)
   expect(overlaid).toEqual(BackendToolkitCassandraDialer.patch(generator))
+  expect(yield* Effect.promise(() => readFile(path.join(directory, "src/LICENSE")))).toEqual(
+    yield* Effect.promise(() => readFile(path.join(f.original, "src/LICENSE"))),
+  )
+  const notice = yield* Effect.promise(() => readFile(path.join(directory, "src/cmd/schemagen/ORCHESTRA-MODIFICATIONS.txt"), "utf8"))
+  expect(notice).toContain("Orchestra cassandra2: schemagen.go changed")
+  expect(notice).toContain("Upstream gocqlx v3.0.4 (Apache-2.0)")
+  expect(notice).toContain(`source SHA-256 ${BackendToolkitCassandraDialer.BEFORE}`)
+  expect(notice).toContain(`modified SHA-256 ${BackendToolkitCassandraDialer.AFTER}`)
   expect(yield* Effect.promise(() => readFile(path.join(directory, "driver/LICENSE"), "utf8"))).toContain("Apache License")
   expect(yield* Effect.promise(() => readFile(path.join(directory, "driver/ORCHESTRA-MODIFICATIONS.txt"), "utf8"))).toContain("Orchestra cassandra1")
   expect(yield* Effect.promise(() => readFile(path.join(f.original, "driver/metadata_scylla.go")))).toEqual(before)
@@ -89,6 +97,17 @@ it.live("source mutations, empty/malformed bytes and missing inputs produce type
   ).pipe(Effect.flip)
   expect(error.cause).toBe("compatibility:cassandra-metadata:driver-source-hash-mismatch")
   expect(yield* PinnedArtifact.installed(failed)).toBe(false)
+  const missingGenerator = path.join(f.root, "missing-generator")
+  yield* Effect.promise(() => cp(f.original, missingGenerator, { recursive: true }))
+  const module = yield* Effect.promise(() => readFile(path.join(missingGenerator, "src/go.mod")))
+  yield* Effect.promise(() => writeFile(path.join(missingGenerator, "src/cmd/schemagen/schemagen.go"), ""))
+  expect((yield* BackendToolkitCassandra.prepare(missingGenerator).pipe(Effect.flip)).cause)
+    .toBe("compatibility:cassandra-dialer:generator-source-hash-mismatch")
+  expect(yield* Effect.promise(() => readFile(path.join(missingGenerator, "src/go.mod")))).toEqual(module)
+  yield* Effect.promise(() => rm(path.join(missingGenerator, "src/cmd/schemagen/schemagen.go")))
+  expect((yield* BackendToolkitCassandra.prepare(missingGenerator).pipe(Effect.flip)).cause)
+    .toBe("compatibility:cassandra-metadata:generator-source-unreadable")
+  expect(yield* Effect.promise(() => readFile(path.join(missingGenerator, "src/go.mod")))).toEqual(module)
 }), 120_000)
 
 it.live("original or cassandra1 ready binaries cannot satisfy cassandra2 cache identity", () => Effect.gen(function* () {
