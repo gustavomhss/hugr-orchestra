@@ -4,7 +4,7 @@ Status: refined coordination contract for Relay's nominal W6 proposal, 2026-10-0
 
 ## Ownership / source pins
 
-- Relay's peer reports reviewed `relay-next` checkpoint `b776e87fe5`. Do not consume pending author-branch V1 wire/atomic-transition `7cbe` or unmerged exporter.
+- Relay's peer reports reviewed `relay-next` checkpoint `937cf2b1de027df090f81fa9ef6d9c71bf859a5d`, superseding `b776e87fe5`. Do not consume pending author-branch V1 wire/atomic-transition `7cbe` or unmerged exporter.
 - Relay solely integrates immediate V1 `prompt.before` parity in `arsenal-approval.ts`, Core ToolSafety Approval optional `messageID`, hook propagation and native queue tests. Upstream has no edits in those areas.
 - Upstream's local `arsenal-bindings.ts` change is limited to the two-site native-upstream V2 flag; it changes no lower W6 resolver/approval/completion code. Upstream bootstrap also uses the existing Instance/Location/plugin ownership, not a Session layer.
 
@@ -17,7 +17,8 @@ publication: {
   projectID,
   documentID,
   activeVersionID,
-  versionChecksum
+  immutableVersionBodyChecksum,
+  livePublicationChecksum
 }
 
 upstreamProvenance: {
@@ -40,7 +41,7 @@ The host acquires/produces these facts. Model/caller fields, `upstream-result`, 
 
 ### Publication semantics
 
-- `versionChecksum` hashes the immutable acquired `RelayAuthoring.Version` body using the existing AuthoringStore checksum algorithm. It is not the checksum of the mutable live Document/editor response.
+- `immutableVersionBodyChecksum` hashes the immutable acquired `RelayAuthoring.Version` body using the existing AuthoringStore checksum algorithm. `livePublicationChecksum` refers to the actual acquired live publication state; it is not substituted for immutable Version identity. Neither is the native materialization byte digest.
 - Live Document `active` and `activeVersionId` establish current publication. Immutable Version flags record save-time state and cannot establish current publication.
 - Current draft may be newer than active publication. Draft save is not publication replacement or authority.
 - Host selection/revalidation must use the actual active pointer and selected immutable Version; wrong document/version/project, unpublished/drifted definition, unknown acquisition or unsupported/non-runnable tooling holds before dispatch.
@@ -82,4 +83,4 @@ One linear product WP, one existing native arm, same Session/logical Task. Produ
 
 Actual native/host tests must reject: unpublished or changed active Version, wrong project/Version checksum, stale materialization/skill digest, mismatched parent/child/message/logical Task, caller-forged upstream source, out-of-approved scope, duplicate evaluation/wrong position, lost delivery/restart reconciliation, stop after failed/unknown transition. Valid unchanged retries must not repeat provider work or spend retry twice. All declared fields must be covered by the approval/adoption hash path, not merely displayed in a record.
 
-No code in this handoff claims W6 closure. Relay lead should freeze exact schema/events/method names and acknowledgment before source integration, while retaining the above semantic obligations.
+No code in this handoff claims W6 closure. Upstream ACKs Relay's nominal binding/lifecycle claim: Maestro event/arm binding regions, Core Relay/workflow modules, Orchestra PlanRevision/Arsenal/Task and minimal existing V1/V2 Session settlement methods plus focused tests. **Canonical PlanSource enum/version and attribution definition remain upstream-owned**, refined in `plan-source-contract.md`; the earlier delegation of that source region is superseded. Relay is the final shared-file integrator and consumes upstream's exact patch, without redeclaring or overriding its provenance. Preserve upstream's two-site V2 flag in Arsenal bindings. Peer coordination is neither owner approval nor a permission waiver.
