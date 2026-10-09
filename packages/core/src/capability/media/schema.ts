@@ -30,18 +30,22 @@ export const ImageInput = Schema.Struct({
 }).annotate(strict)
 export type ImageInput = typeof ImageInput.Type
 
-export const VideoInput = Schema.Struct({
+const video = {
   ...selection,
   provider: Schema.Literal("runway"),
-  operation: Schema.Literals(["generate", "image-to-video", "edit"]),
   model: Schema.Literals(["gen4.5", "gen4_turbo", "gen3a_turbo", "veo3.1", "veo3.1_fast", "veo3", "gen4_aleph"]),
   prompt,
-  options: Schema.Struct({
-    ratio: Schema.Literals(["1280:720", "720:1280", "960:960", "832:1104", "1104:832", "1584:672"]),
-    duration: Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 2, maximum: 10 })),
-  }).annotate(strict),
   inputArtifactRefs: Schema.Array(Capability.ArtifactRef).check(Schema.isMaxLength(1)),
-}).annotate(strict)
+}
+const duration = Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 2, maximum: 10 }))
+export const VideoInput = Schema.Union([
+  Schema.Struct({ ...video, operation: Schema.Literals(["generate", "edit"]), options: Schema.Struct({
+    ratio: Schema.Literals(["1280:720", "720:1280"]), duration,
+  }).annotate(strict) }).annotate(strict),
+  Schema.Struct({ ...video, operation: Schema.Literal("image-to-video"), options: Schema.Struct({
+    ratio: Schema.Literals(["1280:720", "720:1280", "960:960", "832:1104", "1104:832", "1584:672"]), duration,
+  }).annotate(strict) }).annotate(strict),
+])
 export type VideoInput = typeof VideoInput.Type
 
 export const ObserveInput = Schema.Struct({
@@ -68,7 +72,9 @@ export function validateImage(input: ImageInput) {
 export function validateVideo(input: VideoInput) {
   if (input.connection.provider !== input.provider || input.target.connectionID !== input.connection.id ||
     input.inputArtifactRefs.length !== (input.operation === "generate" ? 0 : 1)) return failure("unsupported_operation")
-  if (input.operation === "edit") return input.model === "gen4_aleph" ? undefined : failure("unsupported_operation")
+  // Pinned executable resolveRunwayRatio checks hasImageInput, not hasVideoInput. Its six-ratio advertisement conflicts.
+  if (input.operation === "edit") return input.model === "gen4_aleph" && ["1280:720", "720:1280"].includes(input.options.ratio)
+    ? undefined : failure("unsupported_operation")
   if (input.model === "gen4_aleph") return failure("unsupported_operation")
   if (input.operation === "generate" && (!["gen4.5", "veo3.1", "veo3.1_fast", "veo3"].includes(input.model) ||
     !["1280:720", "720:1280"].includes(input.options.ratio))) return failure("unsupported_operation")
