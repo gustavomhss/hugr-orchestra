@@ -1,5 +1,6 @@
 import { afterEach, describe, expect } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
+import { AgentV2 } from "@orchestra/core/agent"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -166,7 +167,7 @@ const modernAssistant = Effect.fn("UpstreamProvenanceTest.modernAssistant")(func
   task?: { callID: string; metadata: Record<string, unknown>; providerExecuted?: boolean; providerOnly?: boolean },
 ) {
   const events = yield* EventV2Bridge.Service
-  yield* events.publish(SessionEvent.Step.Started, { sessionID, assistantMessageID: id, agent,
+  yield* events.publish(SessionEvent.Step.Started, { sessionID, assistantMessageID: id, agent: AgentV2.ID.make(agent),
     model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now,
   })
   if (task) {
@@ -686,7 +687,7 @@ describe("UpstreamProvenance.observe", () => {
       }
       if (variant === "tool-error" || variant === "incomplete") {
         const base = { sessionID: fixture.child.id, assistantMessageID: authorID }
-        yield* events.publish(SessionEvent.Step.Started, { ...base, agent: "walt", model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now })
+        yield* events.publish(SessionEvent.Step.Started, { ...base, agent: AgentV2.ID.make("walt"), model: { id: ref.modelID, providerID: ref.providerID }, timestamp: yield* DateTime.now })
         yield* events.publish(SessionEvent.Text.Started, { ...base, textID: `text-${authorID}`, timestamp: yield* DateTime.now })
         yield* events.publish(SessionEvent.Text.Ended, { ...base, textID: `text-${authorID}`, text: fixture.text.text, timestamp: yield* DateTime.now })
         yield* events.publish(SessionEvent.Tool.Input.Started, { ...base, callID: "read-proposal", name: "read", timestamp: yield* DateTime.now })
