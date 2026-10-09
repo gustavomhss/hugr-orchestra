@@ -123,7 +123,7 @@ export function make(options: Options) {
     const descriptors = options.descriptors ?? (yield* CapabilityDescriptors.make({ maxEntries, ttlMillis, now }))
     const cursors = yield* CapabilityCursors.make({ maxEntries, ttlMillis, now })
     const locators = new Map<Capability.DescriptorID, Readonly<{
-      provider: string; name: string; owner: Capability.Owner; ref: Capability.DescriptorRef; expiresAt: number
+      provider: string; name: string; owner: Capability.Owner; ref: Capability.DescriptorRef; expiresAt: number; canonicalIdentity: object
     }>>()
     const validators = new Map<string, { value: CapabilityVendorSchema.Validator | Capability.Failure; expiresAt: number }>()
     const compilation = Semaphore.makeUnsafe(1)
@@ -332,6 +332,7 @@ export function make(options: Options) {
             if (locators.size + pending.records.length > maxEntries) return Effect.fail(failure("quota_exceeded"))
             pending.records.forEach((record) => locators.set(record.ref.id, Object.freeze({
               provider: value.provider, name: record.operationID, owner: record.owner, ref: record.ref, expiresAt: record.expiresAt,
+              canonicalIdentity: record.canonicalIdentity,
             })))
             return Effect.succeed({ operations, coverage: acquired.catalog.coverage, catalogGeneration: acquired.catalog.catalogGeneration,
               ...(cursor === undefined ? {} : { cursor }) })
@@ -396,7 +397,38 @@ export function make(options: Options) {
         return !Number.isFinite(time) || locator.expiresAt <= time ? Effect.fail(failure("stale_descriptor")) : Effect.succeed(description)
       })
     })
-    return { find, describe }
+    // Host routing metadata only; the leaf must re-list and validate current selection/schema before execution.
+    const locate = Effect.fn("CapabilityDiscovery.locate")(function* (
+      context: Tool.Context, ref: Capability.DescriptorRef, materialization: ToolRegistry.Materialization,
+    ): Effect.fn.Return<Readonly<{ provider: string; canonicalName: string; name: string }>, Capability.Failure> {
+      const supplied = { ...context }
+      const binding = yield* CapabilityInvocation.require(supplied, placement)
+      yield* policy.assert(supplied, { action: disclosureAction, resources: [disclosureAction] })
+      const parsed = Schema.decodeUnknownOption(Capability.DescriptorRef)(ref)
+      if (Option.isNone(parsed)) return yield* failure("stale_descriptor")
+      const value = { ...parsed.value }
+      const locator = locators.get(value.id)
+      const time = now()
+      if (!locator || !Number.isFinite(time) || locator.expiresAt <= time ||
+        !CapabilityCursors.sameOwner(locator.owner, binding.owner) || !sameRef(locator.ref, value))
+        return yield* failure("stale_descriptor")
+      const permit = yield* policy.authorize(supplied, { action: disclosureAction,
+        resources: [disclosureAction, ...resources({ provider: locator.provider,
+          connectionID: value.connectionID, targetID: value.targetID }), operationResource(locator.provider, locator.name)],
+      })
+      yield* policy.commit(permit, () => Effect.void).pipe(
+        Effect.catchTag("SqlError", () => Effect.fail(failure("connection_unavailable"))),
+      )
+      return yield* Effect.suspend(() => {
+        const canonical = identity(locator.provider, materialization)
+        if (canonical instanceof Capability.Failure) return Effect.fail(canonical)
+        const time = now()
+        if (!Number.isFinite(time) || locator.expiresAt <= time || locators.get(value.id) !== locator ||
+          canonical.canonicalIdentity !== locator.canonicalIdentity) return Effect.fail(failure("stale_descriptor"))
+        return Effect.succeed(Object.freeze({ provider: locator.provider, canonicalName: canonical.canonicalName, name: locator.name }))
+      })
+    })
+    return { find, describe, locate }
   })
 }
 
