@@ -95,9 +95,11 @@ function fixture(provider: "slack" | "discord", options: {
       readError: false, readbackError: false, malformed: false, oversized: false, redirect: false,
       textOverride: undefined as string | undefined, cursorOverride: undefined as string | undefined,
       firstPage: false, permissionRevoke: false, ambiguousMissing: false,
-      cas: "none", casStage: "final", casDone: false }
+      cas: "none", casStage: "final", casDone: false, gatePreflight: false }
     const proof: CapabilityJobs.ProducerProof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const received = yield* Deferred.make<void>()
+    const preflightEntered = yield* Deferred.make<void>()
+    const releasePreflight = yield* Deferred.make<void>()
     const scope = yield* Scope.Scope
     const wire = (message: StoredMessage, routeChannel = channelID) => provider === "slack" ? {
       ts: message.id, text: state.textOverride ?? message.text, ...(message.threadID ? { thread_ts: message.threadID } : {}),
@@ -116,6 +118,11 @@ function fixture(provider: "slack" | "discord", options: {
         requests.push({ method: request.method, path: url.pathname, query: url.searchParams, body,
           authorization: request.headers.get("authorization") })
         const json = (value: unknown, status = 200) => Response.json(value, { status })
+        const preflightPath = provider === "slack" ? "/api/auth.test" : "/api/v10/guilds/1"
+        if (state.gatePreflight && url.pathname === preflightPath && requests.filter((entry) => entry.path === preflightPath).length === 1) {
+          Deferred.doneUnsafe(preflightEntered, Effect.void)
+          await Effect.runPromise(Deferred.await(releasePreflight))
+        }
         if (provider === "slack" && url.pathname === "/api/auth.test") return json({ ok: true, team_id: state.wrongGuild ? "T9" : "T1", user_id: "U1" })
         if (provider === "slack" && url.pathname === "/api/conversations.info") return json({ ok: true, channel: { id: state.wrongChannel ? "C9" : "C1" } })
         if (provider === "discord" && url.pathname === "/api/v10/guilds/1") return json({ id: state.wrongGuild ? "9" : "1" })
@@ -221,7 +228,7 @@ function fixture(provider: "slack" | "discord", options: {
     const output = (input: Schema.Json, name?: Name) => call(input, name).pipe(Effect.flatMap((output) => Schema.decodeUnknownEffect(Output)(output.structured)))
     return { ...f, binding, provider, channels, credentials, selected, connections, jobs, artifacts, connection, target, bind,
       channelID, threadID, messageID, messages, requests, state, submittedStates, submittingIDs, acknowledgedIDs,
-      received, makeOptions, run, call, output }
+      received, preflightEntered, releasePreflight, makeOptions, run, call, output }
   })
 }
 
@@ -503,6 +510,53 @@ describe("CapabilityChannels real REST leaves", () => {
     expect(second.messageID).toBe(first.messageID)
     expect(submitted.requests).toHaveLength(before)
     expect(submitted.state.mutations).toBe(1)
+  }), 30000)
+
+  it.live("Concurrent fresh/reused channel admissions perform one preflight and one HTTP mutation", () => Effect.gen(function* () {
+    yield* Effect.forEach(["slack", "discord"] as const, (provider) => Effect.gen(function* () {
+      const f = yield* fixture(provider)
+      const other = yield* CapabilityChannels.make(f.makeOptions)
+      f.state.gatePreflight = true
+      yield* Effect.addFinalizer(() => Deferred.succeed(f.releasePreflight, undefined))
+      const reused = yield* Deferred.make<void>()
+      const completed: Output[] = []
+      const input = { provider, text: "one charge" }
+      const pending = yield* Effect.all([
+        f.output(input),
+        f.run(Tool.settle(other.tools.channel_send, { type: "tool-call", id: f.context.toolCallID,
+          name: "channel_send", input }, f.context)).pipe(Effect.flatMap((output) => Schema.decodeUnknownEffect(Output)(output.structured))),
+        f.output(input),
+      ].map((effect) => effect.pipe(Effect.tap((output) => Effect.sync(() => {
+        completed.push(output)
+        if (completed.filter((value) => value.result.status === "unknown").length === 2)
+          Deferred.doneUnsafe(reused, Effect.void)
+      })))), { concurrency: "unbounded" }).pipe(Effect.forkChild)
+      yield* Effect.raceFirst(Deferred.await(f.preflightEntered), Fiber.join(pending).pipe(
+        Effect.andThen(Effect.die("CHANNEL_FRESH_PREFLIGHT_NOT_ENTERED"))))
+      yield* Effect.raceFirst(Deferred.await(reused), Fiber.join(pending).pipe(
+        Effect.andThen(Effect.die("CHANNEL_REUSED_ADMISSIONS_DID_NOT_COMPLETE"))))
+      expect(f.requests.map((request) => request.path)).toEqual([
+        provider === "slack" ? "/api/auth.test" : "/api/v10/guilds/1",
+      ])
+      expect(f.state.mutations).toBe(0)
+      const admitted = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+      expect(admitted.filter((row) => row.owner.sessionID === f.context.sessionID)).toMatchObject([
+        { state: "intent", provider_id: null },
+      ])
+      yield* Deferred.succeed(f.releasePreflight, undefined)
+      const outputs = yield* Fiber.join(pending)
+      expect(outputs.map((output) => output.result.status).sort()).toEqual(["completed", "unknown", "unknown"])
+      expect(new Set(outputs.map((output) => output.jobRef?.id)).size).toBe(1)
+      expect(f.requests.filter((request) => provider === "slack" ? request.path === "/api/chat.postMessage"
+        : request.method === "POST" && request.path === "/api/v10/channels/10/messages")).toHaveLength(1)
+      expect(f.state.mutations).toBe(1)
+      const known = outputs.find((output) => output.result.status === "completed")
+      if (!known) return yield* Effect.die("CHANNEL_CONCURRENT_COMPLETION_MISSING")
+      expect(f.messages.get(known.messageID ?? "")?.text).toBe("one charge")
+      const before = f.requests.length
+      expect(yield* f.output(input)).toEqual(known)
+      expect(f.requests).toHaveLength(before)
+    }))
   }), 30000)
 
   it.live("Update action, message and emoji belong to payload identity even when first intent remains pending", () => Effect.gen(function* () {

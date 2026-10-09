@@ -11,7 +11,7 @@ import { CapabilityConnections } from "../connection"
 import { CapabilityInvocation } from "../invocation"
 import { CapabilityJobs } from "../job"
 import { CapabilityPolicy } from "../policy"
-import { CapabilityArtifactTable, CapabilityJobTable } from "../sql"
+import { CapabilityArtifactTable } from "../sql"
 import { CapabilityDiscord } from "../providers/discord"
 import { CapabilitySlack } from "../providers/slack"
 import { Failure, request, safeText, validateOptions, type Options, type RPC } from "./http"
@@ -157,20 +157,6 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       summary: "Existing durable operation requires reconciliation; no retry dispatched", reconciliationRef: ref.id } }
   })
 
-  // Compatibility checkpoint until the shared atomic admit facade is committed.
-  const admit = Effect.fn("CapabilityChannels.admit")(function* (context: Tool.Context, input: CapabilityJobs.CreateInput) {
-    const existing = yield* database.db.select({ id: CapabilityJobTable.id }).from(CapabilityJobTable).where(and(
-      sql`${CapabilityJobTable.operation} = ${input.operation}`,
-      sql`json_extract(${CapabilityJobTable.invocation}, '$.sessionID') = ${context.sessionID}`,
-      sql`json_extract(${CapabilityJobTable.invocation}, '$.agentID') = ${context.agent}`,
-      sql`json_extract(${CapabilityJobTable.invocation}, '$.assistantMessageID') = ${context.assistantMessageID}`,
-      sql`json_extract(${CapabilityJobTable.invocation}, '$.callID') = ${context.toolCallID}`,
-    )).limit(2).all().pipe(Effect.orDie)
-    if (existing.length > 1) return yield* failure("outcome_unknown")
-    const ref = yield* jobs.create(context, input)
-    return { ref, reused: existing.some((row) => row.id === ref.id) }
-  })
-
   const mutate = Effect.fn("CapabilityChannels.mutate")(function* (
     input: Send | Update, context: Tool.Context, kind: "send" | "update",
   ): Effect.fn.Return<Output, Capability.Failure | Failure | CapabilityArtifacts.Failure> {
@@ -180,7 +166,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       return yield* failure("unsupported_schema")
     const operation = `channel.${kind}`
     const prepared = yield* prepare(context, input, operation, `channel_${kind}`)
-    const admission = yield* admit(context, { kind: "provider", operation,
+    const admission = yield* jobs.admit(context, { kind: "provider", operation,
       requestHash: requestHash(input, prepared.resolved, prepared.threadID),
       connection: prepared.resolved.connection, target: prepared.resolved.target })
     const ref = admission.ref
