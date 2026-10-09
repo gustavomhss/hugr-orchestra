@@ -439,9 +439,9 @@
       "authorizedAt": "2026-10-06"
     },
     "packages/sdk/js/src/v2/gen/types.gen.ts": {
-      "maximumLines": 16601,
-      "reason": "@hey-api/OpenAPI generated SDK schema output. Shared V1 admission/transition components preserve nullable CAS fields; the combined runtime adds the existing optional OAuth metadata field. Owner approved 3 additional LOC beyond 16598 for the supported combined generation.",
-      "authorizedBy": "owner (gustavomhss), explicit approval: Autorizar 16601 LOC",
+      "maximumLines": 16718,
+      "reason": "@hey-api/OpenAPI generated SDK schema output. Supported combined generation includes V3 upstream attribution and workflow binding/lifecycle/background contracts, preserving existing nullable CAS and OAuth metadata. Owner approved 117 additional LOC beyond 16601 for this generated output.",
+      "authorizedBy": "owner (gustavomhss), explicit approval: Autorizar 16718 LOC",
       "authorizedAt": "2026-10-08"
     }
   }

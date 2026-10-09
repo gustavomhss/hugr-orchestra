@@ -64,6 +64,7 @@ export type Event =
   | EventMaestroAuthorizationGranted
   | EventMaestroDispatchReserved
   | EventMaestroTaskBound
+  | EventMaestroTaskWorkflowBound
   | EventMessagePartDelta
   | EventSessionDiff
   | EventSessionError
@@ -1369,40 +1370,42 @@ export type GlobalEvent = {
           sessionID: string
           admissionMessageID: string
           methodVersion: string
-          revision: "v2"
+          revision: "v3"
           goal: {
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }
           acceptance: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           scope: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           constraints: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           reviewRequirement: {
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }
           contextRequirement: "PENDING"
           assumptions: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           risks: Array<{
             value: string
-            source: "stakeholder" | "maestro" | "orientation"
+            source: "stakeholder" | "maestro" | "orientation" | "upstream"
           }>
           status: "PROPOSED"
           revisionHash: string
           createdAt: number
-          grounding: MaestroGrounding
+          workflowBinding?: RelayArmWorkflowDefinition
+          upstreamAttribution?: MaestroUpstreamAttributionV1
+          grounding?: MaestroGrounding
         }
       }
     | {
@@ -1581,6 +1584,17 @@ export type GlobalEvent = {
           executionSessionID: string
           authoritySessionID: string
           source: "host" | "user" | "dispatch" | "governed"
+        }
+      }
+    | {
+        id: string
+        type: "maestro.task.workflow_bound"
+        properties: {
+          executionSessionID: string
+          authorityMessageID: string
+          authorityCallID: string
+          token: string
+          binding: RelayArmWorkflowBinding
         }
       }
     | {
@@ -2078,6 +2092,7 @@ export type GlobalEvent = {
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
     | SyncEventMaestroTaskBound
+    | SyncEventMaestroTaskWorkflowBound
     | SyncEventRelayHookDecided
 }
 
@@ -3485,6 +3500,7 @@ export type V2Event =
   | MaestroAuthorizationGranted
   | MaestroDispatchReserved
   | MaestroTaskBound
+  | MaestroTaskWorkflowBound
   | MessagePartDelta
   | SessionDiff
   | SessionError
@@ -3925,6 +3941,51 @@ export type RevertState = {
   files?: Array<FileDiff>
 }
 
+export type RelayArmPublication = {
+  projectID: string
+  documentID: string
+  activeVersionID: string
+  immutableVersionBodyChecksum: string
+  livePublicationChecksum: string
+}
+
+export type RelayArmMaterialization = {
+  schemaIdentifier: "RelaySprint.Sprint"
+  digest: string
+  byteLength: number
+}
+
+export type RelayAuthoringSkillBinding = {
+  wp: string
+  skill: string
+  sha256: string
+  mode: "combine" | "replace"
+  content: string
+}
+
+export type RelayArmWorkflowDefinition = {
+  publication: RelayArmPublication
+  materialization: RelayArmMaterialization
+  resolvedSkills: Array<RelayAuthoringSkillBinding>
+  parameters: {
+    [key: string]: string
+  }
+  writePaths: Array<string>
+}
+
+export type MaestroUpstreamAttributionV1 = {
+  schema: "maestro-upstream-attribution-v1"
+  projectID: string
+  memberID: string
+  profile: "upstream"
+  authorSessionID: string
+  authorMessageID: string
+  parentSessionID: string
+  parentMessageID: string
+  parentCallID: string
+  logicalTaskID: string
+}
+
 export type MaestroGrounding = {
   catalogVersion: string
   snapshot: string
@@ -3978,6 +4039,14 @@ export type MaestroLoadedOwnSkill = {
   content: string
   contentHash: string
   receiptHash: string
+}
+
+export type RelayArmWorkflowBinding = {
+  definition: RelayArmWorkflowDefinition
+  planRevisionID: string
+  executionSessionID: string
+  authoritySessionID: string
+  logicalTaskID: string
 }
 
 export type PermissionV2Source = {
@@ -4849,7 +4918,7 @@ export type SyncEventMaestroPlanRevisionRecorded = {
   type: "sync"
   id: string
   syncEvent: {
-    type: "maestro.plan_revision.recorded.2"
+    type: "maestro.plan_revision.recorded.3"
     id: string
     seq: number
     aggregateID: string
@@ -4858,40 +4927,42 @@ export type SyncEventMaestroPlanRevisionRecorded = {
       sessionID: string
       admissionMessageID: string
       methodVersion: string
-      revision: "v2"
+      revision: "v3"
       goal: {
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }
       acceptance: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       scope: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       constraints: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       reviewRequirement: {
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }
       contextRequirement: "PENDING"
       assumptions: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       risks: Array<{
         value: string
-        source: "stakeholder" | "maestro" | "orientation"
+        source: "stakeholder" | "maestro" | "orientation" | "upstream"
       }>
       status: "PROPOSED"
       revisionHash: string
       createdAt: number
-      grounding: MaestroGrounding
+      workflowBinding?: RelayArmWorkflowDefinition
+      upstreamAttribution?: MaestroUpstreamAttributionV1
+      grounding?: MaestroGrounding
     }
   }
 }
@@ -5133,6 +5204,24 @@ export type SyncEventMaestroTaskBound = {
       executionSessionID: string
       authoritySessionID: string
       source: "host" | "user" | "dispatch" | "governed"
+    }
+  }
+}
+
+export type SyncEventMaestroTaskWorkflowBound = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.task.workflow_bound.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      executionSessionID: string
+      authorityMessageID: string
+      authorityCallID: string
+      token: string
+      binding: RelayArmWorkflowBinding
     }
   }
 }
@@ -6934,40 +7023,42 @@ export type MaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v2"
+    revision: "v3"
     goal: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     acceptance: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     scope: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     constraints: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     reviewRequirement: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     contextRequirement: "PENDING"
     assumptions: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     risks: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
-    grounding: MaestroGrounding
+    workflowBinding?: RelayArmWorkflowDefinition
+    upstreamAttribution?: MaestroUpstreamAttributionV1
+    grounding?: MaestroGrounding
   }
 }
 
@@ -7236,6 +7327,27 @@ export type MaestroTaskBound = {
     executionSessionID: string
     authoritySessionID: string
     source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
+export type MaestroTaskWorkflowBound = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.task.workflow_bound"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    executionSessionID: string
+    authorityMessageID: string
+    authorityCallID: string
+    token: string
+    binding: RelayArmWorkflowBinding
   }
 }
 
@@ -9173,40 +9285,42 @@ export type EventMaestroPlanRevisionRecorded = {
     sessionID: string
     admissionMessageID: string
     methodVersion: string
-    revision: "v2"
+    revision: "v3"
     goal: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     acceptance: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     scope: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     constraints: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     reviewRequirement: {
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }
     contextRequirement: "PENDING"
     assumptions: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     risks: Array<{
       value: string
-      source: "stakeholder" | "maestro" | "orientation"
+      source: "stakeholder" | "maestro" | "orientation" | "upstream"
     }>
     status: "PROPOSED"
     revisionHash: string
     createdAt: number
-    grounding: MaestroGrounding
+    workflowBinding?: RelayArmWorkflowDefinition
+    upstreamAttribution?: MaestroUpstreamAttributionV1
+    grounding?: MaestroGrounding
   }
 }
 
@@ -9394,6 +9508,18 @@ export type EventMaestroTaskBound = {
     executionSessionID: string
     authoritySessionID: string
     source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
+export type EventMaestroTaskWorkflowBound = {
+  id: string
+  type: "maestro.task.workflow_bound"
+  properties: {
+    executionSessionID: string
+    authorityMessageID: string
+    authorityCallID: string
+    token: string
+    binding: RelayArmWorkflowBinding
   }
 }
 

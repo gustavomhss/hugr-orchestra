@@ -132,30 +132,24 @@ export function make(binding: {
 
     if (result) {
       const settlement = { parentMessageID: input.messageID, parentCallID: input.callID, workResult: result, ...receipt }
+      // One private all-view writer validates stored proposal and original anchors before installing any receipt.
+      yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,
+        childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: input.capture.assistantMessageID })
       if (modern) {
-        const parent = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
-        if (parent.type !== "assistant") return yield* new Hold({ message: "HOLD: original parent not assistant" })
-        const matches = parent.content.filter((item) => item.type === "tool" && item.id === input.callID)
-        const tool = matches[0]
-        if (matches.length !== 1 || tool?.type !== "tool" || tool.name !== "task" || tool.provider?.executed ||
-          !("structured" in tool.state)) return yield* new Hold({ message: "HOLD: original Task missing" })
-        const previous = Option.getOrUndefined(record(tool.state.structured.metadata)) ?? {}
-        const metadata = { ...previous, parentSessionId: input.sessionID, sessionId: input.childSessionID,
-          workResult: result, upstreamSettlement: settlement }
-        const owner = { sessionID: input.sessionID, messageID: input.messageID, callID: input.callID, tool: tool.name, input: tool.state.input }
-        const before = SessionMessageUpdater.upstreamSettlement(previous, owner)
-        if (before && !isDeepStrictEqual(before, settlement))
-          return yield* new Hold({ message: "HOLD: original Task settlement conflicts" })
-        if (previous.parentSessionId !== input.sessionID || previous.sessionId !== input.childSessionID ||
-          !SessionMessageUpdater.upstreamSettlement(metadata, owner))
-          return yield* new Hold({ message: "HOLD: original Task binding mismatch" })
-        if (!before) yield* events.publish(SessionEvent.Tool.Progress, { sessionID: SessionSchema.ID.make(input.sessionID), assistantMessageID: SessionMessage.ID.make(input.messageID),
-          callID: input.callID, timestamp: yield* DateTime.now, structured: { ...tool.state.structured, metadata }, content: tool.state.content },
-          { location: parentLocation })
+        const row = yield* database.db.select().from(SessionMessageTable)
+          .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.messageID))).get().pipe(Effect.orDie)
+        if (!row || row.session_id !== input.sessionID) return yield* new Hold({ message: "HOLD: native Task settlement not projected" })
+        const stored = Schema.decodeUnknownSync(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type })
+        const calls = stored.type === "assistant" && stored.agent === "maestro"
+          ? stored.content.filter((item) => item.type === "tool" && item.id === input.callID) : []
+        const call = calls[0]
+        if (calls.length !== 1 || call?.type !== "tool" || call.name !== "task" || call.provider?.executed ||
+          !("structured" in call.state) || !isDeepStrictEqual(SessionMessageUpdater.upstreamSettlement(
+            Option.getOrUndefined(record(call.state.structured.metadata)) ?? {}, { sessionID: input.sessionID,
+              messageID: input.messageID, callID: input.callID, tool: call.name, input: call.state.input }), settlement))
+          return yield* new Hold({ message: "HOLD: native Task settlement readback mismatch" })
       }
-      if (!modern) {
-        yield* sessions.settleUpstreamTask({ ...settlement, workResult: { ...result }, sessionID: input.sessionID,
-          childSessionID: input.childSessionID, logicalTaskID: input.taskID, authorMessageID: input.capture.assistantMessageID })
+      if (legacy) {
         // The generic updatePart boundary strips new receipts. Only the private validated setter may install one.
         const parent = yield* MessageV2.get({ sessionID: input.sessionID, messageID: input.messageID })
         const matches = parent.parts.filter((part) => part.type === "tool" && part.callID === input.callID)
