@@ -109,6 +109,7 @@ export type MemoryState = {
 }
 
 export interface Adapter {
+  // Session projector supplies captured DB facts and internal commit origin; an unbacked adapter has no authority.
   readonly validateTaskObservation?: (input: {
     readonly sessionID: SessionSchema.ID
     readonly assistant: SessionMessage.Assistant
