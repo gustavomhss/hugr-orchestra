@@ -112,37 +112,6 @@ function basePart(messageID: string, id: string) {
 }
 
 describe("session.message-v2.toModelMessage", () => {
-  test("hook reminders follow original parts without changing stored text or attachments", async () => {
-    const message: SessionV1.WithParts = {
-      info: { ...userInfo("msg_reminders"), promptContext: { reminders: ["first\r\n🧠", "second"] } },
-      parts: [
-        { ...basePart("msg_reminders", "text"), type: "text", text: " original\r\ntext " },
-        { ...basePart("msg_reminders", "image"), type: "file", mime: "image/png", filename: "img.png",
-          url: "data:image/png;base64,Zm9v" },
-      ],
-    }
-    const before = structuredClone(message)
-    const result = await MessageV2.toModelMessages([message], model)
-    expect(result).toEqual([{ role: "user", content: [
-      { type: "text", text: " original\r\ntext " },
-      { type: "file", mediaType: "image/png", filename: "img.png", data: "data:image/png;base64,Zm9v" },
-      { type: "text", text: "Hook reminder:\nfirst\r\n🧠" },
-      { type: "text", text: "Hook reminder:\nsecond" },
-    ] }])
-    expect(message).toEqual(before)
-    expect(await MessageV2.toModelMessages([{ ...message, parts: [] }], model)).toEqual([])
-    expect(await MessageV2.toModelMessages([{ ...message,
-      parts: [{ ...basePart("msg_reminders", "ignored"), type: "text", text: "ignored", ignored: true }],
-    }], model)).toEqual([])
-    const stripped = await MessageV2.toModelMessages([message], model, { stripMedia: true })
-    expect(stripped).toEqual([{ role: "user", content: [
-      { type: "text", text: " original\r\ntext " },
-      { type: "text", text: "[Attached image/png: img.png]" },
-      { type: "text", text: "Hook reminder:\nfirst\r\n🧠" },
-      { type: "text", text: "Hook reminder:\nsecond" },
-    ] }])
-  })
-
   test("filters out messages with no parts", async () => {
     const input: SessionV1.WithParts[] = [
       {

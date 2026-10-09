@@ -22,7 +22,7 @@ const sessionID = SessionID.make("ses_reminder_delivery")
 
 for (const native of [false, true]) {
   it.instance(`hook reminders reach real provider requests as user history, native=${native}`, () => Effect.gen(function* () {
-    const wire: { input: { role?: string; content?: { text?: string }[] }[]; instructions?: string }[] = []
+    const wire: { input: { role?: string; content?: { type?: "input_text"; text?: string }[] }[]; instructions?: string }[] = []
     const capture: typeof fetch = Object.assign(async (_url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
       wire.push(await new Response(init?.body).json())
       return new Response([

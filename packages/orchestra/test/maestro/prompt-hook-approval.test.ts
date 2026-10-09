@@ -109,7 +109,7 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
         const decisions = (yield* database.db.select().from(EventTable).all())
           .filter((row) => row.type === "relay.hook.decided.1")
           .map((row) => Schema.decodeUnknownSync(RelayHook.Decided.data)(row.data))
-          .filter((decision) => decision.messageID === request.messageID)
+          .filter((decision) => String(decision.messageID) === request.messageID)
         expect(decisions.map((decision) => decision.outcome)).toEqual(
           reply === "interrupt" ? ["cancelled"] : reply === "reject" ? ["rejected"] : ["approved", "reminded", "reminded"],
         )
