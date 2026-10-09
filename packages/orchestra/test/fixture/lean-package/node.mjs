@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises"
+import { writeFile, rename } from "node:fs/promises"
 import { pathToFileURL } from "node:url"
 import assert from "node:assert/strict"
 
@@ -8,7 +8,8 @@ assert.equal(typeof artifact.Server.listen, "function")
 assert.equal(typeof artifact.Config, "object")
 assert.equal(typeof artifact.bootstrap, "function")
 const listener = await artifact.Server.listen({ hostname: "127.0.0.1", port: 0, mdns: false })
-await writeFile(process.argv[3], listener.url.href)
+await writeFile(process.argv[3] + ".tmp", listener.url.href)
+await rename(process.argv[3] + ".tmp", process.argv[3])
 const deadline = setTimeout(() => { console.error("Node listener lifetime exceeded"); process.exit(1) }, 180000)
 process.once("SIGTERM", async () => {
   try {
