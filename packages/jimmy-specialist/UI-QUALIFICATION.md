@@ -4,6 +4,8 @@
 
 **UNRUN.** These files are detecting controls awaiting final execution, not acceptance evidence. No test, typecheck, production build, browser, model evaluation, dependency installation, push, PR or merge was run during this preparation.
 
+Lead integration subsequently compiled the app/E2E and session-ui packages; browser, benchmark and mutation execution is still UNRUN. Root AGENTS prescribes GitHub Actions testing. The local production recipes below require separately authorized local execution and do not themselves grant it.
+
 - Preparation checkout: `jimmy-ui-close`, starting at `3a62efbcee`.
 - Original product comparator: `73651a0e69a2912d9244dbb73e985c5828c03058` (`73651`). It has no `ResearchResult` renderer.
 - Candidate for final execution: the lead's frozen integrated checkout SHA, recorded before building. Do not substitute this preparation baseline for the original comparator.
@@ -161,8 +163,8 @@ Run each mutation separately only at final qualification; restore production sou
 ## Remaining evidence gaps
 
 - Every execution, mutation result, browser report, timing, trace and CI URL is **UNRUN**. Authored assertions are not demonstrated detecting assertions until the corresponding mutation is observed failing.
-- `packages/app/e2e/tsconfig.json` currently enumerates selected specs; it does not include these new regression/benchmark files in this worktree. The lead owns the include update. After integration run `bun typecheck` and `bun run typecheck:e2e` from `packages/app`, and `bun typecheck` from `packages/session-ui` once. The current E2E config alone would miss these controls.
+- The integrated `packages/app/e2e/tsconfig.json` includes these regression/benchmark files and their reused performance helpers. Consolidated compilation uses `bun typecheck tsconfig.json e2e/tsconfig.json` from `packages/app`, plus `bun typecheck` from `packages/session-ui`. Compilation does not execute browser assertions.
 - Direct live-server storage/admission/authorization, actual server-switch during a pending request, desktop Electron multi-process behavior, native screen reader review, zoom/resize/full RTL scrolling, other locales/browsers and maximum document/page-count bounds remain outside these browser controls. Their existing native/unit/manual qualification remains separate; no skipped test represents them here.
-- The lead owns the native task `state.structured` metadata merge in `app/src/utils/session-message.ts`; this worktree intentionally does not edit it. The authored V2 controls depend on its integration.
-- Static routing mismatch remains for lead reconciliation: `SessionEvent.Tool.Success.type` is `session.next.tool.success`, while `app/src/context/server-session-v2-reducer.ts` switches on `session.tool.success`. The V2 replacement control preserves the native event rather than manufacturing a test adapter. Native event routing must be reconciled before final qualification; no execution evidence yet establishes that an existing client boundary maps it.
+- Lead integration preserves native Task `state.structured` metadata in running/completed presentation. The authored V2 controls still require browser execution.
+- Lead integration adapts the actual `session.next.tool.success` envelope into the older rendering client's `session.tool.success` shape at `server-sdk.tsx`, preserving timestamp, structured output and optional durable facts. The V2 replacement fixture keeps the native event name; it does not supply its own compatibility adapter. Unit/browser detecting assertions remain unexecuted.
 - Original comparator cannot measure research render/open work. This limitation cannot be removed by copying the candidate renderer into it.

@@ -31,8 +31,8 @@ All three execution packages are independent under the frozen contract. The lead
 
 - Packaged runtime proof has not yet passed.
 - The system prompt is provisional until the closure review completes.
-- R01/R08 are provisional single pilots; paired R01–R14 repetitions are not complete. R14 requires evaluator-owned setup.
-- Full named native/Atlas matrix, desktop runtime reach, UI accessibility/direction/locale checks and production timeline benchmark must be reconciled against the governing delivery plan.
+- R01/R08 are provisional single pilots; paired R01–R14 repetitions are not complete. The R14 collector is implemented but still requires evaluator-owned scenario/setup and actual execution.
+- [QUALIFICATION.md](QUALIFICATION.md) maps every named native/Atlas case to current controls and remaining execution gaps. Desktop runtime reach, UI accessibility/direction/locale and production benchmark evidence remain pending.
 - Final generated consumers, cold integration review and consolidated gates remain pending.
 
 `IMPLEMENTATION.md` holds historical evidence. The compaction checkpoint stays outside the checkout; it is not a shipped artifact or acceptance report.
@@ -40,6 +40,8 @@ All three execution packages are independent under the frozen contract. The lead
 ## Current execution state
 
 All three implementation packages returned separate commits and were integrated after diff review. Cold review corrections are included. One consolidated typecheck batch and both prescribed generators completed; only the failed Orchestra check was repeated after its actual compiler fixes. Heavy tests and mutation probes remain deferred to final closure. Temporary writer worktrees are removed; recovery branches retain their commits.
+
+The second preparation wave, based on `3a62efbcee`, adds actual compiled Maestro/Task/provider/HttpApi/generated-client control, rendered browser regression/production benchmark controls and an executable R14 interruption/resume collector. Cold review corrections are integrated. Lead integration preserves V2 structured Task results, adapts canonical native tool-success events without inventing durable facts, propagates native request aborts and fixes missed startup cancellation. New source assertions cover closed final cards, overlapping single-process Atlas writers and startup signals. Package compilation includes the new E2E files and their real performance dependencies; runtime assertions remain unexecuted.
 
 | Remaining block | Owner | Required exit |
 | --- | --- | --- |
@@ -56,9 +58,10 @@ Preparation is parallel; prompt freeze and acceptance are downstream integration
 These are final-stage commands, not results from this wave. Run from the implementation root after the remaining detecting controls are ready. Extend the exact file list when closing a named uncovered requirement, rather than repeatedly rerunning already-passing suites during implementation.
 
 ```sh
-bun run test:ci orchestra test/maestro/seat-skills-build.test.ts test/research/packaged-runtime.test.ts test/research/corpus-integration.test.ts test/research/task-continuation.test.ts test/research/atlas-context.test.ts test/research/atlas-owners.test.ts test/research/allowance.test.ts --os both
+bun run test:ci orchestra test/maestro/seat-skills-build.test.ts test/research/packaged-runtime.test.ts test/research/corpus-integration.test.ts test/research/task-continuation.test.ts test/research/atlas-context.test.ts test/research/atlas-owners.test.ts test/research/allowance.test.ts test/tool/task.test.ts --os both
 bun run test:ci core test/research-binding.test.ts test/research-artifacts.test.ts test/research-records.test.ts test/research-allowance.test.ts --os both
 bun run test:ci session-ui src/components/research-document.test.ts --os both
+bun run test:ci app src/utils/session-message.test.ts src/context/server-sdk.test.ts src/context/server-session-v2-reducer.test.ts --os both
 ```
 
 These scoped commands alone are not the complete epic acceptance matrix. The actual desktop/browser, named uncovered native/Atlas cases, epic lane and independent audition still need their declared execution evidence.
