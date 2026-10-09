@@ -6,6 +6,8 @@ import { Effect, Layer, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { AppRuntime } from "@/effect/app-runtime"
@@ -42,12 +44,13 @@ cases.forEach((variant) => {
         const database = yield* Database.Service
         const planRevisionID = EventV2.ID.create()
         const contextRecordID = EventV2.ID.create()
-        const validation = yield* recordValidation({
+        const recorded = yield* recordValidation({
           sessionID: session.id, projectID: session.projectID, planRevisionID, contextRecordID,
           contextHash: "c".repeat(64), workCardID: "cold-review-card", workCard: "Bounded implementation receipt",
           routedMemberID: "backend", validatorID: "maestro", validatorVersion: "cold-review-fixture-v1",
           checks: [{ id: "source", status: "PASS", detail: "bounded source evidence" }],
         })
+        const validation = { id: recorded.id, ...Schema.decodeUnknownSync(MaestroEvent.Validation.RecordedV3.data)(recorded) }
         if (!("reviewBaseSHA" in validation)) throw new Error("fixture validation lacks review baseline")
         yield* fs.writeFileString(path.join(tmp.path, "cold-review.txt"), "reviewed implementation\n")
         const added = yield* git.run(["add", "cold-review.txt"], { cwd: tmp.path })
@@ -118,6 +121,6 @@ cases.forEach((variant) => {
         }
         expect(yield* check.pipe(Effect.flip)).toMatchObject({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
       }).pipe(Effect.provideService(InstanceRef, instance))
-    }))
+    }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(filesystem))))
   }), 90000)
 })
