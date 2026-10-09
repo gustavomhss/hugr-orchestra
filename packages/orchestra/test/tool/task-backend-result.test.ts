@@ -267,31 +267,14 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
         return admitted
       }
       yield* Deferred.await(release)
+      const returned = yield* ops(text, written, error).prompt(input)
+      if (returned.info.role !== "assistant") throw new Error("actual background fixture assistant missing")
       const info = yield* sessions.updateMessage({
-        id: MessageID.ascending(),
-        role: "assistant",
-        parentID: input.messageID ?? MessageID.ascending(),
-        sessionID: input.sessionID,
-        mode: subagent,
-        agent: subagent,
-        cost: 0,
-        path: { cwd: "/tmp", root: "/tmp" },
-        tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-        modelID: ref.modelID,
-        providerID: ref.providerID,
-        time: { created: Date.now(), completed: Date.now() },
-        finish: "stop",
-        ...(error ? { error } : {}),
+        ...returned.info,
+        time: { ...returned.info.time, completed: Date.now() },
       })
-      written.push(info.id)
-      const part = yield* sessions.updatePart({
-        id: PartID.ascending(),
-        messageID: info.id,
-        sessionID: input.sessionID,
-        type: "text",
-        text,
-      })
-      return { info, parts: [part] }
+      const parts = yield* Effect.forEach(returned.parts, (part) => sessions.updatePart(part))
+      return { info, parts }
     }).pipe(Effect.orDie),
   }
   const tool = yield* TaskTool
