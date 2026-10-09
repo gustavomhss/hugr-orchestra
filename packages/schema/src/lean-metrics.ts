@@ -27,7 +27,16 @@ export interface Group {
   readonly estimatedTokenCalls: number
 }
 
-export interface Summary {
+export type Summary = AvailableSummary | UnavailableSummary
+
+/** Unavailable totals carry no numeric placeholders that could be mistaken for exact savings. */
+export interface UnavailableSummary {
+  readonly unavailable: "overflow" | "invalid-scope"
+  readonly coverage: "loaded-history" | "complete-history"
+}
+
+export interface AvailableSummary {
+  readonly unavailable?: never
   readonly coverage: "loaded-history" | "complete-history"
   readonly observedCalls: number
   readonly eligibleCalls: number
@@ -49,6 +58,7 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
       "eligible", "status", "reason", "filterProfile", "bytes", "tokens", "durationMs"])
     if (!root || root.version !== 1 || root.scope !== "standard-registry" || root.engine !== "hugr-lean@0.2.0:4e46ae0534937bdf"
       || (root.producer !== "native-shell" && root.producer !== "unverified") || typeof root.eligible !== "boolean"
+      || (root.eligible && root.producer !== "native-shell")
       || (root.status !== "applied" && root.status !== "normalized" && root.status !== "passthrough")
       || !text(root.reason) || typeof root.durationMs !== "number" || !Number.isFinite(root.durationMs) || root.durationMs < 0
       || (root.orchestraProfile !== undefined && !text(root.orchestraProfile))

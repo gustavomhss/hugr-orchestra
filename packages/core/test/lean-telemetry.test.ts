@@ -35,6 +35,15 @@ test("passthrough requires identical text, including same-size changes; zero is 
   expect(LeanTelemetry.measure({ ...input, status: "normalized" })?.status).toBe("normalized")
 })
 
+test("contradictory passthrough eligibility fails open through actual measurement", () => {
+  for (const text of ["", "unchanged 😀"]) {
+    const value: LeanTelemetry.Input = { ...input, producer: "unverified", status: "passthrough", before: text, after: text }
+    expect(LeanTelemetry.measure(value)).toBeUndefined()
+    expect(LeanTelemetry.measure({ ...value, eligible: false })?.eligible).toBe(false)
+    expect(LeanTelemetry.measure({ ...value, producer: "native-shell" })?.eligible).toBe(true)
+  }
+})
+
 test("malformed text, ownership, duration and ineligible reductions fail open", () => {
   for (const patch of [
     { before: "\ud800" }, { after: "\udfff" }, { before: "\ud800", after: "\udfff" }, { before: null }, { after: {} },
