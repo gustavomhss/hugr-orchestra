@@ -124,10 +124,16 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       artifacts.read(context, artifact).pipe(Effect.result))
     const records = retained.flatMap((record) => record._tag === "Success" ? [record.success] : [])
     const evidence = records.flatMap((record) => {
+      if (record.metadata.producer.sessionID !== prepared.proof.producer.sessionID ||
+        record.metadata.producer.agentID !== prepared.proof.producer.agentID ||
+        record.metadata.producer.assistantMessageID !== prepared.proof.producer.assistantMessageID ||
+        record.metadata.producer.callID !== prepared.proof.producer.callID) return []
       const parsed = Schema.decodeUnknownOption(Schema.fromJsonString(Evidence))(new TextDecoder().decode(record.data))
       return parsed._tag === "Some" ? [parsed.value] : []
     })
+    // Rotated credentials cannot replace the original, authorized disclosure proof.
     const unsafeID = !!saved.providerID && (!prepared.safeMetadata({ messageID: saved.providerID }) ||
+      !evidence.some((item) => item.acknowledgment.providerIDProjection === "visible" && item.acknowledgment.messageID === saved.providerID) ||
       evidence.some((item) => item.acknowledgment.providerIDProjection === "omitted"))
     const messageID = saved.providerID && !unsafeID ? saved.providerID : undefined
     const common = { provider: input.provider, channelID: prepared.channelID, jobRef: ref,

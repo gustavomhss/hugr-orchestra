@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { CapabilityChannels } from "@orchestra/core/capability/channel/index"
-import { Output } from "@orchestra/core/capability/channel/schema"
+import { Evidence, Output } from "@orchestra/core/capability/channel/schema"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { CapabilityJobs } from "@orchestra/core/capability/job/index"
@@ -56,7 +56,7 @@ const Body = Schema.Struct({ text: Schema.optionalKey(Schema.String), content: S
 })
 
 function fixture(provider: "slack" | "discord", options: {
-  root?: Name; boundThread?: boolean; credential?: Credential.Value; endpoint?: string; quota?: number; timeoutMs?: number; maxResponseBytes?: number
+  root?: Name; boundThread?: boolean; credential?: Credential.Value; endpoint?: string; quota?: number; timeoutMs?: number; maxResponseBytes?: number; acceptedID?: string
 } = {}) {
   return Effect.gen(function* () {
     const f = yield* CapabilityPolicyFixture.fixture({ name: options.root ?? "channel_send" })
@@ -141,7 +141,7 @@ function fixture(provider: "slack" | "discord", options: {
           if (state.mode === "400") return json({ error: token }, 400)
           if (state.mode === "provider_unknown") return json({ ok: false, error: "internal_error" })
           const send = provider === "slack" ? url.pathname.endsWith("chat.postMessage") : request.method === "POST"
-          const id = send ? provider === "slack" ? `${200 + state.mutations}.000001` : String(200 + state.mutations)
+          const id = send ? options.acceptedID ?? (provider === "slack" ? `${200 + state.mutations}.000001` : String(200 + state.mutations))
             : provider === "slack" ? body.ts ?? body.timestamp ?? "" : url.pathname.split("/")[6] ?? ""
           if (send) messages.set(id, { id, text: body.text ?? body.content ?? "", ownEmoji: [],
             ...(body.thread_ts ? { threadID: body.thread_ts } : {}),
@@ -614,6 +614,69 @@ describe("CapabilityChannels real REST leaves", () => {
     const retry = yield* f.output({ provider: "discord", text: "accepted" })
     expect(retry.result).toEqual(output.result)
     expect(retry.messageID).toBeUndefined()
+    expect(f.state.mutations).toBe(1)
+  }))
+
+  it.live("Replay provider IDs require authorized original evidence after credential rotation", () => Effect.gen(function* () {
+    yield* Effect.forEach([true, false], (hidden) => Effect.gen(function* () {
+      const acceptedID = "812345678901234567"
+      const f = yield* fixture("discord", { acceptedID, credential: { type: "key", key: hidden ? acceptedID : token } })
+      const input = { provider: "discord", text: "privacy replay" }
+      const first = yield* f.output(input)
+      expect(first.result.status).toBe(hidden ? "partial" : "completed")
+      expect(first.messageID).toBe(hidden ? undefined : acceptedID)
+      if (first.result.status !== "partial" && first.result.status !== "completed") return yield* Effect.die("CHANNEL_PRIVACY_RECEIPT_MISSING")
+      const ref = first.result.artifactRefs[0]
+      const evidence = yield* f.run(f.artifacts.read(f.context, ref))
+      expect(JSON.parse(new TextDecoder().decode(evidence.data))).toMatchObject({ acknowledgment: {
+        providerIDProjection: hidden ? "omitted" : "visible", ...(hidden ? {} : { messageID: acceptedID }),
+      } })
+      yield* f.credentials.update(f.selected.id, { value: { type: "key", key: "fixture-rotated-secret" } })
+      const before = f.requests.length
+      const authorized = yield* f.output(input)
+      expect(authorized).toEqual(first)
+      yield* CapabilityPolicyFixture.setRules([...rules, { action: "artifact.read", resource: "*", effect: "deny" }])
+      expect(yield* f.run(f.artifacts.read(f.context, ref)).pipe(Effect.flip)).toMatchObject({ code: "target_denied" })
+      const replay = yield* f.call(input)
+      const output = yield* Schema.decodeUnknownEffect(Output)(replay.structured)
+      expect(output.result).toMatchObject({ status: "partial", artifactRefs: [] })
+      if (output.result.status !== "partial") return yield* Effect.die("CHANNEL_PRIVACY_PARTIAL_MISSING")
+      expect(output.result.unresolvedEffects).toContain("provider_id_projection")
+      expect(output.messageID).toBeUndefined()
+      expect(output.acquisition).toBeUndefined()
+      expect(JSON.stringify(replay)).not.toContain(acceptedID)
+      expect(output.jobRef).toEqual(first.jobRef)
+      const rows = yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)
+      expect(rows.filter((row) => row.owner.sessionID === f.context.sessionID)).toMatchObject([
+        { state: "completed", provider_id: acceptedID },
+      ])
+      expect(f.requests).toHaveLength(before)
+      expect(f.state.mutations).toBe(1)
+    }))
+  }), 30000)
+
+  it.live("Replay visible evidence must match the persisted accepted provider ID", () => Effect.gen(function* () {
+    const f = yield* fixture("discord")
+    const input = { provider: "discord", text: "matching proof" }
+    const first = yield* f.output(input)
+    if (first.result.status !== "completed" || !first.jobRef) return yield* Effect.die("CHANNEL_VISIBLE_RECEIPT_MISSING")
+    const ref = first.result.artifactRefs[0]
+    const record = yield* f.run(f.artifacts.read(f.context, ref))
+    const original = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(Evidence))(new TextDecoder().decode(record.data))
+    const changed = yield* f.run(f.artifacts.update(f.context, ref, { data: new TextEncoder().encode(JSON.stringify({
+      ...original, acknowledgment: { ...original.acknowledgment, messageID: "999" },
+    })), mime: record.metadata.mime, kind: record.metadata.kind, verification: record.metadata.verification,
+      metadata: record.metadata.metadata }))
+    const proof: CapabilityJobs.ProducerProof = { owner: f.binding.owner, producer: f.binding.invocation, rootToolName: f.binding.rootToolName }
+    const saved = yield* f.jobs.readHost(proof, first.jobRef)
+    yield* f.jobs.observeHost(proof, first.jobRef, { expectedGeneration: saved.receipt.generation, state: "completed",
+      observation: { ...saved.receipt.observation, artifactRefs: [changed] } })
+    const before = f.requests.length
+    const output = yield* f.output(input)
+    expect(output.messageID).toBeUndefined()
+    expect(output.result).toMatchObject({ status: "partial", unresolvedEffects: ["provider_id_projection"] })
+    expect((yield* f.jobs.readHost(proof, first.jobRef)).providerID).toBe(first.messageID)
+    expect(f.requests).toHaveLength(before)
     expect(f.state.mutations).toBe(1)
   }))
 
