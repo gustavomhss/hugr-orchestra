@@ -15,6 +15,7 @@ import { SessionV1 } from "@orchestra/core/v1/session"
 import { PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Schema } from "effect"
+import { omit } from "remeda"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -59,7 +60,7 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (selection?: "res
   const owner = yield* sessions.updateMessage(assistant(parent.id, "maestro"))
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true, workResult, retained: "current" }
   const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt",
-    ...(selection ? { task_id: selection === "resumed" ? child.id : SessionID.ascending() } : {}) }, title: "proposal",
+    ...(selection ? { task_id: selection === "resumed" ? child.id : SessionID.create() } : {}) }, title: "proposal",
     output: "started", time: { start: Date.now(), end: Date.now() }, metadata }
   const task = yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id, sessionID: parent.id,
     type: "tool", tool: "task", callID: `call-${owner.id}`, state })
@@ -164,8 +165,13 @@ it.instance("late retained legacy conflict holds before modern publication", () 
   const f = yield* seed()
   const before = yield* f.modern()
   const progress = yield* f.progress()
-  yield* f.database.db.update(PartTable).set({ data: { type: "tool", tool: "task", callID: f.task.callID,
-    state: { ...f.state, metadata: { ...f.state.metadata, upstreamSettlement: { ...f.input, parentCallID: "other" } } } } })
+  const row = yield* f.database.db.select().from(PartTable).where(eq(PartTable.id, f.task.id)).get().pipe(Effect.orDie)
+  if (!row) throw new Error("expected retained Task row")
+  const part = Schema.decodeUnknownSync(SessionV1.Part)({ ...row.data, id: row.id, messageID: row.message_id, sessionID: row.session_id })
+  if (part.type !== "tool" || part.tool !== "task" || part.state.status === "pending") throw new Error("expected retained Task")
+  const data = omit({ ...part, state: { ...part.state,
+    metadata: { ...part.state.metadata, upstreamSettlement: { ...f.input, parentCallID: "other" } } } }, ["id", "messageID", "sessionID"])
+  yield* f.database.db.update(PartTable).set({ data })
     .where(eq(PartTable.id, f.task.id)).run().pipe(Effect.orDie)
   expect((yield* Effect.flip(f.sessions.settleUpstreamTask(f.input))).reason).toBe("UPSTREAM_SETTLEMENT_CONFLICT")
   expect(yield* f.modern()).toEqual(before)
@@ -189,8 +195,13 @@ it.instance("typed projection preserves fields changed between preflight and rec
   const events: EventV2.Interface = { ...f.events, publish: (definition, data, options) => Effect.gen(function* () {
     if (!changed.value && definition.type === SessionEvent.Tool.Progress.type) {
       changed.value = true
-      yield* f.database.db.update(PartTable).set({ data: { type: "tool", tool: "task", callID: f.task.callID,
-        state: { ...f.state, metadata: { ...f.state.metadata, concurrent: "keep" } } } })
+      const row = yield* f.database.db.select().from(PartTable).where(eq(PartTable.id, f.task.id)).get().pipe(Effect.orDie)
+      if (!row) throw new Error("expected retained Task row")
+      const part = Schema.decodeUnknownSync(SessionV1.Part)({ ...row.data, id: row.id, messageID: row.message_id, sessionID: row.session_id })
+      if (part.type !== "tool" || part.tool !== "task" || part.state.status === "pending") throw new Error("expected retained Task")
+      const data = omit({ ...part, state: { ...part.state,
+        metadata: { ...part.state.metadata, concurrent: "keep" } } }, ["id", "messageID", "sessionID"])
+      yield* f.database.db.update(PartTable).set({ data })
         .where(eq(PartTable.id, f.task.id)).run().pipe(Effect.orDie)
     }
     return yield* f.events.publish(definition, data, options)
