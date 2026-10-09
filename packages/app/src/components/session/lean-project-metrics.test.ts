@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
-import { createComponent, createRoot, createStore, render } from "./lean-project-metrics.test-helper"
+import { createComponent, createRoot, createStore, decision, render } from "./lean-project-metrics.test-helper"
 import type { Config, Part } from "@orchestra/sdk/v2/client"
 
 const panel = await import("./lean-project-metrics")
 const { createLeanSettingsController } = await import("../settings-v2/general-controllers")
 const { LanguageProvider, useLanguage } = await import("@/context/language")
 const { PlatformProvider } = await import("@/context/platform")
-
+const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
 test("Lean reads backend false and preserves sibling limits in one awaited patch", async () => {
   const [data, setData] = createStore<{ config: Config }>({
     config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
@@ -29,6 +29,11 @@ test("Lean reads backend false and preserves sibling limits in one awaited patch
     expect(owned.lean.enabled()).toBe(false)
     setData("config", "tool_output", "lean", "enabled", true)
     expect(owned.lean.enabled()).toBe(true)
+    await owned.lean.set(false)
+    expect(calls[1]).toEqual({ tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } })
+    expect(owned.lean.enabled()).toBe(true)
+    setData("config", "tool_output", "lean", "enabled", false)
+    expect(owned.lean.enabled()).toBe(false)
   } finally { owned.dispose() }
 })
 
@@ -58,19 +63,19 @@ test("loaded repository selection excludes foreign, unknown, unfinished, orphan 
     ...(id === "one" ? { revert: { messageID: "m2" } } : {}),
   }
   expect(panel.collectLeanProjectRecords(data, owner)).toEqual(["m1", "m3"])
-  expect(panel.collectLeanProjectRecords(data, owner)).toEqual(["m1", "m3"])
   expect(panel.collectLeanProjectRecords({ ...data, project: "" }, owner)).toEqual([])
 })
 
-for (const locale of ["en", "br"] as const) test(`real Solid DOM labels empty loaded history and unavailable estimates/latency (${locale})`, async () => {
+for (const locale of ["en", "br"] as const) test(`real repository KPI DOM: scope, retries, signed estimates and unavailable summaries (${locale})`, async () => {
   const host = document.createElement("div")
+  const [props, setProps] = createStore({ projectID: "native-repo", records: [] as readonly unknown[], coverage: "loaded-history" as const })
   const dispose = render(() => createComponent(PlatformProvider, {
     value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
     get children() { return createComponent(LanguageProvider, {
       locale,
       get children() {
         useLanguage().setLocale(locale)
-        return createComponent(panel.LeanProjectMetrics, { projectID: "native-repo", records: [], coverage: "loaded-history" })
+        return createComponent(panel.LeanProjectMetrics, props)
       },
     }) },
   }), host)
@@ -84,8 +89,37 @@ for (const locale of ["en", "br"] as const) test(`real Solid DOM labels empty lo
     expect(value("lean.observed")).toBe("0")
     expect(value("lean.tokensSaved")).toBe(dict["lean.unavailable"])
     for (const key of ["lean.p50", "lean.p95", "lean.p99"] as const) expect(value(key)).toBe(dict["lean.unavailable"])
-    expect(host.textContent).toContain(dict["lean.filterProfiles"])
-    expect(host.textContent).toContain(dict["lean.orchestraProfiles"])
+    const first = decision("first")
+    const negative = decision("negative", { status: "normalized", reason: "normalized", orchestraProfile: undefined,
+      filterProfile: undefined, bytes: { before: 80, after: 79, saved: 1 }, durationMs: 10,
+      tokens: { kind: "estimated", counter: "chars-per-token-4", before: 10, after: 20, saved: -10 } })
+    const disabled = decision("disabled", { eligible: false, status: "passthrough", reason: "disabled", durationMs: 20,
+      producer: "unverified", orchestraProfile: undefined, filterProfile: undefined,
+      bytes: { before: 4, after: 4, saved: 0 }, tokens: { kind: "unavailable" } })
+    const foreign = decision("foreign", { owner: { ...first.owner, projectID: "foreign-repo" } })
+    expect(LeanMetrics.decode(first)).toEqual(first)
+    const records = [first, negative, disabled, foreign, { ...first, version: 2 }, JSON.parse(JSON.stringify(first))]
+    setProps("records", records)
+    const expected = { "lean.observed": "3", "lean.eligible": "2", "lean.applied": "2", "lean.bytesSaved": "9",
+      "lean.tokensSaved": "-8", "lean.tokenCalls": "2", "lean.latencySamples": "3", "lean.p50": "10", "lean.p95": "20", "lean.p99": "20" }
+    for (const [key, count] of Object.entries(expected)) expect(value(key as keyof typeof dict)).toBe(count)
+    const group = (key: keyof typeof dict) => [...host.querySelectorAll("h4")].find((h) => h.textContent === dict[key])?.parentElement
+    expect(group("lean.filterProfiles")?.querySelector("dt")?.textContent).toBe("cargo")
+    expect(group("lean.orchestraProfiles")?.querySelectorAll("dt").length).toBe(1)
+    expect(group("lean.orchestraProfiles")?.querySelector("dt")?.textContent).toBe("native")
+    expect(group("lean.models")?.querySelector("dt")?.textContent).toBe('["provider","model"]')
+    expect([...group("lean.reasons")!.querySelectorAll("dt")].map((dt) => dt.textContent)).toEqual(["reduced", "normalized", "disabled"])
+    setProps("records", [...records, first, JSON.parse(JSON.stringify(negative))])
+    expect(value("lean.bytesSaved")).toBe("9")
+    setProps("records", [disabled])
+    expect(value("lean.tokensSaved")).toBe(dict["lean.unavailable"])
+    expect(value("lean.tokenCalls")).toBe("0")
+    setProps("records", [decision("huge", { bytes: { before: Number.MAX_SAFE_INTEGER, after: 0, saved: Number.MAX_SAFE_INTEGER } }), first])
+    expect(host.querySelector('[role="status"]')?.textContent).toBe(dict["lean.overflow"])
+    expect(host.querySelectorAll("dd").length).toBe(0)
+    setProps("projectID", "")
+    expect(host.querySelector('[role="status"]')?.textContent).toBe(dict["lean.invalidScope"])
+    expect(host.querySelectorAll("dd").length).toBe(0)
   } finally { dispose() }
 })
 

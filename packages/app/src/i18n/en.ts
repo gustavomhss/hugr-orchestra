@@ -9,6 +9,8 @@ export const dict = {
   "lean.loadedHistory": "Loaded history only · saved, visible tool results for this repository. Not complete repository history.",
   "lean.completeHistory": "Complete saved history for this repository",
   "lean.unavailable": "Unavailable",
+  "lean.overflow": "Lean metrics unavailable: aggregate exceeds exact numeric limits.",
+  "lean.invalidScope": "Lean metrics unavailable: invalid project or Orchestra profile scope.",
   "lean.observed": "Observed calls",
   "lean.eligible": "Eligible calls",
   "lean.applied": "Applied calls",

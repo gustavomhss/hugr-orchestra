@@ -7,6 +7,8 @@ export const dict = {
   "lean.loadedHistory": "Somente histórico carregado · resultados salvos e visíveis de ferramentas deste repositório. Não é o histórico completo do repositório.",
   "lean.completeHistory": "Histórico salvo completo deste repositório",
   "lean.unavailable": "Indisponível",
+  "lean.overflow": "Métricas Lean indisponíveis: o total excede os limites numéricos exatos.",
+  "lean.invalidScope": "Métricas Lean indisponíveis: escopo inválido de projeto ou perfil Orchestra.",
   "lean.observed": "Chamadas observadas",
   "lean.eligible": "Chamadas elegíveis",
   "lean.applied": "Chamadas aplicadas",
