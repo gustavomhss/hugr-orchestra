@@ -13,6 +13,11 @@ export interface Input {
 
 /** Derived from unique persisted owner identities, never render or replay increments. */
 export const summarize: (input: Input) => LeanMetrics.Summary = (input) => {
+  if (!scopeText(input.projectID) || (input.orchestraProfile !== undefined && !scopeText(input.orchestraProfile))
+    || (input.sessionID !== undefined && !scopeText(input.sessionID))
+    || (input.location !== undefined && !scopeText(input.location, 4096))) {
+    return { coverage: input.coverage, unavailable: "invalid-scope" }
+  }
   const unique = new Map<string, { record: LeanMetrics.Decision; signature: string } | null>()
   for (const value of input.records) {
     const record = LeanMetrics.decode(value)
@@ -50,11 +55,15 @@ export const summarize: (input: Input) => LeanMetrics.Summary = (input) => {
   }
   durations.sort((a, b) => a - b)
   const totals = finish(total)
+  const filters = groups(filterProfiles)
+  const profiles = groups(orchestraProfiles)
+  const modelGroups = groups(models)
+  if (!totals || !filters || !profiles || !modelGroups) return { coverage: input.coverage, unavailable: "overflow" }
   return {
     coverage: input.coverage, observedCalls: totals.calls, eligibleCalls, appliedCalls,
     bytesSaved: totals.bytesSaved, estimatedTokensSaved: totals.estimatedTokensSaved,
     estimatedTokenCalls: totals.estimatedTokenCalls, reasons: Object.fromEntries(reasons),
-    filterProfiles: groups(filterProfiles), orchestraProfiles: groups(orchestraProfiles), models: groups(models),
+    filterProfiles: filters, orchestraProfiles: profiles, models: modelGroups,
     latency: { samples: durations.length, p50: percentile(durations, 0.5),
       p95: percentile(durations, 0.95), p99: percentile(durations, 0.99) },
   }
@@ -88,20 +97,33 @@ function group(map: Map<string, ReturnType<typeof draft>>, key: string, record: 
   map.set(key, total)
 }
 
-function finish(total: ReturnType<typeof draft>): LeanMetrics.Group {
-  return { calls: total.calls, bytesSaved: exact(total.bytesSaved),
-    estimatedTokensSaved: exact(total.estimatedTokensSaved), estimatedTokenCalls: total.estimatedTokenCalls }
+function finish(total: ReturnType<typeof draft>): LeanMetrics.Group | undefined {
+  const bytesSaved = exact(total.bytesSaved)
+  const estimatedTokensSaved = exact(total.estimatedTokensSaved)
+  if (bytesSaved === undefined || estimatedTokensSaved === undefined) return undefined
+  return { calls: total.calls, bytesSaved, estimatedTokensSaved, estimatedTokenCalls: total.estimatedTokenCalls }
 }
 
 function groups(map: Map<string, ReturnType<typeof draft>>) {
-  return Object.fromEntries(Array.from(map, ([key, total]) => [key, finish(total)]))
+  const result = new Map<string, LeanMetrics.Group>()
+  for (const [key, total] of map) {
+    const value = finish(total)
+    if (!value) return undefined
+    result.set(key, value)
+  }
+  return Object.fromEntries(result)
 }
 
 function exact(value: bigint) {
   const limit = BigInt(Number.MAX_SAFE_INTEGER)
-  // Frozen Summary has no unavailable variant: refuse invented or rounded totals.
-  if (value > limit || value < -limit) throw new RangeError("Lean summary exceeds safe integer range")
+  if (value > limit || value < -limit) return undefined
   return Number(value)
+}
+
+function scopeText(value: unknown, max = 256): value is string {
+  // Caller scope follows the persisted decoder's inclusive length and well-formed UTF-16 bounds.
+  return typeof value === "string" && value.length > 0 && value.length <= max
+    && !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value)
 }
 
 function percentile(sorted: readonly number[], probability: number) {
