@@ -25,7 +25,7 @@ type RecordRequest = { method: string; url: string; headers: Headers; body: Sche
 type Fixture = {
   requests: RecordRequest[]; bytes: number; initializeCount: number; closed: number; cancelled: number
   mode: "json" | "sse"; chunks: boolean; version: string; tools: Schema.Json[]; paginate: boolean; traffic: Schema.Json[]
-  override?: (request: RecordRequest) => Response | Promise<Response> | undefined
+  override?: (request: RecordRequest) => Response | undefined | Promise<Response | undefined>
   origin: string
   transport: (options?: CapabilityMcp.Options) => CapabilityMcp.Interface
   send: (body: unknown, session?: string) => Response
@@ -63,8 +63,8 @@ function fixture(mode: "json" | "sse" = "json") {
       const recorded: RecordRequest = { method: request.method, url: request.url, headers: request.headers,
         body: request.method === "DELETE" ? {} : Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(await request.json()) }
       state.requests.push(recorded)
-      const overridden = state.override?.(recorded)
-      if (overridden !== undefined) return await overridden
+      const overridden = await state.override?.(recorded)
+      if (overridden !== undefined) return overridden
       if (request.method === "DELETE") { state.closed++; return new Response(null, { status: 204 }) }
       const body = recorded.body
       if (body.method === "initialize") {
@@ -181,17 +181,26 @@ describe("native MCP Streamable HTTP", () => {
     const description = yield* transport.listTools(selected)
     expect(description.catalogGeneration).toBeGreaterThan(changed.catalogGeneration)
     f.tools = [{ ...tool, description: "Changed description", title: "Changed metadata" }]
-    expect((yield* transport.listTools(selected)).catalogGeneration).toBeGreaterThan(description.catalogGeneration)
+    const metadata = yield* transport.listTools(selected)
+    expect(metadata.catalogGeneration).toBeGreaterThan(description.catalogGeneration)
+    f.tools = [{ ...tool, outputSchema: false }]
+    const output = yield* transport.listTools(selected)
+    expect(output.catalogGeneration).toBeGreaterThan(metadata.catalogGeneration)
+    expect(output.tools[0]?.outputSchema).toBe(false)
   }))
 
   it.live("generation identities include connection, target, endpoint and owner; capacity fails closed", () => Effect.gen(function* () {
     const f = yield* fixture()
-    const transport = f.transport({ maxGenerations: 5 })
+    const transport = f.transport({ maxGenerations: 8 })
+    const other = { ...selected.connection, id: Capability.ConnectionID.create() }
     const inputs = [selected, { ...selected, connection: { ...selected.connection, generation: 2 } },
       { ...selected, target: { ...selected.target, generation: 3 } }, { ...selected, endpoint: endpoint + "&scoped=yes" },
-      { ...selected, owner: { ...owner, agentID: Schema.decodeUnknownSync(Capability.Owner)({ ...owner, agentID: "other" }).agentID } }]
+      { ...selected, owner: { ...owner, agentID: Schema.decodeUnknownSync(Capability.Owner)({ ...owner, agentID: "other" }).agentID } },
+      { ...selected, connection: other, target: { ...selected.target, connectionID: other.id } },
+      { ...selected, target: { ...selected.target, id: Capability.TargetID.create() } },
+      { ...selected, endpoint: "https://mcp.cloudflare.com:443/approved/mcp?account=one&codemode=false" }]
     const generations = yield* Effect.forEach(inputs, (input) => transport.listTools(input))
-    expect(new Set(generations.map((value) => value.catalogGeneration)).size).toBe(5)
+    expect(new Set(generations.map((value) => value.catalogGeneration)).size).toBe(8)
     yield* fails(transport.listTools({ ...selected, connection: { ...selected.connection, generation: 99 } }), "quota_exceeded", "generation capacity")
     expect((yield* transport.listTools(selected)).catalogGeneration).toBe(generations[0]?.catalogGeneration)
   }))
@@ -219,15 +228,19 @@ describe("native MCP Streamable HTTP", () => {
       const f = yield* fixture()
       f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: value }) : undefined
       const session = yield* f.transport().open(selected)
-      yield* fails(session.callTool("mutate", {}), "acquisition_failed", "call result")
+      yield* fails(session.callTool("mutate", {}), "acquisition_failed", value === null ? "result envelope" : "call result")
     }))
   }
 
   it.live("preserves tool execution errors, structured results and all MCP content kinds", () => Effect.gen(function* () {
     const f = yield* fixture()
-    const content: Schema.Json[] = [{ type: "text", text: "failed" }, { type: "image", data: "AA==", mimeType: "image/png" },
+    const content: Schema.Json[] = [{ type: "text", text: "failed", annotations: { audience: ["user", "assistant"], priority: 0.7,
+      lastModified: "2025-01-12T15:00:58Z" }, _meta: { "fixture/opaque": [1, true] } }, { type: "image", data: "AA==", mimeType: "image/png" },
       { type: "audio", data: "AA==", mimeType: "audio/wav" }, { type: "resource_link", name: "file", uri: "file:///fixture" },
-      { type: "resource", resource: { uri: "file:///fixture", text: "text" } }]
+      { type: "resource", resource: { uri: "file:///fixture", text: "text" } },
+      { type: "resource", resource: { uri: "file:///blob", blob: "AA==", mimeType: "application/octet-stream", _meta: {} } },
+      { type: "resource_link", name: "rich", title: "Rich", description: "Read only", uri: "file:///rich", size: 10,
+        icons: [{ src: "https://untrusted.invalid/icon.svg", sizes: ["any"], theme: "dark" }], annotations: { priority: 1 } }]
     f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id,
       result: { content, isError: true, structuredContent: { failed: true } } }) : undefined
     const session = yield* f.transport().open(selected)
@@ -245,6 +258,27 @@ describe("native MCP Streamable HTTP", () => {
       result: { protocolVersion: "2025-11-25", capabilities: { tools: { listChanged: "bad" } }, serverInfo: { name: "x", version: "1" } } }, "partial-session") : undefined
     yield* fails(f.transport().listTools(selected), "acquisition_failed")
     expect(f.closed).toBe(3)
+  }))
+
+  it.live("content metadata validates MCP field shapes while preserving opaque extension data", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    for (const content of [{ type: "text", text: "x", annotations: [] },
+      { type: "image", data: "AA==", mimeType: "image/png", annotations: { audience: ["system"] } },
+      { type: "audio", data: "AA==", mimeType: "audio/wav", annotations: { priority: 2 } },
+      { type: "text", text: "x", annotations: { lastModified: 3 } }, { type: "text", text: "x", _meta: "bad" },
+      { type: "resource_link", name: "x", uri: "file:///x", size: "10" },
+      { type: "resource_link", name: "x", uri: "file:///x", icons: [{ src: "data:image/png;base64,AA==", theme: "wrong" }] },
+      { type: "resource", resource: { uri: "file:///x", blob: "AA==", _meta: [] } }]) {
+      f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: { content: [content] } }) : undefined
+      yield* Effect.scoped(Effect.gen(function* () {
+        const session = yield* f.transport().open(selected)
+        yield* fails(session.callTool("mutate", {}), "acquisition_failed", "call result")
+      }))
+    }
+    f.override = (r) => r.body.method === "tools/call" ? f.send({ jsonrpc: "2.0", id: r.body.id,
+      result: { content: [], _meta: "bad" } }) : undefined
+    const session = yield* f.transport().open(selected)
+    yield* fails(session.callTool("mutate", {}), "acquisition_failed", "result envelope")
   }))
 
   for (const status of [401, 403, 302, 307]) {
@@ -305,6 +339,29 @@ describe("native MCP Streamable HTTP", () => {
     expect(f.initializeCount).toBe(3)
     expect(f.requests.find((r) => r.body.method === "initialize" && r.headers.get("authorization") === "Bearer rotated-secret")?.headers.get("mcp-session-id")).toBeNull()
   }))
+
+  it.live("credential expiry after open blocks calls and DELETE; expiry during pagination blocks the next POST", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const credential = Schema.decodeUnknownSync(Credential.OAuth)({ type: "oauth", methodID: "fixture", access: token,
+      refresh: "fixture-refresh", expires: Date.now() + 2000 })
+    yield* Effect.scoped(Effect.gen(function* () {
+      const session = yield* f.transport().open({ ...selected, credential })
+      yield* Effect.sleep(Math.max(1, credential.expires - Date.now() + 20))
+      const before = f.requests.length
+      yield* fails(session.callTool("mutate", {}), "authentication_required", "credential expiry")
+      expect(f.requests).toHaveLength(before)
+    }))
+    expect(f.requests.some((r) => r.method === "DELETE")).toBe(false)
+    const next = Schema.decodeUnknownSync(Credential.OAuth)({ ...credential, expires: Date.now() + 2000 })
+    f.override = async (r) => {
+      if (r.body.method !== "tools/list") return undefined
+      await Bun.sleep(Math.max(1, next.expires - Date.now() + 20))
+      return f.send({ jsonrpc: "2.0", id: r.body.id, result: { tools: [tool], nextCursor: "after-expiry" } })
+    }
+    yield* fails(f.transport().listTools({ ...selected, credential: next }), "authentication_required", "credential expiry")
+    expect(f.requests.filter((r) => r.body.method === "tools/list")).toHaveLength(1)
+    expect(f.requests.some((r) => r.method === "DELETE")).toBe(false)
+  }), 10000)
 
   it.live("byte cap precedes JSON/UTF-8 parsing; full init and page envelopes share one quota", () => Effect.gen(function* () {
     const f = yield* fixture()
@@ -427,6 +484,21 @@ describe("native MCP Streamable HTTP", () => {
     expect(f.requests.filter((r) => r.body.method === "tools/list")).toHaveLength(2)
   }))
 
+  it.live("an already exhausted acquisition deadline sends no first list POST; a permit-wait timeout sends no initialize", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const transport = f.transport({ maxConcurrentSessions: 1, timeoutMs: 2000 })
+    const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+    const session = yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, scope))
+    yield* fails(transport.open(selected), "acquisition_failed", "timeout")
+    expect(f.initializeCount).toBe(1)
+    // Permit wait has exhausted this session's original acquisition deadline too.
+    yield* fails(session.listTools, "acquisition_failed", "timeout")
+    expect(f.requests.filter((r) => r.body.method === "tools/list")).toHaveLength(0)
+    yield* Scope.close(scope, Exit.void)
+    yield* transport.listTools(selected)
+    expect(f.initializeCount).toBe(2)
+  }), 10000)
+
   it.live("DELETE is bounded/best effort; host defects remain defects", () => Effect.gen(function* () {
     const f = yield* fixture()
     f.override = (r) => r.method === "DELETE" ? new Response(new ReadableStream({ start() {} })) : undefined
@@ -464,6 +536,92 @@ describe("native MCP Streamable HTTP", () => {
     f.override = (r) => r.body.method === "tools/list" ? f.send({ jsonrpc: "2.0", id: r.body.id, result: { tools: [] } }, "foreign-session") : undefined
     yield* fails(f.transport().listTools(selected), "acquisition_failed", "session changed")
     expect(f.requests.find((r) => r.method === "DELETE")?.headers.get("mcp-session-id")).toBe("session-1")
+  }))
+
+  it.live("SSE server-request acknowledgements cannot replace session headers or carry response bodies", () => Effect.gen(function* () {
+    const f = yield* fixture("sse")
+    const transport = f.transport()
+    for (const changed of [true, false]) {
+      yield* Effect.scoped(Effect.gen(function* () {
+        f.traffic = []
+        f.override = undefined
+        const session = yield* transport.open(selected)
+        f.traffic = [{ jsonrpc: "2.0", id: "unsupported", method: "roots/list" }]
+        f.override = (r) => r.body.error !== undefined ? new Response(changed ? null : "vendor-private", {
+          status: 202, headers: changed ? { "mcp-session-id": "foreign-session" } : {},
+        }) : undefined
+        yield* fails(session.listTools, "acquisition_failed", changed ? "session changed" : "response acknowledgement")
+      }))
+    }
+    expect(f.requests.filter((r) => r.body.error !== undefined)).toHaveLength(2)
+    expect(f.requests.filter((r) => r.method === "DELETE").map((r) => r.headers.get("mcp-session-id"))).toEqual(["session-1", "session-2"])
+  }))
+
+  it.live("strict framing rejects malformed JSON, truncated/duplicate SSE and nonempty initialized acknowledgements", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    for (const entry of [
+      { text: "{bad", type: "application/json", reason: "JSON" },
+      { text: JSON.stringify({ jsonrpc: "2.0", method: "notifications/message" }), type: "application/json", reason: "response required" },
+      { text: "data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[]}}\n", type: "text/event-stream", reason: "disconnected" },
+      { text: "data: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[]}}\n\n".repeat(2), type: "text/event-stream", reason: "duplicate response" },
+      { text: "{}", type: "text/html", reason: "content type" },
+    ]) {
+      f.override = (r) => r.body.method === "tools/list" ? new Response(entry.text, { headers: { "content-type": entry.type } }) : undefined
+      yield* fails(f.transport().listTools(selected), "acquisition_failed", entry.reason)
+    }
+    f.override = (r) => r.body.method === "notifications/initialized" ? new Response("{}", { status: 202 }) : undefined
+    yield* fails(f.transport().listTools(selected), "acquisition_failed", "notification acknowledgement")
+  }))
+
+  it.live("SSE completes at the correlated response even when the server keeps the stream open", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    f.override = (r) => r.body.method === "tools/list" ? new Response(new ReadableStream({ start(controller) {
+      controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ jsonrpc: "2.0", id: r.body.id, result: { tools: [tool] } })}\n\n`))
+    }, cancel() { f.cancelled++ } }), { headers: { "content-type": "text/event-stream" } }) : undefined
+    expect((yield* f.transport({ timeoutMs: 2000 }).listTools(selected)).tools[0]?.name).toBe(tool.name)
+    expect(f.requests.filter((r) => r.body.method === "tools/list")).toHaveLength(1)
+    expect(f.closed).toBe(1)
+  }))
+
+  it.live("initialization interruption releases its partial session and permit inside a long-lived caller scope", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const entered = yield* Deferred.make<void>()
+    const transport = f.transport({ maxConcurrentSessions: 1 })
+    f.override = (r) => {
+      if (r.body.id === "initial-ping") {
+        expect(r.headers.get("mcp-session-id")).toBe("partial-session")
+        Effect.runSync(Deferred.succeed(entered, undefined))
+        return new Response(null, { status: 202 })
+      }
+      if (r.body.method !== "initialize") return undefined
+      return new Response(new ReadableStream({ start(controller) {
+        controller.enqueue(new TextEncoder().encode('data: {"jsonrpc":"2.0","id":"initial-ping","method":"ping"}\n\n'))
+      } }),
+        { headers: { "content-type": "text/event-stream", "mcp-session-id": "partial-session" } })
+    }
+    const opening = yield* transport.open(selected).pipe(Effect.forkChild)
+    yield* Deferred.await(entered)
+    yield* Fiber.interrupt(opening)
+    expect(Exit.hasInterrupts(yield* Fiber.join(opening).pipe(Effect.exit))).toBe(true)
+    expect(f.requests.filter((r) => r.body.method === "initialize")).toHaveLength(1)
+    f.override = undefined
+    yield* transport.listTools(selected)
+    expect(f.requests.filter((r) => r.body.method === "initialize")).toHaveLength(2)
+    expect(f.closed).toBe(2)
+  }))
+
+  it.live("failed opens detach child finalizers from the long-lived parent scope", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const transport = f.transport({ maxConcurrentSessions: 1 })
+    const parent = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
+    f.version = "unsupported"
+    yield* fails(transport.open(selected).pipe(Effect.provideService(Scope.Scope, parent)), "unsupported_operation")
+    expect(parent.state._tag === "Open" ? parent.state.finalizers.size : 0).toBe(0)
+    f.version = "2025-11-25"
+    yield* transport.open(selected).pipe(Effect.provideService(Scope.Scope, parent))
+    expect(parent.state._tag === "Open" ? parent.state.finalizers.size : 0).toBe(1)
+    yield* Scope.close(parent, Exit.void)
+    expect(f.closed).toBe(2)
   }))
 
   it.live("SSE correlation is exact for initialization and mutation responses, including CR-only frames", () => Effect.gen(function* () {

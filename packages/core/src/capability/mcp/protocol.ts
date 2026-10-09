@@ -72,6 +72,7 @@ export function message(value: Schema.Json, id: number): Message {
       throw failure("acquisition_failed", "error envelope")
     throw failure("acquisition_failed", "remote error")
   }
+  if (!object(value.result) || !metadata(value.result)) throw failure("acquisition_failed", "result envelope")
   return { kind: "response", result: value.result }
 }
 
@@ -83,6 +84,9 @@ export function initialize(value: Schema.Json): Version {
   if (value.capabilities.tools.listChanged !== undefined && typeof value.capabilities.tools.listChanged !== "boolean")
     throw failure("acquisition_failed", "capabilities")
   if (!object(value.serverInfo) || typeof value.serverInfo.name !== "string" || typeof value.serverInfo.version !== "string" ||
+    ["title", "description", "websiteUrl"].some((key) => object(value.serverInfo) &&
+      value.serverInfo[key] !== undefined && typeof value.serverInfo[key] !== "string") ||
+    !icons(value.serverInfo.icons) ||
     (value.instructions !== undefined && typeof value.instructions !== "string")) throw failure("acquisition_failed", "initialization")
   return version
 }
@@ -94,17 +98,16 @@ export function page(value: Schema.Json) {
   const tools = value.tools.map((tool): CapabilityDiscovery.VendorTool => {
     if (!object(tool) || typeof tool.name !== "string" || !tool.name.trim() || tool.name.length > 256 ||
       (tool.description !== undefined && (typeof tool.description !== "string" || tool.description.length > 2048)) ||
-      (tool.title !== undefined && typeof tool.title !== "string") || !schema(tool.inputSchema) ||
+      (tool.title !== undefined && typeof tool.title !== "string") || !metadata(tool) || !schema(tool.inputSchema) ||
       (tool.outputSchema !== undefined && !schema(tool.outputSchema)) ||
       (tool.annotations !== undefined && (!object(tool.annotations) ||
         ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"].some((key) =>
           object(tool.annotations) && tool.annotations[key] !== undefined && typeof tool.annotations[key] !== "boolean") ||
         (tool.annotations.title !== undefined && typeof tool.annotations.title !== "string"))) ||
-      (tool.icons !== undefined && (!Array.isArray(tool.icons) || !tool.icons.every((icon) => object(icon) && typeof icon.src === "string" &&
-        (icon.mimeType === undefined || typeof icon.mimeType === "string") &&
-        (icon.sizes === undefined || Array.isArray(icon.sizes) && icon.sizes.every((size) => typeof size === "string"))))) ||
+      !icons(tool.icons) ||
       (tool.execution !== undefined && (!object(tool.execution) ||
-        (tool.execution.taskSupport !== undefined && !["forbidden", "optional", "required"].includes(String(tool.execution.taskSupport))))))
+        (tool.execution.taskSupport !== undefined && tool.execution.taskSupport !== "forbidden" &&
+          tool.execution.taskSupport !== "optional" && tool.execution.taskSupport !== "required"))))
       throw failure("acquisition_failed", "tool entry")
     return { name: tool.name, summary: tool.description ?? "", inputSchema: tool.inputSchema,
       ...(tool.outputSchema === undefined ? {} : { outputSchema: tool.outputSchema }) }
@@ -127,15 +130,35 @@ export function callResult(value: Schema.Json): CallResult {
 }
 
 function content(value: Schema.Json) {
-  if (!object(value)) return false
+  if (!object(value) || !metadata(value) || !annotations(value.annotations)) return false
   if (value.type === "text") return typeof value.text === "string"
   if (value.type === "image" || value.type === "audio") return typeof value.data === "string" && typeof value.mimeType === "string"
-  if (value.type === "resource_link") return typeof value.uri === "string" && typeof value.name === "string"
+  if (value.type === "resource_link") return typeof value.uri === "string" && typeof value.name === "string" &&
+    ["title", "description", "mimeType"].every((key) => value[key] === undefined || typeof value[key] === "string") &&
+    (value.size === undefined || typeof value.size === "number") && icons(value.icons)
   if (value.type === "resource") return object(value.resource) && typeof value.resource.uri === "string" &&
     ((typeof value.resource.text === "string" && value.resource.blob === undefined) ||
       (typeof value.resource.blob === "string" && value.resource.text === undefined)) &&
-    (value.resource.mimeType === undefined || typeof value.resource.mimeType === "string")
+    (value.resource.mimeType === undefined || typeof value.resource.mimeType === "string") && metadata(value.resource)
   return false
+}
+
+function metadata(value: Schema.JsonObject) {
+  return value._meta === undefined || object(value._meta)
+}
+
+function annotations(value: Schema.Json | undefined) {
+  return value === undefined || object(value) &&
+    (value.audience === undefined || Array.isArray(value.audience) && value.audience.every((role) => role === "user" || role === "assistant")) &&
+    (value.priority === undefined || typeof value.priority === "number" && value.priority >= 0 && value.priority <= 1) &&
+    (value.lastModified === undefined || typeof value.lastModified === "string")
+}
+
+function icons(value: Schema.Json | undefined) {
+  return value === undefined || Array.isArray(value) && value.every((icon) => object(icon) && typeof icon.src === "string" &&
+    (icon.mimeType === undefined || typeof icon.mimeType === "string") &&
+    (icon.sizes === undefined || Array.isArray(icon.sizes) && icon.sizes.every((size) => typeof size === "string")) &&
+    (icon.theme === undefined || icon.theme === "light" || icon.theme === "dark"))
 }
 
 /** Counts exact encoded bytes before allocating a serialized request; no custom serializers/accessors. */

@@ -38,9 +38,7 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
             connection.sessionID = sessionID
           }
         }
-        const assigned = response.headers.get("mcp-session-id")
-        if (connection.version && assigned !== null && assigned !== connection.sessionID)
-          throw failure("acquisition_failed", "session changed")
+        checkSession(response, connection)
         if (id === undefined) {
           await read(response, budget)
           if (response.status !== 202 || budget.bytes !== budgetStart) throw failure("acquisition_failed", "notification acknowledgement")
@@ -59,6 +57,7 @@ export function request(connection: Connection, body: Schema.Json, id: number | 
           const reply = await fetch(connection.endpoint, { method: "POST", headers: headers(connection),
             body: encode(body, limits.requestBytes), redirect: "manual", signal: AbortSignal.any([signal, controller.signal, connection.lifetime.signal]) })
           checkStatus(reply, connection)
+          checkSession(reply, connection)
           const before = budget.bytes
           await read(reply, budget)
           if (reply.status !== 202 || before !== budget.bytes) throw failure("acquisition_failed", "response acknowledgement")
@@ -99,6 +98,12 @@ function checkStatus(response: Response, connection: Connection) {
   if (response.status === 404) connection.dead = true
   throw failure(response.status === 401 ? "authentication_required" : response.status === 403 ? "target_denied"
     : response.status === 404 ? "connection_unavailable" : "acquisition_failed", "HTTP status")
+}
+
+function checkSession(response: Response, connection: Connection) {
+  const assigned = response.headers.get("mcp-session-id")
+  if (assigned !== null && assigned !== connection.sessionID)
+    throw failure("acquisition_failed", "session changed")
 }
 
 function count(budget: Budget, bytes: number) {

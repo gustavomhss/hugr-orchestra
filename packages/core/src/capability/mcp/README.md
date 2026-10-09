@@ -15,6 +15,7 @@ Written against the MCP 2025-11-25 specification, consulted 2026-10-09:
 - https://modelcontextprotocol.io/specification/2025-11-25/basic/transports
 - https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle
 - https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+- https://modelcontextprotocol.io/specification/2025-11-25/schema
 
 The provider host table is transcribed from
 `packages/capability-assets/src/providers.ts` and provider names in `catalog.ts`
@@ -26,7 +27,9 @@ trusted test construction, never model arguments.
 
 Initialization offers 2025-11-25; 2025-03-26 and 2025-06-18 are also accepted.
 Tools capability is required. Each POST accepts JSON and SSE and uses one exact
-JSON-RPC ID; batches fail. Initialized notifications and replies to server requests
+JSON-RPC ID; batches fail. SSE needs a blank-line event delimiter: EOF does not
+dispatch a truncated event. Duplicate correlated responses in acquired chunks fail.
+Initialized notifications and replies to server requests
 require empty HTTP 202 acknowledgements. Sampling, elicitation and other unsupported
 server methods receive `-32601`; ping receives an empty result. No server request
 executes a model, approval, filesystem access, or tool.
@@ -63,7 +66,8 @@ the session, aborts active readers and attempts DELETE when assigned and credent
 remain unexpired. Expiry is checked again before every outbound POST. DELETE is best effort, byte bounded,
 and limited to the lesser of one second and the configured timeout. Interruption and
 unexpected defects remain Effect causes. Expected errors contain only fixed transport
-reasons, never endpoint, credentials, session ID or vendor body.
+reasons, never endpoint, credentials, session ID or vendor body. Failed child scopes
+detach from their parent rather than retaining cleanup entries until parent close.
 
 ## Deliberate limits and caller responsibilities
 
@@ -80,6 +84,11 @@ reasons, never endpoint, credentials, session ID or vendor body.
   rewritten. Call arguments must be objects; structured content must be an object.
 - Returned content remains untrusted vendor data. Callers enforce captured registry,
   permission policy, input/output validation, disclosure and durable replay.
+- Wire checks validate required fields and optional metadata, annotations and icon
+  field shapes. They do not validate URI syntax, ISO timestamps, MIME registries or
+  base64 payloads, fetch referenced resources/icons, or validate vendor JSON Schemas.
+  Unknown JSON extension fields remain opaque. Embedded resource content accepts
+  one text or blob representation, not both.
 - Tests use real localhost HTTP through fetch. They do not qualify live providers.
 
 ## Verification
@@ -100,3 +109,7 @@ The real localhost `rejects wrong numeric ID` fixture failed its assertion:
 `Expected: true; Received: false` for `Exit.isFailure(exit)`. The comparison was
 restored. This demonstrates that the correlation assertion detects that bypass;
 it is not a claim of exhaustive protocol or live-provider qualification.
+
+The failed-open child-scope fixture also reproduced a retained parent cleanup entry
+(`Expected: 0; Received: 1`) before replacing manual child attachment with the installed
+Effect 4.0.0-beta.83 `Scope.fork`. Successful opens still attach one cleanup entry.

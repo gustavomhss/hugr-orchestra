@@ -97,9 +97,12 @@ export function make(options: Options = {}): Interface {
       return request(connection, { jsonrpc: "2.0", id: counter.id, method, params }, counter.id, budget, limits)
     })
     const bounded = <A>(effect: Effect.Effect<A, Capability.Failure>, start: number, mutating = false) =>
-      effect.pipe(Effect.timeoutOrElse({ duration: Math.max(1, limits.timeoutMs - (Date.now() - start)),
-        orElse: () => Effect.fail(failure(mutating ? "outcome_unknown" : "acquisition_failed", "timeout")) }),
-        Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.sync(() => { connection.dead = true }) : Effect.void))
+      Effect.suspend(() => {
+        const remaining = limits.timeoutMs - (Date.now() - start)
+        const timeout = () => Effect.fail(failure(mutating ? "outcome_unknown" : "acquisition_failed", "timeout"))
+        return (remaining <= 0 ? timeout() : effect.pipe(Effect.timeoutOrElse({ duration: remaining, orElse: timeout }))).pipe(
+          Effect.onExit((exit) => Exit.isFailure(exit) ? Effect.sync(() => { connection.dead = true }) : Effect.void))
+      })
     yield* bounded(Effect.gen(function* () {
       const result = yield* rpc("initialize", { protocolVersion: "2025-11-25", capabilities: {},
         clientInfo: { name: "orchestra-capability", version: "1" } }, initial)
@@ -150,8 +153,9 @@ export function make(options: Options = {}): Interface {
     return { listTools, callTool } satisfies Session
   })
   const open = Effect.fn("CapabilityMcp.open")(function* (selection: CapabilityDiscovery.Selection) {
-    const scope = yield* Effect.acquireRelease(Scope.make(), (scope, exit) => Scope.close(scope, exit))
-    // Failed acquisition releases its partial session and permit immediately, even in a long-lived caller scope.
+    const parent = yield* Scope.Scope
+    const scope = yield* Scope.fork(parent)
+    // Closing a failed child also detaches its finalizer from a long-lived parent.
     return yield* connect(selection).pipe(Effect.provideService(Scope.Scope, scope),
       Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
   })
@@ -183,7 +187,7 @@ function requireSelection(selection: CapabilityDiscovery.Selection, fixture: str
     !authority || authority.includes("@") || value.endpoint.includes("\\")) throw failure("target_denied", "endpoint")
   const captured = { ...value.credential }
   const authorization = credential(captured)
-  const key = CapabilityVendorSchema.hash({ connection: value.connection, target: value.target, endpoint: endpoint.href, owner: value.owner })
+  const key = CapabilityVendorSchema.hash({ connection: value.connection, target: value.target, endpoint: value.endpoint, owner: value.owner })
   if (fixture) {
     const origin = new URL(fixture)
     endpoint.protocol = origin.protocol
