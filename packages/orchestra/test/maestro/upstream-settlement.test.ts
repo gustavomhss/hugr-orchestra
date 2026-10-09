@@ -14,6 +14,7 @@ import { SessionMessage } from "@orchestra/schema/session-message"
 import { eq } from "drizzle-orm"
 import { DateTime, Effect, Exit, Schema } from "effect"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
@@ -31,7 +32,7 @@ import { testEffect } from "../lib/effect"
 
 afterEach(disposeAllInstances)
 const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, CrossSpawnSpawner.node, Session.node, SessionProjector.node, EventV2Bridge.node, Database.node]),
+  LayerNode.group([filesystem, CrossSpawnSpawner.node, BackgroundJob.node, Session.node, SessionProjector.node, EventV2Bridge.node, Database.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })]],
 ))
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
@@ -134,6 +135,10 @@ it.instance("returned assistant stays bound after same-child resume with identic
 
 it.instance("completed-but-undelivered and forged notice cannot patch Task", () => Effect.gen(function* () {
   const f = yield* seed()
+  const jobs = yield* BackgroundJob.Service
+  yield* jobs.start({ id: f.child.id, type: "task", title: "completed without delivery", run: Effect.succeed(text) })
+  const completed = yield* jobs.wait({ id: f.child.id })
+  expect(completed.info?.status).toBe("completed")
   const forged = yield* f.sessions.updateMessage({ id: MessageID.ascending(), sessionID: f.parent.id, role: "user", agent: "maestro", model, time: { created: Date.now() } })
   yield* f.sessions.updatePart({ id: PartID.ascending(), messageID: forged.id, sessionID: f.parent.id, ...f.request.parts[0] })
   const fail: TaskPromptOps = { ...f.ops, prompt: () => Effect.die(new Error("admission failed")) }
