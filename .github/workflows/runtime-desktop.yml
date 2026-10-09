@@ -32,8 +32,8 @@ jobs:
           test -s .github/scripts/runtime-desktop-package-proof.ts || { echo DESKTOP_PACKAGE_GATE_MISSING >&2; exit 1; }
           test -s .github/scripts/runtime-desktop-bootstrap-proof.ts || { echo DESKTOP_BOOTSTRAP_GATE_MISSING >&2; exit 1; }
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA" || { echo DESKTOP_SOURCE_HEAD_MISMATCH >&2; exit 1; }
-          test "$(git hash-object .github/scripts/runtime-desktop-package-proof.ts)" = a0281172a892927fbc790e33f3fd13b2eb32bf4d || { echo DESKTOP_PACKAGE_GATE_CHANGED >&2; exit 1; }
-          test "$(git hash-object .github/scripts/runtime-desktop-bootstrap-proof.ts)" = bd3a7de1d146694c54b28fecb3c2a7700a3f9140 || { echo DESKTOP_BOOTSTRAP_GATE_CHANGED >&2; exit 1; }
+          test "$(git hash-object .github/scripts/runtime-desktop-package-proof.ts)" = ede583f270cacf8c70e53619bffc1e9e75843cd7 || { echo DESKTOP_PACKAGE_GATE_CHANGED >&2; exit 1; }
+          test "$(git hash-object .github/scripts/runtime-desktop-bootstrap-proof.ts)" = 2ec3aeefd6b1f486bf66784dc2ac2273bb74efe6 || { echo DESKTOP_BOOTSTRAP_GATE_CHANGED >&2; exit 1; }
           bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
           bun -e 'const versions = await Promise.all(["cli", "desktop", "orchestra"].map(async p => (await Bun.file(`packages/${p}/package.json`).json()).version)); if (!versions[0] || versions.some(v => v !== versions[0])) throw Error("DESKTOP_SOURCE_VERSION_MISMATCH");'
       - name: Install once without lifecycle scripts
