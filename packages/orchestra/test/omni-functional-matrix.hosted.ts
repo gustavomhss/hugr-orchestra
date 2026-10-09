@@ -1,3 +1,4 @@
+// Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
 import { Omni } from "@orchestra/core/omni"
 import { appRuntime, effectModules } from "../../omni/campaign/delivery-fixtures.ts"

@@ -1,3 +1,4 @@
+// Dedicated native proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { afterAll, beforeAll, expect, test } from "bun:test"
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import os from "node:os"

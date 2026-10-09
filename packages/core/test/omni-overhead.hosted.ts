@@ -1,3 +1,4 @@
+// Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 import { expect, test } from "bun:test"
 import { cpSync, mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
@@ -5,10 +6,10 @@ import path from "node:path"
 import { BUN, ROOT } from "../../omni/campaign/lib.ts"
 import { run, settle } from "../../omni/campaign/v7-attribution.ts"
 
-// This Linux benchmark needs the release binaries supplied by test:ci's omni flag; ordinary suites skip explicitly.
-const native = test.skipIf(process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
+if (process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
+  throw new Error("Linux overhead proof requires its explicit Linux runner and Omni release binaries")
 
-native("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop boundaries", async () => {
+test("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop boundaries", async () => {
   const { Effect } = await import("effect")
   const { ChildProcess } = await import("effect/unstable/process")
   const { Omni } = await import("../src/omni.ts")
@@ -22,11 +23,11 @@ native("V7 attribution: real Effect caller, bare binding, native exit/EOF/stop b
   expect(result.staged.count).toBe(1000)
 }, 900_000)
 
-native("V7 Linux syscall attribution (unprivileged native strace)", async () => {
+test("V7 Linux syscall attribution (unprivileged native strace)", async () => {
   await run(true)
 }, 900_000)
 
-native("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
+test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
   await settle()
   const { run } = await import("../../omni/campaign/v7-overhead.ts")
   const result = await run({ quiet: true })

@@ -8,9 +8,8 @@ import os from "node:os"
 import { ROOT, until } from "../../omni/campaign/lib"
 import { run } from "../../omni/campaign/v7-overhead"
 
-// Ordinary suites omit this hardware measurement; an explicit named-file request must execute on macOS.
-const mac = test.skipIf(!process.argv.some((arg) => arg.endsWith("omni-macos-overhead.test.ts")))
-mac("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {
+// Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
+test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {
   expect(process.platform).toBe("darwin")
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
   const binding = await Omni.load()
