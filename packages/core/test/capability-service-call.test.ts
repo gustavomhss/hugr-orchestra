@@ -409,3 +409,6 @@ it.live("mixed malformed RPC Fail and corrupt ACK Die survives canonical settlem
 
 ;(["defect", "interrupt"] as const).forEach((mode) => [false, true].forEach((reverse) => it.live(`SQL Die with ${mode}, reverse=${reverse} redacts SQL only`, () =>
   CapabilityServiceCallFixture.sqlDiePublication(mode, reverse).pipe(Effect.timeout("45 seconds")), 60000)))
+
+it.live("actual allocator TTL expiring during final service approval prevents RPC after unchanged fresh catalog", () =>
+  CapabilityServiceCallFixture.expiredAfterFinalApproval().pipe(Effect.timeout("45 seconds")), 60000)

@@ -102,6 +102,7 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
           tool.summary !== description.summary) return yield* CapabilityServiceData.failure("stale_descriptor")
         const fresh = yield* CapabilityVendorSchema.compile(tool.inputSchema, tool.outputSchema)
         if (fresh.schemaHash !== ref.schemaHash) return yield* CapabilityServiceData.failure("stale_descriptor")
+        return { catalogGeneration: catalog.catalogGeneration, schemaHash: fresh.schemaHash }
       })
       yield* checkCatalog
       const admitted = yield* options.jobs.admit(context, { kind: "worker", operation: "service_call",
@@ -120,7 +121,11 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
       yield* options.discovery.describe(context, ref, captured)
       const permit = yield* revalidate
       // Last network read uses the very session that will call the operation, after every approval.
-      yield* checkCatalog
+      const catalog = yield* checkCatalog
+      yield* options.discovery.validateCurrent(context, ref, captured, {
+        connectionGeneration: resolution.connection.generation, targetGeneration: resolution.target.generation,
+        catalogGeneration: catalog.catalogGeneration, schemaHash: catalog.schemaHash,
+      })
       yield* gate(permit)
       const acknowledged = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         const exit = yield* restore(Effect.suspend(() => current()

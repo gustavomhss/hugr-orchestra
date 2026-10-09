@@ -336,3 +336,32 @@ export function sqlDiePublication(mode: "defect" | "interrupt", reverse: boolean
     expect(f.state.calls).toHaveLength(1)
   })
 }
+
+export function expiredAfterFinalApproval() {
+  return Effect.gen(function* () {
+    const f = yield* fixture()
+    const reached = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    f.state.beforeList = (number) => number === 4
+      ? Effect.runPromise(Deferred.succeed(reached, undefined).pipe(Effect.andThen(Deferred.await(release)))) : undefined
+    const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const fiber = yield* f.call().pipe(Effect.forkChild)
+    yield* Deferred.await(reached)
+    yield* CapabilityPolicyFixture.setRules([...rules, { action: "service_call", resource: "cloudflare:mutate", effect: "ask" }])
+    yield* Deferred.succeed(release, undefined)
+    const request = yield* Effect.raceFirst(Deferred.await(asked.first), Fiber.join(fiber).pipe(
+      Effect.andThen(Effect.die("SKIPPED_FINAL_SERVICE_APPROVAL"))))
+    // Only the actual allocator's host clock changes. Catalog, selection and issuing registration remain identical.
+    f.state.time += 60001
+    yield* CapabilityPolicyFixture.setRules(rules)
+    yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+    expect((yield* Fiber.join(fiber)).result.type).toBe("error")
+    expect(f.state.errors.at(-1)).toMatchObject({ code: "stale_descriptor" })
+    expect(f.state.calls).toHaveLength(0)
+    expect((yield* f.rows())[0]).toMatchObject({ state: "submitting", generation: 1, provider_id: null })
+    expect(yield* f.artifactRows()).toEqual([])
+    const lists = f.state.requests.filter((request) => request.body.method === "tools/list")
+    expect(lists).toHaveLength(5)
+    expect(lists[4]?.headers.get("mcp-session-id")).toBe(lists[2]?.headers.get("mcp-session-id") ?? "missing")
+  })
+}
