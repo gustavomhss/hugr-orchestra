@@ -47,10 +47,14 @@ export const make = (options: CapabilityServiceContract.Options) => Effect.gen(f
     const validated = validator.validateInput(args)
     if (!validated.valid) return yield* validated.failure
     const credential = yield* options.connections.loadCredential(context, resolution, "service_call")
+    const invalidCredential = CapabilityServiceData.credentialFailure(credential)
+    if (invalidCredential) return yield* invalidCredential
     const proof = { owner: binding.owner, producer: binding.invocation, rootToolName: binding.rootToolName }
     const revalidate = Effect.gen(function* () {
       const permit = yield* policy.authorize(context, { action: "service_call", resources })
       const fresh = yield* options.connections.loadCredential(context, resolution, "service_call")
+      const invalid = CapabilityServiceData.credentialFailure(fresh)
+      if (invalid) return yield* invalid
       if (CapabilityServiceData.credentialIdentity(fresh) !== CapabilityServiceData.credentialIdentity(credential))
         return yield* CapabilityServiceData.failure("authentication_revoked")
       if ((yield* policy.binding(context)) !== binding) return yield* CapabilityServiceData.failure("invocation_binding_mismatch")

@@ -84,6 +84,13 @@ export function credentialIdentity(value: Credential.Value) {
     : JSON.stringify([value.type, value.methodID, value.access, value.refresh, value.expires])
 }
 
+export function credentialFailure(value: Credential.Value) {
+  const token = value.type === "key" ? value.key : value.access
+  return !token || token.length > 16384 || !/^[\x21-\x7e]+(?![\s\S])/.test(token) ||
+    value.type === "oauth" && (!Number.isSafeInteger(value.expires) || value.expires <= Date.now())
+    ? failure("authentication_required") : undefined
+}
+
 /** Validate raw vendor data first. Projection intentionally need not satisfy the vendor schema after redaction. */
 export function redact(value: Schema.Json, credential: Credential.Value, endpoint: string) {
   const secrets = (credential.type === "key" ? [credential.key] : [credential.access, credential.refresh])
