@@ -52,7 +52,6 @@ jobs:
         shell: bash
     env:
       TARGET: ${{ matrix.target }}
-      MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -69,6 +68,8 @@ jobs:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
       - name: Build the owned CLI with its package version
+        env:
+          MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
         run: |
           set -euo pipefail
           ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
@@ -97,8 +98,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -115,6 +114,8 @@ jobs:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
       - name: Build and export the actual Windows ARM64 CLI
+        env:
+          MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
         run: |
           set -euo pipefail
           ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
