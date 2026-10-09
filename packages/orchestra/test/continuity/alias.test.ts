@@ -23,14 +23,16 @@ function history() {
   return value
 }
 
-test("aliases number user text, assistant messages, tool calls and returns in session order", () => {
+test("aliases preserve ordinal sources and anchor empty completed steps in session order", () => {
   const value = history()
   const result = aliases(value)
-  expect(result.map((item) => item.alias)).toEqual(["u1", "a1", "t1", "u2", "t2", "u3", "t3"])
+  expect(result.map((item) => item.alias)).toEqual(["u1", "a1", "t1", "u2", "t2", "u3", expect.stringMatching(/^a1[0-9]{78}$/), "t3"])
   expect(result[0].text).toBe("turn-0")
   expect(result[3]).toMatchObject({ text: "Yes\nstaging, prod", answers: "t1", time: 20 })
   expect(result[5].text).toBe("/review-pr 42")
-  expect(result[6]).toMatchObject({ message: value[4], time: 4 })
+  expect(result[6]).toMatchObject({ message: value[3], time: 3 })
+  expect(result[6].text).toStartWith("Assistant step completed; finish=")
+  expect(result[7]).toMatchObject({ message: value[4], time: 4 })
   expect(child(result[4].part!)).toBe("ses_child")
   expect(userText(value[2])).toBe("/review-pr 42")
   expect(userText(value[4])).toBe("")
