@@ -1,21 +1,28 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": null, "measurementRun": null, "measurementAttempt": null}
+{"ready": false, "phase": "measure", "sourceParent": "1f4f2929b0153aa4f68757d9aee33d8f18f55589", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
-The request above is deliberately inactive. Only the lead, after W6 + Nix are
-ready, publishes a request-only commit on `nix-validation` without `[skip ci]`.
-No request is activated or validation dispatched by this source-fix checkpoint.
+Historical request `7eb2bb766a80f130a8d0758f3337729237b9ea8a` had exact clean source
+parent `1f4f2929b0153aa4f68757d9aee33d8f18f55589`. Its four-native measurement run
+`37954180585` failed; no dependency hash or consumer acceptance was adopted.
+This integration retains that request's ancestry but resets `ready: false`.
+The final repaired source freeze must precede a fresh request-only direct child;
+preserved ancestry permits a normal fast-forward of `nix-validation`, without
+rewriting the published failed request or relaxing branch/source identity checks.
 
 Source contract: `b1cad41dc515eec9dcf474c413da853061894ac1`, containing reviewed
 producer `374da1e154`; prior producer evidence is Actions `37875718504`. That
 evidence is not rerun here and does not certify Nix builds.
 
-Human-authorized deferral: “NO tests/typechecks/mutations/CI/smoke/builds now;
+Historical human-authorized cadence: “NO tests/typechecks/mutations/CI/smoke/builds now;
 prepare runnable validation and measurement capture only, single integrated batch
 after W6+Nix ready.” No local Nix, installer, daemon or global software was used.
-All new commands, output checks and controls below are **unexecuted**.
+Consumer verification and output qualification below remain **unexecuted**.
+Repair `5f7e3b0c7c` passed offline replay/negative-control conformance against the
+actual failed Linux artifacts; that is parser evidence, not native measurement
+acceptance. Changed package inputs require a new four-native capture.
 
 ## Implemented contract
 

@@ -12,7 +12,7 @@ Reuse existing source-bound evidence; keep gates intact. Static cold review rema
 
 ## Current repair wave and qualification hold
 
-Current published integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
+Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
 
@@ -38,6 +38,11 @@ native Task. The existing adapter receives an internal validation callback backe
 the projector's captured Database and real parent, child, project, directory, agent,
 original Task tuple, and returned-assistant rows. Ambient optional Database presence
 does not establish trust. An unbacked memory adapter refuses observation.
+A published `66c0532e2d58b84cdd35fdb4aadd7c576bab123b`. A bounded draft audit
+`ses_ede1c82cfffe66nn95toC1bBPo` found that available original legacy Message/TaskPart
+conflicts could not veto its native-owner callback. The same author is repairing
+that concrete gap; final composition/review remains held. Returned-author completion
+must stay required because the strict private proposal reader requires it too.
 
 Existing author C published `a3b767422a06a0f5d71c60feb4f16bfa3be3262f` and follow-up
 `2c28b537f45832f87907ed44358e13cc9c45c916`. C observes the actual unfavorable host exit,
@@ -49,7 +54,7 @@ view cases exercise the actual scheduler and private setter, without preseeded r
 
 C has conditional static approval only:
 `ses_ede811595ffe8onazcY8NaqjdT/msg_121cda10a001AnodaWbWSLCjSm`.
-The unchanged Core completed-Task guard still blocks that path until A is composed.
+The Core completed-Task guard still blocks that path until corrected A is composed.
 No new Session API, service, event, store, receipt before admission, Core-to-Orchestra
 dependency, permission waiver, or relaxed private-port terminal equality is authorized.
 
@@ -63,13 +68,19 @@ cross-caller review. Runtime alone then owns Core typecheck and the affected sel
   `test/maestro/arsenal-activation.test.ts`, and `test/tool/task-backend-result.test.ts`.
 
 The final clean post-check/generated source freeze is still pending. Runtime owns the
-approved CLI/version and native models.dev workflow changes; the Relay coordinator
-does not edit those dirty files. Generated caps remain SDK **16718 LOC**, Client **6646**.
+approved CLI/version and native models.dev workflow changes, published as
+`f73d92d0838e6cb08fd76e1266851bcfd2b78a7a`. The exact approved blobs are retained
+in integration `93e46af105`; C's immutable source is composed in `69dd0bab15`.
+Neither composition releases the affected checks before corrected A and cross-caller
+review. Generated caps remain SDK **16718 LOC**, Client **6646**.
 
 ### Nix and pilot qualification
 
 Relay is the sole Nix activation/hash writer. Request-only `7eb2bb766a80f130a8d0758f3337729237b9ea8a`
-had exact parent `1f4f2929b0`; upstream created no duplicate request or run. Actual Linux
+had exact parent `1f4f2929b0`; upstream created no duplicate request or run. Integration
+preserves that request's ancestry with `ready: false`, allowing the next request-only
+child of the final freeze to fast-forward the existing branch without a force push.
+Actual Linux
 artifacts falsified the old parser assumptions: Nix 2.29.2 exits 1 on the expected fixed
 output mismatch, counts carry SGR decoration, and derivation fields are `sha256` / `nar`.
 The repaired parser replayed both Linux artifacts and rejected six defect classes per
