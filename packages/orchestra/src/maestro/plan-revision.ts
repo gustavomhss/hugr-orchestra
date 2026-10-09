@@ -5,7 +5,9 @@ import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { eq } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Context, Effect, Schema } from "effect"
+import { RelayArm } from "@orchestra/schema/relay-arm"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { readAdmission } from "./admission-record"
 import { readAtlasSource, AtlasContextHeld } from "./atlas-source"
@@ -15,6 +17,40 @@ import { SessionID } from "@/session/schema"
 
 type LegacyRevisionData = Schema.Schema.Type<typeof MaestroEvent.PlanRevision.Recorded.data>
 type RevisionData = LegacyRevisionData | Schema.Schema.Type<typeof MaestroEvent.PlanRevision.RecordedV2.data>
+
+// This projection contains binding facts only. The final adapter decodes the upstream-owned canonical RecordedV3
+// and verifies its original hash; it must never reinterpret legacy sources or synthesize attribution.
+export interface WorkflowRevision {
+  readonly id: EventV2.ID
+  readonly sessionID: string
+  readonly revisionHash: string
+  readonly workflowBinding: RelayArm.WorkflowDefinition
+}
+export const NativeWorkflowRevision = Context.Reference<{
+  readonly decode: (data: unknown) => Effect.Effect<WorkflowRevision, RelayWorkflowBinding.Held>
+} | undefined>("@orchestra/MaestroPlanRevision/WorkflowV3", { defaultValue: () => undefined })
+
+export const readWorkflowRevision = Effect.fn("MaestroPlanRevision.readWorkflow")(function* (id: string) {
+  const database = yield* Database.Service
+  const row = yield* database.db.select().from(EventTable).where(eq(EventTable.id, EventV2.ID.make(id))).get().pipe(Effect.orDie)
+  if (!row || row.type !== EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, 3))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_MISSING" })
+  const native = yield* NativeWorkflowRevision
+  if (!native) return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING" })
+  const revision = yield* native.decode(row.data)
+  if (revision.id !== row.id || revision.sessionID !== row.aggregate_id)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_MISMATCH" })
+  return revision
+})
+
+// Called by the final canonical V3 producer with host-observed attribution already in fields. Preserve the existing
+// stable/SHA-256 algorithm, and keep the resulting Event.ID outside its own revision body.
+export function workflowRevisionBody(fields: Readonly<Record<string, unknown>>, workflowBinding: RelayArm.WorkflowDefinition) {
+  const { id, revisionHash, createdAt, ...input } = fields
+  const body = { ...input, revision: "v3", workflowBinding }
+  return { ...body, id: EventV2.ID.make(`evt_maestro_plan_revision_${hash(body)}`),
+    revisionHash: hash(body), createdAt: createdAt ?? Date.now() }
+}
 
 export type RecordPlanRevisionInput = Omit<
   LegacyRevisionData,
@@ -71,6 +107,8 @@ export const readPlanRevision = Effect.fn("MaestroPlanRevision.read")(function* 
     .get()
     .pipe(Effect.orDie)
   if (!row) return undefined
+  if (row.type === EventV2.versionedType(MaestroEvent.PlanRevision.Recorded.type, 3))
+    return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING" })
   if (row.type === EventV2.versionedType(MaestroEvent.PlanRevision.RecordedV2.type, 2)) {
     return Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV2.data)(row.data)
   }

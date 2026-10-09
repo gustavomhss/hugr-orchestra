@@ -52,6 +52,8 @@ import { ArsenalApproval } from "./arsenal-approval"
 import { ArsenalOutcome } from "./arsenal-outcome"
 import { canonicalMemberId } from "./roster"
 import { WriteRoots } from "./write-roots"
+import { WorkflowBinding } from "./workflow-binding"
+import { NativeWorkflowRevision } from "./plan-revision"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -247,6 +249,8 @@ export const make = Effect.gen(function* () {
   const observations = yield* ArsenalObservations.Service
   const locations = yield* LocationServiceMap.Service
   const safety = yield* ToolSafety.make
+  const workflowHost = yield* WorkflowBinding.NativeHost
+  const workflowRevision = yield* NativeWorkflowRevision
   const runnerReports = new WeakMap<ArsenalCompletion.Binding, Effect.Success<ReturnType<typeof ArsenalVerification.run>>>()
   const approvalHost = yield* makeApprovalHost
   const state = yield* InstanceState.make((instance) =>
@@ -611,6 +615,8 @@ export const make = Effect.gen(function* () {
           return yield* effect.pipe(
             Effect.provideService(ToolSafety.RuntimeProfileLoader, WriteRoots.loader(local.loadProfile, () => sessions.get(session.id).pipe(Effect.orDie))),
             Effect.provideService(ArsenalCompletion.NativeHost, host),
+            Effect.provideService(WorkflowBinding.NativeHost, workflowHost),
+            Effect.provideService(NativeWorkflowRevision, workflowRevision),
             Effect.provideService(ToolSafety.NativeHost, approvalHost),
             Effect.provideService(ToolSafety.NativeContext, { directory: session.directory, projectID: session.projectID }),
           )
@@ -701,6 +707,8 @@ export const make = Effect.gen(function* () {
           Effect.mapError(() => new ToolFailure({ message: "ARSENAL_INPUT_DENIED" })),
         )
         if (name !== "relay-arm") return
+        if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database)))
+          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED" })
         const input = Schema.decodeUnknownOption(
           Schema.Struct({
             action: Schema.String,

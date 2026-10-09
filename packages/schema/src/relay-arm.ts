@@ -1,8 +1,13 @@
 export * as RelayArm from "./relay-arm"
 
 import { Effect, Schema } from "effect"
-import { NonNegativeInt } from "./schema"
+import { NonNegativeInt, optional } from "./schema"
 import { Hex64, Id } from "./relay-sprint"
+import { ProjectID } from "./project-id"
+import { SessionID } from "./session-id"
+import { SessionMessage } from "./session-message"
+import { Event } from "./event"
+import { RelayAuthoring } from "./relay-authoring"
 
 // One arm: `arms/<token>/`, the directory binding one runner to a sprint, metadata, persisted state and a ledger.
 
@@ -13,6 +18,57 @@ export type Token = typeof Token.Type
 // `escalated` is legacy and reads as parked, like `awaiting-human`.
 export const State = Schema.Literals(["active", "complete", "awaiting-human", "escalated"])
 export type State = typeof State.Type
+
+// Host-acquired publication identity, not authorship or execution authority. Document/version IDs are existing
+// Authoring IDs (strings); the immutable body's save-time active flags never establish live publication.
+export const Publication = Schema.Struct({
+  projectID: ProjectID,
+  documentID: RelayAuthoring.Document.fields.id,
+  activeVersionID: RelayAuthoring.Version.fields.versionId,
+  immutableVersionBodyChecksum: Hex64,
+  livePublicationChecksum: Hex64,
+}).annotate({ identifier: "RelayArm.Publication" })
+export interface Publication extends Schema.Schema.Type<typeof Publication> {}
+
+export const Materialization = Schema.Struct({
+  schemaIdentifier: Schema.Literal("RelaySprint.Sprint"),
+  digest: Hex64,
+  byteLength: NonNegativeInt,
+}).annotate({ identifier: "RelayArm.Materialization" })
+export interface Materialization extends Schema.Schema.Type<typeof Materialization> {}
+
+// The inputs covered by the existing Plan/Task hash payload. Attribution remains in the upstream-owned V3 revision.
+export const WorkflowDefinition = Schema.Struct({
+  publication: Publication,
+  materialization: Materialization,
+  resolvedSkills: Schema.Array(RelayAuthoring.SkillBinding),
+  parameters: Schema.Record(Schema.String, Schema.String),
+  writePaths: Schema.Array(Schema.NonEmptyString),
+}).annotate({ identifier: "RelayArm.WorkflowDefinition" })
+export interface WorkflowDefinition extends Schema.Schema.Type<typeof WorkflowDefinition> {}
+
+export const WorkflowBinding = Schema.Struct({
+  definition: WorkflowDefinition,
+  // External reference to the actual persisted revision; excluded from that revision's own hashed body.
+  planRevisionID: Event.ID,
+  executionSessionID: SessionID,
+  authoritySessionID: SessionID,
+  logicalTaskID: Schema.NonEmptyString,
+}).annotate({ identifier: "RelayArm.WorkflowBinding" })
+export interface WorkflowBinding extends Schema.Schema.Type<typeof WorkflowBinding> {}
+
+export const WorkflowPosition = Schema.Struct({
+  position: Schema.NonEmptyString,
+  attempt: NonNegativeInt,
+  ledgerSeq: Schema.Int.check(Schema.isGreaterThanOrEqualTo(-1)),
+}).annotate({ identifier: "RelayArm.WorkflowPosition" })
+export interface WorkflowPosition extends Schema.Schema.Type<typeof WorkflowPosition> {}
+
+export const WorkflowSettlement = Schema.Struct({
+  assistantMessageID: SessionMessage.ID,
+  expected: WorkflowPosition,
+}).annotate({ identifier: "RelayArm.WorkflowSettlement" })
+export interface WorkflowSettlement extends Schema.Schema.Type<typeof WorkflowSettlement> {}
 
 /**
  * Arm directory layout. `counter`, `retry_*` and `reg_retry` end with LF; every other state file has no trailing LF.
@@ -59,6 +115,7 @@ export const Meta = Schema.Struct({
   session_id: Schema.optionalKey(Schema.String),
   contract_sha256: Schema.optionalKey(Hex64),
   run_id: Schema.optionalKey(Schema.String),
+  workflow: optional(WorkflowBinding),
 }).annotate({ identifier: "RelayArm.Meta", parseOptions: { onExcessProperty: "preserve" } })
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
 
@@ -168,6 +225,16 @@ export const Evaluation = Schema.Struct({
   capture: Schema.optionalKey(HostCapture),
 }).annotate({ identifier: "RelayArm.Evaluation" })
 export interface Evaluation extends Schema.Schema.Type<typeof Evaluation> {}
+
+// A pending checkpoint is a fence: interrupted evaluation cannot be retried against a provider turn. The same-lock
+// evaluator adapter reconciles a durable disposition before completing it; missing evidence is a named HOLD.
+export const WorkflowCheckpoint = Schema.Struct({
+  binding: WorkflowBinding,
+  settlement: WorkflowSettlement,
+  phase: Schema.Literals(["pending", "settled"]),
+  evaluation: optional(Evaluation),
+}).annotate({ identifier: "RelayArm.WorkflowCheckpoint" })
+export interface WorkflowCheckpoint extends Schema.Schema.Type<typeof WorkflowCheckpoint> {}
 
 /**
  * `relay-gate check` output, with the Python key order. A check grades the selected WP's checklist only; it never
