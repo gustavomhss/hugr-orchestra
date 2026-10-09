@@ -2,11 +2,11 @@
 
 ## Applicability
 
-The packet assigns Go table models (gocqlx `table.Table` values and UDT structs) generated from a Cassandra or Scylla keyspace, names the generated package directory as part of the write paths, gives its package name, and supplies a disposable cluster that already holds the keyspace schema. The engine is owned build `3.0.4+orchestra.cassandra2`: upstream gocqlx library `3.0.4` with a command-only host transport adapter, compiled by the host with its own Go toolchain and run only as `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
+Use this recipe when the packet assigns Go table models (`table.Table` values and UDT structs), names an authorized output package directory/name, and supplies a disposable Cassandra or Scylla cluster with schema applied. The host compiles owned build `3.0.4+orchestra.cassandra2` (library `3.0.4`, command-only transport adapter) with its private Go toolchain; invoke only `"$BACKEND_TOOLKIT_BIN/gocqlx-schemagen"`.
 
-Compare project pins against library `3.0.4`, not the host build revision; generated imports remain `github.com/scylladb/gocqlx/v3`. The owned build uses a private, hash-pinned driver backport and retains upstream licenses and modification notices. See the [Cassandra build provenance and measured compatibility](https://github.com/gustavomhss/hugr-orchestra/blob/cassandra-metadata/specs/backend-specialist/cassandra-build.md) for exact driver/artifact pins, catalog behavior and verification limits.
+Compare project pins against library `3.0.4`; generated imports remain `github.com/scylladb/gocqlx/v3`. The private hash-pinned driver backport retains upstream licenses/notices; [provenance and measured compatibility](https://github.com/gustavomhss/hugr-orchestra/blob/cassandra-metadata/specs/backend-specialist/cassandra-build.md) records driver/artifact pins, catalog behavior and verification limits.
 
-The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` only for its declared loopback endpoints. The owned Go adapter strictly parses that captured map and connects through the host's fixed-destination Unix broker; no DYLD injection or clang acquisition is required. Present-but-invalid maps and undeclared, LAN or IPv6 addresses fail without direct TCP fallback. With the map absent, the generator keeps normal Go TCP for unconfined host probes; sandbox policy still denies raw TCP. Do not author, modify or substitute the map or broker.
+The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` for declared loopback endpoints. The Go adapter strictly parses it and uses a fixed-destination Unix broker, without DYLD or clang. Invalid maps or undeclared/LAN/IPv6 addresses fail without TCP fallback. Absent maps retain normal Go TCP for unconfined host probes; sandbox raw TCP stays denied. Never author, change or replace the map/broker.
 
 ## Non-trigger
 
@@ -30,7 +30,7 @@ The host supplies `ORCHESTRA_TCP_PROXY_ROUTES` only for its declared loopback en
    "$BACKEND_TOOLKIT_BIN/gocqlx-schemagen" -cluster <hosts> -keyspace <keyspace> -pkgname <name> -output <pkg-dir>
    ```
    It writes one file, `<pkg-dir>/<name>.go`, and replaces it whole. Add `-user`/`-password`, `-ignore-names <a,b>` or `-ignore-indexes` only as the packet supplies them.
-3. The first run on a machine compiles the engine once; it can take a few minutes before generation starts. Later runs reuse that build. Do not interrupt it or retry in a loop.
+3. The first invocation builds the engine once and can take minutes. Later calls reuse it; never interrupt or retry in a loop.
 4. Read the diff. Only the models for the tables, views, indexes and types the change touched may move; columns are sorted by name. A change to anything else means the cluster's schema differs from the project's: a `packet` blocker.
 5. Use the models in the handwritten layer, then compile and run the packet's checks.
 
