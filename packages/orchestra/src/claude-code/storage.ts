@@ -2,7 +2,7 @@ export * as ClaudeCodeStorage from "./storage"
 
 import path from "node:path"
 import { closeSync, fchmodSync, fsyncSync, lstatSync, openSync, writeFileSync } from "node:fs"
-import { Database } from "bun:sqlite"
+import { openDatabase } from "./sqlite"
 import { Effect } from "effect"
 import type { FSUtil } from "@orchestra/core/fs-util"
 
@@ -51,7 +51,7 @@ export function create<A>(input: {
       return yield* Effect.fail(new Error("claude-code-unsafe-path"))
     // File creation is not migration completion: every contender supplies the legacy candidate until COMMIT.
     const backup = legacy ? yield* input.fs.readFileString(legacyPath) : undefined
-    return yield* Effect.acquireRelease(Effect.try({ try: () => new Database(file, { create: true, strict: true }), catch: (cause) => cause }),
+    return yield* Effect.acquireRelease(Effect.tryPromise({ try: () => openDatabase(file), catch: (cause) => cause }),
       (db) => Effect.sync(() => db.close())).pipe(Effect.map((db) => ({ db, backup, dir, evidence })))
   })
   const modify = <B>(transform: (state: A) => B, write = true) => Effect.scoped(Effect.gen(function* () {
