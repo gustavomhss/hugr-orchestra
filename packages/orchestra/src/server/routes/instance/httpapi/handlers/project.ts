@@ -1,4 +1,4 @@
-import * as InstanceState from "@/effect/instance-state"
+import { InstanceState } from "@/effect/instance-state"
 import { Project } from "@/project/project"
 import { ProjectV2 } from "@orchestra/core/project"
 import { Config } from "@/config/config"
