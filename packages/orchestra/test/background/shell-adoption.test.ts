@@ -52,7 +52,9 @@ const fixture = Effect.gen(function* () {
   const sessions = yield* Session.Service
   const processes = yield* BackgroundProcess.Service
   const session = yield* sessions.create({})
-  yield* Effect.addFinalizer(() => sessions.remove(session.id))
+  const lifetime = { removed: false }
+  const remove = sessions.remove(session.id).pipe(Effect.tap(() => Effect.sync(() => { lifetime.removed = true })))
+  yield* Effect.addFinalizer(() => lifetime.removed ? Effect.void : remove)
   const info = yield* ShellTool
   const tool = yield* info.init()
   const abort = new AbortController()
@@ -60,13 +62,14 @@ const fixture = Effect.gen(function* () {
     sessionID: session.id, messageID: MessageID.make("msg_shell_adoption"), callID: "shell_adoption",
     agent: "maestro", abort: abort.signal, messages: [], metadata: () => Effect.void, ask: () => Effect.void,
   }).pipe(Effect.provideService(ToolSafety.RuntimeProfile, profile))
-  const launch = (runtime: string, file: string) => `${Shell.ps(Shell.acceptable()) ? "& " : ""}"${runtime.replaceAll("\\", "/")}" "${file.replaceAll("\\", "/")}"`
+  const launch = (runtime: string, file: string) => `${Shell.ps(Shell.acceptable()) ? "& " : ""}"${runtime.replaceAll("\\", "/")}" "${file.replaceAll("\\", "/")}"${Shell.ps(Shell.acceptable()) ? "; exit $LASTEXITCODE" : ""}`
   const background = Effect.fnUntraced(function* (exitCode = 0, output = "ready\n") {
     const sample = tree(1)
     yield* Effect.addFinalizer(() => Effect.promise(() => reap(sample.nonce)))
     const script = path.join(instance.directory, "launch.cjs")
     yield* fs.writeFileString(script, `
-      const child = require('node:child_process').spawn(${JSON.stringify(sample.command)}, ${JSON.stringify(sample.args)}, {stdio: ['ignore', 'pipe', 'inherit']});
+      // libuv's parent job otherwise kills Windows descendants when this launcher exits; Omni's job still owns them.
+      const child = require('node:child_process').spawn(${JSON.stringify(sample.command)}, ${JSON.stringify(sample.args)}, {stdio: ['ignore', 'pipe', 'inherit'], detached: process.platform === 'win32'});
       child.on('error', error => {throw error});
       let seen = '';
       child.stdout.on('data', bytes => {
@@ -77,7 +80,7 @@ const fixture = Effect.gen(function* () {
     `)
     return { sample, command: launch(process.execPath, script) }
   })
-  return { ...instance, fs, sessions, processes, session, abort, execute, launch, background }
+  return { ...instance, fs, remove, processes, session, abort, execute, launch, background }
 })
 
 describe("full ShellTool adoption boundary", () => {
@@ -94,7 +97,7 @@ describe("full ShellTool adoption boundary", () => {
     yield* runState.cancel(f.session.id)
     expect(yield* Effect.promise(() => alive(bg.sample.nonce))).toBe(bg.sample.size)
     expect(yield* f.processes.list(f.session.id)).toHaveLength(1)
-    yield* f.sessions.remove(f.session.id)
+    yield* f.remove
     expect(yield* Effect.promise(() => gone(bg.sample.nonce))).toBe(0)
     expect(yield* f.processes.list(f.session.id)).toEqual([])
   }), 60_000)
@@ -179,8 +182,6 @@ describe("full ShellTool adoption boundary", () => {
     expect(result.metadata.exit).toBe(0)
     expect(result.output).toContain("BROKER_CHILD_READY")
     const owned = yield* Effect.promise(async () => JSON.parse(await Bun.file(state).text()) as { socket: string; scratch: string; pid: number })
-    expect(yield* f.fs.exists(owned.socket)).toBe(true)
-    expect(yield* f.fs.exists(owned.scratch)).toBe(true)
     expect(yield* Effect.promise(() => sweep(nonce))).toContain(owned.pid)
     expect(yield* f.processes.list(f.session.id)).toHaveLength(1)
     const exchange = (text: string) => Effect.gen(function* () {
@@ -191,10 +192,12 @@ describe("full ShellTool adoption boundary", () => {
       ), `post-return broker exchange failed: ${text}`)
     })
     expect(yield* exchange("AFTER_RETURN")).toBe("AFTER_RETURN")
+    expect(yield* f.fs.exists(owned.socket)).toBe(true)
+    expect(yield* f.fs.exists(owned.scratch)).toBe(true)
     f.abort.abort()
     yield* runState.cancel(f.session.id)
     expect(yield* exchange("AFTER_ESC")).toBe("AFTER_ESC")
-    yield* f.sessions.remove(f.session.id)
+    yield* f.remove
     expect(yield* Effect.promise(() => sweep(nonce))).toEqual([])
     expect(yield* f.processes.list(f.session.id)).toEqual([])
     expect(yield* f.fs.exists(owned.scratch)).toBe(false)
