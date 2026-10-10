@@ -171,6 +171,7 @@ async function capture(page: Page, name: string, manifest: unknown[], requests: 
   await expect(lean.locator("h1")).toHaveCSS("font-family", /Mx Inter Medium/)
   await expect(lean.locator('[role="alert"]')).toHaveCount(0)
   await expect(lean.locator("pre")).toHaveCount(0)
+  await expect(page.getByRole("complementary", { name: "Diagnóstico de desempenho de desenvolvimento", exact: true })).toHaveCount(0)
   await page.mouse.move(836, 940)
   const out = process.env.ORCHESTRA_VISUAL_OUT
   if (!out || !process.env.LEAN_VISUAL_SOURCE) throw new Error("Capture requires explicit output directory and source pin")
