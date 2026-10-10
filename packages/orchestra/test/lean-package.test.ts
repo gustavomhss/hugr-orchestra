@@ -5,6 +5,7 @@ import os from "node:os"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import ts from "typescript"
+import { leanPin } from "../script/lean-notices"
 
 const dir = path.resolve(import.meta.dirname, "..")
 const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-package-"))
@@ -34,7 +35,7 @@ beforeAll(async () => {
   await symlink(path.dirname(pty), path.join(dir, "dist/node/node_modules/@lydell/node-pty"), "junction")
   await mkdir(path.join(scratch, "archive"))
   const tar = process.platform === "win32" ? path.join(process.env.SystemRoot!, "System32/tar.exe") : "tar"
-  await child([tar, "-xzf", "../core/vendor/hugr-lean-0.2.0.tgz", "-C", path.join(scratch, "archive")], buildEnv).finish()
+  await child([tar, "-xzf", `../core/vendor/${leanPin.artifact}`, "-C", path.join(scratch, "archive")], buildEnv).finish()
 }, 600000)
 afterAll(() => rm(scratch, { recursive: true, force: true }))
 
@@ -43,13 +44,27 @@ test("orchestra package typecheck in CI", async () => {
 }, 240000)
 
 test("actual Node and Bun artifacts retain exact pinned notices", async () => {
-  const archive = new Uint8Array(await Bun.file(path.join(dir, "../core/vendor/hugr-lean-0.2.0.tgz")).arrayBuffer())
-  expect(digest(archive)).toBe("4e46ae0534937bdfedd46f667292d9904f2446a0fe01479ea0e6c71a74862af6")
+  const archive = new Uint8Array(await Bun.file(path.join(dir, "../core/vendor", leanPin.artifact)).arrayBuffer())
+  expect(digest(archive)).toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
+  const core = path.resolve(dir, "../core")
+  expect((await Bun.file(path.join(core, "package.json")).json()).dependencies["hugr-lean"]).toBe(`file:./vendor/${leanPin.artifact}`)
+  const installed = path.resolve(path.dirname(createRequire(path.join(core, "package.json")).resolve("hugr-lean/core")), "../..")
+  for (const file of ["package.json", "dist/core/index.js", "dist/core/profile-selection.js", "dist/core/command.js", "dist/profiles/index.js"]) {
+    expect(new Uint8Array(await Bun.file(path.join(installed, file)).arrayBuffer()))
+      .toEqual(new Uint8Array(await Bun.file(path.join(scratch, "archive/package", file)).arrayBuffer()))
+  }
+  const names = [...(await new Bun.Archive(archive).files()).keys()]
+    .filter((file) => file === "package/LICENSE" || file === "package/NOTICE" || file.startsWith("package/licenses/") || file.endsWith("/SOURCES.md"))
+    .map((file) => file.slice("package/".length)).sort()
+  expect(names).toContain("LICENSE")
+  expect(names).toContain("NOTICE")
+  expect(names).toContain("licenses/TRS-MIT.txt")
+  expect(names).toContain("fixtures/profiles/playwright/SOURCES.md")
   for (const root of [path.dirname(node), path.dirname(path.dirname(binary))]) {
     const manifest = await Bun.file(path.join(root, "licenses/hugr-lean/manifest.json")).json()
-    expect(manifest).toMatchObject({ name: "hugr-lean", version: "0.2.0", commit: "cfe14329cc98f0a2778acdd148e66dbf5a0dd668", sha256: digest(archive), integrity: `sha512-${createHash("sha512").update(archive).digest("base64")}` })
-    expect(manifest.materials.map((entry: { path: string }) => entry.path)).toEqual(["LICENSE", "NOTICE", "licenses/TRS-MIT.txt"])
-    for (const file of ["LICENSE", "NOTICE", "licenses/TRS-MIT.txt"]) {
+    expect(manifest).toMatchObject({ name: "hugr-lean", version: "0.2.0", commit: "465fb4c04773f1a40733c9f4c334b980e3195646", tree: "c3a77068a1b72d57ba39ca1b1aa145e0b6e506d7", sha256: digest(archive), integrity: `sha512-${createHash("sha512").update(archive).digest("base64")}` })
+    expect(manifest.materials.map((entry: { path: string }) => entry.path)).toEqual(names)
+    for (const file of names) {
       const original = new Uint8Array(await Bun.file(path.join(scratch, "archive/package", file)).arrayBuffer())
       const shipped = new Uint8Array(await Bun.file(path.join(root, "licenses/hugr-lean", file)).arrayBuffer())
       expect(shipped).toEqual(original)
