@@ -41,9 +41,9 @@ export function make(deps: { database: Database.Interface; events: EventV2.Inter
     const child = yield* deps.database.db.select().from(SessionTable).where(eq(SessionTable.id, input.childSessionID)).get()
     const logical = yield* LogicalTask.read(input.childSessionID)
     if (!parent || !child || child.parent_id !== parent.id || child.project_id !== parent.project_id ||
-      child.directory !== parent.directory || child.agent !== "walt" || !logical || logical.taskId !== input.logicalTaskID ||
+      child.directory !== parent.directory || child.agent !== "archie" || !logical || logical.taskId !== input.logicalTaskID ||
       logical.executionSessionID !== child.id || logical.authoritySessionID !== parent.id ||
-      logical.memberID !== "walt" || logical.projectID !== parent.project_id)
+      logical.memberID !== "archie" || logical.projectID !== parent.project_id)
       return yield* refuse("UPSTREAM_SETTLEMENT_LINEAGE_MISMATCH")
     const receipt = yield* Schema.decodeUnknownEffect(SessionMessageUpdater.UpstreamSettlement)({
       parentMessageID: input.parentMessageID, parentCallID: input.parentCallID, workResult: input.workResult,
@@ -52,7 +52,7 @@ export function make(deps: { database: Database.Interface; events: EventV2.Inter
     const result = record(input.workResult)
     const identity = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal(UpstreamResult.SCHEMA),
       taskId: Schema.String, card: Schema.Struct({ messageID: Schema.String }),
-      author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.String, messageID: Schema.String }),
+      author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }),
     }))(result)
     if (Option.isNone(identity) || identity.value.taskId !== logical.taskId || identity.value.author.executionSessionID !== child.id ||
       identity.value.author.messageID !== input.authorMessageID || identity.value.card.messageID !== input.authorMessageID)
@@ -131,7 +131,7 @@ const readTasks = Effect.fn("UpstreamTaskSettlement.readTasks")(function* (datab
   if (views.some((view) => !isDeepStrictEqual(view.input, views[0].input)))
     return yield* refuse("UPSTREAM_SETTLEMENT_TASK_VIEW_CONFLICT")
   return yield* Effect.forEach(views, (view) => Effect.gen(function* () {
-    const selection = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.Literal("walt"), task_id: Schema.optional(Schema.String) }))(view.input)
+    const selection = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.Literal("archie"), task_id: Schema.optional(Schema.String) }))(view.input)
     if (Option.isNone(selection) || selection.value.task_id !== undefined && selection.value.task_id !== input.childSessionID ||
       view.metadata.parentSessionId !== input.sessionID || view.metadata.sessionId !== input.childSessionID)
       return yield* refuse("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
@@ -168,15 +168,15 @@ const readProposal = Effect.fn("UpstreamTaskSettlement.readProposal")(function* 
     const { Seats } = yield* Effect.promise(() => import("@/maestro/seats"))
     if (legacy.session_id !== input.childSessionID) return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
     const message = yield* MessageV2.get({ sessionID: input.childSessionID, messageID: input.authorMessageID })
-    if (message.info.role !== "assistant" || message.info.agent !== "walt" || message.info.time.completed === undefined ||
+    if (message.info.role !== "assistant" || message.info.agent !== "archie" || message.info.time.completed === undefined ||
       message.parts.some((part) => part.sessionID !== input.childSessionID || part.messageID !== input.authorMessageID))
       return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
-    return { result: BackendResult.assemble(message, [], Seats.all.walt),
+    return { result: BackendResult.assemble(message, [], Seats.all.archie),
       text: message.parts.flatMap((part) => part.type === "text" && !part.synthetic && !part.ignored ? [part.text] : []).at(-1) ?? "" }
   }) : undefined
   const next = modern ? yield* Effect.gen(function* () {
     const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
-    if (modern.session_id !== input.childSessionID || message.type !== "assistant" || message.agent !== "walt" || message.time.completed === undefined)
+    if (modern.session_id !== input.childSessionID || message.type !== "assistant" || message.agent !== "archie" || message.time.completed === undefined)
       return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
     const texts = message.content.flatMap((part) => part.type === "text" ? [part.text] : [])
     const card = UpstreamResult.parse(texts.join("\n"))
@@ -188,7 +188,7 @@ const readProposal = Effect.fn("UpstreamTaskSettlement.readProposal")(function* 
       card: { parsed: card !== undefined, messageID: message.id }, ...(card ? { outcome: card.outcome } : {}),
       changes: [], checks: [], blockers: card?.blockers ?? [], risks: card?.risks ?? [], nextActions: card?.nextActions ?? [],
       terminal: { reason: terminal }, memory: { reads: [], writes: [] }, artifacts: card?.artifacts ?? [],
-      author: { memberId: "walt", executionSessionID: input.childSessionID, messageID: message.id },
+      author: { memberId: "archie", executionSessionID: input.childSessionID, messageID: message.id },
     } }
   }) : undefined
   if (!old && !next) return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISSING")
