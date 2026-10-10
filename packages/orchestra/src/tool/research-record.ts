@@ -21,9 +21,9 @@ export const ResearchRecordTool = Tool.define("research_record", Effect.gen(func
       records.record(binding, context, input)).pipe(Effect.flatMap((result) => Effect.gen(function* () {
         const qualifications = result.document
           ? yield* ResearchQualifications.collect(records, binding, result.document.findingRefs) : undefined
-        const reply = { ...result, ...(qualifications ? { qualifications } : {}) }
+        const reply = { ...(qualifications ? { qualifications } : {}), ...result }
         return { title: result.document ? `Research document: ${result.document.title}` : `Research ${input.action} retained`,
-          output: JSON.stringify(reply), metadata: { research: reply } }
+          output: JSON.stringify(reply, null, result.document ? 2 : undefined), metadata: { research: reply } }
       }))),
     ).pipe(Effect.orDie),
   }

@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import path from "node:path"
 import { Effect, Exit, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
+import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ResearchBinding } from "@orchestra/core/research/binding"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -18,6 +19,7 @@ import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { MessageID, PartID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
+import { Truncate } from "@/tool/truncate"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { TestInstance } from "../fixture/fixture"
 import { NativeResearchTask } from "./fixtures/native-task"
@@ -32,7 +34,7 @@ const Result = Schema.Struct({ workResult: Schema.Struct({ qualifications: Summa
 for (const background of [false, true]) it.instance(`native qualified Task output survives vague card; background=${background}`, () => Effect.gen(function* () {
   const fs = yield* FSUtil.Service
   const instance = yield* TestInstance
-  yield* fs.writeFileString(path.join(instance.directory, "orchestra.jsonc"), JSON.stringify({ compaction: { tail_turns: 0 } }))
+  yield* fs.writeFileString(path.join(instance.directory, "orchestra.jsonc"), JSON.stringify({ compaction: { tail_turns: 0 }, tool_output: { max_bytes: 16 * 1024 } }))
   const fixture = yield* NativeResearchTask.setup()
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
   const events = yield* EventV2.Service
@@ -70,75 +72,103 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
           reason: "Observation and declaration have different applicability" })
         return
       }
-      const refs = [state.findings[0], state.findings[2]].map((finding) => ({ id: finding.id, revision: finding.revision }))
+      if (!background && state.findings.length <= 4) {
+        yield* fixture.remote.tool("research_record", { action: "finding", proposition: "é".repeat(4096), nature: "hypothesis",
+          conditions: ["x".repeat(4096), "y".repeat(state.findings.length === 3 ? 500 : 4096)], evidence: [], contrary: [] })
+        return
+      }
+      const refs = (background ? [state.findings[2]] : [state.findings[2], state.findings[3]])
+        .map((finding) => ({ id: finding.id, revision: finding.revision }))
       yield* fixture.remote.tool("research_record", { action: "document", document: {
         title: "Conditional public fixture", genre: "comparison", body: "Support depends on scope [source](research:declared).",
-        findingRefs: refs, citations: { declared: state.findings[0].evidence[0] },
+        findingRefs: refs, citations: { declared: state.findings[0].evidence[0],
+          ...Object.fromEntries(Array.from({ length: background ? 0 : 16 }, (_, index) => [`additional${index}`, state.findings[0].evidence[0]])) },
       } })
       return
     }
     if (event.type !== SessionV1.Event.PartUpdated.type) return
     const part = Schema.decodeUnknownSync(SessionV1.Event.PartUpdated.data)(event.data).part
     if (part.sessionID !== state.source?.binding.executionSessionID || part.type !== "tool" || part.tool !== "research_record" || part.state.status !== "completed") return
-    const reply = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Struct({ document: Research.DocumentReceipt, qualifications: Summary })))(part.state.output)
+    const reply = Schema.decodeUnknownOption(Schema.Struct({ document: Research.DocumentReceipt, qualifications: Summary }))(part.state.metadata.research)
     if (reply._tag === "None" || state.document) return
     state.document = reply.value.document
     state.documentReply = part.state.output
-    expect(reply.value.qualifications).toEqual({ records: [state.findings[0], state.findings[2]], complete: true, total: 2, omitted: 0 })
+    expect(reply.value.qualifications).toEqual({ records: background ? [state.findings[2]] : [state.findings[2], state.findings[3]],
+      complete: true, total: background ? 1 : 2, omitted: 0 })
+    expect(part.state.output.startsWith('{\n  "qualifications":')).toBe(true)
+    expect(part.state.output.startsWith(`${JSON.stringify({ qualifications: reply.value.qualifications }, null, 2).slice(0, -2)},\n`)).toBe(true)
+    expect(part.state.output).toContain(state.findings[2].proposition)
+    expect(part.state.output.indexOf('"qualifications"')).toBeLessThan(part.state.output.indexOf('"receipt"'))
+    if (!background) expect(part.state.metadata.truncated).toBe(true)
+    const cardRefs = (background ? [state.findings[0]] : [state.findings[0], state.findings[4]])
+      .map((finding) => ({ id: finding.id, revision: finding.revision }))
     state.card = { answer: "It works.", profile: "evaluate", depth: "focused", sufficiency: "answered",
-      findingRefs: [state.document.findingRefs[0], state.document.findingRefs[0]], evidenceRefs: [], documentRefs: [state.document.ref],
+      findingRefs: [...cardRefs, cardRefs[0]], evidenceRefs: [], documentRefs: [state.document.ref],
       coverage: { examined: ["public-conditions.txt"], excluded: [], failures: [] }, limitations: [], nextActions: [] }
     const prose = background ? "It works." : "It works.\n".repeat(2100)
     yield* fixture.remote.text(`${prose}\n\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`)
-    if (background) yield* fixture.remote.text("Parent received retained qualifications.")
+    yield* fixture.remote.text("Parent received retained qualifications.")
   }))
   yield* Effect.addFinalizer(() => unsubscribe)
+  const args = { description: "Compare public fixture conditions", prompt: "Compare declaration and observation with contrary applicability", subagent_type: "jimmy", background }
+  if (!background) yield* fixture.remote.tool("task", args)
   yield* fixture.remote.tool("read", { filePath: "public-conditions.txt" })
-  const called = yield* awaitWithTimeout(fixture.call({ description: "Compare public fixture conditions", prompt: "Compare declaration and observation with contrary applicability",
-    subagent_type: "jimmy", background }, "qualified-task"), "Native qualified Task did not return", "30 seconds")
-  if (Exit.isFailure(called.exit)) return yield* Effect.failCause(called.exit.cause)
+  const called = background ? yield* awaitWithTimeout(fixture.call(args, "qualified-task"), "Native background Task did not return", "30 seconds") : undefined
+  if (called && Exit.isFailure(called.exit)) return yield* Effect.failCause(called.exit.cause)
+  if (!background) yield* awaitWithTimeout(fixture.prompt.prompt({ sessionID: fixture.parent.id, agent: "maestro",
+    model: { providerID: fixture.model.providerID, modelID: fixture.model.id }, parts: [{ type: "text", text: "Compare public fixture conditions using native Task." }] }),
+    "Actual Maestro Task and parent continuation did not settle", "30 seconds")
   const jobs = yield* BackgroundJob.Service
-  const job = background ? yield* jobs.wait({ id: String(called.exit.value.metadata.sessionId), timeout: 30_000 }) : undefined
+  const job = called && Exit.isSuccess(called.exit) ? yield* jobs.wait({ id: String(called.exit.value.metadata.sessionId), timeout: 30_000 }) : undefined
   if (background) expect(job?.info?.status).toBe("completed")
   const delivered = background ? yield* pollWithTimeout(fixture.sessions.messages({ sessionID: fixture.parent.id }).pipe(
     Effect.map((history) => history.flatMap((message) => message.parts).find((part) => part.type === "text" &&
       part.metadata?.source?.type === "task-return" && part.metadata.source.state === "completed")),
-  ), "Background Task did not deliver qualified output", "30 seconds") : undefined
-  if (background && delivered?.type !== "text") throw new Error("Expected native background return text")
-  const output = delivered?.type === "text" ? delivered.text : called.exit.value.output
-  const metadata = delivered?.type === "text" ? delivered.metadata : called.exit.value.metadata
+  ), "Background Task did not deliver qualified output", "30 seconds") : (yield* fixture.sessions.messages({ sessionID: fixture.parent.id }))
+    .flatMap((message) => message.parts).findLast((part) => part.type === "tool" && part.tool === "task")
+  if (!delivered || (delivered.type !== "text" && (delivered.type !== "tool" || delivered.state.status !== "completed")))
+    throw new Error("Expected independently persisted native Task return")
+  const output = delivered.type === "text" ? delivered.text : delivered.state.output
+  const metadata = delivered.type === "text" ? delivered.metadata : delivered.state.metadata
   const envelope = Schema.decodeUnknownSync(Result)(metadata)
-  const expected = { records: [state.findings[0], state.findings[2]], complete: true, total: 2, omitted: 0 }
+  const expected = { records: background ? [state.findings[0], state.findings[2]] : [state.findings[0], state.findings[2], state.findings[3]],
+    complete: background, total: background ? 2 : 4, omitted: background ? 0 : 1 }
   expect(envelope.workResult).toMatchObject({ qualifications: expected, discovery: state.card,
     referencesChecked: true, terminal: { reason: "ended" } })
   expect(output).toContain(`\n> ${JSON.stringify(expected)}`)
   expect(output.split("Retained finding qualifications")).toHaveLength(2)
   expect(output).toContain("It works.")
-  if (!background) expect(called.exit.value.metadata.truncated).toBe(true)
+  if (!background) {
+    expect(metadata?.truncated).toBe(true)
+    expect(output).toContain("Incomplete: 1 finding(s) omitted; reopen exact retained finding references")
+    expect(Buffer.byteLength(JSON.stringify(expected, null, 2), "utf8")).toBeGreaterThan(14 * 1024)
+    expect(Buffer.byteLength(JSON.stringify(expected, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
+    expect(Buffer.byteLength(output.split("\n\n")[0], "utf8")).toBeLessThanOrEqual(16 * 1024)
+    const truncate = yield* Truncate.Service
+    const preview = yield* truncate.output(`${output}\n${"Worker prose beyond handoff bounds.\n".repeat(2000)}`, { maxBytes: 16 * 1024 })
+    expect(preview.truncated).toBe(true)
+    expect(preview.content).toContain(`\n> ${JSON.stringify(expected)}`)
+    expect(preview.content).toContain("Incomplete: 1 finding(s) omitted; reopen exact retained finding references")
+  }
   expect(expected.records[0]).toMatchObject({ revision: 1, nature: "extraction", conditions: ["release 1", "enabled mode only; disabled mode does not apply"],
     reason: "Declaration is not observed runtime behavior" })
-  expect(expected.records[0].contrary).toHaveLength(1)
+  expect(expected.records[0].contrary).toEqual([{ source: state.source?.ref,
+    locator: { kind: "quote", exact: "Contrary: release 1 disabled mode rejects requests." } }])
   expect(expected.records[1]).toMatchObject({ nature: "observation", conditions: ["release 2", "disabled mode", "supplied public fixture only"] })
   expect(state.findings[1]).toMatchObject({ id: expected.records[0].id, revision: 2, nature: "hypothesis" })
   if (background) yield* fixture.remote.wait(7).pipe(Effect.timeout("30 seconds"))
   const inputs = yield* fixture.remote.inputs
-  expect(inputs).toHaveLength(background ? 7 : 6)
-  expect(JSON.stringify(inputs[5])).toContain(JSON.stringify(state.documentReply).slice(1, -1))
+  expect(inputs).toHaveLength(background ? 7 : 10)
+  expect(JSON.stringify(inputs[background ? 5 : 8])).toContain(JSON.stringify(state.documentReply).slice(1, -1))
+  expect(JSON.stringify(inputs.at(-1))).toContain(JSON.stringify(output).slice(1, -1))
+  expect(JSON.stringify(inputs.at(-1))).toContain(JSON.stringify(JSON.stringify(expected)).slice(1, -1))
   if (!state.source || !state.card) throw new Error("Expected native retained findings and card")
   expect(yield* records.view(state.source.binding, { action: "record", ref: state.card.findingRefs[0] })).toEqual(expected.records[0])
   expect(yield* ResearchQualifications.collect(records, state.source.binding, [state.findings[0], state.findings[1], state.findings[0]]
     .map((finding) => ({ id: finding.id, revision: finding.revision })))).toEqual({ records: state.findings.slice(0, 2), complete: true, total: 2, omitted: 0 })
 
-  if (background) {
-    expect(JSON.stringify((yield* fixture.remote.inputs)[6])).toContain(JSON.stringify(output).slice(1, -1))
-    return
-  }
-  yield* fixture.sessions.updateMessage({ ...fixture.assistant, finish: "tool-calls" })
-  yield* fixture.remote.text("Parent received retained qualifications.")
-  yield* fixture.prompt.prompt({ sessionID: fixture.parent.id, agent: "maestro", model: { providerID: fixture.model.providerID, modelID: fixture.model.id },
-    parts: [{ type: "text", text: "Use returned Task qualifications." }] })
-  expect(yield* fixture.remote.calls).toBe(7)
-  expect(JSON.stringify((yield* fixture.remote.inputs)[6])).toContain(JSON.stringify(output).slice(1, -1))
+  if (background) return
+  if (delivered.type !== "tool") throw new Error("Expected actual native Task part")
 
   const compaction = yield* SessionCompaction.Service
   const execution = yield* ResearchExecution.Service
@@ -148,22 +178,27 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
   const boundary = history.at(-1)
   if (!boundary || boundary.info.role !== "user") throw new Error("Expected real compaction boundary")
   yield* fixture.remote.text("It works; details omitted in this summary.")
-  expect(yield* execution.enter(childID, "qualified-task", compaction.process({ sessionID: childID, parentID: boundary.info.id, messages: history, auto: false }))).toBe("continue")
+  expect(yield* execution.enter(childID, delivered.callID, compaction.process({ sessionID: childID, parentID: boundary.info.id, messages: history, auto: false }))).toBe("continue")
   const visible = MessageV2.filterCompacted((yield* fixture.sessions.messages({ sessionID: childID })).toReversed())
   expect(visible.some((message) => message.parts.some((part) => part.type === "tool" && part.tool === "research_record"))).toBe(false)
   yield* fixture.fs.remove(path.join(fixture.instance.directory, "public-conditions.txt"))
+  yield* fixture.remote.tool("task", { description: "Reopen historical qualifications", prompt: "Return retained historical references", subagent_type: "jimmy", task_id: state.source.binding.taskId })
   yield* fixture.remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`)
-  const resumed = yield* fixture.call({ description: "Reopen historical qualifications", prompt: "Return retained historical references", subagent_type: "jimmy",
-    task_id: state.source.binding.taskId }, "qualified-resume")
-  if (Exit.isFailure(resumed.exit)) return yield* Effect.failCause(resumed.exit.cause)
-  expect(Schema.decodeUnknownSync(Result)(resumed.exit.value.metadata).workResult.qualifications).toEqual(expected)
-  expect(resumed.exit.value.output).toContain(`\n> ${JSON.stringify(expected)}`)
+  yield* fixture.remote.text("Parent received historical qualifications.")
+  yield* fixture.prompt.prompt({ sessionID: fixture.parent.id, agent: "maestro", model: { providerID: fixture.model.providerID, modelID: fixture.model.id },
+    parts: [{ type: "text", text: "Resume same Task after compaction." }] })
+  const resumed = (yield* fixture.sessions.messages({ sessionID: fixture.parent.id })).flatMap((message) => message.parts)
+    .findLast((part) => part.type === "tool" && part.tool === "task")
+  if (resumed?.type !== "tool" || resumed.state.status !== "completed") throw new Error("Expected persisted resumed native Task")
+  expect(Schema.decodeUnknownSync(Result)(resumed.state.metadata).workResult.qualifications).toEqual(expected)
+  expect(resumed.state.output).toContain(`\n> ${JSON.stringify(expected)}`)
 }), { git: true }, 120_000)
 
 it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds explicitly omit whole records", () => Effect.gen(function* () {
   const fixture = yield* NativeResearchTask.setup()
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
   const records = yield* ResearchRecords.Service
+  const database = yield* Database.Service
   const agents = yield* Agent.Service
   const registry = yield* ToolRegistry.Service
   const execution = yield* ResearchExecution.Service
@@ -176,11 +211,11 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const user = yield* fixture.sessions.updateMessage({ id: MessageID.ascending(), sessionID: child.id, role: "user", agent: "jimmy",
     model: { providerID: fixture.model.providerID, modelID: fixture.model.id }, time: { created: Date.now() } })
   const assistant = yield* fixture.sessions.updateMessage({ ...fixture.assistant, id: MessageID.ascending(), sessionID: child.id, parentID: user.id, agent: "jimmy", mode: "subagent" })
-  const record = (input: Research.RecordInput) => Effect.gen(function* () {
+  const record = (input: Research.RecordInput, sessionID = child.id, messageID = assistant.id) => Effect.gen(function* () {
     const callID = PartID.ascending()
-    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: assistant.id, type: "tool", tool: "research_record", callID,
+    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID, messageID, type: "tool", tool: "research_record", callID,
       state: { status: "running", input, time: { start: Date.now() } } })
-    return yield* execution.enter(child.id, "qualification-bounds", tool.execute(input, { sessionID: child.id, messageID: assistant.id, callID,
+    return yield* execution.enter(sessionID, "qualification-bounds", tool.execute(input, { sessionID, messageID, callID,
       agent: agent.name, agentID: "jimmy", permission: agent.permission, abort: AbortSignal.any([]), messages: [],
       ask: () => Effect.void, metadata: () => Effect.void }))
   })
@@ -189,28 +224,72 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const admitted = yield* Effect.forEach(Array.from({ length: 33 }, (_, index) => index), (index) => record({ ...finding, proposition: `${finding.proposition} ${index}` }))
   const refs = admitted.map((reply) => Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(reply.metadata.research).record)
     .map((value) => ({ id: value.id, revision: value.revision }))
-  const calls = { views: 0 }
-  const bounded = yield* ResearchQualifications.collect({ ...records, view: (binding, input) => {
-    calls.views++
+  const calls = { views: 0, queries: 0 }
+  const counted = { ...records, view: (binding: Research.Binding, input: Research.ViewInput) => {
+    if (input.action === "record") calls.views++
     return records.view(binding, input)
-  } }, binding, [...refs, refs[0]])
+  } }
+  const instrumented = { ...database, db: new Proxy(database.db, { get: (target, key, receiver) => {
+    if (key === "select") calls.queries++
+    return Reflect.get(target, key, receiver)
+  } }) }
+  const bounded = yield* ResearchQualifications.collect(counted, binding, [...refs.slice(0, 32), refs[0]]).pipe(Effect.provideService(Database.Service, instrumented))
   expect(calls.views).toBe(32)
-  expect(bounded).toMatchObject({ complete: false, total: 33, omitted: 1 })
+  expect(calls.queries).toBeGreaterThan(0)
+  expect(bounded).toMatchObject({ complete: true, total: 32, omitted: 0 })
   expect(bounded.records).toHaveLength(32)
-  expect(Buffer.byteLength(JSON.stringify(bounded.records), "utf8")).toBeLessThanOrEqual(16 * 1024)
+  expect(Buffer.byteLength(JSON.stringify(bounded, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
   const huge = yield* record({ ...finding, proposition: "é".repeat(4096), conditions: ["é".repeat(2048), "界".repeat(1365)] })
   const hugeRecord = Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(huge.metadata.research).record
   const byteBound = yield* ResearchQualifications.collect(records, binding, [{ id: hugeRecord.id, revision: 1 }, refs[0]])
   expect(byteBound).toMatchObject({ complete: false, total: 2, omitted: 1 })
   expect(byteBound.records).toEqual(bounded.records.slice(0, 1))
-  expect(DiscoveryResult.report("Original worker text", { schema: "discovery-work-result-v1", qualifications: byteBound,
-    card: { parsed: true }, changes: [], checks: [], blockers: [], risks: [], nextActions: [], terminal: { reason: "ended" }, memory: { reads: [], writes: [] } })).toContain(`\n> ${JSON.stringify(byteBound)}`)
   const question = yield* record({ action: "question", question: "Which conditions apply?", selection: { profile: "locate", depth: "quick", genre: "answer" } })
   const questionRecord = Schema.decodeUnknownSync(Schema.Struct({ record: Research.QuestionRecord }))(question.metadata.research).record
   const foreign = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.parent.id })
   yield* LogicalTask.ensure({ executionSessionID: foreign.id, authoritySessionID: fixture.parent.id, projectID: foreign.projectID, memberID: "jimmy", source: "host" })
   const foreignBinding = yield* ResearchBinding.resolve(foreign.id, foreign.projectID)
+  // Core explicit-ID reuse remains project-wide; the handoff boundary must independently reject it.
+  expect(yield* records.view(foreignBinding, { action: "record", ref: refs[0] })).toMatchObject(refs[0])
   expect((yield* ResearchQualifications.collect(records, foreignBinding, [refs[0]]).pipe(Effect.flip)).code).toBe("reference_invalid")
+  const foreignUser = yield* fixture.sessions.updateMessage({ ...user, id: MessageID.ascending(), sessionID: foreign.id })
+  const foreignAssistant = yield* fixture.sessions.updateMessage({ ...assistant, id: MessageID.ascending(), sessionID: foreign.id, parentID: foreignUser.id })
+  const foreignReply = yield* record(finding, foreign.id, foreignAssistant.id)
+  const foreignRecord = Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(foreignReply.metadata.research).record
+  const foreignRef = { id: foreignRecord.id, revision: foreignRecord.revision }
+  for (const last of [refs[32], { ...refs[0], revision: 999 }, foreignRef]) {
+    calls.views = 0
+    calls.queries = 0
+    expect((yield* ResearchQualifications.collect(counted, binding, [...refs.slice(0, 32), last])
+      .pipe(Effect.provideService(Database.Service, instrumented), Effect.flip)).code).toBe("over_cap")
+    expect(calls).toEqual({ views: 0, queries: 0 })
+  }
+  const doc = { genre: "answer" as const, title: "Oversized own reference union", body: "Authored fixture", findingRefs: [refs[32]], citations: {} }
+  const document = Schema.decodeUnknownSync(Schema.Struct({ document: Research.DocumentReceipt }))((yield* record({ action: "document", document: doc })).metadata.research).document
+  expect(Exit.isFailure(yield* record({ action: "document", document: { ...doc, title: "Foreign document-linked finding", findingRefs: [foreignRef] } }).pipe(Effect.exit))).toBe(true)
+  const corpus = yield* records.view(binding, { action: "corpus" })
+  if (!("documents" in corpus)) throw new Error("Expected own published document inventory")
+  const foreignDocument = corpus.documents.find((receipt) => receipt.title === "Foreign document-linked finding")
+  if (!foreignDocument) throw new Error("Expected durable publication before qualification reply rejection")
+  for (const input of [{ findings: refs.slice(0, 32), document },
+    { findings: [...refs.slice(0, 31), { ...refs[0], revision: 999 }], document },
+    { findings: refs.slice(0, 32), document: foreignDocument }]) {
+    const card: Research.Card = { answer: "It works.", profile: "locate", depth: "quick", sufficiency: "answered", findingRefs: input.findings,
+      evidenceRefs: [], documentRefs: [input.document.ref], coverage: { examined: [], excluded: [], failures: [] }, limitations: [], nextActions: [] }
+    const raw = `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`
+    calls.views = 0
+    const result = yield* DiscoveryResult.assemble({ info: { ...assistant, finish: "stop" }, parts: [{ id: PartID.ascending(), sessionID: child.id,
+      messageID: assistant.id, type: "text", text: raw }] }, []).pipe(Effect.provideService(ResearchRecords.Service, counted))
+    expect(calls.views).toBe(0)
+    expect(result).toMatchObject({ referencesChecked: false, terminal: { reason: "ended" } })
+    expect(result.qualifications).toBeUndefined()
+    expect(result.discovery).toBeUndefined()
+    const report = DiscoveryResult.report(raw, result)
+    expect(report).toContain("Finding qualifications unavailable:")
+    expect(report).toContain(`\n> ${JSON.stringify(raw)}`)
+    const truncate = yield* Truncate.Service
+    expect((yield* truncate.output(report, { maxBytes: 16 * 1024 })).content).toContain("Finding qualifications unavailable:")
+  }
   for (const item of [{ sessionID: child.id, ref: { id: questionRecord.id, revision: 1 } },
     { sessionID: child.id, ref: { ...refs[0], revision: 0 } },
     { sessionID: child.id, ref: { ...refs[0], revision: 999 } }, { sessionID: foreign.id, ref: refs[0] }]) {
@@ -224,7 +303,8 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
     expect(result).toMatchObject({ card: { parsed: ref.revision !== 0 }, referencesChecked: false, terminal: { reason: "ended" } })
     expect(result.discovery).toBeUndefined()
     expect(result.qualifications).toBeUndefined()
-    expect(DiscoveryResult.report("Original worker text", result)).toBe("Original worker text")
+    expect(DiscoveryResult.report("Original worker text", result)).toContain('Finding qualifications unavailable:')
+    expect(DiscoveryResult.report("Original worker text", result)).toContain('\n> "Original worker text"')
   }
   expect(DiscoveryResult.report("Unsupported seat text", { schema: "backend-work-result-v1", qualifications: bounded,
     card: { parsed: false }, changes: [], checks: [], blockers: [], risks: [], nextActions: [], terminal: { reason: "ended" }, memory: { reads: [], writes: [] } })).toBe("Unsupported seat text")
