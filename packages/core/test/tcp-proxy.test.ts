@@ -17,6 +17,17 @@ import { testEffect } from "./lib/effect"
 const it = testEffect(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node])))
 const live = process.platform === "win32" ? it.live.skip : it.live
 
+// Unix broker cases are skipped on Windows; still exercise the real spawner required by the suite-wide control.
+if (process.platform === "win32") it.live("Windows real AppProcess control runs while Unix broker cases stay skipped", () => Effect.gen(function* () {
+  const processes = yield* AppProcess.Service
+  const before = Omni.snapshot()
+  const response = yield* processes.run(ChildProcess.make("node", ["-e", "process.stdout.write('process-control')"]))
+  expect(response.exitCode).toBe(0)
+  expect(response.stdout.toString()).toBe("process-control")
+  expect(Omni.snapshot().delegations - before.delegations).toBe(0)
+  expect(Omni.snapshot().spawns - before.spawns).toBe(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? 0 : 1)
+}))
+
 const target = (host = "127.0.0.1", port = 0, reply?: string, stream = false) => Effect.gen(function* () {
   const clients = new Set<Socket>()
   const accepted: Socket[] = []
