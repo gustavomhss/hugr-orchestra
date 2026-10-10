@@ -365,6 +365,18 @@ checks; Desktop also builds, then install refuses missing legacy icon filename
 files into the unchanged hicolor destinations rather than skipping icons.
 Darwin ARM job completed successfully; the complete four-system result is pending.
 
+Icon-repaired source request `d3f6e5ca9e` measured successfully in `38023756709`;
+its hash-only child `d654e60045` runs consumer attempt `38025373070`. Linux ARM
+artifact `11659079018` reports `consumers.exit=0`: full CLI/Desktop build and
+install checks passed. The unchanged all-addons output verifier then refuses a
+bundled musl variant under glibc Electron with `libc.so: invalid ELF header`.
+The next producer candidate removes only locked incompatible optional leaves
+before ASAR collection: musl watcher, ARM's musl-only optional msgpackr accelerator,
+and x64 musl/Node-ABI115 msgpackr binaries. It preserves selected glibc watcher,
+PTY and x64 N-API/glibc accelerator, validates package identity/confinement/inventory
+before mutation, and keeps loading every remaining shipped addon. Copied dependency
+topology/alias retention controls passed; those controls are not native ABI proof.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:

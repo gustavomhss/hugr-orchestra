@@ -4,6 +4,7 @@
   callPackage,
   bun ? callPackage ./bun.nix { },
   nodejs,
+  python3,
   darwin,
   electron ? callPackage ./electron.nix { },
   wrapGAppsHook3,
@@ -36,6 +37,7 @@ stdenv.mkDerivation (finalAttrs: {
     writableTmpDirAsHomeHook
   ]
   ++ lib.optionals stdenv.hostPlatform.isLinux [
+    python3
     autoPatchelfHook
     copyDesktopItems
     wrapGAppsHook3
@@ -78,6 +80,10 @@ stdenv.mkDerivation (finalAttrs: {
     chmod -R u+w node_modules packages/*/node_modules
     patchShebangs node_modules
     patchShebangs packages/*/node_modules
+  '' + lib.optionalString stdenv.hostPlatform.isLinux ''
+    # Bun installs both libc variants; Electron here uses glibc. Prune only the
+    # locked unsupported optional leaves before the collector creates app.asar.
+    python3 ${./scripts/prune-desktop-addons.py} "$PWD" '${stdenv.hostPlatform.system}'
   '';
 
   buildPhase = ''
