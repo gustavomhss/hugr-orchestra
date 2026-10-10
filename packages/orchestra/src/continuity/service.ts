@@ -24,6 +24,7 @@ import type { Prepared } from "./memory-types"
 import { ContinuityAdmission } from "./admission"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
+import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
 
 type Backend = { readonly model: Provider.Model; readonly llm: LLM.Interface; readonly revision: number }
 type Active = { generation: number; epoch: number; backend: Backend | null | undefined; boundary: MessageID;
@@ -42,6 +43,8 @@ type Entry = {
   /** How the last maintenance run ended. */
   result?: string
   admittedBoundary?: MessageID
+  /** No masking fallback until a failed mandatory checkpoint has been saved successfully. */
+  checkpointBlocked?: boolean
 }
 type State = {
   backends: Map<SessionID, Backend | null>
@@ -98,7 +101,7 @@ export interface Interface {
   readonly forget: (sessionID: SessionID) => Effect.Effect<void>
 }
 
-/** "fits": no work needed; "over": still past the hard limit after every step, so the request may overflow. */
+/** "fits": no work needed; "over": compaction could not satisfy its size or mandatory checkpoint requirements. */
 export type Compacted = "disabled" | "fits" | "applied" | "masked" | "over"
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/SessionContinuity") {}
@@ -132,6 +135,7 @@ const layer = Layer.effect(
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
     const config = yield* Config.Service
+    const checkpoints = yield* ProjectCheckpoint.Service
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
@@ -521,7 +525,12 @@ const layer = Layer.effect(
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                  llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
-              }, { history, delegations, member }, { parent: request })
+              }, { history, delegations, member }, { parent: request, beforeDispatch: (input) => Effect.gen(function* () {
+                if (!live()) return yield* Effect.fail(new Error("Checkpoint ownership changed"))
+                token.entry.checkpointBlocked = true
+                yield* checkpoints.save({ sessionID, ...input })
+                if (live()) token.entry.checkpointBlocked = false
+              }) })
               // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
               if (!live()) {
@@ -532,6 +541,16 @@ const layer = Layer.effect(
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.failure ?? (pass.skip ? `skipped-${pass.skip}` : "invalid-schema"), pass)
+                if (pass.failure === "checkpoint") {
+                  token.entry.checkpointBlocked = true
+                  yield* result("checkpoint")
+                  yield* outcome(false)
+                  return "checkpoint"
+                }
+                if (token.entry.checkpointBlocked) {
+                  yield* result("checkpoint")
+                  return "checkpoint"
+                }
                 // Reversible relief on producer failure never claims complete semantic coverage.
                 if (live() && pending.canRecall && (yield* stubs(current, sessionID, history, ContinuityMasking.candidates, live))) {
                   yield* result("masked")
@@ -680,6 +699,7 @@ const layer = Layer.effect(
       })
       yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model })
       yield* settle(current, sessionID)
+      if (item.checkpointBlocked) return "over" as const
       const after = yield* pressure
       const ran = item.result === "applied" ? "applied" as const : item.result === "masked" ? "masked" as const : undefined
       // A forced run (a provider overflow or /compact) that changed nothing goes on to the last resort.
@@ -740,5 +760,5 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node],
+   deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ProjectCheckpoint.node],
 })

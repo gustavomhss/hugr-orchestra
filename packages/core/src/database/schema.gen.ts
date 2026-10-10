@@ -24,6 +24,22 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`project_checkpoint\` (
+          \`id\` text PRIMARY KEY,
+          \`project_id\` text NOT NULL,
+          \`session_id\` text NOT NULL,
+          \`fork_id\` text NOT NULL,
+          \`boundary\` text NOT NULL,
+          \`attempt\` integer NOT NULL,
+          \`directory\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`digest\` text NOT NULL,
+          \`payload\` text NOT NULL,
+          CONSTRAINT \`fk_project_checkpoint_project_id_project_id_fk\` FOREIGN KEY (\`project_id\`) REFERENCES \`project\`(\`id\`) ON DELETE CASCADE,
+          CONSTRAINT "project_checkpoint_attempt_check" CHECK("attempt" in (0, 1))
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`account_state\` (
           \`id\` integer PRIMARY KEY,
           \`active_account_id\` text,
@@ -272,6 +288,9 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(
+        `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
+      )
       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
       yield* tx.run(`CREATE INDEX \`event_aggregate_type_seq_idx\` ON \`event\` (\`aggregate_id\`,\`type\`,\`seq\`);`)
       yield* tx.run(
