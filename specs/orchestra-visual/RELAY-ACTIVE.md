@@ -291,7 +291,9 @@ Its final GC records are approximately 2 GiB V8 heap, followed by SIGABRT / buil
 exit 134. This is a one-shot build heap-limit failure, not measured leak or host-RAM
 exhaustion. The next Desktop recipe grants that build a bounded 4096 MiB old-space
 budget only; runtime settings, timeout, package bytes and checks remain unchanged.
-Intel Darwin is still running; no repaired consumer/product pass is claimed.
+Intel Darwin artifact `11654190526` then confirmed the same approximately 2 GiB
+V8 heap-limit failure. Run `38009229009` completed with all four natives and
+completion failed; no repaired consumer/product pass is claimed.
 
 Source approval and measurement success do not qualify recipe repairs or consumers.
 Archie upstream source/ABI handoff stays accepted independently; authoring/domain
