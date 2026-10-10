@@ -127,6 +127,8 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         GOCACHE: path.join(home, "go-cache"), GOPATH: path.join(home, "go"), TMPDIR: path.join(home, "tmp"), TMP: path.join(home, "tmp"), TEMP: path.join(home, "tmp"),
         ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}),
         ...(process.env.PATHEXT ? { PATHEXT: process.env.PATHEXT } : {}),
+        // omni is on by default; the desktop hands its sidecar these paths (OmniHost.sidecarEnv), so the proof does too.
+        ...Object.fromEntries(["HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"].flatMap((key) => process.env[key] ? [[key, process.env[key]!]] : [])),
         ORCHESTRA_CONFIG_CONTENT: JSON.stringify({ model: "test/test-model", autoupdate: false, tool_output: { lean: { enabled: mode !== "disabled" } }, ...(mode === "failure" ? { plugin: [observer] } : {}),
           provider: { test: { id: "test", name: "Test", env: [], npm: "@ai-sdk/openai-compatible", options: { apiKey: "synthetic-key", baseURL: provider.url.href + "v1" },
             models: { "test-model": { id: "test-model", name: "Test", tool_call: true, limit: { context: 100000, output: 10000 }, cost: { input: 0, output: 0 } } } } } }) }
