@@ -141,7 +141,8 @@ const readTasks = Effect.fn("UpstreamTaskSettlement.readTasks")(function* (datab
     return yield* refuse("UPSTREAM_SETTLEMENT_TASK_VIEW_CONFLICT")
   return yield* Effect.forEach(views, (view) => Effect.gen(function* () {
     const selection = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.Literal("archie"), task_id: Schema.optional(Schema.String) }))(view.input)
-    if (Option.isNone(selection) || selection.value.task_id !== undefined && selection.value.task_id !== input.childSessionID ||
+    if (Option.isNone(selection) || selection.value.task_id !== undefined &&
+      selection.value.task_id !== input.childSessionID && selection.value.task_id !== input.logicalTaskID ||
       view.metadata.parentSessionId !== input.sessionID || view.metadata.sessionId !== input.childSessionID)
       return yield* refuse("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
     const state = view.kind === "modern" ? view.call.state : view.part.state
