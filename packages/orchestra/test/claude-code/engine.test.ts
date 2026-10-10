@@ -4,6 +4,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ClaudeCodeStore } from "@/claude-code/store"
 import { SessionContinuity } from "@/continuity/service"
+import { PromptGuard } from "@/session/prompt-guard"
 import { ClaudeEngineFixture } from "./engine-fixture"
 
 ClaudeEngineFixture.it.instance("hook reminders batch beside their own prompt and never reappear on resumed Claude turns", () =>
@@ -129,3 +130,15 @@ ClaudeEngineFixture.it.instance("SDK mirror_error is an explicit persistence fai
   expect(next.info.role === "assistant" && next.info.finish).toBe("error")
   expect(ClaudeEngineFixture.state.queries).toHaveLength(1)
 }), 60_000)
+
+ClaudeEngineFixture.it.instance("a failing pre-model guard ends the Claude Code turn before any SDK query", () => Effect.gen(function* () {
+  ClaudeEngineFixture.reset()
+  const { prompt, chat } = yield* ClaudeEngineFixture.setup()
+  ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.reply("unguarded answer", "msg_unguarded"))
+  const check = Effect.fail(new Error("write root changed before model"))
+  const result = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("guarded work") })
+    .pipe(Effect.provideService(PromptGuard.Current, { sessionID: chat.id, check, checked: false }))
+  expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: "write root changed before model" })
+  expect(ClaudeEngineFixture.state.queries).toHaveLength(0)
+  expect(ClaudeEngineFixture.state.scripts).toHaveLength(1)
+}), 30_000)
