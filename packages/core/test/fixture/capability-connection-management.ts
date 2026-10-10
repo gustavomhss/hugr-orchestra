@@ -8,7 +8,7 @@ import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { SessionID } from "@orchestra/schema/session-id"
 import { randomUUID } from "node:crypto"
-import { Effect, Exit } from "effect"
+import { Deferred, Effect, Exit, Fiber, Schema, Tracer } from "effect"
 import { CapabilityConnectionManagement } from "../../src/capability/connection/management"
 import type { CapabilityConnectionStoreContract } from "../../src/capability/connection/store-contract"
 import { CapabilityOperator } from "../../src/capability/operator/index"
@@ -40,12 +40,12 @@ const storeFactory = Effect.promise(async () => {
   return CapabilityConnectionStore.make
 })
 
-export function fixture(options: { scope?: CapabilityOperatorContract.GrantScope } = {}) {
+export function fixture(options: { scope?: CapabilityOperatorContract.GrantScope; principal?: string } = {}) {
   return Effect.gen(function* () {
     const database = yield* Database.Service
     const makeStore = yield* storeFactory
     const store = yield* makeStore
-    const operators = yield* CapabilityOperator.make({ principal: "management-operator",
+    const operators = yield* CapabilityOperator.make({ principal: options.principal ?? `management-${randomUUID()}`,
       scope: options.scope ?? { placements: "instance", actions: ["*"] } })
     const management = yield* CapabilityConnectionManagement.make({ operators, store })
     const credentialID = Credential.ID.create()
@@ -96,4 +96,55 @@ export function expectCode<A, E>(exit: Exit.Exit<A, E>, code: Capability.ErrorCo
     expect(JSON.stringify(reason.error)).not.toContain(secret)
   })
   return cause
+}
+
+export function publicFailures<A, E>(exit: Exit.Exit<A, E>) {
+  return failed(exit).reasons.map((reason) => {
+    if (reason._tag !== "Fail" || !(reason.error instanceof Capability.Failure)) throw new Error("Expected pure Capability failure")
+    return Schema.encodeSync(Capability.Failure)(reason.error)
+  })
+}
+
+/** Hold the real immediate writer exactly after Management captures parent/actor, before ledger
+ * admission. The named-effect Tracer starts SQL work synchronously; no authority method is replaced. */
+export function writerCheckpoint(database: Database.Interface,
+  change: (tx: CapabilityConnectionStoreContract.Transaction) => Effect.Effect<void, CapabilityConnectionStoreContract.Error>) {
+  return Effect.gen(function* () {
+    const scope = yield* Effect.scope
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const state: { writer?: Fiber.Fiber<void, CapabilityConnectionStoreContract.Error>; starts: number } = { starts: 0 }
+    const tracer = Tracer.make({ span: (options) => {
+      if (options.name === "CapabilityConnectionManagement.commit" && !state.writer) {
+        state.starts++
+        state.writer = Effect.runFork(database.db.transaction((tx) => Effect.gen(function* () {
+          if (!database.inTransaction) return yield* Effect.die("Missing real SQL transaction identity")
+          expect(yield* database.inTransaction).toBe(true)
+          yield* change(tx)
+          yield* Deferred.succeed(entered, undefined)
+          yield* Deferred.await(release)
+        }), { behavior: "immediate" })).pipe(Fiber.runIn(scope))
+      }
+      return new Tracer.NativeSpan(options)
+    } })
+    return { state, entered, release, tracer }
+  })
+}
+
+/** Records actual SQL spans and returned row counts, not a stand-in query implementation. */
+export function targetScans() {
+  const scans: { query: string; rows?: number }[] = []
+  const tracer = Tracer.make({ span: (options) => new class extends Tracer.NativeSpan {
+    query = ""
+    override attribute(key: string, value: unknown) {
+      super.attribute(key, value)
+      if (key === "db.query.text" && typeof value === "string") this.query = value
+    }
+    override end(time: bigint, exit: Exit.Exit<unknown, unknown>) {
+      super.end(time, exit)
+      if (this.query.startsWith("select") && this.query.includes('from "capability_target"'))
+        scans.push({ query: this.query, ...(Exit.isSuccess(exit) && Array.isArray(exit.value) ? { rows: exit.value.length } : {}) })
+    }
+  }(options) })
+  return { scans, tracer }
 }
