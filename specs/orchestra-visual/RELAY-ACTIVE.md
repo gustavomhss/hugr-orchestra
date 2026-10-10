@@ -10,7 +10,67 @@ build or product smoke while combined implementation is incomplete. Prepare runn
 checks now; perform one integrated validation batch after combined source is ready.
 Reuse existing source-bound evidence; keep gates intact. Static cold review remains required.
 
-## Recovered four-native consumer capture
+## Qualified four-native Nix component
+
+The finite-archive source repair is clean published
+`aa00d7b33f1de57a8bc05e268735463a494669a0`, tree
+`bd76c4e1af1b368ed25400e16e5043b00ea2c30c`. Independent static review accepted the
+exact archive helper blob `af3fbe890d19985a903cbe9089ca487657b74be6` and workflow
+blob `f46f9c6db20067a495eff609e2c544ceb5efe401`
+(`ses_ede10b10bffeZj7Sr8S8b57wwj`, `msg_12641ad38001dVK62IezJENaKW`). Actual
+measurement and consumer capture replay checked transport equivalence and preserved
+named failures before any new CI success was adopted.
+
+Fresh request-only direct child `d5f82cc12095ba9abc1f0979ebb805cfbe82afb5`, tree
+`7699dd9542802072ff04e03bdb0f83031f9850a8`, completed measurement **38060772794**,
+attempt 1. All four natives and independent completion succeeded. Original candidate
+parsing, live API bindings, current fingerprint, worker copies and the 22 original
+completion-control records were checked. Its five artifacts are Linux x64
+`11672917259`, Linux ARM `11672804368`, Intel Darwin `11673790280`, ARM Darwin
+`11673555215` and completion `11673825353`. This measurement alone is not a consumer
+pass.
+
+Reviewed sole-parent hash/request child `a9361bb8e4e06bd98a69f252afdd8aefde5f1035`,
+tree `fa1a3567fa434cb0e2f9cf9db371a089d3e69bba`, changes exactly four matching SRI
+fields and one request JSON line (5 additions / 5 deletions). Independent static
+approval: `msg_1265219db001bat5rfpKO6ww9x`, same reviewer. Actual consumer run
+**38061818637**, attempt 1, succeeded on prepare, all four native jobs and independent
+completion. No timeout, refusal, negative control or oracle source was relaxed.
+
+| System | Native verification artifact | Raw standalone CLI SHA-256 |
+| --- | --- | --- |
+| x86_64-linux | `11673048788` | `ae905b9ffc6b0a4d475dc508dbb0aff1874d86cf69abe5f21ec62df62c5b16c8` |
+| aarch64-linux | `11674031653` | `5969d073a0b6b10d7387008b20637389d7f31a82f03104cbf323be05f3ed57c0` |
+| x86_64-darwin | `11673974491` | `20c6a6d566b1985a500ab123bb94faa47ca975ae3403c490aa3cee27ddee84bc` |
+| aarch64-darwin | `11673883047` | `eb6f0f1e82b190e42aff47196fa67121177938681ea5466f3501f8020a688d95` |
+
+Independent completion artifact is **11674695279**. Full finite archives were
+recovered through CRC-checked ZIP entries; every listed native record's SHA-256,
+size, path and record-set completeness matched its manifest. Completion records
+were checked likewise. Original completion logic reproduced the captured receipt;
+the live API/native job and artifact sets match source, tree, repository, workflow
+and attempt. External versus completion worker records are byte-identical. All
+recorded phase exits are 0, every system imported packaged PTY under Electron
+**42.3.3 / module ABI 146**, and every remaining shipped addon loaded (Linux ARM:
+two; other systems: three). Each lane's exact twelve output controls and all 26
+independent-completion control verdicts were checked. A deliberately wrong digest
+in the actual manifest was refused as `ARCHIVE_RECORD_BYTES`, without editing any
+stored artifact.
+
+The receipt's status is
+`NATIVE_DISTRIBUTION_CAPTURE_COMPLETE_PRODUCT_QUALIFICATION_PENDING`: these are
+qualified Nix component captures, not the remaining Archie/Auth/dev milestone.
+Evidence retains the historical qualified `791d7e1846` package fingerprint. The
+integration preserves this successful ancestry and measured hashes, and leaves the
+next request inactive. Maestro/Archie own the changed package/dev composition;
+its accepted final source requires fresh fingerprint-bound Nix capture rather than
+relabelled historical evidence.
+
+Local verified receipt:
+`nix-verify-38061818637-complete/verified-result.json` in the approved temporary
+OpenCode directory. CI artifacts above are durable run-bound references.
+
+## Historical recovered four-native consumer capture
 
 The copied-dependency glibc packaging repair `c998221ad89f13c25be105b567d35c31e731b041`
 was measured through request-only direct child

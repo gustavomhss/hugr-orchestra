@@ -1,8 +1,35 @@
-# Native distribution checkpoint — UNVALIDATED
+# Native distribution checkpoint — source-bound component evidence
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": true, "phase": "verify", "sourceParent": "d5f82cc12095ba9abc1f0979ebb805cfbe82afb5", "measurementRun": 38060772794, "measurementAttempt": 1}
+{"ready": false, "phase": "verify", "sourceParent": "a9361bb8e4e06bd98a69f252afdd8aefde5f1035", "measurementRun": 38060772794, "measurementAttempt": 1}
 <!-- NIX_BATCH_REQUEST_END -->
+
+## Qualified Nix component
+
+Fresh measurement `38060772794`, attempt 1, succeeded on request-only source
+`d5f82cc12095ba9abc1f0979ebb805cfbe82afb5`, tree
+`7699dd9542802072ff04e03bdb0f83031f9850a8`. The four actual candidate records, current
+dependency fingerprint, live API bindings, independent worker copies and all 22
+completion controls were checked before applying their four matching hash fields.
+
+Its reviewed strict direct child `a9361bb8e4e06bd98a69f252afdd8aefde5f1035`, tree
+`fa1a3567fa434cb0e2f9cf9db371a089d3e69bba`, completed consumer run **38061818637**,
+attempt 1: prepare, all four native consumers and independent completion succeeded.
+The exact CLI/Desktop builds and install checks, schema-1 raw CLI admission,
+packaged PTY/all shipped addon imports under Electron 42.3.3 (module ABI 146),
+closure checks and Darwin app identity passed. Each lane retained all twelve
+original output controls; independent completion retained all 26 original controls.
+Full finite archives were recovered, individual record manifests checked, and
+external/native-completion worker record bytes compared against the live API-bound
+receipt. Persistent identity and artifact IDs are in
+[`specs/orchestra-visual/RELAY-ACTIVE.md`](../specs/orchestra-visual/RELAY-ACTIVE.md).
+
+This qualifies the named Nix component source. Its package fingerprint remains
+historical qualified `791d7e1846`; changed Archie/Auth/dev package inputs need a
+fresh composition-bound measurement and consumer child. The current integration
+retains successful ancestry and measured hashes with the next request inactive.
+
+## Historical failed checkpoint and transport repair
 
 Consumer run `38055863264` on `92d41e6de02697519e38c0a620d6acac13fa933d` completed
 all four native CLI/Desktop capture jobs successfully. Independent completion's
