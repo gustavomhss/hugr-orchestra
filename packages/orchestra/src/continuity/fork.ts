@@ -241,7 +241,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   captured: MemorySnapshot,
   services: { provider: Pick<Provider.Interface, "getModel">; llm: LLM.Interface },
   host: Host,
-  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void> } = {},
+  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void>; reviewOverhead?: number } = {},
 ) {
   const previous = captured.previous?.text ?? ""
   const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ...rest })
@@ -308,11 +308,14 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     const packet = ContinuityReview.request(captured, host, decoded.artifact)
     const review: LLM.StreamInput = {
       user: { ...user, id: MessageID.ascending(), agent: "continuity-review" },
+      // API maintenance admits only this dedicated role; SDK payload compiler deduplicates it.
       agent: { ...agent, name: "continuity-review", prompt: packet.system.join("\n") },
       permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
       purpose: "context-maintenance", model, ...packet, tools: {}, retries: 0,
     }
-    if (Token.estimate(packet.system.join("\n") + JSON.stringify(packet.messages)) > inputLimit)
+    const reviewSize = services.llm.estimateInput?.(review) ?? Token.estimate(packet.system.join("\n") + JSON.stringify(packet.messages))
+    const overhead = options.reviewOverhead ?? 0
+    if (!Number.isFinite(reviewSize) || reviewSize < 0 || !Number.isFinite(overhead) || overhead < 0 || reviewSize + overhead > inputLimit)
       return { check: "C18", detail: "Semantic review source exceeds selected model input budget.", failure: "input-budget" as const }
     if (options.onRequest) yield* options.onRequest(review)
     const response = yield* ask(review)
