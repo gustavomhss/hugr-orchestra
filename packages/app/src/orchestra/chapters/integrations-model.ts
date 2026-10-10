@@ -6,7 +6,7 @@ import { getOwner, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Api, Connection, Failure, Model, Receipt, State, Target } from "./integrations-contract"
 
-export function createIntegrationModel(api: Api, requestKey = () => crypto.randomUUID()): Model {
+export function createIntegrationModel(api: Api, requestKey: () => string = () => crypto.randomUUID()): Model {
   const [state, set] = createStore<{ -readonly [K in keyof State]: State[K] }>({
     status: "loading", connections: [], targets: [], bindings: [], busy: false,
   })
@@ -17,7 +17,12 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
   let connection: Capability.ConnectionRef | undefined
   let target: Capability.TargetRef | undefined
   // Neither credentials nor idempotency keys enter the reactive/public store.
-  let operation: ((signal: AbortSignal) => Promise<Receipt>) | undefined
+  let operation: { run: (signal: AbortSignal) => Promise<Receipt>; clear: () => void } | undefined
+
+  const clear = () => {
+    operation?.clear()
+    operation = undefined
+  }
 
   const fence = () => {
     reading?.abort()
@@ -30,20 +35,27 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     const controller = new AbortController()
     reading = controller
     set({ status: "loading", failure: undefined })
-    await Promise.resolve().then(() => run(controller.signal)).then((apply) => {
-      if (disposed || version !== generation) return
+    const applied = await Promise.resolve().then(() => {
+      if (disposed || version !== generation) throw "invalid"
+      return run(controller.signal)
+    }).then((apply) => {
+      if (disposed || version !== generation) return false
       apply()
       set({ status: "ready", failure: undefined })
+      return true
     }, (error: unknown) => {
-      if (disposed || version !== generation) return
+      if (disposed || version !== generation) return false
       set({ status: "error", failure: failure(error, false) })
+      return false
     })
     if (reading === controller) reading = undefined
+    return applied
   }
   const load = async (more = false, committed = false) => {
     if (disposed || (state.busy && !committed) || (more && !state.after)) return
     const after = more ? state.after : undefined
-    await read(async (signal) => {
+    // Coverage is live rows/current actor, never all records or provider readiness.
+    return read(async (signal) => {
       const page = decode(CapabilityManagement.ConnectionPage, await api.list(after, { signal }))
       if (page.items.length > 32) throw "invalid"
       return () => {
@@ -56,7 +68,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     if (!connection || (more && !state.targetsAfter)) return
     const ref = connection
     const after = more ? state.targetsAfter : undefined
-    await read(async (signal) => {
+    return read(async (signal) => {
       const page = decode(CapabilityManagement.TargetPage, await api.targets(ref.id, after, { signal }))
       if (page.items.length > 32 || page.items.some((row) => row.target.connectionID !== ref.id)) throw "invalid"
       return () => {
@@ -70,7 +82,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     if (!target || (more && !state.bindingsAfter)) return
     const ref = target
     const after = more ? state.bindingsAfter : undefined
-    await read(async (signal) => {
+    return read(async (signal) => {
       const page = decode(CapabilityManagement.BindingPage, await api.bindings(ref.id, after, { signal }))
       if (page.items.length > 32) throw "invalid"
       return () => {
@@ -83,7 +95,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
   const select = async (input: Connection) => {
     if (disposed || state.busy) return
     fence()
-    operation = undefined
+    clear()
     target = undefined
     try {
       connection = decode(CapabilityManagement.Connection, input).connection
@@ -100,7 +112,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
   const selectTarget = async (input: Target) => {
     if (disposed || state.busy) return
     fence()
-    operation = undefined
+    clear()
     try {
       const value = decode(CapabilityManagement.Target, input).target
       if (value.connectionID !== connection?.id) throw "invalid"
@@ -117,15 +129,13 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     // A committed receipt survives a failed read; the closed intent can never be redriven.
     const selectedConnection = connection?.id
     const selectedTarget = target?.id
-    await load(false, true)
-    if (disposed || ["error"].includes(state.status)) return
+    if (!(await load(false, true)) || disposed) return
     connection = state.connections.find((row) => row.connection.id === selectedConnection)?.connection
     target = undefined
     set({ connectionID: connection?.id, targetID: undefined, targets: [], bindings: [], targetsAfter: undefined,
       bindingsAfter: undefined })
     if (!connection) return
-    await readTargets()
-    if (disposed || ["error"].includes(state.status)) return
+    if (!(await readTargets()) || disposed) return
     target = state.targets.find((row) => row.target.id === selectedTarget)?.target
     set("targetID", target?.id)
     if (target) await readBindings()
@@ -137,50 +147,62 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     const controller = new AbortController()
     writing = controller
     set({ busy: true, failure: undefined, receipt: undefined })
-    const receipt = await Promise.resolve().then(() => intent(controller.signal)).then((value) => value, (error: unknown) => {
+    const receipt = await Promise.resolve().then(() => intent.run(controller.signal)).then((value) => value, (error: unknown) => {
       if (!disposed && operation === intent) set({ status: "error", failure: failure(error, true) })
       return undefined
     })
     if (disposed || operation !== intent) return
-    writing = undefined
-    if (!receipt) { set("busy", false); return }
-    operation = undefined
+    if (!receipt) {
+      writing = undefined
+      set("busy", false)
+      return
+    }
+    clear()
     set({ receipt, failure: undefined })
     await refresh()
-    if (!disposed) set("busy", false)
+    if (!disposed && writing === controller) {
+      writing = undefined
+      set("busy", false)
+    }
   }
-  const mutate = async <S extends Schema.Decoder<unknown>, R extends Schema.Decoder<Schema.Json>>(
+  const mutate = <S extends Schema.Decoder<unknown>, R extends Schema.Decoder<Schema.Json>>(
     schema: S, input: unknown,
     send: (value: S["Type"], key: string, signal: AbortSignal) => Promise<Receipt>, result: R,
   ) => {
-    if (disposed || state.busy) return
-    operation = undefined
+    if (disposed || state.busy) return Promise.resolve()
+    clear()
     set({ receipt: undefined, failure: undefined })
     // Capture synchronously at call time, before any promise can yield to caller edits.
     try {
-      const value = decode(schema, input)
-      const key = requestKey()
-      operation = async (signal) => {
-        const receipt = decode(CapabilityManagement.Receipt, await send(structuredClone(value), key, signal))
-        const data = decode(result, receipt.data)
-        // Reject reflected private keys even in otherwise valid receipt metadata.
-        const publicJSON = JSON.stringify({ ...receipt, data })
-        if (publicJSON.includes(key) || (value && typeof value === "object" && "key" in value
-          && typeof value.key === "string" && publicJSON.includes(value.key))) throw "invalid"
-        return { ...receipt, data }
+      let value: S["Type"] | undefined = decode(schema, input)
+      let key: string | undefined = decode(Schema.NonEmptyString, requestKey())
+      operation = {
+        clear: () => { value = undefined; key = undefined },
+        run: async (signal) => {
+          if (value === undefined || key === undefined || signal.aborted) throw "invalid"
+          const reply = await send(structuredClone(value), key, signal)
+          if (value === undefined || key === undefined || signal.aborted) throw "invalid"
+          const receipt = decode(CapabilityManagement.Receipt, reply)
+          const data = decode(result, receipt.data)
+          // Reject reflected private keys even in otherwise valid receipt metadata.
+          const publicJSON = JSON.stringify({ ...receipt, data })
+          if (publicJSON.includes(JSON.stringify(key).slice(1, -1)) || (value && typeof value === "object" && "key" in value
+            && typeof value.key === "string" && publicJSON.includes(JSON.stringify(value.key).slice(1, -1)))) throw "invalid"
+          return { ...receipt, data }
+        },
       }
     } catch {
       set({ status: "error", failure: "invalid" })
-      return
+      return Promise.resolve()
     }
-    await retry()
+    return retry()
   }
   const cancel = () => {
     if (disposed) return
     fence()
     writing?.abort()
     writing = undefined
-    operation = undefined
+    clear()
     set({ busy: false, receipt: undefined, status: "error", failure: "request" })
   }
   const dispose = () => {
@@ -189,7 +211,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
     fence()
     writing?.abort()
     writing = undefined
-    operation = undefined
+    clear()
     connection = undefined
     target = undefined
     set({ status: "loading", connections: [], targets: [], bindings: [], busy: false, connectionID: undefined,
@@ -198,7 +220,7 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
   }
   if (getOwner()) onCleanup(dispose)
   return {
-    state, load: (more) => load(more), select, selectTarget, retry, cancel, dispose,
+    state, load: async (more) => { await load(more) }, select, selectTarget, retry, cancel, dispose,
     moreTargets: async () => { if (!disposed && !state.busy) await readTargets(true) },
     moreBindings: async () => { if (!disposed && !state.busy) await readBindings(true) },
     connect: (input) => mutate(CapabilitySetup.Input, input,
@@ -219,9 +241,15 @@ export function createIntegrationModel(api: Api, requestKey = () => crypto.rando
 }
 
 function decode<S extends Schema.Decoder<unknown>>(schema: S, input: unknown): S["Type"] {
-  const value = Schema.decodeUnknownOption(schema, { onExcessProperty: "error" })(structuredClone(input))
+  const parse = Schema.decodeUnknownOption(schema, { onExcessProperty: "error" })
+  const value = parse(input)
   if (Option.isNone(value)) throw "invalid"
-  return value.value
+  // JSON detachment also handles Solid store proxies; structuredClone rejects proxies.
+  const snapshot = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(JSON.stringify(value.value))
+  if (Option.isNone(snapshot)) throw "invalid"
+  const detached = parse(snapshot.value)
+  if (Option.isNone(detached)) throw "invalid"
+  return detached.value
 }
 
 function rows<T>(previous: readonly T[], incoming: readonly T[], id: (row: T) => string, limit: number) {
