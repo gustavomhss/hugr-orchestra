@@ -29,11 +29,9 @@ import { decode64 } from "@/utils/base64"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
 import { SettingsList } from "./settings-list"
 import {
-  createLeanSettingsController,
   createShellOptions,
   createShellSettingsController,
 } from "./settings-v2/general-controllers"
-import { LeanSettingControl } from "./settings-v2/lean-setting"
 
 let demoSoundState = {
   cleanup: undefined as (() => void) | undefined,
@@ -108,7 +106,6 @@ export const SettingsGeneral: Component = () => {
   const desktop = createMemo(() => platform.platform === "desktop")
 
   const shell = createShellSettingsController()
-  const lean = createLeanSettingsController()
   const shellOptions = createMemo(() => createShellOptions({ shells: shell.shells(), current: shell.current() }))
 
   const [displayBackend, { refetch: refetchDisplayBackend }] = createResource(
@@ -234,9 +231,6 @@ export const SettingsGeneral: Component = () => {
   const GeneralSection = () => (
     <div class="flex flex-col gap-1">
       <SettingsList>
-        <SettingsRow title={language.t("lean.settings.title")} description={language.t("lean.settings.description")}>
-          <LeanSettingControl controller={lean} />
-        </SettingsRow>
         <SettingsRow
           title={language.t("settings.general.row.language.title")}
           description={language.t("settings.general.row.language.description")}
