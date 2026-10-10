@@ -43,6 +43,8 @@ type Entry = {
   /** How the last maintenance run ended. */
   result?: string
   admittedBoundary?: MessageID
+  /** No masking fallback until a failed mandatory checkpoint has been saved successfully. */
+  checkpointBlocked?: boolean
 }
 type State = {
   backends: Map<SessionID, Backend | null>
@@ -99,7 +101,7 @@ export interface Interface {
   readonly forget: (sessionID: SessionID) => Effect.Effect<void>
 }
 
-/** "fits": no work needed; "over": still past the hard limit after every step, so the request may overflow. */
+/** "fits": no work needed; "over": compaction could not satisfy its size or mandatory checkpoint requirements. */
 export type Compacted = "disabled" | "fits" | "applied" | "masked" | "over"
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/SessionContinuity") {}
@@ -526,6 +528,7 @@ const layer = Layer.effect(
               }, { history, delegations, member }, { parent: request, beforeDispatch: (input) => Effect.gen(function* () {
                 if (!live()) return yield* Effect.fail(new Error("Checkpoint ownership changed"))
                 yield* checkpoints.save({ sessionID, ...input })
+                if (live()) token.entry.checkpointBlocked = false
               }) })
               // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
@@ -537,6 +540,16 @@ const layer = Layer.effect(
               // A skip is no producer failure; only a check that failed again on the retry counts.
               if (!artifact) {
                 yield* diagnostic(sessionID, active.boundary, pass.failure ?? (pass.skip ? `skipped-${pass.skip}` : "invalid-schema"), pass)
+                if (pass.failure === "checkpoint") {
+                  token.entry.checkpointBlocked = true
+                  yield* result("checkpoint")
+                  yield* outcome(false)
+                  return "checkpoint"
+                }
+                if (token.entry.checkpointBlocked) {
+                  yield* result("checkpoint")
+                  return "checkpoint"
+                }
                 // Reversible relief on producer failure never claims complete semantic coverage.
                 if (live() && pending.canRecall && (yield* stubs(current, sessionID, history, ContinuityMasking.candidates, live))) {
                   yield* result("masked")
@@ -685,6 +698,7 @@ const layer = Layer.effect(
       })
       yield* schedule(current, sessionID, { message: last, canRecall: input.canRecall === true, model })
       yield* settle(current, sessionID)
+      if (item.checkpointBlocked) return "over" as const
       const after = yield* pressure
       const ran = item.result === "applied" ? "applied" as const : item.result === "masked" ? "masked" as const : undefined
       // A forced run (a provider overflow or /compact) that changed nothing goes on to the last resort.

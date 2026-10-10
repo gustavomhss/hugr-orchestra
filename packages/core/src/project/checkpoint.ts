@@ -101,13 +101,6 @@ export const layer = Layer.effect(
         return yield* database.db.transaction(
           (tx) =>
             Effect.gen(function* () {
-              const session = yield* tx
-                .select({ projectID: SessionTable.project_id, directory: SessionTable.directory })
-                .from(SessionTable)
-                .where(eq(SessionTable.id, value.sessionID))
-                .get()
-              if (!session) return yield* new CheckpointError({ reason: "missing_session" })
-
               const existing = yield* tx
                 .select({ ...metadata, payload: ProjectCheckpointTable.payload })
                 .from(ProjectCheckpointTable)
@@ -119,15 +112,22 @@ export const layer = Layer.effect(
                   existing.forkID !== value.forkID ||
                   existing.boundary !== value.boundary ||
                   existing.attempt !== value.attempt ||
-                  existing.payload !== value.payload ||
-                  existing.projectID !== session.projectID ||
-                  existing.directory !== session.directory
+                  existing.payload !== value.payload
                 )
                   return yield* new CheckpointError({ reason: "conflict" })
                 if (existing.digest !== hash) return yield* new CheckpointError({ reason: "corrupt" })
                 const { payload, ...result } = existing
                 return result
               }
+
+              // Exact retries use the retained record, even after the source Session is deleted.
+              // Only insertion resolves current ownership; retries never reassign old checkpoints.
+              const session = yield* tx
+                .select({ projectID: SessionTable.project_id, directory: SessionTable.directory })
+                .from(SessionTable)
+                .where(eq(SessionTable.id, value.sessionID))
+                .get()
+              if (!session) return yield* new CheckpointError({ reason: "missing_session" })
 
               const createdAt = yield* Clock.currentTimeMillis
               yield* tx

@@ -10,6 +10,7 @@ import type { ConfigV1 } from "@orchestra/core/v1/config/config"
 import { LLMEvent } from "@orchestra/llm"
 import { Archive } from "@/continuity/archive"
 import { CheckpointContext } from "@/continuity/checkpoint-context"
+import { ContinuityMasking } from "@/continuity/masking"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { Config } from "@/config/config"
@@ -17,7 +18,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Plugin } from "@/plugin"
 import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
-import { SessionID } from "@/session/schema"
+import { PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { provideTmpdirInstance, TestInstance } from "../fixture/fixture"
 import { ProviderTest } from "../fake/provider"
@@ -154,5 +155,46 @@ it.instance("checkpoint write failure blocks working-memory publication and all 
       saves.push(input)
       return yield* new ProjectCheckpoint.CheckpointError({ reason: "storage" })
     }) }),
+  })))
+}), 60_000)
+
+it.instance("checkpoint failure prevents ordinary and urgent masks until a successful save", () => Effect.gen(function* () {
+  const requests: LLM.StreamInput[] = []
+  const failure = { enabled: true }
+  yield* Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const continuity = yield* SessionContinuity.Service
+    const archive = yield* Archive.Service
+    const checkpoints = yield* ProjectCheckpoint.Service
+    const chat = yield* sessions.create({ title: "Checkpoint failure cannot fall through to masking" })
+    for (let step = 0; step < 8; step++) {
+      const assistant = yield* complete(yield* begin(chat.id, `Source ${step}`), `Completed ${step}`, 100)
+      yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: assistant.id, type: "tool",
+        tool: "read", callID: `read-${step}`, state: { status: "completed", input: { filePath: `source-${step}.txt` },
+          output: step === 0 ? "ORIGINAL_MASKABLE_OUTPUT ".repeat(2000) : "small result", title: "Read",
+          metadata: {}, time: { start: 1, end: 2 } } })
+    }
+    const boundary = yield* complete(yield* begin(chat.id, "Trigger checkpoint"), "Completed trigger", 50_000)
+    yield* terminal((yield* jobFor(chat.id, boundary.id)).id, "completed", "checkpoint")
+    const original = yield* sessions.messages({ sessionID: chat.id })
+    expect(ContinuityMasking.candidates(original, new Map()).length).toBeGreaterThan(0)
+    expect(ContinuityMasking.urgent(original, new Map()).length).toBeGreaterThan(0)
+    expect((yield* continuity.prepare({ sessionID: chat.id, messages: original, canRecall: true })).messages).toEqual(original)
+    for (let attempt = 0; attempt < 4; attempt++) {
+      expect(yield* continuity.compact({ sessionID: chat.id, force: true, canRecall: true })).toBe("over")
+      expect((yield* continuity.prepare({ sessionID: chat.id, messages: original, canRecall: true })).messages).toEqual(original)
+      expect((yield* archive.readMemory(chat.id))?.masks ?? []).toEqual([])
+    }
+    expect(requests).toEqual([])
+    expect((yield* checkpoints.list({ projectID: chat.projectID, directory: chat.directory })).items).toEqual([])
+    failure.enabled = false
+    yield* continuity.invalidate(chat.id)
+    expect(yield* continuity.compact({ sessionID: chat.id, force: true, canRecall: true })).toBe("masked")
+    expect(requests).toHaveLength(2)
+    expect((yield* checkpoints.list({ projectID: chat.projectID, directory: chat.directory })).items).toHaveLength(2)
+    expect((yield* archive.readMemory(chat.id))?.masks.length).toBeGreaterThan(0)
+  }).pipe(Effect.provide(environment(() => ({ stream: (request) => { requests.push(request); return Stream.empty } }), {
+    checkpoint: (actual) => ({ ...actual, save: (input) => failure.enabled
+      ? Effect.fail(new ProjectCheckpoint.CheckpointError({ reason: "storage" })) : actual.save(input) }),
   })))
 }), 60_000)

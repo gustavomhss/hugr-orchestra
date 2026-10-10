@@ -224,6 +224,26 @@ it.effect("schema failures remain safe checkpoint errors", () => Effect.gen(func
   expect(JSON.stringify(forged)).not.toContain("PRIVATE_CONTENT")
 }))
 
+it.effect("rejects decorated URLs and array subclasses before invoking their overrides", () => Effect.gen(function* () {
+  const invoked = { getter: 0, map: 0 }
+  const hidden = Object.defineProperty(new URL("https://example.test"), "hidden", { value: "PRIVATE_CONTENT" })
+  const symbol = Object.defineProperty(new URL("https://example.test"), Symbol("hidden"), { value: "PRIVATE_CONTENT" })
+  const accessor = Object.defineProperty(new URL("https://example.test"), "href", { get: () => {
+    invoked.getter++
+    return "https://substituted.test"
+  } })
+  class CustomArray extends Array<string> {}
+  Object.defineProperty(CustomArray.prototype, "map", { value: () => { invoked.map++; return ["SUBSTITUTED"] } })
+  for (const extra of [hidden, symbol, accessor, new CustomArray("original")]) {
+    const original = input()
+    original.agent.options.extra = extra
+    const error = yield* CheckpointContext.capture(original).pipe(Effect.flip)
+    expect(error).toBeInstanceOf(CheckpointContext.CaptureError)
+    expect(JSON.stringify(error)).not.toContain("PRIVATE_CONTENT")
+  }
+  expect(invoked).toEqual({ getter: 0, map: 0 })
+}))
+
 it.effect("materializes PromiseLike schemas once, including asynchronous output schemas", () => Effect.gen(function* () {
   const original = input()
   const resolutions = { input: 0, output: 0 }

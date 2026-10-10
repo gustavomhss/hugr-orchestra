@@ -145,8 +145,16 @@ function encode(value: unknown, seen = new Set<object>()): Encoded {
   seen.add(value)
   try {
     if (value instanceof URL && Object.getPrototypeOf(value) === URL.prototype) {
-      if (Object.keys(value).length) fail("unsupported-property")
-      return ["url", value.href]
+      const native = new URL("https://checkpoint.invalid")
+      void native.searchParams
+      const allowed = Reflect.ownKeys(native)
+      if (Reflect.ownKeys(value).some((key) => {
+        const actual = Object.getOwnPropertyDescriptor(value, key)
+        const expected = Object.getOwnPropertyDescriptor(native, key)
+        return !allowed.includes(key) || !actual || !expected || !Object.hasOwn(actual, "value") ||
+          actual.enumerable !== expected.enumerable || actual.configurable !== expected.configurable || actual.writable !== expected.writable
+      })) fail("unsupported-property")
+      return ["url", URL.prototype.toString.call(value)]
     }
     if (value instanceof Date && Object.getPrototypeOf(value) === Date.prototype) {
       if (Reflect.ownKeys(value).length) fail("unsupported-property")
@@ -168,8 +176,9 @@ function encode(value: unknown, seen = new Set<object>()): Encoded {
     if (!Array.isArray(value) && !record(value)) fail("unsupported-class")
     const keys = properties(value)
     if (Array.isArray(value)) {
+      if (Object.getPrototypeOf(value) !== Array.prototype) fail("unsupported-array")
       if (keys.length !== value.length || keys.some((key, index) => key !== String(index))) fail("unsupported-array")
-      return ["array", value.map((item) => encode(item, seen))]
+      return ["array", Array.from(value, (item) => encode(item, seen))]
     }
     return ["object", Object.entries(value).map(([key, item]) => [key, encode(item, seen)])]
   } finally {

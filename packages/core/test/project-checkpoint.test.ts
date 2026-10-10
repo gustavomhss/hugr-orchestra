@@ -149,16 +149,18 @@ describe("ProjectCheckpoint", () => {
       const outcomes = yield* Effect.all(
         ["{}", "[]"].map((payload) =>
           store.save({ ...input, payload }).pipe(
-            Effect.map(() => "saved"),
-            Effect.catch((error) => Effect.succeed(error.reason)),
+            Effect.map((metadata) => ({ status: "saved", payload, metadata })),
+            Effect.catch((error) => Effect.succeed({ status: error.reason, payload, metadata: undefined })),
           ),
         ),
         { concurrency: "unbounded" },
       )
-      expect(outcomes.sort()).toEqual(["conflict", "saved"])
+      expect(outcomes.map((outcome) => outcome.status).sort()).toEqual(["conflict", "saved"])
       const saved = yield* store.read({ projectID, id: "fork:0" })
       if (!saved) throw new Error("Expected the winning checkpoint")
-      expect(["{}", "[]"]).toContain(saved.payload)
+      const winner = outcomes.find((outcome) => outcome.status === "saved")
+      if (!winner?.metadata) throw new Error("Missing successful write receipt")
+      expect(saved).toEqual({ ...winner.metadata, payload: winner.payload })
       const checkpoints = yield* Effect.all(
         [globalA, globalB].map((id) => store.save({ ...input, sessionID: id, forkID: id })),
         { concurrency: "unbounded" },
@@ -195,7 +197,8 @@ describe("ProjectCheckpoint", () => {
       yield* database.db.delete(SessionTable).where(eq(SessionTable.id, sessionID)).run()
       expect(yield* store.read({ projectID, id: saved.id })).toEqual({ ...saved, payload: input.payload })
       expect(yield* store.list({ projectID })).toEqual({ items: [saved] })
-      expect(yield* store.save(input).pipe(Effect.flip)).toMatchObject({ reason: "missing_session" })
+      expect(yield* store.save(input)).toEqual(saved)
+      expect(yield* store.save({ ...input, payload: "[]" }).pipe(Effect.flip)).toMatchObject({ reason: "conflict" })
       expect(yield* store.save({ ...input, forkID: "missing" }).pipe(Effect.flip)).toMatchObject({
         reason: "missing_session",
       })
@@ -371,13 +374,15 @@ testEffect(Layer.empty).live("upgrades an existing Session database without rewr
     yield* database.db.run(`DELETE FROM migration WHERE id = '${checkpointMigration.id}'`)
     const missing = yield* database.db.all<{ name: string }>("SELECT name FROM sqlite_master WHERE name = 'project_checkpoint'")
     expect(missing).toEqual([])
-    return yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get()
+    return yield* database.db.select().from(SessionTable).orderBy(SessionTable.id).all()
   }).pipe(Effect.provide(build()), Effect.scoped)
-  expect(before?.id).toBe(sessionID)
+  expect(before.some((row) => row.id === sessionID)).toBe(true)
   yield* Effect.gen(function* () {
     const database = yield* Database.Service
     const store = yield* ProjectCheckpoint.Service
-    expect(yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get()).toEqual(before)
+    expect(yield* database.db.select().from(SessionTable).orderBy(SessionTable.id).all()).toEqual(before)
+    expect((yield* database.db.all<{ name: string }>("PRAGMA index_list('project_checkpoint')")).map((row) => row.name))
+      .toContain("project_checkpoint_project_time_id_idx")
     const saved = yield* store.save(input)
     expect(yield* store.read({ projectID, id: saved.id })).toEqual({ ...saved, payload: input.payload })
   }).pipe(Effect.provide(build()), Effect.scoped)
