@@ -1,3 +1,63 @@
+diff --git a/dist/internal/core.js b/dist/internal/core.js
+--- a/dist/internal/core.js
++++ b/dist/internal/core.js
+@@ -318,10 +318,19 @@ export const exitFailCause = /*#__PURE__*/makeExit({
+       annotated = true;
+     }
+     let cont = fiber.getCont(contE);
+-    while (fiber.interruptible && fiber._interruptedCause && cont) {
++    while (fiber.interruptible && fiber._interruptedCause) {
++      // getCont runs mask restoration but its returned continuation is skipped
++      // on interrupted fibers. Match pending interrupt identity and annotation entries
++      // (body stack annotation clones reasons); never deduplicate body reasons.
++      const reasons = fiber._interruptedCause.reasons.filter(reason => !cause.reasons.some(existing => existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" && existing.fiberId === reason.fiberId && Array.from(reason.annotations).every(([key, value]) => existing.annotations.has(key) && existing.annotations.get(key) === value)));
++      if (reasons.length > 0) {
++        cause = causeFromReasons([...cause.reasons, ...reasons]);
++        annotated = true;
++      }
++      if (!cont) break;
+       cont = fiber.getCont(contE);
+     }
+-    return cont ? cont[contE](cause, fiber, annotated ? undefined : this) : fiber.yieldWith(annotated ? this : exitFailCause(cause));
++    return cont ? cont[contE](cause, fiber, annotated ? undefined : this) : fiber.yieldWith(annotated ? exitFailCause(cause) : this);
+   }
+ });
+ /** @internal */
+diff --git a/src/internal/core.ts b/src/internal/core.ts
+--- a/src/internal/core.ts
++++ b/src/internal/core.ts
+@@ -536,12 +536,29 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
+       annotated = true
+     }
+     let cont = fiber.getCont(contE)
+-    while (fiber.interruptible && fiber._interruptedCause && cont) {
++    while (fiber.interruptible && fiber._interruptedCause) {
++      // getCont runs mask restoration but its returned continuation is skipped
++      // on interrupted fibers. Match pending interrupt identity and annotation entries
++      // (body stack annotation clones reasons); never deduplicate body reasons.
++      const reasons = fiber._interruptedCause.reasons.filter((reason) =>
++        !cause.reasons.some((existing) =>
++          existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" &&
++            existing.fiberId === reason.fiberId &&
++            Array.from(reason.annotations).every(([key, value]) =>
++              existing.annotations.has(key) && existing.annotations.get(key) === value
++            )
++        )
++      )
++      if (reasons.length > 0) {
++        cause = causeFromReasons([...cause.reasons, ...reasons])
++        annotated = true
++      }
++      if (!cont) break
+       cont = fiber.getCont(contE)
+     }
+     return cont
+       ? cont[contE](cause, fiber, annotated ? undefined : this)
+-      : fiber.yieldWith(annotated ? this : exitFailCause(cause))
++      : fiber.yieldWith(annotated ? exitFailCause(cause) : this)
+   }
+ })
+ 
 diff --git a/dist/unstable/httpapi/HttpApiSchema.js b/dist/unstable/httpapi/HttpApiSchema.js
 index ecb6603d1ee4e89e92174b3a1100e8c9c720b3f3..08b832b6b3e9e4d10df156eca36b16f571f67f6e 100644
 --- a/dist/unstable/httpapi/HttpApiSchema.js
