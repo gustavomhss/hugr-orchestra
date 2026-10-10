@@ -31,7 +31,7 @@ import { NativeResearchTask } from "./fixtures/native-task"
 
 // Optional Config is resolved at Truncate call time, so both services must be public root outputs.
 const it = testEffect(Layer.mergeAll(NativeResearchTask.layer,
-  TestAppNodeBuilder.build(LayerNode.group([Config.node, Truncate.node])),
+  TestAppNodeBuilder.build(LayerNode.group([Config.node, Truncate.node, Global.node])),
 ))
 const Summary = Schema.Struct({ records: Schema.Array(Research.FindingRecord), complete: Schema.Boolean,
   total: Schema.Int, omitted: Schema.Int })
@@ -141,10 +141,12 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
       part.metadata?.source?.type === "task-return" && part.metadata.source.state === "completed")),
   ), "Background Task did not deliver qualified output", "30 seconds") : (yield* fixture.sessions.messages({ sessionID: fixture.parent.id }))
     .flatMap((message) => message.parts).findLast((part) => part.type === "tool" && part.tool === "task")
-  if (!delivered || (delivered.type !== "text" && (delivered.type !== "tool" || delivered.state.status !== "completed")))
-    throw new Error("Expected independently persisted native Task return")
-  const output = delivered.type === "text" ? delivered.text : delivered.state.output
-  const metadata = delivered.type === "text" ? delivered.metadata : delivered.state.metadata
+  if (!delivered) throw new Error("Expected independently persisted native Task return")
+  const returned = delivered.type === "text" ? { output: delivered.text, metadata: delivered.metadata }
+    : delivered.type === "tool" && delivered.state.status === "completed" ? delivered.state : undefined
+  if (!returned) throw new Error("Expected completed native Task return")
+  const output = returned.output
+  const metadata = returned.metadata
   const envelope = Schema.decodeUnknownSync(Result)(metadata)
   const expected = { records: background ? [state.findings[0], state.findings[2]] : [state.findings[0], state.findings[2], state.findings[3]],
     complete: background, total: background ? 2 : 4, omitted: background ? 0 : 1 }
@@ -166,7 +168,9 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
   }
   expect(expected.records[0]).toMatchObject({ revision: 1, nature: "extraction", conditions: ["release 1", "enabled mode only; disabled mode does not apply"],
     reason: "Declaration is not observed runtime behavior" })
-  expect(expected.records[0].contrary).toEqual([{ source: state.source?.ref,
+  const source = state.source
+  if (!source) throw new Error("Expected retained native source")
+  expect(expected.records[0].contrary).toEqual([{ source: source.ref,
     locator: { kind: "quote", exact: "Contrary: release 1 disabled mode rejects requests." } }])
   expect(expected.records[1]).toMatchObject({ nature: "observation", conditions: ["release 2", "disabled mode", "supplied public fixture only"] })
   expect(state.findings[1]).toMatchObject({ id: expected.records[0].id, revision: 2, nature: "hypothesis" })
