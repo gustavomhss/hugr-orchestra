@@ -58,16 +58,19 @@ All 33 frozen inventory files were rehashed before/after the run and independent
 | Repaired ordinary-authoring prompt/playbook pins | [38024190713](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38024190713) | Linux/Windows: 23 tests, 0 failures, 151 assertions each |
 | Legacy consumer mutation | [38019869958](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38019869958) | Removing pro-option filtering and output-cap omission made all three selected tests fail; implementation restored |
 | Native authorship mutation | [38025092625](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025092625) | Removing actual assistant-agent equality made old/generic-author rejection fail while two controls passed; implementation restored |
-| Attribution schema | [38019106475](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38019106475) | Linux/Windows: 32 pass, seven failures; explicit `undefined` gets schema type error instead of required `UPSTREAM_ATTRIBUTION_MISSING`; remains open |
+| Attribution schema counterexample | [38019106475](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38019106475) | Linux/Windows: 32 pass, seven failures; explicit `undefined` got schema type error instead of required `UPSTREAM_ATTRIBUTION_MISSING` |
+| Attribution schema repair | [38028673763](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38028673763) | Linux/Windows: 40 tests, 0 failures, 227 assertions each; reviewed schema/test blobs copied unchanged into `175187aef14bc75580245a6ce4560644f95beb37` |
 
-Package `bun typecheck` completed for Orchestra, Core and Schema on composed renamed source. Supported generators ran through `packages/client`'s `bun run generate` and `./packages/sdk/js/script/build.ts`; both completed without a tracked output diff. These scoped checks do not become full-milestone or every-descendant CI evidence.
+Package `bun typecheck` completed for Orchestra, Core and Schema on composed renamed source and after the attribution repair. Supported generators ran through `packages/client`'s `bun run generate` and `./packages/sdk/js/script/build.ts`; both completed without a tracked output diff. Atlas Boundary `bun typecheck` and `bun run check:generated` completed. These scoped checks do not become full-milestone or every-descendant CI evidence.
+
+The Godfile gate first failed on the observer test at 758 nonblank LOC. The reviewed repair removed eight comments and one blank line without changing executable fixtures or assertions. `GODFILE_BASE_REF=fork/dev bun run check:godfile` then inspected 4029 source files with 325 warnings and zero errors; the observer fixture is exactly 750 nonblank LOC. No waiver or gate change was added.
 
 The original Maestro prompt demanded model-side inspection unavailable in the actual tool surface. Actual inference returned HOLD. The repaired prompt delegates workflow/completion observation to the existing native Task gate; no runtime gate, known HOLD, governed lifecycle or approval requirement was removed. An earlier Task attempt failed on a final-LF request mismatch; exact rendered assignment corrected that failure. Earlier failed attempts remain failed receipts.
 
 ## Remaining acceptance and landing
 
 - Independent host review accepted the successful foreground receipt. Independent Archie domain judgment of the proposal remains separate and pending.
-- Seven Schema named-refusal failures and the observer fixture's Godfile over-cap finding require owned producer corrections and focused requalification.
+- Seven Schema named-refusal failures and the observer fixture's Godfile over-cap finding are corrected at `175187aef14bc75580245a6ce4560644f95beb37`. Schema repair changes only explicit-undefined decoding/encoding and preserves strict attribution refusals; observer executable fixtures remain unchanged.
 - Later Maestro text accurately describes V3 host-observed upstream attribution while retaining V1/V2 sources. The successful run remains attributed to its original source head.
 - This proves ordinary native authoring through V1 message/part storage. It does not prove dual-view/V2 delivery, governed W6, same-Session resume, exact retry, background delivery, Nix distribution, Desktop/WSL or operational Orchestra OAuth consent.
 - The Runtime branch's diff from `fork/dev` contains broader unlanded work. PR scope, required evidence and independent landing review must be reconciled before merging; this receipt does not qualify that broader work automatically.
