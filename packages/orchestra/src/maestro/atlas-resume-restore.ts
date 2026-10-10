@@ -1,6 +1,6 @@
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { Agent } from "@/agent/agent"
 import { MessageV2 } from "@/session/message-v2"
 import { PartID, type MessageID, type SessionID } from "@/session/schema"
@@ -38,8 +38,15 @@ export const restore = Effect.fn("AtlasResumeRestore.restore")(
       metadata: { [AtlasMemory.ADMISSION_KEY]: restored },
     })
   },
+  // Keep the caller's Agent/config binding; standalone callers still get the native graph.
   // A restore never fails the compaction it follows.
-  (effect) => effect.pipe(Effect.provide(LayerNode.compile(Agent.node)), Effect.ignore),
+  (effect) =>
+    Effect.gen(function* () {
+      const agents = yield* Effect.serviceOption(Agent.Service)
+      return yield* (Option.isSome(agents)
+        ? effect.pipe(Effect.provideService(Agent.Service, agents.value))
+        : effect.pipe(Effect.provide(LayerNode.compile(Agent.node))))
+    }).pipe(Effect.ignore),
 )
 
 function admissions(history: readonly SessionV1.WithParts[]) {
