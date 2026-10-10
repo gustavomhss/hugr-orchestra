@@ -96,6 +96,7 @@ import type {
   GlobalUpgradeResponses,
   InstanceDisposeErrors,
   InstanceDisposeResponses,
+  LeanProfileUpdate,
   LocationRef,
   LspStatusErrors,
   LspStatusResponses,
@@ -152,6 +153,12 @@ import type {
   ProjectIcon,
   ProjectInitGitErrors,
   ProjectInitGitResponses,
+  ProjectLeanErrors,
+  ProjectLeanHistoryErrors,
+  ProjectLeanHistoryResponses,
+  ProjectLeanResponses,
+  ProjectLeanUpdateErrors,
+  ProjectLeanUpdateResponses,
   ProjectListErrors,
   ProjectListResponses,
   ProjectUpdateErrors,
@@ -2874,6 +2881,137 @@ export class Mcp extends HeyApiClient {
 }
 
 export class Project extends HeyApiClient {
+  /**
+   * Get selected-profile Lean dashboard
+   *
+   * Saved instrumented history for the native project and selected canonical directory.
+   */
+  public lean<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<ProjectLeanResponses, ProjectLeanErrors, ThrowOnError>({
+      url: "/project/lean",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update selected-profile Lean preferences
+   *
+   * Persist independent profile master or item preferences without deleting earned savings.
+   */
+  public leanUpdate<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      leanProfileUpdate?: LeanProfileUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { key: "leanProfileUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<ProjectLeanUpdateResponses, ProjectLeanUpdateErrors, ThrowOnError>({
+      url: "/project/lean",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Get selected-profile Lean item history
+   *
+   * Latest 50 durable instrumented executions; complete is false when bounded.
+   */
+  public leanHistory<ThrowOnError extends boolean = false>(
+    parameters: {
+      itemID:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "itemID" },
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<ProjectLeanHistoryResponses, ProjectLeanHistoryErrors, ThrowOnError>({
+      url: "/project/lean/history/{itemID}",
+      ...options,
+      ...params,
+    })
+  }
+
   /**
    * List all projects
    *
