@@ -1,7 +1,6 @@
 import { Tool } from "./tool"
 import DESCRIPTION from "./task.txt"
 import { ToolJsonSchema } from "./json-schema"
-import { SessionV1 } from "@orchestra/core/v1/session"
 import { BackgroundJob } from "@/background/job"
 import { Session } from "@/session/session"
 import { SessionID, MessageID } from "../session/schema"
@@ -9,7 +8,6 @@ import { MessageV2 } from "../session/message-v2"
 import { Agent } from "../agent/agent"
 import { Provider } from "@/provider/provider"
 import { GovernedTaskReservation } from "../maestro/governed-task-reservation"
-import type { SessionPrompt } from "../session/prompt"
 import { Config } from "@/config/config"
 import { Effect, Exit, FileSystem, Schema, Scope, Option } from "effect"
 import { EffectBridge } from "@/effect/bridge"
@@ -23,7 +21,6 @@ import { Permission } from "@/permission"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Git } from "@/git"
 import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
-import { GroundedSkills } from "@/maestro/grounded-skills"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AtlasResume } from "@/maestro/atlas-resume"
 import { SeatWork } from "@/maestro/backend-work"
@@ -37,15 +34,9 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { InstanceState } from "@/effect/instance-state"
 import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
+import { TaskPrompt, type TaskPromptOps } from "./task-prompt"
 
-export interface TaskPromptOps {
-  cancel(sessionID: SessionID): Effect.Effect<void>
-  resolvePromptParts(template: string): Effect.Effect<SessionPrompt.PromptInput["parts"]>
-  prompt(
-    input: SessionPrompt.PromptInput,
-    options?: { beforeModel: Effect.Effect<void, unknown> },
-  ): Effect.Effect<SessionV1.WithParts>
-}
+export type { TaskPromptOps } from "./task-prompt"
 
 const id = "task"
 const dispatchLock = KeyedMutex.makeUnsafe<string>()
@@ -541,12 +532,9 @@ export const TaskTool = Tool.define(
             Effect.provideService(Session.Service, sessions),
           )
         }
-        // A brief names other agents as plain text. As an @mention, an agent part would tell the child to
-        // delegate to that agent and skip its own task permission prompt.
-        const parts = (yield* ops.resolvePromptParts(params.prompt)).filter((part) => part.type !== "agent")
-        const own = params.authorizationID
-          ? yield* GroundedSkills.parts(params.authorizationID).pipe(Effect.provideService(Database.Service, database))
-          : []
+        const parts = yield* TaskPrompt.parts(ops, params.prompt, params.authorizationID).pipe(
+          Effect.provideService(Database.Service, database),
+        )
         const beforeModel = params.authorizationID
           ? reserveDispatch({
               sessionID: ctx.sessionID,
@@ -574,7 +562,7 @@ export const TaskTool = Tool.define(
             },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
-            parts: [...parts, ...own, ...resume],
+            parts: [...parts, ...resume],
           },
           beforeModel ? { beforeModel } : undefined,
         )

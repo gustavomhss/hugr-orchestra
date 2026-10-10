@@ -56,8 +56,8 @@ import { decodeDataUrl } from "@/util/data-url"
 import { Process } from "@/util/process"
 import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
 import { InstanceState } from "@/effect/instance-state"
-import { TaskTool, type TaskPromptOps } from "@/tool/task"
-import { PromptGuard } from "./prompt-guard"
+import { TaskTool } from "@/tool/task"
+import { TaskPrompt } from "@/tool/task-prompt"
 import { SessionRunState } from "./run-state"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -151,11 +151,7 @@ const layer = Layer.effect(
     const nativeHost = yield* ArsenalBindings.make
     const research = yield* ResearchExecution.Service
     const ops = Effect.fn("SessionPrompt.ops")(function* () {
-      return {
-        cancel: (sessionID: SessionID) => cancel(sessionID),
-        resolvePromptParts: (template: string) => resolvePromptParts(template),
-        prompt: (input, options) => nativeHost.withSession(input.sessionID, PromptGuard.wrap(prompt)(input, options)),
-      } satisfies TaskPromptOps
+      return TaskPrompt.bind({ cancel, resolvePromptParts, prompt }, nativeHost)
     })
 
     const cancel = Effect.fn("SessionPrompt.cancel")(function* (sessionID: SessionID) {
