@@ -65,7 +65,10 @@ must be described honestly. Empty candidate items permit an empty critical set, 
 A host-owned optional v5 `review` seal records version 1, work state, next-action class, critical IDs
 and a canonical digest of the artifact plus those fields. Cold reads reject malformed/stale seals.
 Old v4/v5 artifacts remain readable. Existing reviewed input permits incremental review against new
-span plus prior items/seal; unreviewed migration is checked against full declared covered sources.
+span plus prior items/seal and supplemental older covered messages cited by new or changed items or
+changed Now. A prior seal covers unchanged prior claims, not new assertions about old evidence.
+Unreviewed migration is checked against full declared covered sources. Alias ownership, source
+fingerprints, ordered declared coverage and the exact boundary bind the review to the captured prefix.
 
 Expose pure `request(snapshot, host, artifact)` and
 `decode({ text, snapshot, host, artifact }) -> review decision | Failure` in W1. Shared seal functions
@@ -80,16 +83,31 @@ provider failure, rejection, cancellation or stale ownership cannot publish an u
 Parent replay remains immutable and tool-denied. Existing selected-model and lifecycle fences apply.
 `prepare` remains pure. No legacy SessionPrompt orchestration bridge or extra durable runner identity.
 
+Review admission uses the selected backend's input estimate when available, plus observed backend
+overhead supplied by the service (zero when absent). The SDK estimate measures its compiled payload:
+role-preserving historical-message JSON framing and deduplicated system/reviewer instructions. The
+fallback estimates review instructions plus serialized messages. Invalid estimates or an estimate plus
+overhead above the selected model's input limit fail before review transport. This is an estimate, not
+an exact provider tokenizer or a guarantee that every provider-side token has been counted.
+
 ## 4. Archive search
 
 Keep `reference`, literal `archive_query` and listing behavior compatible. Extend search with optional
 `match: "literal" | "terms"`, `offset`, `role: "user" | "assistant"`, `from_message`, `through_message`.
-Terms mode builds a bounded per-fragment lexical index over verified archived content. All query terms
-must occur; rank by exact phrase, title matches, term proximity and deterministic tie-breaks. Paths,
-tool names, error signatures and identifiers are searchable text, not invented semantic entities.
-Role comes from the verified closed archive envelope; message range uses validated descriptor IDs.
+Terms mode builds a bounded per-fragment lexical index over verified archived content. Tokens match
+`[\p{L}\p{N}_][\p{L}\p{N}\p{M}_]*`, then undergo NFKD normalization, combining-mark stripping and
+JavaScript `toLowerCase()`; tokens without a letter or number are discarded. This is not full Unicode
+case folding. All distinct query terms must occur across a fragment's title/content; rank by consecutive
+normalized-token phrase, title-term count, proximity, then last source ID descending and archive ID
+ascending. Snippet offsets remain original UTF-16 code-unit offsets. Paths, tool names, error signatures
+and identifiers are searchable text, not invented semantic entities.
+Role comes from the verified closed archive envelope. Message bounds are inclusive lexicographic ID
+bounds, not timestamps or numeric suffixes: include a chunk when `last >= from_message` and
+`first <= through_message` for supplied bounds. A reversed pair returns `invalid_message_range`.
 
-Read every eligible retained chunk before claiming an honest total. Missing/corrupt chunks fail closed.
+Read and verify every retained chunk before applying role or message-range filters, including chunks
+beyond the requested page. Unverified manifest descriptors cannot exclude a chunk from integrity
+checks. Missing/corrupt chunks fail closed even when filters would exclude them; totals follow the scan.
 Return ranked, paginated descriptors, source snippets and truthful completeness/continuation. Never
 scan another Session or external file, silently truncate coverage, or keep a process-global content cache.
 Literal default ordering stays unchanged. No embedding dependency or archive migration is required.
@@ -112,3 +130,6 @@ Literal default ordering stays unchanged. No embedding dependency or archive mig
 Mutation controls must break the protected behavior, fail the named oracle, restore and pass. Local
 typechecks run from package directories. Tests run via `bun run test:ci` unless owner separately permits
 local runs. No new paid benchmark of the old Warhammer competitors.
+
+The source-pinned acceptance record, measured scope and publication status are in
+[Context Continuity quality results](context-continuity-quality-results.md).
