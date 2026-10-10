@@ -8,6 +8,9 @@ import { ToolRegistry } from "@/tool/registry"
 import { MCP } from "@/mcp"
 import { Truncate } from "@/tool/truncate"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { Config } from "@/config/config"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
 import { SessionTools } from "./tools"
 
 /** Resolve with the captured Session services, then install the single native evidence owner. */
@@ -20,6 +23,9 @@ export const resolve = Effect.fn("SessionNativeTools.resolve")(function* (
     mcp: Parameters<typeof MCP.Service.of>[0]
     truncate: Parameters<typeof Truncate.Service.of>[0]
     flags: Parameters<typeof RuntimeFlags.Service.of>[0]
+    config: Parameters<typeof Config.Service.of>[0]
+    fs: FSUtil.Interface
+    global: Global.Interface
     nativeHost: Effect.Success<typeof ArsenalBindings.make>
     promptOps: () => Effect.Effect<Parameters<typeof SessionTools.resolve>[0]["promptOps"]>
   },
@@ -37,6 +43,9 @@ export const resolve = Effect.fn("SessionNativeTools.resolve")(function* (
     Effect.provideService(MCP.Service, services.mcp),
     Effect.provideService(Truncate.Service, services.truncate),
     Effect.provideService(RuntimeFlags.Service, services.flags),
+    Effect.provideService(Config.Service, services.config),
+    Effect.provideService(FSUtil.Service, services.fs),
+    Effect.provideService(Global.Service, services.global),
   )
   return yield* services.nativeHost.wrapTools({
     sessionID: input.session.id,
