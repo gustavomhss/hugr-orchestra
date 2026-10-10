@@ -5,6 +5,7 @@ import { connect } from "node:net"
 import type { ElectronApplication, Page } from "@playwright/test"
 import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
 import { appID, desktop, productName } from "./lean-candidate-archive.fixture"
+import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 const appRequire = createRequire(path.resolve(desktop, "../app/package.json"))
 export const expect = (appRequire("@playwright/test") as typeof import("@playwright/test")).expect
@@ -47,17 +48,23 @@ export async function portClosed(url: string) {
   }))
 }
 
-export async function launchCandidate(executable: string, root: string, errors: unknown[]) {
+export async function launchCandidate(executable: string, root: string, recorder: CandidateRecorder) {
   assert.ok(path.isAbsolute(root), "Candidate ROOT must be absolute")
+  recorder.protectPath(root, "candidate-root")
   // Resolve the installed Playwright through the package that declares it. Never attach to a user app.
   const { _electron } = appRequire("@playwright/test") as typeof import("@playwright/test")
   const env = Object.fromEntries(["PATH", "LANG", "LC_ALL", "GOROOT", "RUSTUP_HOME"].flatMap((key) =>
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
     cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
-  const diagnostics: string[] = []
-  application.process().stdout?.on("data", (bytes) => diagnostics.push(`main stdout: ${bytes}`))
-  application.process().stderr?.on("data", (bytes) => diagnostics.push(`main stderr: ${bytes}`))
+  // Join each raw stream before redaction so chunk boundaries cannot split a password.
+  const stdout: string[] = []
+  const stderr: string[] = []
+  const renderer: string[] = []
+  const diagnostics = () => [`main stdout: ${stdout.join("")}`, `main stderr: ${stderr.join("")}`, ...renderer]
+  recorder.observe("owned Electron streams and renderer diagnostics", diagnostics)
+  application.process().stdout?.on("data", (bytes) => stdout.push(String(bytes)))
+  application.process().stderr?.on("data", (bytes) => stderr.push(String(bytes)))
   const state: { backend?: ServerReadyData; page?: Page; closed: boolean } = { closed: false }
   const close = async () => {
     if (state.closed) return
@@ -66,16 +73,16 @@ export async function launchCandidate(executable: string, root: string, errors: 
       if (state.backend) await portClosed(state.backend.url)
       state.closed = true
     } catch (error) {
-      errors.push(error)
+      recorder.fail("cleanup", "owned Electron quit", error)
       // Only the child returned by this launch is eligible for forced cleanup.
       const child = application.process()
-      if (child.exitCode === null) child.kill("SIGKILL")
+      try { if (child.exitCode === null) child.kill("SIGKILL") }
+      catch (error) { recorder.fail("cleanup", "owned Electron forced termination", error) }
       if (state.backend) {
-        try { await portClosed(state.backend.url) } catch (error) { errors.push(error) }
+        try { await portClosed(state.backend.url) } catch (error) { recorder.fail("cleanup", "owned backend port closure", error) }
       }
       state.closed = true
     }
-    if (errors.length) console.error(diagnostics.join("\n"))
   }
   try {
     const page = await application.firstWindow({ timeout: 60000 })
@@ -83,14 +90,25 @@ export async function launchCandidate(executable: string, root: string, errors: 
     page.setDefaultTimeout(30000)
     page.setDefaultNavigationTimeout(30000)
     await page.waitForURL((url) => url.protocol === "oc:" && url.hostname === "renderer", { timeout: 60000 })
-    page.on("pageerror", (error) => { errors.push(error); diagnostics.push(`renderer error: ${error.stack}`) })
-    page.on("console", (message) => { if (message.type() === "error") diagnostics.push(`renderer console: ${message.text()}`) })
+    page.on("pageerror", (error) => { recorder.fail("primary", "owned renderer", error); renderer.push(`renderer error: ${error.stack}`) })
+    page.on("console", (message) => { if (message.type() === "error") renderer.push(`renderer console: ${message.text()}`) })
     assert.ok(page.url().startsWith("oc://renderer/"), `Unexpected packaged renderer URL: ${page.url()}`)
+    // Production await-initialization returns main's own Deferred ServerReadyData (url/username/password).
+    // Register generated credentials before assertions or diagnostics can reach an output sink.
+    const backend = await bounded("own production initialization IPC", page.evaluate(async () => {
+      const api = (window as unknown as { api: ElectronAPI }).api
+      return api.awaitInitialization()
+    }), 60000)
+    state.backend = backend
+    recorder.protectBackend(backend.username, backend.password)
     const snapshot = await bounded("actual Electron candidate paths", application.evaluate(({ app }) => ({
       packaged: app.isPackaged, name: app.getName(), lock: app.hasSingleInstanceLock(),
       paths: { userData: app.getPath("userData"), sessionData: app.getPath("sessionData"), home: app.getPath("home"), temp: app.getPath("temp") },
       env: { ...process.env }, utility: app.getAppMetrics().filter((metric) => metric.type === "Utility").length,
     })))
+    for (const [key, value] of Object.entries(snapshot.paths)) recorder.protectPath(value, `observed-${key}`)
+    const pathKeys = ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "ORCHESTRA_DB", "ORCHESTRA_TEST_MANAGED_CONFIG_DIR", "TMPDIR"]
+    for (const key of pathKeys) if (snapshot.env[key]) recorder.protectPath(snapshot.env[key]!, `observed-${key}`)
     assert.equal(snapshot.packaged, true)
     assert.equal(snapshot.name, productName)
     assert.equal(snapshot.lock, true, "Candidate did not hold its own single-instance lock")
@@ -100,15 +118,10 @@ export async function launchCandidate(executable: string, root: string, errors: 
     assert.equal(snapshot.env.ORCHESTRA_LEAN_CANDIDATE, "1")
     assert.equal(snapshot.env.ORCHESTRA_INHERIT_CREDENTIALS, "0")
     assert.equal(snapshot.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT, root)
-    for (const key of ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "ORCHESTRA_DB", "ORCHESTRA_TEST_MANAGED_CONFIG_DIR", "TMPDIR"])
+    for (const key of pathKeys)
       inside(root, snapshot.env[key]!, key)
     for (const key of Object.keys(snapshot.env))
       assert.ok(!/^(OPENAI|ANTHROPIC|AWS|AZURE|GOOGLE|SENTRY|GH_|GITHUB_TOKEN|SSH_|NODE_OPTIONS|ELECTRON_RUN_AS_NODE|SHELL$)/.test(key), `Inherited host environment: ${key}`)
-    const backend = await bounded("own production initialization IPC", page.evaluate(async () => {
-      const api = (window as unknown as { api: ElectronAPI }).api
-      return api.awaitInitialization()
-    }), 60000)
-    state.backend = backend
     assert.equal(new URL(backend.url).hostname, "127.0.0.1")
     assert.equal(backend.username, "orchestra")
     assert.ok(backend.password, "Own backend authentication is missing")
@@ -120,8 +133,9 @@ export async function launchCandidate(executable: string, root: string, errors: 
         "content-type": "application/json",
       }, body: body === undefined ? undefined : JSON.stringify(body) })
       const bytes = await response.text()
-      assert.ok(response.ok, `${method} ${route}: ${response.status} ${bytes}`)
-      return JSON.parse(bytes) as T
+      if (!response.ok) throw new Error(`${method} ${route}: ${response.status}`, { cause: { privateResponse: bytes } })
+      try { return JSON.parse(bytes) as T }
+      catch (error) { throw new Error(`${method} ${route}: invalid JSON`, { cause: { privateResponse: { bytes, error } } }) }
     }
     assert.equal((await fetch(new URL("global/health", backend.url + "/"), { signal: AbortSignal.timeout(5000) })).status, 401,
       "Unauthenticated own backend must reject access")
@@ -133,11 +147,11 @@ export async function launchCandidate(executable: string, root: string, errors: 
     assert.equal(utilities, 1, "Missing actual owned utility sidecar child")
     const marker = await Bun.file(path.join(root, ".orchestra-lean-candidate.json")).json()
     assert.deepEqual(marker, { appId: appID, version: 1, root })
-    return { application, page, backend, request, close, diagnostics, root }
+    return { application, page, backend, request, close, get diagnostics() { return diagnostics() }, root }
   } catch (error) {
-    errors.push(error)
+    recorder.fail("primary", "owned candidate launch", error)
     await close()
-    throw new AggregateError(errors, "Candidate launch primary and cleanup diagnostics")
+    throw error
   }
 }
 
