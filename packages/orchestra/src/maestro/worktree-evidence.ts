@@ -8,7 +8,10 @@ import { Filesystem } from "@/util/filesystem"
 const MEMORY_LOGS = [".atlas/memory.jsonl", ".atlas/orientation.jsonl"]
 const MEMORY = MEMORY_LOGS.map((file) => `:(exclude)${file}`)
 
-export const current = Effect.fn("MaestroContext.currentEvidence")(function* (directory: string) {
+export const current = Effect.fn("MaestroContext.currentEvidence")(function* (
+  directory: string,
+  bounds?: { readonly files: number; readonly bytes: number },
+) {
   const git = yield* Git.Service
   const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: directory })
   const worktree = Filesystem.windowsPath(root.text().replace(/\r?\n$/, ""))
@@ -22,8 +25,20 @@ export const current = Effect.fn("MaestroContext.currentEvidence")(function* (di
     cwd: worktree,
   })
   if (diff.exitCode !== 0 || diff.truncated || untracked.exitCode !== 0 || untracked.truncated) return undefined
-  const untrackedFiles = yield* Effect.forEach(untracked.text().split("\0").filter(Boolean).sort(), (file) =>
-    Effect.promise(() => Bun.file(path.join(worktree, file)).arrayBuffer()).pipe(
+  const files = untracked.text().split("\0").filter(Boolean).sort()
+  if (bounds && (files.length > bounds.files || (untracked.text() && !untracked.text().endsWith("\0"))))
+    return yield* Effect.die(new Error("worktree-evidence-untracked-overflow-or-framing"))
+  const budget = { remaining: bounds?.bytes ?? Infinity }
+  const untrackedFiles = yield* Effect.forEach(files, (file) =>
+    Effect.promise(async () => {
+      const source = Bun.file(path.join(worktree, file))
+      if (!bounds) return source.arrayBuffer()
+      if (source.size > budget.remaining) throw new Error("worktree-evidence-untracked-overflow")
+      const bytes = await source.slice(0, budget.remaining + 1).arrayBuffer()
+      budget.remaining -= bytes.byteLength
+      if (budget.remaining < 0) throw new Error("worktree-evidence-untracked-overflow")
+      return bytes
+    }).pipe(
       Effect.map((bytes) => ({ file, sha256: createHash("sha256").update(Buffer.from(bytes)).digest("hex") })),
     ),
   )
