@@ -17,7 +17,8 @@ export async function typecheckCandidateProof() {
       compilerOptions: { types: ["vite/client", "bun", "node", "electron"], tsBuildInfoFile: path.join(scratch, "proof.tsbuildinfo"),
         paths: { "@playwright/test": [path.resolve(desktop, "../app/node_modules/@playwright/test/index.d.ts")] } },
       references: [{ path: path.resolve(desktop, "../app") }],
-      include: [path.join(desktop, "src"), path.join(desktop, "package.json"), path.join(import.meta.dir, "lean-candidate-*.ts")],
+      // Bun globals belong to proof files. Production renderer uses the unchanged desktop config.
+      include: [path.join(import.meta.dir, "lean-candidate-*.ts")],
     }))
     const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: desktop, stdout: "pipe", stderr: "pipe", timeout: 120000, killSignal: "SIGKILL" })
     const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
