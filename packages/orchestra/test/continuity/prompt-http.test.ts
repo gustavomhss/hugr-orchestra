@@ -3,10 +3,12 @@ import path from "node:path"
 import { Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Archive } from "@/continuity/archive"
 import { SessionContinuity } from "@/continuity/service"
+import { completeSnapshot } from "@/continuity/fork"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Plugin } from "@/plugin"
+import { Provider } from "@/provider/provider"
 import { SessionPrompt } from "@/session/prompt"
 import { Session } from "@/session/session"
 import { SessionSummary } from "@/session/summary"
@@ -46,7 +48,7 @@ const llmNode = LayerNode.make({ service: TestLLMServer, deps: [], layer: Layer.
   return llm
 })).pipe(Layer.provide(TestLLMServer.layer)) })
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
-  SessionPrompt.node, SessionContinuity.node, Session.node, SessionProjector.node, BackgroundJob.node,
+  SessionPrompt.node, SessionContinuity.node, Session.node, Provider.node, SessionProjector.node, BackgroundJob.node,
   Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, Archive.node, llmNode,
 ]), [
   [RuntimeFlags.node, RuntimeFlags.layer({ experimentalEventSystem: true })],
@@ -436,6 +438,8 @@ it.instance("different user queued during real held catch-up retries stale admis
   const prompt = yield* SessionPrompt.Service
   const sessions = yield* Session.Service
   const jobs = yield* BackgroundJob.Service
+  const continuity = yield* SessionContinuity.Service
+  const provider = yield* Provider.Service
   yield* configure(llm.url, instance.directory)
   const chat = yield* sessions.create({ title: "Held catch-up caller race" })
   const seed = Array.from({ length: 6 }, (_, index) => `CATCHUP_SEED_${index}`)
@@ -448,19 +452,76 @@ it.instance("different user queued during real held catch-up retries stale admis
   if (latest.role !== "assistant") throw new Error("Expected initial completed boundary")
   const job = yield* jobFor(chat.id, latest.id)
   expect((yield* jobs.wait({ id: job.id, timeout: 10_000 })).info?.output).toBe("applied")
+  const selectedModel = yield* provider.getModel(model.providerID, model.modelID)
+  const retained = yield* continuity.prepare({ sessionID: chat.id, messages: before, canRecall: true, model: selectedModel })
+  if (retained.coverage?.coveredThrough !== latest.id || !retained.system.some((text) => text.includes(FIRST)))
+    throw new Error(`CATCHUP_RETAINED_COMPLETE_PREFIX_REQUIRED ${JSON.stringify({ coverage: retained.coverage,
+      expectedBoundary: latest.id, systemCount: retained.system.length, initialMemoryPresent: retained.system.some((text) => text.includes(FIRST)) })}`)
   // Completed provider step arriving before first paying admission makes a real catch-up necessary.
   const delta = { ...latest, id: MessageID.ascending(), tokens: { ...latest.tokens, input: 100 },
     time: { created: Date.now(), completed: Date.now() } }
   yield* sessions.updateMessage(delta)
   yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: delta.id, type: "text", text: `NEW_COMPLETED_DELTA ${PAD}` })
+  const canonical = yield* sessions.messages({ sessionID: chat.id })
+  const completed = completeSnapshot(chat.id, canonical, undefined, true, delta.id)
+  if (!completed || completed.boundary !== delta.id || completed.head.at(-1)?.info.id !== delta.id)
+    throw new Error(`CATCHUP_CANONICAL_COMPLETED_DELTA_REQUIRED ${JSON.stringify({ deltaBoundary: delta.id,
+      snapshotBoundary: completed?.boundary, sourceCount: canonical.length,
+      lastSources: canonical.slice(-4).map((message) => ({ id: message.info.id, role: message.info.role,
+        ...(message.info.role === "assistant" ? { finish: message.info.finish, completed: message.info.time.completed !== undefined,
+          failed: message.info.error !== undefined, parentID: message.info.parentID } : {}) })) })}`)
+  const pendingView = yield* continuity.prepare({ sessionID: chat.id, messages: canonical, canRecall: true, model: selectedModel })
+  if (pendingView.coverage?.coveredThrough !== latest.id || !pendingView.messages.some((message) => message.info.id === delta.id))
+    throw new Error(`CATCHUP_UNCOVERED_COMPLETED_DELTA_REQUIRED ${JSON.stringify({ coverage: pendingView.coverage,
+      retainedBoundary: latest.id, deltaBoundary: delta.id, deltaPresent: pendingView.messages.some((message) => message.info.id === delta.id) })}`)
   const hold = yield* gate
   const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
   const heldCatchup = ledger()
-  yield* llm.pushMatch(heldCatchup.record("held-catchup", catchup.match), catchup.response)
+  const selected = Promise.withResolvers<Hit>()
+  const match = heldCatchup.record("held-catchup", catchup.match)
+  yield* llm.pushMatch((hit) => {
+    if (!match(hit)) return false
+    selected.resolve(hit)
+    return true
+  }, catchup.response)
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
-  yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
-  // A request count alone does not establish that the held maintenance response was selected.
+  // pull() selects synchronously before hits/notify. Only this exact response's callback opens the barrier.
+  yield* awaitWithTimeout(Effect.promise(() => selected.promise), "Exact held catch-up response was not selected", "15 seconds").pipe(
+    Effect.catch(() => Effect.gen(function* () {
+      const hits = yield* llm.hits
+      const stored = yield* sessions.messages({ sessionID: chat.id })
+      const view = yield* continuity.prepare({ sessionID: chat.id, messages: stored, canRecall: true, model: selectedModel })
+      const observedJobs = (yield* jobs.list()).filter((entry) => entry.metadata?.sessionId === chat.id)
+      const polled = old.pollUnsafe()
+      const oldResult = polled && Exit.isSuccess(polled) ? polled.value : undefined
+      const summarize = (hit: Hit) => {
+        const messages = wireMessages(hit.body)
+        return { route: hit.url.pathname, model: typeof hit.body.model === "string" ? hit.body.model.slice(0, 80) : undefined,
+          maintenance: maintenance(hit), review: review(hit), oldCaller: parent("OLD_U1_CATCHUP_CALLER")(hit),
+          messageCount: messages.length,
+          messages: messages.flatMap((message, index) => index < 2 || index >= messages.length - 2 ? [{ index,
+            role: message.role, length: message.content.length, prefix: message.content.slice(0, 240) }] : []),
+        }
+      }
+      const detail = {
+        hitCount: hits.length, heldMatches: heldCatchup.hits.length, pendingResponses: yield* llm.pending,
+        inputLimit: selectedModel.limit.input ?? null, contextLimit: selectedModel.limit.context, outputLimit: selectedModel.limit.output,
+        coverage: view.coverage, retainedBoundary: latest.id, deltaBoundary: delta.id,
+        canonicalDeltaPresent: stored.some((message) => message.info.id === delta.id),
+        oldCaller: { state: polled?._tag ?? "running", role: oldResult?.info.role,
+          ...(oldResult?.info.role === "assistant" ? { finish: oldResult.info.finish, error: oldResult.info.error?.name } : {}),
+          text: oldResult?.parts.flatMap((part) => part.type === "text" ? [part.text.slice(0, 160)] : []).slice(0, 2) },
+        eighthRequest: hits[7] ? summarize(hits[7]) : null,
+        lastHits: hits.slice(-8).map((hit, index) => ({ index: Math.max(0, hits.length - 8) + index, ...summarize(hit) })),
+        jobCount: observedJobs.length,
+        jobs: observedJobs.slice(-8).map((entry) => ({ id: entry.id.slice(0, 160), status: entry.status,
+          output: typeof entry.output === "string" ? entry.output.slice(0, 160) : undefined,
+          error: typeof entry.error === "string" ? entry.error.slice(0, 160) : undefined })),
+      }
+      return yield* Effect.fail(new Error(`CATCHUP_EXACT_HTTP_SELECTION_REQUIRED ${JSON.stringify(detail)}`))
+    })),
+  )
   expect(heldCatchup.hits.length).toBe(1)
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
