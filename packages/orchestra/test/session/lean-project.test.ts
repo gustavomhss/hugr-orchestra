@@ -7,6 +7,7 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { MessageTable, PartTable, SessionTable } from "@orchestra/core/session/sql"
 import { LeanEngine } from "@orchestra/schema/lean-engine"
 import { Effect } from "effect"
+import { eq } from "drizzle-orm"
 import { LeanProject } from "../../src/session/lean-project"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { testEffect } from "../lib/effect"
@@ -83,7 +84,7 @@ it.live("SQL collector intersects native project and selected directory, bounds 
       metrics.owner = { projectID: scope.projectID, location: scope.directory, sessionID, callID: `call${count}` }
       yield* database.db.insert(PartTable).values({ id: PartID.make(`prt_lean_sql_${index}_${count}`), session_id: sessionID, message_id: messageID,
         time_created: 1, time_updated: 1, data: { type: "tool", callID: `call${count}`, tool: "bash", state: { status: "completed",
-          input: { command: "go test -v ." }, time: { start: 1, end: 2 }, output: "large-output".repeat(100000), title: "test", metadata: { exit: 0, lean: metrics } } } as never }).run()
+          input: { command: "go test -v ." }, time: { start: 1, end: 2 + count }, output: "large-output".repeat(100000), title: "test", metadata: { exit: 0, lean: metrics } } } as never }).run()
     }
   }
   const all = yield* LeanProject.collect(scope)
@@ -93,4 +94,13 @@ it.live("SQL collector intersects native project and selected directory, bounds 
   const capped = yield* LeanProject.collect(scope, 1)
   expect(capped.complete).toBe(false)
   expect(capped.executions).toHaveLength(1)
+  const latest = yield* LeanProject.collect(scope, 1, true)
+  expect(latest.complete).toBe(false)
+  expect(latest.executions[0].time).toBe(3)
+  yield* database.db.update(SessionTable).set({ revert: { messageID: "msg_lean_sql_0", partID: "prt_lean_sql_0_1" } as never })
+    .where(eq(SessionTable.id, SessionID.make("ses_lean_sql_0"))).run()
+  expect((yield* LeanProject.collect(scope)).executions).toHaveLength(1)
+  yield* database.db.update(SessionTable).set({ revert: { messageID: "msg_lean_sql_0", partID: "missing" } as never })
+    .where(eq(SessionTable.id, SessionID.make("ses_lean_sql_0"))).run()
+  expect((yield* LeanProject.collect(scope)).executions).toEqual([])
 }))
