@@ -23,7 +23,8 @@ import {
 import * as NodeChildProcess from "node:child_process"
 import { PassThrough } from "node:stream"
 import launch from "cross-spawn"
-import { flatten, toError, toPlatformError } from "./child-process-common"
+import { toError, toPlatformError } from "./child-process-common"
+import { fds, pipeline, stdin, stdio } from "./cross-spawn-command"
 import { makeGlobalNode } from "./effect/app-node"
 import { filesystem, path } from "./effect/app-node-platform"
 import { Flag } from "./flag/flag"
@@ -50,36 +51,6 @@ const legacy = Effect.gen(function* () {
 
   const output = (x: ChildProcess.CommandOutput | undefined): NodeChildProcess.IOType | undefined =>
     Sink.isSink(x) ? "pipe" : x
-
-  const stdin = (opts: ChildProcess.CommandOptions): ChildProcess.StdinConfig => {
-    const cfg: ChildProcess.StdinConfig = { stream: "pipe", encoding: "utf-8", endOnDone: true }
-    if (Predicate.isUndefined(opts.stdin)) return cfg
-    if (typeof opts.stdin === "string") return { ...cfg, stream: opts.stdin }
-    if (Stream.isStream(opts.stdin)) return { ...cfg, stream: opts.stdin }
-    return {
-      stream: opts.stdin.stream,
-      encoding: opts.stdin.encoding ?? cfg.encoding,
-      endOnDone: opts.stdin.endOnDone ?? cfg.endOnDone,
-    }
-  }
-
-  const stdio = (opts: ChildProcess.CommandOptions, key: "stdout" | "stderr"): ChildProcess.StdoutConfig => {
-    const cfg = opts[key]
-    if (Predicate.isUndefined(cfg)) return { stream: "pipe" }
-    if (typeof cfg === "string") return { stream: cfg }
-    if (Sink.isSink(cfg)) return { stream: cfg }
-    return { stream: cfg.stream }
-  }
-
-  const fds = (opts: ChildProcess.CommandOptions) => {
-    if (Predicate.isUndefined(opts.additionalFds)) return []
-    return Object.entries(opts.additionalFds)
-      .flatMap(([name, config]) => {
-        const fd = ChildProcess.parseFdName(name)
-        return Predicate.isUndefined(fd) ? [] : [{ fd, config }]
-      })
-      .toSorted((a, b) => a.fd - b.fd)
-  }
 
   const stdios = (
     sin: ChildProcess.StdinConfig,
@@ -278,22 +249,6 @@ const legacy = Effect.gen(function* () {
       })
     }
 
-  const source = (handle: ChildProcessHandle, from: ChildProcess.PipeFromOption | undefined) => {
-    const opt = from ?? "stdout"
-    switch (opt) {
-      case "stdout":
-        return handle.stdout
-      case "stderr":
-        return handle.stderr
-      case "all":
-        return handle.all
-      default: {
-        const fd = ChildProcess.parseFdName(opt)
-        return Predicate.isNotUndefined(fd) ? handle.getOutputFd(fd) : handle.stdout
-      }
-    }
-  }
-
   const spawnCommand: (
     command: ChildProcess.Command,
   ) => Effect.Effect<ChildProcessHandle, PlatformError.PlatformError, Scope.Scope> = Effect.fnUntraced(
@@ -386,45 +341,7 @@ const legacy = Effect.gen(function* () {
           })
         }
         case "PipedCommand": {
-          const flat = flatten(command)
-          const [head, ...tail] = flat.commands
-          let handle = spawnCommand(head)
-          for (let i = 0; i < tail.length; i++) {
-            const next = tail[i]
-            const opts = flat.opts[i] ?? {}
-            const sin = stdin(next.options)
-            const stream = Stream.unwrap(Effect.map(handle, (x) => source(x, opts.from)))
-            const to = opts.to ?? "stdin"
-            if (to === "stdin") {
-              handle = spawnCommand(
-                ChildProcess.make(next.command, next.args, {
-                  ...next.options,
-                  stdin: { ...sin, stream },
-                }),
-              )
-              continue
-            }
-            const fd = ChildProcess.parseFdName(to)
-            if (Predicate.isUndefined(fd)) {
-              handle = spawnCommand(
-                ChildProcess.make(next.command, next.args, {
-                  ...next.options,
-                  stdin: { ...sin, stream },
-                }),
-              )
-              continue
-            }
-            handle = spawnCommand(
-              ChildProcess.make(next.command, next.args, {
-                ...next.options,
-                additionalFds: {
-                  ...next.options.additionalFds,
-                  [ChildProcess.fdName(fd) as `fd${number}`]: { type: "input", stream },
-                },
-              }),
-            )
-          }
-          return yield* handle
+          return yield* pipeline(command, spawnCommand)
         }
       }
     },
