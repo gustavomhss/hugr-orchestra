@@ -1,6 +1,7 @@
 // Actual packaged Electron only. Crash/quit assertions precede every emergency signal.
 import { spawn, spawnSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { randomUUID } from "node:crypto"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "../../../omni/campaign/lib"
 import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
@@ -18,6 +19,9 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   try { requiredFixtures(mutation === "empty" ? [] : ["main", "shell", "terminal"]) }
   catch (error) { return { cell, diagnostic, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
   const scratch = await fixtures()
+  const trace = process.argv.includes("--trace-server")
+  // Default acceptance retains the original sanitized fixture environment.
+  if (trace) Object.assign(scratch.env, { ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "INFO" })
   const withoutMain = diagnostic === "no-main-native" || diagnostic === "load-only" || diagnostic === "completed-run"
   if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC: diagnostic,
     ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC_ARGV: JSON.stringify([scratch.trees.main.command, "-e", "process.stdout.write('SHORT_RUN_READY')"]) })
@@ -43,6 +47,11 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   const retained: Identity[] = []
   const evidence: Record<string, unknown> = {}
   evidence.keychain = store?.evidence
+  const logReport = { source: scratch.report, userData: undefined as string | undefined }
+  evidence.logReport = logReport
+  evidence.logEnvironment = { trace, ORCHESTRA_PRINT_LOGS: scratch.env.ORCHESTRA_PRINT_LOGS ?? null,
+    ORCHESTRA_LOG_LEVEL: scratch.env.ORCHESTRA_LOG_LEVEL ?? null,
+    scope: trace ? "opt-in --trace-server fixture logging intervention" : "original sanitized fixture environment; trace disabled" }
   const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
     scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown",
     hostFixture: process.platform === "darwin" ? store ? "real isolated unlocked keychain" : "missing-keychain root mutation" : "native hosted OS", pass: false, error: "", cleanup: false }
@@ -57,6 +66,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     if (!server.packaged || !server.versions.electron || server.db !== ":memory:" || server.home !== scratch.home || server.nonce !== scratch.trees.main.nonce ||
       path.resolve(server.resources) !== path.resolve(manifest.resources) || !withoutMain && (server.main?.line !== scratch.trees.main.ready || !server.main.bytes) ||
       !Number.isSafeInteger(server.utilityPID) || server.pid === server.utilityPID) throw new Error("actual packaged Electron/isolation/bytes/utility PID control failed")
+    logReport.userData = server.userData
     const rows = table()
     const main = identity(server.pid, rows)
     const utility = identity(server.utilityPID, rows)
@@ -101,9 +111,13 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     const utilityOwned = owned(before, [utility]).map((row) => identity(row.pid, before))
     const selected = cell === "utility-kill" ? scratch.specs.filter((spec) => spec.name !== "main") : scratch.specs
     const boundMs = cell === "quit" ? 20_000 : 8000
+    const actionID = randomUUID()
     const started = Date.now()
-    evidence.action = { cell, started, boundMs, input: cell === "quit" && mutation !== "forced-kill" ? "app.quit" : win ? "TerminateProcess (no tree kill)" : "SIGKILL", target: cell === "utility-kill" ? utility : main }
-    if (cell === "quit" && mutation !== "forced-kill") writeFileSync(server.quit, server.token, { mode: 0o600 })
+    evidence.action = { cell, actionID, started, boundMs, input: cell === "quit" && mutation !== "forced-kill" ? "app.quit" : win ? "TerminateProcess (no tree kill)" : "SIGKILL", target: cell === "utility-kill" ? utility : main }
+    if (cell === "quit" && mutation !== "forced-kill") {
+      writeFileSync(`${server.quit}.tmp`, JSON.stringify({ token: server.token, actionID }), { mode: 0o600 })
+      renameSync(`${server.quit}.tmp`, server.quit)
+    }
     if (cell !== "quit" || mutation === "forced-kill") {
       if (!kill9(cell === "utility-kill" ? utility : main)) throw new Error("pinned actual Electron kill not delivered")
     }
@@ -112,7 +126,9 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     evidence.events = events(scratch.report)
     evidence.exit = { exitCode: app.exitCode, signalCode: app.signalCode, closed: state.closed, exitMs: state.exitedAt ? state.exitedAt - started : undefined }
     if (cell === "quit") {
-      const witnessed = events(scratch.report).filter((event) => event.pid === main.pid && event.at >= started)
+      // Repair: causal identity replaces cross-process wall-clock ordering, never the parent deadlines.
+      const witnessed = events(scratch.report).filter((event) => event.pid === main.pid && "actionID" in event && event.actionID === actionID)
+      evidence.witnessed = witnessed
       const orderly = ["quit-requested", "before-quit", "utility-stopped", "utility-exit", "will-quit", "quit"].every((name) => witnessed.some((event) => event.name === name)) &&
         !witnessed.some((event) => event.name === "utility-watchdog") && witnessed.some((event) => event.name === "utility-exit" && event.code === 0) && witnessed.some((event) => event.name === "quit" && event.code === 0) &&
         app.exitCode === 0 && app.signalCode === null && state.closed && state.exitedAt > started && state.exitedAt - started < boundMs
@@ -159,6 +175,42 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
       for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events|txt)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
       writeFileSync(path.join(destination, "app.log"), state.output)
     } catch (error) { result.pass = false; result.error += `; evidence preservation: ${error}` }
+    // Onboarding replaces XDG_DATA_HOME with the actual report's sibling data directory.
+    const serverLog = preserveLog(logReport.userData ? path.join(path.dirname(logReport.userData), "data", "orchestra", "log", "orchestra.log") : undefined,
+      path.join(destination, "server.log"))
+    evidence.serverLog = serverLog
+    const desktopLogDirectory = { source: logReport.userData ? path.join(logReport.userData, "logs") : undefined,
+      destination: path.join(destination, "desktop-logs"), status: "missing", error: "verified desktop report unavailable", runs: [] as string[] }
+    evidence.desktopLogDirectory = desktopLogDirectory
+    if (desktopLogDirectory.source) {
+      try {
+        desktopLogDirectory.runs = readdirSync(desktopLogDirectory.source, { withFileTypes: true })
+          .filter((entry) => entry.isDirectory() && /^\d{8}T\d{6}$/.test(entry.name)).map((entry) => entry.name)
+        desktopLogDirectory.status = desktopLogDirectory.runs.length ? "found" : "missing"
+        desktopLogDirectory.error = desktopLogDirectory.runs.length ? "" : "no UTC-stamped desktop log directory"
+      }
+      catch (error) {
+        desktopLogDirectory.status = error instanceof Error && "code" in error && error.code === "ENOENT" ? "missing" : "failed"
+        desktopLogDirectory.error = String(error)
+      }
+    }
+    const desktopLogs: ReturnType<typeof preserveLog>[] = []
+    evidence.desktopLogs = desktopLogs
+    desktopLogDirectory.runs.forEach((stamp) => {
+      const target = path.join(desktopLogDirectory.destination, stamp)
+      try {
+        mkdirSync(target, { recursive: true })
+        ;["main.log", "server.log"].forEach((file) => desktopLogs.push(preserveLog(path.join(desktopLogDirectory.source!, stamp, file), path.join(target, file))))
+      } catch (error) {
+        desktopLogs.push({ source: path.join(desktopLogDirectory.source!, stamp), destination: target, status: "failed", bytes: 0, error: String(error) })
+      }
+    })
+    const failures = [serverLog, desktopLogDirectory, ...desktopLogs].filter((receipt) => receipt.status === "failed")
+    if (failures.length) {
+      // Accepted mutant-red cells still require successful cleanup/preservation completion.
+      result.pass = false; result.cleanup = false
+      result.error += `; evidence preservation: ${failures.map((receipt) => `${receipt.source}: ${receipt.error}`).join("; ")}`
+    }
   }
   const record = { ...result, at: new Date().toISOString(), os: process.platform, arch: process.arch, run: process.env.GITHUB_RUN_ID,
     sourceSHA: manifest.sourceSHA, sourceTree: manifest.sourceTree, buildManifestSha256: digest(path.join(logs, "build.json")),
@@ -167,6 +219,20 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   console.log("DESKTOP_CELL " + JSON.stringify({ ...record, evidence: { hosts: evidence.hosts, action: evidence.action, orderly: evidence.orderly,
     observation: evidence.observed ? Object.fromEntries(Object.entries(evidence.observed).filter(([key]) => key !== "samples")) : undefined, failureRows: evidence.failureRows } }))
   return record
+}
+
+function preserveLog(source: string | undefined, destination: string) {
+  const receipt = { source: source ?? null, destination, status: "missing", bytes: 0, error: source ? "" : "verified desktop report unavailable" }
+  if (!source) return receipt
+  try { receipt.bytes = statSync(source).size }
+  catch (error) {
+    receipt.status = error instanceof Error && "code" in error && error.code === "ENOENT" ? "missing" : "failed"
+    receipt.error = String(error)
+    return receipt
+  }
+  try { copyFileSync(source, destination); receipt.status = "copied" }
+  catch (error) { receipt.status = "failed"; receipt.error = String(error) }
+  return receipt
 }
 
 export async function matrix() {
