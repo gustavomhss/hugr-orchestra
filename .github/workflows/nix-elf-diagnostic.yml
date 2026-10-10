@@ -1,0 +1,63 @@
+name: nix-elf-diagnostic
+
+on:
+  push:
+    branches: [nix-elf-debug]
+    paths: [.github/workflows/nix-elf-diagnostic.yml, .github/scripts/nix-elf-diagnostic.py]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: native ELF diagnostic (${{ matrix.system }})
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-24.04
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Preserve diagnostic script outside the source checkout
+        run: cp .github/scripts/nix-elf-diagnostic.py "$RUNNER_TEMP/nix-elf-diagnostic.py"
+      - name: Restore the exact failed source snapshot
+        run: |
+          git fetch --depth=3 origin 3213cc90eec9dd60bfe0e528067e54205aae1e13
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = 3213cc90eec9dd60bfe0e528067e54205aae1e13
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035
+      - name: Capture the real compiler and untouched failed ELF
+        shell: bash
+        env:
+          SYSTEM: ${{ matrix.system }}
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/elf-diagnostic-$SYSTEM"
+          mkdir "$dir"
+          git rev-parse HEAD > "$dir/source-revision.txt"
+          git rev-parse 'HEAD^{tree}' > "$dir/source-tree.txt"
+          git status --porcelain --untracked-files=all > "$dir/source-status.txt"
+          bun=$(nix build --no-write-lock-file --no-update-lock-file --no-link --print-out-paths ".#packages.$SYSTEM.bun")
+          tools=$(nix build --impure --no-write-lock-file --no-update-lock-file --no-link --print-out-paths --expr '
+            let f = builtins.getFlake (toString ./.); p = f.inputs.nixpkgs.legacyPackages.${builtins.currentSystem};
+            in p.symlinkJoin { name = "elf-diagnostic-tools"; paths = [ p.gdb p.binutils p.patchelf ]; }
+          ')
+          export PATH="$tools/bin:$PATH"
+          python3 "$RUNNER_TEMP/nix-elf-diagnostic.py" "$bun/bin/bun" "$dir" "$SYSTEM"
+      - name: Preserve diagnostic evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nix-elf-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
+          path: ${{ runner.temp }}/elf-diagnostic-${{ matrix.system }}
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 14
