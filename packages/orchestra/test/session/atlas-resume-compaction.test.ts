@@ -83,7 +83,7 @@ function compacting(replies: number) {
       compaction: { model: "test/test-model" },
       "backend-lookalike": { name: "backend", model: "test/test-model", mode: "subagent" },
     },
-  })
+  }) as ConfigV1.Info
   return Effect.provide(
     TestAppNodeBuilder.build(compactionTestNode, [
       [Provider.node, ProviderTest.fake({ model }).layer],

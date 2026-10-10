@@ -22,7 +22,7 @@ import { OpenApi } from "effect/unstable/httpapi"
 import { TestLLMServer } from "../../lib/llm-server"
 import path from "path"
 import { array, boolean, check, data, isRecord, locationData, message, object, stable } from "./assertions"
-import { controlledPtyInput, http, route } from "./dsl"
+import { controlledPtyInput, cursor, http, route } from "./dsl"
 import {
   cleanupExercisePaths,
   exerciseConfigDirectory,
@@ -46,10 +46,6 @@ import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
 import { researchArtifactScenarios } from "./research-artifact"
-
-function cursor(input: Record<string, unknown>) {
-  return Buffer.from(JSON.stringify(input)).toString("base64url")
-}
 
 const scenarios: Scenario[] = [
   http.protected
