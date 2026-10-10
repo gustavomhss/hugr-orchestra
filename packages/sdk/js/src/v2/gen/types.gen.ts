@@ -63,6 +63,7 @@ export type Event =
   | EventMaestroAuthorizationGranted
   | EventMaestroDispatchReserved
   | EventMaestroTaskBound
+  | EventMaestroWorkResultDecided
   | EventMessagePartDelta
   | EventSessionDiff
   | EventSessionError
@@ -1549,6 +1550,28 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "maestro.work_result.decided"
+        properties: {
+          projectID: string
+          memberID: "backend"
+          taskId: string
+          authoritySessionID: string
+          executionSessionID: string
+          resultRef: {
+            parentSessionID: string
+            messageID: string
+            partID: string
+            callID: string
+          }
+          workResultHash: string
+          decision: "accepted" | "rejected"
+          verificationState: "not-host-verified" | "host-verified" | "host-failed" | "host-incomplete"
+          terminalReason: "ended" | "blocked" | "failed" | "interrupted"
+          reason?: string
+        }
+      }
+    | {
+        id: string
         type: "message.part.delta"
         properties: {
           sessionID: string
@@ -2040,6 +2063,7 @@ export type GlobalEvent = {
     | SyncEventMaestroAuthorizationGranted
     | SyncEventMaestroDispatchReserved
     | SyncEventMaestroTaskBound
+    | SyncEventMaestroWorkResultDecided
     | SyncEventRelayHookDecided
 }
 
@@ -3446,6 +3470,7 @@ export type V2Event =
   | MaestroAuthorizationGranted
   | MaestroDispatchReserved
   | MaestroTaskBound
+  | MaestroWorkResultDecided
   | MessagePartDelta
   | SessionDiff
   | SessionError
@@ -5070,6 +5095,35 @@ export type SyncEventMaestroTaskBound = {
       executionSessionID: string
       authoritySessionID: string
       source: "host" | "user" | "dispatch" | "governed"
+    }
+  }
+}
+
+export type SyncEventMaestroWorkResultDecided = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.work_result.decided.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      projectID: string
+      memberID: "backend"
+      taskId: string
+      authoritySessionID: string
+      executionSessionID: string
+      resultRef: {
+        parentSessionID: string
+        messageID: string
+        partID: string
+        callID: string
+      }
+      workResultHash: string
+      decision: "accepted" | "rejected"
+      verificationState: "not-host-verified" | "host-verified" | "host-failed" | "host-incomplete"
+      terminalReason: "ended" | "blocked" | "failed" | "interrupted"
+      reason?: string
     }
   }
 }
@@ -7153,6 +7207,38 @@ export type MaestroTaskBound = {
     executionSessionID: string
     authoritySessionID: string
     source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
+export type MaestroWorkResultDecided = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.work_result.decided"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    projectID: string
+    memberID: "backend"
+    taskId: string
+    authoritySessionID: string
+    executionSessionID: string
+    resultRef: {
+      parentSessionID: string
+      messageID: string
+      partID: string
+      callID: string
+    }
+    workResultHash: string
+    decision: "accepted" | "rejected"
+    verificationState: "not-host-verified" | "host-verified" | "host-failed" | "host-incomplete"
+    terminalReason: "ended" | "blocked" | "failed" | "interrupted"
+    reason?: string
   }
 }
 
@@ -9302,6 +9388,29 @@ export type EventMaestroTaskBound = {
     executionSessionID: string
     authoritySessionID: string
     source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
+export type EventMaestroWorkResultDecided = {
+  id: string
+  type: "maestro.work_result.decided"
+  properties: {
+    projectID: string
+    memberID: "backend"
+    taskId: string
+    authoritySessionID: string
+    executionSessionID: string
+    resultRef: {
+      parentSessionID: string
+      messageID: string
+      partID: string
+      callID: string
+    }
+    workResultHash: string
+    decision: "accepted" | "rejected"
+    verificationState: "not-host-verified" | "host-verified" | "host-failed" | "host-incomplete"
+    terminalReason: "ended" | "blocked" | "failed" | "interrupted"
+    reason?: string
   }
 }
 
