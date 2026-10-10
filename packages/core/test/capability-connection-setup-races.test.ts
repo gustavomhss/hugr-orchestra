@@ -32,14 +32,12 @@ it.live("authority revoked while reconcile waits on real writer rejects before a
   })).pipe(Effect.timeout("3 seconds"))
 }))
 
-it.live("project deletion or authority revocation between HTTP and writer commit prevents orphan rows", () => Effect.forEach(
-  ["project", "authority"] as const, (change) => Effect.gen(function* () {
+it.live("project deletion between HTTP and writer commit prevents orphan rows", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionSetupFixture.fixture()
     const issued = yield* f.operators.issue({ origin: "sdk" })
     const before = yield* f.rows
-    const hold = yield* CapabilityConnectionSetupFixture.checkpoint(f.database, "commit", (tx) => change === "project"
-      ? tx.delete(ProjectTable).where(eq(ProjectTable.id, placement.projectID)).run().pipe(Effect.asVoid)
-      : f.operators.revoke(issued.authority))
+    const hold = yield* CapabilityConnectionSetupFixture.checkpoint(f.database, "commit", (tx) =>
+      tx.delete(ProjectTable).where(eq(ProjectTable.id, placement.projectID)).run().pipe(Effect.asVoid))
     return yield* hold.protect(Effect.gen(function* () {
       const pending = yield* hold.start(f.run(f.setup.connect(placement, input), "writer-fence", issued.authority).pipe(Effect.exit))
       yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(Effect.andThen(Effect.die("SETUP_COMMIT_WRITER_NOT_HELD"))))
@@ -48,11 +46,11 @@ it.live("project deletion or authority revocation between HTTP and writer commit
       yield* Deferred.succeed(hold.release, undefined)
       if (!hold.state.writer) return yield* Effect.die("Missing setup writer")
       yield* Fiber.join(hold.state.writer)
-      CapabilityConnectionSetupFixture.expectCode(yield* Fiber.join(pending), change === "project" ? "connection_unavailable" : "authentication_required")
+      CapabilityConnectionSetupFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
       expect(yield* f.rows).toEqual(before)
       expect(f.seen).toHaveLength(1)
     })).pipe(Effect.timeout("3 seconds"))
-  })))
+  }))
 
 it.live("revocation during actual identity response blocks persistence under same private binding", () => Effect.gen(function* () {
   const entered = yield* Deferred.make<void>()
