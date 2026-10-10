@@ -18,7 +18,9 @@ test.each(cases)("streamed refresh %s late %s after %s preserves current owner w
   const f = fixture((request) => {
     const current = new URL(request.url).pathname
     if (request.method === "POST") { committed = true; return json({ requestID: "ack", reused: false, data: null }) }
-    if (current.includes(connection(2).connection.id)) return json({ items: [target(2, 2)], coverage: "live" })
+    if (current.includes(connection(2).connection.id)) return reply === "json"
+      ? json({ items: [target(2, 2)], coverage: "live" })
+      : json({ _tag: "InvalidRequestError", message: "current selection invalid" }, 400)
     if (committed && current === path) return late.response
     return reads(request)
   }, true, (state) => snapshots.push(JSON.stringify(state)), undefined, (current, signal) => {
@@ -52,8 +54,9 @@ test.each(cases)("streamed refresh %s late %s after %s preserves current owner w
   expect(snapshots.length).toBeGreaterThan(1)
   if (action === "select") {
     expect(f.model.state.connectionID).toBe(connection(2).connection.id)
-    expect(f.model.state.targets).toEqual([target(2, 2)])
-    expect(f.model.state.status).toBe("ready")
+    expect(f.model.state.targets).toEqual(reply === "json" ? [target(2, 2)] : [])
+    expect(f.model.state.status).toBe(reply === "json" ? "ready" : "error")
+    expect(f.model.state.failure).toBe(reply === "json" ? undefined : "invalid")
   }
   if (action === "dispose") {
     expect(f.model.state.receipt).toBeUndefined()
