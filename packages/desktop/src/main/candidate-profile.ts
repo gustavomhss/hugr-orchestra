@@ -36,6 +36,9 @@ export function initializeCandidateProfile(
   const appData = app.getPath("appData")
   const requested = process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT ?? join(appData, APP_ID)
   if (!isAbsolute(requested)) throw new Error("candidate-profile: root must be absolute")
+  if (lstatSync(resolve(requested), { throwIfNoEntry: false })?.isSymbolicLink()) {
+    throw new Error("candidate-profile: root must not be a symlink")
+  }
   const root = canonicalPath(requested)
   // OS account home remains stable when a relaunch inherits the candidate HOME.
   const home = canonicalPath(userInfo().homedir)
@@ -77,6 +80,13 @@ export function initializeCandidateProfile(
   }
   const marker = join(root, MARKER)
   const ownership = JSON.stringify({ appId: APP_ID, version: 1, root })
+  const directories = [
+    profile.desktop, profile.session, profile.home, profile.data, profile.config, profile.cache, profile.state,
+    profile.tmp, dirname(profile.db), profile.managed, join(profile.home, "Documents"), join(profile.home, "Downloads"),
+    join(profile.home, ".claude"), join(profile.home, ".claude-secure-storage"),
+  ]
+  // Validate all persistent descendants before reading settings/markers or creating any missing paths.
+  validateExistingState(root, new Set([root, ...directories]))
   if (existsSync(root)) {
     if (!lstatSync(root).isDirectory()) throw new Error("candidate-profile: root is not a directory")
     if (existsSync(marker)) {
@@ -85,20 +95,9 @@ export function initializeCandidateProfile(
       }
     } else if (readdirSync(root).length) throw new Error("candidate-profile: nonempty unowned root")
   }
-  const directories = [
-    profile.desktop, profile.session, profile.home, profile.data, profile.config, profile.cache, profile.state,
-    profile.tmp, dirname(profile.db), profile.managed, join(profile.home, "Documents"), join(profile.home, "Downloads"),
-  ]
-  // Validate the entire partial profile before filling missing directories; never follow a planted symlink.
-  for (const path of [...directories, profile.db, marker]) {
-    if (canonicalPath(path) !== path || lstatSync(path, { throwIfNoEntry: false })?.isSymbolicLink()) {
-      throw new Error("candidate-profile: path escapes owned root")
-    }
-    if (directories.includes(path) && existsSync(path) && !lstatSync(path).isDirectory()) {
-      throw new Error("candidate-profile: path is not a directory")
-    }
+  if (existsSync(profile.db) && !lstatSync(realpathSync(profile.db)).isFile()) {
+    throw new Error("candidate-profile: db is not a file")
   }
-  if (existsSync(profile.db) && !lstatSync(profile.db).isFile()) throw new Error("candidate-profile: db is not a file")
   mkdirSync(root, { recursive: true, mode: 0o700 })
   if (!existsSync(marker)) writeFileSync(marker, ownership, { flag: "wx", mode: 0o600 })
   directories.forEach((path) => mkdirSync(path, { recursive: true, mode: 0o700 }))
@@ -125,6 +124,8 @@ export function candidateEnvironment(
     HOME: profile.home,
     USERPROFILE: profile.home,
     ORCHESTRA_TEST_HOME: profile.home,
+    CLAUDE_CONFIG_DIR: join(profile.home, ".claude"),
+    CLAUDE_SECURESTORAGE_CONFIG_DIR: join(profile.home, ".claude-secure-storage"),
     XDG_DATA_HOME: profile.data,
     XDG_CONFIG_HOME: profile.config,
     XDG_CACHE_HOME: profile.cache,
@@ -159,6 +160,40 @@ function canonicalPath(path: string): string {
   const parent = dirname(absolute)
   if (parent === absolute) return absolute
   return join(canonicalPath(parent), relative(parent, absolute))
+}
+
+function validateExistingState(root: string, privateDirectories: Set<string>) {
+  const visited = new Set<string>()
+  const uid = process.platform === "win32" ? undefined : process.geteuid?.()
+  if (process.platform !== "win32" && uid === undefined) throw new Error("candidate-profile: effective uid unavailable")
+  const visit = (path: string, privateDirectory = privateDirectories.has(path)): void => {
+    const info = lstatSync(path, { throwIfNoEntry: false })
+    if (!info) return
+    if (uid !== undefined && info.uid !== uid) throw new Error("candidate-profile: path not owned by effective uid")
+    if (info.isSymbolicLink()) {
+      const target = (() => {
+        try {
+          return realpathSync(path)
+        } catch {
+          throw new Error("candidate-profile: unresolved owned link")
+        }
+      })()
+      if (!contains(root, target)) throw new Error("candidate-profile: path escapes owned root")
+      visit(target, privateDirectory)
+      return
+    }
+    if (privateDirectory && !info.isDirectory()) throw new Error("candidate-profile: path is not a directory")
+    // Symlink mode bits have no portable access meaning; target nodes enforce the actual permissions.
+    if (uid !== undefined && (info.mode & (privateDirectory ? 0o077 : 0o022)) !== 0) {
+      throw new Error(
+        privateDirectory ? "candidate-profile: unsafe private permissions" : "candidate-profile: writable persistent state",
+      )
+    }
+    if (!info.isDirectory() || visited.has(path)) return
+    visited.add(path)
+    readdirSync(path).forEach((name) => visit(join(path, name)))
+  }
+  visit(root)
 }
 
 function contains(parent: string, child: string) {

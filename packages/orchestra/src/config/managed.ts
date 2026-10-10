@@ -5,6 +5,9 @@ import os from "os"
 import path from "path"
 import { Process } from "@/util/process"
 
+// Replaced only by the backend compiler's explicit candidate build mode; absent in normal source execution.
+declare const ORCHESTRA_CANDIDATE_BUILD: boolean
+
 const MANAGED_PLIST_DOMAIN = "ai.hugr.orchestra.managed"
 
 // Keys injected by macOS/MDM into the managed plist that are not Orchestra config
@@ -35,7 +38,8 @@ export function managedConfigDir() {
 }
 
 function candidateManagedConfigDir() {
-  if (process.env.ORCHESTRA_LEAN_CANDIDATE !== "1") return
+  if (typeof ORCHESTRA_CANDIDATE_BUILD === "undefined" || ORCHESTRA_CANDIDATE_BUILD !== true) return
+  if (process.env.ORCHESTRA_LEAN_CANDIDATE !== "1") throw new Error("candidate-managed: candidate environment required")
   const root = process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT
   if (!root || !path.isAbsolute(root)) throw new Error("candidate-managed: absolute root required")
   const marker = path.join(root, ".orchestra-lean-candidate.json")
