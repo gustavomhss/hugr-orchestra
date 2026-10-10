@@ -134,6 +134,7 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const permission = yield* Permission.Service
     const fsys = yield* FSUtil.Service
+    const global = yield* Global.Service
     const mcp = yield* MCP.Service
     const lsp = yield* LSP.Service
     const registry = yield* ToolRegistry.Service
@@ -1219,7 +1220,7 @@ const layer = Layer.effect(
               model,
               processor: proxy.processor,
               messages: sent,
-            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, promptOps: ops })
+            }, { plugin, permission, registry, mcp, truncate, flags, nativeHost, config, fs: fsys, global, promptOps: ops })
 
             canRecall = Object.hasOwn(
               LLMRequestPrep.resolveTools({ tools, agent, permission: session.permission, user: lastUser }),
