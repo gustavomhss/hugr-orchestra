@@ -70,7 +70,8 @@ export async function startHost(mode: "basic" | "bearer" = "basic") {
 
 export function transport() {
   const calls: { url: string; method: string; headers: Headers; body: string; signal?: AbortSignal | null; status?: number; response?: string }[] = []
-  const controls = { loseNextPost: false, failNextGet: false, holdNextGet: undefined as Promise<void> | undefined }
+  const controls = { loseNextPost: false, failNextGet: false, holdNextGet: undefined as Promise<void> | undefined,
+    holdNextPost: undefined as Promise<void> | undefined }
   const fetch = Object.assign(async (input: Parameters<typeof globalThis.fetch>[0], init?: Parameters<typeof globalThis.fetch>[1]) => {
     const url = typeof input === "string" || input instanceof URL ? String(input) : input.url
     if (!['127.0.0.1', 'localhost'].includes(new URL(url).hostname)) throw new Error(`Non-loopback transport: ${url}`)
@@ -81,8 +82,9 @@ export function transport() {
       controls.failNextGet = false
       return new Response(JSON.stringify({ message: "fixture-private-read-error" }), { status: 503 })
     }
-    const hold = request.method === "GET" ? controls.holdNextGet : undefined
-    if (hold) controls.holdNextGet = undefined
+    const hold = request.method === "GET" ? controls.holdNextGet : controls.holdNextPost
+    if (hold && request.method === "GET") controls.holdNextGet = undefined
+    if (hold && request.method === "POST") controls.holdNextPost = undefined
     const response = await Bun.fetch(url, { ...init, headers: Object.fromEntries(request.headers) })
     request.status = response.status
     request.response = await response.clone().text()

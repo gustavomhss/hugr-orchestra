@@ -1,6 +1,11 @@
 import { afterEach, expect, test } from "bun:test"
 import { assertPrivate, button, connect, field, idle, mountPage, select, startHost, submit, waitFor } from "./integrations-native.fixture"
 
+// Desired main-path assertions stay live. At a1eee26ade, entry's tracked load disposes writes;
+// separately, implicit-local ledger capture decodes wire Location.Ref instead of its Type.
+// Diagnostic untrack/load + Schema.toType(targetSchema) probes reach all real HTTP/SQL assertions.
+// Production fixes belong to the lead; this test-only branch intentionally exposes those regressions.
+
 const cleanup: (() => void | Promise<void>)[] = []
 afterEach(async () => { for (const dispose of cleanup.splice(0).reverse()) await dispose(); localStorage.clear() })
 
@@ -171,4 +176,23 @@ test("failed read after ACK retries only GET, never POST or vendor verification"
   expect(view.root.querySelector('[role="alert"]')).toBeNull()
   expect(view.root.textContent).toContain("Read retry")
   assertPrivate(view.root, ["read-retry-private-key", "fixture-private-read-error"], view.wire)
+}, 90000)
+
+test("actual page sanitizes malformed/expired vendor credentials without persisting failed setup", async () => {
+  const host = await startHost()
+  cleanup.push(host.stop)
+  const view = mountPage(host)
+  cleanup.push(view.dispose)
+  await idle(view.root)
+  for (const key of ["malformed-page-private-key", "expired-page-private-key"]) {
+    await connect(view.root, "slack", key)
+    expect(view.root.textContent).toContain("Host authorization is required")
+    expect(view.root.textContent).not.toContain("Request saved")
+    assertPrivate(view.root, [key, "token_expired", "vendor-private"], view.wire)
+  }
+  const rows = await host.inspect()
+  expect(rows.vendor).toHaveLength(2)
+  expect(rows.connections).toEqual([])
+  expect(rows.credentials).toEqual([])
+  expect(rows.receipts).toEqual([])
 }, 90000)

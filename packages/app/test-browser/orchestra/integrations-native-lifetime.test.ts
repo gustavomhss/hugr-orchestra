@@ -2,6 +2,7 @@ import { afterEach, expect, test } from "bun:test"
 import { button, field, idle, mountPage, startHost, submit, transport, waitFor } from "./integrations-native.fixture"
 import { navigation, breadcrumbLabel, isWip } from "../../src/orchestra/navigation"
 import { createIntegrationsApi } from "../../src/orchestra/chapters/integrations-api"
+import type { Component } from "solid-js"
 
 const cleanup: (() => void | Promise<void>)[] = []
 afterEach(async () => { for (const dispose of cleanup.splice(0).reverse()) await dispose(); localStorage.clear() })
@@ -132,7 +133,7 @@ test("navigation and lazy chapter registration retain actual route contract", as
   const host = await startHost()
   cleanup.push(host.stop)
   // Load through the actual lazy registration; entry fixtures mount that same default export.
-  const loaded = await (page as typeof import("solid-js").Component & { preload: () => Promise<{ default: unknown }> }).preload()
+  const loaded = await (page as Component & { preload: () => Promise<{ default: unknown }> }).preload()
   const entry = await import("../../src/orchestra/chapters/integrations")
   expect(loaded.default).toBe(entry.default)
   const view = mountPage(host)
@@ -140,4 +141,43 @@ test("navigation and lazy chapter registration retain actual route contract", as
   await idle(view.root)
   expect(view.root.querySelector('[data-mx-page="orchestra-integrations"]')).not.toBeNull()
   expect(view.wire.calls[0].status).toBe(200)
+}, 90000)
+
+test("pending setup root disposal clears private intent and cannot refresh or retry under B", async () => {
+  const a = await startHost()
+  cleanup.push(a.stop)
+  const b = await startHost("bearer")
+  cleanup.push(b.stop)
+  const wire = transport()
+  const first = mountPage(a, wire)
+  cleanup.push(first.dispose)
+  await idle(first.root)
+  const gate = Promise.withResolvers<void>()
+  cleanup.push(gate.resolve)
+  wire.controls.holdNextPost = gate.promise
+  button("Connect account", first.root).click()
+  await waitFor(() => !!document.querySelector(".integrations-dialog"))
+  const key = field("key")
+  key.value = "pending-profile-private-key"
+  field("label").value = "Late profile A account"
+  submit()
+  expect(key.value).toBe("")
+  await waitFor(() => wire.calls.at(-1)?.method === "POST" && wire.calls.at(-1)?.status === 200 && !!wire.calls.at(-1)?.response)
+  expect((await a.inspect()).connections).toHaveLength(1)
+  const pending = wire.calls.at(-1)
+  expect(first.root.querySelector('[aria-busy="true"]')).not.toBeNull()
+  first.dispose()
+  expect(pending?.signal?.aborted).toBe(true)
+  const before = wire.calls.length
+  const second = mountPage(b, wire)
+  cleanup.push(second.dispose)
+  await idle(second.root)
+  gate.resolve()
+  await Bun.sleep(50)
+  expect(wire.calls.slice(before).map((call) => [call.method, new URL(call.url).origin, call.headers.has("authorization")])).toEqual([["GET", b.url, false]])
+  expect(second.root.textContent).not.toContain("Late profile A account")
+  expect(second.root.textContent).not.toContain("Request saved")
+  expect(second.root.textContent).not.toContain("Retry same request")
+  expect(second.root.textContent).not.toContain("pending-profile-private-key")
+  expect(field("bearer").value).toBe("")
 }, 90000)
