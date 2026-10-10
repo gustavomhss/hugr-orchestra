@@ -6,6 +6,7 @@ import type { LeanViewProps } from "@/orchestra/chapters/lean-view-contract"
 const { LeanProfileView } = await import("@/orchestra/chapters/lean-view")
 const { PlatformProvider } = await import("@/context/platform")
 const { LanguageProvider } = await import("@/context/language")
+type MutableProps = { -readonly [K in keyof LeanViewProps]: LeanViewProps[K] }
 
 export function info(profileID = "profile-one"): LeanDashboard.Info {
   return {
@@ -48,7 +49,7 @@ export function history(data = info()): LeanDashboard.History {
 }
 
 export function mount(patch: Partial<LeanViewProps> = {}, locale: "en" | "br" = "en") {
-  const [props, set] = createStore<LeanViewProps>({
+  const [props, set] = createStore<MutableProps>({
     profileName: "Profile one",
     loading: false,
     data: info(),
