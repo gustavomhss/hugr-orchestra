@@ -80,7 +80,7 @@ test("rejects relative, home, production/dev/beta and symlink-alias roots before
 
 test("preserves nonempty unowned partial roots instead of adopting or deleting them", () => {
   const root = join(base, "unknown")
-  mkdirSync(join(root, "desktop"), { recursive: true })
+  mkdirSync(join(root, "desktop"), { recursive: true, mode: 0o700 })
   writeFileSync(join(root, "desktop", "orchestra.settings"), "unknown bytes")
   process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = root
   expect(() => initializeCandidateProfile(fixture().app, true)).toThrow("nonempty unowned root")
@@ -163,7 +163,7 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
   `, candidateEnvironment(p))
 })
 
-test("managed policy bypass requires flag plus owned absolute root; normal plist parsing stays intact", () => {
+test("normal backend candidate environment and owned marker cannot bypass machine policy", () => {
   const p = initializeCandidateProfile(fixture().app, true)!
   run(resolve(import.meta.dir, "../../../orchestra"), `
     import assert from "node:assert/strict"; import { mock } from "bun:test"; import fs from "node:fs";
@@ -173,17 +173,18 @@ test("managed policy bypass requires flag plus owned absolute root; normal plist
     mock.module("./src/util/process", () => ({ Process: { run: async () => {
       policyReads++; return { code: 0, stdout: Buffer.from('{"machine":true}') };
     } } }));
+    process.env.ORCHESTRA_CANDIDATE_BUILD = "true";
     const m = await import("./src/config/managed.ts");
     assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
-    assert.equal(await m.readManagedPreferences(), undefined); assert.equal(policyReads, 0);
+    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 1);
     process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = "relative";
-    assert.throws(() => m.managedConfigDir(), /absolute root required/);
+    assert.equal(m.managedConfigDir(), ${JSON.stringify(p.managed)});
     process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT = ${JSON.stringify(p.root)};
     process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR = "/host/managed";
-    assert.throws(() => m.managedConfigDir(), /invalid owned profile/);
+    assert.equal(m.managedConfigDir(), "/host/managed");
     delete process.env.ORCHESTRA_LEAN_CANDIDATE;
     assert.equal(m.managedConfigDir(), "/host/managed");
-    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 1);
+    assert.equal((await m.readManagedPreferences()).text, '{"machine":true}'); assert.equal(policyReads, 2);
     assert.equal(m.parseManagedPlist('{"PayloadUUID":"mdm","keep":true}'), '{"keep":true}');
   `, candidateEnvironment(p))
 })
