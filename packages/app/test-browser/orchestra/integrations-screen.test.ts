@@ -3,22 +3,20 @@ import { createRequire } from "node:module"
 import { Capability } from "@orchestra/schema/capability"
 import { SessionID } from "@orchestra/schema/session-id"
 import { createComponent, render } from "solid-js/web"
-import type { Api, Connection, Model, Receipt } from "../../src/orchestra/chapters/integrations-contract"
+import type {
+  Api,
+  Binding,
+  Connection,
+  Model,
+  Receipt,
+  Target,
+} from "../../src/orchestra/chapters/integrations-contract"
 
-// Compile real components with Solid, not Bun's React JSX transform. Optional source override exercises
-// the actual sibling author's controller before landing, without merging or substituting a fake Model.
+// Compile real components with Solid, not Bun's React JSX transform. Model imports use actual local source.
 const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
 Bun.plugin({
   name: "solid-integrations-screen",
   setup(build) {
-    build.onLoad({ filter: /integrations-model\.ts$/ }, async (args) => ({
-      // A sibling worktree has its own installation. Share this test's Solid runtime for reactivity.
-      contents: (await Bun.file(args.path).text()).replace(
-        /from "(solid-js(?:\/store)?)"/g,
-        (_match, spec: string) => `from ${JSON.stringify(Bun.resolveSync(spec, import.meta.dir))}`,
-      ),
-      loader: "ts",
-    }))
     build.onLoad({ filter: /\.tsx(?:\?integrations-solid)?$/ }, async (args) => {
       const file = args.path.replace(/\?integrations-solid$/, "")
       const result = await solid("@babel/core").transformAsync(await Bun.file(file).text(), {
@@ -32,9 +30,7 @@ Bun.plugin({
     })
   },
 })
-const { createIntegrationModel }: { createIntegrationModel: (api: Api, key?: () => string) => Model } = await import(
-  process.env.INTEGRATIONS_MODEL_SOURCE ?? "../../src/orchestra/chapters/integrations-model"
-)
+const { createIntegrationModel } = await import("../../src/orchestra/chapters/integrations-model")
 const { IntegrationsScreen }: typeof import("../../src/orchestra/chapters/integrations-screen") = await import(
   "../../src/orchestra/chapters/integrations-screen"
 )
@@ -67,6 +63,23 @@ const target = {
   },
 }
 const binding = { sessionID: SessionID.create(), actions: ["slack.message.send", "discord.channel.read"] }
+const other: Connection = {
+  ...account,
+  connection: { ...account.connection, id: Capability.ConnectionID.create(), provider: "discord" },
+  label: "Other account",
+}
+const nextTarget: Target = {
+  target: { ...target.target, id: Capability.TargetID.create(), environment: "Next environment" },
+}
+const otherTarget: Target = {
+  target: {
+    ...target.target,
+    id: Capability.TargetID.create(),
+    connectionID: other.connection.id,
+    environment: "Other environment",
+  },
+}
+const nextBinding: Binding = { ...binding, sessionID: SessionID.make(`${binding.sessionID}z`) }
 const receipt = (data: Receipt["data"], reused = false): Receipt => ({ requestID: "public-receipt", reused, data })
 
 async function mount(
@@ -80,18 +93,61 @@ async function mount(
 ) {
   const calls: { method: string; args: unknown[] }[] = []
   const record = (method: string, args: unknown[]) => calls.push({ method, args })
+  const accounts = new Map<Capability.ConnectionID, Connection>(
+    [account, other].map((row) => [row.connection.id, structuredClone(row)]),
+  )
+  const targets = new Map<Capability.TargetID, Target>(
+    [target, nextTarget, otherTarget].map((row) => [row.target.id, structuredClone(row)]),
+  )
+  const bindings = new Map<Capability.TargetID, Binding[]>([
+    [target.target.id, structuredClone([binding, nextBinding])],
+  ])
   const api: Api = {
+    get: async (...args) => {
+      record("get", args)
+      const row = accounts.get(args[0])
+      if (!row) throw { status: 404 }
+      return structuredClone(row)
+    },
+    getTarget: async (...args) => {
+      record("getTarget", args)
+      const row = targets.get(args[0])
+      if (!row) throw { status: 404 }
+      return structuredClone(row)
+    },
     list: async (...args) => {
       record("list", args)
-      return { items: [account], after: account.connection.id, coverage: "live" }
+      const rows = [...accounts.values()]
+        .filter((row) => !args[0] || row.connection.id > args[0])
+        .sort((a, b) => a.connection.id.localeCompare(b.connection.id))
+      return {
+        items: structuredClone(rows.slice(0, 1)),
+        ...(rows.length > 1 ? { after: rows[0].connection.id } : {}),
+        coverage: "live",
+      }
     },
     targets: async (...args) => {
       record("targets", args)
-      return { items: [target], after: "a".repeat(32), coverage: "live" }
+      const rows = [...targets.values()]
+        .filter((row) => row.target.connectionID === args[0])
+        .sort((a, b) => a.target.id.localeCompare(b.target.id))
+      const offset = Number(args[1] ?? 0)
+      return {
+        items: structuredClone(rows.slice(offset, offset + 1)),
+        ...(rows.length > offset + 1 ? { after: String(offset + 1).padStart(32, "0") } : {}),
+        coverage: "live",
+      }
     },
     bindings: async (...args) => {
       record("bindings", args)
-      return { items: [binding], after: binding.sessionID, coverage: "current-actor" }
+      const rows = (bindings.get(args[0]) ?? [])
+        .filter((row) => !args[1] || row.sessionID > args[1])
+        .sort((a, b) => a.sessionID.localeCompare(b.sessionID))
+      return {
+        items: structuredClone(rows.slice(0, 1)),
+        ...(rows.length > 1 ? { after: rows[0].sessionID } : {}),
+        coverage: "current-actor",
+      }
     },
     connect: async (...args) => {
       record("connect", args)
@@ -102,26 +158,57 @@ async function mount(
     },
     createTarget: async (...args) => {
       record("createTarget", args)
-      return receipt(target)
+      const row = {
+        target: {
+          id: Capability.TargetID.create(),
+          connectionID: args[0].id,
+          generation: 0,
+          environment: args[1].environment,
+        },
+      }
+      targets.set(row.target.id, row)
+      return receipt(row)
     },
     retargetTarget: async (...args) => {
       record("retargetTarget", args)
-      return receipt(target)
+      const row = { target: { ...args[0], generation: args[0].generation + 1, environment: args[1].environment } }
+      targets.set(row.target.id, row)
+      return receipt(row)
     },
     bind: async (...args) => {
       record("bind", args)
+      bindings.set(args[0].id, [{ sessionID: args[1].sessionID, actions: [...args[1].actions] }])
       return receipt(null)
     },
     unbind: async (...args) => {
       record("unbind", args)
+      bindings.set(
+        args[0].id,
+        (bindings.get(args[0].id) ?? []).filter((row) => row.sessionID !== args[1]),
+      )
       return receipt(null)
     },
     removeTarget: async (...args) => {
       record("removeTarget", args)
+      targets.delete(args[0].id)
+      bindings.delete(args[0].id)
       return receipt(null)
     },
     disconnect: async (...args) => {
       record("disconnect", args)
+      const row = accounts.get(args[0].id)
+      if (!row) throw { status: 404 }
+      accounts.set(args[0].id, {
+        ...row,
+        connection: { ...row.connection, generation: row.connection.generation + 1 },
+        state: "disconnected",
+      })
+      Array.from(targets.values())
+        .filter((item) => item.target.connectionID === args[0].id)
+        .forEach((item) => {
+          targets.delete(item.target.id)
+          bindings.delete(item.target.id)
+        })
       return receipt(null)
     },
   }
@@ -166,6 +253,29 @@ function button(text: string, root: ParentNode = document) {
   if (!element) throw new Error(`Missing button: ${text}`)
   return element
 }
+function privateState(model: Model, secret: string) {
+  const strings = (value: unknown): string[] =>
+    typeof value === "string"
+      ? [value]
+      : value && typeof value === "object"
+        ? Object.values(value).flatMap(strings)
+        : []
+  // Positive control also covers escaped tokens: inspect decoded leaves, never serialized JSON spelling.
+  expect(strings({ nested: { secret } })).toContain(secret)
+  expect(strings(model.state).some((value) => value === secret || (secret.length >= 8 && value.includes(secret)))).toBe(
+    false,
+  )
+  expect(model.state).not.toHaveProperty("key")
+  expect(model.state).not.toHaveProperty("bearer")
+  expect(model.state).not.toHaveProperty("idempotencyKey")
+}
+function row(id: string, root: ParentNode = document) {
+  const element = [...root.querySelectorAll<HTMLButtonElement>(".integrations-select")].find(
+    (element) => element.querySelector("code")?.textContent === id,
+  )
+  if (!element) throw new Error(`Missing row: ${id}`)
+  return element
+}
 function field(name: string) {
   const element = document.querySelector<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${name}"]`)
   if (!element) throw new Error(`Missing field: ${name}`)
@@ -183,10 +293,11 @@ async function selectTarget() {
 
 test("connect clears DOM key before dispatch; unknown retry uses real controller snapshot and receipt", async () => {
   const view = await mount({ lost: true })
+  const secret = 'fixture-"access"\\token'
   button("Connect account").click()
   await settle()
   const key = field("key")
-  key.value = "fixture-access-token"
+  key.value = secret
   field("provider").value = "discord"
   field("label").value = "فريق Alpha"
   submit()
@@ -194,14 +305,15 @@ test("connect clears DOM key before dispatch; unknown retry uses real controller
   await settle()
   expect(view.model.state.failure).toBe("unknown")
   expect(document.body.textContent).not.toContain("fixture secret")
-  expect(JSON.stringify(view.model.state)).not.toContain("fixture-access-token")
+  privateState(view.model, secret)
+  privateState(view.model, "private-idempotency-key")
   button("Retry same request").click()
   await settle()
   const requests = view.calls.filter((call) => call.method === "connect")
   expect(requests.length).toBe(2)
   expect(requests.map((call) => call.args.slice(0, 2))).toEqual([
-    [{ provider: "discord", key: "fixture-access-token", label: "فريق Alpha" }, "private-idempotency-key"],
-    [{ provider: "discord", key: "fixture-access-token", label: "فريق Alpha" }, "private-idempotency-key"],
+    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key"],
+    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key"],
   ])
   expect(document.body.textContent).toContain("Original request receipt reused")
 })
@@ -262,7 +374,7 @@ test("host bearer stays out of Basic mode, clears on submit and disposal", async
   form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
   expect(view.tokens).toEqual(["fixture-host-bearer"])
   expect(bearer.value).toBe("")
-  expect(JSON.stringify(view.model.state)).not.toContain("fixture-host-bearer")
+  privateState(view.model, "fixture-host-bearer")
   bearer.value = "cancel-fixture-bearer"
   button("Cancel", form).click()
   expect(bearer.value).toBe("")
@@ -303,10 +415,41 @@ test("busy request exposes Cancel, clears key and aborts real controller request
   button("Cancel").click()
   expect(view.model.state.busy).toBe(false)
   expect(view.calls.find((call) => call.method === "connect")?.args[2]).toMatchObject({ signal: { aborted: true } })
+  button("Next page").click()
+  await settle()
+  row(other.connection.id).click()
+  await settle()
+  row(otherTarget.target.id).click()
+  await settle()
+  button("Create target").click()
+  await settle()
+  field("environment").value = "other-account-write"
+  field("resource").value = '{"channel":"other-explicit"}'
+  submit()
+  await settle()
+  expect(view.calls.find((call) => call.method === "createTarget")?.args[0]).toEqual(other.connection)
+  expect(view.model.state.connectionID).toBe(other.connection.id)
+  expect(view.model.state.targetID).toBe(otherTarget.target.id)
+  button("Connect account").click()
+  await settle()
+  const draft = field("key")
+  draft.value = "new-account-draft"
+  field("label").value = "draft-after-new-writer"
+  const dialog = document.querySelector('[role="dialog"]')
+  const beforeAck = view.calls.length
   pending.resolve()
   await settle()
-  expect(view.model.state.receipt).toBeUndefined()
-  expect(JSON.stringify(view.model.state)).not.toContain("cancel-pending-fixture-key")
+  expect(view.calls.length).toBe(beforeAck)
+  expect(view.model.state.connectionID).toBe(other.connection.id)
+  expect(view.model.state.targetID).toBe(otherTarget.target.id)
+  expect(document.querySelector('[role="dialog"]') === dialog).toBe(true)
+  expect(draft.value).toBe("new-account-draft")
+  expect(field("label").value).toBe("draft-after-new-writer")
+  privateState(view.model, "cancel-pending-fixture-key")
+  privateState(view.model, "new-account-draft")
+  button("Cancel", dialog ?? document).click()
+  await settle()
+  expect(draft.value).toBe("")
 })
 
 test("remove and disconnect each dispatch selected local ref", async () => {
@@ -355,6 +498,7 @@ test("replacement sends only explicit new environment and resource", async () =>
   accountButton.click()
   await settle()
   await selectTarget()
+  const selected = row(target.target.id)
   button("Replace target").click()
   await settle()
   expect(field("environment").value).toBe("")
@@ -367,6 +511,14 @@ test("replacement sends only explicit new environment and resource", async () =>
     target.target,
     { environment: "staging", resource: { channel: "replacement-7" } },
   ])
+  expect(view.calls.find((call) => call.method === "get")?.args[0]).toBe(account.connection.id)
+  expect(view.calls.find((call) => call.method === "getTarget")?.args[0]).toBe(target.target.id)
+  expect(row(target.target.id) === selected).toBe(true)
+  expect(row(target.target.id).textContent).toContain("staging")
+  expect(row(target.target.id).getAttribute("aria-pressed")).toBe("true")
+  expect(view.model.state.targets.find((item) => item.target.id === target.target.id)?.target.generation).toBe(1)
+  expect(view.host.textContent).toContain("These are live pages, not a snapshot")
+  expect(view.host.textContent).toContain("current stored actor")
 })
 
 for (const direction of ["ltr", "rtl"] as const) {
@@ -419,7 +571,7 @@ test("pagination and local destructive controls dispatch actual model methods", 
   await settle()
   expect(view.calls.filter((call) => call.method === "targets")[1]?.args.slice(0, 2)).toEqual([
     account.connection.id,
-    "a".repeat(32),
+    "1".padStart(32, "0"),
   ])
   await selectTarget()
   button("Next page", view.host.querySelector('[aria-labelledby="integrations-bindings-title"]') ?? document).click()

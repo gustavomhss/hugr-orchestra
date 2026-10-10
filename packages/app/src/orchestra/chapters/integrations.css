@@ -14,6 +14,9 @@
   padding-inline-start: 0;
   list-style: none;
 }
+.integrations-list > li[hidden] {
+  display: none;
+}
 .integrations-select {
   display: flex;
   flex-wrap: wrap;

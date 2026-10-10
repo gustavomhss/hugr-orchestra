@@ -1,4 +1,4 @@
-import { For, onCleanup, Show } from "solid-js"
+import { createEffect, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { Model } from "./integrations-contract"
@@ -12,6 +12,16 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
     form: undefined as IntegrationForm | undefined,
     sessionID: undefined as string | undefined,
     opener: undefined as HTMLButtonElement | undefined,
+    accounts: [] as string[],
+    targets: [] as string[],
+  })
+  // Keep DOM keys through temporary empty refresh windows. Missing live rows stay hidden; no DTO is cached.
+  createEffect(() => {
+    const accounts = props.model.state.connections.map((item) => item.connection.id)
+    const targets = props.model.state.targets.map((item) => item.target.id)
+    const busy = props.model.state.busy
+    setState("accounts", (previous) => (busy ? [...new Set([...previous, ...accounts])] : accounts))
+    setState("targets", (previous) => (busy ? [...new Set([...previous, ...targets])] : targets))
   })
   const auth = { current: undefined as HTMLFormElement | undefined }
   onCleanup(() => {
@@ -121,97 +131,106 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
         </Show>
         <h2 id="integrations-accounts-title">{language.t("orchestra.integrations.accounts")}</h2>
         <ul class="integrations-list" aria-labelledby="integrations-accounts-title">
-          <For each={props.model.state.connections}>
-            {(item) => (
-              <li class="mx-card">
-                <button
-                  type="button"
-                  class="mx-btn integrations-select"
-                  disabled={disabled()}
-                  aria-pressed={item.connection.id === props.model.state.connectionID}
-                  onClick={() => void props.model.select({ ...item, connection: { ...item.connection } })}
-                >
-                  <bdi>{item.connection.provider}</bdi>
-                  <Show when={item.label}>
-                    <bdi>{item.label}</bdi>
+          <For each={state.accounts}>
+            {(id) => {
+              const item = () => props.model.state.connections.find((item) => item.connection.id === id)
+              return (
+                <li class="mx-card" hidden={!item()}>
+                  <button
+                    type="button"
+                    class="mx-btn integrations-select"
+                    disabled={disabled() || !item()}
+                    aria-pressed={id === props.model.state.connectionID}
+                    onClick={() => {
+                      const current = item()
+                      if (current) void props.model.select({ ...current, connection: { ...current.connection } })
+                    }}
+                  >
+                    <bdi>{item()?.connection.provider}</bdi>
+                    <Show when={item()?.label}>
+                      <bdi>{item()?.label}</bdi>
+                    </Show>
+                    <bdi dir="ltr">
+                      <code>{id}</code>
+                    </bdi>
+                  </button>
+                  <Show when={item()}>
+                    {(current) => (
+                      <div class="mx-meta">
+                        <MxBadge>{language.t(`orchestra.integrations.state.${current().state}`)}</MxBadge>
+                        <MxBadge>{language.t(`orchestra.integrations.credential.${current().credential}`)}</MxBadge>
+                      </div>
+                    )}
                   </Show>
-                  <bdi dir="ltr">
-                    <code>{item.connection.id}</code>
-                  </bdi>
-                </button>
-                <div class="mx-meta">
-                  <MxBadge>{language.t(`orchestra.integrations.state.${item.state}`)}</MxBadge>
-                  <MxBadge>{language.t(`orchestra.integrations.credential.${item.credential}`)}</MxBadge>
-                </div>
-              </li>
-            )}
+                </li>
+              )
+            }}
           </For>
         </ul>
-        <Show when={account()}>
-          {(selected) => (
-            <section aria-labelledby="integrations-targets-title">
-              <h2 id="integrations-targets-title">{language.t("orchestra.integrations.targets")}</h2>
-              <div class="integrations-controls">
-                <button
-                  type="button"
-                  class="mx-btn"
-                  disabled={disabled() || selected().state !== "active"}
-                  onClick={(event) => open("createTarget", event.currentTarget)}
-                >
-                  {language.t("orchestra.integrations.createTarget")}
-                </button>
-                <button
-                  type="button"
-                  class="mx-btn"
-                  disabled={disabled() || selected().state !== "active"}
-                  onClick={(event) => open("disconnect", event.currentTarget)}
-                >
-                  {language.t("orchestra.integrations.disconnect")}
-                </button>
-              </div>
-              <Show when={!props.model.state.targets.length && !disabled() && !props.model.state.failure}>
-                <p role="status">{language.t("orchestra.integrations.noTargets")}</p>
-              </Show>
-              <ul class="integrations-list">
-                <For each={props.model.state.targets}>
-                  {(item) => (
-                    <li>
+        <Show when={props.model.state.connectionID}>
+          <section aria-labelledby="integrations-targets-title">
+            <h2 id="integrations-targets-title">{language.t("orchestra.integrations.targets")}</h2>
+            <div class="integrations-controls">
+              <button
+                type="button"
+                class="mx-btn"
+                disabled={disabled() || account()?.state !== "active"}
+                onClick={(event) => open("createTarget", event.currentTarget)}
+              >
+                {language.t("orchestra.integrations.createTarget")}
+              </button>
+              <button
+                type="button"
+                class="mx-btn"
+                disabled={disabled() || account()?.state !== "active"}
+                onClick={(event) => open("disconnect", event.currentTarget)}
+              >
+                {language.t("orchestra.integrations.disconnect")}
+              </button>
+            </div>
+            <Show when={!props.model.state.targets.length && !disabled() && !props.model.state.failure}>
+              <p role="status">{language.t("orchestra.integrations.noTargets")}</p>
+            </Show>
+            <ul class="integrations-list">
+              <For each={state.targets}>
+                {(id) => {
+                  const item = () => props.model.state.targets.find((item) => item.target.id === id)
+                  return (
+                    <li hidden={!item()}>
                       <button
                         type="button"
                         class="mx-btn integrations-select"
-                        disabled={disabled()}
-                        aria-pressed={item.target.id === props.model.state.targetID}
-                        onClick={() => void props.model.selectTarget({ target: { ...item.target } })}
+                        disabled={disabled() || !item()}
+                        aria-pressed={id === props.model.state.targetID}
+                        onClick={() => {
+                          const current = item()
+                          if (current) void props.model.selectTarget({ target: { ...current.target } })
+                        }}
                       >
-                        <bdi>{item.target.environment}</bdi>
+                        <bdi>{item()?.target.environment}</bdi>
                         <bdi dir="ltr">
-                          <code>{item.target.id}</code>
+                          <code>{id}</code>
                         </bdi>
                       </button>
                     </li>
-                  )}
-                </For>
-              </ul>
-              <Show when={props.model.state.targetsAfter}>
-                <button
-                  type="button"
-                  class="mx-btn"
-                  disabled={disabled()}
-                  onClick={() => void props.model.moreTargets()}
-                >
-                  {language.t("orchestra.integrations.more")}
-                </button>
-              </Show>
-            </section>
-          )}
+                  )
+                }}
+              </For>
+            </ul>
+            <Show when={props.model.state.targetsAfter}>
+              <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.moreTargets()}>
+                {language.t("orchestra.integrations.more")}
+              </button>
+            </Show>
+          </section>
         </Show>
-        <Show when={target()}>
+        <Show when={props.model.state.targetID}>
           <section aria-labelledby="integrations-bindings-title">
             <div class="integrations-controls">
               <button
                 type="button"
                 class="mx-btn"
-                disabled={disabled()}
+                disabled={disabled() || !target()}
                 onClick={(event) => open("retarget", event.currentTarget)}
               >
                 {language.t("orchestra.integrations.retarget")}
@@ -219,7 +238,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
               <button
                 type="button"
                 class="mx-btn"
-                disabled={disabled()}
+                disabled={disabled() || !target()}
                 onClick={(event) => open("remove", event.currentTarget)}
               >
                 {language.t("orchestra.integrations.remove")}
@@ -230,7 +249,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             <button
               type="button"
               class="mx-btn"
-              disabled={disabled()}
+              disabled={disabled() || !target()}
               onClick={(event) => open("bind", event.currentTarget)}
             >
               {language.t("orchestra.integrations.bind")}
