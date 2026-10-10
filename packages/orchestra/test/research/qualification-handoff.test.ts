@@ -1,11 +1,13 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
 import { ResearchBinding } from "@orchestra/core/research/binding"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
@@ -74,7 +76,7 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
       }
       if (!background && state.findings.length <= 4) {
         yield* fixture.remote.tool("research_record", { action: "finding", proposition: "é".repeat(4096), nature: "hypothesis",
-          conditions: ["x".repeat(4096), "y".repeat(state.findings.length === 3 ? 500 : 4096)], evidence: [], contrary: [] })
+          conditions: ["x".repeat(4096), "y".repeat(state.findings.length === 3 ? 300 : 4096)], evidence: [], contrary: [] })
         return
       }
       const refs = (background ? [state.findings[2]] : [state.findings[2], state.findings[3]])
@@ -142,7 +144,7 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
     expect(metadata?.truncated).toBe(true)
     expect(output).toContain("Incomplete: 1 finding(s) omitted; reopen exact retained finding references")
     expect(Buffer.byteLength(JSON.stringify(expected, null, 2), "utf8")).toBeGreaterThan(14 * 1024)
-    expect(Buffer.byteLength(JSON.stringify(expected, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
+    expect(Buffer.byteLength(JSON.stringify({ qualifications: expected }, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
     expect(Buffer.byteLength(output.split("\n\n")[0], "utf8")).toBeLessThanOrEqual(16 * 1024)
     const truncate = yield* Truncate.Service
     const preview = yield* truncate.output(`${output}\n${"Worker prose beyond handoff bounds.\n".repeat(2000)}`, { maxBytes: 16 * 1024 })
@@ -195,6 +197,9 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
 }), { git: true }, 120_000)
 
 it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds explicitly omit whole records", () => Effect.gen(function* () {
+  const fs = yield* FSUtil.Service
+  const instance = yield* TestInstance
+  yield* fs.writeFileString(path.join(instance.directory, "orchestra.jsonc"), JSON.stringify({ tool_output: { max_bytes: 16 * 1024 } }))
   const fixture = yield* NativeResearchTask.setup()
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
   const records = yield* ResearchRecords.Service
@@ -202,7 +207,7 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const agents = yield* Agent.Service
   const registry = yield* ToolRegistry.Service
   const execution = yield* ResearchExecution.Service
-  const child = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.parent.id })
+  const child = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.parent.id, title: "Qualification boundary execution" })
   yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: fixture.parent.id, projectID: child.projectID, memberID: "jimmy", source: "host" })
   const binding = yield* ResearchBinding.resolve(child.id, child.projectID)
   const agent = yield* agents.get("jimmy")
@@ -211,16 +216,19 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const user = yield* fixture.sessions.updateMessage({ id: MessageID.ascending(), sessionID: child.id, role: "user", agent: "jimmy",
     model: { providerID: fixture.model.providerID, modelID: fixture.model.id }, time: { created: Date.now() } })
   const assistant = yield* fixture.sessions.updateMessage({ ...fixture.assistant, id: MessageID.ascending(), sessionID: child.id, parentID: user.id, agent: "jimmy", mode: "subagent" })
-  const record = (input: Research.RecordInput, sessionID = child.id, messageID = assistant.id) => Effect.gen(function* () {
-    const callID = PartID.ascending()
-    yield* fixture.sessions.updatePart({ id: PartID.ascending(), sessionID, messageID, type: "tool", tool: "research_record", callID,
-      state: { status: "running", input, time: { start: Date.now() } } })
-    return yield* execution.enter(sessionID, "qualification-bounds", tool.execute(input, { sessionID, messageID, callID,
+  const record = (input: Research.RecordInput, sessionID = child.id, messageID = assistant.id, callID = PartID.ascending()) => Effect.gen(function* () {
+    const part = { id: callID, sessionID, messageID, type: "tool" as const, tool: "research_record", callID,
+      state: { status: "running" as const, input, time: { start: Date.now() } } }
+    yield* fixture.sessions.updatePart(part)
+    const result = yield* execution.enter(sessionID, "qualification-bounds", tool.execute(input, { sessionID, messageID, callID,
       agent: agent.name, agentID: "jimmy", permission: agent.permission, abort: AbortSignal.any([]), messages: [],
       ask: () => Effect.void, metadata: () => Effect.void }))
+    yield* fixture.sessions.updatePart({ ...part, state: { status: "completed", input, title: result.title, output: result.output,
+      metadata: result.metadata, time: { start: part.state.time.start, end: Date.now() } } })
+    return result
   })
   const finding = { action: "finding" as const, proposition: "Public fixture hypothesis", nature: "hypothesis" as const,
-    conditions: ["Unobserved fixture hypothesis only"], evidence: [], contrary: [] }
+    conditions: Array.from({ length: 32 }, (_, index) => `scope ${index}`), evidence: [], contrary: [] }
   const admitted = yield* Effect.forEach(Array.from({ length: 33 }, (_, index) => index), (index) => record({ ...finding, proposition: `${finding.proposition} ${index}` }))
   const refs = admitted.map((reply) => Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(reply.metadata.research).record)
     .map((value) => ({ id: value.id, revision: value.revision }))
@@ -236,9 +244,30 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const bounded = yield* ResearchQualifications.collect(counted, binding, [...refs.slice(0, 32), refs[0]]).pipe(Effect.provideService(Database.Service, instrumented))
   expect(calls.views).toBe(32)
   expect(calls.queries).toBeGreaterThan(0)
-  expect(bounded).toMatchObject({ complete: true, total: 32, omitted: 0 })
-  expect(bounded.records).toHaveLength(32)
-  expect(Buffer.byteLength(JSON.stringify(bounded, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
+  expect(bounded).toMatchObject({ complete: false, total: 32, omitted: 32 - bounded.records.length })
+  expect(bounded.records.length).toBeGreaterThan(10)
+  expect(bounded.records).toEqual(admitted.slice(0, bounded.records.length)
+    .map((reply) => Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(reply.metadata.research).record))
+  expect(Buffer.byteLength(JSON.stringify({ qualifications: bounded }, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
+  yield* record({ ...finding, id: refs[0].id, baseRevision: 1, proposition: "Later applicability must not replace own historical finding", reason: "Scope revised after admission" })
+  const manyLines = { action: "document" as const, document: { genre: "answer" as const, title: "Many-line qualification packet",
+    body: "Own historical constraints", findingRefs: refs.slice(0, 32), citations: {} } }
+  const documentCall = PartID.ascending()
+  const published = yield* record(manyLines, child.id, assistant.id, documentCall)
+  const qualified = Schema.decodeUnknownSync(Schema.Struct({ qualifications: Summary, document: Research.DocumentReceipt }))(published.metadata.research)
+  expect(qualified.qualifications).toEqual(bounded)
+  expect(published.metadata.truncated).toBe(true)
+  const packet = JSON.stringify({ qualifications: bounded }, null, 2).slice(0, -2)
+  expect(packet.split("\n").length).toBeGreaterThan(500)
+  expect(published.output.startsWith(`${packet},\n`)).toBe(true)
+  const receiptStart = published.output.indexOf(',\n  "receipt":')
+  if (receiptStart < 0) throw new Error("Native preview dropped qualification boundary")
+  expect(Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ qualifications: Summary })))(`${published.output.slice(0, receiptStart)}\n}`).qualifications).toEqual(bounded)
+  const truncate = yield* Truncate.Service
+  const preview = yield* truncate.output(JSON.stringify({ qualifications: bounded, receipt: qualified.document }, null, 2), { maxBytes: 16 * 1024 })
+  expect(preview.truncated).toBe(true)
+  expect(preview.content.startsWith(`${packet},\n`)).toBe(true)
+  expect((yield* record(manyLines, child.id, assistant.id, documentCall)).metadata.research).toEqual(published.metadata.research)
   const huge = yield* record({ ...finding, proposition: "é".repeat(4096), conditions: ["é".repeat(2048), "界".repeat(1365)] })
   const hugeRecord = Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(huge.metadata.research).record
   const byteBound = yield* ResearchQualifications.collect(records, binding, [{ id: hugeRecord.id, revision: 1 }, refs[0]])
@@ -246,7 +275,7 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   expect(byteBound.records).toEqual(bounded.records.slice(0, 1))
   const question = yield* record({ action: "question", question: "Which conditions apply?", selection: { profile: "locate", depth: "quick", genre: "answer" } })
   const questionRecord = Schema.decodeUnknownSync(Schema.Struct({ record: Research.QuestionRecord }))(question.metadata.research).record
-  const foreign = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.parent.id })
+  const foreign = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.parent.id, title: "Foreign qualification owner" })
   yield* LogicalTask.ensure({ executionSessionID: foreign.id, authoritySessionID: fixture.parent.id, projectID: foreign.projectID, memberID: "jimmy", source: "host" })
   const foreignBinding = yield* ResearchBinding.resolve(foreign.id, foreign.projectID)
   // Core explicit-ID reuse remains project-wide; the handoff boundary must independently reject it.
@@ -265,15 +294,35 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
     expect(calls).toEqual({ views: 0, queries: 0 })
   }
   const doc = { genre: "answer" as const, title: "Oversized own reference union", body: "Authored fixture", findingRefs: [refs[32]], citations: {} }
+  const before = (yield* ResearchLedger.entries(binding)).filter((entry) => entry.type === "research.document.published")
+  expect(before).toHaveLength(1)
+  expect(before[0].data.receipt.bytes).toBeGreaterThan(0)
+  const global = yield* Global.Service
+  const directory = path.join(global.data, "research", ResearchLedger.digest(binding.projectID), ResearchLedger.digest(binding.taskId))
+  const files = (yield* fs.readDirectory(directory)).toSorted()
+  expect(files.some((file) => file.endsWith(".body"))).toBe(true)
+  const bytes = (yield* Effect.forEach(files, (file) => fs.stat(path.join(directory, file)))).reduce((bytes, stat) => bytes + Number(stat.size), 0)
+  const rejectedInput = { action: "document" as const, document: { ...doc, title: "Foreign document-linked finding", findingRefs: [foreignRef] } }
+  yield* fixture.remote.tool("research_record", rejectedInput)
+  yield* fixture.remote.text("Foreign document preflight rejected.")
+  yield* execution.enter(child.id, "qualification-bounds", fixture.prompt.prompt({ sessionID: child.id, agent: "jimmy",
+    model: { providerID: fixture.model.providerID, modelID: fixture.model.id }, parts: [{ type: "text", text: "Attempt supplied document mutation." }] }))
+  const rejected = (yield* fixture.sessions.messages({ sessionID: child.id })).flatMap((message) => message.parts)
+    .findLast((part) => part.type === "tool" && part.tool === "research_record")
+  if (rejected?.type !== "tool" || rejected.state.status !== "error") throw new Error("Expected persisted native document rejection")
+  expect(rejected.state.error).toContain("Qualification finding is not admitted by this Task")
+  const retried = yield* execution.enter(child.id, "qualification-bounds", tool.execute(rejectedInput, { sessionID: child.id,
+    messageID: rejected.messageID, callID: rejected.callID, agent: agent.name, agentID: "jimmy", permission: agent.permission,
+    abort: AbortSignal.any([]), messages: [], ask: () => Effect.void, metadata: () => Effect.void })).pipe(Effect.exit)
+  expect(Exit.isFailure(retried) && Cause.pretty(retried.cause)).toContain("Qualification finding is not admitted by this Task")
+  const after = (yield* ResearchLedger.entries(binding)).filter((entry) => entry.type === "research.document.published")
+  expect(after).toEqual(before)
+  expect(after.filter((entry) => entry.data.receipt.title === rejectedInput.document.title)).toHaveLength(0)
+  expect((yield* fs.readDirectory(directory)).toSorted()).toEqual(files)
+  expect((yield* Effect.forEach(files, (file) => fs.stat(path.join(directory, file)))).reduce((bytes, stat) => bytes + Number(stat.size), 0) - bytes).toBe(0)
   const document = Schema.decodeUnknownSync(Schema.Struct({ document: Research.DocumentReceipt }))((yield* record({ action: "document", document: doc })).metadata.research).document
-  expect(Exit.isFailure(yield* record({ action: "document", document: { ...doc, title: "Foreign document-linked finding", findingRefs: [foreignRef] } }).pipe(Effect.exit))).toBe(true)
-  const corpus = yield* records.view(binding, { action: "corpus" })
-  if (!("documents" in corpus)) throw new Error("Expected own published document inventory")
-  const foreignDocument = corpus.documents.find((receipt) => receipt.title === "Foreign document-linked finding")
-  if (!foreignDocument) throw new Error("Expected durable publication before qualification reply rejection")
   for (const input of [{ findings: refs.slice(0, 32), document },
-    { findings: [...refs.slice(0, 31), { ...refs[0], revision: 999 }], document },
-    { findings: refs.slice(0, 32), document: foreignDocument }]) {
+    { findings: [...refs.slice(0, 31), { ...refs[0], revision: 999 }], document }]) {
     const card: Research.Card = { answer: "It works.", profile: "locate", depth: "quick", sufficiency: "answered", findingRefs: input.findings,
       evidenceRefs: [], documentRefs: [input.document.ref], coverage: { examined: [], excluded: [], failures: [] }, limitations: [], nextActions: [] }
     const raw = `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`
@@ -287,7 +336,6 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
     const report = DiscoveryResult.report(raw, result)
     expect(report).toContain("Finding qualifications unavailable:")
     expect(report).toContain(`\n> ${JSON.stringify(raw)}`)
-    const truncate = yield* Truncate.Service
     expect((yield* truncate.output(report, { maxBytes: 16 * 1024 })).content).toContain("Finding qualifications unavailable:")
   }
   for (const item of [{ sessionID: child.id, ref: { id: questionRecord.id, revision: 1 } },

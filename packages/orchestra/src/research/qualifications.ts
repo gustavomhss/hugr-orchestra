@@ -37,11 +37,11 @@ export const collect = Effect.fn("ResearchQualifications.collect")(function* (
       return yield* new Research.Error({ code: "reference_invalid", message: "Qualification view differs from own finding admission" })
     return value
   }))
-  // Bound the whole pretty summary; reserve 1 KiB for quoted packet notes and Task framing.
+  // Include the document reply's nesting/indentation; reserve 1 KiB for host framing.
   return findings.reduce<Summary>((summary, finding) => {
     const candidate = { records: [...summary.records, finding], complete: summary.records.length + 1 === unique.length,
       total: unique.length, omitted: unique.length - summary.records.length - 1 }
-    return Buffer.byteLength(JSON.stringify(candidate, null, 2), "utf8") <= 15 * 1024 ? candidate : summary
+    return Buffer.byteLength(JSON.stringify({ qualifications: candidate }, null, 2), "utf8") <= 15 * 1024 ? candidate : summary
   }, { records: [], complete: unique.length === 0, total: unique.length, omitted: unique.length })
 })
 
