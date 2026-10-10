@@ -9,6 +9,8 @@ import { ResearchExecution } from "./allowance"
 import { Tool } from "@/tool/tool"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 
+const DISPLAY_NOTICE = "Native tool display only; this receipt does not prove original-source completeness, absence, or runtime behavior."
+
 // Issued by the native registry, never decoded from model arguments or plugin metadata.
 export const Current = Context.Reference<((input: ResearchRecords.CaptureInput) => Effect.Effect<Research.SourceReceipt>) | undefined>(
   "@orchestra/ResearchSourceCapture/Current", { defaultValue: () => undefined },
@@ -31,7 +33,7 @@ export const make = Effect.gen(function* () {
         const page = yield* run(ctx, name, (binding) => records.view(binding, { action: "source", ref }), false).pipe(Effect.orDie)
         if (!("receipt" in page) || !("origin" in page.receipt))
           return yield* Effect.die(new Research.Error({ code: "source_unavailable", message: "Historical acquisition is not a retained source" }))
-        return { title: "Retained source replay", output: `${page.text}\n\nHistorical retained representation; no live source was reacquired.\n${JSON.stringify({ ref: previous.source, cursor: page.cursor })}`,
+        return { title: "Retained source replay", output: `${page.text}\n\nHistorical retained representation; no live source was reacquired.\n${JSON.stringify({ ref: previous.source, cursor: page.cursor })}${page.receipt.origin.kind === "tool-output" ? `\n${DISPLAY_NOTICE}` : ""}`,
           metadata: { researchSource: page.receipt, truncated: !page.complete, ...(page.cursor ? { researchCursor: page.cursor } : {}), researchReplay: true } }
       }
       const state: { receipt?: Research.SourceReceipt } = {}
@@ -65,7 +67,7 @@ export const make = Effect.gen(function* () {
     const admitted = Schema.decodeUnknownOption(Research.SourceReceipt)(result.metadata.researchSource)
     if (admitted._tag === "Some") return Effect.succeed({
       ...result,
-      output: `${result.output}\n\nRetained source evidence: ${JSON.stringify(admitted.value.ref)}\nLocators address retained representation from line 1; original coordinates are recorded separately.`,
+      output: `${result.output}\n\nRetained source evidence: ${JSON.stringify(admitted.value.ref)}\nLocators address retained representation from line 1; original coordinates are recorded separately.${admitted.value.origin.kind === "tool-output" ? `\n${DISPLAY_NOTICE}` : ""}`,
     })
     return Effect.gen(function* () {
       const capture = yield* Current

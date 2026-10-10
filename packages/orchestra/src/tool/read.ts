@@ -12,6 +12,7 @@ import { OutputInspector } from "@orchestra/core/output-inspector"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import { ResearchSourceCapture } from "@/research/source-capture"
+import { TRUNCATION_DIR } from "./truncation-dir"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000
@@ -161,6 +162,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
       limit: number,
       reserve: (first: number, lineCount: number) => number,
       byteStart = 0,
+      savedDisplay = false,
     ) {
       const lines: string[] = []
       const decoder = new TextDecoder("utf-8")
@@ -232,7 +234,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
         }),
       )
       const received = capture ? yield* capture({
-        origin: { kind: "file", uri: filepath }, representation: "received", mediaType: "text/plain",
+        origin: { kind: savedDisplay ? "tool-output" : "file", uri: filepath }, representation: "received", mediaType: "text/plain",
         content: Buffer.concat(observed.chunks), complete: observed.eof && byteStart === 0 && !observed.capped,
         observed: { byteStart },
       }) : undefined
@@ -303,8 +305,15 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
           () => Effect.succeed(undefined),
         ),
       )
-      yield* assertExternalDirectoryEffect(ctx, filepath, {
-        bypass: Boolean(ctx.extra?.["bypassCwdCheck"]),
+      // Grants name the configured saved-output root. Parent aliases (/var on macOS) may resolve elsewhere,
+      // but neither a symlink replacing tool-output itself nor a child escaping it inherits that grant.
+      const savedRoot = ctx.agentID === "jimmy" && stat?.type === "File"
+        ? path.join(yield* fs.realPath(path.dirname(TRUNCATION_DIR)), path.basename(TRUNCATION_DIR))
+        : undefined
+      const savedDisplay = savedRoot !== undefined && path.dirname(filepath) === savedRoot &&
+        (yield* fs.realPath(TRUNCATION_DIR)) === savedRoot
+      yield* assertExternalDirectoryEffect(ctx, savedDisplay ? path.join(TRUNCATION_DIR, path.basename(filepath)) : filepath, {
+        bypass: ctx.agentID !== "jimmy" && Boolean(ctx.extra?.["bypassCwdCheck"]),
         kind: stat?.type === "Directory" ? "directory" : "file",
       })
       yield* ctx.ask({
@@ -415,6 +424,7 @@ export const ReadTool = Tool.define<typeof Parameters, Metadata, FSUtil.Service 
             "utf-8",
           ),
         byteStart,
+        savedDisplay,
       )
       if (!page.lines.length && start !== 1)
         return yield* Effect.fail(
