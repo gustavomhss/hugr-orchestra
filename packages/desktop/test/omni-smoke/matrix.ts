@@ -115,7 +115,7 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     const started = Date.now()
     evidence.action = { cell, actionID, started, boundMs, input: cell === "quit" && mutation !== "forced-kill" ? "app.quit" : win ? "TerminateProcess (no tree kill)" : "SIGKILL", target: cell === "utility-kill" ? utility : main }
     if (cell === "quit" && mutation !== "forced-kill") {
-      writeFileSync(`${server.quit}.tmp`, JSON.stringify({ token: server.token, actionID }), { mode: 0o600 })
+      writeFileSync(`${server.quit}.tmp`, JSON.stringify({ token: server.token, actionID: randomUUID() }), { mode: 0o600 })
       renameSync(`${server.quit}.tmp`, server.quit)
     }
     if (cell !== "quit" || mutation === "forced-kill") {
