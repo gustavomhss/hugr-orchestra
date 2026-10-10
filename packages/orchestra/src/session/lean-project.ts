@@ -18,6 +18,10 @@ const COMMAND_LIMIT = 4096
 /** Only native instrumented legacy parts currently contain this provenance. No V2/SDK telemetry inference. */
 export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
   const database = yield* Database.Service
+  return yield* collectWith(database, scope, limit, latest)
+})
+
+const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Database.Interface, scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
   const rows = yield* database.db.select({
     sessionID: SessionTable.id,
     messageID: MessageTable.id,
@@ -156,6 +160,17 @@ export const read = Effect.fn("LeanProject.read")(function* (state: LeanProfileP
   const result = yield* collect(state.scope)
   return dashboard(state, globalEnabled, result)
 })
+
+export function make(database: Database.Interface) {
+  return {
+    read: Effect.fn("LeanProject.readBound")(function* (state: LeanProfilePreferences.State, globalEnabled: boolean) {
+      return dashboard(state, globalEnabled, yield* collectWith(database, state.scope))
+    }),
+    history: Effect.fn("LeanProject.historyBound")(function* (scope: LeanDashboard.Scope, itemID: LeanCoverage.ItemID) {
+      return historyResult(scope, itemID, yield* collectWith(database, scope, MAX_PARTS, true))
+    }),
+  }
+}
 
 export function dashboard(state: LeanProfilePreferences.State, globalEnabled: boolean, result: ReturnType<typeof projectRows>): LeanDashboard.Info {
   return {

@@ -26,6 +26,7 @@ it.instance("Lean routes follow native profile, persist independent controls, ex
   const global = yield* Global.Service
   const other = yield* tmpdirScoped({ config: { tool_output: { lean: { enabled: false } } } })
   const firstResponse = yield* requestInDirectory("/project/lean?projectID=ignored", instance.directory)
+  if (firstResponse.status !== 200) throw new Error(`Lean read failed: ${firstResponse.status} ${JSON.stringify(yield* firstResponse.json)}`)
   expect(firstResponse.status).toBe(200)
   const first = yield* Schema.decodeUnknownEffect(LeanDashboard.Info)(yield* firstResponse.json)
   expect(first.scope.directory).toBe(instance.directory)

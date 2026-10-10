@@ -28,9 +28,7 @@ const Stored = Schema.fromJsonString(Schema.Struct({
 const decode = Schema.decodeUnknownSync(Stored, { onExcessProperty: "error" })
 const unavailable = (cause: unknown) => new Unavailable({ message: `Lean profile preferences unavailable: ${String(cause)}` })
 
-const locate = Effect.fnUntraced(function* (owner: Owner) {
-  const fs = yield* FSUtil.Service
-  const global = yield* Global.Service
+const locate = Effect.fnUntraced(function* (owner: Owner, fs: FSUtil.Interface, global: Global.Interface) {
   // Native callers already use canonical InstanceRef directories. Resolve aliases defensively.
   const directory = yield* fs.realPath(owner.directory)
   const profileID = createHash("sha256").update(JSON.stringify([owner.projectID, directory])).digest("hex")
@@ -70,16 +68,16 @@ const load = Effect.fnUntraced(function* (location: Effect.Success<ReturnType<ty
   return { scope: location.scope, enabled: stored.enabled, items: stored.items } satisfies State
 })
 
-export const read: (owner: Owner) => Effect.Effect<State, Unavailable, FSUtil.Service | Global.Service> = Effect.fn("LeanPreferences.read")(
-  function* (owner: Owner) {
-    return yield* load(yield* locate(owner))
+const readWith = Effect.fn("LeanPreferences.read")(
+  function* (owner: Owner, fs: FSUtil.Interface, global: Global.Interface) {
+    return yield* load(yield* locate(owner, fs, global))
   },
   Effect.mapError(unavailable),
 )
 
-export const update: (owner: Owner, value: LeanDashboard.Update) => Effect.Effect<State, Unavailable, FSUtil.Service | Global.Service> = Effect.fn("LeanPreferences.update")(
-  function* (owner: Owner, value: LeanDashboard.Update) {
-    const location = yield* locate(owner)
+const updateWith = Effect.fn("LeanPreferences.update")(
+  function* (owner: Owner, value: LeanDashboard.Update, fs: FSUtil.Interface, global: Global.Interface) {
+    const location = yield* locate(owner, fs, global)
     yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Struct({
       itemID: Schema.optional(LeanCoverage.ItemID), enabled: Schema.Boolean,
     }), { onExcessProperty: "error" })(value), catch: unavailable })
@@ -104,3 +102,20 @@ export const update: (owner: Owner, value: LeanDashboard.Update) => Effect.Effec
   },
   Effect.catchCause((cause) => Effect.fail(unavailable(cause))),
 )
+export function make(fs: FSUtil.Interface, global: Global.Interface) {
+  return {
+    read: (owner: Owner) => readWith(owner, fs, global),
+    update: (owner: Owner, value: LeanDashboard.Update) => updateWith(owner, value, fs, global),
+  }
+}
+
+export const read: (owner: Owner) => Effect.Effect<State, Unavailable, FSUtil.Service | Global.Service> = Effect.fn("LeanPreferences.readService")(function* (owner: Owner) {
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  return yield* readWith(owner, fs, global)
+})
+export const update: (owner: Owner, value: LeanDashboard.Update) => Effect.Effect<State, Unavailable, FSUtil.Service | Global.Service> = Effect.fn("LeanPreferences.updateService")(function* (owner: Owner, value: LeanDashboard.Update) {
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  return yield* updateWith(owner, value, fs, global)
+})
