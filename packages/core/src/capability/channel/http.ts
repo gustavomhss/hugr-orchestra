@@ -1,8 +1,8 @@
 import http from "node:http"
 import https from "node:https"
 import { Buffer } from "node:buffer"
-import { Capability } from "@orchestra/schema/capability"
 import { Effect, Option, Schema } from "effect"
+import type { CapabilityConnections } from "../connection/index"
 
 export class Failure extends Schema.TaggedErrorClass<Failure>()("CapabilityChannel.TransportFailure", {
   reason: Schema.Literals(["timeout", "transport", "response_limit", "invalid_response", "redirect", "http", "provider"]),
@@ -17,7 +17,7 @@ export type Request = {
   query?: Readonly<Record<string, string | number | boolean | undefined>>
   body?: Schema.Json
 }
-export type RPC = (input: Request) => Effect.Effect<Schema.Json, Failure | Capability.Failure>
+export type RPC = (input: Request) => Effect.Effect<Schema.Json, Failure | CapabilityConnections.Error>
 export type Options = { fixtureOrigin?: string; timeoutMs?: number; maxResponseBytes?: number }
 
 /** Only trusted construction may redirect fixed vendor routes to loopback HTTP fixtures. */

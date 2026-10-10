@@ -47,10 +47,18 @@ function fixture() {
   })
 }
 
-function expectCode<A, R>(effect: Effect.Effect<A, Capability.Failure, R>, code: Capability.ErrorCode) {
+function expectCode<A, R>(effect: Effect.Effect<A, CapabilityConnections.Error, R>, code: Capability.ErrorCode) {
   return Effect.gen(function* () {
-    const error = yield* effect.pipe(Effect.flip)
+    const exit = yield* Effect.exit(effect)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isSuccess(exit)) return yield* Effect.die("EXPECTED_CONNECTION_FAILURE")
+    expect(exit.cause.reasons).toHaveLength(1)
+    const reason = exit.cause.reasons[0]
+    expect(reason._tag).toBe("Fail")
+    if (reason._tag !== "Fail") return yield* Effect.failCause(exit.cause)
+    const error = reason.error
     expect(error).toBeInstanceOf(Capability.Failure)
+    if (!(error instanceof Capability.Failure)) return yield* Effect.failCause(exit.cause)
     expect(error.code).toBe(code)
     const encoded = yield* Schema.encodeEffect(Capability.Failure)(error)
     expect(new TextEncoder().encode(JSON.stringify(encoded)).byteLength).toBeLessThan(4096)
@@ -211,7 +219,11 @@ describe("CapabilityConnections", () => {
       ))
       expect(result._tag).toBe(change === "zero" ? "Failure" : "Success")
       if (result._tag === "Success") expect(result.success.target.id).toBe(f.otherTarget.id)
-      if (result._tag === "Failure") expect(result.failure.code).toBe("connection_unavailable")
+      if (result._tag === "Failure") {
+        expect(result.failure).toBeInstanceOf(Capability.Failure)
+        if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+        expect(result.failure.code).toBe("connection_unavailable")
+      }
       expect(yield* Ref.get(observation.count)).toBe(1)
       expect(yield* f.permissions.list()).toEqual([])
     }).pipe(Effect.timeout("15 seconds")))
@@ -250,7 +262,11 @@ describe("CapabilityConnections", () => {
       yield* Fiber.join(gate)
       const result = yield* Fiber.join(fiber)
       expect(result._tag).toBe("Failure")
-      if (result._tag === "Failure") expect(result.failure.code).toBe("invocation_binding_mismatch")
+      if (result._tag === "Failure") {
+        expect(result.failure).toBeInstanceOf(Capability.Failure)
+        if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+        expect(result.failure.code).toBe("invocation_binding_mismatch")
+      }
     }).pipe(Effect.timeout("15 seconds")))
   }))
 
@@ -275,7 +291,11 @@ describe("CapabilityConnections", () => {
     yield* Fiber.join(revocation)
     const result = yield* Fiber.join(fiber)
     expect(result._tag).toBe("Failure")
-    if (result._tag === "Failure") expect(result.failure.code).toBe("target_denied")
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(Capability.Failure)
+      if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+      expect(result.failure.code).toBe("target_denied")
+    }
   }).pipe(Effect.timeout("15 seconds")))
 
   it.live("trusted host inputs and nested refs/actions/resources snapshot before SQLite waits", () => Effect.gen(function* () {
@@ -505,7 +525,11 @@ describe("CapabilityConnections", () => {
     yield* f.permissions.reply({ requestID: asked.id, reply: "once" })
     const result = yield* Fiber.join(fiber)
     expect(result._tag).toBe("Failure")
-    if (result._tag === "Failure") expect(result.failure.code).toBe("target_denied")
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(Capability.Failure)
+      if (!(result.failure instanceof Capability.Failure)) return yield* Effect.die(result.failure)
+      expect(result.failure.code).toBe("target_denied")
+    }
     expect(yield* Ref.get(observation.count)).toBe(1)
     yield* f.service.bind(f.binding)
     const drift = yield* CapabilityPolicyFixture.observeAsked(f.context)
@@ -515,7 +539,11 @@ describe("CapabilityConnections", () => {
     yield* f.permissions.reply({ requestID: driftRequest.id, reply: "once" })
     const driftResult = yield* Fiber.join(drifting)
     expect(driftResult._tag).toBe("Failure")
-    if (driftResult._tag === "Failure") expect(driftResult.failure.code).toBe("stale_descriptor")
+    if (driftResult._tag === "Failure") {
+      expect(driftResult.failure).toBeInstanceOf(Capability.Failure)
+      if (!(driftResult.failure instanceof Capability.Failure)) return yield* Effect.die(driftResult.failure)
+      expect(driftResult.failure.code).toBe("stale_descriptor")
+    }
     yield* f.service.bind({ ...f.binding, target: next })
     yield* CapabilityPolicyFixture.setRules(CapabilityPolicyFixture.allow)
     const current = yield* f.resolve()
@@ -527,7 +555,11 @@ describe("CapabilityConnections", () => {
     yield* f.permissions.reply({ requestID: revokeRequest.id, reply: "once" })
     const revokedResult = yield* Fiber.join(revoking)
     expect(revokedResult._tag).toBe("Failure")
-    if (revokedResult._tag === "Failure") expect(revokedResult.failure.code).toBe("target_denied")
+    if (revokedResult._tag === "Failure") {
+      expect(revokedResult.failure).toBeInstanceOf(Capability.Failure)
+      if (!(revokedResult.failure instanceof Capability.Failure)) return yield* Effect.die(revokedResult.failure)
+      expect(revokedResult.failure.code).toBe("target_denied")
+    }
     yield* CapabilityPolicyFixture.setRules([])
     const interrupted = yield* CapabilityPolicyFixture.observeAsked(f.context)
     const waiting = yield* f.run(f.service.loadCredential(f.context, current, "read")).pipe(Effect.forkChild)

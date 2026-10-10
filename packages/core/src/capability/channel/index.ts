@@ -23,6 +23,7 @@ export type MakeOptions = Options & {
   jobs: Effect.Success<typeof CapabilityJobs.make>
   artifacts: Effect.Success<ReturnType<typeof CapabilityArtifacts.make>>
 }
+export type Error = Failure | CapabilityConnections.Error | CapabilityArtifacts.Error
 
 /** Location producer only. The lead registers these canonical leaves through producedTools. */
 export const make = (options: MakeOptions) => Effect.gen(function* () {
@@ -93,7 +94,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
   })
 
   const read = Effect.fn("CapabilityChannels.read")(function* (input: Read, context: Tool.Context): Effect.fn.Return<Output,
-     Failure | CapabilityArtifacts.Error> {
+     Error> {
     const prepared = yield* prepare(context, input, "read", "channel_read")
     const adapter = yield* prepared.adapter
     const acquired = yield* adapter.read(input)
@@ -107,7 +108,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
 
   const replay = Effect.fn("CapabilityChannels.replay")(function* (
     input: Send | Update, context: Tool.Context, prepared: Effect.Success<ReturnType<typeof prepare>>, ref: Capability.JobRef,
-  ): Effect.fn.Return<Output, Capability.Failure> {
+  ): Effect.fn.Return<Output, Error> {
     const saved = yield* jobs.readHost(prepared.proof, ref)
     const receipt = saved.receipt
     // Read-only recovery of this exact producer's published evidence when a job CAS could not attach its refs.
@@ -120,9 +121,9 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
           sql`json_extract(${CapabilityArtifactTable.producer}, '$.assistantMessageID') = ${prepared.proof.producer.assistantMessageID}`,
           sql`json_extract(${CapabilityArtifactTable.producer}, '$.callID') = ${prepared.proof.producer.callID}`,
         )).limit(2).all().pipe(Effect.orDie)
-    const retained = yield* Effect.forEach(refs, (artifact) =>
-      artifacts.read(context, artifact).pipe(Effect.result))
-    const records = retained.flatMap((record) => record._tag === "Success" ? [record.success] : [])
+    const retained = yield* Effect.forEach(refs, (artifact) => expectedExit(artifacts.read(context, artifact),
+      (error) => error instanceof Capability.Failure || error instanceof CapabilityArtifacts.Failure))
+    const records = retained.flatMap((record) => Exit.isSuccess(record) ? [record.value] : [])
     const evidence = records.flatMap((record) => {
       if (record.metadata.producer.sessionID !== prepared.proof.producer.sessionID ||
         record.metadata.producer.agentID !== prepared.proof.producer.agentID ||
@@ -165,7 +166,7 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
 
   const mutate = Effect.fn("CapabilityChannels.mutate")(function* (
     input: Send | Update, context: Tool.Context, kind: "send" | "update",
-  ): Effect.fn.Return<Output, Capability.Failure | Failure | CapabilityArtifacts.Failure> {
+  ): Effect.fn.Return<Output, Error> {
     // Unsupported payloads fail before durable intent or HTTP mutation.
     if (input.provider === "slack" && "replyTo" in input && input.replyTo) return yield* failure("unsupported_operation")
     if (input.provider === "slack" && "emoji" in input && !/^[a-z0-9_+-]{1,80}(?![\s\S])/.test(input.emoji))
@@ -185,40 +186,45 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
     })
     const observe = (generation: number, state: Capability.JobState, providerID?: string, observation: CapabilityJobs.Observation = {}) =>
       jobs.observeHost(prepared.proof, ref, { expectedGeneration: generation, state, providerID, observation }).pipe(
-        Effect.catchTag("Capability.Failure", () => Effect.gen(function* () {
+        Effect.catchCauseIf((cause) => pureFailures(cause, (error) => error instanceof Capability.Failure), () => Effect.gen(function* () {
           // One current-state reconciliation attempt; expected CAS/policy failures cannot erase known effects.
-          const current = yield* jobs.readHost(prepared.proof, ref).pipe(Effect.result)
-          if (current._tag === "Failure" || (current.success.providerID && providerID && current.success.providerID !== providerID))
+          const current = yield* expectedExit(jobs.readHost(prepared.proof, ref), (error) => error instanceof Capability.Failure)
+          if (Exit.isFailure(current) || (current.value.providerID && providerID && current.value.providerID !== providerID))
             return undefined
-          if (state === "submitted" && current.success.providerID === providerID &&
-            ["submitted", "running", "completed"].includes(current.success.receipt.state)) return current.success.receipt
-          return yield* jobs.observeHost(prepared.proof, ref, { expectedGeneration: current.success.receipt.generation,
-            state, providerID, observation }).pipe(Effect.catchTag("Capability.Failure", () => Effect.succeed(undefined)))
+          if (state === "submitted" && current.value.providerID === providerID &&
+            ["submitted", "running", "completed"].includes(current.value.receipt.state)) return current.value.receipt
+          return yield* jobs.observeHost(prepared.proof, ref, { expectedGeneration: current.value.receipt.generation,
+            state, providerID, observation }).pipe(Effect.catchCauseIf(
+              (cause) => pureFailures(cause, (error) => error instanceof Capability.Failure), () => Effect.succeed(undefined)))
         })),
       )
     // Acceptance and ID persistence are indivisible locally; the HTTP wait itself remains interruptible.
     const submitted = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-      const result = yield* restore("action" in input ? adapter.update(input) : adapter.send(input)).pipe(
-        Effect.onInterrupt(() => observe(1, "unknown").pipe(Effect.orDie)), Effect.result,
-      )
-      if (result._tag === "Failure") {
-        const error = result.failure
-        const rejected = error instanceof Capability.Failure || (error.reason === "http" &&
-          (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) || (error.reason === "provider" && !error.ambiguous)
-        yield* observe(1, rejected ? "failed" : "unknown")
-        if (rejected) return yield* error
+      const result = yield* restore("action" in input ? adapter.update(input) : adapter.send(input)).pipe(Effect.exit)
+      if (Exit.isFailure(result)) {
+        const expected = pureFailures(result.cause, (error) => error instanceof Capability.Failure || error instanceof Failure)
+        const rejected = expected && pureFailures(result.cause, (error) => error instanceof Capability.Failure ||
+          (error instanceof Failure && ((error.reason === "http" && (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) ||
+            (error.reason === "provider" && !error.ambiguous))))
+        const observation = yield* observe(1, rejected ? "failed" : "unknown").pipe(Effect.exit)
+        // Recover expected outcomes only after observation succeeds; beta83 onExit also loses the body Cause on failure.
+        if (Exit.isFailure(observation)) return yield* Effect.failCause(
+          Cause.fromReasons<Error>([...result.cause.reasons, ...observation.cause.reasons]),
+        )
+        if (!expected || rejected) return yield* Effect.failCause(result.cause)
         return undefined
       }
       // Provider-valid IDs are host facts even when a token happens to be their substring.
-      const receipt = yield* observe(1, "submitted", result.success)
-      return { id: result.success, receipt }
+      const receipt = yield* observe(1, "submitted", result.value)
+      return { id: result.value, receipt }
     }))
     if (!submitted) return { provider: input.provider, channelID: adapter.channelID, jobRef: ref,
       result: { status: "unknown", receipt: ref.id, summary: "Provider mutation outcome unknown; automatic retry prohibited",
         reconciliationRef: ref.id } }
-    const observed = yield* ("action" in input ? adapter.observe(input) : adapter.get(submitted.id)).pipe(Effect.result)
-    const message = observed._tag === "Success" ? observed.success : undefined
-    const verified = observed._tag === "Success" && (
+    const observed = yield* expectedExit("action" in input ? adapter.observe(input) : adapter.get(submitted.id),
+      (error) => error instanceof Capability.Failure || error instanceof Failure)
+    const message = Exit.isSuccess(observed) ? observed.value : undefined
+    const verified = Exit.isSuccess(observed) && (
       "action" in input && input.action === "delete" ? !message
         : !!message && ("text" in input ? message.text === input.text : "emoji" in input
           ? message.reactions.some((reaction) => reaction.emoji === input.emoji && reaction.own) === (input.action === "reaction_add") : false) &&
@@ -229,22 +235,38 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
       messages: message ? [prepared.clean(message)] : [], hasMore: false }
     const safeID = prepared.safeMetadata({ messageID: submitted.id })
     const safeAcquisition = prepared.safeMetadata(acquisition)
-    const retained = yield* retain(context, input.provider, adapter.channelID, verified ? "verified" : "acknowledged",
-      safeAcquisition ? acquisition : undefined,
-      { ...(safeID ? { messageID: submitted.id } : {}), operation, postcondition: verified ? "verified" : "unresolved",
-        readback: observed._tag === "Success" ? "acquired" : "failed", providerIDProjection: safeID ? "visible" : "omitted" },
-      ref,
-    ).pipe(Effect.result)
-    const artifactRefs = retained._tag === "Success" ? [retained.success] : []
-    const settled = yield* observe(submitted.receipt?.generation ?? 2, verified ? "completed" : "submitted", submitted.id,
-      verified ? { remoteOutcome: "completed", materialization: retained._tag === "Success" ? "complete" : "failed", artifactRefs }
-        : { artifactRefs })
+    const retained = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const result = yield* restore(expectedExit(retain(context, input.provider, adapter.channelID, verified ? "verified" : "acknowledged",
+        safeAcquisition ? acquisition : undefined,
+        { ...(safeID ? { messageID: submitted.id } : {}), operation, postcondition: verified ? "verified" : "unresolved",
+          readback: Exit.isSuccess(observed) ? "acquired" : "failed", providerIDProjection: safeID ? "visible" : "omitted" },
+        ref,
+      ), (error) => error instanceof Capability.Failure || error instanceof CapabilityArtifacts.Failure)).pipe(Effect.exit)
+      if (Exit.isSuccess(result)) return result.value
+      const observation = yield* observe(submitted.receipt?.generation ?? 2,
+        verified ? "completed" : "submitted", submitted.id,
+        verified ? { remoteOutcome: "completed", materialization: "pending" } : {}).pipe(Effect.exit)
+      return yield* Effect.failCause(Exit.isFailure(observation)
+        ? Cause.fromReasons<Error>([...result.cause.reasons, ...observation.cause.reasons]) : result.cause)
+    }))
+    const artifactRefs = Exit.isSuccess(retained) ? [retained.value] : []
+    const settled = yield* Effect.uninterruptible(Effect.gen(function* () {
+      const observation = yield* observe(submitted.receipt?.generation ?? 2, verified ? "completed" : "submitted", submitted.id,
+        verified ? { remoteOutcome: "completed", materialization: Exit.isSuccess(retained) ? "complete" : "failed", artifactRefs }
+          : { artifactRefs }).pipe(Effect.exit)
+      if (Exit.isSuccess(observation)) return observation.value
+      return yield* Effect.failCause(Cause.fromReasons<Error>([
+        ...(Exit.isFailure(observed) ? observed.cause.reasons : []),
+        ...(Exit.isFailure(retained) ? retained.cause.reasons : []),
+        ...observation.cause.reasons,
+      ]))
+    }))
     const common = { provider: input.provider, channelID: adapter.channelID, jobRef: ref,
       ...(safeID ? { messageID: submitted.id } : {}) }
-    if (!verified || retained._tag === "Failure" || !settled || !safeID || !safeAcquisition) return { ...common, result: { status: "partial", receipt: ref.id,
+    if (!verified || Exit.isFailure(retained) || !settled || !safeID || !safeAcquisition) return { ...common, result: { status: "partial", receipt: ref.id,
         summary: "Provider acknowledged mutation; verification or evidence retention unresolved",
         completedEffects: ["provider_acknowledged"], unresolvedEffects: [
-          ...(!verified ? ["postcondition_readback"] : []), ...(retained._tag === "Failure" ? ["evidence_retention"] : []),
+          ...(!verified ? ["postcondition_readback"] : []), ...(Exit.isFailure(retained) ? ["evidence_retention"] : []),
           ...(!settled ? ["job-observation"] : []), ...(!safeID ? ["provider_id_projection"] : []),
           ...(!safeAcquisition && safeID ? ["evidence_metadata"] : []),
         ], artifactRefs } }
@@ -253,10 +275,10 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         verification: "verified", artifactRefs } }
   })
 
-  const toolFailure = (error: Failure | CapabilityArtifacts.Error) => new Tool.Failure({
+  const toolFailure = (error: Error) => new Tool.Failure({
     message: error instanceof Failure ? `channel_${error.reason}` : "code" in error ? error.code : "artifact_storage_failed",
   })
-  const toolErrors = <A>(effect: Effect.Effect<A, Failure | CapabilityArtifacts.Error>) => effect.pipe(
+  const toolErrors = <A>(effect: Effect.Effect<A, Error>) => effect.pipe(
     Effect.exit,
     Effect.flatMap((exit) => Exit.isSuccess(exit) ? Effect.succeed(exit.value) : Effect.failCause(
       Cause.fromReasons<Tool.Failure>(exit.cause.reasons.flatMap((reason) => reason._tag === "Fail"
@@ -279,4 +301,13 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
 
 function failure(code: Capability.ErrorCode) {
   return new Capability.Failure({ code, message: "Channel operation is unavailable" })
+}
+
+function pureFailures<E>(cause: Cause.Cause<E>, allowed: (error: E) => boolean) {
+  return cause.reasons.length > 0 && cause.reasons.every((reason) => reason._tag === "Fail" && allowed(reason.error))
+}
+
+function expectedExit<A, E, R>(effect: Effect.Effect<A, E, R>, allowed: (error: E) => boolean) {
+  return effect.pipe(Effect.exit, Effect.flatMap((exit) => Exit.isSuccess(exit) || pureFailures(exit.cause, allowed)
+    ? Effect.succeed(exit) : Effect.failCause(exit.cause)))
 }
