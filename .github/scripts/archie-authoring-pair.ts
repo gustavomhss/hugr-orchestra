@@ -7,6 +7,7 @@ import { lstat, mkdir, open, realpath, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
+import type { Schema } from "effect"
 
 // Observation wrapper, not an approval/benefit gate. No inference in prepare/preflight modes.
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
@@ -20,6 +21,9 @@ const authPins = [
   ["plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
   ["plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
 ] as const
+const runtimeFiles = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "session/prompt.ts",
+  "session/task-prompt-ops.ts", "session/prompt-guard.ts", "maestro/seats/archie.ts", "maestro/roster.ts", "maestro/write-roots.ts",
+  "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "effect/app-runtime.ts"]
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const blob = (bytes: Uint8Array) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
 class PairError extends Error {}
@@ -50,16 +54,19 @@ async function read(path: string, privateMode = false) {
 }
 
 function utf8(bytes: Uint8Array) {
-  const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes)
+  const text = (() => {
+    try { return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes) }
+    catch { throw new PairError("PAIR_UTF8_INVALID") }
+  })()
   requireFact(Buffer.from(text).equals(Buffer.from(bytes)), "PAIR_UTF8_ROUNDTRIP_FAILED")
   return text
 }
 
 // Exported so refusal probes execute this verifier rather than a second implementation.
 export async function verifyPacket(candidate: string, packetPath: string) {
-  const { Option, Schema } = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-  function decode<S extends { readonly Type: unknown }>(schema: S, value: unknown, code: string): S["Type"] {
-    const result = Schema.decodeUnknownOption(schema)(value)
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  function decode<S extends Schema.Decoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
+    const result = Schema.decodeUnknownOption(schema)(value, { onExcessProperty: "error" })
     requireFact(Option.isSome(result), code)
     return result.value
   }
@@ -77,10 +84,15 @@ export async function verifyPacket(candidate: string, packetPath: string) {
   requireFact(packet.stages.every((stage) => new Set(stage.sourceIDs).size === stage.sourceIDs.length && stage.sourceIDs.every((id) => packet.sourceUniverse.some((item) => item.id === id))), "PAIR_STAGE_SOURCE_MEMBERSHIP_INVALID")
   const artifact = async (path: string) => {
     requireFact(!path.split(/[\\/]/).includes(".."), "PAIR_ARTIFACT_TRAVERSAL_REFUSED")
-    const absolute = await canonical(isAbsolute(path) ? path : join(dirname(packetPath), path))
-    const bytes = await read(absolute)
-    requireFact(bytes.length > 0, "PAIR_ARTIFACT_EMPTY")
-    return { path: absolute, sha256: sha256(bytes), utf8ByteLength: bytes.length, text: utf8(bytes) }
+    try {
+      const absolute = await canonical(isAbsolute(path) ? path : join(dirname(packetPath), path))
+      const bytes = await read(absolute)
+      requireFact(bytes.length > 0, "PAIR_ARTIFACT_EMPTY")
+      return { path: absolute, sha256: sha256(bytes), utf8ByteLength: bytes.length, text: utf8(bytes) }
+    } catch (error) {
+      if (error instanceof PairError) throw error
+      throw new PairError(`PAIR_ARTIFACT_UNAVAILABLE:${path}`)
+    }
   }
   const sources = await Promise.all(packet.sourceUniverse.map(async (item, index) => {
     const source = await artifact(item.path)
@@ -112,7 +124,14 @@ import { createHash } from "node:crypto"
 const job = ${JSON.stringify(job)}
 const model = ${JSON.stringify(model)}
 const requireCandidate = createRequire(job.candidate + "/packages/orchestra/package.json")
-const { Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
+const { Effect, ManagedRuntime, Option, Schema } = await import(requireCandidate.resolve("effect"))
+const authStore = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(process.env.ORCHESTRA_AUTH_CONTENT)
+fact(Option.isSome(authStore), "PAIR_AUTH_CONTENT_INVALID")
+const auth = Schema.decodeUnknownOption(Schema.Struct({ openai: Schema.Struct({ access: Schema.String, refresh: Schema.String, accountId: Schema.optional(Schema.String) }) }))(authStore.value)
+fact(Option.isSome(auth), "PAIR_AUTH_CONTENT_INVALID")
+const secrets = [auth.value.openai.access, auth.value.openai.refresh, ...(auth.value.openai.accountId ? [auth.value.openai.accountId] : [])]
+  .flatMap((text) => [text, JSON.stringify(text).slice(1, -1), encodeURIComponent(text), Buffer.from(text).toString("base64")]).sort((a, b) => b.length - a.length)
+const redact = (text: string) => secrets.reduce((result, secret) => result.split(secret).join("[REDACTED]"), text)
 const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
 const { CrossSpawnSpawner } = await import(job.candidate + "/packages/core/src/cross-spawn-spawner.ts")
 const { LayerNode } = await import(job.candidate + "/packages/core/src/effect/layer-node.ts")
@@ -132,7 +151,16 @@ const processRuntime = ManagedRuntime.make(LayerNode.compile(LayerNode.group([Ap
 function fact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
 const emit = (event: object) => console.log(JSON.stringify(event))
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
-const save = (path: string, value: unknown) => writeFile(path, JSON.stringify(value) + "\\n", { flag: "wx", mode: 0o600 })
+const save = (path: string, value: unknown) => writeFile(path, redact(JSON.stringify(value)) + "\\n", { flag: "wx", mode: 0o600 })
+const verifyInputs = async () => {
+  fact(digest(await Bun.file(job.packet.packetPath).bytes()) === job.packet.packetSha256, "PAIR_PACKET_CHANGED")
+  const inputs = [job.packet.global, ...job.packet.sources, ...job.packet.stages.map((stage) => stage.request)]
+  await Promise.all(inputs.map(async (input) => {
+    const bytes = await Bun.file(input.path).bytes()
+    fact(bytes.length === input.utf8ByteLength && digest(bytes) === input.sha256, "PAIR_INPUT_CHANGED_DURING_STAGE")
+  }))
+  return inputs.map((input) => ({ path: input.path, sha256: input.sha256, utf8ByteLength: input.utf8ByteLength }))
+}
 try {
 const seeded = await processRuntime.runPromise(Effect.gen(function* () {
   const processes = yield* AppProcess.Service
@@ -184,10 +212,10 @@ for (const arm of ["E", "P"] as const) {
     const denies = [{ permission: "edit", pattern: "*", action: "deny" as const }, { permission: "bash", pattern: "*", action: "deny" as const },
       { permission: "read", pattern: "*", action: "deny" as const }, { permission: "glob", pattern: "*", action: "deny" as const },
       { permission: "grep", pattern: "*", action: "deny" as const }, { permission: "external_directory", pattern: "*", action: "deny" as const },
-      { permission: "read", pattern: join(project, "*"), action: "allow" as const }]
+      { permission: "read", pattern: relative(placement.worktree, join(project, "*")).replaceAll("\\\\", "/"), action: "allow" as const }]
     const parent = yield* sessions.create({ agent: "maestro", title: "archie-pair-" + arm, permission: denies })
     yield* sessions.setPermission({ sessionID: parent.id, permission: denies })
-    return { agents, sessions, prompts, task: named.task, parent, denies }
+    return { agents, sessions, prompts, task: named.task, parent, denies, archie, maestro, toolIDs: Object.keys(named) }
   }))
   const base = await realpath(placement.worktree === "/" ? placement.directory : placement.worktree)
   const proposal = join(project, "proposal.md")
@@ -199,6 +227,7 @@ for (const arm of ["E", "P"] as const) {
     fact(JSON.stringify(WriteRoots.read(rules)) === JSON.stringify([proposal]), "PAIR_WRITE_ROOT_BINDING_INVALID")
   }))
   emit({ type: "pair_preflight", arm, parentSessionID: services.parent.id, projectID: services.parent.projectID, worktree: placement.worktree, project, dispatchPath })
+  await save(join(root, "native-settings.json"), { archie: services.archie, maestro: services.maestro, toolIDs: services.toolIDs, parent: services.parent, denies: services.denies, dispatchPath, worktree: placement.worktree })
   if (job.preflightOnly) continue
   const state: { index: number; calls: number; checks: number; child?: string; logical?: string; prompt?: string; result?: unknown; parentMessageID?: string; callID?: string } = { index: 0, calls: 0, checks: 0 }
   const execute = services.task.execute
@@ -215,13 +244,17 @@ for (const arm of ["E", "P"] as const) {
     fact(isOps(ops), "PAIR_NATIVE_PROMPT_OPS_MISSING")
     const result = yield* execute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
       prompt: (request, options) => Effect.gen(function* () {
+        fact(request.parts.length === 1 && request.parts[0].type === "text" && request.parts[0].text === state.prompt, "PAIR_NATIVE_ATTACHMENT_EXPANSION_REFUSED")
         const child = yield* services.sessions.get(request.sessionID)
         fact(child.parentID === services.parent.id && child.agent === "archie" && child.directory === project
           && child.projectID === services.parent.projectID && (!state.child || state.child === child.id), "PAIR_SAME_CHILD_BINDING_MISMATCH")
         state.child = child.id
         fact(JSON.stringify(WriteRoots.read(child.permission)) === JSON.stringify([proposal]), "PAIR_CHILD_WRITE_ROOT_INVALID")
-        yield* services.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []), { permission: "edit", pattern, action: "allow" }] })
+        // Native child inheritance retains denies, not parent read allowances. Bind the same local read surface in both arms.
+        yield* services.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []),
+          { permission: "read", pattern: relative(placement.worktree, join(project, "*")).replaceAll("\\\\", "/"), action: "allow" }, { permission: "edit", pattern, action: "allow" }] })
         const check = Effect.gen(function* () {
+          yield* Effect.promise(verifyInputs)
           const bound = yield* services.sessions.get(child.id)
           const archie = yield* services.agents.get("archie")
           const canonicalProposal = yield* Effect.promise(() => realpath(proposal).catch(async (error: NodeJS.ErrnoException) => {
@@ -233,12 +266,14 @@ for (const arm of ["E", "P"] as const) {
             && Permission.evaluate("edit", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "deny"
             && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny"
             && Permission.evaluate("task", "archie", archie.permission, bound.permission ?? []).action === "deny"
-            && Permission.evaluate("read", job.packet.packetPath, archie.permission, bound.permission ?? []).action === "deny", "PAIR_CHILD_SCOPE_INVALID")
+            && Permission.evaluate("read", relative(placement.worktree, join(project, "global.txt")), archie.permission, bound.permission ?? []).action === "allow"
+            && Permission.evaluate("read", relative(placement.worktree, job.packet.packetPath), archie.permission, bound.permission ?? []).action === "deny", "PAIR_CHILD_SCOPE_INVALID")
           state.checks++
         })
         return yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, check], { discard: true }) })
       }).pipe(Effect.provideService(InstanceRef, placement))
     } } })
+    yield* Effect.promise(() => save(join(root, "stage-" + (state.index + 1), "task-return.json"), result))
     const work = result.metadata.workResult
     fact(work && work.schema === "upstream-work-result-v1" && work.author?.memberId === "archie"
       && work.author.executionSessionID === state.child && work.author.messageID === work.card?.messageID
@@ -250,7 +285,10 @@ for (const arm of ["E", "P"] as const) {
   try {
     const revealed = new Set<string>()
     for (const [index, stage] of job.packet.stages.entries()) {
+      await verifyInputs()
       state.index = index; state.calls = 0; state.checks = 0; state.result = undefined
+      const stageRoot = join(root, "stage-" + (index + 1))
+      await mkdir(stageRoot, { mode: 0o700 })
       const reveal = arm === "E" && index === 0 ? job.packet.sources : arm === "P" ? job.packet.sources.filter((item) => stage.sourceIDs.includes(item.id) && !revealed.has(item.id)) : []
       await Promise.all(reveal.map(async (item) => {
         await writeFile(join(project, item.file), item.text, { flag: "wx", mode: 0o400 })
@@ -266,22 +304,23 @@ for (const arm of ["E", "P"] as const) {
         + ". Omit background, governed, authorizationID, workflow, memoryUnit and command. Copy following assignment exactly into prompt; no trimming, rewriting or added obligations. Return actual Task result.\\n\\n" + state.prompt
       emit({ type: "pair_stage_start", arm, index, id: stage.id, requestSha256: stage.request.sha256, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed] })
       const returned = await run(services.prompts.prompt({ sessionID: services.parent.id, agent: "maestro", model: { providerID: "openai", modelID: "gpt-6.1-sol" }, parts: [{ type: "text", text: host }] }))
+      await save(join(stageRoot, "parent-return.json"), returned)
       fact(returned.info.role === "assistant" && !returned.info.error && state.calls === 1 && state.checks > 0 && state.result, "PAIR_STAGE_NATIVE_EXECUTION_INCOMPLETE")
+      const inputHashes = await verifyInputs()
       const bytes = await Bun.file(proposal).bytes()
       fact(bytes.length > 0 && (await realpath(proposal)) === proposal, "PAIR_PROPOSAL_MISSING_OR_ALIAS")
-      const stageRoot = join(root, "stage-" + (index + 1))
-      await mkdir(stageRoot, { mode: 0o700 })
+      fact(!secrets.some((secret) => Buffer.from(bytes).includes(Buffer.from(secret))), "PAIR_PROPOSAL_SECRET_BEARING")
       await writeFile(join(stageRoot, "proposal.md"), bytes, { flag: "wx", mode: 0o600 })
       await save(join(stageRoot, "native.json"), { arm, index, id: stage.id, parentSessionID: services.parent.id, parentMessageID: state.parentMessageID, callID: state.callID,
-        childSessionID: state.child, logicalTaskID: state.logical, result: state.result, parentReturned: returned, proposalSha256: digest(bytes), proposalBytes: bytes.length,
-        requestSha256: stage.request.sha256, assignment: state.prompt, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed], checks: state.checks })
+        childSessionID: state.child, logicalTaskID: state.logical, worktree: placement.worktree, result: state.result, parentReturned: returned, proposalSha256: digest(bytes), proposalBytes: bytes.length,
+        requestSha256: stage.request.sha256, assignment: state.prompt, assignmentSha256: digest(Buffer.from(state.prompt)), revealedSourceIDs: [...revealed], inputHashes, checks: state.checks })
       emit({ type: "pair_stage_end", arm, index, childSessionID: state.child, logicalTaskID: state.logical })
     }
   } finally { services.task.execute = execute }
 }
 } finally { await AppRuntime.dispose() }
 } catch (error) {
-  emit({ type: "pair_failure", code: error instanceof Error && /^(PAIR|LEGACY_CODEX)_[A-Z_]+$/.test(error.message) ? error.message : "PAIR_INITIALIZER_OR_NATIVE_RUNTIME_FAILED" })
+  emit({ type: "pair_failure", code: error instanceof Error && /^(PAIR|LEGACY_CODEX)_[A-Z_]+$/.test(error.message) ? error.message : "PAIR_INITIALIZER_OR_NATIVE_RUNTIME_FAILED", diagnostic: redact(String(error)) })
   process.exitCode = 1
 } finally {
   await processRuntime.dispose()
@@ -313,7 +352,8 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
       state.groupGone = true
     }
   }
-  const abort = () => { state.failure = "PAIR_INTERRUPTED"; signal("SIGTERM") }
+  const interruption: { timer?: ReturnType<typeof setTimeout> } = {}
+  const abort = () => { state.failure = "PAIR_INTERRUPTED"; signal("SIGTERM"); interruption.timer ??= setTimeout(() => signal("SIGKILL"), 3000) }
   process.once("SIGINT", abort); process.once("SIGTERM", abort)
   const timer = setTimeout(() => { state.failure = "PAIR_DEADLINE"; signal("SIGKILL") }, budget)
   const drains = [child.stdout, child.stderr].map(async (stream, index) => {
@@ -334,6 +374,7 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
     await Promise.all(drains)
   } finally {
     clearTimeout(timer)
+    clearTimeout(interruption.timer)
     signal("SIGTERM")
     const until = Date.now() + 3000
     while (alive() && Date.now() < until) await Bun.sleep(25)
@@ -372,13 +413,17 @@ async function main() {
   }))
   const coreAuth = await read(await canonical(join(candidate, "packages/core/src/auth/siwc.ts")))
   requireFact(blob(coreAuth) === "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3", "PAIR_CORE_AUTH_PIN_MISMATCH")
+  const runtimeHashes = await Promise.all(runtimeFiles.map(async (file) => {
+    const path = await canonical(join(candidate, "packages/orchestra/src", file))
+    return { path, sha256: sha256(await read(path)) }
+  }))
   const git = Bun.spawn(["git", "--no-optional-locks", "-C", candidate, "rev-parse", "HEAD"], { stdout: "pipe", stderr: "ignore" })
   const head = (await new Response(git.stdout).text()).trim()
   requireFact(await git.exited === 0 && /^[a-f0-9]{40}$/.test(head), "PAIR_CANDIDATE_HEAD_UNAVAILABLE")
   process.umask(0o077)
   await mkdir(output, { mode: 0o700 }) // Existing output is refused: no overwrite or mixed-run receipts.
   const save = (file: string, value: unknown) => writeFile(join(output, file), JSON.stringify(value) + "\n", { flag: "wx", mode: 0o600 })
-  await save("prepared.json", { schema: 1, candidate, head, model, sourceHashes, coreAuthBlob: blob(coreAuth), packetPath, packetSha256: packet.packetSha256,
+  await save("prepared.json", { schema: 1, candidate, head, model, sourceHashes, runtimeHashes, coreAuthBlob: blob(coreAuth), packetPath, packetSha256: packet.packetSha256,
     global: receipt(packet.global), sources: packet.sources.map((item) => ({ id: item.id, file: item.file, ...receipt(item) })),
     stages: packet.stages.map((item) => ({ id: item.id, sourceIDs: item.sourceIDs, request: receipt(item.request) })),
     deadlineMs, outputLimit, judgment: "not-performed", authAdapter: "explicit-legacy-codex-readonly", order: ["E", "P"] })
@@ -393,7 +438,7 @@ async function main() {
     const entry = join(output, "initializer.ts")
     await writeFile(entry, program, { flag: "wx", mode: 0o600 })
     if (args["prepare-only"]) { console.log(JSON.stringify({ code: "PAIR_PREPARED_NO_MODEL", output })); return }
-    const { Option, Schema } = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+    const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
     const source = await canonical(args["auth-source"])
     const authBytes = await read(source, true)
     const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(utf8(authBytes))
@@ -402,7 +447,7 @@ async function main() {
     requireFact(value && typeof value === "object" && !Object.hasOwn(value, "metadata"), "PAIR_LEGACY_AUTH_METADATA_REFUSED")
     const auth = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("oauth"), access: Schema.NonEmptyString, refresh: Schema.NonEmptyString,
       expires: Schema.Int, accountId: Schema.optional(Schema.String) }))(value)
-    requireFact(Option.isSome(auth) && auth.value.expires > Date.now() + deadlineMs + 15 * 60_000, "PAIR_LEGACY_AUTH_INVALID_OR_EXPIRY_TOO_CLOSE")
+    requireFact(Option.isSome(auth) && auth.value.expires > Date.now() + (args.run ? deadlineMs : 60_000) + 15 * 60_000, "PAIR_LEGACY_AUTH_INVALID_OR_EXPIRY_TOO_CLOSE")
     const secrets = [auth.value.access, auth.value.refresh, ...(auth.value.accountId ? [auth.value.accountId] : [])].flatMap((text) => [text, JSON.stringify(text).slice(1, -1), encodeURIComponent(text), Buffer.from(text).toString("base64")]).sort((a, b) => b.length - a.length)
     const redact = (text: string) => secrets.reduce((result, secret) => result.split(secret).join("[REDACTED]"), text)
     const env: Record<string, string | undefined> = Object.fromEntries(["HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "TMPDIR"].map((key) => [key, join(output, key.toLowerCase())]))
@@ -418,8 +463,20 @@ async function main() {
     await writeFile(join(output, "stderr.txt"), redact(launched.stderr), { flag: "wx", mode: 0o600 })
     requireFact(sha256(await read(source, true)) === sha256(authBytes), "PAIR_SELECTED_AUTH_STORE_CHANGED")
     await unchanged(packet)
+    await Promise.all([...runtimeHashes, ...sourceHashes.map((item) => ({ path: join(candidate, "packages/orchestra/src", item.file), sha256: item.sha256 }))].map(async (item) =>
+      requireFact(sha256(await read(await canonical(item.path))) === item.sha256, `PAIR_CANDIDATE_SOURCE_CHANGED:${item.path}`)))
+    requireFact(blob(await read(await canonical(join(candidate, "packages/core/src/auth/siwc.ts")))) === blob(coreAuth), "PAIR_CORE_AUTH_SOURCE_CHANGED")
     requireFact(!launched.code, launched.code ?? "PAIR_PROCESS_FAILED")
-    if (args["preflight-only"]) { await save("status.json", { code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL" }); console.log(JSON.stringify({ code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL", output })); return }
+    if (args["preflight-only"]) {
+      const events = launched.stdout.split("\n").flatMap((line) => {
+        const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
+        if (Option.isNone(parsed)) return []
+        const event = Schema.decodeUnknownOption(Schema.Struct({ type: Schema.Literal("pair_preflight"), arm: Schema.Literals(["E", "P"]), parentSessionID: Schema.String }))(parsed.value)
+        return Option.isSome(event) ? [event.value] : []
+      })
+      requireFact(events.length === 2 && new Set(events.map((event) => event.arm)).size === 2 && new Set(events.map((event) => event.parentSessionID)).size === 2, "PAIR_PREFLIGHT_RECORDS_MISSING_OR_AMBIGUOUS")
+      await save("status.json", { code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL" }); console.log(JSON.stringify({ code: "PAIR_PREFLIGHT_COMPLETED_NO_MODEL", output })); return
+    }
     await verifyDatabase(candidate, output, packet, secrets)
     await save("status.json", { code: "PAIR_NATIVE_RESULTS_OBSERVED", judgment: "not-performed" })
     console.log(JSON.stringify({ code: "PAIR_NATIVE_RESULTS_OBSERVED", output, judgment: "not-performed" }))
@@ -431,8 +488,8 @@ async function main() {
 
 async function verifyDatabase(candidate: string, output: string, packet: Packet, secrets: string[]) {
   const db = new Database(join(output, "session.db"), { readonly: true, strict: true })
-  const { Option, Schema } = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-  function decode<S extends { readonly Type: unknown }>(schema: S, value: unknown, code: string): S["Type"] {
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  function decode<S extends Schema.Decoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
     const result = Schema.decodeUnknownOption(schema)(value)
     requireFact(Option.isSome(result), code)
     return result.value
@@ -447,12 +504,22 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         const nativeBytes = await read(await canonical(join(root, "native.json")))
         requireFact(!secrets.some((secret) => nativeBytes.includes(Buffer.from(secret))), "PAIR_RAW_RESULT_SECRET_BEARING")
         const native = decode(Schema.Struct({ parentSessionID: Schema.String, parentMessageID: Schema.String, callID: Schema.String,
-          childSessionID: Schema.String, logicalTaskID: Schema.String, assignment: Schema.String, assignmentSha256: Schema.String,
+          childSessionID: Schema.String, logicalTaskID: Schema.String, worktree: Schema.String, assignment: Schema.String, assignmentSha256: Schema.String,
           requestSha256: Schema.String, proposalSha256: Schema.String, proposalBytes: Schema.Int, revealedSourceIDs: Schema.Array(Schema.String) }), json(utf8(nativeBytes)), "PAIR_STAGE_RECEIPT_INVALID")
         requireFact(native.requestSha256 === stage.request.sha256 && native.assignment.endsWith(stage.request.text) && native.assignmentSha256 === sha256(Buffer.from(native.assignment)), "PAIR_STAGE_REQUEST_CHANGED")
         const parent = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.parentSessionID), "PAIR_PARENT_DB_MISSING")
         const child = decode(sessionSchema, db.query("SELECT id,parent_id,project_id,directory,agent,permission FROM session WHERE id=?").get(native.childSessionID), "PAIR_CHILD_DB_MISSING")
-        requireFact(parent.parent_id === null && parent.agent === "maestro" && child.agent === "archie" && child.parent_id === parent.id && child.project_id === parent.project_id && child.directory === join(output, arm, "project"), "PAIR_DB_LINEAGE_MISMATCH")
+        requireFact(parent.parent_id === null && parent.agent === "maestro" && child.agent === "archie" && child.parent_id === parent.id && child.project_id === parent.project_id && parent.directory === child.directory && child.directory === join(output, arm, "project"), "PAIR_DB_LINEAGE_MISMATCH")
+        const caller = decode(Schema.Struct({ data: Schema.String }), db.query("SELECT data FROM message WHERE session_id=? AND id=?").get(parent.id, native.parentMessageID), "PAIR_TASK_CALLER_MESSAGE_MISSING")
+        const callerInfo = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro"), providerID: Schema.String, modelID: Schema.String }), json(caller.data), "PAIR_TASK_CALLER_IDENTITY_INVALID")
+        requireFact(callerInfo.providerID + "/" + callerInfo.modelID === model, "PAIR_TASK_CALLER_MODEL_MISMATCH")
+        const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(child.permission), "PAIR_PERSISTED_CHILD_RULES_INVALID")
+        const proposalPath = join(child.directory, "proposal.md")
+        const proposalPattern = relative(native.worktree, proposalPath).replaceAll("\\", "/")
+        requireFact(JSON.stringify(rules.filter((rule) => rule.permission === "tool_safety_write_root" && rule.action === "allow").map((rule) => rule.pattern)) === JSON.stringify([proposalPath])
+          && rules.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "deny")
+          && rules.findLast((rule) => rule.permission === "edit" && ["*", proposalPattern].includes(rule.pattern))?.action === "allow"
+          && rules.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "deny"), "PAIR_PERSISTED_CHILD_SCOPE_MISMATCH")
         const taskRows = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.tool')='task' AND json_extract(data,'$.callID')=?").all(parent.id, native.parentMessageID, native.callID), "PAIR_TASK_ROWS_INVALID")
         requireFact(taskRows.length === 1, "PAIR_STAGE_TASK_MISSING_OR_AMBIGUOUS")
         const task = decode(Schema.Struct({ state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Struct({ prompt: Schema.String, model: Schema.String, subagent_type: Schema.Literal("archie"), task_id: Schema.optional(Schema.String) }),
@@ -474,14 +541,22 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         requireFact(returned.length > 0 && !secrets.some((secret) => returned.includes(secret)), "PAIR_ASSISTANT_EMPTY_OR_SECRET_BEARING")
         await writeFile(join(root, "returned-assistant.txt"), returned, { flag: "wx", mode: 0o600 })
         const proposal = await read(await canonical(join(root, "proposal.md")))
+        utf8(proposal)
         requireFact(proposal.length === native.proposalBytes && sha256(proposal) === native.proposalSha256 && !secrets.some((secret) => proposal.includes(Buffer.from(secret))), "PAIR_PROPOSAL_SNAPSHOT_MISMATCH_OR_SECRET")
         // Collect every stored provider step belonging to this child prompt, including tool turns.
         const messages = decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM message WHERE session_id=? AND json_extract(data,'$.role')='assistant' AND json_extract(data,'$.parentID')=? ORDER BY id").all(child.id, info.parentID), "PAIR_USAGE_MESSAGE_ROWS_INVALID")
         requireFact(messages.length > 0, "PAIR_STAGE_PROVIDER_MESSAGES_MISSING")
-        const steps = messages.flatMap((msg) => decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(child.id, msg.id), "PAIR_STEP_ROWS_INVALID").map((row) => ({ messageID: msg.id, partID: row.id, stored: json(row.data) })))
+        const steps = messages.flatMap((msg) => decode(Schema.Array(rowSchema), db.query("SELECT id,data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(child.id, msg.id), "PAIR_STEP_ROWS_INVALID").map((row) => {
+          const stored = decode(Schema.Record(Schema.String, Schema.Unknown), json(row.data), "PAIR_STEP_DATA_INVALID")
+          const tokens = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(stored.tokens)
+          const cache = Option.isSome(tokens) ? Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(tokens.value.cache) : Option.none()
+          const missingFields = [...["total", "input", "output", "reasoning", "cache"].filter((field) => Option.isNone(tokens) || !Object.hasOwn(tokens.value, field)),
+            ...["read", "write"].filter((field) => Option.isNone(cache) || !Object.hasOwn(cache.value, field)).map((field) => "cache." + field)]
+          return { messageID: msg.id, partID: row.id, stored, missingFields }
+        }))
         const evidence = { arm, index, id: stage.id, ...native, returnedAssistantID: work.author.messageID, childPromptMessageID: info.parentID,
           returnedAssistantSha256: sha256(Buffer.from(returned)), providerMessages: messages.map((row) => ({ id: row.id, stored: json(row.data) })),
-          usage: { source: "stored-step-finish", steps, missingness: steps.length === 0 ? "no-stored-step-finish" : "fields-as-stored-no-inferred-counts" },
+          usage: { scope: "native-child-only-parent-overhead-excluded", source: "stored-step-finish", steps, missingness: steps.length === 0 ? "no-stored-step-finish" : "per-step-missingFields-no-inferred-counts" },
           inputs: [receipt(packet.global), ...packet.sources.map(receipt), ...packet.stages.map((item) => receipt(item.request))], judgment: "not-performed" }
         await writeFile(join(root, "verified.json"), JSON.stringify(evidence) + "\n", { flag: "wx", mode: 0o600 })
         return evidence
@@ -490,9 +565,13 @@ async function verifyDatabase(candidate: string, output: string, packet: Packet,
         && new Set(stages.map((stage) => stage.returnedAssistantID)).size === 4, "PAIR_SAME_CHILD_RESUME_NOT_OBSERVED")
       const tasks = db.query("SELECT id FROM part WHERE session_id=? AND json_extract(data,'$.tool')='task'").all(stages[0].parentSessionID)
       requireFact(tasks.length === 4, "PAIR_PARENT_EXTRA_OR_MISSING_TASKS")
+      const children = decode(Schema.Array(Schema.Struct({ id: Schema.String })), db.query("SELECT id FROM session WHERE parent_id=?").all(stages[0].parentSessionID), "PAIR_NATIVE_CHILD_ROWS_INVALID")
+      requireFact(children.length === 1 && children[0].id === stages[0].childSessionID, "PAIR_EXTRA_OR_MISSING_NATIVE_CHILD")
       return { arm, stages }
     }))
     requireFact(arms[0].stages[0].childSessionID !== arms[1].stages[0].childSessionID && arms[0].stages[0].parentSessionID !== arms[1].stages[0].parentSessionID, "PAIR_ARMS_NOT_INDEPENDENT")
+    const settings = await Promise.all(["E", "P"].map(async (arm) => decode(Schema.Struct({ archie: Schema.Unknown, maestro: Schema.Unknown, toolIDs: Schema.Array(Schema.String) }), json(utf8(await read(await canonical(join(output, arm, "native-settings.json"))))), "PAIR_NATIVE_SETTINGS_MISSING")))
+    requireFact(JSON.stringify(settings[0]) === JSON.stringify(settings[1]), "PAIR_NATIVE_SETTINGS_OR_TOOLS_DIFFER")
     await writeFile(join(output, "results.json"), JSON.stringify({ schema: 1, model, arms, judgment: "not-performed", benefit: "not-assessed", approval: "not-assessed" }) + "\n", { flag: "wx", mode: 0o600 })
   } finally { db.close() }
 }
