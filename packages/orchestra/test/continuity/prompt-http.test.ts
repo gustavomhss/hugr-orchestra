@@ -450,8 +450,6 @@ it.instance("different user queued during real held catch-up retries stale admis
   const hold = yield* gate
   const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
   yield* llm.pushMatch(catchup.match, catchup.response)
-  const replacement = forkAnswer("FRESH_CATCHUP_RESULT", maintenance)
-  yield* llm.pushMatch(replacement.match, replacement.response)
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
@@ -466,7 +464,12 @@ it.instance("different user queued during real held catch-up retries stale admis
   expect(history.filter((message) => message.info.role === "assistant" && message.info.parentID === newer.info.id)).toHaveLength(1)
   const hits = yield* llm.hits
   expect(hits.filter(parent("QUEUED_U2_DURING_CATCHUP"))).toHaveLength(1)
-  expect(hits.filter(maintenance)).toHaveLength(3)
+  // The completed prefix remains usable; rebinding a newer caller must not pay for it again.
+  expect(hits.filter(maintenance)).toHaveLength(2)
+  const delivered = hits.find(parent("QUEUED_U2_DURING_CATCHUP"))
+  if (!delivered) throw new Error("Missing rebound caller request")
+  expect(wireMessages(delivered.body).filter((message) => message.role === "system").map((message) => message.content).join("\n"))
+    .toContain("HELD_CATCHUP_RESULT")
   expect(hits.filter(review)).toEqual([])
 }), 120_000)
 

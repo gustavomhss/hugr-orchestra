@@ -1,5 +1,9 @@
 # Context Continuity quality results — 2026-10-09
 
+> These results describe the historical paid-review implementation. The owner subsequently selected
+> [single-call self-check](context-continuity-selfcheck.md). These live measurements do not establish
+> semantic quality or token savings for the new one-call path.
+
 **Acceptance verified within the scope below; integrated into `dev` through PR #187.** This records observed
 behavior and its limits, not universal semantic correctness or superiority over legacy compaction.
 

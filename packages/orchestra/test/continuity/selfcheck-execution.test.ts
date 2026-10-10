@@ -174,7 +174,7 @@ for (const action of ["complete", "interrupt", "scope-close", "deadline"] as con
     })))
     const sent = transport([reply])
     const operation = yield* run(value.snapshot, { provider: provider(), llm: sent.llm }, value.host).pipe(
-      Effect.tap(() => Effect.sync(() => events.push("returned"))), Effect.exit, Effect.forkIn(scope))
+      Effect.tap(() => Effect.sync(() => events.push("returned"))), Effect.forkIn(scope))
     yield* Deferred.await(entered)
     if (action === "complete") yield* Deferred.succeed(finish, undefined)
     const trigger = action === "interrupt" ? yield* Fiber.interrupt(operation).pipe(Effect.forkChild)
@@ -184,7 +184,7 @@ for (const action of ["complete", "interrupt", "scope-close", "deadline"] as con
     expect(operation.pollUnsafe()).toBeUndefined()
     expect(events).toEqual(["closing"])
     yield* Deferred.succeed(release, undefined)
-    const result = yield* Fiber.join(operation)
+    const result = yield* Fiber.await(operation)
     if (trigger) yield* Fiber.join(trigger)
     expect(sent.requests).toHaveLength(1)
     expect(events).toEqual(action === "interrupt" || action === "scope-close" ? ["closing", "closed"] : ["closing", "closed", "returned"])

@@ -519,7 +519,7 @@ const layer = Layer.effect(
               if (!live()) return "discarded"
               const { artifact, ...pass } = yield* run(selected, {
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
-                 llm: { estimateInput: (backend?.llm ?? llm).estimateInput, stream: (request) => Stream.unwrap(Effect.sync(() => live()
+                 llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
               }, { history, delegations, member }, { parent: request })
               // A producer pull may observe ownership loss before its transport finishes.
