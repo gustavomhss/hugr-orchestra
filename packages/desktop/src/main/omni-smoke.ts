@@ -16,12 +16,13 @@ import { Omni } from "@orchestra/core/omni"
 import { DesktopOmni } from "./omni-process"
 
 const utility = { pid: undefined as number | undefined }
+const quitAction = { id: undefined as string | undefined }
 
 /** Smoke-only lifecycle witnesses. No new runtime IPC or HTTP surface. */
 export function event(name: string, data: Record<string, unknown> = {}) {
   const file = process.env.ORCHESTRA_DESKTOP_OMNI_SMOKE
   if (!file || !DesktopOmni.enabled()) return
-  appendFileSync(`${file}.events`, JSON.stringify({ name, pid: process.pid, at: Date.now(), ...data }) + "\n", { mode: 0o600 })
+  appendFileSync(`${file}.events`, JSON.stringify({ name, pid: process.pid, at: Date.now(), ...data, actionID: quitAction.id }) + "\n", { mode: 0o600 })
 }
 
 export function utilityStarted(pid: number | undefined) {
@@ -69,7 +70,15 @@ export async function report(server: { url: string; username: string; password: 
   }
   const timer = setInterval(() => {
     gui()
-    if (!existsSync(quit) || readFileSync(quit, "utf8") !== token) return
+    if (!existsSync(quit)) return
+    const request = (() => {
+      try { return JSON.parse(readFileSync(quit, "utf8")) as unknown }
+      catch { return undefined }
+    })()
+    if (!request || typeof request !== "object" || !("token" in request) || request.token !== token ||
+      !("actionID" in request) || typeof request.actionID !== "string" || !request.actionID.trim()) return
+    // Bind every subsequent witness before observing resources or requesting shutdown.
+    quitAction.id = request.actionID
     clearInterval(timer)
     void (async () => {
       resources("quit-trigger-active-fixtures")

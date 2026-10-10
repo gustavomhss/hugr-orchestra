@@ -1,6 +1,7 @@
 // Actual packaged Electron only. Crash/quit assertions precede every emergency signal.
 import { spawn, spawnSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
+import { randomUUID } from "node:crypto"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "../../../omni/campaign/lib"
 import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
@@ -110,9 +111,13 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     const utilityOwned = owned(before, [utility]).map((row) => identity(row.pid, before))
     const selected = cell === "utility-kill" ? scratch.specs.filter((spec) => spec.name !== "main") : scratch.specs
     const boundMs = cell === "quit" ? 20_000 : 8000
+    const actionID = randomUUID()
     const started = Date.now()
-    evidence.action = { cell, started, boundMs, input: cell === "quit" && mutation !== "forced-kill" ? "app.quit" : win ? "TerminateProcess (no tree kill)" : "SIGKILL", target: cell === "utility-kill" ? utility : main }
-    if (cell === "quit" && mutation !== "forced-kill") writeFileSync(server.quit, server.token, { mode: 0o600 })
+    evidence.action = { cell, actionID, started, boundMs, input: cell === "quit" && mutation !== "forced-kill" ? "app.quit" : win ? "TerminateProcess (no tree kill)" : "SIGKILL", target: cell === "utility-kill" ? utility : main }
+    if (cell === "quit" && mutation !== "forced-kill") {
+      writeFileSync(`${server.quit}.tmp`, JSON.stringify({ token: server.token, actionID }), { mode: 0o600 })
+      renameSync(`${server.quit}.tmp`, server.quit)
+    }
     if (cell !== "quit" || mutation === "forced-kill") {
       if (!kill9(cell === "utility-kill" ? utility : main)) throw new Error("pinned actual Electron kill not delivered")
     }
@@ -121,7 +126,9 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
     evidence.events = events(scratch.report)
     evidence.exit = { exitCode: app.exitCode, signalCode: app.signalCode, closed: state.closed, exitMs: state.exitedAt ? state.exitedAt - started : undefined }
     if (cell === "quit") {
-      const witnessed = events(scratch.report).filter((event) => event.pid === main.pid && event.at >= started)
+      // Repair: causal identity replaces cross-process wall-clock ordering, never the parent deadlines.
+      const witnessed = events(scratch.report).filter((event) => event.pid === main.pid && "actionID" in event && event.actionID === actionID)
+      evidence.witnessed = witnessed
       const orderly = ["quit-requested", "before-quit", "utility-stopped", "utility-exit", "will-quit", "quit"].every((name) => witnessed.some((event) => event.name === name)) &&
         !witnessed.some((event) => event.name === "utility-watchdog") && witnessed.some((event) => event.name === "utility-exit" && event.code === 0) && witnessed.some((event) => event.name === "quit" && event.code === 0) &&
         app.exitCode === 0 && app.signalCode === null && state.closed && state.exitedAt > started && state.exitedAt - started < boundMs
