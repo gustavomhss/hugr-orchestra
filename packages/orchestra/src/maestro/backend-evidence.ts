@@ -28,6 +28,7 @@ export function bind(
     callCounts.set(part.callID, (callCounts.get(part.callID) ?? 0) + 1)
   })
   const calls = parts.flatMap(({ message, part }) => {
+    // Provider-executed calls bypass native host dispatch; their result metadata is not host evidence.
     if (
       !path.isAbsolute(input.directory) ||
       message.role !== "assistant" ||
@@ -39,6 +40,7 @@ export function bind(
       callCounts.get(part.callID) !== 1 ||
       partCounts.get(part.id) !== 1 ||
       messageCounts.get(message.id) !== 1 ||
+      part.metadata?.providerExecuted === true ||
       part.state.status !== "completed"
     ) return []
     return [{ part, state: part.state }]

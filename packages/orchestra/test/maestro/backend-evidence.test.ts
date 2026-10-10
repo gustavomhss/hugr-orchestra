@@ -74,6 +74,48 @@ const unbound: BackendResult.WorkerEvidence["changes"] = [{ index: 0, evidence: 
 const bound: BackendResult.WorkerEvidence["changes"] = [{ index: 0, evidence: "bound", callIDs: ["call_evidence"] }]
 
 describe("BackendEvidence", () => {
+  for (const scenario of [
+    { tool: "write", expected: { changes: bound, checks: unbound } },
+    { tool: "edit", expected: { changes: bound, checks: unbound } },
+    { tool: "apply_patch", expected: { changes: bound, checks: unbound } },
+    { tool: "bash", expected: { changes: unbound, checks: bound } },
+  ]) {
+    test(`providerExecuted filter rejects completed ${scenario.tool} with otherwise matching evidence`, () => {
+      const message = call(
+        scenario.tool,
+        {
+          filePath: "written.txt",
+          content: "new",
+          oldString: "old",
+          newString: "new",
+          patchText: "*** Begin Patch\n*** Add File: written.txt\n+new\n*** End Patch",
+          command: "exit 0",
+          workdir: directory,
+        },
+        { exit: 0, files: [{ filePath: path.join(directory, "written.txt"), type: "add" }] },
+      )
+      const before = JSON.stringify(result)
+      expect(BackendEvidence.bind(result, [message], placement)).toEqual(scenario.expected)
+      expect(
+        BackendEvidence.bind(result, [
+          {
+            ...message,
+            parts: message.parts.map((part) => ({ ...part, metadata: { providerExecuted: true } })),
+          },
+        ], placement),
+      ).toEqual({ changes: unbound, checks: unbound })
+      expect(
+        BackendEvidence.bind(result, [
+          {
+            ...message,
+            parts: message.parts.map((part) => ({ ...part, metadata: { providerExecuted: false } })),
+          },
+        ], placement),
+      ).toEqual(scenario.expected)
+      expect(JSON.stringify(result)).toBe(before)
+    })
+  }
+
   test("binds explicit native write/edit and host patch inventory without changing claims", () => {
     for (const history of [
       [call("write", { filePath: "written.txt", content: "value" })],
