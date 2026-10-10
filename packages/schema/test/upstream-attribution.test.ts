@@ -252,6 +252,9 @@ describe("PlanRevision attribution versions", () => {
     expect(Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope(retained, 3)).data).toEqual(retained)
     ;[
       null,
+      {},
+      { schema: attribution.schema, memberID: attribution.memberID },
+      { ...attribution, authorMessageID: undefined },
       { ...attribution, verified: true },
       { ...attribution, memberID: "backend" },
       { ...attribution, memberID: "walt" },
@@ -263,6 +266,12 @@ describe("PlanRevision attribution versions", () => {
       ).toThrow()
       expect(() =>
         Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope({ ...input, upstreamAttribution }, 3)),
+      ).toThrow()
+      expect(() =>
+        Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)({ ...revisionV3, upstreamAttribution }),
+      ).toThrow()
+      expect(() =>
+        Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope({ ...revisionV3, upstreamAttribution }, 3)),
       ).toThrow()
     })
   })
@@ -285,6 +294,24 @@ describe("PlanRevision attribution versions", () => {
     expect(event.data).not.toHaveProperty("upstreamAttribution")
     expect(event.data).not.toHaveProperty("grounding")
     expect(Schema.encodeSync(MaestroEvent.PlanRevision.RecordedV3)(event)).toEqual(envelope(revisionV3, 3))
+  })
+
+  test("ungrounded non-upstream V3 accepts own undefined attribution and omits it when encoding data and envelope", () => {
+    const input = { ...revisionV3, upstreamAttribution: undefined }
+    const decoded = Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3.data)(input)
+    expect(decoded.upstreamAttribution).toBeUndefined()
+    expect(decoded).not.toHaveProperty("grounding")
+    expect(decoded.contextRequirement).toBe("PENDING")
+    const encoded = Schema.encodeSync(MaestroEvent.PlanRevision.RecordedV3.data)(decoded)
+    expect(encoded).toEqual(revisionV3)
+    expect(encoded).not.toHaveProperty("upstreamAttribution")
+    const event = Schema.decodeUnknownSync(MaestroEvent.PlanRevision.RecordedV3)(envelope(input, 3))
+    expect(event.data.upstreamAttribution).toBeUndefined()
+    expect(event.data).not.toHaveProperty("grounding")
+    const encodedEvent = Schema.encodeSync(MaestroEvent.PlanRevision.RecordedV3)(event)
+    expect(encodedEvent).toEqual(envelope(revisionV3, 3))
+    expect(encodedEvent.data).not.toHaveProperty("upstreamAttribution")
+    expect(encodedEvent.data).not.toHaveProperty("grounding")
   })
 
   test("V3 retains acquired grounding but leaves attributed ungrounded revisions PENDING", () => {
