@@ -1,6 +1,6 @@
 # Context Continuity quality results — 2026-10-09
 
-**Acceptance verified within the scope below; publication to `dev` is pending.** This records observed
+**Acceptance verified within the scope below; integrated into `dev` through PR #187.** This records observed
 behavior and its limits, not universal semantic correctness or superiority over legacy compaction.
 
 ## Source and evidence custody
@@ -138,4 +138,10 @@ cannot establish general reliability, causality or superiority. This receipt cas
 expected-negative source outcome. Structural CI, live evidence and semantic assessment remain distinct.
 
 This documentation closeout reuses those receipts; no new paid calls, tests or typecheck were needed.
-Acceptance is verified as scoped above. Default-branch publication remains pending; evidence backup is verified.
+Acceptance is verified as scoped above; evidence backup is verified. The existing dependent PRs were
+consolidated before [PR #187](https://github.com/gustavomhss/hugr-orchestra/pull/187) landed the complete
+campaign at `ef8399bcbf710e900d9ee0082f68102e45ad3706`. Its tree
+`77a9e49d4851e46a1794664e22c4d9ff0a627947` exactly matched publication candidate `a88eb6ed6e`, validated
+on current `dev` by [CI 38010070675](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38010070675)
+with the same platform counts above. Package `bun typecheck` also passed on that candidate. This final
+status correction changes documentation only.
