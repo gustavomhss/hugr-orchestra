@@ -1,13 +1,17 @@
 export * as BackendWork from "./backend-work"
 export * as SeatWork from "./backend-work"
 
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
+import { Session } from "@/session/session"
+import { InstanceState } from "@/effect/instance-state"
+import path from "path"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
+import { BackendEvidence } from "./backend-evidence"
 import type { Seat } from "./seats"
 
 // F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
@@ -24,8 +28,19 @@ export function track(input: {
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
-  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult) {
-    const task = input.taskId ? { ...result, taskId: input.taskId } : result
+  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[]) {
+    // BackgroundJob callbacks have no required services; only a real host Session service may supply placement.
+    const sessions = yield* Effect.serviceOption(Session.Service)
+    const session = Option.isSome(sessions)
+      ? yield* sessions.value.get(input.sessionID).pipe(Effect.catch(() => Effect.succeed(undefined)))
+      : undefined
+    const placement = yield* InstanceState.context
+    const located = session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
+      path.resolve(session.directory) === path.resolve(placement.directory) && session.projectID === placement.project.id &&
+      session.workspaceID === (yield* InstanceState.workspaceID)
+      ? { ...result, workerEvidence: BackendEvidence.bind(result, history, { executionSessionID: session.id, directory: session.directory }) }
+      : result
+    const task = input.taskId ? { ...located, taskId: input.taskId } : located
     if (!input.writeRoots) return task
     const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
@@ -39,7 +54,8 @@ export function track(input: {
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
-      evidence.value = yield* bound(BackendResult.assemble(message, yield* history(), input.seat))
+      const session = yield* history()
+      evidence.value = yield* bound(BackendResult.assemble(message, session, input.seat), session)
       yield* input.publish(evidence.value)
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
@@ -52,7 +68,7 @@ export function track(input: {
       const session = evidence.value ? [] : yield* history()
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat))
+        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session)
       yield* input.publish(evidence.value)
     }),
     // F4 cl.6/35: the Task part already completed with terminal `running`, so the background completion notice carries
@@ -63,10 +79,11 @@ export function track(input: {
       const session = yield* history()
       const last = lastAssistant(session)
       if (state === "error")
-        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat))
-      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat))
+        return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat), session)
+      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat), session)
       return yield* bound(
         BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
+        session,
       )
     }),
   }
