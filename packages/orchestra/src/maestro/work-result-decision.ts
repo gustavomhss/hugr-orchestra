@@ -149,13 +149,7 @@ export const record = Effect.fn("WorkResultDecision.record")(function* (input: {
     ...(target.reason !== undefined ? { reason: target.reason } : {}),
   }
   const id = EventV2.ID.make(
-    `evt_maestro_work_result_decision_${hash([
-      current.id,
-      target.parentSessionID,
-      target.messageID,
-      target.partID,
-      wanted.workResultHash,
-    ])}`,
+    `evt_maestro_work_result_decision_${hash([current.id, target.partID, wanted.workResultHash])}`,
   )
   const existing = yield* read(id)
   if (existing) return yield* reconcile(existing, wanted)
