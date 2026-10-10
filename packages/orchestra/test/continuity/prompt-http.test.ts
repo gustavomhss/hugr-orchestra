@@ -455,15 +455,48 @@ it.instance("different user queued during real held catch-up retries stale admis
   yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: delta.id, type: "text", text: `NEW_COMPLETED_DELTA ${PAD}` })
   const hold = yield* gate
   const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
-  yield* llm.pushMatch(catchup.match, catchup.response)
+  const heldCatchup = ledger()
+  yield* llm.pushMatch(heldCatchup.record("held-catchup", catchup.match), catchup.response)
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
+  // A request count alone does not establish that the held maintenance response was selected.
+  expect(heldCatchup.hits.length).toBe(1)
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
   yield* Deferred.succeed(hold.release, undefined)
   const result = yield* awaitWithTimeout(Fiber.join(old), "Queued caller stranded by catch-up", "30 seconds")
   expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id })
+  if (result.info.role !== "assistant") throw new Error("CATCHUP_U2_ASSISTANT_REQUIRED")
+  // Instrumentation only: keep exact delivery below; expose which boundary failed after U2 binding.
+  if (result.info.error || result.info.finish !== "stop" ||
+    !result.parts.some((part) => part.type === "text" && part.text === "U2_DELIVERED_ONCE")) {
+    const hits = yield* llm.hits
+    const pending = yield* llm.pending
+    const observedJobs = (yield* jobs.list()).filter((entry) => entry.metadata?.sessionId === chat.id)
+    const error = result.info.error
+    const detail = {
+      stage: error ? "terminal-error" : result.info.finish !== "stop" ? "unexpected-finish" : "missing-exact-U2-text",
+      finish: result.info.finish ?? null, completed: result.info.time.completed !== undefined,
+      error: error ? { name: error.name, message: "message" in error.data && typeof error.data.message === "string"
+        ? error.data.message.slice(0, 320) : undefined } : undefined,
+      partCount: result.parts.length,
+      parts: result.parts.slice(0, 8).map((part) => ({ type: part.type,
+        ...(part.type === "text" ? { length: part.text.length, prefix: part.text.slice(0, 160) } : {}) })),
+      hitCount: hits.length, heldCatchupMatches: heldCatchup.hits.length, pendingResponses: pending,
+      lastHits: hits.slice(-8).map((hit, index) => ({ index: Math.max(0, hits.length - 8) + index,
+        route: hit.url.pathname, model: typeof hit.body.model === "string" ? hit.body.model.slice(0, 80) : undefined,
+        maintenance: maintenance(hit), review: review(hit),
+        oldCaller: parent("OLD_U1_CATCHUP_CALLER")(hit), queuedCaller: parent("QUEUED_U2_DURING_CATCHUP")(hit) })),
+      jobCount: observedJobs.length,
+      jobs: observedJobs.slice(-8).map((entry) => ({ status: entry.status,
+        output: typeof entry.output === "string" ? entry.output.slice(0, 160) : undefined,
+        error: typeof entry.error === "string" ? entry.error.slice(0, 160) : undefined })),
+    }
+    throw new Error(`CATCHUP_U2_FIRST_FALSE_AFTER_PARENT_BINDING ${JSON.stringify(detail)}`)
+  }
+  expect(result.info.error).toBeUndefined()
+  expect(result.info.finish).toBe("stop")
   expect(result.parts.some((part) => part.type === "text" && part.text === "U2_DELIVERED_ONCE")).toBe(true)
   const history = yield* sessions.messages({ sessionID: chat.id })
   expect(history.filter((message) => message.info.role === "assistant" && message.info.error)).toEqual([])
