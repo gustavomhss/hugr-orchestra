@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
+import { existsSync, writeSync } from "node:fs"
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat } from "node:fs/promises"
 import { builtinModules, createRequire } from "node:module"
 import { createConnection, createServer } from "node:net"
@@ -12,6 +13,7 @@ import { Research } from "../../../schema/src/research"
 import { reply } from "../../../orchestra/test/lib/llm-server"
 import { testProviderConfig } from "../../../orchestra/test/lib/test-provider"
 import ts from "typescript"
+import { cleanupProofRoot } from "./jimmy-desktop-cleanup.fixture"
 
 const desktop = path.resolve(import.meta.dir, "../..")
 const repo = path.resolve(desktop, "../..")
@@ -30,6 +32,8 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
   if (!["darwin", "linux"].includes(process.platform)) throw new Error(`Unsupported desktop proof platform: ${process.platform}`)
   if (process.platform === "darwin" && process.arch !== "arm64") throw new Error("Desktop macOS proof requires native arm64")
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "jimmy-desktop-proof-")))
+  const stage = (name: string) => writeSync(2, `JIMMY_DESKTOP_STAGE=${name}\n`)
+  expect(existsSync(root)).toBe(true)
   const env = {
     ...process.env,
     MODELS_DEV_API_JSON: path.join(repo, "packages/orchestra/test/tool/fixtures/models-api.json"),
@@ -103,20 +107,83 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     expect(changes.length, "Native bridge mutation must alter a compiled route").toBeGreaterThan(0)
     const failure = await runProof(root, mutant, require("electron"), true).then(() => undefined, (error: unknown) => String(error))
     expect(failure).toContain("generated native artifact bridge")
+    stage("mutant-asserted")
     const evidence = { schema: "jimmy-desktop-proof-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, ...positive, mutation: { changes, failure } }
+    stage("evidence-write-start")
     await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-proof.json"), JSON.stringify(evidence))
-    console.log(`JIMMY_DESKTOP_EVIDENCE=${JSON.stringify(evidence)}`)
+    stage("evidence-write-done")
+    writeSync(1, `JIMMY_DESKTOP_EVIDENCE=${JSON.stringify(evidence)}\n`)
+    stage("evidence-console-done")
   } finally {
-    await rm(root, { recursive: true, force: true })
+    stage("root-rm-start")
+    // CI exits inside both Bun's recursive fs/promises.rm and rmSync after native teardown.
+    await cleanupProofRoot(root)
+    expect(existsSync(root)).toBe(false)
+    stage("root-rm-done")
   }
+  stage("native-test-return")
 }, 360000)
 
 test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("owned desktop proof typechecks", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof typecheck")
+  writeSync(2, "JIMMY_DESKTOP_STAGE=typecheck-start\n")
   await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), process.env, 60000)
   await command([process.execPath, "typecheck", "src/main/jimmy-desktop-proof.tsconfig.json"], desktop, process.env, 90000)
   await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-typecheck.json"), JSON.stringify({ schema: "jimmy-desktop-typecheck-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, passed: true }))
+  writeSync(2, "JIMMY_DESKTOP_STAGE=typecheck-return\n")
 }, 160000)
+
+test("owned recursive cleanup preserves real Bun two-case completion", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "jimmy-cleanup-completion-"))
+  try {
+    await Bun.write(path.join(root, "completion.test.ts"), `
+      import { expect, test } from "bun:test"
+      import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+      import { cleanupProofRoot } from ${JSON.stringify(path.join(import.meta.dir, "jimmy-desktop-cleanup.fixture.ts"))}
+      const root = ${JSON.stringify(path.join(root, "install"))}
+      test("cleanup first case", async () => {
+        Array.from({ length: 256 }, (_, directory) => {
+          const folder = root + "/" + directory
+          mkdirSync(folder, { recursive: true })
+          Array.from({ length: 64 }, (_, file) => writeFileSync(folder + "/" + file, "owned install fixture"))
+        })
+        expect(existsSync(root)).toBe(true)
+        if (process.env.JIMMY_EARLY_EXIT_CONTROL === "1") process.exit(0)
+        await cleanupProofRoot(root)
+        expect(existsSync(root)).toBe(false)
+        writeFileSync(${JSON.stringify(path.join(root, "first"))}, "completed")
+      }, 30000)
+      test("completion second case", () => {
+        expect(existsSync(root)).toBe(false)
+        writeFileSync(${JSON.stringify(path.join(root, "second"))}, "completed")
+      })
+    `)
+    const run = async (earlyExit: boolean) => {
+      const child = Bun.spawn([process.execPath, "test", "./completion.test.ts"], {
+        cwd: root, env: { ...process.env, JIMMY_EARLY_EXIT_CONTROL: earlyExit ? "1" : "0" },
+        stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout: 40000, killSignal: "SIGKILL",
+      })
+      const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+      return { output: stdout + stderr, code }
+    }
+    const incomplete = await run(true)
+    expect(incomplete.code).toBe(0)
+    expect(incomplete.output).not.toMatch(/^\s*2 pass\s*$/m)
+    expect(existsSync(path.join(root, "first"))).toBe(false)
+    expect(existsSync(path.join(root, "second"))).toBe(false)
+    const completed = await run(false)
+    expect(completed.code).toBe(0)
+    expect(completed.output).toMatch(/^\s*2 pass\s*$/m)
+    expect(completed.output).toMatch(/^\s*0 fail\s*$/m)
+    expect(completed.output).toContain("(pass) cleanup first case")
+    expect(completed.output).toContain("(pass) completion second case")
+    expect(await readFile(path.join(root, "first"), "utf8")).toBe("completed")
+    expect(await readFile(path.join(root, "second"), "utf8")).toBe("completed")
+    expect(existsSync(path.join(root, "install"))).toBe(false)
+  } finally {
+    await cleanupProofRoot(root)
+  }
+}, 90000)
 
 async function runProof(root: string, install: string, electron: string, mutant: boolean) {
   const owned = path.join(root, mutant ? "negative" : "positive")
@@ -329,27 +396,29 @@ async function runProof(root: string, install: string, electron: string, mutant:
     expect(hash(await readFile(retained[0]))).toBe(state.document.digest)
     expect((await stat(path.join(owned, "native.db"))).size).toBeGreaterThan(0)
     const database = new Database(path.join(owned, "native.db"), { readonly: true })
+    const childID = state.child
+    const source = state.source
     const sourceOracle = await (async () => {
       try {
         expect(database.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" })
         expect(database.query("SELECT count(*) AS count FROM session").get()).toMatchObject({ count: 3 })
-        const published = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.document.published%'").all(state.child))
+        const published = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.document.published%'").all(childID))
         expect(published).toHaveLength(1)
         expect(object(parse(published[0].data)).receipt).toEqual(state.document)
-        const committed = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.record.committed%'").all(state.child))
+        const committed = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.record.committed%'").all(childID))
         expect(committed).toHaveLength(1)
         expect(object(parse(committed[0].data)).record).toEqual(state.finding)
         // Read admissions and immutable blobs from the host, independently of HTTP/tool metadata.
-        const admitted = json(Schema.Array(Schema.Struct({ sessionID: Schema.String, binding: Research.Binding, receipt: Research.SourceReceipt })), json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type = 'research.source.admitted.1'").all(state.child)).map((row) => parse(row.data)))
+        const admitted = json(Schema.Array(Schema.Struct({ sessionID: Schema.String, binding: Research.Binding, receipt: Research.SourceReceipt })), json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type = 'research.source.admitted.1'").all(childID)).map((row) => parse(row.data)))
         expect(admitted).toHaveLength(2)
         const readMetadata = object(object(calls[2].state).metadata)
         return await Promise.all(["received", "text"].map(async (representation) => {
           const events = admitted.filter((event) => event.receipt.ref.representation === representation)
           expect(events).toHaveLength(1)
           const event = events[0]
-          expect(event.sessionID).toBe(state.child)
+          expect(event.sessionID).toBe(childID)
           expect(event.binding).toEqual(event.receipt.binding)
-          expect(event.binding).toEqual(state.source?.binding)
+          expect(event.binding).toEqual(source.binding)
           expect(event.receipt.origin).toEqual({ kind: "file", uri: path.join(project, "task-evidence.txt") })
           expect(event.receipt.complete).toBe(true)
           const blobs = files.filter((file) => path.basename(file) === `${event.receipt.ref.artifact.id}-${event.receipt.ref.artifact.revision}.body`)
@@ -358,7 +427,7 @@ async function runProof(root: string, install: string, electron: string, mutant:
           const expected = Buffer.from(representation === "received" ? sourceText : sourceProjection)
           assertSourceBytes(event.receipt, json(Research.SourceReceipt, readMetadata[representation === "received" ? "researchReceived" : "researchSource"]), bytes, expected)
           if (representation === "text") {
-            expect(event.receipt).toEqual(state.source)
+            expect(event.receipt).toEqual(source)
             expect(event.receipt.derivedFrom).toEqual(admitted.find((item) => item.receipt.ref.representation === "received")?.receipt.ref)
             // Corrupt both receipt copies identically: metadata self-comparison would still pass.
             const wrongLength = { ...event.receipt, bytes: event.receipt.bytes + 1 }
@@ -409,7 +478,8 @@ async function runProof(root: string, install: string, electron: string, mutant:
     console.log(`JIMMY_DESKTOP_STOPPED=${JSON.stringify({ mainPID: main.pid, utilityPID: node.pid, portClosed, survivorFailure })}`)
     return { platform: process.platform, arch: process.arch, main, node, processes, loaded, requests, parentID: state.parent, childID: state.child, source: state.source, sourceOracle, finding: state.finding, document: state.document, report, transport, retained: retained[0], digest: hash(body), db: path.join(owned, "native.db"), portClosed, survivorFailure, stopped: true, fixtureReaped: "SIGKILL" }
   } finally {
-    provider.stop(true)
+    const providerPort = provider.port
+    await provider.stop(true)
     clearTimeout(timeout)
     if (child.exitCode === null && child.signalCode === null) {
       child.stdin.write("stop\n")
@@ -423,6 +493,10 @@ async function runProof(root: string, install: string, electron: string, mutant:
     child.stdout.destroy()
     child.stderr.destroy()
     await Promise.allSettled(readers)
+    const portClosed = await waitForPortRefusal(port)
+    if (providerPort === undefined) throw new Error("Owned provider port unavailable after shutdown")
+    const providerClosed = await waitForPortRefusal(providerPort)
+    writeSync(2, `JIMMY_DESKTOP_CLEANUP=${JSON.stringify({ mutant, pids, portClosed, providerClosed })}\n`)
     if (errors.length) console.error(`JIMMY_PROVIDER_ERRORS=${JSON.stringify(errors)}`)
     if (child.exitCode !== 0) console.error(`JIMMY_PROCESS_LOGS=${JSON.stringify(logs)}`)
   }
