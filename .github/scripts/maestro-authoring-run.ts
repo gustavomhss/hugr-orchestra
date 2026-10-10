@@ -11,7 +11,7 @@ const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
 // R4 approved these exact source bytes; runtime tests and model qualification remain lead-owned.
 const consumerReview = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "approved", sourceReview: "R4", runtimeQualification: "pending" }
 const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
-const inventoryDigest = "c3bf0ff8c07c22fef5d17d45d5588b963c3c699868f0accb7be1b4b0cb92c839"
+const inventoryDigest = "80bdd0f9e2cb3195fbdc64ad7d1e8fb1d2e06bb55ceabcb213e28e4bed4ae465"
 const guarded = [
   ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
   ["packages/orchestra/src/plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
