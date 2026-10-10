@@ -26,7 +26,12 @@
     },
     "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/script/test-ci-request.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/script/test-ci-request.ts",
+        "$TURBO_ROOT$/script/test-ci-desktop.ts",
+        "$TURBO_ROOT$/.github/workflows/test-ci.yml"
+      ],
       "outputs": []
     },
     "@orchestra/app#test": {

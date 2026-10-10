@@ -24,7 +24,8 @@ test("real Turbo graph orders SDK before plugin and rejects the removed override
   }
 }, 60_000)
 
-test("real Turbo build generates SDK then compiles plugin", async () => {
+// Regeneration mutates source exports. Run this proof in scoped CI, outside the concurrent Turbo unit suite.
+test.skipIf(process.env.PACKAGE !== "core")("real Turbo build generates SDK then compiles plugin", async () => {
   requireSDKBeforePlugin(await graph())
   const child = Bun.spawn([process.execPath, "turbo", "run", "build", "--filter=@orchestra/plugin", "--force"], {
     cwd: root,
