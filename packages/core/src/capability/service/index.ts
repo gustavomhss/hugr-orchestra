@@ -65,7 +65,7 @@ export function make(options: { discovery: CapabilityServiceContract.Discovery; 
 }
 
 function serviceToolBoundary<A, R>(effect: Effect.Effect<A,
-  Capability.Failure | CapabilityArtifacts.Failure | Tool.Failure | ToolOutputStore.Error, R>) {
+  CapabilityArtifacts.Error | Tool.Failure | ToolOutputStore.Error, R>) {
   return effect.pipe(Effect.exit, Effect.flatMap((exit) => {
     if (Exit.isSuccess(exit)) return Effect.succeed(exit.value)
     // Translate each declared failure, never collapse a mixed Cause to its first typed error.
@@ -84,7 +84,7 @@ const requireCaptured = Effect.gen(function* () {
   return captured
 })
 
-function typedToolFailure(error: Capability.Failure | CapabilityArtifacts.Failure) {
+function typedToolFailure(error: CapabilityArtifacts.Error) {
   return new Tool.Failure({ message: error.message, error })
 }
 

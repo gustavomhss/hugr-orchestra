@@ -46,7 +46,7 @@ export type State = {
   beforeList?: (number: number) => void | Promise<void>; beforeCall?: () => void
   response: "normal" | "loss" | "hold"; called: Deferred.Deferred<void>; supplied?: CapabilityServiceSchema.CallInput
   context?: Tool.Context; provider?: string
-  errors: (Capability.Failure | CapabilityArtifacts.Failure)[]
+  errors: CapabilityArtifacts.Error[]
 }
 
 export const fixture = (options: { rootName?: string; resource?: Schema.Json; oauth?: boolean; timeout?: number;
@@ -150,7 +150,15 @@ export const fixture = (options: { rootName?: string; resource?: Schema.Json; oa
     const platform = Tool.make({ description: "Actual canonical platform fixture", input: CapabilityServiceSchema.CallInput,
       output: CapabilityServiceSchema.CallOutput,
       execute: (input, context) => execute(state.provider ?? "cloudflare", state.supplied ?? input, state.context ?? context)
-        .pipe(Effect.mapError((error) => { state.errors.push(error); return new Tool.Failure({ message: "Service denied", error }) })),
+        .pipe(Effect.exit, Effect.flatMap((exit) => {
+          if (Exit.isSuccess(exit)) return Effect.succeed(exit.value)
+          return Effect.failCause(Cause.fromReasons<Tool.Failure>(exit.cause.reasons.flatMap((reason) => {
+            if (reason._tag !== "Fail") return [reason]
+            state.errors.push(reason.error)
+            return Cause.fail(new Tool.Failure({ message: "Service denied", error: reason.error })).reasons
+              .map((next) => next.annotate(Context.makeUnsafe(new Map(reason.annotations))))
+          })))
+        })),
     })
     yield* registry.register({ platform_cloudflare: platform })
     const materialization = yield* registry.materialize(undefined, { advertisedNames: [] })
