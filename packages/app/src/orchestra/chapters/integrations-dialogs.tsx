@@ -79,7 +79,7 @@ export function IntegrationsDialog(props: {
     if (props.kind === "disconnect") void props.model.disconnect()
     if (props.kind === "unbind") {
       const input = Schema.decodeUnknownOption(CapabilityManagement.RemoveBindingInput)({
-        target: props.model.state.targets.find((item) => item.target.id === props.model.state.targetID)?.target,
+        target: { ...props.model.state.targets.find((item) => item.target.id === props.model.state.targetID)?.target },
         sessionID: props.sessionID,
       })
       if (Option.isNone(input)) return invalid()
@@ -122,11 +122,25 @@ export function IntegrationsDialog(props: {
                   <Dialog.Title as="h2">{title()}</Dialog.Title>
                   <Dialog.Description>{hint()}</Dialog.Description>
                 </div>
-                <Dialog.CloseButton type="button" class="mx-link" aria-label={language.t("orchestra.integrations.close")}>
+                <Dialog.CloseButton
+                  type="button"
+                  class="mx-link"
+                  aria-label={language.t("orchestra.integrations.close")}
+                >
                   {language.t("orchestra.integrations.close")}
                 </Dialog.CloseButton>
               </header>
               <fieldset class="mx-dialog-body integrations-fields" disabled={props.model.state.busy}>
+                <Show when={props.kind === "disconnect"}>
+                  <bdi dir="ltr">
+                    <code>{props.model.state.connectionID}</code>
+                  </bdi>
+                </Show>
+                <Show when={props.kind !== "connect" && props.kind !== "disconnect" && props.kind !== "createTarget"}>
+                  <bdi dir="ltr">
+                    <code>{props.model.state.targetID}</code>
+                  </bdi>
+                </Show>
                 <Show when={state.invalid}>
                   <p role="alert" class="mx-error">
                     {language.t("orchestra.integrations.error.invalid")}
@@ -185,7 +199,11 @@ export function IntegrationsDialog(props: {
                 </Show>
               </fieldset>
               <footer class="mx-dialog-foot">
-                <Dialog.CloseButton type="button" class="mx-btn" aria-label={language.t("orchestra.integrations.cancel")}>
+                <Dialog.CloseButton
+                  type="button"
+                  class="mx-btn"
+                  aria-label={language.t("orchestra.integrations.cancel")}
+                >
                   {language.t("orchestra.integrations.cancel")}
                 </Dialog.CloseButton>
                 <button

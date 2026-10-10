@@ -23,8 +23,6 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
     props.model.state.connections.find((item) => item.connection.id === props.model.state.connectionID)
   const target = () => props.model.state.targets.find((item) => item.target.id === props.model.state.targetID)
   const open = (form: IntegrationForm, opener: HTMLButtonElement, sessionID?: string) => {
-    // Starting a different intent explicitly discards a previous pending retry closure.
-    props.model.cancel()
     setState({ form, opener, sessionID })
   }
   return (
@@ -69,6 +67,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             <button type="submit" class="mx-btn" disabled={disabled()}>
               {language.t("orchestra.integrations.applyAuth")}
             </button>
+            <button type="button" class="mx-btn" onClick={() => auth.current?.reset()}>
+              {language.t("orchestra.integrations.cancel")}
+            </button>
           </form>
         </Show>
         <div class="integrations-controls">
@@ -85,7 +86,12 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
           <p role="status">{language.t("orchestra.integrations.loading")}</p>
         </Show>
         <Show when={props.model.state.busy}>
-          <p role="status">{language.t("orchestra.integrations.busy")}</p>
+          <div class="integrations-controls">
+            <p role="status">{language.t("orchestra.integrations.busy")}</p>
+            <button type="button" class="mx-btn" onClick={() => props.model.cancel()}>
+              {language.t("orchestra.integrations.cancel")}
+            </button>
+          </div>
         </Show>
         <Show when={props.model.state.failure || props.model.state.status === "error"}>
           <div role="alert" class="mx-error integrations-controls">
@@ -113,7 +119,8 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             <p role="status">{language.t("orchestra.integrations.empty")}</p>
           </Show>
         </Show>
-        <ul class="integrations-list">
+        <h2 id="integrations-accounts-title">{language.t("orchestra.integrations.accounts")}</h2>
+        <ul class="integrations-list" aria-labelledby="integrations-accounts-title">
           <For each={props.model.state.connections}>
             {(item) => (
               <li class="mx-card">
@@ -122,7 +129,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                   class="mx-btn integrations-select"
                   disabled={disabled()}
                   aria-pressed={item.connection.id === props.model.state.connectionID}
-                  onClick={() => void props.model.select(item)}
+                  onClick={() => void props.model.select({ ...item, connection: { ...item.connection } })}
                 >
                   <bdi>{item.connection.provider}</bdi>
                   <Show when={item.label}>
@@ -174,7 +181,7 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                         class="mx-btn integrations-select"
                         disabled={disabled()}
                         aria-pressed={item.target.id === props.model.state.targetID}
-                        onClick={() => void props.model.selectTarget(item)}
+                        onClick={() => void props.model.selectTarget({ target: { ...item.target } })}
                       >
                         <bdi>{item.target.environment}</bdi>
                         <bdi dir="ltr">

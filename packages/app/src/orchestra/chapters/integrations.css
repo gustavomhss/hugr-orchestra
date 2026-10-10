@@ -21,7 +21,8 @@
   text-align: start;
   max-inline-size: 100%;
 }
-.integrations-screen code {
+.integrations-screen code,
+.integrations-dialog code {
   overflow-wrap: anywhere;
 }
 .integrations-auth,
