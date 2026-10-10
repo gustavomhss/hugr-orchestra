@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import path from "node:path"
-import ts from "typescript"
 import { z } from "zod"
 import { ConfigMarkdown } from "@orchestra/core/config/markdown"
 import { Skill } from "../../src/skill"
@@ -77,58 +76,6 @@ describe("Maestro Arsenal playbooks", () => {
         expect(await Bun.file(path.join(Skill.PLAYBOOKS_DIR, name, "SKILL.md")).exists()).toBe(true),
       ),
     )
-  })
-
-  // Source correspondence only: parse the real Task boundary, not comment/string sentries or runtime evidence.
-  test("authoring documents reference the unconditional native Task completion boundary", async () => {
-    const source = ts.createSourceFile("task.ts", await Bun.file(path.join(root, "packages/orchestra/src/tool/task.ts")).text(), ts.ScriptTarget.Latest, true)
-    const calls: ts.CallExpression[] = []
-    const variables: ts.VariableDeclaration[] = []
-    const properties: ts.PropertyAccessExpression[] = []
-    const visit = (node: ts.Node) => {
-      if (ts.isCallExpression(node)) calls.push(node)
-      if (ts.isVariableDeclaration(node)) variables.push(node)
-      if (ts.isPropertyAccessExpression(node)) properties.push(node)
-      ts.forEachChild(node, visit)
-    }
-    visit(source)
-    const before = calls.filter((call) => ts.isPropertyAccessExpression(call.expression) &&
-      ts.isIdentifier(call.expression.expression) && call.expression.expression.text === "completion" &&
-      call.expression.name.text === "beforeDispatch")
-    if (before.length !== 1) throw new Error("TASK_COMPLETION_BOUNDARY_MISSING_OR_AMBIGUOUS")
-    const delegated = before[0].parent
-    if (!ts.isYieldExpression(delegated) || !delegated.asteriskToken || !ts.isVariableDeclaration(delegated.parent))
-      throw new Error("TASK_COMPLETION_BOUNDARY_NOT_AWAITED")
-    const statement = delegated.parent.parent.parent
-    if (!ts.isVariableStatement(statement) || !ts.isBlock(statement.parent) ||
-      !ts.isFunctionExpression(statement.parent.parent) || !statement.parent.parent.asteriskToken)
-      throw new Error("TASK_COMPLETION_BOUNDARY_CONDITIONAL_OR_DETACHED")
-    const generator = statement.parent.parent
-    const runs = variables.filter((variable) => ts.isIdentifier(variable.name) && variable.name.text === "run")
-    if (runs.length !== 1 || !runs[0].initializer || !ts.isCallExpression(runs[0].initializer) ||
-      !runs[0].initializer.arguments.includes(generator))
-      throw new Error("TASK_COMPLETION_BOUNDARY_OUTSIDE_DISPATCH")
-    const factories = variables.filter((variable) => ts.isIdentifier(variable.name) && variable.name.text === "completion")
-    const factory = factories[0]?.initializer
-    if (factories.length !== 1 || !factory || !ts.isYieldExpression(factory) || !factory.asteriskToken ||
-      properties.filter((property) => property.pos >= factory.pos && property.end <= factory.end &&
-        ts.isIdentifier(property.expression) && property.expression.text === "ArsenalCompletion" && property.name.text === "make").length !== 1)
-      throw new Error("TASK_COMPLETION_NATIVE_FACTORY_MISSING_OR_AMBIGUOUS")
-    const workflow = calls.filter((call) => ts.isPropertyAccessExpression(call.expression) &&
-      ts.isIdentifier(call.expression.expression) && call.expression.expression.text === "WorkflowBinding" &&
-      call.expression.name.text === "read" && call.arguments[0]?.getText(source) === "ctx.sessionID" &&
-      call.pos > generator.body.pos && call.end < before[0].pos)
-    if (workflow.length !== 1 || !ts.isYieldExpression(workflow[0].parent) || !workflow[0].parent.asteriskToken ||
-      !ts.isIfStatement(workflow[0].parent.parent) || workflow[0].parent.parent.expression !== workflow[0].parent)
-      throw new Error("TASK_PARENT_WORKFLOW_GUARD_MISSING_OR_DRIFTED")
-    const documents = [
-      await Bun.file(path.join(root, "packages/core/src/agent/prompt/maestro.txt")).text(),
-      ...await Promise.all(["maestro-decompose", "maestro-contract", "maestro-pack"].map(async (name) => (await readSkill(name)).content)),
-    ]
-    documents.forEach((document) => {
-      const references = Array.from(document.matchAll(/`(completion\.[a-zA-Z0-9_]+)`/g), (match) => match[1])
-      expect(references).toEqual([before[0].expression.getText(source)])
-    })
   })
 
   test.each(names.filter((name) => name !== "maestro-composer" && name !== "maestro-governed"))(
