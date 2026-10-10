@@ -95,6 +95,19 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "orchestra"
 
+      # Extension: only the named, windowless production-launcher proof needs Electron/Xvfb.
+      - name: Setup Jimmy desktop Electron runtime
+        if: steps.request.outputs.package == 'desktop'
+        run: |
+          if ! jq -e 'any(.args[]; . == "src/main/jimmy-desktop-proof.test.ts" or . == "./src/main/jimmy-desktop-proof.test.ts")' .ci-run.json >/dev/null; then
+            exit 0
+          fi
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
+          fi
+          node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))"
+
       - name: Run tests
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -138,6 +151,44 @@ jobs:
           else
             GITHUB_ACTIONS=false bun test "${args[@]}"
           fi
+
+      # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
+      - name: Assert Jimmy desktop detecting evidence
+        id: jimmy-evidence
+        if: always() && steps.request.outputs.package == 'desktop'
+        run: |
+          if ! jq -e 'any(.args[]; . == "src/main/jimmy-desktop-proof.test.ts" or . == "./src/main/jimmy-desktop-proof.test.ts")' .ci-run.json >/dev/null; then
+            exit 0
+          fi
+          node --input-type=module <<'NODE'
+          import { existsSync, readFileSync } from 'node:fs'
+          const load = (name) => {
+            const file = `test-ci-evidence/jimmy-desktop-${name}.json`
+            if (!existsSync(file)) throw new Error(`Missing completed Jimmy desktop ${name} evidence`)
+            const value = JSON.parse(readFileSync(file, 'utf8'))
+            if (value.sha !== process.env.GITHUB_SHA || value.runID !== process.env.GITHUB_RUN_ID)
+              throw new Error(`Jimmy desktop ${name} evidence belongs to another run`)
+            return value
+          }
+          const proof = load('proof')
+          if (proof.schema !== 'jimmy-desktop-proof-v1' || !proof.stopped || proof.fixtureReaped !== 'SIGKILL' ||
+              proof.platform !== process.platform || proof.arch !== process.arch || !proof.mutation.changes.length ||
+              !proof.mutation.failure.includes('generated native artifact bridge'))
+            throw new Error('Jimmy desktop native/mutation proof did not complete')
+          const types = load('typecheck')
+          if (types.schema !== 'jimmy-desktop-typecheck-v1' || types.passed !== true)
+            throw new Error('Jimmy desktop scoped typecheck did not complete')
+          NODE
+          echo "proof=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Jimmy desktop evidence
+        if: always() && steps.jimmy-evidence.outputs.proof == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: jimmy-desktop-${{ matrix.host }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 7
+          path: test-ci-evidence/jimmy-desktop-*.json
 
       - name: Upload Playwright evidence
         if: always() && steps.request.outputs.runner == 'playwright'
