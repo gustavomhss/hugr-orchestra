@@ -130,6 +130,51 @@ it.instance("extended background worker cannot inherit earlier turn's verified r
   expect(JSON.stringify(notice.metadata?.workResult)).not.toContain('"verified":true')
 }), git)
 
+for (const firstFails of [false, true]) {
+  it.instance(firstFails ? "queued extension not started retains prior attempt's actual host facts" :
+    "early extension failure cannot reuse old assistant's verified receipt", () => Effect.gen(function* () {
+    const f = yield* fixture({ background: true, content: firstFails ? "fail" : "pass", outcome: firstFails ? "blocked" : "done" })
+    const start = yield* f.run()
+    if (Exit.isFailure(start)) throw Cause.squash(start.cause)
+    const attempts: string[] = []
+    const queued = yield* f.def.execute({ ...f.params, description: "queued extension", task_id: start.value.metadata.workResult?.taskId }, {
+      ...f.context, extra: { promptOps: { ...f.context.extra.promptOps, resolvePromptParts: () => Effect.gen(function* () {
+        attempts.push("extension started")
+        return yield* Effect.die(new Error("extension failed before prompt"))
+      }) } },
+    })
+    expect(queued.metadata.workResult?.terminal.reason).toBe("running")
+    expect(attempts).toEqual([])
+    yield* Deferred.succeed(f.release, undefined)
+    const notice = (yield* awaitWithTimeout(Deferred.await(f.notice), "early extension notice missing", "15 seconds")).parts[0]
+    if (notice.type !== "text") throw new Error("notice text missing")
+    expect(f.written).toHaveLength(1)
+    expect(attempts).toEqual(firstFails ? [] : ["extension started"])
+    expect(notice.metadata?.workResult).toMatchObject({ card: { messageID: f.written[0].info.id },
+      memberId: "backend", executionSessionId: start.value.metadata.sessionId, authoritySessionId: f.chat.id,
+      mode: "delegated-armed", acceptance: { state: "pending" }, changes: card.changes, checks: card.checks,
+      terminal: { reason: firstFails ? "blocked" : "failed" }, verification: { state: firstFails ? "host-failed" : "host-incomplete" } })
+    if (firstFails) expect(notice.metadata?.workResult).toMatchObject({ hostChecks: f.captures.at(-1),
+      verification: { hostReason: { reason: "completion-checks-not-passing" } } })
+    if (!firstFails) {
+      expect(f.streamed).toContainEqual(expect.objectContaining({ verification: expect.objectContaining({ state: "host-verified" }) }))
+      expect(notice.metadata?.workResult).toEqual(expect.not.objectContaining({ hostChecks: expect.anything() }))
+      expect(notice.metadata?.workResult).toEqual(expect.not.objectContaining({ delta: expect.anything() }))
+      expect(JSON.stringify(notice.metadata?.workResult)).not.toContain('"receipt"')
+    }
+  }), git)
+}
+
+it.instance("post-observation completion metadata defect revokes receipt and retains actual inspection", () => Effect.gen(function* () {
+  const f = yield* fixture({ completionMetadataDefect: true })
+  const exit = yield* f.run()
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain("completion metadata publication defect")
+  expect(f.streamed.at(-1)).toMatchObject({ terminal: { reason: "ended" }, verification: {
+    state: "host-incomplete", hostReason: { reason: "completion-evaluation-acquisition" } }, hostChecks: f.captures.at(-1) })
+  expect(JSON.stringify(f.streamed.at(-1))).not.toContain('"verified":true')
+}), git)
+
 it.instance("governed replay re-verifies host arm; spent arm refuses cached worker pass", () => Effect.gen(function* () {
   const original = yield* dispatch({ subagentType: "backend" })
   const f = yield* fixture({ parent: original.chat })

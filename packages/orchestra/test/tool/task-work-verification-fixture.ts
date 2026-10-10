@@ -20,7 +20,7 @@ export const card = {
 export const fixture = Effect.fn("TaskWorkVerification.fixture")(function* (options: {
   armed?: boolean; outcome?: "done" | "blocked"; finish?: string; error?: SessionV1.Assistant["error"]
   content?: string; drift?: boolean; hostDenial?: boolean; secondaryAcquisition?: boolean
-  background?: boolean; promptFailure?: "interrupt" | "die"; metadataDefect?: boolean
+  background?: boolean; promptFailure?: "interrupt" | "die"; metadataDefect?: boolean; completionMetadataDefect?: boolean
   parent?: Session.Info
 } = {}) {
   const fs = yield* FSUtil.Service
@@ -96,6 +96,8 @@ export const fixture = Effect.fn("TaskWorkVerification.fixture")(function* (opti
       const result = input.metadata?.workResult
       if (!result || typeof result !== "object" || !("verification" in result)) return
       streamed.push(result)
+      if (options.completionMetadataDefect && input.metadata?.completion)
+        return yield* Effect.die(new Error("completion metadata publication defect"))
       if (options.metadataDefect && typeof result.verification === "object" && result.verification !== null &&
         "state" in result.verification && (result.verification.state === "host-verified" || "hostReason" in result.verification))
         return yield* Effect.die(new Error("metadata observer defect"))

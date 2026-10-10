@@ -574,8 +574,8 @@ export const TaskTool = Tool.define(
         }
         const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id, work.observe)
         if (verified) {
+          yield* work.publish(ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) }))
           completionEvidence.value = verified
-          yield* ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) })
         }
         type Part = (typeof result.parts)[number]
         const reported = (item: Part): item is Extract<Part, { type: "text" }> =>
@@ -619,18 +619,13 @@ export const TaskTool = Tool.define(
           .pipe(Effect.ignore, Effect.forkIn(scope, { startImmediately: true }))
       })
 
-      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* (jobID: string) {
-        yield* background.wait({ id: jobID }).pipe(
-          Effect.flatMap((result) => {
-            if (result.info?.status === "completed") return inject("completed", result.info.output ?? "")
-            if (result.info?.status === "error") return inject("error", result.info.error ?? "")
-            return Effect.void
-          }),
-          Effect.forkIn(scope, { startImmediately: true }),
-        )
+      const notify = Effect.fn("TaskTool.notifyBackgroundResult")(function* (info: BackgroundJob.Info) {
+        if (info.metadata?.background !== true) return
+        if (info.status === "completed") return yield* inject("completed", info.output ?? "")
+        if (info.status === "error") return yield* inject("error", info.error ?? "")
       })
 
-      if (yield* background.extend({ id: nextSession.id, run: runTask() })) {
+      if (yield* background.extend({ id: nextSession.id, run: runTask(), notify })) {
         yield* work.hostEnded("running", "Background task updated")
         return {
           title: params.description,
@@ -649,10 +644,8 @@ export const TaskTool = Tool.define(
         type: id,
         title: params.description,
         metadata,
-        onPromote: Effect.all([
-          ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
-          notify(nextSession.id),
-        ]),
+        notify,
+        onPromote: ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
         run: runTask().pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
       })
 
@@ -672,7 +665,6 @@ export const TaskTool = Tool.define(
       })
 
       if (runInBackground) {
-        yield* notify(info.id)
         return yield* backgroundResult()
       }
 

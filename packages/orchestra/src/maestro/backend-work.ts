@@ -60,8 +60,20 @@ export function track(input: {
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
   })
   const history = () => MessageV2.stream(input.sessionID)
+  const publish = Effect.fn("SeatWork.publish")((effect: Effect.Effect<void>) => effect.pipe(Effect.catchCause((cause) => {
+    // Publication is part of completion: a defect after observation also revokes the pass receipt.
+    if (completion.projection?.verification.state === "host-verified") {
+      completion.projection = { ...completion.projection, verification: {
+        state: "host-incomplete", hostReason: { reason: "completion-evaluation-acquisition" },
+      } }
+    }
+    if (!evidence.value) return Effect.failCause(cause)
+    evidence.value = project(evidence.value)
+    return input.publish(evidence.value).pipe(Effect.catchCause(() => Effect.void), Effect.andThen(Effect.failCause(cause)))
+  })))
 
   return {
+    publish,
     observe: Effect.fn("SeatWork.observe")(function* (facts: ArsenalCompletion.Facts) {
       completion.observed = true
       if (!input.enabled) return
@@ -78,18 +90,7 @@ export function track(input: {
       if (!evidence.value) return
       const observed = project(evidence.value)
       evidence.value = observed
-      yield* input.publish(observed).pipe(Effect.catchCause((cause) => {
-        // A failed metadata observer cannot leave a successful completion receipt behind.
-        if (facts.state === "host-verified") {
-          completion.projection = { ...completion.projection, verification: {
-            state: "host-incomplete", hostReason: { reason: "completion-evaluation-acquisition" },
-          } }
-          evidence.value = project(observed)
-        }
-        return input.publish(evidence.value ?? observed).pipe(
-          Effect.catchCause(() => Effect.void), Effect.andThen(Effect.failCause(cause)),
-        )
-      }))
+      yield* publish(input.publish(observed))
     }),
     attach: <T extends object>(metadata: T) => ({
       ...metadata,
