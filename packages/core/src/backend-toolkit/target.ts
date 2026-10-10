@@ -54,7 +54,7 @@ function floor(host: Host) {
   if (host.platform === "linux" && (major < 2 || (major === 2 && minor < 28))) return "glibc-below-2.28"
 }
 
-// Probing spawns processes (ldd, sysctl, PowerShell), so the host is described once per process.
+// Probing spawns processes (ldd, sysctl), so the host is described once per process.
 let probed: Host | undefined
 
 function current(): Host {
@@ -91,18 +91,12 @@ function hasAvx2() {
   }
   if (process.platform === "darwin")
     return spawnSync("sysctl", ["-n", "hw.optional.avx2_0"], { encoding: "utf8", timeout: 1500 }).stdout?.trim() === "1"
-  if (process.platform === "win32")
-    return (
-      spawnSync(
-        "powershell.exe",
-        [
-          "-NoProfile",
-          "-NonInteractive",
-          "-Command",
-          '(Add-Type -MemberDefinition "[DllImport(""kernel32.dll"")] public static extern bool IsProcessorFeaturePresent(int ProcessorFeature);" -Name Kernel32 -Namespace Win32 -PassThru)::IsProcessorFeaturePresent(40)',
-        ],
-        { encoding: "utf8", timeout: 3000, windowsHide: true },
-      ).stdout?.trim().toLowerCase() === "true"
-    )
+  if (process.platform === "win32") {
+    // The installer asks PowerShell, whose Add-Type compile can outlast any sane timeout on a cold machine; the same
+    // kernel32 call through FFI is immediate. 40 is PF_AVX2_INSTRUCTIONS_AVAILABLE.
+    const ffi: typeof import("bun:ffi") = require("bun:ffi")
+    const kernel32 = ffi.dlopen("kernel32.dll", { IsProcessorFeaturePresent: { args: [ffi.FFIType.u32], returns: ffi.FFIType.bool } })
+    return kernel32.symbols.IsProcessorFeaturePresent(40)
+  }
   return false
 }
