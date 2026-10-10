@@ -11,8 +11,8 @@ export const V1 = Schema.Struct({
   schema: Schema.Literal("maestro-upstream-attribution-v1"),
   projectID: Project.ID,
   memberID: Agent.ID.pipe(
-    Schema.refine<typeof Agent.ID, Agent.ID & "walt">((id): id is Agent.ID & "walt" => id === "walt", {
-      expected: '"walt"',
+    Schema.refine<typeof Agent.ID, Agent.ID & "archie">((id): id is Agent.ID & "archie" => id === "archie", {
+      expected: '"archie"',
       // Effect resolves brand annotations from the newest check.
       brands: Agent.ID.ast.annotations?.brands,
     }),

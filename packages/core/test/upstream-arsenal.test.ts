@@ -16,8 +16,8 @@ import { executeTool, settleTool, toolIdentity } from "./lib/tool"
 import { hostLayer, sessionID, setup } from "./maestro-arsenal.test"
 
 const it = testEffect(hostLayer)
-const walt = AgentV2.ID.make("walt")
-const context = { sessionID, agent: walt }
+const archie = AgentV2.ID.make("archie")
+const context = { sessionID, agent: archie }
 const args = {
   wps: [
     { id: "first", writes: ["src/shared.ts"] },
@@ -42,7 +42,7 @@ const catalog = Schema.decodeUnknownSync(
 const setupUpstream = Effect.fn("UpstreamArsenalTest.setup")(function* () {
   const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
   yield* agents.transform((editor) =>
-    editor.update(walt, (agent) => {
+    editor.update(archie, (agent) => {
       agent.permissions = [{ action: "*", resource: "*", effect: "allow" }]
     }),
   )
@@ -65,7 +65,7 @@ const boundHost = Effect.fn("UpstreamArsenalTest.host")(function* () {
           action,
           resources,
           sessionID,
-          agent: walt,
+          agent: archie,
           source: { type: "tool", messageID: toolIdentity.assistantMessageID, callID: "upstream" },
         })
         .pipe(Effect.mapError(() => new Tool.Failure({ message: "Arsenal permission denied." }))),
@@ -79,7 +79,7 @@ const boundHost = Effect.fn("UpstreamArsenalTest.host")(function* () {
   }
 })
 
-const call = (name: string, input: unknown, agent = walt) => ({
+const call = (name: string, input: unknown, agent = archie) => ({
   sessionID,
   ...toolIdentity,
   agent,
@@ -246,12 +246,20 @@ describe("Upstream Arsenal authoring access", () => {
     }),
   )
 
-  it.live("ordinary fake walt identity and revoked host attestation cannot use a receipt", () =>
+  it.live("retired upstream ID and revoked host attestation cannot use a receipt", () =>
     Effect.gen(function* () {
       yield* setupUpstream()
       const host = yield* boundHost()
       const handlers = MaestroArsenal.makeHandlers(() => Effect.succeed(host))
       yield* handlers.describe({ name: "conflict-map" }, context)
+      const retired = { ...context, agent: AgentV2.ID.make("walt") }
+      yield* Effect.forEach([
+        handlers.catalog({}, retired),
+        handlers.describe({ name: "conflict-map" }, retired),
+        handlers.execute({ name: "conflict-map", arguments: args }, retired),
+      ], (effect) => Effect.gen(function* () {
+        expect((yield* effect.pipe(Effect.flip)).message).toBe("Maestro Arsenal requires native Maestro identity.")
+      }))
       host.nativeUpstream = false
       yield* Effect.forEach([context, { ...context, agent: "general" }], (invocation) =>
         Effect.gen(function* () {
@@ -275,7 +283,7 @@ describe("Upstream Arsenal authoring access", () => {
       const registry = yield* ToolRegistry.Service
       yield* MaestroArsenal.registerScoped({
         nativeMaestro: () => Effect.succeed(false),
-        nativeUpstream: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === walt)),
+        nativeUpstream: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === archie)),
       })
       // Capture the real registry before revocation; catalog filtering cannot hide a missing leaf assertion.
       const materialized = yield* registry.materialize()
@@ -290,7 +298,7 @@ describe("Upstream Arsenal authoring access", () => {
           .result,
       ).toMatchObject({ type: "text" })
       yield* agents.transform((editor) =>
-        editor.update(walt, (agent) => {
+        editor.update(archie, (agent) => {
           agent.permissions = [{ action: "*", resource: "*", effect: "deny" }]
         }),
       )
@@ -343,7 +351,7 @@ describe("Upstream Arsenal authoring access", () => {
           Effect.gen(function* () {
             expect(
               (yield* handlers.execute({ name: "conflict-map", arguments: args }, changed).pipe(Effect.flip)).message,
-            ).toStartWith("Describe this Arsenal capability")
+            ).toStartWith(changed.agent === archie ? "Describe this Arsenal capability" : "Maestro Arsenal requires native Maestro identity.")
           }),
       )
       expect(decode(yield* handlers.execute({ name: "conflict-map", arguments: args }, context))).toHaveProperty(
@@ -361,11 +369,11 @@ describe("Upstream Arsenal authoring access", () => {
     }),
   )
 
-  it.live("requires actual AgentV2 walt and current roster attestation for scoped registration", () =>
+  it.live("requires actual AgentV2 archie and current roster attestation for scoped registration", () =>
     Effect.gen(function* () {
       const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
       const registry = yield* ToolRegistry.Service
-      const attested = new Set<AgentV2.ID>([walt, toolIdentity.agent])
+      const attested = new Set<AgentV2.ID>([archie, toolIdentity.agent])
       yield* MaestroArsenal.registerScoped({
         nativeMaestro: () => Effect.succeed(false),
         nativeUpstream: (id) => Effect.succeed(attested.has(id)),
@@ -375,7 +383,7 @@ describe("Upstream Arsenal authoring access", () => {
         value: "Maestro Arsenal requires native Maestro identity.",
       })
       yield* agents.transform((editor) => {
-        editor.update(walt, (agent) => {
+        editor.update(archie, (agent) => {
           agent.permissions = [{ action: "*", resource: "*", effect: "allow" }]
         })
         editor.update(toolIdentity.agent, (agent) => {
@@ -386,12 +394,12 @@ describe("Upstream Arsenal authoring access", () => {
         type: "error",
         value: "Maestro Arsenal requires native Maestro identity.",
       })
-      attested.delete(walt)
+      attested.delete(archie)
       expect(yield* executeTool(registry, call(MaestroArsenal.names.catalog, {}))).toEqual({
         type: "error",
         value: "Maestro Arsenal requires native Maestro identity.",
       })
-      attested.add(walt)
+      attested.add(archie)
       expect(
         catalog((yield* settleTool(registry, call(MaestroArsenal.names.catalog, { limit: 10 }))).output?.structured),
       ).toMatchObject({ total: 13 })
@@ -404,7 +412,7 @@ describe("Upstream Arsenal authoring access", () => {
       expect(
         yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "conflict-map", arguments: args })),
       ).toMatchObject({ type: "text" })
-      attested.delete(walt)
+      attested.delete(archie)
       expect(
         yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "conflict-map", arguments: args })),
       ).toEqual({ type: "error", value: "Maestro Arsenal requires native Maestro identity." })

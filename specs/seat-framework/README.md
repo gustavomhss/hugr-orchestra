@@ -9,10 +9,15 @@ Each native specialist has one definition in `packages/orchestra/src/maestro/sea
 - `description`: task-list guidance describing role, access and return without display labels.
 - `labelEnv?`, `skills`: label override and seat-scoped entry skill names. Skills live in `packages/<id>-specialist/skills/<skill>/SKILL.md`; companion references remain in that tree. Source runs read it directly; Bun binaries and Node sidecars embed and extract each tree into a content-addressed cache directory.
 - `writeRoots`, `strictResume`: host-bound dispatch `writePaths` (read-only when absent) and retained logical-task resume enforcement.
-- `workResult?`: result schema id for a closed worker-claim card. The fenced tag is `returnCard`; task metadata carries parsed claims separately from host termination, task identity and enforced roots. The upstream `walt` seat uses `upstream-work-result-v1` for proposal artifacts and host-observed authorship; other installed work-result seats retain the execution card shape. This is evidence, not acceptance, approval or materialized artifact identity.
+- `workResult?`: result schema id for a closed worker-claim card. The fenced tag is `returnCard`; task metadata carries parsed claims separately from host termination, task identity and enforced roots. The upstream `archie` seat uses `upstream-work-result-v1` for proposal artifacts and host-observed authorship; other installed work-result seats retain the execution card shape. This is evidence, not acceptance, approval or materialized artifact identity.
 - `atlasMemory`, `toolkit`: supported capability boundaries below.
 
 ## Supported boundaries
+
+Current upstream example: `id: "archie"`, `profileKey: "upstream"`, config `agent.archie.name`,
+packaged tree `packages/archie-specialist/skills/`, entries `archie-plan` and `archie-work-package`.
+This is an ID correction, not a display-only alias or a new permission/memory/toolkit grant; historical
+source receipts keep their original IDs. See [naming correction](../upstream-specialist/NAMING-CORRECTION.md).
 
 Permissions extend shared bases with only the seat's entry skills and read-only external skill root. Native config cannot widen permissions. Existing execution/review members keep their semantics.
 

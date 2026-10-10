@@ -5,7 +5,13 @@
 > rather than separate personas. There is no architecture-only review seat. This document is the
 > canonical map of who owns what.
 
-The unified upstream ownership below is the owner's target contract. Native `walt` registration, the
+Current identity contract: upstream routes as `archie`, profile `upstream`, assets under
+`packages/archie-specialist`, config `agent.archie.name`. This supersedes the earlier label-only naming
+rule; no active old-ID alias is defined. Source status and candidate pins in the following paragraph
+describe pre-correction implementation evidence, not qualification of the renamed runtime. See
+[NAMING-CORRECTION.md](../../../specs/upstream-specialist/NAMING-CORRECTION.md).
+
+The unified upstream ownership below is the owner's target contract. Native upstream registration, the
 `upstream` profile projection, central config/environment name resolution, packaged skills/assets and the
 proposal-result card/projection are implemented and reviewed. Core/V1 restricted Arsenal authoring bindings
 and `UpstreamProposal.inspect` are now implemented in unlanded candidate
@@ -46,14 +52,15 @@ here. The architecture-only review mandate is retired, not transferred to this m
 
 | Persona | Phase    | Discipline                                                                                                                                                                                                         | Kit (placeholder) |
 | --------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------- |
-| **the Upstream Specialist** — `walt` | Product / architecture / specification / planning | Proposes product definition, technical architecture, precise requirements and acceptance, Tasks/WPs, briefs and roadmaps within Maestro's assignment. Returns artifacts, evidence and blockers to Maestro. | `NORTHSTAR` |
+| **the Upstream Specialist** — `archie` | Product / architecture / specification / planning | Proposes product definition, technical architecture, precise requirements and acceptance, Tasks/WPs, briefs and roadmaps within Maestro's assignment. Returns artifacts, evidence and blockers to Maestro. | `NORTHSTAR` |
 
 The unified specialist's default public label lives in `UPSTREAM_DEFAULT_LABEL`, not its routing identity.
 Like every team member except Maestro, its display name is configurable through the host's central name
-resolution (`agent.walt.name`, overridden by `HUGR_UPSTREAM_NAME`); prompts consume the resolved label.
+resolution (`agent.archie.name`, overridden by `HUGR_UPSTREAM_NAME`); prompts consume the resolved label.
 Refer to the member by role or stable ID in code and documents. The native profile key is `upstream`; the
-existing ID `walt` remains the Atlas `curatedBy` key. Registration and name binding are implemented in the
-reviewed candidate, not landed, deployed or domain-qualified. The kit name remains a placeholder; this
+current ID `archie` is the active Atlas `curatedBy` producer key; stored historical curator records are
+not rewritten or accepted as an active alias. Registration and name-binding evidence belongs to the
+reviewed pre-correction candidate, not a renamed-runtime deployment or domain qualification. The kit name remains a placeholder; this
 contract grants no Atlas memory or toolkit ownership.
 
 **Owner correction, 2026-10-07:** the unified specialist is subordinate to Maestro, like the backend

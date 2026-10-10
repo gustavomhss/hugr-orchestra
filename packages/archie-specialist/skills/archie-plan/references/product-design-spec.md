@@ -4,7 +4,7 @@ Read when the assignment asks what/why, technical design, a specification, a roa
 
 ## Inputs and source discipline
 
-Start with verbatim demand, supplied current scope/baseline, stakeholder constraints, observed behavior/source, existing requirements/design/acceptance and host evidence. Use the claim labels in [walt-plan](../SKILL.md). Cite each factual field to a bounded source identity; do not treat a design document's proposed tool or state machine as installed runtime.
+Start with verbatim demand, supplied current scope/baseline, stakeholder constraints, observed behavior/source, existing requirements/design/acceptance and host evidence. Use the claim labels in [archie-plan](../SKILL.md). Cite each factual field to a bounded source identity; do not treat a design document's proposed tool or state machine as installed runtime.
 
 If behavior/design already exists, recover its clauses and acceptance first. Quote the source clause, retain its ID, mark derived requirements/scenarios, and expose contradictions instead of silently reconciling them. Observed implementation is evidence of what exists, not owner approval of what ought to exist. New behavior stays visibly proposed. Missing source, owner or a decision yielding incompatible outcomes becomes a blocker; ordinary local uncertainty may remain an explicit assumption.
 
@@ -44,7 +44,7 @@ Describe dependency-ordered Now/Next/Later horizons from explicit prerequisite e
 
 Use the project's existing artifact shape. Include:
 
-- `walt` author, author proposal version, input/baseline/source refs, scope supplied by host, and status `proposed`.
+- `archie` author, author proposal version, input/baseline/source refs, scope supplied by host, and status `proposed`.
 - Goal/value, constraints/non-goals, acceptance and coverage links, live invariants, design/mechanisms/seams and alternatives.
 - Cohesive work units/dependencies, risks, assumptions and blockers with decision owner/unblock condition.
 - For successors: parent artifact/version, change source/reason and field-level diff **plus the full successor proposal**. Preserve prior bytes/artifacts; refresh source identities after drift. Previous approval does not travel to new bytes, scope or context.

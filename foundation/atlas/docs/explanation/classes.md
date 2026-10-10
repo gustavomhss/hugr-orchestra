@@ -22,7 +22,12 @@ mistaken for ratified truth.
 
 ## The classes
 
-The upstream rows follow the target ownership in [TEAM.md](../TEAM.md). Native `walt` registration, profile
+Current upstream identity is `archie`, profile `upstream`, packaged assets `packages/archie-specialist`,
+config `agent.archie.name`; old-ID routing is not an active alias. The candidate/source-status evidence
+below predates this correction and does not qualify the renamed runtime. See
+[NAMING-CORRECTION.md](../../../../specs/upstream-specialist/NAMING-CORRECTION.md).
+
+The upstream rows follow the target ownership in [TEAM.md](../TEAM.md). Native upstream registration, profile
 `upstream`, config/environment label resolution, packaged assets and the result card/projection are implemented
 and reviewed. Core/V1 restricted Arsenal authoring bindings and `UpstreamProposal.inspect` are now implemented
 in unlanded candidate `ff3b57d4a6323a150949072d06ad379f666a65af`, not deployed or domain-qualified. Actual
@@ -35,7 +40,7 @@ model, not installed memory for each row: the runtime Atlas Memory boundary supp
 
 | Class            | Owner(s)                            | Scope (writes)                                        | Knowledge flavour — **shared**                                                                                                                                    | Memory flavour — **per member**                                                                                               |
 | ---------------- | ----------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Produto, arquitetura, especificação e planejamento** | `walt` | Assigned product/design/spec proposals, acceptance, Tasks/WPs, briefs, dependency plans and roadmaps | Grounds unified upstream proposals in current evidence; retains field provenance and owner decision requests; does not implement, self-approve or dispatch work. | The member's upstream experience — task/pr notes and standing rules. |
+| **Produto, arquitetura, especificação e planejamento** | `archie` | Assigned product/design/spec proposals, acceptance, Tasks/WPs, briefs, dependency plans and roadmaps | Grounds unified upstream proposals in current evidence; retains field provenance and owner decision requests; does not implement, self-approve or dispatch work. | The member's upstream experience — task/pr notes and standing rules. |
 | **Orquestração** | Maestro (the Conductor) | ORCHESTRATE — assign → review/adopt → dispatch → integrate | Organizes and decides within owner authority; assigns upstream authoring, binds adopted proposals to actual placement, readiness, permissions and execution evidence; requests revisions rather than filling plan gaps. | The orchestrator's own memory plus its logbook — the append-only per-PR decision journal. |
 | **Build**        | `backend`, `patty`                  | EXECUTE — backend / frontend artifacts                | Receives the territory's **pack** to transcribe against real anchors; at wave-close its `ResultCard.absorb` feeds candidate facts back.                           | each builder's private craft — "where the docs lie", what was tried/failed on a WP (task memory), decisions on a PR.          |
 | **Revisão** | `lucy`, `billy`, `frankie` | VERIFY — general cold review, security, process | Checks deliverables against real invariants and architectural consequences as part of the whole; no dedicated architecture-only seat or transfer of that mandate to upstream. Ratification follows existing authority rules. | Each reviewer's own review craft — recurring smells, traps and prior verdicts. |

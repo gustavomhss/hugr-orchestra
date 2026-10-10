@@ -34,12 +34,12 @@ export const AWARENESS_TOK_CAP = 400
 export const UN_SEEDED = "UN-SEEDED"
 
 /**
- * One walt-curated ontology candidate node. Only `slot === 'definition'` nodes curated by the DEFINE
- * persona (walt) source the `ontology` facet (MEM-11d); a member's non-definition fact is filtered out.
+ * One upstream-curated ontology candidate node. Only `slot === 'definition'` nodes curated by the
+ * upstream definition producer (`archie`) source the `ontology` facet (MEM-11d).
  */
 export interface DefinitionNode {
   readonly slot: string // 'definition' | other
-  readonly curatedBy: string // 'walt' (DEFINE persona)
+  readonly curatedBy: string // 'archie' (upstream definition producer)
   readonly text: string
 }
 
@@ -109,7 +109,7 @@ function facetsOf(root: Node): Partial<Record<FacetName, FacetEntry>> {
 
 // ── per-facet rollup (top tier only, grounded, UN-SEEDED on absence) ─────────────────────────────────────────
 
-/** The top (injected) tier of a facet — the first tier, or the first walt-curated definition for ontology. */
+/** The top (injected) tier of a facet — the first tier, or the first archie-curated definition for ontology. */
 function topTier(name: FacetName, entry: FacetEntry): string | undefined {
   if (name === "ontology") {
     return definitions(entry)[0]?.text
@@ -117,9 +117,9 @@ function topTier(name: FacetName, entry: FacetEntry): string | undefined {
   return (entry.tiers ?? [])[0]
 }
 
-/** The walt-curated `slot='definition'` nodes only — a member's non-definition fact is filtered out. */
+/** The archie-curated `slot='definition'` nodes only — a member's non-definition fact is filtered out. */
 function definitions(entry: FacetEntry): readonly DefinitionNode[] {
-  return (entry.definitions ?? []).filter((d) => d.slot === "definition" && d.curatedBy === "walt")
+  return (entry.definitions ?? []).filter((d) => d.slot === "definition" && d.curatedBy === "archie")
 }
 
 /** The labeled `UN-SEEDED` sentinel facet (MEM-11e/11i) — an absent source, never a fabricated line. */
