@@ -179,6 +179,10 @@ export const TaskTool = Tool.define(
       }
 
       const parent = yield* sessions.get(ctx.sessionID)
+      const authority = yield* SessionAuthority.make((id) =>
+        id === parent.id ? Effect.succeed(parent) : sessions.get(id),
+      )(parent.id, parent.projectID)
+      const depth = authority.ancestry.length - 1
       const next = yield* agent.get(params.subagent_type)
       if (!next) {
         return yield* Effect.fail(new Error(`Unknown agent type: ${params.subagent_type} is not a valid agent type`))
@@ -241,13 +245,7 @@ export const TaskTool = Tool.define(
             return yield* Effect.fail(new Error(`Invalid model "${params.model}". Use the form 'providerID/modelID'.`))
           }
         }
-        let ancestor = parent
-        let ancestorDepth = 0
-        while (ancestor.parentID) {
-          ancestorDepth++
-          ancestor = yield* sessions.get(ancestor.parentID)
-        }
-        if (ancestorDepth >= (cfg.subagent_depth ?? 1)) {
+        if (depth >= (cfg.subagent_depth ?? 1)) {
           return yield* Effect.fail(
             new Error(
               "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
@@ -302,8 +300,6 @@ export const TaskTool = Tool.define(
         reservedChildPermissions = reservation.permission
         replayReserved = reservation.replayReserved
       }
-      const authority = yield* SessionAuthority.make(sessions.get)(parent.id, parent.projectID)
-      const depth = authority.ancestry.length - 1
       if (depth >= (cfg.subagent_depth ?? 1)) {
         return yield* Effect.fail(
           new Error(
