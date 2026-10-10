@@ -1,6 +1,6 @@
 # WP9a — native default and rollback
 
-Status: technical default-on gates verified for local use. Candidate branch: `omni-default-ci`;
+Status: technical default-on gates verified for local use; fast-forwarded into `omni-native`. Candidate branch: `omni-default-ci`;
 product candidate `f036dca9a4`, CI/harness repairs through `fc41e41a68`; integration PR #73.
 
 The owner accepted the WP10 hosted report for local use on 2026-10-09: "eai, pode seguir". Developer ID/notarization
@@ -120,6 +120,6 @@ not passes. Raw campaign logs are retained locally; they are not uploaded by ord
 
 ## Landing and deferred delivery
 
-- Verified candidate is ready for `omni-native` and draft PR #73; the report does not approve a merge into `dev`.
+- Verified candidate is integrated into `omni-native`; PR #73 remains draft. The report does not approve a merge into `dev`.
 - WP9b legacy removal still waits for one clean release. npm/public release and signed/notarized distribution
   remain outside the owner's local-use approval.

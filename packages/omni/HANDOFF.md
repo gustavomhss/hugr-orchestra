@@ -4,7 +4,7 @@
 
 Esta seção substitui os pontos de retomada históricos abaixo. A fonte da integração é `packages/omni` no
 `gustavomhss/hugr-orchestra`; o repositório separado é o espelho. Worktree ativa:
-`~/Documents/HuGR/_worktrees/omni-default-ci`; produto verificado `f036dca9a4`, reparos CI `fc41e41a68`. Branch de integração do PR #73
+`~/Documents/HuGR/_worktrees/omni-native`; produto verificado `f036dca9a4`, reparos CI `fc41e41a68`. Branch de integração do PR #73
 (draft): `omni-native`. O relatório lista as revisões verificadas e os gates ainda pendentes.
 
 - O rename da `dev` foi reconciliado: pacote `packages/orchestra`, imports `@orchestra/*`, flag
@@ -44,7 +44,7 @@ Esta seção substitui os pontos de retomada históricos abaixo. A fonte da inte
   `docs/ux/WP9a-default-on.md`. Não atribuir essas medições a binário novo `f036dca9a4`.
 - Epic completa verde em `fc41e41a68` (`38014329741`): producers/consumers, unit Linux/Windows, e2e Linux,
   Atlas, godfile, HttpApi, Relay e Windows `=0`. Core Windows executou sem cache: 1524 pass/29 skips existentes.
-  Relatório WP9a revisado; candidato pronto para integração no `omni-native` e PR #73 (draft).
+  Relatório WP9a revisado; candidato integrado por fast-forward no `omni-native` e PR #73 (draft).
   WP9b continua depois de uma release limpa. Artefatos dos oito alvos não habilitam sozinhos as rows CLI desativadas.
 - Provas brutas locais anteriores foram preservadas nas worktrees `omni-campaign`, `omni-protocol-qa` e
   `omni-delivery-qa` (`campaign/logs`, ignorado). Não apagar esses logs antes de arquivar as evidências.
