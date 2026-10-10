@@ -8,6 +8,7 @@ import { CapabilityConnectionInput } from "../src/capability/connection/input"
 import { CapabilityConnectionSetup } from "../src/capability/connection/setup"
 import type { CapabilityConnectionSetupContract } from "../src/capability/connection/setup-contract"
 import { CapabilityOperator } from "../src/capability/operator/index"
+import { CapabilityConnectionManagementFixture } from "./fixture/capability-connection-management"
 import { CapabilityConnectionSetupFixture } from "./fixture/capability-connection-setup"
 import { testEffect } from "./lib/effect"
 
@@ -115,7 +116,10 @@ it.live("malicious proof provider/endpoint/integration/identity/fingerprint/desc
   yield* Effect.forEach(changes, (change) => Effect.gen(function* () {
     const setup = yield* CapabilityConnectionSetup.make({ operators: f.operators, ledger: f.ledger,
       verifier: { verify: (value) => f.verifier.verify(value).pipe(Effect.map(change)) } })
-    CapabilityConnectionSetupFixture.expectCode(yield* f.run(setup.connect(placement, input)).pipe(Effect.exit), "connection_unavailable")
+    const exit = yield* f.run(setup.connect(placement, input)).pipe(Effect.exit)
+    CapabilityConnectionSetupFixture.expectCode(exit, "connection_unavailable")
+    expect(CapabilityConnectionManagementFixture.publicFailures(exit)).toEqual([{ _tag: "Capability.Failure",
+      code: "connection_unavailable", message: "Capability connection is unavailable" }])
     expect(yield* f.rows).toEqual(before)
   }))
   const wrongKey = yield* CapabilityConnectionSetup.make({ operators: f.operators, ledger: f.ledger,
