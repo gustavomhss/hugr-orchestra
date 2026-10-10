@@ -5,6 +5,7 @@ import { ToolModelProjection } from "@orchestra/core/tool/model-projection"
 import { LeanProcessor } from "@orchestra/core/tool/lean-processor"
 import { LeanTelemetry } from "@orchestra/core/tool/lean-telemetry"
 import { LeanMetrics } from "@orchestra/schema/lean-metrics"
+import { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { isDeepStrictEqual } from "node:util"
 
@@ -22,6 +23,9 @@ interface Input<A extends LegacyLeanCapture.Output> {
   readonly binding?: ToolModelCapture.Binding
   readonly owner: ToolModelCapture.Owner
   readonly enabled: boolean
+  readonly command?: string
+  readonly items?: LeanCoverage.Settings
+  readonly unavailable?: "config_unavailable" | "preferences_unavailable" | "preferences_scope_mismatch"
   readonly limits: { readonly maxLines: number; readonly maxBytes: number }
   readonly policyMappingChanged?: boolean
   readonly telemetry?: Pick<LeanTelemetry.Input, "owner" | "model" | "orchestraProfile">
@@ -29,7 +33,8 @@ interface Input<A extends LegacyLeanCapture.Output> {
 
 export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A {
   const start = now()
-  const selected = select(input)
+  const identity = identify(input)
+  const selected = select(input, identity.itemID, identity.failed)
   const end = now()
   if (!input.telemetry || start === undefined || end === undefined) return selected.output
   try {
@@ -44,6 +49,7 @@ export function project<A extends LegacyLeanCapture.Output>(input: Input<A>): A 
       && candidate.observation.termination.kind === "exited" && candidate.observation.termination.code === 0
     const metrics = LeanMetrics.decode(LeanTelemetry.measure({
       owner: input.telemetry.owner, model: input.telemetry.model, orchestraProfile: input.telemetry.orchestraProfile,
+      itemID: identity.itemID,
       producer: trusted ? "native-shell" : "unverified", eligible,
       status: selected.decision?.status === "reduced" ? "applied"
         : selected.decision?.status === "normalized" ? "normalized" : "passthrough",
@@ -67,14 +73,30 @@ function now(): number | undefined {
   }
 }
 
-function select<A extends LegacyLeanCapture.Output>(input: Input<A>): {
+function identify(input: Input<LegacyLeanCapture.Output>): { itemID?: LeanCoverage.ItemID; failed?: boolean } {
+  try {
+    // Host passes the actual post-before-hook invocation, including unsuccessful native calls.
+    const command = input.command ?? input.binding?.candidate.observation.command
+    if (typeof command !== "string") return {}
+    if (command.length > 65536) return { failed: true }
+    const itemID = LeanProcessor.identify(command)
+    return { itemID: LeanCoverage.ids.find((id) => id === itemID) }
+  } catch {
+    return { failed: true }
+  }
+}
+
+function select<A extends LegacyLeanCapture.Output>(input: Input<A>, itemID?: LeanCoverage.ItemID, identityFailed?: boolean): {
   output: A; reason: string; decision?: ToolModelProjection.FilterResult
 } {
   const declined = (reason: string) => ({ output: input.output, reason })
+  if (input.unavailable) return declined(input.unavailable)
   if (!input.enabled) return declined("disabled")
-  if (input.policyMappingChanged) return declined("policy_mapping_changed")
-  if (!input.binding) return declined("not_eligible")
+  if (identityFailed) return declined("processorfailed")
   try {
+    if (itemID && input.items?.[itemID] === false) return declined("item_disabled")
+    if (input.policyMappingChanged) return declined("policy_mapping_changed")
+    if (!input.binding) return declined("not_eligible")
     const baseline = input.binding.baseline.content[0]
     if (baseline?.type !== "text" || !input.output.output.startsWith(baseline.text)) return declined("policy_mapping_changed")
     const suffix = input.output.output.slice(baseline.text.length)
@@ -89,7 +111,7 @@ function select<A extends LegacyLeanCapture.Output>(input: Input<A>): {
     }
     const selected = ToolModelProjection.project({ ...projection, filter: (observation) => {
         try {
-          return observed.result = LeanProcessor.process(observation)
+          return observed.result = LeanProcessor.process(observation, input.items)
         } catch (error) {
           observed.failed = true
           throw error
