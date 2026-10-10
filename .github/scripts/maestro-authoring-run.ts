@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { Database } from "bun:sqlite"
 import { Option, Schema } from "effect"
+import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import { lstat, mkdir, mkdtemp, open, realpath, writeFile } from "node:fs/promises"
@@ -8,8 +9,8 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
-// Owner-selected successor; cold review is pending. Rename steering grants no auth/model qualification.
-const consumerReview: { revision: string; status: "pending" | "approved" } = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "pending" }
+// R4 approved these exact source bytes; runtime tests and model qualification remain lead-owned.
+const consumerReview = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "approved", sourceReview: "R4", runtimeQualification: "pending" }
 const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
 const inventoryDigest = "c3bf0ff8c07c22fef5d17d45d5588b963c3c699868f0accb7be1b4b0cb92c839"
 const guarded = [
@@ -118,8 +119,8 @@ async function main() {
   const redact = (text: string) => secrets.reduce((output, secret) => output.split(secret).join("[REDACTED]"), text)
   const entry = join(runtime, "initializer.ts")
   await writeFile(entry, initializer(job), { flag: "wx", mode: 0o600 })
-  const prompt = `Use exactly one existing foreground Task with subagent_type=archie, model=${model}, writePaths=["proposal.md"], and the exact following prompt. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch.\n${assignment}`
-  const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH, ORCHESTRA_AUTH_CONTENT: JSON.stringify({ openai: auth }) }, prompt)
+  // Initializer derives the Task path from its real Instance. Stdin carries only this exact assignment and EOF.
+  const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH, ORCHESTRA_AUTH_CONTENT: JSON.stringify({ openai: auth }) }, assignment)
   const records = output.text.split("\n").flatMap<{ type: string; sessionID: string; projectID?: string; worktree?: string; timestamp?: number }>((line) => {
     const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
     if (Option.isNone(parsed)) return []
@@ -176,34 +177,76 @@ async function gitHead(candidate: string) {
   return output[1].trim()
 }
 async function launch(entry: string, candidate: string, env: Record<string, string | undefined>, prompt: string) {
-  const child = Bun.spawn([process.execPath, entry], { cwd: join(candidate, "packages/orchestra"), env, stdin: new Blob([prompt]).stream(), stdout: "pipe", stderr: "pipe" })
+  requireAuthoring(["darwin", "linux"].includes(process.platform), "AUTHORING_OWNED_GROUP_HOST_UNSUPPORTED")
+  const state: { bytes: number; failure?: string; groupGone?: boolean; stopping?: Promise<void>; stopDone?: () => void } = { bytes: 0 }
+  const stopped = new Promise<void>((done) => { state.stopDone = done })
+  const child = spawn(process.execPath, [entry], { cwd: join(candidate, "packages/orchestra"), env, detached: true, stdio: "pipe" })
+  const exited = new Promise<number | null>((done) => {
+    child.once("exit", (status) => done(status))
+    child.once("error", () => { state.failure = "AUTHORING_CHILD_SPAWN_FAILED"; done(null) })
+  })
   const chunks: Uint8Array[] = []
-  const state: { bytes: number; failure?: string } = { bytes: 0 }
-  const readers = [child.stdout.getReader(), child.stderr.getReader()]
-  const stop = () => { if (child.exitCode === null) child.kill("SIGKILL"); readers.forEach((reader) => { void reader.cancel().catch(() => undefined) }) }
-  const abort = () => { state.failure = "AUTHORING_INTERRUPTED"; stop() }
+  const groupAlive = () => {
+    if (!child.pid || state.groupGone) return false
+    try { process.kill(-child.pid, 0); return true } catch (error) {
+      requireAuthoring(error instanceof Error && "code" in error && error.code === "ESRCH", "AUTHORING_OWNED_GROUP_INSPECTION_FAILED")
+      state.groupGone = true; return false
+    }
+  }
+  const signalGroup = (signal: NodeJS.Signals) => {
+    if (!child.pid || !groupAlive()) return
+    try { process.kill(-child.pid, signal) } catch (error) {
+      requireAuthoring(error instanceof Error && "code" in error && error.code === "ESRCH", "AUTHORING_OWNED_GROUP_SIGNAL_FAILED")
+      state.groupGone = true
+    }
+  }
+  const stop = () => (state.stopping ??= (async () => {
+    child.stdin.destroy()
+    const waitGroup = async (milliseconds: number) => {
+      const until = Date.now() + milliseconds
+      while (groupAlive() && Date.now() < until) await Bun.sleep(50)
+    }
+    if (groupAlive()) { signalGroup("SIGTERM"); await waitGroup(3_000) }
+    if (groupAlive()) { signalGroup("SIGKILL"); await waitGroup(3_000) }
+    requireAuthoring(!groupAlive() && (child.exitCode !== null || child.signalCode !== null || !child.pid), "AUTHORING_OWNED_GROUP_CLEANUP_FAILED")
+  })())
+  const requestStop = () => { void stop().then(() => state.stopDone?.(), () => state.stopDone?.()) } // Finalizer surfaces failure.
+  const abort = () => { state.failure = "AUTHORING_INTERRUPTED"; requestStop() }
   process.once("SIGINT", abort); process.once("SIGTERM", abort)
-  const timer = setTimeout(() => { state.failure = "AUTHORING_DEADLINE"; stop() }, deadline)
+  child.stdin.once("error", () => { state.failure ??= "AUTHORING_STDIN_FAILED"; requestStop() })
+  child.stdin.end(prompt)
+  // Reserve graceful/escalation time inside the ten-minute total budget.
+  const timer = setTimeout(() => { state.failure = "AUTHORING_DEADLINE"; requestStop() }, deadline - 7_000)
   try {
-    const drains = readers.map(async (reader, index) => {
-      while (true) {
-        const part = await reader.read()
-        if (part.done) return
+    const drains = [child.stdout, child.stderr].map(async (stream, index) => {
+      for await (const part of stream) {
         if (index !== 0) continue
-        state.bytes += part.value.length
-        if (state.bytes > 32 * 1024 * 1024) { state.failure = "AUTHORING_OUTPUT_LIMIT"; stop(); return }
-        chunks.push(part.value)
+        const bytes = Buffer.from(part)
+        state.bytes += bytes.length
+        if (state.bytes > 32 * 1024 * 1024) { state.failure = "AUTHORING_OUTPUT_LIMIT"; requestStop(); return }
+        chunks.push(bytes)
       }
     })
-    const [status] = await Promise.all([child.exited, ...drains])
+    const drained = Promise.all(drains).catch(() => { state.failure ??= "AUTHORING_STREAM_FAILED"; requestStop() })
+    const status = await Promise.race([exited, stopped.then(() => null)])
+    await stop() // Also remove surviving descendants after a normally exited primary.
+    await Promise.race([drained, Bun.sleep(1_000)])
     return { text: Buffer.concat(chunks).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
-  } finally { clearTimeout(timer); stop(); await child.exited; process.removeListener("SIGINT", abort); process.removeListener("SIGTERM", abort) }
+  } finally {
+    clearTimeout(timer)
+    try { await stop() } catch {
+      if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL")
+      throw new AuthoringError([state.failure, "AUTHORING_OWNED_GROUP_CLEANUP_FAILED"].filter(Boolean).join("; "))
+    }
+    finally { child.stdout.destroy(); child.stderr.destroy(); process.removeListener("SIGINT", abort); process.removeListener("SIGTERM", abort) }
+  }
 }
 
 function initializer(job: { candidate: string; project: string; model: string; assignment: string }) {
   // Adapter uses the real candidate runtime and CLI command in one owned process; restores every wrapped method.
   return `import { createRequire } from "node:module"
-import { relative } from "node:path"
+import { relative, dirname } from "node:path"
+import { realpath } from "node:fs/promises"
 const job = ${JSON.stringify(job)}
 const { Effect } = await import(createRequire(job.candidate + "/package.json").resolve("effect"))
 const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
@@ -215,6 +258,7 @@ const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/
 const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
 const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats.ts")
 const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
+const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
 const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
 const { RunCommand } = await import(job.candidate + "/packages/orchestra/src/cli/cmd/run.ts")
 type TaskPromptOps = import(${JSON.stringify(job.candidate + "/packages/orchestra/src/tool/task.ts")}).TaskPromptOps
@@ -222,6 +266,8 @@ function requireFact(value: unknown, code: string): asserts value { if (!value) 
 function isOps(value: unknown): value is TaskPromptOps {
   return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function" && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function"
 }
+const shutdown = () => { void Promise.race([AppRuntime.dispose(), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
+process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
   const store = yield* InstanceStore.Service
   const ctx = yield* store.load({ directory: job.project })
@@ -244,6 +290,10 @@ const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
 const state = { calls: 0, parentChecks: 0, childChecks: 0 }
 const taskExecute = loaded.task.execute
 const realPrompt = loaded.prompts.prompt
+const writeRootBase = await realpath(loaded.ctx.worktree === "/" ? loaded.ctx.directory : loaded.ctx.worktree)
+const proposalRoot = job.project + "/proposal.md"
+const dispatchPath = relative(writeRootBase, proposalRoot).split(String.fromCharCode(92)).join("/")
+requireFact(dispatchPath && !dispatchPath.split("/").includes(".."), "AUTHORING_DISPATCH_PATH_OUTSIDE_WORKTREE")
 const proposalPattern = relative(loaded.ctx.worktree, job.project + "/proposal.md").split(String.fromCharCode(92)).join("/")
 const contextPattern = relative(loaded.ctx.worktree, job.project + "/README.md").split(String.fromCharCode(92)).join("/")
 const parentCheck = Effect.gen(function* () {
@@ -257,7 +307,7 @@ const parentCheck = Effect.gen(function* () {
 loaded.prompts.prompt = (request) => PromptGuard.provide(realPrompt(request), loaded.parent.id, parentCheck)
 loaded.task.execute = (params, ctx) => Effect.gen(function* () {
   state.calls++
-  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "archie" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === '["proposal.md"]' && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
+  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "archie" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === JSON.stringify([dispatchPath]) && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
   const ops = ctx.extra?.promptOps
   requireFact(isOps(ops), "AUTHORING_REAL_TASK_PROMPT_OPS_MISSING")
   return yield* taskExecute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
@@ -265,12 +315,19 @@ loaded.task.execute = (params, ctx) => Effect.gen(function* () {
       // Bind the inherited deny + exact allowance before prompt admission/tool selection, not after tools are built.
       const child = yield* loaded.sessions.get(request.sessionID)
       requireFact(child.parentID === loaded.parent.id && child.agent === "archie" && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
+      const roots = WriteRoots.read(child.permission)
+      requireFact(JSON.stringify(roots) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_NOT_OWNER_PROPOSAL")
       yield* loaded.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []), { permission: "edit", pattern: proposalPattern, action: "allow" }] })
       const beforeModel = Effect.gen(function* () {
         const archie = yield* loaded.agents.get("archie")
         const child = yield* loaded.sessions.get(request.sessionID)
         requireFact(archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && request.agent === "archie" && child.agent === "archie" && child.parentID === loaded.parent.id && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
         const bound = yield* loaded.sessions.get(child.id)
+        const canonicalRoot = yield* Effect.promise(() => realpath(proposalRoot).catch(async (error: NodeJS.ErrnoException) => {
+          if (error.code !== "ENOENT") throw error
+          return (await realpath(dirname(proposalRoot))) + "/proposal.md"
+        }))
+        requireFact(canonicalRoot === proposalRoot && JSON.stringify(WriteRoots.read(bound.permission)) === JSON.stringify([proposalRoot]), "AUTHORING_RESERVED_ROOT_CHANGED_BEFORE_MODEL")
         requireFact(Permission.evaluate("edit", proposalPattern, archie.permission, bound.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, archie.permission, bound.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
         state.childChecks++
       }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
@@ -281,7 +338,8 @@ loaded.task.execute = (params, ctx) => Effect.gen(function* () {
 try {
   console.log(JSON.stringify({ type: "authoring_native_preflight", sessionID: loaded.parent.id, projectID: loaded.parent.projectID, worktree: loaded.ctx.worktree }))
   requireFact(RunCommand.handler, "AUTHORING_REAL_CLI_HANDLER_MISSING")
-  await RunCommand.handler({ $0: "orchestra", _: ["run"], message: [], command: undefined, continue: false, session: loaded.parent.id, fork: false,
+  const hostPrompt = "Use exactly one existing foreground Task with subagent_type=archie, model=" + job.model + ", writePaths=" + JSON.stringify([dispatchPath]) + ", and the exact assignment supplied below on stdin. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch."
+  await RunCommand.handler({ $0: "orchestra", _: ["run"], message: [hostPrompt], command: undefined, continue: false, session: loaded.parent.id, fork: false,
     model: job.model, agent: "maestro", format: "json", file: undefined, title: undefined, attach: undefined, password: undefined, username: undefined,
     dir: job.project, port: undefined, variant: undefined, thinking: false, mini: false, interactive: false, replay: undefined,
     "replay-limit": undefined, replayLimit: undefined, auto: false, yolo: false, "dangerously-skip-permissions": false, dangerouslySkipPermissions: false, demo: false })
@@ -309,7 +367,8 @@ async function verifyDatabase(path: string, parentID: string, project: string, m
     const row = rows[0]
     const task = decode(Schema.Struct({ callID: Schema.String, state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Record(Schema.String, Schema.Unknown), metadata: Schema.Struct({ sessionId: Schema.String, parentSessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String, author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }), writeRoots: Schema.Array(Schema.String) }) }) }) }), json(row.data), "AUTHORING_CAPTURED_TASK_RETURN_MISSING")
     const author = task.state.metadata.workResult.author
-    requireAuthoring(task.state.input.subagent_type === "archie" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === '["proposal.md"]' && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === '["proposal.md"]', "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
+    const dispatchPath = relative(worktree === "/" ? project : worktree, join(project, "proposal.md")).replaceAll("\\", "/")
+    requireAuthoring(task.state.input.subagent_type === "archie" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === JSON.stringify([dispatchPath]) && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === JSON.stringify([dispatchPath]), "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
     decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro") }), json(row.message), "AUTHORING_TASK_CALLER_NOT_MAESTRO")
     const child = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(author.executionSessionID), "AUTHORING_CHILD_DB_MISSING")
     requireAuthoring(child.parent_id === parentID && child.project_id === parent.project_id && child.directory === project && child.agent === "archie", "AUTHORING_CHILD_DB_BINDING_MISMATCH")
