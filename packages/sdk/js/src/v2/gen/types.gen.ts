@@ -3308,11 +3308,6 @@ export type SessionHistory = {
 
 export type SessionDurableEventStream = string
 
-export type ResearchArtifactNotFoundError = {
-  _tag: "ResearchArtifactNotFoundError"
-  message: string
-}
-
 export type SessionMessagesResponse = {
   data: Array<SessionMessage>
   cursor: {
@@ -6124,112 +6119,6 @@ export type CapabilityArtifactId = string
 export type CapabilityArtifactRef = {
   id: CapabilityArtifactId
   revision: number
-}
-
-export type ResearchBinding = {
-  projectID: string
-  memberID: "jimmy"
-  taskId: string
-  executionSessionID: string
-  authoritySessionID: string
-  directory: string
-  worktree: string
-}
-
-export type ResearchSourceRef = {
-  artifact: CapabilityArtifactRef
-  representation: "received" | "text" | "markdown" | "html" | "structured-json"
-  digest: string
-}
-
-export type ResearchSourceOrigin = {
-  kind: "file" | "url" | "tool-output" | "atlas-own"
-  uri: string
-  revision?: string
-}
-
-export type ResearchSourceExtent = {
-  byteStart: number
-  lineStart?: number
-  lineEnd?: number
-}
-
-export type ResearchAtlasSource = {
-  sourceIdentity: string
-  unit: string
-  contentHash: string
-  receiptHash: string
-}
-
-export type ResearchSourceReceipt = {
-  binding: ResearchBinding
-  ref: ResearchSourceRef
-  origin: ResearchSourceOrigin
-  capturedAt: number
-  mediaType: string
-  bytes: number
-  complete: boolean
-  derivedFrom?: ResearchSourceRef
-  transformation?: string
-  observed?: ResearchSourceExtent
-  atlas?: ResearchAtlasSource
-}
-
-export type ResearchDocumentRef = {
-  id: string
-  revision: number
-}
-
-export type ResearchRecordRef = {
-  id: string | string | string
-  revision: number
-}
-
-export type ResearchLineLocator = {
-  kind: "lines"
-  start: number
-  end: number
-}
-
-export type ResearchQuoteLocator = {
-  kind: "quote"
-  exact: string
-  prefix?: string
-  suffix?: string
-}
-
-export type ResearchJsonLocator = {
-  kind: "json"
-  pointer: string
-}
-
-export type ResearchEvidenceRef = {
-  source: ResearchSourceRef
-  locator: ResearchLineLocator | ResearchQuoteLocator | ResearchJsonLocator
-}
-
-export type ResearchDocumentReceipt = {
-  binding: ResearchBinding
-  ref: ResearchDocumentRef
-  artifact: CapabilityArtifactRef
-  digest: string
-  title: string
-  genre: "answer" | "map" | "explanation" | "comparison" | "evidence-review" | "opportunity"
-  bytes: number
-  publishedAt: number
-  findingRefs: Array<ResearchRecordRef>
-  citations: {
-    [key: string]: ResearchEvidenceRef
-  }
-}
-
-export type ResearchArtifactPage = {
-  ref: CapabilityArtifactRef
-  representation: "received" | "text" | "markdown" | "html" | "structured-json"
-  text: string
-  receipt: ResearchSourceReceipt | ResearchDocumentReceipt
-  complete: boolean
-  cursor?: string
 }
 
 export type ModelApi =
@@ -15065,53 +14954,6 @@ export type V2SessionMessageResponses = {
 
 export type V2SessionMessageResponse = V2SessionMessageResponses[keyof V2SessionMessageResponses]
 
-export type V2ResearchArtifactData = {
-  body?: never
-  path: {
-    sessionID: string
-    artifactID: CapabilityArtifactId
-  }
-  query: {
-    revision: string
-    cursor?: string
-  }
-  url: "/api/session/{sessionID}/research/{artifactID}"
-}
-
-export type V2ResearchArtifactErrors = {
-  /**
-   * InvalidRequestError
-   */
-  400: InvalidRequestError
-  /**
-   * UnauthorizedError
-   */
-  401: UnauthorizedError
-  /**
-   * ResearchArtifactNotFoundError | SessionNotFoundError
-   */
-  404: ResearchArtifactNotFoundError | SessionNotFoundError
-  /**
-   * ConflictError
-   */
-  409: ConflictError
-  /**
-   * ServiceUnavailableError
-   */
-  503: ServiceUnavailableError
-}
-
-export type V2ResearchArtifactError = V2ResearchArtifactErrors[keyof V2ResearchArtifactErrors]
-
-export type V2ResearchArtifactResponses = {
-  /**
-   * Research.ArtifactPage
-   */
-  200: ResearchArtifactPage
-}
-
-export type V2ResearchArtifactResponse = V2ResearchArtifactResponses[keyof V2ResearchArtifactResponses]
-
 export type V2SessionMessagesData = {
   body?: never
   path: {
@@ -18442,3 +18284,26 @@ export type PtyConnectResponses = {
 }
 
 export type PtyConnectResponse = PtyConnectResponses[keyof PtyConnectResponses]
+
+export type {
+  ResearchArtifactNotFoundError,
+  ResearchArtifactPage,
+  ResearchAtlasSource,
+  ResearchBinding,
+  ResearchDocumentReceipt,
+  ResearchDocumentRef,
+  ResearchEvidenceRef,
+  ResearchJsonLocator,
+  ResearchLineLocator,
+  ResearchQuoteLocator,
+  ResearchRecordRef,
+  ResearchSourceExtent,
+  ResearchSourceOrigin,
+  ResearchSourceReceipt,
+  ResearchSourceRef,
+  V2ResearchArtifactData,
+  V2ResearchArtifactError,
+  V2ResearchArtifactErrors,
+  V2ResearchArtifactResponse,
+  V2ResearchArtifactResponses,
+} from "./research.gen.js"

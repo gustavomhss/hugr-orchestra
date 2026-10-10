@@ -2,6 +2,7 @@
 
 import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
+import type { V2ResearchArtifactErrors, V2ResearchArtifactResponses } from "./research.gen.js"
 import type {
   AgentFileInput,
   AgentPartInput,
@@ -423,8 +424,6 @@ import type {
   V2RelayScopeRemoveResponses,
   V2RelayScopeUpdateErrors,
   V2RelayScopeUpdateResponses,
-  V2ResearchArtifactErrors,
-  V2ResearchArtifactResponses,
   V2ScheduleCreateErrors,
   V2ScheduleCreateResponses,
   V2ScheduleListErrors,

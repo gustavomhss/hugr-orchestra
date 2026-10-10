@@ -1,6 +1,10 @@
 [
   "client-error.ts",
   "client.ts",
+  "errors.ts",
   "index.ts",
+  "request.ts",
+  "research-types.ts",
+  "research.ts",
   "types.ts"
 ]
