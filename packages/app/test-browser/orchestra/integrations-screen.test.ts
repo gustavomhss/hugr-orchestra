@@ -102,6 +102,7 @@ async function mount(
   const bindings = new Map<Capability.TargetID, Binding[]>([
     [target.target.id, structuredClone([binding, nextBinding])],
   ])
+  const setupReceipts = new Map<string, Receipt>()
   const api: Api = {
     get: async (...args) => {
       record("get", args)
@@ -152,9 +153,19 @@ async function mount(
     connect: async (...args) => {
       record("connect", args)
       await options.hold
-      if (options.lost && calls.filter((call) => call.method === "connect").length === 1)
-        throw new Error("fixture secret: never display")
-      return receipt({ connection: account.connection, verification: "verified" }, !!options.lost)
+      const previous = setupReceipts.get(args[1])
+      if (previous) return structuredClone({ ...previous, reused: true })
+      const row: Connection = {
+        connection: { id: Capability.ConnectionID.create(), provider: args[0].provider, generation: 0 },
+        ...(args[0].label !== undefined ? { label: args[0].label } : {}),
+        state: "active",
+        credential: "present",
+      }
+      accounts.set(row.connection.id, row)
+      const saved = receipt({ connection: row.connection, verification: "verified" })
+      setupReceipts.set(args[1], saved)
+      if (options.lost) throw new Error("fixture secret: never display")
+      return structuredClone(saved)
     },
     createTarget: async (...args) => {
       record("createTarget", args)
