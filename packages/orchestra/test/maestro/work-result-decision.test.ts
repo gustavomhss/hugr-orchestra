@@ -8,6 +8,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { Npm } from "@orchestra/core/npm"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { PartTable, SessionTable } from "@orchestra/core/session/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { OrchestraEvent } from "@orchestra/protocol/groups/event"
 import { eq } from "drizzle-orm"
@@ -24,7 +25,7 @@ import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances, provideTmpdirInstance } from "../fixture/fixture"
-import { decisionFixture, raceDecisions } from "../fixture/work-result-decision"
+import { decisionFixture, mutateBeforeDecision, raceDecisions } from "../fixture/work-result-decision"
 import { NpmTest } from "../fake/npm"
 import { testEffect } from "../lib/effect"
 
@@ -191,15 +192,91 @@ describe("durable WorkResult decision", () => {
       .filter(Exit.isSuccess).map((exit) => exit.value)
     expect(records).toHaveLength(2)
     expect(records[0]).toEqual(records[1])
+    const exact = records[0]
+    if (!exact) throw new Error("missing exact winner")
+    expect(yield* WorkResultDecision.read(exact.id)).toEqual(exact)
     const fixture = yield* decisionFixture()
     const raced = yield* raceDecisions([
-      WorkResultDecision.record(fixture.input),
-      WorkResultDecision.record({ ...fixture.input, target: { ...fixture.target, decision: "rejected" } }),
+      WorkResultDecision.record({ ...fixture.input, target: { ...fixture.target, reason: "concurrent-proof" } }),
+      WorkResultDecision.record({ ...fixture.input, target: { ...fixture.target, decision: "rejected", reason: "concurrent-proof" } }),
     ])
     expect(raced.filter(Exit.isSuccess)).toHaveLength(1)
     expect(raced.filter(Exit.isFailure)).toHaveLength(1)
     expect(raced.map(failure).join("\n")).toContain("WorkResultDecisionConflict")
+    const winner = raced.find(Exit.isSuccess)
+    if (!winner) throw new Error("missing contradictory winner")
+    expect(yield* WorkResultDecision.read(winner.value.id)).toEqual(winner.value)
+    const { id, ...data } = winner.value
+    expect((yield* decisions).find((row) => row.id === id)?.data).toEqual(data)
     expect(yield* decisions).toHaveLength(2)
+  }))
+
+  it.instance("provider-executed Task cannot impersonate native host projection or bypass override", () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    yield* Effect.forEach(["host-verified", "host-failed"] as const, (verification) => Effect.gen(function* () {
+      const fixture = yield* decisionFixture({ verification })
+      yield* sessions.updatePart({ ...fixture.part, metadata: { providerExecuted: true } })
+      yield* Effect.forEach([undefined, "explicit override"], (reason) => Effect.gen(function* () {
+        expect(failure(yield* Effect.exit(WorkResultDecision.record({ ...fixture.input,
+          target: { ...fixture.target, reason } })))).toContain("provider-executed-task")
+      }))
+    }))
+    expect(yield* decisions).toHaveLength(0)
+    const native = yield* decisionFixture({ verification: "host-verified" })
+    expect((yield* WorkResultDecision.record(native.input)).decision).toBe("accepted")
+  }))
+
+  it.instance("publication commit refuses externally changed/deleted targets and changed ownership/binding", () => Effect.gen(function* () {
+    const database = yield* Database.Service
+    const sessions = yield* Session.Service
+    const foreign = yield* provideTmpdirInstance(() => sessions.create({ agent: "maestro" }), { git: true })
+    yield* Effect.forEach(["result", "delete", "running", "final-status", "provider", "project", "caller-delete", "caller-root", "child-root", "child-agent", "binding"] as const,
+      (change) => Effect.gen(function* () {
+        const fixture = yield* decisionFixture()
+        if (fixture.part.state.status !== "completed") throw new Error("fixture not completed")
+        const other = yield* sessions.create({ agent: "maestro" })
+        const mutation = change === "delete" ? sessions.removePart({ sessionID: fixture.parent.id,
+          messageID: fixture.part.messageID, partID: fixture.part.id })
+          : change === "result" ? sessions.updatePart({ ...fixture.part, state: { ...fixture.part.state,
+            metadata: { sessionId: fixture.child.id, workResult: { ...fixture.result, risks: ["changed after read"] } } } })
+          : change === "running" ? sessions.updatePart({ ...fixture.part, state: { status: "running", input: {}, time: { start: 1 } } })
+          : change === "final-status" ? sessions.updatePart({ ...fixture.part, state: { ...fixture.part.state, status: "error", error: "changed after read" } })
+          : change === "provider" ? sessions.updatePart({ ...fixture.part, metadata: { providerExecuted: true } })
+          : change === "caller-delete" ? sessions.remove(fixture.root.id)
+          : change === "binding" ? database.db.update(EventTable).set({ data: { ...fixture.binding, taskId: "tsk_changed" } })
+            .where(eq(EventTable.aggregate_id, fixture.child.id)).run().pipe(Effect.orDie)
+          : database.db.update(SessionTable).set(change === "project" ? { project_id: foreign.projectID }
+            : change === "child-agent" ? { agent: "general" } : { parent_id: other.id })
+            .where(eq(SessionTable.id, change === "child-root" || change === "child-agent" ? fixture.child.id : fixture.root.id))
+            .run().pipe(Effect.orDie)
+        expect(failure(yield* mutateBeforeDecision(WorkResultDecision.record(fixture.input), mutation))).toContain("stale-target")
+      }))
+    expect(yield* decisions).toHaveLength(0)
+  }))
+
+  it.instance("commit revalidation shares event transaction: failed native check rolls back projector mutation", () => Effect.gen(function* () {
+    const fixture = yield* decisionFixture()
+    const database = yield* Database.Service
+    const events = yield* EventV2Bridge.Service
+    const { id, messageID, sessionID, ...data } = fixture.part
+    const projected = { ...data, metadata: { providerExecuted: true } }
+    yield* events.project(MaestroEvent.WorkResult.Decided, (event) => event.data.authoritySessionID !== fixture.root.id ? Effect.void
+      : database.db.update(PartTable).set({ data: projected })
+        .where(eq(PartTable.id, id)).run().pipe(Effect.orDie, Effect.asVoid))
+    expect(failure(yield* Effect.exit(WorkResultDecision.record(fixture.input)))).toContain("stale-target")
+    const sessions = yield* Session.Service
+    expect(yield* sessions.getPart({ sessionID, messageID, partID: id })).toEqual(fixture.part)
+    expect(yield* decisions).toHaveLength(0)
+  }))
+
+  it.instance("existing decision never admits removed target; old artifact remains readable", () => Effect.gen(function* () {
+    const fixture = yield* decisionFixture()
+    const first = yield* WorkResultDecision.record(fixture.input)
+    const sessions = yield* Session.Service
+    yield* sessions.removePart({ sessionID: fixture.parent.id, messageID: fixture.part.messageID, partID: fixture.part.id })
+    expect(failure(yield* Effect.exit(WorkResultDecision.record(fixture.input)))).toContain("task-part-not-found")
+    expect(yield* WorkResultDecision.read(first.id)).toEqual(first)
+    expect(yield* decisions).toHaveLength(1)
   }))
 
   it.instance("hash binds raw stored JSON; reordered keys retry; changed content creates new artifact", () => Effect.gen(function* () {

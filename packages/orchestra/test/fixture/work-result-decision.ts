@@ -3,7 +3,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { EventV2 } from "@orchestra/core/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
-import { Deferred, Effect, Ref, Schema } from "effect"
+import { Deferred, Effect, Fiber, Ref, Schema } from "effect"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { LogicalTask } from "@/maestro/logical-task"
 import { WorkResultDecision } from "@/maestro/work-result-decision"
@@ -72,5 +72,28 @@ export function raceDecisions<A, E, R>(effects: readonly Effect.Effect<A, E, R>[
     return yield* Effect.all(effects.map(Effect.exit), { concurrency: "unbounded" }).pipe(
       Effect.provideService(EventV2Bridge.Service, EventV2Bridge.Service.of({ ...actual, publish })),
     )
+  })
+}
+
+// Pause outside Core's publish transaction; a separate fiber commits a real storage mutation, then releases it.
+export function mutateBeforeDecision<A, E, R, E2, R2>(decision: Effect.Effect<A, E, R>, mutation: Effect.Effect<unknown, E2, R2>) {
+  return Effect.gen(function* () {
+    const actual = yield* EventV2Bridge.Service
+    const reached = yield* Deferred.make<void>()
+    const resume = yield* Deferred.make<void>()
+    const publish: EventV2.Interface["publish"] = (definition, data, options) => Effect.gen(function* () {
+      if (definition.type !== MaestroEvent.WorkResult.Decided.type) return yield* actual.publish(definition, data, options)
+      yield* Deferred.succeed(reached, undefined)
+      yield* Deferred.await(resume).pipe(Effect.timeout("5 seconds"))
+      return yield* actual.publish(definition, data, options)
+    }).pipe(Effect.orDie)
+    const pending = yield* decision.pipe(
+      Effect.provideService(EventV2Bridge.Service, EventV2Bridge.Service.of({ ...actual, publish })),
+      Effect.exit, Effect.forkChild,
+    )
+    yield* Deferred.await(reached).pipe(Effect.timeout("5 seconds"))
+    yield* mutation.pipe(Effect.timeout("5 seconds"))
+    yield* Deferred.succeed(resume, undefined)
+    return yield* Fiber.join(pending)
   })
 }
