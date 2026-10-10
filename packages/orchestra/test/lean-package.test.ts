@@ -48,7 +48,7 @@ test("actual Node and Bun artifacts retain exact pinned notices", async () => {
   expect(digest(archive)).toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
   const core = path.resolve(dir, "../core")
   expect((await Bun.file(path.join(core, "package.json")).json()).dependencies["hugr-lean"]).toBe(`file:./vendor/${leanPin.artifact}`)
-  const installed = path.resolve(path.dirname(createRequire(path.join(core, "package.json")).resolve("hugr-lean/core")), "../..")
+  const installed = path.resolve(path.dirname(Bun.resolveSync("hugr-lean/core", core)), "../..")
   for (const file of ["package.json", "dist/core/index.js", "dist/core/profile-selection.js", "dist/core/command.js", "dist/profiles/index.js"]) {
     expect(new Uint8Array(await Bun.file(path.join(installed, file)).arrayBuffer()))
       .toEqual(new Uint8Array(await Bun.file(path.join(scratch, "archive/package", file)).arrayBuffer()))
