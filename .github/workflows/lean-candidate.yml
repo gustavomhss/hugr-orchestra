@@ -36,13 +36,41 @@ jobs:
       - name: Require integrated source and native Intel host
         id: host
         run: |
-          test "$GITHUB_REF" = refs/heads/lean-candidate-build
-          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          test "$WORKFLOW_SHA" = "$CANDIDATE_SHA"
-          test "$RUNNER_OS" = macOS
-          test "$RUNNER_ARCH" = X64
-          test "$(uname -m)" = x86_64
-          test "$(sysctl -in sysctl.proc_translated 2>/dev/null || printf '0')" != 1
+          fail() { printf '::error::%s\n' "$1" >&2; exit 1; }
+          test "$GITHUB_REF" = refs/heads/lean-candidate-build || fail "Integrated candidate branch required"
+          checkout_sha=$(git rev-parse HEAD) || fail "Cannot read checkout SHA"
+          test "$checkout_sha" = "$CANDIDATE_SHA" || fail "Candidate checkout SHA mismatch"
+          test "$WORKFLOW_SHA" = "$CANDIDATE_SHA" || fail "Candidate workflow SHA mismatch"
+          test "$RUNNER_OS" = macOS || fail "Native macOS runner required"
+          test "$RUNNER_ARCH" = X64 || fail "Native X64 runner required"
+          machine_error="$RUNNER_TEMP/lean-candidate-uname.stderr"
+          machine=$(uname -m 2>"$machine_error") || { cat "$machine_error" >&2; fail "Cannot read native kernel architecture"; }
+          cat "$machine_error" >&2
+          test "$machine" = x86_64 && test ! -s "$machine_error" || fail "Native x86_64 kernel required"
+          vendor_error="$RUNNER_TEMP/lean-candidate-vendor.stderr"
+          vendor=$(sysctl -n machdep.cpu.vendor 2>"$vendor_error") || { cat "$vendor_error" >&2; fail "Cannot read native Intel CPU vendor"; }
+          cat "$vendor_error" >&2
+          test "$vendor" = GenuineIntel && test ! -s "$vendor_error" || fail "Native GenuineIntel CPU required"
+          probe_error="$RUNNER_TEMP/lean-candidate-proc-translated.stderr"
+          probe_output="$RUNNER_TEMP/lean-candidate-proc-translated.stdout"
+          if sysctl -n sysctl.proc_translated >"$probe_output" 2>"$probe_error"; then
+            probe_code=0
+          else
+            probe_code=$?
+          fi
+          cat "$probe_error" >&2
+          cat "$probe_output"
+          translated=$(cat "$probe_output")
+          probe_stderr=$(cat "$probe_error")
+          printf 'sysctl.proc_translated exit=%s stdout=<%s>\n' "$probe_code" "$translated"
+          if [ "$probe_code" = 0 ] && [ "$translated" = 0 ] && [ -z "$probe_stderr" ]; then
+            : # Explicit non-translated process, after positive Intel identity.
+          elif [ "$probe_code" = 1 ] && [ ! -s "$probe_output" ] && \
+            [ "$probe_stderr" = "sysctl: unknown oid 'sysctl.proc_translated'" ]; then
+            : # This one absent OID is expected on native Intel; no other errors qualify.
+          else
+            fail "Rejected sysctl.proc_translated result (exit=$probe_code)"
+          fi
           for required in packages/desktop/scripts/lean-candidate.ts \
             packages/desktop/electron-builder.candidate.config.ts \
             packages/desktop/electron.vite.candidate.config.ts \
