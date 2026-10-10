@@ -13,7 +13,7 @@ const NOW = 1_900_000_000_000
 const MINUTE = 60_000
 const SOURCE = "https://api.openai.com/v1/responses"
 const BACKEND = "https://chatgpt.com/backend-api/codex/responses"
-const BODY = '{"model":"gpt-5.1-codex","input":[],"stream":true}'
+const BODY = '{"model":"gpt-6.1-sol","input":[],"stream":true}'
 const REPLY = "event: response.completed\ndata: {\"id\":\"synthetic-response\"}\n\n"
 
 function credential(extra: Record<string, unknown> = {}) {
@@ -21,17 +21,20 @@ function credential(extra: Record<string, unknown> = {}) {
     expires: NOW + 30 * MINUTE, accountId: "synthetic-account-exact", ...extra }
 }
 
-function provider(): Provider {
-  const model = (id: string): Model => ({
+function provider(pro = false) {
+  const model = (id: string) => ({
     id, providerID: "openai", name: id, family: "test", status: "active", release_date: "2026-01-01",
     api: { id, url: "https://api.openai.com/v1", npm: "@ai-sdk/openai" }, headers: {}, options: {},
     cost: { input: 1, output: 2, cache: { read: 1, write: 1 } }, limit: { context: 128_000, output: 16_384 },
     capabilities: { temperature: true, reasoning: true, attachment: false, toolcall: true,
       input: { text: true, audio: false, image: false, video: false, pdf: false },
       output: { text: true, audio: false, image: false, video: false, pdf: false }, interleaved: false },
-  })
+  } satisfies Model)
   return { id: "openai", name: "OpenAI", source: "api", env: [], options: {},
-    models: Object.fromEntries(["gpt-5.1-codex", "gpt-4.1", "o3", "unrelated-test-model"].map((id) => [id, model(id)])) }
+    models: Object.fromEntries<Model>([
+      ...["gpt-6.1-sol", "gpt-4.1", "o3", "unrelated-test-model"].map((id) => [id, model(id)] as const),
+      ...(pro ? [["gpt-6.1-sol-pro", { ...model("gpt-6.1-sol-pro"), options: { reasoningMode: "pro" } }] as const] : []),
+    ]) } satisfies Provider
 }
 
 const fixture = (auth: ReturnType<typeof credential>, options: {
@@ -71,7 +74,7 @@ const fixture = (auth: ReturnType<typeof credential>, options: {
     expect(request.redirect).toBe("error")
     return fetch(new Request(new URL("/receive", server.url), request))
   }, { preconnect: fetch.preconnect })
-  const hooks = yield* Effect.promise(() => LegacyCodexReadonlyPlugin({} as never, { send }))
+  const hooks = yield* Effect.promise(() => LegacyCodexReadonlyPlugin({} as never, send))
   expect(hooks.auth?.provider).toBe("openai")
   expect(hooks.auth?.methods).toEqual([])
   const load = async (getAuth: () => Promise<Auth> = async () => auth as Auth) => {
@@ -83,9 +86,9 @@ const fixture = (auth: ReturnType<typeof credential>, options: {
     if (typeof config.fetch !== "function") throw new Error("Actual legacy read-only fetch wrapper missing")
     return config.fetch as typeof fetch
   }
-  const models = async () => {
+  const models = async (catalog = provider()) => {
     if (!hooks.provider?.models) throw new Error("Actual legacy read-only provider.models missing")
-    return hooks.provider.models(provider(), { auth: auth as Auth })
+    return hooks.provider.models(catalog, { auth: auth as Auth })
   }
   return { auth, hooks, send, load, models, observed }
 })
@@ -112,6 +115,7 @@ describe("plugin.legacy-codex-readonly actual hooks / loopback HTTP", () => {
   }))
 
   const invalidMetadata = [
+    { name: "explicit undefined", metadata: undefined },
     { name: "null", metadata: null },
     { name: "empty", metadata: {} },
     { name: "partial issued registration", metadata: { clientId: "synthetic-issued-client" } },
@@ -121,9 +125,11 @@ describe("plugin.legacy-codex-readonly actual hooks / loopback HTTP", () => {
   ]
   invalidMetadata.forEach((entry) => it.live(`refuses ${entry.name} metadata before loader or models send`, () => Effect.gen(function* () {
     const f = yield* fixture(credential({ metadata: entry.metadata }))
+    expect(Object.hasOwn(f.auth, "metadata")).toBe(true)
+    if (entry.metadata === undefined) expect(JSON.stringify(f.auth)).not.toContain('"metadata"')
     yield* Effect.promise(async () => {
-      await expect(f.load()).rejects.toThrow()
-      await expect(f.models()).rejects.toThrow()
+      await expect(f.load()).rejects.toThrow("LEGACY_CODEX_METADATA_MUST_BE_ABSENT")
+      await expect(f.models()).rejects.toThrow("LEGACY_CODEX_METADATA_MUST_BE_ABSENT")
     })
     expect(f.observed.attempts).toHaveLength(0)
     expect(f.observed.requests).toHaveLength(0)
@@ -250,12 +256,25 @@ describe("plugin.legacy-codex-readonly actual hooks / loopback HTTP", () => {
     const models = yield* Effect.promise(() => f.models())
     expect(Object.keys(original.models)).toHaveLength(4)
     expect(Object.keys(models).length).toBeGreaterThan(0)
-    expect(models["gpt-5.1-codex"]).toBeDefined()
+    expect(models["gpt-6.1-sol"]).toBeDefined()
     expect(models["gpt-4.1"]).toBeUndefined()
     expect(models.o3).toBeUndefined()
     expect(models["unrelated-test-model"]).toBeUndefined()
-    expect(Object.keys(models)).toEqual(["gpt-5.1-codex"])
-    expect(models["gpt-5.1-codex"].api.npm).toBe("@ai-sdk/openai")
+    expect(Object.keys(models)).toEqual(["gpt-6.1-sol"])
+    expect(models["gpt-6.1-sol"].api.npm).toBe("@ai-sdk/openai")
+    expect(f.observed.attempts).toHaveLength(0)
+    expect(f.observed.requests).toHaveLength(0)
+  }))
+
+  it.live("installed model policy rejects pro reasoning without losing the allowed Sol model", () => Effect.gen(function* () {
+    const f = yield* fixture(credential())
+    const catalog = provider(true)
+    expect(Object.keys(catalog.models)).toHaveLength(5)
+    expect(catalog.models["gpt-6.1-sol-pro"].options.reasoningMode).toBe("pro")
+    const models = yield* Effect.promise(() => f.models(catalog))
+    expect(Object.keys(models)).toEqual(["gpt-6.1-sol"])
+    expect(models["gpt-6.1-sol"]).toBeDefined()
+    expect(models["gpt-6.1-sol-pro"]).toBeUndefined()
     expect(f.observed.attempts).toHaveLength(0)
     expect(f.observed.requests).toHaveLength(0)
   }))
