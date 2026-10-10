@@ -6,6 +6,7 @@ import { mkdtemp, mkdir, realpath, rm, symlink } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { createHash } from "node:crypto"
 import type { Config, Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
+import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 
 // Adapted from orchestra/test/lean-package.test.ts at 66172f566642a3f66580b001082aba4448e75946
 // (repository MIT): Node-only artifact, observed whole output, real HTTP config and Solid consumers.
@@ -54,7 +55,7 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       const config = path.join(dir, "tsconfig.json")
       await Bun.write(config, JSON.stringify({ extends: path.join(app, "tsconfig.json"),
         compilerOptions: { composite: false, declaration: false, emitDeclarationOnly: false, noEmit: true, rootDir: path.resolve(app, "../.."), tsBuildInfoFile: path.join(dir, "types.tsbuildinfo") },
-        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
+        include: [path.join(app, "src"), path.join(app, "package.json"), import.meta.path, path.join(import.meta.dir, "lean-native-product.test-helper.ts"), path.join(import.meta.dir, "lean-project-metrics.test-helper.ts")],
       }))
       console.log(await child([process.execPath, "typecheck", config], process.env, app).finish())
     } catch (error) { errors.push(error) }
@@ -62,19 +63,20 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
     if (errors.length) throw new AggregateError(errors, "Proof typecheck primary and cleanup errors")
   }, 600000)
 } else {
-  const { createComponent, createRoot, createMemo, createStore, render } = await import("./lean-project-metrics.test-helper")
+  const { createComponent, createRoot, createStore, render } = await import("./lean-project-metrics.test-helper")
   Bun.plugin({ name: "lean-native-product-assets", setup(build) {
     build.onLoad({ filter: /\?(worker&)?url$/ }, (args) => ({ contents: `export default ${JSON.stringify(args.path)}`, loader: "js" }))
   } })
-  const { collectLeanProjectRecords, LeanProjectMetrics } = await import("@/components/session/lean-project-metrics")
-  const { createLeanSettingsController } = await import("@/components/settings-v2/general-controllers")
-  const { LeanSettingControl } = await import("@/components/settings-v2/lean-setting")
+  const { createLeanController } = await import("@/orchestra/chapters/lean-controller")
+  const { LeanProfileView } = await import("@/orchestra/chapters/lean-view")
+  const { LeanDashboard } = await import("@orchestra/schema/lean-dashboard")
+  const { Schema } = await import("effect")
+  const { verifyProfileRows } = await import("./lean-native-product.test-helper")
   const { LanguageProvider, useLanguage } = await import("@/context/language")
   const { PlatformProvider } = await import("@/context/platform")
   const { PART_MAPPING, ToolRegistry } = await import("../../session-ui/src/components/message-part")
   const { DataProvider } = await import("../../session-ui/src/context/data")
   const { LeanMetrics } = await import("@orchestra/schema/lean-metrics")
-  const { dict } = await import("@/i18n/en")
 
   test("real Node Go30: durable owners/bytes/estimates, shell DOM, replay, privacy and persisted disable", async () => {
     if (!process.env.CI && !process.env.GITHUB_RUN_ID) throw new Error("Package builds require CI")
@@ -89,7 +91,19 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       const pty = createRequire(path.join(orchestra, "../core/package.json")).resolve("@lydell/node-pty/package.json")
       await symlink(path.dirname(pty), path.join(orchestra, "dist/node/node_modules/@lydell/node-pty"), "junction")
       const manifest = await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean/manifest.json")).json()
-      expect(manifest).toMatchObject({ version: "0.2.0", commit: "cfe14329cc98f0a2778acdd148e66dbf5a0dd668", sha256: "4e46ae0534937bdfedd46f667292d9904f2446a0fe01479ea0e6c71a74862af6" })
+      const archive = new Uint8Array(await Bun.file(path.join(orchestra, "../core/vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz")).arrayBuffer())
+      const digest = createHash("sha256").update(archive).digest("hex")
+      expect(digest).toBe("369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1")
+      expect(manifest).toMatchObject({ version: "0.2.0", commit: "465fb4c04773f1a40733c9f4c334b980e3195646", sha256: digest })
+      const files = await new Bun.Archive(archive).files()
+      expect(manifest.materials.map((material: { path: string }) => material.path)).toContain("LICENSE")
+      expect(manifest.materials.map((material: { path: string }) => material.path)).toContain("NOTICE")
+      for (const material of manifest.materials) {
+        const original = new Uint8Array(await files.get(`package/${material.path}`)!.arrayBuffer())
+        const copied = new Uint8Array(await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean", material.path)).arrayBuffer())
+        expect(copied).toEqual(original)
+        expect(createHash("sha256").update(original).digest("hex")).toBe(material.sha256)
+      }
       console.log(`Node artifact sha256=${createHash("sha256").update(new Uint8Array(await Bun.file(artifact).arrayBuffer())).digest("hex")} Lean=${JSON.stringify(manifest)}`)
       const scratch = await mkdtemp(path.join(os.tmpdir(), "lean-native-product-"))
       resources.push({ label: "native scratch", close: () => rm(scratch, { recursive: true, force: true }) })
@@ -155,10 +169,10 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         await Bun.sleep(100)
       }
       const base = await Bun.file(ready).text()
-      async function request<T>(route: string, method = "GET", body?: unknown): Promise<T> {
+      async function request<T>(route: string, method = "GET", body?: unknown, directory = project): Promise<T> {
         // Native HTTP avoids HappyDOM's synthetic-origin fetch policy; endpoint remains real loopback.
         const response = await new Promise<{ status: number; text: string }>((resolve, reject) => {
-          const req = http.request(new URL(`${route}?directory=${encodeURIComponent(project)}`, base), { method,
+          const req = http.request(new URL(`${route}?directory=${encodeURIComponent(directory)}`, base), { method,
             headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(120000) }, (res) => {
             const chunks: string[] = []
             res.setEncoding("utf8")
@@ -205,32 +219,30 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         return { messages, tool: { ...tool, state: tool.state }, metric, session, upstream }
       }
       const enabled = await execute("call_enabled")
+      if (enabled.metric.status !== "applied") throw new Error(`Enabled native Go30 declined: ${JSON.stringify(enabled.metric)}\n${enabled.upstream.output}`)
       expect(enabled.metric.status).toBe("applied")
       expect(enabled.metric.filterProfile).toBe("go-test-verbose")
       expect(enabled.tool.state.output).not.toContain("=== RUN")
       expect(enabled.tool.state.output).toContain("PASS\n")
       expect(enabled.metric.bytes.saved).toBeGreaterThan(0)
-      const [data, setData] = createStore(structuredClone({ project: enabled.session.projectID, session: [enabled.session],
+      const [data, setData] = createStore(structuredClone({ session: [enabled.session],
         message: { [admitted.id]: enabled.messages.map((message) => message.info) },
         part: Object.fromEntries(enabled.messages.map((message) => [message.info.id, message.parts])),
         session_status: {}, session_diff: {}, current: enabled.tool }))
-      const owned = createRoot((dispose) => ({ dispose, records: createMemo(() => collectLeanProjectRecords(data, (id) => data.session.find((session) => session.id === id))) }))
-      disposers.push(owned.dispose)
-      const [settings, setSettings] = createStore<{ config: Config; configReady: boolean }>({ config: {}, configReady: false })
-      const patches: Config[] = []
-      async function readConfig(route = "global/config") {
-        setSettings("configReady", false)
-        const config = await request<Config>(route)
-        setSettings({ config, configReady: true })
-      }
-      const controller = createRoot((dispose) => ({ dispose, lean: createLeanSettingsController(() => ({ data: settings, ready: true, configReady: settings.configReady,
-        async updateConfig(patch) {
-          patches.push(patch)
-          await request("global/config", "PATCH", patch)
-          await readConfig()
-        },
-      }), () => true) }))
-      disposers.push(controller.dispose)
+      const patches: LeanDashboard.Update[] = []
+      const decodeInfo = Schema.decodeUnknownSync(LeanDashboard.Info, { onExcessProperty: "error" })
+      const decodeHistory = Schema.decodeUnknownSync(LeanDashboard.History, { onExcessProperty: "error" })
+      const transport = (directory: string, route = "project/lean"): LeanDashboard.Transport => ({
+        read: async () => decodeInfo(await request(route, "GET", undefined, directory)),
+        update: async (value) => { patches.push(value); return decodeInfo(await request("project/lean", "PATCH", value, directory)) },
+        history: async (itemID) => decodeHistory(await request(`project/lean/history/${itemID}`, "GET", undefined, directory)),
+      })
+      const owned = createRoot((dispose) => ({ dispose, lean: createLeanController((error) => ({
+        message: String(error), unavailable: String(error).includes("404"),
+      })) }))
+      disposers.push(owned.dispose, owned.lean.dispose)
+      const controller = owned.lean
+      const select = (directory: string, route?: string) => controller.select({ server: base, directory, transport: transport(directory, route) })
       const host = document.createElement("div")
       document.body.appendChild(host)
       disposers.push(() => host.remove())
@@ -239,8 +251,11 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         value: { platform: "web", openExternal() {}, async restart() {}, async notify() {} },
         get children() { return createComponent(LanguageProvider, { locale: "en", get children() {
           useLanguage().setLocale("en")
-          return [createComponent(LeanProjectMetrics, { projectID: data.project, coverage: "loaded-history", get records() { return owned.records() } }),
-            createComponent(LeanSettingControl, { controller: controller.lean }),
+          return [createComponent(LeanProfileView, { get data() { return controller.state.data }, profileName: "Native selected profile",
+            get loading() { return controller.state.loading }, get error() { return controller.state.error },
+            get pending() { return controller.state.pending }, get history() { return controller.state.history },
+            get historyLoading() { return controller.state.historyLoading }, get historyError() { return controller.state.historyError },
+            onUpdate: controller.update, onRefresh: controller.refresh, onHistory: controller.history, onOpenSession() {} }),
             createComponent(DataProvider, { data, directory: enabled.session.directory, get children() {
               return createComponent(PART_MAPPING.tool!, { get part() { return data.current },
                 message: enabled.messages.find((message) => message.info.id === enabled.tool.messageID)!.info, defaultOpen: true, deferToolContent: false })
@@ -248,103 +263,112 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
         } }) },
       }), host))
       await Bun.sleep(20)
-      const input = () => host.querySelector<HTMLInputElement>('[data-action="settings-lean"] input[type="checkbox"]')
-      const unavailable = () => {
-        expect(controller.lean.editable()).toBe(false)
-        expect(controller.lean.enabled()).toBeUndefined()
-        expect(input()).toBeNull()
-        expect(host.querySelector('[data-action="settings-lean"]')?.textContent).toBe(dict["lean.settings.unavailable"])
-      }
+      const row = (id = "go") => host.querySelector(`[data-lean-item="${id}"]`)!
+      const input = () => row().querySelector<HTMLButtonElement>('[role="switch"]')!
+      const unavailable = () => { expect(controller.state.data).toBeUndefined(); expect(host.querySelector('[role="switch"]')).toBeNull() }
       // Missing GET and real rejected missing-endpoint GET cannot turn bootstrap defaults into permission to write.
       unavailable()
-      await controller.lean.set(false)
+      await controller.update({ itemID: "go", enabled: false })
       expect(patches).toHaveLength(0)
-      await expect(readConfig("global/config-not-found")).rejects.toThrow("GET global/config-not-found: 404")
+      await select(project, "project/lean-not-found")
+      expect(controller.state.error).toContain("GET project/lean-not-found: 404")
       unavailable()
-      await controller.lean.set(false)
+      await controller.update({ itemID: "go", enabled: false })
       expect(patches).toHaveLength(0)
       expect((await Bun.file(configFile).json()).tool_output.lean.enabled).toBe(true)
-      await readConfig()
-      expect(settings.configReady).toBe(true)
-      expect(controller.lean.editable()).toBe(true)
+      await select(project)
+      expect(controller.state.error).toBeUndefined()
+      const first = controller.state.data!
+      expect(first.scope).toMatchObject({ projectID: enabled.session.projectID, directory: project })
+      const savings = { bytesSaved: enabled.metric.bytes.saved, tokensSaved: enabled.metric.tokens.kind === "estimated" ? enabled.metric.tokens.saved : null, calls: 1, tokenCalls: 1 }
+      expect(first.savings).toEqual(savings)
+      await verifyProfileRows(first.scope, enabled.tool, enabled.metric)
       const toolPanel = () => host.querySelector('[data-component="lean-tool-metrics"]')
-      const toolValue = (slot: string) => toolPanel()?.querySelector(`[data-slot="${slot}"]`)?.textContent
-      const projectValue = (key: keyof typeof dict) => [...host.querySelectorAll('[data-component="lean-project-metrics"] dt')].find((dt) => dt.textContent === dict[key])?.nextElementSibling?.textContent
       const body = () => host.querySelector('[data-component="bash-output"] code')?.textContent
       const fmt = (n: number) => n.toLocaleString("en-US")
       expect(body()).toBe(`$ go test -v .\n\n${enabled.tool.state.output}`)
-      expect(toolPanel()?.getAttribute("aria-label")).toContain(enabled.session.projectID)
-      for (const key of ["before", "after", "saved"] as const) expect(toolValue(`bytes-${key}`)).toBe(fmt(enabled.metric.bytes[key]))
-      if (enabled.metric.tokens.kind !== "estimated") throw new Error("Native token estimate unavailable")
-      for (const key of ["before", "after", "saved"] as const) expect(toolValue(`tokens-${key}`)).toBe(fmt(enabled.metric.tokens[key]))
-      expect(toolPanel()?.textContent).toContain("Estimated tokens saved (signed)")
-      expect(toolValue("token-counter")).toBe("chars-per-token-4")
-      expect(toolPanel()?.textContent).not.toContain("go test -v .")
-      expect(toolPanel()?.textContent).not.toContain(enabled.tool.state.output)
-      expect(projectValue("lean.observed")).toBe("1")
-      expect(projectValue("lean.bytesSaved")).toBe(fmt(enabled.metric.bytes.saved))
-      expect(projectValue("lean.tokensSaved")).toBe(fmt(enabled.metric.tokens.saved))
-      expect(host.textContent).toContain(dict["lean.loadedHistory"])
+      expect(toolPanel()).toBeNull()
+      const pairs = () => {
+        expect(host.querySelectorAll("[data-lean-item]")).toHaveLength(32)
+        for (const item of controller.state.data!.items) {
+          expect(row(item.id).querySelector('[data-lean-value="bytes"]')?.getAttribute("title")).toBe(`Exact UTF-8 bytes: ${item.savings.bytesSaved ? "+" : ""}${fmt(item.savings.bytesSaved!)}`)
+          expect(row(item.id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe(`${item.savings.tokensSaved ? "+" : ""}${fmt(item.savings.tokensSaved!)}`)
+        }
+      }
+      pairs()
       // Replay the actual fetched durable ToolPart; summary deduplicates identity, never increments.
       const replay = await request<Saved>(`session/${admitted.id}/message`)
-      setData("part", enabled.tool.messageID, [...data.part[enabled.tool.messageID]!, ...replay.flatMap((message) => message.parts).filter((part) => part.id === enabled.tool.id)])
-      expect(owned.records()).toHaveLength(2)
-      expect(projectValue("lean.observed")).toBe("1")
-      expect(projectValue("lean.bytesSaved")).toBe(fmt(enabled.metric.bytes.saved))
-      const replace = (lean: unknown) => {
-        const clone = structuredClone(enabled.tool)
-        if (clone.state.status !== "completed") throw new Error("Expected completed ToolPart")
-        clone.state.metadata.lean = lean
-        setData("current", clone)
-        setData("part", enabled.tool.messageID, [clone])
-      }
-      const reject = (lean: unknown) => {
-        replace(lean)
-        expect(toolPanel()).toBeNull()
-        expect(projectValue("lean.observed")).toBe("0")
-        expect(body()).toBe(`$ go test -v .\n\n${enabled.tool.state.output}`)
-        replace(structuredClone(enabled.tool.state.metadata.lean))
-        expect(toolPanel()).not.toBeNull()
-        expect(projectValue("lean.observed")).toBe("1")
-      }
-      for (const key of ["projectID", "location", "sessionID", "callID"] as const)
-        reject({ ...enabled.metric, owner: { ...enabled.metric.owner, [key]: "foreign-native-owner" } })
-      // Unknown root and nested command/output fields reject whole record, never leak into KPI UI.
-      for (const field of ["command", "output"]) {
-        reject({ ...enabled.metric, [field]: "PRIVATE MUST_NOT_RENDER" })
-        for (const nested of ["owner", "model", "bytes", "tokens"] as const)
-          reject({ ...enabled.metric, [nested]: { ...enabled.metric[nested], [field]: "PRIVATE MUST_NOT_RENDER" } })
-      }
-      expect(host.textContent).not.toContain("PRIVATE MUST_NOT_RENDER")
-      reject(undefined)
-      expect(controller.lean.enabled()).toBe(true)
-      expect(input()?.checked).toBe(true)
+      expect(replay.flatMap((message) => message.parts).find((part) => part.id === enabled.tool.id)).toEqual(enabled.tool)
+      await controller.refresh()
+      expect(controller.state.data!.savings).toEqual(savings)
+      expect(input().getAttribute("aria-checked")).toBe("true")
       input()!.click()
       const configDeadline = Date.now() + 30000
-      while (controller.lean.pending()) {
+      while (controller.state.pending.size || controller.state.loading) {
         if (Date.now() >= configDeadline) throw new Error("Config PATCH did not settle")
         await Bun.sleep(20)
       }
-      expect(controller.lean.failed()).toBe(false)
-      expect(controller.lean.enabled()).toBe(false)
-      expect(input()?.checked).toBe(false)
-      expect(patches).toEqual([{ tool_output: { max_lines: 2000, max_bytes: 50000, lean: { enabled: false } } }])
-      expect((await request<Config>("global/config")).tool_output).toEqual({ max_lines: 2000, max_bytes: 50000, lean: { enabled: false } })
-      expect((await Bun.file(configFile).json()).tool_output).toEqual({ max_lines: 2000, max_bytes: 50000, lean: { enabled: false } })
+      expect(controller.state.error).toBeUndefined()
+      expect(controller.state.data!.enabled).toBe(true)
+      expect(input().getAttribute("aria-checked")).toBe("false")
+      expect(patches).toEqual([{ itemID: "go", enabled: false }])
+      expect(controller.state.data!.savings).toEqual(savings)
+      const preference = await Bun.file(path.join(home, "data/orchestra/lean/profiles", `${first.scope.profileID}.json`)).json()
+      expect(preference.items.go).toBe(false)
+      for (const config of [await request<Config>("global/config"), await Bun.file(configFile).json()])
+        expect(config.tool_output).toEqual({ max_lines: 2000, max_bytes: 50000, lean: { enabled: true } })
       const disabled = await execute("call_disabled")
       expect(disabled.metric.status).toBe("passthrough")
-      expect(disabled.metric.reason).toBe("disabled")
+      expect(disabled.metric.reason).toBe("item_disabled")
       expect(disabled.metric.bytes.saved).toBe(0)
+      expect(disabled.metric.tokens).toMatchObject({ kind: "estimated", saved: 0 })
       expect(Buffer.from(disabled.tool.state.output)).toEqual(Buffer.from(disabled.upstream.output))
       expect(disabled.tool.state.output.match(/=== RUN/g)).toHaveLength(30)
       setData("message", admitted.id, disabled.messages.map((message) => message.info))
       setData("part", Object.fromEntries(disabled.messages.map((message) => [message.info.id, message.parts])))
       setData("current", disabled.tool)
-      expect(projectValue("lean.observed")).toBe("2")
-      expect(projectValue("lean.bytesSaved")).toBe(fmt(enabled.metric.bytes.saved))
-      expect(toolValue("reason")).toBe("disabled")
+      await controller.refresh()
+      expect(controller.state.data!.savings).toEqual({ ...savings, calls: 2, tokenCalls: 2 })
+      pairs()
+      row().querySelector<HTMLButtonElement>("button")!.click()
+      const historyDeadline = Date.now() + 30000
+      while (controller.state.historyLoading) {
+        if (Date.now() >= historyDeadline) throw new Error("History GET did not settle")
+        await Bun.sleep(20)
+      }
+      const history = controller.state.history!
+      expect(history.scope).toEqual(first.scope)
+      expect(history.executions).toHaveLength(2)
+      for (const run of [enabled, disabled]) {
+        expect(history.executions.find((entry) => entry.callID === run.tool.callID)).toMatchObject({
+          sessionID: admitted.id, messageID: run.tool.messageID, partID: run.tool.id, command: run.tool.state.input.command,
+          commandTruncated: false, status: "completed", exit: 0, bytesSaved: run.metric.bytes.saved,
+          tokensSaved: run.metric.tokens.kind === "estimated" ? run.metric.tokens.saved : null,
+        })
+      }
+      expect([...host.querySelectorAll("[data-lean-execution] code")].map((code) => code.textContent)).toEqual(["go test -v .", "go test -v ."])
+      const other = path.join(home, "profile-b")
+      await mkdir(other)
+      await select(other)
+      expect(controller.state.data!.scope.projectID).toBe(first.scope.projectID)
+      expect(controller.state.data!.scope.profileID).not.toBe(first.scope.profileID)
+      expect(controller.state.data!.savings).toEqual({ bytesSaved: 0, tokensSaved: 0, calls: 0, tokenCalls: 0 })
+      expect(input().getAttribute("aria-checked")).toBe("true")
+      expect(controller.state.history).toBeUndefined()
+      expect(host.querySelector("[data-lean-execution]")).toBeNull()
+      pairs()
+      await controller.update({ itemID: "cargo", enabled: false })
+      await select(project)
+      expect(controller.state.data!.scope).toEqual(first.scope)
+      expect(controller.state.data!.savings).toEqual({ ...savings, calls: 2, tokenCalls: 2 })
+      expect(input().getAttribute("aria-checked")).toBe("false")
+      expect(row("cargo").querySelector('[role="switch"]')?.getAttribute("aria-checked")).toBe("true")
+      expect(controller.state.history).toBeUndefined()
+      expect(host.querySelector("[data-lean-execution]")).toBeNull()
+      pairs()
       expect(body()).toBe(`$ go test -v .\n\n${disabled.tool.state.output}`)
-      console.log(`native calls=2 Go cases=30/call privacy controls=10 foreign owners=4 replay=1 config unavailable controls=2 PATCH=1 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
+      expect(toolPanel()).toBeNull()
+      console.log(`native calls=2 Go cases=30/call profile A/B/A rows=32 privacy controls=10 foreign owners=4 replay=1 unavailable=2 bytes=${JSON.stringify(enabled.metric.bytes)} tokens=${JSON.stringify(enabled.metric.tokens)}`)
     } catch (error) { errors.push(error) }
     for (const dispose of disposers.reverse()) { try { dispose() } catch (error) { errors.push(error) } }
     await cleanup(resources, errors)
