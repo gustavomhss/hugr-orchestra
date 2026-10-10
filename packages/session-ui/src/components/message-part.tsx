@@ -294,11 +294,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
       sync(text)
       return
     }
-    if (!text.startsWith(shown) || text.length <= shown.length) {
-      sync(text)
-      return
-    }
-    if (text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
+    if (!text.startsWith(shown) || text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
       sync(text)
       return
     }
@@ -314,12 +310,7 @@ function createPacedValue(getValue: () => string, live?: () => boolean) {
       sync(text)
       return
     }
-    if (!text.startsWith(shown) || text.length < shown.length) {
-      clear()
-      sync(text)
-      return
-    }
-    if (text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
+    if (!text.startsWith(shown) || text.length - shown.length <= TEXT_RENDER_IMMEDIATE) {
       clear()
       sync(text)
       return

@@ -263,23 +263,7 @@ export function createServerSession(
     infoSeen.delete(session.id)
     infoSeen.add(session.id)
     if (infoSeen.size > sessionInfoLimit) {
-      const preserve = new Set([
-        ...pinned.keys(),
-        ...requests.keys(),
-        ...inflight.keys(),
-        ...inflightTodo.keys(),
-        ...messageLoads.keys(),
-        ...optimistic.keys(),
-        ...Object.entries(data.permission)
-          .filter(([, items]) => items.length > 0)
-          .map(([sessionID]) => sessionID),
-        ...Object.entries(data.question)
-          .filter(([, items]) => items.length > 0)
-          .map(([sessionID]) => sessionID),
-        ...Object.entries(data.session_status)
-          .filter(([, status]) => status.type !== "idle")
-          .map(([sessionID]) => sessionID),
-      ])
+      const preserve = protectedSessions()
       for (const sessionID of preserve) {
         let current = data.info[sessionID]
         while (current) {
