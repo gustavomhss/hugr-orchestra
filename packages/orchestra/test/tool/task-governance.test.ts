@@ -265,6 +265,7 @@ it.instance(
         card: { parsed: false },
         changes: [],
         checks: [],
+        workerEvidence: { changes: [], checks: [] },
         blockers: [],
         risks: [],
         nextActions: [],
