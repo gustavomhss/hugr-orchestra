@@ -22,7 +22,7 @@ test("capture native production Lean page in CI Chromium; exact PNG/manifest art
   await run(["x", "playwright", "install", "--with-deps", "chromium"])
   await rm(out, { recursive: true, force: true })
   await run(["x", "playwright", "test", "--config", "e2e/orchestra-screenshots/playwright.config.ts", "lean-dashboard.visual.ts", "--project", "chromium"],
-    { ...process.env, ORCHESTRA_VISUAL_OUT: out, LEAN_VISUAL_SOURCE: source, ORCHESTRA_CHANNEL: "prod" })
+    { ...process.env, NODE_ENV: "production", ORCHESTRA_VISUAL_OUT: out, LEAN_VISUAL_SOURCE: source, ORCHESTRA_CHANNEL: "prod" })
   expect((await readdir(out)).sort()).toEqual([...files, "manifest.json"].sort())
   const manifest = await Bun.file(path.join(out, "manifest.json")).json()
   const validate = (value: typeof manifest) => {
@@ -35,6 +35,8 @@ test("capture native production Lean page in CI Chromium; exact PNG/manifest art
       expect(capture.locale).toBe("pt-BR")
       expect(capture.viewport).toEqual({ width: 1672, height: 941 })
       expect(capture.rows.length).toBeGreaterThan(0)
+      expect(capture.rows.length).toBe(capture.file === "detail-dark.png" ? 1 : capture.file === "frameworks-dark.png" ? 3 : 32)
+      expect(capture.scheme).toBe(capture.file === "dashboard-light.png" ? "light" : "dark")
       expect(capture.fontsLoaded).toBe(true)
       expect(capture.bundle).toContain(source)
       expect(capture.ownerLabel).toContain(capture.file === "profileB-dark.png" ? "Orchestra · Orchestra" : "Orchestra · HuGR-Lean")
