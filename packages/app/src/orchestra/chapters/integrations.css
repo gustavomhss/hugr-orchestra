@@ -1,0 +1,67 @@
+.integrations-screen {
+  display: grid;
+  gap: 16px;
+}
+.integrations-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.integrations-list {
+  display: grid;
+  gap: 12px;
+  padding-inline-start: 0;
+  list-style: none;
+}
+.integrations-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  text-align: start;
+  max-inline-size: 100%;
+}
+.integrations-screen code {
+  overflow-wrap: anywhere;
+}
+.integrations-auth,
+.integrations-fields {
+  display: grid;
+  gap: 12px;
+}
+.integrations-auth {
+  padding-block: 12px;
+  padding-inline: 16px;
+  border: 1px solid var(--border-weak-base);
+  border-radius: 8px;
+}
+.integrations-fields {
+  margin: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+.integrations-fields textarea {
+  min-block-size: 100px;
+  resize: vertical;
+}
+.integrations-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+  z-index: 100;
+}
+.integrations-layer {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 101;
+  pointer-events: none;
+}
+.integrations-dialog {
+  inline-size: min(100%, 480px);
+  max-block-size: calc(100dvh - 32px);
+  overflow: auto;
+  pointer-events: auto;
+}
