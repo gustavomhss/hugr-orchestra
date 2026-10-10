@@ -139,11 +139,17 @@ export function make(jobs: BackgroundJob.Interface, options: { pollMs?: number }
         title: input.title,
         metadata: { sessionID: input.sessionID, pid: child.pid },
         run: watch(child, pollMs).pipe(
-          Effect.ensuring(stopChild(child).pipe(Effect.andThen(Effect.sync(() => entries.delete(id))))),
+          Effect.ensuring(
+            stopChild(child).pipe(
+              Effect.ensuring(input.finalize ?? Effect.void),
+              Effect.ensuring(Effect.sync(() => entries.delete(id))),
+            ),
+          ),
           Effect.as(""),
         ),
       })
       .pipe(Effect.onError(() => Effect.sync(() => entries.delete(id))))
+    yield* input.onAdopt ?? Effect.void
     yield* Effect.logInfo("omni adopted a background tree", { id, pid: child.pid, sessionID: input.sessionID })
   })
 
@@ -151,7 +157,10 @@ export function make(jobs: BackgroundJob.Interface, options: { pollMs?: number }
   const register: Interface["register"] = (child, input) =>
     adopt(child, input).pipe(
       Effect.catchCause((cause) =>
-        Effect.logWarning("omni could not adopt a tree; stopping it", { cause }).pipe(Effect.andThen(stopChild(child))),
+        Effect.logWarning("omni could not adopt a tree; stopping it", { cause }).pipe(
+          Effect.andThen(stopChild(child)),
+          Effect.ensuring(input.finalize ?? Effect.void),
+        ),
       ),
       Effect.withSpan("OmniBackground.register"),
     )

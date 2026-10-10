@@ -24,7 +24,10 @@ export interface Interface extends OmniBackground.Interface {
    * Lets a tool's spawn be adopted by this registry: with the omni flag on, provides OmniAdoption `{sessionID,
    * policy: "tool"}` and the registry; with it off, changes nothing.
    */
-  readonly adoptable: (sessionID: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
+  readonly adoptable: (
+    sessionID: string,
+    lease?: Pick<OmniAdoption.RegisterInput, "onAdopt" | "finalize">,
+  ) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/BackgroundProcess") {}
@@ -53,13 +56,15 @@ const layer = Layer.effect(
     yield* Effect.addFinalizer(() => off)
 
     // The flag is read when the effect runs, like the spawner reads it.
-    const adoptable: Interface["adoptable"] = (sessionID) => (effect) =>
+    const adoptable: Interface["adoptable"] = (sessionID, lease) => (effect) =>
       Effect.suspend(() =>
         Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off"
           ? effect
           : effect.pipe(
               Effect.provideService(OmniAdoption.Service, { sessionID, policy: "tool" }),
-              Effect.provideService(OmniAdoption.Registry, registry),
+              Effect.provideService(OmniAdoption.Registry, lease
+                ? { register: (child, input) => registry.register(child, { ...input, ...lease }) }
+                : registry),
             ),
       )
 
@@ -76,6 +81,6 @@ export const node = LayerNode.make({ service: Service, layer, deps: [BackgroundJ
 export const adoptable = Effect.map(
   Effect.serviceOption(Service),
   (service) =>
-    (sessionID: string): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
-      Option.isSome(service) ? service.value.adoptable(sessionID) : (effect) => effect,
+    (sessionID: string, lease?: Pick<OmniAdoption.RegisterInput, "onAdopt" | "finalize">): (<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>) =>
+      Option.isSome(service) ? service.value.adoptable(sessionID, lease) : (effect) => effect,
 )

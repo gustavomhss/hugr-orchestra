@@ -17,7 +17,14 @@ export class Service extends Context.Service<Service, { readonly sessionID: stri
   "@orchestra/OmniAdoption",
 ) {}
 
-export type RegisterInput = { sessionID: string; title: string }
+export type RegisterInput = {
+  sessionID: string
+  title: string
+  /** Transfers the foreground resource lease only after a job owns the live tree. */
+  onAdopt?: Effect.Effect<void>
+  /** Releases resources after the owned tree has stopped. */
+  finalize?: Effect.Effect<void>
+}
 
 export interface Interface {
   /** Takes ownership of a live child. It must stop the child at the latest when the session ends. */
