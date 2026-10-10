@@ -2,6 +2,15 @@ import { parsers } from "prettier/plugins/typescript"
 import { GenerationError, identifierPart } from "./error-symbol"
 import type { Group } from "./index"
 
+export function assertSplitGroups(groups: ReadonlyArray<Group>, splitGroups?: ReadonlySet<string>) {
+  const identifiers = new Set(groups.map((group) => group.identifier))
+  splitGroups?.forEach((identifier) => {
+    if (!identifiers.has(identifier)) {
+      throw new GenerationError({ reason: `Unknown split group: ${identifier}` })
+    }
+  })
+}
+
 export function splitPromiseTypes(content: string, names: ReadonlyArray<string>, module: string) {
   const ast: unknown = Reflect.apply(parsers.typescript.parse, undefined, [content, {}])
   if (!isNode(ast) || !Array.isArray(ast.body)) {
@@ -16,8 +25,9 @@ export function splitPromiseTypes(content: string, names: ReadonlyArray<string>,
   const visit = (value: unknown) => {
     if (Array.isArray(value)) return value.forEach(visit)
     if (!isNode(value)) return
-    if (value.type === "TSTypeReference" && isNode(value.typeName) && typeof value.typeName.name === "string") {
-      references.add(value.typeName.name)
+    if (value.type === "TSTypeReference") {
+      const root = typeReferenceRoot(value.typeName)
+      if (root !== undefined) references.add(root)
     }
     Object.values(value).forEach(visit)
   }
@@ -94,6 +104,12 @@ function declarationName(node: Record<string, unknown>) {
   if (node.declaration.type !== "TSTypeAliasDeclaration") return
   if (!isNode(node.declaration.id) || typeof node.declaration.id.name !== "string") return
   return node.declaration.id.name
+}
+
+function typeReferenceRoot(node: unknown): string | undefined {
+  if (!isNode(node)) return
+  if (node.type === "TSQualifiedName") return typeReferenceRoot(node.left)
+  if (node.type === "Identifier" && typeof node.name === "string") return node.name
 }
 
 function source(content: string, node: Record<string, unknown>) {

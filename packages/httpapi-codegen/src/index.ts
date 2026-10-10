@@ -4,7 +4,7 @@ import { HttpMethod, type HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi"
 import { format } from "prettier"
 import { assertErrorSymbols, errorSymbols, GenerationError, identifierPart } from "./error-symbol"
-import { renderPromiseGroup, splitPromiseRequest, splitPromiseTypes } from "./layout"
+import { assertSplitGroups, renderPromiseGroup, splitPromiseRequest, splitPromiseTypes } from "./layout"
 import { renderImportedEffectFiles } from "./imported-effect"
 
 export type InputField = {
@@ -174,7 +174,7 @@ export function compile<Id extends string, Groups extends HttpApiGroup.Any>(
     },
   })
 
-  const modules = new Set(["client", "client-error", "index"])
+  const modules = new Set(["client", "client-error", "index", "request", "errors", "types"])
   const groups = Array.from(
     Map.groupBy(endpoints, (endpoint) => endpoint.group),
     ([identifier, endpoints], index) => {
@@ -184,6 +184,7 @@ export function compile<Id extends string, Groups extends HttpApiGroup.Any>(
       const base = /^[A-Za-z0-9_-]+$/.test(identifier) ? identifier : `group-${index}`
       const module = uniqueModule(base, index, modules)
       modules.add(module.toLowerCase())
+      modules.add(`${module}-types`.toLowerCase())
       return { identifier, sourceIdentifier: endpoints[0].sourceGroup, module, endpoints }
     },
   )
@@ -227,6 +228,7 @@ export function emitEffectImported(
     | { readonly module: string; readonly endpoints: Readonly<Record<string, string>> },
   layout?: { readonly splitGroups: ReadonlySet<string> },
 ): Output {
+  assertSplitGroups(contract.groups, layout?.splitGroups)
   return {
     operations: operations(contract.groups),
     files: renderImportedEffectFiles(contract.groups, options, layout?.splitGroups),
@@ -241,6 +243,7 @@ export function emitPromise(
   },
 ): Output {
   const groups = contract.groups
+  assertSplitGroups(groups, options?.splitGroups)
   for (const group of groups) {
     for (const endpoint of group.endpoints) assertPromiseEndpoint(endpoint)
   }
@@ -562,10 +565,12 @@ function promisePath(path: string, input: ReadonlyArray<InputField>) {
 }
 
 function uniqueModule(base: string, index: number, modules: ReadonlySet<string>) {
-  if (!modules.has(base.toLowerCase())) return base
+  // Every group owns both paths, even when an emitter leaves its types inline.
+  const occupied = (module: string) => modules.has(module.toLowerCase()) || modules.has(`${module}-types`.toLowerCase())
+  if (!occupied(base)) return base
   const seed = `${base}-${index}`
   let suffix = 0
-  while (modules.has(`${seed}${suffix === 0 ? "" : `-${suffix}`}`.toLowerCase())) suffix++
+  while (occupied(`${seed}${suffix === 0 ? "" : `-${suffix}`}`)) suffix++
   return `${seed}${suffix === 0 ? "" : `-${suffix}`}`
 }
 
