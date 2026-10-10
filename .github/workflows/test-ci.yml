@@ -94,6 +94,17 @@ jobs:
             GITHUB_ACTIONS=false bun test "${args[@]}"
           fi
 
+      - name: Upload Lean dashboard previews (extension)
+        if: always() && hashFiles('packages/app/e2e/test-results/lean-visual/*.png') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lean-visual-${{ runner.os }}
+          path: |
+            packages/app/e2e/test-results/lean-visual/*.png
+            packages/app/e2e/test-results/lean-visual/*.json
+          if-no-files-found: error
+          retention-days: 7
+
   cleanup:
     needs: test
     if: always()
