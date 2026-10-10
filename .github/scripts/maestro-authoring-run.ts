@@ -12,6 +12,10 @@ const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
 const consumerReview = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "approved", sourceReview: "R4", runtimeQualification: "pending" }
 const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
 const inventoryDigest = "80bdd0f9e2cb3195fbdc64ad7d1e8fb1d2e06bb55ceabcb213e28e4bed4ae465"
+// Proposal only: W6/lead must approve before changing the executable historical guard.
+const proposedConsumerPin = { file: "packages/orchestra/src/plugin/index.ts", previousBlob: "6588027dd666cd6d1a3dd437bec548e53622afda",
+  proposedBlob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", status: "pending-independent-review",
+  reason: "ListenerContext.Current binds plugin client and serverUrl to the actual listener; legacy selection is unchanged." }
 const guarded = [
   ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
   ["packages/orchestra/src/plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
@@ -41,8 +45,10 @@ const inside = (path: string, root: string) => path === root || path.startsWith(
 const bootstrap = await (async () => {
   const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
     candidate: { type: "string" }, pilot: { type: "string" }, "auth-source": { type: "string" },
+    "inventory-digest": { type: "string" },
     model: { type: "string", default: "openai/gpt-6.1-sol" }, "prepare-only": { type: "boolean" }, "preflight-only": { type: "boolean" }, run: { type: "boolean" },
   } }).values
+  requireAuthoring(args["inventory-digest"] === undefined || /^[a-f0-9]{64}$/.test(args["inventory-digest"]), "AUTHORING_INVENTORY_DIGEST_INVALID")
   const candidate = await canonical(args.candidate, true)
   const effect = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
   return { args, candidate, effect }
@@ -55,6 +61,7 @@ await main().catch((error: unknown) => {
 async function main() {
   requireAuthoring(process.getuid && constants.O_NOFOLLOW, "AUTHORING_PRIVATE_FILE_HOST_UNSUPPORTED")
   const args = bootstrap.args
+  const expectedInventoryDigest = args["inventory-digest"] ?? inventoryDigest
   requireAuthoring([args.run, args["prepare-only"], args["preflight-only"]].filter(Boolean).length <= 1, "AUTHORING_MODE_CONFLICT")
   const model = args.model ?? "openai/gpt-6.1-sol"
   requireAuthoring(/^openai\/[A-Za-z0-9._-]{1,128}$/.test(model), "AUTHORING_MODEL_INVALID")
@@ -83,7 +90,7 @@ async function main() {
   // Artifacts contain scalar fields only. Preserve all fields, sorted keys, array order, UTF-8, and no LF.
   const originalArtifacts = decode(Schema.Array(Schema.Record(Schema.String, Schema.Unknown)), parsedDomain.artifacts, "AUTHORING_ORIGINAL_ARTIFACTS_INVALID")
   const canonicalInventory = Buffer.from(JSON.stringify(originalArtifacts.map((item) => Object.fromEntries(Object.entries(item).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)))))
-  requireAuthoring(domain.inventoryDigest.sha256 === inventoryDigest && sha256(canonicalInventory) === inventoryDigest && canonicalInventory.length === domain.inventoryDigest.utf8ByteLength, "AUTHORING_INVENTORY_DIGEST_MISMATCH")
+  requireAuthoring(domain.inventoryDigest.sha256 === expectedInventoryDigest && sha256(canonicalInventory) === expectedInventoryDigest && canonicalInventory.length === domain.inventoryDigest.utf8ByteLength, "AUTHORING_INVENTORY_DIGEST_MISMATCH")
   requireAuthoring(domain.nativeAssignmentBoundary.projectRoot === project && domain.artifacts.length > 0 && domain.artifacts.length <= 128 && new Set(domain.artifacts.map((item) => item.id)).size === domain.artifacts.length, "AUTHORING_DOMAIN_BOUNDARY_OR_MEMBERSHIP_INVALID")
   const inventory = await Promise.all(domain.artifacts.map(async (item) => {
     requireAuthoring(/^[a-f0-9]{64}$/.test(item.sha256) && item.utf8ByteLength >= 0, "AUTHORING_DOMAIN_DIGEST_INVALID")
@@ -95,6 +102,10 @@ async function main() {
   const demand = inventory.find((item) => item.id === "fresh-demand")
   const handoff = inventory.find((item) => item.id === "fresh-handoff")
   requireAuthoring(demand?.path === join(pilot, "demand.txt") && handoff, "AUTHORING_OPERATIVE_INPUT_MISSING")
+  if (args["inventory-digest"] !== undefined) {
+    requireAuthoring(originalArtifacts.every((item) => Object.values(item).every((value) => value === null || ["string", "number", "boolean"].includes(typeof value))), "AUTHORING_INVENTORY_NON_SCALAR_FIELD")
+    requireAuthoring(demand.bytes.length > 0 && handoff.bytes.length > 0 && demand.path !== handoff.path && inventory.every((item) => item.path !== join(project, "proposal.md")), "AUTHORING_REVISION_INPUT_OR_WRITE_BOUNDARY_INVALID")
+  }
   const instructions = await read(await canonical(join(packet, "AUTHORING-RUN-INPUT.md"), false))
   requireAuthoring(instructions.length > 0, "AUTHORING_RUN_INPUT_EMPTY")
   requireAuthoring(await lstat(join(project, "proposal.md")).then(() => false, (error: NodeJS.ErrnoException) => error.code === "ENOENT"), "AUTHORING_ORIGINAL_PROPOSAL_ALREADY_EXISTS")
@@ -108,7 +119,8 @@ async function main() {
   // Render one exact Task string without the source file's final LF; original input hashes remain byte-exact.
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`.trimEnd()
   const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]) }
-  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, inventoryDigest,
+  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, proposedConsumerPin, inventoryDigest: expectedInventoryDigest,
+    inventoryDigestSelection: args["inventory-digest"] === undefined ? "historical-default" : "explicit-packet",
     packetPointer: join(packet, "DOMAIN-SOURCE.json"), packetSha256: sha256(domainBytes), runInputSha256: sha256(instructions),
     inventory: inventory.map(({ bytes, ...item }) => item), assignmentSha256: sha256(Buffer.from(assignment)), deadlineMs: deadline, stdoutBytes: 32 * 1024 * 1024, semanticJudgment: "not-performed" }
   await writeFile(join(runtime, "prepared.json"), JSON.stringify(report) + "\n", { flag: "wx", mode: 0o600 })
@@ -170,7 +182,7 @@ async function main() {
   await writeFile(returnedCardPath, returnedCard, { flag: "wx", mode: 0o600 })
   await Promise.all(inventory.map(async (item) => requireAuthoring(sha256(await read(item.path)) === item.sha256, "AUTHORING_FROZEN_INPUT_CHANGED_DURING_RUN")))
   requireAuthoring(await gitHead(candidate) === head, "AUTHORING_CANDIDATE_CHANGED_DURING_RUN")
-  const receipt = { ...report, ...result, proposalPath: join(project, "proposal.md"), proposalBytes: proposal.length, proposalSha256: sha256(proposal), returnedCardPath, returnedCardBytes: returnedCard.length, returnedCardSha256: sha256(returnedCard) }
+  const receipt = { ...report, ...result, stepUsage: evidence.stepUsage, proposalPath: join(project, "proposal.md"), proposalBytes: proposal.length, proposalSha256: sha256(proposal), returnedCardPath, returnedCardBytes: returnedCard.length, returnedCardSha256: sha256(returnedCard) }
   await writeFile(join(runtime, "report.json"), JSON.stringify(receipt) + "\n", { flag: "wx", mode: 0o600 })
   console.log(JSON.stringify({ code: "AUTHORING_RETURN_OBSERVED_NOT_DOMAIN_JUDGMENT", runtime, ...result, proposalSha256: receipt.proposalSha256 }))
 }
@@ -511,6 +523,18 @@ async function verifyDatabase(path: string, parentID: string, project: string, m
     requireAuthoring(bound.taskId === task.state.metadata.workResult.taskId && bound.executionSessionID === child.id && bound.authoritySessionID === parentID && bound.projectID === parent.project_id, "AUTHORING_LOGICAL_TASK_BINDING_MISMATCH")
     const texts = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, author.messageID), "AUTHORING_CAPTURED_ASSISTANT_TEXT_MISSING")
     const returnedText = texts.map((item) => decode(Schema.Struct({ type: Schema.Literal("text"), text: Schema.String }), json(item.data), "AUTHORING_CAPTURED_TEXT_INVALID").text).join("\n")
-    return { provenance: { parentSessionID: parentID, parentMessageID: row.message_id, parentCallID: task.callID, childSessionID: child.id, projectID: child.project_id, logicalTaskID: bound.taskId, returnedAssistantID: author.messageID, nativeMemberID: child.agent }, returnedText }
+    // Observe stored step-finish parts, not assistant totals or inferred provider/token counts.
+    const stepRows = decode(Schema.Array(Schema.Struct({ id: Schema.String, message_id: Schema.String, session_id: Schema.String, data: Schema.String })),
+      db.query("SELECT id,message_id,session_id,data FROM part WHERE session_id IN (?,?) AND json_extract(data,'$.type')='step-finish' ORDER BY id").all(parentID, child.id), "AUTHORING_STEP_USAGE_ROWS_INVALID")
+    const steps = stepRows.map((item) => {
+      const part = decode(Schema.Struct({ type: Schema.Literal("step-finish"), reason: Schema.optional(Schema.String), cost: Schema.optional(Schema.Finite),
+        tokens: Schema.optional(Schema.Struct({ total: Schema.optional(Schema.Finite), input: Schema.optional(Schema.Finite), output: Schema.optional(Schema.Finite), reasoning: Schema.optional(Schema.Finite),
+          cache: Schema.optional(Schema.Struct({ read: Schema.optional(Schema.Finite), write: Schema.optional(Schema.Finite) })) })) }), json(item.data), "AUTHORING_STEP_USAGE_INVALID")
+      return { partID: item.id, messageID: item.message_id, sessionID: item.session_id, reason: part.reason ?? null, cost: part.cost ?? null,
+        tokens: { total: part.tokens?.total ?? null, input: part.tokens?.input ?? null, output: part.tokens?.output ?? null, reasoning: part.tokens?.reasoning ?? null,
+          cache: { read: part.tokens?.cache?.read ?? null, write: part.tokens?.cache?.write ?? null } } }
+    })
+    return { provenance: { parentSessionID: parentID, parentMessageID: row.message_id, parentCallID: task.callID, childSessionID: child.id, projectID: child.project_id, logicalTaskID: bound.taskId, returnedAssistantID: author.messageID, nativeMemberID: child.agent }, returnedText,
+      stepUsage: { source: "stored-part.step-finish", status: steps.length ? "observed" : "absent", absentFields: "null", inferredCounts: false, steps } }
   } finally { db.close() }
 }
