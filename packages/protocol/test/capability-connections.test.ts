@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { Capability } from "@orchestra/schema/capability"
+import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { SessionID } from "@orchestra/schema/session-id"
-import { Effect, Layer, Schema } from "effect"
+import { Effect, Layer, Schema, SchemaAST } from "effect"
 import { HttpRouter, HttpServer, HttpServerRequest } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder, HttpApiMiddleware, OpenApi } from "effect/unstable/httpapi"
 import { makeCapabilityConnectionsGroup } from "../src/groups/capability-connections"
@@ -22,17 +23,19 @@ const binding = { sessionID, actions: ["read"] }
 const receipt = { requestID: "request-fixture", reused: false, data: { target } }
 const item = { connection, state: "active" as const, credential: "present" as const }
 const connections = { items: [item], after: connection.id, coverage: "live" as const }
-const targets = { items: [{ target }], after: target.id, coverage: "live" as const }
+// Synthetic schema token only; Core owns cursor encryption and authority checks.
+const targetCursor = Schema.decodeUnknownSync(CapabilityManagement.TargetCursor)("C".repeat(32))
+const targets = { items: [{ target }], after: targetCursor, coverage: "live" as const }
 const cases = [
-  { name: "capability.connection.list", method: "get", path: "/api/capability/connections", payload: undefined, output: connections },
-  { name: "capability.connection.get", method: "get", path: "/api/capability/connections/{connectionID}", payload: undefined, output: item },
-  { name: "capability.connection.targets", method: "get", path: "/api/capability/connections/{connectionID}/targets", payload: undefined, output: targets },
-  { name: "capability.connection.disconnect", method: "post", path: "/api/capability/connections/disconnect", payload: { connection }, output: receipt },
-  { name: "capability.target.create", method: "post", path: "/api/capability/targets", payload: { connection, input }, output: receipt },
-  { name: "capability.target.retarget", method: "post", path: "/api/capability/targets/retarget", payload: { target, input }, output: receipt },
-  { name: "capability.target.remove", method: "post", path: "/api/capability/targets/remove", payload: { target }, output: receipt },
-  { name: "capability.binding.put", method: "post", path: "/api/capability/bindings", payload: { target, input: binding }, output: receipt },
-  { name: "capability.binding.remove", method: "post", path: "/api/capability/bindings/remove", payload: { target, sessionID }, output: receipt },
+  { name: "capability.connection.list", method: "get", path: "/api/capability/connections", payload: undefined, output: connections, success: CapabilityManagement.ConnectionPage },
+  { name: "capability.connection.get", method: "get", path: "/api/capability/connections/{connectionID}", payload: undefined, output: item, success: CapabilityManagement.Connection },
+  { name: "capability.connection.targets", method: "get", path: "/api/capability/connections/{connectionID}/targets", payload: undefined, output: targets, success: CapabilityManagement.TargetPage },
+  { name: "capability.connection.disconnect", method: "post", path: "/api/capability/connections/disconnect", payload: { connection }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.target.create", method: "post", path: "/api/capability/targets", payload: { connection, input }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.target.retarget", method: "post", path: "/api/capability/targets/retarget", payload: { target, input }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.target.remove", method: "post", path: "/api/capability/targets/remove", payload: { target }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.binding.put", method: "post", path: "/api/capability/bindings", payload: { target, input: binding }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.binding.remove", method: "post", path: "/api/capability/bindings/remove", payload: { target, sessionID }, output: receipt, success: CapabilityManagement.Receipt },
 ] as const
 const group = makeCapabilityConnectionsGroup(FixtureLocation)
 const api = HttpApi.make("connection-protocol-test").add(group)
@@ -65,6 +68,8 @@ describe("capability connection projections", () => {
       location: { directory: "/caller", workspace: "workspace" },
     })
     expect(endpoint.success.size).toBe(1)
+    // Match the exact imported DTO after HttpApi's JSON codec projection.
+    expect([...endpoint.success][0]?.ast).toBe(Schema.toCodecJson<unknown, unknown, never, never>(entry.success).ast)
     expect(decode([...endpoint.success][0], entry.output)).toEqual(entry.output)
     expect(operation?.responses[200]?.content?.["application/json"]?.schema).not.toHaveProperty("properties.location")
     if (!entry.payload) {
@@ -100,8 +105,8 @@ describe("capability connection projections", () => {
   })
 
   test.each([
-    { name: "capability.connection.list", after: connection.id, wrong: target.id, ref: "ConnectionID" },
-    { name: "capability.connection.targets", after: target.id, wrong: connection.id, ref: "TargetID" },
+    { name: "capability.connection.list", after: connection.id, wrong: target.id, ref: "Capability.ConnectionID" },
+    { name: "capability.connection.targets", after: targetCursor, wrong: target.id, ref: "CapabilityManagement.TargetCursor" },
   ] as const)("$name decodes bounded HTTP pagination", (entry) => {
     const endpoint = group.endpoints[entry.name]
     expect(decode(endpoint.query, {})).toEqual({})
@@ -115,9 +120,21 @@ describe("capability connection projections", () => {
     expect(() => decode(endpoint.query, { after: entry.after + "\n" })).toThrow()
     const operation = spec.paths[endpoint.path.replace(":connectionID", "{connectionID}")]?.get
     expect(operation?.parameters?.find((parameter) => parameter.name === "after")?.schema).toEqual({
-      $ref: `#/components/schemas/Capability.${entry.ref}`,
+      $ref: `#/components/schemas/${entry.ref}`,
     })
     expect(operation?.parameters?.find((parameter) => parameter.name === "limit")?.schema).toEqual({ type: "string" })
+  })
+
+  test("target query preserves imported opaque cursor AST and bounds", () => {
+    const query = group.endpoints["capability.connection.targets"].query
+    if (!query || !SchemaAST.isObjects(query.ast)) throw new Error("Missing target query object schema")
+    expect(query.ast.propertySignatures.find((property) => property.name === "after")?.type).toBe(
+      CapabilityManagement.TargetQuery.fields.after.ast,
+    )
+    expect(decode(query, { after: "C".repeat(2048) })).toEqual({ after: "C".repeat(2048) })
+    ;["C".repeat(31), "C".repeat(2049), "/".repeat(32), target.id].forEach((after) => {
+      expect(() => decode(query, { after })).toThrow()
+    })
   })
 
   test("item reads require branded parent IDs", () => {
