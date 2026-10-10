@@ -5,6 +5,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { ToolSafety } from "@orchestra/core/tool-safety"
 import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
+import type { ArsenalCompletion } from "./arsenal-completion"
 import { Seats, type Seat } from "./seats"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
@@ -63,6 +64,19 @@ export type WorkResult = {
   schema: string
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
   taskId?: string
+  memberId?: string
+  executionSessionId?: string
+  authoritySessionId?: string
+  mode: "delegated" | "delegated-armed"
+  acceptance: { state: "pending" }
+  verification: {
+    state: ArsenalCompletion.Facts["state"]
+    receipt?: ArsenalCompletion.Verified
+    hostReason?: { reason: string; detail?: string }
+    deltaReason?: { reason: string; detail?: string }
+  }
+  hostChecks?: ArsenalCompletion.Capture
+  delta?: ArsenalCompletion.Facts["delta"]
   card: { parsed: boolean; messageID?: string }
   outcome?: Card["outcome"]
   changes: Card["changes"]
@@ -94,6 +108,9 @@ export function assemble(message: SessionV1.WithParts, session: readonly Session
   const host = terminal(message)
   return {
     schema: requireSchema(seat),
+    mode: "delegated",
+    acceptance: { state: "pending" },
+    verification: { state: "not-host-verified" },
     card: { parsed: card !== undefined, messageID: message.info.id },
     ...(card ? { outcome: card.outcome } : {}),
     changes: card?.changes ?? [],
@@ -121,6 +138,9 @@ export function hostEnded(input: {
     ? assemble(input.message, input.session, seat)
     : {
         schema: requireSchema(seat),
+        mode: "delegated" as const,
+        acceptance: { state: "pending" as const },
+        verification: { state: "not-host-verified" as const },
         card: { parsed: false },
         changes: [],
         checks: [],
