@@ -12,6 +12,7 @@ const backend = path.resolve(desktop, "../orchestra/dist/node")
 const manifestPath = path.join(output, "lean-candidate-build.json")
 const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
+const heapBudgetMiB = 8192
 
 type CommandResult = {
   exitCode: number | null; signal: string | null; stdout: string; stderr: string; timedOut: boolean; error?: string
@@ -83,6 +84,33 @@ export function runCandidateCommand(
     child.once("error", (failure) => { error = failure.message; process.stderr.write(`${failure.stack ?? failure}\n`) })
     child.once("close", finish)
   })
+}
+
+// Child tools receive build plumbing only, never release/signing credentials or the caller's NODE_OPTIONS.
+export function candidateEnv(version: string) {
+  const env = Object.fromEntries([
+    "PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "SHELL", "CI", "GITHUB_ACTIONS", "GITHUB_SHA",
+    "SDKROOT", "DEVELOPER_DIR",
+  ].flatMap((key) => process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
+  return Object.assign(env, { ORCHESTRA_CHANNEL: "prod", ORCHESTRA_VERSION: version, CSC_IDENTITY_AUTO_DISCOVERY: "false" })
+}
+
+// Build-only heap budget: the electron-vite build exceeds Node's default ~2 GiB old space on the Intel runner.
+// It describes the build process only, never the packaged app's runtime memory.
+export function electronViteEnv(env: Record<string, string>) {
+  return { ...env, NODE_OPTIONS: `--max-old-space-size=${heapBudgetMiB}` }
+}
+
+export function assertBuildResources(memory: CommandResult, heap: CommandResult) {
+  const bytes = (probe: CommandResult) =>
+    !probe.timedOut && !probe.error && !probe.signal && probe.exitCode === 0 && /^\d+$/.test(probe.stdout.trim())
+      ? Number(probe.stdout.trim()) : undefined
+  const memoryBytes = bytes(memory), heapLimitBytes = bytes(heap)
+  if (
+    memoryBytes === undefined || heapLimitBytes === undefined ||
+    memoryBytes < 10 * 1024 ** 3 || heapLimitBytes < heapBudgetMiB * 1024 ** 2
+  ) throw new Error(`Candidate build heap budget rejected: ${JSON.stringify({ memory, heap })}`)
+  return { memoryBytes, heapLimitBytes, heapBudgetMiB }
 }
 
 function requireSuccess(result: CommandResult, args: string[]) {
@@ -206,20 +234,20 @@ export async function candidate(action: string) {
   })
   const source = await identity()
   const pkg = await Bun.file(path.join(desktop, "package.json")).json()
-  // Child tools receive build plumbing only, never release/signing credentials.
-  const env = Object.fromEntries([
-    "PATH", "HOME", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "SHELL", "CI", "GITHUB_ACTIONS", "GITHUB_SHA",
-    "SDKROOT", "DEVELOPER_DIR",
-  ].flatMap((key) => process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
-  Object.assign(env, { ORCHESTRA_CHANNEL: "prod", ORCHESTRA_VERSION: pkg.version, CSC_IDENTITY_AUTO_DISCOVERY: "false" })
+  const env = candidateEnv(pkg.version)
   if (action === "build") {
+    const viteEnv = electronViteEnv(env)
+    const buildResources = assertBuildResources(
+      await runCandidateCommand(["/usr/sbin/sysctl", "-n", "hw.memsize"], env, desktop, 15_000),
+      await runCandidateCommand(["node", "-p", "require('v8').getHeapStatistics().heap_size_limit"], viteEnv, desktop, 15_000),
+    )
     await rm(manifestPath, { force: true })
     await rm(path.join(desktop, "out"), { recursive: true, force: true })
     await rm(backend, { recursive: true, force: true })
     await command(["bun", "./scripts/copy-icons.ts", "prod"], env)
     await command(["bun", "./scripts/copy-metainfo.ts", "prod"], env)
     await command(["bun", "script/build-node.ts", "--lean-candidate"], env, path.resolve(desktop, "../orchestra"))
-    await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], env)
+    await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], viteEnv)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
     const main = await inventory(path.join(desktop, "out/main"))
@@ -246,7 +274,7 @@ export async function candidate(action: string) {
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
       backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
-      resources: await inventory(path.join(desktop, "resources")),
+      buildResources, resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
   }

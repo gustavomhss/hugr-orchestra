@@ -1,7 +1,9 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import ts from "typescript"
-import { assertIntelRunner, runCandidateCommand } from "./scripts/lean-candidate"
+import {
+  assertBuildResources, assertIntelRunner, candidateEnv, electronViteEnv, runCandidateCommand,
+} from "./scripts/lean-candidate"
 
 const result = (stdout: string, stderr = "", exitCode: number | null = 0) =>
   ({ stdout, stderr, exitCode, signal: null, timedOut: false })
@@ -117,3 +119,56 @@ test("actual Node build define is boolean source text gated only by explicit CLI
   expect(evaluate({ argv: ["bun", file, "--lean-candidate=false"], env: {} })).toBe("false")
   expect(evaluate({ argv: ["bun", file, "--lean-candidate"], env: {} })).toBe("true")
 })
+
+const withCallerNodeOptions = async <T>(run: () => T | Promise<T>) => {
+  const previous = process.env.NODE_OPTIONS
+  process.env.NODE_OPTIONS = "--require /nonexistent/evil.js"
+  try { return await run() }
+  finally {
+    if (previous === undefined) delete process.env.NODE_OPTIONS
+    else process.env.NODE_OPTIONS = previous
+  }
+}
+
+test("caller NODE_OPTIONS never reaches children; only electron-vite receives the fixed heap budget", async () => {
+  await withCallerNodeOptions(() => {
+    const shared = candidateEnv("0.0.0-test")
+    const vite = electronViteEnv(shared)
+    expect("NODE_OPTIONS" in shared).toBe(false)
+    expect(vite.NODE_OPTIONS).toBe("--max-old-space-size=8192")
+    expect(JSON.stringify([shared, vite])).not.toContain("evil.js")
+    expect(vite).toEqual({ ...shared, NODE_OPTIONS: "--max-old-space-size=8192" })
+  })
+})
+
+test("build resources reject low memory, failed probes and heap below budget with raw evidence", () => {
+  const memory = result("15032385536\n"), heap = result(`${8192 * 1024 * 1024}\n`)
+  expect(assertBuildResources(memory, heap)).toEqual({ memoryBytes: 15032385536, heapLimitBytes: 8192 * 1024 * 1024, heapBudgetMiB: 8192 })
+  for (const [memoryProbe, heapLimit] of [
+    [result(`${10 * 1024 ** 3 - 1}\n`), heap],
+    [result("15032385536\n", "sysctl: denied\n", 1), heap],
+    [{ ...memory, signal: "SIGKILL" }, heap],
+    [{ ...memory, timedOut: true }, heap],
+    [{ ...memory, error: "spawn ENOENT" }, heap],
+    [result(""), heap],
+    [result("15032385536.5\n"), heap],
+    [result("-15032385536\n"), heap],
+    [result("14 GiB\n"), heap],
+    [memory, result(`${2028 * 1024 * 1024}\n`)],
+    [memory, result(`${8192 * 1024 * 1024 - 1}\n`)],
+    [memory, result("", "FATAL ERROR: JavaScript heap out of memory\n", null)],
+    [memory, { ...heap, signal: "SIGABRT" }],
+    [memory, result("unknown\n")],
+  ] as const) {
+    expect(() => assertBuildResources(memoryProbe, heapLimit)).toThrow(
+      `Candidate build heap budget rejected: ${JSON.stringify({ memory: memoryProbe, heap: heapLimit })}`,
+    )
+  }
+})
+
+test("real node child with the electron-vite env reports heap_size_limit at or above 8192 MiB", async () => {
+  const probe = await withCallerNodeOptions(() =>
+    runCandidateCommand(["node", "-p", "require('v8').getHeapStatistics().heap_size_limit"], electronViteEnv(candidateEnv("0.0.0-test")), import.meta.dirname, 15_000, false))
+  expect(probe.stderr).toBe("")
+  expect(assertBuildResources(result("15032385536\n"), probe).heapLimitBytes).toBeGreaterThanOrEqual(8192 * 1024 * 1024)
+}, 20_000)
