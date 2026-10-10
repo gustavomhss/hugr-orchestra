@@ -69,6 +69,8 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
       || !text(root.reason) || typeof root.durationMs !== "number" || !Number.isFinite(root.durationMs) || root.durationMs < 0
       || (root.orchestraProfile !== undefined && !text(root.orchestraProfile))
       || (root.filterProfile !== undefined && !text(root.filterProfile))) return undefined
+    const mappedItem = typeof root.filterProfile === "string" ? LeanCoverage.forProfile(root.filterProfile) : undefined
+    if (root.itemID !== undefined && mappedItem !== undefined && root.itemID !== mappedItem) return undefined
     const owner = record(root.owner, ["projectID", "location", "sessionID", "callID"])
     const model = record(root.model, ["provider", "id"])
     const bytes = counts(root.bytes)
