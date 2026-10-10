@@ -49,9 +49,16 @@ function fixture() {
 
 function expectCode<A, R>(effect: Effect.Effect<A, CapabilityConnections.Error, R>, code: Capability.ErrorCode) {
   return Effect.gen(function* () {
-    const error = yield* effect.pipe(Effect.flip)
+    const exit = yield* Effect.exit(effect)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isSuccess(exit)) return yield* Effect.die("EXPECTED_CONNECTION_FAILURE")
+    expect(exit.cause.reasons).toHaveLength(1)
+    const reason = exit.cause.reasons[0]
+    expect(reason._tag).toBe("Fail")
+    if (reason._tag !== "Fail") return yield* Effect.failCause(exit.cause)
+    const error = reason.error
     expect(error).toBeInstanceOf(Capability.Failure)
-    if (!(error instanceof Capability.Failure)) return yield* Effect.die(error)
+    if (!(error instanceof Capability.Failure)) return yield* Effect.failCause(exit.cause)
     expect(error.code).toBe(code)
     const encoded = yield* Schema.encodeEffect(Capability.Failure)(error)
     expect(new TextEncoder().encode(JSON.stringify(encoded)).byteLength).toBeLessThan(4096)

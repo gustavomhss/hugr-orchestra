@@ -25,7 +25,7 @@ import { SessionID } from "@orchestra/schema/session-id"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
 import { eq, sql } from "drizzle-orm"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
-import { Cause, Context, Effect, Exit, Layer } from "effect"
+import { Cause, Context, Effect, Exit, Layer, type Schema } from "effect"
 import { SqlError } from "effect/unstable/sql/SqlError"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { tmpdir } from "./fixture/tmpdir"
@@ -78,6 +78,71 @@ function expectCode<A, E>(effect: Effect.Effect<A, E>, code: Capability.ErrorCod
 }
 
 describe("CapabilityConnectionStore", () => {
+  it.live("JSON resources roundtrip null, primitives, arrays and objects through create and retarget", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const resources: readonly { value: Schema.Json; kind: string }[] = [
+      { value: null, kind: "null" }, { value: false, kind: "false" }, { value: true, kind: "true" },
+      { value: 0, kind: "integer" }, { value: -12, kind: "integer" }, { value: 1.25, kind: "real" },
+      { value: "", kind: "text" }, { value: "null", kind: "text" }, { value: "quoted \"text\"\n雪", kind: "text" },
+      { value: [], kind: "array" }, { value: [null, false, 0, "null", { nested: null }], kind: "array" },
+      { value: {}, kind: "object" }, { value: { nested: { value: null }, list: [true, "", 1.25] }, kind: "object" },
+    ]
+    const check = (ref: Capability.TargetRef, expected: typeof resources[number]) => f.write((tx) => Effect.gen(function* () {
+      expect((yield* f.store.target(tx, placement, ref)).row.resource).toEqual(expected.value)
+      expect(yield* tx.select({
+        resource: sql<string>`${CapabilityTargetTable.resource}`,
+        storage: sql<string>`typeof(${CapabilityTargetTable.resource})`,
+        kind: sql<string>`json_type(${CapabilityTargetTable.resource})`,
+      }).from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, ref.id)).get()).toEqual({
+        resource: JSON.stringify(expected.value), storage: "text", kind: expected.kind,
+      })
+    }))
+    yield* Effect.forEach(resources, (resource) => Effect.gen(function* () {
+      const created = yield* f.write((tx) => f.store.createTarget(tx, placement, f.connection,
+        { environment: "created", resource: resource.value }))
+      expect(created.generation).toBe(0)
+      yield* check(created, resource)
+      const original = yield* f.write((tx) => f.store.createTarget(tx, placement, f.other, input))
+      const retargeted = yield* f.write((tx) => f.store.retargetTarget(tx, placement, original,
+        { environment: "retargeted", resource: resource.value }))
+      expect(retargeted).toEqual({ ...original, environment: "retargeted", generation: 1 })
+      yield* check(retargeted, resource)
+    }))
+    const host = yield* f.host.createTarget(f.connection, { environment: "host", resource: null })
+    yield* check(host, resources[0])
+    const retargeted = yield* f.host.retargetTarget(f.target, { environment: "host", resource: null })
+    yield* check(retargeted, resources[0])
+  }))
+
+  it.live("JSON null create and retarget roll back with caller transaction, including binding invalidation", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const before = yield* f.database.db.select().from(CapabilityTargetTable).orderBy(CapabilityTargetTable.id).all()
+    const bindings = yield* f.bindings()
+    expect(bindings).toHaveLength(1)
+    const sentinel = new Capability.Failure({ code: "target_denied", message: "JSON null rollback sentinel" })
+    const exit = yield* f.write((tx) => Effect.gen(function* () {
+      const created = yield* f.store.createTarget(tx, placement, f.connection, { environment: "created", resource: null })
+      const retargeted = yield* f.store.retargetTarget(tx, placement, f.target, { environment: "retargeted", resource: null })
+      yield* Effect.forEach([created, retargeted], (ref) => Effect.gen(function* () {
+        expect((yield* f.store.target(tx, placement, ref)).row.resource).toBeNull()
+        expect(yield* tx.select({ resource: sql<string>`${CapabilityTargetTable.resource}`,
+          storage: sql<string>`typeof(${CapabilityTargetTable.resource})` }).from(CapabilityTargetTable)
+          .where(eq(CapabilityTargetTable.id, ref.id)).get()).toEqual({ resource: "null", storage: "text" })
+      }))
+      expect(retargeted.generation).toBe(1)
+      expect(yield* tx.select().from(CapabilityBindingTable).all()).toEqual([])
+      return yield* Effect.fail(sentinel)
+    })).pipe(Effect.exit)
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isSuccess(exit)) return yield* Effect.die("JSON_NULL_TRANSACTION_DID_NOT_ROLL_BACK")
+    expect(exit.cause.reasons).toHaveLength(1)
+    const reason = exit.cause.reasons[0]
+    expect(reason._tag).toBe("Fail")
+    if (reason._tag === "Fail") expect(reason.error).toBe(sentinel)
+    expect(yield* f.database.db.select().from(CapabilityTargetTable).orderBy(CapabilityTargetTable.id).all()).toEqual(before)
+    expect(yield* f.bindings()).toEqual(bindings)
+  }))
+
   it.live("owner predicate rejects foreign project, directory and workspace for connection and target", () => Effect.gen(function* () {
     const f = yield* fixture()
     expect(Object.isFrozen(f.store)).toBe(true)
@@ -236,7 +301,10 @@ describe("CapabilityConnectionStore", () => {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
       expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(["Fail", "Fail", "Die", "Interrupt"])
-      expect(exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error)).toEqual([expected, sqlError])
+      const failures = exit.cause.reasons.filter(Cause.isFailReason)
+      expect(failures).toHaveLength(2)
+      expect(failures[0].error).toBe(expected)
+      expect(failures[1].error).toBe(sqlError)
       expect(exit.cause.reasons.filter(Cause.isDieReason)[0].defect).toBe(defect)
       expect(exit.cause.reasons.filter(Cause.isInterruptReason)[0].fiberId).toBe(123)
       exit.cause.reasons.forEach((reason) => expect(reason.annotations.get("store-probe")).toBe("retained"))

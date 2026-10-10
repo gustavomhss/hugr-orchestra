@@ -25,7 +25,9 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { Integration } from "@orchestra/schema/integration"
 import { IntegrationMethodID } from "@orchestra/schema/integration-id"
 import { Capability } from "@orchestra/schema/capability"
-import { Cause, Deferred, Effect, Fiber, Layer, Schema, Scope } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Schema, Scope, Tracer } from "effect"
+import { SqlError } from "effect/unstable/sql/SqlError"
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { sql } from "drizzle-orm"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { tmpdir } from "./fixture/tmpdir"
@@ -257,6 +259,103 @@ function fixture(provider: "slack" | "discord", options: {
 }
 
 describe("CapabilityChannels real REST leaves", () => {
+  it.live("mutation pre-dispatch real SQL plus defect/interrupt remains failure with durable state and no vendor mutation", () => Effect.gen(function* () {
+    yield* Effect.forEach(["slack", "discord"] satisfies ("slack" | "discord")[], (provider) =>
+      Effect.forEach(["channel_send", "channel_update"] satisfies Name[], (root) =>
+        Effect.forEach(["pure", "defect", "interrupt", "both"], (mode) => Effect.gen(function* () {
+          const f = yield* fixture(provider, { root })
+          const defect = new Error("mutation SQL companion defect")
+          const annotations = Context.makeUnsafe(new Map([["mutation-sql-probe", "retained"]]))
+          const captured: Cause.Cause<SqlError>[] = []
+          const exits: Exit.Exit<unknown, unknown>[] = []
+          // Real Connection callback and writer run first. Fault only the credential recheck after durable submitting.
+          const transaction: typeof f.database.db.transaction = (use, options) => f.database.db.transaction((tx) => Effect.gen(function* () {
+            const result = yield* use(tx)
+            const row = yield* tx.select().from(CapabilityJobTable).where(
+              sql`json_extract(${CapabilityJobTable.owner}, '$.sessionID') = ${f.context.sessionID}`,
+            ).get().pipe(Effect.orDie)
+            if (row?.state !== "submitting") return result
+            const failed = yield* tx.run("INSERT INTO missing_mutation_sql_probe VALUES (1)").pipe(Effect.exit)
+            expect(Exit.isFailure(failed)).toBe(true)
+            if (Exit.isSuccess(failed)) return yield* Effect.die("MUTATION_SQL_FAULT_DID_NOT_FIRE")
+            expect(failed.cause.reasons).toHaveLength(1)
+            const reason = failed.cause.reasons[0]
+            if (!Cause.isFailReason(reason) || !(reason.error instanceof EffectDrizzleQueryError) || !Cause.isCause(reason.error.cause))
+              return yield* Effect.die("MISSING_MUTATION_SQL_DRIVER_CAUSE")
+            const reasons = reason.error.cause.reasons.filter((entry): entry is Cause.Reason<SqlError> =>
+              entry._tag !== "Fail" || entry.error instanceof SqlError)
+            expect(reasons).toHaveLength(reason.error.cause.reasons.length)
+            if (reasons.length !== reason.error.cause.reasons.length) return yield* Effect.die("UNEXPECTED_MUTATION_SQL_CAUSE")
+            expect(reasons.filter(Cause.isFailReason)).toHaveLength(1)
+            const cause = Cause.annotate(Cause.combine(Cause.fromReasons(reasons), Cause.fromReasons<never>([
+              ...(mode === "defect" || mode === "both" ? [Cause.makeDieReason(defect)] : []),
+              ...(mode === "interrupt" || mode === "both" ? [Cause.makeInterruptReason(321)] : []),
+            ])), annotations)
+            captured.push(cause)
+            return yield* Effect.failCause(cause)
+          }), options)
+          const db = new Proxy(f.database.db, { get: (database, key) => key === "transaction"
+            ? transaction : Reflect.get(database, key, database) })
+          const connections = yield* CapabilityConnections.make.pipe(Effect.provideService(Database.Service, { ...f.database, db }))
+          const channels = yield* CapabilityChannels.make({ ...f.makeOptions, connections })
+          const tracer = Tracer.make({ span: (options) => new class extends Tracer.NativeSpan {
+            override end(time: bigint, exit: Exit.Exit<unknown, unknown>) {
+              super.end(time, exit)
+              if (this.name === "CapabilityChannels.mutate") exits.push(exit)
+            }
+          }(options) })
+          const input = root === "channel_send" ? { provider, text: "never dispatched" }
+            : { provider, action: "edit", messageID: f.messageID, text: "never dispatched" }
+          const call = () => f.run(Tool.settle(channels.tools[root],
+            { type: "tool-call", id: f.context.toolCallID, name: root, input }, f.context))
+          const exit = yield* call().pipe(Effect.withTracer(tracer), Effect.exit)
+          expect(captured).toHaveLength(1)
+          expect(exits).toHaveLength(1)
+          expect(Exit.isFailure(exit)).toBe(true)
+          const mutation = exits[0]
+          expect(Exit.isFailure(mutation)).toBe(true)
+          if (Exit.isSuccess(exit) || Exit.isSuccess(mutation)) return yield* Effect.die("MUTATION_SQL_FAULT_BECAME_SUCCESS")
+          expect(mutation.cause.reasons.map((reason) => reason._tag)).toEqual(captured[0].reasons.map((reason) => reason._tag))
+          mutation.cause.reasons.forEach((reason, index) => {
+            if (mode === "pure") {
+              expect(Cause.isFailReason(reason)).toBe(true)
+              if (Cause.isFailReason(reason)) expect(reason.error).toMatchObject({ code: "connection_unavailable" })
+              return
+            }
+            const original = captured[0].reasons[index]
+            if (Cause.isFailReason(reason) && Cause.isFailReason(original)) expect(reason.error).toBe(original.error)
+            if (Cause.isDieReason(reason)) expect(reason.defect).toBe(defect)
+            if (Cause.isInterruptReason(reason)) expect(reason.fiberId).toBe(321)
+            expect(reason.annotations.get("mutation-sql-probe")).toBe("retained")
+          })
+          expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(mutation.cause.reasons.map((reason) => reason._tag))
+          exit.cause.reasons.forEach((reason) => {
+            if (Cause.isFailReason(reason)) {
+              expect(reason.error).toBeInstanceOf(Tool.Failure)
+              expect(reason.error.message).toBe(mode === "pure" ? "connection_unavailable" : "artifact_storage_failed")
+            }
+            if (Cause.isDieReason(reason)) expect(reason.defect).toBe(defect)
+            if (Cause.isInterruptReason(reason)) expect(reason.fiberId).toBe(321)
+            if (mode !== "pure") expect(reason.annotations.get("mutation-sql-probe")).toBe("retained")
+          })
+          const rows = (yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie))
+            .filter((row) => row.owner.sessionID === f.context.sessionID)
+          expect(rows).toHaveLength(1)
+          expect(rows[0]).toMatchObject({ state: mode === "pure" ? "failed" : "unknown",
+            provider_id: root === "channel_send" ? null : f.messageID })
+          expect(f.state.mutations).toBe(0)
+          expect(f.requests.every((request) => request.method === "GET" || request.path === "/api/auth.test" || request.path === "/api/conversations.info")).toBe(true)
+          expect(yield* f.database.db.select().from(CapabilityArtifactTable).all().pipe(Effect.orDie)).toEqual([])
+          const requests = f.requests.length
+          const replay = yield* call().pipe(Effect.flatMap((value) => Schema.decodeUnknownEffect(Output)(value.structured)))
+          expect(replay.result.status).toBe("unknown")
+          expect(replay.jobRef?.id).toBe(rows[0].id)
+          expect(f.requests).toHaveLength(requests)
+          expect(f.state.mutations).toBe(0)
+          expect(captured).toHaveLength(1)
+        }))))
+  }), 30000)
+
   it.live("Discord references distinguish actual replies from thread starters, crossposts and forwards", () => Effect.gen(function* () {
     const f = yield* fixture("discord", { root: "channel_read" })
     const cases = [
