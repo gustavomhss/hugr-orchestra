@@ -11,12 +11,10 @@ import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
-import { LeanSetting } from "./lean-setting"
 import { LayoutRetirementNotice, LayoutTransitionToggle } from "./interface-transition"
 import { PalettePicker } from "@/orchestra/palette/picker"
 import {
   createAppearanceSettingsController,
-  createLeanSettingsController,
   createPermissionScopeController,
   createShellOptions,
   createShellSettingsController,
@@ -259,7 +257,6 @@ export const SettingsGeneralV2: Component<{
   const updater = useUpdaterAction()
   const permissionScope = createPermissionScopeController(() => props.sessionID)
   const shell = createShellSettingsController()
-  const lean = createLeanSettingsController()
   const appearance = createAppearanceSettingsController()
   const sounds = createSoundSettingsController()
   const desktop = createMemo(() => platform.platform === "desktop")
@@ -306,7 +303,6 @@ export const SettingsGeneralV2: Component<{
     <div class="settings-v2-section">
       <SettingsListV2>
         <LanguageSetting />
-        <LeanSetting controller={lean} />
 
         <PermissionScopeSetting controller={permissionScope} />
 
