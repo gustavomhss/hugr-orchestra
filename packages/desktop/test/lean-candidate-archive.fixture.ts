@@ -88,7 +88,8 @@ export async function packagedCandidate() {
       `Build receipt differs from actual ${key} compiler output`)
   }
   // The build receipt is evidence to retain, not an acceptance verdict.
-  console.log(`candidate build identity=${JSON.stringify(manifest)}`)
+  console.log(`candidate build identity=${JSON.stringify({ sourceCommit: manifest.sourceCommit, sourceTree: manifest.sourceTree,
+    appId: manifest.appId, productName: manifest.productName, platform: manifest.platform, arch: manifest.arch })}`)
   return { app, resources, executable, manifest }
 }
 

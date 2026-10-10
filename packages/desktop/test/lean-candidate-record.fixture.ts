@@ -5,6 +5,15 @@ export class CandidateRecorder {
   readonly failures: CandidateFailure[] = []
   private readonly identities = new Map<unknown, string>()
   private readonly replacements = new Map<string, string>()
+  private readonly sources: { label: string; read: () => unknown }[] = []
+
+  observe(label: string, read: () => unknown) {
+    this.sources.push({ label, read })
+  }
+
+  get observations() {
+    return this.sources.map((source) => ({ label: source.label, value: source.read() }))
+  }
 
   protectBackend(username: string | null, password: string | null) {
     if (!password) return
@@ -58,7 +67,7 @@ export class CandidateRecorder {
       return Object.fromEntries(Object.entries(item).map(([key, field]) => [this.clean(key),
         /password|authorization|token|secret|api[_-]?key/i.test(key) && !/^(tokens|tokensSaved|tokenCalls)$/.test(key)
           ? "[redacted]"
-          : /^(env|environment|config|machineConfig|managedConfig|userConfig)$/i.test(key) ? "[omitted]" : project(field)]))
+          : /^(env|environment|config|machineConfig|managedConfig|userConfig|privateResponse)$/i.test(key) ? "[omitted]" : project(field)]))
     }
     return JSON.stringify(project(value), null, 2) ?? "null"
   }

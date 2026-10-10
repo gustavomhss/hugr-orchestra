@@ -7,21 +7,25 @@ import { desktop, packagedCandidate } from "./lean-candidate-archive.fixture"
 import { bounded, expect, launchCandidate, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import { nativeFixture, nativePtySmoke, type NativeRun } from "./lean-candidate-native.fixture"
 import { nativeHistory, nativeItemToggle, nativeMasterToggle, seedNativeRenderer, selectNativeProfile, verifyNativeRows } from "./lean-candidate-ui.fixture"
+import { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 export async function proveNativeCandidate() {
-  const candidate = await packagedCandidate()
-  const errors: unknown[] = []
+  const recorder = new CandidateRecorder()
+  recorder.protectPath(path.resolve(desktop, "../.."), "repository")
+  recorder.protectPath(os.homedir(), "runner-home")
   const resources: { label: string; close: () => Promise<unknown> }[] = []
-  const proof: Record<string, unknown> = { sourceCommit: candidate.manifest.sourceCommit,
-    scope: "native macOS x64 CI packaged Electron; public synthetic/native fixtures", status: "started" }
+  const proof: Record<string, unknown> = { scope: "native macOS x64 CI packaged Electron; public synthetic/native fixtures", status: "started" }
   const artifacts = path.join(desktop, "dist-candidate/proof")
-  await mkdir(artifacts, { recursive: true })
-  const parent = await realpath(await mkdtemp(path.join(os.tmpdir(), "lean-candidate-owned-")))
-  resources.push({ label: "owned candidate scratch", close: () => rm(parent, { recursive: true, force: true }) })
   const owned: { current?: OwnedCandidate } = {}
   try {
+    const candidate = await packagedCandidate()
+    proof.sourceCommit = candidate.manifest.sourceCommit
+    await mkdir(artifacts, { recursive: true })
+    const parent = await realpath(await mkdtemp(path.join(os.tmpdir(), "lean-candidate-owned-")))
+    recorder.protectPath(parent, "owned-scratch")
+    resources.push({ label: "owned candidate scratch", close: () => rm(parent, { recursive: true, force: true }) })
     const root = path.join(parent, "candidate")
-    const app = await launchCandidate(candidate.executable, root, errors)
+    const app = await launchCandidate(candidate.executable, root, recorder)
     owned.current = app
     resources.push({ label: "owned packaged Electron", close: app.close })
     const directories = [path.join(root, "public-profile-a"), path.join(root, "public-profile-b")]
@@ -31,16 +35,16 @@ export async function proveNativeCandidate() {
     assert.deepEqual(await app.request("pty", "GET", undefined, a), [], "Default candidate startup executed PTY tools")
     // Two instances of the same packaged executable in fresh owned roots must coexist.
     // Identity + isolated userData + held locks bind this control without launching production.
-    const independent = await launchCandidate(candidate.executable, path.join(parent, "lock-control"), errors)
+    const independent = await launchCandidate(candidate.executable, path.join(parent, "lock-control"), recorder)
     resources.push({ label: "independent owned lock control", close: independent.close })
     assert.notEqual(independent.application.process().pid, app.application.process().pid)
     assert.notEqual(independent.backend.url, app.backend.url)
     assert.deepEqual(await independent.request("session"), [], "Fresh independent root reused candidate sessions")
     await independent.close()
-    assert.equal(errors.length, 0, "Independent lock control cleanup failed")
-    await nativePtySmoke(app, a)
+    assert.equal(recorder.failures.length, 0, "Independent lock control cleanup failed")
+    await nativePtySmoke(app, a, recorder)
     assert.ok(Bun.which("go"), "LEAN_CANDIDATE_GO_REQUIRED: native Go30 fixture needs runner Go")
-    const fixture = await nativeFixture(app, a, errors)
+    const fixture = await nativeFixture(app, a, recorder)
     resources.push({ label: "owned public loopback model", close: fixture.close })
     const on = await fixture.execute("call_go_on")
     assert.equal(on.metric.status, "applied", `Enabled native Go30 declined: ${JSON.stringify(on.metric)}\n${on.raw.output}`)
@@ -134,8 +138,8 @@ export async function proveNativeCandidate() {
       durable: run.tool.state.status === "completed" ? run.tool.state.output : run.tool.state, metric: run.metric }))
     proof.ownedBackend = { url: app.backend.url, sidecarChildren: 1, ptyChildrenObserved: 1 }
     await app.close()
-    assert.equal(errors.length, 0, "Owned quit/port-closure failed; refusing relaunch")
-    const again = await launchCandidate(candidate.executable, root, errors)
+    assert.equal(recorder.failures.length, 0, "Owned quit/port-closure failed; refusing relaunch")
+    const again = await launchCandidate(candidate.executable, root, recorder)
     owned.current = again
     resources.push({ label: "owned candidate relaunch", close: again.close })
     assert.deepEqual(await again.request("project/lean", "GET", undefined, a), saved)
@@ -155,22 +159,22 @@ export async function proveNativeCandidate() {
     await selectNativeProfile(again, b, savedB)
     await selectNativeProfile(again, a, saved)
     await nativeHistory(again, a, "go", [on, off])
+    const visible = await bounded("owned renderer privacy check", again.page.locator("body").innerText())
+    assert.equal(recorder.clean(visible), visible, "Owned renderer contains protected text; refusing PNG")
     await bounded("owned packaged renderer PNG", again.page.screenshot({ path: path.join(artifacts, "renderer.png") }))
     proof.persistence = "same candidate ROOT; retained independent preferences, history and paired savings"
   } catch (error) {
-    errors.push(error)
-    if (owned.current) {
-      proof.rendererDiagnostics = owned.current.diagnostics
-      try { await bounded("owned failure renderer PNG", owned.current.page.screenshot({ path: path.join(artifacts, "renderer.png") }), 5000) }
-      catch (error) { errors.push(error) }
-    }
+    recorder.fail("primary", "native candidate acceptance", error)
+    if (owned.current) proof.rendererDiagnostics = owned.current.diagnostics
   }
   for (const resource of resources.reverse()) {
-    try { await bounded(resource.label, resource.close(), 30000) } catch (error) { errors.push(error) }
+    try { await bounded(resource.label, resource.close(), 30000) } catch (error) { recorder.fail("cleanup", resource.label, error) }
   }
-  proof.status = errors.length ? "failed" : "accepted"
-  proof.diagnostics = errors.map((error) => error instanceof Error ? `${error.stack}\n${error instanceof AggregateError ? error.errors.map(String).join("\n") : ""}` : String(error))
-  try { await Bun.write(path.join(artifacts, "proof.log"), JSON.stringify(proof, null, 2) + "\n") } catch (error) { errors.push(error) }
-  if (errors.length) throw new AggregateError(errors, "Native candidate primary and owned cleanup diagnostics")
-  console.log(`native candidate accepted: source=${candidate.manifest.sourceCommit}; actual Go30 on/off; Cargo=${proof.cargo}; actual renderer A/B/A; same-ROOT relaunch`)
+  proof.status = recorder.failures.length ? "failed" : "accepted"
+  proof.diagnostics = recorder.failures // Original objects stay in memory; serialization is the output boundary.
+  if (recorder.failures.length) proof.ownedOutput = recorder.observations
+  try { await Bun.write(path.join(artifacts, "proof.log"), recorder.serialize(proof) + "\n") }
+  catch (error) { recorder.fail("cleanup", "owned proof log publication", error) }
+  if (recorder.failures.length) throw recorder.publicError("Native candidate primary and owned cleanup diagnostics")
+  console.log(recorder.clean(`native candidate accepted: source=${proof.sourceCommit}; actual Go30 on/off; Cargo=${proof.cargo}; actual renderer A/B/A; same-ROOT relaunch`))
 }

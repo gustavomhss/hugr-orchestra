@@ -5,6 +5,7 @@ import { mkdir } from "node:fs/promises"
 import type { Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
 import { LeanMetrics } from "../../schema/src/lean-metrics"
 import { bounded, inside, until, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
+import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 // Adapted from packages/app/test-browser/lean-native-product.test.ts at
 // 09a0ab11f2 (this repository, MIT). Modification: packaged Electron owns the backend;
@@ -13,7 +14,7 @@ type Hit = { messages: { role: string; tool_call_id?: string; content: string }[
 type Turn = { callID: string; command: string; directory: string }
 type Saved = { info: Message; parts: Part[] }[]
 
-export async function nativeFixture(candidate: OwnedCandidate, directory: string, errors: unknown[]) {
+export async function nativeFixture(candidate: OwnedCandidate, directory: string, recorder: CandidateRecorder) {
   inside(candidate.root, directory, "public fixture directory")
   await mkdir(directory, { recursive: true })
   await Bun.write(path.join(directory, "go.mod"), "module example.test\n\ngo 1.20\n")
@@ -43,7 +44,7 @@ export async function nativeFixture(candidate: OwnedCandidate, directory: string
         model: "test-model", choices: [{ index: 0, delta, finish_reason: index ? (complete ? "stop" : "tool_calls") : null }] })}\n\n`)
       res.writeHead(200, { "content-type": "text/event-stream" })
       res.end(stream.join("") + "data: [DONE]\n\n")
-    } catch (error) { errors.push(error); res.destroy(error instanceof Error ? error : new Error(String(error))) }
+    } catch (error) { recorder.fail("primary", "owned loopback model request", error); res.destroy() }
   })
   provider.headersTimeout = 10000
   provider.requestTimeout = 10000
@@ -54,7 +55,7 @@ export async function nativeFixture(candidate: OwnedCandidate, directory: string
         provider.close((error) => error ? reject(error) : resolve())
         provider.closeAllConnections()
       }), 10000)
-    } catch (error) { errors.push(error); provider.closeAllConnections() }
+    } catch (error) { recorder.fail("cleanup", "owned loopback model close", error); provider.closeAllConnections() }
   }
   try {
     await bounded("owned loopback model listen", new Promise<void>((resolve, reject) => {
@@ -89,7 +90,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       const tools = messages.flatMap((message) => message.parts).filter((part): part is ToolPart => part.type === "tool" && part.callID === callID)
       assert.equal(tools.length, 1, `Expected one durable actual native tool: ${callID}`)
       const tool = tools[0]!
-      if (tool.state.status !== "completed") throw new Error(`Candidate native tool failed: ${JSON.stringify(tool.state)}`)
+      if (tool.state.status !== "completed") throw new Error(`Candidate native tool ${callID} failed: ${tool.state.status}`, { cause: { privateResponse: tool.state } })
       assert.equal(tool.state.input.command, command)
       assert.equal(tool.state.metadata.exit, 0)
       assert.equal(tool.state.metadata.truncated, false)
@@ -113,14 +114,14 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
   } catch (error) { await close(); throw error }
 }
 
-export async function nativePtySmoke(candidate: OwnedCandidate, directory: string) {
+export async function nativePtySmoke(candidate: OwnedCandidate, directory: string, recorder: CandidateRecorder) {
   const request = candidate.request
   assert.deepEqual(await request("pty", "GET", undefined, directory), [], "Default startup spawned native PTY tools")
   const output = path.join(candidate.root, "public-pty-smoke.json")
   // Real native PTY child records its actual environment and terminal identity inside owned ROOT.
   const script = `require('node:fs').writeFileSync(${JSON.stringify(output)},JSON.stringify({tty:process.stdout.isTTY,input:process.stdin.isTTY,env:process.env}));setTimeout(()=>process.exit(0),1500)`
   const pty = await request<{ id: string; pid: number }>("pty", "POST", { command: "node", args: ["-e", script], cwd: directory, title: "Public native PTY fixture" }, directory)
-  const errors: unknown[] = []
+  const before = recorder.failures.length
   try {
     assert.ok(pty.pid > 0, "Real native PTY child PID missing")
     const children = await request<{ id: string; pid: number }[]>("pty", "GET", undefined, directory)
@@ -129,18 +130,20 @@ export async function nativePtySmoke(candidate: OwnedCandidate, directory: strin
     const observed = await Bun.file(output).json() as { tty: boolean; input: boolean; env: Record<string, string> }
     assert.equal(observed.tty, true)
     assert.equal(observed.input, true)
-    for (const key of ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "ORCHESTRA_DB"])
+    for (const key of ["HOME", "XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "ORCHESTRA_DB"]) {
+      if (observed.env[key]) recorder.protectPath(observed.env[key]!, `native-PTY-${key}`)
       inside(candidate.root, observed.env[key]!, `native PTY ${key}`)
+    }
     assert.equal(observed.env.ORCHESTRA_INHERIT_CREDENTIALS, "0")
     for (const key of Object.keys(observed.env)) assert.ok(!/^(OPENAI|ANTHROPIC|AWS|AZURE|GOOGLE|SENTRY|GH_|GITHUB_TOKEN|SSH_|NODE_OPTIONS)/.test(key), `Native PTY inherited host credentials: ${key}`)
     await until("native PTY child exit", async () => (await request<{ status: string; exitCode?: number }>(`pty/${pty.id}`, "GET", undefined, directory)).status === "exited")
     assert.equal((await request<{ exitCode: number }>(`pty/${pty.id}`, "GET", undefined, directory)).exitCode, 0)
-  } catch (error) { errors.push(error) }
+  } catch (error) { recorder.fail("primary", "owned native PTY smoke", error) }
   try {
     await request(`pty/${pty.id}`, "DELETE", undefined, directory)
     assert.deepEqual(await request("pty", "GET", undefined, directory), [], "Owned native PTY child remains")
-  } catch (error) { errors.push(error) }
-  if (errors.length) throw new AggregateError(errors, "Native PTY primary and cleanup diagnostics")
+  } catch (error) { recorder.fail("cleanup", "owned native PTY removal", error) }
+  if (recorder.failures.length > before) throw recorder.publicError("Native PTY primary and cleanup diagnostics")
 }
 
 export type NativeRun = Awaited<ReturnType<Awaited<ReturnType<typeof nativeFixture>>["execute"]>>
