@@ -95,13 +95,25 @@ jobs:
           git config --global user.email "bot@opencode.ai"
           git config --global user.name "orchestra"
 
-      # Extension: only the named, windowless production-launcher proof needs Electron/Xvfb.
-      - name: Setup Jimmy desktop Electron runtime
-        if: steps.request.outputs.package == 'desktop'
+      - name: Resolve Jimmy desktop test selection
+        id: desktop-selection
+        if: steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
         run: |
-          if ! jq -e 'any(.args[]; . == "src/main/jimmy-desktop-proof.test.ts" or . == "./src/main/jimmy-desktop-proof.test.ts")' .ci-run.json >/dev/null; then
-            exit 0
-          fi
+          bun --eval "$(cat <<'BUN'
+          import { appendFileSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+          import { desktopSelection } from './script/test-ci-desktop.ts'
+          // A snapshot or rerun cannot supply completion records for this execution.
+          for (const name of ['proof', 'typecheck']) rmSync(`test-ci-evidence/jimmy-desktop-${name}.json`, { force: true })
+          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
+          writeFileSync('test-ci-evidence/jimmy-desktop-selection.json', JSON.stringify(selected))
+          appendFileSync(process.env.GITHUB_OUTPUT, `proof=${selected.includes('src/main/jimmy-desktop-proof.test.ts')}\n`)
+          BUN
+          )"
+
+      # Repair: exact files, directory/filter matches and whole-package runs share one selector.
+      - name: Setup Jimmy desktop Electron runtime
+        if: steps.desktop-selection.outputs.proof == 'true'
+        run: |
           if [ "$RUNNER_OS" = Linux ]; then
             sudo apt-get update
             sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
@@ -155,31 +167,17 @@ jobs:
       # Repair: a Bun/Electron harness that exits early must not pass without both completion records.
       - name: Assert Jimmy desktop detecting evidence
         id: jimmy-evidence
-        if: always() && steps.request.outputs.package == 'desktop'
+        if: always() && steps.request.outputs.package == 'desktop' && steps.request.outputs.runner == 'bun'
         run: |
-          if ! jq -e 'any(.args[]; . == "src/main/jimmy-desktop-proof.test.ts" or . == "./src/main/jimmy-desktop-proof.test.ts")' .ci-run.json >/dev/null; then
-            exit 0
-          fi
-          node --input-type=module <<'NODE'
-          import { existsSync, readFileSync } from 'node:fs'
-          const load = (name) => {
-            const file = `test-ci-evidence/jimmy-desktop-${name}.json`
-            if (!existsSync(file)) throw new Error(`Missing completed Jimmy desktop ${name} evidence`)
-            const value = JSON.parse(readFileSync(file, 'utf8'))
-            if (value.sha !== process.env.GITHUB_SHA || value.runID !== process.env.GITHUB_RUN_ID)
-              throw new Error(`Jimmy desktop ${name} evidence belongs to another run`)
-            return value
-          }
-          const proof = load('proof')
-          if (proof.schema !== 'jimmy-desktop-proof-v1' || !proof.stopped || proof.fixtureReaped !== 'SIGKILL' ||
-              proof.platform !== process.platform || proof.arch !== process.arch || !proof.mutation.changes.length ||
-              !proof.mutation.failure.includes('generated native artifact bridge'))
-            throw new Error('Jimmy desktop native/mutation proof did not complete')
-          const types = load('typecheck')
-          if (types.schema !== 'jimmy-desktop-typecheck-v1' || types.passed !== true)
-            throw new Error('Jimmy desktop scoped typecheck did not complete')
-          NODE
-          echo "proof=true" >> "$GITHUB_OUTPUT"
+          bun --eval "$(cat <<'BUN'
+          import { appendFileSync, readFileSync } from 'node:fs'
+          import { desktopSelection, requireDesktopEvidence } from './script/test-ci-desktop.ts'
+          const selected = desktopSelection(JSON.parse(readFileSync('.ci-run.json', 'utf8')), 'packages/desktop')
+          if (requireDesktopEvidence(selected, 'test-ci-evidence', { sha: process.env.GITHUB_SHA,
+              runID: process.env.GITHUB_RUN_ID, platform: process.platform, arch: process.arch }))
+            appendFileSync(process.env.GITHUB_OUTPUT, 'proof=true\n')
+          BUN
+          )"
 
       - name: Upload Jimmy desktop evidence
         if: always() && steps.jimmy-evidence.outputs.proof == 'true'
