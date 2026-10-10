@@ -9,7 +9,7 @@ import { retainIntegrationRows } from "./integrations-model-retention"
 
 export function createIntegrationModel(api: Api, requestKey: () => string = () => crypto.randomUUID()): Model {
   const [state, set] = createStore<{ -readonly [K in keyof State]: State[K] }>({
-    status: "loading", connections: [], targets: [], bindings: [], busy: false,
+    status: "loading", connections: [], targets: [], bindings: [], busy: false, retryable: false, readRetryable: false,
   })
   let disposed = false
   let generation = 0
@@ -23,6 +23,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   let target: Capability.TargetRef | undefined
   // Neither credentials nor idempotency keys enter the reactive/public store.
   let operation: { kind: string; run: (signal: AbortSignal) => Promise<Receipt>; clear: () => void } | undefined
+  let recovery: { current: () => boolean; run: (owned: () => boolean) => Promise<void> } | undefined
 
   const clear = () => {
     operation?.clear()
@@ -35,16 +36,19 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   }
 
   const fence = () => {
+    recovery = undefined
     reading?.abort()
     reading = undefined
     return ++generation
   }
-  const read = async (run: (signal: AbortSignal) => Promise<() => void>, owned = () => true) => {
+  const read = async (run: (signal: AbortSignal) => Promise<() => void>, owned = () => true,
+    resume?: (owned: () => boolean) => Promise<void>) => {
     if (disposed || !owned()) return false
     const version = fence()
+    const scope = epoch
     const controller = new AbortController()
     reading = controller
-    set({ status: "loading", failure: undefined })
+    set({ status: "loading", failure: undefined, readRetryable: false })
     const applied = await Promise.resolve().then(() => {
       if (disposed || version !== generation || !owned()) throw "invalid"
       return run(controller.signal)
@@ -52,17 +56,19 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       if (disposed || version !== generation || !owned()) return false
       apply()
       if (disposed || version !== generation || !owned()) return false
-      set({ status: "ready", failure: undefined })
+      set({ status: "ready", failure: undefined, readRetryable: false })
       return true
     }, (error: unknown) => {
       if (disposed || version !== generation || !owned()) return false
-      set({ status: "error", failure: failure(error, false) })
+      recovery = { current: () => !disposed && generation === version && epoch === scope,
+        run: resume ?? (async (owner) => { await read(run, owner) }) }
+      set({ status: "error", failure: failure(error, false), readRetryable: true })
       return false
     })
     if (reading === controller) reading = undefined
     return applied
   }
-  const load = async (more = false, owned?: () => boolean) => {
+  const load = async (more = false, owned?: () => boolean, resume?: (owned: () => boolean) => Promise<void>) => {
     if (disposed || (state.busy && !owned) || (more && !state.after) || (owned && !owned())) return false
     const after = more ? state.after : undefined
     // Coverage is live rows/current actor, never all records or provider readiness.
@@ -72,9 +78,9 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       return () => {
         set({ ...retainIntegrationRows(state, "connections", { connections: page.items }, !more), after: page.after })
       }
-    }, owned)
+    }, owned, resume)
   }
-  const readTargets = async (more = false, owned?: () => boolean) => {
+  const readTargets = async (more = false, owned?: () => boolean, resume?: (owned: () => boolean) => Promise<void>) => {
     if (!connection || (more && !state.targetsAfter) || (owned && !owned())) return false
     if (!more) resetTargetQuery()
     const ref = connection
@@ -92,9 +98,9 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
         lastTargetID = page.items.at(-1)?.target.id ?? lastTargetID
         set({ ...retainIntegrationRows(state, "targets", { targets: page.items }, !more), targetsAfter: page.after })
       }
-    }, owned)
+    }, owned, resume)
   }
-  const readBindings = async (more = false, owned?: () => boolean) => {
+  const readBindings = async (more = false, owned?: () => boolean, resume?: (owned: () => boolean) => Promise<void>) => {
     if (!target || (more && !state.bindingsAfter) || (owned && !owned())) return false
     const ref = target
     const after = more ? state.bindingsAfter : undefined
@@ -104,7 +110,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       return () => {
         set({ ...retainIntegrationRows(state, "bindings", { bindings: page.items }, !more), bindingsAfter: page.after })
       }
-    }, owned)
+    }, owned, resume)
   }
   const select = async (input: Connection) => {
     if (disposed || state.busy) return
@@ -116,11 +122,11 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     try {
       connection = decode(CapabilityManagement.Connection, { ...input, connection: { ...input.connection } }).connection
       set({ connectionID: connection.id, targetID: undefined, targets: [], bindings: [], targetsAfter: undefined,
-        bindingsAfter: undefined, receipt: undefined })
+        bindingsAfter: undefined, receipt: undefined, retryable: false, readRetryable: false })
     } catch {
       connection = undefined
       set({ status: "error", failure: "invalid", connectionID: undefined, targetID: undefined,
-        targets: [], bindings: [], targetsAfter: undefined, bindingsAfter: undefined })
+        targets: [], bindings: [], targetsAfter: undefined, bindingsAfter: undefined, retryable: false, readRetryable: false })
       return
     }
     await readTargets()
@@ -134,55 +140,66 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       const value = decode(CapabilityManagement.Target, { ...input, target: { ...input.target } }).target
       if (value.connectionID !== connection?.id) throw "invalid"
       target = value
-      set({ targetID: target.id, bindings: [], bindingsAfter: undefined, receipt: undefined })
+      set({ targetID: target.id, bindings: [], bindingsAfter: undefined, receipt: undefined, retryable: false, readRetryable: false })
     } catch {
       target = undefined
-      set({ status: "error", failure: "invalid", targetID: undefined, bindings: [], bindingsAfter: undefined })
+      set({ status: "error", failure: "invalid", targetID: undefined, bindings: [], bindingsAfter: undefined, retryable: false, readRetryable: false })
       return
     }
     await readBindings()
   }
   const refresh = async (owned: () => boolean, kind: string, selectedConnection?: Capability.ConnectionID,
-    selectedTarget?: Capability.TargetID, acknowledgedTarget?: Capability.TargetRef) => {
+    selectedTarget?: Capability.TargetID, start = 0) => {
     // A committed receipt survives a failed read; the closed intent can never be redriven.
     if (!owned()) return
-    if (kind === "removeTarget" || kind === "disconnect") {
-      target = undefined
-      set({ targetID: undefined, targets: state.targets.filter((row) => row.target.id !== selectedTarget),
-        bindings: [], bindingsAfter: undefined })
+    // Recovery carries read stage/IDs only; acknowledged mutation effects run once in retry.
+    const resume = (stage: number) => (owner: () => boolean) => refresh(owner, kind, selectedConnection, selectedTarget, stage)
+    if (start === 0) {
+      resetTargetQuery()
+      set({ targets: state.targets.filter((row) => row.target.id === state.targetID), bindings: [],
+        targetsAfter: undefined, bindingsAfter: undefined })
+      if (!owned() || !(await load(false, owned, resume(0))) || !owned()) return
     }
-    if (!owned()) return
-    resetTargetQuery()
-    set({ targets: state.targets.filter((row) => row.target.id === state.targetID), bindings: [],
-      targetsAfter: undefined, bindingsAfter: undefined })
-    if (!owned()) return
-    if (kind === "disconnect") set({ connections: state.connections.map((row) => row.connection.id === selectedConnection
-      ? { ...row, state: "disconnected" as const } : row) })
-    if (acknowledgedTarget) target = acknowledgedTarget
-    if (!owned() || !(await load(false, owned)) || !owned() || !selectedConnection) return
-    if (!(await read(async (signal) => {
+    if (!selectedConnection) return
+    if (start <= 1 && (!(await read(async (signal) => {
       const current = decode(CapabilityManagement.Connection, await api.get(selectedConnection, { signal }))
       if (current.connection.id !== selectedConnection) throw "invalid"
       return () => {
         connection = decode(Capability.ConnectionRef, current.connection)
         set({ ...retainIntegrationRows(state, "connections", { connections: [current] }), connectionID: connection.id })
       }
-    }, owned)) || !owned()) return
+    }, owned, resume(1))) || !owned())) return
     if (kind === "disconnect") {
       resetTargetQuery()
       set({ targets: [], targetsAfter: undefined })
       return
     }
-    if (!(await readTargets(false, owned)) || !owned() || !selectedTarget || kind === "removeTarget") return
-    if (!(await read(async (signal) => {
+    if (start <= 2 && (!(await readTargets(false, owned, resume(2))) || !owned())) return
+    if (!selectedTarget || kind === "removeTarget") return
+    if (start <= 3 && (!(await read(async (signal) => {
       const current = decode(CapabilityManagement.Target, await api.getTarget(selectedTarget, { signal }))
       if (current.target.id !== selectedTarget || current.target.connectionID !== selectedConnection) throw "invalid"
       return () => {
         target = decode(Capability.TargetRef, current.target)
         set({ ...retainIntegrationRows(state, "targets", { targets: [current] }), targetID: target.id })
       }
-    }, owned)) || !owned()) return
-    await readBindings(false, owned)
+    }, owned, resume(3))) || !owned())) return
+    await readBindings(false, owned, resume(4))
+  }
+  const retryRead = async () => {
+    if (disposed || state.busy || !recovery?.current()) return
+    const intent = recovery
+    fence()
+    const scope = ++epoch
+    const controller = new AbortController()
+    writing = controller
+    const owned = () => !disposed && writing === controller && !controller.signal.aborted && epoch === scope
+    set({ busy: true, readRetryable: false })
+    if (!owned()) return
+    await intent.run(owned)
+    if (!owned()) return
+    writing = undefined
+    set("busy", false)
   }
   const retry = async () => {
     if (disposed || state.busy || !operation) return
@@ -194,7 +211,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     const owned = () => !disposed && writing === controller && !controller.signal.aborted && epoch === version
     const selectedConnection = connection?.id
     const selectedTarget = target?.id
-    set({ busy: true, failure: undefined, receipt: undefined })
+    set({ busy: true, failure: undefined, receipt: undefined, retryable: true, readRetryable: false })
     const receipt = await Promise.resolve().then(() => intent.run(controller.signal)).then((value) => value, (error: unknown) => {
       if (owned() && operation === intent) set({ status: "error", failure: failure(error, true) })
       return undefined
@@ -207,9 +224,18 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     }
     const acknowledgedTarget = intent.kind === "retargetTarget" ? decode(CapabilityManagement.Target, receipt.data).target : undefined
     clear()
-    set({ receipt, failure: undefined })
+    set({ receipt, failure: undefined, retryable: false, readRetryable: false })
     if (!owned()) return
-    await refresh(owned, intent.kind, selectedConnection, selectedTarget, acknowledgedTarget)
+    if (intent.kind === "removeTarget" || intent.kind === "disconnect") {
+      target = undefined
+      set({ targetID: undefined, targets: state.targets.filter((row) => row.target.id !== selectedTarget), bindings: [], bindingsAfter: undefined })
+    }
+    if (!owned()) return
+    if (intent.kind === "disconnect") set({ connections: state.connections.map((row) => row.connection.id === selectedConnection
+      ? { ...row, state: "disconnected" as const } : row) })
+    if (!owned()) return
+    if (acknowledgedTarget) target = acknowledgedTarget
+    await refresh(owned, intent.kind, selectedConnection, selectedTarget)
     if (owned()) {
       writing = undefined
       set("busy", false)
@@ -221,8 +247,9 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     verify: (value: S["Type"], data: R["Type"]) => boolean = () => true,
   ) => {
     if (disposed || state.busy) return Promise.resolve()
+    fence()
     clear()
-    set({ receipt: undefined, failure: undefined })
+    set({ receipt: undefined, failure: undefined, retryable: false, readRetryable: false })
     // Capture synchronously at call time, before any promise can yield to caller edits.
     try {
       let value: S["Type"] | undefined = decode(schema, input)
@@ -255,7 +282,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     writing?.abort()
     writing = undefined
     clear()
-    set({ busy: false, receipt: undefined, status: "error", failure: "request" })
+    set({ busy: false, receipt: undefined, status: "error", failure: "request", retryable: false, readRetryable: false })
   }
   const dispose = () => {
     if (disposed) return
@@ -270,11 +297,11 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     target = undefined
     set({ status: "loading", connections: [], targets: [], bindings: [], busy: false, connectionID: undefined,
       targetID: undefined, after: undefined, targetsAfter: undefined, bindingsAfter: undefined,
-      failure: undefined, receipt: undefined })
+      failure: undefined, receipt: undefined, retryable: false, readRetryable: false })
   }
   if (getOwner()) onCleanup(dispose)
   return {
-    state, load: async (more) => { await load(more) }, select, selectTarget, retry, cancel, dispose,
+    state, load: async (more) => { await load(more) }, select, selectTarget, retry, retryRead, cancel, dispose,
     moreTargets: async () => { if (!disposed && !state.busy) await readTargets(true) },
     moreBindings: async () => { if (!disposed && !state.busy) await readBindings(true) },
     connect: (input) => mutate(CapabilitySetup.Input, input,
