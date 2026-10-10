@@ -12,6 +12,7 @@ import { CapabilityBindingTable, CapabilityRequestTable } from "../src/capabilit
 import { ProjectTable } from "../src/project/sql"
 import { SessionTable } from "../src/session/sql"
 import { CapabilityConnectionManagementFixture } from "./fixture/capability-connection-management"
+import { CapabilityConnectionSetupFixture } from "./fixture/capability-connection-setup"
 import { testEffect } from "./lib/effect"
 
 const it = testEffect(CapabilityConnectionManagementFixture.layer)
@@ -139,6 +140,6 @@ it.live("binding authority normalization preserves mixed auth/SQL defect/Interru
   const bindings = yield* CapabilityConnectionBindings.make({ operators: { ...f.operators,
     require: (target) => f.operators.require(target).pipe(Effect.andThen(Effect.failCause(mixed))) } })
   const cause = CapabilityConnectionManagementFixture.failed(yield* f.run(bindings.list(f.child.id, {})).pipe(Effect.exit))
-  expect(cause.reasons).toEqual(mixed.reasons)
+  CapabilityConnectionSetupFixture.expectCause(cause, mixed)
   cause.reasons.forEach((reason) => expect(Context.getOrUndefined(Cause.reasonAnnotations(reason), Marker)).toEqual({ boundary: "binding" }))
 }))

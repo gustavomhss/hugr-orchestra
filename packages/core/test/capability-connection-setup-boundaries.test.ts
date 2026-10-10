@@ -103,6 +103,11 @@ it.live("malicious proof provider/endpoint/integration/identity/fingerprint/desc
     (proof) => ({ ...proof, scopeHash: "not-a-hash" }),
     (proof) => ({ ...proof, scopeHash: "0".repeat(64) }),
     (proof) => ({ ...proof, subjectID: '["T999","U456",null]' }),
+    // Counterfeit a typed proof source using descriptors, without weakening the public DTO types.
+    (proof) => Object.defineProperty({ ...proof }, "provider", { value: 17 }),
+    (proof) => Object.defineProperty({ ...proof }, "subjectID", { value: [] }),
+    (proof) => Object.defineProperty({ ...proof }, "scopeHash", { value: null }),
+    (proof) => Object.defineProperty({ ...proof }, "endpoint", { value: undefined }),
     (proof) => Object.defineProperty({ ...proof }, "subjectID", { enumerable: true,
       get() { calls.getter++; return "untrusted" } }),
     (proof) => new Proxy(proof, { ownKeys() { calls.proxy++; return [] } }),
@@ -152,7 +157,7 @@ it.live("reconcile/verifier/writer mixed SQL+quota+auth+Die+Interrupt causes ret
           Effect.andThen((data) => phase === "writer" ? Effect.failCause(mixed) : Effect.succeed(data))), verify),
       } })
     const actual = CapabilityConnectionSetupFixture.failed(yield* f.run(setup.connect(placement, input)).pipe(Effect.exit))
-    expect(actual.reasons).toEqual(mixed.reasons)
+    CapabilityConnectionSetupFixture.expectCause(actual, mixed)
     actual.reasons.forEach((reason) => expect(Context.getOrUndefined(Cause.reasonAnnotations(reason), Marker)).toEqual({ boundary: "setup" }))
     expect(yield* f.rows).toEqual(before)
   }))

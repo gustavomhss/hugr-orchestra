@@ -4,7 +4,7 @@ import { expect } from "bun:test"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { randomUUID } from "node:crypto"
-import { Effect, Schema, Tracer } from "effect"
+import { Cause, Effect, Schema, Tracer } from "effect"
 import { CapabilityConnectionSetup } from "../../src/capability/connection/setup"
 import type { CapabilityConnectionSetupContract } from "../../src/capability/connection/setup-contract"
 import type { CapabilityConnectionStoreContract } from "../../src/capability/connection/store-contract"
@@ -76,6 +76,19 @@ export function failed<A, E>(exit: import("effect").Exit.Exit<A, E>) {
 export function expectCode<A, E>(exit: import("effect").Exit.Exit<A, E>, code: Capability.ErrorCode) {
   const cause = CapabilityConnectionManagementFixture.expectCode(exit, code)
   cause.reasons.forEach((reason) => expect(JSON.stringify(reason)).not.toContain(input.key))
+}
+
+/** Traced boundaries may add stack annotations, but cannot lose/reorder reasons or old annotations. */
+export function expectCause(actual: Cause.Cause<unknown>, expected: Cause.Cause<unknown>) {
+  expect(actual.reasons).toHaveLength(expected.reasons.length)
+  expected.reasons.forEach((reason, index) => {
+    const received = actual.reasons[index]
+    expect(received._tag).toBe(reason._tag)
+    if (Cause.isFailReason(received) && Cause.isFailReason(reason)) expect(received.error).toBe(reason.error)
+    if (Cause.isDieReason(received) && Cause.isDieReason(reason)) expect(received.defect).toBe(reason.defect)
+    if (Cause.isInterruptReason(received) && Cause.isInterruptReason(reason)) expect(received.fiberId).toBe(reason.fiberId)
+    reason.annotations.forEach((value, key) => expect(received.annotations.get(key)).toBe(value))
+  })
 }
 
 /** Reuse the real writer holder; map only the selected setup span to its admission checkpoint. */
