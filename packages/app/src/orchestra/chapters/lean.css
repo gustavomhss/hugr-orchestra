@@ -30,6 +30,10 @@
   font-family: var(--mx-emphasis);
   font-size: 18px;
 }
+.lean-count-total {
+  color: var(--mx-dim);
+  font-size: 12px;
+}
 .lean-count {
   padding-inline-start: 22px;
   border-inline-start: 1px solid var(--mx-line);
@@ -50,7 +54,7 @@
   padding: 32px 20px;
   text-align: center;
 }
-.lean-detail-row > td {
+.lean-table .lean-detail-row > td {
   text-align: start;
   white-space: normal;
   background: var(--mx-soft);

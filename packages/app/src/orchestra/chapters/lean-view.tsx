@@ -87,6 +87,7 @@ export function LeanProfileView(props: LeanViewProps) {
                     : 0
                   : undefined,
               )}
+              <Show when={props.data}>{(data) => <span class="lean-count-total"> / {number(data().items.length)}</span>}</Show>
             </dd>
           </div>
         </dl>
