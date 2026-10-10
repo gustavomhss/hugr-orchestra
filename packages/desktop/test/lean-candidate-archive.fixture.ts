@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import path from "node:path"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
-import { realpath } from "node:fs/promises"
+import { lstat, readlink, readdir, realpath } from "node:fs/promises"
 
 export const desktop = path.resolve(import.meta.dir, "..")
 export const repository = path.resolve(desktop, "../..")
@@ -10,6 +10,34 @@ export const appID = "ai.hugr.orchestra.lean.candidate"
 export const productName = "HuGR Lean Candidate"
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const archivePin = "369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1"
+type Material = { path: string; bytes: number; sha256: string; link?: string }
+type BuildIdentity = {
+  schemaVersion: number; status: string; accepted: boolean; sourceCommit: string; sourceTree: string; treeDigest: string
+  platform: string; arch: string; appRelativePath: string; appId: string; productName: string
+  tools: { bun: string; node: string; electron: string; "electron-builder": string }
+  main: Material[]; preload: Material[]; renderer: Material[]; backend: Material[]; packaged: Material[]
+  nativePty: { name: string; version: string; binaries: Material[] }
+}
+
+async function git(...args: string[]) {
+  const child = Bun.spawn(["git", ...args], { cwd: repository, stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
+  const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+  assert.equal(code, 0, `Candidate source identity failed: git ${args.join(" ")}\n${error}`)
+  return out.trim()
+}
+
+async function inventory(directory: string): Promise<Material[]> {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const files = await Promise.all(entries.map(async (entry) => {
+    const file = path.join(directory, entry.name)
+    if (entry.isDirectory()) return (await inventory(file)).map((item) => ({ ...item, path: `${entry.name}/${item.path}` }))
+    assert.ok(entry.isSymbolicLink() || entry.isFile(), `Unsupported candidate member: ${file}`)
+    const link = entry.isSymbolicLink() ? await readlink(file) : undefined
+    const bytes = link === undefined ? new Uint8Array(await Bun.file(file).arrayBuffer()) : Buffer.from(link)
+    return [{ path: entry.name, bytes: bytes.length, sha256: digest(bytes), ...(link === undefined ? {} : { link }) }]
+  }))
+  return files.flat().sort((a, b) => a.path.localeCompare(b.path, "en"))
+}
 
 export function requireNativeCI() {
   if (process.platform !== "darwin" || process.arch !== "x64")
@@ -35,8 +63,30 @@ export async function packagedCandidate() {
   assert.equal(field("CFBundleDisplayName"), productName)
   const executable = path.join(app, "Contents/MacOS", field("CFBundleExecutable"))
   assert.ok(await Bun.file(executable).exists(), "Missing packaged candidate executable")
-  const manifest = await Bun.file(path.join(output, "lean-candidate-build.json")).json()
-  assert.ok(manifest && typeof manifest === "object", "Missing candidate build identity")
+  const manifest = await Bun.file(path.join(output, "lean-candidate-build.json")).json() as BuildIdentity
+  assert.equal(manifest.schemaVersion, 1)
+  assert.equal(manifest.status, "packaged")
+  assert.equal(manifest.accepted, false, "Build receipt must not claim acceptance")
+  assert.equal(manifest.appId, appID)
+  assert.equal(manifest.productName, productName)
+  assert.equal(manifest.platform, "darwin")
+  assert.equal(manifest.arch, "x64")
+  assert.equal(manifest.sourceCommit, process.env.GITHUB_SHA)
+  assert.equal(manifest.sourceCommit, await git("rev-parse", "HEAD"))
+  assert.equal(manifest.sourceTree, await git("rev-parse", "HEAD^{tree}"))
+  assert.equal(manifest.treeDigest, digest(Buffer.from(await git("ls-tree", "-r", "HEAD"))))
+  assert.equal(path.resolve(output, manifest.appRelativePath), app)
+  assert.equal(manifest.tools.bun, "1.3.14")
+  assert.match(manifest.tools.node, /^v24\./)
+  const pkg = await Bun.file(path.join(desktop, "package.json")).json()
+  assert.equal(manifest.tools.electron, pkg.devDependencies.electron)
+  assert.equal(manifest.tools["electron-builder"], pkg.devDependencies["electron-builder"])
+  assert.deepEqual(manifest.packaged, await inventory(app), "Packaged receipt differs from actual app bytes")
+  for (const key of ["main", "preload", "renderer", "backend"] as const) {
+    assert.ok(manifest[key].length > 0, `Empty candidate ${key} inventory`)
+    assert.deepEqual(manifest[key], await inventory(key === "backend" ? path.resolve(desktop, "../orchestra/dist/node") : path.join(desktop, "out", key)),
+      `Build receipt differs from actual ${key} compiler output`)
+  }
   // The build receipt is evidence to retain, not an acceptance verdict.
   console.log(`candidate build identity=${JSON.stringify(manifest)}`)
   return { app, resources, executable, manifest }
@@ -45,7 +95,9 @@ export async function packagedCandidate() {
 export async function verifyCandidateArchive() {
   const candidate = await packagedCandidate()
   const require = createRequire(path.join(desktop, "package.json"))
-  const asar = require("@electron/asar") as {
+  const builder = createRequire(require.resolve("electron-builder/package.json"))
+  const library = createRequire(builder.resolve("app-builder-lib/package.json"))
+  const asar = library("@electron/asar") as {
     listPackage(file: string): string[]
     extractFile(file: string, member: string): Buffer
   }
@@ -77,6 +129,19 @@ export async function verifyCandidateArchive() {
     const bytes = asar.extractFile(archive, file)
     assert.equal(bytes.readUInt32LE(0), 0xfeedfacf, `Expected Mach-O PTY: ${file}`)
     assert.equal(bytes.readUInt32LE(4), 0x01000007, `Expected x86_64 PTY: ${file}`)
+  }
+  assert.equal(candidate.manifest.nativePty.name, "@lydell/node-pty-darwin-x64")
+  assert.equal(candidate.manifest.nativePty.version, "1.2.0-beta.12")
+  assert.ok(candidate.manifest.nativePty.binaries.some((file) => path.basename(file.path) === "spawn-helper"), "Missing native PTY spawn-helper receipt")
+  for (const file of candidate.manifest.nativePty.binaries) {
+    assert.ok(!path.isAbsolute(file.path) && !file.path.split("/").includes(".."), "Unsafe PTY receipt path")
+    const target = path.join(candidate.resources, "app.asar.unpacked/node_modules", candidate.manifest.nativePty.name, file.path)
+    const bytes = Buffer.from(await Bun.file(target).arrayBuffer())
+    assert.equal(bytes.length, file.bytes)
+    assert.equal(digest(bytes), file.sha256)
+    assert.equal(bytes.readUInt32LE(0), 0xfeedfacf)
+    assert.equal(bytes.readUInt32LE(4), 0x01000007)
+    if (path.basename(file.path) === "spawn-helper") assert.ok((await lstat(target)).mode & 0o111, "PTY spawn-helper is not executable")
   }
   const originalArchive = new Uint8Array(await Bun.file(path.join(repository, "packages/core/vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz")).arrayBuffer())
   assert.equal(digest(originalArchive), archivePin, "Unapproved native Lean archive")
