@@ -301,6 +301,24 @@ execution is not gated on Nix builds. Any later Maestro-qualified Auth package o
 test change requires a fresh final-source measurement rather than relabeling this
 791-package-fingerprint evidence.
 
+Independent Nix request `08673acc6f829ec1f3919931536d6afe6c5d0694`, direct parent
+`1019861213`, completed measurement **`38013353330`** on all four natives and
+completion, attempt 1, tree `8293eaea910d7cca90fb7f0cf93f0086e8fe9cf9`.
+Fresh worker artifacts `11655617023`, `11654727302`, `11655648570`, `11655272817`
+and completion `11655028763` passed actual source/API/fingerprint/byte/control-record
+validation. Cold-reviewed hash/request-only direct child
+`84dfd7f530b4804b25fd093acf18bfde7c08e418`, tree
+`42cece0d8ad83a51c8b594870dedaa2dd49d11ff`, now runs consumer verification
+**`38014605786`**. An asynchronous completion notice resumes the owned proof work;
+Auth qualification is not a prerequisite for this snapshot's recipe verification.
+
+The owner superseded active upstream ID `walt` with `archie`; profile remains
+`upstream`. Current 791-fingerprint Nix evidence remains historical diagnostic
+evidence, not qualification of the upcoming rename. Relay writes only Nix/workflow/
+ledger paths; Archie and Maestro own disjoint identity/consumer edits. New qualified
+package identity/Auth source requires fresh final composition capture. Immutable
+historical records and original evidence are not rewritten; no active alias is added.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:
