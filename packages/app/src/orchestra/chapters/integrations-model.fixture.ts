@@ -34,6 +34,18 @@ export function deferred<T>() {
   return { promise, resolve }
 }
 
+/** Independent privacy oracle over every synchronous createComputed publication, including transient values. */
+export function recordSnapshots(...privateValues: readonly string[]) {
+  const captured: string[] = []
+  return {
+    observe: (state: State) => { captured.push(JSON.stringify(state)) },
+    verify: () => {
+      expect(captured.length).toBeGreaterThan(1)
+      captured.forEach((snapshot) => privateValues.forEach((value) => expect(snapshot).not.toContain(value)))
+    },
+  }
+}
+
 /** Send headers and a JSON prefix now; finish the actual HTTP body only when the test releases it. */
 export function streamedJson(value: unknown, status = 200, malformed = false) {
   const stream: { controller?: ReadableStreamDefaultController<Uint8Array>; closed: boolean } = { closed: false }
