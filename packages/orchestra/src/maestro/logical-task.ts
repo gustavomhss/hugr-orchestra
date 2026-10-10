@@ -13,6 +13,7 @@ import { Identifier } from "@/id/id"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { canonicalMemberId } from "./roster"
+import { SessionAuthority } from "./session-authority"
 
 // F2.11: the logical task an execution Session carries. The Task `task_id` the model sees for a bound Session is this
 // `taskId`, never the child Session ID; the binding is host-written and durable, so a resume or a replay finds it.
@@ -48,18 +49,23 @@ export const ensure = Effect.fn("LogicalTask.ensure")(function* (input: {
 }) {
   if (input.source === "user" && !USER_TASK_ID.test(input.taskId ?? ""))
     return yield* new Denied({ stage: "binding", reason: "task-id-invalid" })
-  const existing = yield* read(input.executionSessionID)
+  const existing = yield* readStored(input.executionSessionID)
   if (existing) {
-    if (matches(existing, input)) return existing
-    return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
+    return yield* reconcile(existing, input)
   }
+  const sessions = yield* Session.Service
+  const authority = yield* SessionAuthority.make(sessions.get)(input.executionSessionID, input.projectID).pipe(
+    Effect.mapError((error) => new Denied({ stage: "binding", reason: error.reason })),
+  )
+  if (input.authoritySessionID !== authority.rootID)
+    return yield* new Denied({ stage: "binding", reason: "task-authority-mismatch" })
   const events = yield* EventV2Bridge.Service
   const binding = {
     taskId: input.taskId ?? Identifier.create("tsk", "ascending"),
     projectID: input.projectID,
     memberID: input.memberID,
     executionSessionID: input.executionSessionID,
-    authoritySessionID: input.authoritySessionID,
+    authoritySessionID: authority.rootID,
     source: input.source,
   }
   return yield* events.publish(MaestroEvent.Task.Bound, binding, { id: eventID(input.executionSessionID) }).pipe(
@@ -67,16 +73,20 @@ export const ensure = Effect.fn("LogicalTask.ensure")(function* (input: {
     // A concurrent bind of the same Session won the insert: the stored binding decides.
     Effect.catchCause((cause) =>
       Effect.gen(function* () {
-        const stored = yield* read(input.executionSessionID)
+        const stored = yield* readStored(input.executionSessionID)
         if (!stored) return yield* Effect.failCause(cause)
-        if (matches(stored, input)) return stored
-        return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
+        return yield* reconcile(stored, input)
       }),
     ),
   )
 })
 
 export const read = Effect.fn("LogicalTask.read")(function* (executionSessionID: string) {
+  const stored = yield* readStored(executionSessionID)
+  return stored ? yield* reconcile(stored) : undefined
+})
+
+const readStored = Effect.fn("LogicalTask.readStored")(function* (executionSessionID: string) {
   const database = yield* Database.Service
   const row = yield* database.db
     .select({ data: EventTable.data })
@@ -84,7 +94,10 @@ export const read = Effect.fn("LogicalTask.read")(function* (executionSessionID:
     .where(eq(EventTable.id, eventID(executionSessionID)))
     .get()
     .pipe(Effect.orDie)
-  return row ? decode(row.data) : undefined
+  const binding = row ? decode(row.data) : undefined
+  if (binding && binding.executionSessionID !== executionSessionID)
+    return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
+  return binding
 })
 
 /**
@@ -148,6 +161,7 @@ const strictSession = Effect.fnUntraced(function* (input: { taskID: string; proj
     return yield* new Denied({ stage: "resume", reason: "task-project-mismatch" })
   if (binding && canonicalMemberId(binding.memberID) !== input.memberID)
     return yield* new Denied({ stage: "resume", reason: "task-member-mismatch" })
+  if (binding) yield* reconcile(binding)
   const id = binding?.executionSessionID ?? input.taskID
   const session = yield* Effect.suspend(() => sessions.get(SessionID.make(id))).pipe(
     Effect.catchCause(() => Effect.succeed(undefined)),
@@ -158,13 +172,36 @@ const strictSession = Effect.fnUntraced(function* (input: { taskID: string; proj
   return session
 })
 
-function matches(stored: Binding, input: Omit<Binding, "taskId"> & { taskId?: string }) {
+// Read compatibility never rewrites the event. Only the actual immediate parent is a historical authority spelling;
+// any other ancestor, placement or retry identity is refused. New producers must supply the root.
+const reconcile = Effect.fn("LogicalTask.reconcile")(function* (
+  stored: Binding,
+  input?: Omit<Binding, "taskId"> & { taskId?: string },
+): Effect.fn.Return<Binding, Denied, Session.Service> {
+  if (input && !sameTask(stored, input))
+    return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
+  const sessions = yield* Session.Service
+  const authority = yield* SessionAuthority.make(sessions.get)(stored.executionSessionID, stored.projectID).pipe(
+    Effect.mapError((error) => new Denied({ stage: "binding", reason: error.reason })),
+  )
+  if (!validAuthority(stored.authoritySessionID, authority))
+    return yield* new Denied({ stage: "binding", reason: "task-authority-mismatch" })
+  if (input && input.authoritySessionID !== authority.rootID && input.authoritySessionID !== stored.authoritySessionID)
+    return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
+  return { ...stored, authoritySessionID: authority.rootID }
+})
+
+function validAuthority(id: string, authority: SessionAuthority.Result) {
+  return id === authority.rootID || id === authority.execution.parentID
+}
+
+function sameTask(stored: Binding, input: Omit<Binding, "taskId"> & { taskId?: string }) {
   return isDeepStrictEqual(stored, {
     taskId: input.taskId ?? stored.taskId,
     projectID: input.projectID,
     memberID: input.memberID,
     executionSessionID: input.executionSessionID,
-    authoritySessionID: input.authoritySessionID,
+    authoritySessionID: stored.authoritySessionID,
     source: input.source,
   })
 }
