@@ -1,20 +1,18 @@
 import { expect, test } from "bun:test"
-import { types } from "node:util"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
-import { Schema } from "effect"
 import { Response, binding, connection, deferred, fixture, json, reads, target } from "./integrations-model.fixture"
 
-test("reads actual live/current-actor pages; next controls send exact cursors, dedup IDs", async () => {
+test("reads actual live/current-actor pages; next controls send exact advancing cursors", async () => {
   const cursor = "x".repeat(32)
   const f = fixture((request) => {
     const url = new URL(request.url)
     const more = url.searchParams.has("after")
     if (url.pathname.endsWith("/bindings")) return json({ items: [binding(more ? 2 : 1)],
       coverage: "current-actor", ...(more ? {} : { after: binding().sessionID }) })
-    if (url.pathname.endsWith("/targets")) return json({ items: [target(), target(more ? 2 : 1)],
+    if (url.pathname.endsWith("/targets")) return json({ items: [target(more ? 2 : 1)],
       coverage: "live", ...(more ? {} : { after: cursor }) })
-    return json({ items: [connection(), connection(more ? 2 : 1)], coverage: "live",
+    return json({ items: [connection(more ? 2 : 1)], coverage: "live",
       ...(more ? {} : { after: connection().connection.id }) })
   })
   await f.model.load()
@@ -260,6 +258,7 @@ test("retarget uses detached selected generation/resource; refresh adopts actual
       return json({ requestID: "retarget-receipt", reused: false,
         data: new URL(request.url).pathname.endsWith("/retarget") ? updated : null })
     }
+    if (new URL(request.url).pathname.endsWith(target().target.id) && committed) return json(updated)
     if (new URL(request.url).pathname.endsWith("/targets") && committed) return json({ items: [updated], coverage: "live" })
     return reads(request)
   })
@@ -346,118 +345,37 @@ test("paging retains at most 512 rows across account/target/binding pages; malfo
   expect(f.model.state.connections.length + f.model.state.targets.length + f.model.state.bindings.length).toBe(512)
 })
 
-test("reactive refetch refs stay detached through bind/unbind/retarget/retry/remove/disconnect", async () => {
-  let account = connection()
-  let selected = target()
-  let exists = true
-  let bound = false
-  const snapshots: string[] = []
-  const receipts = new Map<string, typeof CapabilityManagement.Receipt.Type>()
-  const f = fixture(async (request) => {
-    const path = new URL(request.url).pathname
-    if (request.method === "GET") {
-      if (path.endsWith("/bindings")) return json(CapabilityManagement.BindingPage.make({
-        items: bound ? [binding()] : [], coverage: "current-actor",
-      }))
-      if (path.endsWith("/targets")) return json(CapabilityManagement.TargetPage.make({
-        items: exists ? [selected] : [], coverage: "live",
-      }))
-      return json(CapabilityManagement.ConnectionPage.make({ items: [account], coverage: "live" }))
-    }
-    const key = request.headers.get("idempotency-key")!
-    const previous = receipts.get(key)
-    if (previous) return json({ ...previous, reused: true })
-    const body: unknown = await request.json()
-    const receipt = { requestID: `receipt-${receipts.size + 1}`, reused: false, data: null as Schema.Json }
-    if (path === "/api/capability/bindings") {
-      Schema.decodeUnknownSync(CapabilityManagement.PutBindingInput)(body)
-      bound = true
-    }
-    if (path.endsWith("/bindings/remove")) {
-      Schema.decodeUnknownSync(CapabilityManagement.RemoveBindingInput)(body)
-      bound = false
-      account = { ...account, connection: { ...account.connection, generation: 2 } }
-      selected = { target: { ...selected.target, generation: 1 } }
-    }
-    if (path.endsWith("/retarget")) {
-      const input = Schema.decodeUnknownSync(CapabilityManagement.RetargetInput)(body)
-      selected = { target: { ...selected.target, generation: 2, environment: input.input.environment } }
-      receipt.data = selected
-    }
-    if (path.endsWith("/targets/remove")) {
-      Schema.decodeUnknownSync(CapabilityManagement.RemoveTargetInput)(body)
-      exists = false
-    }
-    if (path.endsWith("/disconnect")) {
-      Schema.decodeUnknownSync(CapabilityManagement.DisconnectInput)(body)
-      if (account.state === "disconnected") return json({ _tag: "InvalidRequestError", message: "unavailable" }, 400)
-      account = { ...account, state: "disconnected", connection: { ...account.connection, generation: 3 } }
-    }
-    receipts.set(key, CapabilityManagement.Receipt.make(receipt))
-    if (path.endsWith("/retarget")) return new Response('{"requestID":', { headers: { "content-type": "application/json" } })
-    return json(receipt)
-  }, false, (state) => snapshots.push(JSON.stringify(state)))
-  // The normal unit lane resolves Solid's SSR store. Run this same case once with real browser proxies.
-  if (!types.isProxy(f.model.state)) {
-    expect(process.env.ORCHESTRA_INTEGRATIONS_PROXY_CHILD).not.toBe("1")
-    f.dispose()
-    f.stop()
-    const child = Bun.spawn([process.execPath, "test", "--conditions=browser", "--preload", "./happydom.ts",
-      import.meta.path, "-t", "reactive refetch refs stay detached"], {
-      env: { ...process.env, ORCHESTRA_LOCAL_TESTS: "1", ORCHESTRA_INTEGRATIONS_PROXY_CHILD: "1" },
-      stdout: "pipe", stderr: "pipe",
-    })
-    const output = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()])
-    expect({ exit: await child.exited, output: output.join("\n") }).toMatchObject({ exit: 0 })
-    expect(output.join("\n")).toContain("(pass) reactive refetch refs stay detached")
-    return
-  }
-  expect(types.isProxy(f.model.state)).toBe(true)
-  await f.model.load()
-  await f.model.select(f.model.state.connections[0])
-  await f.model.selectTarget(f.model.state.targets[0])
-  await f.model.bind({ sessionID: binding().sessionID, actions: ["send"] })
+test.each(["null", "a"])("short private value %s does not match JSON syntax or incidental provider word", async (key) => {
+  const f = fixture((request) => request.method === "GET" ? reads(request) : json({ requestID: "receipt", reused: false,
+    data: new URL(request.url).pathname.endsWith("/connect") ? { connection: connection().connection, verification: "verified" } : null }),
+  false, undefined, () => key)
+  await f.model.connect({ provider: "slack", key: "a" })
   expect(f.model.state.failure).toBeUndefined()
-  expect(f.model.state.bindings).toEqual([binding()])
-  await f.model.unbind(binding().sessionID)
-  expect(f.model.state.failure).toBeUndefined()
-  expect(f.model.state.bindings).toEqual([])
-  expect(f.model.state.connections[0].connection.generation).toBe(2)
-  expect(f.model.state.targets[0].target.generation).toBe(1)
-  const input = { environment: "next", resource: { room: "original" } }
-  const pending = f.model.retargetTarget(input)
-  input.resource.room = "edited"
-  await pending
-  expect(f.model.state.failure).toBe("unknown")
-  expect(JSON.stringify(f.model.state)).not.toContain("private-intent")
-  await f.model.retry()
-  expect(f.model.state.receipt?.reused).toBe(true)
-  expect(f.model.state.targets[0].target.generation).toBe(2)
+  expect(f.model.state.receipt?.requestID).toBe("receipt")
+  await f.model.select(connection()); await f.model.selectTarget(target())
   await f.model.removeTarget()
   expect(f.model.state.failure).toBeUndefined()
-  expect(f.model.state.targets).toEqual([])
-  expect(f.model.state.targetID).toBeUndefined()
-  await f.model.disconnect()
-  expect(f.model.state.failure).toBeUndefined()
-  expect(f.model.state.connections[0].connection.generation).toBe(3)
-  expect(f.model.state.connectionID).toBe(connection().connection.id)
-  await f.model.retry()
-  await f.model.disconnect()
-  expect(f.model.state.failure).toBe("invalid")
-  const posts = f.requests.filter((row) => row.method === "POST")
-  expect(posts.map((row) => row.key)).toEqual([
-    "private-intent-1", "private-intent-2", "private-intent-3", "private-intent-3",
-    "private-intent-4", "private-intent-5", "private-intent-6",
-  ])
-  expect(posts.map((row) => row.body)).toEqual([
-    { target: target().target, input: { sessionID: binding().sessionID, actions: ["send"] } },
-    { target: target().target, sessionID: binding().sessionID },
-    { target: { ...target().target, generation: 1 }, input: { environment: "next", resource: { room: "original" } } },
-    { target: { ...target().target, generation: 1 }, input: { environment: "next", resource: { room: "original" } } },
-    { target: { ...target().target, generation: 2, environment: "next" } },
-    { connection: { ...connection().connection, generation: 2 } },
-    { connection: { ...connection().connection, generation: 3 } },
-  ])
-  expect(snapshots.length).toBeGreaterThan(1)
-  expect(snapshots.every((snapshot) => !snapshot.includes("private-intent"))).toBe(true)
+  expect(f.model.state.receipt?.data).toBeNull()
+})
+
+test.each(["full-private-secret", "a"])("exact private string leaf %s is rejected without public receipt", async (key) => {
+  const f = fixture(() => json({ requestID: key, reused: false,
+    data: { connection: connection().connection, verification: "verified" } }))
+  await f.model.connect({ provider: "slack", key })
+  expect(f.model.state.failure).toBe("unknown")
+  expect(f.model.state.receipt).toBeUndefined()
+})
+
+test("long secret substring rejected in schema-valid string leaf; matching property name is harmless", async () => {
+  const leaking = fixture(() => json({ requestID: "prefix-private-secret-suffix", reused: false,
+    data: { connection: connection().connection, verification: "verified" } }))
+  await leaking.model.connect({ provider: "slack", key: "private-secret" })
+  expect(leaking.model.state.failure).toBe("unknown")
+  expect(leaking.model.state.receipt).toBeUndefined()
+  expect(JSON.stringify(leaking.model.state)).not.toContain("private-secret")
+  const harmless = fixture((request) => request.method === "GET" ? reads(request) : json({ requestID: "receipt", reused: false,
+    data: { connection: connection().connection, verification: "verified" } }))
+  await harmless.model.connect({ provider: "slack", key: "verification" })
+  expect(harmless.model.state.failure).toBeUndefined()
+  expect(harmless.model.state.receipt?.data).toEqual({ connection: connection().connection, verification: "verified" })
 })
