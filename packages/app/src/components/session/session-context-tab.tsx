@@ -1,8 +1,6 @@
 import { createMemo, createEffect, on, onCleanup, For, Show } from "solid-js"
 import type { JSX } from "solid-js"
 import { useSync } from "@/context/sync"
-import { useServerSync } from "@/context/server-sync"
-import { collectLeanProjectRecords, LeanProjectMetrics } from "./lean-project-metrics"
 import { checksum } from "@orchestra/core/util/encode"
 import { findLast } from "@orchestra/core/util/array"
 import { same } from "@/utils/same"
@@ -98,8 +96,6 @@ const emptyUserMessages: UserMessage[] = []
 
 export function SessionContextTab() {
   const sync = useSync()
-  const serverSync = useServerSync()
-  const leanRecords = createMemo(() => collectLeanProjectRecords(sync().data, (id) => serverSync().session.get(id)))
   const language = useLanguage()
   const sdk = useSDK()
   const providers = useProviders(() => sdk().directory)
@@ -311,9 +307,6 @@ export function SessionContextTab() {
       onScroll={handleScroll}
     >
       <div class="px-6 pt-4 pb-10 flex flex-col gap-10">
-        <Show when={sync().data.project}>
-          {(projectID) => <LeanProjectMetrics projectID={projectID()} records={leanRecords()} coverage="loaded-history" />}
-        </Show>
         <div class="grid grid-cols-1 @[32rem]:grid-cols-2 gap-4">
           <For each={stats}>
             {(stat) => <Stat label={language.t(stat.label as Parameters<typeof language.t>[0])} value={stat.value()} />}
