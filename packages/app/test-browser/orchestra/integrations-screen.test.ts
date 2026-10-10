@@ -232,7 +232,26 @@ async function mount(
       return receipt(null)
     },
   }
-  const model = createIntegrationModel(api, () => "private-idempotency-key")
+  const keyCalls: string[] = []
+  const model = createIntegrationModel(api, () => {
+    const key = `private-idempotency-key-${keyCalls.length + 1}`
+    keyCalls.push(key)
+    return key
+  })
+  const connectEntries: { field: string; form: FormDataEntryValue | null }[] = []
+  const connect = model.connect
+  // Observe the real synchronous admission boundary, then call through on the same Model instance.
+  Object.defineProperty(model, "connect", {
+    value: (input: Parameters<Model["connect"]>[0]) => {
+      const password = document.querySelector<HTMLInputElement>(".integrations-dialog input[name='key']")
+      if (!password?.form) throw new Error("Missing password form at Model.connect entry")
+      const snapshot = { field: password.value, form: new FormData(password.form).get("key") }
+      connectEntries.push(snapshot)
+      const result = connect(input)
+      expect(snapshot).toEqual({ field: "", form: "" })
+      return result
+    },
+  })
   await model.load()
   const host = document.body.appendChild(document.createElement("div"))
   const tokens: string[] = []
@@ -249,7 +268,13 @@ async function mount(
               return createComponent(IntegrationsScreen, {
                 model,
                 basic: options.basic ?? true,
-                onAuthorize: (token) => tokens.push(token),
+                onAuthorize: (token) => {
+                  const bearer = host.querySelector<HTMLInputElement>("input[name='bearer']")
+                  if (!bearer?.form) throw new Error("Missing bearer form at onAuthorize entry")
+                  const snapshot = { field: bearer.value, form: new FormData(bearer.form).get("bearer") }
+                  tokens.push(token)
+                  expect(snapshot).toEqual({ field: "", form: "" })
+                },
               })
             },
           })
@@ -263,7 +288,7 @@ async function mount(
     host.remove()
   })
   await settle()
-  return { model, host, calls, tokens, dispose, http }
+  return { model, host, calls, tokens, dispose, http, keyCalls, connectEntries }
 }
 
 function button(text: string, root: ParentNode = document) {
@@ -306,6 +331,11 @@ function submit() {
   if (!form) throw new Error("Missing integrations form")
   form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
 }
+async function waitFor(condition: () => boolean) {
+  const deadline = Date.now() + 3_000
+  while (!condition() && Date.now() < deadline) await Bun.sleep(10)
+  expect(condition()).toBe(true)
+}
 async function selectTarget() {
   button(`${target.target.environment}${target.target.id}`).click()
   await settle()
@@ -322,21 +352,45 @@ test("connect clears DOM key before dispatch; unknown retry uses real controller
   field("label").value = "فريق Alpha"
   submit()
   expect(key.value).toBe("")
-  await settle()
+  await waitFor(() => view.model.state.failure === "unknown")
   expect(view.model.state.failure).toBe("unknown")
+  expect(view.keyCalls).toEqual(["private-idempotency-key-1"])
+  expect(view.connectEntries).toEqual([{ field: "", form: "" }])
   expect(document.body.textContent).not.toContain("fixture secret")
   privateState(view.model, secret)
-  privateState(view.model, "private-idempotency-key")
+  privateState(view.model, view.keyCalls[0])
   button("Retry same request").click()
-  await settle()
+  await waitFor(() => !view.model.state.busy)
   const requests = view.calls.filter((call) => call.method === "connect")
   expect(requests.length).toBe(2)
+  expect(view.keyCalls).toEqual(["private-idempotency-key-1"])
+  expect(view.connectEntries).toHaveLength(1)
   expect(requests.map((call) => call.args.slice(0, 2))).toEqual([
-    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key"],
-    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key"],
+    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key-1"],
+    [{ provider: "discord", key: secret, label: "فريق Alpha" }, "private-idempotency-key-1"],
   ])
   expect(document.body.textContent).toContain("Original request receipt reused")
-})
+  button("Connect account", view.host).click()
+  await settle()
+  field("key").value = "independent-setup-fixture-key"
+  field("label").value = "Independent setup"
+  submit()
+  await waitFor(() => view.model.state.failure === "unknown")
+  const admissions = view.calls.filter((call) => call.method === "connect")
+  expect(admissions).toHaveLength(3)
+  expect(view.keyCalls).toEqual(["private-idempotency-key-1", "private-idempotency-key-2"])
+  expect(view.connectEntries).toEqual([
+    { field: "", form: "" },
+    { field: "", form: "" },
+  ])
+  expect(admissions[2].args.slice(0, 2)).toEqual([
+    { provider: "slack", key: "independent-setup-fixture-key", label: "Independent setup" },
+    "private-idempotency-key-2",
+  ])
+  expect(admissions[2].args[1]).not.toBe(admissions[0].args[1])
+  privateState(view.model, "independent-setup-fixture-key")
+  privateState(view.model, view.keyCalls[1])
+}, 20_000)
 
 test("invalid resource and SessionID block controller writes; target resource never prefilled", async () => {
   const view = await mount()
@@ -484,7 +538,9 @@ test("remove and disconnect each dispatch selected local ref", async () => {
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain(target.target.id)
   submit()
   await settle()
-  expect(view.calls.find((call) => call.method === "removeTarget")?.args[0]).toEqual(target.target)
+  const removals = view.calls.filter((call) => call.method === "removeTarget")
+  expect(removals).toHaveLength(1)
+  expect(removals[0].args[0]).toEqual(target.target)
   view.dispose()
   const next = await mount()
   const selected = next.host.querySelector<HTMLButtonElement>(".integrations-select")
@@ -496,7 +552,9 @@ test("remove and disconnect each dispatch selected local ref", async () => {
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain(account.connection.id)
   submit()
   await settle()
-  expect(next.calls.find((call) => call.method === "disconnect")?.args[0]).toEqual(account.connection)
+  const disconnects = next.calls.filter((call) => call.method === "disconnect")
+  expect(disconnects).toHaveLength(1)
+  expect(disconnects[0].args[0]).toEqual(account.connection)
 })
 
 test("Arabic locale keeps dialog direction and code isolation", async () => {
@@ -604,22 +662,25 @@ test("pagination and local destructive controls dispatch actual model methods", 
   await settle()
   submit()
   await settle()
-  expect(view.calls.find((call) => call.method === "unbind")?.args.slice(0, 2)).toEqual([
-    target.target,
-    binding.sessionID,
-  ])
+  const unbinds = view.calls.filter((call) => call.method === "unbind")
+  expect(unbinds).toHaveLength(1)
+  expect(unbinds[0].args.slice(0, 2)).toEqual([target.target, binding.sessionID])
   button("Remove target").click()
   await settle()
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain("does not delete the provider resource")
   submit()
   await settle()
-  expect(view.calls.find((call) => call.method === "removeTarget")?.args[0]).toEqual(target.target)
+  const removals = view.calls.filter((call) => call.method === "removeTarget")
+  expect(removals).toHaveLength(1)
+  expect(removals[0].args[0]).toEqual(target.target)
   button("Disconnect account").click()
   await settle()
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain("does not revoke the provider token")
   submit()
   await settle()
-  expect(view.calls.find((call) => call.method === "disconnect")?.args[0]).toEqual(account.connection)
+  const disconnects = view.calls.filter((call) => call.method === "disconnect")
+  expect(disconnects).toHaveLength(1)
+  expect(disconnects[0].args[0]).toEqual(account.connection)
 })
 
 test("idle Close, Cancel and Escape preserve known receipt and clear only dialog fields", async () => {
@@ -678,7 +739,7 @@ test("pending HTTP submit restores connected current-page heading while opener i
   expect(heading?.getAttribute("tabindex")).toBe("-1")
   expect(document.activeElement === heading).toBe(true)
   reply.resolve(receipt({ connection: account.connection, verification: "verified" }))
-  await settle()
+  await waitFor(() => !view.model.state.busy)
   expect(view.model.state.busy).toBe(false)
   expect(view.model.state.receipt).toBeDefined()
   privateState(view.model, "http-pending-fixture-key")
