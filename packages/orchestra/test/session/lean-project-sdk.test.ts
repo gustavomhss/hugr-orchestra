@@ -49,6 +49,15 @@ test("actual legacy SDK regeneration includes native Lean routes; unchanged Prot
       if (!property || !ts.isPropertySignature(property) || !nullable(property.type)) throw new Error(`Generated ${name}.${field} lost Schema.NullOr(null)`)
     }
   }
+  for (const [name, fields] of [["LeanProfileSavings", ["calls", "tokenCalls"]], ["LeanProfileExecution", ["time"]]] as const) {
+    const declaration = types.statements.find((node) => ts.isTypeAliasDeclaration(node) && node.name.text === name)
+    if (!declaration || !ts.isTypeAliasDeclaration(declaration) || !ts.isTypeLiteralNode(declaration.type)) throw new Error(`Generated ${name} missing`)
+    for (const field of fields) {
+      const property = declaration.type.members.find((member) => member.name?.getText(types) === field)
+      if (!property || !ts.isPropertySignature(property) || property.type?.kind !== ts.SyntaxKind.NumberKeyword)
+        throw new Error(`Generated ${name}.${field} must be number, not unknown`)
+    }
+  }
   await run(["bun", "typecheck"], path.join(root, "packages/sdk/js"))
   await run(["bun", "typecheck"], path.join(root, "packages/orchestra"))
   const files = ["packages/sdk/js/src/v2/gen/types.gen.ts", "packages/sdk/js/src/v2/gen/sdk.gen.ts"]
