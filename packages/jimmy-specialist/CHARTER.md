@@ -2,7 +2,7 @@
 
 ## CURRENT — charter identity and failed qualification, 2026-10-10
 
-Source handoff: `7f00a8bb6a035ed05405d0188b449aeab2a9060f`. Candidate-only confirmation froze `f8e276c20dc292369f9cf8958e4b3e1f049f4462` and actually loaded roster/worker behavior hash `9a00703e9ba953b12ae6bb03d5f5ce47dff0c1b7b63997a0b23183c6e97fb912`. The `929cd402…` hash below is historical charter-candidate evidence, not the confirmed loaded identity.
+Final mechanically tested source: `fa00d95cb660de09ebbeffc0e1fafc9d02bb7e5c`, main CI [38030684084](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38030684084). Candidate-only confirmation froze `f8e276c20dc292369f9cf8958e4b3e1f049f4462` and actually loaded roster/worker behavior hash `9a00703e9ba953b12ae6bb03d5f5ce47dff0c1b7b63997a0b23183c6e97fb912`. Subsequent build/test/localization repairs did not change that charter. The `929cd402…` hash below remains historical.
 
 **Feature implemented; qualification failed; release acceptance blocked.** Original v15 candidate was 37 pass / 5 fail; v17/v18 confirmation is 35 pass / 7 fail across 42 slots, including three completed-parent qualifier/provenance publication failures and four missing native evaluations. Saved-output grading reconciled all 38 native returns without new native trials. Preserve original hashes, trials and grades. [HANDOFF.md](HANDOFF.md) and [QUALIFICATION.md](QUALIFICATION.md) govern current claims; preparation statements below retain their original date and scope. Next fix preserves general applicability and provenance limits through publication and handoff, without private expected-answer content or a new architecture.
 

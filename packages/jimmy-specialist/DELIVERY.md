@@ -2,9 +2,9 @@
 
 ## CURRENT — final handoff, 2026-10-10
 
-**Feature implemented; completed scoped mechanical checks passed within their stated reach. Qualification failed; release acceptance is blocked.** Source is `7f00a8bb6a035ed05405d0188b449aeab2a9060f`; its last delta changes three browser-test lines. The latest full main run remains RED. See [HANDOFF.md](HANDOFF.md) for the decision, exact evidence and two pending lead-run markers, and [IMPLEMENTATION.md](IMPLEMENTATION.md#current--final-evidence-checkpoint-2026-10-10) for measured scope.
+**Feature implemented; final main CI passed all 12 jobs. Qualification failed; release acceptance is blocked.** Tested source is `fa00d95cb660de09ebbeffc0e1fafc9d02bb7e5c`; final main [38030684084](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38030684084) includes the SDK/plugin build-order repair. Chromium passed 28 cases and final macOS Electron passed three. See [HANDOFF.md](HANDOFF.md) for exact identities, retained failures and remaining model-quality blockers.
 
-The original v15 study retains all 84 trials and grades. Candidate-only v17/v18 confirmation is 35 passed / 7 failed across 42 scheduled slots; saved-output grading reconciliation did not rerun native tasks. No superiority or release-ready claim follows. Historical preparation plans and pending statements below describe their dated checkpoints, not new scheduling instructions. Finish this delivery with an honest blocked handoff; the next product fix is general qualifier/provenance preservation through publication and parent handoff. No new model tests are scheduled by this document.
+The original v15 study retained all 84 trials and grades. Candidate-only v17/v18 confirmation is 35 passed / 7 failed across 42 scheduled slots; saved-output grading reconciliation did not rerun native tasks. Public reports and seals are committed; temporary evaluator bytes are now unavailable and backup availability is unverified. No superiority or release-ready claim follows. Historical preparation plans below describe dated checkpoints. The next product fix is general qualifier/provenance preservation through publication and parent handoff; this document schedules no new model tests.
 
 ## Historical delivery checkpoints
 

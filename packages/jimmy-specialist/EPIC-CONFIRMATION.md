@@ -1,5 +1,40 @@
 # Frozen principal five-workflow confirmation
 
+## Final closure checkpoint — GREEN main CI
+
+Main [38030684084](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38030684084), attempt 1, completed with all 12 jobs successful. This checkpoint supersedes the mechanical RED verdicts below while retaining their exact historical identities and failures. Model qualification remains blocked: 35/42 confirmation slots passed.
+
+| Identity | Exact value |
+| --- | --- |
+| Final tested source | `fa00d95cb660de09ebbeffc0e1fafc9d02bb7e5c` |
+| Product tree | `a3ecd03c8e6078edda9cf81fc9844daf9b2663e5` |
+| GitHub snapshot | `86704ea0f4844f9b8099e54852c20befcd71f61f` |
+| Snapshot tree including request metadata | `41160cf58d7c4e773fb35f2bb952cfa43faa787d` |
+
+Recovery verification compared every recursive path, mode, object type and SHA against the final Git commit. Excluding only root `.ci-run.json`, the manifests matched. Removing that entry from the root tree and reconstructing with Git produced the exact product-tree hash. An altered-SHA control was rejected. All job metadata and nonempty job logs were retrieved again from GitHub; no new test run was scheduled during recovery.
+
+| Executed lane | Result |
+| --- | --- |
+| Atlas scope and product | Successful; product 4,168 pass, 17 skip, three TODO |
+| Linux Orchestra 1/2 | 1,693 pass, 14 skip, one TODO, zero fail |
+| Linux Orchestra 2/2 | 3,007 pass, eight skip, zero fail |
+| Windows Orchestra 1/3 | 1,694 pass, 20 skip, one TODO, zero fail |
+| Windows Orchestra 2/3 | 1,188 pass, 15 skip, zero fail |
+| Windows Orchestra 3/3 | 1,827 pass, 34 skip, zero fail |
+| Linux other packages, godfile, generated Client, HttpApi and Relay | Successful; Turbo 20/20 tasks, zero cached tests; four later dependency builds replayed cache |
+| Windows other packages | Successful; Windows-only exclusions retain their existing scope |
+| Linux E2E 1/3, 2/3, 3/3 | 124 + 155 + 190 passes; one existing fixme skip |
+
+The previously missing full HTTP stages executed: coverage/auth/effect each reports `pass=271 fail=0 skip=0 missing=0 extra=0` across 233 effect routes. Thirteen research scenarios passed in each mode, covering actual artifact pagination, receipts, task isolation, unavailable bytes and validation. Generated-client checking passed. Python Relay reports 1,477 passes and one skip.
+
+Dedicated production Chromium [38027999108](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38027999108) passed all 28 cases. Dedicated macOS arm64 Electron [38028275423](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38028275423) passed native Task/artifact proof, scoped typecheck and detecting cleanup completion: three tests, zero failures. Linux bounded-log Electron evidence remains [38025429218](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025429218), whose Linux job passed three cases while its unsupported Windows job failed. The main suite skips specialized Electron cases; Windows E2E remains disabled by its existing default.
+
+SDK generation now precedes plugin compilation. Dedicated final-source [38030580678](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38030580678) passed two controls: actual SDK-generation/plugin-compilation and rejection of the removed dependency edge. The regenerating proof is scoped to direct CI so it cannot race the concurrent main unit suite.
+
+The four ancillary workflow successes below retain their exact earlier source identities; they were not rerun solely for build-order and test repairs. Temporary execution/evaluator directories are now unavailable. This committed report, prior public study reports and GitHub run logs remain recoverable; private ledger backup availability is unverified.
+
+## Historical RED checkpoints
+
 ## Verdict
 
 **RED.** All five workflows were dispatched exactly once on the verified frozen principal snapshot. All 17 jobs completed: 14 succeeded and 3 failed. No job was cancelled or skipped. The main test workflow finished in 18m40s. The measured epic peak was 16 simultaneous jobs.

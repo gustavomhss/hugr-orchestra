@@ -1,5 +1,7 @@
 # Candidate-only confirmation: bounded v17 checkpoint
 
+Recovery note, 2026-10-10: this public report and its recorded seals were restored from Git after temporary execution/evaluator directories became unavailable. Ledger locations below describe the original evaluation, not currently available files. Raw private backup availability is unverified; private data was not imported or recreated. Historical trials, assessments and failure counts below remain unchanged.
+
 This is a candidate-only confirmation, not a new paired baseline study or a
 superiority claim. All 42 slots were predeclared: R01–R14, three repetitions.
 
