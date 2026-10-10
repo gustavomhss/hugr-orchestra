@@ -22,7 +22,7 @@ const guarded = [
   ["packages/orchestra/src/plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
 ] as const
 // Current runtime ABI observations are separate from the frozen historical packet's source/blob identities.
-const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats.ts", "maestro/roster.ts",
+const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats/index.ts", "maestro/roster.ts",
   "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "tool/task-background.ts",
   "session/prompt-guard.ts", "session/task-prompt-ops.ts", "effect/app-runtime.ts", "cli/cmd/run.ts"]
 const deadline = 10 * 60_000
@@ -137,6 +137,7 @@ async function main() {
   })
   await writeFile(join(runtime, "events.jsonl"), records.map((item) => redact(JSON.stringify(item))).join("\n") + "\n", { flag: "wx", mode: 0o600 })
   await writeFile(join(runtime, "status.txt"), output.code ?? "AUTHORING_CHILD_COMPLETED", { flag: "wx", mode: 0o600 })
+  if (output.code) await writeFile(join(runtime, "diagnostic.txt"), redact(output.stderr), { flag: "wx", mode: 0o600 })
   requireAuthoring(!output.code, output.code ?? "AUTHORING_CHILD_FAILED_STDERR_WITHHELD")
   const preflight = records.filter((item) => item.type === "authoring_native_preflight")
   requireAuthoring(preflight.length === 1, "AUTHORING_NATIVE_PREFLIGHT_NOT_OBSERVED")
@@ -190,6 +191,7 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
     child.once("error", () => { state.failure = "AUTHORING_CHILD_SPAWN_FAILED"; done(null) })
   })
   const chunks: Uint8Array[] = []
+  const diagnostics: Uint8Array[] = []
   const groupAlive = () => {
     if (!child.pid || state.groupGone) return false
     try { process.kill(-child.pid, 0); return true } catch (error) {
@@ -224,18 +226,18 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
   try {
     const drains = [child.stdout, child.stderr].map(async (stream, index) => {
       for await (const part of stream) {
-        if (index !== 0) continue
         const bytes = Buffer.from(part)
         state.bytes += bytes.length
         if (state.bytes > 32 * 1024 * 1024) { state.failure = "AUTHORING_OUTPUT_LIMIT"; requestStop(); return }
-        chunks.push(bytes)
+        if (index === 0) chunks.push(bytes)
+        if (index === 1) diagnostics.push(bytes)
       }
     })
     const drained = Promise.all(drains).catch(() => { state.failure ??= "AUTHORING_STREAM_FAILED"; requestStop() })
     const status = await Promise.race([exited, stopped.then(() => null)])
     await stop() // Also remove surviving descendants after a normally exited primary.
     await Promise.race([drained, Bun.sleep(1_000)])
-    return { text: Buffer.concat(chunks).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
+    return { text: Buffer.concat(chunks).toString("utf8"), stderr: Buffer.concat(diagnostics).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
   } finally {
     clearTimeout(timer)
     try { await stop() } catch {
@@ -263,18 +265,27 @@ const joinOwnedGroup = (command: Command): Command => command._tag === "Standard
 const spawnerRuntime = ManagedRuntime.make(LayerNode.compile(CrossSpawnSpawner.node), { memoMap }), sharedSpawner = await spawnerRuntime.runPromise(ChildProcessSpawner.ChildProcessSpawner)
 const originalSpawner = { ...sharedSpawner }, containedSpawner = ChildProcessSpawner.make((command) => originalSpawner.spawn(joinOwnedGroup(command)))
 Object.assign(sharedSpawner, containedSpawner)
-const releaseSpawner = () => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() }
+const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
+const { Git } = await import(job.candidate + "/packages/orchestra/src/git/index.ts")
+const processRuntime = ManagedRuntime.make(LayerNode.compile(LayerNode.group([AppProcess.node, Git.node])), { memoMap })
+const releaseSpawner = () => processRuntime.dispose().finally(() => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() })
 try {
+// Dependencies are hidden by AppLayer's root surface. Materialize the real consumer graph, not a fake self-provided tag.
+const seeded = await processRuntime.runPromise(Effect.gen(function* () {
+  const processes = yield* AppProcess.Service
+  const git = yield* Git.Service
+  if (processes.spawn !== containedSpawner.spawn) throw new Error("AUTHORING_CONTAINED_PROCESS_PROVIDER_NOT_BOUND")
+  return { processes, git }
+}))
 const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
 try {
-const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
 const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
 const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
 const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
 const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
 const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
 const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
-const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats.ts")
+const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats/index.ts")
 const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
 const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
 const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
@@ -285,9 +296,8 @@ function isOps(value: unknown): value is TaskPromptOps { return !!value && typeo
 const shutdown = () => { void Promise.race([AppRuntime.dispose().finally(releaseSpawner), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
 process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
-  const actualSpawner = yield* ChildProcessSpawner.ChildProcessSpawner
-  const processes = yield* AppProcess.Service
-  requireFact(actualSpawner === sharedSpawner && actualSpawner.spawn === containedSpawner.spawn && processes.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_SPAWNER_NOT_BOUND")
+  const actualGit = yield* Git.Service
+  requireFact(actualGit === seeded.git && seeded.processes.spawn === containedSpawner.spawn && sharedSpawner.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_GIT_CONSUMER_NOT_BOUND")
   const store = yield* InstanceStore.Service
   const ctx = yield* store.load({ directory: job.project })
   const services = yield* Effect.gen(function* () {
