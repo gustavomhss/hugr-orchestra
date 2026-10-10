@@ -4,13 +4,13 @@ import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import type { SessionID } from "@orchestra/schema/session-id"
+import { types } from "node:util"
 import { and, eq, gt, isNull, sql } from "drizzle-orm"
 import { Cause, Effect, Option, Schema } from "effect"
 import { Database } from "../../database/database"
 import { SessionTable } from "../../session/sql"
 import type { CapabilityOperatorContract } from "../operator/contract"
 import { CapabilityRequest } from "../operator/request"
-import { snapshot } from "../operator/request-data"
 import { CapabilityOperatorScope } from "../operator/scope"
 import { CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 import type { CapabilityConnectionManagementContract } from "./management-contract"
@@ -233,10 +233,28 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
 export type Interface = CapabilityConnectionManagementContract.Interface
 
 function capture<A>(input: unknown, parse: (value: unknown) => A) {
-  // Scope's copier reflects objects. Ledger's descriptor boundary rejects proxies before any traps,
-  // then Scope capture applies its own budget/copy rules before strict type decoding.
-  const safe = CapabilityOperatorScope.capture(null, () => snapshot(input, { bytes: 65536, nodes: 2048 }).data)
-  return safe.ok ? CapabilityOperatorScope.capture(safe.value, parse) : safe
+  // Scope's copier reflects objects. Check proxies before reflection, preserving optional undefined
+  // placement/query fields that are valid DTO data but are not ledger JSON payloads.
+  return CapabilityOperatorScope.capture(null, () => {
+    requireDataDescriptors(input)
+    const captured = CapabilityOperatorScope.capture(input, parse)
+    if (!captured.ok) throw new Error("Invalid management data")
+    return captured.value
+  })
+}
+
+function requireDataDescriptors(value: unknown, depth = 0, budget = { nodes: 0 }): void {
+  if (++budget.nodes > 2048 || depth > 64) throw new Error("Invalid management data")
+  if (value === null || typeof value !== "object") return
+  if (types.isProxy(value)) throw new Error("Invalid management data")
+  const keys = Reflect.ownKeys(value)
+  if (keys.length > 2049) throw new Error("Invalid management data")
+  keys.forEach((key) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)
+    if (!descriptor || !("value" in descriptor)) throw new Error("Invalid management data")
+    if (Array.isArray(value) && key === "length") return
+    requireDataDescriptors(descriptor.value, depth + 1, budget)
+  })
 }
 
 function decode<S extends Schema.Top>(schema: S) {
