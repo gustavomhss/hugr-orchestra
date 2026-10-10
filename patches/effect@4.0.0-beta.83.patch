@@ -1,16 +1,27 @@
 diff --git a/dist/internal/core.js b/dist/internal/core.js
 --- a/dist/internal/core.js
 +++ b/dist/internal/core.js
-@@ -318,10 +318,19 @@ export const exitFailCause = /*#__PURE__*/makeExit({
+@@ -131,1 +131,3 @@
+ const annotationsMap = /*#__PURE__*/new WeakMap();
++// Only annotation clones share an interrupt origin; newly constructed reasons remain distinct.
++const interruptOrigins = /*#__PURE__*/new WeakMap();
+@@ -156,3 +158,6 @@ export class ReasonBase {
+     const self = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+     self.annotations = newAnnotations;
++    if (this._tag === "Interrupt") {
++      interruptOrigins.set(self, interruptOrigins.get(this) ?? this);
++    }
+     return self;
+@@ -318,10 +323,19 @@ export const exitFailCause = /*#__PURE__*/makeExit({
        annotated = true;
      }
      let cont = fiber.getCont(contE);
 -    while (fiber.interruptible && fiber._interruptedCause && cont) {
 +    while (fiber.interruptible && fiber._interruptedCause) {
 +      // getCont runs mask restoration but its returned continuation is skipped
-+      // on interrupted fibers. Match user annotations symmetrically; only an extra
-+      // StackTraceKey from causeAnnotate is allowed. Never deduplicate body reasons.
-+      const reasons = fiber._interruptedCause.reasons.filter(reason => !cause.reasons.some(existing => existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" && existing.fiberId === reason.fiberId && Array.from(reason.annotations).every(([key, value]) => existing.annotations.has(key) && existing.annotations.get(key) === value) && Array.from(existing.annotations).every(([key, value]) => key === StackTraceKey.key && !reason.annotations.has(key) || reason.annotations.has(key) && reason.annotations.get(key) === value)));
++      // on interrupted fibers. Only proven annotation lineage may identify an
++      // already represented native request. Never deduplicate body reasons.
++      const reasons = fiber._interruptedCause.reasons.filter(reason => !cause.reasons.some(existing => existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" && (interruptOrigins.get(existing) ?? existing) === (interruptOrigins.get(reason) ?? reason)));
 +      if (reasons.length > 0) {
 +        cause = causeFromReasons([...cause.reasons, ...reasons]);
 +        annotated = true;
@@ -26,26 +37,30 @@ diff --git a/dist/internal/core.js b/dist/internal/core.js
 diff --git a/src/internal/core.ts b/src/internal/core.ts
 --- a/src/internal/core.ts
 +++ b/src/internal/core.ts
-@@ -536,12 +536,33 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
+@@ -177,1 +177,3 @@
+ const annotationsMap = new WeakMap<object, ReadonlyMap<string, unknown>>()
++// Only annotation clones share an interrupt origin; newly constructed reasons remain distinct.
++const interruptOrigins = new WeakMap<object, object>()
+@@ -218,3 +220,6 @@ export abstract class ReasonBase<Tag extends string> implements Cause.Cause.ReasonP
+     const self = Object.assign(Object.create(Object.getPrototypeOf(this)), this)
+     self.annotations = newAnnotations
++    if (this._tag === "Interrupt") {
++      interruptOrigins.set(self, interruptOrigins.get(this) ?? this)
++    }
+     return self
+@@ -536,12 +541,26 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
        annotated = true
      }
      let cont = fiber.getCont(contE)
 -    while (fiber.interruptible && fiber._interruptedCause && cont) {
 +    while (fiber.interruptible && fiber._interruptedCause) {
 +      // getCont runs mask restoration but its returned continuation is skipped
-+      // on interrupted fibers. Match user annotations symmetrically; only an extra
-+      // StackTraceKey from causeAnnotate is allowed. Never deduplicate body reasons.
++      // on interrupted fibers. Only proven annotation lineage may identify an
++      // already represented native request. Never deduplicate body reasons.
 +      const reasons = fiber._interruptedCause.reasons.filter((reason) =>
 +        !cause.reasons.some((existing) =>
 +          existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" &&
-+            existing.fiberId === reason.fiberId &&
-+            Array.from(reason.annotations).every(([key, value]) =>
-+              existing.annotations.has(key) && existing.annotations.get(key) === value
-+            ) &&
-+            Array.from(existing.annotations).every(([key, value]) =>
-+              key === StackTraceKey.key && !reason.annotations.has(key) ||
-+                reason.annotations.has(key) && reason.annotations.get(key) === value
-+            )
++            (interruptOrigins.get(existing) ?? existing) === (interruptOrigins.get(reason) ?? reason)
 +        )
 +      )
 +      if (reasons.length > 0) {
