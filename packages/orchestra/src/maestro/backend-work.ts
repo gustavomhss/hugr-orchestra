@@ -1,13 +1,18 @@
 export * as BackendWork from "./backend-work"
 export * as SeatWork from "./backend-work"
 
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
+import path from "path"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
+import { Session } from "@/session/session"
+import { InstanceState } from "@/effect/instance-state"
 import type { SessionID } from "@/session/schema"
 import { BackendResult } from "./backend-result"
+import { BackendEvidence } from "./backend-evidence"
+import { UpstreamResult } from "./upstream-result"
 import type { Seat } from "./seats"
 
 // F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
@@ -25,8 +30,21 @@ export function track(input: {
   const evidence: { value?: BackendResult.WorkResult } = {}
   const returned: { value?: BackendResult.WorkResult } = {}
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
-  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult) {
-    const task = input.taskId ? { ...result, taskId: input.taskId } : result
+  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[]) {
+    // Background callbacks may omit Session services; absent or mismatched placement cannot mint evidence.
+    const sessions = yield* Effect.serviceOption(Session.Service)
+    const session = Option.isSome(sessions)
+      ? yield* sessions.value.get(input.sessionID).pipe(Effect.catch(() => Effect.succeed(undefined)))
+      : undefined
+    const placement = yield* InstanceState.context
+    // Proposal-only upstream results have no execution claims; preserve their exact private receipt payload.
+    const located = session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
+      path.resolve(session.directory) === path.resolve(placement.directory) && session.projectID === placement.project.id &&
+      session.workspaceID === (yield* InstanceState.workspaceID) &&
+      (result.schema !== UpstreamResult.SCHEMA || result.changes.length > 0 || result.checks.length > 0)
+      ? { ...result, workerEvidence: BackendEvidence.bind(result, history, { executionSessionID: session.id, directory: session.directory }) }
+      : result
+    const task = input.taskId ? { ...located, taskId: input.taskId } : located
     if (!input.writeRoots) return task
     const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
@@ -41,7 +59,8 @@ export function track(input: {
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
       const snapshot = structuredClone(message)
-      const captured = yield* bound(BackendResult.assemble(snapshot, yield* history(), input.seat))
+      const session = structuredClone(yield* history())
+      const captured = yield* bound(BackendResult.assemble(snapshot, session, input.seat), session)
       returned.value = captured
       evidence.value = captured
       yield* input.publish(captured)
@@ -54,10 +73,10 @@ export function track(input: {
       detail: string,
     ) {
       if (!input.enabled) return
-      const session = evidence.value ? [] : yield* history()
+      const session = evidence.value ? [] : structuredClone(yield* history())
       evidence.value = evidence.value
         ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat))
+        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session)
       yield* input.publish(evidence.value)
     }),
     // Compatibility accessor only: never reselect a resumed child's newer assistant for an older dispatch.
