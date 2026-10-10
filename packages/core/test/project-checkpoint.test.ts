@@ -4,6 +4,7 @@ import path from "node:path"
 import { eq } from "drizzle-orm"
 import { Effect, Layer } from "effect"
 import { Database } from "@orchestra/core/database/database"
+import checkpointMigration from "@orchestra/core/database/migration/20261010135215_project_checkpoints"
 import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
 import { ProjectCheckpointTable } from "@orchestra/core/project/checkpoint.sql"
 import { ProjectSchema } from "@orchestra/core/project/schema"
@@ -358,3 +359,26 @@ testEffect(Layer.empty).live("ProjectCheckpoint reloads exact payload after clos
     }).pipe(Effect.provide(build()), Effect.scoped)
   }),
 )
+
+testEffect(Layer.empty).live("upgrades an existing Session database without rewriting its rows", () => Effect.gen(function* () {
+  const tmp = yield* temporary
+  const build = () => ProjectCheckpoint.layer.pipe(Layer.provideMerge(Database.layerFromPath(path.join(tmp.path, "upgrade.sqlite"))))
+  const before = yield* Effect.gen(function* () {
+    yield* seed
+    const database = yield* Database.Service
+    // Model the immediately preceding installed schema, not a fresh database bootstrap.
+    yield* database.db.run("DROP TABLE project_checkpoint")
+    yield* database.db.run(`DELETE FROM migration WHERE id = '${checkpointMigration.id}'`)
+    const missing = yield* database.db.all<{ name: string }>("SELECT name FROM sqlite_master WHERE name = 'project_checkpoint'")
+    expect(missing).toEqual([])
+    return yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get()
+  }).pipe(Effect.provide(build()), Effect.scoped)
+  expect(before?.id).toBe(sessionID)
+  yield* Effect.gen(function* () {
+    const database = yield* Database.Service
+    const store = yield* ProjectCheckpoint.Service
+    expect(yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get()).toEqual(before)
+    const saved = yield* store.save(input)
+    expect(yield* store.read({ projectID, id: saved.id })).toEqual({ ...saved, payload: input.payload })
+  }).pipe(Effect.provide(build()), Effect.scoped)
+}))

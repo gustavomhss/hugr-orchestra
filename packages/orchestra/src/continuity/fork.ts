@@ -304,12 +304,13 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     if (frozen && options.beforeDispatch) yield* options.beforeDispatch({ forkID: sessionID, attempt, boundary: captured.boundary,
       payload: frozen.payload }).pipe(Effect.catchCause((cause) => Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) :
         Effect.fail(new CheckpointContext.CaptureError({ reason: "checkpoint-write-failed" }))))
-    return yield* services.llm.stream(frozen?.request ?? input).pipe(Stream.toPull, Effect.flatMap((pull) => {
+    const dispatched = frozen?.request ?? input
+    return yield* services.llm.stream(dispatched).pipe(Stream.toPull, Effect.flatMap((pull) => {
       let state = { text: "", finished: false, invalid: false }
       return pull.pipe(
         Effect.tap((events) => Effect.sync(() => { for (const event of events) state = reduce(state, event) })),
         Effect.forever,
-        Pull.catchDone(() => Effect.succeed(state)),
+        Pull.catchDone(() => Effect.succeed({ ...state, request: dispatched })),
       )
     }), Effect.scoped)
   })
@@ -327,7 +328,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
         "Reply with one complete, corrected ops object for the same new span, and nothing else.")
     // A paid reply that failed and cannot be retried is a failure, so the breaker can stop it.
     if (size + Token.estimate(reply.text + note) > inputLimit) return pass({ check: outcome.check, failure: "invalid-schema" })
-    const retry = { ...first, messages: [...first.messages,
+    const retry = { ...reply.request, messages: [...reply.request.messages,
       { role: "assistant" as const, content: reply.text || "(empty reply)" }, { role: "user" as const, content: note }] }
     if (options.onRequest) yield* options.onRequest(retry)
     const corrected = check(yield* ask(retry, 1))

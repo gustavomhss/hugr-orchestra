@@ -102,9 +102,12 @@ it.effect("detaches before asynchronous schemas; resolves each builder once and 
   original.tools.read.description = "Late description"
   original.tools.read.execute = async () => "late"
   original.tools.read.inputExamples?.push({ input: { path: "late" } })
-  original.preflightParams!.options.cache = "late"
+  if (!original.preflightParams) throw new Error("Missing source parameters")
+  original.preflightParams.options.cache = "late"
   released.resolve(schema)
   const result = yield* Fiber.join(fiber)
+  const capturedOutput = result.request.tools.read.outputSchema
+  if (!capturedOutput) throw new Error("Missing output schema")
   expect(builds).toEqual({ input: 1, output: 1 })
   const saved = object(CheckpointContext.decode(result.payload))
   const tool = object(object(saved.tools).read)
@@ -117,7 +120,7 @@ it.effect("detaches before asynchronous schemas; resolves each builder once and 
   expect(result.request.preflightParams?.options.cache).toBe("exact")
   expect(tool).toEqual({ description: "Before await", inputExamples: [{ input: { path: "before" } }], inputSchema: schema, outputSchema: output })
   expect(tool.inputSchema).toEqual(asSchema(result.request.tools.read.inputSchema).jsonSchema)
-  expect(tool.outputSchema).toEqual(asSchema(result.request.tools.read.outputSchema!).jsonSchema)
+  expect(tool.outputSchema).toEqual(asSchema(capturedOutput).jsonSchema)
   expect(result.request.tools.read.execute).toBe(execute)
   expect(result.request.tools.read.onInputStart).toBe(callback)
   expect(result.request.tools.read.onInputDelta).toBe(callback)
@@ -125,14 +128,14 @@ it.effect("detaches before asynchronous schemas; resolves each builder once and 
   expect(result.request.tools.read.needsApproval).toBe(needsApproval)
   expect(result.request.tools.read.toModelOutput).toBe(bindings.toModelOutput)
   expect(asSchema(result.request.tools.read.inputSchema).validate).toBe(validate)
-  expect(asSchema(result.request.tools.read.outputSchema!).validate).toBe(validate)
+  expect(asSchema(capturedOutput).validate).toBe(validate)
   expect(result.request.prepared).toBe(original.prepared)
   schema.description = "Mutated resolved schema"
   output.description = "Mutated output schema"
   original.messages.length = 0
   expect(CheckpointContext.decode(result.payload)).toEqual(saved)
   expect(tool.inputSchema).toEqual(asSchema(result.request.tools.read.inputSchema).jsonSchema)
-  expect(tool.outputSchema).toEqual(asSchema(result.request.tools.read.outputSchema!).jsonSchema)
+  expect(tool.outputSchema).toEqual(asSchema(capturedOutput).jsonSchema)
 }))
 
 it.effect("round-trips large Unicode, nested media, URL, exact bytes, undefined, Date and collision keys", () => Effect.gen(function* () {
@@ -140,10 +143,11 @@ it.effect("round-trips large Unicode, nested media, URL, exact bytes, undefined,
   const text = "🪨漢字e\u0301\u0000\ud800".repeat(20_000)
   const bytes = new Uint8Array([0, 1, 127, 128, 254, 255])
   const buffer = bytes.buffer.slice(0)
+  const nodeBuffer = Buffer.from([0, 128, 255])
   const url = new URL("https://example.test/image?q=%F0%9F%AA%A8#exact")
   original.messages = [{ role: "user", content: [{ type: "text", text },
-    { type: "image", image: bytes }, { type: "image", image: buffer }, { type: "image", image: url }] }]
-  original.agent.options.extra = { nested: [{ media: bytes, buffer, url, absent: undefined }],
+    { type: "image", image: bytes }, { type: "image", image: buffer }, { type: "image", image: url }, { type: "image", image: nodeBuffer }] }]
+  original.agent.options.extra = { nested: [{ media: bytes, buffer, url, nodeBuffer, absent: undefined }],
     date: new Date("2026-01-01T00:00:00.000Z"), negativeZero: -0, undefined: undefined,
     type: "uint8array", data: ["undefined"], path: ["object"], $tag: "url",
     collision: Object.fromEntries([["__proto__", { intact: true }], ["constructor", "data"]]) }
@@ -157,6 +161,7 @@ it.effect("round-trips large Unicode, nested media, URL, exact bytes, undefined,
   expect(Object.is(object(extra).negativeZero, -0)).toBe(true)
   expect(result.request.agent.options.extra).toEqual(extra)
   bytes.fill(42)
+  nodeBuffer.fill(42)
   new Uint8Array(buffer).fill(42)
   url.pathname = "/late"
   original.agent.options.extra = "late"
@@ -235,7 +240,8 @@ it.effect("materializes PromiseLike schemas once, including asynchronous output 
   const saved = object(object(object(CheckpointContext.decode(result.payload)).tools).read)
   expect(resolutions).toEqual({ input: 1, output: 1 })
   expect(saved.inputSchema).toEqual(asSchema(result.request.tools.read.inputSchema).jsonSchema)
-  expect(saved.outputSchema).toEqual(asSchema(result.request.tools.read.outputSchema!).jsonSchema)
+  if (!result.request.tools.read.outputSchema) throw new Error("Missing output schema")
+  expect(saved.outputSchema).toEqual(asSchema(result.request.tools.read.outputSchema).jsonSchema)
 }))
 
 test("decode rejects malformed envelopes and tags without echoing payload", () => {

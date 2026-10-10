@@ -35,8 +35,10 @@ export const capture = Effect.fn("CheckpointContext.capture")(function* (input: 
           output: outputSchema === undefined ? undefined : materialize(outputSchema) }]
       }))
       // All request data and schema handles are captured before the first await.
-      const snapshot = LLMPrepared.snapshot({ ...data, prepared, tools: Object.fromEntries(Object.entries(definitions).map(([name, tool]) =>
-        [name, { ...tool.visible, ...tool.bindings, inputSchema: tool.input }])) })
+      // Data is already detached by the lossless codec. A second structuredClone is both
+      // redundant and unable to preserve URL objects on supported Bun releases.
+      const snapshot = { ...data, prepared, tools: Object.fromEntries(Object.entries(definitions).map(([name, tool]) =>
+        [name, { ...tool.visible, ...tool.bindings, inputSchema: tool.input }])) }
       const [resolved, outputs] = await Promise.all([LLMPrepared.tools(snapshot.tools), Promise.all(
         Object.entries(definitions).map(async ([name, tool]) => [name, tool.output === undefined ? undefined :
           jsonSchema(clone(await tool.output.jsonSchema), { validate: tool.output.validate })] as const),
@@ -159,6 +161,10 @@ function encode(value: unknown, seen = new Set<object>()): Encoded {
       if (Reflect.ownKeys(value).length !== value.length) fail("unsupported-property")
       return ["uint8array", Buffer.from(value).toString("base64")]
     }
+    if (Buffer.isBuffer(value) && Object.getPrototypeOf(value) === Buffer.prototype) {
+      if (Reflect.ownKeys(value).length !== value.length) fail("unsupported-property")
+      return ["buffer", value.toString("base64")]
+    }
     if (!Array.isArray(value) && !record(value)) fail("unsupported-class")
     const keys = properties(value)
     if (Array.isArray(value)) {
@@ -206,9 +212,10 @@ function unpack(value: unknown): unknown {
     if (!Number.isFinite(date.getTime()) || date.toISOString() !== data) fail("invalid-date")
     return date
   }
-  if (tag === "arraybuffer" || tag === "uint8array") {
+  if (tag === "arraybuffer" || tag === "uint8array" || tag === "buffer") {
     const bytes = Uint8Array.from(Buffer.from(data, "base64"))
     if (Buffer.from(bytes).toString("base64") !== data) fail("invalid-binary")
+    if (tag === "buffer") return Buffer.from(bytes)
     return tag === "arraybuffer" ? bytes.buffer : bytes
   }
   return fail("invalid-tag")

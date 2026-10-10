@@ -51,7 +51,10 @@ const fixture = Effect.gen(function* () {
   }
   const llm: LLM.Interface = { stream: (input) => {
     requests.push(input)
-    return Stream.make(LLMEvent.textDelta({ id: "reply", text: JSON.stringify(body(input, FIRST)) }),
+    // Scenario reply generation reads textual instructions; the actual transport input
+    // retained above still includes its media and is compared against the checkpoint.
+    return Stream.make(LLMEvent.textDelta({ id: "reply", text: JSON.stringify(body({ ...input,
+      messages: input.messages.filter((message) => typeof message.content === "string") }, FIRST)) }),
       LLMEvent.finish({ reason: "stop" }))
   } }
   return { chat, history, captured, store, saves, requests, debug, callbacks, llm }
@@ -108,9 +111,10 @@ it.instance("awaits the real store sink; replay context stays detached while sav
     user, sessionID: f.chat.id, model: { ...model, headers: { Authorization: "TRANSPORT_SECRET" } },
     agent: { name: "build", mode: "primary", prompt: "Exact role", permission: [], options: { temperature: 0.2 } },
     permission: [{ permission: "read", pattern: "*", action: "allow" }], system: ["Parent system 🪨漢字e\u0301"],
+    // Parent receipts already passed the existing structured-clone preparation boundary.
+    // URL object preservation is tested directly at the new checkpoint codec boundary.
     messages: [{ role: "user", content: [{ type: "text", text: "Exact prefix 🪨漢字e\u0301" },
-      { type: "image", image: new Uint8Array([0, 128, 255]) },
-      { type: "image", image: new URL("https://example.test/image?q=%F0%9F%AA%A8") }] },
+      { type: "image", image: new Uint8Array([0, 128, 255]) }] },
       { role: "assistant", content: "Parent answer" }],
     tools, toolChoice: "auto", contextMemory: false, small: false, prepared: LLMPrepared.token(),
     preflightParams: { temperature: 0.3, topP: 0.9, topK: 3, maxOutputTokens: 2000, options: { cache: "exact" } },
@@ -150,6 +154,7 @@ it.instance("awaits the real store sink; replay context stays detached while sav
   original.preflightParams.options.cache = "late"
   yield* Deferred.succeed(release, undefined)
   const result = yield* Fiber.join(task)
+  expect(result.failure).toBeUndefined()
   expect(result.artifact).toBeDefined()
   expect(result.retried).toBe(false)
   expect(f.requests).toHaveLength(1)
@@ -193,6 +198,28 @@ it.instance("save failure is checkpoint failure with no transport or correction"
   expect(attempts).toEqual([0])
   expect(f.requests).toEqual([])
   expect((yield* f.store.list({ projectID: f.chat.projectID, directory: f.chat.directory })).items).toEqual([])
+}))
+
+it.instance("correction extends the frozen dispatched prefix despite later observer mutation", () => Effect.gen(function* () {
+  const f = yield* fixture
+  const result = yield* run(f.captured, { provider: provider(), llm: { stream: (input) => {
+    f.requests.push(input)
+    return Stream.make(LLMEvent.textDelta({ id: "reply", text: f.requests.length === 1 ? "invalid" : JSON.stringify(body(input, FIRST)) }),
+      LLMEvent.finish({ reason: "stop" }))
+  } } }, host(f.history), { ...f.callbacks, beforeDispatch: (input) => Effect.gen(function* () {
+    yield* f.callbacks.beforeDispatch(input)
+    if (input.attempt === 0) f.debug[0].messages.push({ role: "user", content: "LATE OUTSIDE-FORK MUTATION" })
+  }) })
+  expect(result.retried).toBe(true)
+  expect(result.artifact).toBeDefined()
+  expect(f.requests).toHaveLength(2)
+  expect(f.requests[1].messages.slice(0, -2)).toEqual(f.requests[0].messages)
+  expect(JSON.stringify(f.requests[1].messages)).not.toContain("LATE OUTSIDE-FORK MUTATION")
+  yield* Effect.forEach(f.saves, (save, index) => Effect.gen(function* () {
+    const stored = yield* f.store.read({ projectID: f.chat.projectID, id: `${save.forkID}:${save.attempt}` })
+    if (!stored) throw new Error("Missing correction checkpoint")
+    matches(stored.payload, f.requests[index])
+  }))
 }))
 
 it.instance("abort while save is held cannot dispatch or retry after release", () => Effect.gen(function* () {
