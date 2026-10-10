@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { afterAll, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, writeSync } from "node:fs"
+import { existsSync, fstatSync, writeFileSync, writeSync } from "node:fs"
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat } from "node:fs/promises"
 import { builtinModules, createRequire } from "node:module"
 import { createConnection, createServer } from "node:net"
@@ -17,6 +17,22 @@ import { cleanupProofRoot } from "./jimmy-desktop-cleanup.fixture"
 
 const desktop = path.resolve(import.meta.dir, "../..")
 const repo = path.resolve(desktop, "../..")
+const stages: unknown[] = []
+function stage(name: string, details?: unknown) {
+  const record = { name, details, pid: process.pid, time: Date.now(), written: 0, fds: [0, 1, 2].map((fd) => {
+    try {
+      const stat = fstatSync(fd)
+      return { fd, dev: stat.dev, ino: stat.ino, mode: stat.mode }
+    } catch (error) { return { fd, error: String(error) } }
+  }) }
+  stages.push(record)
+  writeFileSync(path.join(repo, "test-ci-evidence/jimmy-desktop-diagnostic.json"), JSON.stringify({ sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, stages }))
+  record.written = writeSync(2, `JIMMY_DESKTOP_STAGE=${name}\n`)
+  writeFileSync(path.join(repo, "test-ci-evidence/jimmy-desktop-diagnostic.json"), JSON.stringify({ sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, stages }))
+}
+afterAll(() => {
+  if (process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF === "1") stage("after-all")
+})
 const body = "Résumé: Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n"
 const sourceText = "Version 1 only.\nDisabled rejects operation.\n"
 // This fixed read fixture projects two lines without the file's terminal newline.
@@ -32,7 +48,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
   if (!["darwin", "linux"].includes(process.platform)) throw new Error(`Unsupported desktop proof platform: ${process.platform}`)
   if (process.platform === "darwin" && process.arch !== "arm64") throw new Error("Desktop macOS proof requires native arm64")
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "jimmy-desktop-proof-")))
-  const stage = (name: string) => writeSync(2, `JIMMY_DESKTOP_STAGE=${name}\n`)
+  stage("native-test-start", { root })
   expect(existsSync(root)).toBe(true)
   const env = {
     ...process.env,
@@ -112,12 +128,13 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     stage("evidence-write-start")
     await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-proof.json"), JSON.stringify(evidence))
     stage("evidence-write-done")
-    writeSync(1, `JIMMY_DESKTOP_EVIDENCE=${JSON.stringify(evidence)}\n`)
+    // Keep full evidence in the artifact. A giant synchronous pipe write loses CI log framing.
+    console.log(`JIMMY_DESKTOP_EVIDENCE=${JSON.stringify({ schema: evidence.schema, sha: evidence.sha, runID: evidence.runID, platform: evidence.platform, stopped: evidence.stopped, mutation: evidence.mutation })}`)
     stage("evidence-console-done")
   } finally {
     stage("root-rm-start")
-    // CI exits inside both Bun's recursive fs/promises.rm and rmSync after native teardown.
-    await cleanupProofRoot(root)
+    // A separate Node process owns deletion; verify it finishes before returning this test.
+    await cleanupProofRoot(root, (name, details) => stage(name, details))
     expect(existsSync(root)).toBe(false)
     stage("root-rm-done")
   }
@@ -126,11 +143,11 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
 
 test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("owned desktop proof typechecks", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof typecheck")
-  writeSync(2, "JIMMY_DESKTOP_STAGE=typecheck-start\n")
+  stage("typecheck-start")
   await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), process.env, 60000)
   await command([process.execPath, "typecheck", "src/main/jimmy-desktop-proof.tsconfig.json"], desktop, process.env, 90000)
   await Bun.write(path.join(repo, "test-ci-evidence/jimmy-desktop-typecheck.json"), JSON.stringify({ schema: "jimmy-desktop-typecheck-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, passed: true }))
-  writeSync(2, "JIMMY_DESKTOP_STAGE=typecheck-return\n")
+  stage("typecheck-return")
 }, 160000)
 
 test("owned recursive cleanup preserves real Bun two-case completion", async () => {
@@ -172,6 +189,7 @@ test("owned recursive cleanup preserves real Bun two-case completion", async () 
     expect(existsSync(path.join(root, "first"))).toBe(false)
     expect(existsSync(path.join(root, "second"))).toBe(false)
     const completed = await run(false)
+    if (process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF === "1") stage("completion-subprocess", { incomplete, completed })
     expect(completed.code).toBe(0)
     expect(completed.output).toMatch(/^\s*2 pass\s*$/m)
     expect(completed.output).toMatch(/^\s*0 fail\s*$/m)
@@ -180,6 +198,7 @@ test("owned recursive cleanup preserves real Bun two-case completion", async () 
     expect(await readFile(path.join(root, "first"), "utf8")).toBe("completed")
     expect(await readFile(path.join(root, "second"), "utf8")).toBe("completed")
     expect(existsSync(path.join(root, "install"))).toBe(false)
+    if (process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF === "1") stage("completion-asserted")
   } finally {
     await cleanupProofRoot(root)
   }
@@ -490,15 +509,17 @@ async function runProof(root: string, install: string, electron: string, mutant:
     await exited
     await Promise.all(pids.map(waitForPidExit))
     await Promise.race([Promise.all(readers), Bun.sleep(1000)])
+    stage("streams-before-destroy", { mutant })
     child.stdout.destroy()
     child.stderr.destroy()
     await Promise.allSettled(readers)
+    stage("streams-after-destroy", { mutant })
     const portClosed = await waitForPortRefusal(port)
     if (providerPort === undefined) throw new Error("Owned provider port unavailable after shutdown")
     const providerClosed = await waitForPortRefusal(providerPort)
     writeSync(2, `JIMMY_DESKTOP_CLEANUP=${JSON.stringify({ mutant, pids, portClosed, providerClosed })}\n`)
     if (errors.length) console.error(`JIMMY_PROVIDER_ERRORS=${JSON.stringify(errors)}`)
-    if (child.exitCode !== 0) console.error(`JIMMY_PROCESS_LOGS=${JSON.stringify(logs)}`)
+    if (child.exitCode !== 0 && child.signalCode !== "SIGKILL") console.error(`JIMMY_PROCESS_LOGS=${JSON.stringify({ stdout: logs.stdout.slice(-4000), stderr: logs.stderr.slice(-4000) })}`)
   }
 }
 
