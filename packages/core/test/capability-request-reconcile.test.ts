@@ -62,6 +62,16 @@ function failed<A, E>(exit: Exit.Exit<A, E>) {
 }
 
 describe("CapabilityRequest reconcile under the SQL writer", () => {
+  it.live("decoded implicit-local placement reconciles omitted and own undefined workspace identity", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const local = { ...target, placement: { ...target.placement,
+      location: { ...target.placement.location, workspaceID: undefined } } }
+    expect(yield* f.run(f.store.reconcile(local, { key: "private" }))).toBeUndefined()
+    const receipt = yield* f.run(f.store.commit(local, { key: "private" }, f.write))
+    expect(yield* f.run(f.store.reconcile(target, { key: "private" }))).toEqual({ ...receipt, reused: true })
+    expect(yield* f.run(f.store.reconcile(local, { key: "private" }))).toEqual({ ...receipt, reused: true })
+  }))
+
   it.live("missing receipts leave no domain or ledger rows and consume no quota", () => Effect.gen(function* () {
     const f = yield* fixture()
     yield* Effect.forEach(["intent", "other", "intent"], (key) => Effect.gen(function* () {
