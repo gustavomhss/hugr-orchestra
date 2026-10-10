@@ -139,7 +139,8 @@ test("busy blocks selection and duplicate mutations; snapshot refs/resource surv
   const f = fixture((request) => {
     if (request.method === "GET") return reads(request)
     if (++posts === 1) { started.resolve(); return held.promise }
-    return json({ requestID: "target-receipt", reused: true, data: target(2) })
+    return json({ requestID: "target-receipt", reused: true,
+      data: { target: { ...target(2).target, environment: "original" } } })
   })
   await f.model.load()
   const selected = structuredClone(connection())
@@ -159,6 +160,7 @@ test("busy blocks selection and duplicate mutations; snapshot refs/resource surv
   expect(f.model.state.receipt).toBeUndefined()
   await f.model.retry()
   const writes = f.requests.filter((row) => row.method === "POST")
+  expect(f.model.state.receipt?.reused).toBe(true)
   expect(writes[0].body).toEqual({ connection: connection().connection,
     input: { environment: "original", resource: { room: "one" } } })
   expect(writes[1]).toMatchObject({ key: writes[0].key, body: writes[0].body })

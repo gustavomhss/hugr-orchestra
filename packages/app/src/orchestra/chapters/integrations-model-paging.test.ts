@@ -88,3 +88,37 @@ test("opaque continuation history caps at 512; cannot forget old cursors and loo
   expect(f.model.state.status).toBe("error")
   expect(f.model.state.targetsAfter).toBe(String(512).padStart(32, "0"))
 }, 15000)
+
+test.each(["repeated", "backward", "after-empty"] as const)("fresh opaque cursors cannot hide %s visible target IDs", async (kind) => {
+  const f = fixture((request) => {
+    const url = new URL(request.url)
+    if (!url.pathname.endsWith("/targets")) return reads(request)
+    const after = url.searchParams.get("after")
+    if (after === null) return json({ items: [target(10), target(11)], coverage: "live", after: "x".repeat(32) })
+    if (kind === "after-empty" && after === "x".repeat(32)) return json({ items: [], coverage: "live", after: "y".repeat(32) })
+    return json({ items: [target(kind === "repeated" ? 11 : 9)], coverage: "live", after: "z".repeat(32) })
+  })
+  await f.model.select(connection())
+  if (kind === "after-empty") { await f.model.moreTargets(); expect(f.model.state.status).toBe("ready") }
+  await f.model.moreTargets()
+  expect(f.model.state.status).toBe("error")
+  expect(f.model.state.targets).toEqual([target(10), target(11)])
+  await f.model.select(connection())
+  expect(f.model.state.status).toBe("ready")
+  expect(f.model.state.targets).toEqual([target(10), target(11)])
+})
+
+test("target ordering survives eviction from bounded visible ID history", async () => {
+  const f = fixture((request) => {
+    const offset = Number(new URL(request.url).searchParams.get("after") ?? "0")
+    return json({ items: offset === 544 ? [target()] : Array.from({ length: 32 }, (_, index) => target(offset + index + 1)),
+      coverage: "live", after: String(offset + 32).padStart(32, "0") })
+  })
+  await f.model.select(connection())
+  for (let index = 1; index < 17; index++) await f.model.moreTargets()
+  expect(f.model.state.status).toBe("ready")
+  expect(f.model.state.targets).toHaveLength(512)
+  await f.model.moreTargets()
+  expect(f.model.state.status).toBe("error")
+  expect(f.model.state.targetsAfter).toBe(String(544).padStart(32, "0"))
+})
