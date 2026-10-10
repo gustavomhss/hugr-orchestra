@@ -8,13 +8,13 @@ import { createRequire } from "node:module"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
-// R4 approved these exact source bytes; runtime tests and model qualification remain lead-owned.
-const consumerReview = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "approved", sourceReview: "R4", runtimeQualification: "pending" }
+// W6 approved the listener-bound successor in source; current-tree runtime qualification remains separate.
+const consumerReview = { revision: "4f2156e1003978b1edd949fcde8f488b2ceaf667", status: "approved", sourceReview: "W6",
+  historicalRevision: "6d325f9356a100ea684fc9c302015557d33b1bfa", runtimeQualification: "pending" }
 const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
 const inventoryDigest = "80bdd0f9e2cb3195fbdc64ad7d1e8fb1d2e06bb55ceabcb213e28e4bed4ae465"
-// Proposal only: W6/lead must approve before changing the executable historical guard.
-const proposedConsumerPin = { file: "packages/orchestra/src/plugin/index.ts", previousBlob: "6588027dd666cd6d1a3dd437bec548e53622afda",
-  proposedBlob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", status: "pending-independent-review",
+const consumerPinReview = { file: "packages/orchestra/src/plugin/index.ts", previousBlob: "6588027dd666cd6d1a3dd437bec548e53622afda",
+  approvedBlob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", status: "source-approved", reviewer: "W6", runtimeQualification: "pending",
   reason: "ListenerContext.Current binds plugin client and serverUrl to the actual listener; legacy selection is unchanged." }
 const guarded = [
   ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
@@ -23,7 +23,7 @@ const guarded = [
   ["packages/core/src/auth/siwc.ts", "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3"],
   // 6d325f9356a100ea684fc9c302015557d33b1bfa; keep these distinct from the historical auth guards above.
   ["packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
-  ["packages/orchestra/src/plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
+  ["packages/orchestra/src/plugin/index.ts", "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5"],
 ] as const
 // Current runtime ABI observations are separate from the frozen historical packet's source/blob identities.
 const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats/index.ts", "maestro/roster.ts",
@@ -106,7 +106,10 @@ async function main() {
     requireAuthoring(originalArtifacts.every((item) => Object.values(item).every((value) => value === null || ["string", "number", "boolean"].includes(typeof value))), "AUTHORING_INVENTORY_NON_SCALAR_FIELD")
     requireAuthoring(demand.bytes.length > 0 && handoff.bytes.length > 0 && demand.path !== handoff.path && inventory.every((item) => item.path !== join(project, "proposal.md")), "AUTHORING_REVISION_INPUT_OR_WRITE_BOUNDARY_INVALID")
   }
-  const instructions = await read(await canonical(join(packet, "AUTHORING-RUN-INPUT.md"), false))
+  const instructionsInput = inventory.find((item) => item.path === join(packet, "AUTHORING-RUN-INPUT.md"))
+  requireAuthoring(args["inventory-digest"] === undefined || instructionsInput, "AUTHORING_PINNED_RUN_INPUT_MISSING")
+  // Reuse the checked snapshot; a second read could disagree with its inventory during a change-and-restore race.
+  const instructions = instructionsInput?.bytes ?? await read(await canonical(join(packet, "AUTHORING-RUN-INPUT.md"), false))
   requireAuthoring(instructions.length > 0, "AUTHORING_RUN_INPUT_EMPTY")
   requireAuthoring(await lstat(join(project, "proposal.md")).then(() => false, (error: NodeJS.ErrnoException) => error.code === "ENOENT"), "AUTHORING_ORIGINAL_PROPOSAL_ALREADY_EXISTS")
   process.umask(0o077)
@@ -119,7 +122,7 @@ async function main() {
   // Render one exact Task string without the source file's final LF; original input hashes remain byte-exact.
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`.trimEnd()
   const job = { candidate, project, model, assignment, preflightOnly: Boolean(args["preflight-only"]) }
-  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, proposedConsumerPin, inventoryDigest: expectedInventoryDigest,
+  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, consumerPinReview, inventoryDigest: expectedInventoryDigest,
     inventoryDigestSelection: args["inventory-digest"] === undefined ? "historical-default" : "explicit-packet",
     packetPointer: join(packet, "DOMAIN-SOURCE.json"), packetSha256: sha256(domainBytes), runInputSha256: sha256(instructions),
     inventory: inventory.map(({ bytes, ...item }) => item), assignmentSha256: sha256(Buffer.from(assignment)), deadlineMs: deadline, stdoutBytes: 32 * 1024 * 1024, semanticJudgment: "not-performed" }
