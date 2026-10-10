@@ -364,10 +364,9 @@ jobs:
         run: |
           filters=(--filter='!orchestra')
           if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@orchestra/httpapi-codegen'); fi
-          # Windows cold embedded startup contended with another runtime suite and exceeded its unchanged deadline.
-          # Serial package scheduling retains every test; Linux keeps two concurrent packages.
-          concurrency=2
-          [ "$RUNNER_OS" != Windows ] || concurrency=1
+          # Cold embedded startup on Windows and contract generation on Linux exceeded unchanged deadlines
+          # when sharing the runner with another runtime suite. Keep every package and per-test budget.
+          concurrency=1
           GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" "${filters[@]}"
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
