@@ -137,6 +137,7 @@ async function main() {
   })
   await writeFile(join(runtime, "events.jsonl"), records.map((item) => redact(JSON.stringify(item))).join("\n") + "\n", { flag: "wx", mode: 0o600 })
   await writeFile(join(runtime, "status.txt"), output.code ?? "AUTHORING_CHILD_COMPLETED", { flag: "wx", mode: 0o600 })
+  if (output.code) await writeFile(join(runtime, "diagnostic.txt"), redact(output.stderr), { flag: "wx", mode: 0o600 })
   requireAuthoring(!output.code, output.code ?? "AUTHORING_CHILD_FAILED_STDERR_WITHHELD")
   const preflight = records.filter((item) => item.type === "authoring_native_preflight")
   requireAuthoring(preflight.length === 1, "AUTHORING_NATIVE_PREFLIGHT_NOT_OBSERVED")
@@ -190,6 +191,7 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
     child.once("error", () => { state.failure = "AUTHORING_CHILD_SPAWN_FAILED"; done(null) })
   })
   const chunks: Uint8Array[] = []
+  const diagnostics: Uint8Array[] = []
   const groupAlive = () => {
     if (!child.pid || state.groupGone) return false
     try { process.kill(-child.pid, 0); return true } catch (error) {
@@ -224,18 +226,18 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
   try {
     const drains = [child.stdout, child.stderr].map(async (stream, index) => {
       for await (const part of stream) {
-        if (index !== 0) continue
         const bytes = Buffer.from(part)
         state.bytes += bytes.length
         if (state.bytes > 32 * 1024 * 1024) { state.failure = "AUTHORING_OUTPUT_LIMIT"; requestStop(); return }
-        chunks.push(bytes)
+        if (index === 0) chunks.push(bytes)
+        if (index === 1) diagnostics.push(bytes)
       }
     })
     const drained = Promise.all(drains).catch(() => { state.failure ??= "AUTHORING_STREAM_FAILED"; requestStop() })
     const status = await Promise.race([exited, stopped.then(() => null)])
     await stop() // Also remove surviving descendants after a normally exited primary.
     await Promise.race([drained, Bun.sleep(1_000)])
-    return { text: Buffer.concat(chunks).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
+    return { text: Buffer.concat(chunks).toString("utf8"), stderr: Buffer.concat(diagnostics).toString("utf8"), code: state.failure ?? (status === 0 ? undefined : "AUTHORING_CHILD_FAILED_STDERR_WITHHELD") }
   } finally {
     clearTimeout(timer)
     try { await stop() } catch {
