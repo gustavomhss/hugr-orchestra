@@ -63,3 +63,22 @@ test("all owned candidate proof helpers compile through the standard desktop pac
   const { typecheckCandidateProof } = await import("./lean-candidate-types.fixture")
   await typecheckCandidateProof()
 }, 150000)
+
+test("recorder redacts split-stream passwords discovered after capture and omits raw response/config payloads", () => {
+  const recorder = new CandidateRecorder()
+  const password = "synthetic-late-owned-password"
+  const chunks = [password.slice(0, 11), password.slice(11)]
+  recorder.observe("owned child stream", () => chunks.join(""))
+  expect(JSON.stringify(recorder.observations)).toContain(password)
+  recorder.protectBackend("orchestra", password)
+  const response = { privateResponse: { config: "synthetic-private-machine-policy", password } }
+  const original = new Error("Own GET route: 500", { cause: response })
+  recorder.fail("primary", "own HTTP failure", original)
+  const output = recorder.serialize({ streams: recorder.observations, diagnostics: recorder.failures })
+  expect(output).not.toContain(password)
+  expect(output).not.toContain("synthetic-private-machine-policy")
+  expect(output).toContain("Own GET route: 500")
+  expect(output).toContain("[omitted]")
+  expect(original.cause).toBe(response)
+  expect(chunks.join("")).toBe(password)
+})
