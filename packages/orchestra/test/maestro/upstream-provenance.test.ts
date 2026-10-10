@@ -49,9 +49,6 @@ const card: UpstreamResult.Card = {
 }
 const fenced = (value: unknown) => "```upstream-result\n" + JSON.stringify(value) + "\n```"
 
-// These fixtures write the agreed private host port on real Task records. Relay owns the production writer,
-// captured-return identity, durable delivery ordering, and preservation against stale Task completion writes.
-
 function assistant(sessionID: SessionID, agent: string, parentID: MessageID): SessionV1.Assistant {
   return {
     id: MessageID.ascending(), role: "assistant", sessionID, parentID, agent, mode: agent,
@@ -101,7 +98,6 @@ const seed = Effect.fn("UpstreamProvenanceTest.seed")(function* (options?: {
     id: PartID.ascending(), type: "tool", sessionID: parent.id, messageID: parentMessage.id,
     tool: "task", callID: `call-${parentMessage.id}`, state,
   })
-  // Use the actual host producer to persist workResult; no model or substituted registry/storage service.
   const work = SeatWork.track({
     enabled: true, seat: Seats.all.archie, sessionID: child.id, taskId: binding?.taskId, writeRoots: [],
     publish: (workResult) => sessions.updatePart({ ...task, state: { ...state, metadata: { ...metadata, workResult } } }).pipe(Effect.asVoid),
@@ -170,7 +166,6 @@ const settled = Effect.fn("UpstreamProvenanceTest.settled")(function* () {
   return { ...fixture, delivery: delivery.part, upstreamSettlement }
 })
 
-// Adversarial retained evidence only: generic writers preserve admitted receipts and captured workResult.
 const corruptTaskMetadata = Effect.fn("UpstreamProvenanceTest.corruptTaskMetadata")(function* (
   fixture: Effect.Success<ReturnType<typeof settled>>,
   change: (metadata: Record<string, unknown>) => Record<string, unknown>,
@@ -246,7 +241,6 @@ describe("UpstreamProvenance.observe", () => {
     })
     const parentID = SessionMessage.ID.create()
     const callID = `call-${parentID}`
-    // Retain ordinary host anchors before Success; only the private setter admits the later Progress receipt.
     yield* modernAssistant(fixture.parent.id, parentID, "maestro", "", { callID,
       metadata: fixture.task.state.metadata, input: fixture.task.state.input, progress: true,
     })
@@ -358,8 +352,6 @@ describe("UpstreamProvenance.observe", () => {
     const sessions = yield* Session.Service
     const next = yield* sessions.updateMessage(assistant(fixture.child.id, "archie", fixture.author.info.parentID))
     const text = yield* sessions.updatePart({ ...fixture.text, id: PartID.ascending(), messageID: next.id })
-    // Deliberately replace retained outer evidence with a real later producer result. Generic writers freeze
-    // captured workResult; this adversarial row proves the observer still selects the original receipt author.
     yield* fixture.work.record({ info: next, parts: [text] })
     const workResult = yield* fixture.work.notice("completed", text.text)
     if (!workResult) throw new Error("expected actual later SeatWork result")
@@ -486,7 +478,6 @@ describe("UpstreamProvenance.observe", () => {
   it.instance("rejects forged host metadata for a child owned by another parent", () => Effect.gen(function* () {
     const sessions = yield* Session.Service
     const otherParent = yield* sessions.create({ agent: "maestro", title: "actual foreign authority" })
-    // All caller/host metadata and retained binding claim the selected parent; actual Session ownership disagrees.
     const fixture = yield* seed({ childParentID: otherParent.id })
     expect(fixture.task.state.metadata).toMatchObject({ parentSessionId: fixture.parent.id, sessionId: fixture.child.id })
     expect(fixture.binding?.authoritySessionID).toBe(fixture.parent.id)
