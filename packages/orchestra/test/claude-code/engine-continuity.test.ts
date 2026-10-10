@@ -1,10 +1,11 @@
 import { expect } from "bun:test"
-import { Deferred, Effect, Fiber, Schema } from "effect"
+import { Deferred, Effect, Fiber } from "effect"
 import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { Archive } from "@/continuity/archive"
-import REVIEW_PROMPT from "@/continuity/review-prompt.txt"
+import { validChecklist } from "@/continuity/checklist-seal"
+import PROMPT from "@/continuity/prompt.txt"
 import { ClaudeCodeStore } from "@/claude-code/store"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { pollWithTimeout } from "../lib/effect"
@@ -29,22 +30,20 @@ ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and
     expect(done.info?.status).toBe("completed")
     expect(done.info?.output).toBe("applied")
     expect(ClaudeEngineFixture.state.producers).toBe(1)
-    expect(ClaudeEngineFixture.state.reviews).toBe(1)
-    const reviews = ClaudeEngineFixture.state.queries.filter(ClaudeEngineFixture.isReview)
-    expect(reviews).toHaveLength(1)
-    expect(reviews[0].options?.model).toBe("claude-haiku-4-5-20251001")
-    expect(reviews[0].options?.systemPrompt).toEqual({ type: "custom", prompt: REVIEW_PROMPT })
-    const packet = Schema.decodeUnknownSync(Schema.Struct({ role: Schema.Literal("user"), content: Schema.String }))(
-      ClaudeEngineFixture.historicalMessages(reviews[0])[0])
-    const reviewed = Schema.decodeUnknownSync(Schema.Struct({ candidate: Schema.Struct({ text: Schema.String, items: Schema.Array(Schema.Unknown) }),
-      transcript: Schema.String }))(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(packet.content))
-    expect(reviewed.candidate.text).toContain("SDK_MEMORY_NEEDLE_9C41")
-    expect(reviewed.candidate.items.length).toBeGreaterThan(0)
-    expect(reviewed.transcript).toContain("prompt-0")
+    expect(ClaudeEngineFixture.state.reviews).toBe(0)
+    const producers = ClaudeEngineFixture.state.queries.filter((query) => query.options?.persistSession === false)
+    expect(producers).toHaveLength(1)
+    expect(producers[0].options?.model).toBe("claude-haiku-4-5-20251001")
+    expect(producers[0].options?.systemPrompt).toEqual({ type: "custom", prompt: PROMPT })
+    expect(JSON.stringify(ClaudeEngineFixture.historicalMessages(producers[0]))).toContain("prompt-0")
     const storage = yield* Archive.Service
     const memory = (yield* storage.readMemory(chat.id))?.context?.artifact
     expect(memory?.version).toBe(5)
-    expect(memory?.version === 5 && memory.review).toMatchObject({ version: 1, state: "active", next: "verify" })
+    expect(memory?.version === 5 && memory.checklist).toMatchObject({ version: 1, critical: [], digest: expect.any(String) })
+    expect(memory?.version === 5 && validChecklist(memory)).toBe(true)
+    expect(memory).not.toHaveProperty("review")
+    expect(memory?.text).toContain("SDK_MEMORY_NEEDLE_9C41")
+    expect(memory?.items.length).toBeGreaterThan(0)
     expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
     expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ contextWindow: 20_000, maxOutputTokens: 2_000, version: "2.1.289", continuityPaused: null })
     const prepared = yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })
@@ -116,15 +115,14 @@ ClaudeEngineFixture.it.instance("session-pattern recall denial disables masking 
   expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
   expect((yield* archive.readMemory(chat.id))?.masks).toEqual([])
   expect(ClaudeEngineFixture.state.producers).toBe(1)
-  expect(ClaudeEngineFixture.state.reviews).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
   ClaudeEngineFixture.state.producer = undefined
 }), 120_000)
 
-for (const cancel of [false, true]) {
-  ClaudeEngineFixture.it.instance(`SDK reviewer cannot publish before query.return cleanup; Stop joins disposal (cancel=${cancel})`, () => Effect.gen(function* () {
+for (const correction of [false, true]) for (const cancel of [false, true]) {
+  ClaudeEngineFixture.it.instance(`SDK producer cannot publish before query.return cleanup; Stop joins disposal (correction=${correction}, cancel=${cancel})`, () => Effect.gen(function* () {
     ClaudeEngineFixture.reset()
-    ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
     const entered = yield* Deferred.make<void>()
     const disposing = yield* Deferred.make<void>()
     const stopped = yield* Deferred.make<void>()
@@ -132,18 +130,25 @@ for (const cancel of [false, true]) {
     const cleanup: { release?: () => void; aborted: boolean; closed: number; returns: number; disposed: boolean } = {
       aborted: false, closed: 0, returns: 0, disposed: false,
     }
-    yield* Effect.addFinalizer(() => Effect.sync(() => { cleanup.release?.(); ClaudeEngineFixture.state.reviewer = undefined }))
-    ClaudeEngineFixture.state.reviewer = (params) => {
+    yield* Effect.addFinalizer(() => Effect.sync(() => { cleanup.release?.(); ClaudeEngineFixture.state.producer = undefined }))
+    ClaudeEngineFixture.state.producer = (params) => {
+      if (correction && ClaudeEngineFixture.state.producers === 1) return (async function* () {
+        // Missing Now is a real C15 host failure, not a synthetic reviewer response.
+        yield { type: "assistant", ...ClaudeEngineFixture.frame, message: { id: "invalid", content: [{ type: "text", text: '{"ops":[]}' }], stop_reason: "end_turn", usage: {} } }
+        yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", ...ClaudeEngineFixture.frame }
+      })()
+      expect(ClaudeEngineFixture.state.producers).toBe(correction ? 2 : 1)
+      if (correction) expect(JSON.stringify(ClaudeEngineFixture.historicalMessages(params).at(-1))).toContain("HOST CHECK FAILED. C15:")
       const release = new Promise<void>((resolve) => { cleanup.release = resolve })
       const abort = new Promise<void>((resolve) => params.options?.abortController?.signal.addEventListener("abort", () => {
         cleanup.aborted = true
         resolve()
       }, { once: true }))
       const query = (async function* () {
-        for await (const message of ClaudeEngineFixture.memoryReviewer(params)) {
+        for await (const message of ClaudeEngineFixture.memoryProducer(params)) {
           yield message
           if (message.type === "assistant") {
-            // The accepted review JSON has reached the real transport before cancellation.
+            // Candidate bytes reached the SDK transport; publication must still await disposal.
             await Effect.runPromiseWith(context)(Deferred.succeed(entered, undefined))
             if (cancel) {
               await abort
@@ -171,10 +176,10 @@ for (const cancel of [false, true]) {
     const archive = yield* Archive.Service
     for (let index = 0; index < 6; index++) {
       ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(index, { usage: index === 5 ? 15_000 : 50 }))
-      yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say(`review-cleanup-${index} ` + "source evidence ".repeat(120)) })
+      yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say(`producer-cleanup-${index} ` + "source evidence ".repeat(120)) })
     }
     yield* Deferred.await(entered).pipe(Effect.timeout("15 seconds"))
-    const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "review job not registered")
+    const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "producer job not registered")
     const before = yield* archive.readMemory(chat.id)
     expect(before?.context).toBeUndefined()
     const history = yield* sessions.messages({ sessionID: chat.id })
@@ -186,8 +191,8 @@ for (const cancel of [false, true]) {
     expect((yield* jobs.get(job.id))?.status).toBe(cancel ? "cancelled" : "running")
     expect(yield* archive.readMemory(chat.id)).toEqual(before)
     expect((yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })).system).toEqual([])
-    expect(ClaudeEngineFixture.state.producers).toBe(1)
-    expect(ClaudeEngineFixture.state.reviews).toBe(1)
+    expect(ClaudeEngineFixture.state.producers).toBe(correction ? 2 : 1)
+    expect(ClaudeEngineFixture.state.reviews).toBe(0)
     expect(ClaudeEngineFixture.state.queries.filter((query) => query.options?.persistSession !== false)).toHaveLength(6)
     expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
     cleanup.release?.()
@@ -196,6 +201,8 @@ for (const cancel of [false, true]) {
     expect(done.timedOut).toBe(false)
     expect(cleanup.disposed).toBe(true)
     expect(done.info?.status).toBe(cancel ? "cancelled" : "completed")
+    expect(ClaudeEngineFixture.state.producers).toBe(correction ? 2 : 1)
+    expect(ClaudeEngineFixture.state.reviews).toBe(0)
     expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(history)
     if (cancel) {
       expect(yield* Deferred.isDone(stopped)).toBe(true)
@@ -205,7 +212,9 @@ for (const cancel of [false, true]) {
     }
     expect(done.info?.output).toBe("applied")
     const memory = (yield* archive.readMemory(chat.id))?.context?.artifact
-    expect(memory?.version === 5 && memory.review).toMatchObject({ version: 1, state: "active", next: "verify" })
+    expect(memory?.version === 5 && memory.checklist).toMatchObject({ version: 1, critical: [], digest: expect.any(String) })
+    expect(memory?.version === 5 && validChecklist(memory)).toBe(true)
+    expect(memory).not.toHaveProperty("review")
     expect((yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })).system.join("\n")).toContain("SDK_MEMORY_NEEDLE_9C41")
   }), 120_000)
 }
@@ -241,7 +250,12 @@ ClaudeEngineFixture.it.instance("context_compact uses the real SDK backend witho
   expect(part?.type === "tool" && part.state.status).toBe("completed")
   expect(part?.type === "tool" && part.state.status === "completed" && part.state.metadata.outcome).toBe("applied")
   expect(ClaudeEngineFixture.state.producers).toBe(1)
-  expect(ClaudeEngineFixture.state.reviews).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
+  const archive = yield* Archive.Service
+  const memory = (yield* archive.readMemory(chat.id))?.context?.artifact
+  expect(memory?.version === 5 && memory.checklist).toMatchObject({ version: 1, critical: [], digest: expect.any(String) })
+  expect(memory?.version === 5 && validChecklist(memory)).toBe(true)
+  expect(memory).not.toHaveProperty("review")
   const loaded: SessionStoreEntry[][] = []
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(8, { loaded }))
   yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("continue") })
@@ -298,7 +312,8 @@ ClaudeEngineFixture.it.instance("exact native fallback admission refuses spawn e
   }
   const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "missing producer")
   expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
-  expect(ClaudeEngineFixture.state.reviews).toBe(1)
+  expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect((yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toHaveLength(1)
   const context = yield* Effect.context<never>()
   const native = ClaudeCodeStore.create({ sessionID: chat.id, sessions, continuity, fs: yield* FSUtil.Service,
@@ -326,8 +341,9 @@ ClaudeEngineFixture.it.instance("unknown deferred carrier uses authoritative nat
     yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say(`carrier-boundary-${index} ` + "span text ".repeat(120)) })
   }
   const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "missing producer")
-  yield* jobs.wait({ id: job.id, timeout: 15_000 })
-  expect(ClaudeEngineFixture.state.reviews).toBe(1)
+  expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
+  expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   const context = yield* Effect.context<never>()
   const continuity = yield* SessionContinuity.Service
   const native = ClaudeCodeStore.create({ sessionID: chat.id, sessions, continuity, fs: yield* FSUtil.Service,
@@ -389,6 +405,7 @@ ClaudeEngineFixture.it.instance("actual engine caller turns reuse the stable SDK
   yield* Effect.sleep("50 millis")
   expect(aborted).toBe(false)
   expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   yield* Deferred.succeed(release, undefined)
   yield* Fiber.join(next)
   ClaudeEngineFixture.state.producer = undefined
