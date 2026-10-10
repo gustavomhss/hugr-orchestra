@@ -1,7 +1,7 @@
 export * as LeanMetrics from "./lean-metrics"
 
-import type { LeanCoverage } from "./lean-coverage"
-import type { LeanEngine } from "./lean-engine"
+import { LeanCoverage } from "./lean-coverage"
+import { LeanEngine } from "./lean-engine"
 
 /** Local numeric provenance for one actually selected standard tool result. No command/output payload. */
 export interface Decision {
@@ -58,9 +58,11 @@ export interface AvailableSummary {
 /** Frozen decoder signature; metrics author fills validation with the actual persisted record contract. */
 export const decode: (value: unknown) => Decision | undefined = (value) => {
   try {
-    const root = record(value, ["version", "scope", "owner", "orchestraProfile", "model", "engine", "producer",
+    const root = record(value, ["version", "scope", "owner", "orchestraProfile", "model", "engine", "itemID", "producer",
       "eligible", "status", "reason", "filterProfile", "bytes", "tokens", "durationMs"])
-    if (!root || root.version !== 1 || root.scope !== "standard-registry" || root.engine !== "hugr-lean@0.2.0:4e46ae0534937bdf"
+    if (!root || root.version !== 1 || root.scope !== "standard-registry"
+      || typeof root.engine !== "string" || !LeanEngine.accepted.includes(root.engine)
+      || (root.itemID !== undefined && (typeof root.itemID !== "string" || !LeanCoverage.ids.some((id) => id === root.itemID)))
       || (root.producer !== "native-shell" && root.producer !== "unverified") || typeof root.eligible !== "boolean"
       || (root.eligible && root.producer !== "native-shell")
       || (root.status !== "applied" && root.status !== "normalized" && root.status !== "passthrough")
@@ -82,11 +84,12 @@ export const decode: (value: unknown) => Decision | undefined = (value) => {
       if (bytes.saved !== 0 || (tokens.kind === "estimated" && tokens.saved !== 0)) return undefined
     } else if (!root.eligible || root.producer !== "native-shell" || bytes.saved <= 0) return undefined
     return Object.freeze({
-      version: 1, scope: "standard-registry", engine: "hugr-lean@0.2.0:4e46ae0534937bdf",
+      version: 1, scope: "standard-registry", engine: root.engine as LeanEngine.ID,
       owner: Object.freeze({ projectID: owner.projectID, location: owner.location, sessionID: owner.sessionID, callID: owner.callID }),
       model: Object.freeze({ provider: model.provider, id: model.id }),
       ...(root.orchestraProfile === undefined ? {} : { orchestraProfile: root.orchestraProfile }),
       ...(root.filterProfile === undefined ? {} : { filterProfile: root.filterProfile }),
+      ...(root.itemID === undefined ? {} : { itemID: root.itemID as LeanCoverage.ItemID }),
       producer: root.producer, eligible: root.eligible, status: root.status, reason: root.reason,
       bytes, tokens, durationMs: root.durationMs,
     })
