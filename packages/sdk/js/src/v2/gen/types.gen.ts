@@ -2912,6 +2912,196 @@ export type McpUnsupportedOAuthError = {
   error: string
 }
 
+export type LeanProfileScope = {
+  profileID: string
+  projectID: string
+  directory: string
+}
+
+export type LeanProfileSavings = {
+  bytesSaved: number | null
+  tokensSaved: number | null
+  calls: unknown
+  tokenCalls: unknown
+}
+
+export type LeanProfileItem = {
+  id:
+    | "cargo"
+    | "go"
+    | "pytest"
+    | "jest"
+    | "vitest"
+    | "git"
+    | "rg"
+    | "tsc"
+    | "node"
+    | "pnpm"
+    | "eslint"
+    | "biome"
+    | "ruff"
+    | "pyright"
+    | "pylint"
+    | "bun"
+    | "esbuild"
+    | "golangci"
+    | "markdownlint"
+    | "mypy"
+    | "next"
+    | "npm"
+    | "pip"
+    | "playwright"
+    | "prettier"
+    | "rollup"
+    | "shellcheck"
+    | "stylelint"
+    | "uv"
+    | "vite"
+    | "webpack"
+    | "yarn"
+  enabled: boolean
+  savings: LeanProfileSavings
+}
+
+export type LeanProfileDashboard = {
+  scope: LeanProfileScope
+  engine: string
+  enabled: boolean
+  coverage: "saved-profile-history"
+  complete: boolean
+  savings: LeanProfileSavings
+  items: Array<LeanProfileItem>
+}
+
+export type ServiceUnavailableError = {
+  _tag: "ServiceUnavailableError"
+  message: string
+  service?: string
+}
+
+export type LeanProfileUpdate = {
+  itemID?:
+    | "cargo"
+    | "go"
+    | "pytest"
+    | "jest"
+    | "vitest"
+    | "git"
+    | "rg"
+    | "tsc"
+    | "node"
+    | "pnpm"
+    | "eslint"
+    | "biome"
+    | "ruff"
+    | "pyright"
+    | "pylint"
+    | "bun"
+    | "esbuild"
+    | "golangci"
+    | "markdownlint"
+    | "mypy"
+    | "next"
+    | "npm"
+    | "pip"
+    | "playwright"
+    | "prettier"
+    | "rollup"
+    | "shellcheck"
+    | "stylelint"
+    | "uv"
+    | "vite"
+    | "webpack"
+    | "yarn"
+  enabled: boolean
+}
+
+export type LeanProfileExecution = {
+  sessionID: string
+  messageID: string
+  partID: string
+  callID: string
+  itemID:
+    | "cargo"
+    | "go"
+    | "pytest"
+    | "jest"
+    | "vitest"
+    | "git"
+    | "rg"
+    | "tsc"
+    | "node"
+    | "pnpm"
+    | "eslint"
+    | "biome"
+    | "ruff"
+    | "pyright"
+    | "pylint"
+    | "bun"
+    | "esbuild"
+    | "golangci"
+    | "markdownlint"
+    | "mypy"
+    | "next"
+    | "npm"
+    | "pip"
+    | "playwright"
+    | "prettier"
+    | "rollup"
+    | "shellcheck"
+    | "stylelint"
+    | "uv"
+    | "vite"
+    | "webpack"
+    | "yarn"
+  command: string
+  commandTruncated: boolean
+  status: "completed" | "error"
+  exit: number | null
+  time: unknown
+  bytesSaved: number | null
+  tokensSaved: number | null
+}
+
+export type LeanProfileHistory = {
+  scope: LeanProfileScope
+  itemID:
+    | "cargo"
+    | "go"
+    | "pytest"
+    | "jest"
+    | "vitest"
+    | "git"
+    | "rg"
+    | "tsc"
+    | "node"
+    | "pnpm"
+    | "eslint"
+    | "biome"
+    | "ruff"
+    | "pyright"
+    | "pylint"
+    | "bun"
+    | "esbuild"
+    | "golangci"
+    | "markdownlint"
+    | "mypy"
+    | "next"
+    | "npm"
+    | "pip"
+    | "playwright"
+    | "prettier"
+    | "rollup"
+    | "shellcheck"
+    | "stylelint"
+    | "uv"
+    | "vite"
+    | "webpack"
+    | "yarn"
+  complete: boolean
+  executions: Array<LeanProfileExecution>
+}
+
 export type Project = {
   id: string
   worktree: string
@@ -3259,12 +3449,6 @@ export type PromptInput = {
   text: string
   files?: Array<PromptInputFileAttachment>
   agents?: Array<PromptAgentAttachment>
-}
-
-export type ServiceUnavailableError = {
-  _tag: "ServiceUnavailableError"
-  message: string
-  service?: string
 }
 
 export type MessageNotFoundError = {
@@ -11623,6 +11807,136 @@ export type McpDisconnectResponses = {
 }
 
 export type McpDisconnectResponse = McpDisconnectResponses[keyof McpDisconnectResponses]
+
+export type ProjectLeanData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/lean"
+}
+
+export type ProjectLeanErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type ProjectLeanError = ProjectLeanErrors[keyof ProjectLeanErrors]
+
+export type ProjectLeanResponses = {
+  /**
+   * LeanProfileDashboard
+   */
+  200: LeanProfileDashboard
+}
+
+export type ProjectLeanResponse = ProjectLeanResponses[keyof ProjectLeanResponses]
+
+export type ProjectLeanUpdateData = {
+  body?: LeanProfileUpdate
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/lean"
+}
+
+export type ProjectLeanUpdateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type ProjectLeanUpdateError = ProjectLeanUpdateErrors[keyof ProjectLeanUpdateErrors]
+
+export type ProjectLeanUpdateResponses = {
+  /**
+   * LeanProfileDashboard
+   */
+  200: LeanProfileDashboard
+}
+
+export type ProjectLeanUpdateResponse = ProjectLeanUpdateResponses[keyof ProjectLeanUpdateResponses]
+
+export type ProjectLeanHistoryData = {
+  body?: never
+  path: {
+    itemID:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/project/lean/history/{itemID}"
+}
+
+export type ProjectLeanHistoryErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type ProjectLeanHistoryError = ProjectLeanHistoryErrors[keyof ProjectLeanHistoryErrors]
+
+export type ProjectLeanHistoryResponses = {
+  /**
+   * LeanProfileHistory
+   */
+  200: LeanProfileHistory
+}
+
+export type ProjectLeanHistoryResponse = ProjectLeanHistoryResponses[keyof ProjectLeanHistoryResponses]
 
 export type ProjectListData = {
   body?: never
