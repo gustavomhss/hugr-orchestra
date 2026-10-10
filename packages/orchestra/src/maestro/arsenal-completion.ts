@@ -55,6 +55,8 @@ export type Facts = {
   readonly checks?: Capture
   readonly receipt?: Verified
   readonly hostReason?: ToolSafety.Denied
+  /** Secondary sampling failure when a native denial already owns the completion failure. */
+  readonly deltaReason?: ToolSafety.Denied
   readonly delta?: { readonly baseRevision: string; readonly checkedRevision: string; readonly worktreeDigest: string }
 }
 const receipts = new WeakMap<Receipt, {
@@ -197,7 +199,7 @@ export const make = Effect.gen(function* () {
       return
     }
     const seen: RelayArm.HostCheckResult[] = []
-    const captured: { checks?: Capture; delta?: Facts["delta"] } = {}
+    const captured: { checks?: Capture; delta?: Facts["delta"]; deltaReason?: ToolSafety.Denied } = {}
     return yield* Effect.gen(function* () {
       const current = receipts.get(receipt)
       if (!current || receipt.taskID !== taskID) return yield* new ToolSafety.Denied({ reason: "completion-receipt-unbound" })
@@ -235,11 +237,18 @@ export const make = Effect.gen(function* () {
         },
       }).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "completion-evaluation-acquisition" })))
       if (evaluation.capture) captured.checks = evaluation.capture
-      const after = yield* fingerprint(binding.directory)
+      const after = yield* fingerprint(binding.directory).pipe(Effect.catch((error) => {
+        if (refused.error) captured.deltaReason = error
+        return Effect.fail(refused.error ?? error)
+      }))
       // Sampled Git fingerprints, not an atomic filesystem snapshot. Memory log writes are excluded by the shared reader.
-      if (before.digest !== after.digest && evaluation.outcome !== "revision-drift")
-        return yield* new ToolSafety.Denied({ reason: "completion-delta-drift" })
-      if (refused.error) return yield* refused.error
+      const drift = before.digest !== after.digest && evaluation.outcome !== "revision-drift"
+        ? new ToolSafety.Denied({ reason: "completion-delta-drift" }) : undefined
+      if (refused.error) {
+        if (drift) captured.deltaReason = drift
+        return yield* refused.error
+      }
+      if (drift) return yield* drift
       const hold = Relay.hold(evaluation)
       if (hold === "completion-parked-awaiting-owner")
         return yield* new ToolSafety.Denied({ reason: hold, detail: Relay.parkedHold(evaluation.wp ?? "", evaluation.failing) })
@@ -259,8 +268,7 @@ export const make = Effect.gen(function* () {
       })
       const facts: Facts = Exit.isSuccess(exit)
         ? { state: "host-verified", receipt: exit.value, ...captured }
-        : { state: hostReason.reason !== "completion-checks-not-passing" && hostReason.reason !== "completion-parked-awaiting-owner"
-            ? "host-incomplete" : captured.checks?.results.some((result) => result.status === "fail") ? "host-failed" : "host-incomplete",
+        : { state: captured.checks?.results.some((result) => result.status === "fail") ? "host-failed" : "host-incomplete",
           hostReason, ...captured }
       return Effect.suspend(() => observe?.(facts) ?? Effect.void).pipe(
         // An observer defect must not replace the real host failure. On success it remains a defect, never a new pass.
