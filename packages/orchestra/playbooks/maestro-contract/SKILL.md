@@ -28,7 +28,7 @@ maps/search; follow explicit drill pointers and HOLD stale Own state.
    gates. If an active binding prevents authoring or required inspection is unavailable, HOLD through the
    existing owner process. No ordinary Task enters the active governed chain; do not invent disarm,
    fresh-Session escape or downgrade to normal. Repeat this inspection before later authoring revisions.
-1. Supply current boundary facts to native `walt` and request the smallest load-bearing contract: exact
+1. Supply current boundary facts to native `archie` and request the smallest load-bearing contract: exact
    signatures/types/errors, wire/event or DB/migration shapes, invariants, producer/consumer duties,
    source identities and seam-test oracles. Private algorithms remain implementation-owned. Do not
    create speculative interfaces or fill missing contract decisions yourself.

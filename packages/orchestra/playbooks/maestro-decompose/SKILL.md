@@ -8,7 +8,7 @@ description: Coordinate upstream acceptance coverage, decomposition review and a
 ## Trigger and rationale
 
 Use when a demand spans responsibilities, shared writes or independently deliverable outcomes.
-Native `walt` authors acceptance, decomposition, Tasks/WPs, dependencies and revisions. Maestro organizes
+Native `archie` authors acceptance, decomposition, Tasks/WPs, dependencies and revisions. Maestro organizes
 and decides within owner authority, supplies observed host facts, coordinates review/adoption, dispatches
 and integrates. Missing planning content returns to upstream; Maestro does not invent it. Small Tasks
 retain their current format and lifecycle, without compulsory WPs, compiler, arm or progressive steps.
@@ -34,7 +34,7 @@ Normal source inspection cannot substitute for governed GROUNDED evidence.
    Run preserved-behavior baseline checks and capture meaningful failing evidence for new behavior when
    runnable. Separate preservation from red-to-green proof; untestable items remain judged by an
    accountable decision owner, never auto-green.
-2. Assign native `walt` to author or revise requested acceptance, five criteria, coverage, bounded units,
+2. Assign native `archie` to author or revise requested acceptance, five criteria, coverage, bounded units,
    dependencies, conflicts, sizing and briefs. Supply actual facts and exact permitted paths. Small
    planning requests may return inline proposals; drafting them starts no execution Task.
 3. Coordinate independent cold coverage critique where warranted using [suite-review.md](suite-review.md).
