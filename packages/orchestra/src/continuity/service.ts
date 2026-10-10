@@ -24,6 +24,7 @@ import type { Prepared } from "./memory-types"
 import { ContinuityAdmission } from "./admission"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
+import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
 
 type Backend = { readonly model: Provider.Model; readonly llm: LLM.Interface; readonly revision: number }
 type Active = { generation: number; epoch: number; backend: Backend | null | undefined; boundary: MessageID;
@@ -132,6 +133,7 @@ const layer = Layer.effect(
     const llm = yield* LLM.Service
     const archive = yield* Archive.Service
     const config = yield* Config.Service
+    const checkpoints = yield* ProjectCheckpoint.Service
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
@@ -521,7 +523,10 @@ const layer = Layer.effect(
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                  llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
-              }, { history, delegations, member }, { parent: request })
+              }, { history, delegations, member }, { parent: request, beforeDispatch: (input) => Effect.gen(function* () {
+                if (!live()) return yield* Effect.fail(new Error("Checkpoint ownership changed"))
+                yield* checkpoints.save({ sessionID, ...input })
+              }) })
               // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
               if (!live()) {
@@ -740,5 +745,5 @@ const layer = Layer.effect(
 export const node = LayerNode.make({
   service: Service,
   layer,
-  deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node],
+   deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ProjectCheckpoint.node],
 })

@@ -19,6 +19,7 @@ import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
 import { DryRequestCaptured } from "./dry-transport"
 import { ContinuityChecklist } from "./checklist"
+import { CheckpointContext } from "./checkpoint-context"
 
 const TAIL_SIZE = 8
 
@@ -227,7 +228,7 @@ export function request(captured: MemorySnapshot, host: Host, appended: string) 
 export type Pass = {
   artifact?: MemoryArtifact
   skip?: "precondition" | "workflow" | "input-limit"
-  failure?: "timeout" | "input-budget" | "invalid-schema" | "provider" | "dry-captured"
+  failure?: "timeout" | "input-budget" | "invalid-schema" | "provider" | "dry-captured" | "checkpoint"
   check?: string
   retried: boolean
   ops: { op: string; section?: string; id?: string }[]
@@ -240,7 +241,11 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   captured: MemorySnapshot,
   services: { provider: Pick<Provider.Interface, "getModel">; llm: LLM.Interface },
   host: Host,
-  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void> } = {},
+  options: {
+    parent?: ParentRequest
+    onRequest?: (input: LLM.StreamInput) => Effect.Effect<void>
+    beforeDispatch?: (input: { forkID: SessionID; attempt: 0 | 1; boundary: MessageID; payload: string }) => Effect.Effect<void, unknown>
+  } = {},
 ) {
   const previous = captured.previous?.text ?? ""
   const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ...rest })
@@ -294,20 +299,26 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   // Bind transport pulls to this Effect's scope. The runFold/Channel.runWith
   // runner owns a separate scope; cancellation must join transport cleanup before
   // the timeout worker exits and the service releases its maintenance slot.
-  const ask = (input: LLM.StreamInput) => services.llm.stream(input).pipe(Stream.toPull, Effect.flatMap((pull) => {
-    let state = { text: "", finished: false, invalid: false }
-    return pull.pipe(
-      Effect.tap((events) => Effect.sync(() => { for (const event of events) state = reduce(state, event) })),
-      Effect.forever,
-      Pull.catchDone(() => Effect.succeed(state)),
-    )
-  }), Effect.scoped)
+  const ask = (input: LLM.StreamInput, attempt: 0 | 1) => Effect.gen(function* () {
+    const frozen = options.beforeDispatch ? yield* CheckpointContext.capture(input) : undefined
+    if (frozen && options.beforeDispatch) yield* options.beforeDispatch({ forkID: sessionID, attempt, boundary: captured.boundary,
+      payload: frozen.payload }).pipe(Effect.catchCause((cause) => Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) :
+        Effect.fail(new CheckpointContext.CaptureError({ reason: "checkpoint-write-failed" }))))
+    return yield* services.llm.stream(frozen?.request ?? input).pipe(Stream.toPull, Effect.flatMap((pull) => {
+      let state = { text: "", finished: false, invalid: false }
+      return pull.pipe(
+        Effect.tap((events) => Effect.sync(() => { for (const event of events) state = reduce(state, event) })),
+        Effect.forever,
+        Pull.catchDone(() => Effect.succeed(state)),
+      )
+    }), Effect.scoped)
+  })
   const check = (reply: { text: string; finished: boolean; invalid: boolean }): Decoded | Failure => {
     if (!reply.finished || reply.invalid) return { check: "C1", detail: "the reply must finish with stop and call no tools" }
     const decoded = decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, budget })
     return "check" in decoded ? decoded : ContinuityChecklist.check(decoded, captured, host)
   }
-  const reply = yield* ask(first)
+  const reply = yield* ask(first, 0)
   const outcome = check(reply)
   if ("check" in outcome) {
     // One cache-hot retry: the same request, the rejected reply and the failed check.
@@ -319,7 +330,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     const retry = { ...first, messages: [...first.messages,
       { role: "assistant" as const, content: reply.text || "(empty reply)" }, { role: "user" as const, content: note }] }
     if (options.onRequest) yield* options.onRequest(retry)
-    const corrected = check(yield* ask(retry))
+    const corrected = check(yield* ask(retry, 1))
     if ("check" in corrected) return pass({ check: corrected.check, retried: true, failure: "invalid-schema" })
     return accepted(corrected, true)
   }
@@ -330,7 +341,8 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt
   const error = Cause.squash(cause)
   const failed: Pass = { retried: false, ops: [], size: 0,
-    failure: error instanceof DryRequestCaptured ? "dry-captured" : error && typeof error === "object" && "_tag" in error && error._tag === "TimeoutError" ? "timeout" : "provider" }
+    failure: error instanceof CheckpointContext.CaptureError ? "checkpoint" : error instanceof DryRequestCaptured ? "dry-captured" :
+      error && typeof error === "object" && "_tag" in error && error._tag === "TimeoutError" ? "timeout" : "provider" }
   return Effect.succeed(failed)
 }))
 
