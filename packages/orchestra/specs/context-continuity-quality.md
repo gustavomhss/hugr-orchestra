@@ -1,5 +1,8 @@
 # Context Continuity quality improvement contract
 
+> Historical two-call design. The owner subsequently selected [single-call self-check](context-continuity-selfcheck.md).
+> Production no longer calls a separate reviewer; prior review receipts remain readable.
+
 Owner authorized implementation on 2026-10-09 after reviewing the real v5 corpus. This work improves
 critical retention, current work state, source-grounded claims, actual continuation and archive recovery.
 It does not assert universal semantic accuracy or superiority over legacy compaction.

@@ -1,3 +1,4 @@
+// Historical paid-review report decoder and offline evidence helpers. Production uses checklist.ts.
 import { Option, Schema } from "effect"
 import { parseTree } from "jsonc-parser"
 import type { Node, ParseError } from "jsonc-parser"

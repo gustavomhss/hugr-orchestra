@@ -18,8 +18,7 @@ import PROMPT from "./prompt.txt"
 import { RequestSource } from "./request-source"
 import { ParentReceipt } from "./parent-receipt"
 import { DryRequestCaptured } from "./dry-transport"
-import { ContinuityReview } from "./review"
-import { seal } from "./review-seal"
+import { ContinuityChecklist } from "./checklist"
 
 const TAIL_SIZE = 8
 
@@ -241,7 +240,7 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   captured: MemorySnapshot,
   services: { provider: Pick<Provider.Interface, "getModel">; llm: LLM.Interface },
   host: Host,
-  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void>; reviewOverhead?: number } = {},
+  options: { parent?: ParentRequest; onRequest?: (input: LLM.StreamInput) => Effect.Effect<void> } = {},
 ) {
   const previous = captured.previous?.text ?? ""
   const pass = (rest: Partial<Pass>): Pass => ({ retried: false, ops: [], size: Token.estimate(previous), ...rest })
@@ -259,7 +258,10 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
   const last = (captured.complete ? captured.covered ?? captured.head : captured.tail).findLast((message) => message.info.role === "assistant")?.info
   const observed = options.parent ? ParentReceipt.usage(options.parent, captured, model) ?? 0 : 0
   const sessionID = SessionID.descending()
-  const appended = index(captured, host, Token.estimate(previous))
+  const protectedIDs = ContinuityChecklist.protectedItems(captured.previous)
+  const appended = index(captured, host, Token.estimate(previous)) + (captured.complete
+    ? `\n## Executable retention checklist\nProtected item IDs: ${protectedIDs.join(", ") || "(none)"}. Changing or retiring these requires newly covered sources; retirement also needs a reason. Unchanged items are retained automatically.\n`
+    : "")
   const requestIDs = new Set(options.parent?.messageIDs ?? [])
   // Full original source supplement is conservative even for matching logical hashes: provider projection may omit
   // compacted outputs or ignored parts. Never declare complete coverage from a masked prefix or clipped index alone.
@@ -300,35 +302,14 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
       Pull.catchDone(() => Effect.succeed(state)),
     )
   }), Effect.scoped)
-  const check = (reply: { text: string; finished: boolean; invalid: boolean }): Decoded | Failure => reply.finished && !reply.invalid
-    ? decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, budget })
-    : { check: "C1", detail: "the reply must finish with stop and call no tools" }
-  const assess = (decoded: Decoded) => Effect.gen(function* () {
-    if (decoded.artifact.version !== 5) return decoded
-    const packet = ContinuityReview.request(captured, host, decoded.artifact)
-    const review: LLM.StreamInput = {
-      user: { ...user, id: MessageID.ascending(), agent: "continuity-review" },
-      // API maintenance admits only this dedicated role; SDK payload compiler deduplicates it.
-      agent: { ...agent, name: "continuity-review", prompt: packet.system.join("\n") },
-      permission: agent.permission, sessionID, parentSessionID: captured.sessionID,
-      purpose: "context-maintenance", model, ...packet, tools: {}, retries: 0,
-    }
-    const reviewSize = services.llm.estimateInput?.(review) ?? Token.estimate(packet.system.join("\n") + JSON.stringify(packet.messages))
-    const overhead = options.reviewOverhead ?? 0
-    if (!Number.isFinite(reviewSize) || reviewSize < 0 || !Number.isFinite(overhead) || overhead < 0 || reviewSize + overhead > inputLimit)
-      return { check: "C18", detail: "Semantic review source exceeds selected model input budget.", failure: "input-budget" as const }
-    if (options.onRequest) yield* options.onRequest(review)
-    const response = yield* ask(review)
-    if (!response.finished || response.invalid) return { check: "C18", detail: "Semantic review must finish with stop and call no tools." }
-    const decision = ContinuityReview.decode({ text: response.text, snapshot: captured, host, artifact: decoded.artifact })
-    if ("check" in decision) return decision
-    return { ...decoded, artifact: { ...decoded.artifact, review: seal(decoded.artifact, decision) } }
-  })
+  const check = (reply: { text: string; finished: boolean; invalid: boolean }): Decoded | Failure => {
+    if (!reply.finished || reply.invalid) return { check: "C1", detail: "the reply must finish with stop and call no tools" }
+    const decoded = decode({ text: reply.text, snapshot: captured, producerID: sessionID, host, budget })
+    return "check" in decoded ? decoded : ContinuityChecklist.check(decoded, captured, host)
+  }
   const reply = yield* ask(first)
-  const parsed = check(reply)
-  const outcome = "check" in parsed ? parsed : yield* assess(parsed)
+  const outcome = check(reply)
   if ("check" in outcome) {
-    if ("failure" in outcome && outcome.failure === "input-budget") return pass({ check: outcome.check, failure: "input-budget" })
     // One cache-hot retry: the same request, the rejected reply and the failed check.
     const note = `HOST CHECK FAILED. ${outcome.check}: ${outcome.detail}\n` +
       (captured.complete ? "Reply with one complete, corrected JSON object containing now and ops for the same new span. Now.src must include a completed boundary alias listed in the host index. Return nothing else." :
@@ -340,13 +321,10 @@ export const run = Effect.fn("ContinuityFork.run")(function* (
     if (options.onRequest) yield* options.onRequest(retry)
     const corrected = check(yield* ask(retry))
     if ("check" in corrected) return pass({ check: corrected.check, retried: true, failure: "invalid-schema" })
-    const reviewed = yield* assess(corrected)
-    if ("check" in reviewed) return pass({ check: reviewed.check, retried: true,
-      failure: "failure" in reviewed && reviewed.failure === "input-budget" ? "input-budget" : "invalid-schema" })
-    return accepted(reviewed, true)
+    return accepted(corrected, true)
   }
   return accepted(outcome, false)
-// One abort deadline covers lookup, production, semantic review and the shared correction allowance.
+// One abort deadline covers lookup, production, executable checks and the single correction allowance.
 // Uninterruptible transport cleanup is joined before returning.
 }, Effect.timeout("600 seconds"), Effect.catchCause((cause) => {
   if (Cause.hasInterruptsOnly(cause)) return Effect.interrupt

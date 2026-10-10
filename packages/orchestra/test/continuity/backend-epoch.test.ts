@@ -7,7 +7,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ProviderTest } from "../fake/provider"
 import { it } from "../lib/effect"
-import { FIRST, SECOND, applyFirst, begin, body, complete, entered, environment, held, prepare, reviewBody, seed } from "./service-fixture"
+import { FIRST, SECOND, applyFirst, begin, body, complete, entered, environment, held, prepare, reviewing, seed } from "./service-fixture"
 import type { LLM } from "@/session/llm"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
@@ -29,7 +29,8 @@ it.instance("changing backend joins the held API transport before admitting SDK 
     yield* entered(old)
     const llm: LLM.Interface = { stream: (request) => {
       requests.push(request)
-      return Stream.make(LLMEvent.textDelta({ id: "memory", text: request.agent.name === "continuity-review" ? reviewBody(request) : JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
+      return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
     } }
     const change = yield* continuity.configure({ sessionID, model, llm }).pipe(Effect.andThen(Deferred.succeed(stopped, undefined)), Effect.forkChild)
     yield* Deferred.await(old.closing)
@@ -43,16 +44,19 @@ it.instance("changing backend joins the held API transport before admitting SDK 
     const job = (yield* jobs.list()).findLast((job) => job.metadata?.sessionId === sessionID)
     if (!job) throw new Error("No SDK maintenance job")
     expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
-    expect(requests.filter((request) => request.agent.name !== "continuity-review")).toHaveLength(1)
-    expect(requests.filter((request) => request.agent.name === "continuity-review")).toHaveLength(1)
+    expect(old.requests).toHaveLength(1)
+    expect(old.requests.filter(reviewing)).toEqual([])
+    expect(requests).toHaveLength(1)
+    expect(requests.filter(reviewing)).toEqual([])
+    expect(requests[0].agent.name).toBe("continuity")
     expect(requests[0].model.id).toBe(model.id)
     expect(requests[0].model.limit.context).toBe(20_000)
-    expect(requests[1].model).toEqual(requests[0].model)
-    expect(requests[1].parentSessionID).toBe(sessionID)
-    expect(requests[1].sessionID).toBe(requests[0].sessionID)
-    expect(requests[1].tools).toEqual({})
+    expect(requests[0].parentSessionID).toBe(sessionID)
+    expect(requests[0].sessionID).not.toBe(sessionID)
+    expect(requests[0].tools).toEqual({})
+    expect(requests[0].permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
     yield* continuity.configure({ sessionID, model: structuredClone(model), llm })
-    expect(requests).toHaveLength(2)
+    expect(requests).toHaveLength(1)
   }).pipe(Effect.provide(environment([old])))
 }), 120_000)
 
@@ -102,7 +106,8 @@ it.instance("release prevents a deferred follow-up from using default API and su
     const sessionID = yield* seed()
     yield* applyFirst(sessionID, first)
     const llm: LLM.Interface = { stream: (request) => {
-      sdkCalls[request.agent.name === "continuity-review" ? "reviewer" : "producer"]++
+      sdkCalls[reviewing(request) ? "reviewer" : "producer"]++
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
       return Stream.fail(new Error("Unexpected SDK work after release"))
     } }
     yield* continuity.configure({ sessionID, model, llm })
@@ -126,9 +131,10 @@ it.instance("release fences a follow-up already queued behind SDK transport disp
     const sessionID = yield* seed()
     yield* applyFirst(sessionID, first)
     const llm: LLM.Interface = { stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
-      sdkCalls[request.agent.name === "continuity-review" ? "reviewer" : "producer"]++
+      sdkCalls[reviewing(request) ? "reviewer" : "producer"]++
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
       yield* Effect.addFinalizer(() => Deferred.succeed(closing, undefined).pipe(Effect.andThen(Deferred.await(cleanup))))
-      return Stream.make(LLMEvent.textDelta({ id: "memory", text: request.agent.name === "continuity-review" ? reviewBody(request) : JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
+      return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
     }))) }
     yield* continuity.configure({ sessionID, model, llm })
     yield* complete(yield* begin(sessionID, "first SDK boundary"), "SDK response", 9_000)
@@ -147,7 +153,7 @@ it.instance("release fences a follow-up already queued behind SDK transport disp
   }).pipe(Effect.provide(environment([first, laterDefault])))
 }), 120_000)
 
-it.instance("configure race joins held review disposal, preserves prior memory and never pairs an old model with the new LLM", () => Effect.gen(function* () {
+it.instance("configure race joins held producer disposal, preserves prior memory and never pairs an old model with the new LLM", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
   const enteredA = yield* Deferred.make<void>()
   const closingA = yield* Deferred.make<void>()
@@ -164,23 +170,23 @@ it.instance("configure race joins held review disposal, preserves prior memory a
     yield* applyFirst(sessionID, first)
     const llmA: LLM.Interface = { stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
       requestsA.push(request)
-      if (request.agent.name !== "continuity-review") return Stream.make(
-        LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, "STALE_REVIEW_MEMORY")) }), LLMEvent.finish({ reason: "stop" }))
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
       yield* Effect.addFinalizer(() => Deferred.succeed(closingA, undefined).pipe(Effect.andThen(Deferred.await(cleanupA)),
         Effect.andThen(Deferred.succeed(closedA, undefined))))
       yield* Deferred.succeed(enteredA, undefined)
       yield* Deferred.await(releaseA)
-      return Stream.make(LLMEvent.textDelta({ id: "review", text: reviewBody(request) }), LLMEvent.finish({ reason: "stop" }))
+      return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, "STALE_PRODUCER_MEMORY")) }), LLMEvent.finish({ reason: "stop" }))
     }))) }
     const llmB: LLM.Interface = { stream: (request) => {
       requestsB.push(request)
-      return Stream.make(LLMEvent.textDelta({ id: "memory", text: request.agent.name === "continuity-review" ? reviewBody(request) : JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
+      return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
     } }
     yield* continuity.configure({ sessionID, model, llm: llmA })
     yield* complete(yield* begin(sessionID, "held model A"), "A response", 9_000)
     yield* Deferred.await(enteredA)
     expect((yield* prepare(sessionID)).system[0]).toContain(FIRST)
-    expect((yield* prepare(sessionID)).system[0]).not.toContain("STALE_REVIEW_MEMORY")
+    expect((yield* prepare(sessionID)).system[0]).not.toContain("STALE_PRODUCER_MEMORY")
     yield* continuity.configure({ sessionID, model: structuredClone(model), llm: llmA })
     expect(yield* Deferred.isDone(closingA)).toBe(false)
     const newer = { ...model, limit: { context: 30_000, output: 3_000 } }
@@ -198,20 +204,20 @@ it.instance("configure race joins held review disposal, preserves prior memory a
     const job = (yield* jobs.list()).findLast((job) => job.metadata?.sessionId === sessionID)
     if (!job) throw new Error("Missing B maintenance")
     expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
-    expect(requestsA.filter((request) => request.agent.name !== "continuity-review")).toHaveLength(1)
-    expect(requestsA.filter((request) => request.agent.name === "continuity-review")).toHaveLength(1)
-    expect(requestsB.filter((request) => request.agent.name !== "continuity-review")).toHaveLength(1)
-    expect(requestsB.filter((request) => request.agent.name === "continuity-review")).toHaveLength(1)
+    expect(requestsA).toHaveLength(1)
+    expect(requestsA.filter(reviewing)).toEqual([])
+    expect(requestsB).toHaveLength(1)
+    expect(requestsB.filter(reviewing)).toEqual([])
     requestsA.forEach((request) => { expect(request.model.limit.context).toBe(20_000); expect(request.parentSessionID).toBe(sessionID) })
     requestsB.forEach((request) => { expect(request.model.limit.context).toBe(30_000); expect(request.parentSessionID).toBe(sessionID) })
-    expect(requestsA[1].model).toEqual(requestsA[0].model)
-    expect(requestsB[1].model).toEqual(requestsB[0].model)
-    expect(requestsA[1].sessionID).toBe(requestsA[0].sessionID)
-    expect(requestsB[1].sessionID).toBe(requestsB[0].sessionID)
-    expect(requestsA[1].tools).toEqual({})
-    expect(requestsB[1].tools).toEqual({})
+    for (const request of [...requestsA, ...requestsB]) {
+      expect(request.agent.name).toBe("continuity")
+      expect(request.sessionID).not.toBe(sessionID)
+      expect(request.tools).toEqual({})
+      expect(request.permission).toEqual([{ permission: "*", pattern: "*", action: "deny" }])
+    }
     expect((yield* prepare(sessionID)).system[0]).toContain(SECOND)
-    expect((yield* prepare(sessionID)).system[0]).not.toContain("STALE_REVIEW_MEMORY")
+    expect((yield* prepare(sessionID)).system[0]).not.toContain("STALE_PRODUCER_MEMORY")
   }).pipe(Effect.provide(environment([first])))
 }), 120_000)
 
@@ -280,12 +286,14 @@ for (const transition of ["configure", "release"] as const) it.instance(`${trans
     const sessionID = yield* seed()
     yield* applyFirst(sessionID, first)
     const old: LLM.Interface = { stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
-      oldCalls[request.agent.name === "continuity-review" ? "reviewer" : "producer"]++
+      oldCalls[reviewing(request) ? "reviewer" : "producer"]++
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
       yield* Effect.addFinalizer(() => Deferred.succeed(closing, undefined).pipe(Effect.andThen(Deferred.await(cleanup))))
-      return Stream.make(LLMEvent.textDelta({ id: "memory", text: request.agent.name === "continuity-review" ? reviewBody(request) : JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
+      return Stream.make(LLMEvent.textDelta({ id: "memory", text: JSON.stringify(body(request, SECOND)) }), LLMEvent.finish({ reason: "stop" }))
     }))) }
     const next: LLM.Interface = { stream: (request) => {
-      newCalls[request.agent.name === "continuity-review" ? "reviewer" : "producer"]++
+      newCalls[reviewing(request) ? "reviewer" : "producer"]++
+      if (reviewing(request)) return Stream.fail(new Error("Unexpected continuity review request"))
       return Stream.fail(new Error("no explicit new work was scheduled"))
     } }
     yield* continuity.configure({ sessionID, model, llm: old })

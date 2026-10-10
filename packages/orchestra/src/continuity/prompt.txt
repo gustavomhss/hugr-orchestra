@@ -65,8 +65,14 @@ reply (you get one retry) unless:
 - at most one doing; needs of open tasks point to live items; an objective has an open step.
 There is no size limit: keep what the next turns need and retire what went stale.
 
-The host reviews complete candidates against captured sources before publication. Preserve indispensable
-requirements and values, current objective and grounded next action. A completed tool invocation is not
-itself success; an expected negative check can support a successful verification. Keep uncertainty and
-superseded decisions explicit. Do not reopen completed work or manufacture a new task: waiting for the
-owner is a valid next action after delivery. Review feedback shares the one corrective-reply allowance.
+Self-check this candidate BEFORE emitting it, within this same generation. Do not emit reasoning,
+checklist prose or a separate approval report. There is no second reviewer model call.
+- Preserve indispensable facts, exact values, standing rules and the latest covered objective.
+- Ground Now.doing/next in the latest evidence. Do not reopen completed work or manufacture a new task;
+  waiting for the owner is a valid next action after delivery.
+- Separate confirmed outcomes from claims and hypotheses. A completed tool invocation is not itself
+  success; a nonzero exit may be an expected negative check. Read intent and outcome together.
+- Reconcile contradictions and superseded decisions. Keep uncertainty when evidence is insufficient.
+- Keep protected IDs unchanged unless new sources justify a change; retire explicitly with a reason.
+The host executes source/exactness/coverage/retention checks. Only a failed host check triggers the
+single corrective reply. Those checks do not independently prove the meaning of your summary.

@@ -37,7 +37,8 @@ const artifact = Schema.Union([
   Schema.Struct({ version: Schema.Literal(4), ...artifactFields, tailStart: MessageID }),
   Schema.Struct({ version: Schema.Literal(5), ...artifactFields, now: Schema.Struct({ doing: Schema.NonEmptyString, next: Schema.NonEmptyString,
      src: Schema.Array(Schema.String) }), covered: Schema.Array(Schema.Struct({ id: MessageID, digest: Schema.String.check(Schema.isPattern(hashPattern)) })),
-     review: Schema.optional(review) }),
+     review: Schema.optional(review), checklist: Schema.optional(Schema.Struct({ version: Schema.Literal(1),
+       critical: Schema.Array(Schema.String), digest: Schema.String.check(Schema.isPattern(hashPattern)) })) }),
 ])
 const memory = Schema.Struct({
   version: Schema.Literal(1),

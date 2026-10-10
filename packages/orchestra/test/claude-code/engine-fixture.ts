@@ -8,7 +8,8 @@ import { LLM } from "@/session/llm"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
-import { body, reviewBody } from "../continuity/service-fixture"
+import { body } from "../continuity/service-fixture"
+import PROMPT from "@/continuity/prompt.txt"
 import { Session } from "@/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { TestInstance } from "../fixture/fixture"
@@ -22,12 +23,11 @@ export const state: {
   scripts: Script[]
   producer: ((params: Params) => AsyncGenerator<unknown>) | undefined
   producers: number
-  reviewer: ((params: Params) => AsyncGenerator<unknown>) | undefined
   reviews: number
   apiCalls: number
   construct: ClaudeCodeSDK.Interface["query"] | undefined
   heldRead: { plan?: { file: string; entered: Deferred.Deferred<void>; release: Deferred.Deferred<void> } }
-} = { queries: [], scripts: [], producer: undefined, producers: 0, reviewer: undefined, reviews: 0, apiCalls: 0, construct: undefined, heldRead: {} }
+} = { queries: [], scripts: [], producer: undefined, producers: 0, reviews: 0, apiCalls: 0, construct: undefined, heldRead: {} }
 
 export type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
 
@@ -38,7 +38,6 @@ export function reset() {
   state.scripts.length = 0
   state.producer = undefined
   state.producers = 0
-  state.reviewer = undefined
   state.reviews = 0
   state.apiCalls = 0
   state.construct = undefined
@@ -48,20 +47,13 @@ export function reset() {
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   query: (params) => {
     state.queries.push(params)
+    // Detect by instruction before routing: a reviewer must never consume an ordinary script.
+    if (isReview(params)) {
+      state.reviews++
+      throw new Error("Unexpected SDK reviewer: maintenance must use producer self-check")
+    }
     if (state.construct) return state.construct(params)
     if (params.options?.persistSession === false) {
-      if (isReview(params)) {
-        state.reviews++
-        const producer = state.queries.findLast((query) => query.options?.persistSession === false && !isReview(query))
-        expect(producer).toBeDefined()
-        expect(params.options).toMatchObject({ model: producer?.options?.model, tools: [], mcpServers: {}, strictMcpConfig: true,
-          disallowedTools: ["*"], persistSession: false, maxTurns: 1, settingSources: [] })
-        expect(params.options.resume).toBeUndefined()
-        expect(params.options.sessionStore).toBeUndefined()
-        expect(params.options).not.toHaveProperty("parentResume")
-        expect(params.options.systemPrompt).toMatchObject({ type: "custom" })
-        return (state.reviewer ?? memoryReviewer)(params) as ReturnType<ClaudeCodeSDK.Interface["query"]>
-      }
       state.producers++
       if (!state.producer) throw new Error("Unexpected SDK producer")
       return state.producer(params) as ReturnType<ClaudeCodeSDK.Interface["query"]>
@@ -145,7 +137,12 @@ export function nativeReply(index: number, options: { usage?: number; version?: 
 }
 
 export const memoryProducer = async function* (params: Params) {
-  expect(params.options).toMatchObject({ tools: [], persistSession: false, maxTurns: 1 })
+  expect(params.options).toMatchObject({ tools: [], mcpServers: {}, strictMcpConfig: true,
+    disallowedTools: ["*"], persistSession: false, maxTurns: 1, settingSources: [],
+    systemPrompt: { type: "custom", prompt: PROMPT } })
+  expect(params.options?.resume).toBeUndefined()
+  expect(params.options?.sessionStore).toBeUndefined()
+  expect(params.options).not.toHaveProperty("parentResume")
   const reply = JSON.stringify(body({ messages: historicalMessages(params) }, "SDK_MEMORY_NEEDLE_9C41"))
   yield { type: "assistant", ...frame, message: { id: "memory", content: [{ type: "text", text: reply }], stop_reason: "end_turn", usage: {} } }
   yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", ...frame }
@@ -155,8 +152,8 @@ const reviewInstruction = "You independently review a complete working-memory ca
 
 export function isReview(params: Params) {
   const system = params.options?.systemPrompt
-  return typeof system === "object" && !Array.isArray(system) && system.type === "custom" &&
-    (Array.isArray(system.prompt) ? system.prompt.join("\n") : system.prompt).includes(reviewInstruction)
+  const prompt = typeof system === "string" || Array.isArray(system) ? system : system?.type === "custom" ? system.prompt : system?.append ?? ""
+  return (Array.isArray(prompt) ? prompt.join("\n") : prompt).includes(reviewInstruction)
 }
 
 export function historicalMessages(params: Params) {
@@ -164,14 +161,6 @@ export function historicalMessages(params: Params) {
   expect(params.prompt.split("\n")[0]).toBe("Historical messages (JSON, including original roles/content):")
   return Schema.decodeUnknownSync(Schema.Array(Schema.Unknown))(
     Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(params.prompt.split("\n").slice(1).join("\n")))
-}
-
-/** Scenario-authored reviewer JSON from the actual SDK packet; not a real-model quality assessment. */
-export const memoryReviewer = async function* (params: Params) {
-  expect(isReview(params)).toBe(true)
-  const reply = reviewBody({ messages: historicalMessages(params) })
-  yield { type: "assistant", ...frame, message: { id: "review", content: [{ type: "text", text: reply }], stop_reason: "end_turn", usage: {} } }
-  yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", ...frame }
 }
 
 export const compactTurn: Script = async function* (_signal, params) {
