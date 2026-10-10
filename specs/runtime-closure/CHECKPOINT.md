@@ -2,6 +2,8 @@
 
 The later 2026-10-09 Task observation first-rejection measurement, exact-source Core/Orchestra results and failed-lane-only Windows x64 native repair are recorded in [SNAPSHOT-QUALIFICATION.md](./SNAPSHOT-QUALIFICATION.md). Those scoped results do not close the milestone.
 
+The owner-corrected native Archie identity, successful ordinary native authoring run, exact original output/host receipts and remaining producer/landing failures are recorded in [ARCHIE-QUALIFICATION.md](./ARCHIE-QUALIFICATION.md). That execution uses the explicit read-only legacy account consumer and does not qualify operational Orchestra OAuth consent or the broader Runtime milestone.
+
 Published integration base for the focused checks below: `59e73080cb` on `runtime-closure`. These results describe the verified corrections before the subsequent Relay integration. This checkpoint is not milestone closure or exact-head epic CI evidence.
 
 Latest integration details live in `WAVE-2.md`: Relay parity checkpoint `937cf2b1de`, actual native exporter completion `374da1e154` (Actions `37875718504`), and prepared SDK matrix plus portable Node admission correction `22addae2df` (Actions `37877015907`). These are reviewed, scoped results; product builds and operational OAuth requirements remain open.
