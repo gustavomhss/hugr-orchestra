@@ -17,7 +17,7 @@ import { RequestSource } from "@/continuity/request-source"
 import { CaseCapabilities } from "./case-capabilities"
 
 export function replay(input: { messages: SessionV1.WithParts[]; boundary?: MessageID; model: Provider.Model; previous?: MemoryArtifact;
-  llm?: LLM.Interface; response?: string }) {
+  llm?: LLM.Interface; response?: string; reviewResponse?: string }) {
   return Effect.gen(function* () {
     const sessionID = input.messages[0]?.info.sessionID
     if (!sessionID) throw new Error("complete-replay-empty-source")
@@ -37,6 +37,9 @@ export function replay(input: { messages: SessionV1.WithParts[]; boundary?: Mess
     const pass = yield* run(captured, { provider: replayProvider(input.model),
       llm: input.llm ?? { stream: (request) => {
         if (!requests.includes(request)) return Stream.fail(new Error("complete-replay-construction-order"))
+        if (request.agent.name === "continuity-review") return input.reviewResponse === undefined
+          ? Stream.fail(new Error("complete-replay-review-response-required"))
+          : Stream.make(LLMEvent.textDelta({ id: "saved-review", text: input.reviewResponse }), LLMEvent.finish({ reason: "stop" }))
         return input.response ? Stream.make(LLMEvent.textDelta({ id: "saved-output", text: input.response }), LLMEvent.finish({ reason: "stop" })) :
           Stream.fail(new DryRequestCaptured())
       } } },

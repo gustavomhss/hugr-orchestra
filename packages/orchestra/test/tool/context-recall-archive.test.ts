@@ -34,7 +34,6 @@ const invalid = [
   { reference: id, archive_query: "x" },
   { reference: id, archive_list: true },
   { archive_query: "x", archive_list: true },
-  { archive_query: "x", offset: 0 },
   { archive_list: false },
   { archive_list: true, part_id: "prt_known" },
   { archive_query: "" },

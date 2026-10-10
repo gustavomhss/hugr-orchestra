@@ -13,7 +13,7 @@ export const Lookup = Schema.Struct({
   limit: Schema.optional(Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(8000))),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 export const Search = Schema.Struct({
-  archive_query: Schema.String.check(Schema.isMaxLength(256)),
+  archive_query: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
   limit: Schema.optional(Count),
   match: Schema.optional(Schema.Literals(["literal", "terms"])),
   offset: Schema.optional(Offset.check(Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER))),
@@ -139,10 +139,11 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
     // Retain rank metadata only, bounded by actual refs. Read every eligible chunk,
     // including those beyond the requested page, before reporting any total.
     for (const ref of retained) {
-      if (params.from_message && ref.last < params.from_message) continue
-      if (params.through_message && ref.first > params.through_message) continue
       const chunk = yield* archive.read({ sessionID, id: ref.id })
       if (!chunk) return { status: "unavailable", reason: "missing" }
+      // Unverified manifest descriptors must never hide a corrupt in-range source.
+      if (params.from_message && chunk.last < params.from_message) continue
+      if (params.through_message && chunk.first > params.through_message) continue
       // Archive.read verified the closed envelope, including this fixed header line.
       if (params.role && chunk.markdown.split("\n", 6)[5] !== `Role: ${params.role}`) continue
       const content = literal?.exec(chunk.markdown)
@@ -158,7 +159,14 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
           : undefined
       if (!rank) continue
       total++
-      const candidate = { ...ref, ...rank }
+      const candidate = {
+        id: chunk.id,
+        title: chunk.title,
+        first: chunk.first,
+        last: chunk.last,
+        bytes: chunk.bytes,
+        ...rank,
+      }
       if (!terms) {
         if (total > offset && selected.length < limit) selected.push(candidate)
         continue

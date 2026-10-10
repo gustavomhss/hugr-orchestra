@@ -69,6 +69,15 @@ export function packet(input: { messages?: unknown }) {
 export const retrying = (input: { messages?: unknown }) =>
   wireMessages(input).at(-1)?.content.startsWith("HOST CHECK FAILED") === true
 
+/** Lifecycle-only reviewer fixture; real semantic quality is evaluated with real models separately. */
+export function reviewBody(input: { messages?: unknown }) {
+  const value = Schema.decodeUnknownSync(Schema.Struct({ candidate: Schema.Struct({ now: Schema.Struct({ src: Schema.Array(Schema.String) }) }) }))(
+    Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(wireMessages(input)[0]?.content))
+  return JSON.stringify({ verdict: "accept", cursor: { supported: true, state: "active", next: "verify",
+    reason: "Scenario-authored lifecycle fixture; not a semantic quality claim.", src: value.candidate.now.src },
+    critical: [], resolved: [], issues: [] })
+}
+
 /** The index entries of the new span: alias and its index text, including appended output lines. */
 export function fragments(markdown: string) {
   const start = markdown.lastIndexOf("## Index of the new span\n")
@@ -128,6 +137,8 @@ export function environment<A = never, E = never>(plans: Held[], options: {
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+        if (request.agent.name === "continuity-review") return Stream.make(LLMEvent.textStart({ id: "review" }),
+          LLMEvent.textDelta({ id: "review", text: reviewBody(request) }), LLMEvent.textEnd({ id: "review" }), LLMEvent.finish({ reason: "stop" }))
         // The one retry after a failed check replays the same plan's reply without re-entering.
         if (retrying(request) && plans[index - 1]) {
           const plan = plans[index - 1]
