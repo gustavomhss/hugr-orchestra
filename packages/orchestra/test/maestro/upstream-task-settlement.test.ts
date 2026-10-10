@@ -14,7 +14,7 @@ import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { eq } from "drizzle-orm"
-import { DateTime, Effect, Schema } from "effect"
+import { Cause, DateTime, Effect, Exit, Schema } from "effect"
 import { omit } from "remeda"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -48,7 +48,7 @@ function assistant(sessionID: SessionID, agent: string): SessionV1.Assistant {
 }
 
 const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
-  selection?: "resumed" | "wrong",
+  selection?: "resumed" | "wrong" | "logical" | "foreign-logical",
   returned?: "failed" | "interrupted" | "host-failed",
   parentID?: SessionID,
 ) {
@@ -59,6 +59,11 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   const child = yield* sessions.create({ parentID: parent.id, agent: "archie" })
   const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parentID ?? parent.id,
     projectID: parent.projectID, memberID: "archie", source: "host" })
+  const foreign = selection === "foreign-logical" ? yield* Effect.gen(function* () {
+    const sibling = yield* sessions.create({ parentID: parent.id, agent: "archie" })
+    return yield* LogicalTask.ensure({ executionSessionID: sibling.id, authoritySessionID: logical.authoritySessionID,
+      projectID: parent.projectID, memberID: "archie", source: "host" })
+  }) : undefined
   const author = yield* sessions.updateMessage({ ...assistant(child.id, "archie"),
     ...(returned === "failed" ? { error: new SessionV1.APIError({ message: "Stored author failure", isRetryable: false }).toObject() } : {}),
     ...(returned === "interrupted" ? { finish: "tool-calls" } : {}),
@@ -71,7 +76,8 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   const owner = yield* sessions.updateMessage(assistant(parent.id, "maestro"))
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true, workResult, retained: "current" }
   const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "archie",
-    ...(selection ? { task_id: selection === "resumed" ? child.id : SessionID.create() } : {}) }, title: "proposal",
+    ...(selection ? { task_id: selection === "resumed" ? child.id : selection === "logical" ? logical.taskId :
+      foreign?.taskId ?? SessionID.create() } : {}) }, title: "proposal",
     output: "started", time: { start: Date.now(), end: Date.now() }, metadata }
   const task = yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id, sessionID: parent.id,
     type: "tool", tool: "task", callID: `call-${owner.id}`, state })
@@ -193,6 +199,85 @@ it.instance("resumed task_id naming another execution child holds before publica
   const before = yield* f.modern()
   expect((yield* Effect.flip(f.sessions.settleUpstreamTask(f.input))).reason).toBe("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
   expect(yield* f.modern()).toEqual(before)
+}))
+
+it.instance("logical-id resume settles nested Task and exact retry publishes nothing", () => Effect.gen(function* () {
+  const sessions = yield* Session.Service
+  const root = yield* sessions.create({ agent: "maestro" })
+  const f = yield* seed("logical", undefined, root.id)
+  expect(f.state.input.task_id).toBe(f.logical.taskId)
+  expect(f.logical.taskId).not.toBe(f.child.id)
+  expect((yield* LogicalTask.resolveResume({ taskID: f.logical.taskId, strict: true,
+    parentSessionID: f.parent.id, projectID: f.parent.projectID, memberID: "archie" }))?.id).toBe(f.child.id)
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(true)
+  const part = yield* f.legacy()
+  if (part?.type !== "tool" || part.state.status === "pending") throw new Error("expected retained Task")
+  expect(part.state.metadata).toMatchObject({ parentSessionId: f.parent.id, sessionId: f.child.id,
+    upstreamSettlement: { parentMessageID: f.owner.id, parentCallID: f.task.callID,
+      workResult: f.workResult, deliveryMessageID: f.input.deliveryMessageID } })
+  const before = { modern: yield* f.modern(), legacy: part, progress: yield* f.progress() }
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(false)
+  expect({ modern: yield* f.modern(), legacy: yield* f.legacy(), progress: yield* f.progress() }).toEqual(before)
+  expect((yield* LogicalTask.read(f.child.id))?.authoritySessionID).toBe(root.id)
+}))
+
+;(["logical", "foreign-logical"] as const).forEach((selection) => {
+  it.instance(`${selection} resume host observation preserves captured author and original Task owner`, () => Effect.gen(function* () {
+    const sessions = yield* Session.Service
+    const root = yield* sessions.create({ agent: "maestro" })
+    const f = yield* seed(selection, undefined, root.id)
+    const failed = { ...f.workResult,
+      terminal: { reason: "failed" as const, hostDetail: "Observed host failure after return" } }
+    // A later same-byte assistant is not the return captured by this invocation.
+    const later = yield* sessions.updateMessage(assistant(f.child.id, "archie"))
+    yield* sessions.updatePart({ ...f.proposal, id: PartID.ascending(), messageID: later.id })
+    const observation = TaskWorkObservation.make({ database: f.database, events: f.events,
+      childSessionID: f.child.id, taskID: f.logical.taskId,
+      metadata: { parentSessionId: f.parent.id, sessionId: f.child.id, model },
+      ctx: { sessionID: f.parent.id, messageID: f.owner.id, callID: f.task.callID, agent: "maestro", agentID: "maestro",
+        abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: () => Effect.void },
+    })
+    const before = { modern: yield* f.modern(), legacy: yield* f.legacy(), progress: yield* f.progress() }
+    if (selection === "foreign-logical") {
+      expect(f.state.input.task_id).not.toBe(f.logical.taskId)
+      yield* Effect.forEach([observation.capture(failed).pipe(Effect.asVoid), observation.publish(failed)], (action) =>
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(action)
+          expect(Exit.isFailure(exit)).toBe(true)
+          if (!Exit.isFailure(exit)) throw new Error("foreign logical resume observed")
+          const failure = Cause.squash(exit.cause)
+          expect(failure instanceof Error ? failure.message : failure)
+            .toBe("HOLD: Task host observation original anchors mismatch")
+        }))
+      expect({ modern: yield* f.modern(), legacy: yield* f.legacy(), progress: yield* f.progress() }).toEqual(before)
+      return
+    }
+    expect(yield* observation.capture(f.workResult)).toEqual(f.workResult)
+    yield* observation.publish(failed)
+    const part = yield* f.legacy()
+    if (part?.type !== "tool" || part.state.status === "pending" || !part.state.metadata) throw new Error("expected retained Task")
+    expect(part.sessionID).toBe(f.parent.id)
+    expect(part.state.metadata.workResult).toEqual(failed)
+    expect(part.state.metadata.workResult.author.messageID).toBe(f.author.id)
+    expect(part.state.metadata.workResult.author.messageID).not.toBe(later.id)
+    expect(part.state.metadata.upstreamSettlement).toBeUndefined()
+    const modern = yield* f.modern()
+    if (!modern) throw new Error("expected native Task")
+    const message = Schema.decodeUnknownSync(SessionMessage.Message)({ ...modern.data, id: modern.id, type: modern.type })
+    const call = message.type === "assistant" ? message.content.find((part) => part.type === "tool" && part.id === f.task.callID) : undefined
+    if (call?.type !== "tool" || !("structured" in call.state)) throw new Error("expected native Task call")
+    expect(call.state.structured.metadata).toMatchObject({ workResult: failed })
+    expect((yield* f.progress()).length).toBeGreaterThan(before.progress.length)
+  }))
+})
+
+it.instance("foreign logical-id resume holds before receipt or progress publication", () => Effect.gen(function* () {
+  const f = yield* seed("foreign-logical")
+  expect(f.state.input.task_id).not.toBe(f.logical.taskId)
+  expect(f.state.input.task_id).not.toBe(f.child.id)
+  const before = { modern: yield* f.modern(), legacy: yield* f.legacy(), progress: yield* f.progress() }
+  expect((yield* Effect.flip(f.sessions.settleUpstreamTask(f.input))).reason).toBe("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
+  expect({ modern: yield* f.modern(), legacy: yield* f.legacy(), progress: yield* f.progress() }).toEqual(before)
 }))
 
 it.instance("original Task A anchors cannot be repaired by Task B caller claims", () => Effect.gen(function* () {

@@ -84,7 +84,8 @@ export function make(input: {
       return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation views conflict" })
     views.forEach((view) => {
       const selection = Schema.decodeUnknownSync(Schema.Struct({ subagent_type: Schema.String, task_id: Schema.optional(Schema.String) }))(view.input)
-      if (selection.subagent_type !== child.agent || selection.task_id !== undefined && selection.task_id !== child.id ||
+      if (selection.subagent_type !== child.agent || selection.task_id !== undefined &&
+        selection.task_id !== child.id && selection.task_id !== logical.taskId ||
         view.metadata.parentSessionId !== parent.id || view.metadata.sessionId !== child.id)
         throw new UpstreamSettlement.Hold({ message: "HOLD: Task host observation original anchors mismatch" })
     })
