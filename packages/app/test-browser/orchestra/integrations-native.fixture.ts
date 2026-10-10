@@ -1,9 +1,10 @@
 import { expect } from "bun:test"
 import { createRequire } from "node:module"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createComponent, render } from "solid-js/web"
+import { createStore } from "solid-js/store"
 import type { ChapterPageProps } from "../../src/orchestra/chapter-route"
 import type { SessionID } from "@orchestra/schema/session-id"
 import type { CapabilityConnectionTable, CapabilityBindingTable, CapabilityTargetTable, CapabilityRequestTable } from "@orchestra/core/capability/sql"
@@ -31,9 +32,10 @@ type Snapshot = {
   receipts: (typeof CapabilityRequestTable.$inferSelect)[]
   vendor: { method: string; path: string; authorization: string | null }[]
 }
-export type Host = { url: string; directory: string; sessionID: SessionID; bearer: string; password?: string }
+export type Host = { url: string; directory: string; sessionID: SessionID; bearer: string; username?: string; password?: string }
 export async function startHost(mode: "basic" | "bearer" = "basic") {
   const directory = await mkdtemp(join(tmpdir(), "integrations-native-"))
+  await mkdir(join(directory, "profile-b"))
   const child = Bun.spawn([process.execPath, "--conditions=browser", join(import.meta.dir, "integrations-native-server.fixture.ts"), mode], {
     cwd: join(import.meta.dir, "../.."), stdout: "pipe", stderr: "pipe",
     env: { ...process.env, ORCHESTRA_TEST_HOME: directory, ORCHESTRA_DB: join(directory, "proof.sqlite"),
@@ -102,8 +104,8 @@ export function transport() {
 
 export function mountPage(host: Host, wire = transport(), direction: "ltr" | "rtl" = "ltr") {
   const root = document.body.appendChild(document.createElement("div"))
-  const props: ChapterPageProps = { directory: host.directory,
-    server: { type: "http", http: { url: host.url, username: "native", password: host.password } } }
+  const [props, setProps] = createStore<ChapterPageProps>({ directory: host.directory,
+    server: { type: "http", http: { url: host.url, username: host.username ?? "native", password: host.password } } })
   const dispose = render(() => createComponent(PlatformProvider, {
     value: { platform: "web", fetch: wire.fetch, openExternal: (url) => { window.open(url, "_blank", "noopener,noreferrer") },
       restart: async () => { window.location.reload() }, notify: async () => {} },
@@ -113,7 +115,9 @@ export function mountPage(host: Host, wire = transport(), direction: "ltr" | "rt
       return createComponent(IntegrationsPage, props)
     } }) },
   }), root)
-  return { root, wire, dispose: () => { dispose(); root.remove() } }
+  return { root, wire, dispose: () => { dispose(); root.remove() },
+    change: (next: Host) => setProps({ directory: next.directory,
+      server: { type: "http", http: { url: next.url, username: next.username ?? "native", password: next.password } } }) }
 }
 export async function waitFor(condition: () => boolean) {
   const deadline = Date.now() + 5000

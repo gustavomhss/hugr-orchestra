@@ -1,10 +1,8 @@
 import { afterEach, expect, test } from "bun:test"
 import { assertPrivate, button, connect, field, idle, mountPage, select, startHost, submit, waitFor } from "./integrations-native.fixture"
 
-// Desired main-path assertions stay live. At a1eee26ade, entry's tracked load disposes writes;
-// separately, implicit-local ledger capture decodes wire Location.Ref instead of its Type.
-// Diagnostic untrack/load + Schema.toType(targetSchema) probes reach all real HTTP/SQL assertions.
-// Production fixes belong to the lead; this test-only branch intentionally exposes those regressions.
+// Real main-path regressions found at a1eee26ade; bd78c022a3 closes tracked load and
+// implicit-local ledger capture. Assertions run against production source without diagnostic fixes.
 
 const cleanup: (() => void | Promise<void>)[] = []
 afterEach(async () => { for (const dispose of cleanup.splice(0).reverse()) await dispose(); localStorage.clear() })
