@@ -7,6 +7,7 @@ const domain = { _tag: "NativeMaskFailure" }
 const defect = new Error("NATIVE_MASK_DEFECT")
 const fail = Cause.makeFailReason(domain).annotate(Context.make(Annotation, annotation))
 const die = Cause.makeDieReason(defect).annotate(Context.make(Annotation, annotation))
+const bodyInterrupt = Cause.makeInterruptReason(123).annotate(Context.make(Annotation, annotation))
 
 function failure<A, E>(exit: Exit.Exit<A, E>) {
   expect(Exit.isFailure(exit)).toBe(true)
@@ -22,6 +23,7 @@ function expectBody(actual: Cause.Cause<unknown>, original: Cause.Cause<unknown>
     const found = actual.reasons[index]
     if (Cause.isFailReason(reason) && Cause.isFailReason(found)) expect(found.error).toBe(reason.error)
     if (Cause.isDieReason(reason) && Cause.isDieReason(found)) expect(found.defect).toBe(reason.defect)
+    if (Cause.isInterruptReason(reason) && Cause.isInterruptReason(found)) expect(found.fiberId).toBe(reason.fiberId)
     expect(Context.getOrUndefined(Cause.reasonAnnotations(found), Annotation)).toBe(annotation)
   })
 }
@@ -33,7 +35,7 @@ const run = <A, E>(body: Effect.Effect<A, E, never>) => body.pipe(
 test.each([
   ["Fail", Cause.fromReasons([fail])],
   ["Die", Cause.fromReasons([die])],
-  ["mixed duplicate reasons", Cause.fromReasons([fail, die, die, fail])],
+  ["mixed duplicate reasons", Cause.fromReasons([fail, die, die, fail, bodyInterrupt, bodyInterrupt])],
 ] as const)("native interrupt survives failing mask unwind: %s", async (_, original) => {
   await run(Effect.gen(function* () {
     const entered = yield* Deferred.make<void>()
@@ -59,7 +61,9 @@ test.each([
     yield* Fiber.join(interruptor)
     expectBody(cause, original)
     expect(cause.reasons).toHaveLength(original.reasons.length + 1)
-    expect(cause.reasons.filter(Cause.isInterruptReason).map((reason) => reason.fiberId)).toEqual([interruptor.id])
+    expect(cause.reasons.filter(Cause.isInterruptReason).map((reason) => reason.fiberId)).toEqual([
+      ...original.reasons.flatMap((reason) => Cause.isInterruptReason(reason) ? [reason.fiberId] : []), interruptor.id,
+    ])
     expect(continued).toEqual([])
   }))
 })
@@ -109,6 +113,37 @@ test("restored native cancellation plus failing cleanup keeps one native reason 
   }))
 })
 
+test("pending native interrupts sharing fiber ID retain distinct annotation identities", async () => {
+  await run(Effect.gen(function* () {
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const controllerID = yield* Effect.fiberId
+    const firstAnnotation = { phase: "first native interrupt" }
+    const secondAnnotation = { phase: "second native interrupt" }
+    const original = Cause.fromReasons([die, die])
+    const pending = yield* Effect.uninterruptibleMask(() => Deferred.succeed(entered, undefined).pipe(
+      Effect.andThen(Deferred.await(release).pipe(Effect.timeout("2 seconds"))),
+      Effect.andThen(Effect.failCause(original)),
+    )).pipe(Effect.withSpan("annotated native requests"), Effect.forkChild)
+    yield* Deferred.await(entered)
+    const first = yield* Fiber.interruptAs(pending, controllerID, Context.make(Annotation, firstAnnotation))
+      .pipe(Effect.forkChild({ startImmediately: true }))
+    const second = yield* Fiber.interruptAs(pending, controllerID, Context.make(Annotation, secondAnnotation))
+      .pipe(Effect.forkChild({ startImmediately: true }))
+    yield* Deferred.succeed(release, undefined)
+    const cause = failure(yield* Fiber.await(pending))
+    yield* Fiber.join(first)
+    yield* Fiber.join(second)
+    expectBody(cause, original)
+    expect(cause.reasons).toHaveLength(4)
+    const interrupts = cause.reasons.filter(Cause.isInterruptReason)
+    expect(interrupts.map((reason) => reason.fiberId)).toEqual([controllerID, controllerID])
+    expect(interrupts.map((reason) => Context.getOrUndefined(Cause.reasonAnnotations(reason), Annotation))).toEqual([
+      firstAnnotation, secondAnnotation,
+    ])
+  }))
+})
+
 test("positive control: native interrupt during successful mask is delivered", async () => {
   await run(Effect.gen(function* () {
     const entered = yield* Deferred.make<void>()
@@ -147,7 +182,7 @@ test("positive control: interruptible cancellation stays native and cannot recov
 })
 
 test("positive control: uninterrupted failing mask preserves original duplicate reasons", async () => {
-  const original = Cause.fromReasons([fail, die, die, fail])
+  const original = Cause.fromReasons([fail, die, die, fail, bodyInterrupt, bodyInterrupt])
   const cause = failure(await Effect.runPromiseExit(Effect.uninterruptibleMask(() => Effect.failCause(original))))
   expectBody(cause, original)
   expect(cause.reasons).toHaveLength(original.reasons.length)
