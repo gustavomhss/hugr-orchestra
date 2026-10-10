@@ -1,5 +1,5 @@
 ---
-name: walt-plan
+name: archie-plan
 description: Author or revise product, architecture, specifications, plans, decomposition and briefs from Maestro's bounded assignment. Keep small independent Tasks lightweight.
 ---
 
@@ -15,7 +15,7 @@ Read the bounded assignment, supplied baseline/scope and evidence before authori
 | Cover a substantial demand or split responsibilities | [Decomposition and coverage](references/decomposition.md) | Acceptance map, cohesive read/write slices, dependencies/conflicts and `partitionPlan` when useful |
 | A producer/consumer seam would force coordinated changes | [Load-bearing contracts](references/load-bearing-contracts.md) | Minimal exact interface sketch, behavior/errors, source identity and seam evidence |
 | Prepare bounded executor context or reduce context pressure | [Brief authoring](references/briefs.md) | Proposed briefs with anchors, criteria deltas, host-supplied checks and compact returns |
-| Coordinated work needs progressive validated checkpoints | [walt-work-package](../walt-work-package/SKILL.md) | One complete native linear WP proposal; host owns reveal and execution |
+| Coordinated work needs progressive validated checkpoints | [archie-work-package](../archie-work-package/SKILL.md) | One complete native linear WP proposal; host owns reveal and execution |
 
 For a small independent Task, write goal, bounded writes/reads, acceptance using existing checks, constraints and blockers inline. Five criteria may stay implicit; compiler, arm and ordered steps are not mandatory. Preserve roadmap/epic/issue/Task contracts. A product Task, native delegation task and WP step are different concepts; `work_packages` are steps of one WP, not new product Tasks.
 
@@ -23,7 +23,7 @@ For a small independent Task, write goal, bounded writes/reads, acceptance using
 
 Label substantive claims: **fact** (supplied stakeholder/project fact with reference), **observed source** (what exact inspected revision shows, not proof of execution), **proposal** (author's recommendation), **assumption** (unconfirmed premise with consequence/check), **owner decision** (actual decision reference and applicable scope), or **blocker** (missing decision/evidence/capability, next owner and unblock condition). Hypotheses remain proposals/assumptions. Missing data stays `UNKNOWN`; identify partial acquisition. Never turn absence of evidence into an empty verified result.
 
-Each authored revision is a complete proposal, not only a delta, with `walt` author, proposal version, supplied baseline/source identities and parent/reason when revising. Keep contents proportional: a complete small Task is its whole bounded inline brief. Substantial proposals include goal/value, scope/exclusions, constraints, acceptance/coverage, live invariants, design/seams, useful work sequence, risks and unresolved decisions. Preserve old revisions and distinguish historical evidence from obligations still live. Adoption does not change authorship; author version/path/hash cannot mint host identity or approval. A symbol/partition artifact is `partitionPlan`, never durable governed `PlanRevision`; host owns that lifecycle and authority persistence.
+Each authored revision is a complete proposal, not only a delta, with `archie` author, proposal version, supplied baseline/source identities and parent/reason when revising. Keep contents proportional: a complete small Task is its whole bounded inline brief. Substantial proposals include goal/value, scope/exclusions, constraints, acceptance/coverage, live invariants, design/seams, useful work sequence, risks and unresolved decisions. Preserve old revisions and distinguish historical evidence from obligations still live. Adoption does not change authorship; author version/path/hash cannot mint host identity or approval. A symbol/partition artifact is `partitionPlan`, never durable governed `PlanRevision`; host owns that lifecycle and authority persistence.
 
 For governed work, consume current host-supplied scope/Own facts and explicit drill pointers. Ordinary inspection cannot substitute for GROUNDED evidence. Missing, stale, ambiguous or held ownership/authority means `HOLD` with a blocker to Maestro. Authoring does not admit work, validate governed eligibility, approve or authorize Task.
 

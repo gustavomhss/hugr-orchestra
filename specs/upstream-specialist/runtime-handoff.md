@@ -1,5 +1,7 @@
 # Upstream runtime handoff
 
+Current identity correction: active upstream ID `archie`, profile `upstream`, assets `packages/archie-specialist`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Old IDs, source paths, quotations and qualification pins below are historical, not active aliases or renamed-runtime proof.
+
 Status: reviewed candidate slice, not landed, deployed or end-to-end qualified. No feature-branch commit, push or PR was made. The clean SHAs below are temporary CI snapshots produced by the repository's prescribed test runner.
 
 ## Source identity

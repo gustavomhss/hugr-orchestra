@@ -71,12 +71,12 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   if (!input.parentCallID || !input.logicalTaskID)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_MISSING", message: "Task call and logical Task references are required" })
   const agents = yield* Agent.Service
-  const agent = yield* agents.get("walt")
-  const seat = Seats.find("walt")
-  if (!agent || agent.id !== "walt" || agent.native !== true || agent.mode !== "subagent" ||
+  const agent = yield* agents.get("archie")
+  const seat = Seats.find("archie")
+  if (!agent || agent.id !== "archie" || agent.native !== true || agent.mode !== "subagent" ||
     !seat || seat.profileKey !== "upstream" || seat.workResult !== UpstreamResult.SCHEMA ||
     roster.find((member) => member.memberId === agent.id)?.nativeProfile !== "upstream")
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_REGISTRY_MISMATCH", message: "Native walt upstream seat is unavailable or inconsistent" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_REGISTRY_MISMATCH", message: "Native archie upstream seat is unavailable or inconsistent" })
 
   const sessions = yield* Session.Service
   const parent = yield* sessions.get(input.parentSessionID).pipe(Effect.catchIf(NotFoundError.isInstance, missing))
@@ -86,7 +86,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   if (child.id === parent.id || child.parentID !== parent.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Author Session is not a direct child of the authority Session" })
   if (child.agent !== agent.id)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Author Session does not belong to native walt" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Author Session does not belong to native archie" })
 
   const authority = yield* readMessage(parent.id, input.parentMessageID, "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
   if (!authority.owned || authority.role !== "assistant" || authority.agent !== "maestro")
@@ -94,7 +94,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   const calls = authority.tools.filter((call) => call.id === input.parentCallID)
   const call = calls[0]
   if (calls.length !== 1 || !call || call.name !== "task" || call.input?.subagent_type !== agent.id || call.providerExecuted)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Authority must contain one exact native Task dispatch to walt" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Authority must contain one exact native Task dispatch to archie" })
   const initial = record(call.metadata?.workResult)
   const background = call.metadata?.background === true || record(initial?.terminal)?.reason === "running"
   if (authority.error || authority.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true ||
@@ -127,7 +127,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
 
   const author = yield* readMessage(child.id, input.authorMessageID, "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH")
   if (!author.owned || author.role !== "assistant" || author.agent !== agent.id)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Proposal must be an actual owned walt assistant" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Proposal must be an actual owned archie assistant" })
   const proposal = author.legacy ? BackendResult.assemble(author.legacy, [], seat) : modernProposal(author)
   if (!proposal || (background && (!author.completed || author.finish === "error")) || !proposal.card.parsed || proposal.outcome !== "done" || proposal.terminal.reason !== "ended" || proposal.blockers.length)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Author has no unique parsed successful terminal upstream proposal" })
@@ -263,7 +263,7 @@ function modernProposal(author: Evidence): BackendResult.WorkResult | undefined 
     schema: UpstreamResult.SCHEMA, card: { parsed: true, messageID: author.id }, outcome: card.outcome,
     changes: [], checks: [], blockers: card.blockers, risks: card.risks, nextActions: card.nextActions,
     artifacts: card.artifacts, terminal: { reason: card.outcome === "blocked" || card.blockers.length ? "blocked" : "ended" },
-    memory: { reads: [], writes: [] }, author: { memberId: "walt", executionSessionID: author.sessionID, messageID: author.id },
+    memory: { reads: [], writes: [] }, author: { memberId: "archie", executionSessionID: author.sessionID, messageID: author.id },
   }
 }
 

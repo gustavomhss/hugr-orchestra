@@ -14,7 +14,7 @@ if (boundary !== "catalog" && boundary !== "describe" && boundary !== "execute")
   throw new Error("UPSTREAM_DRIFT_FIXTURE_BOUNDARY_INVALID")
 
 test(`actual ${boundary} rejects ${mode} registry drift before backend entry`, async () => {
-  const context = { sessionID: "ses_upstream_drift", agent: "walt" }
+  const context = { sessionID: "ses_upstream_drift", agent: "archie" }
   const host = {
     directory,
     stateDirectory: directory,

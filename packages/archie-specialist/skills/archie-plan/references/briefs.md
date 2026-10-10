@@ -37,7 +37,7 @@ host binding needed: permission/authority/completion needs, no invented receipts
 return: local status; baseline; changed paths; evidence refs; blockers; new decisions
 ```
 
-For governed work, cite host-supplied current scope/grounding/approval/authorization references without manufacturing or persisting them. A packet, generated policy or author hash cannot mint authorization. For a linear native WP, follow [walt-work-package](../../walt-work-package/SKILL.md); ordered steps remain in the same Session/logical task and host controls reveal.
+For governed work, cite host-supplied current scope/grounding/approval/authorization references without manufacturing or persisting them. A packet, generated policy or author hash cannot mint authorization. For a linear native WP, follow [archie-work-package](../../archie-work-package/SKILL.md); ordered steps remain in the same Session/logical task and host controls reveal.
 
 ## Evidence return design
 

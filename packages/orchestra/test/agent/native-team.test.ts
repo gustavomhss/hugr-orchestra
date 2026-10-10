@@ -37,7 +37,7 @@ const nativeTeam = [
     description: "Backend implementation specialist. Use it to implement one complete backend work packet: the target behavior with its acceptance, the write paths, and the checks to run. Edits only dispatch writePaths; read-only without them. Runs shell commands. Returns the change, check evidence and blockers. Not for investigation, diagnosis, design or review.",
   },
   {
-    id: "walt",
+    id: "archie",
     profile: "upstream",
     prompt: `You are ${UPSTREAM_DEFAULT_LABEL}, the upstream product, architecture, specification and planning specialist`,
     description: "Upstream product, architecture, specification and planning specialist. Use it to author or revise requirements, technical proposals, roadmaps, decomposition, tasks, work packages and briefs. Edits only dispatch writePaths; read-only without them. Returns attributed proposals, source references, blockers and next actions. Does not implement products, approve scope, dispatch work or execute workflows.",
@@ -119,7 +119,7 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "edit")).toBe(seat.profile === "review" ? "deny" : "allow")
       const profile = Permission.fromConfig(nativeProfiles[seat.profile])
       expect(agent.permission.slice(0, profile.length)).toEqual(profile)
-      if (seat.id !== "backend" && seat.id !== "walt") expect(agent.permission).toEqual(profile)
+      if (seat.id !== "backend" && seat.id !== "archie") expect(agent.permission).toEqual(profile)
     }
   }),
 )
@@ -201,15 +201,15 @@ it.instance("upstream registration retains native scope and isolates its authori
   Effect.gen(function* () {
     const agents = yield* Agent.Service
     const skills = yield* Skill.Service
-    const upstream = yield* agents.get("walt")
-    expect(upstream).toMatchObject({ id: "walt", name: UPSTREAM_DEFAULT_LABEL, native: true, mode: "subagent" })
-    expect(roster.find((member) => member.memberId === "walt")?.nativeProfile).toBe("upstream")
-    expect(nativeProfiles.upstream).toBe(nativeProfiles.walt)
-    expect((yield* skills.available(upstream)).map((skill) => skill.name).toSorted()).toEqual(Seats.all.walt.skills.toSorted())
-    expect((yield* skills.require("walt-work-package", "walt")).content).toContain("RelaySprint.Sprint")
+    const upstream = yield* agents.get("archie")
+    expect(upstream).toMatchObject({ id: "archie", name: UPSTREAM_DEFAULT_LABEL, native: true, mode: "subagent" })
+    expect(roster.find((member) => member.memberId === "archie")?.nativeProfile).toBe("upstream")
+    expect(nativeProfiles.upstream).toBe(nativeProfiles.archie)
+    expect((yield* skills.available(upstream)).map((skill) => skill.name).toSorted()).toEqual(Seats.all.archie.skills.toSorted())
+    expect((yield* skills.require("archie-work-package", "archie")).content).toContain("RelaySprint.Sprint")
     const backend = yield* agents.get("backend")
-    expect((yield* skills.available(backend)).map((skill) => skill.name)).not.toContain("walt-plan")
-    expect((yield* skills.all()).map((skill) => skill.name)).not.toContain("walt-plan")
+    expect((yield* skills.available(backend)).map((skill) => skill.name)).not.toContain("archie-plan")
+    expect((yield* skills.all()).map((skill) => skill.name)).not.toContain("archie-plan")
     expect(yield* agents.get("bobby")).toBeUndefined()
     for (const tool of ["task", "question", "atlas_memory_recall", "atlas_memory_emit", "maestro_record_review", "maestro_record_approval"])
       expect(evaluate(upstream, tool)).toBe("deny")
@@ -219,29 +219,53 @@ it.instance("upstream registration retains native scope and isolates its authori
 it.instance("upstream name config cannot widen its native charter or permissions", () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
-    const upstream = yield* agents.get("walt")
-    expect(upstream).toMatchObject({ id: "walt", name: "Configured Planner", native: true, mode: "subagent" })
+    const upstream = yield* agents.get("archie")
+    expect(upstream).toMatchObject({ id: "archie", name: "Configured Planner", native: true, mode: "subagent" })
     expect(upstream.prompt).toStartWith("You are Configured Planner, the upstream product")
     expect(evaluate(upstream, "task")).toBe("deny")
     expect(evaluate(upstream, "maestro_record_approval")).toBe("deny")
   }),
-  { config: { permission: { task: "allow" }, agent: { walt: {
+  { config: { permission: { task: "allow" }, agent: { archie: {
     name: "Configured Planner", mode: "primary", disable: true, prompt: "replacement", permission: { task: "allow" },
   } } } },
 )
 
 testEffect(LayerNode.compile(
   LayerNode.group([Agent.node, Plugin.node, Provider.node, Auth.node, Config.node, Skill.node, RuntimeFlags.node]),
-  [[RuntimeFlags.node, RuntimeFlags.layer({ seatLabels: { walt: "Environment Planner" } })]],
+  [[RuntimeFlags.node, RuntimeFlags.layer({ seatLabels: { archie: "Environment Planner" } })]],
 )).instance("upstream environment label overrides config without changing routing", () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
-    const upstream = yield* agents.get("walt")
-    expect(upstream).toMatchObject({ id: "walt", name: "Environment Planner", native: true, mode: "subagent" })
+    const upstream = yield* agents.get("archie")
+    expect(upstream).toMatchObject({ id: "archie", name: "Environment Planner", native: true, mode: "subagent" })
     expect(upstream.prompt).toStartWith("You are Environment Planner, the upstream product")
     expect(yield* agents.get("Environment Planner")).toBeUndefined()
   }),
-  { config: { agent: { walt: { name: "Configured Planner" } } } },
+  { config: { agent: { archie: { name: "Configured Planner" } } } },
+)
+
+it.instance("retired upstream ID is not registered or aliased", () =>
+  Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    expect(yield* agents.get("walt")).toBeUndefined()
+    expect(Seats.find("walt")).toBeUndefined()
+    expect(nativeProfiles).not.toHaveProperty("walt")
+    expect(yield* agents.get("upstream")).toBeUndefined()
+    expect(yield* agents.get(UPSTREAM_DEFAULT_LABEL)).toBeUndefined()
+  }),
+)
+
+it.instance("custom agents remain non-native rather than acquiring the upstream charter", () =>
+  Effect.gen(function* () {
+    const agents = yield* Agent.Service
+    const custom = yield* agents.get("custom-planner")
+    expect(custom).toMatchObject({ id: "custom-planner", name: "Custom Planner", native: false, mode: "subagent" })
+    expect(custom.prompt).toBe("Custom proposal prompt")
+    expect(Seats.find(custom.id)).toBeUndefined()
+    expect(roster.find((member) => member.memberId === custom.id)).toBeUndefined()
+    expect(yield* agents.get("Custom Planner")).toBeUndefined()
+  }),
+  { config: { agent: { "custom-planner": { name: "Custom Planner", mode: "subagent", prompt: "Custom proposal prompt" } } } },
 )
 
 it.instance("native team seats cannot read .env files but can read .env.example", () =>

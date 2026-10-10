@@ -43,7 +43,7 @@ Size by cohesive concepts, uncertainty, working-set size and review cost. Split 
 
 ## Pure operations and evidence
 
-Use [walt-plan's authorized sequence/subset](../SKILL.md#authorized-structural-helpers) only when installed and authorized:
+Use [archie-plan's authorized sequence/subset](../SKILL.md#authorized-structural-helpers) only when installed and authorized:
 
 | Operation | Authoring purpose | Evidence limit |
 | --- | --- | --- |

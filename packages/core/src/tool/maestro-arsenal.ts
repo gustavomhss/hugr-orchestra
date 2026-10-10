@@ -119,8 +119,8 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
   const receipts = new Map<string, string>()
   const key = (context: C, host: Host, name: string) =>
     JSON.stringify([host.projectID, host.directory, context.sessionID, context.agent, name])
-  const requireNative = (host: Host) =>
-    host.nativeMaestro || host.nativeUpstream === true
+  const requireNative = (host: Host, context: C) =>
+    host.nativeMaestro || (host.nativeUpstream === true && context.agent === "archie")
       ? Effect.void
       : Effect.fail(new Tool.Failure({ message: "Maestro Arsenal requires native Maestro identity." }))
   const load = () =>
@@ -153,7 +153,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     catalog: (input: typeof CatalogInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireNative(host)
+        yield* requireNative(host, context)
         yield* host.ask(names.catalog, [input.group ?? "*"])
         const { Arsenal } = yield* load()
         const descriptors = yield* Effect.tryPromise({
@@ -182,7 +182,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     describe: (input: typeof DescribeInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireNative(host)
+        yield* requireNative(host, context)
         yield* host.ask(names.describe, [input.name])
         const result = yield* selected(input.name, host)
         const receipt = key(context, host, input.name)
@@ -200,7 +200,7 @@ export function makeHandlers<C extends Invocation>(resolve: (context: C) => Effe
     execute: (input: typeof ExecuteInput.Type, context: C) =>
       Effect.gen(function* () {
         const host = yield* resolve(context)
-        yield* requireNative(host)
+        yield* requireNative(host, context)
         yield* host.ask(names.execute, [input.name])
         const result = yield* selected(input.name, host)
         if (receipts.get(key(context, host, input.name)) !== createHash("sha256").update(result.contract).digest("hex"))
@@ -534,7 +534,7 @@ export const authorize = Effect.fn("MaestroArsenal.authorize")(function* (
 export interface Options {
   /** V2 has no native identity field. The application must attest from its actual roster. */
   readonly nativeMaestro: (agent: AgentV2.ID) => Effect.Effect<boolean, Tool.Failure>
-  /** Actual upstream roster attestation, also restricted to the resolved V2 agent ID `walt`. */
+  /** Actual upstream roster attestation, also restricted to the resolved V2 agent ID `archie`. */
   readonly nativeUpstream?: (agent: AgentV2.ID) => Effect.Effect<boolean, Tool.Failure>
   readonly observeGovernance?: (
     context: Tool.Context,
@@ -602,7 +602,7 @@ export const registerScoped = Effect.fn("MaestroArsenal.registerScoped")(functio
           typeof options.nativeMaestro === "function" &&
           (yield* options.nativeMaestro(context.agent))
         const nativeUpstream =
-          agent?.id === "walt" &&
+          agent?.id === "archie" &&
           typeof options.nativeUpstream === "function" &&
           (yield* options.nativeUpstream(context.agent))
         const ask = (action: string, resources: readonly string[]) =>

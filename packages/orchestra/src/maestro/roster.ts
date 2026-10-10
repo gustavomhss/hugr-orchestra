@@ -85,7 +85,7 @@ function seatProfile(seat: Seat): NativeProfile {
   return Object.freeze({
     ...baseProfiles[seat.profile],
     ...(seat.atlasMemory ? { atlas_memory_recall: "allow" as const, atlas_memory_emit: "allow" as const } : {}),
-    ...(seat.id === "walt" ? {
+    ...(seat.id === "archie" ? {
       maestro_arsenal_catalog: "allow" as const,
       ...Object.fromEntries(["maestro_arsenal_describe", "maestro_arsenal_execute"].map((name) => [name, Object.freeze({
         "*": "deny" as const,
@@ -155,7 +155,7 @@ export const roster = createRoster([
 
 function seatMember(seat: Seat): RosterMember {
   const labels: Readonly<Record<string, string>> = {
-    backend: BACKEND_DEFAULT_LABEL, walt: UPSTREAM_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
+    backend: BACKEND_DEFAULT_LABEL, archie: UPSTREAM_DEFAULT_LABEL, patty: "Patty", lucy: "Lucy", billy: "Billy", jimmy: "Jimmy", rosie: "Rosie", frankie: "Frankie",
   }
   return {
     displayName: labels[seat.id] ?? seat.id,

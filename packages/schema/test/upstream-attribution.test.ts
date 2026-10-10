@@ -12,16 +12,16 @@ import { UpstreamAttribution } from "../src/upstream-attribution"
 
 const attribution = {
   schema: "maestro-upstream-attribution-v1",
-  projectID: "project-upstream",
-  memberID: "walt",
+  projectID: Project.ID.make("project-upstream"),
+  memberID: Schema.decodeUnknownSync(UpstreamAttribution.V1.fields.memberID)("archie"),
   profile: "upstream",
-  authorSessionID: "ses_upstream",
-  authorMessageID: "msg_proposal",
-  parentSessionID: "ses_authority",
-  parentMessageID: "msg_dispatch",
+  authorSessionID: SessionID.make("ses_upstream"),
+  authorMessageID: SessionMessage.ID.make("msg_proposal"),
+  parentSessionID: SessionID.make("ses_authority"),
+  parentMessageID: SessionMessage.ID.make("msg_dispatch"),
   parentCallID: "provider-call:dispatch",
   logicalTaskID: "logical-task:proposal",
-} as const satisfies typeof UpstreamAttribution.V1.Encoded
+} satisfies UpstreamAttribution.V1
 
 const grounding = {
   catalogVersion: "catalog-v1",
@@ -72,10 +72,10 @@ const sourceSlots = [
   { slot: "risks", patch: { risks: [...revisionV1.risks, upstream] } },
 ]
 
-function envelope(data: unknown, version: number) {
+function envelope<A>(data: A, version: number) {
   return {
     id: "evt_revision",
-    type: "maestro.plan_revision.recorded",
+    type: MaestroEvent.PlanRevision.Recorded.type,
     durable: { aggregateID: revisionV1.sessionID, seq: 1, version },
     data,
   }
@@ -125,9 +125,9 @@ describe("upstream attribution contract", () => {
     const input = {
       ...attribution,
       projectID: Project.ID.global,
-      authorSessionID: "ses",
-      parentSessionID: "session-legacy",
-      authorMessageID: "msg_",
+      authorSessionID: SessionID.make("ses"),
+      parentSessionID: SessionID.make("session-legacy"),
+      authorMessageID: SessionMessage.ID.make("msg_"),
       parentCallID: "unprefixed-call",
       logicalTaskID: "unprefixed-task",
     }
@@ -145,9 +145,9 @@ describe("upstream attribution contract", () => {
     { key: "schema", value: "maestro-upstream-attribution-v2" },
     { key: "schema", value: "" },
     { key: "memberID", value: "backend" },
-    { key: "memberID", value: "Walt" },
+    { key: "memberID", value: "walt" },
     { key: "memberID", value: "upstream" },
-    { key: "profile", value: "walt" },
+    { key: "profile", value: "archie" },
     { key: "profile", value: "" },
     { key: "authorSessionID", value: "msg_wrong-kind" },
     { key: "parentSessionID", value: "msg_wrong-kind" },
@@ -254,6 +254,7 @@ describe("PlanRevision attribution versions", () => {
       null,
       { ...attribution, verified: true },
       { ...attribution, memberID: "backend" },
+      { ...attribution, memberID: "walt" },
       { ...attribution, parentMessageID: "ses_wrong-kind" },
       { ...attribution, logicalTaskID: "" },
     ].forEach((upstreamAttribution) => {

@@ -1,5 +1,7 @@
 # W6 observed upstream publication binding
 
+Current identity correction: active upstream ID `archie`, profile `upstream`, assets `packages/archie-specialist`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Old member literals, source pins and ownership quotations below remain historical, not active aliases or changes to current writer authority.
+
 Status: refined coordination contract for Relay's nominal W6 proposal, 2026-10-08. Not implemented approval, owner acceptance or a permission waiver. Relay lead remains sole integrator of W6 Task/Session/Arsenal completion/Relay service-schema. Upstream owns native registration, projection and authoring methods.
 
 ## Ownership / source pins
