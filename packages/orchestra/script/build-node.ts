@@ -23,6 +23,7 @@ await Bun.build({
   external: ["jsonc-parser", "@lydell/node-pty"],
   define: {
     ORCHESTRA_COMPILED: "true",
+    ORCHESTRA_CANDIDATE_BUILD: String(process.argv.slice(2).includes("--lean-candidate")),
     ORCHESTRA_MODELS_DEV: generated.modelsData,
     ORCHESTRA_VERSION: `'${Script.version}'`,
     ORCHESTRA_CHANNEL: `'${Script.channel}'`,
