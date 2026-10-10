@@ -92,6 +92,43 @@ describe("CapabilityConnectionManagement real Store and private operator request
       .toEqual([{ target: sorted[2] }])
   }))
 
+  it.live("JSON null resources roundtrip through actual management create/retarget receipts and exact retries", () => Effect.gen(function* () {
+    const f = yield* CapabilityConnectionManagementFixture.fixture()
+    const create = { connection: f.parent, input: { environment: "null-created", resource: null } }
+    const created = yield* f.run(f.management.createTarget(create), "null-create")
+    const createdRef = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }), { onExcessProperty: "error" })(created.data).target
+    expect(created.reused).toBe(false)
+    expect(createdRef).toEqual({ id: createdRef.id, connectionID: f.parent.id, environment: "null-created", generation: 0 })
+    expect(yield* f.run(f.management.createTarget(create), "null-create")).toEqual({ ...created, reused: true })
+    yield* f.run(f.management.bind({ target: f.child, input: { sessionID: f.sessionID, actions: ["read"] } }), "null-binding")
+    expect(yield* f.database.db.select().from(CapabilityBindingTable)).toHaveLength(1)
+    const retarget = { target: f.child, input: { environment: "null-retargeted", resource: null } }
+    const retargeted = yield* f.run(f.management.retargetTarget(retarget), "null-retarget")
+    const retargetedRef = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }), { onExcessProperty: "error" })(retargeted.data).target
+    expect(retargeted.reused).toBe(false)
+    expect(retargetedRef).toEqual({ ...f.child, environment: "null-retargeted", generation: 1 })
+    expect(yield* f.run(f.management.retargetTarget(retarget), "null-retarget")).toEqual({ ...retargeted, reused: true })
+    expect(yield* f.database.db.select().from(CapabilityBindingTable)).toHaveLength(0)
+    yield* Effect.forEach([createdRef, retargetedRef], (ref) => Effect.gen(function* () {
+      const row = yield* f.database.db.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, ref.id)).get()
+      expect(row?.resource).toBeNull()
+      expect(row?.environment).toBe(ref.environment)
+      expect(row?.generation).toBe(ref.generation)
+      expect(yield* f.database.db.select({ resource: sql<string>`${CapabilityTargetTable.resource}`,
+        storage: sql<string>`typeof(${CapabilityTargetTable.resource})`, kind: sql<string>`json_type(${CapabilityTargetTable.resource})` })
+        .from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, ref.id)).get())
+        .toEqual({ resource: "null", storage: "text", kind: "null" })
+    }))
+    yield* Effect.forEach([created, retargeted], (receipt) => Effect.gen(function* () {
+      expect((yield* f.database.db.select().from(CapabilityRequestTable).where(eq(CapabilityRequestTable.id, receipt.requestID)).get())?.result)
+        .toEqual(receipt.data)
+      expect(JSON.stringify(receipt)).not.toContain(CapabilityConnectionManagementFixture.secret)
+    }))
+    CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.createTarget({ ...create,
+      input: { ...create.input, resource: "null" } }), "null-create").pipe(Effect.exit), "outcome_unknown")
+    expect(yield* f.database.db.select().from(CapabilityTargetTable)).toHaveLength(2)
+  }))
+
   it.live("concurrent creation canonicalizes payload, receipts expose only target refs and changed input conflicts", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
     const input = { connection: f.parent, input: { environment: "production", resource: { secret: CapabilityConnectionManagementFixture.secret } } }
