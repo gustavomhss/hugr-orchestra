@@ -3,7 +3,7 @@ import { Orchestra } from "@orchestra/client/effect"
 import { CapabilityBindingTable } from "@orchestra/core/capability/sql"
 import { Capability } from "../../schema/src/capability"
 import { ForbiddenError, UnauthorizedError } from "../../protocol/src/errors"
-import { Effect, Schema } from "effect"
+import { Effect, Layer, Schema } from "effect"
 import { FetchHttpClient } from "effect/unstable/http"
 import { it } from "../../core/test/lib/effect"
 import { CapabilityConnectionsFixture } from "../../server/test/capability-connections-fixture"
@@ -17,11 +17,13 @@ function targetFrom(data: unknown) {
 
 // Exercise exact production group, middleware, handler and SQL Store through the
 // generated client and owning embedded transport; embedded.test.ts covers aggregate wiring.
+// Location fixtures already build a platform HttpClient. Fresh Fetch layers capture the
+// owning transport instead of reusing that memoized client's default host fetch.
 it.live("embedded generated connections client executes all nine methods against real router and SQL", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionsFixture.make()
   const transport = yield* makeOperatorTransport(f.handler, f.operators)
   const client = yield* Orchestra.make({ baseUrl: "http://orchestra.local", headers: transport.headers }).pipe(
-    Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
+    Effect.provide(Layer.fresh(FetchHttpClient.layer)), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
   const location = f.placement.location
   const page = yield* client.connections.list({ location, limit: 1 })
@@ -73,7 +75,7 @@ it.live("embedded generated client preserves opaque pagination across requests a
   const second = yield* f.target(f.parent)
   const transport = yield* makeOperatorTransport(f.handler, f.operators)
   const client = yield* Orchestra.make({ baseUrl: "http://orchestra.local", headers: transport.headers }).pipe(
-    Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
+    Effect.provide(Layer.fresh(FetchHttpClient.layer)), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
   const location = f.placement.location
   const input = { location, connectionID: f.parent.id, limit: 1 }
@@ -83,14 +85,14 @@ it.live("embedded generated client preserves opaque pagination across requests a
   expect([...first.items, ...next.items].map((item) => item.target.id).sort()).toEqual([f.child.id, second.id].sort())
   const credential = yield* f.operators.issue({ origin: "sdk", scope: { placements: [f.placement], actions: ["*"] } })
   const scoped = yield* Orchestra.make({ baseUrl: "http://orchestra.local", headers: { Authorization: `Bearer ${credential.bearer}` } }).pipe(
-    Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
+    Effect.provide(Layer.fresh(FetchHttpClient.layer)), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
   const denied = yield* scoped.connections.get({ location, connectionID: f.foreignParent.id }).pipe(Effect.flip)
   expect(Schema.encodeUnknownSync(ForbiddenError)(denied)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
   const wrong = yield* scoped.connections.targets({ ...input, after: first.after }).pipe(Effect.flip)
   expect(Schema.encodeUnknownSync(ForbiddenError)(wrong)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
   const unauthenticated = yield* Orchestra.make({ baseUrl: "http://orchestra.local" }).pipe(
-    Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
+    Effect.provide(Layer.fresh(FetchHttpClient.layer)), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
   expect(Schema.encodeUnknownSync(UnauthorizedError)(yield* unauthenticated.connections.list({ location }).pipe(Effect.flip))).toEqual({
     _tag: "UnauthorizedError", message: "Authentication required",
