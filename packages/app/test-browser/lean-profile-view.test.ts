@@ -79,15 +79,15 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
         "Jest",
         "Vitest",
       ])
-      expect(screen.host.querySelector('[data-lean-total="bytes"]')?.textContent).toBe("+1,024")
+      expect(screen.host.querySelector('[data-lean-total="bytes"]')?.textContent).toBe("+1 KiB")
       expect(screen.host.querySelector('[data-lean-total="tokens"]')?.textContent).toBe("-4")
       for (const id of ["cargo", "go", "pytest", "jest", "vitest"] as const) {
         expect(screen.row(id).querySelector('[data-lean-value="bytes"]')?.textContent).toBe("0")
         expect(screen.row(id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe("0")
         expect(screen.switch(id).getAttribute("aria-label")).toContain("for this profile")
       }
-      expect(screen.row("jest").textContent).toContain("Exact preservation")
-      expect(screen.row("vitest").textContent).toContain("Exact preservation")
+      expect(screen.row("jest").textContent).toContain("Plaintext preserved")
+      expect(screen.row("vitest").textContent).toContain("Plaintext preserved")
       screen.set("data", {
         ...data,
         savings: { ...data.savings, tokenCalls: 1 },
@@ -215,7 +215,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       screen.set("data", { ...info(), enabled: false, complete: false })
       expect(screen.host.textContent).toContain("Lean is off for this profile")
       expect(screen.host.textContent).toContain("History is bounded")
-      expect(screen.host.querySelector('[data-lean-total="bytes"]')?.textContent).toBe("+1,024")
+      expect(screen.host.querySelector('[data-lean-total="bytes"]')?.textContent).toBe("+1 KiB")
     } finally {
       screen.close()
     }
@@ -227,8 +227,104 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
     try {
       expect(screen.host.textContent).toContain("Bytes economizados")
       expect(screen.host.textContent).toContain("Tokens economizados estimados")
-      expect(screen.row("vitest").textContent).toContain("Preservação exata")
+      expect(screen.row("vitest").textContent).toContain("Texto preservado")
       expect(screen.switch("pytest").getAttribute("aria-label")).toBe("Ativar pytest neste perfil")
+      screen.set("data", { ...info(), savings: { ...info().savings, tokenCalls: 1 } })
+      expect(screen.host.querySelector(".lean-summary [data-lean-coverage]")?.textContent).toBe(
+        "Execuções com estimativa: 1/2",
+      )
+    } finally {
+      screen.close()
+    }
+  })
+
+  test("mixed token coverage stays visible with unavailable values; exact byte titles and negative tones", () => {
+    const data = info()
+    const partial = { ...data.savings, tokensSaved: null, tokenCalls: 1 }
+    const screen = mount({
+      data: {
+        ...data,
+        savings: partial,
+        items: data.items.map((item) => (item.id === "cargo" ? { ...item, savings: partial } : item)),
+      },
+    })
+    try {
+      expect(screen.host.querySelector('[data-lean-total="tokens"]')?.textContent).toBe("Unavailable")
+      expect(screen.row("cargo").querySelector('[data-lean-value="tokens"]')?.textContent).toBe("Unavailable")
+      expect(screen.host.querySelector(".lean-summary [data-lean-coverage]")?.textContent).toBe(
+        "Executions with estimates: 1/2",
+      )
+      expect(screen.row("cargo").querySelector("[data-lean-coverage]")?.textContent).toBe(
+        "Executions with estimates: 1/2",
+      )
+      screen.set("data", { ...screen.props.data!, savings: { ...partial, tokenCalls: 0 } })
+      expect(screen.host.querySelector(".lean-summary [data-lean-coverage]")?.textContent).toBe(
+        "Executions with estimates: 0/2",
+      )
+      const negative = { ...data.savings, bytesSaved: -1310720, tokensSaved: -9 }
+      screen.set("data", {
+        ...data,
+        savings: negative,
+        items: data.items.map((item) =>
+          item.id === "cargo"
+            ? { ...item, savings: negative }
+            : item.id === "pytest"
+              ? { ...item, savings: data.savings }
+              : item,
+        ),
+      })
+      const bytes = screen.host.querySelector('[data-lean-total="bytes"]')!
+      expect(bytes.textContent).toBe("-1.25 MiB")
+      expect(bytes.getAttribute("title")).toBe("Exact UTF-8 bytes: -1,310,720")
+      expect(bytes.getAttribute("aria-label")).toBe(bytes.getAttribute("title"))
+      expect(bytes.getAttribute("data-tone")).toBe("negative")
+      expect(screen.host.querySelector('[data-lean-total="tokens"]')?.getAttribute("data-tone")).toBe("negative")
+      expect(screen.row("cargo").querySelector('[data-lean-value="bytes"]')?.textContent).toBe("-1.25 MiB")
+      expect(screen.row("cargo").querySelector('[data-lean-value="bytes"]')?.getAttribute("title")).toBe(
+        bytes.getAttribute("title"),
+      )
+      expect(screen.row("pytest").querySelector('[data-lean-value="bytes"]')?.getAttribute("data-tone")).toBe("default")
+      expect(screen.row("pytest").querySelector('[data-lean-value="tokens"]')?.getAttribute("data-tone")).toBe(
+        "negative",
+      )
+      expect(screen.row("pytest").querySelector('[data-lean-value="tokens"]')?.textContent).toBe("-4")
+      expect(screen.host.querySelectorAll("[data-lean-coverage]")).toHaveLength(0)
+    } finally {
+      screen.close()
+    }
+  })
+
+  test("A to B to A clears save errors and rejects late failures; dispatch stays synchronous before profile microtasks", async () => {
+    const first = Promise.withResolvers<void>()
+    const late = Promise.withResolvers<void>()
+    const waits = [first, late]
+    const profiles: string[] = []
+    const screen = mount({
+      onUpdate() {
+        profiles.push(screen.props.data!.scope.profileID)
+        return waits.shift()!.promise
+      },
+    })
+    try {
+      screen.switch("cargo").click()
+      expect(profiles).toEqual(["profile-one"])
+      first.reject(new Error("first write denied"))
+      await settle()
+      expect(screen.host.querySelector('[role="alert"]')?.textContent).toContain("Could not save this change")
+      screen.set("data", info())
+      expect(!!screen.host.querySelector('[role="alert"]')).toBe(true)
+      screen.set("data", info("profile-two"))
+      screen.set("data", info())
+      expect(!!screen.host.querySelector('[role="alert"]')).toBe(false)
+      screen.switch("cargo").click()
+      screen.set("data", info("profile-two"))
+      expect(profiles).toEqual(["profile-one", "profile-one"])
+      queueMicrotask(() => screen.set("data", info()))
+      late.reject(new Error("late write denied"))
+      await settle()
+      expect(screen.props.data?.scope.profileID).toBe("profile-one")
+      expect(!!screen.host.querySelector('[role="alert"]')).toBe(false)
+      expect(screen.switch("cargo").getAttribute("aria-checked")).toBe("true")
     } finally {
       screen.close()
     }
