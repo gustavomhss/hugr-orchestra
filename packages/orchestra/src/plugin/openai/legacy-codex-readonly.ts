@@ -37,7 +37,9 @@ export async function LegacyCodexReadonlyPlugin(
         const inherited = requireInherited(15 * 60_000)
         if (!isDeepStrictEqual(requireOAuth(context.auth, 15 * 60_000), inherited))
           throw new Error("LEGACY_CODEX_INHERITED_AUTH_MISMATCH")
-        return Object.fromEntries(Object.entries(provider.models).filter(([, model]) => allowedModel(model.api.id)))
+        return Object.fromEntries(Object.entries(provider.models).filter(([, model]) =>
+          model.options.reasoningMode !== "pro" && allowedModel(model.api.id),
+        ))
       },
     },
     auth: {
@@ -60,9 +62,9 @@ export async function LegacyCodexReadonlyPlugin(
             if (!isDeepStrictEqual(current, snapshot) || !isDeepStrictEqual(inherited, snapshot))
               throw new Error("LEGACY_CODEX_AUTH_IDENTITY_CHANGED")
             const headers = new Headers(request.headers)
+            // HTTP session/affinity headers are Codex protocol context, not the private title marker.
             ;[
-              "authorization", "chatgpt-account-id", "x-orchestra-title", "session-id", "x-session-id",
-              "x-session-affinity", "x-parent-session-id", "x-opencode-session", "x-opencode-request",
+              "authorization", "chatgpt-account-id", "x-orchestra-title", "x-opencode-session", "x-opencode-request",
               "x-opencode-project", "x-opencode-client",
             ].forEach((name) => headers.delete(name))
             headers.set("Authorization", `Bearer ${snapshot.access}`)
@@ -74,6 +76,16 @@ export async function LegacyCodexReadonlyPlugin(
           },
         }
       },
+    },
+    "chat.headers": async (input, output) => {
+      if (input.model.providerID !== "openai") return
+      output.headers.originator = "opencode"
+      output.headers["User-Agent"] = `opencode/${InstallationVersion} (${os.platform()} ${os.release()}; ${os.arch()})`
+      output.headers["session-id"] = input.sessionID
+    },
+    "chat.params": async (input, output) => {
+      if (input.model.providerID !== "openai") return
+      output.maxOutputTokens = undefined
     },
   }
 }
