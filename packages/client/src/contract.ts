@@ -42,9 +42,16 @@ export const groupNames = {
   "server.pullRequest": "pullRequests",
   "server.schedule": "schedules",
   "server.capability.operator": "operator",
+  "server.capability.connections": "connections",
 } as const
 
 export const endpointNames = {
+  "capability.connection.targets": "targets",
+  "capability.target.create": "createTarget",
+  "capability.target.retarget": "retargetTarget",
+  "capability.target.remove": "removeTarget",
+  "capability.binding.put": "bind",
+  "capability.binding.remove": "unbind",
   "agent.file.get": "getFile",
   "agent.file.update": "updateFile",
   "session.messages": "list",

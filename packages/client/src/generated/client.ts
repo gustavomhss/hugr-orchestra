@@ -190,6 +190,24 @@ import type {
   SchedulesRunOutput,
   OperatorInspectInput,
   OperatorInspectOutput,
+  ConnectionsListInput,
+  ConnectionsListOutput,
+  ConnectionsGetInput,
+  ConnectionsGetOutput,
+  ConnectionsTargetsInput,
+  ConnectionsTargetsOutput,
+  ConnectionsDisconnectInput,
+  ConnectionsDisconnectOutput,
+  ConnectionsCreateTargetInput,
+  ConnectionsCreateTargetOutput,
+  ConnectionsRetargetTargetInput,
+  ConnectionsRetargetTargetOutput,
+  ConnectionsRemoveTargetInput,
+  ConnectionsRemoveTargetOutput,
+  ConnectionsBindInput,
+  ConnectionsBindOutput,
+  ConnectionsUnbindInput,
+  ConnectionsUnbindOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -1615,6 +1633,128 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/capability/operator`,
             query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    connections: {
+      list: (input?: ConnectionsListInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsListOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections`,
+            query: { location: input?.["location"], after: input?.["after"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ConnectionsGetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections/${encodeURIComponent(input.connectionID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      targets: (input: ConnectionsTargetsInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsTargetsOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/connections/${encodeURIComponent(input.connectionID)}/targets`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      disconnect: (input: ConnectionsDisconnectInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsDisconnectOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/connections/disconnect`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { connection: input["connection"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      createTarget: (input: ConnectionsCreateTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsCreateTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { connection: input["connection"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      retargetTarget: (input: ConnectionsRetargetTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsRetargetTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets/retarget`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      removeTarget: (input: ConnectionsRemoveTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsRemoveTargetOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/targets/remove`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bind: (input: ConnectionsBindInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsBindOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/bindings`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], input: input["input"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      unbind: (input: ConnectionsUnbindInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsUnbindOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/bindings/remove`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { target: input["target"], sessionID: input["sessionID"] },
             successStatus: 200,
             declaredStatuses: [401, 403, 400],
             empty: false,

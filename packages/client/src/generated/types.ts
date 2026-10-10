@@ -6859,3 +6859,219 @@ export type OperatorInspectOutput = {
   readonly origin: "configured-auth" | "desktop" | "cli" | "sdk"
   readonly scopeHash: string
 }
+
+export type ConnectionsListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["location"]
+  readonly after?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["after"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["limit"]
+}
+
+export type ConnectionsListOutput = {
+  readonly items: ReadonlyArray<{
+    readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+    readonly state: "active" | "disconnected" | "revoked"
+    readonly credential: "present" | "missing"
+  }>
+  readonly after?: string
+  readonly coverage: "live"
+}
+
+export type ConnectionsGetInput = {
+  readonly connectionID: { readonly connectionID: string }["connectionID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ConnectionsGetOutput = {
+  readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+  readonly state: "active" | "disconnected" | "revoked"
+  readonly credential: "present" | "missing"
+}
+
+export type ConnectionsTargetsInput = {
+  readonly connectionID: { readonly connectionID: string }["connectionID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["location"]
+  readonly after?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["after"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["limit"]
+}
+
+export type ConnectionsTargetsOutput = {
+  readonly items: ReadonlyArray<{
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+  }>
+  readonly after?: string
+  readonly coverage: "live"
+}
+
+export type ConnectionsDisconnectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly connection: {
+    readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+  }["connection"]
+}
+
+export type ConnectionsDisconnectOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}
+
+export type ConnectionsCreateTargetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly connection: {
+    readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+    readonly input: { readonly environment: string; readonly resource: JsonValue }
+  }["connection"]
+  readonly input: {
+    readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+    readonly input: { readonly environment: string; readonly resource: JsonValue }
+  }["input"]
+}
+
+export type ConnectionsCreateTargetOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}
+
+export type ConnectionsRetargetTargetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly target: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly input: { readonly environment: string; readonly resource: JsonValue }
+  }["target"]
+  readonly input: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly input: { readonly environment: string; readonly resource: JsonValue }
+  }["input"]
+}
+
+export type ConnectionsRetargetTargetOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}
+
+export type ConnectionsRemoveTargetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly target: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+  }["target"]
+}
+
+export type ConnectionsRemoveTargetOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}
+
+export type ConnectionsBindInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly target: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly input: { readonly sessionID: string; readonly actions: ReadonlyArray<string> }
+  }["target"]
+  readonly input: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly input: { readonly sessionID: string; readonly actions: ReadonlyArray<string> }
+  }["input"]
+}
+
+export type ConnectionsBindOutput = { readonly requestID: string; readonly reused: boolean; readonly data: JsonValue }
+
+export type ConnectionsUnbindInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly target: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly sessionID: string
+  }["target"]
+  readonly sessionID: {
+    readonly target: {
+      readonly id: string
+      readonly connectionID: string
+      readonly generation: number
+      readonly environment: string
+    }
+    readonly sessionID: string
+  }["sessionID"]
+}
+
+export type ConnectionsUnbindOutput = { readonly requestID: string; readonly reused: boolean; readonly data: JsonValue }
