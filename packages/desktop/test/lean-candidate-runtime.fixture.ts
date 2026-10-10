@@ -57,14 +57,12 @@ export async function launchCandidate(executable: string, root: string, recorder
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
     cwd: path.dirname(root), env: { ...env, ORCHESTRA_CANDIDATE_PROFILE_ROOT: root } })
-  // Join each raw stream before redaction so chunk boundaries cannot split a password.
-  const stdout: string[] = []
-  const stderr: string[] = []
-  const renderer: string[] = []
-  const diagnostics = () => [`main stdout: ${stdout.join("")}`, `main stderr: ${stderr.join("")}`, ...renderer]
-  recorder.observe("owned Electron streams and renderer diagnostics", diagnostics)
-  application.process().stdout?.on("data", (bytes) => stdout.push(String(bytes)))
-  application.process().stderr?.on("data", (bytes) => stderr.push(String(bytes)))
+  // Recorder-owned bounded streams join chunks before redaction; overflow publishes only a named marker.
+  const stdout = recorder.stream("owned Electron main stdout")
+  const stderr = recorder.stream("owned Electron main stderr")
+  const renderer = recorder.stream("owned renderer diagnostics")
+  application.process().stdout?.on("data", (bytes: Buffer) => stdout.push(bytes))
+  application.process().stderr?.on("data", (bytes: Buffer) => stderr.push(bytes))
   const state: { backend?: ServerReadyData; page?: Page; closed: boolean } = { closed: false }
   const close = async () => {
     if (state.closed) return
@@ -90,8 +88,8 @@ export async function launchCandidate(executable: string, root: string, recorder
     page.setDefaultTimeout(30000)
     page.setDefaultNavigationTimeout(30000)
     await page.waitForURL((url) => url.protocol === "oc:" && url.hostname === "renderer", { timeout: 60000 })
-    page.on("pageerror", (error) => { recorder.fail("primary", "owned renderer", error); renderer.push(`renderer error: ${error.stack}`) })
-    page.on("console", (message) => { if (message.type() === "error") renderer.push(`renderer console: ${message.text()}`) })
+    page.on("pageerror", (error) => { recorder.fail("primary", "owned renderer", error); renderer.push(`renderer error: ${error.stack}\n`) })
+    page.on("console", (message) => { if (message.type() === "error") renderer.push(`renderer console: ${message.text()}\n`) })
     assert.ok(page.url().startsWith("oc://renderer/"), `Unexpected packaged renderer URL: ${page.url()}`)
     // Production await-initialization returns main's own Deferred ServerReadyData (url/username/password).
     // Register generated credentials before assertions or diagnostics can reach an output sink.
@@ -147,7 +145,7 @@ export async function launchCandidate(executable: string, root: string, recorder
     assert.equal(utilities, 1, "Missing actual owned utility sidecar child")
     const marker = await Bun.file(path.join(root, ".orchestra-lean-candidate.json")).json()
     assert.deepEqual(marker, { appId: appID, version: 1, root })
-    return { application, page, backend, request, close, get diagnostics() { return diagnostics() }, root }
+    return { application, page, backend, request, close, get diagnostics() { return [stdout.read(), stderr.read(), renderer.read()] }, root }
   } catch (error) {
     recorder.fail("primary", "owned candidate launch", error)
     await close()
