@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { Model } from "./integrations-contract"
-import { Response, browser, connection, deferred, fixture, json, reads, recordSnapshots, target } from "./integrations-model.fixture"
+import { Response, binding, browser, connection, deferred, fixture, json, reads, recordSnapshots, target } from "./integrations-model.fixture"
 
 test("browser initial read failure exposes read-only recovery and retries exactly one GET", async () => {
   let failed = true
@@ -146,3 +146,108 @@ test("browser disposal during explicit read recovery aborts it and prevents late
   expect(f.requests).toHaveLength(2)
   expect(f.model.state.connections).toEqual([])
 })
+
+test("browser two live roots keep recovery callbacks receipts and late results isolated", async () => {
+  for (const end of ["cancel", "dispose"] as const) {
+    const held = deferred<Response>()
+    const started = deferred<void>()
+    const observedA: string[] = []
+    const observedB: string[] = []
+    const root = (id: number, name: string, observed: string[], blocked: boolean) => {
+      let posted = false
+      let attempts = 0
+      return fixture((request) => {
+        const path = new URL(request.url).pathname
+        if (request.method === "POST") { posted = true; return json({ requestID: `receipt-${name}`, reused: false, data: null }) }
+        if (path.endsWith(target(id, id).target.id)) {
+          if (posted && ++attempts === 1) return json({ _tag: "ForbiddenError", message: `private-${name}-read-error` }, 403)
+          if (posted && blocked) { started.resolve(); return held.promise }
+          return json({ target: { ...target(id, id).target, generation: posted ? 2 : 0 } })
+        }
+        if (path.endsWith("/bindings")) return json({ items: [], coverage: "current-actor" })
+        if (path.endsWith("/targets")) return json({ items: [target(id, id)], coverage: "live" })
+        if (path.endsWith(connection(id).connection.id)) return json(connection(id))
+        return json({ items: [connection(id)], coverage: "live" })
+      }, true, (state) => observed.push(JSON.stringify(state)), () => `private-intent-${name}`)
+    }
+    const a = root(1, "a", observedA, false)
+    const b = root(2, "b", observedB, true)
+    if (!(await browser(a, import.meta.path, "browser two live roots keep recovery"))) { b.dispose(); b.stop(); return }
+    expect(await browser(b, import.meta.path, "browser two live roots keep recovery")).toBe(true)
+    expect(a.model.state).not.toBe(b.model.state)
+    await a.model.load(); await a.model.select(a.model.state.connections[0]); await a.model.selectTarget(a.model.state.targets[0])
+    expect(observedA.length).toBeGreaterThan(1)
+    expect(observedB).toHaveLength(1)
+    const aReady = observedA.length
+    await b.model.load(); await b.model.select(b.model.state.connections[0]); await b.model.selectTarget(b.model.state.targets[0])
+    expect(observedB.length).toBeGreaterThan(1)
+    expect(observedA).toHaveLength(aReady)
+    await a.model.unbind(binding().sessionID); await b.model.unbind(binding(2).sessionID)
+    expect(a.model.state).toMatchObject({ connectionID: connection().connection.id, targetID: target().target.id,
+      status: "error", failure: "authorization", retryable: false, readRetryable: true, busy: false })
+    expect(b.model.state).toMatchObject({ connectionID: connection(2).connection.id, targetID: target(2, 2).target.id,
+      status: "error", failure: "authorization", retryable: false, readRetryable: true, busy: false })
+    expect(a.model.state.receipt).toEqual({ requestID: "receipt-a", reused: false, data: null })
+    expect(b.model.state.receipt).toEqual({ requestID: "receipt-b", reused: false, data: null })
+    expect(new URL(a.requests[0].url).origin).not.toBe(new URL(b.requests[0].url).origin)
+    const beforeA = a.requests.length
+    const beforeB = b.requests.length
+    expect(beforeA).toBe(8)
+    expect(beforeB).toBe(8)
+    const aFailure = JSON.stringify(a.model.state)
+    const recoverA = () => a.model.retryRead()
+    const recoverB = () => b.model.retryRead()
+    const pendingB = recoverB()
+    await started.promise
+    expect(JSON.stringify(a.model.state)).toBe(aFailure)
+    const bPending = JSON.stringify(b.model.state)
+    const bRecorded = observedB.length
+    await recoverA()
+    expect(a.model.state).toMatchObject({ status: "ready", connectionID: connection().connection.id, targetID: target().target.id,
+      retryable: false, readRetryable: false, busy: false, receipt: { requestID: "receipt-a" } })
+    expect(a.model.state.targets).toEqual([{ target: { ...target().target, generation: 2 } }])
+    expect(JSON.stringify(b.model.state)).toBe(bPending)
+    expect(observedB).toHaveLength(bRecorded)
+    expect(a.requests.slice(beforeA).map((request) => new URL(request.url).pathname)).toEqual([
+      `/api/capability/targets/${target().target.id}`, `/api/capability/targets/${target().target.id}/bindings`,
+    ])
+    expect(b.requests.slice(beforeB).map((request) => new URL(request.url).pathname)).toEqual([
+      `/api/capability/targets/${target(2, 2).target.id}`,
+    ])
+    const signal = b.signals.at(-1)
+    expect(signal?.aborted).toBe(false)
+    const recoveredA = JSON.stringify(a.model.state)
+    const recoveredObservedA = observedA.length
+    if (end === "cancel") b.model.cancel()
+    if (end === "dispose") b.dispose()
+    expect(signal?.aborted).toBe(true)
+    expect(b.model.state).toMatchObject({ retryable: false, readRetryable: false, busy: false })
+    expect(b.model.state.receipt).toBeUndefined()
+    const abandonedB = JSON.stringify(b.model.state)
+    const abandonedObservedB = observedB.length
+    held.resolve(json({ target: { ...target(2, 2).target, generation: 2 } }))
+    await pendingB; await a.model.retryRead(); await b.model.retryRead()
+    expect(JSON.stringify(a.model.state)).toBe(recoveredA)
+    expect(observedA).toHaveLength(recoveredObservedA)
+    expect(JSON.stringify(b.model.state)).toBe(abandonedB)
+    expect(observedB).toHaveLength(abandonedObservedB)
+    expect(a.requests).toHaveLength(beforeA + 2)
+    expect(b.requests).toHaveLength(beforeB + 1)
+    expect(a.requests.filter((request) => request.method === "POST")).toEqual([expect.objectContaining({ key: "private-intent-a",
+      body: { target: target().target, sessionID: binding().sessionID } })])
+    expect(b.requests.filter((request) => request.method === "POST")).toEqual([expect.objectContaining({ key: "private-intent-b",
+      body: { target: target(2, 2).target, sessionID: binding(2).sessionID } })])
+    if (end === "cancel") {
+      expect(b.model.state.connectionID).toBe(connection(2).connection.id)
+      expect(b.model.state.targetID).toBe(target(2, 2).target.id)
+      expect(b.model.state.targets).toEqual([target(2, 2)])
+    }
+    if (end === "dispose") {
+      expect(b.model.state.connectionID).toBeUndefined()
+      expect(b.model.state.targetID).toBeUndefined()
+      expect(b.model.state.targets).toEqual([])
+    }
+    expect([...observedA, ...observedB].every((snapshot) => !snapshot.includes("private-intent") && !snapshot.includes("read-error"))).toBe(true)
+    a.dispose(); a.stop(); b.dispose(); b.stop()
+  }
+}, 60000)
