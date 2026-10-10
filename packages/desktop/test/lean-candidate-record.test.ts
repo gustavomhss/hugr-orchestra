@@ -84,3 +84,15 @@ test("recorder redacts split-stream passwords discovered after capture and omits
   expect(original.cause).toBe(response)
   expect(chunks.join("")).toBe(password)
 })
+
+test("actual native proof entry fails by name on unsupported CI hosts before registering native tests", async () => {
+  if (process.env.CI !== "true" || !process.env.GITHUB_RUN_ID) throw new Error("LEAN_CANDIDATE_NEGATIVE_PROBE_CI_REQUIRED")
+  if (process.platform === "darwin" && process.arch === "x64") throw new Error("LEAN_CANDIDATE_NEGATIVE_PROBE_REQUIRES_UNSUPPORTED_HOST")
+  const { desktop } = await import("./lean-candidate-archive.fixture")
+  const child = Bun.spawn([process.execPath, "test", "test/lean-candidate-package.test.ts"], { cwd: desktop,
+    env: { PATH: process.env.PATH!, CI: "true", GITHUB_ACTIONS: "false" }, stdout: "pipe", stderr: "pipe", timeout: 10000, killSignal: "SIGKILL" })
+  const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+  expect(code).toBe(1)
+  expect(child.signalCode).not.toBe("SIGKILL")
+  expect(out + error).toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM: proof requires native macOS x64")
+}, 15000)
