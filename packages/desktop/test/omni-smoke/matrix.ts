@@ -1,6 +1,6 @@
 // Actual packaged Electron only. Crash/quit assertions precede every emergency signal.
 import { spawn, spawnSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { adoptTree, control, identity, inventoryScope, kill9, matches, members, own, table, until, win, type Identity } from "../../../omni/campaign/lib"
 import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
@@ -159,6 +159,24 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
       for (const file of readdirSync(scratch.home).filter((file) => file !== "smoke.json" && /\.(json|events|txt)$/.test(file))) copyFileSync(path.join(scratch.home, file), path.join(destination, file))
       writeFileSync(path.join(destination, "app.log"), state.output)
     } catch (error) { result.pass = false; result.error += `; evidence preservation: ${error}` }
+    // Global.Path.log uses the fixture's XDG_DATA_HOME on every hosted OS.
+    const serverLog = { source: path.join(scratch.env.XDG_DATA_HOME!, "orchestra", "log", "orchestra.log"),
+      destination: path.join(destination, "server.log"), status: "pending", error: "" }
+    evidence.serverLog = serverLog
+    try {
+      try { statSync(serverLog.source) }
+      catch (error) {
+        if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) throw error
+        serverLog.status = "missing"
+      }
+      if (serverLog.status !== "missing") {
+        copyFileSync(serverLog.source, serverLog.destination)
+        serverLog.status = "copied"
+      }
+    } catch (error) {
+      serverLog.status = "failed"; serverLog.error = String(error)
+      result.pass = false; result.error += `; evidence preservation: server.log: ${error}`
+    }
   }
   const record = { ...result, at: new Date().toISOString(), os: process.platform, arch: process.arch, run: process.env.GITHUB_RUN_ID,
     sourceSHA: manifest.sourceSHA, sourceTree: manifest.sourceTree, buildManifestSha256: digest(path.join(logs, "build.json")),
