@@ -11,6 +11,7 @@ import { Global } from "../global"
 import { PinnedArtifact } from "../pinned-artifact"
 import { AppProcess } from "../process"
 import { BackendToolkitAcquisition } from "./acquisition"
+import { BackendToolkitCassandra } from "./cassandra-metadata"
 import { BackendToolkitDiagnostics } from "./diagnostics"
 import {
   ENGINES,
@@ -247,11 +248,18 @@ export function hosted(
       return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
     const cause = yield* attempts.once(home, PinnedArtifact.install(home, [pin.artifact]))
     if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
+    if (install.kind === "source" && install.compatibility && (engine.id !== "gocqlx-schemagen" || install.build !== "go"))
+      return yield* new PinnedArtifact.Failed({ cause: "compatibility:cassandra-metadata:unsupported-engine" })
     yield* PinnedArtifact.install(
       directory,
-      install.kind === "jar" || install.kind === "source" ? [install.artifact] : [],
+      install.kind === "jar" || install.kind === "source"
+        ? [install.artifact, ...(install.kind === "source" && install.compatibility ? [BackendToolkitCassandra.artifact] : [])]
+        : [],
       (staging) =>
-        Effect.suspend(() => {
+        // Compatibility preparation owns staging writes too; finish them before interrupted install cleanup.
+        (install.kind === "source" && install.compatibility
+          ? BackendToolkitCassandra.prepare(staging).pipe(Effect.uninterruptible)
+          : Effect.void).pipe(Effect.andThen(Effect.suspend(() => {
           const pending: { work?: Promise<void> } = {}
           return Effect.tryPromise({
             try: (signal) =>
@@ -360,7 +368,7 @@ export function hosted(
               ),
             ),
           )
-        }),
+        }))),
     )
     // Existing complete pip caches used the engine id beside the packages. Refresh the private launcher without
     // reinstalling or touching pinned package bytes, so their advertised executable exists after a layout upgrade.

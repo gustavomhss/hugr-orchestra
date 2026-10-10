@@ -7,7 +7,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { OmniSpawner } from "@orchestra/core/omni-spawner"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { createWriteStream } from "node:fs"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import { InstanceState } from "@/effect/instance-state"
 
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -15,9 +15,9 @@ import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Shell } from "@orchestra/core/shell"
 import { ShellID } from "./shell/id"
-import * as ShellScan from "./shell/scan"
+import { ShellScan } from "./shell/scan"
 
-import * as Truncate from "./truncate"
+import { Truncate } from "./truncate"
 import { Plugin } from "@/plugin"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
@@ -25,6 +25,8 @@ import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BackgroundProcess } from "@/background/process"
 import { Agent } from "@/agent/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
+import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
+import path from "path"
 import { Seats } from "@/maestro/seats"
 
 export { Parameters } from "./shell/prompt"
@@ -125,6 +127,7 @@ export const ShellTool = Tool.define(
         cwd: string
         env: NodeJS.ProcessEnv
         timeout: number
+        prepareParents: boolean
       },
       ctx: Tool.Context,
     ) {
@@ -181,7 +184,7 @@ export const ShellTool = Tool.define(
       const code: number | null = yield* Effect.scoped(
         Effect.gen(function* () {
           yield* Effect.addFinalizer(closeSink)
-          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env)).pipe(
+          const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
           )
@@ -347,11 +350,22 @@ export const ShellTool = Tool.define(
                 throw new Error(`Invalid timeout value: ${params.timeout}. Timeout must be a positive number.`)
               }
               const timeout = params.timeout ?? defaultTimeoutMs
-              const ps = Shell.ps(shell)
-              yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
+              const prepareParents = yield* scanned(ShellScan.approve(ctx, { command: params.command, cwd, shell }))
 
               // Only the native backend seat gets its toolkit engines fetched; a blocked engine is the tool's output.
               const seat = Seats.find(ctx.agentID)?.toolkit ? yield* agents.get(ctx.agentID ?? ctx.agent) : undefined
+              const blocked = seat?.native === true ? yield* Effect.gen(function* () {
+                const root = yield* BackendToolkit.Root
+                const owned = yield* ShellScan.ownedToolArgv({ command: params.command, shell, toolkitBin: path.join(root, "bin") })
+                if (owned.blocked) return owned.blocked
+                yield* Effect.forEach(owned.calls ?? [], (call) => BackendToolkitProject.checkProjectVersion({
+                  ...call, cwd, projectDirectory: instanceCtx.worktree === "/" ? instanceCtx.directory : instanceCtx.worktree,
+                }), { discard: true })
+                // Literal owned paths need not use toolkit variables; ensure the parsed engine, then reuse its cache.
+                if (owned.calls?.length) yield* BackendToolkit.ensure("openapi-generator")
+              }).pipe(Effect.catch((error) => Effect.succeed(error.reason))) : undefined
+              if (blocked)
+                return { title: params.command, output: blocked, metadata: { output: blocked, exit: null, timeout: false, aborted: false, truncated: false } }
               const toolkit = seat?.native === true ? yield* BackendToolkit.prepare(params.command) : undefined
               if (toolkit?.blocked)
                 return { title: params.command, output: toolkit.blocked, metadata: { output: toolkit.blocked, exit: null, timeout: false, aborted: false, truncated: false } }
@@ -362,6 +376,7 @@ export const ShellTool = Tool.define(
                   cwd,
                   env: { ...(yield* shellEnv(ctx, cwd)), ...toolkit?.env },
                   timeout,
+                  prepareParents,
                 },
                 ctx,
               )

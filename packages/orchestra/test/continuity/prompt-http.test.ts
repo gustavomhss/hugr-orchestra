@@ -21,7 +21,7 @@ import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
 import { httpError, raw, reply, TestLLMServer } from "../lib/llm-server"
 import { testProviderConfig } from "../lib/test-provider"
-import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, wireMessages } from "./service-fixture"
+import { FIRST, NONCE, PAD, body, fragments, jobFor, packet, reviewing, retrying, wireMessages } from "./service-fixture"
 import { MessageID, PartID } from "@/session/schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
 
@@ -30,7 +30,21 @@ const preparation: { plan?: { systemCalls: number; paramCalls: number; system?: 
   entered?: Deferred.Deferred<void>; release?: Deferred.Deferred<void> } } = {}
 
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
-const llmNode = LayerNode.make({ service: TestLLMServer, layer: TestLLMServer.layer, deps: [] })
+const llmNode = LayerNode.make({ service: TestLLMServer, deps: [], layer: Layer.effect(TestLLMServer, Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const rejected: Hit[] = []
+  // This permanent first matcher cannot consume a parent/producer response, even after repeated review attempts.
+  yield* llm.pushMatch((hit) => {
+    if (!review(hit)) return false
+    rejected.push(hit)
+    throw new Error("Unexpected continuity review request")
+  }, httpError(400, { error: { message: "Unexpected continuity review request" } }))
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    expect(rejected).toEqual([])
+    expect((yield* llm.hits).filter(review)).toEqual([])
+  }))
+  return llm
+})).pipe(Layer.provide(TestLLMServer.layer)) })
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   SessionPrompt.node, SessionContinuity.node, Session.node, SessionProjector.node, BackgroundJob.node,
   Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, Archive.node, llmNode,
@@ -74,12 +88,14 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 ]))
 type Match = Parameters<TestLLMServer["Service"]["pushMatch"]>[0]
 type Hit = Parameters<Match>[0]
+const review: Match = (hit) => reviewing(hit.body)
 const maintenance: Match = (hit) => {
+  if (review(hit)) return false
   const wire = wireMessages(hit.body)
   return wire.some((message) => message.role === "system" && message.content.includes("CONTEXT CONTINUITY CHECKPOINT · working memory v5")) ||
     (wire.at(-1)?.role === "user" && /^(CONTEXT CONTINUITY CHECKPOINT|HOST CHECK FAILED)/.test(wire.at(-1)!.content))
 }
-const parent = (marker: string): Match => (hit) => !maintenance(hit) &&
+const parent = (marker: string): Match => (hit) => !review(hit) && !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
 function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number } = {}) {
@@ -151,6 +167,12 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   expect(maintenance(control("CONTEXT CONTINUITY CHECKPOINT\nprotocol", "user"))).toBe(true)
   expect(maintenance(control("TRIGGER", "user"))).toBe(false)
   expect(parent("TRIGGER")(control("TRIGGER", "user"))).toBe(true)
+  const reviewing: Hit = { ...control('{"candidate":{"now":{"src":["a1"]}},"marker":"TRIGGER"}', "user"), body: {
+    messages: [{ role: "system", content: "You independently review a complete working-memory candidate" },
+      { role: "user", content: '{"candidate":{"now":{"src":["a1"]}},"marker":"TRIGGER"}' }] } }
+  expect(review(reviewing)).toBe(true)
+  expect(maintenance(reviewing)).toBe(false)
+  expect(parent("TRIGGER")(reviewing)).toBe(false)
   for (const turn of seed) yield* llm.pushMatch(capture.record(turn.user, parent(turn.user)), answer(turn.assistant))
   yield* llm.pushMatch(capture.record("trigger", parent("TRIGGER")), answer("TRIGGER_DONE", 50_000, cached))
   // The replayed instruction indexes the new span by alias with the opening words of each source.
@@ -204,7 +226,7 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   const reference = fragments(packet(providerB.hit.body)).find((entry) => entry.text.includes("7E5D"))!.id
   expect(prepared.system[0]).toContain(reference)
   yield* llm.pushMatch(capture.record("next", parent("RECOVER_NONCE")), reply().tool("context_recall", { reference }))
-  yield* llm.pushMatch(capture.record("recovered", (hit) => !maintenance(hit) && wireMessages(hit.body).some((entry) =>
+  yield* llm.pushMatch(capture.record("recovered", (hit) => !review(hit) && !maintenance(hit) && wireMessages(hit.body).some((entry) =>
     entry.role === "tool" && entry.content.includes(NONCE))), answer(`Continue read-only verification with ${NONCE}; deployment still awaits approval.`))
   yield* llm.pushMatch(() => true, httpError(400, { error: { message: "Unarmed HTTP request" } }))
   const continued = yield* send("RECOVER_NONCE")
@@ -225,8 +247,56 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   expect(recovered.state.output).toContain(NONCE)
   expect(durable.slice(0, history.length)).toEqual(history)
   expect(capture.hits.map((entry) => entry.name)).toEqual([...seed.map((turn) => turn.user), "trigger", "A", "advance", "B", "next", "recovered"])
+  expect(capture.hits.filter((entry) => maintenance(entry.hit))).toHaveLength(2)
+  expect(capture.hits.filter((entry) => review(entry.hit))).toHaveLength(0)
   expect(yield* llm.hits).toEqual(capture.hits.map((entry) => entry.hit))
   expect(yield* sessions.children(chat.id)).toEqual([])
+}), 120_000)
+
+it.instance("Stop joins held HTTP producer without publishing unchecked memory or consuming a parent response", () => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  const instance = yield* TestInstance
+  const prompt = yield* SessionPrompt.Service
+  const sessions = yield* Session.Service
+  const continuity = yield* SessionContinuity.Service
+  const jobs = yield* BackgroundJob.Service
+  yield* configure(llm.url, instance.directory)
+  const chat = yield* sessions.create({ title: "Stop during HTTP producer" })
+  const capture = ledger()
+  const seed = Array.from({ length: 6 }, (_, index) => `STOP_PRODUCER_SEED_${index}`)
+  for (const text of seed) yield* llm.pushMatch(capture.record(text, parent(text)), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
+  const initial = forkAnswer(FIRST, capture.record("producer initial", maintenance))
+  yield* llm.pushMatch(initial.match, initial.response)
+  const send = (text: string) => awaitWithTimeout(prompt.prompt({ sessionID: chat.id, agent: "build", model,
+    parts: [{ type: "text", text }] }), "Stop-producer parent stalled", "30 seconds")
+  for (const text of seed) yield* send(text)
+  const before = yield* sessions.messages({ sessionID: chat.id })
+  const firstJob = yield* jobFor(chat.id, before.at(-1)!.info.id)
+  expect((yield* jobs.wait({ id: firstJob.id, timeout: 10_000 })).info?.output).toBe("applied")
+  const saved = yield* continuity.prepare({ sessionID: chat.id, messages: before, canRecall: true })
+  yield* llm.pushMatch(capture.record("refresh", parent("STOP_PRODUCER_REFRESH")), answer("REFRESH_DONE", 50_000))
+  const hold = yield* gate
+  const candidate = forkAnswer("UNCHECKED_HTTP_MEMORY", capture.record("producer held", maintenance), undefined, hold.wait)
+  yield* llm.pushMatch(candidate.match, candidate.response)
+  yield* llm.pushMatch(parent("UNSENT_PARENT_AFTER_STOP"), answer("PARENT_REPLY_NOT_FOR_PRODUCER"))
+  const refreshed = yield* send("STOP_PRODUCER_REFRESH")
+  yield* awaitWithTimeout(llm.wait(9), "Held producer never reached HTTP", "15 seconds")
+  const job = yield* jobFor(chat.id, refreshed.info.id)
+  expect((yield* jobs.get(job.id))?.status).toBe("running")
+  const history = yield* sessions.messages({ sessionID: chat.id })
+  expect((yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })).system).toEqual(saved.system)
+  yield* awaitWithTimeout(prompt.cancel(chat.id), "Stop did not join held HTTP producer", "15 seconds")
+  expect((yield* jobs.get(job.id))?.status).toBe("cancelled")
+  expect(yield* Deferred.isDone(hold.release)).toBe(false)
+  yield* Deferred.succeed(hold.release, undefined)
+  expect((yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })).system).toEqual(saved.system)
+  expect(yield* sessions.messages({ sessionID: chat.id })).toEqual(history)
+  expect(yield* sessions.children(chat.id)).toEqual([])
+  expect(capture.hits.map((entry) => entry.name)).toEqual([...seed, "producer initial", "refresh", "producer held"])
+  expect((yield* llm.hits).filter(maintenance)).toHaveLength(2)
+  expect((yield* llm.hits).filter(review)).toHaveLength(0)
+  expect(yield* llm.pending).toBe(2) // Permanent review rejection plus the unsent parent reply.
+  expect(yield* llm.hits).toEqual(capture.hits.map((entry) => entry.hit))
 }), 120_000)
 
 it.instance("large outgoing plugin append on first request emits completed overflow error and sends zero provider requests", () => Effect.gen(function* () {
@@ -380,8 +450,6 @@ it.instance("different user queued during real held catch-up retries stale admis
   const hold = yield* gate
   const catchup = forkAnswer("HELD_CATCHUP_RESULT", maintenance, undefined, hold.wait)
   yield* llm.pushMatch(catchup.match, catchup.response)
-  const replacement = forkAnswer("FRESH_CATCHUP_RESULT", maintenance)
-  yield* llm.pushMatch(replacement.match, replacement.response)
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
   yield* awaitWithTimeout(llm.wait(8), "Real catch-up never reached HTTP", "15 seconds")
@@ -396,6 +464,13 @@ it.instance("different user queued during real held catch-up retries stale admis
   expect(history.filter((message) => message.info.role === "assistant" && message.info.parentID === newer.info.id)).toHaveLength(1)
   const hits = yield* llm.hits
   expect(hits.filter(parent("QUEUED_U2_DURING_CATCHUP"))).toHaveLength(1)
+  // The completed prefix remains usable; rebinding a newer caller must not pay for it again.
+  expect(hits.filter(maintenance)).toHaveLength(2)
+  const delivered = hits.find(parent("QUEUED_U2_DURING_CATCHUP"))
+  if (!delivered) throw new Error("Missing rebound caller request")
+  expect(wireMessages(delivered.body).filter((message) => message.role === "system").map((message) => message.content).join("\n"))
+    .toContain("HELD_CATCHUP_RESULT")
+  expect(hits.filter(review)).toEqual([])
 }), 120_000)
 
 for (const invalid of ['{"memory":"missing references"}', "I resumed work and implemented the changes."]) {
@@ -435,6 +510,10 @@ for (const invalid of ['{"memory":"missing references"}', "I resumed work and im
     const prepared = yield* continuity.prepare({ sessionID: chat.id, messages: history, canRecall: true })
     expect(prepared.system).toEqual(before.system)
     expect(prepared.messages).toEqual(history.slice(-2))
+    const producers = (yield* llm.hits).filter(maintenance)
+    expect(producers).toHaveLength(3) // One successful pass, then the failed pass and its only retry.
+    expect(producers.map((hit) => retrying(hit.body))).toEqual([false, false, true])
+    expect((yield* llm.hits).filter(review)).toEqual([])
     yield* send("AFTER_INVALID")
     const wire = wireMessages(capture.hits[0].hit.body)
     expect(wire.filter((entry) => entry.role === "system").map((entry) => entry.content).join("\n")).toContain(FIRST)
@@ -499,6 +578,8 @@ for (const condition of ["allowed", "session-deny", "agent-deny", "user-false", 
     expect(hasRecall(capture.hits[0].hit)).toBe(condition === "allowed" || condition === "revoked" || condition === "pattern-revoked" ||
       condition === "no-toolcall" || patterned)
     expect(capture.hits.map((entry) => entry.name)).toEqual([...seed, "memory", "next"])
+    expect(capture.hits.filter((entry) => maintenance(entry.hit))).toHaveLength(1)
+    expect(capture.hits.filter((entry) => review(entry.hit))).toHaveLength(0)
     expect(yield* llm.hits).toEqual(capture.hits.map((entry) => entry.hit))
     expect((yield* jobs.list()).filter((job) => job.metadata?.sessionId === chat.id)).toHaveLength(1)
     expect((yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toEqual(saved.system)
@@ -546,6 +627,8 @@ it.instance("read shows nested rules again after working memory drops the turn t
   expect(conversation).not.toContain("NESTED_RULE_5C1E")
   expect(reads[1].output).toContain(`Instructions from: ${path.join(rules, "AGENTS.md")}\nNESTED_RULE_5C1E`)
   expect(reads[1].metadata.loaded).toEqual([path.join(rules, "AGENTS.md")])
+  expect((yield* llm.hits).filter(maintenance)).toHaveLength(1)
+  expect((yield* llm.hits).filter(review)).toEqual([])
 }), 120_000)
 
 it.instance("read shows nested rules again after masking hides the read that showed them", () => Effect.gen(function* () {

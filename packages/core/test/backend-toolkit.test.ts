@@ -145,6 +145,45 @@ it.live("a failed fetch is remembered as failed and not fetched again inside the
   }), 30_000,
 )
 
+it.live("a complete parent stays failed when its newly required owned plugin cannot be acquired", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    yield* BackendToolkit.ensure("buf").pipe(within(f.root, f.manifest()))
+    const manifest = f.manifest(["protoc-gen-es"])
+    const scoped = within(f.root, { ...manifest, buf: { ...manifest.buf, dependencies: ["protoc-gen-es"] } })
+    expect(yield* BackendToolkit.prefetch(["buf"]).pipe(scoped)).toMatchObject([{ engine: "buf", status: "failed", cause: "toolkit-not-ready:failed:protoc-gen-es:download:404" }])
+    expect(yield* BackendToolkit.status("buf").pipe(scoped)).toMatchObject([{ status: "failed" }])
+    expect(yield* exists(path.join(f.root, "engines", "buf", `${manifest.buf.version}-${host()}`, ".complete"))).toBe(true)
+    expect(f.hits).toEqual({ ["/" + file("buf")]: 1, ["/missing/" + file("protoc-gen-es")]: 1 })
+  }), 30_000,
+)
+
+it.live("complete caches need a host shim and an executable; prefetch repairs the missing shim", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const scoped = within(f.root, f.manifest())
+    const result = yield* BackendToolkit.ensure("sqlc").pipe(scoped)
+    yield* Effect.promise(() => rm(path.join(f.root, "bin", file("sqlc"))))
+    expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "absent" }])
+    expect(yield* BackendToolkit.prefetch(["sqlc"]).pipe(scoped)).toMatchObject([{ status: "ready", executable: result.executable }])
+    yield* Effect.promise(() => rm(result.executable))
+    expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "absent" }])
+    expect(yield* BackendToolkit.prefetch(["sqlc"]).pipe(scoped)).toMatchObject([{ status: "failed", cause: "executable-missing" }])
+    expect(f.hits).toEqual({ ["/" + file("sqlc")]: 1 })
+  }), 30_000,
+)
+
+it.live("an acquisition defect settles as a named failure instead of leaving the request fetching", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const manifest = f.manifest()
+    const scoped = within(f.root, { ...manifest, sqlc: { ...manifest.sqlc, get env(): Readonly<Record<string, string>> { throw new Error("launcher-env-defect") } } })
+    const failed = yield* BackendToolkit.ensure("sqlc").pipe(scoped, Effect.flip, Effect.timeout("3 seconds"))
+    expect(failed.reason).toBe("toolkit-not-ready:failed:sqlc:acquisition-defect:launcher-env-defect")
+    expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "failed", cause: "acquisition-defect:launcher-env-defect" }])
+  }), 10_000,
+)
+
 it.live("prepare fetches nothing for a command that names no engine", () =>
   Effect.gen(function* () {
     const f = yield* fixture
@@ -185,6 +224,87 @@ it.live("a musl host is blocked as an unsupported target without fetching", () =
     expect(states.every((state) => state.status === "unsupported" && state.reason === "libc-musl")).toBe(true)
     expect(f.total()).toBe(0)
   }), 30_000,
+)
+
+it.live("owned dependencies are provisioned recursively without fetching unrelated engines", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const manifest = f.manifest()
+    const scoped = within(f.root, {
+      ...manifest,
+      buf: { ...manifest.buf, dependencies: ["sqlc"] },
+      sqlc: { ...manifest.sqlc, dependencies: ["kiota"] },
+    })
+    const prepared = yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/buf" generate', { PATH: "caller-path" }).pipe(scoped)
+    expect(prepared).toEqual({ env: { BACKEND_TOOLKIT_BIN: path.join(f.root, "bin"), PATH: `${path.join(f.root, "bin")}${path.delimiter}caller-path` } })
+    expect(f.hits).toEqual({ ["/" + file("kiota")]: 1, ["/" + file("sqlc")]: 1, ["/" + file("buf")]: 1 })
+    expect(BackendToolkit.dependencyOrder({ ...manifest, buf: { ...manifest.buf, dependencies: ["sqlc", "kiota"] }, sqlc: { ...manifest.sqlc, dependencies: ["kiota"] } }, "buf")).toEqual(["kiota", "sqlc"])
+  }), 30_000,
+)
+
+it.live("every shipped engine has a valid owned dependency graph", () =>
+  Effect.sync(() => {
+    const engines = Object.values(BackendToolkitManifest.ENGINES)
+    expect(engines.length).toBeGreaterThan(0)
+    for (const engine of engines) {
+      const order = BackendToolkit.dependencyOrder(BackendToolkitManifest.ENGINES, engine.id)
+      expect(order, `${engine.id}: ${JSON.stringify(order)}`).toBeArray()
+    }
+  }),
+)
+
+it.live("missing and cyclic owned dependencies fail by name before any download", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const manifest = f.manifest()
+    for (const [dependencies, reason] of [
+      [["missing-engine"], "toolkit-dependency-missing:missing-engine"],
+      [["buf"], "toolkit-dependency-cycle:buf->buf"],
+      [["sqlc"], "toolkit-dependency-cycle:buf->sqlc->buf"],
+    ] as const) {
+      const scoped = within(f.root, { ...manifest, buf: { ...manifest.buf, dependencies }, sqlc: { ...manifest.sqlc, dependencies: ["buf"] } })
+      expect(yield* BackendToolkit.ensure("buf").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))).toBe(reason)
+      expect((yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/buf" generate').pipe(scoped)).blocked).toBe(reason)
+      expect(yield* BackendToolkit.prefetch(["buf"]).pipe(scoped)).toMatchObject([{ engine: "buf", status: "failed", cause: reason }])
+    }
+    expect(f.total()).toBe(0)
+  }), 30_000,
+)
+
+it.live("a delayed ES dependency outlives the shell waiter and continues through Buf exactly once", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const released = Promise.withResolvers<void>()
+    const received = { plugins: 0 }
+    yield* Effect.addFinalizer(() => Effect.sync(() => released.resolve()))
+    const server = yield* Effect.acquireRelease(
+      Effect.sync(() => Bun.serve({ port: 0, idleTimeout: 0, fetch: async () => { received.plugins++; await released.promise; return new Response(script("protoc-gen-es")) } })),
+      (server) => Effect.promise(() => server.stop(true)),
+    )
+    const manifest = f.manifest()
+    const plugin = manifest["protoc-gen-es"]
+    if (!("targets" in plugin)) throw new Error("fixture plugin must be native")
+    const target = host()
+    const scoped = within(f.root, { ...manifest, buf: { ...manifest.buf, dependencies: ["protoc-gen-es"] }, "protoc-gen-es": { ...plugin, targets: { ...plugin.targets, [target]: { ...plugin.targets[target], artifact: { ...plugin.targets[target].artifact, url: `http://127.0.0.1:${server.port}/${file("protoc-gen-es")}` } } } } })
+    const prepared = yield* BackendToolkit.prepare('"$BACKEND_TOOLKIT_BIN/buf" generate').pipe(scoped)
+    expect(prepared.blocked).toBe("toolkit-not-ready:fetching:buf")
+    expect(yield* BackendToolkit.status("buf").pipe(scoped)).toMatchObject([{ status: "fetching", at: expect.any(Number), budgetMs: 30 * 60_000 }])
+    expect(f.hits).toEqual({})
+    expect(received.plugins).toBe(1)
+    released.resolve()
+    // Only read status: a second ensure must not be needed to restart an abandoned parent request.
+    yield* Effect.gen(function* () {
+      while (true) {
+        const [state] = yield* BackendToolkit.status("buf").pipe(scoped)
+        if (state.status === "ready") return
+        if (state.status === "failed") throw new Error(state.cause)
+        yield* Effect.sleep("25 millis")
+      }
+    }).pipe(Effect.timeout("10 seconds"))
+    yield* Effect.all([BackendToolkit.ensure("buf"), BackendToolkit.ensure("buf")], { concurrency: "unbounded" }).pipe(scoped)
+    expect(received.plugins).toBe(1)
+    expect(f.hits).toEqual({ ["/" + file("buf")]: 1 })
+  }), 90_000,
 )
 
 it.live("prefetch for another target installs it without writing a host shim", () =>

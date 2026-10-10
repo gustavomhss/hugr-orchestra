@@ -29,6 +29,8 @@ Sections and fields (? = optional):
 
 For complete-prefix checkpoints return required current cursor, even if ops is empty. doing and next are nonempty
 single-line statements describing CURRENT covered work and concrete next action. Cite relevant source aliases in src.
+now.src MUST include at least one completed assistant or tool source from the exact boundary message.
+The host lists eligible boundary aliases below. Earlier user sources alone do not satisfy this requirement.
 Do not copy a huge last ask, old user ledger, raw call arguments/output, an exhaustive command trail or file contents.
 Every declared completed source through the boundary is covered; there is no protected native tail to fix stale Now.
 The host renders semantic sections and compact artifact/ongoing-delegation inventory. Retire obsolete work; retain
@@ -47,8 +49,9 @@ this reply, for a new item; use it only in needs.
 
 src: aliases from the index (uN user, aN assistant, tN tool call or delegation return). Copy
 exact strings only from what you can see, one value or error per item, never joined (two errors
-are two failures); otherwise cite the alias. An error, value or quote the host cannot find drops only its own op,
-so a rule whose quote is not the user's exact words is lost. Retire what is disproven,
+are two failures); otherwise cite the alias. In complete-prefix checkpoints, unlocated exact data requires
+a corrected reply rather than silently losing its operation. Partial v4 drops only the offending op.
+Retire what is disproven,
 finished with or no longer true; keep a dead end worth remembering as a failure.
 
 Quotes are found in the user text of the cited sources or the new span. The host rejects the
@@ -61,3 +64,15 @@ reply (you get one retry) unless:
   done has detail;
 - at most one doing; needs of open tasks point to live items; an objective has an open step.
 There is no size limit: keep what the next turns need and retire what went stale.
+
+Self-check this candidate BEFORE emitting it, within this same generation. Do not emit reasoning,
+checklist prose or a separate approval report. There is no second reviewer model call.
+- Preserve indispensable facts, exact values, standing rules and the latest covered objective.
+- Ground Now.doing/next in the latest evidence. Do not reopen completed work or manufacture a new task;
+  waiting for the owner is a valid next action after delivery.
+- Separate confirmed outcomes from claims and hypotheses. A completed tool invocation is not itself
+  success; a nonzero exit may be an expected negative check. Read intent and outcome together.
+- Reconcile contradictions and superseded decisions. Keep uncertainty when evidence is insufficient.
+- Keep protected IDs unchanged unless new sources justify a change; retire explicitly with a reason.
+The host executes source/exactness/coverage/retention checks. Only a failed host check triggers the
+single corrective reply. Those checks do not independently prove the meaning of your summary.

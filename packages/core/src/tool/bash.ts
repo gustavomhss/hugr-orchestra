@@ -195,7 +195,7 @@ const layer = Layer.effectDiscard(
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
-                const wrapped = yield* ToolSafetySandbox.wrap(command).pipe(Effect.provideService(FSUtil.Service, fs))
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),

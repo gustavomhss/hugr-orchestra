@@ -34,7 +34,7 @@ export type Op =
   | { op: "retire"; id: string; reason: string; src?: string[]; quote?: string }
 
 export type Failure = { check: string; detail: string }
-/** `dropped` counts ops whose exact value, error or user quote was not found; the rest of the pass still applies. */
+/** Partial v4 may drop unlocated exact data; complete v5 requires correction instead. */
 export type Decoded = { artifact: MemoryArtifact; ops: Op[]; dropped: number }
 
 const fail = (check: string, detail: string): Failure => ({ check, detail })
@@ -105,7 +105,7 @@ export function decode(input: {
     !cursor.src.every((alias) => typeof alias === "string" && ctx.sources.has(alias)) ||
     !cursor.src.some((alias) => ctx.span.some((source) => source.alias === alias && source.message.info.id === snapshot.boundary &&
       (source.alias.startsWith("a") || source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status))))))
-    return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases at or before its boundary")
+    return fail("C15", "complete coverage requires Now: nonempty single-line doing/next and nonempty aliases, including a completed assistant/tool source from the exact boundary message listed in the host index")
   const prohibited = RawPayload.inventory(snapshot.complete ? snapshot.covered ?? snapshot.head :
     host.history.filter((message) => ctx.covered.some((source) => source.message.info.id === message.info.id)))
   if (snapshot.complete && [cursor, ...body.ops].some((value) => {
@@ -144,7 +144,11 @@ export function decode(input: {
       } else if (quoted(item)) {
         if (!op.quote) return fail("C7", `retiring ${op.id} needs quote: the user's revoking words from the new span`)
         // Revoking words that are not found drop the retire: the user's item stays.
-        if ("check" in quote(op.quote, ctx, op.src ?? [], true)) continue
+        const found = quote(op.quote, ctx, op.src ?? [], true)
+        if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Retirement ${op.id} needs a corrected user revocation quote: ${found.detail}`)
+          continue
+        }
       }
       items.delete(op.id)
       applied.push(op)
@@ -163,6 +167,7 @@ export function decode(input: {
         const found = name === "quote" ? quote(value, ctx, op.src, false) : exact(name, value, ctx, op.src)
         // A wrong exact value, error or user quote costs only its own op; nothing unverified is stored.
         if ("check" in found) {
+          if (snapshot.complete) return fail("C17", `Correct ${section}.${name} before complete coverage: ${found.detail}`)
           if (op.op === "add" && op.key) lost.add(op.key)
           continue each
         }
@@ -674,6 +679,10 @@ export function index(snapshot: MemorySnapshot, host: Host, size: number) {
     `${ranges.join(", ") || "No aliased sources"} (through ${ctx.end?.alias ?? "the start of this session"}). ` +
       (snapshot.complete ? "Every declared completed source through the boundary is covered; no protected tail. Return required Now doing/next/src." :
         `The native tail starts at ${ctx.tail?.alias ?? "the next message"} and is not covered.`),
+    ...(snapshot.complete ? [`Now.src MUST include at least one of these exact completed boundary aliases: ${ctx.span
+      .filter((source) => source.message.info.id === snapshot.boundary && (source.alias.startsWith("a") ||
+        source.part?.type === "tool" && ["completed", "error"].includes(source.part.state.status)))
+      .map((source) => source.alias).join(", ")}. Earlier user aliases alone are insufficient.`] : []),
     "## Index of the new span",
     ...lines,
     "## Size",

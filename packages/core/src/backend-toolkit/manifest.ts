@@ -74,6 +74,8 @@ export type HostedEngine<Id extends string = EngineId> = {
         readonly path: string
         /** The built executable's name without `.exe`. */
         readonly binary: string
+        /** Owned, hash-pinned driver backport; valid only for gocqlx-schemagen's Go build. */
+        readonly compatibility?: "cassandra-metadata"
         /** Cargo only. */
         readonly features?: ReadonlyArray<string>
         /** Cargo release optimization; plan-check CLIs can trade execution speed for bounded cold builds. */

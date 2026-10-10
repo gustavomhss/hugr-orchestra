@@ -37,12 +37,24 @@ export type PartialArtifact = {
 }
 
 export type Now = { doing: string; next: string; src: readonly string[] }
+export type MemoryReview = {
+  version: 1
+  state: "active" | "waiting" | "closed"
+  next: "continue" | "verify" | "ask-user" | "wait-user"
+  critical: readonly string[]
+  digest: string
+}
+export type MemoryChecklist = { version: 1; critical: readonly string[]; digest: string }
 export type CompleteArtifact = Omit<PartialArtifact, "version" | "tailStart"> & {
   version: 5
   tailStart?: never
   now: Now
   /** Host-owned source fingerprint inventory, not producer-authored coverage. */
   covered: readonly { id: MessageID; digest: string }[]
+  /** Host-owned review receipt; absence identifies an older unaudited v5 artifact. */
+  review?: MemoryReview
+  /** Host-executed retention/integrity checks, not an independent semantic review. */
+  checklist?: MemoryChecklist
 }
 export type MemoryArtifact = PartialArtifact | CompleteArtifact
 export type Coverage = { version: 5; boundary: MessageID; coveredThrough: MessageID; currentUserID?: MessageID }

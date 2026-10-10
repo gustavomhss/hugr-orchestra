@@ -30,10 +30,15 @@ const item = Schema.Struct({
 })
 const artifactFields = { parentID: SessionID, producerID: SessionID, boundary: MessageID, coveredThrough: MessageID,
   items: Schema.Array(item), next: Schema.Int, text: Schema.String }
+const review = Schema.Struct({ version: Schema.Literal(1), state: Schema.Literals(["active", "waiting", "closed"]),
+  next: Schema.Literals(["continue", "verify", "ask-user", "wait-user"]), critical: Schema.Array(Schema.String),
+  digest: Schema.String.check(Schema.isPattern(hashPattern)) })
 const artifact = Schema.Union([
   Schema.Struct({ version: Schema.Literal(4), ...artifactFields, tailStart: MessageID }),
   Schema.Struct({ version: Schema.Literal(5), ...artifactFields, now: Schema.Struct({ doing: Schema.NonEmptyString, next: Schema.NonEmptyString,
-    src: Schema.Array(Schema.String) }), covered: Schema.Array(Schema.Struct({ id: MessageID, digest: Schema.String.check(Schema.isPattern(hashPattern)) })) }),
+     src: Schema.Array(Schema.String) }), covered: Schema.Array(Schema.Struct({ id: MessageID, digest: Schema.String.check(Schema.isPattern(hashPattern)) })),
+     review: Schema.optional(review), checklist: Schema.optional(Schema.Struct({ version: Schema.Literal(1),
+       critical: Schema.Array(Schema.String), digest: Schema.String.check(Schema.isPattern(hashPattern)) })) }),
 ])
 const memory = Schema.Struct({
   version: Schema.Literal(1),

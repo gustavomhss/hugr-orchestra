@@ -4,6 +4,8 @@ import type { SessionStoreEntry } from "@anthropic-ai/claude-agent-sdk"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { Archive } from "@/continuity/archive"
+import { validChecklist } from "@/continuity/checklist-seal"
+import PROMPT from "@/continuity/prompt.txt"
 import { ClaudeCodeStore } from "@/claude-code/store"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { pollWithTimeout } from "../lib/effect"
@@ -11,10 +13,7 @@ import { ClaudeEngineFixture } from "./engine-fixture"
 
 ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and loads accepted memory on resume without changing the native archive", () =>
   Effect.gen(function* () {
-    ClaudeEngineFixture.state.queries.length = 0
-    ClaudeEngineFixture.state.scripts.length = 0
-    ClaudeEngineFixture.state.producers = 0
-    ClaudeEngineFixture.state.apiCalls = 0
+    ClaudeEngineFixture.reset()
     ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
     const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
     const continuity = yield* SessionContinuity.Service
@@ -31,6 +30,21 @@ ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and
     expect(done.info?.status).toBe("completed")
     expect(done.info?.output).toBe("applied")
     expect(ClaudeEngineFixture.state.producers).toBe(1)
+    expect(ClaudeEngineFixture.state.reviews).toBe(0)
+    const producers = ClaudeEngineFixture.state.queries.filter((query) => query.options?.persistSession === false)
+    expect(producers).toHaveLength(1)
+    expect(producers[0].options?.model).toBe("claude-haiku-4-5-20251001")
+    expect(producers[0].options?.systemPrompt).toEqual({ type: "custom", prompt: PROMPT })
+    expect(JSON.stringify(ClaudeEngineFixture.historicalMessages(producers[0]))).toContain("prompt-0")
+    const storage = yield* Archive.Service
+    const memory = (yield* storage.readMemory(chat.id))?.context?.artifact
+    expect(memory?.version).toBe(5)
+    // Bun's asymmetric object matcher mutates its received object; keep sealed bytes untouched.
+    expect(memory?.version === 5 && structuredClone(memory.checklist)).toMatchObject({ version: 1, critical: [], digest: expect.any(String) })
+    expect(memory?.version === 5 && validChecklist(memory)).toBe(true)
+    expect(memory).not.toHaveProperty("review")
+    expect(memory?.text).toContain("SDK_MEMORY_NEEDLE_9C41")
+    expect(memory?.items.length).toBeGreaterThan(0)
     expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
     expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ contextWindow: 20_000, maxOutputTokens: 2_000, version: "2.1.289", continuityPaused: null })
     const prepared = yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })
@@ -56,24 +70,20 @@ ClaudeEngineFixture.it.instance("SDK window triggers the actual SDK producer and
   }), 120_000)
 
 ClaudeEngineFixture.it.instance("unknown transcript version keeps native compaction enabled and pauses Orchestra production", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
-  ClaudeEngineFixture.state.producer = undefined
+  ClaudeEngineFixture.reset()
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   for (let index = 0; index < 2; index++) {
     ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(index, { version: "99.9.9", usage: 19_000 }))
     yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("native only") })
   }
   expect(ClaudeEngineFixture.state.producers).toBe(0)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect(ClaudeEngineFixture.state.queries.every((query) => typeof query.options?.settings !== "string" && query.options?.settings?.autoCompactEnabled === true)).toBe(true)
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ continuityPaused: "Claude Code 99.9.9 not yet supported" })
 }), 60_000)
 
 ClaudeEngineFixture.it.instance("SDK init model aliases reconcile actual modelUsage without borrowing catalog limits", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
+  ClaudeEngineFixture.reset()
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   ClaudeEngineFixture.state.scripts.push(async function* (signal, params) {
     for await (const message of ClaudeEngineFixture.nativeReply(0, { modelKey: "claude-haiku-4-5" })(signal, params)) {
@@ -87,13 +97,11 @@ ClaudeEngineFixture.it.instance("SDK init model aliases reconcile actual modelUs
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ contextWindow: 20_000, maxOutputTokens: 2_000,
     model: "claude-haiku-4-5-20251001", continuityPaused: null })
   expect(ClaudeEngineFixture.state.producers).toBe(0)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
 }), 60_000)
 
 ClaudeEngineFixture.it.instance("session-pattern recall denial disables masking while SDK memory production remains available", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
-  ClaudeEngineFixture.state.apiCalls = 0
+  ClaudeEngineFixture.reset()
   ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   const jobs = yield* BackgroundJob.Service
@@ -108,30 +116,26 @@ ClaudeEngineFixture.it.instance("session-pattern recall denial disables masking 
   expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
   expect((yield* archive.readMemory(chat.id))?.masks).toEqual([])
   expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
   ClaudeEngineFixture.state.producer = undefined
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("disabled continuity retains native compaction and never starts the SDK producer", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
-  ClaudeEngineFixture.state.producer = undefined
+  ClaudeEngineFixture.reset()
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup({ enabled: false })
   for (let index = 0; index < 2; index++) {
     ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(index, { usage: 19_000 }))
     yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("continuity disabled") })
   }
   expect(ClaudeEngineFixture.state.producers).toBe(0)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect(ClaudeEngineFixture.state.queries.every((query) => typeof query.options?.settings !== "string" && query.options?.settings?.autoCompactEnabled === true)).toBe(true)
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ continuityPaused: "disabled" })
 }), 60_000)
 
 ClaudeEngineFixture.it.instance("context_compact uses the real SDK backend without awaiting its own unfinished tool; swap is deferred to resume", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
-  ClaudeEngineFixture.state.apiCalls = 0
+  ClaudeEngineFixture.reset()
   ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   for (let index = 0; index < 6; index++) {
@@ -139,6 +143,7 @@ ClaudeEngineFixture.it.instance("context_compact uses the real SDK backend witho
     yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say(`phase-${index} ` + "historical source ".repeat(120)) })
   }
   expect(ClaudeEngineFixture.state.producers).toBe(0)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.compactTurn)
   const result = yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("compact now") }).pipe(Effect.timeout("20 seconds"))
   expect(result.info.role === "assistant" && result.info.error).toBeUndefined()
@@ -147,6 +152,12 @@ ClaudeEngineFixture.it.instance("context_compact uses the real SDK backend witho
   expect(part?.type === "tool" && part.state.status).toBe("completed")
   expect(part?.type === "tool" && part.state.status === "completed" && part.state.metadata.outcome).toBe("applied")
   expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
+  const archive = yield* Archive.Service
+  const memory = (yield* archive.readMemory(chat.id))?.context?.artifact
+  expect(memory?.version === 5 && structuredClone(memory.checklist)).toMatchObject({ version: 1, critical: [], digest: expect.any(String) })
+  expect(memory?.version === 5 && validChecklist(memory)).toBe(true)
+  expect(memory).not.toHaveProperty("review")
   const loaded: SessionStoreEntry[][] = []
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(8, { loaded }))
   yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say("continue") })
@@ -157,10 +168,7 @@ ClaudeEngineFixture.it.instance("context_compact uses the real SDK backend witho
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("hard-limit admission waits before the next SDK query; Stop closes the held producer transport", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
-  ClaudeEngineFixture.state.apiCalls = 0
+  ClaudeEngineFixture.reset()
   const entered = yield* Deferred.make<void>()
   const context = yield* Effect.context<never>()
   const gate: { release?: () => void; aborted: boolean } = { aborted: false }
@@ -187,15 +195,15 @@ ClaudeEngineFixture.it.instance("hard-limit admission waits before the next SDK 
   yield* prompt.cancel(chat.id)
   yield* Fiber.await(next)
   expect(gate.aborted).toBe(true)
+  expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect(ClaudeEngineFixture.state.queries.filter((query) => query.options?.persistSession !== false)).toHaveLength(6)
   expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
   ClaudeEngineFixture.state.producer = undefined
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("exact native fallback admission refuses spawn even though the Orchestra prepared view fits", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
+  ClaudeEngineFixture.reset()
   ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   const jobs = yield* BackgroundJob.Service
@@ -206,6 +214,8 @@ ClaudeEngineFixture.it.instance("exact native fallback admission refuses spawn e
   }
   const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "missing producer")
   expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
+  expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   expect((yield* continuity.prepare({ sessionID: chat.id, messages: yield* sessions.messages({ sessionID: chat.id }), canRecall: true })).system).toHaveLength(1)
   const context = yield* Effect.context<never>()
   const native = ClaudeCodeStore.create({ sessionID: chat.id, sessions, continuity, fs: yield* FSUtil.Service,
@@ -224,7 +234,8 @@ ClaudeEngineFixture.it.instance("exact native fallback admission refuses spawn e
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("unknown deferred carrier uses authoritative native fallback and auto-compaction before actual SDK spawn", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0; ClaudeEngineFixture.state.scripts.length = 0; ClaudeEngineFixture.state.producers = 0; ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
+  ClaudeEngineFixture.reset()
+  ClaudeEngineFixture.state.producer = ClaudeEngineFixture.memoryProducer
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   const jobs = yield* BackgroundJob.Service
   for (let index = 0; index < 6; index++) {
@@ -232,7 +243,9 @@ ClaudeEngineFixture.it.instance("unknown deferred carrier uses authoritative nat
     yield* prompt.prompt({ sessionID: chat.id, ...ClaudeEngineFixture.say(`carrier-boundary-${index} ` + "span text ".repeat(120)) })
   }
   const job = yield* pollWithTimeout(jobs.list().pipe(Effect.map((list) => list.find((job) => job.metadata?.sessionId === chat.id))), "missing producer")
-  yield* jobs.wait({ id: job.id, timeout: 15_000 })
+  expect((yield* jobs.wait({ id: job.id, timeout: 15_000 })).info?.output).toBe("applied")
+  expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   const context = yield* Effect.context<never>()
   const continuity = yield* SessionContinuity.Service
   const native = ClaudeCodeStore.create({ sessionID: chat.id, sessions, continuity, fs: yield* FSUtil.Service,
@@ -253,9 +266,7 @@ ClaudeEngineFixture.it.instance("unknown deferred carrier uses authoritative nat
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("missing SDK snapshot keeps native compaction on, but known SDK limit still rejects huge ordinary next prompt", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
+  ClaudeEngineFixture.reset()
   const { sessions, prompt, chat } = yield* ClaudeEngineFixture.setup()
   ClaudeEngineFixture.state.scripts.push(ClaudeEngineFixture.nativeReply(0, { usage: 50, snapshot: false }), ClaudeEngineFixture.nativeReply(1, { usage: 50, snapshot: false,
     inspect: (params) => expect(params.options?.settings).toMatchObject({ autoCompactEnabled: true }) }))
@@ -267,12 +278,11 @@ ClaudeEngineFixture.it.instance("missing SDK snapshot keeps native compaction on
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ continuityPaused: "SDK system/tool snapshot unavailable; native compaction enabled" })
   expect((yield* sessions.get(chat.id)).metadata?.claudeCode).toMatchObject({ nativeAdmission: { bounded: false } })
   expect(ClaudeEngineFixture.state.producers).toBe(0)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
 }), 120_000)
 
 ClaudeEngineFixture.it.instance("actual engine caller turns reuse the stable SDK backend while a soft producer is held", () => Effect.gen(function* () {
-  ClaudeEngineFixture.state.queries.length = 0
-  ClaudeEngineFixture.state.scripts.length = 0
-  ClaudeEngineFixture.state.producers = 0
+  ClaudeEngineFixture.reset()
   const entered = yield* Deferred.make<void>()
   const release = yield* Deferred.make<void>()
   const context = yield* Effect.context<never>()
@@ -297,6 +307,7 @@ ClaudeEngineFixture.it.instance("actual engine caller turns reuse the stable SDK
   yield* Effect.sleep("50 millis")
   expect(aborted).toBe(false)
   expect(ClaudeEngineFixture.state.producers).toBe(1)
+  expect(ClaudeEngineFixture.state.reviews).toBe(0)
   yield* Deferred.succeed(release, undefined)
   yield* Fiber.join(next)
   ClaudeEngineFixture.state.producer = undefined

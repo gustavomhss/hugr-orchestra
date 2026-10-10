@@ -9,6 +9,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { body } from "../continuity/service-fixture"
+import PROMPT from "@/continuity/prompt.txt"
 import { Session } from "@/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { TestInstance } from "../fixture/fixture"
@@ -22,18 +23,35 @@ export const state: {
   scripts: Script[]
   producer: ((params: Params) => AsyncGenerator<unknown>) | undefined
   producers: number
+  reviews: number
   apiCalls: number
   construct: ClaudeCodeSDK.Interface["query"] | undefined
   heldRead: { plan?: { file: string; entered: Deferred.Deferred<void>; release: Deferred.Deferred<void> } }
-} = { queries: [], scripts: [], producer: undefined, producers: 0, apiCalls: 0, construct: undefined, heldRead: {} }
+} = { queries: [], scripts: [], producer: undefined, producers: 0, reviews: 0, apiCalls: 0, construct: undefined, heldRead: {} }
 
 export type Params = Parameters<ClaudeCodeSDK.Interface["query"]>[0]
 
 export type Script = (signal: AbortSignal, params: Params) => AsyncGenerator<unknown>
 
+export function reset() {
+  state.queries.length = 0
+  state.scripts.length = 0
+  state.producer = undefined
+  state.producers = 0
+  state.reviews = 0
+  state.apiCalls = 0
+  state.construct = undefined
+  state.heldRead.plan = undefined
+}
+
 const sdk = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
   query: (params) => {
     state.queries.push(params)
+    // Detect by instruction before routing: a reviewer must never consume an ordinary script.
+    if (isReview(params)) {
+      state.reviews++
+      throw new Error("Unexpected SDK reviewer: maintenance must use producer self-check")
+    }
     if (state.construct) return state.construct(params)
     if (params.options?.persistSession === false) {
       state.producers++
@@ -119,12 +137,30 @@ export function nativeReply(index: number, options: { usage?: number; version?: 
 }
 
 export const memoryProducer = async function* (params: Params) {
-  expect(params.options).toMatchObject({ tools: [], persistSession: false, maxTurns: 1 })
-  expect(typeof params.prompt).toBe("string")
-  const historical = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(String(params.prompt).split("\n").slice(1).join("\n"))
-  const reply = JSON.stringify(body({ messages: historical }, "SDK_MEMORY_NEEDLE_9C41"))
+  expect(params.options).toMatchObject({ tools: [], mcpServers: {}, strictMcpConfig: true,
+    disallowedTools: ["*"], persistSession: false, maxTurns: 1, settingSources: [],
+    systemPrompt: { type: "custom", prompt: PROMPT } })
+  expect(params.options?.resume).toBeUndefined()
+  expect(params.options?.sessionStore).toBeUndefined()
+  expect(params.options).not.toHaveProperty("parentResume")
+  const reply = JSON.stringify(body({ messages: historicalMessages(params) }, "SDK_MEMORY_NEEDLE_9C41"))
   yield { type: "assistant", ...frame, message: { id: "memory", content: [{ type: "text", text: reply }], stop_reason: "end_turn", usage: {} } }
   yield { type: "result", subtype: "success", is_error: false, stop_reason: "end_turn", ...frame }
+}
+
+const reviewInstruction = "You independently review a complete working-memory candidate"
+
+export function isReview(params: Params) {
+  const system = params.options?.systemPrompt
+  const prompt = typeof system === "string" || Array.isArray(system) ? system : system?.type === "custom" ? system.prompt : system?.append ?? ""
+  return (Array.isArray(prompt) ? prompt.join("\n") : prompt).includes(reviewInstruction)
+}
+
+export function historicalMessages(params: Params) {
+  if (typeof params.prompt !== "string") throw new Error("Expected SDK historical JSON prompt")
+  expect(params.prompt.split("\n")[0]).toBe("Historical messages (JSON, including original roles/content):")
+  return Schema.decodeUnknownSync(Schema.Array(Schema.Unknown))(
+    Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(params.prompt.split("\n").slice(1).join("\n")))
 }
 
 export const compactTurn: Script = async function* (_signal, params) {

@@ -203,7 +203,7 @@ const layer = Layer.effect(
       })
       const gate = { run: toolRun, context: (toolUseID: string) => toolContext(view.tool(toolUseID), abort.signal),
         shell: (ctx: Tool.Context, command: string) => approve(ctx, { command, cwd: instance.directory, shell }).pipe(
-          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner)) }
+          Effect.provideService(FSUtil.Service, fs), Effect.provideService(ChildProcessSpawner, spawner), Effect.asVoid) }
       const instructions = yield* instruction.system().pipe(Effect.orElseSucceed(() => [] as string[]))
       const append = [agent.prompt, ...instructions].filter(Boolean).join("\n\n") || undefined
       const prepare = Effect.gen(function* () {

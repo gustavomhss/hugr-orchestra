@@ -37,7 +37,8 @@ export function replay(input: { messages: SessionV1.WithParts[]; boundary?: Mess
     const pass = yield* run(captured, { provider: replayProvider(input.model),
       llm: input.llm ?? { stream: (request) => {
         if (!requests.includes(request)) return Stream.fail(new Error("complete-replay-construction-order"))
-        return input.response ? Stream.make(LLMEvent.textDelta({ id: "saved-output", text: input.response }), LLMEvent.finish({ reason: "stop" })) :
+        if (request.agent.name !== "continuity") return Stream.fail(new Error("complete-replay-unexpected-role"))
+        return input.response !== undefined ? Stream.make(LLMEvent.textDelta({ id: "saved-output", text: input.response }), LLMEvent.finish({ reason: "stop" })) :
           Stream.fail(new DryRequestCaptured())
       } } },
       { history: input.messages, delegations: {}, member: false }, { onRequest: (request) => Effect.sync(() => { requests.push(request) }) })
