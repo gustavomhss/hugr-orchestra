@@ -206,6 +206,8 @@ describe("durable WorkResult decision", () => {
     // Independent canonical preimage, not the implementation's hash helper or focused consumer schema.
     const preimage = `{"acceptance":{"state":"pending"},"authoritySessionId":${JSON.stringify(fixture.root.id)},"blockers":[],"card":{"parsed":true},"changes":[],"checks":[],"executionSessionId":${JSON.stringify(fixture.child.id)},"memberId":"backend","memory":{"reads":[],"writes":[]},"mode":"delegated","nextActions":[],"outcome":"done","risks":[],"schema":"backend-work-result-v1","taskId":${JSON.stringify(fixture.binding.taskId)},"terminal":{"reason":"ended"},"verification":{"state":"not-host-verified"}}`
     expect(first.workResultHash).toBe(createHash("sha256").update(preimage).digest("hex"))
+    expect(String(first.id)).toBe(`evt_maestro_work_result_decision_${createHash("sha256")
+      .update(JSON.stringify([fixture.root.id, fixture.part.id, first.workResultHash])).digest("hex")}`)
     const sessions = yield* Session.Service
     if (fixture.part.state.status !== "completed") throw new Error("fixture not completed")
     yield* sessions.updatePart({ ...fixture.part, state: { ...fixture.part.state, metadata: { sessionId: fixture.child.id,
