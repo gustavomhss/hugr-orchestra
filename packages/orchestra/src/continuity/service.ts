@@ -31,6 +31,8 @@ type Active = { generation: number; epoch: number; backend: Backend | null | und
 type Pending = { message: SessionV1.Assistant; canRecall: boolean; model?: Provider.Model }
 type Entry = {
   generation: number
+  /** Explicit history invalidation, unlike admitting a new uncompleted caller. */
+  historyRevision: number
   safe?: MessageID
   active?: Active
   pending?: Pending
@@ -106,7 +108,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/S
 function entry(state: State, sessionID: SessionID) {
   const existing = state.sessions.get(sessionID)
   if (existing) return existing
-  const next: Entry = { generation: 0, refresh: false }
+  const next: Entry = { generation: 0, historyRevision: 0, refresh: false }
   state.sessions.set(sessionID, next)
   return next
 }
@@ -308,19 +310,21 @@ const layer = Layer.effect(
       })
     })
 
-    const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")(function* (sessionID) {
+    const advanceGeneration = Effect.fn("SessionContinuity.advanceGeneration")(function* (sessionID: SessionID, invalidate: boolean) {
       const current = yield* InstanceState.get(state)
       yield* Effect.sync(() => {
         const item = entry(current, sessionID)
         item.generation += 1
+        if (invalidate) item.historyRevision++
         item.safe = undefined
         item.pending = undefined
         if (item.active) item.refresh = true
       })
     })
+    const advance: Interface["advance"] = Effect.fn("SessionContinuity.advance")((sessionID) => advanceGeneration(sessionID, false))
 
     const invalidate: Interface["invalidate"] = Effect.fn("SessionContinuity.invalidate")(function* (sessionID) {
-      yield* advance(sessionID)
+      yield* advanceGeneration(sessionID, true)
       const current = yield* InstanceState.get(state)
       current.contexts.discard(sessionID)
       current.requests.delete(sessionID)
@@ -390,11 +394,13 @@ const layer = Layer.effect(
       })
 
     const schedule = (current: State, sessionID: SessionID, pending: Pending,
-      expected?: { entry: Entry; generation: number; epoch: number; backend: Backend | null | undefined }): Effect.Effect<void> =>
+      expected?: { entry: Entry; generation: number; historyRevision: number; epoch: number; backend: Backend | null | undefined }): Effect.Effect<void> =>
       Effect.gen(function* () {
         const token = expected ?? { entry: entry(current, sessionID), generation: entry(current, sessionID).generation,
+          historyRevision: entry(current, sessionID).historyRevision,
           epoch: current.epochs.get(sessionID) ?? 0, backend: current.backends.get(sessionID) }
         const live = () => current.sessions.get(sessionID) === token.entry && token.entry.generation === token.generation &&
+          token.entry.historyRevision === token.historyRevision &&
           (current.epochs.get(sessionID) ?? 0) === token.epoch && current.backends.get(sessionID) === token.backend
         if (!live()) return
         const message = pending.message
@@ -454,7 +460,8 @@ const layer = Layer.effect(
             // New users clear the safe boundary; retry only a new completed turn.
             if (!pending || (current.epochs.get(sessionID) ?? 0) !== token.epoch || current.backends.get(sessionID) !== token.backend ||
               item.safe !== pending.message.id || item.attempted === pending.message.id) return
-            return { pending, entry: item, generation: item.generation, epoch: token.epoch, backend: token.backend }
+            return { pending, entry: item, generation: item.generation, historyRevision: item.historyRevision,
+              epoch: token.epoch, backend: token.backend }
           })
           // A cancelled worker still carries its interrupt cause in this finalizer.
           // Admit the queued turn in a fresh fiber, owned by this instance's cache
@@ -505,6 +512,15 @@ const layer = Layer.effect(
                 yield* result("discarded")
                 return "discarded"
               }
+              const priorContext = current.contexts.get(sessionID)
+              const historyRevision = token.historyRevision
+              const caller = RequestSource.latest(stored)?.info
+              // Only paid admission catch-up of an unsealed v5 prefix may hand off a checked candidate.
+              // Ordinary background maintenance keeps the existing caller-generation fence.
+              const catchup = pending.model !== undefined && selected.complete === true &&
+                selected.previous?.version === 5 && selected.previous.boundary !== selected.boundary &&
+                token.entry.admittedBoundary !== selected.previous.boundary && caller?.role === "user"
+              const sourceModel = catchup ? structuredClone(model) : undefined
               // A turn that started before the last swap replays older memory than this
               // pass edits. Wait for a turn that carries the current memory instead of
               // paying for an uncached isolated request.
@@ -522,9 +538,9 @@ const layer = Layer.effect(
                  llm: { stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
               }, { history, delegations, member }, { parent: request })
-              // A producer pull may observe ownership loss before its transport finishes.
-              // That is a stale result, not a provider failure or a breaker strike.
-              if (!live()) {
+              // Caller generation can change during paid catch-up without changing its completed source.
+              // Only a decoded, checklist-checked artifact may reach the canonical handoff CAS below.
+              if (!live() && !(catchup && artifact)) {
                 yield* diagnostic(sessionID, active.boundary, "stale-or-backend-change", pass)
                 yield* result("discarded")
                 return "discarded"
@@ -544,9 +560,29 @@ const layer = Layer.effect(
                 return pass.failure === "input-budget" ? "unmet-span-input-budget" : pass.failure ?? "discarded"
               }
               const latest = yield* sessions.messages({ sessionID })
+              const nextCaller = RequestSource.latest(latest)?.info
+              const nextModel = catchup && nextCaller?.role === "user"
+                ? yield* resolve(current, sessionID, nextCaller.model.providerID, nextCaller.model.modelID).pipe(
+                    Effect.orElseSucceed(() => undefined))
+                : undefined
+              const generation = token.entry.generation
+              const canonical = catchup ? yield* sessions.messages({ sessionID }) : latest
+              const canonicalHistory = MessageV2.filterCompacted(canonical.toReversed())
               const applied = yield* Effect.sync(() => {
                 const item = current.sessions.get(sessionID)
-                if (!live() || !item || item.active !== active || !isCurrent(selected, MessageV2.filterCompacted(latest.toReversed())))
+                const actualCaller = RequestSource.latest(canonical)?.info
+                // Publish memory only, never admit the old caller: ContinuityAdmission still rebinds and
+                // seals it with the new caller's unchanged epoch/generation CAS before provider allocation.
+                const handoff = catchup && item === token.entry && item.generation === generation &&
+                  item.generation !== token.generation && item.historyRevision === historyRevision &&
+                  (current.epochs.get(sessionID) ?? 0) === token.epoch && current.backends.get(sessionID) === token.backend &&
+                  current.contexts.get(sessionID) === priorContext && actualCaller?.role === "user" &&
+                  caller?.role === "user" && actualCaller.id !== caller.id &&
+                  nextCaller?.role === "user" && actualCaller.id === nextCaller.id &&
+                  isDeepStrictEqual(actualCaller.model, caller.model) && isDeepStrictEqual(nextModel, sourceModel) &&
+                  !selected.covered?.some((message) => message.info.id === actualCaller.id) &&
+                  completeSnapshot(sessionID, canonicalHistory)?.boundary === selected.boundary
+                if ((!live() && !handoff) || !item || item.active !== active || !isCurrent(selected, canonicalHistory))
                   return false
                 if (
                   artifact.parentID !== sessionID ||
@@ -565,7 +601,7 @@ const layer = Layer.effect(
                 )
                   return false
                 item.refresh = false
-                return true
+                return handoff ? "caller-handoff" as const : "applied" as const
               })
               if (!applied) {
                   yield* diagnostic(sessionID, active.boundary, "stale-or-backend-change", pass)
@@ -573,7 +609,7 @@ const layer = Layer.effect(
                 return "discarded"
               }
               yield* persist(current, sessionID)
-              yield* diagnostic(sessionID, active.boundary, "applied", pass)
+              yield* diagnostic(sessionID, active.boundary, applied === "caller-handoff" ? "checked-catchup-caller-handoff" : "applied", pass)
               yield* outcome(true)
               yield* result("applied")
               return "applied"

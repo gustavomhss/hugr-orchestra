@@ -100,12 +100,15 @@ const maintenance: Match = (hit) => {
 const parent = (marker: string): Match => (hit) => !review(hit) && !maintenance(hit) &&
   wireMessages(hit.body).findLast((message) => message.role === "user")?.content.includes(marker) === true
 
-function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number } = {}) {
+function configure(url: string, directory: string, options: { toolcall?: boolean; permission?: unknown; context?: number; alternateModel?: boolean } = {}) {
   const config = testProviderConfig(url)
   config.provider.test.models["test-model"].tool_call = options.toolcall ?? true
   if (options.context) config.provider.test.models["test-model"].limit.context = options.context
   return Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
     ...config, model: "test/test-model", small_model: "test/test-model", enabled_providers: ["test"],
+    ...(options.alternateModel ? { provider: { ...config.provider, test: { ...config.provider.test,
+      models: { ...config.provider.test.models, "changed-catchup-model": { ...config.provider.test.models["test-model"],
+        id: "changed-catchup-model", limit: { context: 200_000, output: 10_000 } } } } } } : {}),
     plugin: [], mcp: {}, compaction: { auto: false },
     // Scenario turns report 50,000 tokens against the test model's 100,000-token window.
     continuity: { trigger: 0.5 },
@@ -432,7 +435,8 @@ it.instance("permission changes during real preflight rebind same caller before 
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(1)
 }), 120_000)
 
-it.instance("different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error", () => Effect.gen(function* () {
+for (const change of ["unchanged", "completed-source-edit", "caller-model-change"] as const) it.instance(
+  `different user queued during real held catch-up retries stale admission instead of emitting terminal U1 error${change === "unchanged" ? "" : `; ${change}`}`, () => Effect.gen(function* () {
   const llm = yield* TestLLMServer
   const instance = yield* TestInstance
   const prompt = yield* SessionPrompt.Service
@@ -440,7 +444,7 @@ it.instance("different user queued during real held catch-up retries stale admis
   const jobs = yield* BackgroundJob.Service
   const continuity = yield* SessionContinuity.Service
   const provider = yield* Provider.Service
-  yield* configure(llm.url, instance.directory)
+  yield* configure(llm.url, instance.directory, { alternateModel: change === "caller-model-change" })
   const chat = yield* sessions.create({ title: "Held catch-up caller race" })
   const seed = Array.from({ length: 6 }, (_, index) => `CATCHUP_SEED_${index}`)
   for (const text of seed) yield* llm.pushMatch(parent(text), answer(`DONE_${text} ${PAD}`, text === seed[5] ? 50_000 : 100))
@@ -484,6 +488,10 @@ it.instance("different user queued during real held catch-up retries stale admis
     selected.resolve(hit)
     return true
   }, catchup.response)
+  if (change !== "unchanged") {
+    const fresh = forkAnswer("REBOUND_CATCHUP_RESULT", maintenance)
+    yield* llm.pushMatch(fresh.match, fresh.response)
+  }
   yield* llm.pushMatch(parent("QUEUED_U2_DURING_CATCHUP"), answer("U2_DELIVERED_ONCE"))
   const old = yield* prompt.prompt({ sessionID: chat.id, agent: "build", model, parts: [{ type: "text", text: "OLD_U1_CATCHUP_CALLER" }] }).pipe(Effect.forkChild)
   // pull() selects synchronously before hits/notify. Only this exact response's callback opens the barrier.
@@ -524,10 +532,19 @@ it.instance("different user queued during real held catch-up retries stale admis
   )
   expect(heldCatchup.hits.length).toBe(1)
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toHaveLength(7)
-  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
+  if (change === "completed-source-edit") {
+    const source = (yield* sessions.messages({ sessionID: chat.id })).find((message) => message.info.id === delta.id)
+    const part = source?.parts.find((part) => part.type === "text" && part.text.startsWith("NEW_COMPLETED_DELTA"))
+    if (!part || part.type !== "text") throw new Error("CATCHUP_CANONICAL_EDIT_SOURCE_REQUIRED")
+    yield* sessions.updatePart({ ...part, text: `NEW_COMPLETED_DELTA_EDITED ${PAD}` })
+  }
+  const callerModel = change === "caller-model-change"
+    ? { providerID: model.providerID, modelID: ModelV2.ID.make("changed-catchup-model") } : model
+  const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "build", model: callerModel, parts: [{ type: "text", text: "QUEUED_U2_DURING_CATCHUP" }] })
   yield* Deferred.succeed(hold.release, undefined)
   const result = yield* awaitWithTimeout(Fiber.join(old), "Queued caller stranded by catch-up", "30 seconds")
   expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id })
+  expect(result.info).toMatchObject({ modelID: callerModel.modelID })
   if (result.info.role !== "assistant") throw new Error("CATCHUP_U2_ASSISTANT_REQUIRED")
   // Instrumentation only: keep exact delivery below; expose which boundary failed after U2 binding.
   if (result.info.error || result.info.finish !== "stop" ||
@@ -564,12 +581,16 @@ it.instance("different user queued during real held catch-up retries stale admis
   expect(history.filter((message) => message.info.role === "assistant" && message.info.parentID === newer.info.id)).toHaveLength(1)
   const hits = yield* llm.hits
   expect(hits.filter(parent("QUEUED_U2_DURING_CATCHUP"))).toHaveLength(1)
-  // The completed prefix remains usable; rebinding a newer caller must not pay for it again.
-  expect(hits.filter(maintenance)).toHaveLength(2)
+  // Unchanged source/model reuses checked catch-up; changed inputs require a genuinely fresh pass.
+  expect(hits.filter(maintenance)).toHaveLength(change === "unchanged" ? 2 : 3)
   const delivered = hits.find(parent("QUEUED_U2_DURING_CATCHUP"))
   if (!delivered) throw new Error("Missing rebound caller request")
   expect(wireMessages(delivered.body).filter((message) => message.role === "system").map((message) => message.content).join("\n"))
-    .toContain("HELD_CATCHUP_RESULT")
+    .toContain(change === "unchanged" ? "HELD_CATCHUP_RESULT" : "REBOUND_CATCHUP_RESULT")
+  if (change !== "unchanged") expect(wireMessages(delivered.body).filter((message) => message.role === "system")
+    .map((message) => message.content).join("\n")).not.toContain("HELD_CATCHUP_RESULT")
+  expect((yield* jobs.list()).filter((entry) => entry.metadata?.sessionId === chat.id).map((entry) => entry.output))
+    .toEqual(change === "unchanged" ? ["applied", "applied"] : ["applied", "discarded", "applied"])
   expect(hits.filter(review)).toEqual([])
 }), 120_000)
 
