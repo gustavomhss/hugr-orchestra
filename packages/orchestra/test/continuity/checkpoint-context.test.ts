@@ -54,6 +54,24 @@ it.effect("captures exact transport context and contextual model descriptor, not
   expect(result.request.model.api.url).toBe(original.model.api.url)
   expect(JSON.parse(result.payload)).toMatchObject({ version: 1, representation: "continuity-fork-input/v1" })
   expect((yield* CheckpointContext.capture(result.request)).payload).toBe(result.payload)
+  expect(Object.isFrozen(result.request)).toBe(true)
+  expect(Object.isFrozen(result.request.tools.read)).toBe(true)
+  expect(Object.isFrozen(result.request.messages)).toBe(true)
+}))
+
+it.effect("optional undefined fields remain aligned with snapshot transport input", () => Effect.gen(function* () {
+  const original = input()
+  delete original.permission
+  delete original.preflightParams
+  delete original.responseSchema
+  original.tools = {}
+  const result = yield* CheckpointContext.capture(original)
+  const saved = object(CheckpointContext.decode(result.payload))
+  for (const key of ["permission", "preflightParams", "responseSchema"] as const) {
+    expect(Object.hasOwn(saved, key)).toBe(Object.hasOwn(result.request, key))
+    expect(saved[key]).toBe(result.request[key])
+  }
+  expect((yield* CheckpointContext.capture(result.request)).payload).toBe(result.payload)
 }))
 
 it.effect("detaches before asynchronous schemas; resolves each builder once and retains host bindings", () => Effect.gen(function* () {
@@ -152,6 +170,9 @@ for (const [name, value] of [
   ["map", new Map([["secret", "PRIVATE_CONTENT"]])], ["infinity", Infinity], ["nan", NaN],
   ["bigint", 1n], ["symbol", Symbol("PRIVATE_CONTENT")], ["date", new Date(NaN)],
   ["typed-array", new Uint16Array([1])], ["sparse-array", new Array(2)],
+  ["accessor", Object.defineProperty({}, "secret", { enumerable: true, get: () => "PRIVATE_CONTENT" })],
+  ["symbol-key", { [Symbol("PRIVATE_CONTENT")]: 1 }],
+  ["binary-property", Object.assign(new Uint8Array([1]), { hiddenCallback: () => "PRIVATE_CONTENT" })],
 ] as const) {
   it.effect(`rejects unsupported ${name} with content-free typed error`, () => Effect.gen(function* () {
     const original = input()
@@ -173,6 +194,11 @@ it.effect("rejects cycles, unknown tool functions and missing request data", () 
   delete original.agent.options.extra
   Object.assign(original.tools.read, { unexpectedCallback: () => "PRIVATE_CONTENT" })
   expect((yield* CheckpointContext.capture(original).pipe(Effect.flip)).reason).toBe("unsupported-value")
+  original.tools.read = { inputSchema: jsonSchema({}), needsApproval: true }
+  const boolean = yield* CheckpointContext.capture(original)
+  expect(object(object(object(CheckpointContext.decode(boolean.payload)).tools).read).needsApproval).toBe(true)
+  Object.defineProperty(original.tools.read, "hiddenCallback", { value: () => "PRIVATE_CONTENT" })
+  expect((yield* CheckpointContext.capture(original).pipe(Effect.flip)).reason).toBe("unsupported-property")
   const missing = input()
   Object.assign(missing, { messages: undefined })
   expect((yield* CheckpointContext.capture(missing).pipe(Effect.flip)).reason).toBe("invalid-request")
@@ -187,6 +213,29 @@ it.effect("schema failures remain safe checkpoint errors", () => Effect.gen(func
   const error = yield* CheckpointContext.capture(original).pipe(Effect.flip)
   expect(error.reason).toBe("capture-failed")
   expect(JSON.stringify(error)).not.toContain("PRIVATE_CONTENT")
+  original.tools.read.inputSchema = jsonSchema(async () => { throw new CheckpointContext.CaptureError({ reason: "PRIVATE_CONTENT" }) })
+  const forged = yield* CheckpointContext.capture(original).pipe(Effect.flip)
+  expect(forged.reason).toBe("capture-failed")
+  expect(JSON.stringify(forged)).not.toContain("PRIVATE_CONTENT")
+}))
+
+it.effect("materializes PromiseLike schemas once, including asynchronous output schemas", () => Effect.gen(function* () {
+  const original = input()
+  const resolutions = { input: 0, output: 0 }
+  const schema: JSONSchema7 = { type: "string" }
+  const thenable: PromiseLike<JSONSchema7> = { then: (success, failure) => {
+    resolutions.input++
+    return Promise.resolve(schema).then(success, failure)
+  } }
+  original.tools.read = { inputSchema: jsonSchema(thenable), outputSchema: jsonSchema(async () => {
+    resolutions.output++
+    return schema
+  }) }
+  const result = yield* CheckpointContext.capture(original)
+  const saved = object(object(object(CheckpointContext.decode(result.payload)).tools).read)
+  expect(resolutions).toEqual({ input: 1, output: 1 })
+  expect(saved.inputSchema).toEqual(asSchema(result.request.tools.read.inputSchema).jsonSchema)
+  expect(saved.outputSchema).toEqual(asSchema(result.request.tools.read.outputSchema!).jsonSchema)
 }))
 
 test("decode rejects malformed envelopes and tags without echoing payload", () => {

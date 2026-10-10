@@ -1,4 +1,4 @@
-import { asSchema, jsonSchema, type Tool } from "ai"
+import { asSchema, jsonSchema, type JSONSchema7, type Tool } from "ai"
 import { Effect, Schema } from "effect"
 import type { LLM } from "@/session/llm"
 import { LLMPrepared } from "@/session/llm/prepared"
@@ -8,6 +8,7 @@ export class CaptureError extends Schema.TaggedErrorClass<CaptureError>()("Conti
 }) {}
 
 const representation = "continuity-fork-input/v1"
+const failures = new WeakSet<CaptureError>()
 const callbacks = new Set(["execute", "toModelOutput", "onInputStart", "onInputDelta", "onInputAvailable", "needsApproval"])
 const fields = new Set(["user", "sessionID", "parentSessionID", "model", "agent", "permission", "system", "messages",
   "small", "tools", "retries", "toolChoice", "responseSchema", "contextMemory", "purpose", "prepared", "preflightParams"])
@@ -16,13 +17,17 @@ const fields = new Set(["user", "sessionID", "parentSessionID", "model", "agent"
 export const capture = Effect.fn("CheckpointContext.capture")(function* (input: LLM.StreamInput) {
   return yield* Effect.tryPromise({
     try: async () => {
-      if (!input || Object.keys(input).some((key) => !fields.has(key)) || !input.model || !input.user || !input.agent ||
+      if (!record(input) || Object.keys(input).some((key) => !fields.has(key)) || !input.model || !input.user || !input.agent ||
         typeof input.sessionID !== "string" || !Array.isArray(input.system) || !Array.isArray(input.messages) || !record(input.tools))
         fail("invalid-request")
+      properties(input)
+      properties(input.tools)
       // The codec validates before structuredClone can erase unsupported prototypes or properties.
       const { tools, prepared, ...rest } = input
       const data = clone(rest)
       const definitions = Object.fromEntries(Object.entries(tools).map(([name, tool]) => {
+        if (!record(tool)) fail("invalid-tool")
+        properties(tool)
         const { inputSchema, outputSchema, ...rest } = tool
         const bindings = Object.fromEntries(Object.entries(rest).filter(([key, value]) => callbacks.has(key) && typeof value === "function"))
         const visible = clone(Object.fromEntries(Object.entries(rest).filter(([key, value]) => !callbacks.has(key) || typeof value !== "function")))
@@ -32,27 +37,39 @@ export const capture = Effect.fn("CheckpointContext.capture")(function* (input: 
       // All request data and schema handles are captured before the first await.
       const snapshot = LLMPrepared.snapshot({ ...data, prepared, tools: Object.fromEntries(Object.entries(definitions).map(([name, tool]) =>
         [name, { ...tool.visible, ...tool.bindings, inputSchema: tool.input }])) })
-      const resolved = await LLMPrepared.tools(snapshot.tools)
-      const request: LLM.StreamInput = { ...snapshot, ...data, tools: Object.fromEntries(await Promise.all(
-        Object.entries(definitions).map(async ([name, tool]) => [name, { ...resolved[name], ...tool.visible, ...tool.bindings,
-          ...(tool.output === undefined ? {} : { outputSchema: jsonSchema(clone(await tool.output.jsonSchema), { validate: tool.output.validate }) }) }]),
-      )) }
+      const [resolved, outputs] = await Promise.all([LLMPrepared.tools(snapshot.tools), Promise.all(
+        Object.entries(definitions).map(async ([name, tool]) => [name, tool.output === undefined ? undefined :
+          jsonSchema(clone(await tool.output.jsonSchema), { validate: tool.output.validate })] as const),
+      ).then(Object.fromEntries)])
+      const request: LLM.StreamInput = { ...snapshot, ...data, tools: Object.fromEntries(
+        Object.entries(definitions).map(([name, tool]) => [name, { ...resolved[name], ...tool.visible, ...tool.bindings,
+          ...(outputs[name] === undefined ? {} : { outputSchema: outputs[name] }) }]),
+      ) }
       const capturedTools = Object.fromEntries(Object.entries(request.tools).map(([name, tool]) => [name, {
         ...definitions[name].visible,
         inputSchema: asSchema(tool.inputSchema).jsonSchema,
         ...(tool.outputSchema === undefined ? {} : { outputSchema: asSchema(tool.outputSchema).jsonSchema }),
       }]))
       const model = request.model
-      const payload = JSON.stringify({ version: 1, representation, data: encode({ ...data,
+      const context = Object.fromEntries(Object.entries(request).filter(([key]) => key !== "tools" && key !== "prepared"))
+      const payload = JSON.stringify({ version: 1, representation, data: encode({ ...context,
         model: { id: model.id, providerID: model.providerID, name: model.name, family: model.family,
           api: { id: model.api.id, npm: model.api.npm }, capabilities: model.capabilities, cost: model.cost,
           limit: model.limit, status: model.status, options: model.options, release_date: model.release_date, variants: model.variants },
         tools: capturedTools,
       }) })
       // Bindings (including validation and the prepared token) remain host-owned and confer no payload authority.
-      return { request, payload }
+      freeze(data)
+      Object.entries(request.tools).forEach(([name, tool]) => {
+        freeze(definitions[name].visible)
+        freeze(asSchema(tool.inputSchema).jsonSchema)
+        if (tool.outputSchema !== undefined) freeze(asSchema(tool.outputSchema).jsonSchema)
+        Object.freeze(tool)
+      })
+      Object.freeze(request.tools)
+      return { request: Object.freeze(request), payload }
     },
-    catch: (error) => error instanceof CaptureError ? error : new CaptureError({ reason: "capture-failed" }),
+    catch: (error) => error instanceof CaptureError && failures.has(error) ? error : new CaptureError({ reason: "capture-failed" }),
   })
 })
 
@@ -77,7 +94,24 @@ function materialize(input: Tool["inputSchema"]) {
   const schema = asSchema(input)
   const value = schema.jsonSchema
   // jsonSchema memoizes the lazy result, so snapshot/tools never re-run the original builder.
-  return jsonSchema(value instanceof Promise ? () => value.then(clone) : clone(value), { validate: schema.validate })
+  if (value && typeof value === "object" && "then" in value && typeof value.then === "function") {
+    const pending = Promise.resolve(value).then(schemaData)
+    // Setup may fail synchronously on a different definition; that must not leak an unhandled rejection.
+    void pending.catch(() => {})
+    return jsonSchema(pending, { validate: schema.validate })
+  }
+  return jsonSchema(schemaData(value), { validate: schema.validate })
+}
+
+function schemaData(value: unknown): JSONSchema7 {
+  if (!record(value)) fail("invalid-schema")
+  return clone(value)
+}
+
+function freeze(value: unknown): void {
+  if (!Array.isArray(value) && !record(value)) return
+  Object.values(value).forEach(freeze)
+  Object.freeze(value)
 }
 
 function clone<T>(value: T): T {
@@ -85,7 +119,9 @@ function clone<T>(value: T): T {
 }
 
 function fail(reason: string): never {
-  throw new CaptureError({ reason })
+  const error = new CaptureError({ reason })
+  failures.add(error)
+  throw error
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -106,19 +142,25 @@ function encode(value: unknown, seen = new Set<object>()): Encoded {
   if (seen.has(value)) fail("cyclic-value")
   seen.add(value)
   try {
-    if (value instanceof URL && Object.getPrototypeOf(value) === URL.prototype) return ["url", value.href]
+    if (value instanceof URL && Object.getPrototypeOf(value) === URL.prototype) {
+      if (Object.keys(value).length) fail("unsupported-property")
+      return ["url", value.href]
+    }
     if (value instanceof Date && Object.getPrototypeOf(value) === Date.prototype) {
+      if (Reflect.ownKeys(value).length) fail("unsupported-property")
       if (!Number.isFinite(value.getTime())) fail("invalid-date")
       return ["date", value.toISOString()]
     }
-    if (value instanceof ArrayBuffer && Object.getPrototypeOf(value) === ArrayBuffer.prototype)
+    if (value instanceof ArrayBuffer && Object.getPrototypeOf(value) === ArrayBuffer.prototype) {
+      if (Reflect.ownKeys(value).length) fail("unsupported-property")
       return ["arraybuffer", Buffer.from(value).toString("base64")]
-    if (value instanceof Uint8Array && Object.getPrototypeOf(value) === Uint8Array.prototype)
+    }
+    if (value instanceof Uint8Array && Object.getPrototypeOf(value) === Uint8Array.prototype) {
+      if (Reflect.ownKeys(value).length !== value.length) fail("unsupported-property")
       return ["uint8array", Buffer.from(value).toString("base64")]
+    }
     if (!Array.isArray(value) && !record(value)) fail("unsupported-class")
-    const keys = Reflect.ownKeys(value).filter((key) => !(Array.isArray(value) && key === "length"))
-    if (keys.some((key) => typeof key !== "string" || !Object.getOwnPropertyDescriptor(value, key)?.enumerable ||
-      !Object.hasOwn(Object.getOwnPropertyDescriptor(value, key) ?? {}, "value"))) fail("unsupported-property")
+    const keys = properties(value)
     if (Array.isArray(value)) {
       if (keys.length !== value.length || keys.some((key, index) => key !== String(index))) fail("unsupported-array")
       return ["array", value.map((item) => encode(item, seen))]
@@ -127,6 +169,13 @@ function encode(value: unknown, seen = new Set<object>()): Encoded {
   } finally {
     seen.delete(value)
   }
+}
+
+function properties(value: object) {
+  const keys = Reflect.ownKeys(value).filter((key) => !(Array.isArray(value) && key === "length"))
+  if (keys.some((key) => typeof key !== "string" || !Object.getOwnPropertyDescriptor(value, key)?.enumerable ||
+    !Object.hasOwn(Object.getOwnPropertyDescriptor(value, key) ?? {}, "value"))) fail("unsupported-property")
+  return keys
 }
 
 function unpack(value: unknown): unknown {
