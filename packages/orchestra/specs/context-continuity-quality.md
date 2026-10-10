@@ -12,8 +12,9 @@ It does not assert universal semantic accuracy or superiority over legacy compac
 - W1: `continuity/review.ts`, `review-prompt.txt`, `test/continuity/review.test.ts`.
 - W2: `continuity/archive-search.ts`, `tool/context-recall-archive.ts`,
   `test/tool/context-recall-ranked.test.ts`. W2 does not change archive storage or shared memory types.
-- Small coherent PRs (at most 400 changed lines), cold review, scoped Linux/Windows CI on integrated
-  candidate. Runtime dependencies and existing Session ownership/admission contracts remain intact.
+- The owner clarified the 400 LOC cap applies per file, not per PR, and explicitly retained the existing
+  stack/layout. Keep cold review and scoped Linux/Windows CI on the integrated candidate. Runtime
+  dependencies and existing Session ownership/admission contracts remain intact.
 
 ## 1. Structural retention strengthening
 
