@@ -161,7 +161,8 @@ const main = Effect.gen(function* () {
   app.setAppUserModelId(appId)
   app.setPath(
     "userData",
-    candidateProfile?.desktop ?? (onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId)),
+    candidateProfile?.desktop ??
+      (onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId)),
   )
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
   if (candidateProfile) {

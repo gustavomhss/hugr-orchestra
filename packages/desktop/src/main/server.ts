@@ -262,6 +262,7 @@ export function createSidecarEnv(candidateProfile?: CandidateProfile): Record<st
   const env = Object.fromEntries(
     Object.entries(process.env).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
   )
+  delete env.ORCHESTRA_LEAN_CANDIDATE // Only a validated compile-time candidate may enable backend isolation mode.
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   return env
