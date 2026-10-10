@@ -345,7 +345,12 @@ export function hosted(
                     },
                     signal,
                   )
-                if (install.kind === "source") return access(executable(engine, staging, target))
+                if (install.kind === "source") {
+                  // Reject invalid builder output before PinnedArtifact publishes its complete cache.
+                  if (!(await Effect.runPromise(fileReady(executable(engine, staging, target), target))))
+                    throw new Error("source-executable-not-ready")
+                  return
+                }
                 const file = executable(engine, staging, target)
                 await mkdir(path.dirname(file), { recursive: true })
                 await writeFile(file, text)
