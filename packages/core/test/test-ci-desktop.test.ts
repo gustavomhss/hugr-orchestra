@@ -167,6 +167,21 @@ test("workflow setup uses resolved proof output; completion cannot skip failed s
   expect(desktopSelection({ package: "desktop", runner: "pytest", args: [] }, "missing")).toEqual([])
 })
 
+test("proof opt-in is issued only by selected provisioning after successful installation", () => {
+  const runtime = steps.find((step) => step.name === "Setup Jimmy desktop Electron runtime")!
+  expect(runtime?.if).toBe("steps.desktop-selection.outputs.proof == 'true'")
+  expect(runtime?.run).toBeString()
+  const commands = runtime.run!.trim().split("\n").map((line) => line.trim())
+  expect(steps.filter((step) => JSON.stringify(step).includes("ORCHESTRA_JIMMY_DESKTOP_PROOF"))).toEqual([runtime])
+  expect(JSON.stringify(workflow).split("ORCHESTRA_JIMMY_DESKTOP_PROOF")).toHaveLength(2)
+  expect(commands[0]).toBe("set -euo pipefail")
+  expect(commands).toContain("sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64")
+  expect(commands).toContain("node -e \"require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))\"")
+  expect(commands.at(-1)).toBe('echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"')
+  expect(steps.indexOf(runtime)).toBeGreaterThan(steps.indexOf(selection))
+  expect(steps.indexOf(runtime)).toBeLessThan(steps.findIndex((step) => step.name === "Run tests"))
+})
+
 test("real desktop tree selects proof for exact/directory/filter/package requests", () => {
   for (const args of [[`./${proof}`], ["src/main"], ["jimmy-desktop-proof"], []])
     expect(desktopSelection({ package: "desktop", runner: "bun", args: [...args, "--timeout", "120000"] },

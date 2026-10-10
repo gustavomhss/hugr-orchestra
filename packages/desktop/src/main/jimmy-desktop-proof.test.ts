@@ -24,7 +24,8 @@ const object = (value: unknown): Record<string, unknown> => json(Schema.Record(S
 const parse = (value: string) => json(Schema.fromJsonString(Schema.Unknown), value)
 const hash = (value: string | Buffer) => createHash("sha256").update(value).digest("hex")
 
-test("real Electron production Node-sidecar Jimmy Task and generated artifact bridge", async () => {
+// Only the selected test-ci provisioning step enables these specialized proofs.
+test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron production Node-sidecar Jimmy Task and generated artifact bridge", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof; local execution forbidden")
   if (!["darwin", "linux"].includes(process.platform)) throw new Error(`Unsupported desktop proof platform: ${process.platform}`)
   if (process.platform === "darwin" && process.arch !== "arm64") throw new Error("Desktop macOS proof requires native arm64")
@@ -110,7 +111,7 @@ test("real Electron production Node-sidecar Jimmy Task and generated artifact br
   }
 }, 360000)
 
-test("owned desktop proof typechecks", async () => {
+test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("owned desktop proof typechecks", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("GitHub-only desktop proof typecheck")
   await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), process.env, 60000)
   await command([process.execPath, "typecheck", "src/main/jimmy-desktop-proof.tsconfig.json"], desktop, process.env, 90000)

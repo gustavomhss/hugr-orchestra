@@ -114,11 +114,13 @@ jobs:
       - name: Setup Jimmy desktop Electron runtime
         if: steps.desktop-selection.outputs.proof == 'true'
         run: |
+          set -euo pipefail
           if [ "$RUNNER_OS" = Linux ]; then
             sudo apt-get update
             sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2t64
           fi
           node -e "require(require('node:path').join(require('node:path').dirname(require.resolve('electron', {paths:['./packages/desktop']})), 'install.js'))"
+          echo "ORCHESTRA_JIMMY_DESKTOP_PROOF=1" >> "$GITHUB_ENV"
 
       - name: Run tests
         env:
