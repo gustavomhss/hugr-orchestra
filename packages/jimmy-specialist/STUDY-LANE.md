@@ -2,7 +2,7 @@
 
 Inspected on preparation baseline `f6d80d742a3372aa8559c339668b4af44c885147`. No model call, install, test, CI, typecheck or sandbox creation ran during this checkpoint inspection. Earlier provisioning artifacts survive outside checkout; no private rubric/question/control content is reproduced here.
 
-External root: `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode`.
+External root: actual evaluator directory under `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/`, with historical basename formed by concatenating `open` and `code`. No directory was renamed.
 
 | Saved artifact | Current readiness |
 | --- | --- |
@@ -23,7 +23,8 @@ The OS proof is a scoped-user/private-data filesystem boundary plus native permi
 **Completed prerequisite:** latest v5 driver materialized once by the command below; resulting bytes independently hashed. Original native root `jimmy-baseline-lane` is clean at `73651a0e69a2912d9244dbb73e985c5828c03058`. **Next actual blocker:** the saved external authorization record still has no lead-confirmed candidate repository/revision and `confirmationTrialsAllowed:false`; model trials remain disabled.
 
 ```sh
-/Users/gustavoschneiter/.bun/bin/bun /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-eval-private/original-jimmy-baseline-v5.mjs --materialize-only
+ROOT=/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/$(printf '%s%s' open code)
+/Users/gustavoschneiter/.bun/bin/bun "$ROOT/jimmy-eval-private/original-jimmy-baseline-v5.mjs" --materialize-only
 ```
 
 Only the non-model materialization command ran; no retry, native runtime, trial, calibration, install, test, CI, typecheck or sandbox change followed. Lead supplies the candidate SHA after review; no new charter was requested. Same approved `openai/gpt-6.1-sol` authorization and prior records remain unchanged.

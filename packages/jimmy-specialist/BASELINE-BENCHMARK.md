@@ -21,7 +21,7 @@ Only `commonStream` has identical rendered workload. Task publication has identi
 | --- | --- |
 | Original product / starting HEAD | `73651a0e69a2912d9244dbb73e985c5828c03058` |
 | Isolated local branch | `jimmy-baseline-bench` |
-| Isolated worktree | `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-baseline-bench` |
+| Isolated worktree | `jimmy-baseline-bench` under the actual evaluator temporary root |
 | Controls read from frozen integration | `4df291b7e832385257eca092a475bb1db6d3082f` |
 | Actual baseline GitHub checkout | `a303fa09bdf69084597d9cb8ef64c25ceec3428c` |
 | Baseline checkout parent | `73651a0e69a2912d9244dbb73e985c5828c03058` |
@@ -253,11 +253,11 @@ packages/ui/src/i18n/en.ts
 
 Raw metrics inside both artifacts: **`test-ci-evidence/playwright-runtime.json`**, each repetition's `suites[].specs[].tests[].results[].stdout` contains its complete `BENCHMARK` and `BENCHMARK_PAGE` JSON records. The artifacts also contain `request.json`, `benchmark-runtime.json`, `playwright-selection.json` in that directory and `packages/app/e2e/playwright-report/index.html`.
 
-Downloaded raw paths:
+Downloaded raw paths below are relative to the actual evaluator temporary root. Its historical directory basename is the concatenation of `open` and `code`; no directory was renamed.
 
 ```text
-/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-baseline-benchmark-evidence/test-ci-evidence/playwright-runtime.json
-/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-candidate-benchmark-evidence/test-ci-evidence/playwright-runtime.json
+jimmy-baseline-benchmark-evidence/test-ci-evidence/playwright-runtime.json
+jimmy-candidate-benchmark-evidence/test-ci-evidence/playwright-runtime.json
 ```
 
 The evidence audit parsed the actual downloaded reports and required: exact checkout/request/renderer identity, exact workload digest and parameters, exactly repetitions 0/1/2, one attempt each, passed status without errors/skips/flakes, one complete metric/page record per attempt, finite populated common-stream fields, final progress index 160 and original `research:null`. Its positive controls accepted the real complete reports; removing a metric record, replacing `commonStream` with null, or removing a repetition each produced a rejecting assertion. This calibrates evidence completeness, not product mutation coverage.

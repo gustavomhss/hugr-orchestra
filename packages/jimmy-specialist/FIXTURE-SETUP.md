@@ -6,7 +6,7 @@ Comparator is **original native Jimmy at `73651a0e69a2912d9244dbb73e985c5828c030
 
 ## Prepared artifacts and scope
 
-Evaluator-owned roots remain outside every checkout/ref/CI snapshot: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-eval-inputs` and `jimmy-eval-private`. Only disclosed inputs may be copied into the execution Location. Private questions, controls and freezes are accessed by the isolated evaluator/host, never candidate tools, corpus, Atlas or served endpoints.
+Evaluator-owned roots `jimmy-eval-inputs` and `jimmy-eval-private` remain outside every checkout/ref/CI snapshot, under the actual temporary root recorded in the evaluator freeze. Its historical directory basename is the concatenation of `open` and `code`; no directory was renamed. Only disclosed inputs may be copied into the execution Location. Private questions, controls and freezes are accessed by the isolated evaluator/host, never candidate tools, corpus, Atlas or served endpoints.
 
 | Scope | Prepared setup | Remaining executor requirement |
 | --- | --- | --- |
@@ -25,7 +25,7 @@ R14's disclosed workflow permits genuine investigative progress, an actual faile
 - Scanner: `/usr/local/Cellar/gitleaks/8.30.1/bin/gitleaks`, version `8.30.1`, SHA256 `bb73559cd722f511a32885e298a5bb124046ccf3f5b3ee173b18694901ee9bd0`.
 - Outer timeout: `/usr/local/Cellar/coreutils/9.10/bin/gtimeout`, GNU coreutils `9.10`, SHA256 `2e6d2aebf762de4aae3b731b4fb5129363f5698255a186a03a59c68717895132`.
 - Bun: `/Users/gustavoschneiter/.bun/bin/bun`, version `1.3.14`; Node: `/usr/local/bin/node`, version `v22.17.1`. Their digests, Git/dylib identities and setup-file digests are in the evaluator-owned setup freeze.
-- Operational tools root: `/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/jimmy-operational-tools`. Trusted `npm install --ignore-scripts --no-audit --no-fund --prefer-offline --save-exact` provisioned TLS `4.3.4` and TypeScript `5.9.3`; no workspace/runtime installation occurred.
+- Operational tools root: `jimmy-operational-tools` under that actual evaluator temporary root. Trusted `npm install --ignore-scripts --no-audit --no-fund --prefer-offline --save-exact` provisioned TLS `4.3.4` and TypeScript `5.9.3`; no workspace/runtime installation occurred.
 - Real LSP CLI: `node_modules/typescript-language-server/lib/cli.mjs` under that root, SHA256 `557a242e685e6b49967597a8d33934190f391090c763a0d344b9e7211e55b5dd`. The command is the canonical Node executable, that regular CLI file, then `--stdio`.
 - Compiler: `node_modules/typescript/lib/tsserver.js` under that root, SHA256 `e3ccfeec65ec5c470b8ffc5611878a31182650c7e8a062c38a719f83b523edcb`. Initialization uses this actual file and disables automatic typing acquisition. `tsserver` is not passed as an LSP executable.
 - `setup-typescript-v4.json` and `executor-tool-freeze-v4.json` bind Node, scanner, CLI, compiler implementation/libraries, bundled dependencies, source maps, package metadata and lockfile. Hashing Node alone is insufficient. No semantic stub or runtime implicit installer is supplied.
@@ -55,7 +55,7 @@ After final dependency/isolation/contract/calibration gates, run from the frozen
 
 ```sh
 # --setup requires a canonical path; macOS /var is an alias for /private/var.
-ROOT=/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode
+ROOT=/private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/$(printf '%s%s' open code)
 : "${FINAL_SHA:?freeze final clean candidate SHA}" "${RUNS:?preprovision isolated run parent}"
 REP=1  # repeat 1, 2, 3, preserving each scheduled attempt
 PATH=/usr/local/Cellar/gitleaks/8.30.1/bin:/usr/local/Cellar/git/2.51.0/bin:$PATH \

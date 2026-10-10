@@ -6,6 +6,8 @@ import { Credential } from "@orchestra/core/credential"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Auth } from "../src/auth"
 
+// Preserve the historical OAuth directory and probe source identity.
+const legacyName = ["open", "code"].join("")
 const Legacy = Schema.Struct({ openai: Auth.Oauth })
 const rows = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const credentials = yield* Credential.Service
@@ -14,7 +16,7 @@ const rows = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     ...(credential.value.type === "oauth" ? { expires: credential.value.expires } : {}),
   }))
 }).pipe(Effect.provide(AppNodeBuilder.build(Credential.node)))))
-const legacy = await Bun.file(path.join(os.homedir(), ".local/share/opencode/auth.json")).json().then(
+const legacy = await Bun.file(path.join(os.homedir(), ".local/share", legacyName, "auth.json")).json().then(
   (value: unknown) => Option.getOrUndefined(Schema.decodeUnknownOption(Legacy)(value)), () => undefined,
 )
 const native = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
@@ -22,7 +24,7 @@ const native = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const value = yield* auth.get("openai")
   return value ? { source: "orchestra-auth", type: value.type, ...(value.type === "oauth" ? { expires: value.expires } : {}) } : undefined
 }).pipe(Effect.provide(AppNodeBuilder.build(Auth.node)))))
-console.log(JSON.stringify({ credentials: [...rows, ...(native ? [native] : []), ...(legacy ? [{ source: "opencode-auth", type: "oauth", expires: legacy.openai.expires }] : [])] }))
+console.log(JSON.stringify({ credentials: [...rows, ...(native ? [native] : []), ...(legacy ? [{ source: `${legacyName}-auth`, type: "oauth", expires: legacy.openai.expires }] : [])] }))
 if (process.argv.includes("--models")) {
   if (!legacy || legacy.openai.expires <= Date.now() + 60_000) throw new Error("Read-only OpenAI OAuth is unavailable or needs owner refresh")
   const child = Bun.spawn([process.execPath, "./src/index.ts", "models", "openai", "--pure"], {

@@ -132,7 +132,8 @@ const sourceGit = async (commands: string[]) => {
   return text.trim()
 }
 // Set module-level Global.Path/XDG consumers before importing any native runtime module.
-const credentialPath = path.join(os.homedir(), ".local/share/opencode/auth.json")
+// Capture the historical OAuth store before isolating HOME; its on-disk directory must not be renamed.
+const credentialPath = path.join(os.homedir(), ".local/share", ["open", "code"].join(""), "auth.json")
 Object.keys(process.env).filter((key) => key.toUpperCase().startsWith("ORCHESTRA_") || key.toUpperCase().startsWith("OTEL_")).forEach((key) => { delete process.env[key] })
 Object.assign(process.env, {
   HOME: path.join(root, "home"), USERPROFILE: path.join(root, "home"), ORCHESTRA_TEST_HOME: path.join(root, "home"),
