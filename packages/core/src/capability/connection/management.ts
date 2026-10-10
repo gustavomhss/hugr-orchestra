@@ -4,7 +4,6 @@ import { Agent } from "@orchestra/schema/agent"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import type { SessionID } from "@orchestra/schema/session-id"
-import { types } from "node:util"
 import { and, eq, gt, isNull, sql } from "drizzle-orm"
 import { Cause, Effect, Option, Schema } from "effect"
 import { Database } from "../../database/database"
@@ -16,13 +15,14 @@ import { CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 import type { CapabilityConnectionManagementContract } from "./management-contract"
 import type { CapabilityConnectionStoreContract } from "./store-contract"
 import { CapabilityConnectionManagementCursor } from "./management-cursor"
+import { capture, decode } from "./input"
 
 // Do not load credential identity or host-only connection/target material for management reads.
 const connectionColumns = {
   id: CapabilityConnectionTable.id, projectID: CapabilityConnectionTable.project_id,
   directory: CapabilityConnectionTable.directory, workspaceID: CapabilityConnectionTable.workspace_id,
   provider: CapabilityConnectionTable.provider, generation: CapabilityConnectionTable.generation,
-  state: CapabilityConnectionTable.state,
+  state: CapabilityConnectionTable.state, label: CapabilityConnectionTable.label,
   credential: sql<number>`${CapabilityConnectionTable.credential_id} IS NOT NULL`,
 }
 const targetColumns = {
@@ -238,35 +238,6 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
 
 export type Interface = CapabilityConnectionManagementContract.Interface
 
-function capture<A>(input: unknown, parse: (value: unknown) => A) {
-  // Scope's copier reflects objects. Check proxies before reflection, preserving optional undefined
-  // placement/query fields that are valid DTO data but are not ledger JSON payloads.
-  return CapabilityOperatorScope.capture(null, () => {
-    requireDataDescriptors(input)
-    const captured = CapabilityOperatorScope.capture(input, parse)
-    if (!captured.ok) throw new Error("Invalid management data")
-    return captured.value
-  })
-}
-
-function requireDataDescriptors(value: unknown, depth = 0, budget = { nodes: 0 }): void {
-  if (++budget.nodes > 2048 || depth > 64) throw new Error("Invalid management data")
-  if (value === null || typeof value !== "object") return
-  if (types.isProxy(value)) throw new Error("Invalid management data")
-  const keys = Reflect.ownKeys(value)
-  if (keys.length > 2049) throw new Error("Invalid management data")
-  keys.forEach((key) => {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key)
-    if (!descriptor || !("value" in descriptor)) throw new Error("Invalid management data")
-    if (Array.isArray(value) && key === "length") return
-    requireDataDescriptors(descriptor.value, depth + 1, budget)
-  })
-}
-
-function decode<S extends Schema.Top>(schema: S) {
-  return Schema.decodeUnknownSync(Schema.toType(schema), { onExcessProperty: "error" })
-}
-
 function placementOf(row: { projectID: CapabilityOperatorContract.Placement["projectID"];
   directory: CapabilityOperatorContract.Placement["location"]["directory"];
   workspaceID: CapabilityOperatorContract.Placement["location"]["workspaceID"] | null }) {
@@ -279,11 +250,12 @@ function samePlacement(placement: CapabilityOperatorContract.Placement, row: { p
     placement.location.workspaceID === (row.workspaceID ?? undefined)
 }
 
-function projectConnection(row: { id: Capability.ConnectionID; provider: string; generation: number;
+function projectConnection(row: { id: Capability.ConnectionID; provider: string; generation: number; label: string;
   state: typeof CapabilityManagement.Connection.Type["state"]; credential: number }) {
   const decoded = Schema.decodeUnknownOption(Schema.toType(CapabilityManagement.Connection))({
     connection: { id: row.id, provider: row.provider, generation: row.generation }, state: row.state,
     credential: row.credential ? "present" : "missing",
+    ...(row.label.length > 0 && row.label.length <= 128 ? { label: row.label } : {}),
   })
   return Option.isNone(decoded) ? Effect.fail(unavailable()) : Effect.succeed(Object.freeze({ ...decoded.value,
     connection: Object.freeze(decoded.value.connection) }))
