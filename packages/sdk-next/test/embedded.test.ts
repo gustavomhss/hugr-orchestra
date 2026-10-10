@@ -3,6 +3,8 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { Flag } from "@orchestra/core/flag/flag"
+import { Capability } from "../../schema/src/capability"
+import { ForbiddenError } from "../../protocol/src/errors"
 import { Deferred, Effect, Latch, Option, Schema, Stream } from "effect"
 import type { OrchestraEvent } from "../src"
 
@@ -31,6 +33,11 @@ test("embedded client uses the real router and handlers", async () => {
       expect(operator.origin).toBe("sdk")
       expect(operator.requestID).not.toBe(nextOperator.requestID)
       expect(operator.scopeHash).toBe(nextOperator.scopeHash)
+      expect(yield* orchestra.connections.list({ location: { directory } })).toEqual({ items: [], coverage: "live" })
+      expect(Schema.encodeUnknownSync(ForbiddenError)(yield* orchestra.connections.get({ location: { directory },
+        connectionID: Capability.ConnectionID.create() }).pipe(Effect.flip))).toEqual({
+        _tag: "ForbiddenError", message: "Request denied",
+      })
       yield* orchestra.tools.register({
         embedded_tool: Tool.make({
           description: "Embedded test tool",

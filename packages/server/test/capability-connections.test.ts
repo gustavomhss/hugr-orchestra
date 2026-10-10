@@ -79,6 +79,13 @@ it.live("HTTP opaque target pages survive requests, filter scoped rows and rejec
   expect(filtered.after).toBeDefined()
   if (!filtered.after) return yield* Effect.die("Expected filtered continuation")
   expect(children.some((child) => filtered.after?.includes(child.id))).toBe(false)
+  const middle = yield* json(yield* f.request(path, { auth: scoped,
+    query: { limit: "1", after: filtered.after } }), CapabilityManagement.TargetPage)
+  expect(middle.items).toEqual([])
+  if (!middle.after) return yield* Effect.die("Expected continuation to authorized tail")
+  const tail = yield* json(yield* f.request(path, { auth: scoped,
+    query: { limit: "1", after: middle.after } }), CapabilityManagement.TargetPage)
+  expect(tail).toEqual({ items: [{ target: children[2] }], coverage: "live" })
   const tampered = first.after.slice(0, -2) + (first.after.endsWith("AA") ? "BB" : "AA")
   yield* denied(yield* f.request(path, { auth, query: { after: tampered } }))
 }), 20_000)
@@ -90,23 +97,29 @@ it.live("HTTP mutations require header, preserve exact replay, generate fresh ID
   expect((yield* f.request("/api/capability/targets", { auth, payload: create })).status).toBe(400)
   const first = yield* json(yield* f.request("/api/capability/targets", { auth, key: "create", payload: create,
     headers: { "x-request-id": "caller-request", "x-principal": "caller-principal" } }), CapabilityManagement.Receipt)
-  const ref = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(first.data).target
+  expect(first.reused).toBe(false)
+  const ref = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }), { onExcessProperty: "error" })(first.data).target
+  expect(first.data).toEqual({ target: ref })
   const retry = yield* json(yield* f.request("/api/capability/targets", { auth, key: "create", payload: create }), CapabilityManagement.Receipt)
   expect(retry).toEqual({ ...first, reused: true })
   expect(ref.id).not.toBe(f.child.id)
   const retarget = { target: ref, input: { environment: "next", resource: {} } }
   const moved = yield* json(yield* f.request("/api/capability/targets/retarget", { auth, key: "retarget", payload: retarget }), CapabilityManagement.Receipt)
+  expect(moved.reused).toBe(false)
   expect(yield* json(yield* f.request("/api/capability/targets/retarget", { auth, key: "retarget", payload: retarget }),
     CapabilityManagement.Receipt)).toEqual({ ...moved, reused: true })
-  const current = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(moved.data).target
+  const current = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }), { onExcessProperty: "error" })(moved.data).target
+  expect(moved.data).toEqual({ target: current })
   expect(current.generation).toBe(ref.generation + 1)
   const remove = { target: current }
   const removed = yield* json(yield* f.request("/api/capability/targets/remove", { auth, key: "remove", payload: remove }), CapabilityManagement.Receipt)
+  expect(removed.reused).toBe(false)
   expect(removed.data).toBeNull()
   expect(yield* json(yield* f.request("/api/capability/targets/remove", { auth, key: "remove", payload: remove }),
     CapabilityManagement.Receipt)).toEqual({ ...removed, reused: true })
   yield* denied(yield* f.request("/api/capability/targets/remove", { auth, key: "fresh-remove", payload: remove }))
   const disconnected = yield* json(yield* f.request(`${base}/disconnect`, { auth, key: "disconnect", payload: { connection: f.parent } }), CapabilityManagement.Receipt)
+  expect(disconnected.reused).toBe(false)
   expect(disconnected.data).toBeNull()
   expect(yield* json(yield* f.request(`${base}/disconnect`, { auth, key: "disconnect", payload: { connection: f.parent } }),
     CapabilityManagement.Receipt)).toEqual({ ...disconnected, reused: true })
@@ -128,6 +141,7 @@ it.live("HTTP binding derives actual Session actor; strict DTO rejects public ag
     ...payload, agentID: "attacker",
   } })).status).toBe(400)
   const bound = yield* json(yield* f.request("/api/capability/bindings", { auth, key: "bind", payload }), CapabilityManagement.Receipt)
+  expect(bound.reused).toBe(false)
   expect(bound.data).toBeNull()
   expect(yield* json(yield* f.request("/api/capability/bindings", { auth, key: "bind", payload }),
     CapabilityManagement.Receipt)).toEqual({ ...bound, reused: true })
@@ -136,6 +150,9 @@ it.live("HTTP binding derives actual Session actor; strict DTO rejects public ag
   ])
   const unbound = yield* json(yield* f.request("/api/capability/bindings/remove", { auth, key: "unbind",
     payload: { target: f.child, sessionID: f.sessionID } }), CapabilityManagement.Receipt)
+  expect(unbound.reused).toBe(false)
   expect(unbound.data).toBeNull()
+  expect(yield* json(yield* f.request("/api/capability/bindings/remove", { auth, key: "unbind",
+    payload: { target: f.child, sessionID: f.sessionID } }), CapabilityManagement.Receipt)).toEqual({ ...unbound, reused: true })
   expect(yield* f.database.db.select().from(CapabilityBindingTable).all()).toEqual([])
 }), 20_000)

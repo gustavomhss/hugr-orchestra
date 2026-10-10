@@ -2,11 +2,18 @@ import { expect } from "bun:test"
 import { Orchestra } from "@orchestra/client/effect"
 import { CapabilityBindingTable } from "@orchestra/core/capability/sql"
 import { Capability } from "../../schema/src/capability"
+import { ForbiddenError, UnauthorizedError } from "../../protocol/src/errors"
 import { Effect, Schema } from "effect"
 import { FetchHttpClient } from "effect/unstable/http"
 import { it } from "../../core/test/lib/effect"
 import { CapabilityConnectionsFixture } from "../../server/test/capability-connections-fixture"
 import { makeOperatorTransport } from "../src/operator-transport"
+
+function targetFrom(data: unknown) {
+  const target = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }), { onExcessProperty: "error" })(data).target
+  expect(data).toEqual({ target })
+  return target
+}
 
 // Aggregate registration belongs to Lead. Exercise exact production group, middleware,
 // handler and SQL Store through the generated client and owning embedded transport.
@@ -24,26 +31,37 @@ it.live("embedded generated connections client executes all nine methods against
   const create = { location, "idempotency-key": "sdk-create", connection: f.parent,
     input: { environment: "test", resource: { secret: CapabilityConnectionsFixture.secret } } }
   const created = yield* client.connections.createTarget(create)
+  expect(created.reused).toBe(false)
   expect(yield* client.connections.createTarget(create)).toEqual({ ...created, reused: true })
-  const target = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(created.data).target
+  const target = targetFrom(created.data)
   const binding = { location, "idempotency-key": "sdk-bind", target,
     input: { sessionID: f.sessionID, actions: ["read"] } }
-  expect((yield* client.connections.bind(binding)).data).toBeNull()
+  const bound = yield* client.connections.bind(binding)
+  expect(bound.reused).toBe(false)
+  expect(bound.data).toBeNull()
+  expect(yield* client.connections.bind(binding)).toEqual({ ...bound, reused: true })
   expect(yield* f.database.db.select().from(CapabilityBindingTable).all()).toMatchObject([
     { target_id: target.id, session_id: f.sessionID, agent_id: "persisted-http-actor" },
   ])
-  expect((yield* client.connections.unbind({ location, "idempotency-key": "sdk-unbind", target, sessionID: f.sessionID })).data).toBeNull()
+  const unbind = { location, "idempotency-key": "sdk-unbind", target, sessionID: f.sessionID }
+  const unbound = yield* client.connections.unbind(unbind)
+  expect(unbound.reused).toBe(false)
+  expect(unbound.data).toBeNull()
+  expect(yield* client.connections.unbind(unbind)).toEqual({ ...unbound, reused: true })
   expect(yield* f.database.db.select().from(CapabilityBindingTable).all()).toEqual([])
   const retarget = { location, "idempotency-key": "sdk-retarget", target, input: { environment: "next", resource: {} } }
   const moved = yield* client.connections.retargetTarget(retarget)
+  expect(moved.reused).toBe(false)
   expect(yield* client.connections.retargetTarget(retarget)).toEqual({ ...moved, reused: true })
-  const current = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(moved.data).target
+  const current = targetFrom(moved.data)
   const remove = { location, "idempotency-key": "sdk-remove", target: current }
   const removed = yield* client.connections.removeTarget(remove)
+  expect(removed.reused).toBe(false)
   expect(removed.data).toBeNull()
   expect(yield* client.connections.removeTarget(remove)).toEqual({ ...removed, reused: true })
   const disconnect = { location, "idempotency-key": "sdk-disconnect", connection: f.parent }
   const disconnected = yield* client.connections.disconnect(disconnect)
+  expect(disconnected.reused).toBe(false)
   expect(disconnected.data).toBeNull()
   expect(yield* client.connections.disconnect(disconnect)).toEqual({ ...disconnected, reused: true })
   expect(new Set([created.requestID, moved.requestID, removed.requestID, disconnected.requestID]).size).toBe(4)
@@ -68,13 +86,13 @@ it.live("embedded generated client preserves opaque pagination across requests a
     Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
   const denied = yield* scoped.connections.get({ location, connectionID: f.foreignParent.id }).pipe(Effect.flip)
-  expect(denied).toMatchObject({ _tag: "ForbiddenError", message: "Request denied" })
+  expect(Schema.encodeUnknownSync(ForbiddenError)(denied)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
   const wrong = yield* scoped.connections.targets({ ...input, after: first.after }).pipe(Effect.flip)
-  expect(wrong).toMatchObject({ _tag: "ForbiddenError", message: "Request denied" })
+  expect(Schema.encodeUnknownSync(ForbiddenError)(wrong)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
   const unauthenticated = yield* Orchestra.make({ baseUrl: "http://orchestra.local" }).pipe(
     Effect.provide(FetchHttpClient.layer), Effect.provideService(FetchHttpClient.Fetch, transport.fetch),
   )
-  expect(yield* unauthenticated.connections.list({ location }).pipe(Effect.flip)).toMatchObject({
+  expect(Schema.encodeUnknownSync(UnauthorizedError)(yield* unauthenticated.connections.list({ location }).pipe(Effect.flip))).toEqual({
     _tag: "UnauthorizedError", message: "Authentication required",
   })
 }), 20_000)
@@ -104,22 +122,32 @@ it.live("generated Promise client executes nine HTTP methods through owning SDK 
     after: first.after, limit: 1 }), catch: (error) => error }).pipe(Effect.flip)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
   const create = { location, "idempotency-key": "promise-create", connection: f.parent, input: { environment: "test", resource: {} } }
   const created = yield* Effect.promise(() => client.connections.createTarget(create))
+  expect(created.reused).toBe(false)
   expect(yield* Effect.promise(() => client.connections.createTarget(create))).toEqual({ ...created, reused: true })
-  const target = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(created.data).target
-  expect((yield* Effect.promise(() => client.connections.bind({ location, "idempotency-key": "promise-bind", target,
-    input: { sessionID: f.sessionID, actions: ["read"] } }))).data).toBeNull()
-  expect((yield* Effect.promise(() => client.connections.unbind({ location, "idempotency-key": "promise-unbind", target,
-    sessionID: f.sessionID }))).data).toBeNull()
+  const target = targetFrom(created.data)
+  const binding = { location, "idempotency-key": "promise-bind", target, input: { sessionID: f.sessionID, actions: ["read"] } }
+  const bound = yield* Effect.promise(() => client.connections.bind(binding))
+  expect(bound.reused).toBe(false)
+  expect(bound.data).toBeNull()
+  expect(yield* Effect.promise(() => client.connections.bind(binding))).toEqual({ ...bound, reused: true })
+  const unbind = { location, "idempotency-key": "promise-unbind", target, sessionID: f.sessionID }
+  const unbound = yield* Effect.promise(() => client.connections.unbind(unbind))
+  expect(unbound.reused).toBe(false)
+  expect(unbound.data).toBeNull()
+  expect(yield* Effect.promise(() => client.connections.unbind(unbind))).toEqual({ ...unbound, reused: true })
   const retarget = { location, "idempotency-key": "promise-retarget", target, input: { environment: "next", resource: {} } }
   const moved = yield* Effect.promise(() => client.connections.retargetTarget(retarget))
+  expect(moved.reused).toBe(false)
   expect(yield* Effect.promise(() => client.connections.retargetTarget(retarget))).toEqual({ ...moved, reused: true })
-  const current = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(moved.data).target
+  const current = targetFrom(moved.data)
   const remove = { location, "idempotency-key": "promise-remove", target: current }
   const removed = yield* Effect.promise(() => client.connections.removeTarget(remove))
+  expect(removed.reused).toBe(false)
   expect(removed.data).toBeNull()
   expect(yield* Effect.promise(() => client.connections.removeTarget(remove))).toEqual({ ...removed, reused: true })
   const disconnect = { location, "idempotency-key": "promise-disconnect", connection: f.parent }
   const disconnected = yield* Effect.promise(() => client.connections.disconnect(disconnect))
+  expect(disconnected.reused).toBe(false)
   expect(disconnected.data).toBeNull()
   expect(yield* Effect.promise(() => client.connections.disconnect(disconnect))).toEqual({ ...disconnected, reused: true })
 }), 20_000)

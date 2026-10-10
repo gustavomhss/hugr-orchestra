@@ -1,5 +1,6 @@
 export * as CapabilityConnectionsFixture from "./capability-connections-fixture"
 
+import { expect } from "bun:test"
 import { CapabilityOperator } from "@orchestra/core/capability/operator/index"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 import { CapabilityConnectionTable, CapabilityTargetTable } from "@orchestra/core/capability/sql"
@@ -27,6 +28,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { mkdir, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { randomBytes } from "node:crypto"
 import { ServerAuth } from "../src/auth"
 import { CapabilityConnectionsHandler } from "../src/handlers/capability-connections"
 import { LocationMiddleware, layer } from "../src/location"
@@ -71,6 +73,7 @@ export function make(options: { password?: string } = {}) {
     const operators = yield* CapabilityOperator.make({ principal: `http-${crypto.randomUUID()}`,
       scope: { placements: "instance", actions: ["*"] } })
     const credentialID = Credential.ID.create()
+    const scopeHash = randomBytes(32).toString("hex")
     const integrationID = Integration.ID.make("http-fixture")
     yield* database.db.insert(ProjectTable).values({ id: placement.projectID,
       worktree: placement.location.directory, sandboxes: [] }).onConflictDoNothing().run()
@@ -81,7 +84,7 @@ export function make(options: { password?: string } = {}) {
       yield* database.db.insert(CapabilityConnectionTable).values({ id: ref.id, provider: ref.provider,
         project_id: owner.projectID, directory: owner.location.directory, workspace_id: owner.location.workspaceID,
         integration_id: integrationID, credential_id: credentialID, endpoint: `https://invalid.example/${secret}`,
-        subject_id: secret, scope_hash: "a".repeat(64), state: "active", generation: ref.generation }).run()
+        subject_id: secret, scope_hash: scopeHash, state: "active", generation: ref.generation }).run()
       return ref
     })
     const target = (parent: Capability.ConnectionRef) => Effect.gen(function* () {
@@ -110,6 +113,13 @@ export function make(options: { password?: string } = {}) {
       Layer.provide(HttpServer.layerServices),
     ), { disableLogger: true })
     yield* Effect.addFinalizer(() => Effect.promise(() => web.dispose()))
+    // Inspect the serialized public response, before any SDK or Schema decoder can strip extra fields.
+    const handler = async (request: Request) => {
+      const response = await web.handler(request)
+      const text = await response.clone().text()
+      Array.of(secret, credentialID, scopeHash).forEach((value) => expect(text).not.toContain(value))
+      return response
+    }
     const issue = (scope?: CapabilityOperatorContract.GrantScope) => operators.issue({ origin: "sdk", scope }).pipe(
       Effect.map((issued) => `Bearer ${issued.bearer}`),
     )
@@ -118,12 +128,12 @@ export function make(options: { password?: string } = {}) {
       const url = new URL(path, "http://orchestra.local")
       url.searchParams.set("location[directory]", input.directory ?? directory)
       Object.entries(input.query ?? {}).forEach(([key, value]) => url.searchParams.set(key, value))
-      return web.handler(new Request(url, { method: input.payload === undefined ? "GET" : "POST",
+      return handler(new Request(url, { method: input.payload === undefined ? "GET" : "POST",
         headers: { ...input.headers, "content-type": "application/json", ...(input.auth ? { authorization: input.auth } : {}),
           ...(input.key ? { "idempotency-key": input.key } : {}) },
         body: input.payload === undefined ? undefined : JSON.stringify(input.payload) }))
     })
     return { database, operators, directory, placement, foreign, parent, child, foreignParent, sessionID,
-      credentialID, entered, connection, target, issue, request, handler: web.handler }
+      credentialID, scopeHash, entered, connection, target, issue, request, handler }
   })
 }
