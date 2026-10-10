@@ -104,6 +104,24 @@ describe("CapabilityRequest atomic local SQL ledger", () => {
     expect(yield* f.database.db.select().from(CapabilityRequestTable)).toHaveLength(1)
   }))
 
+  it.live("verification owns the writer and rolls back its SQL on fresh and replay rejection", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const inTransaction = f.database.inTransaction
+    if (!inTransaction) return yield* Effect.die("Missing real transaction identity")
+    yield* f.run(f.store.commit(target, {}, f.write))
+    const verify = (tx: CapabilityRequestContract.Transaction) => Effect.gen(function* () {
+      expect(yield* inTransaction).toBe(true)
+      yield* tx.update(DomainTable).set({ writes: 99 }).where(eq(DomainTable.id, f.id)).run()
+      return yield* Effect.fail("VERIFICATION_REJECTED")
+    })
+    yield* Effect.forEach(["key", "fresh"], (key) => Effect.gen(function* () {
+      expect(yield* f.run(f.store.commit(target, {}, () => Effect.die("REJECTED_WRITE_RAN"), verify), key)
+        .pipe(Effect.flip)).toBe("VERIFICATION_REJECTED")
+      expect(yield* f.writes).toBe(1)
+      expect(yield* f.database.db.select().from(CapabilityRequestTable)).toHaveLength(1)
+    }))
+  }))
+
   it.live("concurrent exact retries canonicalize full payload and return original immutable receipt", () => Effect.gen(function* () {
     const f = yield* fixture()
     const second = yield* CapabilityRequest.make({ operators: f.operators })
