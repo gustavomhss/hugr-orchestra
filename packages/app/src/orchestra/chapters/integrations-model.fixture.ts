@@ -2,8 +2,8 @@ import { afterEach } from "bun:test"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { SessionID } from "@orchestra/schema/session-id"
-import { createRoot } from "solid-js"
-import type { Api, Options } from "./integrations-contract"
+import { createComputed, createRoot } from "solid-js"
+import type { Api, Options, State } from "./integrations-contract"
 import { createIntegrationModel } from "./integrations-model"
 
 const cleanup = new Set<() => void>()
@@ -34,7 +34,8 @@ export function deferred<T>() {
 }
 
 // Test-only HTTP transport intentionally leaves JSON unvalidated: controller must check the wire DTO.
-export function fixture(handler: (request: Request) => Response | Promise<Response>, ignoreAbort = false) {
+export function fixture(handler: (request: Request) => Response | Promise<Response>, ignoreAbort = false,
+  observe?: (state: State) => void) {
   const signals: AbortSignal[] = []
   const requests: { method: string; url: string; key: string | null; body: unknown }[] = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
@@ -45,8 +46,10 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
   cleanup.add(() => server.stop(true))
   const request = async <T>(path: string, options?: Options, body?: unknown, key?: string): Promise<T> => {
     if (options?.signal) signals.push(options.signal)
+    // Require detached inputs at the test API boundary; reject private proxies before HTTP.
+    const payload = body === undefined ? undefined : structuredClone(body)
     const response = await Bun.fetch(new URL(path, server.url), { method: body === undefined ? "GET" : "POST",
-      signal: ignoreAbort ? undefined : options?.signal, body: body === undefined ? undefined : JSON.stringify(body),
+      signal: ignoreAbort ? undefined : options?.signal, body: payload === undefined ? undefined : JSON.stringify(payload),
       headers: { "content-type": "application/json", ...(key === undefined ? {} : { "idempotency-key": key }) } })
     if (!response.ok) {
       if ([400, 401, 403].includes(response.status)) throw await response.json()
@@ -70,7 +73,9 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
   const root = createRoot((dispose) => {
     cleanup.add(dispose)
     let serial = 0
-    return { model: createIntegrationModel(api, () => `private-intent-${++serial}`), dispose }
+    const model = createIntegrationModel(api, () => `private-intent-${++serial}`)
+    if (observe) createComputed(() => observe(model.state))
+    return { model, dispose }
   })
   return { ...root, api, requests, signals, stop: () => server.stop(true) }
 }

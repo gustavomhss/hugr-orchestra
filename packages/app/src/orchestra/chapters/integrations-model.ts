@@ -98,7 +98,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     clear()
     target = undefined
     try {
-      connection = decode(CapabilityManagement.Connection, input).connection
+      connection = decode(CapabilityManagement.Connection, { ...input, connection: { ...input.connection } }).connection
       set({ connectionID: connection.id, targetID: undefined, targets: [], bindings: [], targetsAfter: undefined,
         bindingsAfter: undefined, receipt: undefined })
     } catch {
@@ -114,7 +114,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     fence()
     clear()
     try {
-      const value = decode(CapabilityManagement.Target, input).target
+      const value = decode(CapabilityManagement.Target, { ...input, target: { ...input.target } }).target
       if (value.connectionID !== connection?.id) throw "invalid"
       target = value
       set({ targetID: target.id, bindings: [], bindingsAfter: undefined, receipt: undefined })
@@ -130,13 +130,16 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     const selectedConnection = connection?.id
     const selectedTarget = target?.id
     if (!(await load(false, true)) || disposed) return
-    connection = state.connections.find((row) => row.connection.id === selectedConnection)?.connection
+    const nextConnection = state.connections.find((row) => row.connection.id === selectedConnection)?.connection
+    // Store reads are proxies; only schema-decoded detached refs may enter private mutation intents.
+    connection = nextConnection && decode(Capability.ConnectionRef, { ...nextConnection })
     target = undefined
     set({ connectionID: connection?.id, targetID: undefined, targets: [], bindings: [], targetsAfter: undefined,
       bindingsAfter: undefined })
     if (!connection) return
     if (!(await readTargets()) || disposed) return
-    target = state.targets.find((row) => row.target.id === selectedTarget)?.target
+    const nextTarget = state.targets.find((row) => row.target.id === selectedTarget)?.target
+    target = nextTarget && decode(Capability.TargetRef, { ...nextTarget })
     set("targetID", target?.id)
     if (target) await readBindings()
   }
