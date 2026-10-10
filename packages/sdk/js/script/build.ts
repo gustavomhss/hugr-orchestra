@@ -8,6 +8,7 @@ import { $ } from "bun"
 import path from "path"
 
 import { createClient } from "@hey-api/openapi-ts"
+import { splitTypes } from "./split-types"
 
 const orchestra = path.resolve(dir, "../../orchestra")
 
@@ -82,7 +83,9 @@ const historyTypesPatched = generatedTypes.replace(
 if (historyTypesPatched === generatedTypes) {
   throw new Error("Session history numeric query patch did not apply")
 }
-await Bun.write("./src/v2/gen/types.gen.ts", historyTypesPatched)
+const partition = splitTypes(historyTypesPatched, ["MaestroWorkResultDecided", "SyncEventMaestroWorkResultDecided"])
+await Bun.write("./src/v2/gen/types.gen.ts", partition.main)
+await Bun.write("./src/v2/gen/maestro-events.gen.ts", partition.partition)
 
 const generatedSdk = await Bun.file("./src/v2/gen/sdk.gen.ts").text()
 const historySdkPatched = generatedSdk.replace(
