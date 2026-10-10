@@ -126,17 +126,25 @@ it.instance("awaits the real store sink; replay context stays detached while sav
       yield* f.callbacks.beforeDispatch(input)
     }),
   }).pipe(Effect.forkChild)
-  const payload = yield* awaitWithTimeout(Deferred.await(reached), "Checkpoint sink did not enter")
+  const payload = yield* awaitWithTimeout(Deferred.await(reached), "Checkpoint sink did not enter", "15 seconds")
   expect(f.requests).toEqual([])
   expect((yield* f.store.list({ projectID: f.chat.projectID, directory: f.chat.directory })).items).toEqual([])
   expect(f.debug).toHaveLength(1)
   const original = f.debug[0]
+  const media = original.messages[0].content
+  if (!Array.isArray(media)) throw new Error("Expected media prefix")
+  media.forEach((part) => {
+    if (part.type !== "image") return
+    if (part.image instanceof Uint8Array) part.image.fill(42)
+    if (part.image instanceof URL) part.image.pathname = "/late"
+  })
   original.messages.push({ role: "user", content: "LATE MUTATION" })
   original.system[0] = "LATE SYSTEM"
   original.agent.options.temperature = 9
   original.user.model.variant = "late"
   original.model.options.reasoning = "late"
   original.tools.read.description = "LATE TOOL"
+  original.tools.read.inputSchema = jsonSchema({ type: "null" })
   schema.description = "LATE SCHEMA"
   if (!original.preflightParams) throw new Error("Missing captured preflight params")
   original.preflightParams.options.cache = "late"
@@ -157,6 +165,9 @@ it.instance("awaits the real store sink; replay context stays detached while sav
   expect(sent.user.model.variant).toBe("parent-variant")
   expect(sent.preflightParams?.options.cache).toBe("exact")
   expect(sent.tools.read.description).toBe("Read exact path 🪨")
+  expect(asSchema(sent.tools.read.inputSchema).jsonSchema).toEqual({
+    type: "object", properties: { path: { type: "string" } }, required: ["path"],
+  })
   expect(builds).toEqual(["input"])
   expect(sent.prepared).toBe(source.input.prepared)
   expect(sent.tools.read.onInputStart).toBe(callback)
@@ -197,7 +208,7 @@ it.instance("abort while save is held cannot dispatch or retry after release", (
       yield* f.callbacks.beforeDispatch(input)
     }),
   }).pipe(Effect.forkChild)
-  yield* awaitWithTimeout(Deferred.await(reached), "Checkpoint sink did not enter")
+  yield* awaitWithTimeout(Deferred.await(reached), "Checkpoint sink did not enter", "15 seconds")
   yield* Fiber.interrupt(task)
   yield* Deferred.succeed(release, undefined)
   const exit = yield* Fiber.await(task)
@@ -208,16 +219,19 @@ it.instance("abort while save is held cannot dispatch or retry after release", (
   expect((yield* f.store.list({ projectID: f.chat.projectID, directory: f.chat.directory })).items).toEqual([])
 }))
 
-for (const failure of ["provider", "invalid-schema"] as const) it.instance(`${failure} retains immutable attempt checkpoints`, () => Effect.gen(function* () {
+for (const outcome of ["provider", "invalid-schema", "corrected"] as const) it.instance(`${outcome} retains immutable attempt checkpoints`, () => Effect.gen(function* () {
   const f = yield* fixture
   const result = yield* run(f.captured, { provider: provider(), llm: { stream: (input) => {
     f.requests.push(input)
-    return failure === "provider" ? Stream.fail(new Error("Producer failed after checkpoint")) :
-      Stream.make(LLMEvent.textDelta({ id: "invalid", text: "not JSON 🪨" }), LLMEvent.finish({ reason: "stop" }))
+    return outcome === "provider" ? Stream.fail(new Error("Producer failed after checkpoint")) :
+      Stream.make(LLMEvent.textDelta({ id: "reply", text: outcome === "corrected" && f.requests.length === 2 ?
+        JSON.stringify(body(input, FIRST)) : "not JSON 🪨" }), LLMEvent.finish({ reason: "stop" }))
   } } }, host(f.history), f.callbacks)
-  expect(result).toMatchObject({ failure, retried: failure === "invalid-schema" })
-  expect(result.artifact).toBeUndefined()
-  expect(f.saves.map((save) => save.attempt)).toEqual(failure === "provider" ? [0] : [0, 1])
+  expect(result.failure).toBe(outcome === "corrected" ? undefined : outcome)
+  expect(result.retried).toBe(outcome !== "provider")
+  if (outcome === "corrected") expect(result.artifact?.text).toContain(FIRST)
+  if (outcome !== "corrected") expect(result.artifact).toBeUndefined()
+  expect(f.saves.map((save) => save.attempt)).toEqual(outcome === "provider" ? [0] : [0, 1])
   expect(f.requests).toHaveLength(f.saves.length)
   const rows = (yield* f.store.list({ projectID: f.chat.projectID, directory: f.chat.directory })).items
   expect(rows).toHaveLength(f.saves.length)
@@ -232,7 +246,7 @@ for (const failure of ["provider", "invalid-schema"] as const) it.instance(`${fa
     expect(yield* f.store.save({ ...save, payload: "{}" }).pipe(Effect.flip)).toMatchObject({ reason: "conflict" })
     expect(yield* f.store.read(read)).toEqual(stored)
   }))
-  if (failure === "invalid-schema") {
+  if (outcome !== "provider") {
     expect(f.requests[1].messages.slice(0, -2)).toEqual(f.requests[0].messages)
     expect(f.requests[1].messages.at(-2)).toEqual({ role: "assistant", content: "not JSON 🪨" })
     expect(f.requests[1].messages.at(-1)?.role).toBe("user")
