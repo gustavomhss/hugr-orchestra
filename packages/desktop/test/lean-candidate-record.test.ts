@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test"
+import os from "node:os"
+import path from "node:path"
 import { CandidateRecorder } from "./lean-candidate-record.fixture"
 
 test("recorder removes synthetic owned passwords, bare Basic credentials and Authorization tokens from every sink", () => {
@@ -96,3 +98,103 @@ test("actual native proof entry fails by name on unsupported CI hosts before reg
   expect(child.signalCode).not.toBe("SIGKILL")
   expect(out + error).toContain("LEAN_CANDIDATE_UNSUPPORTED_PLATFORM: proof requires native macOS x64")
 }, 15000)
+
+test("recorder bounds deep cause chains, wide objects and whole projections with named overflow markers", () => {
+  const recorder = new CandidateRecorder()
+  const deep = Array.from({ length: 10_000 }).reduce<Error>((cause, _, index) => new Error(`synthetic level ${index}`, { cause }), new Error("synthetic root"))
+  const chain = JSON.parse(recorder.serialize(deep))
+  expect(JSON.stringify(chain)).toContain('{"marker":"candidate-diagnostics-overflow","reason":"depth"}')
+  expect(chain.message).toBe("synthetic level 9999")
+  const wide = recorder.serialize({ items: Array.from({ length: 1000 }, (_, index) => index) })
+  expect(wide).toContain('"reason": "nodes"')
+  expect(wide).not.toContain("999")
+  const large = JSON.parse(recorder.serialize(Array.from({ length: 100 }, () => "x".repeat(4000))))
+  expect(large).toEqual({ marker: "candidate-diagnostics-overflow", reason: "output", observedBytes: expect.any(Number) })
+  expect(large.observedBytes).toBeGreaterThan(64 << 10)
+})
+
+test("recorder truncates long strings only after redaction and omits strings too large to scan", () => {
+  const recorder = new CandidateRecorder()
+  const password = "Zq9-synthetic-boundary-password"
+  recorder.protectBackend("orchestra", password)
+  const text = `${"a".repeat(4093)}${password}${"b".repeat(10_000 - 4093 - password.length)}`
+  const cleaned = recorder.clean(text)
+  expect(JSON.parse(recorder.serialize({ text })).text).toBe(`${cleaned.slice(0, 4096)}[truncated:${cleaned.length}]`)
+  expect(recorder.serialize({ text })).not.toContain("Zq9")
+  expect(JSON.parse(recorder.serialize({ text: password.repeat(200_000) })).text).toBe(`[omitted-unscanned:${password.length * 200_000}]`)
+})
+
+test("recorder streams join split secrets before redaction and replace over-cap streams with a marker, never a prefix", () => {
+  const recorder = new CandidateRecorder()
+  const password = "synthetic-stream-password-V4"
+  const split = recorder.stream("synthetic split stream")
+  split.push(password.slice(0, 9))
+  split.push(new TextEncoder().encode(password.slice(9)))
+  const flood = recorder.stream("synthetic flood stream")
+  flood.push("synthetic-flood-head ")
+  flood.push(`${password} `)
+  flood.push("x".repeat(1 << 20))
+  flood.push(password)
+  recorder.protectBackend("orchestra", password)
+  const output = recorder.serialize(recorder.observations)
+  expect(output).not.toContain(password)
+  expect(output).not.toContain("synthetic-flood-head")
+  expect(output).not.toContain("xxxx")
+  expect(JSON.parse(output)).toEqual([
+    { label: "synthetic split stream", value: "[redacted]" },
+    { label: "synthetic flood stream", value: { marker: "candidate-diagnostics-overflow", label: "synthetic flood stream", reason: "stream",
+      observedBytes: 21 + password.length + 1 + (1 << 20) + password.length } },
+  ])
+})
+
+test("recorder cleans a near-cap word-run stream in linear time", () => {
+  const recorder = new CandidateRecorder()
+  recorder.stream("synthetic near-cap stream").push(`${"x".repeat((1 << 20) - 64)} password=synthetic-near-cap-password`)
+  const started = performance.now()
+  const [observation] = recorder.observations
+  expect(performance.now() - started).toBeLessThan(5000)
+  expect(String(observation!.value)).toEndWith(' password="[redacted]"')
+  expect(recorder.serialize(recorder.observations)).toContain(`[truncated:${(1 << 20) - 64 + 22}]`)
+})
+
+test("recorder records a throwing observation as a named failure instead of propagating it", () => {
+  const recorder = new CandidateRecorder()
+  const failure = new Error("synthetic observation failure password=synthetic-observe-password")
+  recorder.observe("synthetic throwing stream", () => { throw failure })
+  const observations = recorder.observations
+  expect(recorder.failures).toEqual([{ id: "failure-1", phase: "cleanup", label: "diagnostic observation: synthetic throwing stream", error: failure }])
+  const output = recorder.serialize({ observations, failures: recorder.failures })
+  expect(output).toContain("candidate-observation-failed")
+  expect(output).not.toContain("synthetic-observe-password")
+})
+
+test("published scratch acquisition and missing-manifest failures keep phase identity without private paths", async () => {
+  const { desktop, repository } = await import("./lean-candidate-archive.fixture")
+  const { typecheckCandidateProof } = await import("./lean-candidate-types.fixture")
+  const missing = path.join(desktop, "node_modules/.lean-candidate-synthetic-missing-parent")
+  const scratch = await typecheckCandidateProof(missing).then(() => undefined, (error: Error) => error)
+  expect(scratch?.name).toBe("CandidateProofError")
+  expect(scratch?.message).toContain("ENOENT")
+  expect(scratch?.message).toContain('"phase": "primary"')
+  expect(scratch?.message).not.toContain('"phase": "cleanup"')
+  const recorder = new CandidateRecorder()
+  recorder.protectPath(repository, "repository")
+  recorder.protectPath(os.homedir(), "runner-home")
+  recorder.protectPath(os.tmpdir(), "runner-temp")
+  const manifest = await Bun.file(path.join(desktop, "dist-candidate-synthetic-missing/lean-candidate-build.json")).json()
+    .then(() => undefined, (error: Error) => error)
+  expect(String(manifest)).toContain(desktop)
+  recorder.fail("primary", "candidate archive verification", manifest)
+  recorder.fail("cleanup", "synthetic archive cleanup", new Error(`rm ${os.tmpdir()}/synthetic-scratch failed`))
+  const archive = recorder.publicError("Candidate archive verification diagnostics")
+  for (const error of [scratch!, archive]) {
+    for (const sink of [error.message, error.stack ?? ""]) {
+      expect(sink).not.toContain(desktop)
+      expect(sink).not.toContain(os.homedir())
+      expect(sink).not.toMatch(/\/(Users|home|private\/var|var\/folders|tmp)\//)
+    }
+  }
+  expect(archive.message).toContain('"phase": "primary"')
+  expect(archive.message).toContain('"phase": "cleanup"')
+  expect(archive.message).toContain("<repository>/packages/desktop/dist-candidate-synthetic-missing")
+})
