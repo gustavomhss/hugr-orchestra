@@ -37,6 +37,7 @@ import { Global } from "@orchestra/core/global"
 import { Config } from "@/config/config"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { LegacyLeanOutput } from "./lean-output"
+import { LeanProfilePreferences } from "./lean-profile-preferences"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 
 const MCP_RESOURCE_TOOLS = {
@@ -72,6 +73,9 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   const truncate = yield* Truncate.Service
   const flags = yield* RuntimeFlags.Service
   const config = yield* Effect.serviceOption(Config.Service)
+  const fs = Option.getOrUndefined(yield* Effect.serviceOption(FSUtil.Service))
+  const global = Option.getOrUndefined(yield* Effect.serviceOption(Global.Service))
+  const preferences = fs && global ? LeanProfilePreferences.make(fs, global) : undefined
   const safety = yield* ToolSafety.make.pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
   const binding = yield* InstanceRef
   const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
@@ -172,7 +176,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       description: item.description,
       inputSchema: jsonSchema(schema),
       execute(args, options) {
-        const selected: { binding?: ToolModelCapture.Binding; policyMappingChanged?: boolean } = {}
+        const selected: { binding?: ToolModelCapture.Binding; policyMappingChanged?: boolean; command?: string } = {}
         const owner = { sessionID: input.session.id, callID: options.toolCallId }
         return run.promise(Effect.gen(function* () {
           const output = yield* guard(item.id, args, options, Effect.gen(function* () {
@@ -184,6 +188,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             )
             yield* safety.before({ tool: item.id, args, sessionID: ctx.sessionID, callID: options.toolCallId,
               directory: binding?.directory, projectID: binding?.project.id })
+            if (item.id === "bash" && typeof args.command === "string" && args.command.length <= 65536) selected.command = args.command
             const result = yield* item.execute(args, ctx)
             yield* safety.inspect(result)
             const output = {
@@ -209,17 +214,34 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           }))
           if (options.abortSignal?.aborted) return output
           const cfg = Option.isSome(config)
-            ? yield* config.value.get().pipe(Effect.orElseSucceed(() => undefined)) : undefined
-          const enabled = !!cfg && cfg.tool_output?.lean?.enabled !== false
+            ? yield* config.value.get().pipe(Effect.exit) : undefined
+          const globalcfg = cfg && Exit.isSuccess(cfg) ? cfg.value : undefined
+          // Read after native execution and all policy/plugin hooks; never cache profile controls in resolve().
+          const read = binding && preferences ? yield* Effect.suspend(() => preferences.read({
+            projectID: binding.project.id, directory: binding.directory,
+          })).pipe(
+            Effect.flatMap((prefs: LeanProfilePreferences.State) => Effect.sync(() => prefs.scope.projectID === binding.project.id
+              && prefs.scope.directory === binding.directory && typeof prefs.scope.profileID === "string" && prefs.scope.profileID.length > 0
+              ? { enabled: prefs.enabled ?? globalcfg?.tool_output?.lean?.enabled !== false,
+                items: prefs.items, profileID: prefs.scope.profileID }
+              : undefined)),
+            Effect.exit,
+          ) : undefined
+          const prefs = read && Exit.isSuccess(read) ? read.value : undefined
+          const unavailable = !globalcfg ? "config_unavailable" as const
+            : !read || Exit.isFailure(read) ? "preferences_unavailable" as const
+              : !prefs ? "preferences_scope_mismatch" as const : undefined
+          const enabled = !!globalcfg && !!prefs && prefs.enabled
           const limits = enabled && selected.binding && !selected.policyMappingChanged
             ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
           if (options.abortSignal?.aborted) return output
           return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
-            enabled, limits, policyMappingChanged: selected.policyMappingChanged,
+            enabled, limits, items: prefs?.items, command: selected.command, unavailable,
+            policyMappingChanged: selected.policyMappingChanged,
             telemetry: binding ? {
               owner: { projectID: binding.project.id, location: binding.directory, ...owner },
               model: { provider: input.model.providerID, id: input.model.api.id },
-              ...(nativeSeat?.nativeProfile ? { orchestraProfile: nativeSeat.nativeProfile } : {}),
+              ...(prefs ? { orchestraProfile: prefs.profileID } : {}),
             } : undefined })
         }))
       },
