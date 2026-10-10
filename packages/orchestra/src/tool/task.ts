@@ -112,12 +112,7 @@ export const Parameters = Schema.Struct({
   }),
 })
 
-function renderOutput(input: {
-  id: string
-  state: "running" | "completed" | "error"
-  summary?: string
-  text: string
-}) {
+function renderOutput(input: { id: string; state: "running" | "completed" | "error"; summary?: string; text: string }) {
   const tag = input.state === "error" ? "task_error" : "task_result"
   return [
     `<task id="${input.id}" state="${input.state}">`,
@@ -445,26 +440,22 @@ export const TaskTool = Tool.define(
         })
       }
 
-      const metadata = {
-        parentSessionId: ctx.sessionID,
-        sessionId: nextSession.id,
-        model,
-        ...(runInBackground ? { background: true } : {}),
-      }
+      const metadata = { parentSessionId: ctx.sessionID, sessionId: nextSession.id, model,
+        ...(runInBackground ? { background: true } : {}) }
       const completionEvidence: { value?: { verified: true; planID: string; taskID: string; checks: number } } = {}
       const work = SeatWork.track({
         enabled: seat?.workResult !== undefined,
         seat,
         sessionID: nextSession.id,
         taskId: logical?.taskId,
+        memberId: nextID,
+        authoritySessionId: authority.rootID,
+        armed: completionReceipt !== undefined,
         writeRoots: yield* WriteRoots.effective(governedChildID ? nextSession.permission : childPermissions),
         publish: (workResult) => ctx.metadata({ metadata: { ...metadata, workResult } }),
       })
 
-      yield* ctx.metadata({
-        title: params.description,
-        metadata,
-      })
+      yield* ctx.metadata({ title: params.description, metadata })
 
       if (governedChildID && reserved) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
@@ -499,7 +490,7 @@ export const TaskTool = Tool.define(
         }
         if (!completed) yield* work.hostEnded("interrupted", "No completed child message to replay")
         const output = completed?.parts.findLast((part) => part.type === "text")?.text ?? ""
-        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id, work.observe)
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
@@ -555,10 +546,7 @@ export const TaskTool = Tool.define(
           {
             messageID: promptID,
             sessionID: nextSession.id,
-            model: {
-              modelID: model.modelID,
-              providerID: model.providerID,
-            },
+            model: { modelID: model.modelID, providerID: model.providerID },
             variant: next.model || explicitModel ? undefined : variant,
             agent: nextID,
             parts: [...parts, ...own, ...resume],
@@ -580,9 +568,11 @@ export const TaskTool = Tool.define(
         }
         if (completionReceipt && (result.info.role !== "assistant" || !result.info.finish ||
           ["tool-calls", "unknown"].includes(result.info.finish) ||
-          result.parts.some((part) => part.type === "tool" && part.state.status !== "completed")))
+          result.parts.some((part) => part.type === "tool" && part.state.status !== "completed"))) {
+          yield* work.hostEnded("interrupted", "Tool safety HOLD: completion-worker-not-finished").pipe(Effect.provideService(Database.Service, database))
           return yield* Effect.fail(new Error("Tool safety HOLD: completion-worker-not-finished"))
-        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id)
+        }
+        const verified = yield* completion.verifiedCompletion(completionReceipt, nextSession.id, work.observe)
         if (verified) {
           completionEvidence.value = verified
           yield* ctx.metadata({ metadata: work.attach({ ...metadata, completion: verified }) })
@@ -598,10 +588,7 @@ export const TaskTool = Tool.define(
           TaskReport.fallback(history.filter((message) => message.info.id > promptID))
       })
 
-      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (
-        state: "completed" | "error",
-        text: string,
-      ) {
+      const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (state: "completed" | "error", text: string) {
         const currentParent = yield* sessions.get(ctx.sessionID)
         const workResult = yield* work.notice(state, text).pipe(Effect.provideService(Database.Service, database))
         yield* ops
@@ -663,10 +650,7 @@ export const TaskTool = Tool.define(
         title: params.description,
         metadata,
         onPromote: Effect.all([
-          ctx.metadata({
-            title: params.description,
-            metadata: { ...metadata, background: true, jobId: nextSession.id },
-          }),
+          ctx.metadata({ title: params.description, metadata: { ...metadata, background: true, jobId: nextSession.id } }),
           notify(nextSession.id),
         ]),
         run: runTask().pipe(Effect.onInterrupt(() => ops.cancel(nextSession.id))),
@@ -694,7 +678,6 @@ export const TaskTool = Tool.define(
 
       const runCancel = yield* EffectBridge.make()
       const cancel = ops.cancel(nextSession.id)
-
       function onAbort() {
         runCancel.fork(cancel)
       }
