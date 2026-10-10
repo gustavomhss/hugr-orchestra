@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import { Database } from "bun:sqlite"
-import { Option, Schema } from "effect"
 import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import { lstat, mkdir, mkdtemp, open, realpath, writeFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
@@ -28,7 +28,7 @@ const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/ta
 const deadline = 10 * 60_000
 class AuthoringError extends Error {}
 function requireAuthoring(value: unknown, code: string): asserts value { if (!value) throw new AuthoringError(code) }
-function decode<S extends Schema.ConstraintDecoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
+function decode<S extends { readonly Type: unknown }>(schema: S, value: unknown, code: string): S["Type"] {
   const decoded = Schema.decodeUnknownOption(schema)(value)
   requireAuthoring(Option.isSome(decoded), code)
   return decoded.value
@@ -37,20 +37,28 @@ const json = (text: string) => decode(Schema.UnknownFromJsonString, text, "AUTHO
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const blob = (bytes: Uint8Array) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
 const inside = (path: string, root: string) => path === root || path.startsWith(`${root}/`)
+// Resolve the candidate package's installed Effect before any schema decoding; no root dependency assumption.
+const bootstrap = await (async () => {
+  const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
+    candidate: { type: "string" }, pilot: { type: "string" }, "auth-source": { type: "string" },
+    model: { type: "string", default: "openai/gpt-6.1-sol" }, "prepare-only": { type: "boolean" }, run: { type: "boolean" },
+  } }).values
+  const candidate = await canonical(args.candidate, true)
+  const effect = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  return { args, candidate, effect }
+})().catch((error: unknown) => { console.error(error instanceof AuthoringError ? error.message : "AUTHORING_CANDIDATE_EFFECT_BOOTSTRAP_FAILED"); process.exit(1) })
+const { Option, Schema } = bootstrap.effect
 await main().catch((error: unknown) => {
   console.error(error instanceof AuthoringError ? error.message : "AUTHORING_IO_OR_DEPENDENCY_UNAVAILABLE")
   process.exitCode = 1
 })
 async function main() {
   requireAuthoring(process.getuid && constants.O_NOFOLLOW, "AUTHORING_PRIVATE_FILE_HOST_UNSUPPORTED")
-  const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
-    candidate: { type: "string" }, pilot: { type: "string" }, "auth-source": { type: "string" },
-    model: { type: "string", default: "openai/gpt-6.1-sol" }, "prepare-only": { type: "boolean" }, run: { type: "boolean" },
-  } }).values
+  const args = bootstrap.args
   requireAuthoring(!(args.run && args["prepare-only"]), "AUTHORING_MODE_CONFLICT")
   const model = args.model ?? "openai/gpt-6.1-sol"
   requireAuthoring(/^openai\/[A-Za-z0-9._-]{1,128}$/.test(model), "AUTHORING_MODEL_INVALID")
-  const candidate = await canonical(args.candidate, true)
+  const candidate = bootstrap.candidate
   const pilot = await canonical(args.pilot, true)
   const project = await canonical(join(pilot, "project"), true)
   requireAuthoring(!inside(pilot, candidate) && !inside(candidate, pilot), "AUTHORING_CANDIDATE_FIXTURE_OVERLAP")
@@ -96,7 +104,7 @@ async function main() {
   await Promise.all(Object.values(env).map((path) => mkdir(path, { mode: 0o700 })))
   Object.assign(env, { ORCHESTRA_DB: join(runtime, "session.db"), ORCHESTRA_CONFIG: join(runtime, "config.json"),
     ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_LEGACY_CODEX_READONLY: "1", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
-  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } } }) + "\n", { flag: "wx", mode: 0o600 })
+  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } } } }) + "\n", { flag: "wx", mode: 0o600 })
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`
   const job = { candidate, project, model, assignment }
   const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, inventoryDigest,
@@ -243,7 +251,7 @@ function initializer(job: { candidate: string; project: string; model: string; a
 import { relative, dirname } from "node:path"
 import { realpath } from "node:fs/promises"
 const job = ${JSON.stringify(job)}
-const requireCandidate = createRequire(job.candidate + "/package.json")
+const requireCandidate = createRequire(job.candidate + "/packages/orchestra/package.json")
 const { Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
 const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
 const { CrossSpawnSpawner } = await import(job.candidate + "/packages/core/src/cross-spawn-spawner.ts")
