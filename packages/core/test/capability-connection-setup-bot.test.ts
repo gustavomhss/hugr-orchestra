@@ -23,6 +23,7 @@ it.live("two Discord bots require exact HTTP Bot headers and private provider gr
     { provider: "discord", key, label: `bot account ${index}` }), `account-${index}`, issued.authority))
   const results = receipts.map(CapabilityConnectionSetupFixture.result)
   const rows = yield* f.rows
+  CapabilityConnectionSetupFixture.publicReceipts(receipts, rows, keys)
   expect(new Set(results.map((result) => result.connection.id)).size).toBe(2)
   expect(rows.connections).toHaveLength(2)
   expect(new Set(rows.connections.map((row) => row.credential_id)).size).toBe(2)
@@ -41,12 +42,13 @@ it.live("two Discord bots require exact HTTP Bot headers and private provider gr
   const denied = yield* f.operators.issue({ origin: "sdk", scope: { placements: [placement], actions: ["connection.connect"],
     resources: [{ kind: "provider", id: "slack" }] } })
   CapabilityConnectionSetupFixture.expectCode(yield* f.run(f.setup.connect(placement, { provider: "discord", key: keys[0] }),
-    "wrong-provider", denied.authority).pipe(Effect.exit), "target_denied")
+    "wrong-provider", denied.authority).pipe(Effect.exit), "target_denied", keys)
   expect(f.seen).toHaveLength(2)
   const replay = yield* f.run(f.setup.connect(placement, { provider: "discord", key: keys[0], label: "bot account 0" }), "account-0", issued.authority)
   expect(replay).toEqual({ ...receipts[0], reused: true })
+  CapabilityConnectionSetupFixture.publicReceipts([replay], rows, keys)
   CapabilityConnectionSetupFixture.expectCode(yield* f.run(f.setup.connect(placement,
-    { provider: "discord", key: keys[1], label: "bot account 0" }), "account-0", issued.authority).pipe(Effect.exit), "outcome_unknown")
+    { provider: "discord", key: keys[1], label: "bot account 0" }), "account-0", issued.authority).pipe(Effect.exit), "outcome_unknown", keys)
   expect(f.seen).toHaveLength(2)
   expect(yield* f.rows).toEqual(before)
 }))
@@ -58,7 +60,7 @@ it.live("two Discord bots require exact HTTP Bot headers and private provider gr
       ...(bot === undefined ? {} : { bot }) }) })
     const before = yield* f.rows
     CapabilityConnectionSetupFixture.expectCode(yield* f.run(f.setup.connect(placement,
-      { provider: "discord", key: "discord-negative-private-key" })).pipe(Effect.exit), "connection_unavailable")
+      { provider: "discord", key: "discord-negative-private-key" })).pipe(Effect.exit), "connection_unavailable", ["discord-negative-private-key"])
     expect(f.seen).toEqual([{ path: "/api/v10/users/@me", authorization: "Bot discord-negative-private-key" }])
     expect(yield* f.rows).toEqual(before)
   })))

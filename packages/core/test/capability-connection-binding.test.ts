@@ -115,7 +115,7 @@ it.live("binding query snapshots at call time; excess authority fields and inval
   query.limit = 33
   expect((yield* f.run(effect)).items).toEqual([{ sessionID: f.sessionID, actions: ["read"] }])
   yield* Effect.forEach([{ limit: 0 }, { limit: 33 }, { limit: 1.1 }, { agentID: "persisted-actor" }, { body: "authority" }], (input) => {
-    const invalid = { ...query, ...input }
+    const invalid = { limit: 1, ...input }
     return f.run(bindings.list(f.child.id, invalid)).pipe(Effect.exit,
       Effect.tap((exit) => Effect.sync(() => CapabilityConnectionManagementFixture.expectCode(exit, "connection_unavailable"))))
   })

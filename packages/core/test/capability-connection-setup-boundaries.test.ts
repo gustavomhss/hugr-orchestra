@@ -132,7 +132,7 @@ it.live("malicious proof provider/endpoint/integration/identity/fingerprint/desc
 
 it.live("empty/absent labels default to provider; bounded user metadata projects without proof or secret material", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionSetupFixture.fixture()
-  yield* Effect.forEach([undefined, "", "x".repeat(128)], (label) => f.run(f.setup.connect(placement, { ...input, label })))
+  const receipts = yield* Effect.forEach([undefined, "", "x".repeat(128)], (label) => f.run(f.setup.connect(placement, { ...input, label })))
   const rows = yield* f.rows
   expect(rows.connections.map((row) => row.label)).toEqual(["slack", "slack", "x".repeat(128)])
   expect(rows.credentials.map((row) => row.label)).toEqual(["slack", "slack", "x".repeat(128)])
@@ -140,6 +140,7 @@ it.live("empty/absent labels default to provider; bounded user metadata projects
   const receipt = yield* f.run(f.setup.connect(placement, { ...input, label: undefined }), "optional-label")
   const replay = yield* f.run(f.setup.connect(placement, { provider: input.provider, key: input.key }), "optional-label")
   expect(replay).toEqual({ ...receipt, reused: true })
+  CapabilityConnectionSetupFixture.publicReceipts([...receipts, receipt, replay], yield* f.rows, [input.key])
 }))
 
 it.live("reconcile/verifier/writer mixed SQL+quota+auth+Die+Interrupt causes retain reasons and annotations", () => Effect.gen(function* () {

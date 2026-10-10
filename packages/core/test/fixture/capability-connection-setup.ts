@@ -66,16 +66,39 @@ export function fixture(options: { maxReceipts?: number; response?: (request: Re
 }
 
 export function result(receipt: { data: Schema.Json }) {
-  return Schema.decodeUnknownSync(CapabilitySetup.Result)(receipt.data)
+  const decoded = Schema.decodeUnknownSync(Schema.toType(CapabilitySetup.Result), { onExcessProperty: "error" })(receipt.data)
+  expect(receipt.data).toEqual({ connection: decoded.connection, verification: "verified" })
+  return decoded
+}
+
+export function publicReceipts(receipts: readonly { data: Schema.Json }[], rows: {
+  credentials: readonly (typeof CredentialTable.$inferSelect)[];
+  connections: readonly (typeof CapabilityConnectionTable.$inferSelect)[];
+}, secrets: readonly string[] = []) {
+  const forbidden = [...secrets, ...rows.credentials.flatMap((row) => [row.id,
+    ...(row.value.type === "key" ? [row.value.key] : [row.value.access, row.value.refresh])]),
+    ...rows.connections.map((row) => row.scope_hash)]
+  receipts.forEach((receipt) => {
+    result(receipt)
+    forbidden.forEach((secret) => expect(JSON.stringify(receipt)).not.toContain(secret))
+  })
 }
 
 export function failed<A, E>(exit: import("effect").Exit.Exit<A, E>) {
   return CapabilityConnectionManagementFixture.failed(exit)
 }
 
-export function expectCode<A, E>(exit: import("effect").Exit.Exit<A, E>, code: Capability.ErrorCode) {
+export function expectCode<A, E>(exit: import("effect").Exit.Exit<A, E>, code: Capability.ErrorCode, forbidden: readonly string[] = [input.key]) {
   const cause = CapabilityConnectionManagementFixture.expectCode(exit, code)
-  cause.reasons.forEach((reason) => expect(JSON.stringify(reason)).not.toContain(input.key))
+  cause.reasons.forEach((reason) => {
+    if (reason._tag !== "Fail" || !(reason.error instanceof Capability.Failure)) throw new Error("Expected Capability.Failure")
+    const encoded = Schema.encodeSync(Capability.Failure)(reason.error)
+    forbidden.forEach((secret) => {
+      expect(encoded.message).not.toContain(secret)
+      expect(JSON.stringify(encoded.detail ?? null)).not.toContain(secret)
+      expect(JSON.stringify(encoded)).not.toContain(secret)
+    })
+  })
 }
 
 /** Traced boundaries may add stack annotations, but cannot lose/reorder reasons or old annotations. */
@@ -97,6 +120,6 @@ export function checkpoint(database: Database.Interface, span: "reconcile" | "co
   return CapabilityConnectionManagementFixture.writerCheckpoint(database, change).pipe(Effect.map((hold) => {
     const tracer = Tracer.make({ span: (options) => hold.tracer.span({ ...options,
       name: options.name === `CapabilityConnectionSetup.${span}` ? "CapabilityConnectionManagement.commit" : options.name }) })
-    return { ...hold, start: <A, E, R>(effect: Effect.Effect<A, E, R>) => hold.start(effect.pipe(Effect.withTracer(tracer))) }
+    return { ...hold, tracer, start: <A, E, R>(effect: Effect.Effect<A, E, R>) => hold.start(effect.pipe(Effect.withTracer(tracer))) }
   }))
 }

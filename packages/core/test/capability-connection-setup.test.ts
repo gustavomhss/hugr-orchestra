@@ -36,10 +36,12 @@ it.live("verified creation stores canonical exact credential atomically; retry e
   expect(before.connections[0]).toMatchObject({ id: result.connection.id, credential_id: before.credentials[0].id,
     subject_id: '["T123","U456","B789"]', endpoint: "https://slack.com/api", state: "active", label: input.label })
   expect(before.connections[0].scope_hash).toMatch(/^[a-f0-9]{64}$/)
+  CapabilityConnectionSetupFixture.publicReceipts([receipt], before, [input.key])
   expect(f.seen).toEqual([{ path: "/api/auth.test", authorization: `Bearer ${input.key}` }])
   state.expired = true
   const retry = yield* f.run(f.setup.connect(placement, input), "exact")
   expect(retry).toEqual({ ...receipt, reused: true })
+  CapabilityConnectionSetupFixture.publicReceipts([receipt, retry], before, [input.key])
   expect(yield* f.rows).toEqual(before)
   expect(f.seen).toHaveLength(1)
   expect(f.writerStates).toEqual([false])
@@ -54,7 +56,7 @@ it.live("verified creation stores canonical exact credential atomically; retry e
     expect(encoded).not.toContain(input.key)
     expect(encoded).not.toContain(before.credentials[0].id)
     expect(encoded).not.toContain(before.connections[0].subject_id)
-    expect(encoded).not.toContain("scope_hash")
+    expect(encoded).not.toContain(before.connections[0].scope_hash)
   })
 }))
 
@@ -99,10 +101,14 @@ it.live("SQL faults after credential insert and at receipt insert roll back all 
 it.live("two verified accounts keep distinct exact credentials, subjects, targets and current actor bindings", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionSetupFixture.fixture({ response: (request) => Response.json({ ok: true,
     team_id: request.headers.get("authorization") === `Bearer ${input.key}` ? "T123" : "T999", user_id: "U456", bot_id: "B789" }) })
-  const first = CapabilityConnectionSetupFixture.result(yield* f.run(f.setup.connect(placement, input))).connection
-  const second = CapabilityConnectionSetupFixture.result(yield* f.run(f.setup.connect(placement, { ...input, key: input.key + "-two", label: "second account" }))).connection
+  const receipts = yield* Effect.forEach([input, { ...input, key: input.key + "-two", label: "second account" }],
+    (value, index) => f.run(f.setup.connect(placement, value), `account-${index}`))
+  const first = CapabilityConnectionSetupFixture.result(receipts[0]).connection
+  const second = CapabilityConnectionSetupFixture.result(receipts[1]).connection
   expect(first.id).not.toBe(second.id)
   const rows = yield* f.rows
+  const replay = yield* f.run(f.setup.connect(placement, input), "account-0")
+  CapabilityConnectionSetupFixture.publicReceipts([...receipts, replay], rows)
   expect(rows.credentials).toHaveLength(2)
   expect(new Set(rows.connections.map((row) => row.credential_id)).size).toBe(2)
   expect(rows.connections.map((row) => row.subject_id).sort()).toEqual(['["T123","U456","B789"]', '["T999","U456","B789"]'])
@@ -124,8 +130,10 @@ it.live("two verified accounts keep distinct exact credentials, subjects, target
   }))
   const discord: CapabilitySetup.Input = { provider: "discord", key: input.key + "-discord" }
   const other = yield* CapabilityConnectionSetupFixture.fixture()
-  const third = CapabilityConnectionSetupFixture.result(yield* other.run(other.setup.connect(placement, discord))).connection
+  const thirdReceipt = yield* other.run(other.setup.connect(placement, discord))
+  const third = CapabilityConnectionSetupFixture.result(thirdReceipt).connection
   expect(third.provider).toBe("discord")
   const saved = yield* other.rows
+  CapabilityConnectionSetupFixture.publicReceipts([thirdReceipt], saved, [discord.key])
   expect(saved.credentials.find((row) => row.id === saved.connections.find((row) => row.id === third.id)?.credential_id)?.label).toBe("discord")
 }))
