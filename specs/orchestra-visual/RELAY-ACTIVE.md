@@ -1,6 +1,6 @@
 # Relay closure — active implementation checkpoint
 
-Updated: 2026-10-09. Owner priority: Maestro attribution/V3 → W6 → real-model pilot.
+Updated: 2026-10-10. Owner priority: Maestro attribution/V3 → W6 → real-model pilot.
 Nix is independent. One final milestone PR; no work-package PRs.
 
 ## Owner execution cadence
@@ -9,6 +9,68 @@ Implement disjoint slices in parallel. No per-slice typecheck, tests, mutation, 
 build or product smoke while combined implementation is incomplete. Prepare runnable
 checks now; perform one integrated validation batch after combined source is ready.
 Reuse existing source-bound evidence; keep gates intact. Static cold review remains required.
+
+## Recovered four-native consumer capture
+
+The copied-dependency glibc packaging repair `c998221ad89f13c25be105b567d35c31e731b041`
+was measured through request-only direct child
+`dbc46f70f7f788bec5628ad4f8012d0e1ee17e36`, run **38030779044**, attempt 1.
+All four measurements and independent completion succeeded; live API bindings,
+actual candidate parser, current fingerprint, worker byte copies and named finite
+controls were checked. Completion remains measurement-only.
+
+Reviewed direct child `92d41e6de02697519e38c0a620d6acac13fa933d` applies exactly four
+captured hash fields and one verify request line. Its tree is
+`d143a01d1fe2ed032e002f2c87e21f4fb9214de6`; consumer run **38055863264**, attempt 1,
+names measurement 38030779044/1 and that exact measured parent. All four native
+jobs succeeded. Their API-bound artifacts are:
+
+| System | Native verification artifact |
+| --- | --- |
+| x86_64-linux | `11671952481` |
+| aarch64-linux | `11671457561` |
+| x86_64-darwin | `11670968978` |
+| aarch64-darwin | `11671787879` |
+
+CRC-checked ZIP range extraction recovered finite evidence records without copying
+dereferenced executable fixtures. Every recorded phase exit is 0; source head/tree,
+native system and declared dependency fingerprint match the actual measurement.
+Each captured runtime loaded packaged PTY and every remaining shipped addon under
+Electron **42.3.3**, module ABI **146**. The unchanged output oracle's exact twelve
+positive/restored and negative records passed on each system. Linux glibc variants
+now load without retaining unsupported musl/Node-ABI-115 leaves.
+
+An independent local replay of the original completion gate against the four
+actual captures returned
+`NATIVE_DISTRIBUTION_CAPTURE_COMPLETE_PRODUCT_QUALIFICATION_PENDING` and all 26
+original completion controls returned `COMPLETION_CONTROLS_OK`. This local replay
+does not replace the Actions independent-completion result. Its capture step failed,
+and the archival tail exceeded the existing limit. The actual GitHub annotation is
+`The job has exceeded the maximum execution time of 15m0s`. Relay cancelled only
+the already-failed tail; run conclusion is **cancelled**, not success. No completion
+artifact was published. The job log API returned `BlobNotFound`, so the earlier
+capture-step diagnostic is unavailable and is not guessed.
+
+The archive transport repair preserves finite root records, raw toolchain/hash
+control records, output verdicts and provenance/completion API fixtures, with an
+original-versus-copy SHA-256 manifest. It excludes executable fixtures and deeply
+repeated control-input clones; capture execution, oracle/refusal source and timeout
+limits are unchanged. Actual four-native metadata compacted and replayed through
+the original gate yields the identical verdict and all 26 original completion
+controls. An actual failed-worker mutation stays failed before/after archiving;
+empty capture is a named failure, and runtime fixtures are not copied or mutated.
+These are transport-replay checks; fresh CI completion remains required.
+
+The measured package fingerprint remains the historical qualified `791d7e1846`.
+Maestro's `b71db2ef7bcaef5ad2cd1b136555a6dac77aeaa6` Archie/Auth component source and
+its dev-preserving successor change package inputs. Final composition requires its
+own fresh measurement and consumer binding; existing results retain their source.
+
+External cleanup removed the old temporary worktrees. Pushed commits survived;
+recovered writers are `nix-continuation` (exact verify head) and `nix-integration`
+(integration branch) under the approved temporary OpenCode directory. The existing
+authenticated peer backend was rediscovered at `http://127.0.0.1:49220`; no app or
+server restart was performed by Relay.
 
 ## Current repair wave and qualification hold
 

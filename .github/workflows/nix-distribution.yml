@@ -144,12 +144,20 @@ jobs:
           export MEASUREMENT_PROVENANCE_DIR="$provenance" MEASUREMENT_RUN_ID="$MEASUREMENT_RUN" MEASUREMENT_RUN_ATTEMPT="$MEASUREMENT_ATTEMPT"
           bash nix/check-distribution.sh verify "$SYSTEM" "$GITHUB_SHA" "$dir" \
             "$provenance/workers/nix-distribution-measure-$MEASUREMENT_RUN-$MEASUREMENT_ATTEMPT-$SYSTEM"
+      - name: Prepare finite native capture records, including failures
+        if: always()
+        shell: bash
+        env:
+          SYSTEM: ${{ matrix.system }}
+        run: |
+          python3 nix/scripts/archive-distribution-evidence.py native \
+            "$RUNNER_TEMP/nix-distribution-$SYSTEM" "$RUNNER_TEMP/nix-distribution-archive-$SYSTEM"
       - name: Preserve exact native evidence, including failures
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nix-distribution-${{ needs.prepare.outputs.phase }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.system }}
-          path: ${{ runner.temp }}/nix-distribution-${{ matrix.system }}
+          path: ${{ runner.temp }}/nix-distribution-archive-${{ matrix.system }}
           if-no-files-found: error
           retention-days: 14
   completion:
@@ -187,11 +195,17 @@ jobs:
             --pattern "nix-distribution-$PHASE-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-*" --dir "$dir/workers"
           python3 nix/scripts/complete-distribution.py "$dir" "$PHASE" | tee "$dir/result.json"
           python3 nix/scripts/probe-distribution-completion.py "$dir" "$dir/teeth" "$PHASE" | tee "$dir/teeth.json"
+      - name: Prepare finite independent-completion records
+        if: always()
+        shell: bash
+        run: |
+          python3 nix/scripts/archive-distribution-evidence.py completion \
+            "$RUNNER_TEMP/distribution-completion" "$RUNNER_TEMP/distribution-completion-archive"
       - name: Preserve independent completion capture
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: nix-distribution-completion-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/distribution-completion
+          path: ${{ runner.temp }}/distribution-completion-archive
           if-no-files-found: error
           retention-days: 14

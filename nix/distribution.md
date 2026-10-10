@@ -1,8 +1,21 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": true, "phase": "verify", "sourceParent": "dbc46f70f7f788bec5628ad4f8012d0e1ee17e36", "measurementRun": 38030779044, "measurementAttempt": 1}
+{"ready": false, "phase": "measure", "sourceParent": "92d41e6de02697519e38c0a620d6acac13fa933d", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
+
+Consumer run `38055863264` on `92d41e6de02697519e38c0a620d6acac13fa933d` completed
+all four native CLI/Desktop capture jobs successfully. Independent completion's
+capture step failed, and its archival tail exceeded the existing 15-minute limit;
+Relay cancelled only that already-failed tail. The four native artifacts remain
+source-bound, but the run is cancelled and has no successful CI completion receipt.
+The original completion oracle and all 26 finite controls passed in a separately
+labelled local replay of the actual native evidence. Finite-record archiving now
+preserves metadata/control bytes instead of dereferencing executable and nested
+control fixtures; oracle execution and refusal logic are unchanged. Fresh source
+measurement and its strict four-hash direct child must qualify this transport repair.
+The inactive source checkpoint restores the exact pre-application hash blob; no
+old measurement is relabelled as a new successful consumer run.
 
 Historical request `7eb2bb766a80f130a8d0758f3337729237b9ea8a` had exact clean source
 parent `1f4f2929b0153aa4f68757d9aee33d8f18f55589`. Its four-native measurement run
