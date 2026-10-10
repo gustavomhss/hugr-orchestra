@@ -29,6 +29,7 @@ export function track(input: {
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
   const returned: { value?: BackendResult.WorkResult } = {}
+  const ended: { value?: BackendResult.WorkResult } = {}
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
   const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[]) {
     // Background callbacks may omit Session services; absent or mismatched placement cannot mint evidence.
@@ -54,16 +55,16 @@ export function track(input: {
   return {
     attach: <T extends object>(metadata: T) => ({
       ...metadata,
-      ...(evidence.value ? { workResult: evidence.value } : {}),
+      ...(evidence.value ? { workResult: structuredClone(evidence.value) } : {}),
     }),
     record: Effect.fn("SeatWork.record")(function* (message: SessionV1.WithParts) {
       if (!input.enabled) return
       const snapshot = structuredClone(message)
       const session = structuredClone(yield* history())
       const captured = yield* bound(BackendResult.assemble(snapshot, session, input.seat), session)
-      returned.value = captured
-      evidence.value = captured
-      yield* input.publish(captured)
+      returned.value = structuredClone(captured)
+      evidence.value = structuredClone(captured)
+      yield* input.publish(structuredClone(captured))
       return captured
     }),
     // When the host ends the Task before or instead of the child's final message, stream the work result it can
@@ -74,16 +75,27 @@ export function track(input: {
     ) {
       if (!input.enabled) return
       const session = evidence.value ? [] : structuredClone(yield* history())
-      evidence.value = evidence.value
-        ? { ...evidence.value, terminal: { reason, hostDetail: detail } }
-        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session)
-      yield* input.publish(evidence.value)
+      const captured = structuredClone(evidence.value
+        ? { ...evidence.value, terminal: ended.value?.terminal ?? { reason, hostDetail: detail } }
+        : yield* bound(BackendResult.hostEnded({ message: lastAssistant(session), session, reason, detail }, input.seat), session))
+      // Historical evidence is not an assistant returned by this dispatch.
+      if (!returned.value) delete captured.author
+      evidence.value = captured
+      if (captured.terminal.reason === "failed" || captured.terminal.reason === "interrupted")
+        ended.value = structuredClone(captured)
+      yield* input.publish(structuredClone(captured))
     }),
-    // Compatibility accessor only: never reselect a resumed child's newer assistant for an older dispatch.
-    notice: (_state: "completed" | "error", _text: string) => Effect.succeed(returned.value),
+    // Never query history here: retain the returned assistant, or the captured host failure when none returned.
+    notice: (_state: "completed" | "error", _text: string) => Effect.sync(() => {
+      const captured = returned.value ?? ended.value
+      if (!captured) return
+      // A completion-shaped notice cannot erase a later observed host failure.
+      return structuredClone(returned.value && ended.value ? { ...captured, terminal: ended.value.terminal } : captured)
+    }),
   }
 }
 
 function lastAssistant(messages: readonly SessionV1.WithParts[]) {
-  return messages.findLast((message) => message.info.role === "assistant")
+  // MessageV2.stream is newest-first, including across pages.
+  return messages.find((message) => message.info.role === "assistant")
 }
