@@ -47,7 +47,7 @@ it.live(
         git: true,
         config: {
           permission: { "*": "allow" },
-          agent: { walt: { mode: "primary", prompt: "unsafe configured fallback" } },
+          agent: { archie: { mode: "primary", prompt: "unsafe configured fallback" } },
         },
       })
       await using control = await tmpdir({ git: true })
@@ -191,7 +191,7 @@ it.live(
         config: {
           permission: { "*": "allow" },
           agent: {
-            walt: {
+            archie: {
               name: "Renamed upstream",
               disable: true,
               mode: "primary",
@@ -209,9 +209,9 @@ it.live(
       await AppRuntime.runPromise(
         Effect.gen(function* () {
           const host = yield* productionBinding(tmp.path)
-          expect(host.native).toMatchObject({ id: "walt", native: true, name: "Renamed upstream", mode: "subagent" })
+          expect(host.native).toMatchObject({ id: "archie", native: true, name: "Renamed upstream", mode: "subagent" })
           expect(host.actualAgentV2).toMatchObject({
-            id: "walt",
+            id: "archie",
             system: host.native.prompt,
             description: host.native.description,
             mode: "subagent",
@@ -287,7 +287,7 @@ it.live(
         git: true,
         config: {
           agent: {
-            walt: {
+            archie: {
               name: "Before reload",
               model: "requesty/xai/grok-4",
               variant: "before",
@@ -320,7 +320,7 @@ it.live(
               path.join(tmp.path, "orchestra.json"),
               JSON.stringify({
                 agent: {
-                  walt: {
+                  archie: {
                     name: "After reload",
                     model: "requesty/xai/grok-4",
                     variant: "after",
@@ -339,7 +339,7 @@ it.live(
           expect(yield* host.agents.get(host.context.agent)).toBe(before)
           yield* host.agents.reload()
           const nativeAgents = yield* Agent.Service
-          const native = yield* nativeAgents.get("walt").pipe(Effect.provideService(InstanceRef, reloaded))
+          const native = yield* nativeAgents.get("archie").pipe(Effect.provideService(InstanceRef, reloaded))
           expect(native.name).toBe("After reload")
           const current = yield* host.agents.get(host.context.agent)
           expect(current?.system).toBe(native.prompt)
@@ -369,14 +369,14 @@ it.live(
     }),
 )
 
-it.live("production V2 walt catalogs exactly 13 pure operations and describes/executes plan-check", () =>
+it.live("production V2 archie catalogs exactly 13 pure operations and describes/executes plan-check", () =>
   Effect.promise(async () => {
-    await using tmp = await tmpdir({ git: true, config: { agent: { walt: { name: "Renamed upstream" } } } })
+    await using tmp = await tmpdir({ git: true, config: { agent: { archie: { name: "Renamed upstream" } } } })
     await AppRuntime.runPromise(
       Effect.gen(function* () {
         const host = yield* productionBinding(tmp.path)
-        expect(host.native).toMatchObject({ id: "walt", name: "Renamed upstream", native: true })
-        expect(host.actualAgentV2.id).toBe(AgentV2.ID.make("walt"))
+        expect(host.native).toMatchObject({ id: "archie", name: "Renamed upstream", native: true })
+        expect(host.actualAgentV2.id).toBe(AgentV2.ID.make("archie"))
         expect(MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS).toHaveLength(13)
         expect(PermissionV2.evaluate(MaestroArsenal.names.catalog, "*", host.actualAgentV2.permissions).effect).toBe(
           "allow",
@@ -496,7 +496,7 @@ it.live("production V2 rejects custom label impostors and actual native:false re
   Effect.promise(async () => {
     await using tmp = await tmpdir({
       git: true,
-      config: { permission: { "*": "allow" }, agent: { impostor: { name: "walt" } } },
+      config: { permission: { "*": "allow" }, agent: { impostor: { name: "archie" } } },
     })
     await AppRuntime.runPromise(
       Effect.gen(function* () {
@@ -504,7 +504,7 @@ it.live("production V2 rejects custom label impostors and actual native:false re
         text(yield* host.invoke(MaestroArsenal.names.describe, { name: "plan-check" }))
         expectPlan(yield* host.invoke(MaestroArsenal.names.execute, { name: "plan-check", arguments: plan }))
         const impostor = yield* productionBinding(tmp.path, "impostor")
-        expect(impostor.native).toMatchObject({ id: "impostor", name: "walt", native: false })
+        expect(impostor.native).toMatchObject({ id: "impostor", name: "archie", native: false })
         expect(impostor.actualAgentV2.id).toBe(AgentV2.ID.make("impostor"))
         yield* denySurfaces(impostor)
         // Fault the actual Instance-scoped native record, not caller metadata or a replacement service.
@@ -523,7 +523,7 @@ it.live("production V2 rejects custom label impostors and actual native:false re
   }),
 )
 
-it.live("production V2 requires native service walt ID even when actual V2 walt and receipt remain valid", () =>
+it.live("production V2 requires native service archie ID even when actual V2 archie and receipt remain valid", () =>
   Effect.promise(async () => {
     await using tmp = await tmpdir({ git: true })
     await AppRuntime.runPromise(
@@ -537,15 +537,15 @@ it.live("production V2 requires native service walt ID even when actual V2 walt 
           }),
           () =>
             Effect.sync(() => {
-              host.native.id = "walt"
+              host.native.id = "archie"
             }),
         )
         const nativeAgents = yield* Agent.Service
-        expect(yield* nativeAgents.get("walt").pipe(Effect.provideService(InstanceRef, host.instance))).toMatchObject({
+        expect(yield* nativeAgents.get("archie").pipe(Effect.provideService(InstanceRef, host.instance))).toMatchObject({
           id: "general",
           native: true,
         })
-        expect((yield* host.agents.get(host.context.agent))?.id).toBe(AgentV2.ID.make("walt"))
+        expect((yield* host.agents.get(host.context.agent))?.id).toBe(AgentV2.ID.make("archie"))
         yield* host.permissions.assert({
           sessionID: host.session.id,
           agent: host.context.agent,
@@ -558,7 +558,7 @@ it.live("production V2 requires native service walt ID even when actual V2 walt 
   }),
 )
 
-it.live("production V2 requires actual V2 walt ID even when native walt and real permissions remain valid", () =>
+it.live("production V2 requires actual V2 archie ID even when native archie and real permissions remain valid", () =>
   Effect.promise(async () => {
     await using tmp = await tmpdir({ git: true })
     await AppRuntime.runPromise(
@@ -569,11 +569,11 @@ it.live("production V2 requires actual V2 walt ID even when native walt and real
         // Draft.update pins IDs. This scoped fault injects an inconsistent stored result through the real transform.
         const wrong = yield* host.agents.transform((draft) => {
           const agent = draft.get(host.context.agent)
-          if (!agent) throw new Error("Actual V2 walt disappeared before the fault")
+          if (!agent) throw new Error("Actual V2 archie disappeared before the fault")
           Object.assign(agent, { id: AgentV2.ID.make("general") })
         })
         expect((yield* host.agents.get(host.context.agent))?.id).toBe(AgentV2.ID.make("general"))
-        expect(host.native).toMatchObject({ id: "walt", native: true })
+        expect(host.native).toMatchObject({ id: "archie", native: true })
         yield* host.permissions.assert({
           sessionID: host.session.id,
           agent: host.context.agent,
@@ -582,7 +582,7 @@ it.live("production V2 requires actual V2 walt ID even when native walt and real
         })
         yield* denySurfaces(host)
         yield* wrong.dispose
-        expect((yield* host.agents.get(host.context.agent))?.id).toBe(AgentV2.ID.make("walt"))
+        expect((yield* host.agents.get(host.context.agent))?.id).toBe(AgentV2.ID.make("archie"))
         expectPlan(yield* host.invoke(MaestroArsenal.names.execute, { name: "plan-check", arguments: plan }))
         yield* host.agents.transform((draft) => draft.remove(host.context.agent))
         expect(yield* host.agents.get(host.context.agent)).toBeUndefined()
@@ -627,7 +627,7 @@ it.live("production V2 keeps actual Location directory and Project mismatches fa
 // Use the same full AppRuntime and LocationServiceMap as arsenal-bindings.test.ts, with no graph replacements.
 const productionBinding = Effect.fn("UpstreamV2BindingTest.productionBinding")(function* (
   directory: string,
-  id = "walt",
+  id = "archie",
 ) {
   const instances = yield* InstanceStore.Service
   const instance = yield* instances.load({ directory })

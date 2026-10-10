@@ -54,21 +54,21 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   const events = yield* EventV2Bridge.Service
   const database = yield* Database.Service
   const parent = yield* sessions.create({ agent: "maestro" })
-  const child = yield* sessions.create({ parentID: parent.id, agent: "walt" })
+  const child = yield* sessions.create({ parentID: parent.id, agent: "archie" })
   const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parent.id,
-    projectID: parent.projectID, memberID: "walt", source: "host" })
-  const author = yield* sessions.updateMessage({ ...assistant(child.id, "walt"),
+    projectID: parent.projectID, memberID: "archie", source: "host" })
+  const author = yield* sessions.updateMessage({ ...assistant(child.id, "archie"),
     ...(returned === "failed" ? { error: new SessionV1.APIError({ message: "Stored author failure", isRetryable: false }).toObject() } : {}),
     ...(returned === "interrupted" ? { finish: "tool-calls" } : {}),
   })
   const proposal = yield* sessions.updatePart({ id: PartID.ascending(), messageID: author.id, sessionID: child.id, type: "text", text })
   const message = { info: author, parts: [proposal] }
   const workResult = { ...(returned === "host-failed"
-    ? BackendResult.hostEnded({ message, reason: "failed", detail: "Observed host failure after return" }, Seats.all.walt)
-    : BackendResult.assemble(message, [], Seats.all.walt)), taskId: logical.taskId }
+    ? BackendResult.hostEnded({ message, reason: "failed", detail: "Observed host failure after return" }, Seats.all.archie)
+    : BackendResult.assemble(message, [], Seats.all.archie)), taskId: logical.taskId }
   const owner = yield* sessions.updateMessage(assistant(parent.id, "maestro"))
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true, workResult, retained: "current" }
-  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt",
+  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "archie",
     ...(selection ? { task_id: selection === "resumed" ? child.id : SessionID.create() } : {}) }, title: "proposal",
     output: "started", time: { start: Date.now(), end: Date.now() }, metadata }
   const task = yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id, sessionID: parent.id,
@@ -119,7 +119,7 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
     if (part?.type !== "tool" || part.state.status === "pending") throw new Error("expected retained Task")
     expect(part.state.metadata).toMatchObject({ workResult: f.input.workResult,
       upstreamSettlement: { workResult: f.input.workResult, deliveryMessageID: f.input.deliveryMessageID } })
-    expect(f.input.workResult.author).toEqual({ memberId: "walt", executionSessionID: f.child.id, messageID: f.author.id })
+    expect(f.input.workResult.author).toEqual({ memberId: "archie", executionSessionID: f.child.id, messageID: f.author.id })
     expect(f.input.workResult.terminal).toEqual(returned === "host-failed"
       ? { reason: "failed", hostDetail: "Observed host failure after return" } : { reason: returned })
     const before = yield* f.progress()
@@ -144,12 +144,12 @@ it.instance("resumed task_id naming another execution child holds before publica
 
 it.instance("original Task A anchors cannot be repaired by Task B caller claims", () => Effect.gen(function* () {
   const f = yield* seed()
-  const other = yield* f.sessions.create({ parentID: f.parent.id, agent: "walt" })
+  const other = yield* f.sessions.create({ parentID: f.parent.id, agent: "archie" })
   const logical = yield* LogicalTask.ensure({ executionSessionID: other.id, authoritySessionID: f.parent.id,
-    projectID: f.parent.projectID, memberID: "walt", source: "host" })
+    projectID: f.parent.projectID, memberID: "archie", source: "host" })
   const before = yield* f.modern()
   expect((yield* Effect.flip(f.sessions.settleUpstreamTask({ ...f.input, childSessionID: other.id, logicalTaskID: logical.taskId,
-    workResult: { ...f.input.workResult, taskId: logical.taskId, author: { memberId: "walt", executionSessionID: other.id,
+    workResult: { ...f.input.workResult, taskId: logical.taskId, author: { memberId: "archie", executionSessionID: other.id,
       messageID: f.author.id } } }))).reason).toBe("UPSTREAM_SETTLEMENT_TASK_ANCHOR_MISMATCH")
   expect(yield* f.modern()).toEqual(before)
 }))
@@ -159,6 +159,15 @@ it.instance("stored proposal bytes reject unrelated caller-assembled capture", (
   expect((yield* Effect.flip(f.sessions.settleUpstreamTask({ ...f.input,
     workResult: { ...f.input.workResult, artifacts: [{ kind: "plan", path: "unrelated.md" }] } }))).reason)
     .toBe("UPSTREAM_SETTLEMENT_PROPOSAL_MISMATCH")
+}))
+
+it.instance("old active author ID cannot settle an Archie Task or append progress", () => Effect.gen(function* () {
+  const f = yield* seed()
+  const before = yield* f.progress()
+  expect((yield* Effect.flip(f.sessions.settleUpstreamTask({ ...f.input,
+    workResult: { ...f.input.workResult, author: { memberId: "walt", executionSessionID: f.child.id, messageID: f.author.id } },
+  }))).reason).toBe("UPSTREAM_SETTLEMENT_RESULT_MISMATCH")
+  expect(yield* f.progress()).toEqual(before)
 }))
 
 it.instance("unrelated owned synthetic delivery cannot settle selected proposal", () => Effect.gen(function* () {
