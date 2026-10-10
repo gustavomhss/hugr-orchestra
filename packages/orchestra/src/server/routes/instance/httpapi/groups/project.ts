@@ -1,8 +1,10 @@
 import { Project } from "@/project/project"
 import { ProjectV2 } from "@orchestra/core/project"
+import { LeanCoverage } from "@orchestra/schema/lean-coverage"
+import { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { ProjectNotFoundError } from "../errors"
+import { ProjectNotFoundError, ServiceUnavailableError } from "../errors"
 import { Authorization } from "../middleware/authorization"
 import { InstanceContextMiddleware } from "../middleware/instance-context"
 import { WorkspaceRoutingMiddleware, WorkspaceRoutingQuery } from "../middleware/workspace-routing"
@@ -19,6 +21,32 @@ export const ProjectApi = HttpApi.make("project")
   .add(
     HttpApiGroup.make("project")
       .add(
+        HttpApiEndpoint.get("lean", `${root}/lean`, {
+          query: WorkspaceRoutingQuery,
+          success: LeanDashboard.Info,
+          error: ServiceUnavailableError,
+        }).annotateMerge(OpenApi.annotations({
+          identifier: "project.lean", summary: "Get selected-profile Lean dashboard",
+          description: "Saved instrumented history for the native project and selected canonical directory.",
+        })),
+        HttpApiEndpoint.patch("leanUpdate", `${root}/lean`, {
+          query: WorkspaceRoutingQuery,
+          payload: LeanDashboard.Update,
+          success: LeanDashboard.Info,
+          error: ServiceUnavailableError,
+        }).annotateMerge(OpenApi.annotations({
+          identifier: "project.leanUpdate", summary: "Update selected-profile Lean preferences",
+          description: "Persist independent profile master or item preferences without deleting earned savings.",
+        })),
+        HttpApiEndpoint.get("leanHistory", `${root}/lean/history/:itemID`, {
+          params: { itemID: LeanCoverage.ItemID },
+          query: WorkspaceRoutingQuery,
+          success: LeanDashboard.History,
+          error: ServiceUnavailableError,
+        }).annotateMerge(OpenApi.annotations({
+          identifier: "project.leanHistory", summary: "Get selected-profile Lean item history",
+          description: "Latest 50 durable instrumented executions; complete is false when bounded.",
+        })),
         HttpApiEndpoint.get("list", root, {
           query: WorkspaceRoutingQuery,
           success: described(Schema.Array(Project.Info), "List of projects"),

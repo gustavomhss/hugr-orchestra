@@ -8,7 +8,7 @@ import { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { LeanEngine } from "@orchestra/schema/lean-engine"
 import { LeanMetrics } from "@orchestra/schema/lean-metrics"
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, desc, eq, sql } from "drizzle-orm"
 import { Effect } from "effect"
 import { LeanProfilePreferences } from "./lean-profile-preferences"
 
@@ -16,8 +16,12 @@ export const MAX_PARTS = 200_000
 const COMMAND_LIMIT = 4096
 
 /** Only native instrumented legacy parts currently contain this provenance. No V2/SDK telemetry inference. */
-export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDashboard.Scope, limit = MAX_PARTS) {
+export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
   const database = yield* Database.Service
+  return yield* collectWith(database, scope, limit, latest)
+})
+
+const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Database.Interface, scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
   const rows = yield* database.db.select({
     sessionID: SessionTable.id,
     messageID: MessageTable.id,
@@ -45,7 +49,9 @@ export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDa
       sql`json_type(${PartTable.data}, '$.state.metadata.lean') IS NOT NULL`,
     ))
     // Same order as MessageV2.page/hydrate: time-created + message ID, then canonical part ID order.
-    .orderBy(asc(MessageTable.time_created), asc(MessageTable.id), asc(PartTable.id))
+    .orderBy(...(latest
+      ? [desc(sql`json_extract(${PartTable.data}, '$.state.time.end')`), desc(MessageTable.time_created), desc(MessageTable.id), desc(PartTable.id)]
+      : [asc(MessageTable.time_created), asc(MessageTable.id), asc(PartTable.id)]))
     .limit(Math.min(MAX_PARTS, Math.max(1, limit)) + 1).all()
     .pipe(Effect.mapError((error) => new LeanProfilePreferences.Unavailable({ message: String(error) })))
   return projectRows(scope, rows.slice(0, Math.min(MAX_PARTS, Math.max(1, limit))).map((row) => ({
@@ -74,7 +80,7 @@ export interface Row {
 /** Ownership is checked before grouping original executions; conflicting retries remove the whole call. */
 export function projectRows(scope: LeanDashboard.Scope, rows: readonly Row[], complete: boolean) {
   const calls = new Map<string, { signature: string; execution: LeanDashboard.Execution } | null>()
-  for (const row of rows) {
+  for (const row of rows.toSorted((a, b) => a.created - b.created || compareID(a.messageID, b.messageID) || compareID(a.partID, b.partID))) {
     if (!visible(row) || (row.status !== "completed" && row.status !== "error") || typeof row.callID !== "string") continue
     const metrics = decodeMetrics(row.metrics)
     if (!metrics || metrics.owner.projectID !== scope.projectID || metrics.owner.location !== scope.directory
@@ -112,6 +118,8 @@ function visible(row: Row) {
 function integer(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value)
 }
+
+function compareID(a: string, b: string) { return a === b ? 0 : a < b ? -1 : 1 }
 
 function identify(command: string): LeanCoverage.ItemID | undefined {
   // P adds this frozen dependency later. No invented command parser while unavailable.
@@ -153,6 +161,17 @@ export const read = Effect.fn("LeanProject.read")(function* (state: LeanProfileP
   return dashboard(state, globalEnabled, result)
 })
 
+export function make(database: Database.Interface) {
+  return {
+    read: Effect.fn("LeanProject.readBound")(function* (state: LeanProfilePreferences.State, globalEnabled: boolean) {
+      return dashboard(state, globalEnabled, yield* collectWith(database, state.scope))
+    }),
+    history: Effect.fn("LeanProject.historyBound")(function* (scope: LeanDashboard.Scope, itemID: LeanCoverage.ItemID) {
+      return historyResult(scope, itemID, yield* collectWith(database, scope, MAX_PARTS, true))
+    }),
+  }
+}
+
 export function dashboard(state: LeanProfilePreferences.State, globalEnabled: boolean, result: ReturnType<typeof projectRows>): LeanDashboard.Info {
   return {
     scope: state.scope, engine: LeanEngine.current, enabled: state.enabled ?? globalEnabled,
@@ -165,12 +184,12 @@ export function dashboard(state: LeanProfilePreferences.State, globalEnabled: bo
 }
 
 export const history = Effect.fn("LeanProject.history")(function* (scope: LeanDashboard.Scope, itemID: LeanCoverage.ItemID) {
-  const result = yield* collect(scope)
+  const result = yield* collect(scope, MAX_PARTS, true)
   return historyResult(scope, itemID, result)
 })
 
 export function historyResult(scope: LeanDashboard.Scope, itemID: LeanCoverage.ItemID, result: ReturnType<typeof projectRows>): LeanDashboard.History {
   const executions = result.executions.filter((execution) => execution.itemID === itemID)
-    .toSorted((a, b) => b.time - a.time || b.messageID.localeCompare(a.messageID) || b.partID.localeCompare(a.partID))
+    .toSorted((a, b) => b.time - a.time || compareID(b.messageID, a.messageID) || compareID(b.partID, a.partID))
   return { scope, itemID, complete: result.complete && executions.length <= 50, executions: executions.slice(0, 50) }
 }

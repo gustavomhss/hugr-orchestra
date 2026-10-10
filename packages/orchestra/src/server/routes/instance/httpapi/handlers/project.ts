@@ -1,16 +1,52 @@
-import * as InstanceState from "@/effect/instance-state"
+import { InstanceState } from "@/effect/instance-state"
 import { Project } from "@/project/project"
 import { ProjectV2 } from "@orchestra/core/project"
-import { Effect } from "effect"
+import { Database } from "@orchestra/core/database/database"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Config } from "@/config/config"
+import { LeanProject } from "@/session/lean-project"
+import { LeanProfilePreferences } from "@/session/lean-profile-preferences"
+import { LeanCoverage } from "@orchestra/schema/lean-coverage"
+import { LeanDashboard } from "@orchestra/schema/lean-dashboard"
+import { Effect, Layer } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ProjectNotFoundError } from "../errors"
+import { ProjectNotFoundError, ServiceUnavailableError } from "../errors"
 import { markInstanceForReload } from "../lifecycle"
 
 export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", (handlers) =>
   Effect.gen(function* () {
     const svc = yield* Project.Service
     const project = yield* ProjectV2.Service
+    const config = yield* Config.Service
+    const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
+    const database = yield* Database.Service
+    const preferences = LeanProfilePreferences.make(fs, global)
+    const collector = LeanProject.make(database)
+
+    const owner = Effect.fnUntraced(function* () {
+      const context = yield* InstanceState.context
+      return { projectID: context.project.id, directory: context.directory }
+    })
+    const unavailable = (error: LeanProfilePreferences.Unavailable) =>
+      new ServiceUnavailableError({ service: "lean", message: error.message })
+    const lean = Effect.fn("ProjectHttpApi.lean")(function* () {
+      const state = yield* preferences.read(yield* owner())
+      const cfg = yield* config.get()
+      return yield* collector.read(state, cfg.tool_output?.lean?.enabled !== false)
+    }, Effect.mapError(unavailable))
+    const leanUpdate = Effect.fn("ProjectHttpApi.leanUpdate")(function* (ctx: { payload: LeanDashboard.Update }) {
+      const state = yield* preferences.update(yield* owner(), ctx.payload)
+      const cfg = yield* config.get()
+      return yield* collector.read(state, cfg.tool_output?.lean?.enabled !== false)
+    }, Effect.mapError(unavailable))
+    const leanHistory = Effect.fn("ProjectHttpApi.leanHistory")(function* (ctx: { params: { itemID: LeanCoverage.ItemID } }) {
+      const state = yield* preferences.read(yield* owner())
+      return yield* collector.history(state.scope, ctx.params.itemID)
+    }, Effect.mapError(unavailable))
 
     const list = Effect.fn("ProjectHttpApi.list")(function* () {
       return yield* svc.list()
@@ -54,10 +90,13 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
     )
 
     return handlers
+      .handle("lean", lean)
+      .handle("leanUpdate", leanUpdate)
+      .handle("leanHistory", leanHistory)
       .handle("list", list)
       .handle("current", current)
       .handle("initGit", initGit)
       .handle("update", update)
       .handle("directories", directories)
   }),
-)
+).pipe(Layer.provide(LayerNode.compile(Global.node)))
