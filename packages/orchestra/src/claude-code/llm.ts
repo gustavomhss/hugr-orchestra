@@ -4,10 +4,20 @@ import { Effect, Stream } from "effect"
 import { LLMEvent } from "@orchestra/llm"
 import type { LLM } from "@/session/llm"
 import { ClaudeCodeSDK } from "./sdk"
+import { Token } from "@/util/token"
+
+export function payload(input: Pick<LLM.StreamInput, "messages" | "system" | "agent">) {
+  return {
+    prompt: "Historical messages (JSON, including original roles/content):\n" + JSON.stringify(input.messages),
+    system: [...new Set([...input.system, input.agent.prompt].filter((value): value is string => typeof value === "string" && value.length > 0))].join("\n\n"),
+  }
+}
 
 /** Isolated maintenance transport. History is data; this query has no tools or parent session. */
 export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
-  return { stream: (input) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+  return { estimateInput: (input) => { const compiled = payload(input); return Token.estimate(compiled.prompt + compiled.system) },
+    stream: (input) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
+    const compiled = payload(input)
     const abort = new AbortController()
     const env = yield* ClaudeCodeSDK.Environment
     const lifetime = ClaudeCodeSDK.processLifetime({
@@ -18,7 +28,7 @@ export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
       strictMcpConfig: true,
       disallowedTools: ["*"],
       canUseTool: async () => ({ behavior: "deny", message: "Context maintenance cannot execute tools" }),
-      systemPrompt: { type: "custom", prompt: [...input.system, input.agent.prompt].filter(Boolean).join("\n\n") },
+      systemPrompt: { type: "custom", prompt: compiled.system },
       maxTurns: 1,
       persistSession: false,
       settingSources: [],
@@ -27,7 +37,7 @@ export function create(sdk: ClaudeCodeSDK.Interface): LLM.Interface {
     // Also cover a query constructor that throws after spawning its child.
     yield* Effect.addFinalizer(() => Effect.sync(() => abort.abort()).pipe(Effect.andThen(Effect.promise(lifetime.join))))
     const query = yield* Effect.acquireRelease(Effect.sync(() => sdk.query({
-      prompt: "Historical messages (JSON, including original roles/content):\n" + JSON.stringify(input.messages),
+      prompt: compiled.prompt,
       options: lifetime.options,
     })), (query) => Effect.gen(function* () {
       abort.abort()
