@@ -12,10 +12,11 @@ test("recorder removes synthetic owned passwords, bare Basic credentials and Aut
   const raw = { text: `${password} ${basic} Authorization: Bearer ${bearer}\nhttp://orchestra:${password}@127.0.0.1:1234`,
     password, authorization: "custom-auth-token", nested: { access_token: "synthetic-nested-token", apiKey: "synthetic-key" },
     path: "/private/var/synthetic-candidate/public-profile-a", foreign: "/Users/synthetic-owner/.config/private.json",
+    proxy: "http://synthetic-proxy-user:synthetic-proxy-password@127.0.0.1:4321/v1",
     config: { machinePolicy: "synthetic-private-config" }, tokens: { kind: "estimated", saved: 42 }, tokensSaved: 42, tokenCalls: 2 }
   // Positive controls are measured against each sink's actual unsanitized input.
   for (const sink of [
-    { source: JSON.stringify(raw), output: recorder.serialize(raw), values: [password, basic, bearer, "custom-auth-token", "synthetic-nested-token", "synthetic-private-config"] },
+    { source: JSON.stringify(raw), output: recorder.serialize(raw), values: [password, basic, bearer, "custom-auth-token", "synthetic-nested-token", "synthetic-private-config", "synthetic-proxy-user", "synthetic-proxy-password"] },
     { source: raw.text, output: recorder.clean(raw.text), values: [password, basic, bearer] },
   ]) {
     for (const value of sink.values) { expect(sink.source).toContain(value); expect(sink.output).not.toContain(value) }
@@ -24,6 +25,7 @@ test("recorder removes synthetic owned passwords, bare Basic credentials and Aut
   const published = JSON.parse(recorder.serialize(raw))
   expect(published.path).toBe("<owned-root>/public-profile-a")
   expect(published.foreign).toBe("<private-path>")
+  expect(published.proxy).toBe("http://[redacted]@127.0.0.1:4321/v1")
   expect(published.config).toBe("[omitted]")
   expect(published.tokens).toEqual(raw.tokens)
   expect(published.tokensSaved).toBe(42)
