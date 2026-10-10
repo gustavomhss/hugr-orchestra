@@ -2,7 +2,7 @@ export * as LeanProfilePreferences from "./lean-profile-preferences"
 
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
-import { Effect, Option, Schema } from "effect"
+import { Cause, Effect, Exit, Option, Schema, Scope } from "effect"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { Flock } from "@orchestra/core/util/flock"
@@ -29,8 +29,10 @@ const decode = Schema.decodeUnknownSync(Stored, { onExcessProperty: "error" })
 const unavailable = (cause: unknown) => new Unavailable({ message: `Lean profile preferences unavailable: ${String(cause)}` })
 
 const locate = Effect.fnUntraced(function* (owner: Owner, fs: FSUtil.Interface, global: Global.Interface) {
-  // Native callers already use canonical InstanceRef directories. Resolve aliases defensively.
-  const directory = yield* fs.realPath(owner.directory)
+  // Native context owns canonical identity. Never rebind it through the current filesystem.
+  if (!owner.projectID || !owner.directory || !path.isAbsolute(owner.directory))
+    return yield* new Unavailable({ message: "Invalid native Lean preference owner" })
+  const directory = owner.directory
   const profileID = createHash("sha256").update(JSON.stringify([owner.projectID, directory])).digest("hex")
   return {
     fs,
@@ -93,14 +95,34 @@ const updateWith = Effect.fn("LeanPreferences.update")(
       yield* location.fs.makeDirectory(location.root, { recursive: true, mode: 0o700 })
       const temp = path.join(location.root, `${location.scope.profileID}.${randomUUID()}.tmp`)
       yield* Effect.acquireUseRelease(
-        location.fs.writeFileString(temp, JSON.stringify({ version: 1, enabled: next.enabled, items: next.items }), { flag: "wx", mode: 0o600 }),
-        () => location.fs.rename(temp, path.join(location.root, `${location.scope.profileID}.json`)),
-        () => location.fs.remove(temp).pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.void), Effect.orDie),
+        Effect.gen(function* () {
+          const scope = yield* Scope.make()
+          const file = yield* location.fs.open(temp, { flag: "wx", mode: 0o600 }).pipe(
+            Effect.provideService(Scope.Scope, scope),
+            Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void),
+          )
+          return { scope, file }
+        }),
+        (handle) => Effect.gen(function* () {
+          yield* handle.file.writeAll(new TextEncoder().encode(JSON.stringify({ version: 1, enabled: next.enabled, items: next.items })))
+          yield* Scope.close(handle.scope, Exit.void)
+          yield* location.fs.rename(temp, path.join(location.root, `${location.scope.profileID}.json`))
+        }),
+        (handle, exit) => Effect.gen(function* () {
+          const closed = yield* Scope.close(handle.scope, exit).pipe(Effect.exit)
+          const removed = yield* location.fs.remove(temp).pipe(
+            Effect.catchReason("PlatformError", "NotFound", () => Effect.void), Effect.exit,
+          )
+          const failures = [closed, removed].filter(Exit.isFailure)
+          if (failures.length) return yield* Effect.die(new Error(
+            [exit, ...failures].filter(Exit.isFailure).map((failure) => Cause.pretty(failure.cause)).join("\nLean preference cleanup failure:\n"),
+          ))
+        }),
       )
       return next
     }))
   },
-  Effect.catchCause((cause) => Effect.fail(unavailable(cause))),
+  Effect.catchCause((cause) => Effect.fail(unavailable(Cause.pretty(cause)))),
 )
 export function make(fs: FSUtil.Interface, global: Global.Interface) {
   return {
