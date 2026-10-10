@@ -15,8 +15,8 @@ function targetFrom(data: unknown) {
   return target
 }
 
-// Aggregate registration belongs to Lead. Exercise exact production group, middleware,
-// handler and SQL Store through the generated client and owning embedded transport.
+// Exercise exact production group, middleware, handler and SQL Store through the
+// generated client and owning embedded transport; embedded.test.ts covers aggregate wiring.
 it.live("embedded generated connections client executes all nine methods against real router and SQL", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionsFixture.make()
   const transport = yield* makeOperatorTransport(f.handler, f.operators)
@@ -113,13 +113,27 @@ it.live("generated Promise client executes nine HTTP methods through owning SDK 
   const unauthenticated = Orchestra.make({ baseUrl: "http://orchestra.local", fetch: transport.fetch })
   expect(yield* Effect.tryPromise({ try: () => unauthenticated.connections.list({ location }),
     catch: (error) => error }).pipe(Effect.flip)).toEqual({ _tag: "UnauthorizedError", message: "Authentication required" })
-  yield* f.target(f.parent)
+  const children = [f.child, yield* f.target(f.parent), yield* f.target(f.parent)]
+    .sort((left, right) => left.id.localeCompare(right.id))
   const first = yield* Effect.promise(() => client.connections.targets({ location, connectionID: f.parent.id, limit: 1 }))
   expect(first.after).toBeDefined()
   const next = yield* Effect.promise(() => client.connections.targets({ location, connectionID: f.parent.id, after: first.after, limit: 1 }))
   expect(first.items[0].target.id).not.toBe(next.items[0].target.id)
   expect(yield* Effect.tryPromise({ try: () => restricted.connections.targets({ location, connectionID: f.parent.id,
     after: first.after, limit: 1 }), catch: (error) => error }).pipe(Effect.flip)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
+  const tailClient = Orchestra.make({ baseUrl: "http://orchestra.local", fetch: transport.fetch, headers: {
+    Authorization: yield* f.issue({ placements: [f.placement], actions: ["connection.targets"], resources: [
+      { kind: "connection", id: f.parent.id }, { kind: "target", id: children[2].id },
+    ] }),
+  } })
+  const filtered = yield* Effect.promise(() => tailClient.connections.targets({ location, connectionID: f.parent.id, limit: 1 }))
+  expect(filtered.items).toEqual([])
+  if (!filtered.after) return yield* Effect.die("Expected filtered continuation")
+  const middle = yield* Effect.promise(() => tailClient.connections.targets({ location, connectionID: f.parent.id, limit: 1, after: filtered.after }))
+  expect(middle.items).toEqual([])
+  if (!middle.after) return yield* Effect.die("Expected continuation to authorized tail")
+  const tail = yield* Effect.promise(() => tailClient.connections.targets({ location, connectionID: f.parent.id, limit: 1, after: middle.after }))
+  expect(tail).toEqual({ items: [{ target: children[2] }], coverage: "live" })
   const create = { location, "idempotency-key": "promise-create", connection: f.parent, input: { environment: "test", resource: {} } }
   const created = yield* Effect.promise(() => client.connections.createTarget(create))
   expect(created.reused).toBe(false)
