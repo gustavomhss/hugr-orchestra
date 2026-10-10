@@ -169,7 +169,11 @@ function validateExistingState(root: string, privateDirectories: Set<string>) {
     if (uid !== undefined && info.uid !== uid) throw new Error("candidate-profile: path not owned by effective uid")
     if (info.isSymbolicLink()) {
       const target = (() => {
-        try { return realpathSync(path) } catch { throw new Error("candidate-profile: unresolved owned link") }
+        try {
+          return realpathSync(path)
+        } catch {
+          throw new Error("candidate-profile: unresolved owned link")
+        }
       })()
       if (!contains(root, target)) throw new Error("candidate-profile: path escapes owned root")
       visit(target, privateDirectory)
@@ -178,7 +182,9 @@ function validateExistingState(root: string, privateDirectories: Set<string>) {
     if (privateDirectory && !info.isDirectory()) throw new Error("candidate-profile: path is not a directory")
     // Symlink mode bits have no portable access meaning; target nodes enforce the actual permissions.
     if (uid !== undefined && (info.mode & (privateDirectory ? 0o077 : 0o022)) !== 0) {
-      throw new Error(privateDirectory ? "candidate-profile: unsafe private permissions" : "candidate-profile: writable persistent state")
+      throw new Error(
+        privateDirectory ? "candidate-profile: unsafe private permissions" : "candidate-profile: writable persistent state",
+      )
     }
     if (!info.isDirectory() || visited.has(path)) return
     visited.add(path)

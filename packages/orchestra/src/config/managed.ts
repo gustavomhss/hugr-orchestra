@@ -39,7 +39,7 @@ export function managedConfigDir() {
 
 function candidateManagedConfigDir() {
   if (typeof ORCHESTRA_CANDIDATE_BUILD === "undefined" || ORCHESTRA_CANDIDATE_BUILD !== true) return
-  if (process.env.ORCHESTRA_LEAN_CANDIDATE !== "1") return
+  if (process.env.ORCHESTRA_LEAN_CANDIDATE !== "1") throw new Error("candidate-managed: candidate environment required")
   const root = process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT
   if (!root || !path.isAbsolute(root)) throw new Error("candidate-managed: absolute root required")
   const marker = path.join(root, ".orchestra-lean-candidate.json")
