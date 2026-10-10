@@ -55,9 +55,11 @@ const fixture = (auth: ReturnType<typeof credential>, options: {
   const observed = {
     attempts: [] as Array<{ url: string; redirect: RequestRedirect; signal: AbortSignal }>,
     requests: [] as Array<{ path: string; method: string; authorization: string | null; account: string | null; body: string }>,
+    headers: [] as Headers[],
   }
   const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
     async fetch(request) {
+      observed.headers.push(new Headers(request.headers))
       observed.requests.push({ path: new URL(request.url).pathname, method: request.method,
         authorization: request.headers.get("authorization"), account: request.headers.get("chatgpt-account-id"),
         body: await request.text() })
@@ -208,6 +210,71 @@ describe("plugin.legacy-codex-readonly actual hooks / loopback HTTP", () => {
     expect(f.observed.requests[0].account).toBeNull()
   }))
 
+  it.live("actual chat.headers and HTTP wrapper preserve session protocol while stripping private markers", () => Effect.gen(function* () {
+    const f = yield* fixture(credential())
+    const hook = f.hooks["chat.headers"]
+    if (!hook) throw new Error("Actual legacy read-only chat.headers missing")
+    const headers: Record<string, string> = {
+      authorization: "Bearer synthetic-source-secret", "chatgpt-account-id": "synthetic-source-account",
+      "session-id": "synthetic-stale-session", "x-session-id": "synthetic-protocol-session",
+      "x-session-affinity": "synthetic-affinity", "x-parent-session-id": "synthetic-parent",
+      "x-orchestra-title": "synthetic-private-title", "x-opencode-session": "synthetic-private-session",
+      "x-opencode-request": "synthetic-private-request", "x-opencode-project": "synthetic-private-project",
+      "x-opencode-client": "synthetic-private-client", "x-ordinary-context": "synthetic-ordinary",
+    }
+    yield* Effect.promise(() => hook({ sessionID: "synthetic-active-session", model: { providerID: "openai" } } as never, { headers }))
+    expect(headers["session-id"]).toBe("synthetic-active-session")
+    expect(headers.originator).toBe("opencode")
+    expect(headers["User-Agent"]).toStartWith("opencode/")
+    const wrapper = yield* Effect.promise(() => f.load())
+    yield* Effect.promise(async () => { expect(await (await wrapper(SOURCE, { method: "POST", body: BODY, headers })).text()).toBe(REPLY) })
+    expect(f.observed.attempts).toHaveLength(1)
+    expect(f.observed.requests).toHaveLength(1)
+    expect(f.observed.headers).toHaveLength(1)
+    const received = f.observed.headers[0]
+    expect(received.get("authorization")).toBe(`Bearer ${f.auth.access}`)
+    expect(received.get("chatgpt-account-id")).toBe(f.auth.accountId)
+    expect(received.get("session-id")).toBe("synthetic-active-session")
+    expect(received.get("x-session-id")).toBe("synthetic-protocol-session")
+    expect(received.get("x-session-affinity")).toBe("synthetic-affinity")
+    expect(received.get("x-parent-session-id")).toBe("synthetic-parent")
+    expect(received.get("x-ordinary-context")).toBe("synthetic-ordinary")
+    expect(received.get("originator")).toBe("opencode")
+    expect(received.get("user-agent")).toBe(headers["User-Agent"])
+    ;["x-orchestra-title", "x-opencode-session", "x-opencode-request", "x-opencode-project", "x-opencode-client"]
+      .forEach((name) => expect(received.get(name)).toBeNull())
+  }))
+
+  it.live("actual OpenAI chat.params omits maxOutputTokens without changing other options", () => Effect.gen(function* () {
+    const f = yield* fixture(credential())
+    const hook = f.hooks["chat.params"]
+    if (!hook) throw new Error("Actual legacy read-only chat.params missing")
+    const output = { temperature: 0.3, topP: 0.9, topK: 12, maxOutputTokens: 16_384 as number | undefined,
+      options: { reasoningEffort: "high", syntheticPreserve: true } }
+    yield* Effect.promise(() => hook({ model: { providerID: "openai" } } as never, output))
+    expect(output.maxOutputTokens).toBeUndefined()
+    expect(JSON.parse(JSON.stringify(output))).toEqual({ temperature: 0.3, topP: 0.9, topK: 12,
+      options: { reasoningEffort: "high", syntheticPreserve: true } })
+    expect(f.observed.attempts).toHaveLength(0)
+    expect(f.observed.requests).toHaveLength(0)
+  }))
+
+  it.live("non-OpenAI chat.params and chat.headers leave populated outputs unchanged", () => Effect.gen(function* () {
+    const f = yield* fixture(credential())
+    const paramsHook = f.hooks["chat.params"]
+    const headersHook = f.hooks["chat.headers"]
+    if (!paramsHook || !headersHook) throw new Error("Actual legacy read-only chat hooks missing")
+    const params = { temperature: 0.7, topP: 0.8, topK: 7, maxOutputTokens: 8_192,
+      options: { syntheticPreserve: "non-openai" } }
+    const headers = { headers: { "session-id": "synthetic-other-session", originator: "other-origin", "User-Agent": "other-client" } }
+    const before = structuredClone({ params, headers })
+    yield* Effect.promise(() => paramsHook({ model: { providerID: "anthropic" } } as never, params))
+    yield* Effect.promise(() => headersHook({ sessionID: "synthetic-must-not-replace", model: { providerID: "anthropic" } } as never, headers))
+    expect({ params, headers }).toEqual(before)
+    expect(f.observed.attempts).toHaveLength(0)
+    expect(f.observed.requests).toHaveLength(0)
+  }))
+
   const forbidden = ["http://api.openai.com/v1/responses", "https://api.openai.com.evil.invalid/v1/responses",
     "https://synthetic:secret@api.openai.com/v1/responses", "https://api.openai.com:444/v1/responses",
     "https://api.openai.com/v1/models", "https://api.openai.com/v1/responses?redirect=elsewhere",
@@ -275,6 +342,21 @@ describe("plugin.legacy-codex-readonly actual hooks / loopback HTTP", () => {
     expect(Object.keys(models)).toEqual(["gpt-6.1-sol"])
     expect(models["gpt-6.1-sol"]).toBeDefined()
     expect(models["gpt-6.1-sol-pro"]).toBeUndefined()
+    expect(f.observed.attempts).toHaveLength(0)
+    expect(f.observed.requests).toHaveLength(0)
+  }))
+
+  it.live("pro option excludes an alias with the same admitted API ID as the positive model", () => Effect.gen(function* () {
+    const f = yield* fixture(credential())
+    const catalog = provider()
+    catalog.models["synthetic-pro-option-alias"] = { ...catalog.models["gpt-6.1-sol"],
+      id: "synthetic-pro-option-alias", options: { reasoningMode: "pro" } }
+    expect(catalog.models["synthetic-pro-option-alias"].api.id).toBe(catalog.models["gpt-6.1-sol"].api.id)
+    expect(Object.keys(catalog.models)).toHaveLength(5)
+    const models = yield* Effect.promise(() => f.models(catalog))
+    expect(Object.keys(models)).toEqual(["gpt-6.1-sol"])
+    expect(models["gpt-6.1-sol"]).toBeDefined()
+    expect(models["synthetic-pro-option-alias"]).toBeUndefined()
     expect(f.observed.attempts).toHaveLength(0)
     expect(f.observed.requests).toHaveLength(0)
   }))
