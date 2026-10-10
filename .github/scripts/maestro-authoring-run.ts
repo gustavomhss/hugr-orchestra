@@ -470,6 +470,14 @@ stage("initializer", "after")
   stage(stageState.current, "failed", safeCode(error))
   console.error(safeCode(error)); process.exitCode = 1
 }
+// Disposal/restoration above has settled. Residual handles must not turn owned-process completion into a timeout.
+const flush = (stream: NodeJS.WriteStream) => Promise.race([
+  new Promise<boolean>((done) => { try { stream.write("", (error) => done(!error)) } catch { done(false) } }),
+  Bun.sleep(500).then(() => false),
+])
+const flushed = await Promise.all([flush(process.stdout), flush(process.stderr)])
+if (!flushed.every(Boolean)) { console.error("AUTHORING_STDIO_FLUSH_FAILED"); process.exitCode = 1 }
+process.exit(process.exitCode ?? 0)
 `
 }
 async function verifyDatabase(path: string, parentID: string, project: string, model: string, assignment: string, worktree: string) {
