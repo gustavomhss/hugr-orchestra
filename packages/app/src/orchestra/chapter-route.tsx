@@ -9,12 +9,14 @@ import { ServerConnection } from "@/context/server"
 import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider } from "@/context/server-sync"
 import { isWip } from "@/orchestra/navigation"
+import { pathKey } from "@/utils/path-key"
 
 export type ChapterPageProps = { server: ServerConnection.Any; directory: string }
 
 // Implemented chapters register their page here (lazy). Navigation opens a page only for
 // registered chapters; every other chapter keeps its pending-rework dialog.
 export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> = {
+  lean: lazy(() => import("./chapters/lean")),
   mcp: lazy(() => import("./chapters/mcp")),
   skills: lazy(() => import("./chapters/skills")),
   cicd: lazy(() => import("./chapters/cicd")),
@@ -42,7 +44,7 @@ export function OrchestraChapterRoute() {
       const selection = layout.home.selection()
       const server = global.servers.list().find((item) => ServerConnection.key(item) === selection.server)
       if (!server || !selection.directory) return
-      return { key: `${selection.server}\0${selection.directory}`, server, directory: selection.directory }
+      return { key: `${selection.server}\0${pathKey(selection.directory)}`, server, directory: selection.directory }
     },
     undefined,
     { equals: (a, b) => a?.key === b?.key },
