@@ -428,7 +428,7 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
           "type": "object",
         },
       ],
-      "description": "Backend specialist resume only: the task or PR unit whose latest admitted Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for other agents.",
+      "description": "Native Atlas specialist resume only: the task or PR unit whose latest admitted own Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for unsupported agents.",
     },
     "model": {
       "description": "The model to run the teammate on, as 'providerID/modelID'. Without it, the teammate runs on its configured model, or else on yours.",
