@@ -11,7 +11,8 @@ export type Transaction = Parameters<Parameters<Database.Interface["db"]["transa
 export type Interface = Readonly<{
   /** SQL-only mutation; result must be redacted JSON. Authority and idempotency are fenced in the same writer. */
   commit: <E, R>(target: CapabilityOperatorContract.Target, payload: Schema.Json,
-    write: (tx: Transaction) => Effect.Effect<Schema.Json, E, R>) =>
+    write: (tx: Transaction) => Effect.Effect<Schema.Json, E, R>,
+    verify?: (tx: Transaction) => Effect.Effect<void, E, R>) =>
     Effect.Effect<Readonly<{ requestID: string; reused: boolean; data: Schema.Json }>,
       E | Capability.Failure | SqlError | EffectDrizzleQueryError, R>
 }>

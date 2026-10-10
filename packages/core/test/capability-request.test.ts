@@ -87,6 +87,23 @@ function empty(f: Effect.Success<ReturnType<typeof fixture>>) {
 }
 
 describe("CapabilityRequest atomic local SQL ledger", () => {
+  it.live("stored-owner verification fences fresh writes and exact receipt retries", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const verify = (tx: CapabilityRequestContract.Transaction) => Effect.gen(function* () {
+      const row = yield* tx.select().from(DomainTable).where(eq(DomainTable.id, f.id)).get()
+      if (!row || row.owner !== "operator" || !row.allowed) return yield* Effect.fail("OWNER_CHANGED")
+    })
+    const first = yield* f.run(f.store.commit(target, {}, f.write, verify))
+    expect(first.reused).toBe(false)
+    expect((yield* f.run(f.store.commit(target, {}, () => Effect.die("REPLAY_WRITE_RAN"), verify))).reused).toBe(true)
+    yield* f.database.db.update(DomainTable).set({ owner: "foreign" }).where(eq(DomainTable.id, f.id)).run()
+    expect(yield* f.run(f.store.commit(target, {}, f.write, verify)).pipe(Effect.flip)).toBe("OWNER_CHANGED")
+    expect(yield* f.run(f.store.commit(target, {}, () => Effect.die("UNVERIFIED_WRITE_RAN"), verify), "fresh")
+      .pipe(Effect.flip)).toBe("OWNER_CHANGED")
+    expect(yield* f.writes).toBe(1)
+    expect(yield* f.database.db.select().from(CapabilityRequestTable)).toHaveLength(1)
+  }))
+
   it.live("concurrent exact retries canonicalize full payload and return original immutable receipt", () => Effect.gen(function* () {
     const f = yield* fixture()
     const second = yield* CapabilityRequest.make({ operators: f.operators })

@@ -21,6 +21,7 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
     const commit: CapabilityRequestContract.Interface["commit"] = <E, R>(
       target: CapabilityOperatorContract.Target, payload: Schema.Json,
       write: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<Schema.Json, E, R>,
+      verify?: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<void, E, R>,
     ) => {
       // Capture at call time, before authority lookup or any caller-controlled scheduling boundary.
       const input = capture(target, payload)
@@ -40,6 +41,8 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
           const current = yield* operators.require(input.success.target)
           if (current !== binding) return yield* mismatch()
           yield* operators.validate(binding, input.success.target)
+          // Stored ownership/actor checks also run for exact retries, before returning old receipts.
+          if (verify) yield* verify(tx)
           // Read JSON as raw text: Drizzle's JSON decoder would parse malformed rows before our bounded boundary.
           const previous = yield* tx.select({
             id: CapabilityRequestTable.id, principal: CapabilityRequestTable.principal,
