@@ -6,6 +6,8 @@ import type { CapabilityOperatorContract } from "@orchestra/core/capability/oper
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { Flag } from "@orchestra/core/flag/flag"
+import { PtyID } from "@orchestra/core/pty/schema"
+import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -43,6 +45,9 @@ export function make(options: { password?: string; injected?: boolean } = {}) {
       principal: "host-fixture",
       scope: { placements: "instance", actions: ["*"] },
     }).pipe(Scope.provide(authorityScope))
+    const tickets = yield* PtyTicket.make()
+    const ptyID = PtyID.ascending()
+    const token = yield* tickets.issue({ ptyID, directory: directory.path })
     const targets: CapabilityOperatorContract.Target[] = []
     const facade: CapabilityOperatorContract.Interface = {
       ...operator,
@@ -96,6 +101,8 @@ export function make(options: { password?: string; injected?: boolean } = {}) {
       directory: AbsolutePath.make(directory.path),
       foreign: foreign.path,
       closeAuthority: Scope.close(authorityScope, Exit.void),
+      ticket: token.ticket,
+      consumeTicket: tickets.consume({ ptyID, directory: directory.path, ticket: token.ticket }),
     }
   })
 }
