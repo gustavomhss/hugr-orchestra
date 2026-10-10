@@ -45,6 +45,7 @@ if (CapabilitySetupHttpFixture.worker) {
     expect((yield* f.request(`/api/capability/connections/${connection.id}`, { auth, query })).status).toBe(200)
     expect(f.seen).toHaveLength(1)
     expect((yield* f.database.db.select().from(CredentialTable).all())[0]).toMatchObject({ value: { type: "key", key: payload.key } })
+    // packages/orchestra does not depend on @orchestra/client, so the package specifier does not resolve here.
     const { Orchestra } = yield* Effect.promise(() => import("../../../client/src/index"))
     const fetch = Object.assign((input: RequestInfo | URL, init?: RequestInit) => f.handler(new Request(input, init)),
       { preconnect: () => undefined })

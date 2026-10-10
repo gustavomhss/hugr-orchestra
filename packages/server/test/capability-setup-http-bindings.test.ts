@@ -18,6 +18,7 @@ if (CapabilitySetupHttpFixture.worker) {
   const { Project } = await import("@orchestra/schema/project")
   const { AbsolutePath } = await import("@orchestra/schema/schema")
   const { SessionTable } = await import("@orchestra/core/session/sql")
+  const { ProjectTable } = await import("@orchestra/core/project/sql")
   const { CapabilityBindingTable, CapabilityTargetTable, CapabilityConnectionTable } = await import("@orchestra/core/capability/sql")
   const { SqlError, ConnectionError } = await import("effect/unstable/sql/SqlError")
   const { EffectDrizzleQueryError } = await import("drizzle-orm/effect-core/errors")
@@ -57,14 +58,21 @@ if (CapabilitySetupHttpFixture.worker) {
       { suffix: "02", agent: "actor", binding: "old-actor" },
       { suffix: "03", agent: "", binding: "" },
       { suffix: "04", agent: "actor", binding: "actor", foreign: true },
+      // Sort before the first valid row, so a dropped project or workspace predicate changes page one.
+      { suffix: "05", agent: "actor", binding: "actor", workspace: WorkspaceID.make("wrk_binding-other") },
+      { suffix: "06", agent: "actor", binding: "actor", project: Project.ID.make("prj_binding-other") },
       { suffix: "10", agent: "actor", binding: "actor" },
       { suffix: "20", agent: "actor", binding: "actor" },
       { suffix: "30", agent: "actor", binding: "actor" },
     ]
+    yield* f.database.db.insert(ProjectTable).values({ id: Project.ID.make("prj_binding-other"),
+      worktree: AbsolutePath.make(f.directory), sandboxes: [] }).onConflictDoUpdate({ target: ProjectTable.id,
+      set: { worktree: AbsolutePath.make(f.directory) } }).run()
     yield* Effect.forEach(rows, (row) => Effect.gen(function* () {
       const sessionID = SessionID.make(`ses_binding_${row.suffix}`)
-      yield* f.database.db.insert(SessionTable).values({ id: sessionID, project_id: placement.projectID,
-        directory: AbsolutePath.make(row.foreign ? f.directory + "/foreign" : f.directory), workspace_id: placement.location.workspaceID,
+      yield* f.database.db.insert(SessionTable).values({ id: sessionID, project_id: row.project ?? placement.projectID,
+        directory: AbsolutePath.make(row.foreign ? f.directory + "/foreign" : f.directory),
+        workspace_id: row.workspace ?? placement.location.workspaceID,
         agent: row.agent, slug: "binding", title: "binding", version: "test" }).run()
       yield* f.database.db.insert(CapabilityBindingTable).values({ target_id: target.id, session_id: sessionID,
         agent_id: Agent.ID.make(row.binding), actions: ["read"] }).run()
@@ -80,8 +88,13 @@ if (CapabilitySetupHttpFixture.worker) {
     yield* f.database.db.update(SessionTable).set({ agent: "changed" }).where(eq(SessionTable.id, SessionID.make("ses_binding_20"))).run()
     expect(Schema.decodeUnknownSync(CapabilityManagement.BindingPage)(yield* json(yield* f.request(`${read}/bindings`,
       { auth, query: { limit: "2", after: first.after ?? "" } }))).items).toEqual([{ sessionID: SessionID.make("ses_binding_30"), actions: ["read"] }])
+    const missing = yield* f.request(`/api/capability/targets/${Capability.TargetID.create()}/bindings`, { auth, query })
+    expect(missing.status).toBe(403)
+    const unavailable = yield* Effect.promise(() => missing.json())
     const denied = yield* f.issue({ placements: [placement], actions: ["target.get"], resources: [{ kind: "target", id: target.id }] })
-    expect((yield* f.request(`${read}/bindings`, { auth: denied, query })).status).toBe(403)
+    const deniedBindings = yield* f.request(`${read}/bindings`, { auth: denied, query })
+    expect(deniedBindings.status).toBe(403)
+    expect(yield* Effect.promise(() => deniedBindings.json())).toEqual(unavailable)
     expect(yield* json(yield* f.request(read, { auth: denied, query }))).toEqual({ target })
     const wrongPlacement = yield* f.issue({ placements: [{ ...placement, location: {
       ...placement.location, directory: AbsolutePath.make(f.directory + "/foreign") } }], actions: ["*"] })
@@ -89,10 +102,8 @@ if (CapabilitySetupHttpFixture.worker) {
     expect((yield* f.request(`${read}/bindings`, { auth, query: { limit: "33" } })).status).toBe(400)
     yield* f.database.db.update(CapabilityConnectionTable).set({ state: "revoked" }).where(eq(CapabilityConnectionTable.id, connection.id)).run()
     const revoked = yield* f.request(`${read}/bindings`, { auth, query })
-    const missing = yield* f.request(`/api/capability/targets/${Capability.TargetID.create()}/bindings`, { auth, query })
     expect(revoked.status).toBe(403)
-    expect(missing.status).toBe(403)
-    expect(yield* Effect.promise(() => revoked.json())).toEqual(yield* Effect.promise(() => missing.json()))
+    expect(yield* Effect.promise(() => revoked.json())).toEqual(unavailable)
     console.log(`SETUP_PROOF ${markers[0]}`)
   }), 30_000)
 

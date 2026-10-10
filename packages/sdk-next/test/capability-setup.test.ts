@@ -9,6 +9,7 @@ if (!CapabilitySetupHttpFixture.worker) {
 if (CapabilitySetupHttpFixture.worker) {
   const { Effect, Layer, Schema } = await import("effect")
   const { FetchHttpClient } = await import("effect/unstable/http")
+  // sdk-next does not depend on @orchestra/schema, so the package specifier does not resolve here.
   const { CapabilitySetup } = await import("../../schema/src/capability-setup")
   const { Capability } = await import("../../schema/src/capability")
   const { AbsolutePath } = await import("../../schema/src/schema")

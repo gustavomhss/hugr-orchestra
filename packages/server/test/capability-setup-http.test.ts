@@ -105,10 +105,11 @@ if (CapabilitySetupHttpFixture.worker) {
     console.log(`SETUP_PROOF ${markers[1]}`)
   }), 30_000)
 
-  it.live("real identity rejects malformed Slack redirects HTTP failures and non-bot Discord; valid Discord uses Bot", () => Effect.gen(function* () {
+  it.live("real identity rejects expired malformed non-2xx and non-bot Discord without storing; valid Discord uses Bot", () => Effect.gen(function* () {
     const fixture = yield* Effect.promise(() => CapabilitySetupHttpFixture.make())
     const f = yield* fixture
     const auth = yield* f.issue()
+    // 302 only proves generic non-2xx rejection here; packages/core/test/capability-channel.test.ts asserts "channel_redirect".
     yield* Effect.forEach(["expired", "malformed", "redirect", "http", "not-bot"], (mode) => Effect.gen(function* () {
       f.state.mode = mode
       const response = yield* f.request(`${base}/connect`, { auth, key: mode, query,
@@ -135,6 +136,7 @@ if (CapabilitySetupHttpFixture.worker) {
     const auth = yield* f.issue()
     const payload = { provider: "slack", key: CapabilitySetupHttpFixture.keys[0] }
     expect((yield* f.request(`${base}/connect`, { key: "unauth", payload, directory: "\u0000" })).status).toBe(401)
+    // 500 is current behavior, not contract; tracked follow-up: poisoned Location should be 400.
     expect((yield* f.request(base, { auth, directory: "\u0000" })).status).toBe(500)
     expect(f.seen).toEqual([])
     const denied = yield* f.issue({ placements: "instance", actions: ["connection.connect"],
@@ -147,6 +149,7 @@ if (CapabilitySetupHttpFixture.worker) {
       { ...payload, label: payload.key.repeat(10) }], (invalid) => f.request(`${base}/connect`, {
         auth, key: "invalid-schema", payload: invalid, query,
       }).pipe(Effect.tap((response) => Effect.sync(() => expect(response.status).toBe(400)))))
+    // 500 is current behavior, not contract; tracked follow-up: malformed JSON should be 400.
     yield* Effect.forEach([`{"key":"${payload.key}",`, `{"key":${payload.key}}`, JSON.stringify(payload) + "!"],
       (raw) => f.request(`${base}/connect`, { auth, key: "invalid-json", query, raw }).pipe(
         Effect.tap((response) => Effect.sync(() => expect(response.status).toBe(500)))))

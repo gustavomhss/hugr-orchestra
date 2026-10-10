@@ -82,8 +82,10 @@ export async function make(options: { password?: string; routes?: Routes } = {})
     )
     yield* Effect.promise(() => mkdir(join(directory, "foreign")))
     // Core resolves non-git placement to global; persistence is still legacy Project-owned.
+    // Upsert so a prior make() in this worker cannot leave worktree pointing at its deleted temp dir.
     yield* database.db.insert(ProjectTable).values({ id: Project.ID.global,
-      worktree: AbsolutePath.make(directory), sandboxes: [] }).onConflictDoNothing().run()
+      worktree: AbsolutePath.make(directory), sandboxes: [] }).onConflictDoUpdate({ target: ProjectTable.id,
+      set: { worktree: AbsolutePath.make(directory) } }).run()
     const authorityScope = yield* Scope.make()
     yield* Effect.addFinalizer(() => Scope.close(authorityScope, Exit.void))
     const operators = yield* CapabilityOperator.make({ principal: "setup-http-proof",
@@ -120,7 +122,11 @@ export async function make(options: { password?: string; routes?: Routes } = {})
     const handler = async (request: Request) => {
       const response = await web.handler(request, Context.makeUnsafe<unknown>(new Map()))
       const text = await response.clone().text()
-      keys.forEach((key) => expect(text).not.toContain(key))
+      const headers = JSON.stringify([...response.headers])
+      keys.forEach((key) => {
+        expect(text).not.toContain(key)
+        expect(headers).not.toContain(key)
+      })
       return response
     }
     const request = (route: string, input: { auth?: string; key?: string; payload?: unknown;
