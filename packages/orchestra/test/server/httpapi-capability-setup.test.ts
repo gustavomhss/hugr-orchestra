@@ -34,6 +34,10 @@ if (CapabilitySetupHttpFixture.worker) {
       { auth, key: "basic", payload, directory: "\u0000" }).pipe(Effect.tap((res) => Effect.sync(() => expect(res.status).toBe(401)))))
     expect(f.seen).toEqual([])
     const auth = CapabilitySetupHostFixture.basic()
+    const malformed = yield* f.request(connect, { auth, key: "host-invalid-json", query,
+      raw: `{"key":${payload.key}}` })
+    expect(malformed.status).toBe(500)
+    expect(f.seen).toEqual([])
     const response = yield* f.request(connect, { auth, key: "basic", payload, query })
     expect(response.status).toBe(200)
     const receipt = Schema.decodeUnknownSync(CapabilityManagement.Receipt)(yield* Effect.promise(() => response.json()))
@@ -90,9 +94,28 @@ if (CapabilitySetupHttpFixture.worker) {
   it.live("full Orchestra host must support implicit-local setup without explicit workspace identity", () => Effect.gen(function* () {
     const fixture = yield* Effect.promise(() => CapabilitySetupHostFixture.make())
     const f = yield* fixture
-    const response = yield* f.request(connect, { auth: yield* f.issue(), key: "host-implicit-local", payload })
+    const auth = yield* f.issue()
+    const response = yield* f.request(connect, { auth, key: "host-implicit-local", payload })
     expect(response.status).toBe(200)
     expect(f.seen).toHaveLength(1)
+    const receipt = Schema.decodeUnknownSync(CapabilityManagement.Receipt)(yield* Effect.promise(() => response.json()))
+    const connection = Schema.decodeUnknownSync(CapabilitySetup.Result)(receipt.data).connection
+    f.state.mode = "expired"
+    const retry = yield* f.request(connect, { auth, key: "host-implicit-local", payload })
+    expect(retry.status).toBe(200)
+    expect(yield* Effect.promise(() => retry.json())).toEqual({ ...receipt, reused: true })
+    expect(f.seen).toHaveLength(1)
+    const created = yield* f.request("/api/capability/targets", { auth, key: "host-local-target",
+      payload: { connection, input: { environment: "test", resource: null } } })
+    expect(created.status).toBe(200)
+    const target = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(
+      Schema.decodeUnknownSync(CapabilityManagement.Receipt)(yield* Effect.promise(() => created.json())).data).target
+    const metadata = yield* f.request(`/api/capability/targets/${target.id}`, { auth })
+    expect(metadata.status).toBe(200)
+    expect(yield* Effect.promise(() => metadata.json())).toEqual({ target })
+    const bindings = yield* f.request(`/api/capability/targets/${target.id}/bindings`, { auth })
+    expect(bindings.status).toBe(200)
+    expect(yield* Effect.promise(() => bindings.json())).toEqual({ items: [], coverage: "current-actor" })
     console.log(`SETUP_PROOF ${markers[2]}`)
   }), 30_000)
 }

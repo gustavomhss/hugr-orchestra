@@ -14,7 +14,7 @@ if (CapabilitySetupHttpFixture.worker) {
   const { createHash } = await import("node:crypto")
   const { it } = await import("../../core/test/lib/effect")
   const base = "/api/capability/connections"
-  // Explicit placement is a positive control. Implicit-local regression has its own red proof file.
+  // Explicit placement is a positive control. Implicit-local regression has its own proof file.
   const query = { "location[workspace]": "wrk_setup-proof" }
   const json = (response: Response) => Effect.gen(function* () {
     expect(response.status).toBe(200)
@@ -147,8 +147,9 @@ if (CapabilitySetupHttpFixture.worker) {
       { ...payload, label: payload.key.repeat(10) }], (invalid) => f.request(`${base}/connect`, {
         auth, key: "invalid-schema", payload: invalid, query,
       }).pipe(Effect.tap((response) => Effect.sync(() => expect(response.status).toBe(400)))))
-    expect((yield* f.request(`${base}/connect`, { auth, key: "invalid-json", query,
-      raw: `{"key":"${payload.key}",` })).status).toBe(500)
+    yield* Effect.forEach([`{"key":"${payload.key}",`, `{"key":${payload.key}}`, JSON.stringify(payload) + "!"],
+      (raw) => f.request(`${base}/connect`, { auth, key: "invalid-json", query, raw }).pipe(
+        Effect.tap((response) => Effect.sync(() => expect(response.status).toBe(500)))))
     expect((yield* f.request(`${base}/connect`, { auth, payload, query })).status).toBe(400)
     expect(f.seen).toEqual([])
     expect(yield* f.database.db.select().from(CredentialTable).all()).toEqual([])

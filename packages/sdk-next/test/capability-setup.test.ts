@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { CapabilitySetupHttpFixture } from "../../server/test/capability-setup-http-fixture"
 
-const markers = ["sdk-effect", "sdk-promise"]
+const markers = ["sdk-effect", "sdk-promise", "sdk-effect-local", "sdk-promise-local"]
 if (!CapabilitySetupHttpFixture.worker) {
   test("isolated generated setup clients reach real Server routes", () =>
     CapabilitySetupHttpFixture.isolated(import.meta.path, markers), 100_000)
@@ -113,5 +113,49 @@ if (CapabilitySetupHttpFixture.worker) {
         _tag: "UnauthorizedError", message: "Authentication required",
       })))))
     console.log(`SETUP_PROOF ${markers[1]}`)
+  }), 30_000)
+
+  it.live("generated Effect implicit-local setup replay and all new methods reach native handlers", () => Effect.gen(function* () {
+    const { Orchestra } = yield* Effect.promise(() => import("@orchestra/client/effect"))
+    const fixture = yield* Effect.promise(() => CapabilitySetupHttpFixture.make())
+    const f = yield* fixture
+    const transport = yield* makeOperatorTransport(f.handler, f.operators)
+    const client = yield* Orchestra.make({ baseUrl: "http://orchestra.local", headers: transport.headers }).pipe(
+      Effect.provide(Layer.fresh(FetchHttpClient.layer)), Effect.provideService(FetchHttpClient.Fetch, transport.fetch))
+    const location = { directory: AbsolutePath.make(f.directory) }
+    const input = { location, "idempotency-key": "effect-local", provider: "slack" as const,
+      key: CapabilitySetupHttpFixture.keys[0], label: "Implicit Effect account" }
+    const receipt = yield* client.connections.connect(input)
+    const connection = Schema.decodeUnknownSync(CapabilitySetup.Result)(receipt.data).connection
+    f.state.mode = "http"
+    expect(yield* client.connections.connect(input)).toEqual({ ...receipt, reused: true })
+    expect(f.seen).toHaveLength(1)
+    const target = targetFrom((yield* client.connections.createTarget({ location, "idempotency-key": "effect-local-target",
+      connection, input: { environment: "test", resource: null } })).data)
+    expect(yield* client.connections.getTarget({ location, targetID: target.id })).toEqual({ target })
+    expect(yield* client.connections.bindings({ location, targetID: target.id })).toEqual({ items: [], coverage: "current-actor" })
+    console.log(`SETUP_PROOF ${markers[2]}`)
+  }), 30_000)
+
+  it.live("generated Promise implicit-local setup replay and all new methods reach native handlers", () => Effect.gen(function* () {
+    const { Orchestra } = yield* Effect.promise(() => import("@orchestra/client"))
+    const fixture = yield* Effect.promise(() => CapabilitySetupHttpFixture.make())
+    const f = yield* fixture
+    const transport = yield* makeOperatorTransport(f.handler, f.operators)
+    const client = Orchestra.make({ baseUrl: "http://orchestra.local", fetch: transport.fetch, headers: transport.headers })
+    const location = { directory: AbsolutePath.make(f.directory) }
+    const input = { location, "idempotency-key": "promise-local", provider: "discord" as const,
+      key: CapabilitySetupHttpFixture.keys[2], label: "Implicit Promise account" }
+    const receipt = yield* Effect.promise(() => client.connections.connect(input))
+    const connection = Schema.decodeUnknownSync(CapabilitySetup.Result)(receipt.data).connection
+    f.state.mode = "http"
+    expect(yield* Effect.promise(() => client.connections.connect(input))).toEqual({ ...receipt, reused: true })
+    expect(f.seen).toHaveLength(1)
+    const target = targetFrom((yield* Effect.promise(() => client.connections.createTarget({ location,
+      "idempotency-key": "promise-local-target", connection, input: { environment: "test", resource: null } }))).data)
+    expect(yield* Effect.promise(() => client.connections.getTarget({ location, targetID: target.id }))).toEqual({ target })
+    expect(yield* Effect.promise(() => client.connections.bindings({ location, targetID: target.id })))
+      .toEqual({ items: [], coverage: "current-actor" })
+    console.log(`SETUP_PROOF ${markers[3]}`)
   }), 30_000)
 }
