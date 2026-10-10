@@ -75,7 +75,7 @@ export function capture(suppliedTarget: CapabilityOperatorContract.Target, paylo
     const root = fields(suppliedTarget, ["action", "placement", "resource"])
     const placement = fields(root.placement, ["projectID", "location"])
     const location = fields(placement.location, ["directory", "workspaceID"])
-    const decoded = Schema.decodeUnknownOption(targetSchema)({
+    const decoded = Schema.decodeUnknownOption(Schema.toType(targetSchema))({
       action: root.action, placement: { projectID: placement.projectID, location },
       ...(root.resource === undefined ? {} : { resource: fields(root.resource, ["kind", "id"]) }),
     })
