@@ -81,6 +81,10 @@ const LegacyComponentDescriptions: Record<string, string> = {
   LayoutConfig: "@deprecated Always uses stretch layout.",
 }
 
+// These new, required response fields use Schema.NullOr for unavailable measurements.
+// Preserve their declared unions rather than applying legacy optional-field compatibility.
+const RequiredNullableComponents = new Set(["LeanProfileSavings", "LeanProfileExecution"])
+
 function matchLegacyOpenApi(input: Record<string, unknown>) {
   const spec = input as OpenApiSpec
 
@@ -93,9 +97,12 @@ function matchLegacyOpenApi(input: Record<string, unknown>) {
 
   // Effect's Schema.optional emits `anyOf: [T, {type:"null"}]` in OpenAPI,
   // but the legacy SDK expected plain `T` for optional fields. Strip null
-  // from all component schemas so both request and response types match.
+  // from legacy component schemas so both request and response types match.
+  // Native Lean measurement contracts explicitly retain required null values.
   for (const [name, schema] of Object.entries(spec.components?.schemas ?? {})) {
-    spec.components!.schemas![name] = stripOptionalNull(structuredClone(schema))
+    spec.components!.schemas![name] = RequiredNullableComponents.has(name)
+      ? structuredClone(schema)
+      : stripOptionalNull(structuredClone(schema))
   }
   normalizeComponentNames(spec)
   collapseDuplicateComponents(spec)
