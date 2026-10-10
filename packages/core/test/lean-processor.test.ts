@@ -45,14 +45,17 @@ test("actual built-in inventory agrees in both directions with the dashboard cat
     ["cargo test", "cargo"], ["cargo build", "cargo"], ["cargo check", "cargo"], ["cargo clippy", "cargo"],
     ["go test -v .", "go"], ["go test -json .", "go"], ["go mod download", "go"], ["pytest", "pytest"],
     ["jest", "jest"], ["vitest run", "vitest"], ["git status", "git"], ["rg -n needle .", "rg"],
-    ["tsc --build tsconfig.json --verbose --pretty false", "tsc"], ["node --test", "node"], ["pnpm install", "pnpm"], ["eslint clean.js", "eslint"],
+    ["tsc --build tsconfig.json --verbose --pretty false", "tsc"], ["node --test", "node"],
+    ["pnpm install --ignore-scripts --ignore-pnpmfile", "pnpm"], ["eslint clean.js", "eslint"],
     ["biome check clean.js", "biome"], ["ruff check --output-format=json --exit-zero clean.py", "ruff"],
     ["pyright --outputjson clean.py", "pyright"], ["pylint --output-format=json --exit-zero clean.py", "pylint"],
   ] as const
   for (const [command, id] of commands) {
     const argv = tokenizeCommand(command)
     expect(argv).toBeDefined()
-    expect(profiles.filter((profile) => profile.match(argv!))).toHaveLength(1)
+    const matched = profiles.filter((profile) => profile.match(argv!))
+    if (matched.length !== 1) throw new Error(`Expected one actual built-in for ${command}: ${matched.map((profile) => profile.id).join(", ")}`)
+    expect(matched).toHaveLength(1)
     expect(LeanProcessor.identify(command)).toBe(id)
   }
 })
