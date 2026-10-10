@@ -38,11 +38,10 @@ export function track(input: {
       ? yield* sessions.value.get(input.sessionID).pipe(Effect.catch(() => Effect.succeed(undefined)))
       : undefined
     const placement = yield* InstanceState.context
-    // Proposal-only upstream results have no execution claims; preserve their exact private receipt payload.
-    const located = session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
+    // Upstream proposals never carry implementation evidence, including host-ended snapshots.
+    const located = result.schema !== UpstreamResult.SCHEMA && session && session.id === input.sessionID && path.isAbsolute(session.directory) &&
       path.resolve(session.directory) === path.resolve(placement.directory) && session.projectID === placement.project.id &&
-      session.workspaceID === (yield* InstanceState.workspaceID) &&
-      (result.schema !== UpstreamResult.SCHEMA || result.changes.length > 0 || result.checks.length > 0)
+      session.workspaceID === (yield* InstanceState.workspaceID)
       ? { ...result, workerEvidence: BackendEvidence.bind(result, history, { executionSessionID: session.id, directory: session.directory }) }
       : result
     const task = input.taskId ? { ...located, taskId: input.taskId } : located
