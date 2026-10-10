@@ -149,4 +149,7 @@ it.instance("governed replay re-verifies host arm; spent arm refuses cached work
   expect(f.streamed.at(-1)).toMatchObject({ terminal: { reason: "ended" }, acceptance: { state: "pending" },
     verification: { state: "host-incomplete", hostReason: { reason: "completion-evaluation-acquisition" } } })
   expect(original.promptCount()).toBe(1)
+  yield* f.sessions.updateMessage({ ...info, error: new SessionV1.APIError({ message: "replayed provider failure", isRetryable: false }).toObject() })
+  expect(Exit.isFailure(yield* def.execute(original.input, context).pipe(Effect.exit))).toBe(true)
+  expect(f.streamed.at(-1)).toMatchObject({ checks: card.checks, terminal: { reason: "failed" }, verification: { state: "host-incomplete" } })
 }), { git: true, config: { agent: { maestro: { name: "Conductor" } } } }, 60_000)

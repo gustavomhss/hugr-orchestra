@@ -485,7 +485,8 @@ export const TaskTool = Tool.define(
           const failure = completionReceipt
             ? "Tool safety HOLD: completion-worker-not-finished"
             : "Governed Task denied: reserved-child-incomplete"
-          yield* work.hostEnded("interrupted", failure)
+          yield* work.hostEnded(completed?.info.role === "assistant" && (completed.info.error ||
+            completed.parts.some((part) => part.type === "tool" && part.state.status === "error")) ? "failed" : "interrupted", failure)
           return yield* Effect.fail(new Error(failure))
         }
         if (!completed) yield* work.hostEnded("interrupted", "No completed child message to replay")
@@ -501,7 +502,6 @@ export const TaskTool = Tool.define(
       const ops = ctx.extra?.promptOps as TaskPromptOps
       if (!ops) return yield* Effect.fail(new Error("TaskTool requires promptOps in ctx.extra"))
       const resume = yield* AtlasResume.admit({ agent: next, sessionID: nextSession.id, unit: params.memoryUnit, ctx })
-
       const runTask = Effect.fn("TaskTool.runTask")(function* () {
         // Session-start hooks run after reservation and can change the repository.
         if (params.authorizationID) {
