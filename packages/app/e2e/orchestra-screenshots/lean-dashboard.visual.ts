@@ -106,7 +106,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await expect(cargo.getByRole("switch")).toBeEnabled()
   await expect(lean.locator('[data-lean-total="tokens"]')).toHaveText(fmt(data[0].savings.tokensSaved!))
   await expect(lean.locator('[data-lean-total="bytes"]')).toHaveAttribute("title", earned!)
-  await capture(page, "dashboard-dark", manifest, requests)
+  await capture(page, "dashboard-dark", manifest, requests, data[0])
   await search.fill("cargo")
   await expect(rows).toHaveCount(1)
   const history = page.waitForResponse((response) => new URL(response.url()).pathname === "/project/lean/history/cargo")
@@ -120,20 +120,33 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await expect(lean.locator(".lean-execution-meta .mx-badge")).toHaveText(["Concluída", "Falhou"])
   await expect(lean.locator('.lean-detail [data-lean-value="bytes"]')).toHaveText([fmt(12288), fmt(0)])
   await expect(lean.locator('.lean-detail [data-lean-value="tokens"]')).toHaveText([fmt(3072), fmt(0)])
-  await capture(page, "detail-dark", manifest, requests)
+  await expect(lean.locator(".lean-detail-row > td")).toHaveCSS("text-align", "start")
+  const alignment = await lean.locator(".lean-detail code").evaluateAll((commands) => commands.map((command) => {
+    const text = document.createRange()
+    text.selectNodeContents(command)
+    return { textAlign: getComputedStyle(command).textAlign, textLeft: text.getBoundingClientRect().left,
+      commandLeft: command.getBoundingClientRect().left,
+      metadataLeft: command.parentElement!.querySelector(".lean-execution-meta")!.getBoundingClientRect().left }
+  }))
+  for (const command of alignment) {
+    expect(command.textAlign).toBe("start")
+    expect(command.textLeft).toBeCloseTo(command.commandLeft, 1)
+    expect(command.textLeft).toBeCloseTo(command.metadataLeft, 1)
+  }
+  await capture(page, "detail-dark", manifest, requests, data[0])
   await lean.getByRole("button", { name: "Fechar histórico", exact: true }).click()
   await lean.getByRole("combobox", { name: "Filtrar por categoria", exact: true }).selectOption("test")
   await search.fill("est")
   await expect(rows).toHaveCount(3)
   await expect(rows.locator("bdi")).toHaveText(["pytest", "Jest", "Vitest"])
   await expect(lean.locator(".mx-note")).toHaveText("Bytes em UTF-8. Tokens são estimativas locais com sinal (caracteres ÷ 4), não uso faturado. Medições ausentes são indisponíveis.")
-  await capture(page, "frameworks-dark", manifest, requests)
+  await capture(page, "frameworks-dark", manifest, requests, data[0])
   await search.fill("")
   await lean.getByRole("combobox").selectOption("all")
   await expect(rows).toHaveCount(32)
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "light")
-  await capture(page, "dashboard-light", manifest, requests)
+  await capture(page, "dashboard-light", manifest, requests, data[0])
   await page.locator('[data-slot="orchestra-theme-toggle"]').click()
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", "dark")
   await sidebar.locator('[data-slot="orchestra-profile"]').click()
@@ -148,18 +161,22 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await expect(cargo.getByRole("switch")).toHaveAttribute("aria-checked", "false")
   await expect(lean.locator('[data-lean-item="pytest"]').getByRole("switch")).toHaveAttribute("aria-checked", "true")
   await expect(lean.locator('[data-lean-item="go"]').getByRole("switch")).toHaveAttribute("aria-checked", "false")
-  await capture(page, "profileB-dark", manifest, requests)
+  await capture(page, "profileB-dark", manifest, requests, data[1])
   await page.setViewportSize({ width: 1366, height: 768 })
   await expect(sidebar).toHaveCSS("width", "230px")
   await expect(lean.locator(".lean-table-wrap")).toBeInViewport()
   expect(await lean.locator(".lean-table-wrap").evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
   expect(requests.filter((request) => request.method === "PATCH")).toEqual([{ method: "PATCH", directory: profiles[0].worktree, path: "/project/lean", body: { itemID: "cargo", enabled: false } }])
   await writeFile(path.join(process.env.ORCHESTRA_VISUAL_OUT!, "manifest.json"), JSON.stringify({ synthetic: true,
+    polishDependency: "ae0f158f08712b28f64ab1445fc7712e793120fe", detailAlignment: alignment,
     base: "cc726a13aaf211f831cc7a039cff8df635d4743d", source: process.env.LEAN_VISUAL_SOURCE, captures: manifest }, null, 2) + "\n")
 })
 
-async function capture(page: Page, name: string, manifest: unknown[], requests: unknown[]) {
+async function capture(page: Page, name: string, manifest: unknown[], requests: unknown[], profile: LeanDashboard.Info) {
   const lean = page.locator('[data-mx-page="orchestra-lean"]')
+  await expect(lean.locator(".lean-count:has(.lean-count-total) dd")).toHaveText(
+    `${profile.enabled ? profile.items.filter((item) => item.enabled).length : 0} / ${LeanCoverage.items.length}`,
+  )
   await page.evaluate(() => document.fonts.ready)
   await expect(page.locator("html")).toHaveAttribute("lang", "pt-BR")
   await expect(page.locator("body")).toHaveAttribute("data-new-layout", "")
