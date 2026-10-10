@@ -527,6 +527,7 @@ const layer = Layer.effect(
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
               }, { history, delegations, member }, { parent: request, beforeDispatch: (input) => Effect.gen(function* () {
                 if (!live()) return yield* Effect.fail(new Error("Checkpoint ownership changed"))
+                token.entry.checkpointBlocked = true
                 yield* checkpoints.save({ sessionID, ...input })
                 if (live()) token.entry.checkpointBlocked = false
               }) })
