@@ -11,7 +11,7 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { PartTable, SessionTable } from "@orchestra/core/session/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { OrchestraEvent } from "@orchestra/protocol/groups/event"
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { Agent } from "@/agent/agent"
@@ -244,7 +244,8 @@ describe("durable WorkResult decision", () => {
           : change === "provider" ? sessions.updatePart({ ...fixture.part, metadata: { providerExecuted: true } })
           : change === "caller-delete" ? sessions.remove(fixture.root.id)
           : change === "binding" ? database.db.update(EventTable).set({ data: { ...fixture.binding, taskId: "tsk_changed" } })
-            .where(eq(EventTable.aggregate_id, fixture.child.id)).run().pipe(Effect.orDie)
+            .where(and(eq(EventTable.aggregate_id, fixture.child.id), eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.Bound.type, 1))))
+            .run().pipe(Effect.orDie)
           : database.db.update(SessionTable).set(change === "project" ? { project_id: foreign.projectID }
             : change === "child-agent" ? { agent: "general" } : { parent_id: other.id })
             .where(eq(SessionTable.id, change === "child-root" || change === "child-agent" ? fixture.child.id : fixture.root.id))
