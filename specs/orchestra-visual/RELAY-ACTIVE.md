@@ -132,7 +132,7 @@ recovered writers are `nix-continuation` (exact verify head) and `nix-integratio
 authenticated peer backend was rediscovered at `http://127.0.0.1:49220`; no app or
 server restart was performed by Relay.
 
-## Current repair wave and qualification hold
+## Historical repair wave and qualification holds
 
 The reviewed authority source set is A `9358d3833a8efc385ddaaeb501264c013859d5a0`
 (includes `fd0a7ed2e7`, `4b0b09b17a`, `84513c9ecd`, `66c0532e2d`), C `0c8bc60369`
@@ -684,7 +684,7 @@ local cache/install corruption, not a new source dependency/version change. Rela
 duplicate those checks. Nix measurement activation waits for actual post-generation/checks
 freeze. Core Omni `37943566437` on unrelated `f3b2b67` is not Maestro evidence or a failure card.
 
-## Exact source state
+## Historical initial source state
 
 | Front | Source checkpoint | State |
 | --- | --- | --- |
@@ -706,7 +706,7 @@ freeze. Core Omni `37943566437` on unrelated `f3b2b67` is not Maestro evidence o
 W6 working branch/worktree: `relay-workflow`, temporary OpenCode work directory.
 Nix working branch/worktree: `nix-closure`. Integrator: `relay-next`.
 
-## Implementation and qualification boundary
+## Historical implementation and qualification boundary
 
 - Background producer and canonical observer are implemented and composed. Final work
   result is captured from the actual returned assistant; delivery reference is written
@@ -755,7 +755,7 @@ No product readiness, test pass, measurement or pilot acceptance follows from th
 Full compatible background/runtime/Nix source composition: `9b83e5315fa462c0c0ee2053c93380c0ac203b44`.
 Dirty alternative BackendWork delivery implementation was not consumed. Preserve its archived draft.
 
-## Coordination and recovery
+## Historical coordination and recovery
 
 Current existing OpenCode server: `http://127.0.0.1:50407`; old `49246` stopped.
 Server was discovered, not restarted. Basic auth comes from environment; never log secrets.

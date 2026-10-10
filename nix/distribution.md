@@ -86,12 +86,13 @@ evidence is not rerun here and does not certify Nix builds.
 Historical human-authorized cadence: “NO tests/typechecks/mutations/CI/smoke/builds now;
 prepare runnable validation and measurement capture only, single integrated batch
 after W6+Nix ready.” No local Nix, installer, daemon or global software was used.
-Consumer verification and output qualification below remain **unexecuted**.
+The preparation notes below were **unexecuted at their initial checkpoint**.
+Current source-bound results above supersede those initial status claims.
 Repair `5f7e3b0c7c` passed offline replay/negative-control conformance against the
 actual failed Linux artifacts; that is parser evidence, not native measurement
 acceptance. Changed package inputs require a new four-native capture.
 
-## Implemented contract
+## Historical preparation contract
 
 - Locked Nixpkgs is unchanged. `flake.nix` explicitly supplies local Bun 1.3.14
   and Electron 42.3.3 to consumers and exports both for capture. Node 24 supports
@@ -138,7 +139,7 @@ acceptance. Changed package inputs require a new four-native capture.
 These are declared lanes, not build evidence. Intel Darwin remains explicit;
 baseline does not certify arbitrary x64 CPUs or Rosetta.
 
-## One lead-owned integrated batch, after W6 + Nix are ready
+## Historical planned integrated batch, after W6 + Nix readiness
 
 Freeze one committed source revision including final manifests. On each matching
 native runner, the measurement half is:
@@ -233,7 +234,7 @@ Output teeth mutate one **copy of the real produced CLI**: empty artifacts,
 wrong version/target, changed bytes, invalid image header and wrong CPU with valid
 recomputed digests, then restoration. Real production consumer and output checker must reject each
 named defect. Positive/restored real copies must pass. No production output is
-mutated. These controls have not run.
+mutated. These controls had not run at that initial checkpoint.
 
 Completion requires exact native job/artifact sets, explicitly named prepare /
 completion roles, and the full immutable output ledger declared in
@@ -247,7 +248,8 @@ empty/extra/duplicate/unknown lanes and artifacts, wrong workflow/head/attempt,
 failed or cancelled measurement, failed independent completion, relabelled
 candidate/capture, positive-only control subsets, negative setup failures and
 non-hash checkpoint changes. They invoke the actual parser on copies of real
-captured evidence. All controls remain unexecuted until the combined batch.
+captured evidence. These controls were unexecuted at the initial preparation
+checkpoint; their later execution is recorded in the source-bound results above.
 
 `probe-dependency-measurement.py`, wired into that same verification batch,
 prepares hash-capture negative controls: replay real updater evidence
@@ -256,7 +258,7 @@ install receipt; set exit to zero; name another derivation. Invoke the actual
 `dependency_measurement.py capture` on separate evidence copies. Only unchanged
 real evidence may produce a candidate. No hash probe edits committed hash fields.
 
-## Remaining closure evidence / blockers
+## Historical closure evidence / blockers
 
 - Four dependency measurements and approved hash checkpoint remain missing.
 - Native sandbox builds, emitted CLI interpreter/library closure, desktop
