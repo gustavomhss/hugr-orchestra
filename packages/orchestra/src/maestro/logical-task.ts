@@ -3,6 +3,8 @@ export * as LogicalTask from "./logical-task"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { fromRow } from "@orchestra/core/session/info"
+import { SessionTable } from "@orchestra/core/session/sql"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Schema } from "effect"
@@ -177,11 +179,16 @@ const strictSession = Effect.fnUntraced(function* (input: { taskID: string; proj
 const reconcile = Effect.fn("LogicalTask.reconcile")(function* (
   stored: Binding,
   input?: Omit<Binding, "taskId"> & { taskId?: string },
-): Effect.fn.Return<Binding, Denied, Session.Service> {
+): Effect.fn.Return<Binding, Denied, Database.Service> {
   if (input && !sameTask(stored, input))
     return yield* new Denied({ stage: "binding", reason: "task-binding-mismatch" })
-  const sessions = yield* Session.Service
-  const authority = yield* SessionAuthority.make(sessions.get)(stored.executionSessionID, stored.projectID).pipe(
+  // Read consumers include the Session service itself; retained ancestry must not require that service recursively.
+  const database = yield* Database.Service
+  const authority = yield* SessionAuthority.make((id) =>
+    database.db.select().from(SessionTable).where(eq(SessionTable.id, id)).get().pipe(
+      Effect.map((row) => row ? fromRow(row) : undefined),
+    ),
+  )(stored.executionSessionID, stored.projectID).pipe(
     Effect.mapError((error) => new Denied({ stage: "binding", reason: error.reason })),
   )
   if (!validAuthority(stored.authoritySessionID, authority))

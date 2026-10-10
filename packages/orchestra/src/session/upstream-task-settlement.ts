@@ -13,6 +13,7 @@ import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
 import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { UpstreamResult } from "@/maestro/upstream-result"
+import { SessionAuthority } from "@/maestro/session-authority"
 import { MessageV2 } from "./message-v2"
 import { MessageID, SessionID } from "./schema"
 
@@ -42,8 +43,16 @@ export function make(deps: { database: Database.Interface; events: EventV2.Inter
     const logical = yield* LogicalTask.read(input.childSessionID)
     if (!parent || !child || child.parent_id !== parent.id || child.project_id !== parent.project_id ||
       child.directory !== parent.directory || child.agent !== "archie" || !logical || logical.taskId !== input.logicalTaskID ||
-      logical.executionSessionID !== child.id || logical.authoritySessionID !== parent.id ||
+      logical.executionSessionID !== child.id ||
       logical.memberID !== "archie" || logical.projectID !== parent.project_id)
+      return yield* refuse("UPSTREAM_SETTLEMENT_LINEAGE_MISMATCH")
+    // Logical authority scopes the tree; receipt ownership stays with the immediate dispatch parent.
+    const authority = yield* SessionAuthority.make((id) =>
+      deps.database.db.select().from(SessionTable).where(eq(SessionTable.id, id)).get().pipe(
+        Effect.map((row) => row ? fromRow(row) : undefined),
+      ),
+    )(parent.id, parent.project_id)
+    if (logical.authoritySessionID !== authority.rootID)
       return yield* refuse("UPSTREAM_SETTLEMENT_LINEAGE_MISMATCH")
     const receipt = yield* Schema.decodeUnknownEffect(SessionMessageUpdater.UpstreamSettlement)({
       parentMessageID: input.parentMessageID, parentCallID: input.parentCallID, workResult: input.workResult,

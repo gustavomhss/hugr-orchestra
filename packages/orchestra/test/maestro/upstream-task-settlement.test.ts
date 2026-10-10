@@ -27,6 +27,7 @@ import { MessageID, PartID, SessionID } from "@/session/schema"
 import { PromptIdentity } from "@/session/prompt-identity"
 import { SessionPrompt } from "@/session/prompt"
 import { UpstreamTaskSettlement } from "@/session/upstream-task-settlement"
+import { TaskWorkObservation } from "@/tool/task-work-observation"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -49,13 +50,14 @@ function assistant(sessionID: SessionID, agent: string): SessionV1.Assistant {
 const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   selection?: "resumed" | "wrong",
   returned?: "failed" | "interrupted" | "host-failed",
+  parentID?: SessionID,
 ) {
   const sessions = yield* Session.Service
   const events = yield* EventV2Bridge.Service
   const database = yield* Database.Service
-  const parent = yield* sessions.create({ agent: "maestro" })
+  const parent = yield* sessions.create({ agent: "maestro", parentID })
   const child = yield* sessions.create({ parentID: parent.id, agent: "archie" })
-  const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parent.id,
+  const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parentID ?? parent.id,
     projectID: parent.projectID, memberID: "archie", source: "host" })
   const author = yield* sessions.updateMessage({ ...assistant(child.id, "archie"),
     ...(returned === "failed" ? { error: new SessionV1.APIError({ message: "Stored author failure", isRetryable: false }).toObject() } : {}),
@@ -103,8 +105,59 @@ const seed = Effect.fn("PrivateSettlementTest.seed")(function* (
   const progress = () => database.db.select().from(EventTable)
     .where(eq(EventTable.aggregate_id, parent.id)).all().pipe(Effect.orDie,
       Effect.map((rows) => rows.filter((row) => row.type === EventV2.versionedType(SessionEvent.Tool.Progress.type, 1))))
-  return { sessions, database, events, input, parent, child, task, owner, author, proposal, state, modern, legacy, progress }
+  return { sessions, database, events, input, parent, child, logical, workResult, task, owner, author, proposal, state, modern, legacy, progress }
 })
+
+it.instance("nested Maestro settles root-scoped Archie work only on the immediate dispatch parent", () => Effect.gen(function* () {
+  const sessions = yield* Session.Service
+  const root = yield* sessions.create({ agent: "maestro" })
+  const f = yield* seed(undefined, undefined, root.id)
+  expect(f.parent.parentID).toBe(root.id)
+  expect(f.child.parentID).toBe(f.parent.id)
+  expect(f.logical.authoritySessionID).toBe(root.id)
+  expect(f.logical.authoritySessionID).not.toBe(f.input.sessionID)
+  const sibling = yield* sessions.create({ parentID: root.id, agent: "maestro" })
+  const before = yield* f.progress()
+  yield* Effect.forEach([root.id, sibling.id], (sessionID) => Effect.gen(function* () {
+    expect((yield* Effect.flip(f.sessions.settleUpstreamTask({ ...f.input, sessionID }))).reason)
+      .toBe("UPSTREAM_SETTLEMENT_LINEAGE_MISMATCH")
+    expect(yield* f.progress()).toEqual(before)
+  }))
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(true)
+  const part = yield* f.legacy()
+  if (part?.type !== "tool" || part.state.status === "pending") throw new Error("expected retained Task")
+  expect(part.sessionID).toBe(f.parent.id)
+  expect(part.state.metadata).toMatchObject({ parentSessionId: f.parent.id, sessionId: f.child.id,
+    upstreamSettlement: { parentMessageID: f.owner.id, parentCallID: f.task.callID,
+      deliveryMessageID: f.input.deliveryMessageID, workResult: f.workResult } })
+  const modern = yield* f.modern()
+  expect(modern?.session_id).toBe(f.parent.id)
+  const settled = yield* f.progress()
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(false)
+  expect(yield* f.progress()).toEqual(settled)
+  expect((yield* LogicalTask.read(f.child.id))?.authoritySessionID).toBe(root.id)
+}))
+
+it.instance("nested Maestro host observation captures and publishes failure under the immediate Task owner", () => Effect.gen(function* () {
+  const sessions = yield* Session.Service
+  const root = yield* sessions.create({ agent: "maestro" })
+  const f = yield* seed(undefined, "host-failed", root.id)
+  const observation = TaskWorkObservation.make({ database: f.database, events: f.events,
+    childSessionID: f.child.id, taskID: f.logical.taskId,
+    metadata: { parentSessionId: f.parent.id, sessionId: f.child.id, model },
+    ctx: { sessionID: f.parent.id, messageID: f.owner.id, callID: f.task.callID, agent: "maestro", agentID: "maestro",
+      abort: new AbortController().signal, messages: [], metadata: () => Effect.void, ask: () => Effect.void },
+  })
+  expect(yield* observation.capture(f.workResult)).toEqual(f.workResult)
+  yield* observation.publish(f.workResult)
+  const part = yield* f.legacy()
+  if (part?.type !== "tool" || part.state.status === "pending") throw new Error("expected retained Task")
+  expect(part.sessionID).toBe(f.parent.id)
+  expect(part.state.metadata).toMatchObject({ parentSessionId: f.parent.id, sessionId: f.child.id,
+    workResult: { taskId: f.logical.taskId, terminal: { reason: "failed", hostDetail: "Observed host failure after return" } } })
+  expect(yield* f.sessions.settleUpstreamTask(f.input)).toBe(true)
+  expect((yield* LogicalTask.read(f.child.id))?.authoritySessionID).toBe(root.id)
+}))
 
 ;(["failed", "interrupted", "host-failed"] as const).forEach((returned) => {
   it.instance(`actual stored or Task-observed ${returned} result retains exact failure and capture identity`, () => Effect.gen(function* () {
