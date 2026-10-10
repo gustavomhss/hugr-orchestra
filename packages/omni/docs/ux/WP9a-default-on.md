@@ -1,7 +1,8 @@
 # WP9a — native default and rollback
 
-Status: technical default-on gates verified for local use; fast-forwarded into `omni-native`. Candidate branch: `omni-default-ci`;
-product candidate `f036dca9a4`, CI/harness repairs through `fc41e41a68`; integration PR #73.
+Status: technical default-on gates verified for local use. Final reconciled candidate: `omni-native`
+`06699d3fd8f3283a1ee85a9dbecc2e66ecd14d0a`, including `dev` through `ada14ff6ff`; integration PR #73.
+Earlier `omni-default-ci` acceptance at product `f036dca9a4` / CI `fc41e41a68` remains pinned below.
 
 The owner accepted the WP10 hosted report for local use on 2026-10-09: "eai, pode seguir". Developer ID/notarization
 and npm publication remain deferred under the separate decisions recorded in that report.
@@ -120,6 +121,43 @@ not passes. Raw campaign logs are retained locally; they are not uploaded by ord
 
 ## Landing and deferred delivery
 
-- Verified candidate is integrated into `omni-native`; PR #73 remains draft. The report does not approve a merge into `dev`.
+- Owner authorized final reconciliation and merge: **"ok manda bala. paraleliza o que puder, vamos resolver isso logo"**,
+  then **"siga"**. Verified candidate is integrated into `omni-native`; final PR landing follows the gates below.
 - WP9b legacy removal still waits for one clean release. npm/public release and signed/notarized distribution
   remain outside the owner's local-use approval.
+
+## Final dev reconciliation and landing gates — 2026-10-10
+
+The Cassandra compatibility pins/preparation from `dev` and Omni installer cancellation/cleanup were reconciled.
+Source builders now validate a regular executable in staging before `.complete` publication. Shell adoption waits
+for zero foreground exit and output finalization; the adopted job also owns its sandbox broker/scratch scope.
+The native Node TCP broker now runs through AppProcess, preserving FIN/backpressure and explicit `=0` rollback,
+without a new spawn-ledger exception. Independent cold reviewers approved these boundaries; lead probes rejected
+removed readiness, resource retention and native broker selection.
+
+The desktop smoke's private quit command is atomic authenticated JSON with a fresh action ID. All six main-process
+shutdown witnesses must echo that ID. This replaces invalid cross-process wall-clock ordering, with unchanged
+8-second kill / 20-second quit bounds, code-zero, no-signal, closed-handle and no-watchdog checks. Log artifacts now
+retain the actual onboarding-derived Effect log and UTC-stamped desktop logs, with copied/missing/failed receipts.
+Tracing is opt-in only; default acceptance retains the original sanitized environment.
+
+| Evidence | Result and scope |
+|---|---|
+| [38017657553](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38017657553) | Reconciled toolkit/Cassandra/cleanup/project pins: 26 passed per OS, including real production Go acquisition/build. |
+| [38018979518](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38018979518) | Staged source-output readiness restored: Linux/macOS six passed; Windows four passed, two POSIX permission skips. Real Node builder fixture exercises publication, not Go compilation. Lead guard-removal probe [38020268655](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38020268655) rejected invalid output. |
+| [38019538392](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38019538392) | Full ShellTool with real background registry: success/Esc/removal, nonzero refusal and real output-write failure on all OSes; actual post-return broker exchange on macOS. Lead lease-removal probe [38020268619](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38020268619) failed post-return exchange. |
+| [38022635906](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022635906), [38022113499](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022113499) | macOS TCP broker: nine passed with native default, nine with explicit legacy `0`. Lead real-legacy broker probe [38023773681](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38023773681) rejected zero native broker spawns before client exchange. The earlier missing-filesystem probe is not mutation evidence. |
+| [38024550335](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38024550335) | Real compiled Windows V1/V2/V10 and controls: Session/registry adoption, two frontend Esc, foreground cancellation, serve/TUI crash and console quit. |
+| [38056634201](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38056634201) | Final fixture repairs: 31 passed, one Darwin broker skip per Linux/Windows host. Includes exact worker-evidence result and complete Bun/Node production seat-map transport. |
+| [38057262233](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38057262233) | Lead foreign quit ID probe deliberately red on all OSes: required quit rejected while owned inventory still became zero within the original bound. Exact challenge restored before landing. |
+| [38058250760](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058250760) | Final `06699d3fd8` epic passed, attempt 2. Attempt 1's only failed lane was Windows Orchestra 3: fixture birth-reader `spawnSync ... ETIMEDOUT`; exact-source retry passed. Cached e2e/other prior-success lanes do not imply fresh browser execution at this SHA. Same-run artifact validation and all unit/Atlas/HttpApi/Relay/rollback lanes remained required. |
+| [38058252749](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058252749) | Final `06699d3fd8` full package typecheck passed. |
+| [38058254890](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058254890) | Final `06699d3fd8` actual unsigned Electron matrix passed on three OSes: all required restored crash/quit cells, old mutants rejected, matching action IDs and original default logging environment. |
+| [38058254418](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058254418), [38058254442](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058254442) | Final PR-head compiled CLI and native gates passed on three OSes. The synthetic PR merge tree matched `06699d3fd8` byte-exactly before landing. |
+| [38058254455](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38058254455) | Final PR-head delivery passed, attempt 2: V9 three OSes, V8 Windows, V7 Linux/Intel. Attempt 1 Linux stopped at pair 118 for busy host; incomplete timing remains unrun, not a pass. |
+
+Linux/Windows package scheduling is serialized to prevent cold bootstrap/generation contention; every package and
+original per-test deadline remains. Historical macOS `/pty` 500 activation errors did not reproduce in fresh
+original-environment matrices; their cause remains unknown, not a claimed product fix. No diagnostic-only desktop
+intervention substitutes for the required restored cells. Source changes after the final candidate are documentation
+only unless separately recorded.

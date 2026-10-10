@@ -1,5 +1,22 @@
 # HANDOFF — estado do hugr-omni (2026-10-02, tarde)
 
+## Landing WP9a no Orchestra — 2026-10-10
+
+Esta seção substitui o estado de retomada anterior. Worktree `omni-native`; candidato final verificado
+`06699d3fd8`, reconciliado com `dev` até `ada14ff6ff`. Owner autorizou reconciliação/merge do PR #73: **"ok manda bala.
+paraleliza o que puder, vamos resolver isso logo"**, depois **"siga"**.
+
+- Epic final `38058250760` passou na tentativa 2; primeira falhou somente no leitor de identidade da fixture Windows.
+  Cache hits/e2e anteriores não são nova execução de browser. Todos artifacts/lanes continuam obrigatórios.
+- Typecheck `38058252749`, Electron real `38058254890`, CLI `38058254418`, native `38058254442` e delivery
+  `38058254455` verdes. Delivery preserva recusa por carga da tentativa 1. Nenhum deadline/KPI ampliado.
+- Builder publica `.complete` só após saída executável válida. Shell adota após exit zero/finalização; job mantém
+  broker/scratch até parada. Broker Node via AppProcess, sem exceção nova no spawn ledger. Revisões/probes medidos.
+- Quit desktop usa ID causal autenticado/atômico, não ordem entre relógios de processos. ID estrangeiro rejeitado
+  nos três SOs (`38057262233`); logger/capture seguem caminho real do onboarding, tracing padrão desligado.
+- Relatório final: `docs/ux/WP9a-default-on.md`. Restam landing/post-merge do PR; WP9b espera release limpa.
+  npm/Developer ID/notarização seguem os adiamentos explícitos. Não relabelar PTY 500 anterior como corrigido.
+
 ## Retomada no Orchestra — 2026-10-09
 
 Esta seção substitui os pontos de retomada históricos abaixo. A fonte da integração é `packages/omni` no
