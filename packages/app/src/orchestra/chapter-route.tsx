@@ -24,6 +24,7 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   dock: lazy(() => import("./chapters/dock")),
   plugins: lazy(() => import("./chapters/plugins")),
   providers: lazy(() => import("./chapters/providers")),
+  integrations: lazy(() => import("./chapters/integrations")),
   shortcuts: lazy(() => import("./chapters/shortcuts")),
   schedule: lazy(() => import("./chapters/schedule")),
   settings: lazy(() => import("./chapters/settings")),
