@@ -293,7 +293,7 @@ export const ShellTool = Tool.define(
           }
 
           if (exit.kind === "exit") yield* Fiber.join(reader)
-          const code = exit.kind === "exit" ? exit.code : null
+          const code: number | null = exit.kind === "exit" ? exit.code : null
           // A nonzero root is a normal tool result, but its surviving descendants must never be adopted.
           if (code !== null && code !== 0) yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
 

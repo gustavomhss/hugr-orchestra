@@ -54,7 +54,7 @@ const fixture = Effect.gen(function* () {
   const session = yield* sessions.create({})
   const lifetime = { removed: false }
   const remove = sessions.remove(session.id).pipe(Effect.tap(() => Effect.sync(() => { lifetime.removed = true })))
-  yield* Effect.addFinalizer(() => lifetime.removed ? Effect.void : remove)
+  yield* Effect.addFinalizer(() => lifetime.removed ? Effect.void : remove.pipe(Effect.orDie))
   const info = yield* ShellTool
   const tool = yield* info.init()
   const abort = new AbortController()
