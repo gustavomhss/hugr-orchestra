@@ -7,7 +7,6 @@ import { constants } from "node:fs"
 import { lstat, mkdir, mkdtemp, open, realpath, writeFile } from "node:fs/promises"
 import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
-
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
 // R4 approved these exact source bytes; runtime tests and model qualification remain lead-owned.
 const consumerReview = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "approved", sourceReview: "R4", runtimeQualification: "pending" }
@@ -38,12 +37,10 @@ const json = (text: string) => decode(Schema.UnknownFromJsonString, text, "AUTHO
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 const blob = (bytes: Uint8Array) => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
 const inside = (path: string, root: string) => path === root || path.startsWith(`${root}/`)
-
 await main().catch((error: unknown) => {
   console.error(error instanceof AuthoringError ? error.message : "AUTHORING_IO_OR_DEPENDENCY_UNAVAILABLE")
   process.exitCode = 1
 })
-
 async function main() {
   requireAuthoring(process.getuid && constants.O_NOFOLLOW, "AUTHORING_PRIVATE_FILE_HOST_UNSUPPORTED")
   const args = parseArgs({ args: Bun.argv.slice(2), strict: true, allowPositionals: false, options: {
@@ -149,7 +146,6 @@ async function main() {
   await writeFile(join(runtime, "report.json"), JSON.stringify(receipt) + "\n", { flag: "wx", mode: 0o600 })
   console.log(JSON.stringify({ code: "AUTHORING_RETURN_OBSERVED_NOT_DOMAIN_JUDGMENT", runtime, ...result, proposalSha256: receipt.proposalSha256 }))
 }
-
 async function canonical(value: string | undefined, directory: boolean) {
   requireAuthoring(value && isAbsolute(value) && !value.split(/[\\/]/).includes(".."), "AUTHORING_PATH_INVALID")
   const path = resolve(value)
@@ -241,15 +237,29 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
     finally { child.stdout.destroy(); child.stderr.destroy(); process.removeListener("SIGINT", abort); process.removeListener("SIGTERM", abort) }
   }
 }
-
 function initializer(job: { candidate: string; project: string; model: string; assignment: string }) {
   // Adapter uses the real candidate runtime and CLI command in one owned process; restores every wrapped method.
   return `import { createRequire } from "node:module"
 import { relative, dirname } from "node:path"
 import { realpath } from "node:fs/promises"
 const job = ${JSON.stringify(job)}
-const { Effect } = await import(createRequire(job.candidate + "/package.json").resolve("effect"))
+const requireCandidate = createRequire(job.candidate + "/package.json")
+const { Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
+const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
+const { CrossSpawnSpawner } = await import(job.candidate + "/packages/core/src/cross-spawn-spawner.ts")
+const { LayerNode } = await import(job.candidate + "/packages/core/src/effect/layer-node.ts"); const { memoMap } = await import(job.candidate + "/packages/core/src/effect/memo-map.ts")
+type Command = import("effect/unstable/process/ChildProcess").Command
+const joinOwnedGroup = (command: Command): Command => command._tag === "StandardCommand" ? ChildProcess.make(command.command, command.args, { ...command.options, detached: false })
+  : ChildProcess.pipeTo(joinOwnedGroup(command.left), joinOwnedGroup(command.right), command.options)
+// Seed the actual provider before AppRuntime/Instance bootstrap. Same memoMap, same implementation Layer identity.
+const spawnerRuntime = ManagedRuntime.make(LayerNode.compile(CrossSpawnSpawner.node), { memoMap }), sharedSpawner = await spawnerRuntime.runPromise(ChildProcessSpawner.ChildProcessSpawner)
+const originalSpawner = { ...sharedSpawner }, containedSpawner = ChildProcessSpawner.make((command) => originalSpawner.spawn(joinOwnedGroup(command)))
+Object.assign(sharedSpawner, containedSpawner)
+const releaseSpawner = () => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() }
+try {
 const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
+try {
+const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
 const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
 const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
 const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
@@ -263,12 +273,13 @@ const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/se
 const { RunCommand } = await import(job.candidate + "/packages/orchestra/src/cli/cmd/run.ts")
 type TaskPromptOps = import(${JSON.stringify(job.candidate + "/packages/orchestra/src/tool/task.ts")}).TaskPromptOps
 function requireFact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
-function isOps(value: unknown): value is TaskPromptOps {
-  return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function" && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function"
-}
-const shutdown = () => { void Promise.race([AppRuntime.dispose(), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
+function isOps(value: unknown): value is TaskPromptOps { return !!value && typeof value === "object" && "prompt" in value && typeof value.prompt === "function" && "cancel" in value && typeof value.cancel === "function" && "resolvePromptParts" in value && typeof value.resolvePromptParts === "function" }
+const shutdown = () => { void Promise.race([AppRuntime.dispose().finally(releaseSpawner), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
 process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
+  const actualSpawner = yield* ChildProcessSpawner.ChildProcessSpawner
+  const processes = yield* AppProcess.Service
+  requireFact(actualSpawner === sharedSpawner && actualSpawner.spawn === containedSpawner.spawn && processes.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_SPAWNER_NOT_BOUND")
   const store = yield* InstanceStore.Service
   const ctx = yield* store.load({ directory: job.project })
   const services = yield* Effect.gen(function* () {
@@ -347,14 +358,11 @@ try {
 } catch (error) {
   console.error(error instanceof Error && /^AUTHORING_[A-Z_]+$/.test(error.message) ? error.message : "AUTHORING_INITIALIZER_OR_NATIVE_RUN_FAILED")
   process.exitCode = 1
-} finally {
-  loaded.task.execute = taskExecute
-  loaded.prompts.prompt = realPrompt
-  await AppRuntime.dispose()
-}
+} finally { loaded.task.execute = taskExecute; loaded.prompts.prompt = realPrompt }
+} finally { await AppRuntime.dispose() }
+} finally { await releaseSpawner() }
 `
 }
-
 async function verifyDatabase(path: string, parentID: string, project: string, model: string, assignment: string, worktree: string) {
   await canonical(path, false)
   const db = new Database(path, { readonly: true, strict: true })
