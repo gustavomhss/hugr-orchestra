@@ -2921,8 +2921,8 @@ export type LeanProfileScope = {
 export type LeanProfileSavings = {
   bytesSaved: number | null
   tokensSaved: number | null
-  calls: unknown
-  tokenCalls: unknown
+  calls: number
+  tokenCalls: number
 }
 
 export type LeanProfileItem = {
@@ -3058,7 +3058,7 @@ export type LeanProfileExecution = {
   commandTruncated: boolean
   status: "completed" | "error"
   exit: number | null
-  time: unknown
+  time: number
   bytesSaved: number | null
   tokensSaved: number | null
 }
