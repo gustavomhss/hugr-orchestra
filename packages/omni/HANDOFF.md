@@ -4,11 +4,12 @@
 
 Esta seção substitui os pontos de retomada históricos abaixo. A fonte da integração é `packages/omni` no
 `gustavomhss/hugr-orchestra`; o repositório separado é o espelho. Worktree ativa:
-`~/Documents/HuGR/_worktrees/omni-closeout`; produto reconciliado `50df6ac76a`. Branch de integração do PR #73
+`~/Documents/HuGR/_worktrees/omni-default-ci`; produto verificado `f036dca9a4`, reparos CI `fc41e41a68`. Branch de integração do PR #73
 (draft): `omni-native`. O relatório lista as revisões verificadas e os gates ainda pendentes.
 
 - O rename da `dev` foi reconciliado: pacote `packages/orchestra`, imports `@orchestra/*`, flag
-  `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`. Publicação npm continua adiada. Default continua desligado.
+  `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`. Publicação npm continua adiada. Candidato seleciona Omni por default;
+  `=0` mantém rollback legado. Alvos compilados sem suporte nativo continuam no legado.
 - Código revisado e integrado: instalações via AppProcess, settlement de falhas de startup, cancelamento e staging;
   reinício LSP com fence de descarte; join de shutdown; preflight de arquivos nativos antes da árvore da CLI;
   inventário Windows por identidade/owner e deadline completo de ConPTY.
@@ -21,7 +22,7 @@ Esta seção substitui os pontos de retomada históricos abaixo. A fonte da inte
 - `fork/dev` (`ad40b080e9`) foi integrado por merge, incluindo capability/seat framework. O conflito semântico no
   builder de saída natural foi corrigido: usa `seatSkillsFiles`, `ORCHESTRA_COMPILED=true` e hashes do módulo gerado.
   Core, Orchestra e campanha passaram typecheck; revisão fria aprovou os pontos de união.
-- Produto `50df6ac76a`: CLI compilada (`37886935451`) e Electron empacotado real (`37886938068`) verdes nos três SOs.
+- Provas anteriores, produto `50df6ac76a`: CLI compilada (`37886935451`) e Electron real (`37886938068`) nos três SOs.
   Electron prova crash de main/utility e app.quit natural; packaging é unsigned --dir, sem prova de notarização.
 - Saída natural Bun/Node + controles de seats: `37886081319`, 26 testes por SO. Windows V1/V2/V10 restaurado:
   `37887074886`, incluindo dois Esc reais e Ctrl+C. Remover SIGINT/SIGBREAK deixou `37866045782` vermelho.
@@ -33,8 +34,17 @@ Esta seção substitui os pontos de retomada históricos abaixo. A fonte da inte
   e remediação no relatório WP10. Não autoriza distribuição notarizada nem publicação npm.
 - Owner aceitou o relatório para o escopo local em 2026-10-09: **"eai, pode seguir"**, respondendo à pergunta de
   assinatura. WP9a autorizado; npm/distribuição pública continuam fora desse aceite.
-- **Gate pendente:** rerun V2/V7 no Mac do owner no boundary de default-on;
-  provisionamento CI e epic suite do WP9a. Default continua off. `omni-default-ci` existe, ainda sem flip ou patch CI.
+- WP9a provisiona artifacts nativos em cada shard, preserva/hash inputs Rust e helpers de campanha, valida arquivos
+  também em cache hits e mantém lane Windows `=0`. Turbo strict preserva/hash `PSModuleAnalysisCachePath`: remover
+  entrada deixou recorder vermelho; alteração/restauração de helper agora muda/recupera hash Core.
+- Produto `f036dca9a4`: CLI (`38005242768`) e Electron unsigned (`38004541043`) nos três SOs; delivery
+  (`38005245577`, tentativa 2), V9 três SOs/V8 Server 2022/V7 Linux e Intel. Recusa por carga na tentativa 1 preservada.
+  Full typecheck `38004544234`. Reparos posteriores só CI/harness; não são novos binários medidos.
+- Boundary Mac do owner executado: V2 CLI `d4a32678c6`, V7 Bun `feeb526787`; hashes e KPIs em
+  `docs/ux/WP9a-default-on.md`. Não atribuir essas medições a binário novo `f036dca9a4`.
+- Epic completa verde em `fc41e41a68` (`38014329741`): producers/consumers, unit Linux/Windows, e2e Linux,
+  Atlas, godfile, HttpApi, Relay e Windows `=0`. Core Windows executou sem cache: 1524 pass/29 skips existentes.
+  Relatório WP9a revisado; candidato pronto para integração no `omni-native` e PR #73 (draft).
   WP9b continua depois de uma release limpa. Artefatos dos oito alvos não habilitam sozinhos as rows CLI desativadas.
 - Provas brutas locais anteriores foram preservadas nas worktrees `omni-campaign`, `omni-protocol-qa` e
   `omni-delivery-qa` (`campaign/logs`, ignorado). Não apagar esses logs antes de arquivar as evidências.

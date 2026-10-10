@@ -1,6 +1,7 @@
 # WP10 — Orchestra integration validation
 
-Status: **hosted lifecycle report accepted by the owner for local use; WP9a validation pending**. Source integration: `omni-native`, PR
+Status: **hosted lifecycle report accepted by the owner for local use**. Current default-on rollout:
+[WP9a report](WP9a-default-on.md). Source integration: `omni-native`, PR
 [gustavomhss/hugr-orchestra#73](https://github.com/gustavomhss/hugr-orchestra/pull/73).
 Closeout branch: `omni-closeout`; reconciled product revision: `50df6ac76a01a00762b22c62d6e053a78f658164`.
 
@@ -112,17 +113,18 @@ WAIVER (human-authorized) — Apple Developer ID signing and macOS notarization 
 
 No KPI waiver was granted. Busy timing refusals are preserved. npm publication remains owner-deferred.
 
-## Remaining acceptance and WP9a entry
+## WP9a rollout and remaining distribution scope
 
 - Owner accepted this technical report for the documented local scope on 2026-10-09: **"eai, pode seguir"**, in
   response to the explicit report-signature question. This authorizes WP9a work, not npm/public distribution.
-- The plan's owner-Mac V2/V7 rerun at the default-on boundary remains outstanding. Hosted Intel V7 has the reach
-  stated above; it is not a new owner-machine measurement.
-- The default-on epic suite and current default-on packaged smokes have not run: the flag still defaults off.
-- WP9a must provision native artifacts to every consuming test shard, hash Rust/native inputs in Turbo, retain a
-  meaningful Windows `=0` rollback cell and prove unset-default behavior before flipping.
-- `omni-default-ci` exists for that work. Eight-target artifact proof alone does not enable the currently disabled
-  musl/Windows arm64 rows in the CLI build table.
+- Owner-Mac V2/V7 boundary probes executed on their pinned default-on revisions; actual SHAs, raw sample hashes
+  and unchanged KPI limits are in the WP9a report. They are not new `f036dca9a4` binary measurements.
+- Supported candidate builds now select Omni when unset; explicit `=0` retains rollback. CI provisions native
+  artifacts to every unit shard, hashes Rust and campaign inputs, and retains a real Windows legacy cell.
+- Product `f036dca9a4` compiled CLI and actual unsigned Electron matrices passed on three OSes. Later CI/harness
+  repairs change neither product source nor native build inputs. The WP9a report records the separate epic gate,
+  failed attempts and exact source scope; this historical WP10 table does not relabel earlier proofs as current.
+- Eight-target artifact proof alone does not enable currently disabled musl/Windows arm64 CLI build rows.
 - WP9b stays after one clean release; npm publication requires separate owner authorization.
 
-Owner signature: **accepted, 2026-10-09 — "eai, pode seguir"**. Default-on gates above remain mandatory.
+Owner signature: **accepted, 2026-10-09 — "eai, pode seguir"**. Scope: local use; no public distribution approval.
