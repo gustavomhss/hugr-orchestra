@@ -60,7 +60,7 @@ All 33 frozen inventory files were rehashed before/after the run and independent
 | Native authorship mutation | [38025092625](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025092625) | Removing actual assistant-agent equality made old/generic-author rejection fail while two controls passed; implementation restored |
 | Attribution schema | [38019106475](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38019106475) | Linux/Windows: 32 pass, seven failures; explicit `undefined` gets schema type error instead of required `UPSTREAM_ATTRIBUTION_MISSING`; remains open |
 
-Package `bun typecheck` completed for Orchestra, Core and Schema on composed renamed source. The supported Client generator completed without an emitted diff. These scoped checks do not become full-milestone or every-descendant CI evidence.
+Package `bun typecheck` completed for Orchestra, Core and Schema on composed renamed source. Supported generators ran through `packages/client`'s `bun run generate` and `./packages/sdk/js/script/build.ts`; both completed without a tracked output diff. These scoped checks do not become full-milestone or every-descendant CI evidence.
 
 The original Maestro prompt demanded model-side inspection unavailable in the actual tool surface. Actual inference returned HOLD. The repaired prompt delegates workflow/completion observation to the existing native Task gate; no runtime gate, known HOLD, governed lifecycle or approval requirement was removed. An earlier Task attempt failed on a final-LF request mismatch; exact rendered assignment corrected that failure. Earlier failed attempts remain failed receipts.
 
