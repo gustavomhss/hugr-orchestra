@@ -48,7 +48,7 @@ diff --git a/src/internal/core.ts b/src/internal/core.ts
 +      interruptOrigins.set(self, interruptOrigins.get(this) ?? this)
 +    }
      return self
-@@ -536,12 +541,26 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
+@@ -536,11 +541,25 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
        annotated = true
      }
      let cont = fiber.getCont(contE)
@@ -76,7 +76,6 @@ diff --git a/src/internal/core.ts b/src/internal/core.ts
 +      : fiber.yieldWith(annotated ? exitFailCause(cause) : this)
    }
  })
- 
 diff --git a/dist/unstable/httpapi/HttpApiSchema.js b/dist/unstable/httpapi/HttpApiSchema.js
 index ecb6603d1ee4e89e92174b3a1100e8c9c720b3f3..08b832b6b3e9e4d10df156eca36b16f571f67f6e 100644
 --- a/dist/unstable/httpapi/HttpApiSchema.js
