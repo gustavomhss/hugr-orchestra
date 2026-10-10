@@ -4,6 +4,7 @@ import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { CapabilityChannels } from "@orchestra/core/capability/channel/index"
 import { Evidence, Output } from "@orchestra/core/capability/channel/schema"
+import { Failure } from "@orchestra/core/capability/channel/http"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { CapabilityJobs } from "@orchestra/core/capability/job/index"
@@ -259,16 +260,17 @@ function fixture(provider: "slack" | "discord", options: {
   })
 }
 
-function doubleFailure(phase: "rpc" | "retention") {
+function doubleFailure(phase: "rpc" | "retention", expectedFailure = false) {
   return Effect.gen(function* () {
-    const f = yield* fixture("discord")
+    const f = yield* fixture("discord", { quota: phase === "retention" && expectedFailure ? 1 : undefined })
+    if (phase === "rpc" && expectedFailure) f.state.mode = "500"
     const global = yield* Global.Service
     const shared = new Error("duplicate original/observer defect")
     const markers = { original: { phase: "original" }, observer: { phase: "observer" }, shared: { phase: "shared" } }
     const annotations = (marker: object) => Context.makeUnsafe(new Map([["channel-double-failure", marker]]))
     const repeated = [Cause.makeDieReason(shared).annotate(annotations(markers.shared)),
       Cause.makeInterruptReason(765).annotate(annotations(markers.shared))]
-    const originals: Cause.Cause<SqlError>[] = []
+    const originals: Cause.Cause<unknown>[] = []
     const observers: Cause.Cause<never>[] = []
     const observerWrites: (typeof CapabilityJobTable.$inferSelect)[] = []
     const mutationExits: Exit.Exit<unknown, unknown>[] = []
@@ -329,15 +331,17 @@ function doubleFailure(phase: "rpc" | "retention") {
     const observerDB = new Proxy(f.database.db, { get: (db, key) => key === "transaction"
       ? observerTransaction : Reflect.get(db, key, db) })
     const jobs = yield* CapabilityJobs.make.pipe(Effect.provideService(Database.Service, { ...f.database, db: observerDB }))
-    const connections = phase === "rpc" ? yield* CapabilityConnections.make.pipe(
+    const connections = phase === "rpc" && !expectedFailure ? yield* CapabilityConnections.make.pipe(
       Effect.provideService(Database.Service, { ...f.database, db: originalDB })) : f.connections
-    const artifacts = phase === "retention" ? yield* CapabilityArtifacts.make({ root: join(global.data, "evidence") }).pipe(
+    const artifacts = phase === "retention" && !expectedFailure ? yield* CapabilityArtifacts.make({ root: join(global.data, "evidence") }).pipe(
       Effect.provideService(Database.Service, { ...f.database, db: originalDB })) : f.artifacts
     const channels = yield* CapabilityChannels.make({ ...f.makeOptions, connections, jobs, artifacts })
     const tracer = Tracer.make({ span: (options) => new class extends Tracer.NativeSpan {
       override end(time: bigint, exit: Exit.Exit<unknown, unknown>) {
         super.end(time, exit)
         if (this.name === "CapabilityChannels.mutate") mutationExits.push(exit)
+        if (expectedFailure && this.name === (phase === "rpc" ? "CapabilityDiscord.send" : "CapabilityArtifacts.publish") && Exit.isFailure(exit))
+          originals.push(exit.cause)
       }
     }(options) })
     const input = { provider: "discord", text: "double failure" }
@@ -353,7 +357,16 @@ function doubleFailure(phase: "rpc" | "retention") {
     expect(Exit.isFailure(mutation)).toBe(true)
     if (Exit.isSuccess(exit) || Exit.isSuccess(mutation)) return yield* Effect.die("CHANNEL_DOUBLE_FAILURE_BECAME_OUTPUT")
     const expected = [...originals[0].reasons, ...observers[0].reasons]
-    expect(expected).toHaveLength(6)
+    expect(expected).toHaveLength(expectedFailure ? 4 : 6)
+    if (expectedFailure) {
+      expect(originals[0].reasons).toHaveLength(1)
+      const reason = originals[0].reasons[0]
+      expect(Cause.isFailReason(reason)).toBe(true)
+      if (Cause.isFailReason(reason)) {
+        expect(reason.error).toBeInstanceOf(phase === "rpc" ? Failure : Capability.Failure)
+        expect(reason.error).toMatchObject(phase === "rpc" ? { reason: "http", status: 500 } : { code: "quota_exceeded" })
+      }
+    }
     expect(mutation.cause.reasons.map((reason) => reason._tag)).toEqual(expected.map((reason) => reason._tag))
     mutation.cause.reasons.forEach((reason, index) => {
       const original = expected[index]
@@ -362,14 +375,14 @@ function doubleFailure(phase: "rpc" | "retention") {
       if (Cause.isInterruptReason(reason) && Cause.isInterruptReason(original)) expect(reason.fiberId).toBe(original.fiberId)
       expect(reason.annotations.get("channel-double-failure")).toBe(original.annotations.get("channel-double-failure"))
     })
-    expect(mutation.cause.reasons.filter(Cause.isDieReason).filter((reason) => reason.defect === shared)).toHaveLength(2)
-    expect(mutation.cause.reasons.filter(Cause.isInterruptReason).filter((reason) => reason.fiberId === 765)).toHaveLength(2)
+    expect(mutation.cause.reasons.filter(Cause.isDieReason).filter((reason) => reason.defect === shared)).toHaveLength(expectedFailure ? 1 : 2)
+    expect(mutation.cause.reasons.filter(Cause.isInterruptReason).filter((reason) => reason.fiberId === 765)).toHaveLength(expectedFailure ? 1 : 2)
     expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(expected.map((reason) => reason._tag))
     exit.cause.reasons.forEach((reason, index) => {
       const original = expected[index]
       if (Cause.isFailReason(reason)) {
         expect(reason.error).toBeInstanceOf(Tool.Failure)
-        expect(reason.error.message).toBe("artifact_storage_failed")
+        expect(reason.error.message).toBe(expectedFailure ? phase === "rpc" ? "channel_http" : "quota_exceeded" : "artifact_storage_failed")
       }
       if (Cause.isDieReason(reason) && Cause.isDieReason(original)) expect(reason.defect).toBe(original.defect)
       if (Cause.isInterruptReason(reason) && Cause.isInterruptReason(original)) expect(reason.fiberId).toBe(original.fiberId)
@@ -382,10 +395,10 @@ function doubleFailure(phase: "rpc" | "retention") {
       provider_id: phase === "rpc" ? null : "201" })
     expect(observerWrites[0]).toMatchObject({ state: phase === "rpc" ? "unknown" : "completed", generation: phase === "rpc" ? 2 : 3 })
     if (phase === "retention") {
-      expect(observerWrites[0].observation).toMatchObject({ data: { remoteOutcome: "completed", materialization: "pending" } })
+      expect(observerWrites[0].observation).toMatchObject({ data: { remoteOutcome: "completed", materialization: expectedFailure ? "failed" : "pending" } })
       expect(f.messages.get("201")?.text).toBe(input.text)
     }
-    expect(f.state.mutations).toBe(phase === "rpc" ? 0 : 1)
+    expect(f.state.mutations).toBe(phase === "rpc" && !expectedFailure ? 0 : 1)
     expect(yield* f.database.db.select().from(CapabilityArtifactTable).all().pipe(Effect.orDie)).toEqual([])
     const requests = f.requests.length
     const replay = yield* call().pipe(Effect.flatMap((value) => Schema.decodeUnknownEffect(Output)(value.structured)))
@@ -393,7 +406,7 @@ function doubleFailure(phase: "rpc" | "retention") {
     if (phase === "retention") expect(replay.result).toMatchObject({ completedEffects: ["provider_acknowledged"] })
     expect(replay.jobRef?.id).toBe(rows[0].id)
     expect(f.requests).toHaveLength(requests)
-    expect(f.state.mutations).toBe(phase === "rpc" ? 0 : 1)
+    expect(f.state.mutations).toBe(phase === "rpc" && !expectedFailure ? 0 : 1)
     expect(originals).toHaveLength(1)
     expect(observers).toHaveLength(1)
   })
@@ -402,6 +415,8 @@ function doubleFailure(phase: "rpc" | "retention") {
 describe("CapabilityChannels real REST leaves", () => {
   it.live("RPC double failure retains original then observer Causes with duplicate identities and annotations", () => doubleFailure("rpc"))
   it.live("retention double failure retains original then observer Causes and durable ACK without redispatch", () => doubleFailure("retention"))
+  it.live("expected RPC double failure retains actual HTTP 500 before failed observation", () => doubleFailure("rpc", true))
+  it.live("expected retention double failure retains actual quota failure before failed settlement", () => doubleFailure("retention", true))
 
   it.live("mutation pre-dispatch real SQL plus defect/interrupt remains failure with durable state and no vendor mutation", () => Effect.gen(function* () {
     yield* Effect.forEach(["slack", "discord"] satisfies ("slack" | "discord")[], (provider) =>

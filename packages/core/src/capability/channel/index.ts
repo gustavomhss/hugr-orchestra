@@ -206,13 +206,12 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         const rejected = expected && pureFailures(result.cause, (error) => error instanceof Capability.Failure ||
           (error instanceof Failure && ((error.reason === "http" && (error.status ?? 0) >= 400 && (error.status ?? 0) < 500) ||
             (error.reason === "provider" && !error.ambiguous))))
-        if (!expected || rejected) {
-          const observation = yield* observe(1, rejected ? "failed" : "unknown").pipe(Effect.exit)
-          // beta83 onExit replaces the body Cause when its finalizer fails; append without Cause.combine deduplication.
-          return yield* Effect.failCause(Exit.isFailure(observation)
-            ? Cause.fromReasons<Error>([...result.cause.reasons, ...observation.cause.reasons]) : result.cause)
-        }
-        yield* observe(1, "unknown")
+        const observation = yield* observe(1, rejected ? "failed" : "unknown").pipe(Effect.exit)
+        // Recover expected outcomes only after observation succeeds; beta83 onExit also loses the body Cause on failure.
+        if (Exit.isFailure(observation)) return yield* Effect.failCause(
+          Cause.fromReasons<Error>([...result.cause.reasons, ...observation.cause.reasons]),
+        )
+        if (!expected || rejected) return yield* Effect.failCause(result.cause)
         return undefined
       }
       // Provider-valid IDs are host facts even when a token happens to be their substring.
@@ -251,9 +250,17 @@ export const make = (options: MakeOptions) => Effect.gen(function* () {
         ? Cause.fromReasons<Error>([...result.cause.reasons, ...observation.cause.reasons]) : result.cause)
     }))
     const artifactRefs = Exit.isSuccess(retained) ? [retained.value] : []
-    const settled = yield* observe(submitted.receipt?.generation ?? 2, verified ? "completed" : "submitted", submitted.id,
-      verified ? { remoteOutcome: "completed", materialization: Exit.isSuccess(retained) ? "complete" : "failed", artifactRefs }
-        : { artifactRefs })
+    const settled = yield* Effect.uninterruptible(Effect.gen(function* () {
+      const observation = yield* observe(submitted.receipt?.generation ?? 2, verified ? "completed" : "submitted", submitted.id,
+        verified ? { remoteOutcome: "completed", materialization: Exit.isSuccess(retained) ? "complete" : "failed", artifactRefs }
+          : { artifactRefs }).pipe(Effect.exit)
+      if (Exit.isSuccess(observation)) return observation.value
+      return yield* Effect.failCause(Cause.fromReasons<Error>([
+        ...(Exit.isFailure(observed) ? observed.cause.reasons : []),
+        ...(Exit.isFailure(retained) ? retained.cause.reasons : []),
+        ...observation.cause.reasons,
+      ]))
+    }))
     const common = { provider: input.provider, channelID: adapter.channelID, jobRef: ref,
       ...(safeID ? { messageID: submitted.id } : {}) }
     if (!verified || Exit.isFailure(retained) || !settled || !safeID || !safeAcquisition) return { ...common, result: { status: "partial", receipt: ref.id,
