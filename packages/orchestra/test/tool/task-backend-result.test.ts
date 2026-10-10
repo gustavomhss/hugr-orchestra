@@ -123,7 +123,11 @@ const seed = Effect.fn("TaskBackendResultTest.seed")(function* () {
   return { chat, assistant }
 })
 
-function ops(text: string, childMessageIDs: string[], error?: NonNullable<SessionV1.Assistant["error"]>): TaskPromptOps {
+function ops(
+  text: string,
+  childMessageIDs: string[],
+  error?: NonNullable<SessionV1.Assistant["error"]>,
+): TaskPromptOps {
   return {
     cancel: () => Effect.void,
     resolvePromptParts: (template) => Effect.succeed([{ type: "text" as const, text: template }]),
@@ -256,7 +260,22 @@ const deliverBackground = Effect.fn("TaskBackendResultTest.deliverBackground")(f
 const shell = await Effect.runPromise(ToolSafetySandbox.status())
 // Every backend Task binds a host-generated logical task (F2.11), and no Atlas Memory tool ran in these children.
 const host = { taskId: expect.stringMatching(/^tsk_/), memory: { reads: [], writes: [] } }
-const empty = { changes: [], checks: [], blockers: [], risks: [], nextActions: [], writeRoots: [], ...host, ...shell }
+// These child fixtures return/store text only: neither claimed file change nor claimed check has an actual tool call.
+const claimedEvidence = {
+  changes: [{ index: 0, evidence: "unbound", callIDs: [] }],
+  checks: [{ index: 0, evidence: "unbound", callIDs: [] }],
+}
+const empty = {
+  changes: [],
+  checks: [],
+  blockers: [],
+  risks: [],
+  nextActions: [],
+  writeRoots: [],
+  workerEvidence: { changes: [], checks: [] },
+  ...host,
+  ...shell,
+}
 
 describe("tool.task backend-result", () => {
   it.instance("decodes a valid card into the work result", () =>
@@ -269,6 +288,7 @@ describe("tool.task backend-result", () => {
         outcome: "done",
         changes: card.changes,
         checks: card.checks,
+        workerEvidence: claimedEvidence,
         blockers: [],
         risks: card.risks,
         nextActions: [],
@@ -431,7 +451,7 @@ describe("tool.task backend-result", () => {
               messageID: message.id,
               sessionID: input.sessionID,
               type: "text",
-              text: "Done.\n\n```backend-result\n{ \"outcome\": \"do",
+              text: 'Done.\n\n```backend-result\n{ "outcome": "do',
             })
             return yield* Effect.die(new Error("child process died"))
           }),
@@ -467,6 +487,7 @@ describe("tool.task backend-result", () => {
         schema: "backend-work-result-v1",
         card: { parsed: true, messageID: result.childMessageID },
         ...card,
+        workerEvidence: claimedEvidence,
         terminal: { reason: "ended" },
         writeRoots: [],
         ...host,
