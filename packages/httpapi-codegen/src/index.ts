@@ -330,9 +330,9 @@ function renderImportedEffectFiles(
       const request = (["params", "query", "headers", "payload"] as const)
         .flatMap((source) => {
           const fields = item.input.filter((field) => field.source === source)
-          if (fields.length === 0) return []
+          if (fields.length === 0 && (source !== "query" || item.query === undefined)) return []
           return [
-            `${source}: { ${fields.map((field) => `${JSON.stringify(field.name)}: input${item.operation.inputMode === "optional" ? "?." : ""}[${JSON.stringify(field.name)}]`).join(", ")} }`,
+            `${source}: { ${fields.map((field) => renderInputField(field, item.operation.inputMode)).join(", ")} }`,
           ]
         })
         .join(", ")
@@ -383,6 +383,15 @@ function renderImportedEffectFiles(
       content: 'export { ClientError } from "./client-error"\nexport * as Orchestra from "./client"\n',
     },
   ]
+}
+
+function renderInputField(field: InputField & { readonly optional: boolean }, inputMode: Operation["inputMode"]) {
+  const key = JSON.stringify(field.name)
+  const value = `input${inputMode === "optional" ? "?." : ""}[${key}]`
+  // Strict optional keys accept absence, not an own property whose value is undefined.
+  return field.source === "query" && field.optional
+    ? `...(${value} === undefined ? {} : { ${key}: ${value} })`
+    : `${key}: ${value}`
 }
 
 function renderImportedGroup(group: string) {
@@ -1056,10 +1065,7 @@ function renderGroup(group: Group, groupIndex: number) {
         if (slot === undefined) return []
         const fields = operation.input
           .filter((field) => field.source === source)
-          .map(
-            (field) =>
-              `${JSON.stringify(field.name)}: input${operation.operation.inputMode === "optional" ? "?." : ""}[${JSON.stringify(field.name)}]`,
-          )
+          .map((field) => renderInputField(field, operation.operation.inputMode))
         return [`${source}: { ${fields.join(", ")} }`]
       })
       .join(", ")
