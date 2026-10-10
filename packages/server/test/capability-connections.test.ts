@@ -33,7 +33,7 @@ it.live("HTTP authentication precedes real Location; Basic config remains indepe
   expect(basic.entered.location).toBe(0)
   yield* json(yield* basic.request(base, { auth: `Basic ${Buffer.from("http-basic:secret:colon").toString("base64")}` }),
     CapabilityManagement.ConnectionPage)
-}))
+}), 20_000)
 
 it.live("HTTP list uses resolved placement; ID reads and writes use stored owner and grants", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionsFixture.make()
@@ -46,6 +46,9 @@ it.live("HTTP list uses resolved placement; ID reads and writes use stored owner
   yield* Effect.forEach([f.foreignParent.id, Capability.ConnectionID.create()], (id) =>
     f.request(`${base}/${id}`, { auth }).pipe(Effect.flatMap((response) => denied(response))))
   yield* denied(yield* f.request(`${base}/disconnect`, { auth, key: "foreign", payload: { connection: f.foreignParent } }))
+  yield* denied(yield* f.request(`${base}/${f.foreignParent.id}/targets`, { auth }))
+  yield* denied(yield* f.request("/api/capability/targets/remove", { auth, key: "foreign-target",
+    payload: { target: yield* f.target(f.foreignParent) } }))
   const resource = yield* f.issue({ placements: [f.placement], actions: ["*"], resources: [{ kind: "connection", id: f.parent.id }] })
   yield* denied(yield* f.request(base, { auth: resource }))
   yield* json(yield* f.request(`${base}/${f.parent.id}`, { auth: resource }), CapabilityManagement.Connection)
@@ -78,14 +81,15 @@ it.live("HTTP opaque target pages survive requests, filter scoped rows and rejec
   expect(children.some((child) => filtered.after?.includes(child.id))).toBe(false)
   const tampered = first.after.slice(0, -2) + (first.after.endsWith("AA") ? "BB" : "AA")
   yield* denied(yield* f.request(path, { auth, query: { after: tampered } }))
-}))
+}), 20_000)
 
 it.live("HTTP mutations require header, preserve exact replay, generate fresh IDs and JSON null receipts", () => Effect.gen(function* () {
   const f = yield* CapabilityConnectionsFixture.make()
   const auth = yield* f.issue()
   const create = { connection: f.parent, input: { environment: "test", resource: { secret: CapabilityConnectionsFixture.secret } } }
   expect((yield* f.request("/api/capability/targets", { auth, payload: create })).status).toBe(400)
-  const first = yield* json(yield* f.request("/api/capability/targets", { auth, key: "create", payload: create }), CapabilityManagement.Receipt)
+  const first = yield* json(yield* f.request("/api/capability/targets", { auth, key: "create", payload: create,
+    headers: { "x-request-id": "caller-request", "x-principal": "caller-principal" } }), CapabilityManagement.Receipt)
   const ref = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(first.data).target
   const retry = yield* json(yield* f.request("/api/capability/targets", { auth, key: "create", payload: create }), CapabilityManagement.Receipt)
   expect(retry).toEqual({ ...first, reused: true })
@@ -109,7 +113,7 @@ it.live("HTTP mutations require header, preserve exact replay, generate fresh ID
   expect(new Set([first.requestID, moved.requestID, removed.requestID, disconnected.requestID]).size).toBe(4)
   const rows = yield* f.database.db.select().from(CapabilityRequestTable).all()
   expect(rows.map((row) => row.id).sort()).toEqual([first.requestID, moved.requestID, removed.requestID, disconnected.requestID].sort())
-  rows.forEach((row) => expect(row.id).toMatch(/^[0-9a-f-]{36}$/))
+  rows.forEach((row) => expect(row.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/))
   yield* denied(yield* f.request("/api/capability/targets", { auth, key: "create", payload: { ...create, input: { environment: "changed", resource: {} } } }))
 }), 20_000)
 
@@ -125,6 +129,8 @@ it.live("HTTP binding derives actual Session actor; strict DTO rejects public ag
   } })).status).toBe(400)
   const bound = yield* json(yield* f.request("/api/capability/bindings", { auth, key: "bind", payload }), CapabilityManagement.Receipt)
   expect(bound.data).toBeNull()
+  expect(yield* json(yield* f.request("/api/capability/bindings", { auth, key: "bind", payload }),
+    CapabilityManagement.Receipt)).toEqual({ ...bound, reused: true })
   expect(yield* f.database.db.select().from(CapabilityBindingTable).all()).toMatchObject([
     { target_id: f.child.id, session_id: f.sessionID, agent_id: "persisted-http-actor", actions: ["read"] },
   ])
@@ -132,4 +138,4 @@ it.live("HTTP binding derives actual Session actor; strict DTO rejects public ag
     payload: { target: f.child, sessionID: f.sessionID } }), CapabilityManagement.Receipt)
   expect(unbound.data).toBeNull()
   expect(yield* f.database.db.select().from(CapabilityBindingTable).all()).toEqual([])
-}))
+}), 20_000)

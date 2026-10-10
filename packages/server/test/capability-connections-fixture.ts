@@ -113,13 +113,13 @@ export function make(options: { password?: string } = {}) {
     const issue = (scope?: CapabilityOperatorContract.GrantScope) => operators.issue({ origin: "sdk", scope }).pipe(
       Effect.map((issued) => `Bearer ${issued.bearer}`),
     )
-    const request = (path: string, input: { auth?: string; key?: string; payload?: unknown; directory?: string;
+    const request = (path: string, input: { auth?: string; key?: string; payload?: unknown; directory?: string; headers?: Record<string, string>;
       query?: Record<string, string> } = {}) => Effect.promise(() => {
       const url = new URL(path, "http://orchestra.local")
       url.searchParams.set("location[directory]", input.directory ?? directory)
       Object.entries(input.query ?? {}).forEach(([key, value]) => url.searchParams.set(key, value))
       return web.handler(new Request(url, { method: input.payload === undefined ? "GET" : "POST",
-        headers: { "content-type": "application/json", ...(input.auth ? { authorization: input.auth } : {}),
+        headers: { ...input.headers, "content-type": "application/json", ...(input.auth ? { authorization: input.auth } : {}),
           ...(input.key ? { "idempotency-key": input.key } : {}) },
         body: input.payload === undefined ? undefined : JSON.stringify(input.payload) }))
     })
