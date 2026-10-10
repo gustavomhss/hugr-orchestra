@@ -1,17 +1,24 @@
-import { createMemo, For, Show } from "solid-js"
+import { createEffect, createMemo, For, Show } from "solid-js"
+import { Icon } from "@orchestra/ui/icon"
 import { createStore } from "solid-js/store"
 import { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { useLanguage } from "@/context/language"
 import { MxBadge, MxPage, MxToggle } from "./kit"
-import { leanNumber, leanTokens } from "./lean-format"
+import { leanBytes, leanNumber, leanTokens } from "./lean-format"
 import { LeanDetail } from "./lean-detail"
 import type { LeanViewProps } from "./lean-view-contract"
 import "./lean.css"
 
 export function LeanProfileView(props: LeanViewProps) {
   const language = useLanguage()
-  const [state, setState] = createStore({ failed: undefined as string | undefined })
+  const [state, setState] = createStore({ failed: undefined as symbol | undefined })
+  const profileID = createMemo(() => props.data?.scope.profileID)
+  const generation = createMemo(() => Symbol(profileID()))
+  createEffect(() => {
+    generation()
+    setState("failed", undefined)
+  })
   const number = (value: number | null | undefined, signed = false) =>
     leanNumber(
       value,
@@ -20,14 +27,14 @@ export function LeanProfileView(props: LeanViewProps) {
       signed,
     )
   const update = (value: LeanDashboard.Update) => {
-    const profileID = props.data?.scope.profileID
-    if (!profileID) return
+    if (!profileID()) return
+    const started = generation()
     setState("failed", undefined)
     const save = async () => {
       await props.onUpdate(value)
     }
     void save().catch(() => {
-      if (props.data?.scope.profileID === profileID) setState("failed", profileID)
+      if (generation() === started) setState("failed", started)
     })
   }
   return (
@@ -56,11 +63,15 @@ export function LeanProfileView(props: LeanViewProps) {
         <dl class="mx-card lean-summary" aria-label={language.t("lean.page.summary")}>
           <div class="lean-total">
             <dt>{language.t("lean.page.bytes")}</dt>
-            <dd data-lean-total="bytes">{number(props.data?.savings.bytesSaved, true)}</dd>
+            <dd>
+              <LeanValue kind="bytes" savings={props.data?.savings} total loading={props.loading} />
+            </dd>
           </div>
           <div class="lean-total">
             <dt>{language.t("lean.page.tokens")}</dt>
-            <dd data-lean-total="tokens">{number(leanTokens(props.data?.savings), true)}</dd>
+            <dd>
+              <LeanValue kind="tokens" savings={props.data?.savings} total loading={props.loading} />
+            </dd>
           </div>
           <div class="lean-count">
             <dt>{language.t("lean.page.calls")}</dt>
@@ -90,7 +101,7 @@ export function LeanProfileView(props: LeanViewProps) {
             {props.error}
           </p>
         </Show>
-        <Show when={state.failed && state.failed === props.data?.scope.profileID}>
+        <Show when={state.failed === generation()}>
           <p class="mx-error" role="alert">
             {language.t("lean.page.saveFailed")}
           </p>
@@ -141,8 +152,13 @@ function LeanItems(props: LeanViewProps) {
       return [{ catalog, item }]
     }),
   )
-  const number = (value: number | null | undefined) =>
-    leanNumber(value, language.intl(), language.t("lean.unavailable"), true)
+  const icons = {
+    build: "console",
+    test: "checklist",
+    lint: "code",
+    install: "download",
+    search: "magnifying-glass",
+  } as const
   return (
     <>
       <div class="mx-toolbar lean-toolbar">
@@ -200,16 +216,26 @@ function LeanItems(props: LeanViewProps) {
                         onClick={() => open(item.id)}
                       >
                         <span class="mx-mark" aria-hidden="true">
-                          {catalog.label.slice(0, 2)}
+                          <Icon name={icons[catalog.category]} size="small" />
                         </span>
                         <bdi>{catalog.label}</bdi>
                         <Show when={catalog.mode === "preserve"}>
-                          <MxBadge>{language.t("lean.page.preserve")}</MxBadge>
+                          <MxBadge>
+                            {language.t(
+                              item.id === "jest" || item.id === "vitest"
+                                ? "lean.page.plaintextPreserve"
+                                : "lean.page.preserve",
+                            )}
+                          </MxBadge>
                         </Show>
                       </button>
                     </th>
-                    <td data-lean-value="bytes">{number(item.savings.bytesSaved)}</td>
-                    <td data-lean-value="tokens">{number(leanTokens(item.savings))}</td>
+                    <td>
+                      <LeanValue kind="bytes" savings={item.savings} />
+                    </td>
+                    <td>
+                      <LeanValue kind="tokens" savings={item.savings} />
+                    </td>
                     <td>
                       <MxToggle
                         checked={item.enabled}
@@ -240,6 +266,49 @@ function LeanItems(props: LeanViewProps) {
         </Show>
       </div>
       <p class="mx-note">{language.t("lean.page.estimate")}</p>
+    </>
+  )
+}
+
+function LeanValue(props: {
+  kind: "bytes" | "tokens"
+  savings?: LeanDashboard.Savings
+  total?: boolean
+  loading?: boolean
+}) {
+  const language = useLanguage()
+  const value = () => (props.kind === "bytes" ? props.savings?.bytesSaved : leanTokens(props.savings))
+  const unavailable = () => language.t(props.loading && !props.savings ? "lean.page.loading" : "lean.unavailable")
+  const tone = () => {
+    const number = value()
+    if (number === null || number === undefined || !Number.isSafeInteger(number)) return "unavailable"
+    return number < 0 ? "negative" : "default"
+  }
+  const exact = () =>
+    props.kind === "bytes" && tone() !== "unavailable"
+      ? language.t("lean.page.exactBytes", { value: leanNumber(value(), language.intl(), unavailable(), true) })
+      : undefined
+  return (
+    <>
+      <span
+        data-lean-total={props.total ? props.kind : undefined}
+        data-lean-value={!props.total ? props.kind : undefined}
+        data-tone={tone()}
+        title={exact()}
+        aria-label={exact()}
+      >
+        {props.kind === "bytes"
+          ? leanBytes(value(), language.intl(), unavailable())
+          : leanNumber(value(), language.intl(), unavailable(), true)}
+      </span>
+      <Show when={props.kind === "tokens" && props.savings && props.savings.tokenCalls < props.savings.calls}>
+        <small class="lean-coverage" data-lean-coverage>
+          {language.t("lean.page.tokenCoverage", {
+            measured: leanNumber(props.savings?.tokenCalls, language.intl(), unavailable()),
+            calls: leanNumber(props.savings?.calls, language.intl(), unavailable()),
+          })}
+        </small>
+      </Show>
     </>
   )
 }

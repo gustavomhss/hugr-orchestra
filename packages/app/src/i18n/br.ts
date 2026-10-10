@@ -1,5 +1,9 @@
 export const dict = {
   "lean.page.profile": "Perfil Orchestra · {{profile}}",
+  "lean.page.tokenCoverage": "Execuções com estimativa: {{measured}}/{{calls}}",
+  "lean.page.exactBytes": "Bytes UTF-8 exatos: {{value}}",
+  "lean.page.plaintextPreserve": "Texto preservado",
+  "lean.page.plaintextPreserveNote": "O texto da saída permanece intacto. A formatação SGR do terminal pode ser normalizada.",
   "lean.page.history": "Histórico de execuções",
   "lean.page.preserveNote": "A preservação exata mantém a saída intacta. Este item não reduz a saída.",
   "lean.page.close": "Fechar histórico",
