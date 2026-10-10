@@ -25,6 +25,8 @@ No overlapping author files. No agent changes contracts, manifests, aggregate ro
 - Current verification hook carries honest SQL/error unions and preserves full mixed Causes. It cannot open a nested transaction or supply authorization itself.
 - Capture DTOs before effects with descriptor-safe existing `CapabilityOperatorScope.capture` plus strict type schemas. Freeze/copy method facade inputs; reject accessors/proxies, oversized input and excess fields without executing serializers.
 - Query limit defaults16, range1..32. Sort ascending opaque IDs and fetch limit+1; coverage `live`, never snapshot/count claim. Filter scoped entries with full-Cause-safe handling: only pure expected scope denial may become an omitted item; mixed faults propagate.
+- Review correction: target continuation is encrypted/authenticated opaque cursor, never an omitted target ID. Factory-private AES-256-GCM key, random12-byte nonce, bounded payload containing last scanned ID, principal, scopeHash, connectionID, actual placement, action and expiry (five minutes). Validate all bindings/expiry before SQL scan; current grants still required. Changed limit permitted. Factory recreated/expired/tampered/foreign cursor fails closed; cursor confers no authority. Shared management facade must live at Server handler-layer scope, not per HTTP request. Connection keysets remain IDs because resource-restricted connection collections cannot list.
+- Review correction: ID methods normalize pure expected authority rejection (missing/mismatched request frame, denied scope, expired/revoked authority) to the same constant unavailable result as missing IDs. Preserve every mixed Cause reason/annotation.
 
 ## Store
 
