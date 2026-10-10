@@ -19,7 +19,7 @@ export type Interface = Readonly<{
 
 export type Reconciliation = Readonly<{
   /** SQL-only verification under current authority; a missing receipt consumes no quota. */
-  reconcile: <E, R>(target: CapabilityOperatorContract.Target, payload: Schema.Json,
+  reconcile: <E = never, R = never>(target: CapabilityOperatorContract.Target, payload: Schema.Json,
     verify?: (tx: Transaction) => Effect.Effect<void, E, R>) =>
     Effect.Effect<Readonly<{ requestID: string; reused: boolean; data: Schema.Json }> | undefined,
       E | Capability.Failure | SqlError | EffectDrizzleQueryError, R>
