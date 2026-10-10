@@ -3,14 +3,15 @@ export * as CapabilityConnectionVerification from "./verify"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { Integration } from "@orchestra/schema/integration"
-import { Cause, Effect, Option, Schema } from "effect"
+import { Cause, Context, Effect, Option, Schema } from "effect"
 import { createHash } from "node:crypto"
 import { types } from "node:util"
-import { request, validateOptions, type Options } from "../channel/http"
+import { Failure, request, validateOptions, type Options } from "../channel/http"
 import { CapabilityOperatorScope } from "../operator/scope"
 import { CapabilityDiscord } from "../providers/discord"
 import { CapabilitySlack } from "../providers/slack"
 import type { CapabilityConnectionSetupContract } from "./setup-contract"
+import type { CapabilityConnectionStoreContract } from "./store-contract"
 
 export type { Options } from "../channel/http"
 
@@ -53,10 +54,7 @@ export const make = (options: Options = {}) => {
           selected.provider === "slack" ? { method: "POST", path: "/auth.test", body: {} }
             : { method: "GET", path: "/users/@me" }, transport.value).pipe(
           // Map the whole Cause without dropping other failures, defects, interrupts or annotations.
-          Effect.catchCause((cause) => Effect.failCause(Cause.map(cause, (error) => failure(
-            error.reason === "http" && (error.status === 401 || error.status === 403)
-              ? "authentication_required" : "connection_unavailable",
-          )))),
+          Effect.catchCause((cause) => Effect.failCause(transportCause(cause))),
         )
         const rejected = selected.provider === "slack" ? Schema.decodeUnknownOption(SlackRejection)(value) : Option.none()
         if (Option.isSome(rejected)) return yield* failure(
@@ -68,6 +66,7 @@ export const make = (options: Options = {}) => {
         ) : Schema.decodeUnknownOption(DiscordIdentity)(value).pipe(Option.map((auth) => auth.id))
         if (Option.isNone(identity)) return yield* failure("connection_unavailable")
         const subjectID = identity.value
+        if (subjectID.includes(selected.key)) return yield* failure("connection_unavailable")
         // This fingerprint binds identity and exact key, not vendor action entitlement.
         return Object.freeze({ provider: selected.provider, endpoint, subjectID,
           integrationID: Integration.ID.make(`capability.${selected.provider}`),
@@ -78,6 +77,15 @@ export const make = (options: Options = {}) => {
     }
     return Object.freeze({ verify }) satisfies CapabilityConnectionSetupContract.Verifier
   })
+}
+
+/** Pure projection: mixed errors retain identity; repeated reasons and annotations survive normalization. */
+export function transportCause(cause: Cause.Cause<CapabilityConnectionStoreContract.Error | Failure>) {
+  return Cause.fromReasons<CapabilityConnectionStoreContract.Error>(cause.reasons.map((reason) => reason._tag === "Fail"
+    ? Cause.makeFailReason(reason.error instanceof Failure ? failure(
+      reason.error.reason === "http" && (reason.error.status === 401 || reason.error.status === 403)
+        ? "authentication_required" : "connection_unavailable",
+    ) : reason.error).annotate(Context.makeUnsafe(new Map(reason.annotations))) : reason))
 }
 
 /** Reject proxies before reflection, and nested objects before the shared descriptor copier visits them. */
