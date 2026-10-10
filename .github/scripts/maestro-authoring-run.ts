@@ -265,11 +265,20 @@ const joinOwnedGroup = (command: Command): Command => command._tag === "Standard
 const spawnerRuntime = ManagedRuntime.make(LayerNode.compile(CrossSpawnSpawner.node), { memoMap }), sharedSpawner = await spawnerRuntime.runPromise(ChildProcessSpawner.ChildProcessSpawner)
 const originalSpawner = { ...sharedSpawner }, containedSpawner = ChildProcessSpawner.make((command) => originalSpawner.spawn(joinOwnedGroup(command)))
 Object.assign(sharedSpawner, containedSpawner)
-const releaseSpawner = () => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() }
+const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
+const { Git } = await import(job.candidate + "/packages/orchestra/src/git/index.ts")
+const processRuntime = ManagedRuntime.make(LayerNode.compile(LayerNode.group([AppProcess.node, Git.node])), { memoMap })
+const releaseSpawner = () => processRuntime.dispose().finally(() => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() })
 try {
+// Dependencies are hidden by AppLayer's root surface. Materialize the real consumer graph, not a fake self-provided tag.
+const seeded = await processRuntime.runPromise(Effect.gen(function* () {
+  const processes = yield* AppProcess.Service
+  const git = yield* Git.Service
+  if (processes.spawn !== containedSpawner.spawn) throw new Error("AUTHORING_CONTAINED_PROCESS_PROVIDER_NOT_BOUND")
+  return { processes, git }
+}))
 const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
 try {
-const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
 const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
 const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
 const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
@@ -287,9 +296,8 @@ function isOps(value: unknown): value is TaskPromptOps { return !!value && typeo
 const shutdown = () => { void Promise.race([AppRuntime.dispose().finally(releaseSpawner), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
 process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
-  const actualSpawner = yield* ChildProcessSpawner.ChildProcessSpawner
-  const processes = yield* AppProcess.Service
-  requireFact(actualSpawner === sharedSpawner && actualSpawner.spawn === containedSpawner.spawn && processes.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_SPAWNER_NOT_BOUND")
+  const actualGit = yield* Git.Service
+  requireFact(actualGit === seeded.git && seeded.processes.spawn === containedSpawner.spawn && sharedSpawner.spawn === containedSpawner.spawn, "AUTHORING_CONTAINED_GIT_CONSUMER_NOT_BOUND")
   const store = yield* InstanceStore.Service
   const ctx = yield* store.load({ directory: job.project })
   const services = yield* Effect.gen(function* () {
