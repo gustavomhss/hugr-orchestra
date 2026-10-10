@@ -2,7 +2,7 @@ export * as TcpProxy from "./tcp-proxy"
 
 import path from "node:path"
 import which from "which"
-import { Deferred, Effect, Exit, Fiber, Queue, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Queue, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { BackendToolkitDiagnostics } from "./backend-toolkit/diagnostics"
 import { LayerNode } from "./effect/layer-node"
@@ -80,7 +80,7 @@ const broker = Effect.fn("TcpProxy.broker")(function* (snapshot: readonly number
       stdin: "pipe", forceKillAfter: "2 seconds",
     })).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-broker-acquisition" })))
   // Keep stdin open without bytes. Normal queue completion runs the sink's EOF action on both spawners.
-  const input = yield* Queue.make<Uint8Array>()
+  const input = yield* Queue.make<Uint8Array, Cause.Done>()
   const writer = yield* Stream.fromQueue(input).pipe(Stream.run(child.stdin), Effect.forkScoped)
   yield* child.stderr.pipe(Stream.runDrain, Effect.ignore, Effect.forkScoped)
   const ready = yield* Deferred.make<void, ToolSafety.Denied>()
