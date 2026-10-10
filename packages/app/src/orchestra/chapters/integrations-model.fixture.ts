@@ -1,4 +1,5 @@
-import { afterEach } from "bun:test"
+import { afterEach, expect } from "bun:test"
+import { types } from "node:util"
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { SessionID } from "@orchestra/schema/session-id"
@@ -35,7 +36,7 @@ export function deferred<T>() {
 
 // Test-only HTTP transport intentionally leaves JSON unvalidated: controller must check the wire DTO.
 export function fixture(handler: (request: Request) => Response | Promise<Response>, ignoreAbort = false,
-  observe?: (state: State) => void) {
+  observe?: (state: State) => void, requestKey?: () => string) {
   const signals: AbortSignal[] = []
   const requests: { method: string; url: string; key: string | null; body: unknown }[] = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
@@ -59,6 +60,8 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
   }
   const query = (after?: string) => after === undefined ? "" : `?after=${encodeURIComponent(after)}`
   const api: Api = {
+    get: (id, options) => request(`/api/capability/connections/${id}`, options),
+    getTarget: (id, options) => request(`/api/capability/targets/${id}`, options),
     list: (after, options) => request(`/api/capability/connections${query(after)}`, options),
     targets: (id, after, options) => request(`/api/capability/connections/${id}/targets${query(after)}`, options),
     bindings: (id, after, options) => request(`/api/capability/targets/${id}/bindings${query(after)}`, options),
@@ -73,7 +76,7 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
   const root = createRoot((dispose) => {
     cleanup.add(dispose)
     let serial = 0
-    const model = createIntegrationModel(api, () => `private-intent-${++serial}`)
+    const model = createIntegrationModel(api, requestKey ?? (() => `private-intent-${++serial}`))
     if (observe) createComputed(() => observe(model.state))
     return { model, dispose }
   })
@@ -83,7 +86,25 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
 export function reads(request: Request) {
   if (request.method !== "GET") throw new Error("Unexpected fixture mutation")
   const path = new URL(request.url).pathname
+  const id = path.split("/").at(-1) ?? ""
+  if (id.startsWith("cconn_")) return json(connection(Number(id.slice(6))))
+  if (id.startsWith("ctgt_")) return json(target(Number(id.slice(5))))
   if (path.endsWith("/bindings")) return json(CapabilityManagement.BindingPage.make({ items: [binding()], coverage: "current-actor" }))
   if (path.endsWith("/targets")) return json(CapabilityManagement.TargetPage.make({ items: [target()], coverage: "live" }))
   return json(CapabilityManagement.ConnectionPage.make({ items: [connection(), connection(2)], coverage: "live" }))
+}
+
+// SSR unit tests must also execute browser ownership/proxy cases, once, with a fail-closed child guard.
+export async function browser(f: ReturnType<typeof fixture>, file: string, name: string) {
+  if (types.isProxy(f.model.state)) return true
+  expect(process.env.ORCHESTRA_INTEGRATIONS_PROXY_CHILD).not.toBe("1")
+  f.dispose()
+  f.stop()
+  const child = Bun.spawn([process.execPath, "test", "--conditions=browser", "--preload", "./happydom.ts", file, "-t", name], {
+    env: { ...process.env, ORCHESTRA_LOCAL_TESTS: "1", ORCHESTRA_INTEGRATIONS_PROXY_CHILD: "1" }, stdout: "pipe", stderr: "pipe",
+  })
+  const output = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()])
+  expect({ exit: await child.exited, output: output.join("\n") }).toMatchObject({ exit: 0 })
+  expect(output.join("\n")).toContain(`(pass) ${name}`)
+  return false
 }
