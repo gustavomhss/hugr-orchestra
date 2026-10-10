@@ -162,7 +162,7 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     view.dispose()
   })
 
-  test("actual ToolPartDisplay mounts real persisted decisions and preserves output across invalid and incomplete metadata", async () => {
+  test("actual ToolPartDisplay preserves output without inline KPI across valid, invalid and incomplete metadata", async () => {
     const { PART_MAPPING, ToolRegistry } = await import("./message-part")
     const { DataProvider } = await import("../context/data")
     ToolRegistry.register({ name: "lean-dom-test", render: (props) => {
@@ -184,7 +184,12 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
       update({ ...part, state: { status: "completed", input: {}, output: "original output", title: "result", metadata: { lean }, time: { start: 0, end: 1 } } })
     }
     const panel = () => host.querySelector('[data-component="lean-tool-metrics"]')
-    const value = (slot: string) => panel()?.querySelector(`[data-slot="${slot}"]`)?.textContent
+    const preserved = () => {
+      expect(host.querySelector('[data-component="tool-part-wrapper"]')).not.toBeNull()
+      expect(host.textContent).toBe("original output")
+      expect(panel()).toBeNull()
+      expect(host.textContent).not.toContain("PRIVATE MUST_NOT_RENDER")
+    }
     const dispose = render(() => createComponent(DataProvider, {
       get directory() { return directory() },
       data: { get session() { return native.session }, session_status: {}, session_diff: {}, message: {}, part: {} },
@@ -194,97 +199,66 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
           agent: "backend", model: { providerID: "provider", modelID: "model" } },
       }) },
     }), host)
-    expect(host.querySelector('[data-component="tool-part-wrapper"]')).not.toBeNull()
-    expect(host.textContent).toContain("original output")
-    expect(panel()).toBeNull()
+    preserved()
     expect(LeanMetrics.decode(JSON.parse(JSON.stringify(metric)))).toEqual(metric)
     complete(metric)
-    expect(panel()).not.toBeNull()
-    expect(panel()?.getAttribute("aria-label")).toBe("Lean · Repository/project: repo-alpha")
-    expect(value("bytes-before")).toBe("1,200")
-    expect(value("bytes-after")).toBe("600")
-    expect(value("bytes-saved")).toBe("600")
-    expect(value("percent-saved")).toBe("50%")
-    expect(value("tokens-before")).toBe("300")
-    expect(value("tokens-after")).toBe("150")
-    expect(value("tokens-saved")).toBe("150")
-    expect(value("token-counter")).toBe("chars-per-token-4")
-    expect(panel()?.textContent).toContain("UTF-8 bytes before")
-    expect(panel()?.textContent).toContain("Estimated tokens saved (signed)")
-    expect(panel()?.textContent).toContain("Lean filter profile")
-    expect(panel()?.textContent).not.toContain("original output")
-    expect(value("filter-profile")).toBe("git-status")
-    expect(value("duration")).toBe("1.25 ms")
+    preserved()
     for (const lean of [undefined, null, { version: 99 }, { ...metric, bytes: { before: -1 } },
       { ...metric, tokens: null }, { ...metric, tokens: { kind: "unavailable", before: 0 } },
       { ...metric, tokens: { kind: "estimated", counter: "unknown", before: 3, after: 2, saved: 1 } },
       { ...metric, tokens: { kind: "estimated", counter: "chars-per-token-4", before: 3, after: 2, saved: 2 } }]) {
       complete(lean)
-      expect(panel()).toBeNull()
-      expect(host.textContent).toContain("original output")
+      preserved()
       complete(metric)
-      expect(panel()).not.toBeNull()
+      preserved()
     }
     complete({ ...metric, tokens: { kind: "unavailable" } })
-    expect(panel()).not.toBeNull()
-    expect(value("tokens-unavailable")).toBe("Unavailable")
-    expect(value("tokens-before")).toBeUndefined()
-    expect(value("token-counter")).toBeUndefined()
+    preserved()
     complete({ ...metric, tokens: { kind: "estimated", counter: "chars-per-token-4", before: 2, after: 3, saved: -1 } })
-    expect(value("tokens-before")).toBe("2")
-    expect(value("tokens-after")).toBe("3")
-    expect(value("tokens-saved")).toBe("-1")
+    preserved()
     complete(metric)
     for (const owner of [
       { ...metric.owner, projectID: "repo-beta" }, { ...metric.owner, location: "/workspace/beta" },
       { ...metric.owner, sessionID: "ses_beta" }, { ...metric.owner, callID: "call_beta" },
     ]) {
       complete({ ...metric, owner })
-      expect(panel()).toBeNull()
-      expect(host.textContent).toContain("original output")
+      preserved()
       complete(metric)
-      expect(panel()).not.toBeNull()
+      preserved()
     }
-    // Native ownership changes must invalidate a fixed valid metric without a metadata update.
+    for (const field of ["command", "output"]) {
+      complete({ ...metric, [field]: "PRIVATE MUST_NOT_RENDER" })
+      preserved()
+      for (const nested of ["owner", "model", "bytes", "tokens"] as const) {
+        complete({ ...metric, [nested]: { ...metric[nested], [field]: "PRIVATE MUST_NOT_RENDER" } })
+        preserved()
+      }
+    }
+    complete(metric)
+    // Ownership changes never add KPI content or alter the ordinary renderer's output.
     for (const change of [{ projectID: "repo-beta" }, { directory: "/workspace/beta" }, { id: "ses_beta" }]) {
       setNative("session", 0, change)
-      expect(panel()).toBeNull()
-      expect(host.textContent).toContain("original output")
+      preserved()
       setNative("session", [{ ...session }])
-      expect(panel()).not.toBeNull()
+      preserved()
     }
     setNative("session", [])
-    expect(panel()).toBeNull()
-    expect(host.textContent).toContain("original output")
+    preserved()
     setNative("session", [{ ...session }])
-    expect(panel()).not.toBeNull()
+    preserved()
     setDirectory("/workspace/beta")
-    expect(panel()).toBeNull()
-    expect(host.textContent).toContain("original output")
+    preserved()
     setDirectory(session.directory)
-    expect(panel()).not.toBeNull()
+    preserved()
     setNative("session", 0, "projectID", "repo-beta")
     complete({ ...metric, owner: { ...metric.owner, projectID: "repo-beta" }, orchestraProfile: "orchestra-beta",
       filterProfile: "pytest", status: "normalized", reason: "normalized" })
-    expect(panel()?.getAttribute("aria-label")).toBe("Lean · Repository/project: repo-beta")
-    expect(panel()?.firstElementChild?.textContent).toContain("repo-beta")
-    expect(value("filter-profile")).toBe("pytest")
-    expect(value("status")).toBe("Normalized")
-    expect(value("reason")).toBe("normalized")
-    expect(panel()?.textContent).not.toContain("repo-alpha")
-    expect(panel()?.textContent).not.toContain("orchestra-beta")
+    preserved()
     setNative("session", [{ ...session }])
     complete({ ...metric, status: "passthrough", reason: "disabled", filterProfile: undefined,
       bytes: { before: 0, after: 0, saved: 0 },
       tokens: { kind: "estimated", counter: "chars-per-token-4", before: 0, after: 0, saved: 0 } })
-    expect(value("tokens-before")).toBe("0")
-    expect(value("tokens-after")).toBe("0")
-    expect(value("tokens-saved")).toBe("0")
-    expect(value("tokens-unavailable")).toBeUndefined()
-    expect(value("percent-saved")).toBe("Not applicable (zero bytes before)")
-    expect(value("filter-profile")).toBe("Unavailable")
-    expect(value("status")).toBe("Passed through")
-    expect(value("reason")).toBe("disabled")
+    preserved()
     update({ ...part, state: { status: "running", input: {}, metadata: { lean: metric }, time: { start: 0 } } })
     expect(panel()).toBeNull()
     update({ ...part, state: { status: "pending", input: {}, raw: "" } })
@@ -292,31 +266,29 @@ if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
     update({ ...part, state: { status: "error", input: {}, metadata: { lean: metric }, error: "", time: { start: 0, end: 1 } } })
     expect(panel()).toBeNull()
     complete(metric)
-    expect(panel()).not.toBeNull()
-    expect(host.textContent).toContain("original output")
-    // Use an actual Solid ToolPart store: private symbols must not reject a valid persisted record.
+    preserved()
+    // Actual Solid store mutations also preserve output without introducing inline metrics.
     const [stored, setStored] = createStore({ part: { ...part, state: { status: "completed" as const,
       input: {}, output: "original output", title: "result", metadata: { lean: JSON.parse(JSON.stringify(metric)) as {
         owner: { projectID: string }; durationMs: number
       } },
       time: { start: 0, end: 1 } } } })
     update(stored.part)
-    expect(panel()).not.toBeNull()
+    preserved()
     setStored("part", "state", "metadata", "lean", "owner", "projectID", "repo-beta")
-    expect(panel()).toBeNull()
-    expect(host.textContent).toContain("original output")
+    preserved()
     setStored("part", "state", "metadata", "lean", "owner", "projectID", "repo-alpha")
-    expect(panel()).not.toBeNull()
+    preserved()
     setStored("part", "state", "metadata", "lean", "durationMs", 7.5)
-    expect(value("duration")).toBe("7.5 ms")
+    preserved()
     setStored("part", "callID", "call_beta")
-    expect(panel()).toBeNull()
+    preserved()
     setStored("part", "callID", "call_alpha")
-    expect(panel()).not.toBeNull()
+    preserved()
     setStored("part", "sessionID", "ses_beta")
-    expect(panel()).toBeNull()
+    preserved()
     setStored("part", "sessionID", "ses_alpha")
-    expect(panel()).not.toBeNull()
+    preserved()
     dispose()
   })
 }
