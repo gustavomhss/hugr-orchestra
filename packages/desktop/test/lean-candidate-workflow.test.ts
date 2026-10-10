@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 
 // Closed YAML structure and exact command/path fields, not arbitrary shell analysis.
-const source = await Bun.file(new URL("../../../../.github/workflows/lean-candidate.yml", import.meta.url)).text()
+const source = await Bun.file(new URL("../../../.github/workflows/lean-candidate.yml", import.meta.url)).text()
 const document: unknown = Bun.YAML.parse(source)
 const pins = {
   checkout: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
