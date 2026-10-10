@@ -35,6 +35,8 @@ export type State = Readonly<{
   targetsAfter?: string
   bindingsAfter?: SessionID
   busy: boolean
+  retryable: boolean
+  readRetryable: boolean
   failure?: Failure
   receipt?: Receipt
 }>
@@ -53,6 +55,7 @@ export type Model = Readonly<{
   bind: (input: Readonly<{ sessionID: SessionID; actions: readonly string[] }>) => Promise<void>
   unbind: (sessionID: SessionID) => Promise<void>
   retry: () => Promise<void>
+  retryRead: () => Promise<void>
   cancel: () => void
   dispose: () => void
 }>
