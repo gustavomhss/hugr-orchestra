@@ -236,7 +236,10 @@ describe("CapabilityConnectionStore", () => {
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) {
       expect(exit.cause.reasons.map((reason) => reason._tag)).toEqual(["Fail", "Fail", "Die", "Interrupt"])
-      expect(exit.cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error)).toEqual([expected, sqlError])
+      const failures = exit.cause.reasons.filter(Cause.isFailReason)
+      expect(failures).toHaveLength(2)
+      expect(failures[0].error).toBe(expected)
+      expect(failures[1].error).toBe(sqlError)
       expect(exit.cause.reasons.filter(Cause.isDieReason)[0].defect).toBe(defect)
       expect(exit.cause.reasons.filter(Cause.isInterruptReason)[0].fiberId).toBe(123)
       exit.cause.reasons.forEach((reason) => expect(reason.annotations.get("store-probe")).toBe("retained"))
