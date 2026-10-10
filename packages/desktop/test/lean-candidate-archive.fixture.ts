@@ -48,9 +48,9 @@ export function requireNativeCI() {
 
 export async function packagedCandidate() {
   const output = path.join(desktop, "dist-candidate")
-  const apps = await Array.fromAsync(new Bun.Glob("**/*.app/Contents/Info.plist").scan({ cwd: output }))
+  const apps = await Array.fromAsync(new Bun.Glob("mac/*.app/Contents/Info.plist").scan({ cwd: output }))
   assert.equal(apps.length, 1, "LEAN_CANDIDATE_PACKAGE_MISSING: expected exactly one directory app")
-  const app = await realpath(path.resolve(output, apps[0]!, "../../.."))
+  const app = await realpath(path.resolve(output, apps[0]!, "../.."))
   const resources = path.join(app, "Contents/Resources")
   // Read only the candidate's own packaged plist, never machine policy plists.
   const plist = await Bun.file(path.join(app, "Contents/Info.plist")).text()
