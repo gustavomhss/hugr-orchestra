@@ -22,7 +22,7 @@ const guarded = [
   ["packages/orchestra/src/plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
 ] as const
 // Current runtime ABI observations are separate from the frozen historical packet's source/blob identities.
-const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats.ts", "maestro/roster.ts",
+const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats/index.ts", "maestro/roster.ts",
   "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "tool/task-background.ts",
   "session/prompt-guard.ts", "session/task-prompt-ops.ts", "effect/app-runtime.ts", "cli/cmd/run.ts"]
 const deadline = 10 * 60_000
@@ -274,7 +274,7 @@ const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/ag
 const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
 const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
 const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
-const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats.ts")
+const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats/index.ts")
 const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
 const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
 const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
