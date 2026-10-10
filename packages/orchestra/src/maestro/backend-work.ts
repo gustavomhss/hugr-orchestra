@@ -90,5 +90,6 @@ export function track(input: {
 }
 
 function lastAssistant(messages: readonly SessionV1.WithParts[]) {
-  return messages.findLast((message) => message.info.role === "assistant")
+  // MessageV2.stream is newest-first, including across pages.
+  return messages.find((message) => message.info.role === "assistant")
 }

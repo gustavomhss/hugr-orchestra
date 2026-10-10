@@ -76,7 +76,7 @@ export function bind(
 function resolve(value: unknown, directory: string) {
   if (typeof value !== "string" || !value || value.includes("\0") || !path.isAbsolute(directory)) return
   // Windows POSIX paths may need cygpath; drive-relative paths depend on ambient per-drive cwd. Neither is observable here.
-  if (process.platform === "win32" && (value.startsWith("/") || /^[a-z]:[^\\/]/i.test(value))) return
+  if (process.platform === "win32" && (value.startsWith("/") || /^[a-z]:(?:$|[^\\/])/i.test(value))) return
   return path.resolve(directory, value)
 }
 
