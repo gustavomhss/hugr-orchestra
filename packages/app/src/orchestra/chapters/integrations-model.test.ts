@@ -365,3 +365,17 @@ test.each(["full-private-secret", "a"])("exact private string leaf %s is rejecte
   expect(f.model.state.failure).toBe("unknown")
   expect(f.model.state.receipt).toBeUndefined()
 })
+
+test("long secret substring rejected in schema-valid string leaf; matching property name is harmless", async () => {
+  const leaking = fixture(() => json({ requestID: "prefix-private-secret-suffix", reused: false,
+    data: { connection: connection().connection, verification: "verified" } }))
+  await leaking.model.connect({ provider: "slack", key: "private-secret" })
+  expect(leaking.model.state.failure).toBe("unknown")
+  expect(leaking.model.state.receipt).toBeUndefined()
+  expect(JSON.stringify(leaking.model.state)).not.toContain("private-secret")
+  const harmless = fixture((request) => request.method === "GET" ? reads(request) : json({ requestID: "receipt", reused: false,
+    data: { connection: connection().connection, verification: "verified" } }))
+  await harmless.model.connect({ provider: "slack", key: "verification" })
+  expect(harmless.model.state.failure).toBeUndefined()
+  expect(harmless.model.state.receipt?.data).toEqual({ connection: connection().connection, verification: "verified" })
+})

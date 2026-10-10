@@ -71,3 +71,29 @@ test.each(["connection", "target"] as const)("committed receipt survives direct 
   await f.model.retry()
   expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(1)
 })
+
+test("full retained target window cannot starve directly refreshed selected account row", async () => {
+  const f = fixture((request) => {
+    const url = new URL(request.url)
+    if (request.method === "POST") return json({ requestID: "ack", reused: false, data: null })
+    if (url.pathname.endsWith(connection().connection.id)) return json(connection())
+    if (url.pathname.endsWith(target(40).target.id)) return json(target(40))
+    if (url.pathname.endsWith("/bindings")) return json({ items: [], coverage: "current-actor" })
+    if (url.pathname.endsWith("/targets")) {
+      const offset = Number(url.searchParams.get("after") ?? "0")
+      return json({ items: Array.from({ length: 32 }, (_, index) => target(offset + index + 1)), coverage: "live",
+        after: String(offset + 32).padStart(32, "0") })
+    }
+    return json({ items: [connection()], coverage: "live" })
+  })
+  await f.model.load(); await f.model.select(connection())
+  for (let index = 1; index < 16; index++) await f.model.moreTargets()
+  expect(f.model.state.targets).toHaveLength(512)
+  await f.model.selectTarget(target(40))
+  await f.model.bind({ sessionID: binding().sessionID, actions: ["send"] })
+  expect(f.model.state.status).toBe("ready")
+  expect(f.model.state.connections).toEqual([connection()])
+  expect(f.model.state.targetID).toBe(target(40).target.id)
+  expect(f.model.state.targets.some((row) => row.target.id === target(40).target.id)).toBe(true)
+  expect(f.model.state.connections.length + f.model.state.targets.length + f.model.state.bindings.length).toBeLessThanOrEqual(512)
+})

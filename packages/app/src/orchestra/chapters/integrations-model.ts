@@ -145,6 +145,10 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
         bindings: [], bindingsAfter: undefined })
     }
     if (!owned()) return
+    // Fresh owner queries replace old page windows; reserve room for directly refreshed selected rows.
+    cursors.clear()
+    set({ targets: [], bindings: [], targetsAfter: undefined, bindingsAfter: undefined })
+    if (!owned()) return
     if (kind === "disconnect") set({ connections: state.connections.map((row) => row.connection.id === selectedConnection
       ? { ...row, state: "disconnected" as const } : row) })
     if (acknowledgedTarget) target = acknowledgedTarget
@@ -159,8 +163,8 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       }
     }, owned)) || !owned()) return
     if (kind === "disconnect") {
-      set({ targets: [], targetsAfter: undefined })
       cursors.clear()
+      set({ targets: [], targetsAfter: undefined })
       return
     }
     if (!(await readTargets(false, owned)) || !owned() || !selectedTarget || kind === "removeTarget") return

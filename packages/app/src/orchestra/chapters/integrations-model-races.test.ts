@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { Schema } from "effect"
 import type { Model } from "./integrations-contract"
-import { Response, binding, browser, connection, fixture, json, reads, target } from "./integrations-model.fixture"
+import { Response, binding, browser, connection, deferred, fixture, json, reads, target } from "./integrations-model.fixture"
 
 test("reactive refetch refs stay detached through bind/unbind/retarget/retry/remove/disconnect", async () => {
   let account = connection()
@@ -143,4 +143,37 @@ test.each(["select", "dispose"] as const)("post ACK observer %s invalidates old 
   expect(f.model.state.targets).toEqual([target(2, 2)])
   expect(f.model.state.status).toBe("ready")
   expect(f.model.state.busy).toBe(false)
+})
+
+test.each(["connection", "target", "bindings"] as const)("cancel during direct %s refresh cannot populate changed selection or start old next read", async (kind) => {
+  let committed = false
+  const held = deferred<Response>()
+  const started = deferred<void>()
+  const f = fixture((request) => {
+    const path = new URL(request.url).pathname
+    if (request.method === "POST") { committed = true; return json({ requestID: "ack", reused: false, data: null }) }
+    if (path.includes(connection(2).connection.id)) return json({ items: [target(2, 2)], coverage: "live" })
+    if (committed && (kind === "connection" ? path.endsWith(connection().connection.id)
+      : kind === "target" ? path.endsWith(target().target.id) : path.endsWith("/bindings"))) {
+      started.resolve()
+      return held.promise
+    }
+    return reads(request)
+  }, true)
+  await f.model.load(); await f.model.select(connection()); await f.model.selectTarget(target())
+  const pending = f.model.bind({ sessionID: binding().sessionID, actions: ["send"] })
+  await started.promise
+  const before = f.requests.length
+  f.model.cancel()
+  await f.model.select(connection(2))
+  held.resolve(kind === "connection" ? json(connection()) : kind === "target" ? json(target())
+    : json({ items: [binding()], coverage: "current-actor" }))
+  await pending
+  expect(f.model.state.connectionID).toBe(connection(2).connection.id)
+  expect(f.model.state.targets).toEqual([target(2, 2)])
+  expect(f.model.state.bindings).toEqual([])
+  expect(f.model.state.status).toBe("ready")
+  expect(f.requests.slice(before).map((row) => new URL(row.url).pathname)).toEqual([
+    `/api/capability/connections/${connection(2).connection.id}/targets`,
+  ])
 })

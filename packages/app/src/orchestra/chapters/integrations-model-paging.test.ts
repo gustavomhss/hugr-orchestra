@@ -37,12 +37,14 @@ test.each(["connections", "bindings"] as const)("ordered %s pages reject duplica
       const url = new URL(request.url)
       const more = url.searchParams.has("after")
       if (kind === "connections" && url.pathname.endsWith("/connections")) return json({ coverage: "live",
-        items: more ? shape === "duplicate" ? [connection(3), connection(3)] : [connection(1)] : [connection(2)],
-        after: more && shape === "cursor" ? connection().connection.id : connection(3).connection.id,
+        items: more ? shape === "duplicate" ? [connection(4), connection(4)] : shape === "backward"
+          ? [connection(5), connection(4)] : [connection(4)] : [connection(2)],
+        after: more ? connection(shape === "cursor" ? 2 : shape === "duplicate" ? 4 : 5).connection.id : connection(3).connection.id,
       })
       if (kind === "bindings" && url.pathname.endsWith("/bindings")) return json({ coverage: "current-actor",
-        items: more ? shape === "duplicate" ? [binding(3), binding(3)] : [binding(1)] : [binding(2)],
-        after: more && shape === "cursor" ? binding().sessionID : binding(3).sessionID,
+        items: more ? shape === "duplicate" ? [binding(4), binding(4)] : shape === "backward"
+          ? [binding(5), binding(4)] : [binding(4)] : [binding(2)],
+        after: more ? binding(shape === "cursor" ? 2 : shape === "duplicate" ? 4 : 5).sessionID : binding(3).sessionID,
       })
       return reads(request)
     })
