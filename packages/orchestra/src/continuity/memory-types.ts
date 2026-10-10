@@ -44,6 +44,7 @@ export type MemoryReview = {
   critical: readonly string[]
   digest: string
 }
+export type MemoryChecklist = { version: 1; critical: readonly string[]; digest: string }
 export type CompleteArtifact = Omit<PartialArtifact, "version" | "tailStart"> & {
   version: 5
   tailStart?: never
@@ -52,6 +53,8 @@ export type CompleteArtifact = Omit<PartialArtifact, "version" | "tailStart"> & 
   covered: readonly { id: MessageID; digest: string }[]
   /** Host-owned review receipt; absence identifies an older unaudited v5 artifact. */
   review?: MemoryReview
+  /** Host-executed retention/integrity checks, not an independent semantic review. */
+  checklist?: MemoryChecklist
 }
 export type MemoryArtifact = PartialArtifact | CompleteArtifact
 export type Coverage = { version: 5; boundary: MessageID; coveredThrough: MessageID; currentUserID?: MessageID }

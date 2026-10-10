@@ -521,8 +521,8 @@ const layer = Layer.effect(
                 provider: backend || pending.model ? { ...provider, getModel: () => Effect.succeed(model) } : provider,
                  llm: { estimateInput: (backend?.llm ?? llm).estimateInput, stream: (request) => Stream.unwrap(Effect.sync(() => live()
                   ? (backend?.llm ?? llm).stream(request) : Stream.fail(new Error("Continuity backend revision cancelled")))) },
-              }, { history, delegations, member }, { parent: request, reviewOverhead: backend ? current.overheads.get(sessionID) : undefined })
-              // A review pull may observe ownership loss after the producer finished.
+              }, { history, delegations, member }, { parent: request })
+              // A producer pull may observe ownership loss before its transport finishes.
               // That is a stale result, not a provider failure or a breaker strike.
               if (!live()) {
                 yield* diagnostic(sessionID, active.boundary, "stale-or-backend-change", pass)

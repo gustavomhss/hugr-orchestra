@@ -122,7 +122,7 @@ it.effect("near-limit SDK audit budgets compiled role framing and never construc
   const result = yield* run(value.snapshot, { provider: provider(selected), llm: { estimateInput: native.estimateInput, stream: (input) => {
     requests.push(input)
     return input.agent.name === "continuity-review" ? native.stream(input) : response(candidate())
-  } } }, value.host, { reviewOverhead: 10_001 })
+  } } }, value.host)
   expect(opened.calls).toBe(0)
   expect(requests).toHaveLength(1)
   expect(result).toMatchObject({ check: "C18", failure: "input-budget" })
