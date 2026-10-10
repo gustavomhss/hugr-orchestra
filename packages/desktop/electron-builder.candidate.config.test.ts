@@ -150,7 +150,7 @@ test("candidate configuration and CLI compile with real dependency types", () =>
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
     types: ["bun", "node"],
   }
-  const files = ["electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "scripts/lean-candidate.ts", "electron-builder.candidate.config.test.ts"]
+  const files = ["electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "scripts/lean-candidate.ts", "electron-builder.candidate.config.test.ts", "electron-builder.candidate.runner.test.ts"]
   const program = ts.createProgram(files.map((file) => path.join(import.meta.dirname, file)), options)
   const errors = ts.getPreEmitDiagnostics(program)
   expect(ts.formatDiagnosticsWithColorAndContext(errors, { getCanonicalFileName: (file) => file, getCurrentDirectory: () => import.meta.dirname, getNewLine: () => "\n" })).toBe("")

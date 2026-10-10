@@ -2,6 +2,7 @@
 import path from "node:path"
 import { lstat, readlink, readdir, rm } from "node:fs/promises"
 import { createRequire } from "node:module"
+import { spawn } from "node:child_process"
 import { leanPin, sha256 } from "../../orchestra/script/lean-notices"
 
 const desktop = path.resolve(import.meta.dirname, "..")
@@ -11,6 +12,85 @@ const backend = path.resolve(desktop, "../orchestra/dist/node")
 const manifestPath = path.join(output, "lean-candidate-build.json")
 const appRelativePath = "mac/HuGR Lean Candidate.app"
 const pty = "@lydell/node-pty-darwin-x64"
+
+type CommandResult = {
+  exitCode: number | null; signal: string | null; stdout: string; stderr: string; timedOut: boolean; error?: string
+}
+
+export function assertIntelRunner(
+  probes: { vendor: CommandResult; machine: CommandResult; translated: CommandResult },
+  platform = process.platform, arch = process.arch,
+) {
+  const success = (probe: CommandResult, value: string) =>
+    !probe.timedOut && !probe.error && !probe.signal && probe.exitCode === 0 &&
+    probe.stdout.trim() === value && probe.stderr === ""
+  const absent = !probes.translated.timedOut && !probes.translated.error && !probes.translated.signal &&
+    probes.translated.exitCode === 1 && probes.translated.stdout === "" &&
+    probes.translated.stderr.trim() === "sysctl: unknown oid 'sysctl.proc_translated'"
+  if (
+    platform !== "darwin" || arch !== "x64" || !success(probes.vendor, "GenuineIntel") ||
+    !success(probes.machine, "x86_64") || !(success(probes.translated, "0") || absent)
+  ) throw new Error(`Candidate Intel runner probe rejected: ${JSON.stringify({ platform, arch, probes })}`)
+  return probes
+}
+
+// Every command owns a process group. Deadlines cover child exit and pipe drainage, not just spawn.
+export function runCandidateCommand(
+  args: string[], env = process.env, cwd = desktop, timeoutMs = 20 * 60_000, echo = true,
+): Promise<CommandResult> {
+  if (!args.length || !Number.isFinite(timeoutMs) || timeoutMs <= 0) throw new Error("Invalid candidate command/deadline")
+  return new Promise((resolve) => {
+    const child = spawn(args[0]!, args.slice(1), { cwd, env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] })
+    const stdout: Buffer[] = [], stderr: Buffer[] = []
+    let timedOut = false, error: string | undefined, settled = false
+    let escalation: ReturnType<typeof setTimeout> | undefined, drainage: ReturnType<typeof setTimeout> | undefined
+    const kill = (signal: NodeJS.Signals) => {
+      if (!child.pid) return
+      try {
+        if (process.platform === "win32") child.kill(signal)
+        if (process.platform !== "win32") process.kill(-child.pid, signal)
+      } catch (failure) {
+        if (!(failure instanceof Error && "code" in failure && failure.code === "ESRCH")) {
+          error = String(failure)
+          process.stderr.write(`${error}\n`)
+        }
+      }
+    }
+    const finish = (exitCode: number | null, signal: string | null) => {
+      if (settled) return
+      settled = true
+      clearTimeout(deadline); clearTimeout(escalation); clearTimeout(drainage)
+      process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", interrupt)
+      kill("SIGKILL")
+      resolve({ exitCode, signal, stdout: Buffer.concat(stdout).toString(), stderr: Buffer.concat(stderr).toString(), timedOut, error })
+    }
+    const stop = () => {
+      kill("SIGTERM")
+      escalation ??= setTimeout(() => {
+        kill("SIGKILL")
+        drainage = setTimeout(() => {
+          error ??= "Candidate child pipes remained open after SIGKILL"
+          child.stdout.destroy(); child.stderr.destroy()
+          finish(child.exitCode, child.signalCode)
+        }, 1000)
+      }, 1000)
+    }
+    const interrupt = () => { error = "Candidate command interrupted"; stop() }
+    process.once("SIGINT", interrupt); process.once("SIGTERM", interrupt)
+    const deadline = setTimeout(() => { timedOut = true; stop() }, timeoutMs)
+    child.stdout.on("data", (bytes: Buffer) => { stdout.push(bytes); if (echo) process.stdout.write(bytes) })
+    child.stderr.on("data", (bytes: Buffer) => { stderr.push(bytes); process.stderr.write(bytes) })
+    child.once("error", (failure) => { error = failure.message; process.stderr.write(`${failure.stack ?? failure}\n`) })
+    child.once("close", finish)
+  })
+}
+
+function requireSuccess(result: CommandResult, args: string[]) {
+  if (result.exitCode !== 0 || result.signal || result.timedOut || result.error) {
+    throw new Error(`Candidate command failed: ${JSON.stringify({ args, ...result })}`)
+  }
+  return result.stdout
+}
 
 export function assertCandidateHost(platform = process.platform, arch = process.arch, ci = process.env.CI) {
   if (platform !== "darwin" || arch !== "x64") {
@@ -77,16 +157,12 @@ export function assertMachOX64(bytes: Buffer, name: string) {
 }
 
 async function command(args: string[], env: NodeJS.ProcessEnv, cwd = desktop) {
-  const child = Bun.spawn(args, { cwd, env, stdout: "inherit", stderr: "inherit" })
-  const code = await child.exited
-  if (code !== 0) throw new Error(`Candidate command failed (${code}): ${args.join(" ")}`)
+  requireSuccess(await runCandidateCommand(args, env, cwd), args)
 }
 
 async function git(...args: string[]) {
-  const child = Bun.spawn(["git", ...args], { cwd: root, stdout: "pipe", stderr: "inherit" })
-  const text = await new Response(child.stdout).text()
-  if ((await child.exited) !== 0) throw new Error(`Candidate git command failed: ${args.join(" ")}`)
-  return text.trim()
+  const command = ["git", ...args]
+  return requireSuccess(await runCandidateCommand(command, process.env, root, 30_000, false), command).trim()
 }
 
 async function identity() {
@@ -102,9 +178,8 @@ async function identity() {
     const metadata = await Bun.file(Bun.resolveSync(`${name}/package.json`, desktop)).json()
     return [name, metadata.version] as const
   }))
-  const node = Bun.spawn(["node", "--version"], { stdout: "pipe", stderr: "inherit" })
-  const nodeVersion = (await new Response(node.stdout).text()).trim()
-  if ((await node.exited) !== 0 || !nodeVersion.startsWith("v24.")) {
+  const nodeVersion = requireSuccess(await runCandidateCommand(["node", "--version"], process.env, desktop, 15_000, false), ["node", "--version"]).trim()
+  if (!nodeVersion.startsWith("v24.")) {
     throw new Error(`Candidate requires Node24; got ${nodeVersion}`)
   }
   if (Bun.version !== "1.3.14") throw new Error(`Candidate requires Bun 1.3.14; got ${Bun.version}`)
@@ -124,11 +199,11 @@ export async function candidate(action: string) {
     throw new Error("Usage: bun run packages/desktop/scripts/lean-candidate.ts build|package")
   }
   assertCandidateHost()
-  const hardware = Bun.spawn(["/usr/sbin/sysctl", "-n", "hw.optional.arm64"], { stdout: "pipe", stderr: "inherit" })
-  const arm = (await new Response(hardware.stdout).text()).trim()
-  if ((await hardware.exited) !== 0 || arm !== "0") {
-    throw new Error("Lean candidate requires native Intel hardware (hw.optional.arm64=0)")
-  }
+  const runnerProbes = assertIntelRunner({
+    vendor: await runCandidateCommand(["/usr/sbin/sysctl", "-n", "machdep.cpu.vendor"], process.env, desktop, 15_000),
+    machine: await runCandidateCommand(["/usr/bin/uname", "-m"], process.env, desktop, 15_000),
+    translated: await runCandidateCommand(["/usr/sbin/sysctl", "-n", "sysctl.proc_translated"], process.env, desktop, 15_000),
+  })
   const source = await identity()
   const pkg = await Bun.file(path.join(desktop, "package.json")).json()
   // Child tools receive build plumbing only, never release/signing credentials.
@@ -141,7 +216,9 @@ export async function candidate(action: string) {
     await rm(manifestPath, { force: true })
     await rm(path.join(desktop, "out"), { recursive: true, force: true })
     await rm(backend, { recursive: true, force: true })
-    await command(["bun", "run", "prebuild"], env)
+    await command(["bun", "./scripts/copy-icons.ts", "prod"], env)
+    await command(["bun", "./scripts/copy-metainfo.ts", "prod"], env)
+    await command(["bun", "script/build-node.ts", "--lean-candidate"], env, path.resolve(desktop, "../orchestra"))
     await command(["bun", "run", "electron-vite", "build", "--config", "electron.vite.candidate.config.ts"], env)
     const materials = await verifyMaterials(path.join(backend, "licenses"))
     const renderer = await inventory(path.join(desktop, "out/renderer"))
@@ -168,7 +245,8 @@ export async function candidate(action: string) {
     await Bun.write(manifestPath, JSON.stringify({
       schemaVersion: 1, status: "built", accepted: false, ...source, appRelativePath,
       appId: "ai.hugr.orchestra.lean.candidate", productName: "HuGR Lean Candidate",
-      backend: await inventory(backend), renderer, main, preload, materials,
+      backend: await inventory(backend), renderer, main, preload, materials, runnerProbes,
+      resources: await inventory(path.join(desktop, "resources")),
     }, null, 2) + "\n")
     return
   }
@@ -181,6 +259,7 @@ export async function candidate(action: string) {
   for (const [key, directory] of [
     ["backend", backend], ["renderer", path.join(desktop, "out/renderer")],
     ["main", path.join(desktop, "out/main")], ["preload", path.join(desktop, "out/preload")],
+    ["resources", path.join(desktop, "resources")],
   ]) {
     if (JSON.stringify(manifest[key!]) !== JSON.stringify(await inventory(directory!))) {
       throw new Error(`Candidate build material changed: ${key}`)
@@ -249,7 +328,7 @@ export async function candidate(action: string) {
   }
   if (JSON.stringify(await identity()) !== JSON.stringify(source)) throw new Error("Candidate source changed during packaging")
   await Bun.write(manifestPath, JSON.stringify({
-    ...manifest, status: "packaged", accepted: false, materials,
+    ...manifest, status: "packaged", accepted: false, materials, runnerProbes,
     nativePty: { name: pty, version: metadata.version, binaries },
     packaged: await inventory(path.join(output, appRelativePath)),
     nativeResources: {
