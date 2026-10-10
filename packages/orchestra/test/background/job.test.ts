@@ -1,6 +1,6 @@
 import { describe, expect } from "bun:test"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Deferred, Effect } from "effect"
+import { Deferred, Effect, Fiber } from "effect"
 import { BackgroundJob } from "@/background/job"
 import { testEffect } from "../lib/effect"
 
@@ -157,6 +157,7 @@ describe("background.job", () => {
       const fail = yield* Deferred.make<void>()
       const interrupted = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
+      const queued: string[] = []
       const id = "job_test"
       yield* jobs.start({
         id,
@@ -165,18 +166,26 @@ describe("background.job", () => {
       })
       yield* jobs.extend({
         id,
-        run: Effect.never.pipe(
-          Effect.ensuring(Deferred.succeed(interrupted, undefined).pipe(Effect.andThen(Deferred.await(release)))),
-        ),
+        run: Effect.sync(() => queued.push("started")).pipe(Effect.andThen(Effect.never)),
       })
 
       yield* Deferred.succeed(fail, undefined)
       expect((yield* jobs.wait({ id })).info?.status).toBe("error")
+      expect(queued).toEqual([])
+      // Only begun work installs finalizers; hold a cancelled attempt across reuse of its ID.
+      yield* jobs.start({
+        id,
+        type: "test",
+        run: Effect.never.pipe(
+          Effect.ensuring(Deferred.succeed(interrupted, undefined).pipe(Effect.andThen(Deferred.await(release)))),
+        ),
+      })
+      const cancelled = yield* jobs.cancel(id).pipe(Effect.forkScoped)
       yield* Deferred.await(interrupted)
       yield* jobs.start({ id, type: "test", run: Effect.never })
 
       yield* Deferred.succeed(release, undefined)
-      yield* Effect.yieldNow
+      expect((yield* Fiber.join(cancelled))?.status).toBe("cancelled")
       expect((yield* jobs.get(id))?.status).toBe("running")
       yield* jobs.cancel(id)
     }),
