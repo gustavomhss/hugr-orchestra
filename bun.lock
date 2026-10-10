@@ -237,7 +237,7 @@
         "google-auth-library": "10.5.0",
         "gray-matter": "4.0.3",
         "htmlparser2": "8.0.2",
-        "hugr-lean": "file:./vendor/hugr-lean-0.2.0.tgz",
+        "hugr-lean": "file:./vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz",
         "ignore": "7.0.5",
         "immer": "11.1.4",
         "jsonc-parser": "3.3.1",
@@ -2876,7 +2876,7 @@
 
     "https-proxy-agent": ["https-proxy-agent@7.0.6", "", { "dependencies": { "agent-base": "^7.1.2", "debug": "4" } }, "sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw=="],
 
-    "hugr-lean": ["hugr-lean@./vendor/hugr-lean-0.2.0.tgz", { "bin": { "hugr-lean": "./dist/cli/index.js" } }, "sha512-Z1q0Y3UjzX74WPrVSRMU/JQwxkIk+EZs9/nR51TUkJegVtyoxF7Q5A9CYjTwNRVG/3ubdfe55wErWZX1UI3AqQ=="],
+    "hugr-lean": ["hugr-lean@./vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz", { "bin": { "hugr-lean": "./dist/cli/index.js" } }, "sha512-2xkYbdM94nJWORMHF5s8og/fwPOV4e/wpHUR4O72KU7KTriU0TdZ7kbiPddBI5vZ10d5u1LCWCrccYs8GuglGQ=="],
 
     "human-signals": ["human-signals@5.0.0", "", {}, "sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ=="],
 

@@ -64,7 +64,7 @@
     "drizzle-kit": "catalog:"
   },
   "dependencies": {
-    "hugr-lean": "file:./vendor/hugr-lean-0.2.0.tgz",
+    "hugr-lean": "file:./vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz",
     "@ai-sdk/alibaba": "1.0.17",
     "@ai-sdk/amazon-bedrock": "4.0.166",
     "@ai-sdk/anthropic": "3.0.111",
