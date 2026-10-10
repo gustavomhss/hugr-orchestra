@@ -276,7 +276,7 @@ while ($line=[Console]::ReadLine()) {
         } catch (error) { fail(error); proc.kill("SIGKILL") }
       }
     })
-    const timer = setTimeout(() => fail(new Error("identity recorder readiness deadline expired")), timeoutMs)
+    const timer = setTimeout(() => fail(new Error(`identity recorder readiness deadline expired: ${JSON.stringify({ pid: proc.pid, stdout: text.stdout.slice(-2000), stderr: text.stderr.slice(-2000) })}`)), timeoutMs)
     try { await ready.promise }
     catch (error) { await stop(true); throw error }
     finally { clearTimeout(timer) }

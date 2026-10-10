@@ -33,7 +33,10 @@
     },
     "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],
-      "outputs": []
+      "outputs": [],
+      // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
+      // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.
+      "env": ["PSModuleAnalysisCachePath"]
     },
     "@orchestra/app#test": {
       "dependsOn": ["transit", "^build"],
