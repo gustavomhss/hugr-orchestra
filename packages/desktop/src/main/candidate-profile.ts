@@ -36,6 +36,9 @@ export function initializeCandidateProfile(
   const appData = app.getPath("appData")
   const requested = process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT ?? join(appData, APP_ID)
   if (!isAbsolute(requested)) throw new Error("candidate-profile: root must be absolute")
+  if (lstatSync(resolve(requested), { throwIfNoEntry: false })?.isSymbolicLink()) {
+    throw new Error("candidate-profile: root must not be a symlink")
+  }
   const root = canonicalPath(requested)
   // OS account home remains stable when a relaunch inherits the candidate HOME.
   const home = canonicalPath(userInfo().homedir)
