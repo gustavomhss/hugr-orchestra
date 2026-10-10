@@ -33,6 +33,10 @@ jobs:
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
 
+      # The toolkit's installers run through the hugr-omni spawner, which cargo builds here on a cache miss.
+      - name: omni binaries
+        uses: ./.github/actions/omni-binaries
+
       - name: Host
         run: |
           echo "arch=$(uname -m) runner_arch=$RUNNER_ARCH"
