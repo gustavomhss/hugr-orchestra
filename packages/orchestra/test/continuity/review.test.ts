@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { ContinuityReview } from "@/continuity/review"
 import { decode, scope } from "@/continuity/memory"
+import { fingerprint } from "@/continuity/model"
 import type { CompleteArtifact, Host, MemorySnapshot } from "@/continuity/memory-types"
 import { seal } from "@/continuity/review-seal"
 import { Transcript } from "@/continuity/transcript"
@@ -100,7 +101,7 @@ test("request carries full raw covered source, candidate, indexed aliases and ty
   expect(result.request.system[0]).toContain("false-completion")
 })
 
-test("valid prior seal enables only head transcript plus prior memory/seal; unreviewed or stale receipt rechecks full covered source", () => {
+test("valid prior seal enables incremental review; absent receipt rechecks full sources and stale receipt fails closed", () => {
   const previous = prior()
   const incremental = fixture(previous)
   const result = envelope(incremental)
@@ -109,14 +110,14 @@ test("valid prior seal enables only head transcript plus prior memory/seal; unre
   expect(result.data.transcript).not.toContain("OLD_RAW_REQUIREMENT")
   expect(result.data.transcript).toContain("NEW_USER_EVIDENCE")
   expect(result.data.previous).toEqual({ text: previous.text, items: previous.items, review: previous.review })
-  for (const candidate of [{ ...previous, review: undefined }, { ...previous, review: { ...previous.review, digest: "stale" } }]) {
-    const value = fixture({ ...previous, review: undefined })
-    value.snapshot.previous = candidate
-    const full = envelope(value)
-    expect(full.data.mode).toBe("full-covered")
-    expect(full.data.transcript).toContain("OLD_RAW_REQUIREMENT")
-    expect(full.data.previous.review).toBeNull()
-  }
+  const old = fixture({ ...previous, review: undefined })
+  const full = envelope(old)
+  expect(full.data.mode).toBe("full-covered")
+  expect(full.data.transcript).toContain("OLD_RAW_REQUIREMENT")
+  expect(full.data.previous.review).toBeNull()
+  old.snapshot.previous = { ...previous, review: { ...previous.review!, digest: "stale" } }
+  expect(() => envelope(old)).toThrow("C18")
+  failure(review(old), "matching owned complete coverage")
 })
 
 test("accept returns host decision and conserves guarded IDs without reclassifying agent decisions", () => {
@@ -125,6 +126,27 @@ test("accept returns host decision and conserves guarded IDs without reclassifyi
   const body = accepted()
   body.critical = [{ item: "m1", src: ["t1"] }, { item: "m2", src: ["u1"] }]
   expect(review(value, body)).toEqual({ state: "closed", next: "wait-user", critical: ["m1", "m2", "m3", "m4", "m5"] })
+})
+
+test("incremental review supplements older failed evidence when candidate introduces a new historical success claim", () => {
+  const value = fixture()
+  const old = value.host.history[1]
+  old.parts.push({ id: PartID.make("prt_old_failed"), messageID: old.info.id, sessionID, type: "tool", tool: "bash", callID: "old-failure",
+    state: { status: "completed", input: { command: "verify-original" }, output: "OLD_CHECK_FAILED: exit 75", title: "Old check",
+      metadata: { exit: 75 }, time: { start: 1, end: 2 } } })
+  const initial: MemorySnapshot = { ...value.snapshot, boundary: old.info.id, covered: value.host.history.slice(0, 2), head: value.host.history.slice(0, 2) }
+  const artifact = produce(initial, value.host, [], "a1")
+  const previous = { ...artifact, review: seal(artifact, { state: "active", next: "verify", critical: [] }) }
+  value.snapshot = { ...value.snapshot, previous, head: value.host.history.slice(2, 4) }
+  value.artifact = produce(value.snapshot, value.host, [{ op: "add", section: "findings", src: ["t1"],
+    fields: { finding: "Original verification passed", why: "Claims prior success", status: "confirmed" } }])
+  const packet = envelope(value)
+  expect(packet.data.mode).toBe("incremental")
+  expect(packet.data.transcript).toContain("OLD_CHECK_FAILED: exit 75")
+  expect(packet.data.outcomes).toContainEqual(expect.objectContaining({ alias: "t1", exit: 75 }))
+  expect(packet.data.transcript).not.toContain("POST_BOUNDARY_NEW_TASK")
+  expect(previous.covered[1].digest).toBe(fingerprint(old))
+  failure(review(value, { ...accepted(), verdict: "repair", issues: [{ kind: "false-completion", detail: "Old check failed, not passed", src: ["t1"] }] }), "Old check failed")
 })
 
 test("all semantic issue classes reject even an accept verdict with concrete correction feedback", () => {
