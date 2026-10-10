@@ -56,7 +56,8 @@ describe("CapabilityConnectionManagement real Store and private operator request
       "missing", token.authority).pipe(Effect.exit), "connection_unavailable")
     const denied = CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.get(outside.id),
       "foreign", token.authority).pipe(Effect.exit), "connection_unavailable")
-    expect(denied.reasons).toEqual(missing.reasons)
+    expect(denied.reasons.map((reason) => reason._tag === "Fail" ? reason.error : undefined))
+      .toEqual(missing.reasons.map((reason) => reason._tag === "Fail" ? reason.error : undefined))
     CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.targets(outside.id, {}),
       "targets", token.authority).pipe(Effect.exit), "connection_unavailable")
   }))
@@ -73,7 +74,11 @@ describe("CapabilityConnectionManagement real Store and private operator request
     CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.list(CapabilityConnectionManagementFixture.placement, {}),
       "list", scoped.authority).pipe(Effect.exit), "target_denied")
     const short = yield* f.run(f.management.targets(f.parent.id, { limit: 2 }), "targets", scoped.authority)
-    expect(short).toEqual({ items: [], after: sorted[1].id, coverage: "live" })
+    expect(short.items).toEqual([])
+    expect(short.coverage).toBe("live")
+    expect(short.after).toMatch(/^[A-Za-z0-9_-]{32,2048}$/)
+    expect(JSON.stringify(short)).not.toContain(sorted[1].id)
+    expect(Buffer.from(short.after ?? "", "base64url").toString("utf8")).not.toContain(sorted[1].id)
     const tail = yield* f.run(f.management.targets(f.parent.id, { after: short.after, limit: 2 }), "targets", scoped.authority)
     expect(tail).toEqual({ items: [{ target: sorted[2] }], coverage: "live" })
     const childOnly = yield* f.operators.issue({ origin: "sdk", scope: { placements: "instance",
@@ -134,7 +139,7 @@ describe("CapabilityConnectionManagement real Store and private operator request
 
   it.live("replay rechecks current parent placement and target-parent association", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
-    const input = { target: f.child, input: { environment: "changed", resource: null } }
+    const input = { target: f.child, input: { environment: "changed", resource: {} } }
     yield* f.run(f.management.retargetTarget(input))
     const other = yield* f.connection()
     yield* f.database.db.update(CapabilityTargetTable).set({ connection_id: other.id }).where(eq(CapabilityTargetTable.id, f.child.id)).run()
@@ -199,7 +204,7 @@ describe("CapabilityConnectionManagement real Store and private operator request
 
   it.live("missing/revoked private frames fail; mixed target-denial Causes propagate whole", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
-    CapabilityConnectionManagementFixture.expectCode(yield* f.management.get(f.parent.id).pipe(Effect.exit), "invocation_binding_missing")
+    CapabilityConnectionManagementFixture.expectCode(yield* f.management.get(f.parent.id).pipe(Effect.exit), "connection_unavailable")
     const token = yield* f.operators.issue({ origin: "sdk" })
     yield* f.operators.revoke(token.authority)
     CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.get(f.parent.id), "read", token.authority)

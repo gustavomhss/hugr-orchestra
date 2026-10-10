@@ -15,6 +15,7 @@ import { CapabilityOperatorScope } from "../operator/scope"
 import { CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 import type { CapabilityConnectionManagementContract } from "./management-contract"
 import type { CapabilityConnectionStoreContract } from "./store-contract"
+import { CapabilityConnectionManagementCursor } from "./management-cursor"
 
 // Do not load credential identity or host-only connection/target material for management reads.
 const connectionColumns = {
@@ -35,6 +36,7 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
   return Effect.gen(function* () {
     const database = yield* Database.Service
     const requests = yield* CapabilityRequest.make({ operators })
+    const cursors = yield* Effect.sync(() => CapabilityConnectionManagementCursor.make())
     const db = database.db
 
     const parent = Effect.fn("CapabilityConnectionManagement.parent")(function* (
@@ -47,7 +49,7 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
     })
 
     const authorize = (target: CapabilityOperatorContract.Target) => operators.require(target).pipe(
-      Effect.catchCauseIf(pureDenial, () => Effect.fail(unavailable())),
+      Effect.catchCauseIf(pureAuthorityRejection, () => Effect.fail(unavailable())),
     )
 
     const actor = Effect.fn("CapabilityConnectionManagement.actor")(function* (
@@ -95,7 +97,10 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
           return yield* unavailable()
       })
       return yield* requests.commit(target, agentID === undefined ? payload : { input: payload, agentID },
-        (tx) => write(tx, placement, agentID), verify)
+        (tx) => write(tx, placement, agentID), verify).pipe(
+          Effect.withSpan("CapabilityConnectionManagement.commit"),
+          Effect.catchCauseIf(pureAuthorityRejection, () => Effect.fail(unavailable())),
+        )
     })
 
     const list: CapabilityConnectionManagementContract.Interface["list"] = (supplied, input) => {
@@ -132,7 +137,7 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
         const target = { action: "connection.get", placement: placementOf(row), resource: { kind: "connection", id: row.id } }
         const binding = yield* authorize(target)
         const result = yield* projectConnection(row)
-        yield* operators.validate(binding, target).pipe(Effect.catchCauseIf(pureDenial, () => Effect.fail(unavailable())))
+        yield* operators.validate(binding, target).pipe(Effect.catchCauseIf(pureAuthorityRejection, () => Effect.fail(unavailable())))
         return result
       })
     }
@@ -144,12 +149,13 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
         const value = captured.value
         const row = yield* parent(db, value.id)
         const placement = placementOf(row)
-        const target = { action: "connection.targets", placement, resource: { kind: "connection", id: row.id } }
+        const target = { action: "connection.targets", placement, resource: { kind: "connection" as const, id: row.id } }
         const binding = yield* authorize(target)
+        const after = value.input.after === undefined ? undefined : yield* cursors.open(value.input.after, binding, target)
         const limit = value.input.limit ?? 16
         const rows = yield* db.select(targetColumns).from(CapabilityTargetTable).where(and(
           eq(CapabilityTargetTable.connection_id, row.id),
-          value.input.after === undefined ? undefined : gt(CapabilityTargetTable.id, value.input.after),
+          after === undefined ? undefined : gt(CapabilityTargetTable.id, after),
         )).orderBy(CapabilityTargetTable.id).limit(limit + 1).all()
         const items = (yield* Effect.forEach(rows.slice(0, limit), (child) => Effect.gen(function* () {
           const scoped = { action: target.action, placement, resource: { kind: "target", id: child.id } }
@@ -159,10 +165,10 @@ export function make(options: CapabilityConnectionManagementContract.Options) {
           yield* operators.validate(allowed, scoped)
           return Object.freeze({ target: Object.freeze(decoded.value) })
         }).pipe(Effect.catchCauseIf(pureDenial, () => Effect.succeed(undefined))))).filter((item) => item !== undefined)
-        yield* operators.validate(binding, target).pipe(Effect.catchCauseIf(pureDenial, () => Effect.fail(unavailable())))
+        yield* operators.validate(binding, target)
         return Object.freeze({ items: Object.freeze(items), coverage: "live" as const,
-          ...(rows.length > limit ? { after: rows[limit - 1].id } : {}) })
-      })
+          ...(rows.length > limit ? { after: yield* cursors.seal(rows[limit - 1].id, binding, target) } : {}) })
+      }).pipe(Effect.catchCauseIf(pureAuthorityRejection, () => Effect.fail(unavailable())))
     }
 
     const disconnect: CapabilityConnectionManagementContract.Interface["disconnect"] = (input) => {
@@ -286,6 +292,12 @@ function projectConnection(row: { id: Capability.ConnectionID; provider: string;
 function pureDenial(cause: Cause.Cause<CapabilityConnectionStoreContract.Error>) {
   return cause.reasons.length > 0 && cause.reasons.every((reason) => reason._tag === "Fail" &&
     reason.error instanceof Capability.Failure && reason.error.code === "target_denied")
+}
+
+function pureAuthorityRejection(cause: Cause.Cause<CapabilityConnectionStoreContract.Error>) {
+  return cause.reasons.length > 0 && cause.reasons.every((reason) => reason._tag === "Fail" &&
+    reason.error instanceof Capability.Failure && ["invocation_binding_missing", "invocation_binding_mismatch",
+      "target_denied", "authentication_required", "authentication_revoked"].includes(reason.error.code))
 }
 
 function unavailable() {
