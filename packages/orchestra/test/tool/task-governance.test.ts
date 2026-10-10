@@ -271,6 +271,7 @@ it.instance(
         terminal: { reason: "interrupted", hostDetail: "Governed Task denied: reserved-child-incomplete" },
         taskId: expect.stringMatching(/^tsk_[0-9a-f]{64}$/),
         memory: { reads: [], writes: [] },
+        workerEvidence: { changes: [], checks: [] },
         writeRoots: [],
         ...(yield* ToolSafetySandbox.status()),
       })
