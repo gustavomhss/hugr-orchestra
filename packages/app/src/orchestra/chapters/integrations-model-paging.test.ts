@@ -122,3 +122,16 @@ test("target ordering survives eviction from bounded visible ID history", async 
   expect(f.model.state.status).toBe("error")
   expect(f.model.state.targetsAfter).toBe(String(544).padStart(32, "0"))
 })
+
+test("ascending targets accept distinct opaque continuations in lexically decreasing order", async () => {
+  const f = fixture((request) => {
+    const after = new URL(request.url).searchParams.get("after")
+    return json({ items: [target(after === null ? 1 : after === "z".repeat(32) ? 2 : 3)], coverage: "live",
+      ...(after === "a".repeat(32) ? {} : { after: after === null ? "z".repeat(32) : "a".repeat(32) }) })
+  })
+  await f.model.select(connection()); await f.model.moreTargets(); await f.model.moreTargets()
+  expect(f.model.state.status).toBe("ready")
+  expect(f.model.state.targets).toEqual([target(), target(2), target(3)])
+  expect(f.requests.map((row) => new URL(row.url).searchParams.get("after"))).toEqual([null, "z".repeat(32), "a".repeat(32)])
+  expect(f.model.state.targetsAfter).toBeUndefined()
+})

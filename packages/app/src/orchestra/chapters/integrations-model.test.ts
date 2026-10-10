@@ -129,6 +129,8 @@ test("lost HTTP ACK retries only explicitly, same key and detached setup input; 
   expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(2)
   await f.model.connect(input)
   expect(f.requests.filter((row) => row.method === "POST")[2].key).toBe("private-intent-2")
+  expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(3)
+  expect(f.requests.filter((row) => row.method === "POST")[2].body).toEqual({ provider: "slack", key: "edited-secret", label: "edited" })
   expect(commits).toBe(2)
 })
 
