@@ -22,7 +22,7 @@ Source: adapted from the official protobuf-es documentation (Apache-2.0), <https
 ## Steps
 
 1. Check the header of an existing generated file. It names `protoc-gen-es v2.16.0` when this engine produced it. Any other version means the project pins another generator: report `engine-version-mismatch(project=<v>, bundled=2.16.0)` and do not regenerate. With `elide_plugin_version=true` the header carries no version; use the project's `@bufbuild/protoc-gen-es` pin instead, or follow the packet when there is none.
-2. With a project `buf.gen.yaml` whose entry is `local: protoc-gen-es`, let buf find the toolkit's plugin first on `PATH`:
+2. With a project `buf.gen.yaml` whose entry is `local: protoc-gen-es`, invoke the toolkit's buf. The host provisions its pinned plugin first and the buf launcher puts the toolkit bin first on the child `PATH`; make that selection explicit in the recorded command so the caller can bind the indirect plugin invocation:
    ```sh
    PATH="$BACKEND_TOOLKIT_BIN:$PATH" "$BACKEND_TOOLKIT_BIN/buf" generate proto
    ```

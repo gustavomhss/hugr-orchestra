@@ -1,7 +1,7 @@
 export * as Seats from "."
 
 import backend from "./backend"
-import walt from "./walt"
+import archie from "./archie"
 import patty from "./patty"
 import lucy from "./lucy"
 import billy from "./billy"
@@ -17,7 +17,7 @@ export { skillSource } from "./seat"
 // One import and one entry per seat, keyed by its id, in roster order; `script/seat.ts add` writes both.
 export const all: Readonly<Record<string, Seat>> = Object.freeze({
   [backend.id]: backend,
-  [walt.id]: walt,
+  [archie.id]: archie,
   [patty.id]: patty,
   [lucy.id]: lucy,
   [billy.id]: billy,

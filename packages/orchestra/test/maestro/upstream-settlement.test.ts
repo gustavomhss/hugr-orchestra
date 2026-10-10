@@ -54,15 +54,15 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
   const events = yield* EventV2Bridge.Service
   const database = yield* Database.Service
   const parent = yield* sessions.create({ agent: "maestro", title: "settlement authority" })
-  const child = yield* sessions.create({ parentID: parent.id, agent: "walt", title: "returned assistant" })
+  const child = yield* sessions.create({ parentID: parent.id, agent: "archie", title: "returned assistant" })
   const logical = yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: parent.id,
-    projectID: parent.projectID, memberID: "walt", source: "host" })
+    projectID: parent.projectID, memberID: "archie", source: "host" })
   const owner = assistant(parent.id, "maestro")
-  const author = yield* sessions.updateMessage(assistant(child.id, "walt"))
+  const author = yield* sessions.updateMessage(assistant(child.id, "archie"))
   const part = yield* sessions.updatePart({ id: PartID.ascending(), messageID: author.id, sessionID: child.id, type: "text", text })
   const metadata = { parentSessionId: parent.id, sessionId: child.id, background: true }
   const callID = `call-${owner.id}`
-  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "walt" }, title: "proposal",
+  const state: SessionV1.ToolStateCompleted = { status: "completed", input: { subagent_type: "archie" }, title: "proposal",
     output: "started", time: { start: Date.now(), end: Date.now() }, metadata }
   if (!modern) yield* sessions.updateMessage(owner)
   const task = !modern ? yield* sessions.updatePart({ id: PartID.ascending(), messageID: owner.id,
@@ -75,7 +75,7 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
     yield* events.publish(SessionEvent.Tool.Progress, { ...base, structured: { metadata }, content: [], timestamp: yield* DateTime.now })
     if (!running) yield* events.publish(SessionEvent.Tool.Success, { ...base, structured: { metadata }, content: [], provider: { executed: false }, timestamp: yield* DateTime.now })
   }
-  const work = SeatWork.track({ enabled: true, seat: Seats.all.walt, sessionID: child.id, taskId: logical.taskId,
+  const work = SeatWork.track({ enabled: true, seat: Seats.all.archie, sessionID: child.id, taskId: logical.taskId,
     publish: () => Effect.void })
   const result = yield* work.record({ info: author, parts: [part] })
   if (!result) throw new Error("expected captured work result")
@@ -131,7 +131,7 @@ const seed = Effect.fn("SettlementTest.seed")(function* (modern = false, running
 
 it.instance("returned assistant stays bound after same-child resume with identical bytes", () => Effect.gen(function* () {
   const f = yield* seed()
-  const later = yield* f.sessions.updateMessage(assistant(f.child.id, "walt"))
+  const later = yield* f.sessions.updateMessage(assistant(f.child.id, "archie"))
   yield* f.sessions.updatePart({ id: PartID.ascending(), messageID: later.id, sessionID: f.child.id, type: "text", text })
   expect(yield* f.work.notice("completed", text)).toEqual(f.capture.workResult)
   yield* f.deliver()()
@@ -156,7 +156,7 @@ it.instance("completed-but-undelivered and forged notice cannot patch Task", () 
 
 it.instance("two resumed dispatches retain separate assistant and delivery identities on same child", () => Effect.gen(function* () {
   const f = yield* seed()
-  const later = yield* f.sessions.updateMessage(assistant(f.child.id, "walt"))
+  const later = yield* f.sessions.updateMessage(assistant(f.child.id, "archie"))
   const part = yield* f.sessions.updatePart({ id: PartID.ascending(), messageID: later.id, sessionID: f.child.id, type: "text", text })
   const result = yield* f.work.record({ info: later, parts: [part] })
   if (!result || !f.task) throw new Error("expected second captured result")

@@ -143,7 +143,7 @@ export const recordPlanRevision = Effect.fn("MaestroPlanRevision.record")(functi
     if (!input.upstream) return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING" })
     const upstreamAttribution = yield* UpstreamProvenance.observe({ ...input.upstream,
       parentSessionID: session.id, projectID: session.projectID }).pipe(
-      Effect.mapError((error) => new RelayWorkflowBinding.Held({ reason: error.code })),
+      Effect.mapError((error) => new RelayWorkflowBinding.Held({ reason: "code" in error ? error.code : error.reason })),
     )
     const materialized = input.workflow ? yield* RelayWorkflowBinding.acquire({ ...input.workflow,
       projectID: input.workflow.port.projectID }) : undefined

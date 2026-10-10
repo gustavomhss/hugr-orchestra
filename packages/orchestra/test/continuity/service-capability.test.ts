@@ -8,7 +8,7 @@ import { Session } from "@/session/session"
 import { SessionContinuity } from "@/continuity/service"
 import { it } from "../lib/effect"
 import { A, B, FIRST, SECOND, NONCE, RECEIPT, applyFirst, archiveDirectory, archiveFile, begin, complete, entered,
-  environment, fragments, held, jobFor, packet, prepare, recall, seed, terminal } from "./service-fixture"
+  body, environment, fragments, held, jobFor, packet, prepare, recall, seed, terminal } from "./service-fixture"
 
 it.instance("memory applies without recall; recall only gates masking", () => Effect.gen(function* () {
   const first = yield* held(FIRST)
@@ -131,12 +131,15 @@ it.instance("foreign-owner archive IDs cannot enter memory or bypass real tool o
     const denied = yield* recall(own, { reference: selected.id }, { sessionID: foreign })
     expect(denied.status).toBe("unavailable")
     expect(denied.content).toBeUndefined()
-    rejected.respond = () => JSON.stringify({ memory: SECOND, references: [{ id: selected.id, why: "Foreign evidence" }] })
+    rejected.respond = (request) => {
+      const value = body(request, SECOND)
+      return JSON.stringify({ ...value, ops: value.ops.map((op) => op.op === "add" ? { ...op, src: [selected.id] } : op) })
+    }
     yield* complete(yield* begin(own, "FOREIGN_REFERENCE_ATTEMPT"), "FOREIGN_REPLY", 50_000)
     const hit = yield* entered(rejected)
     const before = yield* prepare(own)
     yield* Deferred.succeed(rejected.release, undefined)
-    yield* terminal(hit.jobID, "completed", "discarded")
+    yield* terminal(hit.jobID, "completed", "invalid-schema")
     expect(yield* prepare(own)).toEqual(before)
     expect(before.system[0]).not.toContain(selected.id)
   }).pipe(Effect.provide(environment([first, other, rejected])))

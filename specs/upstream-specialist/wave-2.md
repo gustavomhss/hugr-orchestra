@@ -1,5 +1,7 @@
 # Upstream closure wave 2
 
+Current identity correction: active upstream ID `archie`, profile `upstream`, assets `packages/archie-specialist`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Frozen source, code quotations and prior slice assignments below remain historical; naming adds neither an active old-ID alias nor a new capability grant.
+
 Baseline for every worker: immutable reviewed candidate `abf7a72c77fcaeee1206400a8270b2581ae9839c` over dev baseline `73651a0e69`. No worker may commit, push, merge, open a PR, restart the app/server or change another worktree. The existing dirty lead worktrees remain preserved. Latest observed `fork/dev` additionally includes `5d811f0af8` descriptor-store #102; no source in this wave overlaps that store.
 
 GO: five parallel disjoint slices, then sequential integration. Lead retains all interface/authority decisions. Shared-file claims are excluded from workers and use explicit handoffs. Cold review follows integration; a worker report is not a landing gate.

@@ -55,6 +55,11 @@ export type Memory = {
   writes: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; receiptRef?: RecordRef }[]
 }
 
+export type WorkerEvidence = {
+  changes: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+  checks: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+}
+
 export type WorkResult = {
   schema: string
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
@@ -68,6 +73,8 @@ export type WorkResult = {
   nextActions: Card["nextActions"]
   terminal: Terminal
   memory: Memory
+  // Host binding of worker claims, separate from verification and acceptance.
+  workerEvidence?: WorkerEvidence
   artifacts?: UpstreamResult.Card["artifacts"]
   // Host-observed authorship only. Approval and materialized artifact identity remain separate host contracts.
   author?: { memberId: string; executionSessionID: string; messageID: string }
@@ -87,7 +94,7 @@ export type WorkResult = {
  */
 export function assemble(message: SessionV1.WithParts, session: readonly SessionV1.WithParts[] = [], seat: Seat = Seats.all.backend): WorkResult {
   const text = message.parts.findLast((part) => part.type === "text")
-  const upstream = seat.id === "walt" && seat.workResult === UpstreamResult.SCHEMA
+  const upstream = seat.id === "archie" && seat.workResult === UpstreamResult.SCHEMA
   const authored = upstream && message.info.role === "assistant" && message.info.agent === seat.id
   const card = upstream
     ? authored ? UpstreamResult.parse(message.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join("\n")) : undefined
@@ -134,7 +141,7 @@ export function hostEnded(input: {
         risks: [],
         nextActions: [],
         memory: seat.atlasMemory ? memory(input.session ?? []) : { reads: [], writes: [] },
-        ...(seat.id === "walt" && seat.workResult === UpstreamResult.SCHEMA ? { artifacts: [] } : {}),
+        ...(seat.id === "archie" && seat.workResult === UpstreamResult.SCHEMA ? { artifacts: [] } : {}),
       }
   return { ...base, terminal: { reason: input.reason, hostDetail: input.detail } }
 }

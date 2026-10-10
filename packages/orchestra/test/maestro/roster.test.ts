@@ -41,7 +41,7 @@ describe("Maestro roster", () => {
       },
       {
         displayName: UPSTREAM_DEFAULT_LABEL,
-        memberId: "walt",
+        memberId: "archie",
         role: "product, architecture, specification and planning",
         abilityClass: "scoped proposal authoring",
         returnCard: "upstream-result",
@@ -112,6 +112,13 @@ describe("Maestro roster", () => {
 
   test("looks up valid member ID", () => {
     expect(lookupRosterMember("backend")).toEqual({ status: "FOUND", member: roster[1] })
+    expect(lookupRosterMember("archie")).toEqual({ status: "FOUND", member: roster[2] })
+  })
+
+  test("rejects retired upstream ID and profile name as routing IDs", () => {
+    expect(lookupRosterMember("walt")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+    expect(lookupRosterMember("upstream")).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+    expect(lookupRosterMember(UPSTREAM_DEFAULT_LABEL)).toEqual({ status: "HOLD", reason: "malformed-member-id" })
   })
 
   test("holds unknown or malformed member ID", () => {
@@ -135,5 +142,13 @@ describe("Maestro roster", () => {
 
     expect(lookupRosterMember("backend", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
     expect(lookupRosterMember("ana", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
+  })
+
+  test("upstream display rename preserves exact routing ID and behavior profile", () => {
+    const renamed = createRoster([{ ...roster[2]!, displayName: "Configured Planner" }])
+
+    expect(lookupRosterMember("archie", renamed)).toEqual({ status: "FOUND", member: renamed[0] })
+    expect(renamed[0]?.nativeProfile).toBe("upstream")
+    expect(lookupRosterMember("configured-planner", renamed)).toEqual({ status: "HOLD", reason: "unknown-member-id" })
   })
 })

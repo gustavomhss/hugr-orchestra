@@ -1,5 +1,12 @@
 # Session snapshot + handoff — the backend specialist
 
+Current closure: read **Landing update — 2026-10-09** in [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first. Functional repairs, final epic CI, Cassandra proof and public bench evidence/protocol landed; the dated plan below is historical context.
+
+**Current execution snapshot:** read [session-resume-2026-10-08.md](session-resume-2026-10-08.md) first,
+then [session-state-2026-10-08.md](session-state-2026-10-08.md) for the earlier compaction checkpoint.
+It records the merged seat framework, active failure-repair branches, cancelled-agent worktrees,
+verified follow-ups, partial rerun and the exact resume order. The phase status below is historical.
+
 Date: 2026-10-05. Purpose: respawn continuity. A new agent (e.g. inside Claude Code) reads this file first, then the listed sources, and continues from §7 without rediscovering prior decisions.
 
 ## 0. Where this lives

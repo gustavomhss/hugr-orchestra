@@ -10,6 +10,7 @@ import { Config } from "@/config/config"
 import { createOrchestraClient } from "@orchestra/sdk"
 import { ServerAuth } from "@/server/auth"
 import { CodexAuthPlugin } from "./openai/codex"
+import { LegacyCodexReadonlyPlugin, validateLegacyCodexReadonlyAuth } from "./openai/legacy-codex-readonly"
 import { Session } from "@/session/session"
 import { NamedError } from "@orchestra/core/util/error"
 import { CopilotAuthPlugin } from "./github-copilot/copilot"
@@ -36,6 +37,7 @@ import { InstallationChannel } from "@orchestra/core/installation/version"
 import { HuGRComposerPlugin } from "./hugr-composer"
 import { AppDockPlugin } from "./app-dock"
 import { LinuxWorkspacePlugin } from "./linux-workspace"
+import { ListenerContext } from "@/server/listener-context"
 
 type State = {
   hooks: Hooks[]
@@ -67,12 +69,19 @@ export function experimentalWebSocketsEnabled(input: { enabled: boolean; channel
 
 // Built-in plugins that are directly imported (not installed from npm)
 function internalPlugins(flags: RuntimeFlags.Info): PluginInstance[] {
+  const legacy = process.env.ORCHESTRA_LEGACY_CODEX_READONLY
+  if (legacy && legacy !== "1") throw new Error("LEGACY_CODEX_READONLY_MODE_INVALID")
+  if (legacy === "1" && flags.disableDefaultPlugins) throw new Error("LEGACY_CODEX_DEFAULT_PLUGINS_DISABLED")
+  if (flags.disableDefaultPlugins) return []
+  if (legacy === "1") validateLegacyCodexReadonlyAuth()
   return [
     // Temporary rollout: pre-release builds use WebSockets by default; releases require explicit opt-in.
     (input) =>
-      CodexAuthPlugin(input, {
-        experimentalWebSockets: experimentalWebSocketsEnabled({ enabled: flags.experimentalWebSockets }),
-      }),
+      legacy === "1"
+        ? LegacyCodexReadonlyPlugin(input)
+        : CodexAuthPlugin(input, {
+            experimentalWebSockets: experimentalWebSocketsEnabled({ enabled: flags.experimentalWebSockets }),
+          }),
     CopilotAuthPlugin,
     ModalPlugin,
     GitlabAuthPlugin,
@@ -134,6 +143,7 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const config = yield* Config.Service
     const flags = yield* RuntimeFlags.Service
+    const listenerBinding = yield* ListenerContext.Current
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("Plugin.state")(function* (ctx) {
@@ -146,7 +156,7 @@ const layer = Layer.effect(
 
         const { Server } = yield* Effect.promise(() => import("../server/server"))
 
-        const serverUrl = Server.url
+        const serverUrl = listenerBinding ? ListenerContext.requireURL(listenerBinding) : Server.url
         const client = createOrchestraClient({
           baseUrl: serverUrl?.toString() ?? "http://localhost:4096",
           directory: ctx.directory,
@@ -165,13 +175,15 @@ const layer = Layer.effect(
             },
           },
           get serverUrl(): URL {
-            return Server.url ?? new URL("http://localhost:4096")
+            return listenerBinding
+              ? ListenerContext.requireURL(listenerBinding)
+              : (Server.url ?? new URL("http://localhost:4096"))
           },
           // @ts-expect-error
           $: typeof Bun === "undefined" ? undefined : Bun.$,
         }
 
-        for (const plugin of flags.disableDefaultPlugins ? [] : internalPlugins(flags)) {
+        for (const plugin of internalPlugins(flags)) {
           const init = yield* Effect.tryPromise({
             try: () => plugin(input),
             catch: errorMessage,

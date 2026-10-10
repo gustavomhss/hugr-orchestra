@@ -8,7 +8,7 @@ description: Coordinate upstream acceptance coverage, decomposition review and a
 ## Trigger and rationale
 
 Use when a demand spans responsibilities, shared writes or independently deliverable outcomes.
-Native `walt` authors acceptance, decomposition, Tasks/WPs, dependencies and revisions. Maestro organizes
+Native `archie` authors acceptance, decomposition, Tasks/WPs, dependencies and revisions. Maestro organizes
 and decides within owner authority, supplies observed host facts, coordinates review/adoption, dispatches
 and integrates. Missing planning content returns to upstream; Maestro does not invent it. Small Tasks
 retain their current format and lifecycle, without compulsory WPs, compiler, arm or progressive steps.
@@ -22,19 +22,19 @@ Normal source inspection cannot substitute for governed GROUNDED evidence.
 
 ## Procedure
 
-0. Before any authoring assignment or revision, inspect existing arm/completion bindings and governed
-   state through available actual host inspection; do not guess tool/method names or assume no binding.
-   Authoring precedes execution arming. Native Task calls `completion.beforeDispatch` for ordinary and
-   governed dispatch, without an authoring exemption. Do not let authoring consume or inherit execution
-   gates. If an active binding prevents authoring or required inspection is unavailable, HOLD through the
-   existing owner process. No ordinary Task enters the active governed chain; do not invent disarm,
-   fresh-Session escape or downgrade to normal. Repeat this inspection before later authoring revisions.
+0. Ordinary authoring assignments and revisions use native `task`. The host checks the current Session's
+   workflow binding and calls `completion.beforeDispatch` for ordinary and governed dispatch before worker
+   execution, without an authoring exemption. Do not invent a separate model-side inspection step, guess
+   inspection tools or claim bindings are absent. Authoring precedes explicit governed execution arming.
+   A known binding or host HOLD that prevents authoring stays HOLD through the existing owner process.
+   Do not inherit execution gates, insert an ordinary Task into a bound workflow chain, invent disarm/release,
+   escape through a fresh Session or downgrade to normal. Keep the explicit governed lifecycle.
 1. Gather the owner's request and constraints, actual baseline/placement, available checks, permissions
    and relevant read/write facts. Record observations and unknowns, not a newly authored partition.
    Run preserved-behavior baseline checks and capture meaningful failing evidence for new behavior when
    runnable. Separate preservation from red-to-green proof; untestable items remain judged by an
    accountable decision owner, never auto-green.
-2. Assign native `walt` to author or revise requested acceptance, five criteria, coverage, bounded units,
+2. Assign native `archie` to author or revise requested acceptance, five criteria, coverage, bounded units,
    dependencies, conflicts, sizing and briefs. Supply actual facts and exact permitted paths. Small
    planning requests may return inline proposals; drafting them starts no execution Task.
 3. Coordinate independent cold coverage critique where warranted using [suite-review.md](suite-review.md).

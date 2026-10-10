@@ -46,7 +46,7 @@ for (const phase of ["model"] as const) for (const action of ["unchanged", "inva
       const native = yield* sessions.messages({ sessionID })
       const before = yield* prepare(sessionID)
       expect(before.system).toEqual(initial.system)
-      expect(before.messages).toEqual(native.slice(4))
+      expect(before.messages).toEqual(action === "replace" ? native.slice(-2) : [native.at(-2)!])
       gate.armed = true
       const preparing = yield* continuity.prepare({ sessionID, messages: native, canRecall: true }).pipe(Effect.forkChild)
       yield* awaitWithTimeout(Deferred.await(waiting), "Prepare did not reach the selected real async boundary", "15 seconds")
@@ -77,13 +77,13 @@ for (const phase of ["model"] as const) for (const action of ["unchanged", "inva
       const next = yield* prepare(sessionID)
       if (action === "advance") {
         expect(next.system).toEqual(initial.system)
-        expect(next.messages).toEqual(current.slice(4))
+        expect(next.messages).toEqual([current.at(-1)!])
         return
       }
       if (action === "replace") {
         expect(next.system[0]).toContain(SECOND)
         expect(next.system[0]).not.toContain(FIRST)
-        expect(next.messages).toEqual(current.slice(-8))
+        expect(next.messages).toEqual([current.at(-2)!])
         return
       }
       expect(next).toEqual({ messages: current, system: [] })

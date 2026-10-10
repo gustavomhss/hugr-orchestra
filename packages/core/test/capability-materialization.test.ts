@@ -4,6 +4,7 @@ import { mkdir } from "fs/promises"
 import path from "path"
 import { Context, Deferred, Effect, Exit, Fiber, Layer, Schema, Scope, Stream } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
+import { CapabilityDescriptors } from "@orchestra/core/capability/catalog/descriptors"
 import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -23,6 +24,7 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetyProfile } from "@orchestra/core/tool-safety-profile"
+import { Capability } from "@orchestra/schema/capability"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
@@ -102,9 +104,19 @@ describe("captured capability materialization", () => {
       expect(projected.definition("first")?.outputSchema).toBe(full.definition("first")?.outputSchema)
       expect(projected.definition("write")).toBeUndefined()
       expect(projected.definition("missing")).toBeUndefined()
+      expect(full.registrationIdentity("first")).toBeDefined()
+      expect(full.registrationIdentity("first")).not.toBe(full.definition("first"))
+      expect(projected.registrationIdentity("first")).toBe(full.registrationIdentity("first"))
+      expect(projected.registrationIdentity("hidden")).toBe(applications.entries().get("hidden")?.identity)
+      expect(projected.registrationIdentity("hidden")).toBe(full.registrationIdentity("hidden"))
+      expect(projected.registrationIdentity("write")).toBeUndefined()
+      expect(projected.registrationIdentity("missing")).toBeUndefined()
       expect((yield* projected.settle(call("hidden"))).result).toEqual({ type: "text", value: "hidden" })
       expect((yield* projected.settle(call("write"))).result).toEqual({ type: "error", value: "Unknown tool: write" })
       const unrestricted = yield* registry.materialize()
+      expect(unrestricted.registrationIdentity("first")).toBe(full.registrationIdentity("first"))
+      expect(unrestricted.registrationIdentity("hidden")).toBe(full.registrationIdentity("hidden"))
+      expect(unrestricted.registrationIdentity("write")).toBeDefined()
       expect((yield* unrestricted.settle(call("write"))).result).toEqual({
         type: "text",
         value: "write",
@@ -125,6 +137,10 @@ describe("captured capability materialization", () => {
       expect(omitted.definitions).toEqual(full.definitions)
       expect(empty.definitions).toEqual([])
       expect(empty.definition("echo")).toBe(full.definitions[0])
+      expect(empty.registrationIdentity("echo")).toBeDefined()
+      expect(empty.registrationIdentity("echo")).toBe(full.registrationIdentity("echo"))
+      expect(omitted.registrationIdentity("echo")).toBe(full.registrationIdentity("echo"))
+      expect(selected.registrationIdentity("echo")).toBe(full.registrationIdentity("echo"))
       expect(selected.definitions).toEqual(full.definitions)
       expect((yield* empty.settle(call("echo"))).result).toEqual({ type: "text", value: "echo" })
     }),
@@ -137,16 +153,23 @@ describe("captured capability materialization", () => {
       yield* registry.register({ echo: make() }).pipe(Scope.provide(scope))
       const captured = yield* registry.materialize(undefined, { advertisedNames: [] })
       const metadata = captured.definition("echo")
+      const token = captured.registrationIdentity("echo")
+      expect(token).toBeDefined()
       expect(metadata?.name).toBe("echo")
       expect((yield* captured.settle(call("echo"))).result).toEqual({ type: "text", value: "echo" })
       yield* registry.register({ later: make() })
       expect(captured.definition("later")).toBeUndefined()
+      expect(captured.registrationIdentity("later")).toBeUndefined()
       expect((yield* captured.settle(call("later"))).result).toEqual({ type: "error", value: "Unknown tool: later" })
       const current = yield* registry.materialize()
       expect(current.definition("later")?.name).toBe("later")
+      expect(current.registrationIdentity("later")).toBeDefined()
       expect((yield* current.settle(call("later"))).result).toEqual({ type: "text", value: "later" })
       yield* Scope.close(scope, Exit.void)
       expect(captured.definition("echo")).toBe(metadata)
+      expect(captured.registrationIdentity("echo")).toBe(token)
+      const removed = yield* registry.materialize()
+      expect(removed.registrationIdentity("echo")).toBeUndefined()
       expect((yield* captured.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
     }),
   )
@@ -157,24 +180,35 @@ describe("captured capability materialization", () => {
       const echo = make()
       yield* registry.register({ echo, stable: make() })
       const captured = yield* registry.materialize(undefined, { advertisedNames: [] })
+      const token = captured.registrationIdentity("echo")
+      expect(token).toBeDefined()
+      expect(token).not.toBe(echo)
       yield* registry.register({ echo })
       const current = yield* registry.materialize()
       expect(current.definition("echo")).toBe(captured.definition("echo"))
+      expect(current.registrationIdentity("echo")).toBeDefined()
+      expect(current.registrationIdentity("echo")).not.toBe(token)
+      expect(captured.registrationIdentity("echo")).toBe(token)
+      expect(current.registrationIdentity("stable")).toBe(captured.registrationIdentity("stable"))
       expect((yield* captured.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
       expect((yield* captured.settle(call("stable"))).result).toEqual({ type: "text", value: "stable" })
       expect((yield* current.settle(call("echo"))).result).toEqual({ type: "text", value: "echo" })
     }),
   )
 
-  it.live("keeps application and Location overlay identities stale when prior registrations are revealed", () =>
+  it.live("restores prior application and Location registration tokens when overlays close", () =>
     Effect.gen(function* () {
       const applications = yield* ApplicationTools.Service
       const registry = yield* ToolRegistry.Service
       yield* applications.register({ echo: make(), stable: make() })
       const application = yield* registry.materialize(undefined, { advertisedNames: [] })
+      expect(application.registrationIdentity("echo")).toBe(applications.entries().get("echo")?.identity)
+      expect(application.registrationIdentity("echo")).toBeDefined()
       const localScope = yield* Scope.make()
       yield* registry.register({ echo: make() }).pipe(Scope.provide(localScope))
       const local = yield* registry.materialize(undefined, { advertisedNames: [] })
+      expect(local.registrationIdentity("echo")).toBeDefined()
+      expect(local.registrationIdentity("echo")).not.toBe(application.registrationIdentity("echo"))
       expect((yield* application.settle(call("echo"))).result).toEqual({
         type: "error",
         value: "Stale tool call: echo",
@@ -182,14 +216,84 @@ describe("captured capability materialization", () => {
       const overlayScope = yield* Scope.make()
       yield* registry.register({ echo: make() }).pipe(Scope.provide(overlayScope))
       const overlay = yield* registry.materialize(undefined, { advertisedNames: [] })
+      expect(overlay.registrationIdentity("echo")).toBeDefined()
+      expect(overlay.registrationIdentity("echo")).not.toBe(local.registrationIdentity("echo"))
       expect((yield* local.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
       yield* Scope.close(overlayScope, Exit.void)
+      const restoredLocal = yield* registry.materialize()
+      expect(restoredLocal.registrationIdentity("echo")).toBe(local.registrationIdentity("echo"))
+      expect(overlay.registrationIdentity("echo")).not.toBe(restoredLocal.registrationIdentity("echo"))
       expect((yield* overlay.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
       expect((yield* local.settle(call("echo"))).result).toEqual({ type: "text", value: "echo" })
       yield* Scope.close(localScope, Exit.void)
+      const restoredApplication = yield* registry.materialize()
+      expect(restoredApplication.registrationIdentity("echo")).toBe(application.registrationIdentity("echo"))
+      expect(local.registrationIdentity("echo")).not.toBe(restoredApplication.registrationIdentity("echo"))
       expect((yield* local.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
       expect((yield* application.settle(call("echo"))).result).toEqual({ type: "text", value: "echo" })
       expect((yield* overlay.settle(call("stable"))).result).toEqual({ type: "text", value: "stable" })
+    }),
+  )
+
+  it.live("rejects descriptor metadata with current token after same-object application re-registration", () =>
+    Effect.gen(function* () {
+      const applications = yield* ApplicationTools.Service
+      const registry = yield* ToolRegistry.Service
+      const location = yield* Location.Service
+      const echo = make()
+      yield* applications.register({ echo })
+      const captured = yield* registry.materialize(undefined, { advertisedNames: [] })
+      const token = captured.registrationIdentity("echo")
+      const metadata = captured.definition("echo")
+      if (!token || !metadata) throw new Error("Expected captured echo registration and metadata")
+      const store = yield* CapabilityDescriptors.make({ maxEntries: 1, ttlMillis: 50, now: () => 1000 })
+      const input = {
+        owner: Capability.Owner.make({
+          projectID: location.project.id,
+          location: { directory: location.directory },
+          sessionID: identity.sessionID,
+          agentID: identity.agent,
+        }),
+        connectionGeneration: 2,
+        targetGeneration: 3,
+        canonicalName: metadata.name,
+        canonicalIdentity: token,
+        inputSchema: Schema.decodeUnknownSync(Schema.Json)(metadata.inputSchema),
+        outputSchema: Schema.decodeUnknownSync(Schema.Json)(metadata.outputSchema),
+        operationID: "echo",
+        schemaHash: createHash("sha256")
+          .update(JSON.stringify({ input: metadata.inputSchema, output: metadata.outputSchema }))
+          .digest("hex"),
+        catalogGeneration: 4,
+        connectionID: Capability.ConnectionID.create(),
+        targetID: Capability.TargetID.create(),
+      } satisfies CapabilityDescriptors.IssueInput
+      const scope = {
+        owner: input.owner,
+        connectionGeneration: input.connectionGeneration,
+        targetGeneration: input.targetGeneration,
+        canonicalIdentity: token,
+        catalogGeneration: input.catalogGeneration,
+        schemaHash: input.schemaHash,
+      } satisfies CapabilityDescriptors.ReadScope
+      const record = yield* store.issue(input)
+      expect(record.canonicalIdentity).toBe(token)
+      expect(yield* store.read(record.ref, scope)).toBe(record)
+      yield* applications.register({ echo })
+      const current = yield* registry.materialize()
+      const currentToken = current.registrationIdentity("echo")
+      if (!currentToken) throw new Error("Expected current echo registration")
+      expect(current.definition("echo")).toBe(metadata)
+      expect(captured.registrationIdentity("echo")).toBe(token)
+      expect((yield* captured.settle(call("echo"))).result).toEqual({ type: "error", value: "Stale tool call: echo" })
+      // Metadata-store check only: identical definitions and unchanged generations do not make a token current.
+      const stale = yield* store.read(record.ref, { ...scope, canonicalIdentity: currentToken }).pipe(Effect.result)
+      expect(stale._tag).toBe("Failure")
+      if (stale._tag === "Failure") {
+        expect(stale.failure).toBeInstanceOf(Capability.Failure)
+        expect(stale.failure.code).toBe("stale_descriptor")
+      }
+      expect(currentToken).not.toBe(token)
     }),
   )
 

@@ -20,7 +20,7 @@ export const make = Effect.gen(function* () {
   // Keep the lease in the existing Instance entry scope, not the short bootstrap invocation scope.
   const state = yield* InstanceState.make((instance) =>
     Effect.gen(function* () {
-      const native = yield* nativeAgents.get("walt").pipe(Effect.provideService(InstanceRef, instance))
+      const native = yield* nativeAgents.get("archie").pipe(Effect.provideService(InstanceRef, instance))
       requireNative(native)
       // Native Agent state may itself open the Location for references. Finish that state before replay can reenter it.
       const scope = yield* Scope.Scope
@@ -48,9 +48,9 @@ export const make = Effect.gen(function* () {
           agents
             .transform((draft) =>
               Effect.gen(function* () {
-                const native = yield* nativeAgents.get("walt").pipe(Effect.provideService(InstanceRef, instance))
+                const native = yield* nativeAgents.get("archie").pipe(Effect.provideService(InstanceRef, instance))
                 requireNative(native)
-                draft.update(AgentV2.ID.make("walt"), (agent) => {
+                draft.update(AgentV2.ID.make("archie"), (agent) => {
                   agent.system = native.prompt
                   agent.description = native.description
                   agent.mode = native.mode
@@ -87,7 +87,7 @@ export const make = Effect.gen(function* () {
 })
 
 function requireNative(native: Agent.Info | undefined) {
-  if (native?.id !== "walt" || native.native !== true) throw new Error("UPSTREAM_NATIVE_IDENTITY_MISSING")
+  if (native?.id !== "archie" || native.native !== true) throw new Error("UPSTREAM_NATIVE_IDENTITY_MISSING")
 }
 
 export * as UpstreamV2 from "./upstream-v2"

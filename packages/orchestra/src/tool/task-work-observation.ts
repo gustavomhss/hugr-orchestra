@@ -12,6 +12,7 @@ import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "@orc
 import { SessionV1 } from "@orchestra/core/v1/session"
 import type { BackendResult } from "@/maestro/backend-result"
 import { LogicalTask } from "@/maestro/logical-task"
+import { SessionAuthority } from "@/maestro/session-authority"
 import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 import type { SessionID } from "@/session/schema"
 import type { Tool } from "./tool"
@@ -38,8 +39,17 @@ export function make(input: {
     const logical = yield* LogicalTask.read(input.childSessionID)
     if (!parent || !child || child.parent_id !== parent.id || child.project_id !== parent.project_id ||
       child.directory !== parent.directory || !logical || logical.taskId !== input.taskID ||
-      logical.authoritySessionID !== parent.id || logical.executionSessionID !== child.id ||
+      logical.executionSessionID !== child.id ||
       logical.projectID !== parent.project_id || logical.memberID !== child.agent)
+      return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation lineage mismatch" })
+    const authority = yield* SessionAuthority.make((id) =>
+      input.database.db.select().from(SessionTable).where(eq(SessionTable.id, id)).get().pipe(
+        Effect.map((row) => row ? fromRow(row) : undefined),
+      ),
+    )(parent.id, parent.project_id).pipe(
+      Effect.mapError(() => new UpstreamSettlement.Hold({ message: "HOLD: Task host observation lineage mismatch" })),
+    )
+    if (logical.authoritySessionID !== authority.rootID)
       return yield* new UpstreamSettlement.Hold({ message: "HOLD: Task host observation lineage mismatch" })
     const modern = yield* input.database.db.select().from(SessionMessageTable)
       .where(eq(SessionMessageTable.id, SessionMessage.ID.make(input.ctx.messageID))).get()

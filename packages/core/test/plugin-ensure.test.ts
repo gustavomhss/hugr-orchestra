@@ -14,7 +14,7 @@ it.effect("ensure installs once without closing or reordering active transforms;
     const plugins = yield* PluginV2.Service
     const agents = yield* AgentV2.Service
     const id = PluginV2.ID.make("host-native")
-    const agentID = AgentV2.ID.make("walt")
+    const agentID = AgentV2.ID.make("archie")
     const lifecycle: string[] = []
     const install = (description: string) => () =>
       Effect.gen(function* () {

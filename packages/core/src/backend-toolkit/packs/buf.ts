@@ -19,6 +19,7 @@ export default {
   version: VERSION,
   license: "Apache-2.0",
   upstream: "bufbuild/buf",
+  dependencies: ["protoc-gen-es"],
   targets: {
     "darwin-arm64": target("Darwin-arm64", "sha256-bm3w/vRSLk5D3+fDQYc8PywpzrRanfpeC61VgLiyAi8="),
     "darwin-x64": target("Darwin-x86_64", "sha256-/3jQ6/NBgOv6gdNwJ1hR7GMPywiL8z4hP9cj0P10RKY="),

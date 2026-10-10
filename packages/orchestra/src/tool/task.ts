@@ -28,6 +28,7 @@ import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AtlasResume } from "@/maestro/atlas-resume"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
+import { SessionAuthority } from "@/maestro/session-authority"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -174,6 +175,10 @@ export const TaskTool = Tool.define(
       }
 
       const parent = yield* sessions.get(ctx.sessionID)
+      const authority = yield* SessionAuthority.make((id) =>
+        id === parent.id ? Effect.succeed(parent) : sessions.get(id),
+      )(parent.id, parent.projectID)
+      const depth = authority.ancestry.length - 1
       if (yield* WorkflowBinding.read(ctx.sessionID))
         return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_NESTED_TASK_REFUSED"))
       const next = yield* agent.get(params.subagent_type)
@@ -245,13 +250,7 @@ export const TaskTool = Tool.define(
             return yield* Effect.fail(new Error(`Invalid model "${params.model}". Use the form 'providerID/modelID'.`))
           }
         }
-        let ancestor = parent
-        let ancestorDepth = 0
-        while (ancestor.parentID) {
-          ancestorDepth++
-          ancestor = yield* sessions.get(ancestor.parentID)
-        }
-        if (ancestorDepth >= (cfg.subagent_depth ?? 1)) {
+        if (depth >= (cfg.subagent_depth ?? 1)) {
           return yield* Effect.fail(
             new Error(
               "You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.",
@@ -307,12 +306,6 @@ export const TaskTool = Tool.define(
         governedCallID = reservation.callID
         reservedChildPermissions = reservation.permission
         replayReserved = reservation.replayReserved
-      }
-      let current = parent
-      let depth = 0
-      while (current.parentID) {
-        depth++
-        current = yield* sessions.get(current.parentID)
       }
       if (depth >= (cfg.subagent_depth ?? 1)) {
         return yield* Effect.fail(
@@ -435,7 +428,7 @@ export const TaskTool = Tool.define(
       }
 
       const logical = strictTask
-        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: ctx.sessionID,
+        ? yield* LogicalTask.ensure({ executionSessionID: nextSession.id, authoritySessionID: authority.rootID,
             projectID: parent.projectID, memberID: nextID, ...LogicalTask.origin(governedChildID, !!params.governed) })
         : undefined
       const shownID = logical?.taskId ?? nextSession.id

@@ -1,0 +1,3 @@
+# Upstream license bytes remain verbatim on Windows checkouts.
+NOTICES -text
+licenses/*.LICENSE -text

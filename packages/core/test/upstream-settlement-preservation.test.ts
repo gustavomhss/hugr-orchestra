@@ -30,13 +30,13 @@ import { tmpdir } from "./fixture/tmpdir"
 const it = testEffect(Layer.empty)
 const sessionID = SessionSchema.ID.make("ses_authority")
 const messageID = SessionMessage.ID.make("msg_authority")
-const input = { subagent_type: "walt", task_id: "ses_child", prompt: "Return the proposal" }
+const input = { subagent_type: "archie", task_id: "ses_child", prompt: "Return the proposal" }
 const owner = { sessionID, messageID, callID: "task-call", tool: "task", input }
 const workResult = {
   schema: "upstream-work-result-v1",
   taskId: "tsk_proposal",
   card: { parsed: true, messageID: "msg_returned" },
-  author: { memberId: "walt", executionSessionID: "ses_child", messageID: "msg_returned" },
+  author: { memberId: "archie", executionSessionID: "ses_child", messageID: "msg_returned" },
   outcome: "done",
   terminal: { reason: "ended" },
 }
@@ -92,11 +92,11 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
   yield* database.db.insert(ProjectTable).values({ id: projectID, worktree: AbsolutePath.make("/project"), sandboxes: [] }).run()
   yield* database.db.insert(SessionTable).values([
     { id: parentID, project_id: projectID, slug: "parent", directory: "/project", title: "parent", version: "test" },
-    { id: childID, parent_id: parentID, project_id: projectID, slug: "child", directory: "/project", agent: "walt", title: "child", version: "test" },
+    { id: childID, parent_id: parentID, project_id: projectID, slug: "child", directory: "/project", agent: "archie", title: "child", version: "test" },
   ]).run()
-  const selectedInput = { subagent_type: "walt", task_id: childID, prompt: input.prompt }
+  const selectedInput = { subagent_type: "archie", task_id: childID, prompt: input.prompt }
   const result = { ...workResult, taskId: `tsk_observation_${view}`, card: { parsed: true, messageID: authorMessageID },
-    author: { memberId: "walt", executionSessionID: childID, messageID: authorMessageID },
+    author: { memberId: "archie", executionSessionID: childID, messageID: authorMessageID },
     terminal: { reason: "failed", hostDetail: "Actual host failure after returned assistant" } }
   const retainedMetadata = { parentSessionId: parentID, sessionId: childID, background: true, concurrent: "keep",
     workResult: { schema: result.schema, taskId: result.taskId, card: { parsed: false }, terminal: { reason: "running" } } }
@@ -123,7 +123,7 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
   }) : undefined
   if (view !== "legacy") {
     const author = { sessionID: childID, assistantMessageID: authorMessageID, timestamp }
-    yield* events.publish(SessionEvent.Step.Started, { ...author, agent: AgentV2.ID.make("walt"), model })
+    yield* events.publish(SessionEvent.Step.Started, { ...author, agent: AgentV2.ID.make("archie"), model })
     yield* events.publish(SessionEvent.Text.Started, { ...author, textID: "returned-text" })
     yield* events.publish(SessionEvent.Text.Ended, { ...author, textID: "returned-text", text: "Returned proposal" })
     yield* events.publish(SessionEvent.Step.Ended, { ...author, finish: "stop", cost: 0,
@@ -131,7 +131,7 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
   }
   if (view !== "native") yield* events.publish(SessionV1.Event.MessageUpdated, { sessionID: childID,
     info: SessionV1.Assistant.make({ id: SessionV1.MessageID.make(authorMessageID), sessionID: childID,
-      role: "assistant", agent: "walt", mode: "walt", parentID: SessionV1.MessageID.make("msg_user"),
+      role: "assistant", agent: "archie", mode: "archie", parentID: SessionV1.MessageID.make("msg_user"),
       modelID: model.id, providerID: model.providerID, path: { cwd: "/project", root: "/project" },
       time: { created: 1, completed: 2 }, finish: "stop", cost: 0,
       tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } } }) })
@@ -189,7 +189,7 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
       yield* f.database.db.update(SessionTable).set(patch).where(eq(SessionTable.id, f.childID)).run()
       yield* f.offer(offered)
       expect(yield* f.read()).toEqual(before)
-      yield* f.database.db.update(SessionTable).set({ project_id: f.projectID, directory: "/project", agent: "walt" })
+      yield* f.database.db.update(SessionTable).set({ project_id: f.projectID, directory: "/project", agent: "archie" })
         .where(eq(SessionTable.id, f.childID)).run()
     }
     const reasonOnly = { ...f.result, terminal: { reason: "failed" } }
@@ -299,7 +299,7 @@ dbIt.live("available legacy original Task conflicts veto native observation befo
   yield* f.database.db.update(MessageTable).set({ data: malformedOwner }).where(eq(MessageTable.id, owner.id)).run()
   yield* f.offer(offered)
   expect(yield* f.read()).toEqual(before)
-  const encoded = Schema.encodeSync(SessionV1.Assistant)({ ...info, agent: "walt" })
+  const encoded = Schema.encodeSync(SessionV1.Assistant)({ ...info, agent: "archie" })
   const { id: _, sessionID: __, ...data } = encoded
   yield* f.database.db.update(MessageTable).set({ data }).where(eq(MessageTable.id, owner.id)).run()
   yield* f.offer(offered)
@@ -348,7 +348,7 @@ dbIt.live("stored returned-author completion, agent and role conflicts veto eith
     expect(yield* f.read()).toEqual(before)
     yield* f.database.db.update(SessionMessageTable).set({ type: modern.type, data: modern.data }).where(eq(SessionMessageTable.id, modern.id)).run()
   }
-  const user: Pick<SessionV1.User, "role" | "agent" | "model" | "time"> = { role: "user", agent: "walt",
+  const user: Pick<SessionV1.User, "role" | "agent" | "model" | "time"> = { role: "user", agent: "archie",
     model: { providerID: old.providerID, modelID: old.modelID }, time: { created: legacy.data.time.created } }
   for (const data of [
     { ...legacy.data, time: { created: legacy.data.time.created } },
@@ -599,7 +599,7 @@ describe("private upstream settlement preservation", () => {
     expect(input.task_id).not.toBe(workResult.taskId)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, owner)).toEqual(receipt)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner,
-      input: { subagent_type: "walt", prompt: input.prompt } })).toEqual(receipt)
+      input: { subagent_type: "archie", prompt: input.prompt } })).toEqual(receipt)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner,
       input: { ...input, task_id: workResult.taskId } })).toBeUndefined()
   }))
@@ -613,6 +613,17 @@ describe("private upstream settlement preservation", () => {
     expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner, input: { ...input, task_id: "ses_other" } })).toBeUndefined()
     expect(SessionMessageUpdater.upstreamSettlement({ ...metadata, upstreamSettlement: { ...receipt,
       workResult: { ...workResult, card: { parsed: true, messageID: "msg_later_identical_bytes" } } } }, owner)).toBeUndefined()
+  }))
+
+  it.effect("retired upstream ID cannot carry a receipt even with matching selection and author", () => Effect.sync(() => {
+    const retiredOwner = { ...owner, input: { ...input, subagent_type: "walt" } }
+    const retiredResult = { ...workResult, author: { ...workResult.author, memberId: "walt" } }
+    const retiredMetadata = { ...metadata, workResult: retiredResult,
+      upstreamSettlement: { ...receipt, workResult: retiredResult } }
+    expect(SessionMessageUpdater.upstreamSettlement(metadata, owner)).toEqual(receipt)
+    expect(SessionMessageUpdater.upstreamSettlement(metadata, retiredOwner)).toBeUndefined()
+    expect(SessionMessageUpdater.upstreamSettlement(retiredMetadata, owner)).toBeUndefined()
+    expect(SessionMessageUpdater.upstreamSettlement(retiredMetadata, retiredOwner)).toBeUndefined()
   }))
 
   it.effect("settle-before-initial-completion survives late stale success and same-tick generic progress", () => Effect.gen(function* () {
@@ -730,7 +741,7 @@ describe("private upstream settlement preservation", () => {
   }))
 
   it.effect("new progress receipt cannot rebind stored child or grant provider ownership", () => Effect.gen(function* () {
-    const current = fixture({ subagent_type: "walt", prompt: input.prompt })
+    const current = fixture({ subagent_type: "archie", prompt: input.prompt })
     const wrongResult = { ...workResult, author: { ...workResult.author, executionSessionID: "ses_other" } }
     yield* SessionMessageUpdater.update(current.adapter, progress({ metadata: { ...metadata, sessionId: "ses_other",
       workResult: wrongResult, upstreamSettlement: { ...receipt, workResult: wrongResult } } }))

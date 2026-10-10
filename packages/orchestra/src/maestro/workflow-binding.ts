@@ -20,6 +20,7 @@ import { Session } from "@/session/session"
 import { MessageID, SessionID } from "@/session/schema"
 import { MessageV2 } from "@/session/message-v2"
 import { LogicalTask } from "./logical-task"
+import { SessionAuthority } from "./session-authority"
 import { WriteRoots } from "./write-roots"
 import { readWorkflowRevision } from "./plan-revision"
 import { ToolSafety } from "@orchestra/core/tool-safety"
@@ -98,9 +99,12 @@ export const prepare = Effect.fn("WorkflowBinding.prepare")(function* (input: Di
   const logical = yield* LogicalTask.read(child.id)
   if (child.projectID !== ready.parent.projectID || child.directory !== ready.parent.directory || child.parentID !== ready.parent.id)
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_LINEAGE_MISMATCH" })
-   if (!logical || logical.taskId !== input.logicalTaskID || logical.executionSessionID !== child.id ||
-    logical.authoritySessionID !== ready.parent.id || logical.projectID !== ready.parent.projectID || logical.memberID !== child.agent)
-     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_LOGICAL_TASK_MISMATCH" })
+  const authority = yield* SessionAuthority.make(sessions.get)(ready.parent.id, ready.parent.projectID).pipe(
+    Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_LINEAGE_MISMATCH" })),
+  )
+  if (!logical || logical.taskId !== input.logicalTaskID || logical.executionSessionID !== child.id ||
+    logical.authoritySessionID !== authority.rootID || logical.projectID !== ready.parent.projectID || logical.memberID !== child.agent)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_LOGICAL_TASK_MISMATCH" })
    const approvedRoots = WriteRoots.read(yield* WriteRoots.bind(child.agent ?? input.subagentType,
      input.writePaths, child.permission ?? []))
    if (!approvedRoots || !isDeepStrictEqual(WriteRoots.read(child.permission), approvedRoots))
@@ -121,6 +125,7 @@ export const prepare = Effect.fn("WorkflowBinding.prepare")(function* (input: Di
      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
   const binding = Schema.decodeUnknownSync(RelayArm.WorkflowBinding)({
     definition: ready.materialized.definition, planRevisionID: ready.revision.id,
+    // Publication/reservation authority is the actual caller; logical root scope is checked separately above.
     executionSessionID: child.id, authoritySessionID: ready.parent.id, logicalTaskID: logical.taskId,
   })
   return { binding, ...ready }

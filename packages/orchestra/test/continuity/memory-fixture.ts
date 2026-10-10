@@ -5,7 +5,7 @@ import type { Provider } from "@/provider/provider"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Effect } from "effect"
 import { decode } from "@/continuity/memory"
-import type { Host, MemoryArtifact, MemorySnapshot } from "@/continuity/memory-types"
+import type { Host, MemoryArtifact, MemorySnapshot, PartialArtifact } from "@/continuity/memory-types"
 
 export const sessionID = SessionID.make("ses_memory_parent")
 export const producerID = SessionID.make("ses_memory_producer")
@@ -69,9 +69,10 @@ export function finding(text = memory, src = ["u1"]) {
   return { op: "add", section: "findings", fields: { finding: text, why: "Scenario memory.", status: "hypothesis", check: "None." }, src }
 }
 
-export function artifact(): MemoryArtifact {
+export function artifact(): PartialArtifact {
   const result = decode({ text: JSON.stringify({ ops: [finding()] }), snapshot: captured(), producerID, host: host(), budget: 20_000 })
   if (!("artifact" in result)) throw new Error(`Expected a validated memory fixture: ${JSON.stringify(result)}`)
+  if (result.artifact.version !== 4) throw new Error("Expected explicit v4 compatibility fixture")
   return result.artifact
 }
 

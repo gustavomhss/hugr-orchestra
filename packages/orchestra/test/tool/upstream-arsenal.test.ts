@@ -58,7 +58,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     Effect.gen(function* () {
       const agents = yield* Agent.Service
       const registry = yield* ToolRegistry.Service
-      const upstream = yield* agents.get("walt")
+      const upstream = yield* agents.get("archie")
       requireUpstreamGrants(upstream)
       const ids = (yield* registry.tools({ ...model, agent: upstream })).map((tool) => tool.id)
       expect(ids.filter((id) => id.startsWith("maestro_")).toSorted()).toEqual(arsenalIDs)
@@ -81,7 +81,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     Effect.gen(function* () {
       const agents = yield* Agent.Service
       const registry = yield* ToolRegistry.Service
-      const upstream = yield* agents.get("walt")
+      const upstream = yield* agents.get("archie")
       requireUpstreamGrants(upstream)
       const offered = yield* registry.tools({ ...model, agent: upstream })
       expect(offered.filter((tool) => arsenalIDs.some((id) => id === tool.id))).toHaveLength(3)
@@ -103,9 +103,9 @@ describe("V1 upstream Arsenal discovery and binding", () => {
       Effect.gen(function* () {
         const agents = yield* Agent.Service
         const registry = yield* ToolRegistry.Service
-        const upstream = yield* agents.get("walt")
+        const upstream = yield* agents.get("archie")
         const maestro = yield* agents.get("maestro")
-        expect(upstream.id).toBe("walt")
+        expect(upstream.id).toBe("archie")
         expect(upstream.native).toBe(true)
         expect(maestro.native).toBe(true)
         expect(
@@ -114,7 +114,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
           ),
         ).toBe(true)
         const wrong = yield* Effect.forEach(["general", "impostor", "conductor-impostor"], (id) => agents.get(id))
-        expect(wrong[1].name).toBe("walt")
+        expect(wrong[1].name).toBe("archie")
         expect(wrong[1].native).toBe(false)
         expect(wrong[2].name).toBe("maestro")
         expect(wrong[2].native).toBe(false)
@@ -134,14 +134,14 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     {
       config: {
         permission: { "*": "allow" },
-        agent: { impostor: { name: "walt" }, "conductor-impostor": { name: "maestro" } },
+        agent: { impostor: { name: "archie" }, "conductor-impostor": { name: "maestro" } },
       },
     },
   )
 
   it.instance("catalogs the pure subset and executes plan-check through the actual V1 host", () =>
     Effect.gen(function* () {
-      const host = yield* nativeHost("walt")
+      const host = yield* nativeHost("archie")
       requireUpstreamGrants(host.agent)
       // Display labels cannot be authority; only the actual Agent.Service lookup by agentID attests this caller.
       const context = { ...host.context, agent: "stale upstream display label" }
@@ -190,7 +190,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     "denies an ungranted operation after general allowance through real host permissions",
     () =>
       Effect.gen(function* () {
-        const host = yield* nativeHost("walt", Permission.fromConfig({ "*": "allow" }))
+        const host = yield* nativeHost("archie", Permission.fromConfig({ "*": "allow" }))
         requireUpstreamGrants(host.agent)
         yield* host.describe.execute({ name: "plan-check" }, host.context)
         yield* host.execute.execute({ name: "plan-check", arguments: plan }, host.context)
@@ -221,7 +221,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
         yield* Effect.forEach(["general", "impostor", "conductor-impostor"], (id) =>
           Effect.gen(function* () {
             const host = yield* nativeHost(id)
-            const context = { ...host.context, agent: "walt" }
+            const context = { ...host.context, agent: "archie" }
             expectFailure(
               yield* host.catalog.execute({}, context).pipe(Effect.exit),
               "requires native Maestro identity",
@@ -241,7 +241,7 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     {
       config: {
         permission: { "*": "allow" },
-        agent: { impostor: { name: "walt" }, "conductor-impostor": { name: "maestro" } },
+        agent: { impostor: { name: "archie" }, "conductor-impostor": { name: "maestro" } },
       },
     },
   )
@@ -251,8 +251,8 @@ describe("V1 upstream Arsenal discovery and binding", () => {
     () =>
       Effect.gen(function* () {
         const host = yield* nativeHost("impostor")
-        expect(host.agent).toMatchObject({ id: "impostor", name: "walt", native: false })
-        const context = { ...host.context, agent: "walt", agentID: undefined }
+        expect(host.agent).toMatchObject({ id: "impostor", name: "archie", native: false })
+        const context = { ...host.context, agent: "archie", agentID: undefined }
         expectFailure(yield* host.catalog.execute({}, context).pipe(Effect.exit), "requires native Maestro identity")
         expectFailure(
           yield* host.describe.execute({ name: "plan-check" }, context).pipe(Effect.exit),
@@ -264,22 +264,22 @@ describe("V1 upstream Arsenal discovery and binding", () => {
         )
         expect(host.asks).toEqual([])
       }),
-    { config: { permission: { "*": "allow" }, agent: { impostor: { name: "walt" } } } },
+    { config: { permission: { "*": "allow" }, agent: { impostor: { name: "archie" } } } },
   )
 })
 
 // Positive tests depend on the sibling Core contract and the lead's real roster integration, never fixture grants.
 function requireUpstreamGrants(agent: Agent.Info) {
-  expect(agent.id).toBe("walt")
+  expect(agent.id).toBe("archie")
   expect(agent.native).toBe(true)
   if (!Array.isArray(MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS))
     throw new Error("DEPENDENCY_MISSING: Core MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS")
   if (Permission.evaluate(MaestroArsenal.names.catalog, "*", agent.permission).action !== "allow")
-    throw new Error("DEPENDENCY_MISSING: real walt roster maestro_arsenal_catalog grant")
+    throw new Error("DEPENDENCY_MISSING: real archie roster maestro_arsenal_catalog grant")
   expect(MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS).toHaveLength(13)
   ;[MaestroArsenal.names.describe, MaestroArsenal.names.execute].forEach((permission) => {
     const grants = agent.permission.filter((rule) => rule.permission === permission && rule.action === "allow")
-    if (grants.length === 0) throw new Error(`DEPENDENCY_MISSING: real walt roster ${permission} operation grants`)
+    if (grants.length === 0) throw new Error(`DEPENDENCY_MISSING: real archie roster ${permission} operation grants`)
     expect(grants.map((rule) => rule.pattern).toSorted()).toEqual(
       [...MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS].toSorted(),
     )

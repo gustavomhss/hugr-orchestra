@@ -1,5 +1,7 @@
 # Maestro transfer gate repair
 
+Current identity correction: active upstream ID `archie`, profile `upstream`, assets `packages/archie-specialist`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md). Procedure quotations and raw pins below remain immutable historical receipts. Parent owns active-source naming and new pin freeze; old pins are not renamed-file proof or a second accepted digest.
+
 Category: **REPAIR + STRENGTHENING**. Applies to local orientation integration on `maestro-transfer`,
 baseline `1520daa817c2310daddae70cba93a068041f10c1`.
 

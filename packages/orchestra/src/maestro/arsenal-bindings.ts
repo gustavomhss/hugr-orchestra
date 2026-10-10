@@ -97,7 +97,7 @@ const layer = Layer.effectDiscard(
               const native = yield* nativeAgents.get(context.agent).pipe(Effect.provideService(InstanceRef, instance))
               const agent = yield* agents.get(context.agent)
               const nativeMaestro = agent?.id === "maestro" && native?.id === "maestro" && native.native === true
-              const nativeUpstream = agent?.id === "walt" && native?.id === "walt" && native.native === true
+              const nativeUpstream = agent?.id === "archie" && native?.id === "archie" && native.native === true
               const data = yield* fs
                 .realPath(global.data)
                 .pipe(Effect.map(FSUtil.normalizePath), Effect.mapError(() => new ToolFailure({ message: "ARSENAL_DATA_UNAVAILABLE" })))

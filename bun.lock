@@ -107,6 +107,13 @@
         "dts-bundle-generator": "9.5.1",
       },
     },
+    "packages/capability-assets": {
+      "name": "@orchestra/capability-assets",
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "packages/cli": {
       "name": "@orchestra/cli",
       "version": "1.18.27",
@@ -1517,6 +1524,8 @@
     "@orchestra/app": ["@orchestra/app@workspace:packages/app"],
 
     "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:packages/atlas-boundary"],
+
+    "@orchestra/capability-assets": ["@orchestra/capability-assets@workspace:packages/capability-assets"],
 
     "@orchestra/cli": ["@orchestra/cli@workspace:packages/cli"],
 

@@ -25,13 +25,13 @@ export interface TaskOwner {
 export function upstreamSettlement(metadata: Record<string, unknown>, owner: TaskOwner) {
   const receipt = Schema.decodeUnknownOption(UpstreamSettlement)(metadata.upstreamSettlement, { onExcessProperty: "error" })
   const input = Schema.decodeUnknownOption(Schema.Struct({ subagent_type: Schema.String, task_id: Schema.optional(Schema.String) }))(owner.input)
-  if (Option.isNone(receipt) || Option.isNone(input) || owner.tool !== "task" || input.value.subagent_type !== "walt" ||
+  if (Option.isNone(receipt) || Option.isNone(input) || owner.tool !== "task" || input.value.subagent_type !== "archie" ||
     receipt.value.parentMessageID !== owner.messageID || receipt.value.parentCallID !== owner.callID ||
     metadata.parentSessionId !== owner.sessionID) return
   const result = Schema.decodeUnknownOption(Schema.Struct({
     taskId: Schema.NonEmptyString,
     card: Schema.Struct({ messageID: Schema.NonEmptyString }),
-    author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
+    author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
   }))(receipt.value.workResult)
   // Task's resume parameter names the child Session; logical Task identity is checked by the private host port.
   if (Option.isNone(result) || result.value.author.executionSessionID !== metadata.sessionId ||

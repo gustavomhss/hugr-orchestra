@@ -68,7 +68,7 @@ export function make(binding: {
     if (source?.type !== "task-return" || source.task_id !== input.childSessionID || source.state !== state)
       return yield* new Hold({ message: "HOLD: settlement Task source mismatch" })
     const result = input.capture.workResult?.schema === UpstreamResult.SCHEMA ? input.capture.workResult : undefined
-    if (result && (result.author?.memberId !== "walt" || result.author.messageID !== input.capture.assistantMessageID ||
+    if (result && (result.author?.memberId !== "archie" || result.author.messageID !== input.capture.assistantMessageID ||
       result.author.executionSessionID !== input.childSessionID || result.card.messageID !== input.capture.assistantMessageID ||
       result.taskId !== input.taskID))
       return yield* new Hold({ message: "HOLD: captured assistant binding mismatch" })
