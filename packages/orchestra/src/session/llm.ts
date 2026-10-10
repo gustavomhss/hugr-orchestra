@@ -62,6 +62,8 @@ export type StreamRequest = StreamInput & {
 
 export interface Interface {
   readonly stream: (input: StreamInput) => Stream.Stream<LLMEvent, unknown>
+  /** Optional backend compiler estimate, including its actual text framing. */
+  readonly estimateInput?: (input: StreamInput) => number
   readonly preflight?: (input: StreamInput) => Effect.Effect<LLMPrepared.Plan, unknown>
   readonly receipt?: (plan: LLMPrepared.Plan) => StreamInput | undefined
 }

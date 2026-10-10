@@ -24,8 +24,7 @@ export function rank(title: string, markdown: string, query: Query): Rank | unde
   return {
     // Phrase > title-term count > proximity; each lower tier is strictly bounded.
     score:
-      Number(phrase(heading) || phrase(body)) * 1_000_000 + titleTerms * 1000 +
-      (span ? 1000 / (1 + span.width) : 0),
+      Number(phrase(heading) || phrase(body)) * 1_000_000 + titleTerms * 1000 + (span ? 1000 / (1 + span.width) : 0),
     field,
     snippet_offset: Math.max(0, (span?.offset ?? body.find((token) => query.terms.has(token.value))?.offset ?? 0) - 40),
   }
@@ -35,8 +34,11 @@ export function compare(
   left: { score: number; last: string; id: string },
   right: { score: number; last: string; id: string },
 ) {
-  return right.score - left.score || (left.last > right.last ? -1 : left.last < right.last ? 1 : 0) ||
+  return (
+    right.score - left.score ||
+    (left.last > right.last ? -1 : left.last < right.last ? 1 : 0) ||
     (left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
+  )
 }
 
 function tokens(text: string): Token[] {

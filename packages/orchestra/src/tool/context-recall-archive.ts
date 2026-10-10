@@ -13,7 +13,7 @@ export const Lookup = Schema.Struct({
   limit: Schema.optional(Schema.Int.check(Schema.isGreaterThan(0), Schema.isLessThanOrEqualTo(8000))),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 export const Search = Schema.Struct({
-  archive_query: Schema.String.check(Schema.isMaxLength(256)),
+  archive_query: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),
   limit: Schema.optional(Count),
   match: Schema.optional(Schema.Literals(["literal", "terms"])),
   offset: Schema.optional(Offset.check(Schema.isLessThanOrEqualTo(Number.MAX_SAFE_INTEGER))),
@@ -128,7 +128,8 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
     if (params.from_message && params.through_message && params.from_message > params.through_message)
       return { status: "unavailable", reason: "invalid_message_range" }
     const retained = (yield* archive.list(sessionID)).toSorted((a, b) =>
-      a.first < b.first ? -1 : a.first > b.first ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+      a.first < b.first ? -1 : a.first > b.first ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+    )
     const offset = params.offset ?? 0
     const limit = params.limit ?? 10
     const capacity = Math.min(retained.length, offset + limit)
@@ -138,21 +139,34 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
     // Retain rank metadata only, bounded by actual refs. Read every eligible chunk,
     // including those beyond the requested page, before reporting any total.
     for (const ref of retained) {
-      if (params.from_message && ref.last < params.from_message) continue
-      if (params.through_message && ref.first > params.through_message) continue
       const chunk = yield* archive.read({ sessionID, id: ref.id })
       if (!chunk) return { status: "unavailable", reason: "missing" }
+      // Unverified manifest descriptors must never hide a corrupt in-range source.
+      if (params.from_message && chunk.last < params.from_message) continue
+      if (params.through_message && chunk.first > params.through_message) continue
       // Archive.read verified the closed envelope, including this fixed header line.
       if (params.role && chunk.markdown.split("\n", 6)[5] !== `Role: ${params.role}`) continue
       const content = literal?.exec(chunk.markdown)
       const title = literal?.exec(chunk.title)
-      const rank = terms ? ArchiveSearch.rank(chunk.title, chunk.markdown, terms) : content || title ? {
-        score: 0, field: content ? "markdown" as const : "title" as const,
-        snippet_offset: Math.max(0, (content?.index ?? title?.index ?? 0) - 40),
-      } : undefined
+      const rank = terms
+        ? ArchiveSearch.rank(chunk.title, chunk.markdown, terms)
+        : content || title
+          ? {
+              score: 0,
+              field: content ? ("markdown" as const) : ("title" as const),
+              snippet_offset: Math.max(0, (content?.index ?? title?.index ?? 0) - 40),
+            }
+          : undefined
       if (!rank) continue
       total++
-      const candidate = { ...ref, ...rank }
+      const candidate = {
+        id: chunk.id,
+        title: chunk.title,
+        first: chunk.first,
+        last: chunk.last,
+        bytes: chunk.bytes,
+        ...rank,
+      }
       if (!terms) {
         if (total > offset && selected.length < limit) selected.push(candidate)
         continue
@@ -177,22 +191,43 @@ function search(archive: Archive.Interface, params: Schema.Schema.Type<typeof Se
     for (const ref of terms ? selected.slice(offset) : selected) {
       const chunk = yield* archive.read({ sessionID, id: ref.id })
       if (!chunk) return { status: "unavailable", reason: "missing" }
-      references.push({ ...descriptor(ref), availability: "stored", field: ref.field,
+      references.push({
+        ...descriptor(ref),
+        availability: "stored",
+        field: ref.field,
         snippet_offset: ref.snippet_offset,
-        snippet: (ref.field === "markdown" ? chunk.markdown : chunk.title).slice(ref.snippet_offset, ref.snippet_offset + 300),
-        ...(terms ? { score: ref.score } : {}) })
+        snippet: (ref.field === "markdown" ? chunk.markdown : chunk.title).slice(
+          ref.snippet_offset,
+          ref.snippet_offset + 300,
+        ),
+        ...(terms ? { score: ref.score } : {}),
+      })
     }
-    const legacy = params.match === undefined && params.offset === undefined && params.role === undefined &&
-      params.from_message === undefined && params.through_message === undefined
+    const legacy =
+      params.match === undefined &&
+      params.offset === undefined &&
+      params.role === undefined &&
+      params.from_message === undefined &&
+      params.through_message === undefined
     const page = () => ({
-      status: total ? "found" : "not_found", extent: "archive_descriptors",
+      status: total ? "found" : "not_found",
+      extent: "archive_descriptors",
       order: terms ? "score_descending_source_descending_id_ascending" : "first_message_ascending",
-      offset_unit: terms ? "ranked_references" : "references", snippet_offset_unit: "utf16_code_units",
-      offset, total, retained: retained.length, complete: offset + references.length === total,
-      ...(offset + references.length < total ? legacy ? { continuation: { archive_list: true } } : {
-        next_offset: offset + references.length,
-        continuation: { ...params, offset: offset + references.length },
-      } : {}), references,
+      offset_unit: terms ? "ranked_references" : "references",
+      snippet_offset_unit: "utf16_code_units",
+      offset,
+      total,
+      retained: retained.length,
+      complete: offset + references.length === total,
+      ...(offset + references.length < total
+        ? legacy
+          ? { continuation: { archive_list: true } }
+          : {
+              next_offset: offset + references.length,
+              continuation: { ...params, offset: offset + references.length },
+            }
+        : {}),
+      references,
     })
     while (size(page()) > 8000 && references.length) references.pop()
     if (size(page()) > 8000 || (offset < total && !references.length))
