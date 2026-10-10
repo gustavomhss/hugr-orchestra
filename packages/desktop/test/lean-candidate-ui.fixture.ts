@@ -32,13 +32,21 @@ export async function verifyNativeRows(candidate: OwnedCandidate, info: LeanDash
     assert.ok(value !== null, "Public fixture savings unexpectedly unavailable")
     return new Intl.NumberFormat("en-US", { signDisplay: "exceptZero" }).format(value)
   }
+  const visibleBytes = (value: number | null) => {
+    assert.ok(value !== null && Number.isSafeInteger(value))
+    const magnitude = Math.abs(value)
+    const [unit, suffix]: [number, string] = magnitude >= 1048576 ? [1048576, " MiB"] : magnitude >= 1024 ? [1024, " KiB"] : [1, ""]
+    return new Intl.NumberFormat("en-US", { signDisplay: "exceptZero", maximumFractionDigits: 2 }).format(value / unit) + suffix
+  }
   await expect(page.locator('[data-lean-total="bytes"]')).toHaveAttribute("title", `Exact UTF-8 bytes: ${signed(info.savings.bytesSaved)}`)
+  await expect(page.locator('[data-lean-total="bytes"]')).toHaveJSProperty("textContent", visibleBytes(info.savings.bytesSaved))
   await expect(page.locator('[data-lean-total="tokens"]')).toHaveText(signed(info.savings.tokensSaved))
   await expect(page.locator(".lean-table thead th").nth(2)).toHaveText("Estimated tokens saved")
   for (const item of info.items) {
     const row = page.locator(`[data-lean-item="${item.id}"]`)
     await expect(row.locator('[role="switch"]')).toHaveAttribute("aria-checked", String(item.enabled))
     await expect(row.locator('[data-lean-value="bytes"]')).toHaveAttribute("title", `Exact UTF-8 bytes: ${signed(item.savings.bytesSaved)}`)
+    await expect(row.locator('[data-lean-value="bytes"]')).toHaveJSProperty("textContent", visibleBytes(item.savings.bytesSaved))
     await expect(row.locator('[data-lean-value="tokens"]')).toHaveText(signed(item.savings.tokensSaved))
   }
   await bounded("actual renderer font readiness", page.evaluate(async () => { await document.fonts.ready }))
@@ -96,11 +104,15 @@ export async function nativeHistory(candidate: OwnedCandidate, directory: string
     assert.equal(execution.sessionID, run.session.id)
     assert.equal(execution.messageID, run.tool.messageID)
     assert.equal(execution.partID, run.tool.id)
+    const originalCommand = run.tool.state.input.command
+    assert.ok(typeof originalCommand === "string", "Original native tool command is missing")
+    assert.equal(execution.command, originalCommand, "History rewrote the original native tool command")
+    assert.equal(execution.commandTruncated, false)
     assert.equal(execution.bytesSaved, run.metric.bytes.saved)
     assert.ok(run.metric.tokens.kind === "estimated")
     assert.equal(execution.tokensSaved, run.metric.tokens.saved)
     const row = candidate.page.locator(`[data-lean-execution="${run.tool.callID}"]`)
-    await expect(row.locator("code")).toHaveText(execution.command)
+    await expect(row.locator("code")).toHaveJSProperty("textContent", originalCommand)
     const fmt = (value: number) => new Intl.NumberFormat("en-US", { signDisplay: "exceptZero" }).format(value)
     await expect(row.locator('[data-lean-value="bytes"]')).toHaveText(fmt(run.metric.bytes.saved))
     await expect(row.locator('[data-lean-value="tokens"]')).toHaveText(fmt(run.metric.tokens.saved))
