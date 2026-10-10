@@ -1,5 +1,8 @@
 export * as LeanMetrics from "./lean-metrics"
 
+import type { LeanCoverage } from "./lean-coverage"
+import type { LeanEngine } from "./lean-engine"
+
 /** Local numeric provenance for one actually selected standard tool result. No command/output payload. */
 export interface Decision {
   readonly version: 1
@@ -7,7 +10,8 @@ export interface Decision {
   readonly owner: { readonly projectID: string; readonly location: string; readonly sessionID: string; readonly callID: string }
   readonly orchestraProfile?: string
   readonly model: { readonly provider: string; readonly id: string }
-  readonly engine: "hugr-lean@0.2.0:4e46ae0534937bdf"
+  readonly engine: LeanEngine.ID
+  readonly itemID?: LeanCoverage.ItemID
   readonly producer: "native-shell" | "unverified"
   readonly eligible: boolean
   readonly status: "applied" | "normalized" | "passthrough"
