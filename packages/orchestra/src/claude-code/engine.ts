@@ -19,6 +19,7 @@ import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Session } from "@/session/session"
+import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
@@ -299,6 +300,8 @@ const layer = Layer.effect(
       }
 
       const outcome = yield* Effect.gen(function* () {
+           // Same seam as LLM.stream: the caller's pre-model guard runs once before any SDK process (compaction included).
+           yield* PromptGuard.check(sessionID)
            const materialized = yield* prepare
            // New SDK sessions must never fall into the legacy assistant-based delivery inference.
            if (!state.sessionId && state.delivered === undefined) yield* metadata({ delivered: [] })
