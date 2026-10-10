@@ -102,17 +102,26 @@ badSlack.forEach((body, index) => it.live(`Slack rejects missing/mismatched iden
       error === key ? "connection_unavailable" : "authentication_required")
   })))
 
-;[{}, { id: 123 }, { id: "" }, { id: "123\n" }, { id: "1".repeat(21) }, { id: "U123" },
-  { id: key }, { id: "123", bot: false }, { user: { id: "123" } }].forEach((body, index) =>
+;[{ bot: true }, { id: 123, bot: true }, { id: "", bot: true }, { id: "123\n", bot: true },
+  { id: "1".repeat(21), bot: true }, { id: "U123", bot: true }, { id: key, bot: true },
+  { user: { id: "123" }, bot: true }, null, [], "malformed-user"].forEach((body, index) =>
   it.live(`Discord rejects missing/mismatched identity ${index}`, () => Effect.gen(function* () {
     const f = yield* fixture(() => Response.json(body))
     rejected(yield* f.verifier.verify({ provider: "discord", key }).pipe(Effect.exit), "connection_unavailable")
+    expect(f.seen).toHaveLength(1)
+  })))
+
+;[undefined, null, false, "true", 1, {}, [], key].forEach((bot, index) =>
+  it.live(`Discord requires explicit vendor bot true ${index}`, () => Effect.gen(function* () {
+    const f = yield* fixture(() => Response.json({ id: "123", bot, username: key }))
+    rejected(yield* f.verifier.verify({ provider: "discord", key }).pipe(Effect.exit), "connection_unavailable")
+    expect(f.seen).toHaveLength(1)
   })))
 
 it.live("valid-looking provider identity cannot echo exact credential into proof", () => Effect.gen(function* () {
   const s = yield* fixture(() => Response.json(slack))
   rejected(yield* s.verifier.verify({ provider: "slack", key: "U456" }).pipe(Effect.exit), "connection_unavailable")
-  const d = yield* fixture(() => Response.json({ id: "123" }))
+  const d = yield* fixture(() => Response.json({ id: "123", bot: true }))
   rejected(yield* d.verifier.verify({ provider: "discord", key: "123" }).pipe(Effect.exit), "connection_unavailable")
 }))
 
@@ -140,6 +149,18 @@ it.live("input descriptors, proxies, serializers and bounded strict fields rejec
   yield* f.verifier.verify({ provider: "slack", key: "x".repeat(4096), label: "x".repeat(128) })
   expect(f.seen).toHaveLength(1)
 }))
+
+;(["slack", "discord"] as const).forEach((provider) =>
+  it.live(`${provider} rejects internal key whitespace before network; exact valid key succeeds`, () => Effect.gen(function* () {
+    const f = yield* fixture(() => Response.json(provider === "slack" ? slack : { id: "123", bot: true }))
+    yield* Effect.forEach([" ", "\t", "\r", "\n", "\v", "\f", "\u00a0", "\u2003", "\ufeff"], (space) =>
+      f.verifier.verify({ provider, key: `fixture${space}secret` }).pipe(Effect.exit,
+        Effect.tap((exit) => Effect.sync(() => rejected(exit, "unsupported_schema")))))
+    expect(f.seen).toEqual([])
+    expect((yield* f.verifier.verify({ provider, key })).provider).toBe(provider)
+    expect(f.seen).toHaveLength(1)
+    expect(f.seen[0].authorization).toBe(`${provider === "slack" ? "Bearer" : "Bot"} ${key}`)
+  })))
 
 it.live("captures input and construction options before effects; later mutation cannot switch identity or origin", () => Effect.gen(function* () {
   const f = yield* fixture(() => Response.json(slack))
