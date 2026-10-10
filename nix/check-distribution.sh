@@ -101,11 +101,9 @@ run toolchain env TOOLCHAIN_LOG_DIR="$dir/toolchain" bash nix/check-toolchain.sh
 run consumers nix build --no-write-lock-file --no-update-lock-file --option sandbox true \
   --no-link --print-out-paths --print-build-logs \
   ".#packages.$DISTRIBUTION_SYSTEM.orchestra" ".#packages.$DISTRIBUTION_SYSTEM.orchestra-desktop"
-run outputs nix eval --impure --no-write-lock-file --no-update-lock-file --json --expr '
-  let
-    flake = builtins.getFlake (toString ./.);
-    packages = flake.packages.${builtins.getEnv "DISTRIBUTION_SYSTEM"};
-  in { cli = toString packages.orchestra; desktop = toString packages.orchestra-desktop;
+run outputs nix eval --no-write-lock-file --no-update-lock-file --json \
+  ".#packages.$DISTRIBUTION_SYSTEM" --apply '
+  packages: { cli = toString packages.orchestra; desktop = toString packages.orchestra-desktop;
     bun = toString packages.bun; version = packages.orchestra.version; electronVersion = packages.electron.version;
     source = toString packages.node_modules.src; modules = toString packages.node_modules;
   }

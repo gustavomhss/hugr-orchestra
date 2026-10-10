@@ -319,6 +319,22 @@ ledger paths; Archie and Maestro own disjoint identity/consumer edits. New quali
 package identity/Auth source requires fresh final composition capture. Immutable
 historical records and original evidence are not rewritten; no active alias is added.
 
+That consumer attempt produced concrete new evidence. Linux ARM artifact
+`11655865482` reports identical expected/compiler/emitted Nix interpreters and
+successful empty RPATH values for both compiler and output. The added nonempty
+RPATH predicate was therefore a false refusal, not missing loader metadata.
+Its repair accepts exact empty equality only after successful metadata queries,
+rejects each failed query explicitly, and additionally matches `DT_NEEDED` entries.
+Native runtime/install/output checks remain unchanged.
+
+Darwin ARM artifact `11656590490` reports `consumers.exit=0`: real CLI/Desktop
+builds and install checks completed. The later output selector used a path flake,
+lost Git revision metadata and selected unbuilt `1.18.27+dirty` paths instead of
+the actual `1.18.27+84dfd7f` outputs. `native-outputs` failed at `lstat` on that
+wrong CLI path. The selector repair evaluates the same Git `.#packages.<system>`
+installable as the build, with the same output-field map. No output/ABI/control
+check is removed, and neither repair is qualified by source review alone.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:

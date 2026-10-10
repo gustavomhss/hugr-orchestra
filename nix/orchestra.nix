@@ -73,16 +73,32 @@ stdenv.mkDerivation (finalAttrs: {
     # sections aborts in patchelf; require the emitted native paths before publication.
     cli="packages/cli/dist/cli-${target}/bin/orchestra"
     interpreter="$(cat "$NIX_CC/nix-support/dynamic-linker")"
-    rpath="$(patchelf --print-rpath ${bun}/bin/bun)"
+    # A successful empty RPATH is valid when the native compiler also has none.
+    # Query failures must never masquerade as two matching empty values.
+    rpath="$(patchelf --print-rpath ${bun}/bin/bun)" || {
+      printf 'NIX_DISTRIBUTION_FAILURE:COMPILER_RPATH_READ_FAILED\n' >&2
+      exit 1
+    }
     compilerInterpreter="$(patchelf --print-interpreter ${bun}/bin/bun)"
     cliInterpreter="$(patchelf --print-interpreter "$cli")"
-    cliRpath="$(patchelf --print-rpath "$cli")"
+    cliRpath="$(patchelf --print-rpath "$cli")" || {
+      printf 'NIX_DISTRIBUTION_FAILURE:CLI_RPATH_READ_FAILED\n' >&2
+      exit 1
+    }
+    compilerNeeded="$(patchelf --print-needed ${bun}/bin/bun)" || {
+      printf 'NIX_DISTRIBUTION_FAILURE:COMPILER_NEEDED_READ_FAILED\n' >&2
+      exit 1
+    }
+    cliNeeded="$(patchelf --print-needed "$cli")" || {
+      printf 'NIX_DISTRIBUTION_FAILURE:CLI_NEEDED_READ_FAILED\n' >&2
+      exit 1
+    }
     printf 'CLI_NATIVE_LOADER:expected=%s compiler=%s emitted=%s compilerRpath=%s emittedRpath=%s\n' \
       "$interpreter" "$compilerInterpreter" "$cliInterpreter" "$rpath" "$cliRpath"
-    [[ -n "$interpreter" && -n "$rpath" &&
+    [[ -n "$interpreter" &&
       "$compilerInterpreter" == "$interpreter" &&
       "$cliInterpreter" == "$interpreter" &&
-      "$cliRpath" == "$rpath" ]] || {
+      "$cliRpath" == "$rpath" && "$cliNeeded" == "$compilerNeeded" ]] || {
       printf 'NIX_DISTRIBUTION_FAILURE:CLI_NATIVE_LOADER_MISMATCH\n' >&2
       exit 1
     }
