@@ -21,7 +21,8 @@ export async function isolated(file: string, markers: readonly string[]) {
   const config = join(directory, "bunfig.toml")
   await Bun.write(config, `[test]\nroot = ${JSON.stringify(resolve(file, ".."))}\npreload = [${JSON.stringify(resolve(import.meta.dir, "../../../script/test-guard.ts"))}]\n`)
   const child = Bun.spawn([process.execPath, "test", "--config", config, file, "--timeout", "30000"], {
-    cwd: resolve(file, "../..", file.includes("/test/server/") ? ".." : "."),
+    // Host worker stays in a package directory without Orchestra's legacy env-mutating preload.
+    cwd: file.includes("/test/server/") ? resolve(import.meta.dir, "..") : resolve(file, "../.."),
     env: { ...process.env, ORCHESTRA_SETUP_PROOF_WORKER: "1", ORCHESTRA_DB: join(directory, "proof.db"),
       ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_INHERIT_CREDENTIALS: "0",
       ORCHESTRA_TEST_HOME: join(directory, "home"), ORCHESTRA_TEST_MANAGED_CONFIG_DIR: join(directory, "managed"),
@@ -46,7 +47,7 @@ export async function isolated(file: string, markers: readonly string[]) {
 
 type Routes = (operator: CapabilityOperatorContract.Interface, verifier: CapabilityConnectionSetupContract.Verifier) =>
   Layer.Layer<never, unknown, HttpRouter.HttpRouter | HttpRouter.Request<"Requires", unknown> |
-    HttpRouter.Request<"Error", unknown> | HttpRouter.Request<"GlobalError", unknown>>
+    HttpRouter.Request<"Error", unknown> | HttpRouter.Request<"GlobalError", unknown> | HttpRouter.Request<"GlobalRequires", unknown>>
 
 export async function make(options: { password?: string; routes?: Routes } = {}) {
   const { Effect, Layer, Context, Scope, Exit } = await import("effect")
@@ -57,6 +58,8 @@ export async function make(options: { password?: string; routes?: Routes } = {})
   const { ProjectTable } = await import("@orchestra/core/project/sql")
   const { Project } = await import("@orchestra/schema/project")
   const { AbsolutePath } = await import("@orchestra/schema/schema")
+  const { CapabilityConnectionTable, CapabilityRequestTable } = await import("@orchestra/core/capability/sql")
+  const { CredentialTable } = await import("@orchestra/core/credential/sql")
   const { CapabilityOperator } = await import("@orchestra/core/capability/operator/index")
   const { CapabilityConnectionVerification } = await import("@orchestra/core/capability/connection/verify")
   const { createRoutes } = await import("../src/routes")
@@ -70,10 +73,14 @@ export async function make(options: { password?: string; routes?: Routes } = {})
     const memoMap = Layer.makeMemoMapUnsafe()
     const context = yield* Layer.buildWithMemoMap(Database.layerFromPath(Database.path()), memoMap, scope)
     const database = Context.get(context, Database.Service)
+    yield* database.db.delete(CapabilityConnectionTable).run()
+    yield* database.db.delete(CapabilityRequestTable).run()
+    yield* database.db.delete(CredentialTable).run()
     const directory = yield* Effect.acquireRelease(
       Effect.promise(() => mkdtemp(join(tmpdir(), "setup-http-"))),
       (path) => Effect.promise(() => rm(path, { recursive: true, force: true })),
     )
+    yield* Effect.promise(() => mkdir(join(directory, "foreign")))
     // Core resolves non-git placement to global; persistence is still legacy Project-owned.
     yield* database.db.insert(ProjectTable).values({ id: Project.ID.global,
       worktree: AbsolutePath.make(directory), sandboxes: [] }).onConflictDoNothing().run()
