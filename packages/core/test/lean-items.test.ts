@@ -43,6 +43,11 @@ test("measurement reads itemID once and rejects contradictory eligible unverifie
   expect(LeanTelemetry.measure({ ...input, producer: "unverified" })).toBeUndefined()
 })
 
+test("measurement rejects cross-item filter attribution and accepts coherent current provenance", () => {
+  expect(LeanTelemetry.measure({ ...input, filterProfile: "pytest" })).toBeUndefined()
+  expect(LeanTelemetry.measure({ ...input, filterProfile: "cargo-test" })?.itemID).toBe("cargo")
+})
+
 test("full schema and core typechecks on CI", async () => {
   for (const name of ["schema", "core"]) {
     const compiler = Bun.spawn([process.execPath, "run", "typecheck"], {
