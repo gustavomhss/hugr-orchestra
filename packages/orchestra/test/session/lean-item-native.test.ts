@@ -67,7 +67,9 @@ it.live("same Project ID, different profile directories keep independent native 
   // Non-Git instances deliberately share the global project ID; directories still partition controls.
   const firstDirectory = yield* tmpdirScoped()
   const secondDirectory = yield* tmpdirScoped()
-  const global = Global.make({ data: path.join(firstDirectory, "private"), state: path.join(firstDirectory, "state") })
+  // The Session runtime's own Global: native tools receive the services the Session captured, so preferences
+  // written through any other Global would never reach the executor (as in production, there is one).
+  const global = yield* Global.Service
   yield* Effect.gen(function* () {
     const first = yield* native(false).pipe(provideInstance(firstDirectory))
     const second = yield* native(true).pipe(provideInstance(secondDirectory))
@@ -80,7 +82,7 @@ it.live("same Project ID, different profile directories keep independent native 
     expect(b.items.go).toBe(true)
     const fs = yield* FSUtil.Service
     expect(yield* fs.exists(path.join(global.data, "lean", "profiles", `${a.scope.profileID}.json`))).toBe(true)
-  }).pipe(Effect.provideService(Global.Service, global))
+  })
 }).pipe(Effect.provide(testInstanceStoreLayer)), 180_000)
 
 test("full native Orchestra types require real processor checkpoint", async () => {
