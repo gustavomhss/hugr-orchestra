@@ -213,7 +213,7 @@ const layer = Layer.effect(
             ? Schema.declare<unknown>((u): u is unknown => zodParams.safeParse(u).success)
             : Schema.Unknown
           const executeWithSafety: PluginDef["executeWithSafety"] = (
-            args,
+            rawArgs,
             context,
             durableSafety,
             requiredBinding = false,
@@ -221,6 +221,11 @@ const layer = Layer.effect(
             // Capture before entering the Session wrapper, which may bind a different placement.
             const toolCtx = { ...context }
             return Effect.gen(function* () {
+              const args = yield* Effect.sync(() => freezePluginArguments(
+                zodParams
+                  ? zodParams.parse(structuredClone(rawArgs))
+                  : z.record(z.string(), z.unknown()).parse(structuredClone(rawArgs)),
+              ))
               const info = yield* agent.get(toolCtx.agentID ?? toolCtx.agent)
               const binding = yield* bindInvocation(
                 toolCtx,
@@ -267,12 +272,7 @@ const layer = Layer.effect(
                     const result = yield* safety.run(
                       invocation,
                       Effect.gen(function* () {
-                        const raw = yield* Effect.promise(() =>
-                          def.execute(
-                            zodParams ? zodParams.parse(args) : z.record(z.string(), z.unknown()).parse(args),
-                            pluginCtx,
-                          ),
-                        )
+                        const raw = yield* Effect.promise(() => def.execute(args, pluginCtx))
                         yield* ToolSafety.inspect(raw)
                         return raw
                       }),
@@ -625,6 +625,27 @@ export function allowedTaskModels(ruleset: PermissionV1.Ruleset): string[] {
 
 function isZodType(value: unknown): value is z.ZodType {
   return typeof value === "object" && value !== null && "_zod" in value
+}
+
+// A parsed JSON snapshot is shared by every safety check and execution. Bound traversal and reject non-JSON
+// transform results rather than retaining mutable aliases (including aliases closed over by a plugin schema).
+function freezePluginArguments(input: Record<string, unknown>) {
+  const snapshot = structuredClone(input)
+  const seen = new WeakSet<object>()
+  const budget = { remaining: 10000 }
+  const freeze = (value: unknown, depth: number): void => {
+    if (--budget.remaining < 0 || depth > 32) throw new Error("Plugin arguments exceed snapshot bounds")
+    if (value === null || typeof value === "string" || typeof value === "boolean") return
+    if (typeof value === "number" && Number.isFinite(value)) return
+    if (typeof value !== "object" || seen.has(value) ||
+      (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype))
+      throw new Error("Plugin arguments must be JSON values")
+    seen.add(value)
+    Object.values(value).forEach((item) => freeze(item, depth + 1))
+    Object.freeze(value)
+  }
+  freeze(snapshot, 0)
+  return snapshot
 }
 
 function isPluginTool(value: unknown): value is ToolDefinition {

@@ -36,6 +36,7 @@ export type ToolContext = {
    */
   worktree: string
   abort: AbortSignal
+  /** Await the returned Promise before relying on persisted progress. Fire-and-forget persistence is not guaranteed. */
   metadata(input: { title?: string; metadata?: { [key: string]: any } }): Promise<void> | void
   ask(input: AskInput): Promise<void>
 }
