@@ -21,6 +21,8 @@ type State = {
   data?: LeanDashboard.Info
   loading: boolean
   error?: string
+  readError?: string
+  writeError?: string
   pending: ReadonlySet<Pending>
   history?: LeanDashboard.History
   historyLoading: boolean
@@ -53,14 +55,18 @@ export function createLeanController(describe: (error: unknown) => { message: st
   const scoped = (active: LeanOwner, value: { scope: LeanDashboard.Scope }) => {
     if (pathKey(value.scope.directory) !== pathKey(active.directory)) throw new LeanResponseError("scope")
   }
-  const failure = (error: unknown, history = false) => {
+  const failure = (error: unknown, kind: "read" | "write" | "history" = "read") => {
     const result = describe(error)
     if (result.unavailable) {
       cancel()
       selected = undefined
-      setState({ data: undefined, history: undefined, pending: new Set(), loading: false, historyLoading: false })
+      setState({ data: undefined, history: undefined, pending: new Set(), loading: false, historyLoading: false,
+        error: result.message, readError: result.message, writeError: undefined, historyError: undefined })
+      return
     }
-    setState(history && !result.unavailable ? "historyError" : "error", result.message)
+    if (kind === "history") return setState("historyError", result.message)
+    setState(kind === "write" ? "writeError" : "readError", result.message)
+    setState("error", state.writeError ?? state.readError)
   }
 
   const refresh = async () => {
@@ -69,7 +75,7 @@ export function createLeanController(describe: (error: unknown) => { message: st
     read?.abort()
     const abort = (read = request())
     const order = ++sequence
-    setState({ loading: true, error: undefined })
+    setState({ loading: true, readError: undefined, error: state.writeError })
     try {
       const data = await active.transport.read(abort.signal)
       if (!current(active, abort)) return
@@ -93,7 +99,8 @@ export function createLeanController(describe: (error: unknown) => { message: st
     const abort = request()
     const order = ++sequence
     read?.abort()
-    setState({ pending: new Set([...state.pending, key]), loading: false, error: undefined })
+    if (state.pending.size === 0) setState({ writeError: undefined, error: state.readError })
+    setState({ pending: new Set([...state.pending, key]), loading: false })
     try {
       const data = await active.transport.update(value, abort.signal)
       if (!current(active, abort)) return
@@ -103,13 +110,13 @@ export function createLeanController(describe: (error: unknown) => { message: st
         setState("data", data)
       }
     } catch (error) {
-      if (current(active, abort)) failure(error)
+      if (current(active, abort)) failure(error, "write")
     } finally {
       requests.delete(abort)
       if (current(active, abort)) {
         setState("pending", new Set([...state.pending].filter((item) => item !== key)))
         // Reconcile concurrent server writes from a new GET, without hiding write errors.
-        if (state.pending.size === 0 && !state.error) await refresh()
+        if (state.pending.size === 0) await refresh()
       }
     }
   }
@@ -130,7 +137,7 @@ export function createLeanController(describe: (error: unknown) => { message: st
         throw new LeanResponseError("history")
       setState("history", data)
     } catch (error) {
-      if (current(active, abort)) failure(error, true)
+      if (current(active, abort)) failure(error, "history")
     } finally {
       requests.delete(abort)
       if (current(active, abort)) setState("historyLoading", false)
@@ -151,6 +158,7 @@ export function createLeanController(describe: (error: unknown) => { message: st
       setState({
         key: `${next.server}\0${pathKey(next.directory)}`,
         data: undefined, history: undefined, error: undefined, historyError: undefined,
+        readError: undefined, writeError: undefined,
         pending: new Set(), loading: false, historyLoading: false,
       })
       await refresh()
