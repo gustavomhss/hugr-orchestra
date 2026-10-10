@@ -21,7 +21,7 @@ const SlackIdentity = Schema.Struct({ ok: Schema.Literal(true),
   bot_id: Schema.optionalKey(Schema.String.check(Schema.isPattern(/^B[A-Z0-9]{1,63}(?![\s\S])/))),
 })
 const DiscordIdentity = Schema.Struct({ id: Schema.String.check(Schema.isPattern(/^[0-9]{1,20}(?![\s\S])/)),
-  bot: Schema.optionalKey(Schema.Literal(true)),
+  bot: Schema.Literal(true),
 })
 const SlackRejection = Schema.Struct({ ok: Schema.Literal(false), error: Schema.String })
 const failure = (code: Capability.ErrorCode) => new Capability.Failure({ code,
@@ -42,7 +42,7 @@ export const make = (options: Options = {}) => {
       // Capture at call time, before scheduling any effects; only this flat data shape is accepted.
       const captured = capture(input, ["provider", "key", "label"], (value) => {
         const decoded = Schema.decodeUnknownOption(CapabilitySetup.Input)(value)
-        if (Option.isNone(decoded) || decoded.value.key !== decoded.value.key.trim() || /[\r\n]/.test(decoded.value.key))
+        if (Option.isNone(decoded) || /\s/.test(decoded.value.key))
           throw new Error("Invalid verification input")
         return Object.freeze(decoded.value)
       })
