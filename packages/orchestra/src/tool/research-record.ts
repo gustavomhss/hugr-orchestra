@@ -3,6 +3,7 @@ import { Research } from "@orchestra/schema/research"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchTools } from "@/research/binding"
 import { ResearchExecution } from "@/research/allowance"
+import { ResearchQualifications } from "@/research/qualifications"
 import { Tool } from "./tool"
 import { ToolJsonSchema } from "./json-schema"
 
@@ -17,9 +18,12 @@ export const ResearchRecordTool = Tool.define("research_record", Effect.gen(func
     execute: (input: Research.RecordInput, ctx: Tool.Context) => run(ctx, "research_record", (binding, context) =>
       execution.captureBytes(ctx.sessionID, `${ctx.messageID}:${ctx.callID}:${input.action}`, input.action === "document"
         ? Buffer.byteLength(input.document.body, "utf8") : 0,
-      records.record(binding, context, input)).pipe(Effect.map((result) => ({
-        title: result.document ? `Research document: ${result.document.title}` : `Research ${input.action} retained`,
-        output: JSON.stringify(result), metadata: { research: result },
+      records.record(binding, context, input)).pipe(Effect.flatMap((result) => Effect.gen(function* () {
+        const qualifications = result.document
+          ? yield* ResearchQualifications.collect(records, binding, result.document.findingRefs) : undefined
+        const reply = { ...result, ...(qualifications ? { qualifications } : {}) }
+        return { title: result.document ? `Research document: ${result.document.title}` : `Research ${input.action} retained`,
+          output: JSON.stringify(reply), metadata: { research: reply } }
       }))),
     ).pipe(Effect.orDie),
   }

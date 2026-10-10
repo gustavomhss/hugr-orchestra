@@ -40,20 +40,6 @@ export type { TaskPromptOps } from "./task-prompt"
 
 const id = "task"
 const dispatchLock = KeyedMutex.makeUnsafe<string>()
-const BACKGROUND_DESCRIPTION = [
-  "`background: true` starts the teammate and returns at once; its result arrives later as a new message.",
-  "Use it only for independent work whose result you do not need before you continue. Without it, the call waits for the result.",
-].join(" ")
-const BACKGROUND_STARTED = [
-  "The teammate is working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you started and end your turn.",
-].join("\n")
-const BACKGROUND_UPDATED = [
-  "The added context was sent to the teammate, which is still working in the background. Its result arrives as a new message when it finishes.",
-  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
-  "Continue with other work, or tell the owner what you sent and end your turn.",
-].join("\n")
 
 const BaseParameterFields = {
   description: Schema.String.annotate({ description: "A 3-5 word label the owner sees for this task" }),
@@ -103,23 +89,6 @@ export const Parameters = Schema.Struct({
       "Return at once while the teammate works; its result arrives as a new message when it finishes, so do not wait for it or poll it.",
   }),
 })
-
-function renderOutput(input: {
-  id: string
-  state: "running" | "completed" | "error"
-  summary?: string
-  text: string
-}) {
-  const tag = input.state === "error" ? "task_error" : "task_result"
-  return [
-    `<task id="${input.id}" state="${input.state}">`,
-    ...(input.summary ? [`<summary>${input.summary}</summary>`] : []),
-    `<${tag}>`,
-    input.text,
-    `</${tag}>`,
-    "</task>",
-  ].join("\n")
-}
 
 export const TaskTool = Tool.define(
   id,
@@ -507,7 +476,7 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, ...(verified ? { completion: verified } : {}) }),
-          output: renderOutput({ id: shownID, state: "completed", text: output }),
+          output: SeatWork.output({ id: shownID, state: "completed", text: work.report(output) }),
         }
       }
 
@@ -600,8 +569,8 @@ export const TaskTool = Tool.define(
         const history = result.parts.some(reported)
           ? []
           : yield* sessions.messages({ sessionID: nextSession.id }).pipe(Effect.orElseSucceed(() => [result]))
-        return result.parts.findLast(reported)?.text ??
-          TaskReport.fallback(history.filter((message) => message.info.id > promptID))
+        return work.report(result.parts.findLast(reported)?.text ??
+          TaskReport.fallback(history.filter((message) => message.info.id > promptID)))
       })
 
       const inject = Effect.fn("TaskTool.injectBackgroundResult")(function* (
@@ -623,7 +592,7 @@ export const TaskTool = Tool.define(
                   source: { type: "task-return", task_id: nextSession.id, state },
                   ...(workResult ? { workResult } : {}),
                 },
-                text: renderOutput({
+                text: SeatWork.output({
                   id: shownID,
                   state,
                   summary:
@@ -660,11 +629,11 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: nextSession.id }),
-          output: renderOutput({
+          output: SeatWork.output({
             id: shownID,
             state: "running",
             summary: "Background task updated",
-            text: BACKGROUND_UPDATED,
+            text: SeatWork.BACKGROUND_UPDATED,
           }),
         }
       }
@@ -690,11 +659,11 @@ export const TaskTool = Tool.define(
         return {
           title: params.description,
           metadata: work.attach({ ...metadata, background: true, jobId: info.id }),
-          output: renderOutput({
+          output: SeatWork.output({
             id: shownID,
             state: "running",
             summary: "Background task started",
-            text: BACKGROUND_STARTED,
+            text: SeatWork.BACKGROUND_STARTED,
           }),
         }
       })
@@ -738,7 +707,7 @@ export const TaskTool = Tool.define(
                 ...metadata,
                 ...(completionEvidence.value ? { completion: completionEvidence.value } : {}),
               }),
-              output: renderOutput({ id: shownID, state: "completed", text: result?.output ?? "" }),
+              output: SeatWork.output({ id: shownID, state: "completed", text: result?.output ?? "" }),
             }
           }),
         (_, exit) =>
@@ -758,7 +727,7 @@ export const TaskTool = Tool.define(
 
     return {
       description: flags.experimentalBackgroundSubagents
-        ? [DESCRIPTION, BACKGROUND_DESCRIPTION].join("\n\n")
+        ? [DESCRIPTION, SeatWork.BACKGROUND_DESCRIPTION].join("\n\n")
         : DESCRIPTION,
       parameters: Parameters,
       jsonSchema: flags.experimentalBackgroundSubagents ? undefined : ToolJsonSchema.fromSchema(BaseParameters),

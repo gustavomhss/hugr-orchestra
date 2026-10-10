@@ -7,6 +7,7 @@ import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
 import { Seats, type Seat } from "./seats"
 import type { Research } from "@orchestra/schema/research"
+import type { ResearchQualifications } from "@/research/qualifications"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).
 // Closed at every level: excess properties fail the decode.
@@ -61,6 +62,7 @@ export type WorkResult = {
   referencesChecked?: boolean
   documents?: readonly Research.DocumentReceipt[]
   corpus?: Research.Corpus
+  qualifications?: ResearchQualifications.Summary
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
   taskId?: string
   card: { parsed: boolean; messageID?: string }

@@ -12,6 +12,38 @@ import { DiscoveryResult } from "./discovery-result"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import type { Seat } from "./seats"
 
+export const BACKGROUND_DESCRIPTION = [
+  "`background: true` starts the teammate and returns at once; its result arrives later as a new message.",
+  "Use it only for independent work whose result you do not need before you continue. Without it, the call waits for the result.",
+].join(" ")
+export const BACKGROUND_STARTED = [
+  "The teammate is working in the background. Its result arrives as a new message when it finishes.",
+  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
+  "Continue with other work, or tell the owner what you started and end your turn.",
+].join("\n")
+export const BACKGROUND_UPDATED = [
+  "The added context was sent to the teammate, which is still working in the background. Its result arrives as a new message when it finishes.",
+  "Do not wait, poll or ask it for status, and leave its files and topics to it.",
+  "Continue with other work, or tell the owner what you sent and end your turn.",
+].join("\n")
+
+export function output(input: {
+  id: string
+  state: "running" | "completed" | "error"
+  summary?: string
+  text: string
+}) {
+  const tag = input.state === "error" ? "task_error" : "task_result"
+  return [
+    `<task id="${input.id}" state="${input.state}">`,
+    ...(input.summary ? [`<summary>${input.summary}</summary>`] : []),
+    `<${tag}>`,
+    input.text,
+    `</${tag}>`,
+    "</task>",
+  ].join("\n")
+}
+
 // F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
 // Definition supplies the fenced tag, schema id and memory capability; seats without workResult opt out.
 export function track(input: {
@@ -47,6 +79,7 @@ export function track(input: {
         })
 
   return {
+    report: (text: string) => evidence.value ? DiscoveryResult.report(text, evidence.value) : text,
     attach: <T extends object>(metadata: T) => ({
       ...metadata,
       ...(evidence.value ? { workResult: evidence.value } : {}),
