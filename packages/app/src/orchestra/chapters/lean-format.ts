@@ -8,3 +8,12 @@ export function leanNumber(value: number | null | undefined, locale: string, una
 export function leanTokens(savings: LeanDashboard.Savings | undefined) {
   return savings?.tokenCalls === savings?.calls ? savings?.tokensSaved : null
 }
+
+export function leanTime(value: number, locale: string) {
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) return
+  return {
+    iso: date.toISOString(),
+    label: new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date),
+  }
+}
