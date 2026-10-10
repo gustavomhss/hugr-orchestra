@@ -25,6 +25,84 @@
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+.lean-count dd {
+  font-family: var(--mx-emphasis);
+  font-size: 18px;
+}
+.lean-caption p {
+  margin: 0;
+}
+.lean-table thead th {
+  color: var(--mx-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.lean-table td {
+  white-space: nowrap;
+}
+.lean-empty {
+  margin: 0;
+  padding: 32px 20px;
+  text-align: center;
+}
+.lean-detail-row > td {
+  text-align: start;
+  white-space: normal;
+  background: var(--mx-soft);
+}
+.lean-detail {
+  padding: 10px 4px;
+}
+.lean-detail header,
+.lean-execution-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.lean-detail header {
+  justify-content: space-between;
+  margin-block-end: 18px;
+}
+.lean-detail h3 {
+  margin: 0;
+  font: 12px var(--mx-emphasis);
+}
+.lean-executions {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.lean-executions li {
+  padding: 16px 0;
+  border-block-start: 1px solid var(--mx-line);
+}
+.lean-executions code {
+  display: block;
+  margin-block-end: 10px;
+  font: 12px/1.7 var(--mx-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lean-execution-meta {
+  color: var(--mx-dim);
+  font-size: 11px;
+}
+.lean-execution-savings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 14px 0 0;
+}
+.lean-execution-savings dt {
+  color: var(--mx-dim);
+  font-size: 10px;
+}
+.lean-execution-savings dd {
+  margin: 6px 0 0;
+  color: var(--mx-blue);
+  font-variant-numeric: tabular-nums;
+}
 .lean-total dd {
   color: var(--mx-good);
   font-family: var(--mx-emphasis);
