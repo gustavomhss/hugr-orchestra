@@ -32,7 +32,7 @@ stale or held canonical ownership evidence stays HOLD; Composer does not replace
 1. Observe baseline/placement, actual source and consumer identities, checks, permissions and provider
    facts. Use dedicated read/search and existing host `repo-mapper`/`move-in` only for missing scoped
    reconnaissance. Partial maps and unknown acquisition stay explicit. Supply facts, not a new plan.
-2. Request native `walt` to author/revise the bounded brief: exact targets, proposed writes/reads,
+2. Request native `archie` to author/revise the bounded brief: exact targets, proposed writes/reads,
    acceptance, smallest useful anchors, forbidden scope, assumptions, resolved check commands/cwd,
    criterion deltas, local implementation latitude and compact return shape. The actually exposed pure
    `context-packer`, `plan-to-briefs` and `enrich-plan` may assist upstream; missing tools do not justify
@@ -44,7 +44,7 @@ stale or held canonical ownership evidence stays HOLD; Composer does not replace
    When compiler/Plan brief symbol usage needs checking, Maestro runs available `brief-usage-check`
    after describe, using its exact schema and observed acquisition facts. It is a read/process check,
    outside upstream's pure authoring subset. Acquisition omissions/compiler errors are failures, not
-   empty over-spec success. Return findings to `walt` for brief revision; do not trim or rewrite authored
+   empty over-spec success. Return findings to `archie` for brief revision; do not trim or rewrite authored
    content yourself. Verification is not authorship, and the check does not prove semantic completeness.
 4. Supply the needed project facts. Native seats load only their own permitted packaged skills; backend
    keeps its own backend kit and upstream its authoring skills. Only governed Task and the cold reviewer

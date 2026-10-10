@@ -96,12 +96,13 @@ describe("Maestro Arsenal playbooks", () => {
   // REPAIR + STRENGTHENING: full-file SHA-256 pins replace obsolete sentence sentries.
   // Source: specs/upstream-specialist/maestro-planning-handoff.md, independently reviewed replacements;
   // native API clarification: specs/upstream-specialist/maestro-transfer-gate.md.
+  // Naming-only refreeze: specs/upstream-specialist/NAMING-CORRECTION.md; prior hashes are historical receipts.
   // Update pins only with reviewed procedure changes. Artifact drift protection does not grade prose or prove
   // semantic correctness, model compliance or runtime enforcement.
   test.each([
-    ["maestro-decompose", "b5b08533227d58016e59b453451be4a7fd384d9691e16bd3847d06308b957062"],
-    ["maestro-contract", "7e61a86cd78f3d30e448aeb4c5c70ae6de8552cc57107993792539808fd53493"],
-    ["maestro-pack", "a04400230a2dc4847daa452d4dcd2fd22e433db2cebf90a9ff2183dac5dc20bb"],
+    ["maestro-decompose", "ecab0995522a6c91acd5c2b9bb6c73b7be7e686a180e00464ff89d09a7979993"],
+    ["maestro-contract", "810ebef90b20c48e555231e209b8a01ec00e23073bc5bbdc5504dde49df07d32"],
+    ["maestro-pack", "3eccd3163fb84a1811e07b6cb8dedd3d19d1fc2f656e5a97a13e356574d109b2"],
   ])("%s matches its reviewed procedure artifact SHA-256", async (name, digest) => {
     const skill = await readSkill(name)
     expect(createHash("sha256").update(await Bun.file(skill.location).bytes()).digest("hex")).toBe(digest)
