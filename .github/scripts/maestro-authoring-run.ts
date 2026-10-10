@@ -8,20 +8,22 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { parseArgs } from "node:util"
 
 const selectedAuth = "/Users/gustavoschneiter/.local/share/opencode/auth.json"
-// One explicit pin-update surface for the lead's cold-reviewed successor; ca70 remains fix-first, not qualified.
-const consumerReview: { revision: string; status: "fix-first" | "approved" } = { revision: "ca70beecda61ba285651d3e012890e3b299f516f", status: "fix-first" }
+// Owner-selected successor; cold review is pending. Rename steering grants no auth/model qualification.
+const consumerReview: { revision: string; status: "pending" | "approved" } = { revision: "6d325f9356a100ea684fc9c302015557d33b1bfa", status: "pending" }
+const runtimeAbi = { memberID: "archie", profile: "upstream", predecessorDriver: "ae927567aa4deefcbb933be27b257e6430e1eff5" }
 const inventoryDigest = "c3bf0ff8c07c22fef5d17d45d5588b963c3c699868f0accb7be1b4b0cb92c839"
 const guarded = [
   ["packages/orchestra/src/auth/index.ts", "4b9ac63bd8a69c6cd6e554bcde95908246ee9cef"],
   ["packages/orchestra/src/plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
   ["packages/orchestra/src/plugin/openai/siwc.ts", "203e07b88371a420db664c01e7796401cbad44df"],
   ["packages/core/src/auth/siwc.ts", "6f70d249c2cb3d58558a9ae2e3d85402a1b1b9e3"],
-  // ca70beecda61ba285651d3e012890e3b299f516f: update only after the lead pins a reviewed successor.
-  ["packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts", "f3b96817833c270d1430a26ebc6fb1b204323f8e"],
+  // 6d325f9356a100ea684fc9c302015557d33b1bfa; keep these distinct from the historical auth guards above.
+  ["packages/orchestra/src/plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
   ["packages/orchestra/src/plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
 ] as const
-const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/walt.ts",
-  "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "tool/task-background.ts",
+// Current runtime ABI observations are separate from the frozen historical packet's source/blob identities.
+const sourcePaths = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "maestro/seats/archie.ts", "maestro/seats.ts", "maestro/roster.ts",
+  "maestro/write-roots.ts", "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "tool/task-background.ts",
   "session/prompt-guard.ts", "session/task-prompt-ops.ts", "effect/app-runtime.ts", "cli/cmd/run.ts"]
 const deadline = 10 * 60_000
 class AuthoringError extends Error {}
@@ -96,10 +98,10 @@ async function main() {
   await Promise.all(Object.values(env).map((path) => mkdir(path, { mode: 0o700 })))
   Object.assign(env, { ORCHESTRA_DB: join(runtime, "session.db"), ORCHESTRA_CONFIG: join(runtime, "config.json"),
     ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_LEGACY_CODEX_READONLY: "1", ORCHESTRA_DISABLE_PROJECT_CONFIG: "true", ORCHESTRA_TEST_HOME: env.HOME, TMP: env.TMPDIR, TEMP: env.TMPDIR })
-  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", walt: "allow" } } } }) + "\n", { flag: "wx", mode: 0o600 })
+  await writeFile(env.ORCHESTRA_CONFIG, JSON.stringify({ model, default_agent: "maestro", agent: { maestro: { permission: { "*": "deny", task: { "*": "deny", archie: "allow" } } } }) + "\n", { flag: "wx", mode: 0o600 })
   const assignment = `Ordinary proposal-only authoring. Write only proposal.md. No implementation, tests, builds, publication, child dispatch, approval or workflow execution. Return the existing native upstream-result card.\n\nFULL OWNER DEMAND:\n${Buffer.from(demand.bytes).toString("utf8")}\n\nPINNED SCOPE HANDOFF:\n${Buffer.from(handoff.bytes).toString("utf8")}`
   const job = { candidate, project, model, assignment }
-  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, consumerReview, inventoryDigest,
+  const report = { schema: 1, runtime, candidate, head, project, model, sourceHashes, nativeSourceHashes, runtimeAbi, consumerReview, inventoryDigest,
     packetPointer: join(packet, "DOMAIN-SOURCE.json"), packetSha256: sha256(domainBytes), runInputSha256: sha256(instructions),
     inventory: inventory.map(({ bytes, ...item }) => item), deadlineMs: deadline, stdoutBytes: 32 * 1024 * 1024, semanticJudgment: "not-performed" }
   await writeFile(join(runtime, "prepared.json"), JSON.stringify(report) + "\n", { flag: "wx", mode: 0o600 })
@@ -116,7 +118,7 @@ async function main() {
   const redact = (text: string) => secrets.reduce((output, secret) => output.split(secret).join("[REDACTED]"), text)
   const entry = join(runtime, "initializer.ts")
   await writeFile(entry, initializer(job), { flag: "wx", mode: 0o600 })
-  const prompt = `Use exactly one existing foreground Task with subagent_type=walt, model=${model}, writePaths=["proposal.md"], and the exact following prompt. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch.\n${assignment}`
+  const prompt = `Use exactly one existing foreground Task with subagent_type=archie, model=${model}, writePaths=["proposal.md"], and the exact following prompt. Omit governed, authorizationID, workflow, task_id and background. Do no implementation yourself. Return the actual Task result without additional dispatch.\n${assignment}`
   const output = await launch(entry, candidate, { ...env, PATH: process.env.PATH, ORCHESTRA_AUTH_CONTENT: JSON.stringify({ openai: auth }) }, prompt)
   const records = output.text.split("\n").flatMap<{ type: string; sessionID: string; projectID?: string; worktree?: string; timestamp?: number }>((line) => {
     const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(line)
@@ -229,11 +231,11 @@ const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
     const prompts = yield* SessionPrompt.Service
     const registry = yield* ToolRegistry.Service
     const maestro = yield* agents.get("maestro")
-    const walt = yield* agents.get("walt")
+    const archie = yield* agents.get("archie")
     const named = yield* registry.named()
-    requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && walt.id === "walt" && walt.native === true && walt.mode === "subagent" && Seats.find("walt")?.writeRoots === true && named.task.id === "task", "AUTHORING_NATIVE_REGISTRY_MISMATCH")
+    requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.writeRoots === true && Seats.find("archie")?.profileKey === "upstream" && named.task.id === "task", "AUTHORING_NATIVE_REGISTRY_MISMATCH")
     const denies = [{ permission: "edit", pattern: "*", action: "deny" as const }, { permission: "bash", pattern: "*", action: "deny" as const }]
-    const parent = yield* sessions.create({ agent: "maestro", title: "ordinary-walt-authoring", permission: denies })
+    const parent = yield* sessions.create({ agent: "maestro", title: "ordinary-archie-authoring", permission: denies })
     yield* sessions.setPermission({ sessionID: parent.id, permission: denies })
     return { agents, sessions, prompts, task: named.task, parent, denies }
   }).pipe(Effect.provideService(InstanceRef, ctx))
@@ -246,30 +248,30 @@ const proposalPattern = relative(loaded.ctx.worktree, job.project + "/proposal.m
 const contextPattern = relative(loaded.ctx.worktree, job.project + "/README.md").split(String.fromCharCode(92)).join("/")
 const parentCheck = Effect.gen(function* () {
   const maestro = yield* loaded.agents.get("maestro")
-  const walt = yield* loaded.agents.get("walt")
+  const archie = yield* loaded.agents.get("archie")
   const parent = yield* loaded.sessions.get(loaded.parent.id)
-  requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && walt.id === "walt" && walt.native === true && walt.mode === "subagent" && parent.agent === "maestro" && parent.directory === job.project && !parent.parentID, "AUTHORING_PRE_MODEL_IDENTITY_CHANGED")
+  requireFact(maestro.id === "maestro" && maestro.native === true && maestro.mode === "primary" && archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && parent.agent === "maestro" && parent.directory === job.project && !parent.parentID, "AUTHORING_PRE_MODEL_IDENTITY_CHANGED")
   requireFact(Permission.evaluate("edit", "README.md", parent.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", parent.permission ?? []).action === "deny", "AUTHORING_PARENT_SESSION_PERMISSION_CHANGED")
   state.parentChecks++
 }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
 loaded.prompts.prompt = (request) => PromptGuard.provide(realPrompt(request), loaded.parent.id, parentCheck)
 loaded.task.execute = (params, ctx) => Effect.gen(function* () {
   state.calls++
-  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "walt" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === '["proposal.md"]' && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
+  requireFact(state.calls === 1 && ctx.sessionID === loaded.parent.id && (ctx.agentID ?? ctx.agent) === "maestro" && params.subagent_type === "archie" && params.prompt === job.assignment && params.model === job.model && JSON.stringify(params.writePaths) === '["proposal.md"]' && params.background !== true && params.governed === undefined && params.authorizationID === undefined && params.workflow === undefined && params.task_id === undefined, "AUTHORING_TASK_REQUEST_OUT_OF_SCOPE")
   const ops = ctx.extra?.promptOps
   requireFact(isOps(ops), "AUTHORING_REAL_TASK_PROMPT_OPS_MISSING")
   return yield* taskExecute(params, { ...ctx, extra: { ...ctx.extra, promptOps: { ...ops,
     prompt: (request, options) => Effect.gen(function* () {
       // Bind the inherited deny + exact allowance before prompt admission/tool selection, not after tools are built.
       const child = yield* loaded.sessions.get(request.sessionID)
-      requireFact(child.parentID === loaded.parent.id && child.agent === "walt" && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
+      requireFact(child.parentID === loaded.parent.id && child.agent === "archie" && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
       yield* loaded.sessions.setPermission({ sessionID: child.id, permission: [...(child.permission ?? []), { permission: "edit", pattern: proposalPattern, action: "allow" }] })
       const beforeModel = Effect.gen(function* () {
-        const walt = yield* loaded.agents.get("walt")
+        const archie = yield* loaded.agents.get("archie")
         const child = yield* loaded.sessions.get(request.sessionID)
-        requireFact(walt.id === "walt" && walt.native === true && walt.mode === "subagent" && request.agent === "walt" && child.agent === "walt" && child.parentID === loaded.parent.id && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
+        requireFact(archie.id === "archie" && archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && request.agent === "archie" && child.agent === "archie" && child.parentID === loaded.parent.id && child.projectID === loaded.parent.projectID && child.directory === job.project, "AUTHORING_NATIVE_CHILD_BINDING_MISMATCH")
         const bound = yield* loaded.sessions.get(child.id)
-        requireFact(Permission.evaluate("edit", proposalPattern, walt.permission, bound.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, walt.permission, bound.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", walt.permission, bound.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
+        requireFact(Permission.evaluate("edit", proposalPattern, archie.permission, bound.permission ?? []).action === "allow" && Permission.evaluate("edit", contextPattern, archie.permission, bound.permission ?? []).action === "deny" && Permission.evaluate("bash", "*", archie.permission, bound.permission ?? []).action === "deny", "AUTHORING_CHILD_PERMISSION_NOT_PROPOSAL_ONLY")
         state.childChecks++
       }).pipe(Effect.provideService(InstanceRef, loaded.ctx))
       return yield* ops.prompt(request, { beforeModel: Effect.all([options?.beforeModel ?? Effect.void, beforeModel], { discard: true }) })
@@ -305,22 +307,22 @@ async function verifyDatabase(path: string, parentID: string, project: string, m
     const rows = decode(Schema.Array(Schema.Struct({ id: Schema.String, message_id: Schema.String, data: Schema.String, message: Schema.String })), db.query("SELECT p.id,p.message_id,p.data,m.data AS message FROM part p JOIN message m ON m.id=p.message_id WHERE p.session_id=? AND m.session_id=? AND json_extract(p.data,'$.type')='tool' AND json_extract(p.data,'$.tool')='task'").all(parentID, parentID), "AUTHORING_TASK_DB_SCHEMA_INVALID")
     requireAuthoring(rows.length === 1, "AUTHORING_TASK_DB_MISSING_OR_MULTIPLE")
     const row = rows[0]
-    const task = decode(Schema.Struct({ callID: Schema.String, state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Record(Schema.String, Schema.Unknown), metadata: Schema.Struct({ sessionId: Schema.String, parentSessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String, author: Schema.Struct({ memberId: Schema.Literal("walt"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }), writeRoots: Schema.Array(Schema.String) }) }) }) }), json(row.data), "AUTHORING_CAPTURED_TASK_RETURN_MISSING")
+    const task = decode(Schema.Struct({ callID: Schema.String, state: Schema.Struct({ status: Schema.Literal("completed"), input: Schema.Record(Schema.String, Schema.Unknown), metadata: Schema.Struct({ sessionId: Schema.String, parentSessionId: Schema.String, workResult: Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"), taskId: Schema.String, author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.String, messageID: Schema.String }), card: Schema.Struct({ messageID: Schema.String }), writeRoots: Schema.Array(Schema.String) }) }) }) }), json(row.data), "AUTHORING_CAPTURED_TASK_RETURN_MISSING")
     const author = task.state.metadata.workResult.author
-    requireAuthoring(task.state.input.subagent_type === "walt" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === '["proposal.md"]' && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === '["proposal.md"]', "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
+    requireAuthoring(task.state.input.subagent_type === "archie" && task.state.input.prompt === assignment && task.state.input.model === model && JSON.stringify(task.state.input.writePaths) === '["proposal.md"]' && task.state.input.governed === undefined && task.state.input.authorizationID === undefined && task.state.input.workflow === undefined && task.state.input.task_id === undefined && task.state.input.background !== true && task.state.metadata.parentSessionId === parentID && task.state.metadata.sessionId === author.executionSessionID && task.state.metadata.workResult.card.messageID === author.messageID && JSON.stringify(task.state.metadata.workResult.writeRoots) === '["proposal.md"]', "AUTHORING_TASK_RETURN_BINDING_MISMATCH")
     decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("maestro") }), json(row.message), "AUTHORING_TASK_CALLER_NOT_MAESTRO")
     const child = decode(sessionRow, db.query("SELECT id,project_id,parent_id,directory,agent,permission FROM session WHERE id=?").get(author.executionSessionID), "AUTHORING_CHILD_DB_MISSING")
-    requireAuthoring(child.parent_id === parentID && child.project_id === parent.project_id && child.directory === project && child.agent === "walt", "AUTHORING_CHILD_DB_BINDING_MISMATCH")
+    requireAuthoring(child.parent_id === parentID && child.project_id === parent.project_id && child.directory === project && child.agent === "archie", "AUTHORING_CHILD_DB_BINDING_MISMATCH")
     const rules = decode(Schema.Array(Schema.Struct({ permission: Schema.String, pattern: Schema.String, action: Schema.String })), json(child.permission), "AUTHORING_CHILD_RULES_INVALID")
     const roots = rules.filter((rule) => rule.permission === "tool_safety_write_root" && rule.action === "allow").map((rule) => rule.pattern)
     const proposalPattern = relative(worktree, join(project, "proposal.md")).replaceAll("\\", "/")
     requireAuthoring(JSON.stringify(roots) === JSON.stringify([join(project, "proposal.md")]) && rules.some((rule) => rule.permission === "edit" && rule.pattern === "*" && rule.action === "deny") && rules.findLast((rule) => rule.permission === "edit" && ["*", proposalPattern].includes(rule.pattern))?.action === "allow" && rules.some((rule) => rule.permission === "bash" && rule.pattern === "*" && rule.action === "deny"), "AUTHORING_PERSISTED_CHILD_SCOPE_MISMATCH")
     const returned = decode(Schema.Struct({ session_id: Schema.String, data: Schema.String }), db.query("SELECT session_id,data FROM message WHERE id=?").get(author.messageID), "AUTHORING_CAPTURED_ASSISTANT_DB_MISSING")
-    const info = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("walt"), providerID: Schema.String, modelID: Schema.String }), json(returned.data), "AUTHORING_CAPTURED_ASSISTANT_NOT_WALT")
+    const info = decode(Schema.Struct({ role: Schema.Literal("assistant"), agent: Schema.Literal("archie"), providerID: Schema.String, modelID: Schema.String }), json(returned.data), "AUTHORING_CAPTURED_ASSISTANT_NOT_ARCHIE")
     requireAuthoring(returned.session_id === child.id && `${info.providerID}/${info.modelID}` === model, "AUTHORING_CAPTURED_ASSISTANT_MODEL_OR_SESSION_MISMATCH")
     const bindings = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM event WHERE aggregate_id=? AND type='maestro.task.bound.1'").all(child.id), "AUTHORING_LOGICAL_TASK_DB_INVALID")
     requireAuthoring(bindings.length === 1, "AUTHORING_LOGICAL_TASK_MISSING_OR_AMBIGUOUS")
-    const bound = decode(Schema.Struct({ taskId: Schema.String, memberID: Schema.Literal("walt"), projectID: Schema.String, executionSessionID: Schema.String, authoritySessionID: Schema.String, source: Schema.Literal("host") }), json(bindings[0].data), "AUTHORING_ORDINARY_TASK_BINDING_INVALID")
+    const bound = decode(Schema.Struct({ taskId: Schema.String, memberID: Schema.Literal("archie"), projectID: Schema.String, executionSessionID: Schema.String, authoritySessionID: Schema.String, source: Schema.Literal("host") }), json(bindings[0].data), "AUTHORING_ORDINARY_TASK_BINDING_INVALID")
     requireAuthoring(bound.taskId === task.state.metadata.workResult.taskId && bound.executionSessionID === child.id && bound.authoritySessionID === parentID && bound.projectID === parent.project_id, "AUTHORING_LOGICAL_TASK_BINDING_MISMATCH")
     const texts = decode(Schema.Array(Schema.Struct({ data: Schema.String })), db.query("SELECT data FROM part WHERE session_id=? AND message_id=? AND json_extract(data,'$.type')='text' ORDER BY id").all(child.id, author.messageID), "AUTHORING_CAPTURED_ASSISTANT_TEXT_MISSING")
     const returnedText = texts.map((item) => decode(Schema.Struct({ type: Schema.Literal("text"), text: Schema.String }), json(item.data), "AUTHORING_CAPTURED_TEXT_INVALID").text).join("\n")
