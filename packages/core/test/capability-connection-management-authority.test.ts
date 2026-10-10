@@ -21,6 +21,8 @@ describe("CapabilityConnectionManagement authority and bounded reads", () => {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
     const missingParent: Capability.ConnectionRef = { ...f.parent, id: Capability.ConnectionID.create() }
     const missingTarget: Capability.TargetRef = { ...f.child, id: Capability.TargetID.create() }
+    const baseline = CapabilityConnectionManagementFixture.publicFailures(yield* f.run(f.management.get(missingParent.id)).pipe(Effect.exit))
+    expect(baseline).toEqual([{ _tag: "Capability.Failure", code: "connection_unavailable", message: "Capability connection is unavailable" }])
     const methods = (parent: Capability.ConnectionRef, child: Capability.TargetRef): readonly Effect.Effect<unknown, CapabilityConnectionStoreContract.Error>[] => [
       f.management.get(parent.id), f.management.targets(parent.id, {}),
       f.management.disconnect({ connection: parent }),
@@ -35,7 +37,7 @@ describe("CapabilityConnectionManagement authority and bounded reads", () => {
         (effect) => effect.pipe(Effect.exit))
       exits.forEach((exit) => {
         CapabilityConnectionManagementFixture.expectCode(exit, "connection_unavailable")
-        expect(CapabilityConnectionManagementFixture.publicFailures(exit)).toEqual(CapabilityConnectionManagementFixture.publicFailures(exits[0]))
+        expect(CapabilityConnectionManagementFixture.publicFailures(exit)).toEqual(baseline)
       })
     })
     yield* compare()
@@ -143,11 +145,11 @@ describe("CapabilityConnectionManagement authority and bounded reads", () => {
     yield* f.run(f.management.bind({ target: f.child, input: { sessionID: f.sessionID, actions: ["read"] } }), "setup")
     const bindings = yield* f.database.db.select().from(CapabilityBindingTable)
     const receipts = yield* f.database.db.select().from(CapabilityRequestTable)
-    // Exercise a real SQL abort independently of the Store's separately reported JSON-null bug.
+    // This real SQL fault occurs after binding invalidation; finalization always removes the trigger.
     yield* f.database.db.run("CREATE TRIGGER management_sql_fault BEFORE UPDATE OF resource ON capability_target BEGIN SELECT RAISE(ABORT, 'MANAGEMENT_SQL_FAULT'); END")
     CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.retargetTarget({ target: f.child,
-      input: { environment: "sql-abort", resource: {} } }), "sql").pipe(Effect.exit), "outcome_unknown")
-    yield* f.database.db.run("DROP TRIGGER management_sql_fault")
+      input: { environment: "sql-abort", resource: {} } }), "sql").pipe(
+        Effect.ensuring(f.database.db.run("DROP TRIGGER management_sql_fault").pipe(Effect.orDie)), Effect.exit), "outcome_unknown")
     expect((yield* f.database.db.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.id, f.child.id)).get())?.generation).toBe(0)
     expect(yield* f.database.db.select().from(CapabilityBindingTable)).toEqual(bindings)
     yield* f.database.db.update(CapabilityTargetTable).set({ generation: Number.MAX_SAFE_INTEGER }).where(eq(CapabilityTargetTable.id, f.child.id)).run()

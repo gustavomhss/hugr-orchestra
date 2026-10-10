@@ -112,8 +112,10 @@ export function writerCheckpoint(database: Database.Interface,
   return Effect.gen(function* () {
     const scope = yield* Effect.scope
     const entered = yield* Deferred.make<void>()
+    const locked = yield* Deferred.make<void>()
     const release = yield* Deferred.make<void>()
-    const state: { writer?: Fiber.Fiber<void, CapabilityConnectionStoreContract.Error>; starts: number } = { starts: 0 }
+    const state: { writer?: Fiber.Fiber<void, CapabilityConnectionStoreContract.Error>; pending?: Fiber.Fiber<unknown, unknown>;
+      notification?: Fiber.Fiber<void>; starts: number } = { starts: 0 }
     const tracer = Tracer.make({ span: (options) => {
       if (options.name === "CapabilityConnectionManagement.commit" && !state.writer) {
         state.starts++
@@ -121,13 +123,27 @@ export function writerCheckpoint(database: Database.Interface,
           if (!database.inTransaction) return yield* Effect.die("Missing real SQL transaction identity")
           expect(yield* database.inTransaction).toBe(true)
           yield* change(tx)
-          yield* Deferred.succeed(entered, undefined)
+          yield* Deferred.succeed(locked, undefined)
           yield* Deferred.await(release)
         }), { behavior: "immediate" })).pipe(Fiber.runIn(scope))
+        // Notify only after storing the writer handle; Deferred completion can resume the case inline.
+        state.notification = Effect.runFork(Deferred.await(locked).pipe(Effect.andThen(Deferred.succeed(entered, undefined)),
+          Effect.asVoid)).pipe(Fiber.runIn(scope))
       }
       return new Tracer.NativeSpan(options)
     } })
-    return { state, entered, release, tracer }
+    const start = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.withTracer(tracer), Effect.forkChild,
+      Effect.map((pending) => { state.pending = pending; return pending }))
+    // Cases install this before timeout, so scope teardown never first interrupts a SQL waiter
+    // while the immediate writer is still waiting uninterruptibly for its release signal.
+    const cleanup = Effect.gen(function* () {
+      yield* Deferred.succeed(release, undefined)
+      if (state.writer) yield* Fiber.await(state.writer)
+      if (state.pending) yield* Fiber.interrupt(state.pending)
+      if (state.notification) yield* Fiber.interrupt(state.notification)
+    })
+    const protect = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.ensuring(cleanup))
+    return { state, entered, release, tracer, start, cleanup, protect }
   })
 }
 

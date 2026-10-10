@@ -131,8 +131,13 @@ describe("CapabilityConnectionManagement real Store and private operator request
 
   it.live("concurrent creation canonicalizes payload, receipts expose only target refs and changed input conflicts", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
-    const input = { connection: f.parent, input: { environment: "production", resource: { secret: CapabilityConnectionManagementFixture.secret } } }
-    const receipts = yield* Effect.all([f.run(f.management.createTarget(input)), f.run(f.management.createTarget(input))], { concurrency: "unbounded" })
+    const input = { connection: f.parent, input: { environment: "production", resource: {
+      secret: CapabilityConnectionManagementFixture.secret, nested: { a: 1, b: { x: true, y: [null, "value"] } } } } }
+    const reordered = { connection: f.parent, input: { environment: "production", resource: {
+      nested: { b: { y: [null, "value"], x: true }, a: 1 }, secret: CapabilityConnectionManagementFixture.secret } } }
+    expect(input.input.resource).toEqual(reordered.input.resource)
+    expect(JSON.stringify(input.input.resource)).not.toBe(JSON.stringify(reordered.input.resource))
+    const receipts = yield* Effect.all([f.run(f.management.createTarget(input)), f.run(f.management.createTarget(reordered))], { concurrency: "unbounded" })
     expect(receipts.map((receipt) => receipt.reused).sort()).toEqual([false, true])
     expect(receipts[0].requestID).toBe(receipts[1].requestID)
     const data = Schema.decodeUnknownSync(Schema.Struct({ target: Capability.TargetRef }))(receipts[0].data)
@@ -241,11 +246,22 @@ describe("CapabilityConnectionManagement real Store and private operator request
 
   it.live("missing/revoked private frames fail; mixed target-denial Causes propagate whole", () => Effect.gen(function* () {
     const f = yield* CapabilityConnectionManagementFixture.fixture()
-    CapabilityConnectionManagementFixture.expectCode(yield* f.management.get(f.parent.id).pipe(Effect.exit), "connection_unavailable")
+    const missing = Capability.ConnectionID.create()
+    const baseline = CapabilityConnectionManagementFixture.publicFailures(yield* f.run(f.management.get(missing)).pipe(Effect.exit))
+    expect(baseline).toEqual([{ _tag: "Capability.Failure", code: "connection_unavailable", message: "Capability connection is unavailable" }])
+    const compare = () => Effect.forEach([f.management.get(f.parent.id).pipe(Effect.asVoid), f.management.get(missing).pipe(Effect.asVoid),
+      f.management.targets(f.parent.id, {}).pipe(Effect.asVoid), f.management.targets(missing, {}).pipe(Effect.asVoid)],
+      (effect) => effect.pipe(Effect.exit, Effect.tap((exit) => Effect.sync(() => {
+        CapabilityConnectionManagementFixture.expectCode(exit, "connection_unavailable")
+        expect(CapabilityConnectionManagementFixture.publicFailures(exit)).toEqual(baseline)
+      }))))
+    yield* compare()
     const token = yield* f.operators.issue({ origin: "sdk" })
-    yield* f.operators.revoke(token.authority)
-    CapabilityConnectionManagementFixture.expectCode(yield* f.run(f.management.get(f.parent.id), "read", token.authority)
-      .pipe(Effect.exit), "authentication_required")
+    yield* f.run(Effect.gen(function* () {
+      expect((yield* f.management.get(f.parent.id)).connection).toEqual(f.parent)
+      yield* f.operators.revoke(token.authority)
+      yield* compare()
+    }), "read", token.authority)
     const mixed = Cause.combine(Cause.fail(new Capability.Failure({ code: "target_denied", message: "expected denial" })),
       Cause.die("TARGET_CHECK_DEFECT"))
     const management = yield* CapabilityConnectionManagement.make({ store: f.store, operators: {

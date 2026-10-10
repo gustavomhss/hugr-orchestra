@@ -26,21 +26,22 @@ describe("CapabilityConnectionManagement writer verification", () => {
           : tx.update(CapabilityConnectionTable).set(change === "directory" ? { directory: CapabilityConnectionManagementFixture.foreign.location.directory }
             : change === "project" ? { project_id: foreignProject } : { workspace_id: WorkspaceID.make("wrk_foreign") })
             .where(eq(CapabilityConnectionTable.id, f.parent.id)).run().pipe(Effect.asVoid))
-      const completed = yield* Deferred.make<void>()
-      const pending = yield* f.run(f.management.createTarget(input), mode === "replay" ? "original" : "fresh").pipe(
-        Effect.withTracer(hold.tracer), Effect.exit, Effect.tap(() => Deferred.succeed(completed, undefined)), Effect.forkChild)
-      yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(
-        Effect.andThen(Effect.die("PARENT_WRITER_CHECKPOINT_NOT_HELD"))))
-      yield* Effect.yieldNow
-      expect(hold.state.starts).toBe(1)
-      expect(yield* Deferred.isDone(completed)).toBe(false)
-      if (!hold.state.writer) return yield* Effect.die("Missing parent writer")
-      yield* Deferred.succeed(hold.release, undefined)
-      yield* Fiber.join(hold.state.writer)
-      CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
-      expect(yield* f.database.db.select().from(CapabilityRequestTable)).toEqual(before)
-      expect(yield* f.database.db.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.connection_id, f.parent.id)))
-        .toHaveLength(change === "deleted" ? 0 : mode === "replay" ? 2 : 1)
+      return yield* hold.protect(Effect.gen(function* () {
+        const completed = yield* Deferred.make<void>()
+        const pending = yield* hold.start(f.run(f.management.createTarget(input), mode === "replay" ? "original" : "fresh").pipe(
+          Effect.exit, Effect.tap(() => Deferred.succeed(completed, undefined))))
+        yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(
+          Effect.andThen(Effect.die("PARENT_WRITER_CHECKPOINT_NOT_HELD"))))
+        expect(hold.state.starts).toBe(1)
+        expect(yield* Deferred.isDone(completed)).toBe(false)
+        if (!hold.state.writer) return yield* Effect.die("Missing parent writer")
+        yield* Deferred.succeed(hold.release, undefined)
+        yield* Fiber.join(hold.state.writer)
+        CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
+        expect(yield* f.database.db.select().from(CapabilityRequestTable)).toEqual(before)
+        expect(yield* f.database.db.select().from(CapabilityTargetTable).where(eq(CapabilityTargetTable.connection_id, f.parent.id)))
+          .toHaveLength(change === "deleted" ? 0 : mode === "replay" ? 2 : 1)
+      })).pipe(Effect.timeout("2 seconds"))
     }))).pipe(Effect.timeout("15 seconds")))
 
   it.live("writer-held actor switch/null fence bind AND unbind, fresh AND replay", () => Effect.forEach(
@@ -57,20 +58,21 @@ describe("CapabilityConnectionManagement writer verification", () => {
         const hold = yield* CapabilityConnectionManagementFixture.writerCheckpoint(f.database, (tx) =>
           tx.update(SessionTable).set({ agent: change === "switched" ? "new-actor" : null })
             .where(eq(SessionTable.id, f.sessionID)).run().pipe(Effect.asVoid))
-        const completed = yield* Deferred.make<void>()
-        const pending = yield* f.run(effect(), mode === "replay" ? "original" : "fresh").pipe(
-          Effect.withTracer(hold.tracer), Effect.exit, Effect.tap(() => Deferred.succeed(completed, undefined)), Effect.forkChild)
-        yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(
-          Effect.andThen(Effect.die("ACTOR_WRITER_CHECKPOINT_NOT_HELD"))))
-        yield* Effect.yieldNow
-        expect(hold.state.starts).toBe(1)
-        expect(yield* Deferred.isDone(completed)).toBe(false)
-        if (!hold.state.writer) return yield* Effect.die("Missing actor writer")
-        yield* Deferred.succeed(hold.release, undefined)
-        yield* Fiber.join(hold.state.writer)
-        CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
-        expect(yield* f.database.db.select().from(CapabilityRequestTable)).toEqual(before)
-        expect(yield* f.database.db.select().from(CapabilityBindingTable)).toEqual(bindings)
+        return yield* hold.protect(Effect.gen(function* () {
+          const completed = yield* Deferred.make<void>()
+          const pending = yield* hold.start(f.run(effect(), mode === "replay" ? "original" : "fresh").pipe(
+            Effect.exit, Effect.tap(() => Deferred.succeed(completed, undefined))))
+          yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(
+            Effect.andThen(Effect.die("ACTOR_WRITER_CHECKPOINT_NOT_HELD"))))
+          expect(hold.state.starts).toBe(1)
+          expect(yield* Deferred.isDone(completed)).toBe(false)
+          if (!hold.state.writer) return yield* Effect.die("Missing actor writer")
+          yield* Deferred.succeed(hold.release, undefined)
+          yield* Fiber.join(hold.state.writer)
+          CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
+          expect(yield* f.database.db.select().from(CapabilityRequestTable)).toEqual(before)
+          expect(yield* f.database.db.select().from(CapabilityBindingTable)).toEqual(bindings)
+        })).pipe(Effect.timeout("2 seconds"))
       })))).pipe(Effect.timeout("15 seconds")))
 
   it.live("writer-held target-parent reassociation fences exact replay", () => Effect.gen(function* () {
@@ -80,12 +82,13 @@ describe("CapabilityConnectionManagement writer verification", () => {
     const other = yield* f.connection()
     const hold = yield* CapabilityConnectionManagementFixture.writerCheckpoint(f.database, (tx) =>
       tx.update(CapabilityTargetTable).set({ connection_id: other.id }).where(eq(CapabilityTargetTable.id, f.child.id)).run().pipe(Effect.asVoid))
-    const pending = yield* f.run(f.management.retargetTarget(input)).pipe(Effect.withTracer(hold.tracer), Effect.exit, Effect.forkChild)
-    yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(Effect.andThen(Effect.die("TARGET_WRITER_CHECKPOINT_NOT_HELD"))))
-    yield* Effect.yieldNow
-    if (!hold.state.writer) return yield* Effect.die("Missing target writer")
-    yield* Deferred.succeed(hold.release, undefined)
-    yield* Fiber.join(hold.state.writer)
-    CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
+    return yield* hold.protect(Effect.gen(function* () {
+      const pending = yield* hold.start(f.run(f.management.retargetTarget(input)).pipe(Effect.exit))
+      yield* Effect.raceFirst(Deferred.await(hold.entered), Fiber.join(pending).pipe(Effect.andThen(Effect.die("TARGET_WRITER_CHECKPOINT_NOT_HELD"))))
+      if (!hold.state.writer) return yield* Effect.die("Missing target writer")
+      yield* Deferred.succeed(hold.release, undefined)
+      yield* Fiber.join(hold.state.writer)
+      CapabilityConnectionManagementFixture.expectCode(yield* Fiber.join(pending), "connection_unavailable")
+    })).pipe(Effect.timeout("2 seconds"))
   }).pipe(Effect.timeout("5 seconds")))
 })
