@@ -2,6 +2,16 @@ import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
 
 export const dict = {
   "lean.page.profile": "Orchestra profile · {{profile}}",
+  "lean.page.history": "Execution history",
+  "lean.page.preserveNote": "Exact preservation keeps output intact. This item does not reduce output.",
+  "lean.page.close": "Close history",
+  "lean.page.historyUnavailable": "Execution history is unavailable for this item.",
+  "lean.page.historyEmpty": "No saved executions for this item yet.",
+  "lean.page.commandTruncated": "Command truncated",
+  "lean.page.status.completed": "Completed",
+  "lean.page.status.error": "Failed",
+  "lean.page.exit": "Exit {{code}}",
+  "lean.page.openSession": "Open session",
   "lean.page.description": "Less output. The evidence that matters, kept intact.",
   "lean.page.profileToggle": "Lean for this profile",
   "lean.page.profileToggleLabel": "Enable Lean for {{profile}}",

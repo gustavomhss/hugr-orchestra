@@ -5,6 +5,7 @@ import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import { useLanguage } from "@/context/language"
 import { MxBadge, MxPage, MxToggle } from "./kit"
 import { leanNumber, leanTokens } from "./lean-format"
+import { LeanDetail } from "./lean-detail"
 import type { LeanViewProps } from "./lean-view-contract"
 import "./lean.css"
 
@@ -22,11 +23,12 @@ export function LeanProfileView(props: LeanViewProps) {
     const profileID = props.data?.scope.profileID
     if (!profileID) return
     setState("failed", undefined)
-    void Promise.resolve()
-      .then(() => props.onUpdate(value))
-      .catch(() => {
-        if (props.data?.scope.profileID === profileID) setState("failed", profileID)
-      })
+    const save = async () => {
+      await props.onUpdate(value)
+    }
+    void save().catch(() => {
+      if (props.data?.scope.profileID === profileID) setState("failed", profileID)
+    })
   }
   return (
     <MxPage
@@ -111,7 +113,20 @@ export function LeanProfileView(props: LeanViewProps) {
 
 function LeanItems(props: LeanViewProps) {
   const language = useLanguage()
-  const [state, setState] = createStore({ search: "", category: "all" })
+  const [state, setState] = createStore({
+    search: "",
+    category: "all",
+    detail: undefined as LeanCoverage.ItemID | undefined,
+  })
+  const open = (itemID: LeanCoverage.ItemID) => {
+    if (state.detail === itemID) return void setState("detail", undefined)
+    setState("detail", itemID)
+    props.onHistory(itemID)
+  }
+  const close = (itemID: LeanCoverage.ItemID) => {
+    setState("detail", undefined)
+    document.getElementById(`lean-trigger-${itemID}`)?.focus()
+  }
   const categories = ["build", "test", "lint", "install", "search"] as const
   const rows = createMemo(() =>
     LeanCoverage.items.flatMap((catalog) => {
@@ -173,31 +188,47 @@ function LeanItems(props: LeanViewProps) {
           <tbody>
             <For each={rows()}>
               {({ catalog, item }) => (
-                <tr data-lean-item={item.id} aria-busy={props.pending?.has(item.id)}>
-                  <th scope="row">
-                    <button type="button" class="mx-link lean-item" onClick={() => props.onHistory(item.id)}>
-                      <span class="mx-mark" aria-hidden="true">
-                        {catalog.label.slice(0, 2)}
-                      </span>
-                      <bdi>{catalog.label}</bdi>
-                      <Show when={catalog.mode === "preserve"}>
-                        <MxBadge>{language.t("lean.page.preserve")}</MxBadge>
-                      </Show>
-                    </button>
-                  </th>
-                  <td data-lean-value="bytes">{number(item.savings.bytesSaved)}</td>
-                  <td data-lean-value="tokens">{number(leanTokens(item.savings))}</td>
-                  <td>
-                    <MxToggle
-                      checked={item.enabled}
-                      disabled={props.loading || props.pending?.has("profile") || props.pending?.has(item.id)}
-                      label={language.t("lean.page.itemToggle", { item: catalog.label })}
-                      onChange={(enabled) => {
-                        void props.onUpdate({ itemID: item.id, enabled })
-                      }}
-                    />
-                  </td>
-                </tr>
+                <>
+                  <tr data-lean-item={item.id} aria-busy={props.pending?.has(item.id)}>
+                    <th scope="row">
+                      <button
+                        id={`lean-trigger-${item.id}`}
+                        type="button"
+                        class="mx-link lean-item"
+                        aria-expanded={state.detail === item.id}
+                        aria-controls={state.detail === item.id ? `lean-history-${item.id}` : undefined}
+                        onClick={() => open(item.id)}
+                      >
+                        <span class="mx-mark" aria-hidden="true">
+                          {catalog.label.slice(0, 2)}
+                        </span>
+                        <bdi>{catalog.label}</bdi>
+                        <Show when={catalog.mode === "preserve"}>
+                          <MxBadge>{language.t("lean.page.preserve")}</MxBadge>
+                        </Show>
+                      </button>
+                    </th>
+                    <td data-lean-value="bytes">{number(item.savings.bytesSaved)}</td>
+                    <td data-lean-value="tokens">{number(leanTokens(item.savings))}</td>
+                    <td>
+                      <MxToggle
+                        checked={item.enabled}
+                        disabled={props.loading || props.pending?.has("profile") || props.pending?.has(item.id)}
+                        label={language.t("lean.page.itemToggle", { item: catalog.label })}
+                        onChange={(enabled) => {
+                          void props.onUpdate({ itemID: item.id, enabled })
+                        }}
+                      />
+                    </td>
+                  </tr>
+                  <Show when={state.detail === item.id}>
+                    <tr class="lean-detail-row">
+                      <td colSpan={4}>
+                        <LeanDetail {...props} itemID={item.id} onClose={() => close(item.id)} />
+                      </td>
+                    </tr>
+                  </Show>
+                </>
               )}
             </For>
           </tbody>
