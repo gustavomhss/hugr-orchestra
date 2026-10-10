@@ -1,0 +1,8 @@
+{
+  "id": "C-SPAWN-01.no-path",
+  "steps": [
+    {"spawn": ["whoami"], "options": {"inheritEnv": false}, "expect": {"error": "NOT_FOUND", "message": ["\"whoami\"", "has no PATH", "Set PATH in env, or pass the program's full path"]}},
+    {"run": ["whoami"], "options": {"inheritEnv": false}, "expect": {"error": "NOT_FOUND", "message": ["\"whoami\"", "has no PATH", "Set PATH in env, or pass the program's full path"]}},
+    {"run": ["whoami"], "options": {"env": {"PATH": null}}, "expect": {"error": "NOT_FOUND", "message": ["\"whoami\"", "has no PATH", "Set PATH in env, or pass the program's full path"]}}
+  ]
+}

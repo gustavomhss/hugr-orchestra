@@ -1,0 +1,8 @@
+{
+  "id": "C-IO-02.no-consumer",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "bytes=stdout:3145728", "bytes=stderr:3145728", "exit=0"], "as": "c"},
+    {"wait": "c", "expect": {"exitCode": 0, "reason": "exit"}},
+    {"read": "c", "until": "end", "expect": {"droppedBytes": {"stdout": {"gte": 1835008, "lte": 2359296}, "stderr": {"gte": 1835008, "lte": 2359296}}, "lostBefore": {"gte": 3670016, "lte": 4718592}}}
+  ]
+}

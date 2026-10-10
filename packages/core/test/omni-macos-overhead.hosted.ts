@@ -1,0 +1,49 @@
+import { expect, test } from "bun:test"
+import path from "node:path"
+import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Omni } from "../src/omni"
+import { OmniSpawner } from "../src/omni-spawner"
+import os from "node:os"
+import { ROOT, until } from "../../omni/campaign/lib"
+import { run } from "../../omni/campaign/v7-overhead"
+
+// Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
+test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {
+  expect(process.platform).toBe("darwin")
+  expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("1")
+  const binding = await Omni.load()
+  const control = await Effect.runPromise(OmniSpawner.collect(binding, ChildProcess.make("git", ["rev-parse", "HEAD"]), {}))
+  expect(control.exitCode).toBe(0)
+  // Start with headroom: the benchmark's own work must still fit beneath the unchanged half-CPU gate.
+  const headroom = () => until(600_000, "macOS V7 quiet startup headroom", () =>
+    os.loadavg()[0] <= os.availableParallelism() * 0.25 ? true : undefined)
+  await headroom()
+  const measured = await run({ quiet: true, interPairIdleMs: 20 })
+  console.log("MACOS_V7 " + JSON.stringify(measured))
+  expect(measured.timingKpiRun).toBe(true)
+  if (!("counts" in measured)) throw new Error("macOS V7 did not complete its sample inventory")
+  expect(measured.counts.legacy.completed).toBe(1000)
+  expect(measured.counts.omni.completed).toBe(1000)
+  expect(measured.pass).toBe(true)
+  await headroom()
+  const slow = await run({ quiet: true, interPairIdleMs: 20, mutation: "slow-omni" })
+  console.log("MACOS_V7_SENSITIVITY " + JSON.stringify(slow))
+  expect(slow.timingKpiRun).toBe(true)
+  if (!("counts" in slow)) throw new Error("macOS V7 sensitivity did not complete its sample inventory")
+  expect(slow.counts.legacy.completed).toBe(1000)
+  expect(slow.counts.omni.completed).toBe(1000)
+  expect(slow.pass).toBe(false)
+}, 900_000)
+
+test("V7 rejects malformed pacing flags before any timing acceptance", async () => {
+  for (const args of [["--idle-ms"], ["--idle-ms="], ["--idle-ms= "], ["--idle-ms=5\n"], ["--idle-ms=NaN"], ["--idle-ms=1", "--idle-ms=2"]]) {
+    const proc = Bun.spawn([process.execPath, path.join(ROOT, "packages/omni/campaign/v7-overhead.ts"), ...args], {
+      cwd: ROOT, stdout: "pipe", stderr: "pipe", timeout: 10_000,
+    })
+    const [stdout, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
+    expect(code).not.toBe(0)
+    expect(stderr).toContain("V7 requires one --idle-ms=<integer> value")
+    expect(stdout).not.toContain('"pass":true')
+  }
+}, 60_000)

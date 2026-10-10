@@ -1,9 +1,10 @@
-import { Effect, Fiber, Stream } from "effect"
+import { Effect, Exit, Fiber, Scope, Stream } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetyGit } from "@orchestra/core/tool-safety-git"
 import { OutputInspector } from "@orchestra/core/output-inspector"
 import { AppProcess } from "@orchestra/core/process"
+import { OmniSpawner } from "@orchestra/core/omni-spawner"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { createWriteStream } from "node:fs"
 import { Tool } from "./tool"
@@ -21,6 +22,7 @@ import { Plugin } from "@/plugin"
 import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
+import { BackgroundProcess } from "@/background/process"
 import { Agent } from "@/agent/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { BackendToolkitProject } from "@orchestra/core/backend-toolkit/project-version"
@@ -95,6 +97,7 @@ export const ShellTool = Tool.define(
   Effect.gen(function* () {
     const config = yield* Config.Service
     const spawner = yield* ChildProcessSpawner
+    const adoptable = yield* BackgroundProcess.adoptable
     const fs = yield* FSUtil.Service
     const trunc = yield* Truncate.Service
     const plugin = yield* Plugin.Service
@@ -178,14 +181,26 @@ export const ShellTool = Tool.define(
         },
       })
 
-      const code: number | null = yield* Effect.scoped(
+      return yield* Effect.scoped(
         Effect.gen(function* () {
+          const resources = yield* Scope.make()
+          const ownership = { retained: false }
+          // Registered before spawn: child release transfers ownership before foreground cleanup runs.
+          yield* Effect.addFinalizer(() => ownership.retained ? Effect.void : Scope.close(resources, Exit.void))
           yield* Effect.addFinalizer(closeSink)
           const wrapped = yield* ToolSafetySandbox.wrap(cmd(input.shell, input.command, input.cwd, env), { prepareParents: input.prepareParents }).pipe(
             Effect.provideService(FSUtil.Service, fs),
             Effect.provideService(ToolSafety.NativeContext, { directory: instance.directory, projectID: instance.project.id }),
+            Scope.provide(resources),
           )
-          const handle = yield* spawner.spawn(wrapped)
+          // The tool keeps only the tail, so a gap is a visible marker rather than a failed run (R2-2).
+          const handle = yield* spawner.spawn(wrapped).pipe(
+            Effect.provideService(OmniSpawner.GapPolicy, "marker"),
+            adoptable(ctx.sessionID, {
+              onAdopt: Effect.sync(() => { ownership.retained = true }),
+              finalize: Scope.close(resources, Exit.void),
+            }),
+          )
           const inspection = OutputInspector.quarantine()
 
           const retain = (chunk: string) =>
@@ -278,50 +293,53 @@ export const ShellTool = Tool.define(
           }
 
           if (exit.kind === "exit") yield* Fiber.join(reader)
-          return exit.kind === "exit" ? exit.code : null
-        }),
+          const code: number | null = exit.kind === "exit" ? exit.code : null
+          // A nonzero root is a normal tool result, but its surviving descendants must never be adopted.
+          if (code !== null && code !== 0) yield* handle.kill({ forceKillAfter: "3 seconds" }).pipe(Effect.orDie)
+
+          const meta: string[] = []
+          if (expired) {
+            meta.push(
+              `shell tool terminated command after exceeding timeout ${input.timeout} ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.`,
+            )
+          }
+          if (aborted) meta.push("User aborted the command")
+          const raw = list.map((item) => item.text).join("")
+          const end = tail(raw, limits.maxLines, limits.maxBytes)
+          if (end.cut) cut = true
+          if (!file && end.cut) {
+            file = yield* trunc.write(raw)
+          }
+
+          let output = end.text
+          if (!output) output = "(no output)"
+
+          // Timeout and abort already explain themselves below. This note goes first because the app's
+          // test evidence cards parse the end of the output, where runners print their summaries.
+          if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
+
+          if (cut && file) {
+            output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
+          }
+
+          if (meta.length > 0) {
+            output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
+          }
+          yield* closeSink()
+          return {
+            title: input.command,
+            metadata: {
+              output: last || preview(output),
+              exit: code,
+              timeout: expired,
+              aborted,
+              truncated: cut,
+              ...(cut && file ? { outputPath: file } : {}),
+            },
+            output,
+          }
+        }).pipe(Effect.ensuring(closeSink())),
       ).pipe(Effect.orDie)
-
-      const meta: string[] = []
-      if (expired) {
-        meta.push(
-          `shell tool terminated command after exceeding timeout ${input.timeout} ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.`,
-        )
-      }
-      if (aborted) meta.push("User aborted the command")
-      const raw = list.map((item) => item.text).join("")
-      const end = tail(raw, limits.maxLines, limits.maxBytes)
-      if (end.cut) cut = true
-      if (!file && end.cut) {
-        file = yield* trunc.write(raw)
-      }
-
-      let output = end.text
-      if (!output) output = "(no output)"
-
-      // Timeout and abort already explain themselves below. This note goes first because the app's
-      // test evidence cards parse the end of the output, where runners print their summaries.
-      if (code !== null && code !== 0) output = `<shell_metadata>\nexit code: ${code}\n</shell_metadata>\n\n${output}`
-
-      if (cut && file) {
-        output = `...output truncated...\n\nFull output saved to: ${file}\n\n` + output
-      }
-
-      if (meta.length > 0) {
-        output += "\n\n<shell_metadata>\n" + meta.join("\n") + "\n</shell_metadata>"
-      }
-      return {
-        title: input.command,
-        metadata: {
-          output: last || preview(output),
-          exit: code,
-          timeout: expired,
-          aborted,
-          truncated: cut,
-          ...(cut && file ? { outputPath: file } : {}),
-        },
-        output,
-      }
     })
 
     return () =>

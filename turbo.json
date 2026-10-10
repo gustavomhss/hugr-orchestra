@@ -1,7 +1,8 @@
 {
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
-  "globalEnv": ["CI"],
-  "globalPassThroughEnv": ["CI"],
+  "globalDependencies": ["script/test-omni-control.ts", ".github/actions/omni-binaries/action.yml"],
+  "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"],
+  "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"],
   "tasks": {
     "typecheck": {},
     "build": {
@@ -14,6 +15,17 @@
     "transit": {
       "dependsOn": ["^transit"]
     },
+    "hugr-omni#transit": {
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/omni/crates/**",
+        "$TURBO_ROOT$/packages/omni/Cargo.toml",
+        "$TURBO_ROOT$/packages/omni/Cargo.lock",
+        "$TURBO_ROOT$/packages/omni/rust-toolchain.toml",
+        "$TURBO_ROOT$/packages/omni/.cargo/**"
+      ]
+    },
     "orchestra#test": {
       "dependsOn": ["transit", "^build"],
       "outputs": [],
@@ -21,7 +33,12 @@
     },
     "@orchestra/core#test": {
       "dependsOn": ["transit", "^build"],
-      "outputs": []
+      // Core's inventory tests execute these out-of-package observation helpers.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/omni/campaign/**/*.ts"],
+      "outputs": [],
+      // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
+      // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.
+      "env": ["PSModuleAnalysisCachePath"]
     },
     "@orchestra/app#test": {
       "dependsOn": ["transit", "^build"],

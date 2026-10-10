@@ -96,3 +96,9 @@ await prepareArsenalSDK(path.join(dir, "sdk-fixture"), path.join(dir, "config", 
 const { initProjectors } = await import("../src/server/projectors")
 
 initProjectors()
+
+// Flag snapshots env when first loaded. If an earlier preload loads it, tests silently run on a file database that
+// resetDatabase() deletes while open (macOS SQLite then fails every query with "disk I/O error").
+const { Flag } = await import("@orchestra/core/flag/flag")
+if (Flag.ORCHESTRA_DB !== ":memory:")
+  throw new Error(`test preload: Flag.ORCHESTRA_DB is ${Flag.ORCHESTRA_DB}; a preload loaded flag.ts before this file`)

@@ -1,0 +1,50 @@
+# CI: the same gate on Linux, macOS (arm64) and Windows, scripts/ci.mjs. This repository is a read-only mirror of
+# HuGR Orchestra's packages/omni (skills/omni-release/references/mirror.md): day-to-day CI runs there (omni.yml), and the
+# mirror job runs this gate on Linux before every push. Here it runs only on a v* tag, with the release checks, and by
+# hand (`release` adds them). A newer run of the same ref cancels the older one.
+name: ci
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release: { type: boolean, default: false, description: "Run the release checks too" }
+      test_filter: { type: string, default: "", description: "Passed to cargo test" }
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-14, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: "0"
+      RELEASE: ${{ (startsWith(github.ref, 'refs/tags/v') || inputs.release) && '1' || '' }}
+      TEST_FILTER: ${{ inputs.test_filter }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Rust toolchain (rust-toolchain.toml)
+        shell: bash
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          if [ "$RUNNER_OS" = Linux ] && [ -n "$RELEASE" ]; then rustup target add x86_64-unknown-linux-musl; fi
+      # One cache per OS and lockfile. Only main saves it (a run by hand on main), so tags read it without filling the quota.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Linux PID-reuse test needs unprivileged user namespaces
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: node scripts/ci.mjs

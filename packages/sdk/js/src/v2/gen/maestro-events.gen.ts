@@ -61,3 +61,80 @@ export type SyncEventMaestroWorkResultDecided = {
     }
   }
 }
+
+export type EventMaestroWorkResultDecided = {
+  id: string
+  type: "maestro.work_result.decided"
+  properties: {
+    projectID: string
+    memberID: "backend"
+    taskId: string
+    authoritySessionID: string
+    executionSessionID: string
+    resultRef: {
+      parentSessionID: string
+      messageID: string
+      partID: string
+      callID: string
+    }
+    workResultHash: string
+    decision: "accepted" | "rejected"
+    verificationState: "not-host-verified" | "host-verified" | "host-failed" | "host-incomplete"
+    terminalReason: "ended" | "blocked" | "failed" | "interrupted"
+    reason?: string
+  }
+}
+
+export type MaestroTaskBound = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "maestro.task.bound"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    taskId: string
+    projectID: string
+    memberID: string
+    executionSessionID: string
+    authoritySessionID: string
+    source: "host" | "user" | "dispatch" | "governed"
+  }
+}
+
+export type SyncEventMaestroTaskBound = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "maestro.task.bound.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      taskId: string
+      projectID: string
+      memberID: string
+      executionSessionID: string
+      authoritySessionID: string
+      source: "host" | "user" | "dispatch" | "governed"
+    }
+  }
+}
+
+export type EventMaestroTaskBound = {
+  id: string
+  type: "maestro.task.bound"
+  properties: {
+    taskId: string
+    projectID: string
+    memberID: string
+    executionSessionID: string
+    authoritySessionID: string
+    source: "host" | "user" | "dispatch" | "governed"
+  }
+}

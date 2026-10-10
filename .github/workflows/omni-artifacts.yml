@@ -1,0 +1,145 @@
+name: omni-artifacts
+
+# hugr-omni's shipped binaries for the eight platforms: each job runs packages/omni/scripts/build-artifacts.mjs (the
+# script the mirror's release.yml also calls) on that platform's own OS and CPU and uploads `omni-<id>`, a directory
+# with hugr_omni.node and hugr-omni-supervisor[.exe]. With `pack`, it also packs the npm packages and proves a clean
+# install (bindings/node/npm/{pack,verify}.mjs), as release.yml does, and uploads `npm-<id>`. Called by other
+# workflows, or started by hand. omni-artifacts-proof.yml owns the PR label trigger.
+on:
+  workflow_call:
+    inputs:
+      pack:
+        description: "Also pack the npm packages and prove a clean install"
+        type: boolean
+        default: false
+      ref:
+        description: "Branch, tag or commit to build (default: the caller's ref)"
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      pack:
+        description: "Also pack the npm packages and prove a clean install"
+        type: boolean
+        default: false
+      ref:
+        description: "Branch, tag or commit to build (default: the dispatched ref)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: omni ${{ matrix.id }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # build: zig (glibc 2.17 floor), alpine (musl, inside rust:alpine) or native; the triples are in
+        # build-artifacts.mjs. runtimes: what verify.mjs proves.
+        include:
+          - { id: linux-x64-gnu, os: ubuntu-24.04, build: zig, runtimes: node bun deno }
+          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, build: zig, runtimes: node bun deno }
+          - { id: linux-x64-musl, os: ubuntu-24.04, build: alpine, runtimes: node bun }
+          - { id: linux-arm64-musl, os: ubuntu-24.04-arm, build: alpine, runtimes: node bun }
+          - { id: darwin-arm64, os: macos-14, build: native, runtimes: node bun deno }
+          - { id: darwin-x64, os: macos-15-intel, build: native, runtimes: node bun deno }
+          - { id: win32-x64-msvc, os: windows-2022, build: native, runtimes: node bun deno }
+          - { id: win32-arm64-msvc, os: windows-11-arm, build: native, runtimes: node bun deno }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      CARGO_TERM_COLOR: always
+      HUGR_BUN: npx -y bun@1
+      HUGR_DENO: npx -y deno@2
+      HUGR_PROOF_ID: ${{ matrix.id }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: packages/omni
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ inputs.ref || '' }}
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+
+      - name: Artifact gate controls
+        run: node --test scripts/artifacts.node-smoke.mjs
+
+      # An image without rustup (windows-11-arm may be one) gets it here; build-artifacts.mjs installs the toolchain.
+      - name: rustup (Windows images without it)
+        if: runner.os == 'Windows'
+        run: |
+          if ! command -v rustup >/dev/null; then
+            host=$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64-pc-windows-msvc || echo x86_64-pc-windows-msvc)
+            curl -sSfL -o "$RUNNER_TEMP/rustup-init.exe" "https://static.rust-lang.org/rustup/dist/$host/rustup-init.exe"
+            "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --profile minimal
+            printf '%s\n' "$USERPROFILE\.cargo\bin" >> "$GITHUB_PATH"
+          fi
+
+      - name: Rust cache
+        if: matrix.build != 'alpine'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/omni -> target
+          key: release-${{ matrix.id }}
+          save-if: false
+
+      - name: Setup zig
+        if: matrix.build == 'zig'
+        uses: mlugg/setup-zig@v2
+
+      - name: Install cargo-zigbuild
+        if: matrix.build == 'zig'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild
+
+      # The addon and the supervisor, with the checks of each build (glibc floor, musl linking, static C runtime).
+      - name: Build (${{ matrix.build }})
+        run: node scripts/build-artifacts.mjs ${{ matrix.id }}
+
+      - name: Real artifact mutation controls
+        run: HUGR_PROOF_REAL=true node --test scripts/artifacts.node-smoke.mjs
+
+      - name: Upload omni-${{ matrix.id }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: omni-${{ matrix.id }}
+          path: packages/omni/dist/omni/${{ matrix.id }}/
+          if-no-files-found: error
+
+      # pack.mjs replaces its output directory: dist/npm, so dist/omni stays.
+      - name: Pack
+        if: inputs.pack
+        run: node bindings/node/npm/pack.mjs dist/npm ${{ matrix.id }}
+
+      - name: Clean install and run (${{ matrix.runtimes }})
+        if: inputs.pack && matrix.build != 'alpine'
+        run: for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/npm/tarballs $rt; done
+
+      # musl: the proof runs under Alpine (node:22-alpine), with npm and Bun's musl build; Deno has no musl build.
+      - name: Clean install and run on Alpine (${{ matrix.runtimes }})
+        if: inputs.pack && matrix.build == 'alpine'
+        run: |
+          echo 'Deno: N/A on musl; no supported musl runtime build (GUARANTEES.md platform tiers).'
+          docker run --rm -v "$PWD":/w -w /w -e HUGR_BUN -e HUGR_PROOF_ID node:22-alpine sh -euc '
+            apk add --no-cache git tar >/dev/null
+            for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/npm/tarballs $rt; done'
+
+      - name: Upload npm-${{ matrix.id }}
+        if: inputs.pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-${{ matrix.id }}
+          path: |
+            packages/omni/dist/npm/tarballs/*.tgz
+            packages/omni/dist/npm/proofs/*.json
+          if-no-files-found: error

@@ -1,0 +1,9 @@
+{
+  "id": "C-EXIT-01.precedence",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "ignore-term", "ready", "hang"], "options": {"timeoutMs": 3000, "graceMs": 4000}, "as": "c"},
+    {"read": "c", "until": {"match": "^READY$"}},
+    {"abort": "c"},
+    {"wait": "c", "expect": {"reason": "aborted", "success": false, "elapsedMs": {"lt": 5000}}}
+  ]
+}

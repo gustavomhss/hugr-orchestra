@@ -1,0 +1,71 @@
+name: "omni binaries"
+description: >-
+  The hugr-omni addon and supervisor, release build, from the omni binary cache; built with cargo only on a miss.
+  Exports HUGR_OMNI_ADDON and HUGR_OMNI_SUPERVISOR. cache-warm saves the cache on dev; test-ci only restores it.
+inputs:
+  save:
+    description: "Save the cache after a miss (only cache-warm on dev)"
+    required: false
+    default: "false"
+  artifact:
+    description: "Use this same-run artifact instead of restoring or building locally"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Download same-run omni binaries
+      if: inputs.artifact != ''
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: ${{ inputs.artifact }}
+        path: packages/omni/target/release
+
+    - name: Restore omni binaries
+      if: inputs.artifact == ''
+      id: restore
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          packages/omni/target/release/*hugr_omni_node.*
+          packages/omni/target/release/hugr-omni-supervisor*
+        key: omni-bin-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/omni/crates/**', 'packages/omni/Cargo.toml', 'packages/omni/Cargo.lock', 'packages/omni/rust-toolchain.toml', 'packages/omni/.cargo/**', 'packages/omni/bindings/node/src/**', 'packages/omni/bindings/node/Cargo.toml', 'packages/omni/bindings/node/build.rs') }}
+
+    - name: Build omni binaries (cache miss)
+      if: inputs.artifact == '' && steps.restore.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: packages/omni
+      run: |
+        # The toolchain pinned by packages/omni/rust-toolchain.toml.
+        rustup show active-toolchain || rustup toolchain install
+        cargo build --release -p hugr-omni-node -p omni-supervisor
+
+    - name: Save omni binaries
+      if: inputs.artifact == '' && inputs.save == 'true' && steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: |
+          packages/omni/target/release/*hugr_omni_node.*
+          packages/omni/target/release/hugr-omni-supervisor*
+        key: ${{ steps.restore.outputs.cache-primary-key }}
+
+    - name: Export omni paths
+      shell: bash
+      run: |
+        dir="$GITHUB_WORKSPACE/packages/omni/target/release"
+        case "$RUNNER_OS" in
+          Linux) addon=libhugr_omni_node.so; supervisor=hugr-omni-supervisor ;;
+          macOS) addon=libhugr_omni_node.dylib; supervisor=hugr-omni-supervisor ;;
+          Windows) addon=hugr_omni_node.dll; supervisor=hugr-omni-supervisor.exe ;;
+          *) echo "::error::unsupported omni runner: $RUNNER_OS"; exit 1 ;;
+        esac
+        for file in "$dir/$addon" "$dir/$supervisor"; do
+          if [ ! -f "$file" ] || [ ! -s "$file" ]; then echo "::error::omni binary missing or empty: $file"; exit 1; fi
+        done
+        # upload/download-artifact transfers file bytes, not Unix execute bits.
+        if [ "$RUNNER_OS" != Windows ]; then
+          chmod +x "$dir/$supervisor"
+          [ -x "$dir/$supervisor" ] || { echo "::error::omni supervisor is not executable"; exit 1; }
+        fi
+        echo "HUGR_OMNI_ADDON=$dir/$addon" >> "$GITHUB_ENV"
+        echo "HUGR_OMNI_SUPERVISOR=$dir/$supervisor" >> "$GITHUB_ENV"

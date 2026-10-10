@@ -1,0 +1,41 @@
+# Identifiers the skills name in `code` that are not hugr-omni's TypeScript surface (bindings/node/index.d.ts) but
+# have its option shape (lowerCamelCase) or its error-code shape (UPPER_CASE). check.mjs refuses an entry omni has,
+# an entry no skill uses, a duplicate, and an entry without a `# why`.
+
+# Node child_process, cross-spawn, execa, node-pty / bun-pty (omni-migrate, omni-lifecycle)
+crossSpawn                 # cross-spawn's default export
+execFile                   # node:child_process
+spawnSync                  # node:child_process
+killSignal                 # node:child_process option
+maxBuffer                  # node:child_process option
+windowsVerbatimArguments   # node:child_process option
+forceKillAfterDelay        # execa option
+onData                     # node-pty / bun-pty event
+onExit                     # node-pty / bun-pty event
+setTimeout                 # JS timer, in an anti-pattern
+optionalDependencies       # package.json field
+
+# Contract scenarios and the fixture (conformance/SPEC.md, conformance/FIXTURE.md)
+elapsedMs                  # scenario expectation key
+withinMs                   # scenario os-step key
+GOT                        # fixture marker
+LOGGED                     # fixture marker
+READY                      # fixture marker
+
+# Environment variables and constants
+PATH                       # environment variable
+PS1                        # bash prompt variable
+TEST_FILTER                # scripts/ci.mjs input
+RELEASE                    # scripts/ci.mjs input
+ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER  # Orchestra's switch (integration plan D-L1)
+OMNI_MIRROR_DEPLOY_KEY     # Orchestra CI secret (WP6)
+PRE_RELEASE_INSTALL        # scripts/readme-check/blocks.mjs constant
+VERSION                    # omni-proto protocol version constant
+VCRUNTIME                  # the MSVC runtime DLL family
+
+# OS APIs (omni-os-traps)
+CREATE_NEW_PROCESS_GROUP   # Win32 process creation flag
+PROC_THREAD_ATTRIBUTE_HANDLE_LIST  # Win32 attribute
+POSIX_SPAWN_CLOEXEC_DEFAULT  # macOS posix_spawn flag
+MSG_CMSG_CLOEXEC           # Linux recvmsg flag
+TIOCPTYGNAME               # macOS ioctl

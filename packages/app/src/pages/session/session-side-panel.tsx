@@ -57,6 +57,7 @@ import { useSessionLayout } from "@/pages/session/session-layout"
 import { SessionFileBrowserTab, type SessionFileBrowserState } from "@/pages/session/v2/session-file-browser-tab"
 import { FILE_TREE_WIDTH_MIN, LegacyFileTreePanel } from "./legacy-file-tree-panel"
 import { TasksPanel } from "./tasks-panel"
+import { BackgroundProcessesPanel } from "./processes-panel"
 import { AppsPanel } from "./apps-panel"
 import { OrchestraCockpit, OrchestraTaskFeed } from "./orchestra-cockpit"
 import { OrchestraReviewViews } from "@/orchestra/review"
@@ -578,8 +579,13 @@ export function SessionSidePanel(props: {
                               value="tasks"
                               class="flex flex-col h-full overflow-hidden contain-strict"
                             >
-                              <div class="relative pt-2 flex-1 min-h-0 overflow-hidden">
-                                <TasksPanel data={tasksData} />
+                              <div class="relative pt-2 flex-1 min-h-0 overflow-hidden flex flex-col">
+                                <div class="max-h-[50%] shrink-0 overflow-y-auto">
+                                  <BackgroundProcessesPanel />
+                                </div>
+                                <div class="flex-1 min-h-0">
+                                  <TasksPanel data={tasksData} />
+                                </div>
                               </div>
                             </Tabs.Content>
                           </Show>

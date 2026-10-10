@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import * as pty from "@lydell/node-pty"
 import type { WslDistroProbe, WslInstalledDistro, WslOnlineDistro, WslRuntimeCheck } from "../../preload/types"
 import { wslTerminalArgs } from "./policy"
 import { nativeT } from "../native-translations"
+import { DesktopOmni } from "../omni-process"
 
 export type WslCommandLine = {
   stream: "stdout" | "stderr"
@@ -50,13 +50,17 @@ function runPowerShell(command: string, opts: RunWslOptions = {}) {
   )
 }
 
-function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
+// Exported for its test: wsl.exe writes UTF-16LE, and every command runs through here.
+export function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   return new Promise<WslCommandResult>((resolve, reject) => {
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      windowsHide: true,
-      signal: opts.signal,
-    })
+    // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER through omni: bytes, decoded below exactly as before.
+    const child: Pick<DesktopOmni.Spawned, "stdout" | "stderr" | "kill" | "once"> = DesktopOmni.enabled()
+      ? DesktopOmni.spawn(command, args, { stdin: "closed", signal: opts.signal })
+      : spawn(command, args, {
+          stdio: ["ignore", "pipe", "pipe"],
+          windowsHide: true,
+          signal: opts.signal,
+        })
 
     // Guard every wsl.exe invocation with a timeout. When the distro or
     // the LXSS service is wedged (Ubuntu first-run state, Windows update
@@ -113,17 +117,19 @@ function runCommand(command: string, args: string[], opts: RunWslOptions = {}) {
   })
 }
 
-function runInteractiveCommand(command: string, args: string[], opts: RunWslOptions = {}, defaultTimeoutMs: number) {
+async function runInteractiveCommand(
+  command: string,
+  args: string[],
+  opts: RunWslOptions = {},
+  defaultTimeoutMs: number,
+) {
+  // Behind ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER the terminal is omni's (ConPTY on Windows).
+  const terminal = { name: "xterm-color", cols: 80, rows: 24, cwd: process.cwd() }
+  const legacy = DesktopOmni.enabled() ? undefined : await import("@lydell/node-pty")
+  const child: DesktopOmni.Terminal = legacy
+    ? legacy.spawn(command, args, { ...terminal, env: process.env, useConpty: true })
+    : await DesktopOmni.terminal(command, args, terminal)
   return new Promise<WslCommandResult>((resolve, reject) => {
-    const child = pty.spawn(command, args, {
-      name: "xterm-color",
-      cols: 80,
-      rows: 24,
-      cwd: process.cwd(),
-      env: process.env,
-      useConpty: true,
-    })
-
     let settled = false
     let stdout = ""
 

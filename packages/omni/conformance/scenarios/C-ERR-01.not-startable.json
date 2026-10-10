@@ -1,0 +1,9 @@
+{
+  "id": "C-ERR-01.not-startable",
+  "os": ["windows"],
+  "files": {"notexec.txt": "not a program\r\n"},
+  "steps": [
+    {"spawn": ["${TMP}\\notexec.txt"], "expect": {"error": "NOT_EXECUTABLE", "message": ["notexec.txt", "Windows cannot start", "Pass it as an argument to the program that opens it"]}},
+    {"run": ["${TMP}\\notexec.txt"], "expect": {"error": "NOT_EXECUTABLE", "message": ["notexec.txt", "Windows cannot start", "Pass it as an argument to the program that opens it"]}}
+  ]
+}

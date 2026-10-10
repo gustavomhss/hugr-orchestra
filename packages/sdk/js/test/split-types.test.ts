@@ -59,6 +59,7 @@ test("compiler resolves partition cycle, public SDK reexports and SSE/sync union
       join(dir, "proof.ts"),
       `
 import type { MaestroWorkResultDecided, SyncEventMaestroWorkResultDecided, LocationRef, V2Event, GlobalEvent } from "@orchestra/sdk/v2/types"
+import type { EventMaestroWorkResultDecided, MaestroTaskBound, SyncEventMaestroTaskBound, EventMaestroTaskBound } from "@orchestra/sdk/v2/types"
 type Assert<T extends true> = T
 type SplitEvent = import("../../src/v2/gen/maestro-events.gen.js").MaestroWorkResultDecided
 type SplitSync = import("../../src/v2/gen/maestro-events.gen.js").SyncEventMaestroWorkResultDecided
@@ -70,6 +71,10 @@ export type ExactPublic = Assert<MaestroWorkResultDecided extends SplitEvent ? t
 export type ExactPartition = Assert<SplitEvent extends MaestroWorkResultDecided ? true : false>
 export type ExactSync = Assert<SyncEventMaestroWorkResultDecided extends SplitSync ? true : false>
 export type ExactSyncBack = Assert<SplitSync extends SyncEventMaestroWorkResultDecided ? true : false>
+export type DecidedCompatibility = Assert<EventMaestroWorkResultDecided extends import("../../src/v2/gen/maestro-events.gen.js").EventMaestroWorkResultDecided ? true : false>
+export type BoundLive = Assert<MaestroTaskBound extends import("../../src/v2/gen/maestro-events.gen.js").MaestroTaskBound ? true : false>
+export type BoundSync = Assert<SyncEventMaestroTaskBound extends import("../../src/v2/gen/maestro-events.gen.js").SyncEventMaestroTaskBound ? true : false>
+export type BoundCompatibility = Assert<EventMaestroTaskBound extends import("../../src/v2/gen/maestro-events.gen.js").EventMaestroTaskBound ? true : false>
 export type EventUnion = Assert<Extract<V2Event, { type: "maestro.work_result.decided" }> extends MaestroWorkResultDecided ? true : false>
 export type EventUnionBack = Assert<MaestroWorkResultDecided extends Extract<V2Event, { type: "maestro.work_result.decided" }> ? true : false>
 export type SyncUnion = Assert<SyncEventMaestroWorkResultDecided extends GlobalEvent["payload"] ? true : false>

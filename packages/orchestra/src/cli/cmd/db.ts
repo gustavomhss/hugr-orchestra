@@ -1,10 +1,10 @@
 import type { Argv } from "yargs"
-import { spawn } from "child_process"
 import { Database } from "@orchestra/core/database/database"
 import { Effect } from "effect"
 import { sql } from "drizzle-orm"
 import { effectCmd, fail } from "../effect-cmd"
 import { RuntimeFlags } from "@/effect/runtime-flags"
+import { Process } from "@/util/process"
 
 const QueryCommand = effectCmd({
   command: "$0 [query]",
@@ -36,10 +36,12 @@ const QueryCommand = effectCmd({
       }
       return
     }
-    const child = spawn("sqlite3", [Database.path()], {
-      stdio: "inherit",
+    const child = Process.interactive(["sqlite3", Database.path()], {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
     })
-    yield* Effect.promise(() => new Promise((resolve) => child.on("close", resolve)))
+    yield* Effect.promise(() => child.exited.catch(() => undefined))
   }),
 })
 

@@ -1,0 +1,15 @@
+{
+  "id": "C-PROC-01.tree",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "escape", "tree=2", "read-line", "exit=0"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"read": "c", "until": {"match": "^(PID [12] \\d+|ESCAPED \\d+|ESCAPE-REFUSED)$", "count": 3}, "capture": {"p1": "^PID 1 (\\d+)$", "p2": "^PID 2 (\\d+)$"}},
+    {"processes": "c", "expect": {"entries": [{"pid": "${c.pid}", "parentPid": null, "name": "omni-fixture${EXE}"}, {"pid": "${p1}", "parentPid": "${c.pid}", "name": "omni-fixture${EXE}"}, {"pid": "${p2}", "parentPid": "${p1}", "name": "omni-fixture${EXE}"}]}},
+    {"write": "c", "data": "go\n"},
+    {"wait": "c", "expect": {"reason": "exit", "exitCode": 0}},
+    {"os": "alive", "pids": ["${p1}", "${p2}"]},
+    {"processes": "c", "expect": {"entries": [{"pid": "${p1}", "parentPid": null, "name": "omni-fixture${EXE}"}, {"pid": "${p2}", "parentPid": "${p1}", "name": "omni-fixture${EXE}"}]}},
+    {"stop": "c", "graceMs": 5000, "expect": {"reason": "exit", "exitCode": 0, "elapsedMs": {"lt": 1000}}},
+    {"processes": "c", "expect": {"entries": []}},
+    {"os": "dead", "pids": ["${p1}", "${p2}"]}
+  ]
+}

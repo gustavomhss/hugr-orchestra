@@ -1,0 +1,12 @@
+{
+  "id": "C-IO-04.hold",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "out=ROOT\\n", "hold=60000", "exit=3"], "as": "c"},
+    {"wait": "c", "expect": {"exitCode": 3, "reason": "exit", "elapsedMs": {"lt": 1000}}},
+    {"read": "c", "until": {"match": "^ROOT$"}},
+    {"processes": "c", "capture": "holder", "expect": {"entries": [{"parentPid": null, "name": "omni-fixture${EXE}"}]}},
+    {"stop": "c", "graceMs": 5000, "expect": {"exitCode": 3, "reason": "exit", "elapsedMs": {"lt": 1000}}},
+    {"read": "c", "until": "end"},
+    {"os": "dead", "pids": "${holder}"}
+  ]
+}

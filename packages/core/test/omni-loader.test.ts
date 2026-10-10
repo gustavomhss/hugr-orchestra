@@ -1,0 +1,248 @@
+import { describe, expect, test } from "bun:test"
+import { spawn } from "node:child_process"
+import { mkdir, mkdtemp, realpath, rm, unlink, writeFile } from "node:fs/promises"
+import os from "node:os"
+import path from "node:path"
+import { Flag, omniSpawner } from "@orchestra/core/flag/flag"
+import { Omni } from "@orchestra/core/omni"
+import { Shell } from "@orchestra/core/shell"
+import { alive, gone, reap, sweep, tree } from "./fixture/process-tree"
+
+describe("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER parser", () => {
+  test("unset and 1 are on; empty and 0 select legacy rollback; strict is strict", () => {
+    expect(omniSpawner(undefined)).toBe("on")
+    expect(omniSpawner("")).toBe("off")
+    expect(omniSpawner("0")).toBe("off")
+    expect(omniSpawner("1")).toBe("on")
+    expect(omniSpawner("strict")).toBe("strict")
+  })
+
+  test("anything else is off, not truthy()", () => {
+    for (const value of ["true", "TRUE", "yes", "on", "Strict", "2", " 1"]) expect(omniSpawner(value)).toBe("off")
+  })
+
+  test("the flag reads the variable at access time and ignores ORCHESTRA_EXPERIMENTAL", () => {
+    const saved = { omni: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER, all: process.env.ORCHESTRA_EXPERIMENTAL }
+    try {
+      delete process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+      process.env.ORCHESTRA_EXPERIMENTAL = "true"
+      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("on")
+      process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "strict"
+      expect(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")
+    } finally {
+      restore("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", saved.omni)
+      restore("ORCHESTRA_EXPERIMENTAL", saved.all)
+    }
+  })
+})
+
+describe("Omni counters and the positive control", () => {
+  test("count() adds to the snapshot, which is a copy", () => {
+    const before = Omni.snapshot()
+    Omni.count("spawns")
+    Omni.count("spawns")
+    Omni.count("delegations")
+    const after = Omni.snapshot()
+    expect(after).toEqual({ spawns: before.spawns + 2, delegations: before.delegations + 1 })
+    after.spawns = -1
+    expect(Omni.snapshot().spawns).toBe(before.spawns + 2)
+    Omni.count("spawns", -2)
+    Omni.count("delegations", -1)
+    expect(Omni.snapshot()).toEqual(before)
+  })
+
+  test("verdict: off never fails; on needs a spawn; strict needs a spawn and no delegation", () => {
+    expect(Omni.verdict("off", { spawns: 0, delegations: 9 })).toBeUndefined()
+    expect(Omni.verdict("on", { spawns: 0, delegations: 0 })).toContain("no omni spawn")
+    expect(Omni.verdict("on", { spawns: 1, delegations: 5 })).toBeUndefined()
+    expect(Omni.verdict("strict", { spawns: 0, delegations: 0 })).toContain("no omni spawn")
+    expect(Omni.verdict("strict", { spawns: 3, delegations: 1 })).toContain("delegated 1")
+    expect(Omni.verdict("strict", { spawns: 3, delegations: 0 })).toBeUndefined()
+  })
+})
+
+describe("Omni.childEnv", () => {
+  test("merges process.env and extra, drops undefined, strips HUGR_OMNI_* from the result", () => {
+    const saved = { addon: process.env.HUGR_OMNI_ADDON, keep: process.env.OMNI_TEST_KEEP }
+    try {
+      process.env.HUGR_OMNI_ADDON = "/somewhere/addon.node"
+      process.env.OMNI_TEST_KEEP = "base"
+      const env = Omni.childEnv({
+        OMNI_TEST_KEEP: "extra",
+        OMNI_TEST_NEW: "new",
+        OMNI_TEST_GONE: undefined,
+        HUGR_OMNI_X: "1",
+      })
+      expect(env.OMNI_TEST_KEEP).toBe("extra")
+      expect(env.OMNI_TEST_NEW).toBe("new")
+      expect("OMNI_TEST_GONE" in env).toBe(false)
+      expect(Object.keys(env).filter((key) => key.toUpperCase().startsWith("HUGR_OMNI_"))).toEqual([])
+      expect(Object.values(env).every((value) => typeof value === "string")).toBe(true)
+      expect(Omni.childEnv({ OMNI_TEST_KEEP: undefined }).OMNI_TEST_KEEP).toBeUndefined()
+    } finally {
+      restore("HUGR_OMNI_ADDON", saved.addon)
+      restore("OMNI_TEST_KEEP", saved.keep)
+    }
+  })
+
+  test.if(process.platform === "win32")("on Windows a later Path replaces PATH and only one key survives", () => {
+    const env = Omni.childEnv({ Path: "C:\\later", hugr_omni_lower: "x" })
+    expect(Object.keys(env).filter((key) => key.toUpperCase() === "PATH")).toEqual(["Path"])
+    expect(env.Path).toBe("C:\\later")
+    expect(Object.keys(env).some((key) => key.toUpperCase() === "HUGR_OMNI_LOWER")).toBe(false)
+  })
+
+  test.if(process.platform !== "win32")("elsewhere names are case-sensitive", () => {
+    const env = Omni.childEnv({ Path: "/later" })
+    expect(env.Path).toBe("/later")
+    expect(env.PATH).toBe(process.env.PATH ?? "")
+  })
+})
+
+describe("Omni.locate", () => {
+  test("configured paths win, and a configured file that does not exist fails loudly", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "omni-locate-"))
+    const files = { addon: path.join(dir, "hugr_omni.node"), supervisor: path.join(dir, "hugr-omni-supervisor") }
+    await writeFile(files.addon, "")
+    await writeFile(files.supervisor, "")
+    // locate() takes the paths configure() would hold, so this test never configures the loader other tests use
+    // (configure() is refused once anything in this process has loaded omni).
+    expect(() => Omni.locate({ addon: path.join(dir, "missing.node"), supervisor: files.supervisor })).toThrow(
+      "missing.node does not exist",
+    )
+    expect(Omni.locate(files)).toEqual(files)
+  })
+
+  test("explicit addon with a missing sibling never borrows another candidate's supervisor", async () => {
+    await using fixture = await locateFixture()
+    expect(Omni.locate({})).toEqual(fixture.shipped)
+    const addon = path.join(fixture.dir, "orphan", "hugr_omni.node")
+    await mkdir(path.dirname(addon))
+    await writeFile(addon, "")
+    expect(() => Omni.locate({ addon })).toThrow(
+      `configured supervisor ${path.join(path.dirname(addon), fixture.name)} does not exist`,
+    )
+    expect(Omni.locate({ addon, supervisor: fixture.shipped.supervisor })).toEqual({
+      addon,
+      supervisor: fixture.shipped.supervisor,
+    })
+  })
+
+  test("missing shipped supervisor is diagnosed as supervisor, not addon", async () => {
+    await using fixture = await locateFixture()
+    await unlink(fixture.shipped.supervisor)
+    expect(() => Omni.locate(fixture.shipped)).toThrow(
+      `configured supervisor ${fixture.shipped.supervisor} does not exist`,
+    )
+  })
+
+  test("missing explicitly configured addon never falls back to an intact candidate", async () => {
+    await using fixture = await locateFixture()
+    expect(Omni.locate({})).toEqual(fixture.shipped)
+    const missing = { addon: path.join(fixture.dir, "missing.node"), supervisor: fixture.shipped.supervisor }
+    expect(() => Omni.locate(missing)).toThrow(`configured addon ${missing.addon} does not exist`)
+  })
+
+  test("given paths override environment; environment addon also requires its own sibling", async () => {
+    await using fixture = await locateFixture()
+    const addon = path.join(fixture.dir, "env", "hugr_omni.node")
+    await mkdir(path.dirname(addon))
+    await writeFile(addon, "")
+    process.env.HUGR_OMNI_ADDON = addon
+    expect(Omni.locate(fixture.shipped)).toEqual(fixture.shipped)
+    expect(() => Omni.locate({})).toThrow("configured supervisor")
+    process.env.HUGR_OMNI_SUPERVISOR = fixture.shipped.supervisor
+    expect(Omni.locate({})).toEqual({ addon, supervisor: fixture.shipped.supervisor })
+  })
+})
+
+// No native load or spawn: provide a real on-disk alternate candidate to expose silent fallback.
+async function locateFixture() {
+  const dir = await realpath(await mkdtemp(path.join(os.tmpdir(), "omni-locate-candidate-")))
+  const name = `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`
+  const shipped = { addon: path.join(dir, "hugr_omni.node"), supervisor: path.join(dir, name) }
+  const executable = path.join(dir, "orchestra")
+  await Promise.all([executable, ...Object.values(shipped)].map((file) => writeFile(file, "")))
+  const saved = {
+    executable: process.execPath,
+    addon: process.env.HUGR_OMNI_ADDON,
+    supervisor: process.env.HUGR_OMNI_SUPERVISOR,
+  }
+  process.execPath = executable
+  delete process.env.HUGR_OMNI_ADDON
+  delete process.env.HUGR_OMNI_SUPERVISOR
+  return {
+    dir,
+    name,
+    shipped,
+    async [Symbol.asyncDispose]() {
+      process.execPath = saved.executable
+      restore("HUGR_OMNI_ADDON", saved.addon)
+      restore("HUGR_OMNI_SUPERVISOR", saved.supervisor)
+      await rm(dir, { recursive: true, force: true })
+    },
+  }
+}
+
+describe("Shell.invocation", () => {
+  test.if(process.platform !== "win32")("true is /bin/sh -c with the command and args joined like Node", () => {
+    expect(Shell.invocation(true, "echo", ["a b", "$HOME"])).toEqual({
+      file: "/bin/sh",
+      args: ["-c", "echo a b $HOME"],
+    })
+  })
+
+  test.if(process.platform === "win32")("true on Windows is cmd.exe, so the caller delegates", () => {
+    expect(Shell.invocation(true, "echo", ["hi"])).toBeUndefined()
+  })
+
+  test("a shell path gets -c, PowerShell gets -NoProfile -Command, never Shell.args' wrapping", () => {
+    const bash = process.platform === "win32" ? "C:\\Program Files\\Git\\bin\\bash.exe" : "/bin/bash"
+    expect(Shell.invocation(bash, "ls", ["-la"])).toEqual({ file: bash, args: ["-c", "ls -la"] })
+    const pwsh = process.platform === "win32" ? "C:\\Program Files\\PowerShell\\7\\pwsh.exe" : "/usr/bin/pwsh"
+    expect(Shell.invocation(pwsh, "Get-Item", ["."])).toEqual({
+      file: pwsh,
+      args: ["-NoProfile", "-Command", "Get-Item ."],
+    })
+    expect(Shell.invocation("/bin/zsh", "x", [])).toEqual({ file: "/bin/zsh", args: ["-c", "x"] })
+  })
+
+  test.if(process.platform === "win32")("cmd.exe gives undefined", () => {
+    expect(Shell.invocation("C:\\Windows\\System32\\cmd.exe", "dir", [])).toBeUndefined()
+    expect(Shell.invocation("cmd", "dir", [])).toBeUndefined()
+  })
+})
+
+// The oracle's own positive control: it must see a live tree, then see it gone.
+describe("process-tree fixture", () => {
+  test("the nonce oracle sees every process of a live tree and none after the tree is killed", async () => {
+    const fixture = tree(2)
+    const child = spawn(fixture.command, fixture.args, {
+      stdio: ["ignore", "pipe", "inherit"],
+      detached: process.platform !== "win32",
+      windowsHide: true,
+    })
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let text = ""
+        child.stdout.on("data", (data) => {
+          text += String(data)
+          if (text.includes(fixture.ready)) resolve()
+        })
+        child.once("exit", (code) => reject(new Error(`the tree root exited (${code}) before ready`)))
+      })
+      expect(await alive(fixture.nonce)).toBe(fixture.size)
+      expect((await sweep(fixture.nonce)).length).toBe(fixture.size)
+      await Shell.killTree(child)
+      expect(await gone(fixture.nonce)).toBe(0)
+      expect(await sweep(fixture.nonce)).toEqual([])
+    } finally {
+      await reap(fixture.nonce)
+    }
+  }, 60_000)
+})
+
+function restore(key: string, value: string | undefined) {
+  if (value === undefined) delete process.env[key]
+  else process.env[key] = value
+}

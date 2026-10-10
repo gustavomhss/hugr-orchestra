@@ -1,0 +1,10 @@
+{
+  "id": "C-KILL-03.breakaway",
+  "os": ["windows"],
+  "steps": [
+    {"spawn": ["${FIXTURE}", "escape", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|ESCAPE-REFUSED)$", "count": 2}},
+    {"stop": "c", "graceMs": 1000, "expect": {"reason": "killed"}},
+    {"os": "dead", "pids": ["${c.pid}"]}
+  ]
+}

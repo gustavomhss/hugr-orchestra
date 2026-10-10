@@ -83,7 +83,14 @@ const historyTypesPatched = generatedTypes.replace(
 if (historyTypesPatched === generatedTypes) {
   throw new Error("Session history numeric query patch did not apply")
 }
-const partition = splitTypes(historyTypesPatched, ["MaestroWorkResultDecided", "SyncEventMaestroWorkResultDecided"])
+const partition = splitTypes(historyTypesPatched, [
+  "MaestroWorkResultDecided",
+  "SyncEventMaestroWorkResultDecided",
+  "EventMaestroWorkResultDecided",
+  "MaestroTaskBound",
+  "SyncEventMaestroTaskBound",
+  "EventMaestroTaskBound",
+])
 await Bun.write("./src/v2/gen/types.gen.ts", partition.main)
 await Bun.write("./src/v2/gen/maestro-events.gen.ts", partition.partition)
 

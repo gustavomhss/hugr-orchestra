@@ -1,0 +1,10 @@
+{
+  "id": "C-RUN-01.result",
+  "steps": [
+    {"run": ["${FIXTURE}", "out=O", "err=E", "exit=3"], "expect": {"exitCode": 3, "signal": null, "reason": "exit", "success": false, "stdout": "O", "stderr": "E"}},
+    {"run": ["${FIXTURE}", "exit=0"], "expect": {"exitCode": 0, "signal": null, "reason": "exit", "success": true, "stdout": "", "stderr": ""}},
+    {"run": ["${FIXTURE}", "count-stdin"], "options": {"input": "hello\n"}, "expect": {"exitCode": 0, "stdout": "STDIN 6\n"}},
+    {"run": ["${FIXTURE}", "count-stdin"], "expect": {"exitCode": 0, "stdout": "STDIN 0\n"}},
+    {"run": ["${FIXTURE}", "exit=0"], "options": {"input": "unread"}, "expect": {"exitCode": 0, "success": true}}
+  ]
+}

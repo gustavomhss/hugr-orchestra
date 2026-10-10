@@ -114,6 +114,8 @@ debugging and troubleshooting tools
 Commands:
   orchestra debug config        show resolved configuration
   orchestra debug lsp           LSP debugging utilities
+  orchestra debug omni          show the process spawner in use (omni or legacy) and run a test
+                                process tree through omni
   orchestra debug rg            ripgrep debugging utilities
   orchestra debug file          file system debugging utilities
   orchestra debug scrap         list all known projects

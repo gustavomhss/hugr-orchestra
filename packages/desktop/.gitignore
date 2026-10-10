@@ -29,3 +29,6 @@ resources/orchestra-cli*
 resources/icons
 resources/*.metainfo.xml
 artifacts/
+
+# hugr-omni addon and supervisor, staged by scripts/stage-omni.ts
+resources/omni/

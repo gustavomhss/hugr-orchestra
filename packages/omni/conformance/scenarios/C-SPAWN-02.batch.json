@@ -1,0 +1,9 @@
+{
+  "id": "C-SPAWN-02.batch",
+  "os": ["windows"],
+  "files": {"tool.cmd": "@\"${FIXTURE}\" argv %*\r\n"},
+  "steps": [
+    {"run": ["${TMP}\\tool.cmd", "a b", "q\"uote", "a&b|c", "100%", "%PATH%", "^caret", "<lt>", "", "trail\\"], "expect": {"exitCode": 0, "stdout": "[\"a b\",\"q\\\"uote\",\"a&b|c\",\"100%\",\"%PATH%\",\"^caret\",\"<lt>\",\"\",\"trail\\\\\"]\n"}},
+    {"run": ["${TMP}\\tool.cmd", "line\nbreak"], "expect": {"error": "INVALID_ARGUMENT"}}
+  ]
+}

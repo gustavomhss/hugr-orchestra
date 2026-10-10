@@ -1,0 +1,122 @@
+name: omni-mirror
+
+# Publishes packages/omni to its read-only GitHub mirror, github.com/gustavomhss/hugr-omni
+# (packages/omni/skills/omni-release/references/mirror.md).
+# - A push to dev that touches packages/omni: `git subtree split --prefix=packages/omni` gives the mirror's history
+#   (the import commit's subtree trailers make it walk only the commits since the import). If the mirror's main is
+#   behind the split, the split is pushed to the mirror's main, fast-forward only. The gate is not run again here: the
+#   split's tree is packages/omni byte for byte, and omni.yml runs its gate on the same push on three OSes. Never forced: a mirror main
+#   that is not an ancestor of the split turns the job red.
+# - A tag omni-v<version>: the tagged commit's split is pushed as the mirror's tag v<version>, once that split is on the
+#   mirror's main (the dev run above puts it there). An existing tag is never moved.
+# Authenticates with the deploy key in the OMNI_MIRROR_DEPLOY_KEY secret (write access on the mirror only).
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - "omni-v*"
+    paths:
+      - "packages/omni/**"
+
+concurrency:
+  # One mirror push at a time, never cancelled half-way. Tags get their own group: a newer dev run, which replaces a
+  # pending run of its group, must not drop a pending tag.
+  group: ${{ startsWith(github.ref, 'refs/tags/') && format('omni-mirror-{0}', github.ref) || 'omni-mirror' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  MIRROR: git@github.com:gustavomhss/hugr-omni.git
+  PREFIX: packages/omni
+
+jobs:
+  mirror:
+    name: mirror (${{ github.ref_name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: "0"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+
+      # Plain ssh-agent with the deploy key; github.com's published ed25519 host key, pinned.
+      - name: SSH deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.OMNI_MIRROR_DEPLOY_KEY }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then echo "::error::the OMNI_MIRROR_DEPLOY_KEY secret is not set"; exit 1; fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)"
+          printf '%s\n' "$DEPLOY_KEY" | ssh-add -
+          {
+            echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+            echo "SSH_AGENT_PID=$SSH_AGENT_PID"
+            echo "GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=yes"
+          } >> "$GITHUB_ENV"
+
+      # The split of the pushed commit, and what to do with it: `push` (main is behind it), `none` (main is it, or a
+      # newer run already pushed dev's split) or, for a tag, `tag`. Anything else means the mirror has a commit
+      # Orchestra does not, and the job stops here, before the gate.
+      - name: Split and compare with the mirror
+        id: split
+        run: |
+          split=$(git subtree split --prefix="$PREFIX" "$GITHUB_SHA")
+          echo "split $split of $GITHUB_SHA"
+          echo "sha=$split" >> "$GITHUB_OUTPUT"
+          git fetch --no-tags "$MIRROR" "+refs/heads/main:refs/remotes/mirror/main"
+          main=$(git rev-parse refs/remotes/mirror/main)
+          echo "mirror main $main"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            if ! git merge-base --is-ancestor "$split" "$main"; then
+              echo "::error::the split $split of tag $GITHUB_REF_NAME is not on the mirror's main yet: let the dev mirror run push it, then re-run this job"
+              exit 1
+            fi
+            echo "action=tag" >> "$GITHUB_OUTPUT"
+          elif [ "$split" = "$main" ]; then
+            echo "the mirror's main is already $split: nothing to push"
+            echo "action=none" >> "$GITHUB_OUTPUT"
+          elif git merge-base --is-ancestor "$main" "$split"; then
+            echo "action=push" >> "$GITHUB_OUTPUT"
+          elif git merge-base --is-ancestor "$split" "$main" &&
+            git merge-base --is-ancestor "$main" "$(git subtree split --prefix="$PREFIX" refs/remotes/origin/dev)"; then
+            # A re-run of an older push: a newer run already mirrored dev past this commit.
+            echo "the mirror's main $main is past $split and is dev's split or behind it: nothing to push"
+            echo "action=none" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::not a fast-forward: the mirror has commits Orchestra does not; port them to packages/omni (mirror main $main, split $split)"
+            exit 1
+          fi
+
+      - name: Push to the mirror's main (fast-forward only)
+        if: steps.split.outputs.action == 'push'
+        env:
+          SPLIT: ${{ steps.split.outputs.sha }}
+        run: |
+          if ! git push "$MIRROR" "$SPLIT:refs/heads/main"; then
+            echo "::error::not a fast-forward: the mirror has commits Orchestra does not; port them to packages/omni (split $SPLIT)"
+            exit 1
+          fi
+          echo "the mirror's main is $SPLIT"
+
+      - name: Push the mirror's tag
+        if: steps.split.outputs.action == 'tag'
+        env:
+          SPLIT: ${{ steps.split.outputs.sha }}
+        run: |
+          tag="${GITHUB_REF_NAME#omni-}"
+          if ! git push "$MIRROR" "$SPLIT:refs/tags/$tag"; then
+            echo "::error::the mirror refused tag $tag at $SPLIT: it exists at another commit. Tags are never moved; ask the lead"
+            exit 1
+          fi
+          echo "the mirror's tag $tag is $SPLIT"

@@ -1,0 +1,8 @@
+{
+  "id": "C-ENV-01.windows",
+  "os": ["windows"],
+  "steps": [
+    {"run": ["${FIXTURE}", "env"], "options": {"inheritEnv": false, "env": {"OMNI_ONLY": "1"}}, "expect": {"exitCode": 0, "stdout": {"regex": "^\\{\"OMNI_ONLY\":\"1\",\"SystemRoot\":\"[^\"]+\"\\}\\n$"}}},
+    {"run": ["${FIXTURE}", "getenv=PATH"], "options": {"env": {"path": "omni-x"}}, "expect": {"exitCode": 0, "stdout": {"regex": "^[Pp][Aa][Tt][Hh]=\"omni-x\"\n$"}}}
+  ]
+}

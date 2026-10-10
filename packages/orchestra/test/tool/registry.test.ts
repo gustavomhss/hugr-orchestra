@@ -145,6 +145,7 @@ const identityTool = Effect.fn("RegistryTest.identityTool")(function* () {
     loaded.execute({ lines }, {
       sessionID: session.id,
       messageID: MessageID.make("msg_test"),
+      callID: "identity-tool",
       ...caller,
       abort: new AbortController().signal,
       messages: [],
