@@ -15,9 +15,10 @@ const pins = {
   upload: "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
 }
 // WP-C cold-review repair: host Intel/sysctl semantics; versions/archive were unguarded.
+// Follow-up host pin: align Intel-probe stderr and absent-OID empty stdout with B's parent contract.
 // Hash exact parsed run bodies. Legitimate edits require review plus an explicit pin update.
 const bodyPins = {
-  host: "0a3543170a00c3b60fc173a7a02cb94fdfd99d433ec217145603cbb36829d9ee",
+  host: "9996a7591426138e692dc984b706d83d1038680c5df44eab13c3650712aa14ea",
   versions: "5d8d002f9c8dc80f9d9010c8d475b7554a2aa42695a5607e4a29848a342af66f",
   archive: "f64433a7dad8df6ce6550bd30c93cb3cb78de1008fc068add8a39583ca146ee4",
 }
@@ -147,8 +148,8 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
     await mkdir(path.join(root, "bin"))
     for (const [name, body] of Object.entries({
       git: 'printf "%s\\n" "$CANDIDATE_SHA"',
-      uname: 'printf "%s\\n" "$TEST_UNAME"',
-      sysctl: 'case "$*" in "-n machdep.cpu.vendor") printf "%s\\n" "$TEST_VENDOR"; exit "$TEST_VENDOR_CODE";; "-n sysctl.proc_translated") printf "%s" "$TEST_STDOUT"; printf "%s" "$TEST_STDERR" >&2; exit "$TEST_CODE";; *) exit 99;; esac',
+      uname: 'printf "%s\\n" "$TEST_UNAME"; printf "%s" "$TEST_MACHINE_STDERR" >&2',
+      sysctl: 'case "$*" in "-n machdep.cpu.vendor") printf "%s\\n" "$TEST_VENDOR"; printf "%s" "$TEST_VENDOR_STDERR" >&2; exit "$TEST_VENDOR_CODE";; "-n sysctl.proc_translated") printf "%s" "$TEST_STDOUT"; printf "%s" "$TEST_STDERR" >&2; exit "$TEST_CODE";; *) exit 99;; esac',
     })) {
       const file = path.join(root, "bin", name)
       await Bun.write(file, "#!/bin/bash\n" + body + "\n")
@@ -159,6 +160,7 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       env: { ...process.env, PATH: `${root}/bin:${process.env.PATH}`, RUNNER_TEMP: root,
         GITHUB_REF: "refs/heads/lean-candidate-build", CANDIDATE_SHA: "synthetic-sha", WORKFLOW_SHA: "synthetic-sha",
         RUNNER_OS: "macOS", RUNNER_ARCH: "X64", TEST_UNAME: "x86_64", TEST_VENDOR: "GenuineIntel", TEST_VENDOR_CODE: "0",
+        TEST_MACHINE_STDERR: "", TEST_VENDOR_STDERR: "",
         TEST_CODE: "0", TEST_STDOUT: "0\n", TEST_STDERR: "", ...env },
     })
     for (const file of ["scripts/lean-candidate.ts", "electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "test/lean-candidate-package.test.ts"]) {
@@ -177,6 +179,7 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       { code: "1", out: "", err: "sysctl: unexpected failure\n", expected: 1 },
       { code: "2", out: "", err: unknown, expected: 1 },
       { code: "1", out: "0\n", err: unknown, expected: 1 },
+      { code: "1", out: "\n", err: unknown, expected: 1 },
     ]
     for (const entry of cases) {
       const result = run({ TEST_CODE: entry.code, TEST_STDOUT: entry.out, TEST_STDERR: entry.err })
@@ -189,6 +192,8 @@ test("actual host shell preserves sysctl diagnostics and accepts only closed nat
       [{ TEST_VENDOR: "AuthenticAMD" }, "Native GenuineIntel CPU required"],
       [{ TEST_VENDOR: "" }, "Native GenuineIntel CPU required"],
       [{ TEST_VENDOR_CODE: "2" }, "Cannot read native Intel CPU vendor"],
+      [{ TEST_VENDOR_STDERR: "unexpected warning\n" }, "Native GenuineIntel CPU required"],
+      [{ TEST_MACHINE_STDERR: "unexpected warning\n" }, "Native x86_64 kernel required"],
       [{ TEST_UNAME: "arm64" }, "Native x86_64 kernel required"],
       [{ RUNNER_ARCH: "ARM64" }, "Native X64 runner required"],
       [{ RUNNER_OS: "Linux" }, "Native macOS runner required"],
