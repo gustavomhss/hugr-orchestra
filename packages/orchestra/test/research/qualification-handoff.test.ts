@@ -1,8 +1,9 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Layer, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { ResearchBinding } from "@orchestra/core/research/binding"
@@ -13,6 +14,7 @@ import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Agent } from "@/agent/agent"
 import { BackgroundJob } from "@/background/job"
+import { Config } from "@/config/config"
 import { DiscoveryResult } from "@/maestro/discovery-result"
 import { LogicalTask } from "@/maestro/logical-task"
 import { ResearchExecution } from "@/research/allowance"
@@ -23,10 +25,14 @@ import { MessageID, PartID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
 import { Truncate } from "@/tool/truncate"
 import { awaitWithTimeout, pollWithTimeout, testEffect } from "../lib/effect"
-import { TestInstance } from "../fixture/fixture"
+import { reloadInstance, TestInstance } from "../fixture/fixture"
+import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { NativeResearchTask } from "./fixtures/native-task"
 
-const it = testEffect(NativeResearchTask.layer)
+// Optional Config is resolved at Truncate call time, so both services must be public root outputs.
+const it = testEffect(Layer.mergeAll(NativeResearchTask.layer,
+  TestAppNodeBuilder.build(LayerNode.group([Config.node, Truncate.node])),
+))
 const Summary = Schema.Struct({ records: Schema.Array(Research.FindingRecord), complete: Schema.Boolean,
   total: Schema.Int, omitted: Schema.Int })
 const Result = Schema.Struct({ workResult: Schema.Struct({ qualifications: Summary, discovery: Research.Card,
@@ -37,8 +43,14 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
   const fs = yield* FSUtil.Service
   const instance = yield* TestInstance
   yield* fs.writeFileString(path.join(instance.directory, "orchestra.jsonc"), JSON.stringify({ compaction: { tail_turns: 0 }, tool_output: { max_bytes: 16 * 1024 } }))
+  const config = yield* Config.Service
+  yield* config.invalidate()
+  yield* reloadInstance({ directory: instance.directory })
   const fixture = yield* NativeResearchTask.setup()
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
+  const truncate = yield* Truncate.Service
+  expect((yield* config.get()).tool_output?.max_bytes).toBe(16 * 1024)
+  expect((yield* truncate.limits()).maxBytes).toBe(16 * 1024)
   const events = yield* EventV2.Service
   const records = yield* ResearchRecords.Service
   const state: { source?: Research.SourceReceipt; findings: Extract<Research.Record, { kind: "finding" }>[];
@@ -97,6 +109,7 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
     state.documentReply = part.state.output
     expect(reply.value.qualifications).toEqual({ records: background ? [state.findings[2]] : [state.findings[2], state.findings[3]],
       complete: true, total: background ? 1 : 2, omitted: 0 })
+    if (!background) expect(Buffer.byteLength(JSON.stringify(part.state.metadata.research, null, 2), "utf8")).toBeGreaterThan(16 * 1024)
     expect(part.state.output.startsWith('{\n  "qualifications":')).toBe(true)
     expect(part.state.output.startsWith(`${JSON.stringify({ qualifications: reply.value.qualifications }, null, 2).slice(0, -2)},\n`)).toBe(true)
     expect(part.state.output).toContain(state.findings[2].proposition)
@@ -146,7 +159,6 @@ for (const background of [false, true]) it.instance(`native qualified Task outpu
     expect(Buffer.byteLength(JSON.stringify(expected, null, 2), "utf8")).toBeGreaterThan(14 * 1024)
     expect(Buffer.byteLength(JSON.stringify({ qualifications: expected }, null, 2), "utf8")).toBeLessThanOrEqual(15 * 1024)
     expect(Buffer.byteLength(output.split("\n\n")[0], "utf8")).toBeLessThanOrEqual(16 * 1024)
-    const truncate = yield* Truncate.Service
     const preview = yield* truncate.output(`${output}\n${"Worker prose beyond handoff bounds.\n".repeat(2000)}`, { maxBytes: 16 * 1024 })
     expect(preview.truncated).toBe(true)
     expect(preview.content).toContain(`\n> ${JSON.stringify(expected)}`)
@@ -200,8 +212,14 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const fs = yield* FSUtil.Service
   const instance = yield* TestInstance
   yield* fs.writeFileString(path.join(instance.directory, "orchestra.jsonc"), JSON.stringify({ tool_output: { max_bytes: 16 * 1024 } }))
+  const config = yield* Config.Service
+  yield* config.invalidate()
+  yield* reloadInstance({ directory: instance.directory })
   const fixture = yield* NativeResearchTask.setup()
   yield* Effect.addFinalizer(() => fixture.sessions.remove(fixture.parent.id).pipe(Effect.orDie))
+  const truncate = yield* Truncate.Service
+  expect((yield* config.get()).tool_output?.max_bytes).toBe(16 * 1024)
+  expect((yield* truncate.limits()).maxBytes).toBe(16 * 1024)
   const records = yield* ResearchRecords.Service
   const database = yield* Database.Service
   const agents = yield* Agent.Service
@@ -256,6 +274,7 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const published = yield* record(manyLines, child.id, assistant.id, documentCall)
   const qualified = Schema.decodeUnknownSync(Schema.Struct({ qualifications: Summary, document: Research.DocumentReceipt }))(published.metadata.research)
   expect(qualified.qualifications).toEqual(bounded)
+  expect(Buffer.byteLength(JSON.stringify(published.metadata.research, null, 2), "utf8")).toBeGreaterThan(16 * 1024)
   expect(published.metadata.truncated).toBe(true)
   const packet = JSON.stringify({ qualifications: bounded }, null, 2).slice(0, -2)
   expect(packet.split("\n").length).toBeGreaterThan(500)
@@ -263,7 +282,6 @@ it.instance("own exact refs reject foreign/nonfinding; lookup and UTF-8 bounds e
   const receiptStart = published.output.indexOf(',\n  "receipt":')
   if (receiptStart < 0) throw new Error("Native preview dropped qualification boundary")
   expect(Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ qualifications: Summary })))(`${published.output.slice(0, receiptStart)}\n}`).qualifications).toEqual(bounded)
-  const truncate = yield* Truncate.Service
   const preview = yield* truncate.output(JSON.stringify({ qualifications: bounded, receipt: qualified.document }, null, 2), { maxBytes: 16 * 1024 })
   expect(preview.truncated).toBe(true)
   expect(preview.content.startsWith(`${packet},\n`)).toBe(true)
