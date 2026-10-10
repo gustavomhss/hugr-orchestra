@@ -54,6 +54,11 @@ export type Memory = {
   writes: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; receiptRef?: RecordRef }[]
 }
 
+export type WorkerEvidence = {
+  changes: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+  checks: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+}
+
 export type WorkResult = {
   schema: string
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
@@ -67,6 +72,8 @@ export type WorkResult = {
   nextActions: Card["nextActions"]
   terminal: Terminal
   memory: Memory
+  // F4 cl.16 / F4-CH: host binding of worker claims, separate from verification and acceptance.
+  workerEvidence?: WorkerEvidence
   // Host fact set by the Task path: the write roots enforced for the child, worktree-relative; empty is read-only.
   writeRoots?: string[]
   // Host fact: whether the child's shell commands ran inside the write jail. `unenforced` means at least one ran
