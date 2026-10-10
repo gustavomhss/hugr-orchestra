@@ -194,18 +194,18 @@ const prepare = Effect.fn("GroundedLifecycleTest.prepare")(function* () {
 })
 
 // Reuse the retained foreground Task fixture from upstream-provenance.test.ts. This exercises the public V3
-// producer/reader with stored Walt references; it does not prove live Task dispatch or upstream artifact adoption.
+// producer/reader with stored Archie references; it does not prove live Task dispatch or upstream artifact adoption.
 const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
   data: Effect.Success<ReturnType<typeof prepare>>,
   grounded = true,
 ) {
   const sessions = yield* Session.Service
-  const child = yield* sessions.create({ parentID: data.session.id, agent: "walt", title: "context proposal" })
+  const child = yield* sessions.create({ parentID: data.session.id, agent: "archie", title: "context proposal" })
   const binding = yield* LogicalTask.ensure({
     executionSessionID: child.id,
     authoritySessionID: data.session.id,
     projectID: data.session.projectID,
-    memberID: "walt",
+    memberID: "archie",
     source: "host",
   })
   const owner: SessionV1.Assistant = {
@@ -228,7 +228,7 @@ const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
     id: MessageID.ascending(),
     role: "user",
     sessionID: child.id,
-    agent: "walt",
+    agent: "archie",
     model: { providerID: owner.providerID, modelID: owner.modelID },
     time: { created: Date.now() },
   })
@@ -237,8 +237,8 @@ const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
     id: MessageID.ascending(),
     parentID: prompt.id,
     sessionID: child.id,
-    agent: "walt",
-    mode: "walt",
+    agent: "archie",
+    mode: "archie",
     finish: "stop",
   })
   const text = yield* sessions.updatePart({
@@ -250,7 +250,7 @@ const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
   })
   const state: SessionV1.ToolStateCompleted = {
     status: "completed",
-    input: { description: "context proposal", prompt: "bounded proposal", subagent_type: "walt" },
+    input: { description: "context proposal", prompt: "bounded proposal", subagent_type: "archie" },
     output: text.text,
     title: "context proposal",
     time: { start: owner.time.created, end: Date.now() },
@@ -267,7 +267,7 @@ const prepareV3 = Effect.fn("GroundedLifecycleTest.prepareV3")(function* (
   })
   yield* SeatWork.track({
     enabled: true,
-    seat: Seats.all.walt,
+    seat: Seats.all.archie,
     sessionID: child.id,
     taskId: binding.taskId,
     publish: (workResult) =>

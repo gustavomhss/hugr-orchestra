@@ -170,7 +170,7 @@ it.instance(
         frankie: "read",
         // Bash and edit seats: external access to the directory would also let them run commands and edit there.
         backend: "narrow",
-        walt: "narrow",
+        archie: "narrow",
         patty: "narrow",
         rosie: "narrow",
         // The Linux workspace agent's tools reach only the workspace.
