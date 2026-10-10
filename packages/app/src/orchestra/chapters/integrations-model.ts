@@ -317,7 +317,7 @@ function progress<T>(page: { items: readonly T[]; after?: string }, after: strin
 }
 
 function reflected(value: Schema.Json, secrets: readonly string[]): boolean {
-  if (typeof value === "string") return secrets.some((secret) => secret.length >= 2 ? value.includes(secret)
+  if (typeof value === "string") return secrets.some((secret) => Array.from(secret).length !== 1 ? value.includes(secret)
     : Array.from(value).some((character, index, characters) => character === secret
       && !/[\p{L}\p{N}_]/u.test(characters[index - 1] ?? "") && !/[\p{L}\p{N}_]/u.test(characters[index + 1] ?? "")))
   if (!value || typeof value !== "object") return false

@@ -40,7 +40,8 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
   const signals: AbortSignal[] = []
   const requests: { method: string; url: string; key: string | null; body: unknown }[] = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
-    requests.push({ method: request.method, url: request.url, key: request.headers.get("idempotency-key"),
+    const key = request.headers.get("idempotency-key")
+    requests.push({ method: request.method, url: request.url, key: key === null ? null : decodeURIComponent(key),
       body: request.method === "POST" ? await request.clone().json() : undefined })
     return handler(request)
   } })
@@ -51,7 +52,8 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
     const payload = body === undefined ? undefined : structuredClone(body)
     const response = await Bun.fetch(new URL(path, server.url), { method: body === undefined ? "GET" : "POST",
       signal: ignoreAbort ? undefined : options?.signal, body: payload === undefined ? undefined : JSON.stringify(payload),
-      headers: { "content-type": "application/json", ...(key === undefined ? {} : { "idempotency-key": key }) } })
+      // Test injection permits Unicode keys; HTTP headers need an ASCII wire representation.
+      headers: { "content-type": "application/json", ...(key === undefined ? {} : { "idempotency-key": encodeURIComponent(key) }) } })
     if (!response.ok) {
       if ([400, 401, 403].includes(response.status)) throw await response.json()
       throw new Error("UnexpectedStatus", { cause: { status: response.status } })
