@@ -10,7 +10,7 @@ User communication: Portuguese, persistent **caveman full**. Keep technical subs
 
 - Active worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/native-capabilities`.
 - Active branch: `native-capabilities`.
-- Last completed integration: `e43015e98cd908f06a4b7d023afdc7035878514a` — scoped operator requests delivered to embedded clients.
+- Previous operator-wave integration: `e43015e98cd908f06a4b7d023afdc7035878514a` — scoped operator requests delivered to embedded clients.
 - Current source checkpoint: `4cfebc40e881fdb1b2f524bc765a72ccd06b1a32` — shared connection Store, operator management, protected HTTP delivery, regenerated Effect/Promise clients and actual owning SDK route. Original contract-only checkpoint: `0b9590b305`.
 - Remote: `fork` = `git@github.com:gustavomhss/hugr-orchestra.git`; branch pushed. Default/base branch `dev`, never assume local `main` exists.
 - Original checkout `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical` is user-owned; preserve its existing changes.
@@ -156,4 +156,4 @@ Skills used: techlead, agent-dispatch-and-landing, techlead-repo-maintenance, ef
 
 ## Remaining campaign obligations
 
-Connection/auth setup, management APIs/UI, protected artifact bytes/share/export, jobs/process observation/control, durable schedule/watch/context/delivery, Workspace/mail/calendar/drive/Notion, vault opaque bindings, CLI recipes, Desktop HAR/widgets, App/Claude/CodeMode adaptation, cold packaged resources/OS matrix and real vendor sandbox/entitlement qualification. No 32-asset completeness or cross-platform/live acceptance claim. Resume next wave from contracts above, not from a claim that the campaign is finished.
+Management APIs are delivered. Remaining work: connection/auth setup and management UI, protected artifact bytes/share/export, jobs/process observation/control, durable schedule/watch/context/delivery, Workspace/mail/calendar/drive/Notion, vault opaque bindings, CLI recipes, Desktop HAR/widgets, App/Claude/CodeMode adaptation, cold packaged resources/OS matrix and real vendor sandbox/entitlement qualification. No 32-asset completeness or cross-platform/live acceptance claim. Resume from `capability-management-results.md` and the campaign plan.

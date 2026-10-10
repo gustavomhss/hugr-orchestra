@@ -62,7 +62,7 @@ Dependency installation must actually replace patched runtime copies. Ordinary i
 | Optional query generator + committed consumer | `c230ac4d3a2fcef13483da1bf9e54192b55d21ff` |
 | HTTP/SDK delivery | `4cfebc40e881fdb1b2f524bc765a72ccd06b1a32` |
 
-Task sessions: Store `ses_edcaf97f0ffeTQ2CZj5lUKSRqn`; Management `ses_edcaf97e4ffeacQUAlr6XIjfSI`; Protocol `ses_edcaf97d5ffeTm4Ev5raOHeUb1`; Effect `ses_edc48eaf1ffeznpzp7m5EZIq24`; query generator `ses_edc16f131ffeTzugrbu4WqqRnw`; HTTP `ses_edc39a63dffeGkpRDonrMHJDuC`. Their separate worktrees are campaign-owned; source commits remain recoverable after pruning. Partial reviewer trees intentionally have missing tracked files: never stage their large D statuses.
+Task sessions: Store `ses_edcaf97f0ffeTQ2CZj5lUKSRqn`; Management `ses_edcaf97e4ffeacQUAlr6XIjfSI`; Protocol `ses_edcaf97d5ffeTm4Ev5raOHeUb1`; Effect `ses_edc48eaf1ffeznpzp7m5EZIq24`; query generator `ses_edc16f131ffeTzugrbu4WqqRnw`; HTTP `ses_edc39a63dffeGkpRDonrMHJDuC`. Wave author/reviewer worktrees and six temporary branches were pruned after integration; their source commits remain reachable from the campaign branch. Older partial reviewer trees intentionally have missing tracked files: never stage their large D statuses.
 
 ## Next campaign work
 
