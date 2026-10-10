@@ -11,7 +11,6 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { MessageTable, PartTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
-import { ProjectID } from "@orchestra/schema/project-id"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
@@ -25,12 +24,13 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { SeatWork } from "@/maestro/backend-work"
 import { LogicalTask } from "@/maestro/logical-task"
 import { Seats } from "@/maestro/seats"
+import { SessionAuthority } from "@/maestro/session-authority"
 import { UpstreamProvenance } from "@/maestro/upstream-provenance"
 import { UpstreamResult } from "@/maestro/upstream-result"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
-import { disposeAllInstances, provideTmpdirInstance } from "../fixture/fixture"
+import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
 afterEach(async () => {
@@ -60,19 +60,23 @@ function assistant(sessionID: SessionID, agent: string, parentID: MessageID): Se
 
 const seed = Effect.fn("UpstreamProvenanceTest.seed")(function* (options?: {
   background?: boolean
+  nested?: boolean
   bind?: boolean
   binding?: Partial<LogicalTask.Binding>
   childParentID?: SessionID
   childAgent?: string
 }) {
   const sessions = yield* Session.Service
-  const parent = yield* sessions.create({ agent: "maestro", title: "proposal authority" })
+  const root = yield* sessions.create({ agent: "maestro", title: "proposal authority" })
+  const parent = options?.nested ? yield* sessions.create({ parentID: root.id, agent: "maestro", title: "nested dispatch" }) : root
   const child = yield* sessions.create({ parentID: options?.childParentID ?? parent.id, agent: options?.childAgent ?? "archie", title: "proposal execution" })
-  const bindingInput = {
-    executionSessionID: child.id, authoritySessionID: parent.id, projectID: parent.projectID,
-    memberID: "archie", source: "host" as const, ...options?.binding,
-  }
-  const binding = options?.bind === false ? undefined : yield* LogicalTask.ensure(bindingInput)
+  const admitted = options?.bind === false ? undefined : yield* LogicalTask.ensure({
+    executionSessionID: child.id, projectID: parent.projectID, memberID: "archie", source: "host",
+    authoritySessionID: (yield* SessionAuthority.make((id) => sessions.get(id))(child.id, parent.projectID)).rootID,
+  })
+  const binding = admitted ? { ...admitted, authoritySessionID: root.id, ...options?.binding } : undefined
+  // Invalid retained evidence must reach the observer without bypassing production admission.
+  if (binding && !isDeepStrictEqual(binding, admitted)) yield* corruptBinding(child.id, binding)
   const user = yield* sessions.updateMessage({
     id: MessageID.ascending(), role: "user", sessionID: parent.id, agent: "maestro", model: ref, time: { created: Date.now() },
   })
@@ -107,13 +111,21 @@ const seed = Effect.fn("UpstreamProvenanceTest.seed")(function* (options?: {
   const stored = yield* sessions.getPart({ sessionID: parent.id, messageID: parentMessage.id, partID: task.id })
   if (!stored || stored.type !== "tool" || stored.state.status !== "completed") throw new Error("expected stored completed Task part")
   return {
-    parent, child, parentMessage, author, text, task: { ...stored, state: stored.state }, work, binding,
+    root, parent, child, parentMessage, author, text, task: { ...stored, state: stored.state }, work, binding,
     input: {
       projectID: parent.projectID, parentSessionID: parent.id, parentMessageID: SessionMessage.ID.make(parentMessage.id),
       parentCallID: task.callID, authorSessionID: child.id, authorMessageID: SessionMessage.ID.make(authorInfo.id),
       logicalTaskID: binding?.taskId ?? "tsk_unbound",
     },
   }
+})
+
+const corruptBinding = Effect.fn("UpstreamProvenanceTest.corruptBinding")(function* (sessionID: SessionID, change: Partial<LogicalTask.Binding>) {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, sessionID)).all().pipe(Effect.orDie)
+  const row = rows.find((event) => event.data.executionSessionID === sessionID && typeof event.data.taskId === "string")
+  if (!row) throw new Error("expected retained logical Task event")
+  yield* database.db.update(EventTable).set({ data: { ...row.data, ...change } }).where(eq(EventTable.id, row.id)).run().pipe(Effect.orDie)
 })
 
 const refusal = Effect.fn("UpstreamProvenanceTest.refusal")(function* (
@@ -147,8 +159,8 @@ const notice = Effect.fn("UpstreamProvenanceTest.notice")(function* (
   return { part, workResult: delivered }
 })
 
-const settled = Effect.fn("UpstreamProvenanceTest.settled")(function* () {
-  const fixture = yield* seed({ background: true })
+const settled = Effect.fn("UpstreamProvenanceTest.settled")(function* (options?: { nested?: boolean }) {
+  const fixture = yield* seed({ ...options, background: true })
   const delivery = yield* notice(fixture)
   const upstreamSettlement = {
     parentMessageID: fixture.input.parentMessageID, parentCallID: fixture.task.callID,
@@ -463,18 +475,6 @@ describe("UpstreamProvenance.observe", () => {
     yield* refusal(unbound.input, "UPSTREAM_ATTRIBUTION_MISSING")
   }))
 
-  it.instance("reconciles expected Project against parent, author, and retained logical Task", () => Effect.gen(function* () {
-    const fixture = yield* seed()
-    yield* refusal({ ...fixture.input, projectID: ProjectID.make("prj_other") }, "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH")
-    const foreign = yield* provideTmpdirInstance(() => seed(), { git: true })
-    expect(foreign.parent.projectID).not.toBe(fixture.parent.projectID)
-    yield* refusal({
-      ...fixture.input, authorSessionID: foreign.child.id, authorMessageID: foreign.input.authorMessageID,
-    }, "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH")
-    const wrongBinding = yield* seed({ binding: { projectID: foreign.parent.projectID } })
-    yield* refusal(wrongBinding.input, "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH")
-  }))
-
   it.instance("rejects forged host metadata for a child owned by another parent", () => Effect.gen(function* () {
     const sessions = yield* Session.Service
     const otherParent = yield* sessions.create({ agent: "maestro", title: "actual foreign authority" })
@@ -523,23 +523,6 @@ describe("UpstreamProvenance.observe", () => {
       }
       yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH")
     }))
-  }))
-
-  it.instance("reconciles retained logical Task identity, member, authority, and host-selected Task", () => Effect.gen(function* () {
-    const sessions = yield* Session.Service
-    const fixture = yield* seed()
-    yield* refusal({ ...fixture.input, logicalTaskID: fixture.child.id }, "UPSTREAM_ATTRIBUTION_TASK_MISMATCH")
-    const other = yield* sessions.create({ agent: "maestro" })
-    yield* Effect.forEach([
-      { taskId: "ses_replacement" }, { memberID: "general" }, { authoritySessionID: other.id },
-    ], (binding) => Effect.gen(function* () {
-      const changed = yield* seed({ binding })
-      yield* refusal(changed.input, "UPSTREAM_ATTRIBUTION_TASK_MISMATCH")
-    }))
-    yield* sessions.updatePart({ ...fixture.task, state: {
-      ...fixture.task.state, metadata: { ...fixture.task.state.metadata, workResult: { ...fixture.task.state.metadata.workResult, taskId: "tsk_other" } },
-    } })
-    yield* refusal(fixture.input, "UPSTREAM_ATTRIBUTION_TASK_MISMATCH")
   }))
 
   it.instance("rejects old native ID in retained Session, author, dispatch, binding, and host result", () => Effect.gen(function* () {
@@ -788,3 +771,5 @@ describe("UpstreamProvenance.observe", () => {
       "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE")).message).toContain("HOLD:")
   }))
 })
+
+export { corruptBinding, it, refusal, seed, settled, upstreamMemberID }

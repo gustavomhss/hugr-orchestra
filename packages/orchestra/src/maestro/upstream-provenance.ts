@@ -15,6 +15,7 @@ import { BackendResult } from "./backend-result"
 import { LogicalTask } from "./logical-task"
 import { roster } from "./roster"
 import { Seats } from "./seats"
+import { SessionAuthority } from "./session-authority"
 import { UpstreamResult } from "./upstream-result"
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("UpstreamAttributionDenied", {
@@ -84,20 +85,20 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   if (parent.projectID !== input.projectID || child.projectID !== input.projectID)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH", message: "Parent and author Sessions must belong to the expected Project" })
   if (child.id === parent.id || child.parentID !== parent.id)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Author Session is not a direct child of the authority Session" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Author Session is not a direct child of the dispatch parent Session" })
   if (child.agent !== agent.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH", message: "Author Session does not belong to native archie" })
 
-  const authority = yield* readMessage(parent.id, input.parentMessageID, "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
-  if (!authority.owned || authority.role !== "assistant" || authority.agent !== "maestro")
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Authority must be an actual owned Maestro assistant" })
-  const calls = authority.tools.filter((call) => call.id === input.parentCallID)
+  const dispatch = yield* readMessage(parent.id, input.parentMessageID, "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH")
+  if (!dispatch.owned || dispatch.role !== "assistant" || dispatch.agent !== "maestro")
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Dispatch parent must be an actual owned Maestro assistant" })
+  const calls = dispatch.tools.filter((call) => call.id === input.parentCallID)
   const call = calls[0]
   if (calls.length !== 1 || !call || call.name !== "task" || call.input?.subagent_type !== agent.id || call.providerExecuted)
-    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Authority must contain one exact native Task dispatch to archie" })
+    return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Dispatch parent must contain one exact native Task dispatch to archie" })
   const initial = record(call.metadata?.workResult)
   const background = call.metadata?.background === true || record(initial?.terminal)?.reason === "running"
-  if (authority.error || authority.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true ||
+  if (dispatch.error || dispatch.finish === "error" || call.status !== "completed" || call.metadata?.interrupted === true ||
     ["failed", "error", "interrupted"].includes(String(record(initial?.terminal)?.reason)))
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE", message: "Parent or Task failed, was interrupted, or has not completed" })
   // Caller-settable synthetic notices, process-local job status, timestamps, and matching bytes cannot establish
@@ -105,7 +106,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   const settlement = background
     ? Option.getOrUndefined(decodeSettlement(call.metadata?.upstreamSettlement, { onExcessProperty: "error" }))
     : undefined
-  if (background && (!settlement || settlement.parentMessageID !== authority.id || settlement.parentCallID !== call.id))
+  if (background && (!settlement || settlement.parentMessageID !== dispatch.id || settlement.parentCallID !== call.id))
     return yield* new Denied({
       code: "UPSTREAM_ATTRIBUTION_PROPOSAL_UNAVAILABLE",
       message: "HOLD: background attribution requires exact host Task settlement and a referenced durable delivery",
@@ -116,13 +117,23 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   if (!call.metadata || call.metadata.parentSessionId !== parent.id || call.metadata.sessionId !== child.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH", message: "Host Task placement does not match the parent and author Sessions" })
 
-  const logical = yield* LogicalTask.read(child.id)
+  // Logical authority scopes the stored Session tree; dispatch and delivery anchors stay with the immediate parent.
+  const authority = yield* SessionAuthority.make((id) => sessions.get(id))(parent.id, input.projectID).pipe(
+    Effect.mapError((error) => new Denied({ code: "UPSTREAM_ATTRIBUTION_TASK_MISMATCH", message: `Stored parent ancestry is invalid: ${error.reason}` })),
+  )
+  const logical = yield* LogicalTask.read(child.id).pipe(
+    // Parent ancestry and both endpoint Projects already match. This reason therefore identifies a foreign binding Project.
+    Effect.mapError((error) => new Denied({
+      code: error.reason === "session-project-mismatch" ? "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH" : "UPSTREAM_ATTRIBUTION_TASK_MISMATCH",
+      message: error.message,
+    })),
+  )
   if (!logical) return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_MISSING", message: "Retained logical Task binding is missing" })
   if (logical.projectID !== input.projectID)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_PROJECT_MISMATCH", message: "Retained logical Task belongs to another Project" })
   // The binding has already passed LogicalTask admission. Do not redeclare its user-named Task grammar.
   if (logical.taskId.startsWith("ses_") || logical.taskId === child.id || logical.taskId !== input.logicalTaskID ||
-    logical.executionSessionID !== child.id || logical.authoritySessionID !== parent.id || logical.memberID !== agent.id)
+    logical.executionSessionID !== child.id || logical.authoritySessionID !== authority.rootID || logical.memberID !== agent.id)
     return yield* new Denied({ code: "UPSTREAM_ATTRIBUTION_TASK_MISMATCH", message: "Retained logical Task identity, execution, member, or authority does not match" })
 
   const author = yield* readMessage(child.id, input.authorMessageID, "UPSTREAM_ATTRIBUTION_AUTHOR_MISMATCH")
@@ -143,7 +154,7 @@ export const observe = Effect.fn("UpstreamProvenance.observe")(function* (
   return decodeAttribution({
     schema: "maestro-upstream-attribution-v1", projectID: parent.projectID, memberID: agent.id, profile: seat.profileKey,
     authorSessionID: child.id, authorMessageID: author.id, parentSessionID: parent.id,
-    parentMessageID: authority.id, parentCallID: call.id, logicalTaskID: logical.taskId,
+    parentMessageID: dispatch.id, parentCallID: call.id, logicalTaskID: logical.taskId,
   })
 })
 
