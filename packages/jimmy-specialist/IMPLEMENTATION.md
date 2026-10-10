@@ -1,5 +1,41 @@
 # Discovery integration evidence
 
+## CURRENT — final evidence checkpoint, 2026-10-10
+
+**Feature implemented; completed scoped mechanical checks passed within their reach. Qualification failed; release acceptance blocked.** Final source: `7f00a8bb6a035ed05405d0188b449aeab2a9060f`. Its delta from `d94ccae525` is three localized browser-test line replacements, not a feature-code change. Run evidence below belongs to each tested snapshot, not automatically to this final source. [HANDOFF.md](HANDOFF.md) contains two pending final lead rows.
+
+### Completed scoped mechanical evidence
+
+| Scope | Actual run | Measured reach |
+| --- | --- | --- |
+| Repaired consolidated native controls | [38015590391](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38015590391) | 126 passed on each of Linux, Windows and macOS |
+| Core controls | [38024639488](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38024639488) | 22 passed on each of Linux, Windows and macOS |
+| App locale parity | [38025246533](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025246533) | 5 passed on each of Linux and Windows |
+| Client controls | [38025246237](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025246237) | 13 passed on each of Linux, Windows and macOS |
+| Codegen controls | [38014205713](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38014205713) | 67 passed on Linux; old-producer detecting control [38013811655](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38013811655) retained seven failures |
+| Permission/deadline controls | [38023867171](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38023867171) | 41 passed on each of Linux and Windows; detecting mutant [38023900771](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38023900771) remains separate evidence |
+| Bounded-log production desktop proof | [38025429218](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38025429218) | Linux: 3 passed, actual guard proof, typecheck and cleanup controls. Whole Linux/Windows workflow RED because Windows proof is unsupported; no Windows qualification credit |
+
+The final macOS desktop proof and post-localization production Chromium 28-case lane were RUNNING at handoff. No pass is claimed; lead replaces only the pending markers after actual completed evidence.
+
+### Latest full main and prior ancillary lanes
+
+Latest full main [38026385329](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38026385329) remains **RED: 11 successful jobs, one failed**. Production E2E: 468 passed, one failed, one skipped. The sole failure expected English fallback after Arabic research labels were translated; `7f00a8bb6a` changes those three test lines. This source fix has no completed final-run claim here.
+
+The full HTTP CLI executed coverage, auth and effect modes: **271 scenarios / 233 routes in each mode, zero failures, missing cases or skips**. All 13 research scenarios passed in every mode. Coverage proves registration/completeness, not request execution; auth and effect retain their distinct runtime reach. Full-main platform skips and environment-gated omissions remain recorded in external `jimmy-epic-proof/EPIC-CONFIRMATION.md`, including its append for `38026385329`; all earlier RED checkpoints are preserved.
+
+Prior native [38022081085](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022081085), typecheck [38022083326](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022083326), Storybook [38022088731](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022088731) and Nix [38022093645](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38022093645) passed on their exact prior source. They were not rerun on the final source. Nix evaluated required outputs/devShells for four systems; optional desktop attributes warned. Evaluation is not a desktop build or feature claim.
+
+### Study and performance outcome
+
+Original v15 candidate `4df291b7e832385257eca092a475bb1db6d3082f`: **37 pass / 5 fail / 42**; baseline: **30 pass / 9 fail / 3 unsupported / 42**. All 84 original trials and grades remain preserved. Candidate-only confirmation `f8e276c20dc292369f9cf8958e4b3e1f049f4462`, loaded roster/worker hash `9a00703e9ba953b12ae6bb03d5f5ce47dff0c1b7b63997a0b23183c6e97fb912`: **35 pass / 7 fail / 42** after v18 saved-output reconciliation. All 38 native returns have valid cold grades; no new native task was rerun. Three completed-parent publication defects remain (R05 rep3 provenance; R08 rep1/rep2 applicability), plus four overall-budget missing-native failures, one each in R11–R14. Original grades and inconclusive records remain intact. Public evidence: external `jimmy-study-lane/packages/jimmy-specialist/STUDY-CONFIRMATION.md`, v17/v18. No superiority claim.
+
+[BASELINE-BENCHMARK.md](BASELINE-BENCHMARK.md) records candidate median common-stream completion **1.410× slower**, descriptively: 319724.9 ms versus 226821 ms. Hosted-machine equivalence and the candidate installed dependency graph are unknown. Research rendering/opening is candidate-only; no method speedup is established. Billing, billed/total native tokens and raw-read bytes remain unknown.
+
+Historical paragraphs below preserve dated evidence and original failures. Their then-pending plans are superseded by this checkpoint and the blocked handoff, not instructions for another audit or model-test wave.
+
+## Historical integration checkpoints
+
 Status: committed integration checkpoint, 2026-10-09. This is not release acceptance or evidence of research quality. The final charter, independent audition and complete target-runtime qualification remain open. Current closure ownership and verification cadence are in [DELIVERY.md](DELIVERY.md).
 
 Implementation baseline: `73651a0e69a2912d9244dbb73e985c5828c03058`, branch `jimmy-discovery`. Initial implementation checkpoint: `6b5a831c0cbd915f8855f438fce39150a85fdf32`. Follow-up runtime, consumer and evaluation-preparation commits are integrated on that branch. Planning contracts live in the owner's planning checkout at `specs/jimmy-specialist/`.

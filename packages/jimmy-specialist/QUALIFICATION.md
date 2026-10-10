@@ -1,5 +1,20 @@
 # Current qualification map
 
+## CURRENT — acceptance blocked, 2026-10-10
+
+**Qualification remains failed.** Implementation and measured mechanical controls do not establish semantic answer closure. [HANDOFF.md](HANDOFF.md) gives the final decision; [IMPLEMENTATION.md](IMPLEMENTATION.md#current--final-evidence-checkpoint-2026-10-10) records exact scoped and full-main reach. The native/Atlas tables below preserve the historical control map, not an all-cases pass ledger.
+
+| Study | Frozen candidate | Scheduled outcomes | Interpretation |
+| --- | --- | --- | --- |
+| Original paired v15 | `4df291b7e832385257eca092a475bb1db6d3082f` | Candidate: 37 pass, 5 fail / 42; baseline: 30 pass, 9 fail, 3 unsupported / 42 | All 84 original trials and grades preserved; no superiority claim |
+| Candidate-only v17, reconciled v18 | `f8e276c20dc292369f9cf8958e4b3e1f049f4462` | 35 pass, 7 fail / 42 | All 38 saved native returns have valid cold grades: 35 pass, 3 closure failures; four slots lack native evaluation |
+
+Three publication failures remain: R05 rep3 loses the declared-versus-verified provenance boundary; R08 rep1 and rep2 lose material applicability qualification. Sources were read/reopened and references checked; these are completed-parent publication defects, not demonstrated missing-read or schema rejection failures. Four missing-native slots, one each in R11–R14, failed within the overall budget. Original grades and v17 inconclusive records remain retained; v18 appends saved-output assessments without native reruns or best-of selection. Public confirmation: external `jimmy-study-lane/packages/jimmy-specialist/STUDY-CONFIRMATION.md`, v17 plus v18.
+
+The actual production benchmark reports candidate median common-stream completion **1.410× slower**, descriptively. Machine equivalence and the candidate installed dependency graph are unknown; this is not a method speedup claim. Billing, billed/total native tokens and raw-read bytes remain unknown. General qualifier/provenance preservation through publication and handoff is the next fix; private expected answers are not implementation inputs. Two final lead runs remain pending in HANDOFF.md. Closing them cannot erase the failed study or turn the last full-main RED into a full-suite pass.
+
+## Historical control map
+
 This map reconciles the governing `specs/jimmy-specialist/audition.md` with executable controls. It is not a new acceptance specification or a pass ledger. CI evidence belongs to the exact tested revisions listed in `IMPLEMENTATION.md`; control authorship, execution and detecting mutation are separate states.
 
 Update: consolidated remote gates have now executed. Exact successful and failed runs are recorded under `IMPLEMENTATION.md` → Remote mechanical closure checks. Authored controls below retain their original scope map; a listed remaining qualification is not erased by an unrelated green. Detecting mutations, independent model execution and full epic/Electron acceptance remain open.
@@ -48,12 +63,12 @@ Paths are relative to `packages/`. A listed file means the assertion exists, not
 ## Integration and research
 
 - Browser controls use the actual timeline component and generated artifact request path, with native fetch cancellation. V2 REST structured Task metadata and canonical native success-event adaptation are included. E2E typecheck now includes these controls and their reused performance helpers.
-- The production benchmark reuses the common streaming workload across baseline/candidate. Original baseline has no research renderer; render/open measurements are candidate-only and are not a comparative speed claim. Execution remains serial and unmeasured.
-- R14 now has an executable native interruption/resume collector, not an executed quality result. It requires evaluator-owned ready inputs, the real pinned scanner, applicable Atlas/semantic setup and an external process deadline. It reports timeout, unavailable source, reference change and restoration failure separately.
+- The production benchmark reuses the common streaming workload across baseline/candidate. Original baseline has no research renderer; render/open measurements are candidate-only. Both sets of three repetitions executed; [BASELINE-BENCHMARK.md](BASELINE-BENCHMARK.md) records the descriptive 1.410× candidate/original completion ratio and comparability limits.
+- R14's native interruption/resume collector was authored at the preparation checkpoint and subsequently executed in the study. Confirmation now retains two passing R14 assessments and one missing-native failure. Its setup still requires evaluator-owned inputs, the pinned scanner, applicable Atlas/semantic services and an external process deadline; timeout, unavailable source, reference change and restoration failure remain distinct.
 - Source export authenticates R14 file citations/checkpoint sources against the frozen original bytes and retained received-byte provenance. Other pilot documents are admission/digest-checked; their citation entailment and source applicability still require independent graders. Unsupported partial received UTF-8 text remains unavailable to the textual exporter.
-- All R01–R14 paired repetitions, evaluator-calibrated controls, comparator behavior and final-prompt identity remain final acceptance work. Optional setup support is not proof that a scenario is provisioned.
+- The original 84 paired trials and later 42 candidate-only slots now have the outcomes above. Their preserved failures keep acceptance blocked. Optional setup support is not proof that a scenario is provisioned.
 
-## Closure sequence
+## Historical closure sequence (superseded by current handoff)
 
 1. Finish the specifically uncovered native/Atlas/desktop cases above and evaluator setup in parallel.
 2. Freeze capability-accurate prompt and candidate build identity after the mechanical review; preserve behavior-hash history.

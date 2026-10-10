@@ -1,5 +1,13 @@
 # Jimmy delivery closure
 
+## CURRENT — final handoff, 2026-10-10
+
+**Feature implemented; completed scoped mechanical checks passed within their stated reach. Qualification failed; release acceptance is blocked.** Source is `7f00a8bb6a035ed05405d0188b449aeab2a9060f`; its last delta changes three browser-test lines. The latest full main run remains RED. See [HANDOFF.md](HANDOFF.md) for the decision, exact evidence and two pending lead-run markers, and [IMPLEMENTATION.md](IMPLEMENTATION.md#current--final-evidence-checkpoint-2026-10-10) for measured scope.
+
+The original v15 study retains all 84 trials and grades. Candidate-only v17/v18 confirmation is 35 passed / 7 failed across 42 scheduled slots; saved-output grading reconciliation did not rerun native tasks. No superiority or release-ready claim follows. Historical preparation plans and pending statements below describe their dated checkpoints, not new scheduling instructions. Finish this delivery with an honest blocked handoff; the next product fix is general qualifier/provenance preservation through publication and parent handoff. No new model tests are scheduled by this document.
+
+## Historical delivery checkpoints
+
 ## Owner instruction
 
 > beleza. testes pesados so vamos rodar no final. Organiza a casa, para de ficar repetindo bun typecheck a cada meia duzia de passos, e paraleliza o maximo possivel do trabalho. Pode commitar tambem
@@ -30,8 +38,8 @@ All three execution packages are independent under the frozen contract. The lead
 ## Remaining acceptance work
 
 - The compiled Bun/Node native Task/provider/Client/HTTP proof now passed on Linux, Windows and macOS arm64; actual desktop Electron and epic acceptance remain separate.
-- The system prompt is provisional until the closure review completes.
-- R01/R08 are provisional single pilots; paired R01–R14 repetitions are not complete. The R14 collector is implemented but still requires evaluator-owned scenario/setup and actual execution.
+- At this preparation checkpoint, the system prompt was provisional until closure review.
+- At this preparation checkpoint, R01/R08 were provisional single pilots and paired R01–R14 repetitions were incomplete. The current study outcome is recorded above and in HANDOFF.md.
 - [QUALIFICATION.md](QUALIFICATION.md) maps every named native/Atlas case to current controls and remaining execution gaps. Desktop runtime reach, UI accessibility/direction/locale and production benchmark evidence remain pending.
 - Final generated consumers, cold integration review and consolidated gates remain pending.
 
@@ -77,4 +85,4 @@ bun run test:ci app e2e/regression/session-research-result.spec.ts --runner play
 bun run test:ci app e2e/performance/timeline/session-research-benchmark.spec.ts --runner playwright --config e2e/performance/playwright.config.ts --benchmark-renderer current --os linux
 ```
 
-Next closure work: finalize the capability-accurate charter/source identity; complete independent calibrated model execution and comparator scope; run detecting mutations and outstanding platform/epic checks. Preserve every prior scheduled failure and unknown usage value.
+Historical next-work plan: finalize the capability-accurate charter/source identity; complete independent calibrated model execution and comparator scope; run detecting mutations and outstanding platform/epic checks. Current handoff supersedes this schedule. Preserve every prior scheduled failure and unknown usage value.
