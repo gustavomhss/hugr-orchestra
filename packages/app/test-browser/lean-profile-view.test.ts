@@ -68,7 +68,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
     const data = info()
     const screen = mount({ data })
     try {
-      expect(screen.host.querySelector('[data-mx-page="orchestra-lean"]')).not.toBeNull()
+      expect(!!screen.host.querySelector('[data-mx-page="orchestra-lean"]')).toBe(true)
       expect(screen.host.querySelector("h1")?.textContent).toBe("Lean")
       expect(screen.host.textContent).toContain("Profile one")
       expect(screen.host.querySelectorAll("[data-lean-item]")).toHaveLength(32)
@@ -184,15 +184,15 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
       screen.open("cargo")
       screen.set("profileName", "Profile two")
       screen.set("data", info("profile-two"))
-      expect(screen.host.querySelector(".lean-detail")).toBeNull()
+      expect(!!screen.host.querySelector(".lean-detail")).toBe(false)
       expect(screen.host.textContent).toContain("Profile two")
       screen.open("cargo")
-      expect(screen.host.querySelector("[data-lean-execution]")).toBeNull()
+      expect(!!screen.host.querySelector("[data-lean-execution]")).toBe(false)
       expect(screen.host.textContent).toContain("Execution history is unavailable for this item.")
       screen.set("history", history(info("profile-two")))
-      expect(screen.host.querySelector("[data-lean-execution]")).not.toBeNull()
+      expect(!!screen.host.querySelector("[data-lean-execution]")).toBe(true)
       screen.set("history", { ...history(info("profile-two")), itemID: "pytest" })
-      expect(screen.host.querySelector("[data-lean-execution]")).toBeNull()
+      expect(!!screen.host.querySelector("[data-lean-execution]")).toBe(false)
     } finally {
       screen.close()
     }
@@ -203,7 +203,7 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
     try {
       for (const metric of ["bytes", "tokens"])
         expect(screen.host.querySelector(`[data-lean-total="${metric}"]`)?.textContent).toBe("Loading…")
-      expect(screen.host.querySelector('[role="switch"]')).toBeNull()
+      expect(!!screen.host.querySelector('[role="switch"]')).toBe(false)
       screen.set("loading", false)
       screen.set("error", "Backend capability unavailable")
       expect(screen.host.querySelector('[role="alert"]')?.textContent).toBe("Backend capability unavailable")
