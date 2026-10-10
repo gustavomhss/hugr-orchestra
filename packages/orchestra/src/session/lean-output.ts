@@ -78,7 +78,7 @@ function identify(input: Input<LegacyLeanCapture.Output>): { itemID?: LeanCovera
     // Host passes the actual post-before-hook invocation, including unsuccessful native calls.
     const command = input.command ?? input.binding?.candidate.observation.command
     if (typeof command !== "string") return {}
-    if (command.length > 65536) return { failed: true }
+    if (command.length === 0 || command.length > 65536) return { failed: true }
     const itemID = LeanProcessor.identify(command)
     return { itemID: LeanCoverage.ids.find((id) => id === itemID) }
   } catch {

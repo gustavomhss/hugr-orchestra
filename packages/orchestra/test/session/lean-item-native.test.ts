@@ -5,7 +5,6 @@ import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { LeanEngine } from "@orchestra/schema/lean-engine"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { InstanceRef } from "../../src/effect/instance-ref"
 import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
@@ -17,14 +16,13 @@ import { testEffect } from "../lib/effect"
 import { makeHttp } from "./prompt.fixture"
 
 const it = testEffect(makeHttp())
-const preferencesLayer = LayerNode.compile(LayerNode.group([FSUtil.node, Global.node]))
 
 function native(enabled: boolean) {
   return Effect.gen(function* () {
     const instance = yield* InstanceRef
     if (!instance) throw new Error("Native instance missing")
     const owner = { projectID: instance.project.id, directory: instance.directory }
-    const prefs = yield* LeanProfilePreferences.update(owner, { itemID: "go", enabled }).pipe(Effect.provide(preferencesLayer))
+    const prefs = yield* LeanProfilePreferences.update(owner, { itemID: "go", enabled })
     expect(prefs.scope.projectID).toBe(owner.projectID)
     expect(prefs.scope.directory).toBe(owner.directory)
     const llm = yield* TestLLMServer
@@ -69,15 +67,20 @@ it.live("same Project ID, different profile directories keep independent native 
   // Non-Git instances deliberately share the global project ID; directories still partition controls.
   const firstDirectory = yield* tmpdirScoped()
   const secondDirectory = yield* tmpdirScoped()
-  const first = yield* native(false).pipe(provideInstance(firstDirectory))
-  const second = yield* native(true).pipe(provideInstance(secondDirectory))
-  expect(first.owner.projectID).toBe(second.owner.projectID)
-  expect(first.owner.directory).not.toBe(second.owner.directory)
-  expect(first.scope.profileID).not.toBe(second.scope.profileID)
-  const a = yield* LeanProfilePreferences.read(first.owner).pipe(Effect.provide(preferencesLayer))
-  const b = yield* LeanProfilePreferences.read(second.owner).pipe(Effect.provide(preferencesLayer))
-  expect(a.items.go).toBe(false)
-  expect(b.items.go).toBe(true)
+  const global = Global.make({ data: path.join(firstDirectory, "private"), state: path.join(firstDirectory, "state") })
+  yield* Effect.gen(function* () {
+    const first = yield* native(false).pipe(provideInstance(firstDirectory))
+    const second = yield* native(true).pipe(provideInstance(secondDirectory))
+    expect(first.owner.projectID).toBe(second.owner.projectID)
+    expect(first.owner.directory).not.toBe(second.owner.directory)
+    expect(first.scope.profileID).not.toBe(second.scope.profileID)
+    const a = yield* LeanProfilePreferences.read(first.owner)
+    const b = yield* LeanProfilePreferences.read(second.owner)
+    expect(a.items.go).toBe(false)
+    expect(b.items.go).toBe(true)
+    const fs = yield* FSUtil.Service
+    expect(yield* fs.exists(path.join(global.data, "lean", "profiles", `${a.scope.profileID}.json`))).toBe(true)
+  }).pipe(Effect.provideService(Global.Service, global))
 }).pipe(Effect.provide(testInstanceStoreLayer)), 180_000)
 
 test("full native Orchestra types require real processor checkpoint", async () => {
