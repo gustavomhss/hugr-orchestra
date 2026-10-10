@@ -1,0 +1,11 @@
+{
+  "id": "C-IO-01.lines",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "out=one\\r\\ntwo\\n\\nthree"], "as": "a"},
+    {"read": "a", "lines": true, "until": "end", "expect": {"stdout": "one\ntwo\n\nthree\n", "pieces": {"stdout": [{"bytes": 3, "continues": false}, {"bytes": 3, "continues": false}, {"bytes": 0, "continues": false}, {"bytes": 5, "continues": false}], "stderr": []}, "chunks": 4, "continues": 0, "lostBefore": 0}},
+    {"spawn": ["${FIXTURE}", "ready", "cat", "out=x", "err=x", "repeat=stdout:600000:é", "repeat=stderr:600000:é", "out=\\nEND\\n", "err=\\nEND\\n"], "options": {"stdin": "pipe"}, "as": "b"},
+    {"read": "b", "lines": true, "until": {"match": "^READY$"}},
+    {"write": "b"},
+    {"read": "b", "lines": true, "until": {"match": "^END$", "count": 2}, "expect": {"stdout": {"regex": "^xé+\nEND\n$"}, "stderr": {"regex": "^xé+\nEND\n$"}, "pieces": {"stdout": [{"bytes": 1048575, "continues": true}, {"bytes": 151426, "continues": false}, {"bytes": 3, "continues": false}], "stderr": [{"bytes": 1048575, "continues": true}, {"bytes": 151426, "continues": false}, {"bytes": 3, "continues": false}]}, "chunks": 6, "continues": 2, "lostBefore": 0, "droppedBytes": {"stdout": 0, "stderr": 0}}}
+  ]
+}

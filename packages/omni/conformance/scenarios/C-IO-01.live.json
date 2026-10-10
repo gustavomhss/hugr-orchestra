@@ -1,0 +1,10 @@
+{
+  "id": "C-IO-01.live",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "out=OUT-1\\n", "err=ERR-1\\n", "read-line", "out=OUT-2\\n", "err=ERR-2\\n"], "options": {"stdin": "pipe"}, "as": "c"},
+    {"read": "c", "until": {"match": "^(OUT|ERR)-1$", "count": 2}, "expect": {"stdout": "OUT-1\n", "stderr": "ERR-1\n"}},
+    {"write": "c", "data": "go\n"},
+    {"read": "c", "until": "end", "expect": {"stdout": "GOT go\nOUT-2\n", "stderr": "ERR-2\n"}},
+    {"wait": "c", "expect": {"exitCode": 0, "reason": "exit"}}
+  ]
+}

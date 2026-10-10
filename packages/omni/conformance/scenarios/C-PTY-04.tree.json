@@ -1,0 +1,9 @@
+{
+  "id": "C-PTY-04.tree",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "ignore-term", "tree=2:resist", "ready", "hang"], "options": {"pty": true}, "as": "c"},
+    {"read": "c", "until": {"match": "(READY|PID \\d \\d+)", "count": 3}, "capture": {"d": "PID \\d (\\d+)"}},
+    {"stop": "c", "graceMs": 1000, "expect": {"reason": "killed", "elapsedMs": {"lt": 2000}}},
+    {"os": "dead", "pids": ["${c.pid}", "${d}"]}
+  ]
+}

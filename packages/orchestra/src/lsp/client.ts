@@ -134,6 +134,21 @@ export async function create(input: {
     new StreamMessageWriter(input.server.process.stdin as any),
   )
   input.server.process.stderr?.resume()
+  const state = { connected: true, shutdown: undefined as Promise<void> | undefined }
+  connection.onClose(() => {
+    state.connected = false
+  })
+  connection.onDispose(() => {
+    state.connected = false
+  })
+  void input.server.process.exited?.then(
+    () => {
+      state.connected = false
+    },
+    () => {
+      state.connected = false
+    },
+  )
   // --- Connection state ---
 
   const pushDiagnostics = new Map<string, Diagnostic[]>()
@@ -544,6 +559,9 @@ export async function create(input: {
 
   const result = {
     root: input.root,
+    get connected() {
+      return state.connected && input.server.process.exitCode === null && input.server.process.signalCode === null
+    },
     get serverID() {
       return input.serverID
     },
@@ -637,10 +655,14 @@ export async function create(input: {
       }
       await waitForFullDiagnostics({ path: normalizedPath, version: request.version, after: request.after })
     },
-    async shutdown() {
-      connection.end()
-      connection.dispose()
-      await Process.stop(input.server.process)
+    shutdown() {
+      state.shutdown ??= (async () => {
+        state.connected = false
+        connection.end()
+        connection.dispose()
+        await Process.stop(input.server.process)
+      })()
+      return state.shutdown
     },
   }
 

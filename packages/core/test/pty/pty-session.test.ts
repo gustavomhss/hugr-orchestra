@@ -4,6 +4,7 @@ import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
+import { omniSpawner } from "@orchestra/core/flag/flag"
 import { Location } from "@orchestra/core/location"
 import { Pty } from "@orchestra/core/pty"
 import type { PtyID } from "@orchestra/core/pty/schema"
@@ -25,6 +26,9 @@ const it = testEffect(
   ]),
 )
 const ptyTest = process.platform === "win32" ? it.live.skip : it.live
+// Tests that hold the legacy backend's first read (bun-pty/node-pty) only mean something when that backend runs;
+// omni's terminal claims its output at spawn (test/pty/omni.test.ts covers that race for it).
+const legacyPtyTest = omniSpawner(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) === "off" ? ptyTest : it.live.skip
 
 const subscribePtyEvents = Effect.fn("PtySessionTest.subscribePtyEvents")(function* () {
   const source = yield* EventV2.Service
@@ -169,7 +173,7 @@ describe("pty", () => {
     30000,
   )
 
-  ptyTest("reports the exit of a command that ends before its PTY is first read", () =>
+  legacyPtyTest("reports the exit of a command that ends before its PTY is first read", () =>
     Effect.gen(function* () {
       const hold = yield* holdFirstReadUntilExit
       const pty = yield* Pty.Service

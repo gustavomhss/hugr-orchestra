@@ -74,6 +74,7 @@ import { Agent } from "../agent/agent"
 import { Skill } from "../skill"
 import { Permission } from "@/permission"
 import { BackgroundJob } from "@/background/job"
+import { BackgroundProcess } from "@/background/process"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
@@ -734,6 +735,7 @@ export const node = LayerNode.make({
     Session.node,
     SessionStore.node,
     BackgroundJob.node,
+    BackgroundProcess.node,
     Provider.node,
     LSP.node,
     Instruction.node,

@@ -621,6 +621,8 @@ type Endpoint15_1Input = {
   readonly cwd?: Endpoint15_1Request["payload"]["cwd"]
   readonly title?: Endpoint15_1Request["payload"]["title"]
   readonly env?: Endpoint15_1Request["payload"]["env"]
+  readonly cols?: Endpoint15_1Request["payload"]["cols"]
+  readonly rows?: Endpoint15_1Request["payload"]["rows"]
 }
 const Endpoint15_1 = (raw: RawClient["server.pty"]) => (input?: Endpoint15_1Input) =>
   raw["pty.create"]({
@@ -631,6 +633,8 @@ const Endpoint15_1 = (raw: RawClient["server.pty"]) => (input?: Endpoint15_1Inpu
       cwd: input?.["cwd"],
       title: input?.["title"],
       env: input?.["env"],
+      cols: input?.["cols"],
+      rows: input?.["rows"],
     },
   }).pipe(Effect.mapError(mapClientError))
 

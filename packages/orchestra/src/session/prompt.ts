@@ -1435,10 +1435,10 @@ const layer = Layer.effect(
       if (shellMatches.length > 0) {
         const cfg = yield* config.get()
         const sh = Shell.preferred(cfg.shell)
-        const results = yield* Effect.promise(() =>
-          Promise.all(
-            shellMatches.map(async ([, cmd]) => (await Process.text([cmd], { shell: sh, nothrow: true })).text),
-          ),
+        // `!` commands stop with the prompt, and none runs past 120 s (O3).
+        const opts = { shell: sh, nothrow: true, deadline: 120_000 }
+        const results = yield* Effect.promise((abort) =>
+          Promise.all(shellMatches.map(async ([, cmd]) => (await Process.text([cmd], { ...opts, abort })).text)),
         )
         let index = 0
         template = template.replace(bashRegex, () => results[index++])

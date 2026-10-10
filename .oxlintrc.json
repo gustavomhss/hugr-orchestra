@@ -47,5 +47,13 @@
   "options": {
     "typeAware": true
   },
-  "ignorePatterns": ["**/node_modules", "**/dist", "**/.build", "**/*.d.ts", "**/sdk.gen.ts"]
+  "ignorePatterns": [
+    "**/node_modules",
+    "**/dist",
+    "**/.build",
+    "**/*.d.ts",
+    "**/sdk.gen.ts",
+    // hugr-omni keeps its own gate (packages/omni/scripts/ci.mjs).
+    "packages/omni/**"
+  ]
 }

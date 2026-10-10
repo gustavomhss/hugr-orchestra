@@ -165,7 +165,8 @@ async function bundle(dir: string, target: "bun" | "node", files: Record<string,
           const target = path.join(e.parentPath, e.name);
           return [path.relative(root, target).split(path.sep).join("/"), await fs.readFile(target, "utf8")];
         })));
-        console.log(JSON.stringify({ root, files }));
+        // Await the complete pipe write before natural exit; the production map can exceed one buffered chunk.
+        await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ root, files }), error => error ? reject(error) : resolve(undefined)));
       `,
     },
     external: Object.hasOwn(files, moduleName) ? [] : [moduleName],

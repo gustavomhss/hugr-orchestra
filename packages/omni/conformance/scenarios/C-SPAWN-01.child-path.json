@@ -1,0 +1,8 @@
+{
+  "id": "C-SPAWN-01.child-path",
+  "steps": [
+    {"spawn": ["${FIXTURE}", "copy-self=${TMP}/bin/omni-tool${EXE}"], "as": "copy"},
+    {"wait": "copy", "expect": {"exitCode": 0}},
+    {"run": ["omni-tool", "out=TOOL\\n"], "timeoutMs": 30000, "options": {"env": {"PATH": "${TMP}/bin"}}, "expect": {"exitCode": 0, "stdout": "TOOL\n"}}
+  ]
+}
