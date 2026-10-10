@@ -1,7 +1,7 @@
 # Native distribution checkpoint — UNVALIDATED
 
 <!-- NIX_BATCH_REQUEST_BEGIN -->
-{"ready": false, "phase": "measure", "sourceParent": "92d41e6de02697519e38c0a620d6acac13fa933d", "measurementRun": null, "measurementAttempt": null}
+{"ready": true, "phase": "measure", "sourceParent": "aa00d7b33f1de57a8bc05e268735463a494669a0", "measurementRun": null, "measurementAttempt": null}
 <!-- NIX_BATCH_REQUEST_END -->
 
 Consumer run `38055863264` on `92d41e6de02697519e38c0a620d6acac13fa933d` completed
