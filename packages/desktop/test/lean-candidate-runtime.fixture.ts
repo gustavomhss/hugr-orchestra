@@ -6,6 +6,9 @@ import type { ElectronApplication, Page } from "@playwright/test"
 import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
 import { appID, desktop, productName } from "./lean-candidate-archive.fixture"
 
+const appRequire = createRequire(path.resolve(desktop, "../app/package.json"))
+export const expect = (appRequire("@playwright/test") as typeof import("@playwright/test")).expect
+
 export async function bounded<T>(label: string, task: Promise<T>, ms = 30000): Promise<T> {
   const timeout = Promise.withResolvers<never>()
   const timer = setTimeout(() => timeout.reject(new Error(`${label} timed out after ${ms} ms`)), ms)
@@ -47,8 +50,7 @@ export async function portClosed(url: string) {
 export async function launchCandidate(executable: string, root: string, errors: unknown[]) {
   assert.ok(path.isAbsolute(root), "Candidate ROOT must be absolute")
   // Resolve the installed Playwright through the package that declares it. Never attach to a user app.
-  const require = createRequire(path.resolve(desktop, "../app/package.json"))
-  const { _electron } = require("@playwright/test") as typeof import("@playwright/test")
+  const { _electron } = appRequire("@playwright/test") as typeof import("@playwright/test")
   const env = Object.fromEntries(["PATH", "LANG", "LC_ALL", "GOROOT", "RUSTUP_HOME"].flatMap((key) =>
     process.env[key] === undefined ? [] : [[key, process.env[key]!]]))
   const application: ElectronApplication = await _electron.launch({ executablePath: executable, timeout: 60000,
@@ -80,6 +82,7 @@ export async function launchCandidate(executable: string, root: string, errors: 
     state.page = page
     page.setDefaultTimeout(30000)
     page.setDefaultNavigationTimeout(30000)
+    await page.waitForURL((url) => url.protocol === "oc:" && url.hostname === "renderer", { timeout: 60000 })
     page.on("pageerror", (error) => { errors.push(error); diagnostics.push(`renderer error: ${error.stack}`) })
     page.on("console", (message) => { if (message.type() === "error") diagnostics.push(`renderer console: ${message.text()}`) })
     assert.ok(page.url().startsWith("oc://renderer/"), `Unexpected packaged renderer URL: ${page.url()}`)
