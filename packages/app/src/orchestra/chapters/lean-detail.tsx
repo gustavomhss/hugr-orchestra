@@ -30,7 +30,13 @@ export function LeanDetail(props: LeanViewProps & { itemID: LeanCoverage.ItemID;
         </button>
       </header>
       <Show when={LeanCoverage.items.find((item) => item.id === props.itemID)?.mode === "preserve"}>
-        <p class="lean-notice">{language.t("lean.page.preserveNote")}</p>
+        <p class="lean-notice">
+          {language.t(
+            props.itemID === "jest" || props.itemID === "vitest"
+              ? "lean.page.plaintextPreserveNote"
+              : "lean.page.preserveNote",
+          )}
+        </p>
       </Show>
       <Show when={props.historyError}>
         <p class="mx-error" role="alert">
@@ -100,11 +106,25 @@ export function LeanDetail(props: LeanViewProps & { itemID: LeanCoverage.ItemID;
                       <dl class="lean-execution-savings">
                         <div>
                           <dt>{language.t("lean.page.bytes")}</dt>
-                          <dd data-lean-value="bytes">{number(execution.bytesSaved)}</dd>
+                          <dd
+                            data-lean-value="bytes"
+                            data-tone={
+                              execution.bytesSaved !== null && execution.bytesSaved < 0 ? "negative" : undefined
+                            }
+                          >
+                            {number(execution.bytesSaved)}
+                          </dd>
                         </div>
                         <div>
                           <dt>{language.t("lean.page.tokens")}</dt>
-                          <dd data-lean-value="tokens">{number(execution.tokensSaved)}</dd>
+                          <dd
+                            data-lean-value="tokens"
+                            data-tone={
+                              execution.tokensSaved !== null && execution.tokensSaved < 0 ? "negative" : undefined
+                            }
+                          >
+                            {number(execution.tokensSaved)}
+                          </dd>
                         </div>
                       </dl>
                     </li>

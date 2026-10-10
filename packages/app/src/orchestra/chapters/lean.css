@@ -10,10 +10,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 28px;
+  gap: 32px;
   margin: 0;
   padding: 24px;
   color: var(--mx-strong);
+  background: linear-gradient(135deg, var(--mx-raised), var(--mx-soft));
 }
 .lean-summary dt {
   color: var(--mx-dim);
@@ -28,6 +29,10 @@
 .lean-count dd {
   font-family: var(--mx-emphasis);
   font-size: 18px;
+}
+.lean-count {
+  padding-inline-start: 22px;
+  border-inline-start: 1px solid var(--mx-line);
 }
 .lean-caption p {
   margin: 0;
@@ -108,6 +113,7 @@
   font-family: var(--mx-emphasis);
   font-size: clamp(22px, 2.8vw, 34px);
   letter-spacing: -0.04em;
+  line-height: 1.25;
 }
 .lean-total:nth-child(2) dd {
   color: var(--mx-blue);
@@ -172,6 +178,33 @@
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
   text-align: start;
+  font-size: 13px;
+}
+.lean-item .mx-mark {
+  inline-size: 28px;
+  block-size: 28px;
+  color: var(--mx-dim);
+}
+.lean-item .mx-badge {
+  font-size: 9px;
+}
+.lean-page [data-tone="negative"] {
+  color: var(--mx-bad);
+}
+.lean-page [data-tone="unavailable"] {
+  color: var(--mx-dim);
+}
+.lean-total [data-tone="unavailable"] {
+  font-size: 18px;
+  letter-spacing: -0.015em;
+}
+.lean-page .lean-coverage {
+  display: block;
+  margin-block-start: 5px;
+  color: var(--mx-dim);
+  font: 10px/1.5 var(--mx-sans);
+  letter-spacing: normal;
+  white-space: normal;
 }
 .lean-item .mx-badge {
   margin-inline-start: auto;
@@ -186,6 +219,12 @@
   .lean-summary {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 20px;
+  }
+  .lean-count {
+    padding-inline-start: 0;
+    padding-block-start: 14px;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--mx-line);
   }
 }
 @media (max-width: 600px) {
