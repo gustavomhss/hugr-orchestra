@@ -246,3 +246,30 @@ test("prior v4 and unsealed v5 remain readable and projectable; corrupt legacy s
   expect(() => cold({ ...value.previous, review: { ...review, digest: "0".repeat(64) } })).toThrow("archive-corrupt-memory")
   expect(() => cold({ ...value.previous, now: { ...value.previous.now, next: "FORGED" } })).toThrow("archive-corrupt-memory")
 })
+
+test("active native-compacted subsequence keeps stable aliases but excludes displaced evidence", () => {
+  const history = messages(["user", "assistant", "user", "assistant"])
+  const snapshot = completeSnapshot(sessionID, history.slice(2))
+  if (!snapshot) throw new Error("Missing active subsequence")
+  const check = (text: string) => {
+    const decoded = decode({ text, snapshot, host: host(history), producerID, budget: model.limit.context })
+    if ("check" in decoded) throw new Error(JSON.stringify(decoded))
+    return ContinuityChecklist.check(decoded, snapshot, host(history))
+  }
+  expect(check(body())).toHaveProperty("artifact.checklist")
+  expect(check(JSON.stringify({ now: { doing: "Current task", next: "Wait", src: ["a2", "u1"] }, ops: [] })))
+    .toMatchObject({ check: "C18", detail: expect.stringContaining("outside its declared covered prefix") })
+  expect(check(body([{ op: "add", section: "findings", src: ["u1"], fields: {
+    finding: "Displaced source", why: "Old record", status: "hypothesis", check: "Verify" } }])))
+    .toMatchObject({ check: "C18" })
+  expect(check(body([{ op: "add", section: "findings", src: ["u2"], fields: {
+    finding: "Active source", why: "Current record", status: "hypothesis", check: "Verify" } }]))).toHaveProperty("artifact.checklist")
+  const decoded = decode({ text: body(), snapshot, host: host(history), producerID, budget: model.limit.context })
+  if ("check" in decoded) throw new Error("Missing valid candidate")
+  const divergent = structuredClone(history)
+  const part = divergent[2].parts[0]
+  if (part.type !== "text") throw new Error("Expected active text")
+  part.text = "EDITED_AFTER_CAPTURE"
+  expect(ContinuityChecklist.check(decoded, snapshot, host(divergent))).toMatchObject({ check: "C18" })
+  expect(ContinuityChecklist.check(decoded, snapshot, host([...history].reverse()))).toMatchObject({ check: "C18" })
+})
