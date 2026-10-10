@@ -17,6 +17,7 @@ import { Config } from "@/config/config"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Session } from "@/session/session"
+import { PromptGuard } from "@/session/prompt-guard"
 import { Instruction } from "@/session/instruction"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Snapshot } from "@/snapshot"
@@ -134,18 +135,22 @@ const layer = Layer.effect(
         abortController: abort,
       }
 
-      const outcome = yield* Effect.tryPromise({
-        try: async () => {
+      const outcome = yield* Effect.gen(function* () {
+        // Same seam as LLM.stream: the caller's pre-model guard runs once before any SDK process.
+        yield* PromptGuard.check(sessionID)
+        yield* Effect.tryPromise({
+          try: async () => {
           for await (const message of sdk.query({ prompt, options })) {
             if (message.type === "system" && message.subtype === "init" && message.session_id !== state.sessionId)
               await run(sessions.setMetadata({ sessionID, metadata: { ...session.metadata,
                 claudeCode: { ...state, sessionId: message.session_id } } }))
             await run(view.on(message))
-            if (message.type === "result" && message.subtype !== "success")
-              throw new Error("errors" in message && message.errors?.length ? message.errors.join("; ") : message.subtype)
-          }
-        },
-        catch: (error) => error,
+              if (message.type === "result" && message.subtype !== "success")
+                throw new Error("errors" in message && message.errors?.length ? message.errors.join("; ") : message.subtype)
+            }
+          },
+          catch: (error) => error,
+        })
       }).pipe(
         Effect.as(true),
         Effect.onInterrupt(() => Effect.gen(function* () {

@@ -4,6 +4,7 @@ import path from "node:path"
 import { Effect, Fiber, Layer } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { PromptGuard } from "@/session/prompt-guard"
 import { Session } from "@/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { TestInstance } from "../fixture/fixture"
@@ -96,4 +97,19 @@ it.instance("cancel stops Claude Code and marks the turn aborted", () =>
     expect((last.info as SessionV1.Assistant).error?.name).toBe("MessageAbortedError")
     const tool = last.parts.find((part) => part.type === "tool")
     expect(tool?.type === "tool" && tool.state.status).toBe("error")
+  }), 30_000)
+
+it.instance("a failing pre-model guard ends the Claude Code turn before any SDK query", () =>
+  Effect.gen(function* () {
+    queries.length = 0
+    scripts.length = 0
+    const { prompt, chat } = yield* setup
+    scripts.push(reply("unguarded answer", "msg_unguarded"))
+    const check = Effect.fail(new Error("write root changed before model"))
+    const result = yield* prompt.prompt({ sessionID: chat.id, ...say("guarded work") })
+      .pipe(Effect.provideService(PromptGuard.Current, { sessionID: chat.id, check, checked: false }))
+    expect(result.info.role === "assistant" && result.info.error?.data).toMatchObject({ message: "write root changed before model" })
+    expect(queries).toHaveLength(0)
+    expect(scripts).toHaveLength(1)
+    scripts.length = 0
   }), 30_000)
