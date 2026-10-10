@@ -18,8 +18,12 @@ behavior and its limits, not universal semantic correctness or superiority over 
   records in `*-events.jsonl`, and `evidence-manifest.json`; findings are not based only on an agent claim.
 - `evidence-manifest.json` pins receipt bytes with SHA-256; its `verification-final.json` entry is
   `f1255d7d82bba5c387f83c5f4fea91b183e73a4e1948385ef85f635140f85860`.
-- Expected backup: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/quality-live-20261009.tgz`.
-  **Awaiting backup confirmation.** Evidence currently referenced through the external scratch path.
+- Verified backup: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/quality-live-20261009.tgz`.
+  SHA-256: `82e5c170d98e40bda550a61c9cb9b99ee627a4baaf5b9889f5e8ae271db260a9`.
+  Independent offline audit checked 65 allowlisted regular members and their decompressed hashes;
+  credentials, runtime configuration, dependencies and the live database are excluded. The durable
+  SQLite snapshot, structured traces and failure receipts are retained. This is evidence custody,
+  not a complete runnable environment backup.
 
 ## Verified CI and mutation controls
 
@@ -134,4 +138,4 @@ cannot establish general reliability, causality or superiority. This receipt cas
 expected-negative source outcome. Structural CI, live evidence and semantic assessment remain distinct.
 
 This documentation closeout reuses those receipts; no new paid calls, tests or typecheck were needed.
-Acceptance is verified as scoped above. Default-branch publication and backup confirmation remain pending.
+Acceptance is verified as scoped above. Default-branch publication remains pending; evidence backup is verified.
