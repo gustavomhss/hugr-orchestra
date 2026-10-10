@@ -15,8 +15,8 @@ behavior and its limits, not universal semantic correctness or superiority over 
 - Contract: [context-continuity-quality.md](context-continuity-quality.md). Implementation inspected:
   `src/continuity/{review.ts,review-seal.ts,fork.ts,archive-search.ts,service.ts}`,
   `src/claude-code/llm.ts` and `src/tool/context-recall-archive.ts`.
-- External evidence root: `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/quality-live-20261009`
-  (`/private/var/...` in captured receipts). Paths below are relative to that root.
+- External evidence directory: `quality-live-20261009`, under the harness-approved temporary parent
+  (`/private/var/...` spelling in captured receipts). Paths below are relative to that evidence directory.
 - Read receipts: `summary.json`, `verification-final.json`, `production-repair.json`, `matched-eval.json`,
   `repair-sequence.json`, `resume-result.json`, `workspace/handoff.json`, `inspect.ts`, provider finish
   records in `*-events.jsonl`, and `evidence-manifest.json`; findings are not based only on an agent claim.

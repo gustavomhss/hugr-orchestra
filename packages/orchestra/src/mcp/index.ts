@@ -34,6 +34,7 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { McpStdio, OmniStdioTransport } from "./stdio"
 import { Status } from "./status"
 
 const DEFAULT_TIMEOUT = 30_000
@@ -188,7 +189,7 @@ const layer = Layer.effect(
     const events = yield* EventV2Bridge.Service
     const browser = yield* McpBrowser.Service
 
-    type Transport = StdioClientTransport | StreamableHTTPClientTransport | SSEClientTransport
+    type Transport = StdioClientTransport | OmniStdioTransport | StreamableHTTPClientTransport | SSEClientTransport
 
     /**
      * Connect a client via the given transport with resource safety:
@@ -323,17 +324,11 @@ const layer = Layer.effect(
       const [cmd, ...args] = mcp.command
       const baseDir = yield* InstanceState.directory
       const cwd = mcp.cwd ? path.resolve(baseDir, mcp.cwd) : baseDir
-      const transport = new StdioClientTransport({
-        stderr: "pipe",
-        command: cmd,
-        args,
-        cwd,
-        env: {
-          ...process.env,
-          ...(cmd === "orchestra" ? { BUN_BE_BUN: "1" } : {}),
-          ...mcp.environment,
-        },
-      })
+      const env = { ...process.env, ...(cmd === "orchestra" ? { BUN_BE_BUN: "1" } : {}), ...mcp.environment }
+      // Flag on: omni owns the server's tree and logs its stderr (WP3). Off: the SDK transport, unchanged.
+      const transport = McpStdio.enabled()
+        ? yield* McpStdio.open({ server: key, command: cmd, args, cwd, env })
+        : new StdioClientTransport({ stderr: "pipe", command: cmd, args, cwd, env })
 
       const connectTimeout = mcp.timeout ?? DEFAULT_TIMEOUT
       return yield* connectTransport(transport, connectTimeout).pipe(
@@ -342,7 +337,7 @@ const layer = Layer.effect(
           status: { status: "connected" },
         })),
         Effect.catch((error): Effect.Effect<{ client: MCPClient | undefined; status: Status }> => {
-          const msg = error instanceof Error ? error.message : String(error)
+          const msg = McpStdio.failure(transport, error)
           return Effect.succeed({ client: undefined, status: { status: "failed", error: msg } })
         }),
       )
@@ -517,6 +512,7 @@ const layer = Layer.effect(
               clients,
               (client) =>
                 Effect.gen(function* () {
+                  // Legacy only: an OmniStdioTransport's close() stops the whole tree, so it needs no pgrep walk.
                   const pid = client.transport instanceof StdioClientTransport ? client.transport.pid : null
                   if (typeof pid === "number") {
                     const pids = yield* descendants(pid)

@@ -1,0 +1,83 @@
+{
+  "about": "QA-C: interactive programs in a terminal (omni only: neither std::process nor child_process has one). For each: wait for `prompt`, type `say` and see `said`, type `long` (a command that runs 30 s or more) and see `longing`, which it prints once it runs, press Ctrl-C and see the prompt again, type `exit` and see the program exit 0. `said` and `longing` are computed by the program, so the terminal's echo of the typed line never matches them. `${FIXTURE}` is omni-fixture: a shell's long command is a program that prints its marker itself, so Ctrl-C never lands before the shell made it the foreground job. A program the OS does not have is reported as skipped.",
+  "shells": [
+    {
+      "name": "bash",
+      "os": ["linux", "macos"],
+      "program": "bash",
+      "args": ["--norc", "--noprofile", "-i"],
+      "env": { "PS1": "QA> " },
+      "prompt": "QA> ",
+      "say": "echo $((40+2))QA\r",
+      "said": "42QA",
+      "long": "\"${FIXTURE}\" 'out=\\x35\\x35LONG\\n' hang\r",
+      "longing": "55LONG",
+      "exit": "exit 0\r"
+    },
+    {
+      "name": "zsh",
+      "os": ["linux", "macos"],
+      "program": "zsh",
+      "args": ["-f", "-i"],
+      "env": { "PS1": "QA> " },
+      "prompt": "QA> ",
+      "say": "echo $((40+2))QA\r",
+      "said": "42QA",
+      "long": "\"${FIXTURE}\" 'out=\\x35\\x35LONG\\n' hang\r",
+      "longing": "55LONG",
+      "exit": "exit 0\r"
+    },
+    {
+      "name": "powershell",
+      "os": ["windows"],
+      "program": "powershell.exe",
+      "args": ["-NoLogo", "-NoProfile", "-NoExit", "-Command", "function prompt { 'QA> ' }"],
+      "env": {},
+      "prompt": "QA> ",
+      "say": "Write-Output ('QA' + (40+2))\r",
+      "said": "QA42",
+      "long": "Write-Output ('LO' + 'NG'); Start-Sleep 30\r",
+      "longing": "LONG",
+      "exit": "exit 0\r"
+    },
+    {
+      "name": "pwsh",
+      "os": ["linux", "macos", "windows"],
+      "program": "pwsh",
+      "args": ["-NoLogo", "-NoProfile", "-NoExit", "-Command", "function prompt { 'QA> ' }"],
+      "env": {},
+      "prompt": "QA> ",
+      "say": "Write-Output ('QA' + (40+2))\r",
+      "said": "QA42",
+      "long": "Write-Output ('LO' + 'NG'); Start-Sleep 30\r",
+      "longing": "LONG",
+      "exit": "exit 0\r"
+    },
+    {
+      "name": "node-repl",
+      "os": ["linux", "macos", "windows"],
+      "program": "node",
+      "args": ["-i"],
+      "env": { "NODE_REPL_HISTORY": "" },
+      "prompt": "> ",
+      "say": "'Q' + 'A' + (40 + 2)\r",
+      "said": "QA42",
+      "long": "console.log('LO' + 'NG'); for (;;) {}\r",
+      "longing": "LONG",
+      "exit": ".exit\r"
+    },
+    {
+      "name": "python-repl",
+      "os": ["linux", "macos"],
+      "program": "python3",
+      "args": ["-i", "-q"],
+      "env": { "PYTHON_BASIC_REPL": "1" },
+      "prompt": ">>> ",
+      "say": "print('QA' + str(40 + 2))\r",
+      "said": "QA42",
+      "long": "print('LO' + 'NG'); import time; time.sleep(30)\r",
+      "longing": "LONG",
+      "exit": "raise SystemExit(0)\r"
+    }
+  ]
+}

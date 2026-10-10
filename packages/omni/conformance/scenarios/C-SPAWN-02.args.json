@@ -1,0 +1,6 @@
+{
+  "id": "C-SPAWN-02.args",
+  "steps": [
+    {"run": ["${FIXTURE}", "argv", "a b", "", "q\"uote", "back\\slash\\", "tab\tx", "café ✓ 😀", "$HOME", "a&b|c;d", "%PATH%", "^caret", "*.txt", "'single'", "--flag=x y"], "expect": {"exitCode": 0, "stdout": "[\"a b\",\"\",\"q\\\"uote\",\"back\\\\slash\\\\\",\"tab\\tx\",\"caf\\u00e9 \\u2713 \\ud83d\\ude00\",\"$HOME\",\"a&b|c;d\",\"%PATH%\",\"^caret\",\"*.txt\",\"'single'\",\"--flag=x y\"]\n"}}
+  ]
+}

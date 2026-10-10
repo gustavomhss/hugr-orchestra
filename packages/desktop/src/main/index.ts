@@ -54,6 +54,8 @@ import { nativeT, setNativeTranslations } from "./native-translations"
 import { initializeCandidateProfile } from "./candidate-profile"
 import { getStore } from "./store"
 import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
+import { OmniHost } from "./omni-host"
+import { OmniSmoke } from "./omni-smoke"
 
 const candidateProfile = (() => {
   try {
@@ -171,6 +173,7 @@ const main = Effect.gen(function* () {
   } else initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
+  OmniHost.setup()
 
   const wslServers = createWslServersController(
     app.getVersion(),
@@ -449,6 +452,11 @@ const main = Effect.gen(function* () {
         Effect.sync(() => {
           logger.error("sidecar health check failed", e.toString())
         }),
+      ),
+    )
+    yield* Effect.promise(() =>
+      OmniSmoke.report({ url, username: "orchestra", password }).catch((error: unknown) =>
+        logger.error("omni smoke report failed", error),
       ),
     )
 

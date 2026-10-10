@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
 import { getLogger } from "./logging"
+import { OmniHost } from "./omni-host"
+import { OmniSmoke } from "./omni-smoke"
 import { getUserShell, loadShellEnv } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
@@ -92,6 +94,7 @@ export async function spawnLocalServer(
     cwd: process.cwd(),
     env: {
       ...createSidecarEnv(options.candidateProfile),
+      ...OmniHost.sidecarEnv(),
       ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
       // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
       // repository copy, since the bundled server cannot locate it from its own path.
@@ -112,6 +115,7 @@ export async function spawnLocalServer(
 
   app.on("child-process-gone", onProcessGone)
   child.once("exit", (code) => {
+    OmniSmoke.event("utility-exit", { utilityPID: child.pid, code })
     exited = true
     app.off("child-process-gone", onProcessGone)
     options.onExit?.(code)
@@ -120,6 +124,7 @@ export async function spawnLocalServer(
   child.on("error", (error) => options.onStderr?.(`utility process error: ${serializeError(error).message}`))
 
   child.on("message", (message) => {
+    if (message?.type === "stopped") OmniSmoke.event("utility-stopped")
     if (!options.onMessage) return
     if (!exited) options.onMessage(message, (reply) => child.postMessage(reply))
   })
@@ -210,6 +215,7 @@ export async function spawnLocalServer(
   })()
 
   let stopping: Promise<void> | undefined
+  OmniSmoke.utilityStarted(child.pid)
 
   return {
     listener: {
@@ -220,7 +226,10 @@ export async function spawnLocalServer(
         stopping = Promise.race([
           exit.promise.then(() => undefined),
           delay(SIDECAR_STOP_TIMEOUT).then(() => {
-            if (!exited) child.kill()
+            if (!exited) {
+              OmniSmoke.event("utility-watchdog")
+              child.kill()
+            }
           }),
         ])
         return stopping

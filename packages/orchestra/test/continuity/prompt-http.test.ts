@@ -2,6 +2,8 @@ import { expect } from "bun:test"
 import path from "node:path"
 import { Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { Archive } from "@/continuity/archive"
+import { ProjectCheckpoint } from "@orchestra/core/project/checkpoint"
+import { CheckpointContext } from "@/continuity/checkpoint-context"
 import { SessionContinuity } from "@/continuity/service"
 import { BackgroundJob } from "@/background/job"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -201,6 +203,20 @@ for (const cached of [0, 25_000]) it.instance(`HTTP admission settles held produ
   expect(packet(fork)).toContain("## New span")
   expect(packet(fork)).toContain(tail)
   expect(packet(fork)).toContain("TRIGGER_DONE")
+  const checkpoints = yield* ProjectCheckpoint.Service.pipe(Effect.provide(ProjectCheckpoint.layer))
+  const saved = (yield* checkpoints.list({ projectID: chat.projectID, directory: chat.directory })).items
+  expect(saved).toHaveLength(1)
+  const checkpoint = yield* checkpoints.read({ projectID: chat.projectID, id: saved[0].id })
+  if (!checkpoint) throw new Error("HTTP producer reached transport without a project checkpoint")
+  const captured = CheckpointContext.decode(checkpoint.payload)
+  if (!captured || typeof captured !== "object" || !("messages" in captured)) throw new Error("Missing captured messages")
+  expect(wireMessages({ messages: captured.messages })).toEqual(wireMessages(fork))
+  const definitions = Schema.decodeUnknownSync(Schema.Array(Schema.Struct({ function: Schema.Struct({ name: Schema.String,
+    parameters: Schema.Unknown }) })))(fork.tools)
+  const recallDefinition = definitions.find((tool) => tool.function.name === "context_recall")
+  if (!recallDefinition) throw new Error("Missing actual recall tool definition")
+  expect(captured).toHaveProperty("tools.context_recall.inputSchema", recallDefinition.function.parameters)
+  expect(saved[0]).toMatchObject({ sessionID: chat.id, boundary: triggered.info.id, attempt: 0 })
   const advancing = yield* send("ADVANCE_WHILE_HELD").pipe(Effect.forkChild)
   yield* pollWithTimeout(sessions.messages({ sessionID: chat.id }).pipe(Effect.map((history) => history.some((message) =>
     message.parts.some((part) => part.type === "text" && part.text === "ADVANCE_WHILE_HELD")) ? history : undefined)), "Concurrent prompt never admitted")

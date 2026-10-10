@@ -1,0 +1,9 @@
+{
+  "id": "C-ERR-01.not-executable",
+  "os": ["linux", "macos"],
+  "files": {"notexec.txt": "not a program\n"},
+  "steps": [
+    {"spawn": ["${TMP}/notexec.txt"], "expect": {"error": "NOT_EXECUTABLE", "message": ["notexec.txt", "has no execute permission", "Make it executable"]}},
+    {"run": ["${TMP}/notexec.txt"], "expect": {"error": "NOT_EXECUTABLE", "message": ["notexec.txt", "has no execute permission", "Make it executable"]}}
+  ]
+}

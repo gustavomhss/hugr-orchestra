@@ -6,6 +6,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { Installation } from "../../src/installation"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { AppProcess } from "@orchestra/core/process"
 import { testEffect } from "../lib/effect"
 
 const methods: Installation.Method[] = ["curl", "npm", "yarn", "pnpm", "bun", "brew", "scoop", "choco", "unknown"]
@@ -36,7 +37,9 @@ function recordingLayer() {
     layer: Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
     deps: [],
   })
-  return { spawns, layer: LayerNode.compile(Installation.node, [[CrossSpawnSpawner.node, spawnerNode]]) }
+  // Classification uses a recording spawner, not the native collection fast path or a real package manager.
+  const processNode = makeGlobalNode({ service: AppProcess.Service, layer: AppProcess.layerWith("off"), deps: [spawnerNode] })
+  return { spawns, layer: LayerNode.compile(Installation.node, [[CrossSpawnSpawner.node, spawnerNode], [AppProcess.node, processNode]]) }
 }
 
 describe("installation", () => {

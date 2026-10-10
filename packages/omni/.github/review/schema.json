@@ -1,0 +1,102 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "card",
+    "findings",
+    "verdict"
+  ],
+  "properties": {
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completude",
+        "sucesso",
+        "invariantes",
+        "qualidade",
+        "dod"
+      ],
+      "properties": {
+        "completude": {
+          "$ref": "#/$defs/field"
+        },
+        "sucesso": {
+          "$ref": "#/$defs/field"
+        },
+        "invariantes": {
+          "$ref": "#/$defs/field"
+        },
+        "qualidade": {
+          "$ref": "#/$defs/field"
+        },
+        "dod": {
+          "$ref": "#/$defs/field"
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "severity",
+          "file",
+          "line",
+          "problem",
+          "fix"
+        ],
+        "properties": {
+          "severity": {
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ]
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "problem": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verdict": {
+      "enum": [
+        "approve",
+        "changes_requested"
+      ]
+    }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "evidence": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -13,6 +13,7 @@
     "strict": true,
     "isolatedModules": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "emitDeclarationOnly": false,
     "outDir": "node_modules/.ts-dist",
     "types": ["vite/client", "node", "electron"]

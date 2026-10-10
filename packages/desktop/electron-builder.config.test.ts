@@ -141,3 +141,27 @@ for (const channel of ["beta", "prod"] as const) {
     })
   })
 }
+
+for (const channel of ["dev", "beta", "prod"] as const) {
+  test(`ships hugr-omni as real files in Resources/omni for ${channel}, signed on macOS and Windows`, async () => {
+    const previous = process.env.ORCHESTRA_CHANNEL
+    process.env.ORCHESTRA_CHANNEL = channel
+    const module = await import(`./electron-builder.config.ts?omni=${channel}`)
+    const config = module.default as Configuration
+    if (previous === undefined) delete process.env.ORCHESTRA_CHANNEL
+    else process.env.ORCHESTRA_CHANNEL = previous
+
+    // D-L8: next to each other on disk, outside app.asar; the stale native/ entry is gone.
+    expect(config.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
+    expect(config.files).toContain("!resources/omni/**")
+    expect(JSON.stringify(config.extraResources)).not.toContain("native/")
+    expect(config.mac?.binaries).toEqual([
+      "Contents/Resources/omni/hugr-omni-supervisor",
+      "Contents/Resources/omni/hugr_omni.node",
+    ])
+    expect(typeof config.mac?.sign).toBe("function")
+    expect(config.win?.signExts).toContain(".node")
+    const entitlements = await Bun.file("resources/entitlements.omni.plist").text()
+    expect(entitlements).toContain("<dict/>")
+  })
+}

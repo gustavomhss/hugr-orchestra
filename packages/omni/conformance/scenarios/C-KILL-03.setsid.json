@@ -1,0 +1,12 @@
+{
+  "id": "C-KILL-03.setsid",
+  "os": ["linux", "macos"],
+  "steps": [
+    {"spawn": ["${FIXTURE}", "escape", "ready", "hang"], "as": "c"},
+    {"read": "c", "until": {"match": "^(READY|ESCAPED \\d+)$", "count": 2}, "capture": {"e": "^ESCAPED (\\d+)$"}},
+    {"stop": "c", "graceMs": 1000, "expect": {"reason": "killed"}},
+    {"os": "dead", "pids": ["${c.pid}"]},
+    {"os": "alive", "pids": "${e}"},
+    {"read": "c", "until": "end"}
+  ]
+}

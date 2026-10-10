@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   warm:
+    needs: omni
     name: warm (${{ matrix.settings.name }})
     strategy:
       fail-fast: false
@@ -41,6 +42,11 @@ jobs:
       # Saves the Bun package cache (Linux) or the installed node_modules tree (Windows).
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
+
+      - name: Native binaries for default-on tests
+        uses: ./.github/actions/omni-binaries
+        with:
+          artifact: omni-warm-${{ runner.os }}-${{ runner.arch }}
 
       - name: Read Playwright version
         id: playwright-version
@@ -100,6 +106,36 @@ jobs:
           if [ "$RUNNER_OS" = Windows ]; then filters+=(--filter='!@orchestra/httpapi-codegen'); fi
           # 16 suites share a 4-vCPU runner; Turbo's default of 10 at once pushed tests that take 1-3 s alone
           # past their 5-10 s timeouts.
-          GITHUB_ACTIONS=false bun turbo test --concurrency=2 "${filters[@]}"
+          # Match the epic's isolated package scheduling for cold startup and contract generation.
+          concurrency=1
+          GITHUB_ACTIONS=false bun turbo test --concurrency="$concurrency" "${filters[@]}"
         env:
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
+
+  # The omni binary cache (addon + supervisor) that test-ci restores when a run turns omni on.
+  omni:
+    name: omni binaries (${{ matrix.host }})
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-latest, windows-latest, macos-14]
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: omni binaries
+        uses: ./.github/actions/omni-binaries
+        with:
+          save: "true"
+
+      - name: Share binaries with warm tests
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: omni-warm-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            ${{ env.HUGR_OMNI_ADDON }}
+            ${{ env.HUGR_OMNI_SUPERVISOR }}
+          if-no-files-found: error
+          retention-days: 1
