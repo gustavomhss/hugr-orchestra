@@ -16,7 +16,8 @@ import { AbsolutePath } from "@orchestra/schema/schema"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
 import { eq, sql } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Ref, Schema } from "effect"
+import { SqlError } from "effect/unstable/sql/SqlError"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -234,6 +235,16 @@ describe("CapabilityRequest atomic local SQL ledger", () => {
       const clock = { now: 100 }
       const f = yield* fixture({ now: () => clock.now })
       const token = yield* f.operators.issue({ origin: "cli", ttlMillis: 10 })
+      const authorized = yield* Deferred.make<CapabilityOperatorContract.Binding>()
+      const required = yield* Ref.make(0)
+      // Observe only successful real authority checks; the private frame and returned binding stay untouched.
+      const operators: CapabilityOperatorContract.Interface = Object.freeze({
+        ...f.operators,
+        require: (requested) => f.operators.require(requested).pipe(Effect.tap((binding) => Effect.gen(function* () {
+          if ((yield* Ref.updateAndGet(required, (n) => n + 1)) === 1) yield* Deferred.succeed(authorized, binding)
+        }))),
+      })
+      const store = yield* CapabilityRequest.make({ operators })
       const locked = yield* Deferred.make<void>()
       const release = yield* Deferred.make<void>()
       const writer = yield* f.database.db.transaction(() => Effect.gen(function* () {
@@ -241,16 +252,23 @@ describe("CapabilityRequest atomic local SQL ledger", () => {
         yield* Deferred.await(release)
       }), { behavior: "immediate" }).pipe(Effect.forkChild)
       yield* Deferred.await(locked)
-      const pending = yield* f.run(f.store.commit(target, {}, () => Effect.die("REVOKED_CALLBACK_RAN")), "key", token.authority)
+      const pending = yield* f.run(store.commit(target, {}, () => Effect.die("REVOKED_CALLBACK_RAN")), "key", token.authority)
         .pipe(Effect.exit, Effect.forkChild)
-      yield* Effect.yieldNow
+      const binding = yield* Effect.raceFirst(Deferred.await(authorized), Fiber.join(pending).pipe(
+        Effect.andThen(Effect.fail(new Error("INITIAL_REQUIRE_DID_NOT_SUCCEED"))),
+      ))
+      expect(binding.authority).toBe(token.authority)
+      expect(binding.principal).toBe("operator")
+      expect(yield* Ref.get(required)).toBe(1)
       if (mode === "revoke") yield* f.operators.revoke(token.authority)
       if (mode === "expire") clock.now = 110
       yield* Deferred.succeed(release, undefined)
       yield* Fiber.join(writer)
       const cause = expectCause(yield* Fiber.join(pending))
+      expect(cause.reasons).not.toContainEqual(expect.objectContaining({ _tag: "Die", defect: "REVOKED_CALLBACK_RAN" }))
       expect(cause.reasons.some((r) => r._tag === "Fail" && r.error instanceof Capability.Failure &&
         r.error.code === "authentication_required")).toBe(true)
+      expect(yield* Ref.get(required)).toBe(1)
       expect(yield* f.writes).toBe(0)
       expect(yield* f.database.db.select().from(CapabilityRequestTable)).toHaveLength(0)
     }))
@@ -315,6 +333,43 @@ describe("CapabilityRequest atomic local SQL ledger", () => {
         expect(captured.cause.reasons).toHaveLength(2)
         yield* empty(f)
       }))
+  }))
+
+  it.live("real INSERT OR ROLLBACK preserves mixed body Cause and failed cleanup without partial receipt", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const Annotation = Context.Service<{ readonly phase: string }>("test/capability-request/rollback")
+    const domain = { _tag: "DomainError", phase: "body" }
+    const defect = new Error("host rollback defect")
+    const originals: Cause.Cause<unknown>[] = []
+    const exit = yield* f.run(f.store.commit(target, {}, (tx) => Effect.gen(function* () {
+      yield* f.write(tx)
+      // The duplicate key really rolls SQLite's transaction back before the driver's cleanup runs.
+      const sqlExit = yield* tx.run(sql`INSERT OR ROLLBACK INTO capability_request_fixture
+        (id, owner, allowed, writes) VALUES (${f.id}, 'operator', 1, 0)`).pipe(Effect.exit)
+      const original = Cause.annotate(Cause.combine(expectCause(sqlExit),
+        Cause.combine(Cause.fail(domain), Cause.combine(Cause.die(defect), Cause.interrupt(123)))),
+      Context.make(Annotation, { phase: "body" }))
+      originals.push(original)
+      return yield* Effect.failCause(original)
+    }))).pipe(Effect.exit)
+    const actual: Cause.Cause<unknown> = expectCause(exit)
+    const original = originals[0]
+    expect(original.reasons.map((reason) => reason._tag)).toEqual(["Fail", "Fail", "Die", "Interrupt"])
+    expect(actual.reasons.slice(0, original.reasons.length)).toEqual(Array.from(original.reasons))
+    original.reasons.forEach((reason, index) => expect(
+      Context.getOrUndefined(Cause.reasonAnnotations(actual.reasons[index]), Annotation),
+    ).toBe(Context.getOrUndefined(Cause.reasonAnnotations(reason), Annotation)))
+    expect(actual.reasons).toHaveLength(original.reasons.length + 1)
+    const cleanup = actual.reasons[original.reasons.length]
+    expect(cleanup._tag).toBe("Fail")
+    if (cleanup._tag !== "Fail" || !(cleanup.error instanceof SqlError)) throw new Error("Expected cleanup SqlError")
+    expect(String(cleanup.error.reason.cause)).toContain("no transaction is active")
+    yield* empty(f)
+    if (!f.database.inTransaction) throw new Error("Expected SQL transaction identity")
+    expect(yield* f.database.inTransaction).toBe(false)
+    expect((yield* f.run(f.store.commit(target, {}, f.write))).reused).toBe(false)
+    expect(yield* f.writes).toBe(1)
+    expect(yield* f.database.db.select().from(CapabilityRequestTable)).toHaveLength(1)
   }))
 
   it.live("full payload budgets and hostile descriptors reject before write without invoking code", () => Effect.gen(function* () {
