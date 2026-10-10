@@ -74,8 +74,10 @@ jobs:
       - name: Split and compare with the mirror
         id: split
         run: |
-          # git-subtree recurses once per commit; Ubuntu's /bin/sh (dash) stops at depth 1000, bash does not.
-          subtree() { bash "$(git --exec-path)/git-subtree" "$@"; }
+          # git-subtree recurses once per commit; Ubuntu's /bin/sh (dash) stops at depth 1000, so it runs under bash with
+          # an unlimited stack. Called as a script, it checks that git's exec path leads PATH, as `git subtree` arranges.
+          ulimit -s unlimited
+          subtree() { local e; e=$(git --exec-path); GIT_EXEC_PATH="$e" PATH="$e:$PATH" bash "$e/git-subtree" "$@"; }
           split=$(subtree split --prefix="$PREFIX" "$GITHUB_SHA")
           echo "split $split of $GITHUB_SHA"
           echo "sha=$split" >> "$GITHUB_OUTPUT"
