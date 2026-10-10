@@ -21,6 +21,14 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   if (!oldForm) throw new Error("Missing A authorization form")
   const oldInput = field("bearer")
   oldInput.value = a.bearer
+  const gate = Promise.withResolvers<void>()
+  cleanup.push(gate.resolve)
+  view.wire.controls.holdNextGet = gate.promise
+  const reads = view.wire.calls.length
+  button("Refresh", view.root).click()
+  await waitFor(() => view.wire.calls.length > reads && !!view.wire.calls.at(-1)?.response?.includes("Visible only A"))
+  const pendingRead = view.wire.calls.at(-1)
+  expect(pendingRead?.signal?.aborted).toBe(false)
   const before = view.wire.calls.length
   const root = view.root
   view.change(b) // One render/owner, reactive props only. No fixture remount or substitute controller.
@@ -28,6 +36,7 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   expect(view.root).toBe(root)
   expect(oldForm.isConnected).toBe(false)
   expect(oldInput.value).toBe("")
+  expect(pendingRead?.signal?.aborted).toBe(true)
   expect(view.root.textContent).not.toContain("Visible only A")
   expect(view.root.textContent).toContain("Host authorization is required")
   expect(view.wire.calls.slice(before).map((call) => [new URL(call.url).origin, call.headers.has("authorization"), call.status])).toEqual([[b.url, false, 401]])
@@ -36,6 +45,7 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   const late = new Event("submit", { bubbles: true, cancelable: true })
   oldForm.dispatchEvent(late)
   expect(late.defaultPrevented).toBe(true) // Actual retained DOM listener executes, even after its page owner changes.
+  gate.resolve() // Actual A rows arrive late despite abort; B's live component must remain fenced.
   await Bun.sleep(30)
   expect(view.root.querySelector(".integrations-auth")).toBe(currentForm)
   expect(view.wire.calls).toHaveLength(before + 1)
@@ -125,6 +135,44 @@ test("reactive username/password snapshots replace Basic authority within same c
   expect(view.wire.calls.at(-1)?.headers.get("authorization")).toBe(`Basic ${Buffer.from("native:native:password").toString("base64")}`)
   expect(view.root.querySelector('[name="bearer"]')).toBeNull()
 }, 90000)
+
+test("actual authorization callback rejects owner disposed during DOM FormData capture", async () => {
+  const a = await startHost("bearer")
+  cleanup.push(a.stop)
+  const b = await startHost("bearer")
+  cleanup.push(b.stop)
+  const view = mountPage(a)
+  cleanup.push(view.dispose)
+  await idle(view.root)
+  const form = view.root.querySelector<HTMLFormElement>(".integrations-auth")
+  if (!form) throw new Error("Missing actual authorization form")
+  const input = field("bearer")
+  const captured = { token: a.bearer, switched: false }
+  // Cross the synchronous admission boundary using a DOM field only. The real form listener
+  // calls the actual old onAuthorize after its owner is disposed; no callback/model is replaced.
+  Object.defineProperty(input, "value", { configurable: true,
+    get() {
+      const token = captured.token
+      if (!captured.switched) { captured.switched = true; view.change(b) }
+      return token
+    },
+    set(value: string) { captured.token = value },
+  })
+  const before = view.wire.calls.length
+  const event = new Event("submit", { bubbles: true, cancelable: true })
+  form.dispatchEvent(event)
+  expect(event.defaultPrevented).toBe(true)
+  expect(captured.switched).toBe(true) // Positive control: FormData traversed our actual old DOM field.
+  await idle(view.root)
+  expect(form.isConnected).toBe(false)
+  expect(view.wire.calls.slice(before).map((call) => [new URL(call.url).origin, call.headers.has("authorization"), call.status])).toEqual([[b.url, false, 401]])
+  expect(field("bearer").value).toBe("")
+  field("bearer").value = b.bearer
+  submit(".integrations-auth")
+  await idle(view.root)
+  expect(view.wire.calls.at(-1)?.headers.get("authorization")).toBe(`Bearer ${b.bearer}`)
+  expect(view.wire.calls.at(-1)?.status).toBe(200)
+}, 180000)
 
 test("actual entry retains controller/screen across busy HTTP ACK and GET retryRead", async () => {
   const host = await startHost()
