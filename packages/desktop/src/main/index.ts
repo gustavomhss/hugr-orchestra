@@ -51,6 +51,19 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { startBackgroundCli } from "./background-cli"
 import { nativeT, setNativeTranslations } from "./native-translations"
+import { initializeCandidateProfile } from "./candidate-profile"
+import { getStore } from "./store"
+import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
+
+const candidateProfile = (() => {
+  try {
+    return initializeCandidateProfile(app, import.meta.env.ORCHESTRA_LEAN_CANDIDATE === "1")
+  } catch (error) {
+    console.error("candidate-profile initialization failed", error)
+    app.exit(1)
+    throw error
+  }
+})()
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the App Dock out of every site. Menus, window titles and
@@ -127,9 +140,9 @@ const main = Effect.gen(function* () {
 
   process.env.ORCHESTRA_DISABLE_EMBEDDED_WEB_UI = "true"
 
-  const appId = app.isPackaged ? APP_IDS[CHANNEL] : "ai.hugr.orchestra.dev"
+  const appId = candidateProfile?.appId ?? (app.isPackaged ? APP_IDS[CHANNEL] : "ai.hugr.orchestra.dev")
   const onboardingTestRoot = ((): string | undefined => {
-    if (!TEST_ONBOARDING) return
+    if (candidateProfile || !TEST_ONBOARDING) return
 
     const root = join(tmpdir(), `orchestra-onboarding-${randomUUID()}`)
     rmSync(root, { recursive: true, force: true })
@@ -144,14 +157,17 @@ const main = Effect.gen(function* () {
     process.env.XDG_STATE_HOME = join(root, "state")
     return root
   })()
-  app.setName(app.isPackaged ? APP_NAMES[CHANNEL] : "HuGR Orchestra Dev")
+  app.setName(candidateProfile?.name ?? (app.isPackaged ? APP_NAMES[CHANNEL] : "HuGR Orchestra Dev"))
   app.setAppUserModelId(appId)
   app.setPath(
     "userData",
-    onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId),
+    candidateProfile?.desktop ?? (onboardingTestRoot ? join(onboardingTestRoot, "desktop") : join(app.getPath("appData"), appId)),
   )
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
-  initializeOldLayoutEligibility(app.getPath("userData"))
+  if (candidateProfile) {
+    getStore().set(OLD_LAYOUT_ELIGIBLE_KEY, false)
+    getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
+  } else initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
   initCrashReporter()
 
@@ -212,7 +228,7 @@ const main = Effect.gen(function* () {
     return
   }
 
-  const shellEnv = preferAppEnv(app.getPath("userData"))
+  const shellEnv = preferAppEnv(app.getPath("userData"), candidateProfile)
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
     const urls = argv.filter((arg: string) => arg.startsWith("orchestra://"))
@@ -276,7 +292,7 @@ const main = Effect.gen(function* () {
 
   yield* Effect.promise(() => app.whenReady())
 
-  if (!TEST_ONBOARDING) migrate()
+  if (!candidateProfile && !TEST_ONBOARDING) migrate()
   yield* Effect.promise(() => cleanupStoreFiles(app.getPath("userData"))).pipe(
     Effect.tap((result) =>
       Effect.sync(() => {
@@ -290,7 +306,7 @@ const main = Effect.gen(function* () {
       }),
     ),
   )
-  app.setAsDefaultProtocolClient("orchestra")
+  if (!candidateProfile) app.setAsDefaultProtocolClient("orchestra")
   registerRendererProtocol()
   setDockIcon()
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
@@ -403,6 +419,7 @@ const main = Effect.gen(function* () {
     const { listener, health } = yield* Effect.promise(() =>
       spawnLocalServer(hostname, port, password, {
         userDataPath: app.getPath("userData"),
+        candidateProfile,
         onStdout: (message) => writeLog("server", "stdout", { message }),
         onStderr: (message) => writeLog("server", "stderr", { message }, "warn"),
         onExit: (code) => {
