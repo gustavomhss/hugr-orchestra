@@ -37,6 +37,7 @@ import { Global } from "@orchestra/core/global"
 import { Config } from "@/config/config"
 import { LegacyLeanCapture } from "@/tool/lean-capture"
 import { LegacyLeanOutput } from "./lean-output"
+import { LeanProfilePreferences } from "./lean-profile-preferences"
 import { ToolModelCapture } from "@orchestra/core/tool/model-capture"
 
 const MCP_RESOURCE_TOOLS = {
@@ -188,7 +189,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
       description: item.description,
       inputSchema: jsonSchema(schema),
       execute(args, options) {
-        const selected: { binding?: ToolModelCapture.Binding; policyMappingChanged?: boolean } = {}
+        const selected: { binding?: ToolModelCapture.Binding; policyMappingChanged?: boolean; command?: string } = {}
         const owner = { sessionID: input.session.id, callID: options.toolCallId }
         return run.promise(Effect.gen(function* () {
           const output = yield* guard(item.id, args, options, Effect.gen(function* () {
@@ -200,6 +201,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
             )
             yield* safety.before({ tool: item.id, args, sessionID: ctx.sessionID, callID: options.toolCallId,
               directory: binding?.directory, projectID: binding?.project.id })
+            if (item.id === "bash" && typeof args.command === "string" && args.command.length <= 65536) selected.command = args.command
             const result = yield* item.execute(args, ctx)
             yield* safety.inspect(result)
             const output = {
@@ -225,17 +227,35 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           }))
           if (options.abortSignal?.aborted) return output
           const cfg = Option.isSome(config)
-            ? yield* config.value.get().pipe(Effect.orElseSucceed(() => undefined)) : undefined
-          const enabled = !!cfg && cfg.tool_output?.lean?.enabled !== false
+            ? yield* config.value.get().pipe(Effect.exit) : undefined
+          const globalcfg = cfg && Exit.isSuccess(cfg) ? cfg.value : undefined
+          // Read after native execution and all policy/plugin hooks; never cache profile controls in resolve().
+          const preferences = binding ? yield* Effect.suspend(() => LeanProfilePreferences.read({
+            projectID: binding.project.id, directory: binding.directory,
+          })).pipe(
+            Effect.flatMap((prefs) => Effect.sync(() => prefs.scope.projectID === binding.project.id
+              && prefs.scope.directory === binding.directory && typeof prefs.scope.profileID === "string" && prefs.scope.profileID.length > 0
+              ? { enabled: prefs.enabled ?? globalcfg?.tool_output?.lean?.enabled !== false,
+                items: prefs.items, profileID: prefs.scope.profileID }
+              : undefined)),
+            Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, Global.node]))),
+            Effect.exit,
+          ) : undefined
+          const prefs = preferences && Exit.isSuccess(preferences) ? preferences.value : undefined
+          const unavailable = !globalcfg ? "config_unavailable" as const
+            : !preferences || Exit.isFailure(preferences) ? "preferences_unavailable" as const
+              : !prefs ? "preferences_scope_mismatch" as const : undefined
+          const enabled = !!globalcfg && !!prefs && prefs.enabled
           const limits = enabled && selected.binding && !selected.policyMappingChanged
             ? yield* truncate.limits() : { maxLines: 1, maxBytes: 1 }
           if (options.abortSignal?.aborted) return output
           return LegacyLeanOutput.project({ output, binding: selected.binding, owner,
-            enabled, limits, policyMappingChanged: selected.policyMappingChanged,
+            enabled, limits, items: prefs?.items, command: selected.command, unavailable,
+            policyMappingChanged: selected.policyMappingChanged,
             telemetry: binding ? {
               owner: { projectID: binding.project.id, location: binding.directory, ...owner },
               model: { provider: input.model.providerID, id: input.model.api.id },
-              ...(nativeSeat?.nativeProfile ? { orchestraProfile: nativeSeat.nativeProfile } : {}),
+              ...(prefs ? { orchestraProfile: prefs.profileID } : {}),
             } : undefined })
         }))
       },
