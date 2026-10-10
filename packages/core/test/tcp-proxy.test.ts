@@ -8,6 +8,8 @@ import { LayerNode } from "../src/effect/layer-node"
 import { FSUtil } from "../src/fs-util"
 import { AppProcess } from "../src/process"
 import { Global } from "../src/global"
+import { Flag } from "../src/flag/flag"
+import { Omni } from "../src/omni"
 import { TcpProxy } from "../src/tcp-proxy"
 import { ToolSafetySandbox } from "../src/tool-safety-sandbox"
 import { testEffect } from "./lib/effect"
@@ -59,6 +61,17 @@ const exchange = (destination: string | { host: string; port: number }, payload 
       (response.stderr.toString() || `client exit ${response.exitCode}`)))
     return response.stdout
   })
+
+live("native broker startup uses AppProcess without delegation before client exchange", () => Effect.gen(function* () {
+  const one = yield* target()
+  const before = Omni.snapshot()
+  const sockets = yield* TcpProxy.listen([one.port])
+  const after = Omni.snapshot()
+  expect(after.delegations - before.delegations).toBe(0)
+  expect(after.spawns - before.spawns).toBe(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? 0 : 1)
+  expect(one.accepted.length).toBe(0)
+  expect((yield* exchange(sockets[0])).toString()).toBe("echo")
+}))
 
 live("scoped broker is private, lazy, snapshots ports and preserves backpressure plus half-close", () => Effect.gen(function* () {
   const fs = yield* FSUtil.Service

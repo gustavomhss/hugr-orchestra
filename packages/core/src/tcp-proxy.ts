@@ -1,11 +1,13 @@
 export * as TcpProxy from "./tcp-proxy"
 
 import path from "node:path"
-import { spawn } from "node:child_process"
 import which from "which"
-import { Effect } from "effect"
+import { Deferred, Effect, Exit, Fiber, Queue, Stream } from "effect"
+import { ChildProcess } from "effect/unstable/process"
 import { BackendToolkitDiagnostics } from "./backend-toolkit/diagnostics"
+import { LayerNode } from "./effect/layer-node"
 import { FSUtil } from "./fs-util"
+import { AppProcess } from "./process"
 import { ToolSafety } from "./tool-safety"
 
 const ROUTES = "ORCHESTRA_TCP_PROXY_ROUTES"
@@ -70,42 +72,59 @@ const broker = Effect.fn("TcpProxy.broker")(function* (snapshot: readonly number
     Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-directory-mode" })),
   )
   // Bun 1.3 ignores Unix listener allowHalfOpen. A private native Node worker preserves Node pipe/FIN semantics.
-  const stopped = { closed: false }
-  const child = yield* Effect.acquireRelease(step("sandbox-tcp-proxy-broker-acquisition", async () => {
-    const child = spawn(node, ["-e", BROKER, JSON.stringify(snapshot.map((port, index) => ({ port, socket: reserved.sockets[index] })))], {
-      cwd: reserved.directory, env: BackendToolkitDiagnostics.environment(reserved.directory, { PATH: NODE_PATH, TMPDIR: reserved.directory, LANG: "C" }),
-      stdio: ["pipe", "pipe", "pipe"],
-    })
-    child.on("error", () => undefined)
-    child.once("close", () => { stopped.closed = true })
-    return child
-  }), (child) => Effect.promise(() => new Promise<void>((resolve) => {
-    if (stopped.closed) { resolve(); return }
-    const terminate = setTimeout(() => child.kill("SIGTERM"), 2000)
-    const kill = setTimeout(() => child.kill("SIGKILL"), 4000)
-    child.once("close", () => { clearTimeout(terminate); clearTimeout(kill); resolve() })
-    child.stdin.end()
-  })))
-  child.stdin.on("error", () => undefined)
-  child.stderr.resume()
-  yield* Effect.tryPromise({
-    try: () => new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("broker startup timed out")), 5000)
-      const failed = () => { clearTimeout(timer); reject(new Error("broker startup failed")) }
-      child.once("error", failed)
-      child.once("close", failed)
-      child.stdout.once("data", (data: Buffer) => {
-        clearTimeout(timer)
-        child.removeListener("close", failed)
-        if (data.toString() !== "READY\n") { reject(new Error("broker startup protocol")); return }
-        resolve()
-      })
-    }),
-    catch: () => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" }),
-  })
-  child.stdout.resume()
+  const processes = yield* AppProcess.Service
+  const child = yield* processes.spawn(ChildProcess.make(node,
+    ["-e", BROKER, JSON.stringify(snapshot.map((port, index) => ({ port, socket: reserved.sockets[index] })))], {
+      cwd: reserved.directory,
+      env: BackendToolkitDiagnostics.environment(reserved.directory, { PATH: NODE_PATH, TMPDIR: reserved.directory, LANG: "C" }),
+      stdin: "pipe", forceKillAfter: "2 seconds",
+    })).pipe(Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-broker-acquisition" })))
+  // Keep stdin open without bytes. Normal queue completion runs the sink's EOF action on both spawners.
+  const input = yield* Queue.make<Uint8Array>()
+  const writer = yield* Stream.fromQueue(input).pipe(Stream.run(child.stdin), Effect.forkScoped)
+  yield* child.stderr.pipe(Stream.runDrain, Effect.ignore, Effect.forkScoped)
+  const ready = yield* Deferred.make<void, ToolSafety.Denied>()
+  const frame = Buffer.from("READY\n")
+  const received = { bytes: 0 }
+  yield* Effect.gen(function* () {
+    yield* Stream.runForEach(child.stdout, (chunk) => Effect.gen(function* () {
+      if (received.bytes === frame.length) return
+      if (chunk.length > frame.length - received.bytes ||
+        chunk.some((byte, index) => byte !== frame[received.bytes + index]))
+        return yield* new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" })
+      received.bytes += chunk.length
+      if (received.bytes === frame.length) yield* Deferred.succeed(ready, undefined)
+    }))
+    if (received.bytes !== frame.length)
+      return yield* new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" })
+  }).pipe(
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" })),
+    Effect.onExit((exit) => Exit.isFailure(exit) ? Deferred.failCause(ready, exit.cause) : Effect.void),
+    Effect.ignore,
+    Effect.forkScoped,
+  )
+  // LIFO: close stdin and confirm exit before interrupting pumps or releasing the spawner/directory.
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    yield* Queue.end(input)
+    yield* Effect.all([Fiber.join(writer).pipe(Effect.exit), child.exitCode.pipe(Effect.exit)], {
+      concurrency: "unbounded",
+    }).pipe(Effect.timeoutOrElse({
+      duration: "2 seconds",
+      orElse: () => child.kill({ forceKillAfter: "2 seconds" }).pipe(
+        Effect.ensuring(Fiber.interrupt(writer)), Effect.orDie,
+      ),
+    }))
+  }))
+  yield* Deferred.await(ready).pipe(
+    Effect.raceFirst(child.exitCode.pipe(Effect.andThen(
+      Effect.fail(new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" })),
+    ))),
+    Effect.timeout("5 seconds"),
+    Effect.mapError(() => new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-listen-acquisition" })),
+  )
   return reserved.sockets
-})
+// Broker is a host resource even when its client is sandboxed; do not widen Sandbox's service requirements.
+}, Effect.provide(LayerNode.compile(AppProcess.node)))
 
 function requirePorts(ports: readonly number[]) {
   return ports.length < 1 || ports.length > 32 || new Set(ports).size !== ports.length ||
