@@ -7,13 +7,15 @@ import { SessionID } from "./session-id"
 export const Connection = Schema.Struct({ connection: Capability.ConnectionRef,
   state: Schema.Literals(["active", "disconnected", "revoked"]), credential: Schema.Literals(["present", "missing"]) })
 export const Target = Schema.Struct({ target: Capability.TargetRef })
+export const TargetCursor = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{32,2048}(?![\s\S])/))
+  .annotate({ identifier: "CapabilityManagement.TargetCursor" })
 export const ConnectionPage = Schema.Struct({ items: Schema.Array(Connection),
   after: Schema.optionalKey(Capability.ConnectionID), coverage: Schema.Literal("live") })
 export const TargetPage = Schema.Struct({ items: Schema.Array(Target),
-  after: Schema.optionalKey(Capability.TargetID), coverage: Schema.Literal("live") })
+  after: Schema.optionalKey(TargetCursor), coverage: Schema.Literal("live") })
 export const ConnectionQuery = Schema.Struct({ after: Schema.optionalKey(Capability.ConnectionID),
   limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 32 }))) })
-export const TargetQuery = Schema.Struct({ after: Schema.optionalKey(Capability.TargetID),
+export const TargetQuery = Schema.Struct({ after: Schema.optionalKey(TargetCursor),
   limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 32 }))) })
 export const TargetInput = Schema.Struct({ environment: Schema.NonEmptyString, resource: Schema.Json })
   .annotate({ parseOptions: { onExcessProperty: "error" } })
