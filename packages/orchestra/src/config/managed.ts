@@ -40,11 +40,16 @@ function candidateManagedConfigDir() {
   if (!root || !path.isAbsolute(root)) throw new Error("candidate-managed: absolute root required")
   const marker = path.join(root, ".orchestra-lean-candidate.json")
   const managed = path.join(root, "managed")
-  if (!existsSync(marker) || !lstatSync(marker).isFile() || lstatSync(marker).isSymbolicLink() ||
-    realpathSync(root) !== root || !existsSync(managed) || realpathSync(managed) !== managed ||
+  const home = path.join(root, "home")
+  if (
+    !existsSync(marker) || !lstatSync(marker).isFile() || lstatSync(marker).isSymbolicLink() ||
+    realpathSync(root) !== root || !existsSync(managed) || !lstatSync(managed).isDirectory() ||
+    realpathSync(managed) !== managed ||
+    !existsSync(home) || !lstatSync(home).isDirectory() || realpathSync(home) !== home ||
     readFileSync(marker, "utf8") !== JSON.stringify({ appId: "ai.hugr.orchestra.lean.candidate", version: 1, root }) ||
     process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR !== managed ||
-    process.env.HOME !== path.join(root, "home") || process.env.ORCHESTRA_TEST_HOME !== path.join(root, "home")) {
+    process.env.HOME !== home || process.env.ORCHESTRA_TEST_HOME !== home
+  ) {
     throw new Error("candidate-managed: invalid owned profile")
   }
   return managed
