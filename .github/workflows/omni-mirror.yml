@@ -18,6 +18,9 @@ on:
       - "omni-v*"
     paths:
       - "packages/omni/**"
+      - ".github/workflows/omni-mirror.yml"
+  # By hand, to publish dev's current split after a failed run.
+  workflow_dispatch:
 
 concurrency:
   # One mirror push at a time, never cancelled half-way. Tags get their own group: a newer dev run, which replaces a
