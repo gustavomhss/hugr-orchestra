@@ -41,7 +41,7 @@ Find the module in [the layer table](../../AGENTS.md#layout-and-layers) and read
 
 ## 3. Errors: append-only
 
-- Every error text is a `pub(crate)` constructor in `crates/hugr-omni/src/error/messages.rs`.
+- Every error text is a `pub(crate)` constructor in `crates/hugr-omni/src/error/messages/<wp>.rs` (one submodule per WP).
 - Add your own `impl Error` block **at the end of the file**, named for your work package. Never edit another work
   package's texts.
 - A message says what failed, the value, and the fix ([contract §11](../../docs/api-contract.md#11-errors-and-other-languages-v02)).
@@ -102,7 +102,7 @@ At most 650 lines per code file (400 is the target). Split inside your module be
 ## Review checklist
 
 - No import points up the layer table. No seam signature changed without a lead decision.
-- `messages.rs` changed only by appending a block.
+- `error/messages/` changed only by appending a block to the WP's own submodule (or adding a new one).
 - No new dependency or `windows-sys` feature without the lead's yes. Every `unsafe` sits in an allowed place with
   `// SAFETY:`.
 - Public changes: contract, `index.d.ts`, the Rust `api`, `parity.txt`, docs and skills move together.

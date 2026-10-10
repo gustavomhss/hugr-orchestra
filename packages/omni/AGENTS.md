@@ -56,8 +56,10 @@ by a lead decision. Their bodies and every private item belong to the module's o
   `sleep`.
 - **Contract scenarios** (`conformance/scenarios`, `crates/hugr-omni/tests`) are read-only for implementers
   (INV-13).
-- **Error texts** live in `crates/hugr-omni/src/error/messages.rs` as `pub(crate)` `Error` constructors. It is
-  append-only and shared: each WP adds its own `impl Error` block at the end, and never edits another WP's texts.
+- **Error texts** live in `crates/hugr-omni/src/error/messages/` as `pub(crate)` `Error` constructors, one
+  submodule per WP (`messages/<wp>.rs`; shared helpers in `messages/mod.rs`). They are append-only: each WP adds
+  its own `impl Error` blocks at the end of its own submodule (a new WP adds a new one), and never edits another
+  WP's texts.
 - **Test crates only** may start with `#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]`. Every
   test crate needs a `//!` doc line, because `missing_docs` is denied.
 
