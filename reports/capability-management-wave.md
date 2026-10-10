@@ -2,7 +2,7 @@
 
 ## Frozen execution contract
 
-Baseline: `8846e685b2`, followed by this contract checkpoint. Campaign continuation authorized by owner on 2026-10-09. Parallel execution: three authors, isolated worktrees, no intermediate PR or CI. Lead owns integration, generated clients and request-ledger extension.
+Baseline: `8846e685b2`, followed by this contract checkpoint. Owner resumed the campaign after compaction. Parallel execution: three initial authors, isolated worktrees, no intermediate PR or CI. Lead owns integration, generated clients and request-ledger extension. Final integration and measured checks: `capability-management-results.md`.
 
 | Package | Ownership | Dependency |
 | --- | --- | --- |

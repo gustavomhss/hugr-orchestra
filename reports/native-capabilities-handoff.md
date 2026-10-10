@@ -2,7 +2,7 @@
 
 ## Resume instruction
 
-Read this file first after compaction. User requested saving state and **pausing before the next wave**. All dispatched agents finished and stopped. No next-wave agents have been dispatched.
+Read this file first after compaction, then `capability-management-results.md`. Owner resumed after the earlier pause; the connection/target/binding management wave is now implemented and integrated. All dispatched authors/reviewers have returned. The older sections below preserve the pre-wave checkpoint history; use the results report for current implementations, corrections and verification.
 
 User communication: Portuguese, persistent **caveman full**. Keep technical substance; code, commits and PRs use normal English. User explicitly authorized parallel work, **up to 10 agents**. Keep architecture/contracts/integration judgment with lead; isolated worktree per author/reviewer.
 
@@ -11,7 +11,7 @@ User communication: Portuguese, persistent **caveman full**. Keep technical subs
 - Active worktree: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/native-capabilities`.
 - Active branch: `native-capabilities`.
 - Last completed integration: `e43015e98cd908f06a4b7d023afdc7035878514a` — scoped operator requests delivered to embedded clients.
-- Current source checkpoint: `0b9590b305` — management DTOs/contracts started, compiled and pushed. These are **contracts only**, not implemented management APIs.
+- Current source checkpoint: `4cfebc40e881fdb1b2f524bc765a72ccd06b1a32` — shared connection Store, operator management, protected HTTP delivery, regenerated Effect/Promise clients and actual owning SDK route. Original contract-only checkpoint: `0b9590b305`.
 - Remote: `fork` = `git@github.com:gustavomhss/hugr-orchestra.git`; branch pushed. Default/base branch `dev`, never assume local `main` exists.
 - Original checkout `/Users/gustavoschneiter/Documents/HuGR/orchestra-canonical` is user-owned; preserve its existing changes.
 - Untracked references deliberately preserved: `specs/orchestra-capabilities/` and `reports/Tools concretas para Orchestra.md`. Do not sweep them into commits.
@@ -99,7 +99,7 @@ All are **focused local** gates; cold source reviews and measured mutation failu
 - New management **checkpoint contracts only**: Schema + Core `bun typecheck` passed immediately before this handoff. No management implementation/runtime test exists yet.
 - Mutations verified by lead include expired operator accepted when expiry removed, conflicting ledger payload replay when comparison removed, disabled-auth guard bypass, missing default auth headers, SQL errors becoming Die, transaction original Cause loss, auth-after-Location construction, and skipped bearer renewal.
 
-## Next wave — NOT dispatched; contracts require final freeze
+## Historical next-wave plan — completed; see current results report
 
 Initial artifacts checkpointed at `0b9590b305`:
 
