@@ -156,6 +156,10 @@ export type ScheduleRunError = { readonly _tag: "ScheduleRunError"; readonly mes
 export const isScheduleRunError = (value: unknown): value is ScheduleRunError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ScheduleRunError"
 
+export type ForbiddenError = { readonly _tag: "ForbiddenError"; readonly message: string }
+export const isForbiddenError = (value: unknown): value is ForbiddenError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ForbiddenError"
+
 export type HealthGetOutput = { readonly healthy: true }
 
 export type LocationGetInput = {
@@ -6841,4 +6845,17 @@ export type SchedulesRunOutput = {
     readonly project: { readonly id: string; readonly directory: string }
   }
   readonly data: { readonly sessionID: string }
+}
+
+export type OperatorInspectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type OperatorInspectOutput = {
+  readonly requestID: string
+  readonly principal: string
+  readonly origin: "configured-auth" | "desktop" | "cli" | "sdk"
+  readonly scopeHash: string
 }

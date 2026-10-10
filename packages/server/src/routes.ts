@@ -24,6 +24,9 @@ import { schemaErrorLayer } from "./middleware/schema-error"
 import { PtyEnvironment } from "./pty-environment"
 import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
+import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
+import { ServerOperator } from "./operator"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 
 const applicationServices = LayerNode.group([
   Database.node,
@@ -41,19 +44,21 @@ const applicationServices = LayerNode.group([
   FSUtil.node,
 ])
 
-export function createRoutes(password?: string) {
+export function createRoutes(password?: string, operator?: CapabilityOperatorContract.Interface) {
   return makeRoutes(
     password
       ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(password) })
       : ServerAuth.Config.layer,
+    operator,
   )
 }
 
-export function createEmbeddedRoutes() {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }))
+export function createEmbeddedRoutes(operator?: CapabilityOperatorContract.Interface) {
+  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), operator)
 }
 
-function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>) {
+function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
+  operator?: CapabilityOperatorContract.Interface) {
   const serviceLayer = AppNodeBuilder.build(applicationServices, [[SessionExecution.node, SessionExecutionLocal.node]])
 
   return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
@@ -61,8 +66,10 @@ function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),
+    Layer.provide(capabilityAuthorizationLayer),
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
+    Layer.provide(operator ? Layer.succeed(ServerOperator.Service, operator) : ServerOperator.layer),
     Layer.provide(serviceLayer),
   )
 }

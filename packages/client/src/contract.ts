@@ -41,6 +41,7 @@ export const groupNames = {
   "server.relay.hook": "relayHooks",
   "server.pullRequest": "pullRequests",
   "server.schedule": "schedules",
+  "server.capability.operator": "operator",
 } as const
 
 export const endpointNames = {

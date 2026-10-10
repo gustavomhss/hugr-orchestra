@@ -26,6 +26,11 @@ test("embedded client uses the real router and handlers", async () => {
   try {
     const program = Effect.gen(function* () {
       const orchestra = yield* Orchestra.create()
+      const operator = yield* orchestra.operator.inspect({ location: { directory } })
+      const nextOperator = yield* orchestra.operator.inspect({ location: { directory } })
+      expect(operator.origin).toBe("sdk")
+      expect(operator.requestID).not.toBe(nextOperator.requestID)
+      expect(operator.scopeHash).toBe(nextOperator.scopeHash)
       yield* orchestra.tools.register({
         embedded_tool: Tool.make({
           description: "Embedded test tool",

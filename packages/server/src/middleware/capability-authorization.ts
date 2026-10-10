@@ -70,7 +70,7 @@ function decodeBasic(header: string) {
   }
 }
 
-function capabilityError(error: Capability.Failure) {
+export function capabilityError(error: Capability.Failure) {
   if (error.code === "authentication_required" || error.code === "authentication_revoked") {
     return new UnauthorizedError({ message: "Authentication required" })
   }

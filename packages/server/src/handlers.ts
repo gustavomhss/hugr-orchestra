@@ -22,6 +22,7 @@ import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-docu
 import { RelayHookHandler } from "./handlers/relay-hook"
 import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
+import { CapabilityOperatorHandler } from "./handlers/capability-operator"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -48,4 +49,5 @@ export const handlers = Layer.mergeAll(
   RelayHookHandler,
   PullRequestHandler,
   ScheduleHandler,
+  CapabilityOperatorHandler,
 )

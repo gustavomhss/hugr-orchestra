@@ -188,6 +188,8 @@ import type {
   SchedulesRemoveOutput,
   SchedulesRunInput,
   SchedulesRunOutput,
+  OperatorInspectInput,
+  OperatorInspectOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -1601,6 +1603,20 @@ export function make(options: ClientOptions) {
             query: { location: input["location"] },
             successStatus: 200,
             declaredStatuses: [404, 500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    operator: {
+      inspect: (input?: OperatorInspectInput, requestOptions?: RequestOptions) =>
+        request<OperatorInspectOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/operator`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
             empty: false,
           },
           requestOptions,
