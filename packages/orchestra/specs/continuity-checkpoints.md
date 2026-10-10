@@ -64,3 +64,30 @@ change either side. Failure/abort before save means no stream; failed generation
 Skipped/disabled/no-op compactions create none. Concurrent sessions share project index without overwrite;
 cross-project read fails; reload, hash corruption and project adoption/migration are exercised. New files
 stay below 400 LOC. Existing historical compaction proofs are not checkpoint-conformance evidence.
+
+## Verification receipt
+
+Candidate `b8ff2e6f33e36764c3ac823427e2f994a3d73bd4`, integrated with `dev` at
+`85e38ccab332e6e9e8587327093a3438b7d22105`:
+
+- [Orchestra CI 38063577713](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38063577713):
+  Linux 599 pass / 2 skip / 0 fail; Windows 579 pass / 11 skip / 0 fail, 56 files.
+- [Core CI 38064279939](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38064279939):
+  Linux 37 pass / 0 fail; Windows 36 pass / 0 fail, including migration and background-job tests.
+- Package `bun typecheck` passed in Core and Orchestra; Core `bun run migration --check` passed.
+- Suppressing checkpoint-save failure produced an unchecked dispatch and failed its named oracle in
+  [38060399824](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38060399824).
+  Disabling checksum verification failed the corruption oracle in
+  [38060400496](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38060400496).
+  Both mutations were restored before the passing runs above.
+- Real SQLite tests cover restart, existing-database upgrade, immutable retry after Session deletion,
+  project migration/adoption, hash corruption, metadata-only pagination and private-error sanitization.
+  API HTTP fixtures compare saved role/text context and a materialized tool schema with the actual
+  outgoing request. SDK fixtures compare saved messages with the constructed native query prompt.
+- Scoped independent reviews covered persistence, codec/dispatch, ownership and test oracles. Found
+  issues were corrected before final CI, including blocking both masking fallbacks after failed or
+  pending checkpoint persistence. A successful subsequent save clears that block.
+
+These are deterministic transport/storage conformance checks using fixture transports; no live-model
+benchmark was run. Checkpoints use the existing SQLite durability settings;
+prepared records can remain after cancellation and never certify provider execution or task success.
