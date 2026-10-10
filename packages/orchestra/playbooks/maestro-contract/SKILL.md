@@ -21,13 +21,13 @@ maps/search; follow explicit drill pointers and HOLD stale Own state.
 
 ## Procedure
 
-0. Before any authoring assignment or revision, inspect existing arm/completion bindings and governed
-   state through available actual host inspection; do not guess tool/method names or assume no binding.
-   Authoring precedes execution arming. Native Task calls `completion.beforeDispatch` for ordinary and
-   governed dispatch, without an authoring exemption. Do not let authoring consume or inherit execution
-   gates. If an active binding prevents authoring or required inspection is unavailable, HOLD through the
-   existing owner process. No ordinary Task enters the active governed chain; do not invent disarm,
-   fresh-Session escape or downgrade to normal. Repeat this inspection before later authoring revisions.
+0. Ordinary authoring assignments and revisions use native `task`. The host checks the current Session's
+   workflow binding and calls `completion.beforeDispatch` for ordinary and governed dispatch before worker
+   execution, without an authoring exemption. Do not invent a separate model-side inspection step, guess
+   inspection tools or claim bindings are absent. Authoring precedes explicit governed execution arming.
+   A known binding or host HOLD that prevents authoring stays HOLD through the existing owner process.
+   Do not inherit execution gates, insert an ordinary Task into a bound workflow chain, invent disarm/release,
+   escape through a fresh Session or downgrade to normal. Keep the explicit governed lifecycle.
 1. Supply current boundary facts to native `archie` and request the smallest load-bearing contract: exact
    signatures/types/errors, wire/event or DB/migration shapes, invariants, producer/consumer duties,
    source identities and seam-test oracles. Private algorithms remain implementation-owned. Do not

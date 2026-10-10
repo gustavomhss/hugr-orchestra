@@ -22,13 +22,13 @@ stale or held canonical ownership evidence stays HOLD; Composer does not replace
 
 ## Procedure
 
-0. Before any authoring assignment or revision, inspect existing arm/completion bindings and governed
-   state through available actual host inspection; do not guess tool/method names or assume no binding.
-   Authoring precedes execution arming. Native Task calls `completion.beforeDispatch` for ordinary and
-   governed dispatch, without an authoring exemption. Do not let authoring consume or inherit execution
-   gates. If an active binding prevents authoring or required inspection is unavailable, HOLD through the
-   existing owner process. No ordinary Task enters the active governed chain; do not invent disarm,
-   fresh-Session escape or downgrade to normal. Repeat this inspection before later authoring revisions.
+0. Ordinary authoring assignments and revisions use native `task`. The host checks the current Session's
+   workflow binding and calls `completion.beforeDispatch` for ordinary and governed dispatch before worker
+   execution, without an authoring exemption. Do not invent a separate model-side inspection step, guess
+   inspection tools or claim bindings are absent. Authoring precedes explicit governed execution arming.
+   A known binding or host HOLD that prevents authoring stays HOLD through the existing owner process.
+   Do not inherit execution gates, insert an ordinary Task into a bound workflow chain, invent disarm/release,
+   escape through a fresh Session or downgrade to normal. Keep the explicit governed lifecycle.
 1. Observe baseline/placement, actual source and consumer identities, checks, permissions and provider
    facts. Use dedicated read/search and existing host `repo-mapper`/`move-in` only for missing scoped
    reconnaissance. Partial maps and unknown acquisition stay explicit. Supply facts, not a new plan.
@@ -59,7 +59,7 @@ stale or held canonical ownership evidence stays HOLD; Composer does not replace
    acceptance/context. Maestro still manages its own context pressure and existing evidence pointers.
 6. Only after authoring and required review/adoption, where the existing execution contract genuinely
    needs completion binding, inspect `relay-arm` and actual native dispatch support under Maestro/host
-   authority. Re-inspect current bindings before execution dispatch; no authoring assignment is inserted
+   authority. Native Task checks current bindings before execution dispatch; no authoring assignment is inserted
    after execution arming. Proposed checks are not bound/executed
    until host evidence says so; arming alone is not enforcement. Current armed contracts bind the next
    native Task in this Session on the host Relay arm; spent retry budgets park the arm until owner
