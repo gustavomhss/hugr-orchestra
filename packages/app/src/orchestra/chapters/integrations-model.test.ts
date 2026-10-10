@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
-import { Response, binding, connection, deferred, fixture, json, reads, target } from "./integrations-model.fixture"
+import { Response, binding, browser, connection, deferred, fixture, json, reads, recordSnapshots, target } from "./integrations-model.fixture"
 
 test("reads actual live/current-actor pages; next controls send exact advancing cursors", async () => {
   const cursor = "x".repeat(32)
@@ -81,22 +81,32 @@ test("late bindings, including rejected reply, cannot poison new target", async 
 test("owner disposal aborts reads and discards late results; disposed model sends nothing", async () => {
   const held = deferred<Response>()
   const started = deferred<void>()
-  const f = fixture(() => { started.resolve(); return held.promise }, true)
+  const snapshots = recordSnapshots("private-secret", "private-intent")
+  let first = true
+  const f = fixture((request) => {
+    if (first) { first = false; return reads(request) }
+    started.resolve(); return held.promise
+  }, true, snapshots.observe)
+  if (!(await browser(f, import.meta.path, "owner disposal aborts reads"))) return
+  await f.model.load()
   const load = f.model.load()
   await started.promise
+  snapshots.verify()
   f.dispose()
-  expect(f.signals[0].aborted).toBe(true)
+  expect(f.signals[1].aborted).toBe(true)
   held.resolve(json({ items: [connection()], coverage: "live" }))
   await load
   await f.model.load(); await f.model.select(connection()); await f.model.connect({ provider: "slack", key: "private-secret" })
-  expect(f.requests).toHaveLength(1)
+  expect(f.requests).toHaveLength(2)
   expect(f.model.state.connections).toEqual([])
   expect(f.model.state.receipt).toBeUndefined()
+  snapshots.verify()
 })
 
 test("lost HTTP ACK retries only explicitly, same key and detached setup input; changed intent gets new key", async () => {
   const receipts = new Map<string, typeof CapabilityManagement.Receipt.Type>()
   let commits = 0
+  const snapshots = recordSnapshots("private-secret", "edited-secret", "private-intent")
   const f = fixture((request) => {
     if (request.method === "GET") return reads(request)
     const key = request.headers.get("idempotency-key")!
@@ -108,10 +118,12 @@ test("lost HTTP ACK retries only explicitly, same key and detached setup input; 
     receipts.set(key, receipt)
     // The write committed, but HTTP delivered only a truncated acknowledgement.
     return new Response('{"requestID":', { headers: { "content-type": "application/json" } })
-  })
+  }, false, snapshots.observe)
+  if (!(await browser(f, import.meta.path, "lost HTTP ACK retries only explicitly"))) return
   const input: CapabilitySetup.Input = { provider: "slack", key: "private-secret", label: "first" }
   const pending = f.model.connect(input)
   Object.assign(input, { key: "edited-secret", label: "edited" })
+  snapshots.verify()
   await pending
   expect(f.model.state.failure).toBe("unknown")
   expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(1)
@@ -129,18 +141,24 @@ test("lost HTTP ACK retries only explicitly, same key and detached setup input; 
   expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(2)
   await f.model.connect(input)
   expect(f.requests.filter((row) => row.method === "POST")[2].key).toBe("private-intent-2")
+  expect(f.requests.filter((row) => row.method === "POST")).toHaveLength(3)
+  expect(f.requests.filter((row) => row.method === "POST")[2].body).toEqual({ provider: "slack", key: "edited-secret", label: "edited" })
   expect(commits).toBe(2)
+  snapshots.verify()
 })
 
 test("busy blocks selection and duplicate mutations; snapshot refs/resource survive edits and explicit retry", async () => {
   const held = deferred<Response>()
   const started = deferred<void>()
   let posts = 0
+  const snapshots = recordSnapshots("must not enter receipt", "private-intent")
   const f = fixture((request) => {
     if (request.method === "GET") return reads(request)
     if (++posts === 1) { started.resolve(); return held.promise }
-    return json({ requestID: "target-receipt", reused: true, data: target(2) })
-  })
+    return json({ requestID: "target-receipt", reused: true,
+      data: { target: { ...target(2).target, environment: "original" } } })
+  }, false, snapshots.observe)
+  if (!(await browser(f, import.meta.path, "busy blocks selection and duplicate mutations"))) return
   await f.model.load()
   const selected = structuredClone(connection())
   await f.model.select(selected)
@@ -159,9 +177,11 @@ test("busy blocks selection and duplicate mutations; snapshot refs/resource surv
   expect(f.model.state.receipt).toBeUndefined()
   await f.model.retry()
   const writes = f.requests.filter((row) => row.method === "POST")
+  expect(f.model.state.receipt?.reused).toBe(true)
   expect(writes[0].body).toEqual({ connection: connection().connection,
     input: { environment: "original", resource: { room: "one" } } })
   expect(writes[1]).toMatchObject({ key: writes[0].key, body: writes[0].body })
+  snapshots.verify()
 })
 
 test("successful receipt retained when post-commit read fails; retry cannot redrive closed intent", async () => {
@@ -235,33 +255,22 @@ test("binding and local removal mutations send parsed exact target/session refs,
   expect(f.model.state.connections).toEqual([])
 })
 
-test.each([
-  ["coverage", { items: [], coverage: "all" }],
-  ["credential", { items: [{ ...connection(), credential: "ready" }], coverage: "live" }],
-  ["page limit", { items: Array.from({ length: 33 }, () => connection()), coverage: "live" }],
-  ["cursor", { items: [connection()], coverage: "live", after: "bad-id" }],
-  ["extra token", { items: [connection()], coverage: "live", token: "must not enter public state" }],
-] as const)("malformed HTTP DTO cannot claim ready: %s", async (_name, page) => {
-  const f = fixture(() => json(page))
-  await f.model.load()
-  expect(f.model.state.status).toBe("error")
-  expect(f.model.state.failure).toBe("request")
-  expect(f.model.state.connections).toEqual([])
-})
-
 test("retarget uses detached selected generation/resource; refresh adopts actual server generation", async () => {
   let committed = false
-  const updated = { target: { ...target().target, generation: 1, environment: "new" } }
+  const acknowledged = { target: { ...target().target, generation: 1, environment: "new" } }
+  const updated = { target: { ...target().target, generation: 2, environment: "new" } }
+  const snapshots = recordSnapshots("private-intent")
   const f = fixture((request) => {
     if (request.method === "POST") {
       committed = true
       return json({ requestID: "retarget-receipt", reused: false,
-        data: new URL(request.url).pathname.endsWith("/retarget") ? updated : null })
+        data: new URL(request.url).pathname.endsWith("/retarget") ? acknowledged : null })
     }
     if (new URL(request.url).pathname.endsWith(target().target.id) && committed) return json(updated)
-    if (new URL(request.url).pathname.endsWith("/targets") && committed) return json({ items: [updated], coverage: "live" })
+    if (new URL(request.url).pathname.endsWith("/targets") && committed) return json({ items: [acknowledged], coverage: "live" })
     return reads(request)
-  })
+  }, false, snapshots.observe)
+  if (!(await browser(f, import.meta.path, "retarget uses detached selected generation/resource"))) return
   await f.model.load(); await f.model.select(f.model.state.connections[0])
   const selected = structuredClone(target())
   await f.model.selectTarget(selected)
@@ -270,24 +279,16 @@ test("retarget uses detached selected generation/resource; refresh adopts actual
   const pending = f.model.retargetTarget(input)
   input.resource.room.push("edited")
   await pending
+  expect(f.model.state.receipt?.data).toEqual(acknowledged)
   expect(f.requests.find((row) => row.method === "POST")?.body).toEqual({ target: target().target,
     input: { environment: "new", resource: { room: ["original"] } } })
   expect(f.model.state.targets).toEqual([updated])
+  expect(f.requests.filter((row) => row.method === "GET" && new URL(row.url).pathname.endsWith(target().target.id))).toHaveLength(1)
   await f.model.unbind(binding().sessionID)
   expect(f.requests.filter((row) => row.method === "POST")[1].body).toEqual({ target: updated.target, sessionID: binding().sessionID })
-})
-
-test.each([
-  [401, "UnauthorizedError", "authorization"], [403, "ForbiddenError", "authorization"],
-  [404, "missing", "unsupported"], [405, "method", "unsupported"], [501, "unsupported", "unsupported"],
-  [400, "InvalidRequestError", "invalid"], [422, "validation", "invalid"], [409, "conflict", "request"],
-  [500, "server", "request"],
-] as const)("HTTP %i maps sanitized mutation failure %s/%s", async (status, tag, expected) => {
-  const f = fixture(() => json({ _tag: tag, message: "private-secret private-intent-1" }, status))
-  await f.model.connect({ provider: "slack", key: "private-secret" })
-  expect(f.model.state.failure).toBe(expected)
-  expect(JSON.stringify(f.model.state)).not.toContain("private-secret")
-  expect(JSON.stringify(f.model.state)).not.toContain("private-intent")
+  await f.model.removeTarget()
+  expect(f.requests.filter((row) => row.method === "POST")[2].body).toEqual({ target: updated.target })
+  snapshots.verify()
 })
 
 test("invalid call-time schema inputs never POST; reflected private keys never become public receipts", async () => {

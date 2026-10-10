@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { Schema } from "effect"
-import { binding, connection, fixture, json, target } from "./integrations-model.fixture"
+import { binding, browser, connection, fixture, json, reads, target } from "./integrations-model.fixture"
 
 test("direct refresh retains selected account/target beyond first 32 rows and clears only acknowledged deletion", async () => {
   let account = connection(40)
@@ -88,7 +88,8 @@ test("full retained target window cannot starve directly refreshed selected acco
   })
   await f.model.load(); await f.model.select(connection())
   for (let index = 1; index < 16; index++) await f.model.moreTargets()
-  expect(f.model.state.targets).toHaveLength(512)
+  expect(f.model.state.targets).toHaveLength(511)
+  expect(f.model.state.connections).toEqual([connection()])
   await f.model.selectTarget(target(40))
   await f.model.bind({ sessionID: binding().sessionID, actions: ["send"] })
   expect(f.model.state.status).toBe("ready")
@@ -96,4 +97,40 @@ test("full retained target window cannot starve directly refreshed selected acco
   expect(f.model.state.targetID).toBe(target(40).target.id)
   expect(f.model.state.targets.some((row) => row.target.id === target(40).target.id)).toBe(true)
   expect(f.model.state.connections.length + f.model.state.targets.length + f.model.state.bindings.length).toBeLessThanOrEqual(512)
+})
+
+test("browser retarget ACK generation one must directly refresh generation two before unbind/remove", async () => {
+  let committed = false
+  let exists = true
+  const acknowledged = { target: { ...target().target, generation: 1, environment: "next" } }
+  const current = { target: { ...target().target, generation: 2, environment: "next" } }
+  const snapshots: string[] = []
+  const f = fixture((request) => {
+    const path = new URL(request.url).pathname
+    if (request.method === "POST") {
+      if (path.endsWith("/retarget")) { committed = true; return json({ requestID: "retarget-ack", reused: false, data: acknowledged }) }
+      if (path.endsWith("/targets/remove")) exists = false
+      return json({ requestID: "ack", reused: false, data: null })
+    }
+    if (path.endsWith(target().target.id)) return json(committed ? current : target())
+    if (path.endsWith("/targets")) return json({ items: exists ? [target()] : [], coverage: "live" })
+    return reads(request)
+  }, false, (state) => snapshots.push(JSON.stringify(state)))
+  if (!(await browser(f, import.meta.path, "browser retarget ACK generation one"))) return
+  await f.model.load(); await f.model.select(f.model.state.connections[0]); await f.model.selectTarget(f.model.state.targets[0])
+  const before = f.requests.length
+  await f.model.retargetTarget({ environment: "next", resource: {} })
+  expect(f.model.state.receipt?.data).toEqual(acknowledged)
+  expect(f.model.state.targets.find((row) => row.target.id === current.target.id)).toEqual(current)
+  expect(f.requests.slice(before).filter((row) => row.method === "GET").map((row) => new URL(row.url).pathname)).toEqual([
+    "/api/capability/connections", `/api/capability/connections/${connection().connection.id}`,
+    `/api/capability/connections/${connection().connection.id}/targets`, `/api/capability/targets/${target().target.id}`,
+    `/api/capability/targets/${target().target.id}/bindings`,
+  ])
+  await f.model.unbind(binding().sessionID)
+  await f.model.removeTarget()
+  const posts = f.requests.filter((row) => row.method === "POST")
+  expect(posts[1].body).toEqual({ target: current.target, sessionID: binding().sessionID })
+  expect(posts[2].body).toEqual({ target: current.target })
+  expect(snapshots.length).toBeGreaterThan(1)
 })

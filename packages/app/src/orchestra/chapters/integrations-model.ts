@@ -5,6 +5,7 @@ import { Option, Schema } from "effect"
 import { getOwner, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Api, Connection, Failure, Model, Receipt, State, Target } from "./integrations-contract"
+import { retainIntegrationRows } from "./integrations-model-retention"
 
 export function createIntegrationModel(api: Api, requestKey: () => string = () => crypto.randomUUID()): Model {
   const [state, set] = createStore<{ -readonly [K in keyof State]: State[K] }>({
@@ -14,6 +15,8 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   let generation = 0
   let epoch = 0
   const cursors = new Set<string>()
+  const targetIDs = new Set<string>()
+  let lastTargetID: Capability.TargetID | undefined
   let reading: AbortController | undefined
   let writing: AbortController | undefined
   let connection: Capability.ConnectionRef | undefined
@@ -24,6 +27,11 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   const clear = () => {
     operation?.clear()
     operation = undefined
+  }
+  const resetTargetQuery = () => {
+    cursors.clear()
+    targetIDs.clear()
+    lastTargetID = undefined
   }
 
   const fence = () => {
@@ -62,26 +70,27 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       const page = decode(CapabilityManagement.ConnectionPage, await api.list(after, { signal }))
       progress(page, after, (row) => row.connection.id)
       return () => {
-        set({ connections: rows(more ? state.connections : [], page.items, (row) => row.connection.id,
-          512 - state.targets.length - state.bindings.length), after: page.after })
+        set({ ...retainIntegrationRows(state, "connections", { connections: page.items }, !more), after: page.after })
       }
     }, owned)
   }
   const readTargets = async (more = false, owned?: () => boolean) => {
     if (!connection || (more && !state.targetsAfter) || (owned && !owned())) return false
-    if (!more) cursors.clear()
+    if (!more) resetTargetQuery()
     const ref = connection
     const after = more ? state.targetsAfter : undefined
     return read(async (signal) => {
       const page = decode(CapabilityManagement.TargetPage, await api.targets(ref.id, after, { signal }))
-      progress({ items: page.items }, undefined, (row) => row.target.id)
-      if (page.items.some((row) => row.target.connectionID !== ref.id) || (page.after &&
+      progress({ items: page.items }, lastTargetID, (row) => row.target.id)
+      if (page.items.some((row) => row.target.connectionID !== ref.id || targetIDs.has(row.target.id)) || (page.after &&
         (page.after === after || cursors.has(page.after) || cursors.size >= 512))) throw "invalid"
       return () => {
         if (page.after) cursors.add(page.after)
-        const items = rows(more ? state.targets : [], page.items, (row) => row.target.id, 512 - state.bindings.length)
-        set({ targets: items, connections: state.connections.slice(Math.max(0, state.connections.length + items.length
-          + state.bindings.length - 512)), targetsAfter: page.after })
+        const seen = [...targetIDs, ...page.items.map((row) => row.target.id)].slice(-512)
+        targetIDs.clear()
+        seen.forEach((id) => targetIDs.add(id))
+        lastTargetID = page.items.at(-1)?.target.id ?? lastTargetID
+        set({ ...retainIntegrationRows(state, "targets", { targets: page.items }, !more), targetsAfter: page.after })
       }
     }, owned)
   }
@@ -93,9 +102,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       const page = decode(CapabilityManagement.BindingPage, await api.bindings(ref.id, after, { signal }))
       progress(page, after, (row) => row.sessionID)
       return () => {
-        const items = rows(more ? state.bindings : [], page.items, (row) => row.sessionID, 512 - state.targets.length)
-        set({ bindings: items, connections: state.connections.slice(Math.max(0, state.connections.length
-          + state.targets.length + items.length - 512)), bindingsAfter: page.after })
+        set({ ...retainIntegrationRows(state, "bindings", { bindings: page.items }, !more), bindingsAfter: page.after })
       }
     }, owned)
   }
@@ -104,7 +111,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     epoch++
     fence()
     clear()
-    cursors.clear()
+    resetTargetQuery()
     target = undefined
     try {
       connection = decode(CapabilityManagement.Connection, { ...input, connection: { ...input.connection } }).connection
@@ -145,9 +152,9 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
         bindings: [], bindingsAfter: undefined })
     }
     if (!owned()) return
-    // Fresh owner queries replace old page windows; reserve room for directly refreshed selected rows.
-    cursors.clear()
-    set({ targets: [], bindings: [], targetsAfter: undefined, bindingsAfter: undefined })
+    resetTargetQuery()
+    set({ targets: state.targets.filter((row) => row.target.id === state.targetID), bindings: [],
+      targetsAfter: undefined, bindingsAfter: undefined })
     if (!owned()) return
     if (kind === "disconnect") set({ connections: state.connections.map((row) => row.connection.id === selectedConnection
       ? { ...row, state: "disconnected" as const } : row) })
@@ -158,12 +165,11 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       if (current.connection.id !== selectedConnection) throw "invalid"
       return () => {
         connection = decode(Capability.ConnectionRef, current.connection)
-        set({ connections: rows(state.connections, [current], (row) => row.connection.id,
-          512 - state.targets.length - state.bindings.length), connectionID: connection.id })
+        set({ ...retainIntegrationRows(state, "connections", { connections: [current] }), connectionID: connection.id })
       }
     }, owned)) || !owned()) return
     if (kind === "disconnect") {
-      cursors.clear()
+      resetTargetQuery()
       set({ targets: [], targetsAfter: undefined })
       return
     }
@@ -173,8 +179,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       if (current.target.id !== selectedTarget || current.target.connectionID !== selectedConnection) throw "invalid"
       return () => {
         target = decode(Capability.TargetRef, current.target)
-        set({ targets: rows(state.targets, [current], (row) => row.target.id,
-          512 - state.connections.length - state.bindings.length), targetID: target.id })
+        set({ ...retainIntegrationRows(state, "targets", { targets: [current] }), targetID: target.id })
       }
     }, owned)) || !owned()) return
     await readBindings(false, owned)
@@ -213,6 +218,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   const mutate = <S extends Schema.Decoder<unknown>, R extends Schema.Decoder<Schema.Json>>(
     schema: S, input: unknown,
     send: (value: S["Type"], key: string, signal: AbortSignal) => Promise<Receipt>, result: R, kind = "other",
+    verify: (value: S["Type"], data: R["Type"]) => boolean = () => true,
   ) => {
     if (disposed || state.busy) return Promise.resolve()
     clear()
@@ -230,6 +236,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
           if (value === undefined || key === undefined || signal.aborted) throw "invalid"
           const receipt = decode(CapabilityManagement.Receipt, reply)
           const data = decode(result, receipt.data)
+          if (!verify(value, data)) throw "invalid"
           if (reflected({ ...receipt, data }, [key, ...(value && typeof value === "object" && "key" in value
             && typeof value.key === "string" ? [value.key] : [])])) throw "invalid"
           return { ...receipt, data }
@@ -254,7 +261,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     if (disposed) return
     disposed = true
     epoch++
-    cursors.clear()
+    resetTargetQuery()
     fence()
     writing?.abort()
     writing = undefined
@@ -271,11 +278,16 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     moreTargets: async () => { if (!disposed && !state.busy) await readTargets(true) },
     moreBindings: async () => { if (!disposed && !state.busy) await readBindings(true) },
     connect: (input) => mutate(CapabilitySetup.Input, input,
-      (value, key, signal) => api.connect(value, key, { signal }), CapabilitySetup.Result),
+      (value, key, signal) => api.connect(value, key, { signal }), CapabilitySetup.Result, "other",
+      (value, data) => data.connection.provider === value.provider && data.connection.generation === 0),
     createTarget: (input) => mutate(CapabilityManagement.CreateTargetInput, { connection, input },
-      (value, key, signal) => api.createTarget(value.connection, value.input, key, { signal }), CapabilityManagement.Target),
+      (value, key, signal) => api.createTarget(value.connection, value.input, key, { signal }), CapabilityManagement.Target, "other",
+      (value, data) => data.target.connectionID === value.connection.id && data.target.generation === 0
+        && data.target.environment === value.input.environment),
     retargetTarget: (input) => mutate(CapabilityManagement.RetargetInput, { target, input },
-      (value, key, signal) => api.retargetTarget(value.target, value.input, key, { signal }), CapabilityManagement.Target, "retargetTarget"),
+      (value, key, signal) => api.retargetTarget(value.target, value.input, key, { signal }), CapabilityManagement.Target, "retargetTarget",
+      (value, data) => data.target.id === value.target.id && data.target.connectionID === value.target.connectionID
+        && data.target.generation === value.target.generation + 1 && data.target.environment === value.input.environment),
     removeTarget: () => mutate(CapabilityManagement.RemoveTargetInput, { target },
       (value, key, signal) => api.removeTarget(value.target, key, { signal }), Schema.Null, "removeTarget"),
     disconnect: () => mutate(CapabilityManagement.DisconnectInput, { connection },
@@ -299,18 +311,15 @@ function decode<S extends Schema.Decoder<unknown>>(schema: S, input: unknown): S
   return detached.value
 }
 
-function rows<T>(previous: readonly T[], incoming: readonly T[], id: (row: T) => string, limit: number) {
-  if (limit <= 0) return []
-  return [...new Map([...previous, ...incoming].map((row) => [id(row), row])).values()].slice(-limit)
-}
-
 function progress<T>(page: { items: readonly T[]; after?: string }, after: string | undefined, id: (row: T) => string) {
   if (page.items.length > 32 || page.items.some((row, index) => id(row) <= (index ? id(page.items[index - 1]) : after ?? ""))
     || (page.after && (page.after <= (after ?? "") || (page.items.length && page.after < id(page.items[page.items.length - 1]))))) throw "invalid"
 }
 
 function reflected(value: Schema.Json, secrets: readonly string[]): boolean {
-  if (typeof value === "string") return secrets.some((secret) => value === secret || (secret.length >= 8 && value.includes(secret)))
+  if (typeof value === "string") return secrets.some((secret) => Array.from(secret).length !== 1 ? value.includes(secret)
+    : Array.from(value).some((character, index, characters) => character === secret
+      && !/[\p{L}\p{N}_]/u.test(characters[index - 1] ?? "") && !/[\p{L}\p{N}_]/u.test(characters[index + 1] ?? "")))
   if (!value || typeof value !== "object") return false
   return Object.values(value).some((leaf) => reflected(leaf, secrets))
 }

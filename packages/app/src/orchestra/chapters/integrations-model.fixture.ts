@@ -34,13 +34,45 @@ export function deferred<T>() {
   return { promise, resolve }
 }
 
+/** Independent privacy oracle over every synchronous createComputed publication, including transient values. */
+export function recordSnapshots(...privateValues: readonly string[]) {
+  const captured: string[] = []
+  return {
+    observe: (state: State) => { captured.push(JSON.stringify(state)) },
+    verify: () => {
+      expect(captured.length).toBeGreaterThan(1)
+      captured.forEach((snapshot) => privateValues.forEach((value) => expect(snapshot).not.toContain(value)))
+    },
+  }
+}
+
+/** Send headers and a JSON prefix now; finish the actual HTTP body only when the test releases it. */
+export function streamedJson(value: unknown, status = 200, malformed = false) {
+  const stream: { controller?: ReadableStreamDefaultController<Uint8Array>; closed: boolean } = { closed: false }
+  const response = new Response(new ReadableStream<Uint8Array>({
+    start(controller) { stream.controller = controller; controller.enqueue(new TextEncoder().encode("{")) },
+    cancel() { stream.closed = true },
+  }), { status, headers: { "content-type": "application/json" } })
+  const finish = () => {
+    if (stream.closed) return
+    stream.closed = true
+    if (!stream.controller) throw new Error("Streaming fixture controller missing")
+    stream.controller.enqueue(new TextEncoder().encode(malformed ? '"unfinished":' : JSON.stringify(value).slice(1)))
+    stream.controller.close()
+  }
+  cleanup.add(finish)
+  return { response, finish }
+}
+
 // Test-only HTTP transport intentionally leaves JSON unvalidated: controller must check the wire DTO.
 export function fixture(handler: (request: Request) => Response | Promise<Response>, ignoreAbort = false,
-  observe?: (state: State) => void, requestKey?: () => string) {
+  observe?: (state: State) => void, requestKey?: () => string,
+  onHeaders?: (path: string, signal?: AbortSignal) => void) {
   const signals: AbortSignal[] = []
   const requests: { method: string; url: string; key: string | null; body: unknown }[] = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
-    requests.push({ method: request.method, url: request.url, key: request.headers.get("idempotency-key"),
+    const key = request.headers.get("idempotency-key")
+    requests.push({ method: request.method, url: request.url, key: key === null ? null : decodeURIComponent(key),
       body: request.method === "POST" ? await request.clone().json() : undefined })
     return handler(request)
   } })
@@ -51,7 +83,9 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
     const payload = body === undefined ? undefined : structuredClone(body)
     const response = await Bun.fetch(new URL(path, server.url), { method: body === undefined ? "GET" : "POST",
       signal: ignoreAbort ? undefined : options?.signal, body: payload === undefined ? undefined : JSON.stringify(payload),
-      headers: { "content-type": "application/json", ...(key === undefined ? {} : { "idempotency-key": key }) } })
+      // Test injection permits Unicode keys; HTTP headers need an ASCII wire representation.
+      headers: { "content-type": "application/json", ...(key === undefined ? {} : { "idempotency-key": encodeURIComponent(key) }) } })
+    onHeaders?.(new URL(path, server.url).pathname, options?.signal)
     if (!response.ok) {
       if ([400, 401, 403].includes(response.status)) throw await response.json()
       throw new Error("UnexpectedStatus", { cause: { status: response.status } })
@@ -96,7 +130,11 @@ export function reads(request: Request) {
 
 // SSR unit tests must also execute browser ownership/proxy cases, once, with a fail-closed child guard.
 export async function browser(f: ReturnType<typeof fixture>, file: string, name: string) {
-  if (types.isProxy(f.model.state)) return true
+  if (types.isProxy(f.model.state)) {
+    expect(types.isProxy(f.model.state)).toBe(true)
+    expect(import.meta.resolve("solid-js/store")).toMatch(/\/store\/dist\/(store|dev)\.js$/)
+    return true
+  }
   expect(process.env.ORCHESTRA_INTEGRATIONS_PROXY_CHILD).not.toBe("1")
   f.dispose()
   f.stop()
@@ -106,5 +144,7 @@ export async function browser(f: ReturnType<typeof fixture>, file: string, name:
   const output = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()])
   expect({ exit: await child.exited, output: output.join("\n") }).toMatchObject({ exit: 0 })
   expect(output.join("\n")).toContain(`(pass) ${name}`)
+  expect(output.join("\n")).toMatch(/\b1 pass\b/)
+  expect(output.join("\n")).toContain("Ran 1 test across 1 file")
   return false
 }
