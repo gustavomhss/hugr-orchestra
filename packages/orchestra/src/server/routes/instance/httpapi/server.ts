@@ -73,6 +73,9 @@ import { serveUIEffect } from "@/server/shared/ui"
 import { ServerAuth } from "@/server/auth"
 import { InstanceHttpApi, RootHttpApi } from "./api"
 import { Api } from "@orchestra/server/api"
+import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
+import { ServerOperator } from "@orchestra/server/operator"
+import { capabilityAuthorizationLayer } from "@orchestra/server/middleware/capability-authorization"
 import { PublicApi } from "./public"
 import {
   authorizationLayer,
@@ -177,7 +180,8 @@ const instanceRoutes = instanceApiRoutes.pipe(
   Layer.provide([httpApiAuthLayer, workspaceRoutingLive, instanceContextLayer, schemaErrorLayer]),
 )
 const serverRoutes = HttpApiBuilder.layer(Api).pipe(
-  Layer.provide(handlers),
+  // Invalid host factory options are startup defects, not request failures.
+  Layer.provide(handlers.pipe(Layer.orDie)),
   Layer.provide(PluginPtyEnvironment.layer),
   Layer.provide([serverHttpApiAuthLayer, v2SchemaErrorLayer]),
 )
@@ -272,6 +276,7 @@ const app = LayerNode.group([
 
 export function createRoutes(
   corsOptions?: CorsOptions,
+  operator?: CapabilityOperatorContract.Interface,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
   const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
 
@@ -294,6 +299,9 @@ export function createRoutes(
       HttpServer.layerServices,
     ]),
     Layer.provide(Layer.succeed(CorsConfig)(corsOptions)),
+    Layer.provide(capabilityAuthorizationLayer.pipe(Layer.provide(ServerAuth.Config.layer))),
+    // Middleware and every capability handler share one facade for the host's scope.
+    Layer.provide(operator === undefined ? ServerOperator.layer : Layer.succeed(ServerOperator.Service, operator)),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(PtyEnvironment.layer),
