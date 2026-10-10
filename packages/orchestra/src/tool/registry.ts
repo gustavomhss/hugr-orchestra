@@ -25,6 +25,7 @@ import { MaestroCatalogContextTool, MaestroRecordPlanRevisionTool } from "./maes
 import { MaestroRecordContextTool } from "./maestro-context"
 import { MaestroRequestReviewTool } from "./maestro-review"
 import { MaestroRecordReviewTool, MaestroRecordValidationTool } from "./maestro-validation"
+import { MaestroRecordResultDecisionTool } from "./maestro-result-decision"
 import { MaestroGrantAuthorizationTool } from "./maestro-authorization"
 import { MaestroArsenalTools } from "./maestro-arsenal"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
@@ -174,6 +175,7 @@ const layer = Layer.effect(
     const maestroRecordValidation = yield* MaestroRecordValidationTool
     const maestroRecordReview = yield* MaestroRecordReviewTool
     const maestroGrantAuthorization = yield* MaestroGrantAuthorizationTool
+    const maestroRecordResultDecision = yield* MaestroRecordResultDecisionTool
     const read = yield* ReadTool
     const recall = yield* ContextRecallTool
     const compact = yield* ContextCompactTool
@@ -371,6 +373,7 @@ const layer = Layer.effect(
           maestroRecordValidation: Tool.init(maestroRecordValidation),
           maestroRecordReview: Tool.init(maestroRecordReview),
           maestroGrantAuthorization: Tool.init(maestroGrantAuthorization),
+          maestroRecordResultDecision: Tool.init(maestroRecordResultDecision),
           arsenalCatalog: Tool.init(arsenal[0]),
           arsenalDescribe: Tool.init(arsenal[1]),
           arsenalExecute: Tool.init(arsenal[2]),
@@ -410,6 +413,7 @@ const layer = Layer.effect(
             tool.maestroRecordValidation,
             tool.maestroRecordReview,
             tool.maestroGrantAuthorization,
+            tool.maestroRecordResultDecision,
             tool.arsenalCatalog,
             tool.arsenalDescribe,
             tool.arsenalExecute,
@@ -518,6 +522,10 @@ const layer = Layer.effect(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool) => {
+        if (
+          tool.id === MaestroRecordResultDecisionTool.id &&
+          (input.agent.id !== "maestro" || input.agent.native !== true)
+        ) return false
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
           (input.agent.id !== "maestro" || input.agent.native !== true)
