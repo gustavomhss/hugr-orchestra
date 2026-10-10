@@ -1,0 +1,157 @@
+name: lean-candidate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [lean-candidate-build]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lean-candidate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidate:
+    # Official x64 label: https://github.com/actions/runner-images#available-images
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      CANDIDATE_SHA: ${{ github.sha }}
+      WORKFLOW_SHA: ${{ github.workflow_sha }}
+    steps:
+      - name: Checkout exact candidate source
+        id: checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Require integrated source and native Intel host
+        id: host
+        run: |
+          test "$GITHUB_REF" = refs/heads/lean-candidate-build
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$WORKFLOW_SHA" = "$CANDIDATE_SHA"
+          test "$RUNNER_OS" = macOS
+          test "$RUNNER_ARCH" = X64
+          test "$(uname -m)" = x86_64
+          test "$(sysctl -in sysctl.proc_translated 2>/dev/null || printf '0')" != 1
+          for required in packages/desktop/scripts/lean-candidate.ts \
+            packages/desktop/electron-builder.candidate.config.ts \
+            packages/desktop/electron.vite.candidate.config.ts \
+            packages/desktop/test/lean-candidate-package.test.ts; do
+            test -s "$required" || { printf '::error::Missing dependency: %s\n' "$required"; exit 1; }
+          done
+
+      - name: Setup Node 24
+        id: node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          architecture: x64
+
+      - name: Setup Bun 1.3.14
+        id: bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.3.14"
+          bun-download-url: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-darwin-x64-baseline.zip
+
+      # Cache downloaded packages only. Never restore an installed arm64 tree.
+      - name: Cache Intel Bun downloads
+        id: cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ${{ runner.temp }}/lean-candidate-bun-cache
+          key: lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'patches/**') }}
+
+      - name: Install locked dependencies
+        id: install
+        env:
+          BUN_INSTALL_CACHE_DIR: ${{ runner.temp }}/lean-candidate-bun-cache
+        run: bun install --frozen-lockfile
+
+      - name: Assert toolchain identity
+        id: versions
+        run: |
+          node -e 'if (process.platform !== "darwin" || process.arch !== "x64" || process.versions.node.split(".")[0] !== "24") throw new Error("Node must be native darwin/x64, major 24"); console.log(process.platform, process.arch, process.version)'
+          bun -e 'if (process.platform !== "darwin" || process.arch !== "x64" || Bun.version !== "1.3.14") throw new Error("Bun must be native darwin/x64, version 1.3.14"); console.log(process.platform, process.arch, Bun.version)'
+          # JS template expressions must remain literal to the shell.
+          # shellcheck disable=SC2016
+          bun -e 'const p = await Bun.file("packages/desktop/package.json").json(); for (const name of ["electron", "electron-builder"]) { const installed = require(require.resolve(`${name}/package.json`, { paths: ["packages/desktop"] })).version; if (installed !== p.devDependencies[name]) throw new Error(`${name} version mismatch: ${installed}`); console.log(name, installed) }'
+
+      - name: Portable workflow contract
+        id: contract
+        working-directory: packages/desktop
+        run: bun test test/lean-candidate-workflow.test.ts
+
+      - name: Build actual candidate
+        id: build
+        run: bun run packages/desktop/scripts/lean-candidate.ts build
+
+      - name: Package unsigned directory app
+        id: package
+        run: bun run packages/desktop/scripts/lean-candidate.ts package
+
+      - name: Typecheck desktop
+        id: typecheck
+        working-directory: packages/desktop
+        run: bun typecheck
+
+      # V must launch the real packaged app; this is not a packaging-only oracle.
+      - name: Verify packaged candidate
+        id: verify
+        working-directory: packages/desktop
+        run: bun test --timeout 1200000 test/lean-candidate-package.test.ts
+
+      # Integration dependencies: B writes sourceCommit/platform/arch/appId/productName;
+      # V writes only its owned renderer PNG and synthetic proof log at these paths.
+      - name: Check identity and archive owned app
+        id: archive
+        run: |
+          # JS template expressions must remain literal to the shell.
+          # shellcheck disable=SC2016
+          bun -e '
+          const { lstat } = await import("node:fs/promises");
+          const root = "packages/desktop/dist-candidate";
+          const manifest = `${root}/lean-candidate-build.json`;
+          const identity = await Bun.file(manifest).json();
+          if (identity.sourceCommit !== process.env.CANDIDATE_SHA || identity.sourceCommit !== process.env.WORKFLOW_SHA) throw new Error("Candidate manifest SHA differs from checkout/workflow");
+          if (identity.platform !== "darwin" || identity.arch !== "x64" || identity.appId !== "ai.hugr.orchestra.lean.candidate" || identity.productName !== "HuGR Lean Candidate") throw new Error("Candidate manifest identity mismatch");
+          if (identity.status !== "packaged" || identity.appRelativePath !== "mac/HuGR Lean Candidate.app" || !identity.materials?.materials?.length || !identity.nativePty?.binaries?.length) throw new Error("Candidate package/notices/native PTY inventory missing");
+          const app = `${root}/mac/HuGR Lean Candidate.app`;
+          if (!(await lstat(app)).isDirectory()) throw new Error(`Missing real candidate app: ${app}`);
+          for (const file of [manifest, `${app}/Contents/Resources/app.asar`, `${app}/Contents/Resources/licenses/hugr-lean/manifest.json`, `${app}/Contents/Resources/licenses/hugr-lean/LICENSE`, `${app}/Contents/Resources/licenses/hugr-lean/NOTICE`, `${root}/proof/renderer.png`, `${root}/proof/proof.log`]) {
+            const info = await lstat(file);
+            if (!info.isFile() || info.size === 0) throw new Error(`Missing or empty required artifact: ${file}`);
+          }
+          if (Buffer.compare(Buffer.from(await Bun.file(`${root}/proof/renderer.png`).slice(0, 8).arrayBuffer()), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) !== 0) throw new Error("Owned renderer proof is not PNG");
+          if (!(await lstat(`${app}/Contents/MacOS/HuGR Lean Candidate`)).isFile() || !((await lstat(`${app}/Contents/MacOS/HuGR Lean Candidate`)).mode & 0o111)) throw new Error("Missing executable candidate app");
+          '
+          # ditto retains resource forks, extended attributes, links and executable modes.
+          ditto -c -k --sequesterRsrc --keepParent --rsrc --extattr \
+            "packages/desktop/dist-candidate/mac/HuGR Lean Candidate.app" \
+            "packages/desktop/dist-candidate/ownedappArtifact.zip"
+          test -s packages/desktop/dist-candidate/ownedappArtifact.zip
+
+      - name: Upload verified candidate and owned proof
+        id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ownedappArtifact-${{ github.sha }}
+          path: |
+            packages/desktop/dist-candidate/ownedappArtifact.zip
+            packages/desktop/dist-candidate/lean-candidate-build.json
+            packages/desktop/dist-candidate/proof/renderer.png
+            packages/desktop/dist-candidate/proof/proof.log
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 7
+          compression-level: 0
