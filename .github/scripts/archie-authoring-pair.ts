@@ -19,8 +19,10 @@ const authPins = [
   ["plugin/openai/codex.ts", "97f34ae2b4420014b61f0f3a1574aa10dff4e434"],
   ["plugin/openai/siwc.ts", "203e07b88371a420db664c01e7796401cbad44df"],
   ["plugin/openai/legacy-codex-readonly.ts", "5e357d979ab74a6415821bd7747bf47d35ebceba"],
-  ["plugin/index.ts", "6588027dd666cd6d1a3dd437bec548e53622afda"],
+  ["plugin/index.ts", "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5"],
 ] as const
+const consumerSourceReview = { reviewer: "W6", verdict: "SOURCE_APPROVE", file: "packages/orchestra/src/plugin/index.ts",
+  blob: "40133ca0a23d93afe20e5e53d6e6a67ce5919bf5", runtimeQualification: "pending" }
 const runtimeFiles = ["agent/agent.ts", "agent/subagent-permissions.ts", "tool/task.ts", "tool/registry.ts", "session/prompt.ts",
   "session/task-prompt-ops.ts", "session/prompt-guard.ts", "maestro/seats/archie.ts", "maestro/roster.ts", "maestro/write-roots.ts",
   "maestro/logical-task.ts", "maestro/backend-work.ts", "maestro/backend-result.ts", "effect/app-runtime.ts"]
@@ -71,17 +73,51 @@ export async function verifyPacket(candidate: string, packetPath: string) {
     return result.value
   }
   const packetBytes = await read(await canonical(packetPath))
+  const digest = Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/))
+  const byteLength = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
+  const sourceFields = { id: Schema.NonEmptyString, path: Schema.NonEmptyString, sha256: digest, utf8ByteLength: byteLength }
+  // Authorized schema-1 successor: enumerate documented metadata, never relax execution fields or excess-property refusal.
+  const source = Schema.Union([
+    Schema.Struct(sourceFields),
+    Schema.Struct({ ...sourceFields, provenance: Schema.Literal("EXACT_HASH_PINNED_RECOVERY"), originalPath: Schema.NonEmptyString, originalSha256: digest }),
+    Schema.Struct({ ...sourceFields, provenance: Schema.Literal("FRESH_RECONSTRUCTION_NOT_HISTORICAL_BYTES") }),
+  ])
   const packet = decode(Schema.Struct({ schema: Schema.Literal(1),
-    sourceUniverse: Schema.Array(Schema.Struct({ id: Schema.NonEmptyString, path: Schema.NonEmptyString,
-      sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)), utf8ByteLength: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)) })),
+    status: Schema.optional(Schema.Literal("FRESH_RECONSTRUCTION_UNEXECUTED_NOT_HISTORICAL_SAME_MATERIALS")),
+    sourceUniverse: Schema.Array(source),
     globalPath: Schema.NonEmptyString,
-    stages: Schema.Array(Schema.Struct({ id: Schema.NonEmptyString, requestPath: Schema.NonEmptyString, sourceIDs: Schema.Array(Schema.NonEmptyString) })),
+    globalSha256: Schema.optional(digest), globalUtf8ByteLength: Schema.optional(byteLength),
+    sourceUniverseDigest: Schema.optional(Schema.Struct({ sha256: digest, utf8ByteLength: byteLength,
+      encoding: Schema.Literal("UTF-8 JSON of complete sourceUniverse array including optional fields; sort_keys=True; ensure_ascii=False; compact comma/colon separators; array order retained; no trailing LF") })),
+    stages: Schema.Array(Schema.Struct({ id: Schema.NonEmptyString, requestPath: Schema.NonEmptyString, sourceIDs: Schema.Array(Schema.NonEmptyString),
+      requestSha256: Schema.optional(digest), requestUtf8ByteLength: Schema.optional(byteLength) })),
+    exposure: Schema.optional(Schema.Struct({
+      E: Schema.Struct({ initialSourceIDs: Schema.Array(Schema.NonEmptyString), later: Schema.Literal("retain all; same four request bytes") }),
+      P: Schema.Struct({ schedule: Schema.Literal("cumulative stages[].sourceIDs; retain previous exposure") }),
+      shared: Schema.Literal("GLOBAL.md initially; all native method and prompt assets at P stage 1; no other readable input"),
+      requirementUniverse: Schema.Literal("complete and unchanged from stage 1"),
+    })),
+    rubricPath: Schema.optional(Schema.NonEmptyString), originalDemandSha256: Schema.optional(digest),
+    producerDriverHashAgreement: Schema.optional(Schema.Literal("PRODUCER_HASHES_RECORDED_DRIVER_AGREEMENT_PENDING; preserve optional fields; no driver execution or agreement claimed")),
   }), decode(Schema.UnknownFromJsonString, utf8(packetBytes), "PAIR_PACKET_JSON_INVALID"), "PAIR_PACKET_SCHEMA_INVALID")
   requireFact(packet.stages.length === 4, "PAIR_EXACTLY_FOUR_STAGES_REQUIRED")
   requireFact(packet.sourceUniverse.length > 0, "PAIR_SOURCE_UNIVERSE_EMPTY")
   requireFact(new Set(packet.sourceUniverse.map((item) => item.id)).size === packet.sourceUniverse.length, "PAIR_DUPLICATE_SOURCE_ID")
   requireFact(new Set(packet.stages.map((item) => item.id)).size === 4, "PAIR_DUPLICATE_STAGE_ID")
   requireFact(packet.stages.every((stage) => new Set(stage.sourceIDs).size === stage.sourceIDs.length && stage.sourceIDs.every((id) => packet.sourceUniverse.some((item) => item.id === id))), "PAIR_STAGE_SOURCE_MEMBERSHIP_INVALID")
+  requireFact(packet.sourceUniverse.every((item) => !("originalSha256" in item) || (item.originalSha256 === item.sha256
+    && isAbsolute(item.originalPath) && !item.originalPath.split(/[\\/]/).includes(".."))), "PAIR_SOURCE_PROVENANCE_INCONSISTENT")
+  requireFact((packet.globalSha256 === undefined) === (packet.globalUtf8ByteLength === undefined)
+    && packet.stages.every((stage) => (stage.requestSha256 === undefined) === (stage.requestUtf8ByteLength === undefined)), "PAIR_DECLARED_INTEGRITY_FIELDS_INCOMPLETE")
+  if (packet.sourceUniverseDigest) {
+    const bytes = Buffer.from(JSON.stringify(packet.sourceUniverse.map((item) => Object.fromEntries(Object.entries(item).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)))))
+    requireFact(sha256(bytes) === packet.sourceUniverseDigest.sha256 && bytes.length === packet.sourceUniverseDigest.utf8ByteLength, "PAIR_SOURCE_UNIVERSE_DIGEST_MISMATCH")
+  }
+  if (packet.exposure) {
+    requireFact(JSON.stringify(packet.exposure.E.initialSourceIDs) === JSON.stringify(packet.sourceUniverse.map((item) => item.id)), "PAIR_E_EXPOSURE_DECLARATION_MISMATCH")
+    requireFact(packet.stages.every((stage, index) => packet.stages.slice(0, index).every((prior) => prior.sourceIDs.every((id) => stage.sourceIDs.includes(id)))), "PAIR_P_CUMULATIVE_EXPOSURE_DECLARATION_MISMATCH")
+  }
+  requireFact(!packet.originalDemandSha256 || packet.sourceUniverse.some((item) => item.id === "fresh-demand" && item.sha256 === packet.originalDemandSha256), "PAIR_ORIGINAL_DEMAND_DECLARATION_MISMATCH")
   const artifact = async (path: string) => {
     requireFact(!path.split(/[\\/]/).includes(".."), "PAIR_ARTIFACT_TRAVERSAL_REFUSED")
     try {
@@ -97,19 +133,26 @@ export async function verifyPacket(candidate: string, packetPath: string) {
   const sources = await Promise.all(packet.sourceUniverse.map(async (item, index) => {
     const source = await artifact(item.path)
     requireFact(source.sha256 === item.sha256 && source.utf8ByteLength === item.utf8ByteLength, `PAIR_SOURCE_HASH_OR_LENGTH_MISMATCH:${item.id}`)
-    return { ...source, id: item.id, file: `source-${index + 1}.txt` }
+    return { ...item, ...source, file: `source-${index + 1}.txt` }
   }))
   requireFact(new Set(sources.map((item) => item.path)).size === sources.length, "PAIR_DUPLICATE_SOURCE_PATH")
   const global = await artifact(packet.globalPath)
-  const stages = await Promise.all(packet.stages.map(async (item) => ({ ...item, request: await artifact(item.requestPath) })))
-  // Global/request hashes are frozen here: schema 1 supplies only paths for these artifacts.
-  return { schema: 1, packetPath, packetSha256: sha256(packetBytes), global, sources, stages }
+  requireFact(packet.globalSha256 === undefined || (packet.globalSha256 === global.sha256 && packet.globalUtf8ByteLength === global.utf8ByteLength), "PAIR_GLOBAL_DECLARED_HASH_OR_LENGTH_MISMATCH")
+  const stages = await Promise.all(packet.stages.map(async (item) => {
+    const request = await artifact(item.requestPath)
+    requireFact(item.requestSha256 === undefined || (item.requestSha256 === request.sha256 && item.requestUtf8ByteLength === request.utf8ByteLength), `PAIR_REQUEST_DECLARED_HASH_OR_LENGTH_MISMATCH:${item.id}`)
+    return { ...item, request }
+  }))
+  const nonModelArtifacts = packet.rubricPath ? [receipt(await artifact(packet.rubricPath))] : []
+  requireFact(nonModelArtifacts.every((item) => ![global, ...sources, ...stages.map((stage) => stage.request)].some((input) => input.path === item.path)), "PAIR_BLIND_RUBRIC_IN_MODEL_INPUTS")
+  // Retain declarations as evidence only. They do not grant authority or become model prompt text.
+  return { schema: 1, packetPath, packetSha256: sha256(packetBytes), declarations: packet, nonModelArtifacts, global, sources, stages }
 }
 type Packet = Awaited<ReturnType<typeof verifyPacket>>
 const receipt = (item: { path: string; sha256: string; utf8ByteLength: number }) => ({ path: item.path, sha256: item.sha256, utf8ByteLength: item.utf8ByteLength })
 async function unchanged(packet: Packet) {
   requireFact(sha256(await read(packet.packetPath)) === packet.packetSha256, "PAIR_PACKET_CHANGED")
-  await Promise.all([packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request)].map(async (item) => {
+  await Promise.all([packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request), ...packet.nonModelArtifacts].map(async (item) => {
     const bytes = await read(await canonical(item.path))
     requireFact(bytes.length === item.utf8ByteLength && sha256(bytes) === item.sha256, `PAIR_INPUT_CHANGED:${item.path}`)
   }))
@@ -154,7 +197,7 @@ const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest(
 const save = (path: string, value: unknown) => writeFile(path, redact(JSON.stringify(value)) + "\\n", { flag: "wx", mode: 0o600 })
 const verifyInputs = async () => {
   fact(digest(await Bun.file(job.packet.packetPath).bytes()) === job.packet.packetSha256, "PAIR_PACKET_CHANGED")
-  const inputs = [job.packet.global, ...job.packet.sources, ...job.packet.stages.map((stage) => stage.request)]
+  const inputs = [job.packet.global, ...job.packet.sources, ...job.packet.stages.map((stage) => stage.request), ...job.packet.nonModelArtifacts]
   await Promise.all(inputs.map(async (input) => {
     const bytes = await Bun.file(input.path).bytes()
     fact(bytes.length === input.utf8ByteLength && digest(bytes) === input.sha256, "PAIR_INPUT_CHANGED_DURING_STAGE")
@@ -404,7 +447,7 @@ async function main() {
   const output = resolve(args.output)
   const parent = await canonical(dirname(output), true)
   requireFact(output !== candidate && !output.startsWith(candidate + "/") && !candidate.startsWith(output + "/")
-    && !packetPath.startsWith(output + "/") && ![packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request)].some((item) => item.path.startsWith(output + "/")), "PAIR_OUTPUT_INPUT_OVERLAP")
+    && !packetPath.startsWith(output + "/") && ![packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request), ...packet.nonModelArtifacts].some((item) => item.path.startsWith(output + "/")), "PAIR_OUTPUT_INPUT_OVERLAP")
   requireFact(parent === dirname(output), "PAIR_OUTPUT_PARENT_ALIAS")
   const sourceHashes = await Promise.all(authPins.map(async ([file, expected]) => {
     const bytes = await read(await canonical(join(candidate, "packages/orchestra/src", file)))
@@ -423,7 +466,8 @@ async function main() {
   process.umask(0o077)
   await mkdir(output, { mode: 0o700 }) // Existing output is refused: no overwrite or mixed-run receipts.
   const save = (file: string, value: unknown) => writeFile(join(output, file), JSON.stringify(value) + "\n", { flag: "wx", mode: 0o600 })
-  await save("prepared.json", { schema: 1, candidate, head, model, sourceHashes, runtimeHashes, coreAuthBlob: blob(coreAuth), packetPath, packetSha256: packet.packetSha256,
+  await save("prepared.json", { schema: 1, packetContract: "schema-1-documented-metadata-successor", candidate, head, model, sourceHashes, consumerSourceReview, runtimeHashes, coreAuthBlob: blob(coreAuth), packetPath, packetSha256: packet.packetSha256,
+    packetDeclarations: packet.declarations, nonModelArtifacts: packet.nonModelArtifacts,
     global: receipt(packet.global), sources: packet.sources.map((item) => ({ id: item.id, file: item.file, ...receipt(item) })),
     stages: packet.stages.map((item) => ({ id: item.id, sourceIDs: item.sourceIDs, request: receipt(item.request) })),
     deadlineMs, outputLimit, judgment: "not-performed", authAdapter: "explicit-legacy-codex-readonly", order: ["E", "P"] })
