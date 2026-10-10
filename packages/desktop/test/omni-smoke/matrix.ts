@@ -18,8 +18,9 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   try { requiredFixtures(mutation === "empty" ? [] : ["main", "shell", "terminal"]) }
   catch (error) { return { cell, diagnostic, mutation: mutation ?? "none", pass: false, error: String(error), cleanup: true } }
   const scratch = await fixtures()
-  // Fixture-only logging intervention, applied after environment sanitization.
-  Object.assign(scratch.env, { ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "INFO" })
+  const trace = process.argv.includes("--trace-server")
+  // Default acceptance retains the original sanitized fixture environment.
+  if (trace) Object.assign(scratch.env, { ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "INFO" })
   const withoutMain = diagnostic === "no-main-native" || diagnostic === "load-only" || diagnostic === "completed-run"
   if (diagnostic) Object.assign(scratch.env, { ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC: diagnostic,
     ORCHESTRA_DESKTOP_OMNI_DIAGNOSTIC_ARGV: JSON.stringify([scratch.trees.main.command, "-e", "process.stdout.write('SHORT_RUN_READY')"]) })
@@ -47,7 +48,9 @@ export async function run(cell: Cell, mutation?: Mutation, diagnostic?: Diagnost
   evidence.keychain = store?.evidence
   const logReport = { source: scratch.report, userData: undefined as string | undefined }
   evidence.logReport = logReport
-  evidence.logEnvironment = { ORCHESTRA_PRINT_LOGS: "1", ORCHESTRA_LOG_LEVEL: "INFO", scope: "fixture-only logging environment intervention" }
+  evidence.logEnvironment = { trace, ORCHESTRA_PRINT_LOGS: scratch.env.ORCHESTRA_PRINT_LOGS ?? null,
+    ORCHESTRA_LOG_LEVEL: scratch.env.ORCHESTRA_LOG_LEVEL ?? null,
+    scope: trace ? "opt-in --trace-server fixture logging intervention" : "original sanitized fixture environment; trace disabled" }
   const result = { cell, cellID: scratch.trees.main.nonce, mutation: mutation ?? "none", diagnostic,
     scope: diagnostic ? `diagnostic ${diagnostic} intervention; NOT production shutdown proof` : "actual production shutdown",
     hostFixture: process.platform === "darwin" ? store ? "real isolated unlocked keychain" : "missing-keychain root mutation" : "native hosted OS", pass: false, error: "", cleanup: false }
