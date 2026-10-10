@@ -4,7 +4,7 @@ import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat } from "node:fs/promises"
 import { builtinModules, createRequire } from "node:module"
-import { createServer } from "node:net"
+import { createConnection, createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { Schema } from "effect"
@@ -17,6 +17,8 @@ const desktop = path.resolve(import.meta.dir, "../..")
 const repo = path.resolve(desktop, "../..")
 const body = "Résumé: Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n"
 const sourceText = "Version 1 only.\nDisabled rejects operation.\n"
+// This fixed read fixture projects two lines without the file's terminal newline.
+const sourceProjection = "Version 1 only.\nDisabled rejects operation."
 const json = <A>(schema: Schema.Decoder<A>, value: unknown) => Schema.decodeUnknownSync(schema)(value)
 const object = (value: unknown): Record<string, unknown> => json(Schema.Record(Schema.String, Schema.Unknown), value)
 const parse = (value: string) => json(Schema.fromJsonString(Schema.Unknown), value)
@@ -326,32 +328,85 @@ async function runProof(root: string, install: string, electron: string, mutant:
     expect(hash(await readFile(retained[0]))).toBe(state.document.digest)
     expect((await stat(path.join(owned, "native.db"))).size).toBeGreaterThan(0)
     const database = new Database(path.join(owned, "native.db"), { readonly: true })
-    try {
-      expect(database.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" })
-      expect(database.query("SELECT count(*) AS count FROM session").get()).toMatchObject({ count: 3 })
-      const published = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.document.published%'").all(state.child))
-      expect(published).toHaveLength(1)
-      expect(object(parse(published[0].data)).receipt).toEqual(state.document)
-      const committed = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.record.committed%'").all(state.child))
-      expect(committed).toHaveLength(1)
-      expect(object(parse(committed[0].data)).record).toEqual(state.finding)
-    } finally { database.close() }
-    console.log(`JIMMY_NATIVE_ASSERTED=${JSON.stringify({ platform: process.platform, arch: process.arch, main, node, processes, loaded, source: state.source, finding: state.finding, document: state.document, report, transport, digest: hash(body) })}`)
+    const sourceOracle = await (async () => {
+      try {
+        expect(database.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" })
+        expect(database.query("SELECT count(*) AS count FROM session").get()).toMatchObject({ count: 3 })
+        const published = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.document.published%'").all(state.child))
+        expect(published).toHaveLength(1)
+        expect(object(parse(published[0].data)).receipt).toEqual(state.document)
+        const committed = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.record.committed%'").all(state.child))
+        expect(committed).toHaveLength(1)
+        expect(object(parse(committed[0].data)).record).toEqual(state.finding)
+        // Read admissions and immutable blobs from the host, independently of HTTP/tool metadata.
+        const admitted = json(Schema.Array(Schema.Struct({ sessionID: Schema.String, binding: Research.Binding, receipt: Research.SourceReceipt })), json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type = 'research.source.admitted.1'").all(state.child)).map((row) => parse(row.data)))
+        expect(admitted).toHaveLength(2)
+        const readMetadata = object(object(calls[2].state).metadata)
+        return await Promise.all(["received", "text"].map(async (representation) => {
+          const events = admitted.filter((event) => event.receipt.ref.representation === representation)
+          expect(events).toHaveLength(1)
+          const event = events[0]
+          expect(event.sessionID).toBe(state.child)
+          expect(event.binding).toEqual(event.receipt.binding)
+          expect(event.binding).toEqual(state.source?.binding)
+          expect(event.receipt.origin).toEqual({ kind: "file", uri: path.join(project, "task-evidence.txt") })
+          expect(event.receipt.complete).toBe(true)
+          const blobs = files.filter((file) => path.basename(file) === `${event.receipt.ref.artifact.id}-${event.receipt.ref.artifact.revision}.body`)
+          expect(blobs).toHaveLength(1)
+          const bytes = await readFile(blobs[0])
+          const expected = Buffer.from(representation === "received" ? sourceText : sourceProjection)
+          assertSourceBytes(event.receipt, json(Research.SourceReceipt, readMetadata[representation === "received" ? "researchReceived" : "researchSource"]), bytes, expected)
+          if (representation === "text") {
+            expect(event.receipt).toEqual(state.source)
+            expect(event.receipt.derivedFrom).toEqual(admitted.find((item) => item.receipt.ref.representation === "received")?.receipt.ref)
+            // Corrupt both receipt copies identically: metadata self-comparison would still pass.
+            const wrongLength = { ...event.receipt, bytes: event.receipt.bytes + 1 }
+            expect(() => assertSourceBytes(wrongLength, wrongLength, bytes, expected)).toThrow("Retained source byte length differs from SQLite receipt")
+            const wrongDigest = { ...event.receipt, ref: { ...event.receipt.ref, digest: hash("corrupt source receipt") } }
+            expect(() => assertSourceBytes(wrongDigest, wrongDigest, bytes, expected)).toThrow("Retained source SHA256 differs from SQLite receipt")
+            const corrupt = Buffer.from(bytes)
+            corrupt[0] ^= 1
+            const consistent = { ...event.receipt, ref: { ...event.receipt.ref, digest: hash(corrupt) } }
+            expect(() => assertSourceBytes(consistent, consistent, corrupt, expected)).toThrow("Retained source bytes differ from fixture projection")
+          }
+          return { receipt: event.receipt, retained: blobs[0], bytes: bytes.byteLength, digest: hash(bytes), controls: representation === "text" ? ["receipt-length", "receipt-sha256", "self-consistent-corrupt-blob"] : [] }
+        }))
+      } finally { database.close() }
+    })()
+    console.log(`JIMMY_NATIVE_ASSERTED=${JSON.stringify({ platform: process.platform, arch: process.arch, main, node, processes, loaded, source: state.source, sourceOracle, finding: state.finding, document: state.document, report, transport, digest: hash(body) })}`)
     child.stdin.write("stop\n")
     child.stdin.end()
     const stopDeadline = Date.now() + 10000
-    while (!logs.stdout.includes("JIMMY_DESKTOP_STOPPED=")) {
+    while (!logs.stdout.includes("JIMMY_DESKTOP_STOP_ACK=")) {
       if (Date.now() > stopDeadline) throw new Error(`Native desktop sidecar stop deadline: ${JSON.stringify(logs)}`)
       await Bun.sleep(25)
     }
-    expect(marker("JIMMY_DESKTOP_STOPPED").windows).toBe(0)
+    expect(marker("JIMMY_DESKTOP_STOP_ACK").windows).toBe(0)
     expect(logs.stdout).toContain("JIMMY_SIDECAR_EXIT=0")
     await waitForPidExit(Number(node.pid))
     killOwned()
     expect(await exited).toBeNull()
     expect(child.signalCode).toBe("SIGKILL")
     await waitForPidExit(Number(main.pid))
-    return { platform: process.platform, arch: process.arch, main, node, processes, loaded, requests, parentID: state.parent, childID: state.child, source: state.source, finding: state.finding, document: state.document, report, transport, retained: retained[0], digest: hash(body), db: path.join(owned, "native.db"), stopped: true, fixtureReaped: "SIGKILL" }
+    await waitForPortRefusal(port)
+    // A real listener on the same owned port must fail even with both native PIDs gone.
+    const survivor = createServer((socket) => socket.end())
+    await new Promise<void>((resolve, reject) => {
+      survivor.once("error", reject)
+      survivor.listen(port, "127.0.0.1", resolve)
+    })
+    const survivorFailure = await (async () => {
+      try {
+        const failure = await waitForPortRefusal(port).then(() => undefined, (error: unknown) => String(error))
+        expect(failure).toContain("Owned HTTP port still accepts TCP connections")
+        return failure
+      } finally {
+        await new Promise<void>((resolve, reject) => survivor.close((error) => error ? reject(error) : resolve()))
+      }
+    })()
+    const portClosed = await waitForPortRefusal(port)
+    console.log(`JIMMY_DESKTOP_STOPPED=${JSON.stringify({ mainPID: main.pid, utilityPID: node.pid, portClosed, survivorFailure })}`)
+    return { platform: process.platform, arch: process.arch, main, node, processes, loaded, requests, parentID: state.parent, childID: state.child, source: state.source, sourceOracle, finding: state.finding, document: state.document, report, transport, retained: retained[0], digest: hash(body), db: path.join(owned, "native.db"), portClosed, survivorFailure, stopped: true, fixtureReaped: "SIGKILL" }
   } finally {
     provider.stop(true)
     clearTimeout(timeout)
@@ -370,6 +425,35 @@ async function runProof(root: string, install: string, electron: string, mutant:
     if (errors.length) console.error(`JIMMY_PROVIDER_ERRORS=${JSON.stringify(errors)}`)
     if (child.exitCode !== 0) console.error(`JIMMY_PROCESS_LOGS=${JSON.stringify(logs)}`)
   }
+}
+
+function assertSourceBytes(receipt: Research.SourceReceipt, metadata: Research.SourceReceipt, bytes: Buffer, expected: Buffer) {
+  expect(receipt, "SQLite source receipt differs from read metadata").toEqual(metadata)
+  if (!bytes.equals(expected)) throw new Error("Retained source bytes differ from fixture projection")
+  if (bytes.byteLength !== receipt.bytes) throw new Error("Retained source byte length differs from SQLite receipt")
+  if (hash(bytes) !== receipt.ref.digest) throw new Error("Retained source SHA256 differs from SQLite receipt")
+}
+
+function waitForPortRefusal(port: number, timeout = 3000) {
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) throw new Error(`Invalid owned HTTP port: ${port}`)
+  return new Promise<{ host: string; port: number; result: "ECONNREFUSED"; timeout: number }>((resolve, reject) => {
+    const socket = createConnection({ host: "127.0.0.1", port })
+    const timer = setTimeout(() => {
+      socket.destroy()
+      reject(new Error(`Owned HTTP port probe timed out: 127.0.0.1:${port}`))
+    }, timeout)
+    socket.once("connect", () => {
+      clearTimeout(timer)
+      socket.destroy()
+      reject(new Error(`Owned HTTP port still accepts TCP connections: 127.0.0.1:${port}`))
+    })
+    socket.once("error", (error: NodeJS.ErrnoException) => {
+      clearTimeout(timer)
+      socket.destroy()
+      if (error.code === "ECONNREFUSED") return resolve({ host: "127.0.0.1", port, result: "ECONNREFUSED", timeout })
+      reject(new Error(`Owned HTTP port probe failed: ${String(error)}`))
+    })
+  })
 }
 
 async function command(cmd: string[], cwd: string, env: Record<string, string | undefined>, timeout: number) {

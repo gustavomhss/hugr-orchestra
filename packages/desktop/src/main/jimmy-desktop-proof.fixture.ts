@@ -36,7 +36,8 @@ async function main() {
   process.stdin.once("data", async () => {
     await server.listener.stop()
     clearTimeout(deadline)
-    console.log(`JIMMY_DESKTOP_STOPPED=${JSON.stringify({ windows: BrowserWindow.getAllWindows().length, metrics: app.getAppMetrics() })}`)
+    // This acknowledges the stop request; the host emits STOPPED only after PID and TCP checks.
+    console.log(`JIMMY_DESKTOP_STOP_ACK=${JSON.stringify({ windows: BrowserWindow.getAllWindows().length, metrics: app.getAppMetrics() })}`)
     process.stdin.destroy()
     // The host observes native process disappearance before reaping this private
     // Electron process group. This harness does not exercise desktop activation/quit.
