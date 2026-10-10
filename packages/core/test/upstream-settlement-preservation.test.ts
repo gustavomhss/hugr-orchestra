@@ -81,7 +81,9 @@ const progress = (value: Record<string, unknown>) => SessionEvent.Tool.Progress.
 
 const dbIt = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node])))
 
-const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (view: string, legacyOriginal = false) {
+const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (
+  view: string, legacyOriginal = false, selection: "execution" | "logical" | "wrong-logical" = "execution",
+) {
   const database = yield* Database.Service
   const events = yield* EventV2.Service
   const parentID = SessionSchema.ID.make(`ses_observation_parent_${view}`)
@@ -94,10 +96,11 @@ const observationFixture = Effect.fn("HostObservationTest.fixture")(function* (v
     { id: parentID, project_id: projectID, slug: "parent", directory: "/project", title: "parent", version: "test" },
     { id: childID, parent_id: parentID, project_id: projectID, slug: "child", directory: "/project", agent: "archie", title: "child", version: "test" },
   ]).run()
-  const selectedInput = { subagent_type: "archie", task_id: childID, prompt: input.prompt }
   const result = { ...workResult, taskId: `tsk_observation_${view}`, card: { parsed: true, messageID: authorMessageID },
     author: { memberId: "archie", executionSessionID: childID, messageID: authorMessageID },
     terminal: { reason: "failed", hostDetail: "Actual host failure after returned assistant" } }
+  const selectedInput = { subagent_type: "archie", task_id: selection === "logical" ? result.taskId :
+    selection === "wrong-logical" ? "tsk_unrelated" : childID, prompt: input.prompt }
   const retainedMetadata = { parentSessionId: parentID, sessionId: childID, background: true, concurrent: "keep",
     workResult: { schema: result.schema, taskId: result.taskId, card: { parsed: false }, terminal: { reason: "running" } } }
   const base = { sessionID: parentID, assistantMessageID: parentMessageID, callID: "original-task", timestamp }
@@ -595,13 +598,15 @@ describe("private upstream settlement preservation", () => {
       { ...owner, tool: "unrelated" })).toEqual({ ordinary: "new", extra: true })
   }))
 
-  it.effect("resumed child uses execution Session ID, distinct from retained logical Task name", () => Effect.sync(() => {
+  it.effect("resume accepts exact execution Session or retained logical Task name", () => Effect.sync(() => {
     expect(input.task_id).not.toBe(workResult.taskId)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, owner)).toEqual(receipt)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner,
       input: { subagent_type: "archie", prompt: input.prompt } })).toEqual(receipt)
     expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner,
-      input: { ...input, task_id: workResult.taskId } })).toBeUndefined()
+      input: { ...input, task_id: workResult.taskId } })).toEqual(receipt)
+    expect(SessionMessageUpdater.upstreamSettlement(metadata, { ...owner,
+      input: { ...input, task_id: "tsk_unrelated" } })).toBeUndefined()
   }))
 
   it.effect("malformed, conflicting parent/call/child identity cannot carry a receipt", () => Effect.sync(() => {
@@ -756,3 +761,5 @@ describe("private upstream settlement preservation", () => {
     expect(tool(provider.state).state.structured.metadata).not.toHaveProperty("upstreamSettlement")
   }))
 })
+
+export { called, dbIt, fixture, input, it, metadata, observationFixture, progress, receipt, success, tool, workResult }

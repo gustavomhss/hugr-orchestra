@@ -33,10 +33,11 @@ export function upstreamSettlement(metadata: Record<string, unknown>, owner: Tas
     card: Schema.Struct({ messageID: Schema.NonEmptyString }),
     author: Schema.Struct({ memberId: Schema.Literal("archie"), executionSessionID: Schema.NonEmptyString, messageID: Schema.NonEmptyString }),
   }))(receipt.value.workResult)
-  // Task's resume parameter names the child Session; logical Task identity is checked by the private host port.
+  // The private host port validates this exact logical binding; resume may name it or its execution child.
   if (Option.isNone(result) || result.value.author.executionSessionID !== metadata.sessionId ||
     result.value.card.messageID !== result.value.author.messageID ||
-    (input.value.task_id !== undefined && input.value.task_id !== result.value.author.executionSessionID)) return
+    (input.value.task_id !== undefined && input.value.task_id !== result.value.author.executionSessionID &&
+      input.value.task_id !== result.value.taskId)) return
   return receipt.value
 }
 
@@ -80,11 +81,12 @@ const taskObservation = (adapter: Adapter, assistant: SessionMessage.Assistant, 
     terminal: Schema.Struct({ reason: Schema.Literals(["failed", "interrupted"]), hostDetail: Schema.optional(Schema.NonEmptyString) }),
   }))(value))
   const selection = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
-    subagent_type: Schema.NonEmptyString, task_id: Schema.optional(SessionSchema.ID),
+    subagent_type: Schema.NonEmptyString, task_id: Schema.optional(Schema.NonEmptyString),
   }))(call.state.input))
   if (!result || !selection || result.card.messageID !== result.author.messageID ||
     result.author.executionSessionID !== previous.sessionId || selection.subagent_type !== result.author.memberId ||
-    selection.task_id !== undefined && selection.task_id !== result.author.executionSessionID) return
+    selection.task_id !== undefined && selection.task_id !== result.author.executionSessionID &&
+      selection.task_id !== value.taskId) return
   const oldAuthor = before.author === undefined ? undefined : Option.getOrUndefined(record(before.author))
   const oldCard = Option.getOrUndefined(record(before.card))
   const oldTerminal = Option.getOrUndefined(record(before.terminal))
