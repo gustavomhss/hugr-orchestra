@@ -138,9 +138,55 @@ test("pending native interrupts sharing fiber ID retain distinct annotation iden
     expect(cause.reasons).toHaveLength(4)
     const interrupts = cause.reasons.filter(Cause.isInterruptReason)
     expect(interrupts.map((reason) => reason.fiberId)).toEqual([controllerID, controllerID])
-    expect(interrupts.map((reason) => Context.getOrUndefined(Cause.reasonAnnotations(reason), Annotation))).toEqual([
-      firstAnnotation, secondAnnotation,
-    ])
+    expect(Context.getOrUndefined(Cause.reasonAnnotations(interrupts[0]), Annotation)).toBe(firstAnnotation)
+    expect(Context.getOrUndefined(Cause.reasonAnnotations(interrupts[1]), Annotation)).toBe(secondAnnotation)
+  }))
+})
+
+test.each([["original maps", false], ["copied maps", true]] as const)("annotated restored interrupt and unannotated cleanup interrupt both survive: %s", async (_, copy) => {
+  await run(Effect.gen(function* () {
+    const entered = yield* Deferred.make<void>()
+    const cleanupEntered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const controllerID = yield* Effect.fiberId
+    const requested = { phase: "first annotated request" }
+    const captured: Cause.Cause<never>[] = []
+    const continued: boolean[] = []
+    const pending = yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const original = failure(yield* restore(Deferred.succeed(entered, undefined).pipe(
+        Effect.andThen(Effect.never),
+      )).pipe(Effect.exit))
+      captured.push(original)
+      yield* Deferred.succeed(cleanupEntered, undefined)
+      yield* Deferred.await(release).pipe(Effect.timeout("2 seconds"))
+      const reasons = copy ? original.reasons.map((reason) => reason.annotate(
+        Context.makeUnsafe(new Map(reason.annotations)),
+      )) : original.reasons
+      if (copy) expect(reasons[0].annotations).not.toBe(original.reasons[0].annotations)
+      return yield* Effect.failCause(Cause.fromReasons([...reasons, die]))
+    })).pipe(
+      Effect.catchCause(() => Effect.sync(() => continued.push(true))),
+      Effect.withSpan("two native requests through masked cleanup"), Effect.forkChild,
+    )
+    yield* Deferred.await(entered)
+    const first = yield* Fiber.interruptAs(pending, controllerID, Context.make(Annotation, requested))
+      .pipe(Effect.forkChild({ startImmediately: true }))
+    yield* Deferred.await(cleanupEntered)
+    const second = yield* Fiber.interruptAs(pending, controllerID)
+      .pipe(Effect.forkChild({ startImmediately: true }))
+    yield* Deferred.succeed(release, undefined)
+    const cause = failure(yield* Fiber.await(pending))
+    yield* Fiber.join(first)
+    yield* Fiber.join(second)
+    expect(captured).toHaveLength(1)
+    expect(cause.reasons.map((reason) => reason._tag)).toEqual(["Interrupt", "Die", "Interrupt"])
+    const interrupts = cause.reasons.filter(Cause.isInterruptReason)
+    expect(interrupts.map((reason) => reason.fiberId)).toEqual([controllerID, controllerID])
+    expect(Context.getOrUndefined(Cause.reasonAnnotations(interrupts[0]), Annotation)).toBe(requested)
+    expect(interrupts[1].annotations.has(Annotation.key)).toBe(false)
+    captured[0].reasons[0].annotations.forEach((value, key) => expect(interrupts[0].annotations.get(key)).toBe(value))
+    expect(cause.reasons.filter(Cause.isDieReason)[0].defect).toBe(defect)
+    expect(continued).toEqual([])
   }))
 })
 

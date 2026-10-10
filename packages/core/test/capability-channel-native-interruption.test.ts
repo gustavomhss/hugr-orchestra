@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { join } from "node:path"
 import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { CapabilityChannels } from "@orchestra/core/capability/channel/index"
+import { Output } from "@orchestra/core/capability/channel/schema"
 import { CapabilityConnections } from "@orchestra/core/capability/connection/index"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { CapabilityJobs } from "@orchestra/core/capability/job/index"
@@ -14,7 +15,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { Tool } from "@orchestra/core/tool/tool"
 import { Integration } from "@orchestra/schema/integration"
-import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Tracer } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Schema, Tracer } from "effect"
 import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
 import { sql } from "drizzle-orm"
 import { CapabilityPolicyFixture } from "./fixture/capability-policy"
@@ -55,6 +56,7 @@ function probe(mode: "http-wait" | "masked-observe" | "retention-observe") {
     const callbackRows: (typeof CapabilityJobTable.$inferSelect)[] = []
     const defect = new Error("EXACT_NATIVE_CLEANUP_DEFECT")
     const counts = { posts: 0 }
+    const streams = new Set<ReadableStreamDefaultController<Uint8Array>>()
     const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
       fetch(request) {
         const path = new URL(request.url).pathname
@@ -64,24 +66,27 @@ function probe(mode: "http-wait" | "masked-observe" | "retention-observe") {
         if (path === "/api/v10/channels/10") return Response.json({ id: "10", guild_id: "1", type: 0, permission_overwrites: [] })
         if (path === "/api/v10/channels/10/messages" && request.method === "POST") {
           counts.posts++
-          Deferred.doneUnsafe(received, Effect.void)
           if (mode === "masked-observe") return Response.json({ error: "fixture 500" }, { status: 500 })
           if (mode === "retention-observe") return Response.json({ id: "201" })
-          // Bound server-side streaming resources even if client cancellation fails.
-          const timer = { value: undefined as ReturnType<typeof setTimeout> | undefined }
-          return new Response(new ReadableStream({
+          // This body cannot finish before native interruption, even on a slow host.
+          return new Response(new ReadableStream<Uint8Array>({
             start(controller) {
+              streams.add(controller)
               controller.enqueue(new TextEncoder().encode("{"))
-              timer.value = setTimeout(() => controller.close(), 1000)
+              // Signal after Bun's handler returns; avoid reentrant client interruption.
+              setImmediate(() => Deferred.doneUnsafe(received, Effect.void))
             },
-            cancel() { clearTimeout(timer.value) },
+            cancel() { streams.clear() },
           }))
         }
         if (path === "/api/v10/channels/10/messages/201")
           return Response.json({ id: "201", channel_id: "10", type: 0, content: "native interrupt" })
         return Response.json({ path }, { status: 404 })
       },
-    })), (server) => Effect.promise(() => server.stop(true)))
+    })), (server) => Effect.sync(() => {
+      streams.forEach((controller) => controller.close())
+      streams.clear()
+    }).pipe(Effect.andThen(Effect.promise(() => server.stop(true)))))
     // Facade keeps actual SQLite transaction; fault follows actual observer UPDATE and invalid SQL.
     const transaction: typeof f.database.db.transaction = (use, options) => f.database.db.transaction((tx) => Effect.gen(function* () {
       const result = yield* use(tx)
@@ -117,12 +122,14 @@ function probe(mode: "http-wait" | "masked-observe" | "retention-observe") {
         if (this.name === "CapabilityJobs.observeHost") observerExits.push(exit)
       }
     }(options) })
-    const pending = yield* CapabilityInvocation.withContext(binding, Tool.settle(channels.tools.channel_send,
+    const call = () => CapabilityInvocation.withContext(binding, Tool.settle(channels.tools.channel_send,
       { type: "tool-call", id: f.context.toolCallID, name: "channel_send", input: { provider: "discord", text: "native interrupt" } }, f.context))
-      .pipe(Effect.withTracer(tracer), Effect.forkChild)
+    const pending = yield* call().pipe(Effect.withTracer(tracer), Effect.forkChild)
     yield* Deferred.await(mode === "http-wait" ? received : observerReached)
-    // Let Bun's fetch handler return before synchronously interrupting its client fiber.
-    if (mode === "http-wait") yield* Effect.sleep("20 millis")
+    if (mode === "http-wait") {
+      expect(yield* Deferred.isDone(observerReached)).toBe(false)
+      expect(callbackRows).toHaveLength(0)
+    }
     const interruptor = yield* Fiber.interrupt(pending).pipe(Effect.forkChild({ startImmediately: true }))
     yield* Deferred.await(observerReached)
     expect(pending.pollUnsafe()).toBeUndefined()
@@ -145,11 +152,24 @@ function probe(mode: "http-wait" | "masked-observe" | "retention-observe") {
       expect(Exit.isFailure(observed)).toBe(true)
       if (Exit.isSuccess(observed)) throw new Error("NATIVE_INTERRUPTION_BECAME_SUCCESS")
       const dies = observed.cause.reasons.filter(Cause.isDieReason)
-      expect(dies.map((reason) => reason.defect)).toEqual(cleanup[0].reasons.filter(Cause.isDieReason).map((reason) => reason.defect))
-      dies.forEach((reason) => expect(reason.annotations.get("native-cleanup")).toBe("must-survive"))
+      const originals = cleanup[0].reasons.filter(Cause.isDieReason)
+      expect(dies).toHaveLength(originals.length)
+      dies.forEach((reason, index) => {
+        expect(reason.defect).toBe(originals[index].defect)
+        expect(reason.annotations.get("native-cleanup")).toBe("must-survive")
+      })
       expect(observed.cause.reasons.filter(Cause.isInterruptReason).map((reason) => reason.fiberId)).toEqual([interruptor.id])
       if (mode !== "http-wait") expect(observed.cause.reasons.some(Cause.isFailReason)).toBe(true)
+      if (mode === "http-wait") expect(observed.cause.reasons.filter(Cause.isFailReason)).toHaveLength(0)
     })
+    if (mode === "retention-observe") {
+      const replay = yield* call().pipe(Effect.flatMap((value) => Schema.decodeUnknownEffect(Output)(value.structured)))
+      expect(replay.result.status).toBe("partial")
+      expect(replay.jobRef?.id).toBe(rows[0].id)
+      expect(replay.result.receipt).toBe(rows[0].id)
+      expect(counts.posts).toBe(1)
+      expect(yield* f.database.db.select().from(CapabilityJobTable).all().pipe(Effect.orDie)).toEqual(rows)
+    }
   }).pipe(Effect.timeout("15 seconds"))
 }
 

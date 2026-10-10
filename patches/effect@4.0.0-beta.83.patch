@@ -8,9 +8,9 @@ diff --git a/dist/internal/core.js b/dist/internal/core.js
 -    while (fiber.interruptible && fiber._interruptedCause && cont) {
 +    while (fiber.interruptible && fiber._interruptedCause) {
 +      // getCont runs mask restoration but its returned continuation is skipped
-+      // on interrupted fibers. Match pending interrupt identity and annotation entries
-+      // (body stack annotation clones reasons); never deduplicate body reasons.
-+      const reasons = fiber._interruptedCause.reasons.filter(reason => !cause.reasons.some(existing => existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" && existing.fiberId === reason.fiberId && Array.from(reason.annotations).every(([key, value]) => existing.annotations.has(key) && existing.annotations.get(key) === value)));
++      // on interrupted fibers. Match user annotations symmetrically; only an extra
++      // StackTraceKey from causeAnnotate is allowed. Never deduplicate body reasons.
++      const reasons = fiber._interruptedCause.reasons.filter(reason => !cause.reasons.some(existing => existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" && existing.fiberId === reason.fiberId && Array.from(reason.annotations).every(([key, value]) => existing.annotations.has(key) && existing.annotations.get(key) === value) && Array.from(existing.annotations).every(([key, value]) => key === StackTraceKey.key && !reason.annotations.has(key) || reason.annotations.has(key) && reason.annotations.get(key) === value)));
 +      if (reasons.length > 0) {
 +        cause = causeFromReasons([...cause.reasons, ...reasons]);
 +        annotated = true;
@@ -26,21 +26,25 @@ diff --git a/dist/internal/core.js b/dist/internal/core.js
 diff --git a/src/internal/core.ts b/src/internal/core.ts
 --- a/src/internal/core.ts
 +++ b/src/internal/core.ts
-@@ -536,12 +536,29 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
+@@ -536,12 +536,33 @@ export const exitFailCause: <E>(cause: Cause.Cause<E>) => Exit.Exit<never, E> = makeEx
        annotated = true
      }
      let cont = fiber.getCont(contE)
 -    while (fiber.interruptible && fiber._interruptedCause && cont) {
 +    while (fiber.interruptible && fiber._interruptedCause) {
 +      // getCont runs mask restoration but its returned continuation is skipped
-+      // on interrupted fibers. Match pending interrupt identity and annotation entries
-+      // (body stack annotation clones reasons); never deduplicate body reasons.
++      // on interrupted fibers. Match user annotations symmetrically; only an extra
++      // StackTraceKey from causeAnnotate is allowed. Never deduplicate body reasons.
 +      const reasons = fiber._interruptedCause.reasons.filter((reason) =>
 +        !cause.reasons.some((existing) =>
 +          existing === reason || existing._tag === "Interrupt" && reason._tag === "Interrupt" &&
 +            existing.fiberId === reason.fiberId &&
 +            Array.from(reason.annotations).every(([key, value]) =>
 +              existing.annotations.has(key) && existing.annotations.get(key) === value
++            ) &&
++            Array.from(existing.annotations).every(([key, value]) =>
++              key === StackTraceKey.key && !reason.annotations.has(key) ||
++                reason.annotations.has(key) && reason.annotations.get(key) === value
 +            )
 +        )
 +      )
