@@ -61,7 +61,9 @@ const mapEndpoint1Error = (error: unknown) =>
       ? error
       : new ClientError({ cause: error })
 const Endpoint1 = (raw: RawGroup) => (input?: Endpoint1Input) =>
-  raw["list"]({ query: { archived: input?.["archived"] } }).pipe(Effect.mapError(mapEndpoint1Error))
+  raw["list"]({ query: { ...(input?.["archived"] === undefined ? {} : { archived: input?.["archived"] }) } }).pipe(
+    Effect.mapError(mapEndpoint1Error),
+  )
 
 type Endpoint2Input = { readonly sessionID: (typeof Endpoint2Params.Type)["sessionID"] }
 const Endpoint2DeclaredError = Schema.Union([Endpoint2Error0])
