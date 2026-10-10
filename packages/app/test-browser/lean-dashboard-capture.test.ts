@@ -29,6 +29,7 @@ test("capture native production Lean page in CI Chromium; exact PNG/manifest art
     expect(value.synthetic).toBe(true)
     expect(value.source).toBe(source)
     expect(value.base).toBe("cc726a13aaf211f831cc7a039cff8df635d4743d")
+    expect(value.polishDependency).toBe("ae0f158f08712b28f64ab1445fc7712e793120fe")
     expect(value.captures.map((capture: { file: string }) => capture.file).sort()).toEqual(files)
     for (const capture of value.captures) {
       expect(capture.dpr).toBe(1)
