@@ -783,3 +783,24 @@ it.instance(
     },
   },
 )
+
+it.instance(
+  "native subagent honors a configured engine while Maestro stays on Orchestra's loop",
+  () =>
+    Effect.gen(function* () {
+      const archie = yield* load((svc) => svc.get("archie"))
+      expect(archie).toMatchObject({ id: "archie", native: true, mode: "subagent", engine: "claude-code" })
+      expect(String(archie?.model?.providerID)).toBe("anthropic")
+      const maestro = yield* load((svc) => svc.get("maestro"))
+      expect(maestro).toMatchObject({ id: "maestro", mode: "primary" })
+      expect(maestro?.engine).toBeUndefined()
+    }),
+  {
+    config: {
+      agent: {
+        archie: { engine: "claude-code", model: "anthropic/claude-opus-5-5" },
+        maestro: { engine: "claude-code", mode: "subagent" },
+      },
+    },
+  },
+)
