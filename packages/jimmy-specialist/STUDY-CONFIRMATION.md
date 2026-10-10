@@ -50,3 +50,46 @@ Ledger remains in the external evaluator lane at
 `jimmy-eval-private/candidate-confirmation-v17/ledger.json`.
 Trial billing, billed tokens and raw-read bytes remain unknown.
 This report contains counts, identities and mechanical failure classes only.
+
+## Appended grading reconciliation: v18
+
+The original checkpoint above and its sealed ledger remain unchanged.
+Grading reconciliation used saved immutable outputs only: no native task reruns,
+candidate edits, acceptance edits or best-of selection. All 16 original
+inconclusive records remain retained. Twelve new independent cold assessments
+were appended with exact packet, original-grade and native-evaluation digests.
+Two valid saved-output packet controls and a missing-evaluation rejection control
+executed before model grading. The additional calls used at most six graders and
+finished in 75436 ms, within the separately authorized ten-minute bound.
+
+All 38 retained native task returns now have valid cold assessments:
+35 passed and three failed closure. The four missing native evaluations remain
+failures. Final scheduled-slot counts are 35 passed, seven failed, zero unknown;
+this still does not meet the all-cases/three-repetitions acceptance requirement.
+
+| Cases | Passed per case | Closure failures per case | Native failures per case |
+| --- | ---: | ---: | ---: |
+| R01–R04, R06–R07, R09–R10 | 3 | 0 | 0 |
+| R05 | 2 | 1 | 0 |
+| R08 | 1 | 2 | 0 |
+| R11–R14 | 2 | 0 | 1 |
+
+The three closure misses are completed-parent publication defects:
+- R08 rep1: applicable source was captured and reopened; the completed answer
+  still missed material applicability qualification. Six research records completed.
+- R08 rep2: applicable source was read; other selected sources were reopened;
+  the completed answer still missed applicability qualification. Seven records completed.
+- R05 rep3: provenance source was read and reopened; the completed answer still
+  failed the declared-versus-verified provenance boundary. Three records completed.
+All three have parsed `discovery-work-result-v1` cards and checked references,
+with no failed upstream stream. These are not demonstrated missing-read or
+schema/receipt rejection failures. Valid references do not establish semantic closure.
+
+The external supervisor root fix clears the losing fallback deadline timer;
+its versioned repair was materialized without dispatching any native trial.
+Owned diagnostic/model processes and proxy listeners were cleaned up.
+Billing and total native token usage remain unknown.
+
+Appended ledger: `jimmy-eval-private/grading-reconciliation-v18/ledger.json`.
+Appended ledger SHA256: `19de3d80b6419e5036ce3ac4ffbb7c71396bdab6ee8842bde81b782abe37db20`.
+Original v17 seal retained: `0e764bdd1cd548a112c55b8bbc6f69932bba6400193074eb8372286ab42a33ef`.
