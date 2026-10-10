@@ -1,12 +1,12 @@
 import { describe, expect } from "bun:test"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
-import { InvalidRequestError, UnauthorizedError } from "@orchestra/protocol/errors"
+import { ForbiddenError, InvalidRequestError, UnauthorizedError } from "@orchestra/protocol/errors"
 import { CapabilityAuthorization } from "@orchestra/protocol/middleware/capability-authorization"
 import { Capability } from "@orchestra/schema/capability"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { WorkspaceID } from "@orchestra/schema/workspace-id"
-import { Cause, Context, Deferred, Effect, Exit, Fiber, Option } from "effect"
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Option, Schema } from "effect"
 import { it } from "../../core/test/lib/effect"
 import { CapabilityAuthorizationFixture } from "./capability-authorization-fixture"
 
@@ -248,26 +248,37 @@ describe("capability authorization HTTP boundary", () => {
     Effect.gen(function* () {
       const defect = new Error("lifecycle-defect")
       const native = new InvalidRequestError({ message: "Domain input rejected" })
-      const failure = new Capability.Failure({ code: "target_denied", message: "private-token-detail", detail: { secret: "private-secret" } })
+      const failure = new Capability.Failure({ code: "authentication_required", message: "private-token-detail", detail: { secret: "private-secret" } })
+      const later = new Capability.Failure({ code: "target_denied", message: "private-target-detail", detail: { secret: "private-target-secret" } })
       const mixed = Cause.fromReasons<Capability.Failure | InvalidRequestError>([
         ...Cause.fail(failure).reasons.map((reason) => reason.annotate(Context.makeUnsafe(new Map([["auth", "failure-annotation"]])))),
         ...Cause.fail(native).reasons.map((reason) => reason.annotate(Context.makeUnsafe(new Map([["native", "domain-annotation"]])))),
+        ...Cause.fail(later).reasons.map((reason) => reason.annotate(Context.makeUnsafe(new Map([["target", "target-annotation"]])))),
         ...Cause.die(defect).reasons.map((reason) => reason.annotate(Context.makeUnsafe(new Map([["defect", "defect-annotation"]])))),
         ...Cause.interrupt(919).reasons.map((reason) => reason.annotate(Context.makeUnsafe(new Map([["interrupt", "interrupt-annotation"]])))),
       ])
       const fixture = yield* CapabilityAuthorizationFixture.make({ onBinding: () => Effect.failCause(mixed) })
       const issued = yield* fixture.operator.issue({ origin: "sdk" })
-      yield* denied(yield* fixture.request({ headers: { authorization: `Bearer ${issued.bearer}` } }), 403, [issued.bearer, "private-token-detail", "private-secret"])
+      yield* denied(yield* fixture.request({ headers: { authorization: `Bearer ${issued.bearer}` } }), 401,
+        [issued.bearer, "private-token-detail", "private-secret", "private-target-detail", "private-target-secret"])
       expect(fixture.causes).toHaveLength(1)
       const reasons = fixture.causes[0].reasons
-      expect(reasons.map((reason) => reason._tag)).toEqual(["Fail", "Fail", "Die", "Interrupt"])
+      expect(reasons.map((reason) => reason._tag)).toEqual(["Fail", "Fail", "Fail", "Die", "Interrupt"])
       expect(reasons.map((reason) => Object.fromEntries(reason.annotations))).toEqual([
-        { auth: "failure-annotation" }, { native: "domain-annotation" }, { defect: "defect-annotation" }, { interrupt: "interrupt-annotation" },
+        { auth: "failure-annotation" }, { native: "domain-annotation" }, { target: "target-annotation" },
+        { defect: "defect-annotation" }, { interrupt: "interrupt-annotation" },
       ])
-      expect(reasons[0]._tag === "Fail" && reasons[0].error).toMatchObject({ _tag: "ForbiddenError", message: "Request denied" })
+      const authenticationError = reasons[0]._tag === "Fail" && reasons[0].error
+      const targetError = reasons[2]._tag === "Fail" && reasons[2].error
+      expect(authenticationError).toBeInstanceOf(UnauthorizedError)
+      expect(Schema.encodeUnknownSync(UnauthorizedError)(authenticationError)).toEqual({ _tag: "UnauthorizedError", message: "Authentication required" })
+      expect(UnauthorizedError.ast.annotations?.httpApiStatus).toBe(401)
+      expect(targetError).toBeInstanceOf(ForbiddenError)
+      expect(Schema.encodeUnknownSync(ForbiddenError)(targetError)).toEqual({ _tag: "ForbiddenError", message: "Request denied" })
+      expect(ForbiddenError.ast.annotations?.httpApiStatus).toBe(403)
       expect(reasons[1]._tag === "Fail" && reasons[1].error).toBe(native)
-      expect(reasons[2]._tag === "Die" && reasons[2].defect).toBe(defect)
-      expect(reasons[3]._tag === "Interrupt" && reasons[3].fiberId).toBe(919)
+      expect(reasons[3]._tag === "Die" && reasons[3].defect).toBe(defect)
+      expect(reasons[4]._tag === "Interrupt" && reasons[4].fiberId).toBe(919)
       expect(fixture.domain.effects).toBe(0)
       const authFailure = yield* CapabilityAuthorizationFixture.make({ onBinding: () => Effect.fail(
         new Capability.Failure({ code: "authentication_revoked", message: "private-revocation" }),
