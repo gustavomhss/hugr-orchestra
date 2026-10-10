@@ -87,9 +87,9 @@ for (const exact of [
   expect(result).toMatchObject({ retried: true, dropped: 0 })
   if (result.artifact?.version !== 5) throw new Error("Missing corrected v5 artifact")
   expect(result.artifact.items[0].fields[exact.field]).toBe(exact.good)
-    expect(result.artifact.review).toBeUndefined()
-    expect(result.artifact.checklist).toBeDefined()
-    expect(validChecklist(result.artifact)).toBe(true)
+  expect(result.artifact.review).toBeUndefined()
+  expect(result.artifact.checklist).toBeDefined()
+  expect(validChecklist(result.artifact)).toBe(true)
 }))
 
 it.effect("repeated C17 failure exhausts two streams without publishing a candidate", () => Effect.gen(function* () {

@@ -12,6 +12,9 @@ review in `context-continuity-quality.md`; prior results remain historical evide
 - Host executes existing C1–C17 checks, then a synchronous retention checklist. No model, tools, I/O or
   semantic grading in that checklist. Only a named failed host check permits the existing single retry;
   at most two producer streams per pass, under the original shared deadline and disposal ownership.
+- The checklist also preserves the old review's deterministic source fence: covered records match the
+  owned, fingerprinted, ordered active subsequence. Stable full-history aliases outside that declared
+  prefix cannot support candidate items or Now, including after native compaction.
 - Host protects objective/rules/user-owned decisions and exact values, plus any previously protected IDs
   carried by legacy review or current checklist receipts. Unchanged items survive automatically.
 - Retiring or changing protected items requires newly covered source evidence. Retirement additionally
