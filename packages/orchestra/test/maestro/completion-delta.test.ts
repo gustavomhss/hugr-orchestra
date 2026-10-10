@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
+import { rename, symlink } from "node:fs/promises"
 import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -241,3 +242,103 @@ it.live("interrupted real host callback publishes incomplete facts before fiber 
     expect(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)).toBe(true)
   }),
 )
+
+const bounds = { files: 10_000, bytes: 8 * 1024 * 1024 }
+const link = (target: string, destination: string, type: "file" | "dir" | "junction") => Effect.tryPromise({
+  try: () => symlink(target, destination, type),
+  // Unavailable link creation fails this proof explicitly; it must never be reported as green coverage.
+  catch: (error) => new Error(`LINK_CREATION_UNAVAILABLE: ${process.platform} ${type}: ${String(error)}`),
+})
+
+Array.of("file", "directory").forEach((kind) => {
+  it.live(`symlink guard rejects actual untracked external ${kind} link; clean bounded reader succeeds`, () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const external = yield* tmpdirScoped()
+      yield* f.fs.writeFileString(path.join(external, "outside.txt"), "external content")
+      yield* f.write("new.txt", "clean content")
+      expect(yield* WorktreeEvidence.current(f.directory, bounds)).toEqual(yield* WorktreeEvidence.current(f.directory))
+      yield* link(kind === "file" ? path.join(external, "outside.txt") : external, path.join(f.directory, "escape"),
+        kind === "file" ? "file" : process.platform === "win32" ? "junction" : "dir")
+      // Bounds omitted intentionally retain the legacy file-link read, without a stronger freshness claim.
+      if (kind === "file") expect((yield* WorktreeEvidence.current(f.directory))?.untrackedFiles.some((file) => file.file === "escape")).toBe(true)
+      const exit = yield* WorktreeEvidence.current(f.directory, bounds).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) expect(String(Cause.squash(exit.cause))).toContain("worktree-evidence-untracked-link-or-type")
+      const completion = yield* f.make(() => Effect.succeed({ status: "pass" }))
+      const receipt = yield* completion.beforeDispatch(f.binding)
+      const facts: ArsenalCompletion.Facts[] = []
+      const failure = yield* Effect.flip(completion.verifiedCompletion(receipt, "child", (value) => Effect.sync(() => { facts.push(value) })))
+      expect(failure.reason).toBe("completion-delta-acquisition")
+      expect(facts[0].state).toBe("host-incomplete")
+      expect(facts[0].receipt).toBeUndefined()
+      expect(f.ran).toEqual([])
+    }),
+  )
+})
+
+it.live("symlink guard rejects directory-component link swap after real Git listing, before host checks", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture()
+    const external = yield* tmpdirScoped()
+    yield* f.fs.makeDirectory(path.join(f.directory, "nested"))
+    yield* f.write("nested/inside.txt", "local content")
+    yield* f.fs.writeFileString(path.join(external, "inside.txt"), "external content")
+    expect(yield* WorktreeEvidence.current(f.directory, bounds)).toEqual(yield* WorktreeEvidence.current(f.directory))
+    const processes = yield* AppProcess.Service
+    const swapped = { value: false }
+    const completion = yield* f.make(() => Effect.succeed({ status: "pass" })).pipe(Effect.provideService(AppProcess.Service, {
+      ...processes,
+      run: (command, options) => processes.run(command, options).pipe(Effect.tap(() => Effect.gen(function* () {
+        if (swapped.value || command._tag !== "StandardCommand" || !command.args.includes("ls-files")) return
+        swapped.value = true
+        yield* Effect.promise(() => rename(path.join(f.directory, "nested"), path.join(external, "original")))
+        yield* link(external, path.join(f.directory, "nested"), process.platform === "win32" ? "junction" : "dir")
+      }))),
+    }))
+    const receipt = yield* completion.beforeDispatch(f.binding)
+    const facts: ArsenalCompletion.Facts[] = []
+    const failure = yield* Effect.flip(completion.verifiedCompletion(receipt, "child", (value) => Effect.sync(() => { facts.push(value) })))
+    expect(swapped.value).toBe(true)
+    expect(failure.reason).toBe("completion-delta-acquisition")
+    expect(facts[0].state).toBe("host-incomplete")
+    expect(facts[0].receipt).toBeUndefined()
+    expect(f.ran).toEqual([])
+  }),
+)
+
+const capturedStatuses: ArsenalCompletion.CheckOutcome["status"][] = ["fail", "pass"]
+capturedStatuses.forEach((status) => Array.of("drift", "acquisition", "none").forEach((problem) => {
+  Array.of(false, true).forEach((denied) => {
+    if (!denied && problem === "none") return
+    it.live(`combined capture classifier ${status} + ${problem} + native denial ${denied} retains denial precedence`, () =>
+      Effect.gen(function* () {
+        const f = yield* fixture()
+        const denial = new ToolSafety.Denied({ reason: "native-combined-denial", detail: "original capture refusal" })
+        const completion = yield* f.make(() => Effect.succeed({ status }), undefined, (_binding, capture) => Effect.gen(function* () {
+          f.captures.push(capture)
+          if (problem === "drift") yield* f.write("source.txt", "changed during native observation")
+          if (problem === "acquisition") yield* f.fs.remove(path.join(f.directory, ".git"), { recursive: true })
+          if (denied) return yield* Effect.die(denial)
+        }).pipe(Effect.orDie))
+        const receipt = yield* completion.beforeDispatch(f.binding)
+        const facts: ArsenalCompletion.Facts[] = []
+        const failure = yield* Effect.flip(completion.verifiedCompletion(receipt, "child", (value) => Effect.sync(() => { facts.push(value) })))
+        expect(facts).toHaveLength(1)
+        expect(facts[0].state).toBe(status === "fail" ? "host-failed" : "host-incomplete")
+        expect(facts[0].hostReason).toBe(failure)
+        expect(facts[0].checks?.results[0].status).toBe(status)
+        expect(facts[0].receipt).toBeUndefined()
+        expect(f.captures).toHaveLength(denied || status === "fail" || problem === "acquisition" ? 1 : 2)
+        if (denied) {
+          expect(failure).toBe(denial)
+          expect(facts[0].hostReason?.detail).toBe("original capture refusal")
+          expect(facts[0].deltaReason?.reason).toBe(problem === "none" ? undefined : `completion-delta-${problem}`)
+          return
+        }
+        expect(failure.reason).toBe(`completion-delta-${problem}`)
+        expect(facts[0].deltaReason).toBeUndefined()
+      }),
+    )
+  })
+}))
