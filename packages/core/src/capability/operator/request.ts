@@ -11,6 +11,8 @@ import type { CapabilityOperatorContract } from "./contract"
 import type { CapabilityRequestContract } from "./request-contract"
 import { capture, hash, quota, resultBudget, snapshot, stored } from "./request-data"
 
+type Receipt = Effect.Success<ReturnType<CapabilityRequestContract.Interface["commit"]>>
+
 export function make(options: { operators: CapabilityOperatorContract.Interface; maxReceipts?: number }) {
   const operators = Object.freeze({ ...options.operators })
   const maxReceipts = options.maxReceipts ?? 10_000
@@ -18,11 +20,18 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
     if (!Number.isSafeInteger(maxReceipts) || maxReceipts <= 0) return yield* quota()
     const database = yield* Database.Service
 
-    const commit: CapabilityRequestContract.Interface["commit"] = <E, R>(
-      target: CapabilityOperatorContract.Target, payload: Schema.Json,
+    function request<E, R>(target: CapabilityOperatorContract.Target, payload: Schema.Json,
       write: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<Schema.Json, E, R>,
+      verify?: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<void, E, R>):
+      Effect.Effect<Receipt, E | Capability.Failure | SqlError | EffectDrizzleQueryError, R>
+    function request<E, R>(target: CapabilityOperatorContract.Target, payload: Schema.Json, write: undefined,
+      verify?: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<void, E, R>):
+      Effect.Effect<Receipt | undefined, E | Capability.Failure | SqlError | EffectDrizzleQueryError, R>
+    function request<E, R>(
+      target: CapabilityOperatorContract.Target, payload: Schema.Json,
+      write?: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<Schema.Json, E, R>,
       verify?: (tx: CapabilityRequestContract.Transaction) => Effect.Effect<void, E, R>,
-    ) => {
+    ) {
       // Capture at call time, before authority lookup or any caller-controlled scheduling boundary.
       const input = capture(target, payload)
       return Effect.gen(function* () {
@@ -43,6 +52,7 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
           yield* operators.validate(binding, input.success.target)
           // Stored ownership/actor checks also run for exact retries, before returning old receipts.
           if (verify) yield* verify(tx)
+          yield* operators.validate(binding, input.success.target)
           // Read JSON as raw text: Drizzle's JSON decoder would parse malformed rows before our bounded boundary.
           const previous = yield* tx.select({
             id: CapabilityRequestTable.id, principal: CapabilityRequestTable.principal,
@@ -57,6 +67,8 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
             yield* operators.validate(binding, input.success.target)
             return Object.freeze({ requestID: previous.id, reused: true, data })
           }
+          yield* operators.validate(binding, input.success.target)
+          if (!write) return undefined
           const used = yield* tx.select({ count: count() }).from(CapabilityRequestTable)
             .where(eq(CapabilityRequestTable.principal, binding.principal)).get()
           if (!used || used.count >= maxReceipts) return yield* quota()
@@ -82,7 +94,12 @@ export function make(options: { operators: CapabilityOperatorContract.Interface;
         }), { behavior: "immediate" }))
       })
     }
-    return Object.freeze({ commit }) satisfies CapabilityRequestContract.Interface
+    const commit: CapabilityRequestContract.Interface["commit"] = (target, payload, write, verify) =>
+      request(target, payload, write, verify)
+    const reconcile: CapabilityRequestContract.Reconciliation["reconcile"] = (target, payload, verify) =>
+      request(target, payload, undefined, verify)
+    return Object.freeze({ commit, reconcile }) satisfies
+      CapabilityRequestContract.Interface & CapabilityRequestContract.Reconciliation
   })
 }
 
