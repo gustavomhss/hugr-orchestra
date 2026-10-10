@@ -85,7 +85,9 @@ stdenv.mkDerivation (finalAttrs: {
 
     cd packages/desktop
 
-    bun run build
+    # electron-vite SSR bundling reached Node's 2 GiB V8 heap limit.
+    # Give this build a bounded heap; packaged runtime settings are unchanged.
+    NODE_OPTIONS="--max-old-space-size=4096" bun run build
     ./node_modules/.bin/electron-builder --dir \
       --${if stdenv.hostPlatform.isAarch64 then "arm64" else "x64"} \
       --publish never \

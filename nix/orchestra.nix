@@ -64,7 +64,9 @@ stdenv.mkDerivation (finalAttrs: {
     # Native compiler normally reuses itself. Also provide Bun's exact fallback
     # filename, so target lookup has the same measured/patched binary offline.
     ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
-    bun --bun packages/cli/script/build.ts --target ${target} --skip-install
+    # Bun 1.3.14's automatic Nix-host detection can miss relocated ELF metadata.
+    # Preserve the selected Nix compiler's interpreter, then verify emitted paths below.
+    ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}bun --bun packages/cli/script/build.ts --target ${target} --skip-install
     bun --bun packages/cli/script/schema.ts schema.json
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
     # Bun's Nix-host path can preserve its loader metadata. Rewriting compiled
@@ -72,10 +74,15 @@ stdenv.mkDerivation (finalAttrs: {
     cli="packages/cli/dist/cli-${target}/bin/orchestra"
     interpreter="$(cat "$NIX_CC/nix-support/dynamic-linker")"
     rpath="$(patchelf --print-rpath ${bun}/bin/bun)"
+    compilerInterpreter="$(patchelf --print-interpreter ${bun}/bin/bun)"
+    cliInterpreter="$(patchelf --print-interpreter "$cli")"
+    cliRpath="$(patchelf --print-rpath "$cli")"
+    printf 'CLI_NATIVE_LOADER:expected=%s compiler=%s emitted=%s compilerRpath=%s emittedRpath=%s\n' \
+      "$interpreter" "$compilerInterpreter" "$cliInterpreter" "$rpath" "$cliRpath"
     [[ -n "$interpreter" && -n "$rpath" &&
-      "$(patchelf --print-interpreter ${bun}/bin/bun)" == "$interpreter" &&
-      "$(patchelf --print-interpreter "$cli")" == "$interpreter" &&
-      "$(patchelf --print-rpath "$cli")" == "$rpath" ]] || {
+      "$compilerInterpreter" == "$interpreter" &&
+      "$cliInterpreter" == "$interpreter" &&
+      "$cliRpath" == "$rpath" ]] || {
       printf 'NIX_DISTRIBUTION_FAILURE:CLI_NATIVE_LOADER_MISMATCH\n' >&2
       exit 1
     }

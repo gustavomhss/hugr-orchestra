@@ -276,9 +276,28 @@ Cold-reviewed hash/request-only direct child
 `f72d5b263272f92f6ef64fedf15141d65732bf1d`, requests actual consumer verification
 **`38009229009`** for that measurement and attempt. Only four matching values and
 one request JSON line change; recipe, package and gate bytes are unchanged. That
-run is in progress. Source approval and measurement success do not qualify either
-recipe repair or distribution consumers. Archie upstream source/ABI handoff stays
-accepted independently; its authoring/domain execution is not gated on Nix builds.
+run reached new consumer failures. Both Linux artifacts (`11651968652` ARM,
+`11652768597` x64) report `CLI_NATIVE_LOADER_MISMATCH` after the preceding hash and
+toolchain checks passed. That combined predicate does not identify which loader
+comparison failed. The next source candidate selects Bun 1.3.14's release-enabled
+`BUN_DEBUG_FORCE_NIX_HOST=1` compile branch on native Linux and captures expected,
+compiler and emitted loader metadata independently. The same strict interpreter /
+nonempty RPATH equality gate remains; no emitted ELF is accepted by assumption.
+
+ARM Darwin artifact `11653300730` confirms resource signing/prebuild advanced after
+the `sigtool` addition, then `electron-vite build` aborted with
+`FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory`.
+Its final GC records are approximately 2 GiB V8 heap, followed by SIGABRT / builder
+exit 134. This is a one-shot build heap-limit failure, not measured leak or host-RAM
+exhaustion. The next Desktop recipe grants that build a bounded 4096 MiB old-space
+budget only; runtime settings, timeout, package bytes and checks remain unchanged.
+Intel Darwin is still running; no repaired consumer/product pass is claimed.
+
+Source approval and measurement success do not qualify recipe repairs or consumers.
+Archie upstream source/ABI handoff stays accepted independently; authoring/domain
+execution is not gated on Nix builds. Any later Maestro-qualified Auth package or
+test change requires a fresh final-source measurement rather than relabeling this
+791-package-fingerprint evidence.
 
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
