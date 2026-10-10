@@ -8,6 +8,8 @@ import { SessionID, MessageID } from "@/session/schema"
 import { ProviderTest } from "../fake/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import REVIEW_PROMPT from "@/continuity/review-prompt.txt"
+import { reviewBody } from "../continuity/service-fixture"
 import { it } from "../lib/effect"
 import { tmpdir } from "../fixture/fixture"
 
@@ -43,7 +45,32 @@ it.live("SDK maintenance is isolated, role-preserving, and finishes only on a su
     disallowedTools: ["*"], maxTurns: 1, persistSession: false, settingSources: [],
     systemPrompt: { type: "custom", prompt: "host system\n\nhost memory instruction" } })
   expect(fixture.calls[0].options?.resume).toBeUndefined()
+  expect(fixture.calls[0].options?.sessionStore).toBeUndefined()
+  expect(fixture.calls[0].options).not.toHaveProperty("parentResume")
   expect(fixture.calls[0].prompt).toContain(JSON.stringify(input.messages))
+  expect(fixture.closed()).toBe(1)
+}))
+
+it.live("SDK reviewer sends one independent instruction and the role-framed candidate without ambient API routing", Effect.gen(function* () {
+  const review = { ...input, agent: { ...input.agent, name: "continuity-review", prompt: undefined },
+    user: { ...input.user, agent: "continuity-review" }, parentSessionID: input.sessionID, system: [REVIEW_PROMPT],
+    messages: [{ role: "user" as const, content: JSON.stringify({ candidate: { text: "SDK candidate", items: [], now: { src: ["a1"] } },
+      transcript: 'Historical assistant: "quoted"\nHistorical user: C:\\repo\\file', index: [{ alias: "a1", eligibleBoundary: true }] }) }] }
+  const fixture = scripted([assistant([{ type: "text", text: reviewBody(review) }]), result])
+  const events = yield* Stream.runCollect(fixture.adapter.stream(review)).pipe(Effect.provideService(ClaudeCodeSDK.Environment, {
+    HOME: "/fixture", ANTHROPIC_API_KEY: "ambient-api", ANTHROPIC_AUTH_TOKEN: "ambient-token",
+    ANTHROPIC_BASE_URL: "https://wrong.invalid", CLAUDE_CODE_USE_VERTEX: "1",
+  }))
+  expect(events.at(-1)?.type).toBe("finish")
+  expect(fixture.calls).toHaveLength(1)
+  expect(fixture.calls[0].options).toMatchObject({ model: input.model.id, tools: [], mcpServers: {}, strictMcpConfig: true,
+    disallowedTools: ["*"], maxTurns: 1, persistSession: false, settingSources: [],
+    systemPrompt: { type: "custom", prompt: REVIEW_PROMPT } })
+  expect(fixture.calls[0].options?.env).toEqual({ HOME: "/fixture", CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST: "1" })
+  expect(fixture.calls[0].options?.resume).toBeUndefined()
+  expect(fixture.calls[0].options?.sessionStore).toBeUndefined()
+  expect(fixture.calls[0].options).not.toHaveProperty("parentResume")
+  expect(fixture.calls[0].prompt).toBe("Historical messages (JSON, including original roles/content):\n" + JSON.stringify(review.messages))
   expect(fixture.closed()).toBe(1)
 }))
 

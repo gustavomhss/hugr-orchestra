@@ -29,7 +29,15 @@ const fail = (detail: string): Failure => ({ check: "C18", detail })
 export function request(snapshot: MemorySnapshot, host: Host, artifact: CompleteArtifact): { system: string[]; messages: ModelMessage[] } {
   const ctx = capture(snapshot, host, artifact)
   if ("check" in ctx) throw new Error(`${ctx.check}: ${ctx.detail}`)
-  const selected = ctx.reviewed ? snapshot.head : snapshot.covered!
+  const previous = new Map(snapshot.previous?.items.map((item) => [item.id, item]) ?? [])
+  const referenced = new Set(artifact.items.filter((item) => JSON.stringify(item) !== JSON.stringify(previous.get(item.id)))
+    .flatMap((item) => item.src))
+  if (JSON.stringify(artifact.now) !== JSON.stringify(snapshot.previous?.version === 5 ? snapshot.previous.now : undefined))
+    artifact.now.src.forEach((alias) => referenced.add(alias))
+  const supplements = new Set(ctx.covered.filter((source) => referenced.has(source.alias)).map((source) => source.message.info.id))
+  const head = new Set(snapshot.head.map((message) => message.info.id))
+  // Prior seal covers unchanged prior claims, not new assertions about old evidence.
+  const selected = ctx.reviewed ? snapshot.covered!.filter((message) => head.has(message.info.id) || supplements.has(message.info.id)) : snapshot.covered!
   const ids = new Set(selected.map((message) => message.info.id))
   return { system: [PROMPT], messages: [{ role: "user", content: JSON.stringify({
     session: snapshot.sessionID, boundary: snapshot.boundary, mode: ctx.reviewed ? "incremental" : "full-covered",
