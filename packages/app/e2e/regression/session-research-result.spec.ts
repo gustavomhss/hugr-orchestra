@@ -299,7 +299,7 @@ test("SPA navigation disposes pending document and return cannot restore stale d
 })
 
 for (const profile of [{ locale: "en", dir: "ltr" }, { locale: "en", dir: "rtl" }, { locale: "ar", dir: "rtl" }] as const) {
-  test(`mixed Hebrew Arabic and code stay isolated in ${profile.locale}/${profile.dir} with English fallback`, async ({ page }) => {
+  test(`mixed Hebrew Arabic and code stay isolated in ${profile.locale}/${profile.dir} with localized labels`, async ({ page }) => {
     const title = "דוח מחקר تقرير 42 src/report.ts"
     const document = researchDocument(["## ממצאים نتائج\n\nעברית العربية `src/report.ts`\n\n```ts\nconst answer = 42\n```\n"], { title })
     await setupTimeline(page, { locale: profile.locale, messages: [userMessage(), assistantMessage([researchTask(researchEnvelope({ answer: "## תשובה إجابة\n\nעברית العربية `src/answer.ts`", documents: [document.receipt] }))])] })
@@ -309,8 +309,8 @@ for (const profile of [{ locale: "en", dir: "ltr" }, { locale: "en", dir: "rtl" 
     await expect(page.locator("html")).toHaveAttribute("dir", profile.dir)
     const result = page.locator('[data-component="research-result"]')
     await expect(result).toHaveCSS("text-align", "start")
-    await expect(result.getByText("Research task ended", { exact: true })).toBeVisible()
-    await expect(result.getByText("Partial answer", { exact: true })).toBeVisible()
+    await expect(result.getByText(profile.locale === "ar" ? "انتهت مهمة البحث" : "Research task ended", { exact: true })).toBeVisible()
+    await expect(result.getByText(profile.locale === "ar" ? "إجابة جزئية" : "Partial answer", { exact: true })).toBeVisible()
     const answer = result.locator('[data-component="markdown"]').filter({ has: page.getByRole("heading", { name: "תשובה إجابة", exact: true }) })
     await expect(answer).toHaveAttribute("dir", "auto")
     await expect(answer).toHaveCSS("direction", "rtl")
