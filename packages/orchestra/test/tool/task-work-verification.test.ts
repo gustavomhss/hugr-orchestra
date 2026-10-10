@@ -105,7 +105,7 @@ for (const content of ["pass", "fail"]) {
     expect(started.value.metadata.workResult).toMatchObject({ terminal: { reason: "running" },
       acceptance: { state: "pending" }, verification: { state: "host-incomplete" } })
     yield* Deferred.succeed(f.release, undefined)
-    const notice = (yield* awaitWithTimeout(Deferred.await(f.notice), "background notice missing")).parts[0]
+    const notice = (yield* awaitWithTimeout(Deferred.await(f.notice), "background notice missing", "15 seconds")).parts[0]
     if (notice.type !== "text") throw new Error("notice text missing")
     expect(notice.metadata?.workResult).toMatchObject({ memberId: "backend", authoritySessionId: f.chat.id,
       executionSessionId: started.value.metadata.sessionId, acceptance: { state: "pending" },
@@ -114,6 +114,21 @@ for (const content of ["pass", "fail"]) {
     expect(started.value.metadata.workResult?.terminal.reason).toBe("running")
   }), git)
 }
+
+it.instance("extended background worker cannot inherit earlier turn's verified receipt", () => Effect.gen(function* () {
+  const f = yield* fixture({ background: true })
+  const start = yield* f.run()
+  if (Exit.isFailure(start)) throw Cause.squash(start.cause)
+  const update = yield* f.run({ ...f.params, task_id: start.value.metadata.workResult?.taskId })
+  if (Exit.isFailure(update)) throw Cause.squash(update.cause)
+  yield* Deferred.succeed(f.release, undefined)
+  const notice = (yield* awaitWithTimeout(Deferred.await(f.notice), "extended notice missing", "15 seconds")).parts[0]
+  if (notice.type !== "text") throw new Error("notice text missing")
+  expect(f.written).toHaveLength(2)
+  expect(notice.metadata?.workResult).toMatchObject({ card: { messageID: f.written[1].info.id },
+    terminal: { reason: "ended" }, verification: { state: "host-incomplete" }, acceptance: { state: "pending" } })
+  expect(JSON.stringify(notice.metadata?.workResult)).not.toContain('"verified":true')
+}), git)
 
 it.instance("governed replay re-verifies host arm; spent arm refuses cached worker pass", () => Effect.gen(function* () {
   const original = yield* dispatch({ subagentType: "backend" })

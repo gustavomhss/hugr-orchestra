@@ -32,17 +32,17 @@ export function track(input: {
 }) {
   const evidence: { value?: BackendResult.WorkResult } = {}
   const completion: { observed?: true; interrupted?: true; projection?: Pick<BackendResult.WorkResult, "verification" | "hostChecks" | "delta"> } = {}
-  const project = (result: BackendResult.WorkResult): BackendResult.WorkResult => ({
+  const project = (result: BackendResult.WorkResult, observed = true): BackendResult.WorkResult => ({
     ...result,
     ...(input.memberId ? { memberId: input.memberId, executionSessionId: input.sessionID } : {}),
     ...(input.authoritySessionId ? { authoritySessionId: input.authoritySessionId } : {}),
     mode: input.armed ? "delegated-armed" : "delegated",
     acceptance: { state: "pending" },
     verification: { state: input.armed ? "host-incomplete" : "not-host-verified" },
-    ...completion.projection,
+    ...(observed ? completion.projection : {}),
   })
   // The shell fact is what the child's commands actually got; before any ran, what this host would give them now.
-  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[]) {
+  const bound = Effect.fnUntraced(function* (result: BackendResult.WorkResult, history: readonly SessionV1.WithParts[], observed = true) {
     // BackgroundJob callbacks have no required services; only a real host Session service may supply placement.
     const sessions = yield* Effect.serviceOption(Session.Service)
     const session = Option.isSome(sessions)
@@ -54,7 +54,7 @@ export function track(input: {
       session.workspaceID === (yield* InstanceState.workspaceID)
       ? { ...result, workerEvidence: BackendEvidence.bind(result, history, { executionSessionID: session.id, directory: session.directory }) }
       : result
-    const task = project(input.taskId ? { ...located, taskId: input.taskId } : located)
+    const task = project(input.taskId ? { ...located, taskId: input.taskId } : located, observed)
     if (!input.writeRoots) return task
     const shell = ToolSafety.shellFact(input.sessionID) ?? (yield* ToolSafetySandbox.status())
     return { ...task, writeRoots: [...input.writeRoots], ...shell }
@@ -127,10 +127,11 @@ export function track(input: {
       if (completion.interrupted && evidence.value) return project(evidence.value)
       if (state === "error" && !completion.observed)
         return yield* bound(BackendResult.hostEnded({ message: last, session, reason: "failed", detail: text }, input.seat), session)
-      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat), session)
+      // An extended job may finish a later turn than this callback observed; its card cannot inherit an earlier pass.
+      if (last) return yield* bound(BackendResult.assemble(last, session, input.seat), session, last.info.id === evidence.value?.card.messageID)
       return yield* bound(
         BackendResult.hostEnded({ session, reason: "interrupted", detail: "No completed child message" }, input.seat),
-        session,
+        session, false,
       )
     }),
   }
