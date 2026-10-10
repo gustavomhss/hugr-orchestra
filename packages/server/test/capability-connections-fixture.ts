@@ -31,6 +31,7 @@ import { join } from "node:path"
 import { randomBytes } from "node:crypto"
 import { ServerAuth } from "../src/auth"
 import { CapabilityConnectionsHandler } from "../src/handlers/capability-connections"
+import { ServerCapabilityVerification } from "../src/capability-verification"
 import { LocationMiddleware, layer } from "../src/location"
 import { Authorization, authorizationLayer } from "../src/middleware/authorization"
 import { capabilityAuthorizationLayer } from "../src/middleware/capability-authorization"
@@ -103,6 +104,7 @@ export function make(options: { password?: string } = {}) {
     const entered = { location: 0 }
     const web = HttpRouter.toWebHandler(HttpApiBuilder.layer(TestApi).pipe(
       Layer.provide(CapabilityConnectionsHandler),
+      Layer.provide(ServerCapabilityVerification.layer),
       Layer.provide(Layer.effect(LocationMiddleware, Effect.map(LocationMiddleware, (middleware) =>
         LocationMiddleware.of((effect, metadata) => Effect.sync(() => { entered.location++ })
           .pipe(Effect.andThen(middleware(effect, metadata)))))).pipe(Layer.provide(layer))),

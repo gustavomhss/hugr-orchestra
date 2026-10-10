@@ -190,6 +190,12 @@ import type {
   SchedulesRunOutput,
   OperatorInspectInput,
   OperatorInspectOutput,
+  ConnectionsConnectInput,
+  ConnectionsConnectOutput,
+  ConnectionsGetTargetInput,
+  ConnectionsGetTargetOutput,
+  ConnectionsBindingsInput,
+  ConnectionsBindingsOutput,
   ConnectionsListInput,
   ConnectionsListOutput,
   ConnectionsGetInput,
@@ -1641,6 +1647,44 @@ export function make(options: ClientOptions) {
         ),
     },
     connections: {
+      connect: (input: ConnectionsConnectInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsConnectOutput>(
+          {
+            method: "POST",
+            path: `/api/capability/connections/connect`,
+            query: { location: input["location"] },
+            headers: { "idempotency-key": input["idempotency-key"] },
+            body: { provider: input["provider"], key: input["key"], label: input["label"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      getTarget: (input: ConnectionsGetTargetInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsGetTargetOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/targets/${encodeURIComponent(input.targetID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bindings: (input: ConnectionsBindingsInput, requestOptions?: RequestOptions) =>
+        request<ConnectionsBindingsOutput>(
+          {
+            method: "GET",
+            path: `/api/capability/targets/${encodeURIComponent(input.targetID)}/bindings`,
+            query: { location: input["location"], after: input["after"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 403, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       list: (input?: ConnectionsListInput, requestOptions?: RequestOptions) =>
         request<ConnectionsListOutput>(
           {

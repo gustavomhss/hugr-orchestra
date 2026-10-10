@@ -1,5 +1,8 @@
 import { CapabilityConnectionManagement } from "@orchestra/core/capability/connection/management"
 import { CapabilityConnectionStore } from "@orchestra/core/capability/connection/store"
+import { CapabilityConnectionBindings } from "@orchestra/core/capability/connection/bindings"
+import { CapabilityConnectionSetup } from "@orchestra/core/capability/connection/setup"
+import { CapabilityRequest } from "@orchestra/core/capability/operator/request"
 import type { CapabilityConnectionStoreContract } from "@orchestra/core/capability/connection/store-contract"
 import { Database } from "@orchestra/core/database/database"
 import { Location } from "@orchestra/core/location"
@@ -10,17 +13,31 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { capabilityError } from "../middleware/capability-authorization"
 import { ServerOperator } from "../operator"
+import { ServerCapabilityVerification } from "../capability-verification"
 
 export const CapabilityConnectionsHandler = HttpApiBuilder.group(Api, "server.capability.connections", (handlers) =>
   Effect.gen(function* () {
     const operators = yield* ServerOperator.Service
     const database = yield* Database.Service
     const store = yield* CapabilityConnectionStore.make
+    const verifier = yield* ServerCapabilityVerification.Service
+    const ledger = yield* CapabilityRequest.make({ operators })
+    const setup = yield* CapabilityConnectionSetup.make({ operators, ledger, verifier })
+    const bindings = yield* CapabilityConnectionBindings.make({ operators })
     // Cursor encryption keys belong to this handler layer, never an individual request.
     const management = yield* CapabilityConnectionManagement.make({ operators, store }).pipe(
       Effect.provideService(Database.Service, database),
     )
     return handlers
+      .handle("capability.connection.connect", ({ payload }) => Effect.gen(function* () {
+        const location = yield* Location.Service
+        return yield* setup.connect({ projectID: location.project.id,
+          location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) }, payload)
+      }).pipe(connectionResponse))
+      .handle("capability.target.get", ({ params }) => bindings.get(params.targetID).pipe(connectionResponse))
+      .handle("capability.binding.list", ({ params, query }) => bindings.list(params.targetID,
+        { ...(query.after === undefined ? {} : { after: query.after }),
+          ...(query.limit === undefined ? {} : { limit: query.limit }) }).pipe(connectionResponse))
       .handle("capability.connection.list", ({ query }) => Effect.gen(function* () {
         const location = yield* Location.Service
         return yield* management.list({ projectID: location.project.id,

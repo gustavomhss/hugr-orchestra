@@ -6860,6 +6860,67 @@ export type OperatorInspectOutput = {
   readonly scopeHash: string
 }
 
+export type ConnectionsConnectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly "idempotency-key": { readonly "idempotency-key": string }["idempotency-key"]
+  readonly provider: {
+    readonly provider: "slack" | "discord"
+    readonly key: string
+    readonly label?: string
+  }["provider"]
+  readonly key: { readonly provider: "slack" | "discord"; readonly key: string; readonly label?: string }["key"]
+  readonly label?: { readonly provider: "slack" | "discord"; readonly key: string; readonly label?: string }["label"]
+}
+
+export type ConnectionsConnectOutput = {
+  readonly requestID: string
+  readonly reused: boolean
+  readonly data: JsonValue
+}
+
+export type ConnectionsGetTargetInput = {
+  readonly targetID: { readonly targetID: string }["targetID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ConnectionsGetTargetOutput = {
+  readonly target: {
+    readonly id: string
+    readonly connectionID: string
+    readonly generation: number
+    readonly environment: string
+  }
+}
+
+export type ConnectionsBindingsInput = {
+  readonly targetID: { readonly targetID: string }["targetID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["location"]
+  readonly after?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["after"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: string
+    readonly limit?: number
+  }["limit"]
+}
+
+export type ConnectionsBindingsOutput = {
+  readonly items: ReadonlyArray<{ readonly sessionID: string; readonly actions: ReadonlyArray<string> }>
+  readonly after?: string
+  readonly coverage: "current-actor"
+}
+
 export type ConnectionsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -6881,6 +6942,7 @@ export type ConnectionsListInput = {
 export type ConnectionsListOutput = {
   readonly items: ReadonlyArray<{
     readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+    readonly label?: string
     readonly state: "active" | "disconnected" | "revoked"
     readonly credential: "present" | "missing"
   }>
@@ -6897,6 +6959,7 @@ export type ConnectionsGetInput = {
 
 export type ConnectionsGetOutput = {
   readonly connection: { readonly id: string; readonly provider: string; readonly generation: number }
+  readonly label?: string
   readonly state: "active" | "disconnected" | "revoked"
   readonly credential: "present" | "missing"
 }

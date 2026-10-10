@@ -26,7 +26,9 @@ import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
 import { capabilityAuthorizationLayer } from "./middleware/capability-authorization"
 import { ServerOperator } from "./operator"
+import { ServerCapabilityVerification } from "./capability-verification"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
+import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
 
 const applicationServices = LayerNode.group([
   Database.node,
@@ -44,21 +46,24 @@ const applicationServices = LayerNode.group([
   FSUtil.node,
 ])
 
-export function createRoutes(password?: string, operator?: CapabilityOperatorContract.Interface) {
+export function createRoutes(password?: string, operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier) {
   return makeRoutes(
     password
       ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(password) })
       : ServerAuth.Config.layer,
     operator,
+    verifier,
   )
 }
 
-export function createEmbeddedRoutes(operator?: CapabilityOperatorContract.Interface) {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), operator)
+export function createEmbeddedRoutes(operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier) {
+  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), operator, verifier)
 }
 
 function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
-  operator?: CapabilityOperatorContract.Interface) {
+  operator?: CapabilityOperatorContract.Interface, verifier?: CapabilityConnectionSetupContract.Verifier) {
   const serviceLayer = AppNodeBuilder.build(applicationServices, [[SessionExecution.node, SessionExecutionLocal.node]])
 
   return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
@@ -70,6 +75,7 @@ function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
     Layer.provide(operator ? Layer.succeed(ServerOperator.Service, operator) : ServerOperator.layer),
+    Layer.provide(verifier ? Layer.succeed(ServerCapabilityVerification.Service, verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
   )
 }

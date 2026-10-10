@@ -26,7 +26,11 @@ const connections = { items: [item], after: connection.id, coverage: "live" as c
 // Synthetic schema token only; Core owns cursor encryption and authority checks.
 const targetCursor = Schema.decodeUnknownSync(CapabilityManagement.TargetCursor)("C".repeat(32))
 const targets = { items: [{ target }], after: targetCursor, coverage: "live" as const }
+const bindingPage = { items: [binding], coverage: "current-actor" as const }
 const cases = [
+  { name: "capability.connection.connect", method: "post", path: "/api/capability/connections/connect", payload: { provider: "slack", key: "protocol-private-token" }, output: receipt, success: CapabilityManagement.Receipt },
+  { name: "capability.target.get", method: "get", path: "/api/capability/targets/{targetID}", payload: undefined, output: { target }, success: CapabilityManagement.Target },
+  { name: "capability.binding.list", method: "get", path: "/api/capability/targets/{targetID}/bindings", payload: undefined, output: bindingPage, success: CapabilityManagement.BindingPage },
   { name: "capability.connection.list", method: "get", path: "/api/capability/connections", payload: undefined, output: connections, success: CapabilityManagement.ConnectionPage },
   { name: "capability.connection.get", method: "get", path: "/api/capability/connections/{connectionID}", payload: undefined, output: item, success: CapabilityManagement.Connection },
   { name: "capability.connection.targets", method: "get", path: "/api/capability/connections/{connectionID}/targets", payload: undefined, output: targets, success: CapabilityManagement.TargetPage },
@@ -82,7 +86,8 @@ describe("capability connection projections", () => {
     expect(() => decode(payload, { ...entry.payload, agentID: "forged" })).toThrow()
     expect(() => decode(payload, {})).toThrow()
     const projected = operation?.requestBody?.content["application/json"]?.schema
-    expect(projected).toMatchObject({ additionalProperties: false, required: Object.keys(entry.payload) })
+    const body = entry.name === "capability.connection.connect" ? spec.components?.schemas?.["CapabilitySetup.Input"] : projected
+    expect(body).toMatchObject({ additionalProperties: false, required: Object.keys(entry.payload) })
     if ("connection" in entry.payload) {
       expect(projected).toHaveProperty("properties.connection.$ref", "#/components/schemas/Capability.ConnectionRef")
       expect(() => decode(payload, { ...entry.payload, connection: { ...connection, credentialID: "secret" } })).toThrow()
@@ -107,6 +112,7 @@ describe("capability connection projections", () => {
   test.each([
     { name: "capability.connection.list", after: connection.id, wrong: target.id, ref: "Capability.ConnectionID" },
     { name: "capability.connection.targets", after: targetCursor, wrong: target.id, ref: "CapabilityManagement.TargetCursor" },
+    { name: "capability.binding.list", after: sessionID, wrong: target.id, ref: "SessionID" },
   ] as const)("$name decodes bounded HTTP pagination", (entry) => {
     const endpoint = group.endpoints[entry.name]
     expect(decode(endpoint.query, {})).toEqual({})
@@ -117,11 +123,12 @@ describe("capability connection projections", () => {
       expect(() => decode(endpoint.query, { limit })).toThrow()
     })
     expect(() => decode(endpoint.query, { after: entry.wrong })).toThrow()
-    expect(() => decode(endpoint.query, { after: entry.after + "\n" })).toThrow()
-    const operation = spec.paths[endpoint.path.replace(":connectionID", "{connectionID}")]?.get
-    expect(operation?.parameters?.find((parameter) => parameter.name === "after")?.schema).toEqual({
-      $ref: `#/components/schemas/${entry.ref}`,
-    })
+    if (entry.name !== "capability.binding.list") expect(() => decode(endpoint.query, { after: entry.after + "\n" })).toThrow()
+    const operation = spec.paths[endpoint.path.replace(":connectionID", "{connectionID}").replace(":targetID", "{targetID}")]?.get
+    expect(operation?.parameters?.find((parameter) => parameter.name === "after")?.schema).toEqual(
+      entry.name === "capability.binding.list" ? { type: "string", allOf: [{ pattern: "^ses" }] }
+        : { $ref: `#/components/schemas/${entry.ref}` },
+    )
     expect(operation?.parameters?.find((parameter) => parameter.name === "limit")?.schema).toEqual({ type: "string" })
   })
 
@@ -151,6 +158,9 @@ test("actual router authenticates before Location on every route and rejects mal
   const entered: string[] = []
   const web = HttpRouter.toWebHandler(HttpApiBuilder.layer(api).pipe(
     Layer.provide(HttpApiBuilder.group(api, "server.capability.connections", (handlers) => handlers
+      .handle("capability.connection.connect", () => Effect.succeed(receipt))
+      .handle("capability.target.get", () => Effect.succeed({ target }))
+      .handle("capability.binding.list", () => Effect.succeed(bindingPage))
       .handle("capability.connection.list", () => Effect.sync(() => { entered.push("handler"); return connections }))
       .handle("capability.connection.get", () => Effect.succeed(item))
       .handle("capability.connection.targets", () => Effect.succeed(targets))
@@ -176,7 +186,7 @@ test("actual router authenticates before Location on every route and rejects mal
   await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     yield* Effect.addFinalizer(() => Effect.promise(() => web.dispose()))
     for (const entry of cases) {
-      const url = `http://localhost${entry.path.replace("{connectionID}", connection.id)}?location[directory]=/caller`
+      const url = `http://localhost${entry.path.replace("{connectionID}", connection.id).replace("{targetID}", target.id)}?location[directory]=/caller`
       const options = { method: entry.method.toUpperCase(), body: entry.payload ? JSON.stringify(entry.payload) : undefined }
       entered.length = 0
       const rejected = yield* Effect.promise(() => web.handler(new Request(url, options)))

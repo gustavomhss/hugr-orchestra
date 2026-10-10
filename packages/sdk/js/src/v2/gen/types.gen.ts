@@ -8455,6 +8455,46 @@ export type ScheduledTaskRunResult = {
   sessionID: string
 }
 
+export type CapabilitySetupProvider = "slack" | "discord"
+
+export type CapabilitySetupLabel = string
+
+export type CapabilitySetupInput = {
+  provider: CapabilitySetupProvider
+  key: string
+  label?: CapabilitySetupLabel
+}
+
+export type CapabilityTargetId = string
+
+export type CapabilityConnectionId = string
+
+export type CapabilityTargetRef = {
+  id: CapabilityTargetId
+  connectionID: CapabilityConnectionId
+  generation: number
+  environment: string
+}
+
+export type CapabilityManagementBinding = {
+  sessionID: string
+  actions: Array<string>
+}
+
+export type CapabilityManagementBindingPage = {
+  items: Array<CapabilityManagementBinding>
+  after?: string
+  coverage: "current-actor"
+}
+
+export type CapabilityConnectionRef = {
+  id: CapabilityConnectionId
+  provider: string
+  generation: number
+}
+
+export type CapabilityManagementTargetCursor = string
+
 export type EventModelsDevRefreshed = {
   id: string
   type: "models-dev.refreshed"
@@ -18241,6 +18281,641 @@ export type V2ScheduleRunResponses = {
 }
 
 export type V2ScheduleRunResponse = V2ScheduleRunResponses[keyof V2ScheduleRunResponses]
+
+export type ServerCapabilityOperatorCapabilityOperatorInspectData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/operator"
+}
+
+export type ServerCapabilityOperatorCapabilityOperatorInspectErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityOperatorCapabilityOperatorInspectError =
+  ServerCapabilityOperatorCapabilityOperatorInspectErrors[keyof ServerCapabilityOperatorCapabilityOperatorInspectErrors]
+
+export type ServerCapabilityOperatorCapabilityOperatorInspectResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    principal: string
+    origin: "configured-auth" | "desktop" | "cli" | "sdk"
+    scopeHash: string
+  }
+}
+
+export type ServerCapabilityOperatorCapabilityOperatorInspectResponse =
+  ServerCapabilityOperatorCapabilityOperatorInspectResponses[keyof ServerCapabilityOperatorCapabilityOperatorInspectResponses]
+
+export type ServerCapabilityConnectionsCapabilityConnectionConnectData = {
+  body: CapabilitySetupInput
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/connections/connect"
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionConnectErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionConnectError =
+  ServerCapabilityConnectionsCapabilityConnectionConnectErrors[keyof ServerCapabilityConnectionsCapabilityConnectionConnectErrors]
+
+export type ServerCapabilityConnectionsCapabilityConnectionConnectResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionConnectResponse =
+  ServerCapabilityConnectionsCapabilityConnectionConnectResponses[keyof ServerCapabilityConnectionsCapabilityConnectionConnectResponses]
+
+export type ServerCapabilityConnectionsCapabilityTargetGetData = {
+  body?: never
+  path: {
+    targetID: CapabilityTargetId
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/targets/{targetID}"
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetGetError =
+  ServerCapabilityConnectionsCapabilityTargetGetErrors[keyof ServerCapabilityConnectionsCapabilityTargetGetErrors]
+
+export type ServerCapabilityConnectionsCapabilityTargetGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    target: CapabilityTargetRef
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetGetResponse =
+  ServerCapabilityConnectionsCapabilityTargetGetResponses[keyof ServerCapabilityConnectionsCapabilityTargetGetResponses]
+
+export type ServerCapabilityConnectionsCapabilityBindingListData = {
+  body?: never
+  path: {
+    targetID: CapabilityTargetId
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    after?: string
+    limit?: string
+  }
+  url: "/api/capability/targets/{targetID}/bindings"
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingListError =
+  ServerCapabilityConnectionsCapabilityBindingListErrors[keyof ServerCapabilityConnectionsCapabilityBindingListErrors]
+
+export type ServerCapabilityConnectionsCapabilityBindingListResponses = {
+  /**
+   * CapabilityManagement.BindingPage
+   */
+  200: CapabilityManagementBindingPage
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingListResponse =
+  ServerCapabilityConnectionsCapabilityBindingListResponses[keyof ServerCapabilityConnectionsCapabilityBindingListResponses]
+
+export type ServerCapabilityConnectionsCapabilityConnectionListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    after?: CapabilityConnectionId
+    limit?: string
+  }
+  url: "/api/capability/connections"
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionListError =
+  ServerCapabilityConnectionsCapabilityConnectionListErrors[keyof ServerCapabilityConnectionsCapabilityConnectionListErrors]
+
+export type ServerCapabilityConnectionsCapabilityConnectionListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    items: Array<{
+      connection: CapabilityConnectionRef
+      label?: string
+      state: "active" | "disconnected" | "revoked"
+      credential: "present" | "missing"
+    }>
+    after?: CapabilityConnectionId
+    coverage: "live"
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionListResponse =
+  ServerCapabilityConnectionsCapabilityConnectionListResponses[keyof ServerCapabilityConnectionsCapabilityConnectionListResponses]
+
+export type ServerCapabilityConnectionsCapabilityConnectionGetData = {
+  body?: never
+  path: {
+    connectionID: CapabilityConnectionId
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/connections/{connectionID}"
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionGetError =
+  ServerCapabilityConnectionsCapabilityConnectionGetErrors[keyof ServerCapabilityConnectionsCapabilityConnectionGetErrors]
+
+export type ServerCapabilityConnectionsCapabilityConnectionGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    connection: CapabilityConnectionRef
+    label?: string
+    state: "active" | "disconnected" | "revoked"
+    credential: "present" | "missing"
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionGetResponse =
+  ServerCapabilityConnectionsCapabilityConnectionGetResponses[keyof ServerCapabilityConnectionsCapabilityConnectionGetResponses]
+
+export type ServerCapabilityConnectionsCapabilityConnectionTargetsData = {
+  body?: never
+  path: {
+    connectionID: CapabilityConnectionId
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    after?: CapabilityManagementTargetCursor
+    limit?: string
+  }
+  url: "/api/capability/connections/{connectionID}/targets"
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionTargetsErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionTargetsError =
+  ServerCapabilityConnectionsCapabilityConnectionTargetsErrors[keyof ServerCapabilityConnectionsCapabilityConnectionTargetsErrors]
+
+export type ServerCapabilityConnectionsCapabilityConnectionTargetsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    items: Array<{
+      target: CapabilityTargetRef
+    }>
+    after?: CapabilityManagementTargetCursor
+    coverage: "live"
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionTargetsResponse =
+  ServerCapabilityConnectionsCapabilityConnectionTargetsResponses[keyof ServerCapabilityConnectionsCapabilityConnectionTargetsResponses]
+
+export type ServerCapabilityConnectionsCapabilityConnectionDisconnectData = {
+  body: {
+    connection: CapabilityConnectionRef
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/connections/disconnect"
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionDisconnectError =
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors[keyof ServerCapabilityConnectionsCapabilityConnectionDisconnectErrors]
+
+export type ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityConnectionDisconnectResponse =
+  ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses[keyof ServerCapabilityConnectionsCapabilityConnectionDisconnectResponses]
+
+export type ServerCapabilityConnectionsCapabilityTargetCreateData = {
+  body: {
+    connection: CapabilityConnectionRef
+    input: {
+      environment: string
+      resource: unknown
+    }
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/targets"
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetCreateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetCreateError =
+  ServerCapabilityConnectionsCapabilityTargetCreateErrors[keyof ServerCapabilityConnectionsCapabilityTargetCreateErrors]
+
+export type ServerCapabilityConnectionsCapabilityTargetCreateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetCreateResponse =
+  ServerCapabilityConnectionsCapabilityTargetCreateResponses[keyof ServerCapabilityConnectionsCapabilityTargetCreateResponses]
+
+export type ServerCapabilityConnectionsCapabilityTargetRetargetData = {
+  body: {
+    target: CapabilityTargetRef
+    input: {
+      environment: string
+      resource: unknown
+    }
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/targets/retarget"
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRetargetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRetargetError =
+  ServerCapabilityConnectionsCapabilityTargetRetargetErrors[keyof ServerCapabilityConnectionsCapabilityTargetRetargetErrors]
+
+export type ServerCapabilityConnectionsCapabilityTargetRetargetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRetargetResponse =
+  ServerCapabilityConnectionsCapabilityTargetRetargetResponses[keyof ServerCapabilityConnectionsCapabilityTargetRetargetResponses]
+
+export type ServerCapabilityConnectionsCapabilityTargetRemoveData = {
+  body: {
+    target: CapabilityTargetRef
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/targets/remove"
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRemoveError =
+  ServerCapabilityConnectionsCapabilityTargetRemoveErrors[keyof ServerCapabilityConnectionsCapabilityTargetRemoveErrors]
+
+export type ServerCapabilityConnectionsCapabilityTargetRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityTargetRemoveResponse =
+  ServerCapabilityConnectionsCapabilityTargetRemoveResponses[keyof ServerCapabilityConnectionsCapabilityTargetRemoveResponses]
+
+export type ServerCapabilityConnectionsCapabilityBindingPutData = {
+  body: {
+    target: CapabilityTargetRef
+    input: {
+      sessionID: string
+      actions: Array<string>
+    }
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/bindings"
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingPutErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingPutError =
+  ServerCapabilityConnectionsCapabilityBindingPutErrors[keyof ServerCapabilityConnectionsCapabilityBindingPutErrors]
+
+export type ServerCapabilityConnectionsCapabilityBindingPutResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingPutResponse =
+  ServerCapabilityConnectionsCapabilityBindingPutResponses[keyof ServerCapabilityConnectionsCapabilityBindingPutResponses]
+
+export type ServerCapabilityConnectionsCapabilityBindingRemoveData = {
+  body: {
+    target: CapabilityTargetRef
+    sessionID: string
+  }
+  headers: {
+    "idempotency-key": string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/capability/bindings/remove"
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ForbiddenError
+   */
+  403: ForbiddenError
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingRemoveError =
+  ServerCapabilityConnectionsCapabilityBindingRemoveErrors[keyof ServerCapabilityConnectionsCapabilityBindingRemoveErrors]
+
+export type ServerCapabilityConnectionsCapabilityBindingRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    requestID: string
+    reused: boolean
+    data: unknown
+  }
+}
+
+export type ServerCapabilityConnectionsCapabilityBindingRemoveResponse =
+  ServerCapabilityConnectionsCapabilityBindingRemoveResponses[keyof ServerCapabilityConnectionsCapabilityBindingRemoveResponses]
 
 export type PtyConnectData = {
   body?: never

@@ -46,6 +46,9 @@ export const groupNames = {
 } as const
 
 export const endpointNames = {
+  "capability.connection.connect": "connect",
+  "capability.target.get": "getTarget",
+  "capability.binding.list": "bindings",
   "capability.connection.targets": "targets",
   "capability.target.create": "createTarget",
   "capability.target.retarget": "retargetTarget",

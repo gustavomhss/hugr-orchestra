@@ -1,5 +1,6 @@
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
+import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { Context, Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware } from "effect/unstable/httpapi"
 import { CapabilityAuthorization } from "../middleware/capability-authorization"
@@ -20,10 +21,22 @@ const TargetQuery = Schema.Struct({
   after: CapabilityManagement.TargetQuery.fields.after,
   limit: Limit,
 })
+const BindingQuery = Schema.Struct({ ...LocationQuery.fields,
+  after: CapabilityManagement.BindingQuery.fields.after, limit: Limit })
 const MutationHeaders = Schema.Struct({ "idempotency-key": Schema.NonEmptyString })
 
 export const CapabilityConnectionsGroup = HttpApiGroup.make("server.capability.connections")
   .add(
+    HttpApiEndpoint.post("capability.connection.connect", "/api/capability/connections/connect", {
+      query: LocationQuery, headers: MutationHeaders, payload: CapabilitySetup.Input,
+      success: CapabilityManagement.Receipt,
+    }),
+    HttpApiEndpoint.get("capability.target.get", "/api/capability/targets/:targetID", {
+      params: { targetID: Capability.TargetID }, query: LocationQuery, success: CapabilityManagement.Target,
+    }),
+    HttpApiEndpoint.get("capability.binding.list", "/api/capability/targets/:targetID/bindings", {
+      params: { targetID: Capability.TargetID }, query: BindingQuery, success: CapabilityManagement.BindingPage,
+    }),
     HttpApiEndpoint.get("capability.connection.list", "/api/capability/connections", {
       query: ConnectionQuery,
       success: CapabilityManagement.ConnectionPage,

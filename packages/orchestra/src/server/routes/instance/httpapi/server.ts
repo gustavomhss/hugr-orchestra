@@ -73,6 +73,8 @@ import { serveUIEffect } from "@/server/shared/ui"
 import { ServerAuth } from "@/server/auth"
 import { InstanceHttpApi, RootHttpApi } from "./api"
 import { Api } from "@orchestra/server/api"
+import { ServerCapabilityVerification } from "@orchestra/server/capability-verification"
+import type { CapabilityConnectionSetupContract } from "@orchestra/core/capability/connection/setup-contract"
 import type { CapabilityOperatorContract } from "@orchestra/core/capability/operator/contract"
 import { ServerOperator } from "@orchestra/server/operator"
 import { capabilityAuthorizationLayer } from "@orchestra/server/middleware/capability-authorization"
@@ -277,6 +279,7 @@ const app = LayerNode.group([
 export function createRoutes(
   corsOptions?: CorsOptions,
   operator?: CapabilityOperatorContract.Interface,
+  verifier?: CapabilityConnectionSetupContract.Verifier,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
   const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
 
@@ -289,6 +292,7 @@ export function createRoutes(
     docRoute,
     uiRoute,
   ).pipe(
+    Layer.provide(verifier ? Layer.succeed(ServerCapabilityVerification.Service, verifier) : ServerCapabilityVerification.layer),
     Layer.provide([
       errorLayer,
       compressionLayer,

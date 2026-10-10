@@ -1309,13 +1309,56 @@ const Endpoint24_0 = (raw: RawClient["server.capability.operator"]) => (input?: 
 
 const adaptGroup24 = (raw: RawClient["server.capability.operator"]) => ({ inspect: Endpoint24_0(raw) })
 
-type Endpoint25_0Request = Parameters<RawClient["server.capability.connections"]["capability.connection.list"]>[0]
+type Endpoint25_0Request = Parameters<RawClient["server.capability.connections"]["capability.connection.connect"]>[0]
 type Endpoint25_0Input = {
   readonly location?: Endpoint25_0Request["query"]["location"]
-  readonly after?: Endpoint25_0Request["query"]["after"]
-  readonly limit?: Endpoint25_0Request["query"]["limit"]
+  readonly "idempotency-key": Endpoint25_0Request["headers"]["idempotency-key"]
+  readonly provider: Endpoint25_0Request["payload"]["provider"]
+  readonly key: Endpoint25_0Request["payload"]["key"]
+  readonly label?: Endpoint25_0Request["payload"]["label"]
 }
-const Endpoint25_0 = (raw: RawClient["server.capability.connections"]) => (input?: Endpoint25_0Input) =>
+const Endpoint25_0 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_0Input) =>
+  raw["capability.connection.connect"]({
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+    headers: { "idempotency-key": input["idempotency-key"] },
+    payload: { provider: input["provider"], key: input["key"], label: input["label"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_1Request = Parameters<RawClient["server.capability.connections"]["capability.target.get"]>[0]
+type Endpoint25_1Input = {
+  readonly targetID: Endpoint25_1Request["params"]["targetID"]
+  readonly location?: Endpoint25_1Request["query"]["location"]
+}
+const Endpoint25_1 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_1Input) =>
+  raw["capability.target.get"]({
+    params: { targetID: input["targetID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_2Request = Parameters<RawClient["server.capability.connections"]["capability.binding.list"]>[0]
+type Endpoint25_2Input = {
+  readonly targetID: Endpoint25_2Request["params"]["targetID"]
+  readonly location?: Endpoint25_2Request["query"]["location"]
+  readonly after?: Endpoint25_2Request["query"]["after"]
+  readonly limit?: Endpoint25_2Request["query"]["limit"]
+}
+const Endpoint25_2 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_2Input) =>
+  raw["capability.binding.list"]({
+    params: { targetID: input["targetID"] },
+    query: {
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
+      ...(input["after"] === undefined ? {} : { after: input["after"] }),
+      ...(input["limit"] === undefined ? {} : { limit: input["limit"] }),
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_3Request = Parameters<RawClient["server.capability.connections"]["capability.connection.list"]>[0]
+type Endpoint25_3Input = {
+  readonly location?: Endpoint25_3Request["query"]["location"]
+  readonly after?: Endpoint25_3Request["query"]["after"]
+  readonly limit?: Endpoint25_3Request["query"]["limit"]
+}
+const Endpoint25_3 = (raw: RawClient["server.capability.connections"]) => (input?: Endpoint25_3Input) =>
   raw["capability.connection.list"]({
     query: {
       ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }),
@@ -1324,25 +1367,25 @@ const Endpoint25_0 = (raw: RawClient["server.capability.connections"]) => (input
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_1Request = Parameters<RawClient["server.capability.connections"]["capability.connection.get"]>[0]
-type Endpoint25_1Input = {
-  readonly connectionID: Endpoint25_1Request["params"]["connectionID"]
-  readonly location?: Endpoint25_1Request["query"]["location"]
+type Endpoint25_4Request = Parameters<RawClient["server.capability.connections"]["capability.connection.get"]>[0]
+type Endpoint25_4Input = {
+  readonly connectionID: Endpoint25_4Request["params"]["connectionID"]
+  readonly location?: Endpoint25_4Request["query"]["location"]
 }
-const Endpoint25_1 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_1Input) =>
+const Endpoint25_4 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_4Input) =>
   raw["capability.connection.get"]({
     params: { connectionID: input["connectionID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_2Request = Parameters<RawClient["server.capability.connections"]["capability.connection.targets"]>[0]
-type Endpoint25_2Input = {
-  readonly connectionID: Endpoint25_2Request["params"]["connectionID"]
-  readonly location?: Endpoint25_2Request["query"]["location"]
-  readonly after?: Endpoint25_2Request["query"]["after"]
-  readonly limit?: Endpoint25_2Request["query"]["limit"]
+type Endpoint25_5Request = Parameters<RawClient["server.capability.connections"]["capability.connection.targets"]>[0]
+type Endpoint25_5Input = {
+  readonly connectionID: Endpoint25_5Request["params"]["connectionID"]
+  readonly location?: Endpoint25_5Request["query"]["location"]
+  readonly after?: Endpoint25_5Request["query"]["after"]
+  readonly limit?: Endpoint25_5Request["query"]["limit"]
 }
-const Endpoint25_2 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_2Input) =>
+const Endpoint25_5 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_5Input) =>
   raw["capability.connection.targets"]({
     params: { connectionID: input["connectionID"] },
     query: {
@@ -1352,82 +1395,82 @@ const Endpoint25_2 = (raw: RawClient["server.capability.connections"]) => (input
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_3Request = Parameters<RawClient["server.capability.connections"]["capability.connection.disconnect"]>[0]
-type Endpoint25_3Input = {
-  readonly location?: Endpoint25_3Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_3Request["headers"]["idempotency-key"]
-  readonly connection: Endpoint25_3Request["payload"]["connection"]
+type Endpoint25_6Request = Parameters<RawClient["server.capability.connections"]["capability.connection.disconnect"]>[0]
+type Endpoint25_6Input = {
+  readonly location?: Endpoint25_6Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_6Request["headers"]["idempotency-key"]
+  readonly connection: Endpoint25_6Request["payload"]["connection"]
 }
-const Endpoint25_3 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_3Input) =>
+const Endpoint25_6 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_6Input) =>
   raw["capability.connection.disconnect"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
     payload: { connection: input["connection"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_4Request = Parameters<RawClient["server.capability.connections"]["capability.target.create"]>[0]
-type Endpoint25_4Input = {
-  readonly location?: Endpoint25_4Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_4Request["headers"]["idempotency-key"]
-  readonly connection: Endpoint25_4Request["payload"]["connection"]
-  readonly input: Endpoint25_4Request["payload"]["input"]
+type Endpoint25_7Request = Parameters<RawClient["server.capability.connections"]["capability.target.create"]>[0]
+type Endpoint25_7Input = {
+  readonly location?: Endpoint25_7Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_7Request["headers"]["idempotency-key"]
+  readonly connection: Endpoint25_7Request["payload"]["connection"]
+  readonly input: Endpoint25_7Request["payload"]["input"]
 }
-const Endpoint25_4 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_4Input) =>
+const Endpoint25_7 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_7Input) =>
   raw["capability.target.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
     payload: { connection: input["connection"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_5Request = Parameters<RawClient["server.capability.connections"]["capability.target.retarget"]>[0]
-type Endpoint25_5Input = {
-  readonly location?: Endpoint25_5Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_5Request["headers"]["idempotency-key"]
-  readonly target: Endpoint25_5Request["payload"]["target"]
-  readonly input: Endpoint25_5Request["payload"]["input"]
+type Endpoint25_8Request = Parameters<RawClient["server.capability.connections"]["capability.target.retarget"]>[0]
+type Endpoint25_8Input = {
+  readonly location?: Endpoint25_8Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_8Request["headers"]["idempotency-key"]
+  readonly target: Endpoint25_8Request["payload"]["target"]
+  readonly input: Endpoint25_8Request["payload"]["input"]
 }
-const Endpoint25_5 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_5Input) =>
+const Endpoint25_8 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_8Input) =>
   raw["capability.target.retarget"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
     payload: { target: input["target"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_6Request = Parameters<RawClient["server.capability.connections"]["capability.target.remove"]>[0]
-type Endpoint25_6Input = {
-  readonly location?: Endpoint25_6Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_6Request["headers"]["idempotency-key"]
-  readonly target: Endpoint25_6Request["payload"]["target"]
+type Endpoint25_9Request = Parameters<RawClient["server.capability.connections"]["capability.target.remove"]>[0]
+type Endpoint25_9Input = {
+  readonly location?: Endpoint25_9Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_9Request["headers"]["idempotency-key"]
+  readonly target: Endpoint25_9Request["payload"]["target"]
 }
-const Endpoint25_6 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_6Input) =>
+const Endpoint25_9 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_9Input) =>
   raw["capability.target.remove"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
     payload: { target: input["target"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_7Request = Parameters<RawClient["server.capability.connections"]["capability.binding.put"]>[0]
-type Endpoint25_7Input = {
-  readonly location?: Endpoint25_7Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_7Request["headers"]["idempotency-key"]
-  readonly target: Endpoint25_7Request["payload"]["target"]
-  readonly input: Endpoint25_7Request["payload"]["input"]
+type Endpoint25_10Request = Parameters<RawClient["server.capability.connections"]["capability.binding.put"]>[0]
+type Endpoint25_10Input = {
+  readonly location?: Endpoint25_10Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_10Request["headers"]["idempotency-key"]
+  readonly target: Endpoint25_10Request["payload"]["target"]
+  readonly input: Endpoint25_10Request["payload"]["input"]
 }
-const Endpoint25_7 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_7Input) =>
+const Endpoint25_10 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_10Input) =>
   raw["capability.binding.put"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
     payload: { target: input["target"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint25_8Request = Parameters<RawClient["server.capability.connections"]["capability.binding.remove"]>[0]
-type Endpoint25_8Input = {
-  readonly location?: Endpoint25_8Request["query"]["location"]
-  readonly "idempotency-key": Endpoint25_8Request["headers"]["idempotency-key"]
-  readonly target: Endpoint25_8Request["payload"]["target"]
-  readonly sessionID: Endpoint25_8Request["payload"]["sessionID"]
+type Endpoint25_11Request = Parameters<RawClient["server.capability.connections"]["capability.binding.remove"]>[0]
+type Endpoint25_11Input = {
+  readonly location?: Endpoint25_11Request["query"]["location"]
+  readonly "idempotency-key": Endpoint25_11Request["headers"]["idempotency-key"]
+  readonly target: Endpoint25_11Request["payload"]["target"]
+  readonly sessionID: Endpoint25_11Request["payload"]["sessionID"]
 }
-const Endpoint25_8 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_8Input) =>
+const Endpoint25_11 = (raw: RawClient["server.capability.connections"]) => (input: Endpoint25_11Input) =>
   raw["capability.binding.remove"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     headers: { "idempotency-key": input["idempotency-key"] },
@@ -1435,15 +1478,18 @@ const Endpoint25_8 = (raw: RawClient["server.capability.connections"]) => (input
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup25 = (raw: RawClient["server.capability.connections"]) => ({
-  list: Endpoint25_0(raw),
-  get: Endpoint25_1(raw),
-  targets: Endpoint25_2(raw),
-  disconnect: Endpoint25_3(raw),
-  createTarget: Endpoint25_4(raw),
-  retargetTarget: Endpoint25_5(raw),
-  removeTarget: Endpoint25_6(raw),
-  bind: Endpoint25_7(raw),
-  unbind: Endpoint25_8(raw),
+  connect: Endpoint25_0(raw),
+  getTarget: Endpoint25_1(raw),
+  bindings: Endpoint25_2(raw),
+  list: Endpoint25_3(raw),
+  get: Endpoint25_4(raw),
+  targets: Endpoint25_5(raw),
+  disconnect: Endpoint25_6(raw),
+  createTarget: Endpoint25_7(raw),
+  retargetTarget: Endpoint25_8(raw),
+  removeTarget: Endpoint25_9(raw),
+  bind: Endpoint25_10(raw),
+  unbind: Endpoint25_11(raw),
 })
 
 const adaptClient = (raw: RawClient) => ({
