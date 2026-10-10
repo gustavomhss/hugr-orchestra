@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "97cb4462-a723-4439-92dd-9bb21eaaf2d5",
+  "id": "cd4ed692-a18b-4870-aa6f-6f831ef9f76d",
   "prevIds": [
-    "c856aae2-b84d-4cdf-b1f3-27f53ba036ea"
+    "97cb4462-a723-4439-92dd-9bb21eaaf2d5"
   ],
   "ddl": [
     {
@@ -873,6 +873,16 @@
       "default": null,
       "generated": null,
       "name": "provider",
+      "entityType": "columns",
+      "table": "capability_connection"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "label",
       "entityType": "columns",
       "table": "capability_connection"
     },

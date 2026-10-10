@@ -20,6 +20,7 @@ export const CapabilityConnectionTable = sqliteTable("capability_connection", {
   directory: text().$type<AbsolutePath>().notNull(),
   workspace_id: text().$type<WorkspaceID>(),
   provider: text().notNull(),
+  label: text().notNull().default(""),
   integration_id: text().$type<Integration.ID>().notNull(),
   credential_id: text().$type<Credential.ID>().references(() => CredentialTable.id, { onDelete: "set null" }),
   subject_id: text().notNull(),

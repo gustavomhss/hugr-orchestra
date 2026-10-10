@@ -5,6 +5,7 @@ import { Capability } from "./capability"
 import { SessionID } from "./session-id"
 
 export const Connection = Schema.Struct({ connection: Capability.ConnectionRef,
+  label: Schema.optionalKey(Schema.String.check(Schema.isMaxLength(128))),
   state: Schema.Literals(["active", "disconnected", "revoked"]), credential: Schema.Literals(["present", "missing"]) })
 export const Target = Schema.Struct({ target: Capability.TargetRef })
 export const TargetCursor = Schema.String.check(Schema.isPattern(/^[A-Za-z0-9_-]{32,2048}(?![\s\S])/))
@@ -34,3 +35,11 @@ export const PutBindingInput = Schema.Struct({ target: Capability.TargetRef, inp
 export const RemoveBindingInput = Schema.Struct({ target: Capability.TargetRef, sessionID: SessionID })
   .annotate({ parseOptions: { onExcessProperty: "error" } })
 export const Receipt = Schema.Struct({ requestID: Schema.String, reused: Schema.Boolean, data: Schema.Json })
+export interface Binding extends Schema.Schema.Type<typeof Binding> {}
+export const Binding = Schema.Struct({ sessionID: SessionID, actions: Schema.Array(Schema.NonEmptyString) })
+  .annotate({ identifier: "CapabilityManagement.Binding" })
+export interface BindingPage extends Schema.Schema.Type<typeof BindingPage> {}
+export const BindingPage = Schema.Struct({ items: Schema.Array(Binding), after: Schema.optionalKey(SessionID),
+  coverage: Schema.Literal("current-actor") }).annotate({ identifier: "CapabilityManagement.BindingPage" })
+export const BindingQuery = Schema.Struct({ after: Schema.optionalKey(SessionID),
+  limit: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 32 }))) })

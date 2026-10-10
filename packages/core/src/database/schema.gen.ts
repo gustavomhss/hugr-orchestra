@@ -134,6 +134,7 @@ export default {
           \`directory\` text NOT NULL,
           \`workspace_id\` text,
           \`provider\` text NOT NULL,
+          \`label\` text DEFAULT '' NOT NULL,
           \`integration_id\` text NOT NULL,
           \`credential_id\` text,
           \`subject_id\` text NOT NULL,
