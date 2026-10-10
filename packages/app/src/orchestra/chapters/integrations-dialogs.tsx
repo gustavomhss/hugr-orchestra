@@ -15,12 +15,20 @@ export function IntegrationsDialog(props: {
   sessionID?: string
   onClose: () => void
   opener?: HTMLButtonElement
+  fallbackFocus: () => HTMLElement | undefined
+  isCurrent: () => boolean
 }) {
   const language = useLanguage()
   const opener = props.opener
   const [state, setState] = createStore({ invalid: false })
   const form = { current: undefined as HTMLFormElement | undefined }
   onCleanup(() => form.current?.reset())
+  const close = () => {
+    form.current?.reset()
+    if (!props.isCurrent()) return
+    if (props.model.state.busy || props.model.state.retryable) props.model.cancel()
+    props.onClose()
+  }
   const destructive = () => ["remove", "disconnect", "unbind"].includes(props.kind)
   const title = () => language.t(`orchestra.integrations.${props.kind}`)
   const hint = () =>
@@ -39,7 +47,7 @@ export function IntegrationsDialog(props: {
     )
   const invalid = () => setState("invalid", true)
   const submit = (element: HTMLFormElement) => {
-    if (props.model.state.busy) return
+    if (props.model.state.busy || !props.isCurrent()) return
     const values = new FormData(element)
     // Reset before validation or handing an input to the controller: neither errors nor retries keep DOM secrets.
     element.reset()
@@ -91,10 +99,7 @@ export function IntegrationsDialog(props: {
     <Dialog
       open
       onOpenChange={(open) => {
-        if (!open) {
-          props.model.cancel()
-          props.onClose()
-        }
+        if (!open) close()
       }}
     >
       <Dialog.Portal>
@@ -104,7 +109,20 @@ export function IntegrationsDialog(props: {
             class="mx-dialog integrations-dialog"
             onCloseAutoFocus={(event) => {
               event.preventDefault()
-              opener?.focus()
+              if (!props.isCurrent()) return
+              const fallback = props.fallbackFocus()
+              const active = form.current?.ownerDocument.activeElement
+              // A newer dialog/page may already own focus when Kobalte delivers this close callback.
+              if (
+                active &&
+                active !== active.ownerDocument.body &&
+                !form.current?.contains(active) &&
+                active !== opener &&
+                active !== fallback
+              )
+                return
+              const current = opener?.isConnected && !opener.disabled && !opener.closest("[hidden]") ? opener : fallback
+              if (current?.isConnected) current.focus()
             }}
           >
             <form
@@ -122,12 +140,8 @@ export function IntegrationsDialog(props: {
                   <Dialog.Title as="h2">{title()}</Dialog.Title>
                   <Dialog.Description>{hint()}</Dialog.Description>
                 </div>
-                <Dialog.CloseButton
-                  type="button"
-                  class="mx-link"
-                  aria-label={language.t("orchestra.integrations.close")}
-                >
-                  {language.t("orchestra.integrations.close")}
+                <Dialog.CloseButton type="button" class="mx-link" aria-label={language.t("common.close")}>
+                  {language.t("common.close")}
                 </Dialog.CloseButton>
               </header>
               <fieldset class="mx-dialog-body integrations-fields" disabled={props.model.state.busy}>

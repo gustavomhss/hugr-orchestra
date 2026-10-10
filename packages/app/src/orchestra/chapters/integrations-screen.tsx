@@ -14,25 +14,32 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
     opener: undefined as HTMLButtonElement | undefined,
     accounts: [] as string[],
     targets: [] as string[],
+    bindings: [] as string[],
   })
+  const focus = { active: true, epoch: 0, heading: undefined as HTMLHeadingElement | undefined }
   // Keep DOM keys through temporary empty refresh windows. Missing live rows stay hidden; no DTO is cached.
   createEffect(() => {
     const accounts = props.model.state.connections.map((item) => item.connection.id)
     const targets = props.model.state.targets.map((item) => item.target.id)
+    const bindings = props.model.state.bindings.map((item) => item.sessionID)
     const busy = props.model.state.busy
     setState("accounts", (previous) => (busy ? [...new Set([...previous, ...accounts])] : accounts))
     setState("targets", (previous) => (busy ? [...new Set([...previous, ...targets])] : targets))
+    setState("bindings", (previous) => (busy ? [...new Set([...previous, ...bindings])] : bindings))
   })
   const auth = { current: undefined as HTMLFormElement | undefined }
   onCleanup(() => {
     auth.current?.reset()
-    props.model.cancel()
+    focus.active = false
+    focus.epoch++
+    if (props.model.state.busy || props.model.state.retryable) props.model.cancel()
   })
   const disabled = () => props.model.state.busy || props.model.state.status === "loading"
   const account = () =>
     props.model.state.connections.find((item) => item.connection.id === props.model.state.connectionID)
   const target = () => props.model.state.targets.find((item) => item.target.id === props.model.state.targetID)
   const open = (form: IntegrationForm, opener: HTMLButtonElement, sessionID?: string) => {
+    focus.epoch++
     setState({ form, opener, sessionID })
   }
   return (
@@ -83,9 +90,11 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
           </form>
         </Show>
         <div class="integrations-controls">
-          <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.load()}>
-            {language.t("orchestra.integrations.refresh")}
-          </button>
+          <Show when={!props.model.state.readRetryable}>
+            <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.load()}>
+              {language.t("orchestra.integrations.refresh")}
+            </button>
+          </Show>
           <Show when={props.model.state.after}>
             <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.load(true)}>
               {language.t("orchestra.integrations.more")}
@@ -103,15 +112,20 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             </button>
           </div>
         </Show>
-        <Show when={props.model.state.failure || props.model.state.status === "error"}>
+        <Show when={props.model.state.failure || (props.model.state.status === "error" && !props.model.state.busy)}>
           <div role="alert" class="mx-error integrations-controls">
             <p>{language.t(`orchestra.integrations.error.${props.model.state.failure ?? "request"}`)}</p>
-            <Show when={props.model.state.failure === "unknown" || props.model.state.failure === "request"}>
+            <Show when={props.model.state.retryable}>
               <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.retry()}>
                 {language.t("orchestra.integrations.retry")}
               </button>
               <button type="button" class="mx-btn" disabled={disabled()} onClick={() => props.model.cancel()}>
                 {language.t("orchestra.integrations.cancel")}
+              </button>
+            </Show>
+            <Show when={props.model.state.readRetryable}>
+              <button type="button" class="mx-btn" disabled={disabled()} onClick={() => void props.model.retryRead()}>
+                {language.t("orchestra.integrations.refresh")}
               </button>
             </Show>
           </div>
@@ -129,7 +143,15 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
             <p role="status">{language.t("orchestra.integrations.empty")}</p>
           </Show>
         </Show>
-        <h2 id="integrations-accounts-title">{language.t("orchestra.integrations.accounts")}</h2>
+        <h2
+          id="integrations-accounts-title"
+          tabindex={-1}
+          ref={(element) => {
+            focus.heading = element
+          }}
+        >
+          {language.t("orchestra.integrations.accounts")}
+        </h2>
         <ul class="integrations-list" aria-labelledby="integrations-accounts-title">
           <For each={state.accounts}>
             {(id) => {
@@ -143,7 +165,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                     aria-pressed={id === props.model.state.connectionID}
                     onClick={() => {
                       const current = item()
-                      if (current) void props.model.select({ ...current, connection: { ...current.connection } })
+                      if (!current) return
+                      focus.epoch++
+                      void props.model.select({ ...current, connection: { ...current.connection } })
                     }}
                   >
                     <bdi>{item()?.connection.provider}</bdi>
@@ -204,7 +228,9 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
                         aria-pressed={id === props.model.state.targetID}
                         onClick={() => {
                           const current = item()
-                          if (current) void props.model.selectTarget({ target: { ...current.target } })
+                          if (!current) return
+                          focus.epoch++
+                          void props.model.selectTarget({ target: { ...current.target } })
                         }}
                       >
                         <bdi>{item()?.target.environment}</bdi>
@@ -258,33 +284,39 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
               <p role="status">{language.t("orchestra.integrations.noBindings")}</p>
             </Show>
             <ul class="integrations-list">
-              <For each={props.model.state.bindings}>
-                {(item) => (
-                  <li class="mx-card">
-                    <bdi dir="ltr">
-                      <code>{item.sessionID}</code>
-                    </bdi>
-                    <ul>
-                      <For each={item.actions}>
-                        {(action) => (
-                          <li>
-                            <bdi dir="ltr">
-                              <code>{action}</code>
-                            </bdi>
-                          </li>
-                        )}
-                      </For>
-                    </ul>
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      disabled={disabled()}
-                      onClick={(event) => open("unbind", event.currentTarget, item.sessionID)}
-                    >
-                      {language.t("orchestra.integrations.unbind")}
-                    </button>
-                  </li>
-                )}
+              <For each={state.bindings}>
+                {(id) => {
+                  const item = () => props.model.state.bindings.find((item) => item.sessionID === id)
+                  return (
+                    <li class="mx-card" hidden={!item()}>
+                      <bdi dir="ltr">
+                        <code>{id}</code>
+                      </bdi>
+                      <ul>
+                        <For each={item()?.actions ?? []}>
+                          {(action) => (
+                            <li>
+                              <bdi dir="ltr">
+                                <code>{action}</code>
+                              </bdi>
+                            </li>
+                          )}
+                        </For>
+                      </ul>
+                      <button
+                        type="button"
+                        class="mx-btn"
+                        disabled={disabled() || !item()}
+                        onClick={(event) => {
+                          const current = item()
+                          if (current) open("unbind", event.currentTarget, current.sessionID)
+                        }}
+                      >
+                        {language.t("orchestra.integrations.unbind")}
+                      </button>
+                    </li>
+                  )
+                }}
               </For>
             </ul>
             <Show when={props.model.state.bindingsAfter}>
@@ -301,15 +333,24 @@ export function IntegrationsScreen(props: { model: Model; basic: boolean; onAuth
         </Show>
       </div>
       <Show when={state.form}>
-        {(kind) => (
-          <IntegrationsDialog
-            model={props.model}
-            kind={kind()}
-            sessionID={state.sessionID}
-            opener={state.opener}
-            onClose={() => setState({ form: undefined, sessionID: undefined, opener: undefined })}
-          />
-        )}
+        {(kind) => {
+          const epoch = focus.epoch
+          const model = props.model
+          const isCurrent = () => focus.active && epoch === focus.epoch && props.model === model
+          return (
+            <IntegrationsDialog
+              model={model}
+              kind={kind()}
+              sessionID={state.sessionID}
+              opener={state.opener}
+              fallbackFocus={() => focus.heading}
+              isCurrent={isCurrent}
+              onClose={() => {
+                if (isCurrent()) setState({ form: undefined, sessionID: undefined, opener: undefined })
+              }}
+            />
+          )
+        }}
       </Show>
     </MxPage>
   )
