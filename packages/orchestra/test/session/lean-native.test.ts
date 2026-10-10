@@ -7,6 +7,7 @@ import { MessageV2 } from "../../src/session/message-v2"
 import { Provider } from "../../src/provider/provider"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
+import { Global } from "@orchestra/core/global"
 import { TestInstance } from "../fixture/fixture"
 import { TestLLMServer } from "../lib/llm-server"
 import { testEffect } from "../lib/effect"
@@ -14,8 +15,17 @@ import { makeHttp } from "./prompt.fixture"
 
 const it = testEffect(makeHttp())
 
+function withPreferences<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return Effect.gen(function* () {
+    const { directory } = yield* TestInstance
+    return yield* effect.pipe(Effect.provideService(Global.Service, Global.make({
+      data: path.join(directory, ".lean-data"), state: path.join(directory, ".lean-state"),
+    })))
+  })
+}
+
 for (const mode of ["enabled", "disabled", "failure", "plugin", "plugin-error", "unknown", "truncated"] as const) it.instance(`native Lean ${mode} next model result and saved replay view`, () =>
-  Effect.gen(function* () {
+  withPreferences(Effect.gen(function* () {
     const enabled = mode !== "disabled"
     const changed = mode === "enabled"
     const { directory } = yield* TestInstance
@@ -81,4 +91,4 @@ for (const mode of ["enabled", "disabled", "failure", "plugin", "plugin-error", 
     expect(serialized).toContain("example.test")
     if (changed) expect(serialized).not.toContain("=== RUN")
     if (!changed && mode !== "truncated") expect(serialized).toContain("=== RUN")
-  }), 180_000)
+  })), 180_000)
