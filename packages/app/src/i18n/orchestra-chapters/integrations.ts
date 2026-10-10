@@ -49,4 +49,11 @@ export const INTEGRATIONS_COPY = {
   "orchestra.integrations.error.invalid": "Check the selected account, target, and input fields.",
   "orchestra.integrations.error.request": "The request could not be completed. Refresh before changing the request.",
   "orchestra.integrations.error.unknown": "The response was lost. Retry the same request to reconcile its original receipt.",
+  "orchestra.integrations.close": "Close dialog",
+  "orchestra.integrations.accounts": "Accounts",
+  "orchestra.integrations.live": "These are live pages, not a snapshot. Refresh to see current accounts and targets.",
+  "orchestra.integrations.removeHint":
+    "This removes the local target and its bindings. It does not delete the provider resource.",
+  "orchestra.integrations.unbindHint":
+    "This removes the binding for this session's current stored actor. It does not change the provider resource.",
 }
