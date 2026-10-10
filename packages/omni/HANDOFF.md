@@ -3,13 +3,19 @@
 ## Landing WP9a no Orchestra — 2026-10-10
 
 Esta seção substitui o estado de retomada anterior. Worktree `omni-native`; candidato final verificado
-`06699d3fd8`, reconciliado com `dev` até `ada14ff6ff`. Owner autorizou reconciliação/merge do PR #73: **"ok manda bala.
+`c97e1a7283610c582e3e482a101e9f453ea1bab5`, reconciliado com `dev` até `d6a58a0296`. Owner autorizou reconciliação/merge do PR #73: **"ok manda bala.
 paraleliza o que puder, vamos resolver isso logo"**, depois **"siga"**.
 
-- Epic final `38058250760` passou na tentativa 2; primeira falhou somente no leitor de identidade da fixture Windows.
-  Cache hits/e2e anteriores não são nova execução de browser. Todos artifacts/lanes continuam obrigatórios.
-- Typecheck `38058252749`, Electron real `38058254890`, CLI `38058254418`, native `38058254442` e delivery
-  `38058254455` verdes. Delivery preserva recusa por carga da tentativa 1. Nenhum deadline/KPI ampliado.
+- Epic final `38071818809`, typecheck `38071010416`, Electron real `38071013779`, CLI `38071010746` e native
+  `38071010790` verdes em `c97e1a7283`. Cache hits não são execução nova; todos artifacts/lanes continuam obrigatórios.
+- Delivery `38071010760` passou na tentativa 3: V9 Windows perdeu o limite de 2 s na primeira; macOS recusou carga
+  nas tentativas 1/2, sem KPI completo. Retentativas mantêm fonte, assertions, deadlines e KPI.
+- União do BackgroundJob revisada: extensão não começa após falha. Fixture agora segura cleanup de tentativa
+  iniciada durante reutilização do ID; isso não prova o guard de token de settlement antigo. Mutação da ordem
+  rejeitada em `38069015137`, restauração `38069253793`; adoção real e controles portáveis em `38067064470`/`38067064731`.
+- Checkpoints/evento público novos da `dev` reconciliados. Gerador SDK particiona seis aliases, preservando tipos
+  públicos e teto existente: 16575 LOC, máximo 16592. Revisão fria e compiler probe: vermelho `38071401680`, verde
+  `38071613961`. Client e SDK regenerados pelos comandos oficiais; nenhuma edição manual de generated.
 - Builder publica `.complete` só após saída executável válida. Shell adota após exit zero/finalização; job mantém
   broker/scratch até parada. Broker Node via AppProcess, sem exceção nova no spawn ledger. Revisões/probes medidos.
 - Quit desktop usa ID causal autenticado/atômico, não ordem entre relógios de processos. ID estrangeiro rejeitado

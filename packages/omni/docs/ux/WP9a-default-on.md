@@ -1,7 +1,7 @@
 # WP9a — native default and rollback
 
 Status: technical default-on gates verified for local use. Final reconciled candidate: `omni-native`
-`06699d3fd8f3283a1ee85a9dbecc2e66ecd14d0a`, including `dev` through `ada14ff6ff`; integration PR #73.
+`c97e1a7283610c582e3e482a101e9f453ea1bab5`, including `dev` through `d6a58a0296`; integration PR #73.
 Earlier `omni-default-ci` acceptance at product `f036dca9a4` / CI `fc41e41a68` remains pinned below.
 
 The owner accepted the WP10 hosted report for local use on 2026-10-09: "eai, pode seguir". Developer ID/notarization
@@ -159,5 +159,39 @@ Tracing is opt-in only; default acceptance retains the original sanitized enviro
 Linux/Windows package scheduling is serialized to prevent cold bootstrap/generation contention; every package and
 original per-test deadline remains. Historical macOS `/pty` 500 activation errors did not reproduce in fresh
 original-environment matrices; their cause remains unknown, not a claimed product fix. No diagnostic-only desktop
-intervention substitutes for the required restored cells. Source changes after the final candidate are documentation
-only unless separately recorded.
+intervention substitutes for the required restored cells. The `06699d3fd8` evidence above predates the additional
+runtime reconciliation below; it is not relabeled as a measurement of a later build.
+
+## Latest shared-runtime reconciliation — 2026-10-10
+
+Candidate `c97e1a7283610c582e3e482a101e9f453ea1bab5` includes the `dev` terminal-notification change, project
+checkpoints and durable work-result event through `d6a58a0296`. Cold reviewers approved the shared-job/Omni lease
+union and checkpoint/event integration boundaries. The latter review covered merge boundaries, not an independent
+review of the entire already-landed upstream feature.
+
+The old registry fixture waited for a finalizer inside a queued command that now correctly never begins after its
+predecessor fails. Its replacement retains failure and restart assertions, checks queued non-entry, and holds an
+actual begun-command cancellation finalizer across ID reuse. This proves cleanup isolation, not execution of the
+stale-settlement token guard. Restoring early successor release made the non-entry assertion fail; restoration passed.
+
+The public event initially grew the generated SDK main types to 16634 nonblank LOC, above the existing 16592 cap.
+Extending the existing generator partition to six event aliases reduced it to 16575, without changing a waiver or
+declaration bytes. Public reexports and type-only dependency cycles remain. Client and legacy SDK were regenerated
+with their official commands; generated files were not hand-edited. The compiler probe rejects an omitted partition
+export; its reach is partition placement, not absence of the still-public alias from the main module.
+
+| Evidence | Result and scope |
+|---|---|
+| [38065827835](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38065827835) | Pre-repair fixture timed out on Linux/macOS at its unchanged 120000 ms harness limit. Windows lane was cancelled; it is not a measured test failure. |
+| [38067064470](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38067064470) | Repaired registry plus actual adoption and Task union: Linux/Windows 44 passed, one Darwin-only broker skip each; macOS 45 passed. |
+| [38067064731](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38067064731) | Core registry, resource leases and fresh default/rollback controls: 18 passed per OS, 469 assertions each. |
+| [38069015137](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38069015137), [38069253793](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38069253793) | Early-tail-release mutation rejected queued execution; exact restoration passed. Explicit legacy mode isolates this pure registry probe. The earlier token-removal probe `38068640154` passed the registry test and failed only native positive control; it is not mutation evidence. |
+| [38071401680](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071401680), [38071613961](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071613961) | Generator-selection mutation omitted `MaestroTaskBound` from partition: compiler proof failed while two other tests passed. Official regeneration restored candidate tree exactly; three tests passed. |
+| [38071818809](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071818809) | Final `c97e1a7283` epic passed all lanes: native producers/consumers, Linux/Windows unit suites, e2e, Atlas, generated-client/HttpApi/Relay and Windows rollback. Cache-replayed lanes are not fresh executions. |
+| [38071010416](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010416) | Final `c97e1a7283` full package typecheck passed. |
+| [38071013779](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071013779) | Final `c97e1a7283` actual unsigned Electron matrix passed on three OSes, with required restored crash/quit cells, controls and original logging environment. |
+| [38071010746](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010746), [38071010790](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010790) | Final `c97e1a7283` compiled CLI and native gates passed on three OSes. |
+| [38071010760](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010760) | Final `c97e1a7283` delivery passed, attempt 3. Attempt 1 Windows V9 exceeded 2 s; same-source retry passed. macOS attempts 1/2 refused busy hosts; incomplete V7 timing remains unrun. No deadline or KPI changed. |
+
+Remaining landing steps: documentation-only PR-head checks, history-preserving merge of #73, then post-merge CI and
+mirror fast-forward verification. npm, Developer ID/notarization and WP9b retain their separate deferred scope.
