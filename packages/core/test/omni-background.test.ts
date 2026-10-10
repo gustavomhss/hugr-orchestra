@@ -173,4 +173,66 @@ describe("OmniBackground registry", () => {
       yield* until(() => tree.state.stops === 1)
     }),
   )
+
+  it.live("transfers the resource lease after job start and finalizes only after stopping the tree", () =>
+    Effect.gen(function* () {
+      const owned = yield* registry
+      const tree = fake()
+      const events: string[] = []
+      yield* owned.processes.register(tree.child, {
+        sessionID: "ses_lease", title: "leased",
+        onAdopt: Effect.gen(function* () {
+          expect((yield* owned.jobs.list()).some((job) => job.status === "running")).toBe(true)
+          events.push("adopted")
+        }),
+        finalize: Effect.sync(() => {
+          expect(tree.state.alive).toBe(false)
+          expect(tree.state.stops).toBe(1)
+          events.push("finalized")
+        }),
+      })
+      expect(events).toEqual(["adopted"])
+      yield* owned.processes.stopSession("ses_lease")
+      yield* until(() => events.length === 2)
+      expect(events).toEqual(["adopted", "finalized"])
+      expect(yield* owned.processes.list("ses_lease")).toEqual([])
+    }).pipe(Effect.provide(jobsLayer)),
+  )
+
+  it.live("registration failure stops the tree and finalizes without transferring the lease", () =>
+    Effect.gen(function* () {
+      const owned = yield* registry
+      const tree = fake()
+      const events: string[] = []
+      const processes = OmniBackground.make({ ...owned.jobs, start: () => Effect.die("registration refused") })
+      yield* processes.register(tree.child, {
+        sessionID: "ses_failure", title: "refused",
+        onAdopt: Effect.sync(() => { events.push("adopted") }),
+        finalize: Effect.sync(() => {
+          expect(tree.state.stops).toBe(1)
+          events.push("finalized")
+        }),
+      })
+      expect(events).toEqual(["finalized"])
+      expect(tree.state.alive).toBe(false)
+      expect(yield* processes.list("ses_failure")).toEqual([])
+    }).pipe(Effect.provide(jobsLayer)),
+  )
+
+  it.live("an already gone tree leaves resource ownership with the foreground", () =>
+    Effect.gen(function* () {
+      const owned = yield* registry
+      const tree = fake()
+      tree.end()
+      const events: string[] = []
+      yield* owned.processes.register(tree.child, {
+        sessionID: "ses_gone", title: "gone",
+        onAdopt: Effect.sync(() => { events.push("adopted") }),
+        finalize: Effect.sync(() => { events.push("finalized") }),
+      })
+      expect(tree.state.stops).toBe(1)
+      expect(events).toEqual([])
+      expect(yield* owned.jobs.list()).toEqual([])
+    }).pipe(Effect.provide(jobsLayer)),
+  )
 })
