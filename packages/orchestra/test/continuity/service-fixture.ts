@@ -69,13 +69,10 @@ export function packet(input: { messages?: unknown }) {
 export const retrying = (input: { messages?: unknown }) =>
   wireMessages(input).at(-1)?.content.startsWith("HOST CHECK FAILED") === true
 
-/** Lifecycle-only reviewer fixture; real semantic quality is evaluated with real models separately. */
-export function reviewBody(input: { messages?: unknown }) {
-  const value = Schema.decodeUnknownSync(Schema.Struct({ candidate: Schema.Struct({ now: Schema.Struct({ src: Schema.Array(Schema.String) }) }) }))(
-    Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(wireMessages(input)[0]?.content))
-  return JSON.stringify({ verdict: "accept", cursor: { supported: true, state: "active", next: "verify",
-    reason: "Scenario-authored lifecycle fixture; not a semantic quality claim.", src: value.candidate.now.src },
-    critical: [], resolved: [], issues: [] })
+export function reviewing(input: { agent?: { name: string }; system?: readonly string[]; messages?: unknown }) {
+  return input.agent?.name === "continuity-review" || [...input.system ?? [],
+    ...wireMessages(input).filter((message) => message.role === "system").map((message) => message.content),
+  ].some((text) => text.includes("You independently review a complete working-memory candidate"))
 }
 
 /** The index entries of the new span: alias and its index text, including appended output lines. */
@@ -114,7 +111,7 @@ export function held(memory = FIRST, options: { reference?: string; raw?: boolea
     yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined).pipe(Effect.andThen(Deferred.succeed(cleanup, undefined))))
     return { memory, respond: (request: LLM.StreamInput) => options.respond ? options.respond(request) : options.raw ? memory : JSON.stringify(body(request, memory, options.reference)),
       output: options.output ?? Stream.make(LLMEvent.finish({ reason: "stop" })),
-      entered: yield* Deferred.make<{ request: LLM.StreamInput; jobID: string }>(), release,
+      requests: [] as LLM.StreamInput[], entered: yield* Deferred.make<{ request: LLM.StreamInput; jobID: string }>(), release,
       closed: yield* Deferred.make<void>(), closing: yield* Deferred.make<void>(), cleanup, holdCleanup: options.holdCleanup === true }
   })
 }
@@ -131,21 +128,28 @@ export function environment<A = never, E = never>(plans: Held[], options: {
   const llm = LayerNode.make({ service: LLM.Service, deps: [Session.node, BackgroundJob.node],
     layer: Layer.effect(LLM.Service, Effect.gen(function* () {
       const jobs = yield* BackgroundJob.Service
+      const reviews: LLM.StreamInput[] = []
+      yield* Effect.addFinalizer(() => Effect.sync(() => { expect(reviews).toEqual([]) }))
       yield* Effect.addFinalizer(() => Effect.forEach(plans, (plan) =>
         Deferred.succeed(plan.release, undefined).pipe(Effect.andThen(Deferred.succeed(plan.cleanup, undefined))),
       ).pipe(Effect.asVoid))
       const enteredJobs = new Set<string>()
       let index = 0
       return LLM.Service.of({ stream: (request) => Stream.scoped(Stream.unwrap(Effect.gen(function* () {
-        if (request.agent.name === "continuity-review") return Stream.make(LLMEvent.textStart({ id: "review" }),
-          LLMEvent.textDelta({ id: "review", text: reviewBody(request) }), LLMEvent.textEnd({ id: "review" }), LLMEvent.finish({ reason: "stop" }))
+        if (reviewing(request)) {
+          reviews.push(request)
+          return Stream.fail(new Error("Unexpected continuity review request"))
+        }
         // The one retry after a failed check replays the same plan's reply without re-entering.
         if (retrying(request) && plans[index - 1]) {
           const plan = plans[index - 1]
+          plan.requests.push(request)
+          expect(plan.requests).toHaveLength(2)
           return Stream.concat(Stream.make(LLMEvent.textStart({ id: "memory" }), LLMEvent.textDelta({ id: "memory", text: plan.respond(request) })), plan.output)
         }
         const plan = plans[index++]
         if (!plan) return Stream.fail(new Error("Unexpected maintenance request"))
+        plan.requests.push(request)
         // Mirror LLM.stream's scoped transport cleanup, not only normal stream completion.
         yield* Effect.addFinalizer(() => Effect.gen(function* () {
           yield* Deferred.succeed(plan.closing, undefined)
@@ -282,6 +286,8 @@ export function applyFirst(sessionID: SessionID, plan: Held) {
     const hit = yield* entered(plan)
     yield* Deferred.succeed(plan.release, undefined)
     yield* terminal(hit.jobID, "completed", "applied")
+    expect(plan.requests).toHaveLength(1)
+    expect(plan.requests.filter(reviewing)).toEqual([])
     const continuity = yield* SessionContinuity.Service
     const sessions = yield* Session.Service
     const prepared = yield* continuity.admit({ sessionID, messages: yield* sessions.messages({ sessionID }), canRecall: true })
