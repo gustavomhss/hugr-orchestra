@@ -74,6 +74,55 @@ test("disabled item preserves exact bytes without disabling other actual items o
   expect(LeanProcessor.process(observation).status).toBe("reduced")
 })
 
+// Native fixture literals from https://github.com/gustavomhss/HuGR-Lean,
+// commit 465fb4c04773f1a40733c9f4c334b980e3195646, fixtures/formats/{jest_native,vitest_native}.txt.
+// MIT, copyright (c) 2026 gmhelmold; full LICENSE ships in the existing pinned vendor archive.
+// Capture versions: Jest 30.2.0 / Vitest 3.2.4; provenance: fixtures/formats/SOURCES.md at that commit.
+// Modification record: literal escaping/line joining only, native UTF-8 bytes unchanged and hash-pinned;
+// test adds an SGR wrapper solely to exercise the package's existing presentation normalization.
+const frameworkFixtures = [
+  { id: "jest", command: "jest --runInBand --verbose --no-color", bytes: 242,
+    sha256: "dbb8f4e893d8a4a00f60977ca9411bc953729f50258d4fdedd3368ba711db17a",
+    output: ["PASS ./jest-native.test.cjs", "  maths 🔥", "    ✓ adds café (7 ms)", "    nested",
+      "      ✓ keeps path: evidence (2 ms)", "", "Test Suites: 1 passed, 1 total", "Tests:       2 passed, 2 total",
+      "Snapshots:   0 total", "Time:        1.022 s", "Ran all test suites.", ""].join("\n") },
+  { id: "vitest", command: "vitest run vitest-native.test.js --globals --no-color", bytes: 322,
+    sha256: "97251d219dd514087b42e0bca26b0b30bcf46233d5bcb1d6fd92abdd77cc9566",
+    output: ["", " RUN  v3.2.4 /private/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode/lean-formats-native",
+      "", " ✓ vitest-native.test.js (2 tests) 5ms", "", " Test Files  1 passed (1)", "      Tests  2 passed (2)",
+      "   Start at  00:23:02", "   Duration  1.28s (transform 26ms, setup 0ms, collect 10ms, tests 5ms, environment 0ms, prepare 324ms)",
+      "", ""].join("\n") },
+] as const
+
+for (const fixture of frameworkFixtures) test(`${fixture.id} pinned native normalization follows the actual default engine unless explicitly disabled`, () => {
+  expect(Buffer.byteLength(fixture.output)).toBe(fixture.bytes)
+  expect(createHash("sha256").update(fixture.output).digest("hex")).toBe(fixture.sha256)
+  expect(LeanProcessor.identify(fixture.command)).toBe(fixture.id)
+  const plain = { ...observation, command: fixture.command, output: fixture.output }
+  const unchanged = filter(plain)
+  expect(unchanged.status).toBe("passthrough")
+  expect("replacement" in unchanged).toBe(false)
+  expect(LeanProcessor.process(plain)).toEqual(unchanged)
+  expect(LeanProcessor.process(plain, { [fixture.id]: true })).toEqual(unchanged)
+  const input = { ...plain, output: `\u001b[32m${fixture.output}\u001b[0m`, presentation: "terminal-rendered" as const }
+  const before = structuredClone(input), baseline = filter(input)
+  expect(baseline.status).toBe("normalized")
+  if (baseline.status !== "normalized") throw new Error(`${fixture.id}: actual pinned engine did not normalize the native positive control`)
+  expect(baseline.inputBytes).toBe(fixture.bytes + 9)
+  expect(baseline.outputBytes).toBe(fixture.bytes)
+  expect(Buffer.from(baseline.replacement)).toEqual(Buffer.from(fixture.output))
+  expect(LeanProcessor.process(input)).toEqual(baseline)
+  expect(LeanProcessor.process(input, {})).toEqual(baseline)
+  expect(LeanProcessor.process(input, { [fixture.id]: true })).toEqual(baseline)
+  const disabled = LeanProcessor.process(input, { [fixture.id]: false })
+  expect(disabled.status).toBe("passthrough")
+  expect("replacement" in disabled).toBe(false)
+  expect(disabled.inputBytes).toBe(fixture.bytes + 9)
+  expect(disabled.outputBytes).toBe(disabled.inputBytes)
+  expect(Buffer.from("replacement" in disabled ? disabled.replacement : input.output)).toEqual(Buffer.from(before.output))
+  expect(input).toEqual(before)
+})
+
 test("exact-only prefixes attribute preservation without borrowing any reducer", () => {
   // Prefix evidence: fixtures/profiles/*/cases.json at the vendor README source pin (MIT); no fixtures copied.
   const commands = [

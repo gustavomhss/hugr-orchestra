@@ -19,8 +19,7 @@ export function identify(command: string): LeanCoverage.ItemID | undefined {
 export function process(observation: Observation, items?: LeanCoverage.Settings) {
   try {
     const id = identify(observation.command)
-    const item = LeanCoverage.items.find((item) => item.id === id)
-    const selected = id && (items?.[id] === false || item?.mode === "preserve") ? [] : profiles
+    const selected = id && items?.[id] === false ? [] : profiles
     return filter(observation, { profiles: selected })
   } catch {
     // Keep the package's own fail-open boundary for malformed observations or host settings.
