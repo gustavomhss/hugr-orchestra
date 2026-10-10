@@ -390,8 +390,14 @@ it.instance("queued caller during outgoing preparation rebinds agent/model/permi
   yield* awaitWithTimeout(Deferred.await(entered), "Caller preparation never reached plugin", "15 seconds").pipe(Effect.catch((error) =>
     Effect.fail(new Error(`${error.message}; caller=${String(old.pollUnsafe())}`))))
   expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
+  // The in-process prompt API takes decoded Format classes; HTTP JSON is decoded at the route boundary.
+  const format = Schema.decodeUnknownSync(SessionV1.Format)({ type: "json_schema",
+    schema: { type: "object", properties: { accepted: { type: "boolean" } } } })
   const newer = yield* prompt.prompt({ sessionID: chat.id, noReply: true, agent: "alternate", model: { providerID: model.providerID, modelID: ModelV2.ID.make("alternate-model") },
-    tools: { bash: false }, format: { type: "json_schema", schema: { type: "object", properties: { accepted: { type: "boolean" } } } }, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+    tools: { bash: false }, format, parts: [{ type: "text", text: "NEW_BOUND_CALLER" }] })
+  if (newer.info.role !== "user" || !newer.info.format) throw new Error("New caller structured format was not durably admitted")
+  expect(Schema.encodeSync(SessionV1.Format)(newer.info.format)).toEqual(Schema.encodeSync(SessionV1.Format)(format))
+  expect((yield* sessions.messages({ sessionID: chat.id })).filter((message) => message.info.role === "assistant")).toEqual([])
   yield* Deferred.succeed(release, undefined)
   const result = yield* Fiber.join(old)
   expect(result.info).toMatchObject({ role: "assistant", parentID: newer.info.id, agent: "alternate", modelID: "alternate-model", structured: { accepted: true } })
