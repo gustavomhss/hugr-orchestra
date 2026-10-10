@@ -280,6 +280,12 @@ function applyLegacySchemaOverrides(spec: OpenApiSpec) {
     schemas.GlobalSession.properties.project = nullable(schemas.GlobalSession.properties.project)
   const activity = schemas.VcsActivity?.properties
   if (activity) Object.assign(activity, { ahead: nullable(activity.ahead), behind: nullable(activity.behind) })
+  // Flatten only these declared NonNegativeInt refinements: hey-api otherwise emits
+  // unknown for inline integer + allOf:[{minimum:0}]. Required nullable fields stay intact.
+  for (const [name, fields] of [["LeanProfileSavings", ["calls", "tokenCalls"]], ["LeanProfileExecution", ["time"]]] as const) {
+    const properties = schemas[name]?.properties
+    for (const field of fields) if (properties?.[field]) properties[field] = stripOptionalNull(properties[field])
+  }
   const providerOptions = schemas.ProviderConfig?.properties?.options
   if (providerOptions) providerOptions.additionalProperties = {}
   const model = schemas.ProviderConfig?.properties?.models?.additionalProperties
