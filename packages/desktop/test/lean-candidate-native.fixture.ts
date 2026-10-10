@@ -99,6 +99,7 @@ export default async () => ({ "tool.execute.after": async (input, output) => {
       const raw = await Bun.file(path.join(candidate.root, `${callID}.json`)).json() as { output: string; metadata: { output: string } }
       const metric = LeanMetrics.decode(tool.state.metadata.lean)
       assert.ok(metric, "Missing durable native Lean Decision")
+      assert.equal(metric.engine, "hugr-lean@0.2.0:369206cd0a468904", "Actual native boundary used the wrong archive engine")
       assert.equal(metric.producer, "native-shell")
       assert.equal(metric.eligible, true)
       assert.deepEqual(metric.owner, { projectID: session.projectID, location: directory, sessionID: session.id, callID })
