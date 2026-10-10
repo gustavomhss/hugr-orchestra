@@ -71,7 +71,9 @@ jobs:
       - name: Split and compare with the mirror
         id: split
         run: |
-          split=$(git subtree split --prefix="$PREFIX" "$GITHUB_SHA")
+          # git-subtree recurses once per commit; Ubuntu's /bin/sh (dash) stops at depth 1000, bash does not.
+          subtree() { bash "$(git --exec-path)/git-subtree" "$@"; }
+          split=$(subtree split --prefix="$PREFIX" "$GITHUB_SHA")
           echo "split $split of $GITHUB_SHA"
           echo "sha=$split" >> "$GITHUB_OUTPUT"
           git fetch --no-tags "$MIRROR" "+refs/heads/main:refs/remotes/mirror/main"
@@ -89,7 +91,7 @@ jobs:
           elif git merge-base --is-ancestor "$main" "$split"; then
             echo "action=push" >> "$GITHUB_OUTPUT"
           elif git merge-base --is-ancestor "$split" "$main" &&
-            git merge-base --is-ancestor "$main" "$(git subtree split --prefix="$PREFIX" refs/remotes/origin/dev)"; then
+            git merge-base --is-ancestor "$main" "$(subtree split --prefix="$PREFIX" refs/remotes/origin/dev)"; then
             # A re-run of an older push: a newer run already mirrored dev past this commit.
             echo "the mirror's main $main is past $split and is dev's split or behind it: nothing to push"
             echo "action=none" >> "$GITHUB_OUTPUT"
