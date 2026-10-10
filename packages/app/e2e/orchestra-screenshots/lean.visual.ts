@@ -21,6 +21,11 @@ const metric = LeanMetrics.decode({
 if (!metric) throw new Error("Lean visual demo rejected by production codec")
 
 test.use({ viewport, deviceScaleFactor: 1, serviceWorkers: "block", timezoneId: "UTC" })
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus) return
+  console.log("Lean preview failure DOM:", await page.locator("body").innerText())
+  console.log("Lean preview tool wrappers:", await page.locator('[data-component="tool-part-wrapper"]').evaluateAll((tools) => tools.map((tool) => tool.outerHTML)))
+})
 
 for (const scheme of ["dark", "light"] as const) {
   test(`Lean production shell ${scheme} pt-BR`, async ({ page }) => {
@@ -44,18 +49,23 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(page.locator("body")).toHaveAttribute("data-new-layout", "")
     const sidebar = page.locator('[data-component="orchestra-sidebar"]')
     await expect(sidebar).toHaveCSS("width", "230px")
+    // Evidence mounts the actual bash ToolPart only when its retained-output tab is opened.
+    await page.getByRole("button", { name: "View original output", exact: true }).click()
     const tool = page.locator('[data-timeline-part-id="prt_evidence"]')
     const lean = tool.locator('[data-component="lean-tool-metrics"]')
+    await expect(tool).toHaveCount(1)
     await expect(lean).toHaveCount(1)
     await expect(lean.locator('[data-slot="bytes-saved"]')).toHaveText(metric.bytes.saved.toLocaleString("pt-BR"))
     await expect(lean.locator('[data-slot="filter-profile"]')).toHaveText("go-test-verbose")
     await expect(tool.locator('[data-component="bash-output"]')).toContainText(output)
-    await lean.scrollIntoViewIfNeeded()
+    await tool.scrollIntoViewIfNeeded()
+    await expect(tool).toBeInViewport({ ratio: 1 })
+    await expect(tool.locator('[data-component="bash-output"]')).toBeInViewport({ ratio: 1 })
     await expect(lean).toBeInViewport({ ratio: 1 })
     await capture(page, "tool", scheme)
     if (scheme === "light") return
 
-    await page.locator('button[aria-controls="review-panel"]').click()
+    await page.locator('[data-action="session-review-toggle"]').click()
     const context = page.getByRole("tab", { name: "Contexto", exact: true })
     await context.click()
     await expect(context).toHaveAttribute("aria-selected", "true")
@@ -75,8 +85,10 @@ for (const scheme of ["dark", "light"] as const) {
     const toggle = settings.locator('[data-action="settings-lean"] input[type="checkbox"]')
     await expect(toggle).toBeEnabled()
     await expect(toggle).toBeChecked()
-    await settings.getByText("Saída de ferramentas Lean", { exact: true }).scrollIntoViewIfNeeded()
-    await expect(settings.getByText("Saída de ferramentas Lean", { exact: true })).toBeInViewport({ ratio: 1 })
+    const row = settings.locator('[data-component="settings-v2-row"]').filter({ has: page.locator('[data-action="settings-lean"]') })
+    await expect(row.locator('[data-slot="settings-v2-row-title"]')).toHaveText("Saída de ferramentas Lean")
+    await row.scrollIntoViewIfNeeded()
+    await expect(row).toBeInViewport({ ratio: 1 })
     await capture(page, "settings", scheme)
   })
 }
@@ -115,6 +127,7 @@ async function capture(page: Page, surface: string, scheme: "dark" | "light") {
     file, surface, viewport, dpr: 1, source: test.info().config.metadata.source, facts,
     demo: "Synthetic public Go30 result and codec-validated numeric decision; not measured runtime savings.",
     owner: metric!.owner, coverage: "loaded-history", transport: "existing read-only v1 fixture",
-    components: ["Orchestra shell", "LeanToolMetrics", "SessionContextTab/LeanProjectMetrics", "SettingsGeneralV2/LeanSetting"],
+    components: ["Orchestra shell", "LeanToolMetrics", ...(surface === "tool" ? [] : ["SessionContextTab/LeanProjectMetrics"]),
+      ...(surface === "settings" ? ["SettingsGeneralV2/LeanSetting"] : [])],
   }, null, 2) + "\n")
 }
