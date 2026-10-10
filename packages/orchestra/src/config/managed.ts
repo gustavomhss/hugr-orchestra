@@ -1,6 +1,6 @@
 export * as ConfigManaged from "./managed"
 
-import { existsSync } from "fs"
+import { existsSync, lstatSync, readFileSync, realpathSync } from "fs"
 import os from "os"
 import path from "path"
 import { Process } from "@/util/process"
@@ -29,7 +29,25 @@ function systemManagedConfigDir(): string {
 }
 
 export function managedConfigDir() {
+  const candidate = candidateManagedConfigDir()
+  if (candidate) return candidate
   return process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR || systemManagedConfigDir()
+}
+
+function candidateManagedConfigDir() {
+  if (process.env.ORCHESTRA_LEAN_CANDIDATE !== "1") return
+  const root = process.env.ORCHESTRA_CANDIDATE_PROFILE_ROOT
+  if (!root || !path.isAbsolute(root)) throw new Error("candidate-managed: absolute root required")
+  const marker = path.join(root, ".orchestra-lean-candidate.json")
+  const managed = path.join(root, "managed")
+  if (!existsSync(marker) || !lstatSync(marker).isFile() || lstatSync(marker).isSymbolicLink() ||
+    realpathSync(root) !== root || !existsSync(managed) || realpathSync(managed) !== managed ||
+    readFileSync(marker, "utf8") !== JSON.stringify({ appId: "ai.hugr.orchestra.lean.candidate", version: 1, root }) ||
+    process.env.ORCHESTRA_TEST_MANAGED_CONFIG_DIR !== managed ||
+    process.env.HOME !== path.join(root, "home") || process.env.ORCHESTRA_TEST_HOME !== path.join(root, "home")) {
+    throw new Error("candidate-managed: invalid owned profile")
+  }
+  return managed
 }
 
 export function parseManagedPlist(json: string): string {
@@ -41,6 +59,7 @@ export function parseManagedPlist(json: string): string {
 }
 
 export async function readManagedPreferences() {
+  if (candidateManagedConfigDir()) return
   if (process.platform !== "darwin") return
 
   const user = (() => {
