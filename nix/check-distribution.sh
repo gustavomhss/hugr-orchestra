@@ -124,7 +124,7 @@ run output-negative-controls "$bun/bin/bun" --bun nix/scripts/probe-distribution
   --version "$version" --electron-version "$electronVersion" --directory "$dir/probes" --modules "$modules"
 run references-cli nix-store --query --references "$cli"
 run references-desktop nix-store --query --references "$desktop"
-run closure nix path-info --recursive --json "$cli" "$desktop"
+run closure nix --extra-experimental-features nix-command path-info --recursive --json "$cli" "$desktop"
 if [[ $DISTRIBUTION_SYSTEM == *-darwin ]]; then
   run app-identity python3 - "$desktop" "$version" <<'PY'
 import plistlib, sys

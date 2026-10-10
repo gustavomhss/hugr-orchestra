@@ -335,6 +335,26 @@ wrong CLI path. The selector repair evaluates the same Git `.#packages.<system>`
 installable as the build, with the same output-field map. No output/ABI/control
 check is removed, and neither repair is qualified by source review alone.
 
+Request `33b1bdf6261be0297f90a6cfa1b6029b1f61d14e` measured successfully in
+`38017001475`; its cold-reviewed hash/request-only child `3213cc90ee` runs
+consumer attempt `38018297512`. Linux now passes loader/RPATH/DT_NEEDED checks,
+but actual compiled CLI completions terminate with SIGSEGV (builder exit 139).
+Focused diagnostic `38019939365`, leaf `e8c7b82302`, checks the exact failed source
+`3213cc90ee` on both native Linux CPUs. Both reproduce original template SIGSEGV
+and execute the copied read-only loader-metadata template successfully. The raw
+ELF evidence identifies Nix's extra writable PHDR/`.interp` segment preceding
+the actual writable `.bun` segment, matching Bun 1.3.14 upstream issue #31023.
+The production candidate changes only copied template metadata permissions after
+strict layout checks, invokes that copy as compiler to avoid native self-template
+bypass, and retains exact 1.3.14 plus all artifact/runtime checks. Offline real-ELF
+replay, no-op and malformed/mutable-loader rejection controls passed for both CPUs.
+
+Darwin ARM `11657297859` passed actual CLI/Desktop build/install, native output,
+packaged PTY ABI and all output negative controls. Its first remaining failure is
+closure query activation: `experimental Nix feature 'nix-command' is disabled`.
+The candidate adds that feature only to the unchanged closure query. Diagnostics
+and static approval do not qualify production repairs or the new Archie identity.
+
 Failure-repair integration checkpoint: `b71cd4e0763a8e42a0da37530ca5fa29a0ffcc9c`.
 This is not a qualified runtime freeze. The measured source freeze was
 `1f4f2929b0153aa4f68757d9aee33d8f18f55589`; its focused runs exposed concrete failures:

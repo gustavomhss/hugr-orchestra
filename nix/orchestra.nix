@@ -12,6 +12,7 @@
   versionCheckHook,
   writableTmpDirAsHomeHook,
   patchelf,
+  python3,
   apple-sdk,
   darwin,
   node_modules ? callPackage ./node_modules.nix { inherit bun; },
@@ -32,7 +33,7 @@ stdenv.mkDerivation (finalAttrs: {
     installShellFiles
     makeBinaryWrapper
     writableTmpDirAsHomeHook
-  ] ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf ]
+  ] ++ lib.optionals stdenv.hostPlatform.isLinux [ patchelf python3 ]
     ++ lib.optionals stdenv.hostPlatform.isDarwin [ apple-sdk darwin.sigtool ];
 
   # stdenv supplies the native C compiler; apple-sdk supplies headers and
@@ -61,12 +62,19 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
-    # Native compiler normally reuses itself. Also provide Bun's exact fallback
-    # filename, so target lookup has the same measured/patched binary offline.
+  '' + lib.optionalString stdenv.hostPlatform.isLinux ''
+    # Bun 1.3.14 grows the first writable PT_LOAD. Nix's loader metadata must
+    # remain read-only so the payload grows its real .bun segment, not PHDR/.interp.
+    python3 ${./scripts/prepare-bun-template.py} ${bun}/bin/bun \
+      "$BUN_INSTALL_CACHE_DIR/native-bun-template" '${stdenv.hostPlatform.system}'
+    test "$("$BUN_INSTALL_CACHE_DIR/native-bun-template" --version)" = '${bun.version}'
+    ln -s "$BUN_INSTALL_CACHE_DIR/native-bun-template" packages/cli/bun-${target}-v${bun.version}
+  '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
     ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
+  '' + ''
     # Bun 1.3.14's automatic Nix-host detection can miss relocated ELF metadata.
     # Preserve the selected Nix compiler's interpreter, then verify emitted paths below.
-    ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}bun --bun packages/cli/script/build.ts --target ${target} --skip-install
+    ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}${if stdenv.hostPlatform.isLinux then "\"$BUN_INSTALL_CACHE_DIR/native-bun-template\"" else "bun"} --bun packages/cli/script/build.ts --target ${target} --skip-install
     bun --bun packages/cli/script/schema.ts schema.json
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
     # Bun's Nix-host path can preserve its loader metadata. Rewriting compiled
