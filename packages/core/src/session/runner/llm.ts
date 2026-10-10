@@ -10,6 +10,7 @@ import {
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
 import { AgentV2 } from "../../agent"
+import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
@@ -188,6 +189,7 @@ const layer = Layer.effect(
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
       const agent = yield* agents.select(session.agent)
+      const effectiveRules = agent.info?.permissions.map((rule) => ({ ...rule })) ?? []
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
@@ -212,7 +214,7 @@ const layer = Layer.effect(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(agent.info?.permissions)
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const request = LLM.request({
         model,
@@ -268,12 +270,28 @@ const layer = Layer.effect(
             const assistantMessageID = yield* publisher.assistantMessageID(event.id)
             yield* Effect.uninterruptibleMask((restore) =>
               restore(
-                toolMaterialization.settle({
-                  sessionID: session.id,
-                  agent: agent.id,
-                  assistantMessageID,
-                  call: event,
-                }),
+                CapabilityInvocation.withContext(
+                  {
+                    issuer: "core",
+                    owner: {
+                      projectID: location.project.id,
+                      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+                      sessionID: session.id,
+                      agentID: agent.id,
+                    },
+                    invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: event.id },
+                    rootToolName: event.name,
+                    effectiveRules,
+                    // Core selection has configured permissions, not a separate native Permission floor.
+                    nativeDenyFloor: [],
+                  },
+                  toolMaterialization.settle({
+                    sessionID: session.id,
+                    agent: agent.id,
+                    assistantMessageID,
+                    call: event,
+                  }),
+                ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error))),
               ).pipe(
                 Effect.flatMap((settlement) =>
                   publish(

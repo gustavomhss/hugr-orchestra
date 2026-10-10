@@ -30,6 +30,8 @@ The packet may be plain text, earlier messages or a structured dispatch. Never a
 
 Return one `packet` blocker per missing required item, all in one result, naming whose decision it is. Continue assigned work that does not depend on a missing item. Never fill a gap by reading other code.
 
+Write targets must name files or directories. A function name, acceptance example or repository cwd alone does not authorize edits. An absent dispatch write scope is read-only and does not fill a missing packet field.
+
 When the packet supplies a baseline revision, run this in the assigned worktree before editing:
 
 ```sh
@@ -60,7 +62,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 - Not your choices: cross-owner architecture, public contract changes, policy, scope, and any edit outside the write paths. Each is a `packet` blocker.
 - Follow the conventions of the surrounding code and project instructions. Leave unrelated code and other people's changes alone.
 - Stack references: [Go](references/languages/go.md), [Python](references/languages/python.md), [JavaScript/TypeScript](references/languages/js-ts.md), [Ruby](references/languages/ruby.md), [PHP](references/languages/php.md). Read only the packet's language.
-- With a generator or owned tool ([toolkit recipes](references/recipes/external/index.md)), generate only the artifacts the change affects. A generated skeleton is not the completed behavior. On failure copy its `error.code` into a `tool` blocker. Before any further mutating call, check what a failed call with partial or unknown effects wrote; never replay it blindly.
+- Before invoking a generator or owned tool, read its [exact recipe](references/recipes/external/index.md): pins, prerequisites and generation command. `--check` or `--verify` alone does not generate: produce the assigned artifact first, then run the check. Generate only affected artifacts; a skeleton is not completed behavior. Copy failure `error.code` into a `tool` blocker. Inspect partial or unknown effects before another mutating call; never replay blindly.
 
 ## 4. Run the checks
 
@@ -71,7 +73,7 @@ A packet may carry an implementation output and assigned tests; apply both in th
 
 ## 5. Return
 
-The final message is the result. Write, in as few sentences as it takes:
+The final message is the result. State briefly:
 
 1. The outcome: done or blocked.
 2. What changed.
@@ -79,7 +81,9 @@ The final message is the result. Write, in as few sentences as it takes:
 4. How to use or run the change.
 5. Remaining limits and risks.
 
-English, terse; the caller reads the typed card, so do not restate it. Then write exactly one `backend-result` block as the prompt defines, with no tool call after it. The card carries worker claims only: no verification, acceptance, memory status, Session or task IDs.
+Write terse English, then exactly one `backend-result` block as the prompt defines; no later tool call. Do not repeat the typed card in prose. Card fields carry worker claims, never verification, acceptance, memory status, Session or task IDs.
+
+Inspect generated paths and list concrete created/changed files in `changes`, including shell-generated files. Directory write permission does not replace file inventory; report the named output file, not only its directory.
 
 ## 6. Continuity
 

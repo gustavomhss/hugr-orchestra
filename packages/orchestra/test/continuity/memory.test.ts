@@ -209,14 +209,16 @@ test("C7 requires the user's citation and revoking words for the user's items", 
   expect(failed(run([{ op: "retire", id: "m4", reason: "User allowed staging", src: ["u4"] }], { previous }))).toBe("C7")
   // The revoking words must be in the new span, not in older user text.
   const kept = run([{ op: "retire", id: "m4", reason: "x", src: ["u2"], quote: "nao faz deploy sem eu aprovar" }], { previous })
-  expect(dropped(kept)).toBe(1)
-  expect(ok(kept).items.map((item) => item.id)).toContain("m4")
+  expect(failed(kept)).toBe("C7")
+  expect("artifact" in kept).toBe(false)
   expect(ok(run([{ op: "retire", id: "m4", reason: "User allowed staging", src: ["u4"], quote: "pode fazer deploy em staging" }],
     { previous })).items.map((item) => item.id)).not.toContain("m4")
-  // A permission retires without a quote: removing it is always safe.
+  // Removing a permission still requires newly covered user evidence, without a revoking quote.
   const may = ok(run([{ op: "add", section: "rules", src: ["u4"], fields: { kind: "may", rule: "Regenerate", quote: "pode regenerar" } }], { previous }))
   const later = { ...snap(8, 10, may) }
   expect(failed(decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m8", reason: "Limit ended" }] }), snapshot: later,
+    producerID, host: host(), budget: 20_000 }))).toBe("C7")
+  expect(failed(decode({ text: JSON.stringify({ ops: [{ op: "retire", id: "m8", reason: "Limit ended", src: ["u5"] }] }), snapshot: later,
     producerID, host: host(), budget: 20_000 }))).toBe("accepted")
   // An objective retires on the user's new message, which rarely holds revoking words.
   expect(failed(run([{ op: "retire", id: "m1", reason: "User changed the goal", src: ["u3"] }], { previous }))).toBe("accepted")

@@ -7,6 +7,8 @@ import { ShellTool } from "./shell"
 import { ShellPrompt } from "./shell/prompt"
 import { roster } from "@/maestro/roster"
 import { AtlasMemory } from "@/maestro/atlas-memory"
+import { InvocationBindingHost } from "@/maestro/invocation-binding"
+import { SessionStore } from "@orchestra/core/session/store"
 import { EditTool } from "./edit"
 import { GlobTool } from "./glob"
 import { GrepTool } from "./grep"
@@ -37,9 +39,9 @@ import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
-import * as Tool from "./tool"
+import { Tool } from "./tool"
 import { Config } from "@/config/config"
-import { type ToolContext as PluginToolContext, type ToolDefinition } from "@orchestra/plugin"
+import { type ToolContext, type ToolDefinition } from "@orchestra/plugin"
 import type { JSONSchema7, JSONSchema7Definition } from "@ai-sdk/provider"
 import { Schema } from "effect"
 import z from "zod"
@@ -48,7 +50,7 @@ import { Provider } from "@/provider/provider"
 
 import { WebSearchTool } from "./websearch"
 import { LspTool } from "./lsp"
-import * as Truncate from "./truncate"
+import { Truncate } from "./truncate"
 import { ApplyPatchTool } from "./apply_patch"
 import { Glob } from "@orchestra/core/util/glob"
 import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
@@ -87,8 +89,17 @@ export function webSearchEnabled(flags = { exa: false, parallel: false }) {
 type TaskDef = Tool.InferDef<typeof TaskTool>
 type ReadDef = Tool.InferDef<typeof ReadTool>
 
+type PluginDef = Tool.Def & {
+  executeWithSafety: (
+    args: unknown,
+    context: Tool.Context,
+    durableSafety: boolean,
+    requiredBinding?: boolean,
+  ) => Effect.Effect<Tool.ExecuteResult>
+}
+
 type State = {
-  custom: Tool.Def[]
+  custom: PluginDef[]
   builtin: Tool.Def[]
   task: TaskDef
   read: ReadDef
@@ -122,6 +133,7 @@ const layer = Layer.effect(
     const observations = yield* ArsenalObservations.Service
     const runtime = yield* ArsenalBindings.make
     const safety = yield* ToolSafety.make
+    const bindInvocation = yield* InvocationBindingHost.make
     const arsenal = yield* MaestroArsenalTools.make({
       beforeExecute: (context, name, args) => runtime.beforeExecute(context.sessionID, name, args),
       afterExecute: (context, name, args, result) => {
@@ -185,9 +197,9 @@ const layer = Layer.effect(
 
     const state = yield* InstanceState.make<State>(
       Effect.fn("ToolRegistry.state")(function* (ctx) {
-        const custom: Tool.Def[] = []
+        const custom: PluginDef[] = []
 
-        function fromPlugin(id: string, def: ToolDefinition): Tool.Def {
+        function fromPlugin(id: string, def: ToolDefinition): PluginDef {
           // Plugin tools still expose Zod args publicly; keep that compatibility
           // boxed at the registry boundary and give the LLM the original JSON Schema.
           // Normalize missing args to `{}` once — pre-1.14.49 the code was
@@ -200,78 +212,111 @@ const layer = Layer.effect(
           const parameters = zodParams
             ? Schema.declare<unknown>((u): u is unknown => zodParams.safeParse(u).success)
             : Schema.Unknown
+          const executeWithSafety: PluginDef["executeWithSafety"] = (
+            rawArgs,
+            context,
+            durableSafety,
+            requiredBinding = false,
+          ) => {
+            // Capture before entering the Session wrapper, which may bind a different placement.
+            const toolCtx = { ...context }
+            return Effect.gen(function* () {
+              const args = yield* Effect.sync(() => freezePluginArguments(
+                zodParams
+                  ? zodParams.parse(structuredClone(rawArgs))
+                  : z.record(z.string(), z.unknown()).parse(structuredClone(rawArgs)),
+              ))
+              const info = yield* agent.get(toolCtx.agentID ?? toolCtx.agent)
+              const binding = yield* bindInvocation(
+                toolCtx,
+                requiredBinding || (info?.native === true && info.id === "backend"),
+              )
+              const bridge = yield* EffectBridge.make()
+              const invocation = {
+                tool: id,
+                args,
+                sessionID: toolCtx.sessionID,
+                assistantMessageID: toolCtx.messageID,
+                agent: toolCtx.agentID ?? toolCtx.agent,
+                callID: toolCtx.callID ?? "",
+                directory: binding?.directory ?? ctx.directory,
+                projectID: binding?.projectId ?? ctx.project.id,
+                projectDirectory: binding
+                  ? binding.worktree === "/"
+                    ? binding.directory
+                    : binding.worktree
+                  : ctx.worktree === "/"
+                    ? ctx.directory
+                    : ctx.worktree,
+              }
+              const pluginCtx: ToolContext = Object.freeze({
+                sessionID: toolCtx.sessionID,
+                messageID: toolCtx.messageID,
+                callID: toolCtx.callID,
+                binding,
+                agent: toolCtx.agent,
+                // Callers that predate ids pass only `agent`, which is then also the key (as in the lookup below).
+                agentID: toolCtx.agentID ?? toolCtx.agent,
+                abort: toolCtx.abort,
+                ask: (req: Parameters<ToolContext["ask"]>[0]) => bridge.promise(toolCtx.ask(req)),
+                metadata: (input: Parameters<ToolContext["metadata"]>[0]) => bridge.promise(toolCtx.metadata(input)),
+                directory: binding?.directory ?? ctx.directory,
+                worktree: binding?.worktree ?? ctx.worktree,
+              })
+              return yield* runtime.withSession(
+                toolCtx.sessionID,
+                runtime.run(
+                  invocation,
+                  Effect.gen(function* () {
+                    yield* ToolSafety.beforeInvocation(invocation)
+                    const result = yield* safety.run(
+                      invocation,
+                      Effect.gen(function* () {
+                        const raw = yield* Effect.promise(() => def.execute(args, pluginCtx))
+                        yield* ToolSafety.inspect(raw)
+                        return raw
+                      }),
+                      () => Effect.void,
+                    )
+                    yield* ToolSafety.inspect(result)
+                    const output = typeof result === "string" ? result : result.output
+                    const metadata = typeof result === "string" ? {} : (result.metadata ?? {})
+                    const attachments = typeof result === "string" ? undefined : result.attachments
+                    const out = yield* truncate.output(output, {}, info)
+                    return {
+                      title: typeof result === "string" ? "" : (result.title ?? ""),
+                      output: out.truncated ? out.content : output,
+                      attachments,
+                      metadata: {
+                        ...metadata,
+                        truncated: out.truncated,
+                        ...(out.truncated && { outputPath: out.outputPath }),
+                      },
+                    }
+                  }),
+                  durableSafety,
+                  () => toolCtx.abort.aborted,
+                ),
+              )
+            }).pipe(
+              Effect.orDie,
+              Effect.withSpan("Tool.execute", {
+                attributes: {
+                  "tool.name": id,
+                  "session.id": toolCtx.sessionID,
+                  "message.id": toolCtx.messageID,
+                  ...(toolCtx.callID ? { "tool.call_id": toolCtx.callID } : {}),
+                },
+              }),
+            )
+          }
           return {
             id,
             parameters,
             jsonSchema,
             description: def.description,
-            execute: (args, toolCtx) =>
-              Effect.gen(function* () {
-                // Bridge the host's Effect-based `ask` into a Promise-returning
-                // function for the plugin to make sure context persists
-                const bridge = yield* EffectBridge.make()
-                yield* ToolSafety.beforeInvocation({
-                  tool: id,
-                  args,
-                  sessionID: toolCtx.sessionID,
-                  callID: toolCtx.callID ?? "",
-                  directory: ctx.directory,
-                  projectID: ctx.project.id,
-                  projectDirectory: ctx.worktree === "/" ? ctx.directory : ctx.worktree,
-                })
-                const pluginCtx: PluginToolContext = {
-                  ...toolCtx,
-                  // Callers that predate ids pass only `agent`, which is then also the key (as in the lookup below).
-                  agentID: toolCtx.agentID ?? toolCtx.agent,
-                  ask: (req) => bridge.promise(toolCtx.ask(req)),
-                  directory: ctx.directory,
-                  worktree: ctx.worktree,
-                }
-                const result = yield* safety.run(
-                  {
-                    tool: id,
-                    args,
-                    sessionID: toolCtx.sessionID,
-                    callID: toolCtx.callID ?? "",
-                    directory: ctx.directory,
-                    projectID: ctx.project.id,
-                    projectDirectory: ctx.worktree === "/" ? ctx.directory : ctx.worktree,
-                  },
-                  Effect.gen(function* () {
-                    const raw = yield* Effect.promise(() => def.execute(args as any, pluginCtx))
-                    yield* ToolSafety.inspect(raw)
-                    return raw
-                  }),
-                  () => Effect.void,
-                )
-                yield* ToolSafety.inspect(result)
-                const output = typeof result === "string" ? result : result.output
-                const metadata = typeof result === "string" ? {} : (result.metadata ?? {})
-                const attachments = typeof result === "string" ? undefined : result.attachments
-                // Lookup by stable id (F1.10); `toolCtx.agent` is the display label.
-                const info = yield* agent.get(toolCtx.agentID ?? toolCtx.agent)
-                const out = yield* truncate.output(output, {}, info)
-                return {
-                  title: typeof result === "string" ? "" : (result.title ?? ""),
-                  output: out.truncated ? out.content : output,
-                  attachments,
-                  metadata: {
-                    ...metadata,
-                    truncated: out.truncated,
-                    ...(out.truncated && { outputPath: out.outputPath }),
-                  },
-                }
-              }).pipe(
-                Effect.orDie,
-                Effect.withSpan("Tool.execute", {
-                  attributes: {
-                    "tool.name": id,
-                    "session.id": toolCtx.sessionID,
-                    "message.id": toolCtx.messageID,
-                    ...(toolCtx.callID ? { "tool.call_id": toolCtx.callID } : {}),
-                  },
-                }),
-              ),
+            executeWithSafety,
+            execute: (args, context) => executeWithSafety(args, context, true),
           }
         }
 
@@ -381,26 +426,44 @@ const layer = Layer.effect(
       }),
     )
 
-    const definitions = Effect.fn("ToolRegistry.definitions")(function* (durableSafety: boolean) {
+    const definitions = Effect.fn("ToolRegistry.definitions")(function* (
+      durableSafety: boolean,
+      requiredBinding = false,
+    ) {
       const s = yield* InstanceState.get(state)
       const instance = yield* InstanceState.context
-      return [...s.builtin, ...s.custom].map((definition: Tool.Def) => ({
-        ...definition,
-        execute: (args: unknown, context: Tool.Context) => runtime.withSession(
-          context.sessionID,
-          runtime.run({
-            tool: definition.id,
-            args,
-            sessionID: context.sessionID,
-            assistantMessageID: context.messageID,
-            agent: context.agentID ?? context.agent,
-            callID: context.callID ?? "",
-            directory: instance.directory,
-            projectID: instance.project.id,
-            projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
-          }, definition.execute(args, context), durableSafety, () => context.abort.aborted),
-        ).pipe(Effect.orDie),
-      }))
+      return [
+        ...s.builtin.map((definition: Tool.Def) => ({
+          ...definition,
+          execute: (args: unknown, context: Tool.Context) =>
+            runtime
+              .withSession(
+                context.sessionID,
+                runtime.run(
+                  {
+                    tool: definition.id,
+                    args,
+                    sessionID: context.sessionID,
+                    assistantMessageID: context.messageID,
+                    agent: context.agentID ?? context.agent,
+                    callID: context.callID ?? "",
+                    directory: instance.directory,
+                    projectID: instance.project.id,
+                    projectDirectory: instance.worktree === "/" ? instance.directory : instance.worktree,
+                  },
+                  definition.execute(args, context),
+                  durableSafety,
+                  () => context.abort.aborted,
+                ),
+              )
+              .pipe(Effect.orDie),
+        })),
+        ...s.custom.map((definition) => ({
+          ...definition,
+          execute: (args: unknown, context: Tool.Context) =>
+            definition.executeWithSafety(args, context, durableSafety, requiredBinding),
+        })),
+      ]
     })
 
     const all: Interface["all"] = () => definitions(true)
@@ -451,7 +514,10 @@ const layer = Layer.effect(
 
     const tools: Interface["tools"] = Effect.fn("ToolRegistry.tools")(function* (input) {
       const upstream = input.agent.id === "archie" && input.agent.native === true ? yield* agents.get("archie") : undefined
-      const filtered = (yield* definitions(input.durableSafety !== false)).filter((tool) => {
+      const filtered = (yield* definitions(
+        input.durableSafety !== false,
+        input.agent.native === true && input.agent.id === "backend",
+      )).filter((tool) => {
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
           (input.agent.id !== "maestro" || input.agent.native !== true) &&
@@ -562,6 +628,27 @@ function isZodType(value: unknown): value is z.ZodType {
   return typeof value === "object" && value !== null && "_zod" in value
 }
 
+// A parsed JSON snapshot is shared by every safety check and execution. Bound traversal and reject non-JSON
+// transform results rather than retaining mutable aliases (including aliases closed over by a plugin schema).
+function freezePluginArguments(input: Record<string, unknown>) {
+  const snapshot = structuredClone(input)
+  const seen = new WeakSet<object>()
+  const budget = { remaining: 10000 }
+  const freeze = (value: unknown, depth: number): void => {
+    if (--budget.remaining < 0 || depth > 32) throw new Error("Plugin arguments exceed snapshot bounds")
+    if (value === null || typeof value === "string" || typeof value === "boolean") return
+    if (typeof value === "number" && Number.isFinite(value)) return
+    if (typeof value !== "object" || seen.has(value) ||
+      (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype))
+      throw new Error("Plugin arguments must be JSON values")
+    seen.add(value)
+    Object.values(value).forEach((item) => freeze(item, depth + 1))
+    Object.freeze(value)
+  }
+  freeze(snapshot, 0)
+  return snapshot
+}
+
 function isPluginTool(value: unknown): value is ToolDefinition {
   return typeof value === "object" && value !== null && "args" in value && "description" in value && "execute" in value
 }
@@ -646,6 +733,7 @@ export const node = LayerNode.make({
     Agent.node,
     Skill.node,
     Session.node,
+    SessionStore.node,
     BackgroundJob.node,
     Provider.node,
     LSP.node,

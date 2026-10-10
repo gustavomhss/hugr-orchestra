@@ -82,6 +82,24 @@ it.instance("the agent's context_compact tool runs a forced pass on its own sess
   }).pipe(Effect.provide(environment([first], { config: { continuity: { trigger: 0.5 } } })))
 }), 30_000)
 
+it.instance("context_compact uses the selected model and recall capability for hard-limit fallback", () => Effect.gen(function* () {
+  yield* Effect.gen(function* () {
+    const sessionID = yield* seed()
+    const sessions = yield* Session.Service
+    const history = yield* sessions.messages({ sessionID })
+    yield* sessions.updatePart({ id: PartID.ascending(), sessionID, messageID: history[9].info.id, type: "tool", tool: "read", callID: "selected_model_large",
+      state: { status: "completed", input: { filePath: "selected-model.log" }, output: "build log line\n".repeat(8_000), title: "selected-model.log",
+        metadata: {}, time: { start: 1, end: 2 } } })
+    const tool = yield* Tool.init(yield* ContextCompactTool)
+    const context = { sessionID, messageID: MessageID.ascending(), agent: "build", abort: AbortSignal.any([]), messages: [],
+      metadata: () => Effect.void, ask: () => Effect.void,
+      extra: { model: { ...model, limit: { context: 20_000, output: 2_000 } }, canRecall: true } }
+    expect((yield* tool.execute({}, context)).metadata).toEqual({ outcome: "masked", truncated: false })
+    expect((yield* tool.execute({}, { ...context, extra: { ...context.extra, canRecall: false } })).metadata)
+      .toEqual({ outcome: "over", truncated: false })
+  }).pipe(Effect.provide(environment([])))
+}), 30_000)
+
 it.instance("below the trigger nothing is compacted: a long turn keeps every tool result", () => Effect.gen(function* () {
   yield* Effect.gen(function* () {
     // At trigger 0.5 the seed's 50,000 tokens on a 200,000-token window start no pass.

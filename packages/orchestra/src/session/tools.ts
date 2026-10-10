@@ -58,6 +58,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   bypassAgentCheck: boolean
   messages: SessionV1.WithParts[]
   promptOps: TaskPromptOps
+  canRecall?: () => boolean
 }) {
   const tools: Record<string, AITool> = {}
   const run = yield* EffectBridge.make()
@@ -98,7 +99,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     abort: options.abortSignal!,
     messageID: input.processor.message.id,
     callID: options.toolCallId,
-    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps },
+    extra: { model: input.model, bypassAgentCheck: input.bypassAgentCheck, promptOps: input.promptOps, canRecall: input.canRecall?.() === true },
     agent: input.agent.name,
     agentID: input.agent.id,
     messages: input.messages,
@@ -153,7 +154,23 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           directory: binding?.directory,
           projectID: binding?.project.id,
           projectDirectory: binding?.worktree === "/" ? binding.directory : binding?.worktree,
-        }, effect, (observation) => binding ? context(toRecord(args), options).metadata({ metadata: { toolSafety: observation } }) : Effect.void,
+        }, effect, (observation) => binding ? safety.inspect(observation).pipe(Effect.orDie, Effect.andThen(
+          input.processor.updateToolCall(options.toolCallId, (match) => ({
+            ...match,
+            state: match.state.status === "pending"
+              ? {
+                  status: "running",
+                  input: toRecord(args),
+                  time: { start: Date.now() },
+                  metadata: { toolSafety: observation },
+                }
+              : {
+                  ...match.state,
+                  // Preserve streamed progress and terminal state; only the host owns this observation.
+                  metadata: { ...match.state.metadata, toolSafety: observation },
+                },
+          })),
+        ), Effect.asVoid) : Effect.void,
         () => !!options.abortSignal?.aborted).pipe(Effect.provideService(ToolSafetyHooks.Placement, placement(scope))),
       ),
     ).pipe(Effect.orDie)

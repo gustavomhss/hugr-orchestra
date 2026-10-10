@@ -55,6 +55,11 @@ export type Memory = {
   writes: { outcome: AtlasMemory.Receipt["outcome"]; callID: string; receiptRef?: RecordRef }[]
 }
 
+export type WorkerEvidence = {
+  changes: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+  checks: { index: number; evidence: "bound" | "unbound"; callIDs: string[] }[]
+}
+
 export type WorkResult = {
   schema: string
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
@@ -68,6 +73,8 @@ export type WorkResult = {
   nextActions: Card["nextActions"]
   terminal: Terminal
   memory: Memory
+  // Host binding of worker claims, separate from verification and acceptance.
+  workerEvidence?: WorkerEvidence
   artifacts?: UpstreamResult.Card["artifacts"]
   // Host-observed authorship only. Approval and materialized artifact identity remain separate host contracts.
   author?: { memberId: string; executionSessionID: string; messageID: string }

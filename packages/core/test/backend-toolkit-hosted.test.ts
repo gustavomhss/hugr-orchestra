@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "path"
-import { createHash } from "crypto"
+import { createHash, randomUUID } from "crypto"
 import { access, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "fs/promises"
 import { tmpdir } from "os"
 import { Effect } from "effect"
@@ -20,7 +20,10 @@ const JAR = "fake jar bytes"
 const INTERPRETER = [
   "#!/bin/sh",
   `printf '%s|%s|%s|%s\\n' "$PWD" "$npm_config_cache" "$PIP_CACHE_DIR" "$*" >> "$(dirname "$0")/../calls.log"`,
-  `grep -qs fixture-fail package.json && exit 3`,
+  `if grep -qs fixture-fail package.json; then echo 'fixture installer failure' >&2; exit 3; fi`,
+  `if grep -qs fixture-secret package.json; then printf '%s' '${"ghp_" + "x".repeat(36)}' >&2; printf '%05000d' 0 >&2; exit 4; fi`,
+  `if grep -qs fixture-ansi package.json; then printf 'ghp_\\033[31m${"x".repeat(36)}\\033[0m' >&2; exit 4; fi`,
+  `if grep -qs fixture-inherited package.json; then echo "HOST_SECRET=\${HOST_SECRET-unset}" >&2; exit 4; fi`,
   `echo "greeting=$FIXTURE_GREETING pythonpath=$PYTHONPATH argv=$*"`,
   "",
 ].join("\n")
@@ -256,9 +259,40 @@ posix("an npm engine installs its pinned lockfile with the runtime's bundled npm
       `greeting=hello ${home} pythonpath= argv=${install}/node_modules/orval/dist/bin/orval.js --config orval.config.ts`,
     )
     const reason = yield* BackendToolkit.ensure("protoc-gen-es").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
-    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm")
+    expect(reason).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm:exit:3:fixture installer failure")
     expect(yield* exists(path.join(f.root, "engines", "protoc-gen-es", `${VERSION}-${target}`))).toBe(false)
     expect(f.hits).toEqual({ "/node.tar.gz": 1 })
+  }), 30_000,
+)
+
+posix("installer diagnostics inspect all output before retaining a bounded tail", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const scoped = within(f.root, f.manifest([f.engine("orval", "node", { kind: "npm", packageJson: '{ "name": "fixture-secret" }', lock: "{}" }, ["{install}/x.js"])]), f.runtimes())
+    const reason = yield* BackendToolkit.ensure("orval").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
+    expect(reason).toBe("toolkit-not-ready:failed:orval:install:npm:details-redacted")
+    expect(reason).not.toContain("ghp_")
+  }), 30_000,
+)
+
+posix("an ANSI-split credential is suppressed and an ordinary host secret never reaches the installer", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const secret = `ordinary-host-value-${randomUUID()}`
+    const previous = process.env.HOST_SECRET
+    yield* Effect.acquireRelease(Effect.sync(() => { process.env.HOST_SECRET = secret }), () => Effect.sync(() => {
+      if (previous === undefined) delete process.env.HOST_SECRET
+      if (previous !== undefined) process.env.HOST_SECRET = previous
+    }))
+    const scoped = within(f.root, f.manifest([
+      f.engine("orval", "node", { kind: "npm", packageJson: '{ "name": "fixture-ansi" }', lock: "{}" }, ["{install}/x.js"]),
+      f.engine("protoc-gen-es", "node", { kind: "npm", packageJson: '{ "name": "fixture-inherited" }', lock: "{}" }, ["{install}/x.js"]),
+    ]), f.runtimes())
+    const ansi = yield* BackendToolkit.ensure("orval").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
+    expect(ansi).toBe("toolkit-not-ready:failed:orval:install:npm:details-redacted")
+    const inherited = yield* BackendToolkit.ensure("protoc-gen-es").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
+    expect(inherited).toBe("toolkit-not-ready:failed:protoc-gen-es:install:npm:exit:4:HOST_SECRET=unset")
+    expect(inherited).not.toContain(secret)
   }), 30_000,
 )
 
@@ -284,6 +318,13 @@ posix("a pip engine installs its hash-pinned requirements into its own directory
     expect(yield* Effect.promise(() => readFile(path.join(install, "requirements.txt"), "utf8"))).toBe(requirements)
     const run = Bun.spawnSync([path.join(f.root, "bin", "datamodel-codegen"), "--version"])
     expect(run.stdout.toString().trim()).toBe(`greeting=hello ${home} pythonpath=${install} argv=-m datamodel_code_generator --version`)
+    yield* Effect.promise(() => rm(path.join(install, ".launchers"), { recursive: true }))
+    yield* Effect.promise(() => writeFile(path.join(install, "datamodel-codegen"), "legacy launcher", { mode: 0o755 }))
+    expect(yield* BackendToolkit.status("datamodel-codegen").pipe(scoped)).toMatchObject([{ status: "absent" }])
+    const [cached] = yield* BackendToolkit.prefetch(["datamodel-codegen"]).pipe(scoped)
+    expect(cached).toMatchObject({ status: "ready", executable: path.join(install, ".launchers", "datamodel-codegen") })
+    expect(yield* exists(path.join(install, ".launchers", "datamodel-codegen"))).toBe(true)
+    expect((yield* calls(f.root, "python")).filter((call) => call.argv?.startsWith("-m pip install "))).toHaveLength(1)
   }), 30_000,
 )
 

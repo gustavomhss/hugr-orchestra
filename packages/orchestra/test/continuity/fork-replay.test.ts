@@ -9,6 +9,7 @@ import type { MemoryArtifact } from "@/continuity/memory-types"
 import { testEffect } from "../lib/effect"
 import { finding, host, memory, messages, model, provider, sessionID } from "./memory-fixture"
 import { rethrow } from "../lib/rejection"
+import { ParentReceipt } from "@/continuity/parent-receipt"
 
 const it = testEffect(Layer.empty)
 const body = JSON.stringify({ ops: [finding()] })
@@ -16,6 +17,8 @@ const stopped = () => Stream.fromIterable([LLMEvent.textStart({ id: "text" }),
   LLMEvent.textDelta({ id: "text", text: body }), LLMEvent.textEnd({ id: "text" }), LLMEvent.finish({ reason: "stop" })])
 
 const history = messages().slice(0, 10)
+const latest = history.at(-1)?.info
+if (latest?.role === "assistant") latest.tokens.input = 20_000
 // Every swap must shrink the context, so the covered head outweighs the memory scaffold.
 if (history[0].parts[0].type === "text") history[0].parts[0].text = `turn-0 ${"historical context ".repeat(1_000)}`
 const captured = () => {
@@ -32,14 +35,16 @@ function parent(overrides: Partial<LLM.StreamInput> = {}, ids = history.map((mes
   })
   const user = history.findLast((message) => message.info.role === "user")!.info
   const parentMessages: ModelMessage[] = [{ role: "user", content: "parent history" }]
-  return {
+  const captured = ParentReceipt.capture({
     input: {
       user, sessionID, model, agent: { name: "build", mode: "primary", permission: [], options: {} },
       system: ["parent system"], messages: parentMessages,
       tools: { read }, toolChoice: "auto", contextMemory: false, ...overrides,
     } as LLM.StreamInput,
     messageIDs: ids,
-  }
+  }, history.at(-1)!.info.id, ids.map((id) => history.find((message) => message.info.id === id)!).filter(Boolean))
+  if (latest?.role === "assistant") ParentReceipt.complete(captured, latest)
+  return captured
 }
 
 function execute(request?: ParentRequest) {
@@ -70,7 +75,7 @@ it.live("maintenance replays the parent request prefix and appends one instructi
   expect(sent.messages.slice(0, -1)).toEqual(source.input.messages)
   const appended = sent.messages.at(-1)!
   expect(appended.role).toBe("user")
-  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT · working memory v4")
+  expect(String(appended.content)).toStartWith("CONTEXT CONTINUITY CHECKPOINT · versioned working memory")
   expect(String(appended.content)).toContain("The current working memory, if any, is the system\nblock that begins `# Working memory`.")
   expect(String(appended.content)).toContain("## Index of the new span\nu1 ")
   expect(Object.keys(sent.tools)).toEqual(Object.keys(source.input.tools))

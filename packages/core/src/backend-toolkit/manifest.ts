@@ -52,6 +52,8 @@ export type HostedEngine<Id extends string = EngineId> = {
   readonly version: string
   readonly license: string
   readonly upstream: string
+  /** Owned engines made ready before this engine; ids and cycles are checked before acquisition. */
+  readonly dependencies?: ReadonlyArray<string>
   /** Launcher environment; values may use `{install}` and `{runtime}`. */
   readonly env?: Readonly<Record<string, string>>
   readonly runtime: RuntimeId
@@ -72,8 +74,12 @@ export type HostedEngine<Id extends string = EngineId> = {
         readonly path: string
         /** The built executable's name without `.exe`. */
         readonly binary: string
+        /** Owned, hash-pinned driver backport; valid only for gocqlx-schemagen's Go build. */
+        readonly compatibility?: "cassandra-metadata"
         /** Cargo only. */
         readonly features?: ReadonlyArray<string>
+        /** Cargo release optimization; plan-check CLIs can trade execution speed for bounded cold builds. */
+        readonly optLevel?: 0 | 1 | 2 | 3
       }
   /**
    * Arguments after the runtime interpreter; `{install}` and `{runtime}` expand to the two install directories. Empty
@@ -93,6 +99,8 @@ export type NativeEngine<Id extends string = EngineId> = {
   readonly license: string
   /** Upstream `owner/repo`. */
   readonly upstream: string
+  /** Owned engines made ready before this engine; ids and cycles are checked before acquisition. */
+  readonly dependencies?: ReadonlyArray<string>
   /** Child-scoped environment for every invocation of the engine. */
   readonly env?: Readonly<Record<string, string>>
   /** Per target: the pinned download and the install-relative executable it provides. */
