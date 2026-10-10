@@ -16,6 +16,9 @@ import type { Tool } from "../../tool/tool"
 import { CapabilityPolicy } from "../policy"
 import { CapabilityBindingTable, CapabilityConnectionTable, CapabilityTargetTable } from "../sql"
 import { CapabilityConnectionStore } from "./store"
+import type { CapabilityConnectionStoreContract } from "./store-contract"
+
+export type Error = CapabilityConnectionStoreContract.Error
 
 const Create = Schema.Struct({
   provider: Schema.NonEmptyString,

@@ -28,4 +28,4 @@ export type Options = Readonly<{
 }>
 
 export type Execute = (provider: string, input: CapabilityServiceSchema.CallInput, context: Tool.Context) =>
-  Effect.Effect<CapabilityServiceSchema.CallOutput, Capability.Failure | CapabilityArtifacts.Failure>
+  Effect.Effect<CapabilityServiceSchema.CallOutput, CapabilityConnections.Error | CapabilityArtifacts.Failure>
