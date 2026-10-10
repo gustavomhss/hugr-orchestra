@@ -4,8 +4,9 @@ import { Capability } from "@orchestra/schema/capability"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
 import { Credential } from "@orchestra/schema/credential"
 import { Integration } from "@orchestra/schema/integration"
+import { createHash } from "node:crypto"
 import { eq } from "drizzle-orm"
-import { Effect, Schema } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { CredentialTable } from "../../credential/sql"
 import { Database } from "../../database/database"
 import { ProjectTable } from "../../project/sql"
@@ -20,7 +21,13 @@ const Proof = Schema.Struct({ provider: CapabilitySetup.Provider,
   subjectID: Schema.NonEmptyString.check(Schema.isMaxLength(4096)), endpoint: Schema.String,
   integrationID: Integration.ID,
   scopeHash: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}(?![\s\S])/)) })
-const endpoints = Object.freeze({ slack: "https://slack.com/api/auth.test", discord: "https://discord.com/api/v10/users/@me" })
+// Connections store the fixed channel base; the verifier owns auth.test / users/@me routes.
+const endpoints = Object.freeze({ slack: "https://slack.com/api", discord: "https://discord.com/api/v10" })
+const SlackSubject = Schema.Tuple([
+  Schema.String.check(Schema.isPattern(/^T[A-Z0-9]{1,63}(?![\s\S])/)),
+  Schema.String.check(Schema.isPattern(/^[UW][A-Z0-9]{1,63}(?![\s\S])/)),
+  Schema.NullOr(Schema.String.check(Schema.isPattern(/^B[A-Z0-9]{1,63}(?![\s\S])/))),
+])
 
 /** Historical receipts attest creation only, never current remote credential readiness. */
 export function make(options: CapabilityConnectionSetupContract.Options) {
@@ -39,7 +46,9 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
         const parsed = decode(CapabilitySetup.Input)(root.input)
         const label = parsed.label || parsed.provider
         if (/\s/.test(parsed.key) || label.includes(parsed.key)) throw new Error("Invalid setup data")
-        return Object.freeze({ placement: CapabilityOperatorScope.placement(root.placement), input: Object.freeze(parsed), label })
+        return Object.freeze({ placement: CapabilityOperatorScope.placement(root.placement), input: Object.freeze({
+          provider: parsed.provider, key: parsed.key, ...(parsed.label === undefined ? {} : { label: parsed.label }),
+        }), label })
       })
       return Effect.gen(function* () {
         if (!captured.ok) return yield* unavailable()
@@ -69,6 +78,16 @@ export function make(options: CapabilityConnectionSetupContract.Options) {
           proof.value.integrationID !== `capability.${value.input.provider}` ||
           proof.value.subjectID !== proof.value.subjectID.trim() || proof.value.subjectID.includes(value.input.key))
           return yield* unavailable()
+        if (value.input.provider === "discord" && !/^[0-9]{1,20}(?![\s\S])/.test(proof.value.subjectID)) return yield* unavailable()
+        if (value.input.provider === "slack") {
+          const subject = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(proof.value.subjectID).pipe(
+            Option.flatMap(Schema.decodeUnknownOption(SlackSubject)))
+          if (Option.isNone(subject) || JSON.stringify(subject.value) !== proof.value.subjectID) return yield* unavailable()
+        }
+        if (proof.value.scopeHash.toLowerCase() !== createHash("sha256").update(JSON.stringify([
+          value.input.provider, proof.value.endpoint, proof.value.subjectID,
+          createHash("sha256").update(value.input.key).digest("hex"),
+        ])).digest("hex")) return yield* unavailable()
         return yield* ledger.commit(target, value.input, (tx) => Effect.gen(function* () {
           const credentialID = Credential.ID.create()
           const connection = Object.freeze({ id: Capability.ConnectionID.create(), provider: value.input.provider, generation: 0 })
