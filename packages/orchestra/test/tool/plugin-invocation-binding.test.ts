@@ -1,164 +1,19 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { eq } from "drizzle-orm"
-import { Cause, Effect, Exit, Layer } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import { Database } from "@orchestra/core/database/database"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { ModelV2 } from "@orchestra/core/model"
-import { ProviderV2 } from "@orchestra/core/provider"
-import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionTable } from "@orchestra/core/session/sql"
-import { Agent } from "@/agent/agent"
-import { Config } from "@/config/config"
 import { InstanceRef } from "@/effect/instance-ref"
-import { InstanceState } from "@/effect/instance-state"
-import { RuntimeFlags } from "@/effect/runtime-flags"
-import { EventV2Bridge } from "@/event-v2-bridge"
 import { InvocationBindingHost } from "@/maestro/invocation-binding"
 import { LogicalTask } from "@/maestro/logical-task"
 import { SessionPrompt } from "@/session/prompt"
-import { MessageID, SessionID } from "@/session/schema"
-import { Session } from "@/session/session"
-import { ToolRegistry } from "@/tool/registry"
-import { Tool } from "@/tool/tool"
-import { TestAppNodeBuilder } from "../fixture/app-node-builder"
-import { TestConfig } from "../fixture/config"
+import { SessionID } from "@/session/schema"
 import { provideInstance, TestInstance, tmpdirScoped } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { awaitWithTimeout } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
-
-const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
-const config = Layer.effect(
-  Config.Service,
-  Effect.gen(function* () {
-    const llm = yield* TestLLMServer
-    return TestConfig.make({
-      get: () =>
-        InstanceState.directory.pipe(
-          Effect.map((directory) => ({
-            agent: { backend: { name: "Copper" } },
-            plugin_origins: [
-              {
-                spec: pathToFileURL(path.join(directory, "binding-plugin.ts")).href,
-                source: path.join(directory, "orchestra.json"),
-                scope: "local" as const,
-              },
-            ],
-            provider: {
-              test: {
-                npm: "@ai-sdk/openai-compatible",
-                name: "Test",
-                options: { baseURL: llm.url, apiKey: "test" },
-                models: { "test-model": { name: "Test", limit: { context: 100000, output: 10000 } } },
-              },
-            },
-          })),
-        ),
-    })
-  }),
-)
-const it = testEffect(
-  TestAppNodeBuilder.build(
-    LayerNode.group([
-      ToolRegistry.node,
-      Session.node,
-      SessionProjector.node,
-      SessionPrompt.node,
-      Agent.node,
-      Database.node,
-      FSUtil.node,
-      CrossSpawnSpawner.node,
-      EventV2Bridge.node,
-    ]),
-    [
-      [Config.node, config],
-      [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
-    ],
-  ).pipe(Layer.provideMerge(TestLLMServer.layer)),
-)
-
-// Real Plugin loader + registry adapter. A permitted read override also exercises the native prompt path.
-const options = {
-  git: true,
-  init: (directory: string) =>
-    Effect.promise(() =>
-      Bun.write(
-        path.join(directory, "binding-plugin.ts"),
-        `export default async () => ({ tool: { read: {
-    description: "binding probe",
-    args: { filePath: { type: "string" }, fail: { type: "boolean" } },
-    execute: async (_args, context) => {
-      await context.ask({ permission: "read", patterns: ["."], always: [], metadata: {} })
-      const binding = context.binding
-      const frozen = binding ? Object.isFrozen(binding) : false
-      const mutation = binding ? Reflect.set(binding, "memberId", "spoof") : false
-      const replacement = Reflect.set(context, "binding", { memberId: "spoof" })
-      await context.metadata({ title: "plugin progress", metadata: { receipt: "before-failure", forgedTask: "spoof" } })
-      if (_args.fail) throw new Error("plugin probe failed")
-      return { output: "ok", metadata: {
-        binding, frozen, mutation, replacement, contextFrozen: Object.isFrozen(context),
-        agent: context.agent, agentID: context.agentID, callID: context.callID,
-        directory: context.directory, worktree: context.worktree,
-      } }
-    },
-  } } })`,
-      ),
-    ).pipe(Effect.asVoid),
-}
-
-const fixture = Effect.gen(function* () {
-  const sessions = yield* Session.Service
-  const registry = yield* ToolRegistry.Service
-  const agents = yield* Agent.Service
-  const instance = yield* InstanceState.context
-  const root = yield* sessions.create({ title: "Root", agent: "maestro" })
-  const parent = yield* sessions.create({ parentID: root.id, agent: "maestro" })
-  // Session.agent deliberately differs from the executing assistant's agentID.
-  const child = yield* sessions.create({
-    parentID: parent.id,
-    agent: "maestro",
-    metadata: {
-      binding: { memberId: "spoof", authoritySessionId: "ses_spoofed_authority" },
-      taskId: "spoof",
-    },
-  })
-  const backend = yield* agents.get("backend")
-  if (!backend) throw new Error("native backend missing")
-  expect(backend.native).toBe(true)
-  expect(backend.name).toBe("Copper")
-  const tool = (yield* registry.tools({ ...model, agent: backend })).findLast((tool) => tool.id === "read")
-  if (!tool || tool.description !== "binding probe") throw new Error("real plugin read override missing")
-  const asks: unknown[] = []
-  const context: Tool.Context = {
-    sessionID: child.id,
-    messageID: MessageID.make("msg_binding"),
-    callID: "call_binding",
-    agent: backend.name,
-    agentID: backend.id,
-    abort: new AbortController().signal,
-    messages: [],
-    ask: (request) =>
-      Effect.sync(() => {
-        asks.push(request)
-      }),
-    metadata: () => Effect.void,
-  }
-  return {
-    sessions,
-    registry,
-    tool,
-    context,
-    root,
-    parent,
-    child,
-    instance,
-    asks,
-    args: { filePath: path.join(instance.directory, "binding-plugin.ts"), fail: false },
-  }
-})
+import { fixture, it, model, options } from "./plugin-binding.fixture"
 
 it.instance(
   "binds renamed executing member to stored root authority and immutable public refs",
@@ -312,15 +167,26 @@ it.instance(
   () =>
     Effect.gen(function* () {
       const f = yield* fixture
-      const exit = yield* f.tool
+      const entered = yield* Deferred.make<void>()
+      const release = yield* Deferred.make<void>()
+      const pending = yield* f.tool
         .execute(
           { ...f.args, fail: true },
           {
             ...f.context,
-            metadata: (input) => f.sessions.setMetadata({ sessionID: f.child.id, metadata: input.metadata ?? {} }),
+            metadata: (input) => Effect.gen(function* () {
+              yield* Deferred.succeed(entered, undefined)
+              yield* Deferred.await(release)
+              yield* f.sessions.setMetadata({ sessionID: f.child.id, metadata: input.metadata ?? {} })
+            }),
           },
         )
-        .pipe(Effect.exit)
+        .pipe(Effect.exit, Effect.forkChild)
+      yield* awaitWithTimeout(Deferred.await(entered), "metadata persistence never entered")
+      expect(pending.pollUnsafe()).toBeUndefined()
+      expect((yield* f.sessions.get(f.child.id)).metadata?.receipt).toBeUndefined()
+      yield* Deferred.succeed(release, undefined)
+      const exit = yield* Fiber.join(pending)
       expect(Exit.isFailure(exit)).toBe(true)
       if (!Exit.isFailure(exit)) throw new Error("plugin failure missing")
       expect(String(Cause.squash(exit.cause))).toContain("plugin probe failed")
@@ -357,6 +223,10 @@ it.instance(
         throw new Error("failed read part missing")
       expect(failed.state.error).toContain("plugin probe failed")
       expect(failed.state.metadata).toMatchObject({ receipt: "before-failure", forgedTask: "spoof" })
+      expect(failed.state.metadata?.toolSafety).toEqual({
+        outcome: "failure", callID: failed.callID, sessionID: f.child.id, projectID: f.child.projectID,
+        directory: f.child.directory, tool: "read",
+      })
       expect(yield* llm.pending).toBe(0)
     }),
   options,
